@@ -1,0 +1,150 @@
+.library-panel-container {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tree-view-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-family: 'Segoe UI', 'Segoe UI Web (West European)', 'Segoe UI',
+    -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+}
+
+.view-library-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-family: 'Segoe UI', 'Segoe UI Web (West European)', 'Segoe UI',
+    -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+}
+
+.edit-library-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-family: 'Segoe UI', 'Segoe UI Web (West European)', 'Segoe UI',
+    -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+}
+
+.symbol-view-container {
+  flex-shrink: 0;
+  border-top: 1px solid #ddd;
+  padding: 8px;
+  background: #fafafa;
+}
+
+.symbol-view-image {
+  max-width: 100%;
+  max-height: 160px;
+  object-fit: contain;
+}
+
+.tree-icon {
+  font-size: 0.6rem;
+  padding-right: 8px;
+}
+
+.symbol-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.rstm-toggle-icon {
+  display: inline-block;
+}
+
+.rstm-toggle-icon-symbol {
+  width: 1rem;
+  height: 1rem;
+  text-align: center;
+  line-height: 1rem;
+}
+
+.rstm-tree-item-group {
+  list-style-type: none;
+  margin-top: 0;
+  margin-bottom: 4px;
+  padding-left: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.rstm-tree-item {
+  padding: 0.25rem 0.25rem;
+  cursor: pointer;
+  color: #333;
+  background: none;
+  box-shadow: none;
+  z-index: unset;
+  position: relative;
+}
+
+.rstm-tree-item-level1 {
+  padding-left: 2rem;
+}
+
+.rstm-tree-item--active {
+  user-select: none;
+  color: white;
+  background: #179ed3;
+  border-bottom: none;
+}
+
+.rstm-search {
+  padding: 1rem 1.5rem;
+  border: none;
+  width: 100%;
+}
+
+.error-message {
+  color: red;
+  margin-top: 1rem;
+  margin-left: 0.25rem;
+}
+
+.edit-library-tree {
+  list-style-type: none;
+  margin-top: 0;
+  margin-bottom: 4px;
+  padding-left: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.edit-library-entry {
+  padding: 0.25rem 0.25rem;
+  cursor: pointer;
+  color: #333;
+  background: none;
+  box-shadow: none;
+  z-index: unset;
+  position: relative;
+  list-style-type: none;
+}
+
+.edit-library-entry--active {
+  user-select: none;
+  color: white;
+  background: #179ed3;
+  border-bottom: none;
+}
+
+.no-libraries {
+  padding: 1rem;
+  text-align: center;
+}
+
+.symbol-view-help {
+  font-size: 0.75rem;
+  color: #00000090;
+  top: 0.5rem;
+  position: relative;
+  width: 100%;
+  text-align: center;
+}

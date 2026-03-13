@@ -1,0 +1,226 @@
+@use 'common';
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  -webkit-border-radius: 0px;
+  border-radius: 0px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  -webkit-border-radius: 0px;
+  border-radius: 0px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.page-container {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  margin: 0 auto;
+  max-width: 60rem;
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+}
+
+.scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: calc(100vh - 125px);
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+}
+
+.table-container {
+  margin: 0 auto;
+  width: 80rem;
+  padding-bottom: 3rem;
+}
+
+.menu-container {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.sign-in-button {
+  background-color: white;
+  border: none;
+}
+
+.circuit-top {
+  background-color: white;
+}
+
+.mid-container {
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-direction: row;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.main-content-area {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.circuit-container {
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+.circuit-container-es {
+  @extend .circuit-container;
+}
+
+.bottom-panel-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  flex-grow: 0;
+  min-height: 100px;
+  max-height: 500px;
+  border-top: 1px solid #d1d1d1;
+  background-color: #fafafa;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-panel-container {
+  position: relative;
+  flex-shrink: 0;
+  flex-grow: 0;
+  width: 288px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease-in-out;
+  overflow: hidden;
+  border-right: 1px solid grey;
+}
+
+.side-panel-collapsed {
+  width: 48px;
+
+  .side-panel,
+  .side-panel-es {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.side-panel {
+  flex-shrink: 1;
+  flex-grow: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.side-panel-es {
+  @extend .side-panel;
+  width: 410px;
+}
+
+.panel {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .toolbar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+}
+
+.circuit-drawing {
+  overflow: auto;
+  background-color: rgba(230, 230, 230, 1);
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.circuit-svg {
+  position: relative;
+  background-color: white;
+}
+
+.offPageArea {
+  fill: rgba(230, 230, 230, 1);
+}
+
+.pageRectangle {
+  @extend .drop-shadow;
+  stroke: black;
+  stroke-width: 0.5px;
+  fill: none;
+}
+
+.colorPickerMenu {
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+
+.fontPickerMenu {
+  width: 10em !important;
+  height: 27px;
+  text-align: left;
+}
+
+.fontSizePickerMenu {
+  width: 5em !important;
+  height: 27px;
+}
+
+.fontDesignDetails {
+  font-size: 13px;
+  font-family: sans-serif;
+  white-space: pre;
+}
+
+.sketch-picker {
+  border: none;
+  box-shadow: none !important;
+}

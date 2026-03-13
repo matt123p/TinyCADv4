@@ -1,0 +1,62 @@
+.selectableHighlight {
+  fill: none;
+  stroke: yellow;
+  stroke-width: 2;
+  stroke-opacity: 0.5;
+}
+
+.selectableLineHighlight {
+  fill: none;
+  stroke: yellow;
+  stroke-opacity: 0.5;
+}
+
+@keyframes march-ants {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.selectedHighlight {
+  fill: none;
+  stroke: grey;
+  stroke-opacity: 0.9;
+  stroke-dasharray: 2, 2;
+  stroke-dashoffset: 8px;
+  animation: march-ants 1s linear infinite;
+}
+
+.selectedLineHighlight {
+  fill: none;
+  stroke: blue;
+  stroke-opacity: 0.5;
+}
+
+/* Text CSS */
+
+@keyframes hideshow {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  51% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.text-caret {
+  stroke: black;
+  stroke-width: 1;
+  animation: hideshow 0.5s linear infinite alternate;
+}
+
+.text-selection {
+  stroke: none;
+  fill: blue;
+  opacity: 0.3;
+}

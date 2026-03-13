@@ -1,0 +1,16 @@
+@use "sass:color";
+
+$menu-bg-color: rgb(230, 230, 230);
+$menu-bg-color-on: color.adjust($menu-bg-color, $lightness: -10%);
+$menu-tx-color: black;
+$menu-bg-color-highlight: yellow;
+$toolbar-bg-color: white;
+$toolbar-tx-color: black;
+$menu-bg-color-hover-on: $toolbar-bg-color;
+$menu-line: darkgrey;
+$toolbar-text: rgb(100, 100, 100);
+$black-ter: rgb(100, 100, 100);
+$grey-light: rgb(100, 100, 100);
+$control-padding-vertical: 10px;
+$font-size: 0.75rem;
+$sheetbar-size: 1.5rem;

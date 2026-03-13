@@ -1,0 +1,92 @@
+name: Publish to Stores
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_snap:
+        description: 'Publish to Snap Store'
+        required: false
+        default: false
+        type: boolean
+      publish_ms_store:
+        description: 'Publish to Microsoft Store'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  publish-snap:
+    if: inputs.publish_snap == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Snap
+        run: npm run dist -- --linux snap
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPX_PUBLISHER: ${{ secrets.APPX_PUBLISHER }}
+
+      - name: Publish to Snap Store
+        uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: 'release/*.snap'
+          release: stable
+
+  publish-ms-store:
+    if: inputs.publish_ms_store == true
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build AppX/MSIX
+        # Force build of AppX/MSIX package
+        run: npm run dist -- --win appx
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPX_PUBLISHER: ${{ secrets.APPX_PUBLISHER }}
+
+      - name: Setup Microsoft Store CLI
+        uses: microsoft/setup-msstore-cli@v1
+
+      - name: Publish to Microsoft Store
+        shell: pwsh
+        run: |
+          $file = Get-ChildItem release/*.appx, release/*.msix | Select-Object -First 1
+          if ($file) {
+            Write-Host "Publishing $($file.FullName)..."
+            msstore publish --path "$($file.FullName)" --verbose
+          } else {
+            Write-Error "No AppX or MSIX file found in release folder."
+          }
+        env:
+          MSSTORE_TENANT_ID: ${{ secrets.MSSTORE_TENANT_ID }}
+          MSSTORE_SELLER_ID: ${{ secrets.MSSTORE_SELLER_ID }}
+          MSSTORE_CLIENT_ID: ${{ secrets.MSSTORE_CLIENT_ID }}
+          MSSTORE_CLIENT_SECRET: ${{ secrets.MSSTORE_CLIENT_SECRET }}

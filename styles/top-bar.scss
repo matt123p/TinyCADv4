@@ -1,0 +1,84 @@
+//
+// Customization of the top-bar menu
+//
+
+.top-bar {
+  flex-wrap: nowrap;
+  color: #fff;
+  font-size: 1.1rem !important;
+  margin-top: 0;
+  font-size: 0.9rem;
+}
+
+.top-bar,
+.top-bar ul {
+  background-color: #333;
+}
+
+.top-bar {
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 0.1rem;
+  flex-direction: row;
+}
+
+.top-bar-left {
+  flex: 1 0 50%;
+  max-width: 100%;
+  -webkit-app-region: drag; // Allows dragging the window in electron 
+}
+
+.top-bar .top-bar-right {
+  flex: 0 1 auto;
+  margin-left: auto;
+}
+
+.menu,
+.menu.horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  position: relative;
+}
+
+.top-bar-title {
+  flex: 0 0 auto;
+  margin: 0.5rem 1rem 0.5rem 0;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.7rem 1rem;
+}
+
+.top-bar a {
+  text-decoration: none;
+  color: white;
+}
+
+.topbar-user-icon {
+  padding-right: 1rem;
+}
+
+#window-controls button {
+  background: none;
+  border: none;
+  color: white;
+  width: 40px;
+  height: 30px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#window-controls button:hover {
+  background: unset;
+  background-color: #555555;
+}

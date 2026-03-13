@@ -1,0 +1,28 @@
+.bom-header {
+  text-align: center;
+  width: 100%;
+}
+
+table.bomTable {
+  border: 2px;
+  border-collapse: collapse;
+}
+table.bomTable td,
+table.bomTable th {
+  padding: 3px 4px;
+}
+table.bomTable tbody td {
+  font-size: 13px;
+}
+table.bomTable tr:nth-child(even) {
+  background: #e0e0e0;
+}
+table.bomTable thead {
+  background: #333333;
+}
+table.bomTable thead th {
+  font-size: 15px;
+  font-weight: bold;
+  color: white;
+  text-align: left;
+}

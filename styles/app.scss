@@ -1,0 +1,97 @@
+﻿@charset 'utf-8';
+@use 'variables' as *;
+@use 'common' as *;
+@use 'liberation-fonts.scss';
+@use 'top-bar.scss';
+@use 'circuit.scss';
+@use 'svg.scss';
+@use 'toolbar.scss';
+@use 'sheetbar.scss';
+@use 'forms.scss';
+@use 'bom.scss';
+@use 'editSymbol.scss';
+@use 'treeview.scss';
+@use '../node_modules/fixed-data-table-2/dist/fixed-data-table.css';
+
+body,
+html {
+  height: 100%;
+  overflow: hidden;
+  color: black;
+  padding: 0;
+  margin: 0;
+  font-family: 'Helvetica Neue', Helvetica, Roboto, Arial, sans-serif;
+}
+
+// Common classes
+
+.lds-hourglass {
+  width: 32px;
+  height: 32px;
+  float: left;
+}
+.lds-hourglass:after {
+  content: ' ';
+  display: block;
+  border-radius: 50%;
+  width: 0;
+  height: 0;
+  margin: 8px;
+  box-sizing: border-box;
+  border: 16px solid black;
+  border-color: black transparent black transparent;
+  animation: lds-hourglass 1.2s infinite;
+}
+@keyframes lds-hourglass {
+  0% {
+    transform: rotate(0);
+    animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  }
+  50% {
+    transform: rotate(900deg);
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+  100% {
+    transform: rotate(1800deg);
+  }
+}
+
+.lds-dual-ring {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+}
+.lds-dual-ring:after {
+  content: ' ';
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin: 1px;
+  border-radius: 50%;
+  border: 2px solid red;
+  border-color: red transparent red transparent;
+  animation: lds-dual-ring 1.2s linear infinite;
+}
+@keyframes lds-dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.saving-indicator {
+  font-size: 14px;
+  margin: 4px;
+  color: red;
+}
+
+.m-label {
+  font-size: 14px !important;
+  padding-bottom: 0;
+  font-family: 'Segoe UI', 'Segoe UI Web (West European)', 'Segoe UI',
+    -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+  font-weight: 600;
+  color: rgb(50, 49, 48);
+}
