@@ -1,9 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import png2icons from 'png2icons';
 
-const rootDir = path.resolve(import.meta.dirname, '..');
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(scriptDir, '..');
 const sourceSvgPath = path.join(rootDir, 'images', 'TC Icons.svg');
 const outputDir = path.join(rootDir, 'assets', 'appx');
 const assetsDir = path.join(rootDir, 'assets');

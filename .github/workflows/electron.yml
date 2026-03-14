@@ -49,4 +49,6 @@ jobs:
             release/*.dmg
             release/*.AppImage
             release/*.zip
+            release/*.deb
+            release/*.snap
           if-no-files-found: warn

@@ -107,6 +107,11 @@ export function performPendingAction(pendingAction: UnsavedAction) {
       case 'file-open-recent':
         userManager.fileOpen(dispatch, pendingAction.file as CurrentFile);
         break;
+      case 'app-close':
+        if (process.env.TARGET_SYSTEM === 'electron' && window.electronAPI) {
+          window.electronAPI.sendAppClosingResponse(true);
+        }
+        break;
     }
   };
 }

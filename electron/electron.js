@@ -290,26 +290,8 @@ function createWindow() {
     mainWindow.webContents.send('app-closing');
   });
 
-  const appClosingResponseHandler = (event, saveNeeded) => {
-    if (saveNeeded) {
-      const choice = dialog.showMessageBoxSync(mainWindow, {
-        type: 'question',
-        buttons: ['Save', "Don't Save", 'Cancel'],
-        defaultId: 0,
-        cancelId: 2,
-        title: 'Unsaved Changes',
-        message: 'You have unsaved changes. Do you want to save them before closing?'
-      });
-
-      if (choice === 0) { // Save
-        mainWindow.webContents.send('menu-command', 'file-save');
-        // Stay open to let save happen.
-      } else if (choice === 1) { // Don't Save
-        isQuitting = true;
-        mainWindow.close();
-      }
-      // cancel: do nothing
-    } else {
+  const appClosingResponseHandler = (event, shouldClose) => {
+    if (shouldClose) {
       isQuitting = true;
       mainWindow.close();
     }

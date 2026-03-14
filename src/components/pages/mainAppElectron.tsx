@@ -7,6 +7,7 @@ import { tclib, tclibLibraryEntry } from '../../model/tclib';
 import { handleMenuCommand, handleMenuCommandWithData, initialise } from '../../io/files';
 import { BrowserSheetData } from '../../model/dsnView';
 import { CurrentFile } from '../../state/stores/altStoreReducer';
+import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
 
 export interface MainAppElectronProps {
   selected_sheet: number;
@@ -60,7 +61,16 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
   useEffect(() => {
     if (window.electronAPI?.onAppClosing) {
       const unsubscribe = window.electronAPI.onAppClosing(() => {
-        window.electronAPI.sendAppClosingResponse(props.saveNeeded);
+        if (props.saveNeeded) {
+          props.dispatch(
+            actionSelectDialog('unsaved_changes', {
+              pendingAction: { type: 'app-close' },
+            }),
+          );
+          return;
+        }
+
+        window.electronAPI.sendAppClosingResponse(true);
       });
       return unsubscribe;
     } else {
