@@ -50,6 +50,7 @@
     },
     "icon": "assets/TinyCAD.png",
     "win": {
+      "artifactName": "${productName} Windows Setup ${version}.${ext}",
       "icon": "assets/TinyCAD.ico",
       "target": [
         {
@@ -70,6 +71,7 @@
       "forceCodeSigning": false
     },
     "linux": {
+      "artifactName": "${name}_linux_${version}_${arch}.${ext}",
       "icon": "assets/TinyCAD.png",
       "fileAssociations": [
         {
@@ -97,6 +99,7 @@
         {
           "target": "deb",
           "arch": [
+            "x64",
             "armv7l",
             "arm64"
           ]
@@ -104,6 +107,7 @@
       ]
     },
     "mac": {
+      "artifactName": "${productName}-macos-${version}-${arch}.${ext}",
       "icon": "assets/TinyCAD.icns",
       "target": [
         {
