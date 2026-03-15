@@ -15,9 +15,7 @@ import {
   actionPasteEvent,
 } from './state/dispatcher/AppDispatcher';
 import { imageFile } from './io/files';
-import { initializeNetlistSync } from './io/netlists/netlistSync';
 import i18n from './i18n';
-import { buildNativeMenuTranslations } from './i18n/nativeMenu';
 
 export const store = createStore(
   combineReducers({ docStore: DocStoreWithHistory, altStore: AltStoreReducer }),
@@ -25,7 +23,22 @@ export const store = createStore(
   applyMiddleware(ReduxThunk),
 );
 
-initializeNetlistSync(store as any);
+const scheduleAfterFirstPaint = (task: () => void | Promise<void>) => {
+  const run = () => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(() => {
+        void task();
+      });
+      return;
+    }
+
+    window.setTimeout(() => {
+      void task();
+    }, 0);
+  };
+
+  window.requestAnimationFrame(run);
+};
 
 const initializeGoogleAnalytics = () => {
   const analyticsId = process.env.GOOGLE_ANALYTICS_ID;
@@ -60,6 +73,8 @@ const initializeNativeMenuTranslations = () => {
     if (!window.electronAPI?.setMenuTranslations || !i18n.isInitialized) {
       return;
     }
+
+    const { buildNativeMenuTranslations } = await import('./i18n/nativeMenu');
 
     const requestId = ++syncRequestId;
     const language = i18n.resolvedLanguage || i18n.language;
@@ -142,3 +157,12 @@ root.render(
     </Provider>
   </FluentProvider>,
 );
+
+scheduleAfterFirstPaint(async () => {
+  const { initializeNetlistSync } = await import('./io/netlists/netlistSync');
+  initializeNetlistSync(store as any);
+});
+
+scheduleAfterFirstPaint(() => {
+  initializeNativeMenuTranslations();
+});

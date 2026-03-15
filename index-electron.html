@@ -6,10 +6,64 @@
   <link rel="icon" type="image/x-icon" href="assets/TinyCAD.ico" />
   <link rel="stylesheet" href="./styles/app.scss" />
   <title>TinyCAD</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: #f3f2f1;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    #app {
+      width: 100%;
+      height: 100%;
+    }
+
+    .startup-shell {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 9999;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    .startup-bar {
+      overflow: hidden;
+      width: 100%;
+      height: 3px;
+      background: rgba(15, 108, 189, 0.12);
+    }
+
+    .startup-bar::after {
+      content: "";
+      display: block;
+      width: 18%;
+      height: 100%;
+      background: linear-gradient(90deg, #0f6cbd 0%, #479ef5 100%);
+      animation: startup-progress 1.05s ease-in-out infinite;
+    }
+
+    @keyframes startup-progress {
+      0% {
+        transform: translateX(-120%);
+      }
+
+      100% {
+        transform: translateX(320%);
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <div id="app" style="width: 100%; height: 100%"></div>
+  <div id="app">
+    <div class="startup-shell">
+      <div class="startup-bar"></div>
+    </div>
+  </div>
   <!-- Entry point -->
   <script src="src/startup.tsx" type="module"></script>
 </body>

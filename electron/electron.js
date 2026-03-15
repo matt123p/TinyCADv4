@@ -17,6 +17,21 @@ let mainWindow;
 let fileToOpen = null;
 let isLibraryMode = false;
 let menuTranslations = {};
+let refreshMenu = () => {};
+let ipcHandlersRegistered = false;
+
+const spawnNewWindow = (filePath) => {
+  const args = [];
+  if (isDev) {
+    args.push('.');
+  }
+  args.push(filePath);
+  const subprocess = spawn(process.execPath, args, {
+    detached: true,
+    stdio: 'ignore'
+  });
+  subprocess.unref();
+};
 
 function forceFileExtension(fileName, extension) {
   const parsed = path.parse(fileName || 'drawing');
@@ -187,9 +202,15 @@ function createWindow() {
     Menu.setApplicationMenu(menu);
   }
 
+  refreshMenu = updateMenu;
   updateMenu();
-  const unsubscribe = store.onDidChange('recentFiles', updateMenu);
-  mainWindow.on('closed', () => { unsubscribe(); });
+  const unsubscribe = store.onDidChange('recentFiles', () => refreshMenu());
+  mainWindow.on('closed', () => {
+    unsubscribe();
+    if (mainWindow && mainWindow.isDestroyed()) {
+      mainWindow = null;
+    }
+  });
 
   if (windowState.isMaximized) {
     mainWindow.maximize(); // Restore maximized state
@@ -307,274 +328,314 @@ function createWindow() {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 
-  ipcMain.on('window-minimize', (event) => {
-    mainWindow.minimize();
-  });
+  if (!ipcHandlersRegistered) {
+    ipcHandlersRegistered = true;
 
-  ipcMain.on('window-maximize', (event) => {
-    if (mainWindow.isMaximized()) {
-      mainWindow.unmaximize();
-    } else {
-      mainWindow.maximize();
-    }
-  });
-
-  ipcMain.on('window-close', (event) => {
-    mainWindow.close();
-  });
-
-  ipcMain.on('window-set-title', (event, title) => {
-    mainWindow.setTitle(title);
-  });
-
-  ipcMain.on('open-external', (event, url) => {
-    if (typeof url === 'string' && url.trim() !== '') {
-      shell.openExternal(url);
-    }
-  });
-
-  ipcMain.on('open-containing-folder', (event, filePath) => {
-    if (typeof filePath === 'string' && filePath.trim() !== '') {
-      shell.showItemInFolder(filePath);
-    }
-  });
-
-  const spawnNewWindow = (filePath) => {
-    const args = [];
-    if (isDev) {
-      args.push('.');
-    }
-    args.push(filePath);
-    const subprocess = spawn(process.execPath, args, {
-      detached: true,
-      stdio: 'ignore'
-    });
-    subprocess.unref();
-  };
-
-  ipcMain.on('load-file', (event, file) => {
-    loadFile(mainWindow, file, isLibraryMode, spawnNewWindow);
-  });
-
-  ipcMain.on('save-file', (event, data) => {
-    saveFile(mainWindow, data);
-  });
-
-  ipcMain.on('load-library', (event, filePath) => {
-    // Use event.sender to send response to the requesting window (supports popup windows)
-    if (event.sender !== mainWindow.webContents) {
-      loadLibraryToWebContents(event.sender, mainWindow, filePath);
-    } else {
-      loadLibrary(mainWindow, filePath);
-    }
-  });
-
-  ipcMain.on('save-library', (event, filePath) => {
-    saveLibrary(mainWindow, filePath);
-  });
-
-  ipcMain.on('refresh-libraries', (event) => {
-    sendLibraries(mainWindow);
-  });
-
-  ipcMain.on('open-new-window', (event, arg) => {
-    const args = [];
-
-    // In dev mode, we need to point to the main script
-    if (isDev) {
-      args.push('.');
-    }
-
-    // Use simple switch for new libraries, or pass the file path directly
-    if (arg === 'new') {
-      args.push('--new-library');
-    } else if (arg) {
-      args.push(arg);
-    }
-
-    const subprocess = spawn(process.execPath, args, {
-      detached: true,
-      stdio: 'ignore'
+    ipcMain.on('window-minimize', () => {
+      mainWindow?.minimize();
     });
 
-    subprocess.unref();
-  });
+    ipcMain.on('window-maximize', () => {
+      if (!mainWindow) {
+        return;
+      }
 
-  ipcMain.on('remove-library', (event, filePath) => {
-    removeLibrary(mainWindow, filePath);
-  });
-
-  ipcMain.on('set-menu-mode', (event, mode) => {
-    // Mode is true for library mode, false for design mode
-    if (isLibraryMode !== mode) {
-      isLibraryMode = mode;
-      updateMenu();
-    }
-  });
-
-  ipcMain.on('set-menu-translations', (event, translations) => {
-    if (event.sender !== mainWindow.webContents) {
-      return;
-    }
-
-    if (!translations || typeof translations !== 'object') {
-      return;
-    }
-
-    menuTranslations = translations;
-    updateMenu();
-  });
-
-  ipcMain.handle('import-kicad-file', async () => {
-    const result = await dialog.showOpenDialog(mainWindow, {
-      filters: [{ name: 'KiCad Symbols', extensions: ['kicad_sym'] }],
-      properties: ['openFile'],
+      if (mainWindow.isMaximized()) {
+        mainWindow.unmaximize();
+      } else {
+        mainWindow.maximize();
+      }
     });
 
-    if (result.canceled || result.filePaths.length === 0) {
-      return null;
-    }
+    ipcMain.on('window-close', () => {
+      mainWindow?.close();
+    });
 
-    const selectedPath = result.filePaths[0];
-    const content = await fs.promises.readFile(selectedPath, 'utf8');
-    return {
-      fileName: path.basename(selectedPath),
-      content,
-    };
-  });
+    ipcMain.on('window-set-title', (event, title) => {
+      mainWindow?.setTitle(title);
+    });
 
-  ipcMain.on('show-context-menu', (event, menuItems) => {
-    const toNativeMenuTemplate = (items) => {
-      return items.map((item) => {
-        if (item.itemType === 1) {
-          return { type: 'separator' };
-        }
+    ipcMain.on('open-external', (event, url) => {
+      if (typeof url === 'string' && url.trim() !== '') {
+        shell.openExternal(url);
+      }
+    });
 
-        if (item.subMenuProps?.items?.length) {
+    ipcMain.on('open-containing-folder', (event, filePath) => {
+      if (typeof filePath === 'string' && filePath.trim() !== '') {
+        shell.showItemInFolder(filePath);
+      }
+    });
+
+    ipcMain.on('load-file', (event, file) => {
+      if (!mainWindow) {
+        return;
+      }
+
+      loadFile(mainWindow, file, isLibraryMode, spawnNewWindow);
+    });
+
+    ipcMain.on('save-file', (event, data) => {
+      if (!mainWindow) {
+        return;
+      }
+
+      saveFile(mainWindow, data);
+    });
+
+    ipcMain.on('load-library', (event, filePath) => {
+      if (!mainWindow) {
+        return;
+      }
+
+      // Use event.sender to send response to the requesting window (supports popup windows)
+      if (event.sender !== mainWindow.webContents) {
+        loadLibraryToWebContents(event.sender, mainWindow, filePath);
+      } else {
+        loadLibrary(mainWindow, filePath);
+      }
+    });
+
+    ipcMain.on('save-library', (event, filePath) => {
+      if (!mainWindow) {
+        return;
+      }
+
+      saveLibrary(mainWindow, filePath);
+    });
+
+    ipcMain.on('refresh-libraries', () => {
+      if (!mainWindow) {
+        return;
+      }
+
+      sendLibraries(mainWindow);
+    });
+
+    ipcMain.on('open-new-window', (event, arg) => {
+      const args = [];
+
+      // In dev mode, we need to point to the main script
+      if (isDev) {
+        args.push('.');
+      }
+
+      // Use simple switch for new libraries, or pass the file path directly
+      if (arg === 'new') {
+        args.push('--new-library');
+      } else if (arg) {
+        args.push(arg);
+      }
+
+      const subprocess = spawn(process.execPath, args, {
+        detached: true,
+        stdio: 'ignore'
+      });
+
+      subprocess.unref();
+    });
+
+    ipcMain.on('remove-library', (event, filePath) => {
+      if (!mainWindow) {
+        return;
+      }
+
+      removeLibrary(mainWindow, filePath);
+    });
+
+    ipcMain.on('set-menu-mode', (event, mode) => {
+      if (isLibraryMode !== mode) {
+        isLibraryMode = mode;
+        refreshMenu();
+      }
+    });
+
+    ipcMain.on('set-menu-translations', (event, translations) => {
+      if (!mainWindow || event.sender !== mainWindow.webContents) {
+        return;
+      }
+
+      if (!translations || typeof translations !== 'object') {
+        return;
+      }
+
+      menuTranslations = translations;
+      refreshMenu();
+    });
+
+    ipcMain.handle('import-kicad-file', async () => {
+      if (!mainWindow) {
+        return null;
+      }
+
+      const result = await dialog.showOpenDialog(mainWindow, {
+        filters: [{ name: 'KiCad Symbols', extensions: ['kicad_sym'] }],
+        properties: ['openFile'],
+      });
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return null;
+      }
+
+      const selectedPath = result.filePaths[0];
+      const content = await fs.promises.readFile(selectedPath, 'utf8');
+      return {
+        fileName: path.basename(selectedPath),
+        content,
+      };
+    });
+
+    ipcMain.on('show-context-menu', (event, menuItems) => {
+      if (!mainWindow) {
+        return;
+      }
+
+      const toNativeMenuTemplate = (items) => {
+        return items.map((item) => {
+          if (item.itemType === 1) {
+            return { type: 'separator' };
+          }
+
+          if (item.subMenuProps?.items?.length) {
+            return {
+              label: item.text,
+              enabled: !item.disabled,
+              submenu: toNativeMenuTemplate(item.subMenuProps.items),
+            };
+          }
+
           return {
             label: item.text,
             enabled: !item.disabled,
-            submenu: toNativeMenuTemplate(item.subMenuProps.items),
+            click: () => {
+              mainWindow.webContents.send('context-menu-command', item.key);
+            }
           };
-        }
-
-        return {
-          label: item.text,
-          enabled: !item.disabled,
-          click: () => {
-            mainWindow.webContents.send('context-menu-command', item.key);
-          }
-        };
-      });
-    };
-
-    const template = toNativeMenuTemplate(menuItems);
-    const menu = Menu.buildFromTemplate(template);
-    menu.popup({ window: mainWindow });
-  });
-
-  // Get list of available printers
-  ipcMain.handle('get-printers', async () => {
-    const printers = await mainWindow.webContents.getPrintersAsync();
-    return printers.map(p => ({
-      name: p.name,
-      displayName: p.displayName || p.name,
-      isDefault: p.isDefault,
-    }));
-  });
-
-  // Print HTML content to a specific printer with preview handled by our custom dialog
-  ipcMain.on('print-document', async (event, options) => {
-    // options: { html, printerName, copies, landscape }
-
-    // Create a hidden window to render and print the content
-    const printWindow = new BrowserWindow({
-      show: false,
-      title: 'TinyCAD',
-      icon: windowIcon,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-      },
-    });
-
-    try {
-      // Load the HTML content
-      await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(options.html)}`);
-
-      // Small delay to ensure content is fully rendered
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      const printOptions = {
-        silent: true, // Skip the print dialog since we have our own preview
-        deviceName: options.printerName,
-        copies: options.copies || 1,
-        landscape: options.landscape || false,
-        printBackground: true,
+        });
       };
 
-      printWindow.webContents.print(printOptions, (success, failureReason) => {
+      const template = toNativeMenuTemplate(menuItems);
+      const menu = Menu.buildFromTemplate(template);
+      menu.popup({ window: mainWindow });
+    });
+
+    ipcMain.handle('get-printers', async () => {
+      if (!mainWindow) {
+        return [];
+      }
+
+      const printers = await mainWindow.webContents.getPrintersAsync();
+      return printers.map(p => ({
+        name: p.name,
+        displayName: p.displayName || p.name,
+        isDefault: p.isDefault,
+      }));
+    });
+
+    ipcMain.on('print-document', async (event, options) => {
+      if (!mainWindow) {
+        return;
+      }
+
+      const printWindow = new BrowserWindow({
+        show: false,
+        title: 'TinyCAD',
+        icon: getWindowIconPath(),
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+        },
+      });
+
+      try {
+        await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(options.html)}`);
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        const printOptions = {
+          silent: true,
+          deviceName: options.printerName,
+          copies: options.copies || 1,
+          landscape: options.landscape || false,
+          printBackground: true,
+        };
+
+        printWindow.webContents.print(printOptions, (success, failureReason) => {
+          printWindow.close();
+          mainWindow?.webContents.send('print-complete', {
+            success,
+            failureReason: failureReason || undefined
+          });
+        });
+      } catch (err) {
         printWindow.close();
-        mainWindow.webContents.send('print-complete', {
-          success,
-          failureReason: failureReason || undefined
+        mainWindow?.webContents.send('print-complete', {
+          success: false,
+          failureReason: err.message
         });
-      });
-    } catch (err) {
-      printWindow.close();
-      mainWindow.webContents.send('print-complete', {
-        success: false,
-        failureReason: err.message
-      });
-    }
-  });
-
-  // Handle saving PDF file with native save dialog
-  ipcMain.on('save-pdf', (event, data) => {
-    // data.content is base64-encoded PDF, data.name is suggested filename
-    const pdfBuffer = Buffer.from(data.content, 'base64');
-    const defaultPath = forceFileExtension(data.name || 'drawing.pdf', '.pdf');
-
-    dialog.showSaveDialog(mainWindow, {
-      filters: [{ name: 'PDF files', extensions: ['pdf'] }],
-      defaultPath,
-    }).then(result => {
-      if (!result.canceled && result.filePath) {
-        const outputPath = forceFileExtension(result.filePath, '.pdf');
-        fs.writeFile(outputPath, pdfBuffer, err => {
-          if (err) {
-            mainWindow.webContents.send('pdf-saved', { success: false, error: err.message });
-          } else {
-            mainWindow.webContents.send('pdf-saved', { success: true, path: outputPath });
-          }
-        });
-      } else {
-        mainWindow.webContents.send('pdf-saved', { success: false, cancelled: true });
       }
     });
-  });
 
-  ipcMain.on('save-svg', (event, data) => {
-    const defaultPath = forceFileExtension(data.name || 'drawing.svg', '.svg');
-
-    dialog.showSaveDialog(mainWindow, {
-      filters: [{ name: 'SVG files', extensions: ['svg'] }],
-      defaultPath,
-    }).then(result => {
-      if (!result.canceled && result.filePath) {
-        const outputPath = forceFileExtension(result.filePath, '.svg');
-        fs.writeFile(outputPath, data.content, 'utf8', err => {
-          if (err) {
-            mainWindow.webContents.send('svg-saved', { success: false, error: err.message });
-          } else {
-            mainWindow.webContents.send('svg-saved', { success: true, path: outputPath });
-          }
-        });
-      } else {
-        mainWindow.webContents.send('svg-saved', { success: false, cancelled: true });
+    ipcMain.on('save-pdf', (event, data) => {
+      if (!mainWindow) {
+        return;
       }
+
+      const pdfBuffer = Buffer.from(data.content, 'base64');
+      const defaultPath = forceFileExtension(data.name || 'drawing.pdf', '.pdf');
+
+      dialog.showSaveDialog(mainWindow, {
+        filters: [{ name: 'PDF files', extensions: ['pdf'] }],
+        defaultPath,
+      }).then(result => {
+        if (!mainWindow) {
+          return;
+        }
+
+        if (!result.canceled && result.filePath) {
+          const outputPath = forceFileExtension(result.filePath, '.pdf');
+          fs.writeFile(outputPath, pdfBuffer, err => {
+            if (err) {
+              mainWindow?.webContents.send('pdf-saved', { success: false, error: err.message });
+            } else {
+              mainWindow?.webContents.send('pdf-saved', { success: true, path: outputPath });
+            }
+          });
+        } else {
+          mainWindow.webContents.send('pdf-saved', { success: false, cancelled: true });
+        }
+      });
     });
-  });
+
+    ipcMain.on('save-svg', (event, data) => {
+      if (!mainWindow) {
+        return;
+      }
+
+      const defaultPath = forceFileExtension(data.name || 'drawing.svg', '.svg');
+
+      dialog.showSaveDialog(mainWindow, {
+        filters: [{ name: 'SVG files', extensions: ['svg'] }],
+        defaultPath,
+      }).then(result => {
+        if (!mainWindow) {
+          return;
+        }
+
+        if (!result.canceled && result.filePath) {
+          const outputPath = forceFileExtension(result.filePath, '.svg');
+          fs.writeFile(outputPath, data.content, 'utf8', err => {
+            if (err) {
+              mainWindow?.webContents.send('svg-saved', { success: false, error: err.message });
+            } else {
+              mainWindow?.webContents.send('svg-saved', { success: true, path: outputPath });
+            }
+          });
+        } else {
+          mainWindow.webContents.send('svg-saved', { success: false, cancelled: true });
+        }
+      });
+    });
+  }
 
 }
 
