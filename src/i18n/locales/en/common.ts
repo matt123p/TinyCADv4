@@ -93,6 +93,7 @@ const common = {
     aboutTinyCAD: 'About TinyCAD',
     help: 'Help',
     manual: 'Online Manual',
+    aboutTranslations: 'About Translations...',
     language: 'Language',
     languageMenu: 'Language menu',
     powerBar: 'Bar',

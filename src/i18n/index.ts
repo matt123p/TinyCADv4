@@ -14,6 +14,7 @@ type LocaleModule = {
 
 const localeLoaders: Record<string, () => Promise<LocaleModule>> = {
   en: () => import('./locales/en/common'),
+  nl: () => import('./locales/nl/common'),
   fr: () => import('./locales/fr/common'),
   es: () => import('./locales/es/common'),
   de: () => import('./locales/de/common'),

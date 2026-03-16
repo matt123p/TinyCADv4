@@ -15,7 +15,7 @@ const common = {
     newDesign: '新規設計', saveDesign: '設計を保存', pin: 'ピン', wire: '配線', noConnect: '未接続', power: '電源', label: 'ラベル', text: 'テキスト', shapes: '図形', bus: 'バス', ruler: '定規',
     rotateCounterClockwise: '反時計回りに回転', rotateLeft: '回転（左）', rotateClockwise: '時計回りに回転', rotateRight: '回転（右）', flipHorizontal: '左右反転', flipVertical: '上下反転',
     zoomIn: '拡大 (+)', zoomOut: '縮小 (-)', toggleRulers: '定規の表示切替', settings: '設定', settingsDialog: '設定...', designDetails: '設計詳細', pageSize: 'ページサイズ', colours: '色',
-    checkDesignRules: '設計ルールをチェック', discord: 'TinyCAD Discord', aboutTinyCAD: 'TinyCAD について', help: 'ヘルプ', manual: 'オンラインマニュアル', language: '言語', languageMenu: '言語メニュー', powerBar: 'バー', powerCircle: '円', powerWave: '波形',
+    checkDesignRules: '設計ルールをチェック', discord: 'TinyCAD Discord', aboutTinyCAD: 'TinyCAD について', help: 'ヘルプ', manual: 'オンラインマニュアル', aboutTranslations: '翻訳について...', language: '言語', languageMenu: '言語メニュー', powerBar: 'バー', powerCircle: '円', powerWave: '波形',
     powerArrow: '矢印', powerEarth: 'アース', labelStandard: 'ラベル（標準）', labelInput: 'ラベル（入力）', labelOutput: 'ラベル（出力）', labelIO: 'ラベル（入出力）', rectangle: '長方形', ellipse: '楕円', line: '線',
     busConnection: '接続', horzRuler: '水平定規', vertRuler: '垂直定規', optionsSuffix: 'オプション',
     contextMenu: { cut: '切り取り', copy: 'コピー', paste: '貼り付け', delete: '削除', undo: '元に戻す', redo: 'やり直し', moveToFront: '最前面へ移動', moveToBack: '最背面へ移動', zoomIn: '拡大', zoomOut: '縮小', zoom100: 'ズーム 100%' },

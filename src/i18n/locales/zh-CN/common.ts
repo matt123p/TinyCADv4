@@ -14,7 +14,7 @@ const common = {
     generateSpiceNetlist: '生成 Spice 网表', createVhdlFile: '创建 VHDL 文件', newCustomLibrary: '新建自定义库', newDesign: '新建设计', saveDesign: '保存设计', pin: '引脚', wire: '导线',
     noConnect: '未连接', power: '电源', label: '标签', text: '文本', shapes: '图形', bus: '总线', ruler: '标尺', rotateCounterClockwise: '逆时针旋转', rotateLeft: '旋转（左）',
     rotateClockwise: '顺时针旋转', rotateRight: '旋转（右）', flipHorizontal: '水平翻转', flipVertical: '垂直翻转', zoomIn: '放大 (+)', zoomOut: '缩小 (-)', toggleRulers: '切换标尺',
-    settings: '设置', settingsDialog: '设置...', designDetails: '设计详情', pageSize: '页面尺寸', colours: '颜色', checkDesignRules: '检查设计规则', discord: 'TinyCAD Discord', aboutTinyCAD: '关于 TinyCAD', help: '帮助', manual: '在线手册', language: '语言',
+    settings: '设置', settingsDialog: '设置...', designDetails: '设计详情', pageSize: '页面尺寸', colours: '颜色', checkDesignRules: '检查设计规则', discord: 'TinyCAD Discord', aboutTinyCAD: '关于 TinyCAD', help: '帮助', manual: '在线手册', aboutTranslations: '关于翻译...', language: '语言',
     languageMenu: '语言菜单', powerBar: '横线', powerCircle: '圆形', powerWave: '波形', powerArrow: '箭头', powerEarth: '接地', labelStandard: '标签（标准）', labelInput: '标签（输入）',
     labelOutput: '标签（输出）', labelIO: '标签（输入/输出）', rectangle: '矩形', ellipse: '椭圆', line: '直线', busConnection: '连接', horzRuler: '水平标尺', vertRuler: '垂直标尺', optionsSuffix: '选项',
     contextMenu: { cut: '剪切', copy: '复制', paste: '粘贴', delete: '删除', undo: '撤销', redo: '重做', moveToFront: '移到最前', moveToBack: '移到最后', zoomIn: '放大', zoomOut: '缩小', zoom100: '缩放 100%' },

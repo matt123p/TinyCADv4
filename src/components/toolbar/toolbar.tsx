@@ -704,6 +704,10 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           </MenuTrigger>
           <MenuPopover>
             <MenuList>
+              <MenuItem onClick={() => openExternalUrl('https://docs.tinycad.net/v4/Language-translation/')}>
+                {t('toolbar.aboutTranslations')}
+              </MenuItem>
+              <MenuDivider />
               {SUPPORTED_LANGUAGES.map((language) => (
                 <MenuItem
                   key={language.code}

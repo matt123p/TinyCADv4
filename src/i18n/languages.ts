@@ -7,6 +7,7 @@ export interface LanguageOption {
 
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { code: 'en', label: 'English' },
+  { code: 'nl', label: 'Nederlands' },
   { code: 'fr', label: 'Français' },
   { code: 'es', label: 'Español' },
   { code: 'de', label: 'Deutsch' },
@@ -30,6 +31,10 @@ export const normalizeLanguageCode = (value: string | null | undefined): string 
 
   if (lower.startsWith('en')) {
     return 'en';
+  }
+
+  if (lower.startsWith('nl')) {
+    return 'nl';
   }
 
   if (lower.startsWith('fr')) {
