@@ -17,8 +17,8 @@
   "scripts": {
     "start:ga": "cross-env TARGET_SYSTEM=google parcel index-ga.html",
     "start:fs": "cross-env TARGET_SYSTEM=filesystem parcel index-fs.html",
-    "build:ga": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=google parcel build index-ga.html --no-cache --public-url /ga/ && rimraf --glob 'dist/*.map'",
-    "build:fs": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=filesystem parcel build index-fs.html --no-cache --public-url /fs/ && rimraf --glob 'dist/*.map'",
+    "build:ga": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=google parcel build index-ga.html --no-cache --public-url ./ && node scripts/finalize-pages-build.mjs index-ga",
+    "build:fs": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=filesystem parcel build index-fs.html --no-cache --public-url ./ && node scripts/finalize-pages-build.mjs index-fs",
     "check:i18n": "node scripts/check-translations.mjs",
     "dev": "concurrently -k \"npm run start:electron\" \"npm:electron\"",
     "dist": "rimraf dist .parcel-cache release && node scripts/dist.mjs",
