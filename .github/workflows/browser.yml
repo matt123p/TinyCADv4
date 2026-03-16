@@ -5,7 +5,7 @@ name: Browser Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, production]
   pull_request:
     branches: [main]
 
@@ -26,11 +26,21 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - run: npm ci
+      - run: mkdir -p browser-artifact
       - run: npm run build:ga
         env:
           GOOGLE_CLIENT_ID_DEV: ${{ secrets.GOOGLE_CLIENT_ID_DEV }}
           GOOGLE_CLIENT_ID_PROD: ${{ secrets.GOOGLE_CLIENT_ID_PROD }}
           GOOGLE_ANALYTICS_ID: ${{ secrets.GOOGLE_ANALYTICS_ID }}
+      - run: mv dist browser-artifact/ga
       - run: npm run build:fs
         env:
           GOOGLE_ANALYTICS_ID: ${{ secrets.GOOGLE_ANALYTICS_ID }}
+      - run: mv dist browser-artifact/fs
+      - name: Upload Browser Artifact
+        if: github.ref == 'refs/heads/production'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tinycad-browser
+          path: browser-artifact
+          if-no-files-found: error
