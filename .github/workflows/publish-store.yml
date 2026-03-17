@@ -39,12 +39,25 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPX_PUBLISHER: ${{ secrets.APPX_PUBLISHER }}
 
+      - name: Locate Snap Artifact
+        id: snap_artifact
+        shell: bash
+        run: |
+          snap_file=$(find release -maxdepth 1 -type f -name '*.snap' | head -n 1)
+          if [ -z "$snap_file" ]; then
+            echo "No .snap file found in release/"
+            exit 1
+          fi
+
+          echo "Using snap artifact: $snap_file"
+          echo "path=$snap_file" >> "$GITHUB_OUTPUT"
+
       - name: Publish to Snap Store
         uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
         with:
-          snap: 'release/*.snap'
+          snap: ${{ steps.snap_artifact.outputs.path }}
           release: stable
 
   publish-ms-store:
