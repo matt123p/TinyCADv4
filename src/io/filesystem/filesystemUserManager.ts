@@ -123,6 +123,7 @@ export class FileSystemUserManager implements UserManager {
                           {
                             id: lib.fileId,
                             name: lib.name,
+                            folderId: null,
                           },
                         ],
                       },
@@ -275,6 +276,7 @@ export class FileSystemUserManager implements UserManager {
     return Promise.resolve({
       fileId: null,
       libraries: [],
+      libraryFolders: [],
     });
   }
 
@@ -284,7 +286,7 @@ export class FileSystemUserManager implements UserManager {
     return this.loadConfig().then((config) => {
       const updatedConfig = callback(config);
       if (updatedConfig != config) {
-        return this.saveConfig(callback(updatedConfig));
+        return this.saveConfig(updatedConfig);
       } else {
         return Promise.resolve();
       }

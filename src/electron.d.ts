@@ -29,7 +29,7 @@ declare global {
             }) => void;
 
             // Libraries
-            loadLibrary: (file?: { name: string, id: string, silent?: boolean }) => void;
+            loadLibrary: (file?: { name?: string, id?: string, silent?: boolean, folderId?: string | null }) => void;
             saveLibrary: (data: {
                 name: string;
                 id: FileIdType | string;
@@ -37,6 +37,10 @@ declare global {
                 content: ArrayBuffer
             }) => void;
             removeLibrary: (file: string) => void;
+            saveLibraryConfig: (config: {
+                libraries: { name: string, id: string, folderId?: string | null }[];
+                libraryFolders: { id: string, name: string }[];
+            }) => void;
             setMenuMode: (mode: boolean) => void;
             setMenuTranslations: (translations: Record<string, string>) => void;
 
@@ -47,7 +51,10 @@ declare global {
             libraryLoaded: (callback: (data: { content: ArrayBuffer, name: string, id: string, lastModified?: Date | string }) => void) => () => void;
             libraryLoadFailed: (callback: (data: { id: string, name: string, error: ElectronLibraryLoadError }) => void) => () => void;
             librarySaved: (callback: (data: { success: boolean, name: string, id: string }) => void) => () => void;
-            libraries: (callback: (data: { name: string, id: string, lastModified?: Date | string, bad?: boolean, error?: ElectronLibraryLoadError }[]) => void) => () => void;
+            libraries: (callback: (data: {
+                libraries: { name: string, id: string, folderId?: string | null, lastModified?: Date | string, bad?: boolean, error?: ElectronLibraryLoadError }[];
+                libraryFolders: { id: string, name: string }[];
+            }) => void) => () => void;
             refreshLibraries: () => void;
             onAppClosing: (callback: () => void) => () => void;
             sendAppClosingResponse: (saveNeeded: boolean) => void;

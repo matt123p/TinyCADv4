@@ -12,6 +12,7 @@ import {
   actionMenuSetRecentFileList,
   actionSetDocument,
   actionSetFileData,
+  actionUpdateConfig,
   actionSetLibraryData,
   actionSetLibraryList,
 } from '../../state/dispatcher/AppDispatcher';
@@ -19,10 +20,12 @@ import { CurrentFile, UserConfig } from '../../state/stores/altStoreReducer';
 import { XMLBuilder } from '../../util/xmlbuilder';
 import { UserManager } from '../files';
 import { ioXML } from '../ioXml';
+import { normalizeUserConfig, sortLibrariesByConfig } from '../libraryConfig';
 
 
 export class ElectronUserManager implements UserManager {
   private unsubs: (() => void)[] = [];
+  private currentConfig: UserConfig = normalizeUserConfig(null);
 
   private createFailedLibrary(
     fileId: string,
@@ -117,7 +120,19 @@ export class ElectronUserManager implements UserManager {
 
     this.unsubs.push(
       window.electronAPI.libraries((data) => {
-        const libraries: tclib[] = data.map((l) => ({
+        const config = normalizeUserConfig({
+          fileId: this.currentConfig.fileId,
+          libraries: data.libraries.map((library) => ({
+            id: library.id,
+            name: library.name,
+            folderId: library.folderId,
+          })),
+          libraryFolders: data.libraryFolders,
+        });
+        this.currentConfig = config;
+        dispatch(actionUpdateConfig(config));
+
+        const libraries: tclib[] = data.libraries.map((l) => ({
           fileId: l.id,
           name: l.name,
           modified: this.toModifiedString(l.lastModified),
@@ -128,7 +143,7 @@ export class ElectronUserManager implements UserManager {
           names: [] as tclibLibraryEntry[],
           symbols: [] as tclibSymbol[],
         }));
-        dispatch(actionSetLibraryList(libraries));
+        dispatch(actionSetLibraryList(sortLibrariesByConfig(libraries, config)));
         for (const lib of libraries) {
           if (!lib.bad) {
             this.loadLibrary(lib.fileId as string, lib.name, lib.modified, true).then(
@@ -316,14 +331,13 @@ export class ElectronUserManager implements UserManager {
   }
 
   saveConfig(config: UserConfig): Promise<void> {
+    this.currentConfig = normalizeUserConfig(config);
+    window.electronAPI.saveLibraryConfig(this.currentConfig);
     return Promise.resolve();
   }
 
   loadConfig(): Promise<UserConfig> {
-    return Promise.resolve({
-      fileId: null,
-      libraries: [],
-    });
+    return Promise.resolve(this.currentConfig);
   }
 
   public updateConfig(
@@ -332,7 +346,7 @@ export class ElectronUserManager implements UserManager {
     return this.loadConfig().then((config) => {
       const updatedConfig = callback(config);
       if (updatedConfig != config) {
-        return this.saveConfig(callback(updatedConfig));
+        return this.saveConfig(updatedConfig);
       } else {
         return Promise.resolve();
       }

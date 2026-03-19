@@ -20,6 +20,7 @@ import { FileIdType } from '../../io/files';
 import { SearchSymbol } from '../../components/libraryPanel/Search';
 import { UserLoginActionTypes } from '../actions/userLogin';
 import { ViewActions, ViewActionTypes } from '../actions/viewActions';
+import { ConfigActionTypes } from '../actions/configActions';
 import power0Image from 'url:../../../images/power0.png';
 import label0Image from 'url:../../../images/label0.png';
 import rectangleImage from 'url:../../../images/rectangle.png';
@@ -36,6 +37,12 @@ export interface CurrentUser {
 export interface LibraryFile {
   id: FileIdType;
   name: string;
+  folderId?: string;
+}
+
+export interface LibraryFolder {
+  id: string;
+  name: string;
 }
 
 export interface CurrentFile {
@@ -47,6 +54,7 @@ export interface CurrentFile {
 export interface UserConfig {
   fileId: string;
   libraries: LibraryFile[];
+  libraryFolders: LibraryFolder[];
 }
 
 interface ToolbarDefault {
@@ -179,6 +187,7 @@ const intialState: altStore = {
   config: {
     fileId: null,
     libraries: [],
+    libraryFolders: [],
   },
 
   recentFiles: [],
@@ -416,6 +425,12 @@ export function AltStoreReducer(
       });
       break;
     }
+
+    case ConfigActionTypes.ConfigUpdateConfig:
+      state = update(state, {
+        config: { $set: action.config },
+      });
+      break;
 
     case MenuActionTypes.MenuCommandWithDefault:
       state = update(state, {

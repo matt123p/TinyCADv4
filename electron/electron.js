@@ -4,7 +4,7 @@ import Store from 'electron-store';
 import fs from 'fs';
 import { spawn } from 'child_process';
 import { loadFile, saveFile, sendRecentFiles } from './io.js';
-import { loadLibrary, loadLibraryToWebContents, saveLibrary, sendLibraries, removeLibrary } from './libraries.js';
+import { loadLibrary, loadLibraryToWebContents, saveLibrary, sendLibraries, removeLibrary, saveLibraryConfig } from './libraries.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -441,6 +441,14 @@ function createWindow() {
       }
 
       removeLibrary(mainWindow, filePath);
+    });
+
+    ipcMain.on('save-library-config', (event, config) => {
+      if (!mainWindow) {
+        return;
+      }
+
+      saveLibraryConfig(mainWindow, config);
     });
 
     ipcMain.on('set-menu-mode', (event, mode) => {

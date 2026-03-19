@@ -189,8 +189,11 @@ interface LibraryViewProps {
   lib: tclib;
   findFilter: string;
   selectedId: string;
+  draggable?: boolean;
+  onLibraryClick?(lib: tclib): void;
   onSelect(lib: tclib, name: tclibLibraryEntry): void;
   onSelected(lib: tclib, name: tclibLibraryEntry): void;
+  onDragStart?(lib: tclib): void;
 }
 
 interface LibraryViewState {
@@ -247,10 +250,21 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
         )}
         role="button"
         aria-pressed="false"
+        draggable={!!props.draggable && !isBad}
         onClick={() => {
           if (!isBad) {
+            props.onLibraryClick?.(props.lib);
             setState({ ...state, open: !state.open });
           }
+        }}
+        onDragStart={(event) => {
+          if (!props.draggable || isBad) {
+            return;
+          }
+
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', `${props.lib.fileId}`);
+          props.onDragStart?.(props.lib);
         }}
         onMouseEnter={() => setState({ ...state, hover: true })}
         onMouseLeave={() => setState({ ...state, hover: false })}

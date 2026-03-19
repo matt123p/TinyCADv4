@@ -44,6 +44,7 @@ import { findImporter, ImportedSymbol } from './kicad/importer';
 import { actionEditLibrarySymbol, actionSelectLibrarySymbol } from '../state/dispatcher/AppDispatcher';
 import { get_global_id } from '../util/global_id';
 import { openCurrentAppUrl, openExternalUrl } from '../util/navigation';
+import { normalizeUserConfig, sortLibrariesByConfig } from './libraryConfig';
 
 export type FileIdType = string | FileSystemFileHandle;
 
@@ -288,27 +289,36 @@ export function downloadBom(dispatch: Dispatch, getState: { (): docDrawing }) {
 
 export function removeLibrary(fileId: string) {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
-    const libraries: tclib[] = getState().altStore.libraries.filter(
+    const state = getState();
+    const libraries: tclib[] = state.altStore.libraries.filter(
       (f) => f.fileId !== fileId,
     );
+    const currentConfig = normalizeUserConfig(state.altStore.config);
+    const updatedConfig = update(currentConfig, {
+      libraries: {
+        $apply: (items) => items.filter((library) => `${library.id}` !== fileId),
+      },
+    });
+
+    dispatch(actionUpdateConfig(updatedConfig));
+    dispatch(actionSetLibraryList(sortLibrariesByConfig(libraries, updatedConfig)));
+
+    userManager.updateConfig(() => updatedConfig);
+  };
+}
+
+export function saveLibraryConfig(config: UserConfig) {
+  return (dispatch: Dispatch, getState: { (): docDrawing }) => {
+    const normalizedConfig = normalizeUserConfig(config);
+    const libraries = sortLibrariesByConfig(
+      getState().altStore.libraries,
+      normalizedConfig,
+    );
+
+    dispatch(actionUpdateConfig(normalizedConfig));
     dispatch(actionSetLibraryList(libraries));
 
-    if (process.env.TARGET_SYSTEM === 'electron' && window.electronAPI) {
-      window.electronAPI.removeLibrary(fileId);
-      return;
-    }
-
-    userManager.updateConfig((config) => {
-      const index = config.libraries.findIndex((l) => l.id === fileId);
-      if (index >= 0) {
-        config = update(config, {
-          libraries: {
-            $splice: [[index, 1]],
-          },
-        });
-      }
-      return config;
-    });
+    userManager.updateConfig(() => normalizedConfig);
   };
 }
 
@@ -582,6 +592,7 @@ export function loadLibraries(
   }
 
   userManager.loadConfig().then((config) => {
+    config = normalizeUserConfig(config);
     dispatch(actionUpdateConfig(config));
     const libraries: tclib[] = config.libraries.map((l) => ({
       fileId: l.id,
@@ -590,7 +601,7 @@ export function loadLibraries(
       names: [] as tclibLibraryEntry[],
       symbols: [] as tclibSymbol[],
     }));
-    dispatch(actionSetLibraryList(libraries));
+    dispatch(actionSetLibraryList(sortLibrariesByConfig(libraries, config)));
     libCache().then((lc) => {
       libraries.reduce(
         (p, file) =>

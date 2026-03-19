@@ -86,7 +86,21 @@ jobs:
           APPX_PUBLISHER: ${{ secrets.APPX_PUBLISHER }}
 
       - name: Setup Microsoft Store CLI
-        uses: microsoft/setup-msstore-cli@v1
+        uses: microsoft/microsoft-store-apppublisher@v1.2
+
+      - name: Configure Microsoft Store CLI
+        shell: pwsh
+        run: |
+          msstore reconfigure `
+            --tenantId "$env:PARTNER_CENTER_TENANT_ID" `
+            --sellerId "$env:PARTNER_CENTER_SELLER_ID" `
+            --clientId "$env:PARTNER_CENTER_CLIENT_ID" `
+            --clientSecret "$env:PARTNER_CENTER_CLIENT_SECRET"
+        env:
+          PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+          PARTNER_CENTER_SELLER_ID: ${{ secrets.PARTNER_CENTER_SELLER_ID }}
+          PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+          PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
 
       - name: Publish to Microsoft Store
         shell: pwsh
@@ -94,12 +108,7 @@ jobs:
           $file = Get-ChildItem release/*.appx, release/*.msix | Select-Object -First 1
           if ($file) {
             Write-Host "Publishing $($file.FullName)..."
-            msstore publish --path "$($file.FullName)" --verbose
+            msstore publish . --inputFile "$($file.FullName)" --verbose
           } else {
             Write-Error "No AppX or MSIX file found in release folder."
           }
-        env:
-          MSSTORE_TENANT_ID: ${{ secrets.MSSTORE_TENANT_ID }}
-          MSSTORE_SELLER_ID: ${{ secrets.MSSTORE_SELLER_ID }}
-          MSSTORE_CLIENT_ID: ${{ secrets.MSSTORE_CLIENT_ID }}
-          MSSTORE_CLIENT_SECRET: ${{ secrets.MSSTORE_CLIENT_SECRET }}

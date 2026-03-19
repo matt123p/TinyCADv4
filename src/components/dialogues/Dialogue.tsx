@@ -19,6 +19,7 @@ import NetlistTypeEditorDialog from './netlistTypeEditorDlg';
 import { ImportSymbolPickerDialog } from './importSymbolPickerDlg';
 import { ImportLibrarySymbolPickerDialog } from './importLibrarySymbolPickerDlg';
 import { LibraryInfoDialog } from './libraryInfoDlg';
+import { LibraryFolderDialog } from './libraryFolderDlg';
 
 interface TDialogueProps {
   show_dialogue: string;
@@ -94,6 +95,14 @@ const TDialogue: FunctionComponent<TDialogueProps> = (
           path={props.dialogue_props?.path}
           bad={props.dialogue_props?.bad}
           loadError={props.dialogue_props?.loadError}
+        />
+      );
+    case 'library_folder':
+      return (
+        <LibraryFolderDialog
+          mode={props.dialogue_props?.mode}
+          config={props.dialogue_props?.config}
+          folder={props.dialogue_props?.folder}
         />
       );
   }

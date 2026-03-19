@@ -158,6 +158,7 @@ export class GoogleUserManager implements UserManager {
                           {
                             id: lib.fileId,
                             name: lib.name,
+                            folderId: null,
                           },
                         ],
                       },
@@ -451,6 +452,7 @@ export class GoogleUserManager implements UserManager {
           return {
             fileId: null,
             libraries: [],
+            libraryFolders: [],
           };
         }
       });
@@ -462,7 +464,7 @@ export class GoogleUserManager implements UserManager {
     return this.loadConfig().then((config) => {
       const updatedConfig = callback(config);
       if (updatedConfig != config) {
-        return this.saveConfig(callback(updatedConfig));
+        return this.saveConfig(updatedConfig);
       } else {
         return Promise.resolve();
       }
