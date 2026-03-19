@@ -242,6 +242,9 @@ export class TDrawing extends React.PureComponent<TDrawingProps> {
               hover={hover}
               selected={selected}
               selected_handle={selected_handle}
+              showConnectionPointMarker={
+                this.props.options.show_label_connection_point
+              }
               renderOverride={
                 renderStyle
                   ? {

@@ -91,6 +91,7 @@ export const defaultSheetOption: SheetOptions = {
   color_notetext_fill: '#ffffaf',
   color_notetext_line: '#0000ff',
   color_notetext_text: '#0000ff',
+  show_label_connection_point: true,
   notetext_fill: true,
   notetext_stroke: true,
   notetext_line_pattern: 0,
@@ -120,6 +121,7 @@ export function blankXML() {
     '<COLOR_JUNCTION>000000</COLOR_JUNCTION><COLOR_NOCONNECT>000000</COLOR_NOCONNECT><COLOR_LABEL>208000</COLOR_LABEL><COLOR_POWER>000000</COLOR_POWER>' +
     '<COLOR_PIN>4040C0</COLOR_PIN><COLOR_HIDDEN_PIN>208020</COLOR_HIDDEN_PIN><COLOR_BACKGROUND>FFFFFF</COLOR_BACKGROUND>' +
     '<COLOR_NOTETEXT_FILL>AFFFFF</COLOR_NOTETEXT_FILL><COLOR_NOTETEXT_LINE>FF0000</COLOR_NOTETEXT_LINE><COLOR_NOTETEXT_TEXT>FF0000</COLOR_NOTETEXT_TEXT>' +
+    '<SHOW_LABEL_CONNECTION_POINT>1</SHOW_LABEL_CONNECTION_POINT>' +
     '</OPTIONS></TinyCAD></TinyCADSheets>'
   );
 }
@@ -381,6 +383,10 @@ export class ioXML {
       let options = root.appendChild('OPTIONS');
       options.appendChild('GRID', sheet.options.show_grid ? '1' : '0');
       options.appendChild('UNITS', sheet.options.units.toString());
+      options.appendChild(
+        'SHOW_LABEL_CONNECTION_POINT',
+        sheet.options.show_label_connection_point ? '1' : '0',
+      );
       options.appendChild(
         'COLOR_WIRE',
         root.makeColor(sheet.options.color_wire),
@@ -1760,6 +1766,8 @@ export class ioXML {
         r.show_grid = this.nodeNumber(selected_options[k]) !== 0;
       } else if (selected_options[k].nodeName === 'UNITS') {
         r.units = this.nodeNumber(selected_options[k]);
+      } else if (selected_options[k].nodeName === 'SHOW_LABEL_CONNECTION_POINT') {
+        r.show_label_connection_point = this.nodeNumber(selected_options[k]) !== 0;
       } else if (selected_options[k].nodeName === 'COLOR_WIRE') {
         r.color_wire = this.rgbToHex(this.nodeText(selected_options[k]));
       } else if (selected_options[k].nodeName === 'COLOR_BUS') {

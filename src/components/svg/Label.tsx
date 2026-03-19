@@ -15,6 +15,7 @@ interface TLabelProps {
   hover: boolean;
   selected: boolean;
   selected_handle: number;
+  showConnectionPointMarker: boolean;
   renderOverride?: {
     font_colour?: string;
     font_name?: string;
@@ -168,7 +169,7 @@ const TLabel: FunctionComponent<TLabelProps> = (props: TLabelProps) => {
         />
       ) : null}
 
-      {props.selected ? null : (
+      {props.selected || !props.showConnectionPointMarker ? null : (
         <rect
           x={(point[0] - 2) * scale_x + dx}
           y={point[1] - 2 + dy}

@@ -35,6 +35,7 @@ const mapStateToProps = (state: docDrawing) => {
         color_pin: sheet.options.color_pin,
         color_power: sheet.options.color_power,
         color_wire: sheet.options.color_wire,
+        show_label_connection_point: sheet.options.show_label_connection_point,
       };
       break;
     case 'drc':

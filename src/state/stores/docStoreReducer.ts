@@ -735,6 +735,9 @@ export function DocStoreReducer(
             color_pin: { $set: action.colours.color_pin },
             color_power: { $set: action.colours.color_power },
             color_wire: { $set: action.colours.color_wire },
+            show_label_connection_point: {
+              $set: action.colours.show_label_connection_point,
+            },
           },
         });
       }
@@ -757,6 +760,9 @@ export function DocStoreReducer(
               color_pin: { $set: action.colours.color_pin },
               color_power: { $set: action.colours.color_power },
               color_wire: { $set: action.colours.color_wire },
+              show_label_connection_point: {
+                $set: action.colours.show_label_connection_point,
+              },
             },
           });
         });

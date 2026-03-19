@@ -79,6 +79,7 @@ export interface SheetColours {
   color_notetext_fill: string;
   color_notetext_line: string;
   color_notetext_text: string;
+  show_label_connection_point: boolean;
   notetext_fill: boolean;
   notetext_stroke: boolean;
   notetext_line_pattern: number;

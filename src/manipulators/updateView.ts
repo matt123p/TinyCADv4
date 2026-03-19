@@ -98,6 +98,7 @@ export interface SheetColours {
   color_pin: string;
   color_power: string;
   color_wire: string;
+  show_label_connection_point: boolean;
 }
 
 export interface SheetOptions extends SheetColours {

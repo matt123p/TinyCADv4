@@ -8,6 +8,7 @@ import {
   DialogBody,
   DialogActions,
   Button,
+  Checkbox,
   Text,
   tokens,
 } from '@fluentui/react-components';
@@ -38,6 +39,7 @@ interface ColoursDialogState {
   color_pin: string;
   color_power: string;
   color_wire: string;
+  show_label_connection_point: boolean;
 }
 
 type ColourKey =
@@ -99,6 +101,9 @@ const getColourValues = (options: SheetOptions): ColourValues => ({
   color_wire: options.color_wire,
 });
 
+const defaultShowLabelConnectionPoint =
+  defaultSheetOption.show_label_connection_point;
+
 const defaultColours: ColourValues = getColourValues(defaultSheetOption);
 
 //
@@ -116,12 +121,15 @@ class ColoursDialog extends React.PureComponent<
     this.handleClickOk = this.handleClickOk.bind(this);
     this.handleClickCancel = this.handleClickCancel.bind(this);
     this.handleResetDefault = this.handleResetDefault.bind(this);
+    this.handleLabelConnectionPointChange =
+      this.handleLabelConnectionPointChange.bind(this);
 
     const values = getColourValues(this.props.options);
 
     this.state = {
       selected: 'color_background',
       ...values,
+      show_label_connection_point: this.props.options.show_label_connection_point,
     };
   }
 
@@ -140,6 +148,7 @@ class ColoursDialog extends React.PureComponent<
         color_pin: this.state.color_pin,
         color_power: this.state.color_power,
         color_wire: this.state.color_wire,
+        show_label_connection_point: this.state.show_label_connection_point,
       }),
     );
   }
@@ -194,6 +203,13 @@ class ColoursDialog extends React.PureComponent<
     this.setState(() => {
       return { selected: name };
     });
+  }
+
+  handleLabelConnectionPointChange(
+    _event: React.FormEvent<HTMLInputElement>,
+    data: { checked: boolean | 'mixed' },
+  ) {
+    this.setState({ show_label_connection_point: data.checked === true });
   }
 
   render() {
@@ -296,6 +312,45 @@ class ColoursDialog extends React.PureComponent<
                       disabled={isSelectedDefault}
                     >
                       Reset to default
+                    </Button>
+                  </div>
+                  <div
+                    style={{
+                      borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
+                      marginTop: '12px',
+                      paddingTop: '12px',
+                    }}
+                  >
+                    <Checkbox
+                      checked={this.state.show_label_connection_point}
+                      label="Show label connection point marker"
+                      onChange={this.handleLabelConnectionPointChange}
+                    />
+                    <Text
+                      size={200}
+                      style={{
+                        display: 'block',
+                        marginTop: '6px',
+                        color: tokens.colorNeutralForeground3,
+                      }}
+                    >
+                      Shows the small red rectangle used to indicate a label's connection point.
+                    </Text>
+                    <Button
+                      appearance="subtle"
+                      onClick={() =>
+                        this.setState({
+                          show_label_connection_point:
+                            defaultShowLabelConnectionPoint,
+                        })
+                      }
+                      disabled={
+                        this.state.show_label_connection_point ===
+                        defaultShowLabelConnectionPoint
+                      }
+                      style={{ marginTop: '10px' }}
+                    >
+                      Reset marker default
                     </Button>
                   </div>
                 </div>
