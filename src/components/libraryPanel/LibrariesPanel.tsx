@@ -447,9 +447,15 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     );
   };
 
-  const addLibraries = () => {
+  const addLibraries = (event?: React.MouseEvent<HTMLButtonElement>) => {
     if (!window.electronAPI?.loadLibrary) {
       return;
+    }
+
+    event?.currentTarget?.blur();
+
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
     }
 
     const selectedLibraryId = state.selectedId
@@ -461,9 +467,11 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
         : state.selectedFolderId || ROOT_LIBRARY_FOLDER_ID
       : ROOT_LIBRARY_FOLDER_ID;
 
-    window.electronAPI.loadLibrary({
-      folderId: targetFolderId === ROOT_LIBRARY_FOLDER_ID ? null : targetFolderId,
-    });
+    window.setTimeout(() => {
+      window.electronAPI?.loadLibrary({
+        folderId: targetFolderId === ROOT_LIBRARY_FOLDER_ID ? null : targetFolderId,
+      });
+    }, 0);
   };
 
   const renameFolder = (folder: LibraryFolder) => {
@@ -941,7 +949,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
                                   size="small"
                                   icon={<EditRegular />}
                                   title={t('library.renameFolder')}
-                                  onClick={(event) => {
+                                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
                                     event.stopPropagation();
                                     renameFolder(folder);
                                   }}
@@ -951,7 +959,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
                                   size="small"
                                   icon={<DeleteRegular />}
                                   title={t('library.removeFolder')}
-                                  onClick={(event) => {
+                                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
                                     event.stopPropagation();
                                     removeFolder(folder);
                                   }}
