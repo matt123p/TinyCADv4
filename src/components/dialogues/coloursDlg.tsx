@@ -1,4 +1,5 @@
 import React, { Dispatch } from 'react';
+import { WithTranslation, withTranslation } from 'react-i18next';
 import { SketchPicker, ColorResult } from 'react-color';
 import {
   Dialog,
@@ -20,7 +21,7 @@ import {
 import { connect } from 'react-redux';
 import { defaultSheetOption } from '../../io/ioXml';
 
-interface ColoursDialogProps {
+interface ColoursDialogProps extends WithTranslation {
   options: SheetOptions;
   dispatch: Dispatch<any>;
 }
@@ -58,30 +59,33 @@ type ColourKey =
 
 type ColourValues = Record<ColourKey, string>;
 
-const colourSections: Array<{ title: string; items: Array<{ key: ColourKey; label: string }> }> = [
+const colourSections: Array<{
+  titleKey: string;
+  items: Array<{ key: ColourKey; labelKey: string }>;
+}> = [
   {
-    title: 'Sheet',
-    items: [{ key: 'color_background', label: 'Background Colour' }],
+    titleKey: 'dialogues.colours.sections.sheet',
+    items: [{ key: 'color_background', labelKey: 'dialogues.colours.items.background' }],
   },
   {
-    title: 'Schematic',
+    titleKey: 'dialogues.colours.sections.schematic',
     items: [
-      { key: 'color_bus', label: 'Bus Colour' },
-      { key: 'color_hidden_pin', label: 'Hidden Pin Colour' },
-      { key: 'color_junction', label: 'Junction Colour' },
-      { key: 'color_label', label: 'Label Colour' },
-      { key: 'color_noconnect', label: 'No Connect Colour' },
-      { key: 'color_pin', label: 'Pin Colour' },
-      { key: 'color_power', label: 'Power Colour' },
-      { key: 'color_wire', label: 'Wire Colour' },
+      { key: 'color_bus', labelKey: 'dialogues.colours.items.bus' },
+      { key: 'color_hidden_pin', labelKey: 'dialogues.colours.items.hiddenPin' },
+      { key: 'color_junction', labelKey: 'dialogues.colours.items.junction' },
+      { key: 'color_label', labelKey: 'dialogues.colours.items.label' },
+      { key: 'color_noconnect', labelKey: 'dialogues.colours.items.noConnect' },
+      { key: 'color_pin', labelKey: 'dialogues.colours.items.pin' },
+      { key: 'color_power', labelKey: 'dialogues.colours.items.power' },
+      { key: 'color_wire', labelKey: 'dialogues.colours.items.wire' },
     ],
   },
   {
-    title: 'Annotations',
+    titleKey: 'dialogues.colours.sections.annotations',
     items: [
-      { key: 'color_notetext_fill', label: 'Note Text Fill' },
-      { key: 'color_notetext_line', label: 'Note Text Line' },
-      { key: 'color_notetext_text', label: 'Note Text' },
+      { key: 'color_notetext_fill', labelKey: 'dialogues.colours.items.noteTextFill' },
+      { key: 'color_notetext_line', labelKey: 'dialogues.colours.items.noteTextLine' },
+      { key: 'color_notetext_text', labelKey: 'dialogues.colours.items.noteText' },
     ],
   },
 ];
@@ -100,9 +104,6 @@ const getColourValues = (options: SheetOptions): ColourValues => ({
   color_power: options.color_power,
   color_wire: options.color_wire,
 });
-
-const defaultShowLabelConnectionPoint =
-  defaultSheetOption.show_label_connection_point;
 
 const defaultColours: ColourValues = getColourValues(defaultSheetOption);
 
@@ -213,8 +214,12 @@ class ColoursDialog extends React.PureComponent<
   }
 
   render() {
+    const { t } = this.props;
     const selectedKey = this.state.selected as ColourKey;
     const colour = this.state[selectedKey];
+    const selectedItem = colourSections
+      .flatMap((section) => section.items)
+      .find((item) => item.key === selectedKey);
     const isSelectedDefault =
       colour.toLowerCase() === defaultColours[selectedKey].toLowerCase();
 
@@ -222,7 +227,7 @@ class ColoursDialog extends React.PureComponent<
       <Dialog open={true} onOpenChange={this.handleClickCancel}>
         <DialogSurface style={{ width: '760px', maxWidth: '96vw' }}>
           <DialogBody>
-            <DialogTitle>Colours</DialogTitle>
+            <DialogTitle>{t('dialogues.colours.title')}</DialogTitle>
             <DialogContent>
               <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '16px' }}>
                 <div
@@ -236,7 +241,7 @@ class ColoursDialog extends React.PureComponent<
                   }}
                 >
                   {colourSections.map((section) => (
-                    <div key={section.title} style={{ marginBottom: '10px' }}>
+                    <div key={section.titleKey} style={{ marginBottom: '10px' }}>
                       <Text
                         weight="semibold"
                         style={{
@@ -245,7 +250,7 @@ class ColoursDialog extends React.PureComponent<
                           color: tokens.colorNeutralForeground2,
                         }}
                       >
-                        {section.title}
+                        {t(section.titleKey)}
                       </Text>
                       {section.items.map((item) => (
                         <Button
@@ -270,7 +275,7 @@ class ColoursDialog extends React.PureComponent<
                               flexShrink: 0,
                             }}
                           />
-                          {item.label}
+                          {t(item.labelKey)}
                         </Button>
                       ))}
                     </div>
@@ -292,7 +297,9 @@ class ColoursDialog extends React.PureComponent<
                       color: tokens.colorNeutralForeground2,
                     }}
                   >
-                    Selected: {selectedKey.replace('color_', '').replace(/_/g, ' ')}
+                    {t('dialogues.colours.selected', {
+                      item: selectedItem ? t(selectedItem.labelKey) : selectedKey,
+                    })}
                   </Text>
                   <SketchPicker
                     disableAlpha={true}
@@ -311,7 +318,7 @@ class ColoursDialog extends React.PureComponent<
                       onClick={this.handleResetDefault}
                       disabled={isSelectedDefault}
                     >
-                      Reset to default
+                      {t('dialogues.colours.resetToDefault')}
                     </Button>
                   </div>
                   <div
@@ -323,7 +330,7 @@ class ColoursDialog extends React.PureComponent<
                   >
                     <Checkbox
                       checked={this.state.show_label_connection_point}
-                      label="Show label connection point marker"
+                      label={t('dialogues.colours.showLabelConnectionPointMarker')}
                       onChange={this.handleLabelConnectionPointChange}
                     />
                     <Text
@@ -334,34 +341,18 @@ class ColoursDialog extends React.PureComponent<
                         color: tokens.colorNeutralForeground3,
                       }}
                     >
-                      Shows the small red rectangle used to indicate a label's connection point.
+                      {t('dialogues.colours.showLabelConnectionPointMarkerHelp')}
                     </Text>
-                    <Button
-                      appearance="subtle"
-                      onClick={() =>
-                        this.setState({
-                          show_label_connection_point:
-                            defaultShowLabelConnectionPoint,
-                        })
-                      }
-                      disabled={
-                        this.state.show_label_connection_point ===
-                        defaultShowLabelConnectionPoint
-                      }
-                      style={{ marginTop: '10px' }}
-                    >
-                      Reset marker default
-                    </Button>
                   </div>
                 </div>
               </div>
             </DialogContent>
             <DialogActions>
               <Button appearance="secondary" onClick={this.handleClickCancel}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button appearance="primary" onClick={this.handleClickOk}>
-                OK
+                {t('common.ok')}
               </Button>
             </DialogActions>
           </DialogBody>
@@ -371,4 +362,4 @@ class ColoursDialog extends React.PureComponent<
   }
 }
 
-export default connect()(ColoursDialog);
+export default connect()(withTranslation()(ColoursDialog));

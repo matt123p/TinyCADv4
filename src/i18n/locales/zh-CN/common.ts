@@ -41,6 +41,7 @@ const common = {
     ioFailure: { title: '无法访问文件', message: '文件操作失败。请检查网络连接并确认已正确登录后重试。' },
     editSheet: { renameTitle: '重命名图纸', newTitle: '新建图纸', sheetName: '图纸名称' },
     annotate: { title: '符号标注', action: '操作', addReferences: '添加位号', removeReferences: '移除位号', startValue: '起始值（0 = 默认）', references: '位号', allReferences: '全部位号', unnumberedReferences: '未编号位号', referencesMatching: '匹配位号', matching: '匹配', sheets: '图纸', thisSheet: '当前图纸', allSheets: '所有图纸' },
+    colours: { title: '颜色', sections: { sheet: '图纸', schematic: '原理图', annotations: '注释' }, items: { background: '背景颜色', bus: '总线颜色', hiddenPin: '隐藏引脚颜色', junction: '连接点颜色', label: '标签颜色', noConnect: '无连接颜色', pin: '引脚颜色', power: '电源颜色', wire: '导线颜色', noteTextFill: '注释文本填充', noteTextLine: '注释文本线条', noteText: '注释文本' }, selected: '已选择：{{item}}', resetToDefault: '重置为默认', showLabelConnectionPointMarker: '显示标签连接点标记', showLabelConnectionPointMarkerHelp: '显示用于指示标签连接点的小红色矩形。' },
     pageSize: { title: '页面尺寸', paperSize: '纸张大小', orientation: '方向', portrait: '纵向', landscape: '横向', width: '宽度', height: '高度' },
     settings: { title: '设置', grid: '网格', showGrid: '显示网格', snapToGrid: '吸附到网格', gridSpacing: '网格间距', normalGridSpacing: '标准网格间距', fineGridSpacing: '细网格间距', userGridSpacing: '用户设置网格间距', units: '单位', millimeters: 'mm', inches: '英寸' },
     about: { title: '关于 TinyCAD', version: '版本', description: '适用于 Windows 和 Web 的开源原理图绘制工具', licenseTitle: '许可证（GNU GPL v3）' },

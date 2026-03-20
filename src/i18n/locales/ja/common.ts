@@ -42,6 +42,7 @@ const common = {
     ioFailure: { title: 'ファイルにアクセスできません', message: 'ファイル操作に失敗しました。インターネット接続とサインイン状態を確認して再試行してください。' },
     editSheet: { renameTitle: 'シート名変更', newTitle: '新規シート', sheetName: 'シート名' },
     annotate: { title: 'シンボル注釈', action: '操作', addReferences: '参照を追加', removeReferences: '参照を削除', startValue: '開始値 (0 = 既定)', references: '参照', allReferences: 'すべての参照', unnumberedReferences: '未番号の参照', referencesMatching: '一致する参照', matching: '一致条件', sheets: 'シート', thisSheet: 'このシート', allSheets: 'すべてのシート' },
+    colours: { title: '色', sections: { sheet: 'シート', schematic: '回路図', annotations: '注釈' }, items: { background: '背景色', bus: 'バス色', hiddenPin: '非表示ピン色', junction: '接続点色', label: 'ラベル色', noConnect: 'No Connect 色', pin: 'ピン色', power: '電源色', wire: '配線色', noteTextFill: '注釈テキスト塗りつぶし', noteTextLine: '注釈テキスト線色', noteText: '注釈テキスト' }, selected: '選択中: {{item}}', resetToDefault: '既定に戻す', showLabelConnectionPointMarker: 'ラベル接続点マーカーを表示', showLabelConnectionPointMarkerHelp: 'ラベルの接続点を示す小さな赤い長方形を表示します。' },
     pageSize: { title: 'ページサイズ', paperSize: '用紙サイズ', orientation: '向き', portrait: '縦', landscape: '横', width: '幅', height: '高さ' },
     settings: { title: '設定', grid: 'グリッド', showGrid: 'グリッドを表示', snapToGrid: 'グリッドにスナップ', gridSpacing: 'グリッド間隔', normalGridSpacing: '通常グリッド間隔', fineGridSpacing: '細かいグリッド間隔', userGridSpacing: 'ユーザー設定グリッド間隔', units: '単位', millimeters: 'mm', inches: 'インチ' },
     about: { title: 'TinyCAD について', version: 'バージョン', description: 'Windows と Web 向けのオープンソース回路図作成アプリ', licenseTitle: 'ライセンス (GNU GPL v3)' },
