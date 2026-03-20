@@ -5,6 +5,8 @@ import { UtilityService } from '../../util/utilityService';
 import TTextEditArea from './TextEditArea';
 import { dsnLabel } from '../../model/dsnItem';
 
+const LABEL_TEXT_CLEARANCE = 3;
+
 interface TLabelProps {
   dx: number;
   dy: number;
@@ -72,7 +74,6 @@ const TLabel: FunctionComponent<TLabelProps> = (props: TLabelProps) => {
       : -arrow_distance;
 
   let points = '';
-  let text_point = [];
   let rotation = UtilityService.rotateRotation(dr, effectiveItem.rotation);
 
   // Draw the outline
@@ -100,11 +101,6 @@ const TLabel: FunctionComponent<TLabelProps> = (props: TLabelProps) => {
     // Close the path
     points += ' Z';
 
-    text_point = [
-      (point[0] - i_spacing) * scale_x + dx,
-      (point[1] - effectiveItem.font_size / 2) * scale_y + dy,
-    ];
-
     // We must rotate the rotation to match what TinyCAD.exe does
     switch (rotation) {
       case 0:
@@ -120,16 +116,22 @@ const TLabel: FunctionComponent<TLabelProps> = (props: TLabelProps) => {
         rotation = 1;
         break;
     }
-  } else {
-    text_point = [point[0] * scale_x + dx, point[1] * scale_y + dy];
+  }
+
+  let textAreaDx = props.dx;
+  let textAreaDy = props.dy;
+  if (effectiveItem.which === 0) {
     switch (rotation) {
       case 0:
       case 2:
-        text_point[1] -= effectiveItem.font_size;
+        textAreaDy -= LABEL_TEXT_CLEARANCE;
         break;
       case 1:
+        textAreaDx -= LABEL_TEXT_CLEARANCE;
+        textAreaDy += LABEL_TEXT_CLEARANCE;
+        break;
       case 3:
-        text_point[0] -= effectiveItem.font_size;
+        textAreaDx -= LABEL_TEXT_CLEARANCE;
         break;
     }
   }
@@ -142,20 +144,20 @@ const TLabel: FunctionComponent<TLabelProps> = (props: TLabelProps) => {
 
   return (
     <>
-      <TTextEditArea
-        dx={props.dx}
-        dy={props.dy}
-        dr={props.dr}
-        scale_x={props.scale_x}
-        scale_y={props.scale_y}
-        draw-data={effectiveItem.textData}
-        draw-item={effectiveItem}
-        draw-colour={effectiveItem.font_colour}
-        hover={props.hover}
-        parent={null}
-        selected={props.selected}
-        selected_handle={props.selected_handle}
-      />
+        <TTextEditArea
+          dx={textAreaDx}
+          dy={textAreaDy}
+          dr={props.dr}
+          scale_x={props.scale_x}
+          scale_y={props.scale_y}
+          draw-data={effectiveItem.textData}
+          draw-item={effectiveItem}
+          draw-colour={effectiveItem.font_colour}
+          hover={props.hover}
+          parent={null}
+          selected={props.selected}
+          selected_handle={props.selected_handle}
+        />
 
       {effectiveItem.which !== 0 ? (
         <path
