@@ -33,6 +33,7 @@
     "appId": "com.tinycad.app",
     "productName": "TinyCAD",
     "appx": {
+      "artifactName": "${productName} Windows Setup ${version}-${arch}.${ext}",
       "backgroundColor": "transparent",
       "publisherDisplayName": "TinyCAD.net",
       "identityName": "TinyCAD.net.TinyCAD",
