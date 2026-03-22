@@ -67,6 +67,7 @@ const common = {
     saveDesign: 'Ontwerp opslaan',
     pin: 'Pin',
     wire: 'Draad',
+    pointToPointWire: 'Punt-naar-punt draad',
     noConnect: 'Niet verbonden',
     power: 'Voeding',
     label: 'Label',

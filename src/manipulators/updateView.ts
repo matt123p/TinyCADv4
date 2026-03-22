@@ -50,6 +50,7 @@ import update from 'immutability-helper';
 import { XMLBuilder } from '../util/xmlbuilder';
 import { Snap } from './snap';
 import { updateWire } from './updateWire';
+import { PointToPointWireRouter } from './pointToPointWireRouter';
 import { ioXML } from '../io/ioXml';
 import { dragObject } from './dragObject';
 import { updateSymbol } from './updateSymbol';
@@ -238,6 +239,10 @@ export class updateView {
     r: Coordinate,
     key: number,
   ): viewResult {
+    if (view.menu_command === 'add_wire_point_to_point') {
+      return this.add_point_to_point_wire_event(view, sheet, event_name, p);
+    }
+
     // The user can cancel with a rbuttondown
     if (event_name === 'rbuttondown') {
       if (view.in_add_rect) {
@@ -296,6 +301,265 @@ export class updateView {
 
   ////////////////// ADD ITEM HANDLER //////////////////
 
+  private add_point_to_point_wire_event(
+    view: dsnView,
+    sheet: dsnSheet,
+    event_name: string,
+    p: Coordinate,
+  ): viewResult {
+    if (event_name === 'rbuttondown') {
+      return this.cancel_add(view, sheet);
+    }
+
+    if (event_name === 'lbuttondown') {
+      return this.click_add_point_to_point_wire(view, sheet, p);
+    }
+
+    if (event_name === 'mousemove' || event_name === 'mousedrag') {
+      return this.move_add_point_to_point_wire(view, sheet, p);
+    }
+
+    if (view.cursor !== 'copy') {
+      return {
+        view: update(view, {
+          cursor: { $set: 'copy' },
+        }),
+        sheet,
+      };
+    }
+
+    return { view, sheet };
+  }
+
+  private move_add_point_to_point_wire(
+    view: dsnView,
+    sheet: dsnSheet,
+    p: Coordinate,
+  ): viewResult {
+    const add = view.add as dsnWire;
+    if (!add || add.NodeName !== DocItemTypes.Wire) {
+      return { view, sheet };
+    }
+
+    const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+    const magnetic = snap.snap_magnetic(p, false, sheet.items);
+    const startPoint = add.d_points.length > 0 ? add.d_points[0] : null;
+    let d_points: Coordinate[] = [];
+    let display = magnetic != null;
+    let previewMagnetic = magnetic;
+
+    if (startPoint) {
+      display = true;
+      previewMagnetic = magnetic || { point: startPoint.slice(0), wire: null };
+      if (magnetic && !this.samePoint(startPoint, magnetic.point)) {
+        const preview = view.tracker.pointToPointPreview;
+        const canReuseWorkspace =
+          preview &&
+          preview.items === sheet.items &&
+          preview.grid === sheet.details.grid &&
+          this.samePoint(preview.start, startPoint);
+        const previewWorkspace = canReuseWorkspace
+          ? preview.workspace as ConstructorParameters<typeof PointToPointWireRouter>[1]
+          : undefined;
+        const router = new PointToPointWireRouter(
+          sheet,
+          previewWorkspace,
+        );
+        d_points = router.route(
+          startPoint,
+          magnetic.point,
+          canReuseWorkspace ? preview.route : null,
+        );
+        view.tracker.pointToPointPreview = {
+          start: startPoint.slice(0),
+          end: magnetic.point.slice(0),
+          route: d_points.map((point) => point.slice(0)),
+          workspace: router.getWorkspace(),
+          items: sheet.items,
+          grid: sheet.details.grid,
+        };
+      } else {
+        d_points = [startPoint.slice(0)];
+        view.tracker.pointToPointPreview = null;
+      }
+    }
+
+    return {
+      view: update(view, {
+        add: {
+          $set: update(add, {
+            _magnetic: { $set: previewMagnetic },
+            d_points: { $set: d_points },
+          }),
+        },
+        display_add: { $set: display },
+        cursor: { $set: 'copy' },
+      }),
+      sheet,
+    };
+  }
+
+  private click_add_point_to_point_wire(
+    view: dsnView,
+    sheet: dsnSheet,
+    p: Coordinate,
+  ): viewResult {
+    const add = view.add as dsnWire;
+    if (!add || add.NodeName !== DocItemTypes.Wire) {
+      return { view, sheet };
+    }
+
+    const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+    let magnetic = snap.snap_magnetic(p, false, sheet.items);
+    if (!magnetic) {
+      return { view, sheet };
+    }
+
+    if (add.d_points.length === 0) {
+      view.tracker.pointToPointPreview = null;
+      let items = sheet.items;
+      ({ magnetic, items } = this.split_magnetic_wire_if_needed(magnetic, items));
+      const nextSheet = items !== sheet.items
+        ? update(sheet, {
+            items: { $set: items },
+          })
+        : sheet;
+
+      return {
+        view: update(view, {
+          add: {
+            $set: update(add, {
+              _magnetic: { $set: magnetic },
+              d_points: { $set: [magnetic.point.slice(0)] },
+            }),
+          },
+          display_add: { $set: true },
+          in_add_rect: { $set: false },
+          cursor: { $set: 'copy' },
+          _in_select_rect: { $set: false },
+        }),
+        sheet: nextSheet,
+      };
+    }
+
+    if (this.samePoint(add.d_points[0], magnetic.point)) {
+      return { view, sheet };
+    }
+
+    const preview = view.tracker.pointToPointPreview;
+    const canReuseWorkspace =
+      preview &&
+      preview.items === sheet.items &&
+      preview.grid === sheet.details.grid &&
+      this.samePoint(preview.start, add.d_points[0]);
+    const previewWorkspace = canReuseWorkspace
+      ? preview.workspace as ConstructorParameters<typeof PointToPointWireRouter>[1]
+      : undefined;
+    const router = new PointToPointWireRouter(
+      sheet,
+      previewWorkspace,
+    );
+    const routePoints = router.route(
+      add.d_points[0],
+      magnetic.point,
+      canReuseWorkspace ? preview.route : null,
+    );
+    if (routePoints.length < 2) {
+      return { view, sheet };
+    }
+    view.tracker.pointToPointPreview = null;
+
+    const routedEnd = routePoints[routePoints.length - 1];
+    if (magnetic.wire && !this.samePoint(routedEnd, magnetic.point)) {
+      magnetic = {
+        point: [routedEnd[0], routedEnd[1]],
+        wire: magnetic.wire,
+      };
+    }
+
+    let items = sheet.items;
+    ({ magnetic, items } = this.split_magnetic_wire_if_needed(magnetic, items));
+
+    const newWires = this.make_wire_segments(routePoints);
+    if (newWires.length === 0) {
+      return { view, sheet };
+    }
+
+    let nextSheet = items !== sheet.items
+      ? update(sheet, {
+          items: { $set: items },
+        })
+      : sheet;
+
+    nextSheet = update(nextSheet, {
+      items: { $push: newWires },
+    });
+    nextSheet = this.tidy_wires(nextSheet);
+
+    const createdIds = new Set(newWires.map((wire) => wire._id));
+    const selectedIds = nextSheet.items
+      .filter((item) => item.NodeName === DocItemTypes.Wire && createdIds.has(item._id))
+      .map((item) => item._id);
+
+    return {
+      view: update(view, {
+        display_add: { $set: false },
+        add: { $set: null },
+        menu_command: { $set: '' },
+        cursor: { $set: 'auto' },
+        in_add_rect: { $set: false },
+        selectable: { $set: null },
+        hover_obj: { $set: null },
+        _drag_handle: { $set: -1 },
+        _selected_handle: { $set: 0 },
+        _selected_array: { $set: selectedIds },
+      }),
+      sheet: nextSheet,
+    };
+  }
+
+  private split_magnetic_wire_if_needed(
+    magnetic: { point: Coordinate; wire: dsnWire },
+    items: DocItem[],
+  ) {
+    if (!magnetic || !magnetic.wire) {
+      return { magnetic, items };
+    }
+
+    const updateMagWire = new updateWire(magnetic.wire);
+    const result = updateMagWire.split_wire(magnetic.point, items);
+    return {
+      magnetic: {
+        point: magnetic.point.slice(0),
+        wire: result.obj,
+      },
+      items: UtilityService.updateDupArray(result.items, magnetic.wire, result.obj),
+    };
+  }
+
+  private make_wire_segments(points: Coordinate[]): dsnWire[] {
+    const wires: dsnWire[] = [];
+
+    for (let index = 0; index < points.length - 1; ++index) {
+      if (this.samePoint(points[index], points[index + 1])) {
+        continue;
+      }
+
+      wires.push({
+        NodeName: DocItemTypes.Wire,
+        _id: get_global_id(),
+        _magnetic: null,
+        d_points: [points[index].slice(0), points[index + 1].slice(0)],
+      });
+    }
+
+    return wires;
+  }
+
+  private samePoint(a: Coordinate | null, b: Coordinate | null): boolean {
+    return !!a && !!b && a[0] === b[0] && a[1] === b[1];
+  }
+
   click_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
     const updater_add = updateSimpleAddFactory(view.add);
     const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
@@ -322,6 +586,7 @@ export class updateView {
   }
 
   complete_add(view: dsnView, sheet: dsnSheet): viewResult {
+    view.tracker.pointToPointPreview = null;
     const update_add = updateSimpleAddFactory(view.add);
     if (update_add) {
       let obj = update_add.complete_add();
@@ -357,6 +622,7 @@ export class updateView {
   }
 
   cancel_add(view: dsnView, sheet: dsnSheet): viewResult {
+    view.tracker.pointToPointPreview = null;
     return {
       sheet: sheet,
       view: update(view, {
@@ -1286,6 +1552,16 @@ export class updateView {
       d_points: [],
     };
     return this.add_object(view, sheet, n, 'add_wire');
+  }
+
+  command_add_wire_point_to_point(view: dsnView, sheet: dsnSheet): viewResult {
+    const n: dsnWire = {
+      NodeName: DocItemTypes.Wire,
+      _id: get_global_id(),
+      _magnetic: null,
+      d_points: [],
+    };
+    return this.add_object(view, sheet, n, 'add_wire_point_to_point');
   }
 
   command_add_pin(view: dsnView, sheet: dsnSheet): viewResult {

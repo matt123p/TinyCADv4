@@ -11,7 +11,7 @@ const common = {
     closeBomAria: '关闭物料清单', closeBom: '关闭 BOM', downloadBomAria: '下载物料清单', downloadBom: '下载 BOM', closeHelpAria: '关闭帮助', close: '关闭', open: '打开',
     openLibrary: '打开库', save: '保存', saveLibrary: '保存库', saveAs: '另存为', saveLibraryAs: '库另存为', undo: '撤销 (Ctrl-Z)', redo: '重做 (Ctrl-Y)', file: '文件', new: '新建', edit: '编辑', view: '视图', tools: '工具',
     fileMenu: '文件菜单', openRecent: '打开最近使用的文件', noRecentFiles: '没有最近使用的文件', import: '导入', print: '打印', exportSvg: '导出为 SVG', exportPdf: '导出为 PDF', importKicad: '导入 KiCad 符号', annotateSymbols: '标注符号', billOfMaterials: '物料清单', generateNetlist: '生成网表',
-    generateSpiceNetlist: '生成 Spice 网表', createVhdlFile: '创建 VHDL 文件', newCustomLibrary: '新建自定义库', newDesign: '新建设计', saveDesign: '保存设计', pin: '引脚', wire: '导线',
+    generateSpiceNetlist: '生成 Spice 网表', createVhdlFile: '创建 VHDL 文件', newCustomLibrary: '新建自定义库', newDesign: '新建设计', saveDesign: '保存设计', pin: '引脚', wire: '导线', pointToPointWire: '点到点导线',
     noConnect: '未连接', power: '电源', label: '标签', text: '文本', shapes: '图形', bus: '总线', ruler: '标尺', rotateCounterClockwise: '逆时针旋转', rotateLeft: '旋转（左）',
     rotateClockwise: '顺时针旋转', rotateRight: '旋转（右）', flipHorizontal: '水平翻转', flipVertical: '垂直翻转', zoomIn: '放大 (+)', zoomOut: '缩小 (-)', toggleRulers: '切换标尺',
     settings: '设置', settingsDialog: '设置...', designDetails: '设计详情', pageSize: '页面尺寸', colours: '颜色', checkDesignRules: '检查设计规则', discord: 'TinyCAD Discord', aboutTinyCAD: '关于 TinyCAD', help: '帮助', manual: '在线手册', aboutTranslations: '关于翻译...', language: '语言',

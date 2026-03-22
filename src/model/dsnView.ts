@@ -2,12 +2,22 @@ import { DocItem, Coordinate } from './dsnItem';
 import { dragObject } from '../manipulators/dragObject';
 import { ContextMenuList, MergedStyle } from '../manipulators/updateInterfaces';
 
+interface PointToPointPreviewCache {
+  start: Coordinate;
+  end: Coordinate;
+  route: Coordinate[];
+  workspace: unknown;
+  items: DocItem[];
+  grid: number;
+}
+
 export interface ViewTracker {
   a: Coordinate;
   b: Coordinate;
   _dragArray: dragObject[];
   _drag: dragObject;
   _primary_horz: boolean;
+  pointToPointPreview?: PointToPointPreviewCache;
 }
 
 export interface FindResult {

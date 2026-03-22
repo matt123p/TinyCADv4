@@ -67,6 +67,7 @@ const common = {
     saveDesign: 'Save Design',
     pin: 'Pin',
     wire: 'Wire',
+    pointToPointWire: 'Point-to-Point Wire',
     noConnect: 'No Connect',
     power: 'Power',
     label: 'Label',
