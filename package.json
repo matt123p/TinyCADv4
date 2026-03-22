@@ -51,7 +51,7 @@
     },
     "icon": "assets/TinyCAD.png",
     "win": {
-      "artifactName": "${productName} Windows Setup ${version}.${ext}",
+      "artifactName": "${productName} Windows Setup ${version}-${arch}.${ext}",
       "icon": "assets/TinyCAD.ico",
       "target": [
         {
