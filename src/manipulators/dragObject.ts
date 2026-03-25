@@ -7,6 +7,7 @@
 import update from 'immutability-helper';
 import { DocItemTypes, DocItem, Coordinate, dsnWire } from '../model/dsnItem';
 import { updateAPFactory } from './updateFactory';
+import { UtilityLine } from '../util/utilityLine';
 
 export class dragObject {
   public wire_type: DocItemTypes = DocItemTypes.Wire;
@@ -14,6 +15,97 @@ export class dragObject {
   public _junctions: number[] = [];
 
   constructor() {}
+
+  private samePoint(a: Coordinate, b: Coordinate) {
+    return Math.abs(a[0] - b[0]) < 0.1 && Math.abs(a[1] - b[1]) < 0.1;
+  }
+
+  private isSelectedMovingObject(
+    moving_objects: (DocItem | number)[],
+    item: DocItem,
+  ) {
+    return (
+      moving_objects.indexOf(item) !== -1 || moving_objects.indexOf(item._id) !== -1
+    );
+  }
+
+  private addTrackedWireHandle(
+    wireIndex: number,
+    handleIndex: number,
+    in_use_indexes: { [key: string]: boolean },
+  ) {
+    const key = wireIndex + ':' + handleIndex;
+    if (!in_use_indexes[key]) {
+      this._wires.push([wireIndex, handleIndex]);
+      in_use_indexes[key] = true;
+    }
+  }
+
+  private addTrackedJunction(
+    junctionIndex: number,
+    in_use_indexes: { [key: string]: boolean },
+  ) {
+    const key = junctionIndex.toString();
+    if (!in_use_indexes[key]) {
+      this._junctions.push(junctionIndex);
+      in_use_indexes[key] = true;
+    }
+  }
+
+  private isPointOnWire(item: DocItem, point: Coordinate) {
+    if (
+      item.NodeName !== DocItemTypes.Wire &&
+      item.NodeName !== DocItemTypes.BusWire
+    ) {
+      return false;
+    }
+
+    const wire = item as dsnWire;
+    for (let index = 0; index < wire.d_points.length - 1; ++index) {
+      const nearest = UtilityLine.nearestPointOnLine(
+        point,
+        wire.d_points[index],
+        wire.d_points[index + 1],
+      );
+      if (this.samePoint(nearest, point)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private collectAttachedItemsForWire(
+    items: DocItem[],
+    movingWire: DocItem,
+    moving_objects: (DocItem | number)[],
+    in_use_indexes: { [key: string]: boolean },
+  ) {
+    for (let obj = 0; obj < items.length; ++obj) {
+      const item = items[obj];
+
+      if (this.isSelectedMovingObject(moving_objects, item)) {
+        continue;
+      }
+
+      if (item.NodeName === movingWire.NodeName) {
+        const updater_item = updateAPFactory(item);
+        const handles = updater_item ? updater_item.handles() : [];
+        for (let handleIndex = 0; handleIndex < handles.length; ++handleIndex) {
+          if (this.isPointOnWire(movingWire, handles[handleIndex])) {
+            this.addTrackedWireHandle(obj, handleIndex, in_use_indexes);
+          }
+        }
+      } else if (
+        movingWire.NodeName === DocItemTypes.Wire &&
+        item.NodeName === DocItemTypes.Junction
+      ) {
+        if (this.isPointOnWire(movingWire, item.point)) {
+          this.addTrackedJunction(obj, in_use_indexes);
+        }
+      }
+    }
+  }
 
   move_objects(items: DocItem[], moving_objects: (DocItem | number)[]) {
     // From this list we need to construct a list of wires
@@ -82,6 +174,15 @@ export class dragObject {
               }
             }
           }
+          break;
+        case DocItemTypes.Wire:
+        case DocItemTypes.BusWire:
+          this.collectAttachedItemsForWire(
+            items,
+            m,
+            moving_objects,
+            in_use_indexes,
+          );
           break;
       }
     }
