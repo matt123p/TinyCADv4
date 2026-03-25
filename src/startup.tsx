@@ -104,17 +104,79 @@ const initializeNativeMenuTranslations = () => {
 
 initializeNativeMenuTranslations();
 
+const isEditableClipboardTarget = (target: EventTarget | null) => {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  const editableElement = target.closest('input, textarea, [contenteditable="true"], [role="textbox"]');
+  if (!editableElement) {
+    return false;
+  }
+
+  if (editableElement instanceof HTMLTextAreaElement) {
+    return !editableElement.disabled;
+  }
+
+  if (editableElement instanceof HTMLInputElement) {
+    if (editableElement.disabled) {
+      return false;
+    }
+
+    switch (editableElement.type) {
+      case 'button':
+      case 'checkbox':
+      case 'color':
+      case 'file':
+      case 'hidden':
+      case 'image':
+      case 'radio':
+      case 'range':
+      case 'reset':
+      case 'submit':
+        return false;
+      default:
+        return true;
+    }
+  }
+
+  return editableElement instanceof HTMLElement && editableElement.isContentEditable;
+};
+
+const shouldUseNativeClipboard = (event: ClipboardEvent) => {
+  return (
+    isEditableClipboardTarget(event.target) ||
+    isEditableClipboardTarget(document.activeElement)
+  );
+};
+
 document.addEventListener('paste', function (e) {
+  if (shouldUseNativeClipboard(e)) {
+    return true;
+  }
+
   // cancel paste
   e.preventDefault();
 
+  if (!e.clipboardData) {
+    return false;
+  }
+
   // Check the clipboard for data
-  for (const i in e.clipboardData.items) {
-    if (e.clipboardData.items[i].kind == 'string') {
-      var text = e.clipboardData.getData('text/plain');
+  for (const item of Array.from(e.clipboardData.items)) {
+    if (item.kind == 'string') {
+      const text = e.clipboardData.getData('text/plain');
       store.dispatch(actionPasteEvent(text, null));
-    } else if (e.clipboardData.items[i].kind == 'file') {
-      const file = e.clipboardData.items[i].getAsFile();
+    } else if (item.kind == 'file') {
+      const file = item.getAsFile();
+      if (!file) {
+        continue;
+      }
+
       switch (file.type) {
         case 'image/png':
           store.dispatch(imageFile(file, null, 'PNG') as any);
@@ -131,6 +193,10 @@ document.addEventListener('paste', function (e) {
 });
 
 document.addEventListener('cut', function (e) {
+  if (shouldUseNativeClipboard(e)) {
+    return true;
+  }
+
   // cancel paste
   e.preventDefault();
   store.dispatch(actionCutEvent());
@@ -138,6 +204,10 @@ document.addEventListener('cut', function (e) {
 });
 
 document.addEventListener('copy', function (e) {
+  if (shouldUseNativeClipboard(e)) {
+    return true;
+  }
+
   // cancel paste
   e.preventDefault();
   store.dispatch(actionCopyEvent());
