@@ -793,11 +793,23 @@ export class updateView {
       });
 
       if (hover_obj) {
-        if (!UtilityService.isSelected(view._selected_array, hover_obj)) {
+        const isSelected = UtilityService.isSelected(
+          view._selected_array,
+          hover_obj,
+        );
+        const toggleSelection =
+          append &&
+          (event_name === 'lbuttondown' || event_name === 'ldoubleclick') &&
+          isSelected;
+
+        if (toggleSelection) {
+          view = this.unselectSingleItem(view, sheet, hover_obj);
+        } else if (!isSelected) {
           view = this.selectSingleItem(view, sheet, hover_obj, append);
         }
 
         if (
+          !toggleSelection &&
           UtilityService.isSingleItemSelected(view._selected_array, hover_obj)
         ) {
           if (view._selected_handle !== is_inside.handle) {
@@ -1933,6 +1945,11 @@ export class updateView {
       view: this._updateSelection(view, sheet, view._selected_handle, []),
       sheet: sheet,
     };
+  }
+
+  unselectSingleItem(view: dsnView, sheet: dsnSheet, o: DocItem): dsnView {
+    const ns = view._selected_array.filter((id) => id !== o._id);
+    return this._updateSelection(view, sheet, view._selected_handle, ns);
   }
 
   _updateSelection(
