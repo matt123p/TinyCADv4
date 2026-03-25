@@ -742,8 +742,12 @@ export class updateView {
     });
 
     let hover_obj = is_inside.item;
-    if (event_name === 'lbuttondown' || event_name === 'rbuttondown') {
-      if (event_name === 'lbuttondown') {
+    if (
+      event_name === 'lbuttondown' ||
+      event_name === 'ldoubleclick' ||
+      event_name === 'rbuttondown'
+    ) {
+      if (event_name === 'lbuttondown' || event_name === 'ldoubleclick') {
         const click_threshold = 2.0;
         const is_same_spot =
           view.last_click_point &&
@@ -948,6 +952,7 @@ export class updateView {
 
     if (
       event_name === 'lbuttondown' ||
+      event_name === 'ldoubleclick' ||
       event_name === 'mousemove' ||
       event_name === 'dragstart'
     ) {
@@ -1012,6 +1017,8 @@ export class updateView {
       let new_item = item;
       if (event_name === 'lbuttondown') {
         new_item = update_item.on_mouse_click(handle, p, true);
+      } else if (event_name === 'ldoubleclick') {
+        new_item = update_item.on_mouse_double_click(handle, p);
       } else if (event_name === 'mousedrag') {
         new_item = update_item.on_mouse_click(handle, p, false);
       }

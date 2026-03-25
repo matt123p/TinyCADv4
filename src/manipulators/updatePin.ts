@@ -405,6 +405,50 @@ export class updatePin extends updatePointBase implements SimpleAdd, IsInside {
     return this.item;
   }
 
+  on_mouse_double_click(handle: number, p: Coordinate): DocItem {
+    let edit_position;
+
+    const UpdateTextAreas = this.create_updateTextArea(
+      this.item,
+      p,
+      this.item.rotation,
+    );
+    switch (handle) {
+      case -2:
+        edit_position = UpdateTextAreas.name.find_positon(
+          this.item.textData.name,
+          p,
+        );
+        return update(this.item, {
+          textData: {
+            name: {
+              $set: UpdateTextAreas.name.select_word(
+                this.item.textData.name,
+                edit_position,
+              ),
+            },
+          },
+        });
+      case -3:
+        edit_position = UpdateTextAreas.number.find_positon(
+          this.item.textData.number,
+          p,
+        );
+        return update(this.item, {
+          textData: {
+            number: {
+              $set: UpdateTextAreas.number.select_word(
+                this.item.textData.number,
+                edit_position,
+              ),
+            },
+          },
+        });
+    }
+
+    return this.item;
+  }
+
   handleTextPaste(handle: number, text: string): DocItem {
     return this.item;
   }

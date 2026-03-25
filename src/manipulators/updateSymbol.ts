@@ -210,6 +210,31 @@ export class updateSymbol
     }
   }
 
+  on_mouse_double_click(handle: number, p: Coordinate): DocItem {
+    const index = -handle - 100;
+    if (index >= 0 && index < this.item.text.length) {
+      const UpdateTextAreas = this.create_updateTextArea(
+        this.item,
+        this.item.point,
+      );
+      const edit_position = UpdateTextAreas[index].find_positon(
+        this.item.textData[index],
+        p,
+      );
+      const textData = UpdateTextAreas[index].select_word(
+        this.item.textData[index],
+        edit_position,
+      );
+      return update(this.item, {
+        textData: {
+          [index]: { $set: textData },
+        },
+      });
+    }
+
+    return this.item;
+  }
+
   handleTextPaste(handle: number, pasteText: string): DocItem {
     const index = -handle - 100;
     if (index >= 0 && index < this.item.text.length) {

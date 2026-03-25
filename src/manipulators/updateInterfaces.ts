@@ -23,6 +23,7 @@ export interface UpdateText {
     p: Coordinate,
     clear_selection: boolean,
   ): DocItem;
+  on_mouse_double_click(handle: number, p: Coordinate): DocItem;
   handleTextPaste(handle: number, text: string): DocItem;
   handleTextCopy(handle: number, cut: boolean): CopyData;
   wantKeyPress(handle: number): boolean;

@@ -452,7 +452,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     if (name === 'mousedown') {
       this._div.focus();
       if (e.button === 0) {
-        name = 'lbuttondown';
+        name = e.detail === 2 ? 'ldoubleclick' : 'lbuttondown';
       } else {
         name = 'rbuttondown';
       }

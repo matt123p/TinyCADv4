@@ -172,6 +172,21 @@ export class updateText extends updateRectBase implements MoveAdd, IsInside {
     });
   }
 
+  on_mouse_double_click(handle: number, p: Coordinate): DocItem {
+    const UpdateTextArea = this.create_updateTextArea(
+      this.item,
+      this.item.point,
+      this.item.point_b,
+      this.item.rotation,
+    );
+    const edit_position = UpdateTextArea.find_positon(this.item.textData, p);
+    return update(this.item, {
+      textData: {
+        $set: UpdateTextArea.select_word(this.item.textData, edit_position),
+      },
+    });
+  }
+
   handleTextPaste(handle: number, pasteText: string): DocItem {
     if (handle === -2) {
       const UpdateTextArea = this.create_updateTextArea(
