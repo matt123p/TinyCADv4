@@ -278,6 +278,8 @@ export function DocStoreReducer(
           action.keyCode,
           action.shiftKey,
           action.ctrlKey,
+          action.altKey,
+          action.metaKey,
         );
       }
       break;

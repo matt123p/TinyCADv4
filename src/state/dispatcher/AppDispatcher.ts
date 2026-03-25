@@ -375,12 +375,16 @@ export function actionKeyDown(
   keyCode: number,
   shiftKey: boolean,
   ctrlKey: boolean,
+  altKey: boolean,
+  metaKey: boolean,
 ) {
   const action: TextKeyDown = {
     type: TextActionTypes.TextKeyDown,
     keyCode,
     shiftKey,
     ctrlKey,
+    altKey,
+    metaKey,
   };
   return action;
 }

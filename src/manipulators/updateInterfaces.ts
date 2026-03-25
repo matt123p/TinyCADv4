@@ -14,6 +14,8 @@ export interface UpdateText {
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ): DocItem;
   handleKeyPress(handle: number, keyCode: number): DocItem;
   on_mouse_click(

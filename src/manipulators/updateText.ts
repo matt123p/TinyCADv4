@@ -100,6 +100,8 @@ export class updateText extends updateRectBase implements MoveAdd, IsInside {
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ): DocItem {
     if (handle === -2) {
       const UpdateTextArea = this.create_updateTextArea(
@@ -113,6 +115,8 @@ export class updateText extends updateRectBase implements MoveAdd, IsInside {
         keyCode,
         shiftKey,
         ctrlKey,
+        altKey,
+        metaKey,
       );
       return update(this.item, {
         text: { $set: textData.drawText },

@@ -135,7 +135,6 @@ export class updateTextData {
     edit_position: number,
     clear_selection: boolean,
   ) {
-    // Does this hit one of our items?
     if (clear_selection) {
       textAreaData = update(textAreaData, {
         edit_position: { $set: edit_position },
@@ -157,38 +156,55 @@ export class updateTextData {
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ) {
     let text = textAreaData.drawText;
+    const useWordNavigation = this.isWordNavigationModifier(ctrlKey, altKey);
+    const useLineNavigation = this.isLineNavigationModifier(ctrlKey, metaKey);
 
-    // Is this a special character?
     switch (keyCode) {
+      case 65: // A
+        if (ctrlKey || metaKey) {
+          textAreaData = this.select_all(textAreaData);
+        }
+        break;
+      case 35: // End
+        textAreaData = this.update_sel_begin(textAreaData, shiftKey);
+        textAreaData = this.change_edit_position(
+          textAreaData,
+          this.find_line_end(textAreaData),
+          false,
+          false,
+          text,
+        );
+        textAreaData = this.update_sel_end(textAreaData, shiftKey);
+        break;
+      case 36: // Home
+        textAreaData = this.update_sel_begin(textAreaData, shiftKey);
+        textAreaData = this.change_edit_position(
+          textAreaData,
+          this.find_line_start(textAreaData),
+          false,
+          false,
+          text,
+        );
+        textAreaData = this.update_sel_end(textAreaData, shiftKey);
+        break;
       case 37: // Left
         textAreaData = this.update_sel_begin(textAreaData, shiftKey);
-        if (ctrlKey) {
-          let first_check = true;
-          let check_for;
-          let edit_position = textAreaData.edit_position;
-          do {
-            if (textAreaData.edit_position > 0) {
-              --edit_position;
-            } else {
-              break;
-            }
-            if (first_check) {
-              check_for = this.is_letter(textAreaData.drawText[edit_position]);
-              first_check = false;
-            }
-          } while (
-            this.is_letter(textAreaData.drawText[edit_position]) === check_for
-          );
-          if (
-            this.is_letter(textAreaData.drawText[edit_position]) !== check_for
-          ) {
-            ++edit_position;
-          }
+        if (useLineNavigation) {
           textAreaData = this.change_edit_position(
             textAreaData,
-            edit_position,
+            this.find_line_start(textAreaData),
+            false,
+            false,
+            text,
+          );
+        } else if (useWordNavigation) {
+          textAreaData = this.change_edit_position(
+            textAreaData,
+            this.find_previous_word_boundary(text, textAreaData.edit_position),
             false,
             false,
             text,
@@ -220,27 +236,18 @@ export class updateTextData {
         break;
       case 39: // Right
         textAreaData = this.update_sel_begin(textAreaData, shiftKey);
-        if (ctrlKey) {
-          let first_check = true;
-          let check_for;
-          let edit_position = textAreaData.edit_position;
-          do {
-            if (first_check) {
-              check_for = this.is_letter(textAreaData.drawText[edit_position]);
-              first_check = false;
-            }
-            if (edit_position < textAreaData.drawText.length) {
-              --edit_position;
-            } else {
-              break;
-            }
-          } while (
-            edit_position === textAreaData.drawText.length ||
-            this.is_letter(textAreaData.drawText[edit_position]) === check_for
-          );
+        if (useLineNavigation) {
           textAreaData = this.change_edit_position(
             textAreaData,
-            edit_position,
+            this.find_line_end(textAreaData),
+            false,
+            false,
+            text,
+          );
+        } else if (useWordNavigation) {
+          textAreaData = this.change_edit_position(
+            textAreaData,
+            this.find_next_word_boundary(text, textAreaData.edit_position),
             false,
             false,
             text,
@@ -274,35 +281,71 @@ export class updateTextData {
         if (textAreaData.sel_start !== textAreaData.sel_end) {
           textAreaData = this.delete_sel(textAreaData);
           text = textAreaData.drawText;
-        } else {
-          if (textAreaData.edit_position > 0) {
-            if (text.length > 0) {
-              text =
-                text.substring(0, textAreaData.edit_position - 1) +
-                text.substring(textAreaData.edit_position);
-              textAreaData = this.change_edit_position(
-                textAreaData,
-                -1,
-                false,
-                true,
-                text,
-              );
-            }
+        } else if (useLineNavigation) {
+          const lineStart = this.find_line_start(textAreaData);
+          if (lineStart !== textAreaData.edit_position) {
+            text =
+              text.substring(0, lineStart) +
+              text.substring(textAreaData.edit_position);
+            textAreaData = this.change_edit_position(
+              textAreaData,
+              lineStart,
+              false,
+              false,
+              text,
+            );
           }
+        } else if (useWordNavigation) {
+          const wordStart = this.find_previous_word_boundary(
+            text,
+            textAreaData.edit_position,
+          );
+          if (wordStart !== textAreaData.edit_position) {
+            text =
+              text.substring(0, wordStart) +
+              text.substring(textAreaData.edit_position);
+            textAreaData = this.change_edit_position(
+              textAreaData,
+              wordStart,
+              false,
+              false,
+              text,
+            );
+          }
+        } else if (textAreaData.edit_position > 0 && text.length > 0) {
+          text =
+            text.substring(0, textAreaData.edit_position - 1) +
+            text.substring(textAreaData.edit_position);
+          textAreaData = this.change_edit_position(
+            textAreaData,
+            -1,
+            false,
+            true,
+            text,
+          );
         }
         break;
       case 46: // Delete
         if (textAreaData.sel_start !== textAreaData.sel_end) {
           textAreaData = this.delete_sel(textAreaData);
           text = textAreaData.drawText;
-        } else {
-          if (textAreaData.edit_position < textAreaData.drawText.length) {
-            if (text.length > 0) {
-              text =
-                text.substring(0, textAreaData.edit_position) +
-                text.substring(textAreaData.edit_position + 1);
-            }
+        } else if (useWordNavigation) {
+          const wordEnd = this.find_next_word_boundary(
+            text,
+            textAreaData.edit_position,
+          );
+          if (wordEnd !== textAreaData.edit_position) {
+            text =
+              text.substring(0, textAreaData.edit_position) +
+              text.substring(wordEnd);
           }
+        } else if (
+          textAreaData.edit_position < textAreaData.drawText.length &&
+          text.length > 0
+        ) {
+          text =
+            text.substring(0, textAreaData.edit_position) +
+            text.substring(textAreaData.edit_position + 1);
         }
         break;
       default:
@@ -350,8 +393,10 @@ export class updateTextData {
     const copy_data = textAreaData.drawText.substring(sel_start, sel_end);
 
     if (cut) {
+      const nextTextData = this.delete_sel(textAreaData);
       return {
-        ...this.delete_sel(textAreaData),
+        textData: nextTextData,
+        text: nextTextData.drawText,
         copy_data: copy_data,
       };
     } else {
@@ -764,8 +809,113 @@ export class updateTextData {
     return rotation % 4;
   }
 
-  private is_letter(c: string) {
-    return c.toLowerCase() !== c.toUpperCase();
+  private select_all(textAreaData: TextAreaData) {
+    const textLength = textAreaData.drawText.length;
+    return update(textAreaData, {
+      edit_position: { $set: textLength },
+      sel_start: { $set: 0 },
+      sel_end: { $set: textLength },
+    });
+  }
+
+  private isWordNavigationModifier(ctrlKey: boolean, altKey: boolean) {
+    const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+    return isMac ? altKey : ctrlKey;
+  }
+
+  private isLineNavigationModifier(ctrlKey: boolean, metaKey: boolean) {
+    const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+    return isMac ? metaKey : false;
+  }
+
+  private find_previous_word_boundary(text: string, position: number) {
+    let nextPosition = position;
+
+    while (nextPosition > 0 && this.get_char_category(text[nextPosition - 1]) === 'space') {
+      --nextPosition;
+    }
+
+    const category = this.get_char_category(text[nextPosition - 1]);
+    while (
+      nextPosition > 0 &&
+      this.get_char_category(text[nextPosition - 1]) === category
+    ) {
+      --nextPosition;
+    }
+
+    return nextPosition;
+  }
+
+  private find_next_word_boundary(text: string, position: number) {
+    let nextPosition = position;
+
+    while (nextPosition < text.length && this.get_char_category(text[nextPosition]) === 'space') {
+      ++nextPosition;
+    }
+
+    const category = this.get_char_category(text[nextPosition]);
+    while (
+      nextPosition < text.length &&
+      this.get_char_category(text[nextPosition]) === category
+    ) {
+      ++nextPosition;
+    }
+
+    return nextPosition;
+  }
+
+  private find_current_block(textAreaData: TextAreaData) {
+    const position = textAreaData.edit_position;
+
+    for (let index = 0; index < textAreaData.textBlocks.length; ++index) {
+      const block = textAreaData.textBlocks[index];
+      const blockEnd = block.start + block.value.length;
+      if (position === block.start || position < blockEnd) {
+        return block;
+      }
+
+      if (position === blockEnd) {
+        const nextBlock = textAreaData.textBlocks[index + 1];
+        if (!nextBlock || nextBlock.start !== position) {
+          return block;
+        }
+      }
+    }
+
+    return textAreaData.textBlocks[textAreaData.textBlocks.length - 1] || null;
+  }
+
+  private find_line_start(textAreaData: TextAreaData) {
+    const block = this.find_current_block(textAreaData);
+    return block ? block.start : 0;
+  }
+
+  private find_line_end(textAreaData: TextAreaData) {
+    const block = this.find_current_block(textAreaData);
+    if (!block) {
+      return textAreaData.drawText.length;
+    }
+
+    const visibleLength = block.value.endsWith('\r')
+      ? block.value.length - 1
+      : block.value.length;
+    return block.start + visibleLength;
+  }
+
+  private get_char_category(c: string | undefined) {
+    if (!c) {
+      return 'space';
+    }
+
+    if (/\s/.test(c)) {
+      return 'space';
+    }
+
+    if (/[A-Za-z0-9_]/.test(c)) {
+      return 'word';
+    }
+
+    return 'punct';
   }
 
   private makeTextArea(textAreaData: TextAreaData, drawText: string) {

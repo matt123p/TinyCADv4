@@ -279,6 +279,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     }
 
     if (
+      ((e.metaKey || e.ctrlKey) && (e.key === 'a' || e.key === 'A')) ||
+      e.keyCode === 35 || // End
+      e.keyCode === 36 || // Home
       (e.keyCode >= 37 && e.keyCode <= 40) || // Cursor keys
       e.keyCode === 8 || // Backspace
       e.keyCode === 46 // Delete
@@ -286,7 +289,15 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       e.preventDefault();
       e.stopPropagation();
 
-      this.props.dispatch(actionKeyDown(e.keyCode, e.shiftKey, e.ctrlKey));
+      this.props.dispatch(
+        actionKeyDown(
+          e.keyCode,
+          e.shiftKey,
+          e.ctrlKey,
+          e.altKey,
+          e.metaKey,
+        ),
+      );
     }
   }
 

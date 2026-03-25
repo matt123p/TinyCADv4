@@ -166,6 +166,8 @@ export abstract class updatePointTextBase
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ): DocItem {
     if (handle === -2) {
       const UpdateTextArea = this.create_updateTextArea(
@@ -178,6 +180,8 @@ export abstract class updatePointTextBase
         keyCode,
         shiftKey,
         ctrlKey,
+        altKey,
+        metaKey,
       );
       return update(this.item as DocItem, {
         text: { $set: textData.drawText },

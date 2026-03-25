@@ -2726,6 +2726,8 @@ export class updateView {
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ): dsnSheet {
     const item = this.getSelectedText(view, sheet);
     const update_item = updateTextFactory(item);
@@ -2735,6 +2737,8 @@ export class updateView {
         keyCode,
         shiftKey,
         ctrlKey,
+        altKey,
+        metaKey,
       );
       sheet = this.updateObject(sheet, item, newItem);
     }
@@ -2762,6 +2766,21 @@ export class updateView {
       const data = update_item.handleTextCopy(view._selected_handle, cut);
       sheet = this.updateObject(sheet, item, data.item);
       copy_data = data.copy_data;
+
+      if (copy_data !== null) {
+        if (copy_data.length > 0) {
+          navigator.clipboard
+            .writeText(copy_data)
+            .then(() => {
+              console.log('Text copied to clipboard');
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        }
+
+        return { view: view, sheet: sheet };
+      }
     }
 
     if (!copy_data) {

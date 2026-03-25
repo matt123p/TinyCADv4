@@ -121,6 +121,8 @@ export class updateSymbol
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ): DocItem {
     const index = -handle - 100;
     if (index >= 0 && index < this.item.text.length) {
@@ -133,6 +135,8 @@ export class updateSymbol
         keyCode,
         shiftKey,
         ctrlKey,
+        altKey,
+        metaKey,
       );
       return update(this.item, {
         text: {

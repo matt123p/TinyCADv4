@@ -345,6 +345,8 @@ export class updatePin extends updatePointBase implements SimpleAdd, IsInside {
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ): DocItem {
     return this.item;
   }
