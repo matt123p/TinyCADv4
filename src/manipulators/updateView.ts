@@ -590,20 +590,12 @@ export class updateView {
     const update_add = updateSimpleAddFactory(view.add);
     if (update_add) {
       let obj = update_add.complete_add();
-      const items = UtilityService.updateDupArray(sheet.items, view.add, obj);
-      if (items !== sheet.items) {
-        sheet = update(sheet, {
-          items: { $set: items },
-        });
-      }
-
       sheet = this.tidy_wires(
         update(sheet, {
-          items: { $push: [view.add] },
+          items: { $push: [obj] },
         }),
       );
 
-      const add = view.add;
       view = update(view, {
         display_add: { $set: false },
         add: { $set: null },
@@ -613,7 +605,7 @@ export class updateView {
       });
 
       return {
-        view: this.selectSingleItem(view, sheet, add, false),
+        view: this.selectSingleItem(view, sheet, obj, false),
         sheet: sheet,
       };
     } else {

@@ -553,12 +553,19 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   //
   render() {
     // Is the user dragging out a selection rectangle?
+    const selectRectBounds = this.props._in_select_rect
+      ? UtilityService.normalizeRect(
+          this.props._select_rect_a,
+          this.props._select_rect_b,
+        )
+      : null;
+
     let selectrect = this.props._in_select_rect ? (
       <rect
-        x={this.props._select_rect_a[0]}
-        y={this.props._select_rect_a[1]}
-        width={this.props._select_rect_b[0] - this.props._select_rect_a[0]}
-        height={this.props._select_rect_b[1] - this.props._select_rect_a[1]}
+        x={selectRectBounds.a[0]}
+        y={selectRectBounds.a[1]}
+        width={selectRectBounds.b[0] - selectRectBounds.a[0]}
+        height={selectRectBounds.b[1] - selectRectBounds.a[1]}
         style={{
           fill: 'blue',
           fillOpacity: 0.25,

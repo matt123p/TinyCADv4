@@ -617,10 +617,16 @@ export class updateTextData {
     // Is this text block inside the rectangle?
     let pa = this.rotateMsg(textAreaData, sd, rect_a);
     let pb = this.rotateMsg(textAreaData, sd, rect_b);
+    const rect = UtilityService.normalizeRect(pa, pb);
     let a = [0, 0];
     let b = [textAreaData.width, textAreaData.height];
 
-    return a[0] >= pa[0] && a[1] >= pa[1] && b[0] <= pb[0] && b[1] <= pb[1];
+    return (
+      a[0] >= rect.a[0] &&
+      a[1] >= rect.a[1] &&
+      b[0] <= rect.b[0] &&
+      b[1] <= rect.b[1]
+    );
   }
 
   public on_isinside(
