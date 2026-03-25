@@ -1,4 +1,4 @@
-import React, { Dispatch, useState } from 'react';
+import React, { Dispatch, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { loadLibraries, saveLibraryConfig } from '../../io/files';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../../model/tclib';
@@ -293,7 +293,7 @@ function isFolderOpen(
   expandedFolders: Record<string, boolean>,
   folderId: string,
 ) {
-  return expandedFolders[folderId] !== false;
+  return expandedFolders[folderId] === true;
 }
 
 function selectSymbol(lib: tclib, name: tclibLibraryEntry) {
@@ -313,6 +313,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
 ) => {
   const styles = useStyles();
   const { t } = useTranslation();
+  const treeContainerRef = useRef<HTMLDivElement>(null);
   const isElectron = process.env.TARGET_SYSTEM === 'electron';
   const isFileSystem = process.env.TARGET_SYSTEM === 'filesystem';
   const canUseLibraryFolders = isElectron;
@@ -381,6 +382,34 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
       }
     }
   }, [props.libraries, state.selectedId, state.online]);
+
+  React.useEffect(() => {
+    const handleDocumentMouseDown = (event: MouseEvent) => {
+      if (!canUseLibraryFolders || state.online || !state.selectedFolderId) {
+        return;
+      }
+
+      const treeContainer = treeContainerRef.current;
+      const target = event.target;
+      if (!treeContainer || !(target instanceof Node)) {
+        return;
+      }
+
+      if (treeContainer.contains(target)) {
+        return;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        selectedFolderId: null,
+      }));
+    };
+
+    document.addEventListener('mousedown', handleDocumentMouseDown);
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentMouseDown);
+    };
+  }, [canUseLibraryFolders, state.online, state.selectedFolderId]);
 
   const handleSearchChange = (value: string) => {
     const filterValue = value.toLocaleLowerCase();
@@ -828,7 +857,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
                 )}
               </div>
             </div>
-            <div className={styles.treeContainer}>
+            <div className={styles.treeContainer} ref={treeContainerRef}>
               {props.libraries.length === 0 && config.libraryFolders.length === 0 ? (
                 <div className={styles.emptyState}>
                   {isElectron ? (
