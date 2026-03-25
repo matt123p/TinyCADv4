@@ -31,7 +31,14 @@ import {
   actionSelectLibrarySymbol,
 } from '../../state/dispatcher/AppDispatcher';
 import { ActionCreators } from 'redux-undo';
-import { imageFile, print } from '../../io/files';
+import {
+  fileSave,
+  fileSaveAs,
+  imageFile,
+  librarySave,
+  librarySaveAs,
+  print,
+} from '../../io/files';
 import { SelectSymbol } from '../libraryPanel/Search';
 import { Ruler } from '../controls/Ruler';
 import { actionSetMousePosition } from '../../state/actions/viewActions';
@@ -239,6 +246,25 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       return;
     }
 
+    const hasPrimaryModifier = e.metaKey || e.ctrlKey;
+    const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
+
+    if (hasPrimaryModifier && !e.altKey && key === 's') {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.shiftKey) {
+        this.props.dispatch(
+          (this.props.editingLibrary ? librarySaveAs : fileSaveAs) as any,
+        );
+      } else {
+        this.props.dispatch(
+          (this.props.editingLibrary ? librarySave : fileSave) as any,
+        );
+      }
+      return;
+    }
+
     if (!this.wantKeyPress()) {
       // Handle arrow keys for moving selected objects or panning
       if (e.keyCode >= 37 && e.keyCode <= 40) {
@@ -268,8 +294,8 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       }
       
       // Check the accelerator
-      const key: string = e.ctrlKey ? '~' + e.key : e.key;
-      const action = accelerator[key];
+      const acceleratorKey: string = hasPrimaryModifier ? '~' + e.key : e.key;
+      const action = accelerator[acceleratorKey];
       if (action) {
         e.preventDefault();
         e.stopPropagation();
