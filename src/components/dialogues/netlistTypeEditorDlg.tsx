@@ -102,6 +102,24 @@ const previewPowerJunctionData: dsnJunction = {
   point: [246, 56],
 };
 
+function getClampedSpinButtonValue(
+  value: number | null | undefined,
+  displayValue: string | undefined,
+  min: number,
+  max: number,
+) {
+  if (typeof value === 'number' && !Number.isNaN(value)) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  const parsedValue = Number(displayValue?.trim());
+  if (Number.isFinite(parsedValue)) {
+    return Math.min(max, Math.max(min, parsedValue));
+  }
+
+  return null;
+}
+
 function createPreviewPower(item: dsnPower): dsnPower {
   return new updatePower(item).post_construction() as dsnPower;
 }
@@ -1008,13 +1026,20 @@ const NetlistTypeEditorDialog: React.FC<NetlistTypeEditorDialogProps> = ({
                               min={1}
                               max={64}
                               step={1}
-                              onChange={(e, data) =>
-                                updateRow(row.id, {
-                                  wireThickness: String(
-                                    Math.min(64, Math.max(1, data.value ?? 1)),
-                                  ),
-                                })
-                              }
+                              onChange={(e, data) => {
+                                const nextValue = getClampedSpinButtonValue(
+                                  data.value,
+                                  data.displayValue,
+                                  1,
+                                  64,
+                                );
+
+                                if (nextValue !== null) {
+                                  updateRow(row.id, {
+                                    wireThickness: String(nextValue),
+                                  });
+                                }
+                              }}
                               onFocus={() => setFocusedCell({ row: rowIndex, col: COLS.WT })}
                               onKeyDown={handleKeyDown}
                               disabled={isDefaultType}
