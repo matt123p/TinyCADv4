@@ -1612,7 +1612,7 @@ export class ioXML {
     for (let k = 0; k < fonts.length; ++k) {
       let selected_font = fonts[k];
       if (parseInt(selected_font.getAttribute('id'), 10) === f) {
-        o.font_size = Math.abs(
+        o.font_size = this.fontSizeFromHeight(
           this.nodeNumber(selected_font.getElementsByTagName('HEIGHT')[0]),
         );
         // let width = nodeNumber( font.getElementsByTagName( "WIDTH" )[0] );
@@ -1631,6 +1631,16 @@ export class ioXML {
       }
     }
     return o;
+  }
+
+  private fontSizeFromHeight(height: number) {
+    const absoluteHeight = Math.abs(height);
+
+    if (height < 0) {
+      return Math.max(1, Math.round((absoluteHeight * 72) / 96));
+    }
+
+    return absoluteHeight;
   }
 
   private font_colour(f: string) {

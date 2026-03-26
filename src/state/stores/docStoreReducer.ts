@@ -278,6 +278,8 @@ export function DocStoreReducer(
           action.keyCode,
           action.shiftKey,
           action.ctrlKey,
+          action.altKey,
+          action.metaKey,
         );
       }
       break;
@@ -974,6 +976,25 @@ export function DocStoreReducer(
           heterogeneous: { $set: true },
         });
       }
+      break;
+
+    case SymbolActionTypes.ReplaceSymbol:
+      state = update(state, {
+        drawing: {
+          $set: update_view.replaceSymbolsInDrawing(
+            state.drawing,
+            action.sourceUid,
+            action.targetSymbolId,
+            action.targetSheetIndex,
+            action.scope,
+            action.name,
+            action.symbolData,
+            action.keepFieldValues,
+          ),
+        },
+        drawingVersion: { $set: state.drawingVersion + 1 },
+      });
+      sheet = activeSheet(state);
       break;
 
     case LibraryActionTypes.SetPPP:

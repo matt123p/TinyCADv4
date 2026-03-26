@@ -1,5 +1,7 @@
-import { dsnPin } from '../../model/dsnItem';
+import { DocItem, dsnPin } from '../../model/dsnItem';
 import { tclibLibraryEntry } from '../../model/tclib';
+
+export type ReplaceSymbolScope = 'single_symbol' | 'all_symbols_on_sheet';
 
 export enum SymbolActionTypes {
   SymbolShowPower = '[Symbol] SymbolShowPower',
@@ -14,6 +16,7 @@ export enum SymbolActionTypes {
   SymbolEditPin = '[Symbol] SymbolEditPin',
   SymbolEditSymbol = '[Symbol] SymbolEditSymbol',
   SymbolEditOutline = '[Symbol] SymbolEditOutline',
+  ReplaceSymbol = '[Symbol] ReplaceSymbol',
 }
 
 export interface SymbolShowPower {
@@ -76,6 +79,17 @@ export interface SymbolEditOutline {
   heterogeneous: boolean;
 }
 
+export interface ReplaceSymbol {
+  type: SymbolActionTypes.ReplaceSymbol;
+  sourceUid: string;
+  targetSymbolId: number;
+  targetSheetIndex: number;
+  scope: ReplaceSymbolScope;
+  name: tclibLibraryEntry;
+  symbolData: DocItem[][];
+  keepFieldValues: boolean;
+}
+
 export type SymbolActions =
   | SymbolShowPower
   | SymbolAllowResize
@@ -88,4 +102,5 @@ export type SymbolActions =
   | SymbolAdd
   | SymbolEditPin
   | SymbolEditSymbol
-  | SymbolEditOutline;
+  | SymbolEditOutline
+  | ReplaceSymbol;

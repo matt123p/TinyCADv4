@@ -27,6 +27,24 @@ export abstract class updateRectBase implements SimpleAdd, IsInside {
 
   constructor(public item: dsnRectBase) {}
 
+  protected normalizeRectItem(item: dsnRectBase = this.item): dsnRectBase {
+    const rect = UtilityService.normalizeRect(item.point, item.point_b);
+
+    if (
+      rect.a[0] === item.point[0] &&
+      rect.a[1] === item.point[1] &&
+      rect.b[0] === item.point_b[0] &&
+      rect.b[1] === item.point_b[1]
+    ) {
+      return item;
+    }
+
+    return update(item, {
+      point: { $set: rect.a },
+      point_b: { $set: rect.b },
+    }) as dsnRectBase;
+  }
+
   x() {
     return this.item.point[0];
   }
@@ -505,6 +523,6 @@ export abstract class updateRectBase implements SimpleAdd, IsInside {
   }
 
   complete_add(): DocItem {
-    return this.item as DocItem;
+    return this.normalizeRectItem() as DocItem;
   }
 }

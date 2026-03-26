@@ -20,6 +20,7 @@ import { ImportSymbolPickerDialog } from './importSymbolPickerDlg';
 import { ImportLibrarySymbolPickerDialog } from './importLibrarySymbolPickerDlg';
 import { LibraryInfoDialog } from './libraryInfoDlg';
 import { LibraryFolderDialog } from './libraryFolderDlg';
+import { ReplaceSymbolDialog } from './replaceSymbolDlg';
 
 interface TDialogueProps {
   show_dialogue: string;
@@ -88,6 +89,15 @@ const TDialogue: FunctionComponent<TDialogueProps> = (
       return <ImportSymbolPickerDialog symbols={props.dialogue_props.symbols} />;
     case 'import_library_symbol_picker':
       return <ImportLibrarySymbolPickerDialog symbols={props.dialogue_props.symbols} />;
+    case 'replace_symbol':
+      return (
+        <ReplaceSymbolDialog
+          sourceUid={props.dialogue_props?.sourceUid}
+          targetSymbolId={props.dialogue_props?.targetSymbolId}
+          targetSheetIndex={props.dialogue_props?.targetSheetIndex}
+          initialSearch={props.dialogue_props?.initialSearch}
+        />
+      );
     case 'library_info':
       return (
         <LibraryInfoDialog

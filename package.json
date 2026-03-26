@@ -1,7 +1,7 @@
 {
   "name": "tinycad",
   "productName": "TinyCAD",
-  "version": "4.0.5",
+  "version": "4.0.6",
   "description": "TinyCAD circuit editor",
   "author": {
     "name": "Matt Pyne",
@@ -33,6 +33,7 @@
     "appId": "com.tinycad.app",
     "productName": "TinyCAD",
     "appx": {
+      "artifactName": "${productName} Windows Setup ${version}-${arch}.${ext}",
       "backgroundColor": "transparent",
       "publisherDisplayName": "TinyCAD.net",
       "identityName": "TinyCAD.net.TinyCAD",
@@ -50,7 +51,7 @@
     },
     "icon": "assets/TinyCAD.png",
     "win": {
-      "artifactName": "${productName} Windows Setup ${version}.${ext}",
+      "artifactName": "${productName} Windows Setup ${version}-${arch}.${ext}",
       "icon": "assets/TinyCAD.ico",
       "target": [
         {

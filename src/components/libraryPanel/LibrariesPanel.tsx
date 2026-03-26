@@ -1,4 +1,4 @@
-import React, { Dispatch, useState } from 'react';
+import React, { Dispatch, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { loadLibraries, saveLibraryConfig } from '../../io/files';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../../model/tclib';
@@ -285,15 +285,58 @@ interface LibrariesPanelState {
   online: boolean;
   searchResult: SearchResult | null;
   expandedFolders: Record<string, boolean>;
+  expandedLibraries: Record<string, boolean>;
   dragOverFolderId: string | null;
   draggedFolderId: string | null;
+}
+
+interface SearchExpansionSnapshot {
+  expandedFolders: Record<string, boolean>;
+  expandedLibraries: Record<string, boolean>;
 }
 
 function isFolderOpen(
   expandedFolders: Record<string, boolean>,
   folderId: string,
 ) {
-  return expandedFolders[folderId] !== false;
+  return expandedFolders[folderId] === true;
+}
+
+function isLibraryOpen(
+  expandedLibraries: Record<string, boolean>,
+  fileId: string,
+) {
+  return expandedLibraries[fileId] === true;
+}
+
+function getLibraryMatches(lib: tclib, filter: string) {
+  if (lib.bad) {
+    return [];
+  }
+
+  if (filter.length === 0) {
+    return lib.names;
+  }
+
+  return lib.names.filter(
+    (entry) =>
+      entry.Name.toLocaleLowerCase().includes(filter) ||
+      (entry.Description || '').toLocaleLowerCase().includes(filter),
+  );
+}
+
+function areExpandedStatesEqual(
+  left: Record<string, boolean>,
+  right: Record<string, boolean>,
+) {
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+
+  if (leftKeys.length !== rightKeys.length) {
+    return false;
+  }
+
+  return leftKeys.every((key) => left[key] === right[key]);
 }
 
 function selectSymbol(lib: tclib, name: tclibLibraryEntry) {
@@ -313,6 +356,8 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
 ) => {
   const styles = useStyles();
   const { t } = useTranslation();
+  const treeContainerRef = useRef<HTMLDivElement>(null);
+  const searchExpansionSnapshotRef = useRef<SearchExpansionSnapshot | null>(null);
   const isElectron = process.env.TARGET_SYSTEM === 'electron';
   const isFileSystem = process.env.TARGET_SYSTEM === 'filesystem';
   const canUseLibraryFolders = isElectron;
@@ -327,6 +372,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     online: true,
     searchResult: null,
     expandedFolders: {},
+    expandedLibraries: {},
     dragOverFolderId: null,
     draggedFolderId: null,
   });
@@ -349,6 +395,94 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
         ),
       }))
     : [];
+
+  React.useEffect(() => {
+    const shouldAutoExpandSearchMatches =
+      canUseLibraryFolders &&
+      !state.online &&
+      config.libraryFolders.length > 0 &&
+      state.findFilter.length > 0;
+
+    if (!shouldAutoExpandSearchMatches) {
+      const snapshot = searchExpansionSnapshotRef.current;
+      if (!snapshot) {
+        return;
+      }
+
+      searchExpansionSnapshotRef.current = null;
+      setState((prev) => {
+        if (
+          areExpandedStatesEqual(prev.expandedFolders, snapshot.expandedFolders) &&
+          areExpandedStatesEqual(prev.expandedLibraries, snapshot.expandedLibraries)
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          expandedFolders: snapshot.expandedFolders,
+          expandedLibraries: snapshot.expandedLibraries,
+        };
+      });
+      return;
+    }
+
+    if (!searchExpansionSnapshotRef.current) {
+      searchExpansionSnapshotRef.current = {
+        expandedFolders: state.expandedFolders,
+        expandedLibraries: state.expandedLibraries,
+      };
+    }
+
+    const nextExpandedLibraries = orderedLibraries.reduce<Record<string, boolean>>(
+      (expandedLibraries, lib) => {
+        if (getLibraryMatches(lib, state.findFilter).length > 0) {
+          expandedLibraries[`${lib.fileId}`] = true;
+        }
+
+        return expandedLibraries;
+      },
+      {},
+    );
+
+    const nextExpandedFolders = groupedFolders.reduce<Record<string, boolean>>(
+      (expandedFolders, { folder, libraries }) => {
+        const hasMatch = libraries.some(
+          (lib) => getLibraryMatches(lib, state.findFilter).length > 0,
+        );
+        if (hasMatch) {
+          expandedFolders[folder.id] = true;
+        }
+
+        return expandedFolders;
+      },
+      {},
+    );
+
+    setState((prev) => {
+      if (
+        areExpandedStatesEqual(prev.expandedFolders, nextExpandedFolders) &&
+        areExpandedStatesEqual(prev.expandedLibraries, nextExpandedLibraries)
+      ) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        expandedFolders: nextExpandedFolders,
+        expandedLibraries: nextExpandedLibraries,
+      };
+    });
+  }, [
+    canUseLibraryFolders,
+    config.libraryFolders.length,
+    groupedFolders,
+    orderedLibraries,
+    state.expandedFolders,
+    state.expandedLibraries,
+    state.findFilter,
+    state.online,
+  ]);
 
   React.useEffect(() => {
     props.dispatch(loadLibraries);
@@ -381,6 +515,34 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
       }
     }
   }, [props.libraries, state.selectedId, state.online]);
+
+  React.useEffect(() => {
+    const handleDocumentMouseDown = (event: MouseEvent) => {
+      if (!canUseLibraryFolders || state.online || !state.selectedFolderId) {
+        return;
+      }
+
+      const treeContainer = treeContainerRef.current;
+      const target = event.target;
+      if (!treeContainer || !(target instanceof Node)) {
+        return;
+      }
+
+      if (treeContainer.contains(target)) {
+        return;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        selectedFolderId: null,
+      }));
+    };
+
+    document.addEventListener('mousedown', handleDocumentMouseDown);
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentMouseDown);
+    };
+  }, [canUseLibraryFolders, state.online, state.selectedFolderId]);
 
   const handleSearchChange = (value: string) => {
     const filterValue = value.toLocaleLowerCase();
@@ -639,6 +801,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
         key={lib.fileId + ''}
         selectedId={state.selectedId}
         findFilter={state.findFilter}
+        open={isLibraryOpen(state.expandedLibraries, `${lib.fileId}`)}
         draggable={canUseLibraryFolders}
         onLibraryClick={(selectedLibrary: tclib) => {
           const selectedFolderId = getLibraryFolderId(`${selectedLibrary.fileId}`);
@@ -649,6 +812,21 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
             displaySymbol: null,
             displayName: null,
             displaySearchSymbol: null,
+          }));
+        }}
+        onToggle={(selectedLibrary: tclib, open: boolean) => {
+          const selectedFolderId = getLibraryFolderId(`${selectedLibrary.fileId}`);
+          setState((prev) => ({
+            ...prev,
+            selectedFolderId,
+            selectedId: null,
+            displaySymbol: null,
+            displayName: null,
+            displaySearchSymbol: null,
+            expandedLibraries: {
+              ...prev.expandedLibraries,
+              [`${selectedLibrary.fileId}`]: open,
+            },
           }));
         }}
         onDragStart={() => {
@@ -828,7 +1006,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
                 )}
               </div>
             </div>
-            <div className={styles.treeContainer}>
+            <div className={styles.treeContainer} ref={treeContainerRef}>
               {props.libraries.length === 0 && config.libraryFolders.length === 0 ? (
                 <div className={styles.emptyState}>
                   {isElectron ? (

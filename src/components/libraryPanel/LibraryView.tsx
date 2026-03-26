@@ -188,17 +188,27 @@ interface LibraryViewProps {
   dispatch: Dispatch<any>;
   lib: tclib;
   findFilter: string;
-  selectedId: string;
+  open: boolean;
+  selectedId: string | null;
   draggable?: boolean;
   onLibraryClick?(lib: tclib): void;
+  onToggle(lib: tclib, open: boolean): void;
   onSelect(lib: tclib, name: tclibLibraryEntry): void;
   onSelected(lib: tclib, name: tclibLibraryEntry): void;
   onDragStart?(lib: tclib): void;
 }
 
-interface LibraryViewState {
-  open: boolean;
-  hover: boolean;
+function getMatchingNames(lib: tclib, filter: string) {
+  if (lib.bad) {
+    return [];
+  }
+
+  return lib.names.filter(
+    (entry) =>
+      filter.length === 0 ||
+      entry.Name.toLocaleLowerCase().includes(filter) ||
+      (entry.Description || '').toLocaleLowerCase().includes(filter),
+  );
 }
 
 const LibraryView: React.FunctionComponent<LibraryViewProps> = (
@@ -206,10 +216,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
 ) => {
   const styles = useStyles();
   const { t } = useTranslation();
-  const [state, setState] = useState<LibraryViewState>({
-    open: false,
-    hover: false,
-  });
+  const [hover, setHover] = useState(false);
 
   const isBad = !!props.lib.bad;
 
@@ -226,14 +233,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
     );
   };
 
-  const names = isBad
-    ? []
-    : props.lib.names.filter(
-    (n) =>
-      props.findFilter?.length == 0 ||
-      n.Name.toLocaleLowerCase().indexOf(props.findFilter) >= 0 ||
-      n.Description.toLocaleLowerCase().indexOf(props.findFilter) >= 0,
-  );
+  const names = getMatchingNames(props.lib, props.findFilter);
 
   if (!isBad && names?.length === 0 && props.findFilter?.length > 0) {
     return null;
@@ -245,8 +245,8 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
         className={mergeClasses(
           styles.libraryItem,
           isBad && styles.libraryItemBad,
-          state.open && styles.libraryItemActive,
-          state.open && styles.libraryItemOpen,
+          props.open && styles.libraryItemActive,
+          props.open && styles.libraryItemOpen,
         )}
         role="button"
         aria-pressed="false"
@@ -254,7 +254,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
         onClick={() => {
           if (!isBad) {
             props.onLibraryClick?.(props.lib);
-            setState({ ...state, open: !state.open });
+            props.onToggle(props.lib, !props.open);
           }
         }}
         onDragStart={(event) => {
@@ -266,12 +266,12 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
           event.dataTransfer.setData('text/plain', `${props.lib.fileId}`);
           props.onDragStart?.(props.lib);
         }}
-        onMouseEnter={() => setState({ ...state, hover: true })}
-        onMouseLeave={() => setState({ ...state, hover: false })}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
       >
         <span className={styles.toggleIcon}>
           {!isBad && names?.length > 0 ? (
-            state.open ? (
+            props.open ? (
               <ChevronDownRegular />
             ) : (
               <ChevronRightRegular />
@@ -293,14 +293,14 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
           </button>
         )}
         {!isBad && names?.length > 0 && (
-          <span className={mergeClasses(styles.matchCount, state.open && styles.matchCountActive)}>{names.length}</span>
+          <span className={mergeClasses(styles.matchCount, props.open && styles.matchCountActive)}>{names.length}</span>
         )}
-        {!isBad && (state.hover || state.open) && (
+        {!isBad && (hover || props.open) && (
           <div className={styles.actionButtons}>
             <Button
               className={mergeClasses(
                 styles.actionButton,
-                state.open && styles.actionButtonActive,
+                props.open && styles.actionButtonActive,
               )}
               appearance="subtle"
               size="small"
@@ -311,7 +311,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
           </div>
         )}
       </li>
-      {state.open &&
+      {props.open &&
         names.map((n, index) => {
           const isActive = props.selectedId === `${props.lib.fileId}:${n.NameID}`;
           return (

@@ -291,6 +291,14 @@ function createWindow() {
 
   // Save window size & position when closing
   let isQuitting = false;
+  let pendingAppQuit = false;
+
+  const beforeQuitHandler = () => {
+    pendingAppQuit = true;
+  };
+
+  app.on('before-quit', beforeQuitHandler);
+
   mainWindow.on('close', (e) => {
     if (isQuitting) {
       let bounds;
@@ -312,14 +320,26 @@ function createWindow() {
   });
 
   const appClosingResponseHandler = (event, shouldClose) => {
+    if (!shouldClose) {
+      pendingAppQuit = false;
+      return;
+    }
+
     if (shouldClose) {
       isQuitting = true;
+
+      if (pendingAppQuit) {
+        app.quit();
+        return;
+      }
+
       mainWindow.close();
     }
   };
 
   ipcMain.on('app-closing-response', appClosingResponseHandler);
   mainWindow.on('closed', () => {
+    app.removeListener('before-quit', beforeQuitHandler);
     ipcMain.removeListener('app-closing-response', appClosingResponseHandler);
   });
 

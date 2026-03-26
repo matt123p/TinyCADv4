@@ -49,14 +49,28 @@ export class UtilityService {
     a: Coordinate,
     b: Coordinate,
   ): boolean {
+    const rect = this.normalizeRect(a, b);
+
     // First is it inside the rectangle?
-    if (p[0] < a[0] || p[0] > b[0] || p[1] < a[1] || p[1] > b[1]) {
+    if (
+      p[0] < rect.a[0] ||
+      p[0] > rect.b[0] ||
+      p[1] < rect.a[1] ||
+      p[1] > rect.b[1]
+    ) {
       // It is outside
       return false;
     }
 
     // It is inside
     return true;
+  }
+
+  static normalizeRect(a: Coordinate, b: Coordinate) {
+    return {
+      a: [Math.min(a[0], b[0]), Math.min(a[1], b[1])] as Coordinate,
+      b: [Math.max(a[0], b[0]), Math.max(a[1], b[1])] as Coordinate,
+    };
   }
 
   static simpleIsInsideRect(
@@ -68,11 +82,13 @@ export class UtilityService {
   ): DocItem[] {
     a = UtilityService.rotateMsg(delta, a);
     b = UtilityService.rotateMsg(delta, b);
+    const rect = UtilityService.normalizeRect(
+      [a[0] - delta.dx, a[1] - delta.dy],
+      [b[0] - delta.dx, b[1] - delta.dy],
+    );
+
     if (
-      updater.is_inside_rect_item(
-        [a[0] - delta.dx, a[1] - delta.dy],
-        [b[0] - delta.dx, b[1] - delta.dy],
-      )
+      updater.is_inside_rect_item(rect.a, rect.b)
     ) {
       // We have a hit!
       items.push(updater.item as DocItem);

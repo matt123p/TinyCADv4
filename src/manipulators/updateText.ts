@@ -100,6 +100,8 @@ export class updateText extends updateRectBase implements MoveAdd, IsInside {
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ): DocItem {
     if (handle === -2) {
       const UpdateTextArea = this.create_updateTextArea(
@@ -113,6 +115,8 @@ export class updateText extends updateRectBase implements MoveAdd, IsInside {
         keyCode,
         shiftKey,
         ctrlKey,
+        altKey,
+        metaKey,
       );
       return update(this.item, {
         text: { $set: textData.drawText },
@@ -164,6 +168,21 @@ export class updateText extends updateRectBase implements MoveAdd, IsInside {
           edit_position,
           clear_selection,
         ),
+      },
+    });
+  }
+
+  on_mouse_double_click(handle: number, p: Coordinate): DocItem {
+    const UpdateTextArea = this.create_updateTextArea(
+      this.item,
+      this.item.point,
+      this.item.point_b,
+      this.item.rotation,
+    );
+    const edit_position = UpdateTextArea.find_positon(this.item.textData, p);
+    return update(this.item, {
+      textData: {
+        $set: UpdateTextArea.select_word(this.item.textData, edit_position),
       },
     });
   }
@@ -506,19 +525,37 @@ export class updateText extends updateRectBase implements MoveAdd, IsInside {
     point_b: Coordinate,
     rotation: number,
   ) {
+    const rect = UtilityService.normalizeRect(point, point_b);
+
     return new updateTextData(
-      point[0],
-      point[1],
-      point,
+      rect.a[0],
+      rect.a[1],
+      rect.a,
       item,
       -2,
       0,
       true,
       rotation,
-      point_b[0] - point[0],
-      point_b[1] - point[1],
+      rect.b[0] - rect.a[0],
+      rect.b[1] - rect.a[1],
       false,
       false,
     );
+  }
+
+  complete_add(): DocItem {
+    const item = this.normalizeRectItem(this.item) as dsnText;
+    const UpdateTextArea = this.create_updateTextArea(
+      item,
+      item.point,
+      item.point_b,
+      item.rotation,
+    );
+
+    return update(item, {
+      textData: {
+        $set: UpdateTextArea.create_text_blocks(item.textData, item.text),
+      },
+    });
   }
 }

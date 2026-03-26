@@ -12,7 +12,7 @@ const common = {
     open: '開く', openLibrary: 'ライブラリを開く', save: '保存', saveLibrary: 'ライブラリを保存', saveAs: '名前を付けて保存', saveLibraryAs: 'ライブラリを名前を付けて保存', undo: '元に戻す (Ctrl-Z)',
     redo: 'やり直し (Ctrl-Y)', file: 'ファイル', new: '新規', edit: '編集', view: '表示', tools: 'ツール', fileMenu: 'ファイルメニュー', openRecent: '最近使ったファイルを開く', noRecentFiles: '最近使ったファイルはありません', import: 'インポート', print: '印刷', exportSvg: 'SVGとしてエクスポート', exportPdf: 'PDFとしてエクスポート', importKicad: 'KiCadシンボルをインポート', annotateSymbols: 'シンボル注釈',
     billOfMaterials: '部品表', generateNetlist: 'ネットリスト生成', generateSpiceNetlist: 'Spiceネットリスト生成', createVhdlFile: 'VHDLファイル作成', newCustomLibrary: '新しいカスタムライブラリ',
-    newDesign: '新規設計', saveDesign: '設計を保存', pin: 'ピン', wire: '配線', noConnect: '未接続', power: '電源', label: 'ラベル', text: 'テキスト', shapes: '図形', bus: 'バス', ruler: '定規',
+    newDesign: '新規設計', saveDesign: '設計を保存', pin: 'ピン', wire: '配線', pointToPointWire: 'ポイントツーポイント配線', noConnect: '未接続', power: '電源', label: 'ラベル', text: 'テキスト', shapes: '図形', bus: 'バス', ruler: '定規',
     rotateCounterClockwise: '反時計回りに回転', rotateLeft: '回転（左）', rotateClockwise: '時計回りに回転', rotateRight: '回転（右）', flipHorizontal: '左右反転', flipVertical: '上下反転',
     zoomIn: '拡大 (+)', zoomOut: '縮小 (-)', toggleRulers: '定規の表示切替', settings: '設定', settingsDialog: '設定...', designDetails: '設計詳細', pageSize: 'ページサイズ', colours: '色',
     checkDesignRules: '設計ルールをチェック', discord: 'TinyCAD Discord', aboutTinyCAD: 'TinyCAD について', help: 'ヘルプ', manual: 'オンラインマニュアル', aboutTranslations: '翻訳について...', language: '言語', languageMenu: '言語メニュー', powerBar: 'バー', powerCircle: '円', powerWave: '波形',

@@ -19,9 +19,16 @@ import {
   dsnSymbol,
   dsnImage,
   dsnPin,
+  SymbolTextItem,
 } from '../model/dsnItem';
 import { get_global_id } from '../util/global_id';
-import { dsnSheet, libImage, libSymbol, Size } from '../model/dsnDrawing';
+import {
+  dsnDrawing,
+  dsnSheet,
+  libImage,
+  libSymbol,
+  Size,
+} from '../model/dsnDrawing';
 import {
   isText,
   isStroked,
@@ -50,6 +57,7 @@ import update from 'immutability-helper';
 import { XMLBuilder } from '../util/xmlbuilder';
 import { Snap } from './snap';
 import { updateWire } from './updateWire';
+import { PointToPointWireRouter } from './pointToPointWireRouter';
 import { ioXML } from '../io/ioXml';
 import { dragObject } from './dragObject';
 import { updateSymbol } from './updateSymbol';
@@ -59,9 +67,13 @@ import { updateLabel } from './updateLabel';
 import { updateBusLabel } from './updateBusLabel';
 import { dsnBomEntry } from '../model/dsnBomEntry';
 import { tclibLibraryEntry } from '../model/tclib';
+import { ReplaceSymbolScope } from '../state/actions/symbolActions';
 import md5 from 'md5';
 import { store } from '../startup';
-import { actionMenuSetContextMenu } from '../state/dispatcher/AppDispatcher';
+import {
+  actionMenuSetContextMenu,
+  actionSelectDialog,
+} from '../state/dispatcher/AppDispatcher';
 import i18n from '../i18n';
 
 function StyleSet<T>(original: T, value: T): T {
@@ -121,6 +133,151 @@ export interface viewResult {
 
 export class updateView {
   constructor() {}
+
+  private wirePointKey(point: Coordinate): string {
+    return point[0] + ':' + point[1];
+  }
+
+  private addWireEndpoint(
+    endpointMap: Map<string, number[]>,
+    point: Coordinate,
+    wireId: number,
+  ) {
+    const key = this.wirePointKey(point);
+    const existing = endpointMap.get(key);
+    if (existing) {
+      existing.push(wireId);
+    } else {
+      endpointMap.set(key, [wireId]);
+    }
+  }
+
+  private extendWireChainFromEndpoint(
+    wiresById: Map<number, dsnWire>,
+    endpointMap: Map<string, number[]>,
+    selectedIds: Set<number>,
+    startWire: dsnWire,
+    endpointIndex: number,
+  ) {
+    let currentWire = startWire;
+    let currentEndpointIndex = endpointIndex;
+
+    while (currentWire.d_points.length > 1) {
+      const currentPoint = currentWire.d_points[currentEndpointIndex];
+      const connectedIds = (endpointMap.get(this.wirePointKey(currentPoint)) || [])
+        .filter((wireId) => wireId !== currentWire._id && !selectedIds.has(wireId));
+
+      if (connectedIds.length !== 1) {
+        return;
+      }
+
+      const nextWire = wiresById.get(connectedIds[0]);
+      if (!nextWire || nextWire.d_points.length < 2) {
+        return;
+      }
+
+      const lastIndex = nextWire.d_points.length - 1;
+      if (this.samePoint(nextWire.d_points[0], currentPoint)) {
+        selectedIds.add(nextWire._id);
+        currentWire = nextWire;
+        currentEndpointIndex = lastIndex;
+      } else if (this.samePoint(nextWire.d_points[lastIndex], currentPoint)) {
+        selectedIds.add(nextWire._id);
+        currentWire = nextWire;
+        currentEndpointIndex = 0;
+      } else {
+        return;
+      }
+    }
+  }
+
+  private extendWireNetFromSeed(
+    wiresById: Map<number, dsnWire>,
+    endpointMap: Map<string, number[]>,
+    selectedIds: Set<number>,
+    startWire: dsnWire,
+  ) {
+    const pending: number[] = [startWire._id];
+
+    while (pending.length > 0) {
+      const wireId = pending.pop();
+      const wire = wiresById.get(wireId);
+      if (!wire || wire.d_points.length < 2) {
+        continue;
+      }
+
+      const endpoints = [wire.d_points[0], wire.d_points[wire.d_points.length - 1]];
+      for (const endpoint of endpoints) {
+        const connectedIds = endpointMap.get(this.wirePointKey(endpoint)) || [];
+        for (const connectedId of connectedIds) {
+          if (selectedIds.has(connectedId)) {
+            continue;
+          }
+
+          selectedIds.add(connectedId);
+          pending.push(connectedId);
+        }
+      }
+    }
+  }
+
+  private getWireSelectionItems(
+    sheet: dsnSheet,
+    item: DocItem,
+    includeBranches: boolean,
+  ): DocItem[] {
+    if (item.NodeName !== DocItemTypes.Wire || item.d_points.length < 2) {
+      return [item];
+    }
+
+    const wiresById = new Map<number, dsnWire>();
+    const endpointMap = new Map<string, number[]>();
+    for (const candidate of sheet.items) {
+      if (candidate.NodeName !== DocItemTypes.Wire || candidate.d_points.length < 2) {
+        continue;
+      }
+
+      wiresById.set(candidate._id, candidate);
+      this.addWireEndpoint(endpointMap, candidate.d_points[0], candidate._id);
+      this.addWireEndpoint(
+        endpointMap,
+        candidate.d_points[candidate.d_points.length - 1],
+        candidate._id,
+      );
+    }
+
+    const selectedIds = new Set<number>([item._id]);
+    if (includeBranches) {
+      this.extendWireNetFromSeed(wiresById, endpointMap, selectedIds, item);
+    } else {
+      this.extendWireChainFromEndpoint(
+        wiresById,
+        endpointMap,
+        selectedIds,
+        item,
+        0,
+      );
+      this.extendWireChainFromEndpoint(
+        wiresById,
+        endpointMap,
+        selectedIds,
+        item,
+        item.d_points.length - 1,
+      );
+    }
+
+    return sheet.items.filter((candidate) => selectedIds.has(candidate._id));
+  }
+
+  private unselectItems(view: dsnView, sheet: dsnSheet, items: DocItem[]): dsnView {
+    const idsToRemove = new Set(items.map((item) => item._id));
+    return this._updateSelection(
+      view,
+      sheet,
+      view._selected_handle,
+      view._selected_array.filter((id) => !idsToRemove.has(id)),
+    );
+  }
 
   // Get the selected symbol
   getSelectedSymbol(view: dsnView, sheet: dsnSheet) {
@@ -238,6 +395,10 @@ export class updateView {
     r: Coordinate,
     key: number,
   ): viewResult {
+    if (view.menu_command === 'add_wire_point_to_point') {
+      return this.add_point_to_point_wire_event(view, sheet, event_name, p);
+    }
+
     // The user can cancel with a rbuttondown
     if (event_name === 'rbuttondown') {
       if (view.in_add_rect) {
@@ -296,6 +457,265 @@ export class updateView {
 
   ////////////////// ADD ITEM HANDLER //////////////////
 
+  private add_point_to_point_wire_event(
+    view: dsnView,
+    sheet: dsnSheet,
+    event_name: string,
+    p: Coordinate,
+  ): viewResult {
+    if (event_name === 'rbuttondown') {
+      return this.cancel_add(view, sheet);
+    }
+
+    if (event_name === 'lbuttondown') {
+      return this.click_add_point_to_point_wire(view, sheet, p);
+    }
+
+    if (event_name === 'mousemove' || event_name === 'mousedrag') {
+      return this.move_add_point_to_point_wire(view, sheet, p);
+    }
+
+    if (view.cursor !== 'copy') {
+      return {
+        view: update(view, {
+          cursor: { $set: 'copy' },
+        }),
+        sheet,
+      };
+    }
+
+    return { view, sheet };
+  }
+
+  private move_add_point_to_point_wire(
+    view: dsnView,
+    sheet: dsnSheet,
+    p: Coordinate,
+  ): viewResult {
+    const add = view.add as dsnWire;
+    if (!add || add.NodeName !== DocItemTypes.Wire) {
+      return { view, sheet };
+    }
+
+    const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+    const magnetic = snap.snap_magnetic(p, false, sheet.items);
+    const startPoint = add.d_points.length > 0 ? add.d_points[0] : null;
+    let d_points: Coordinate[] = [];
+    let display = magnetic != null;
+    let previewMagnetic = magnetic;
+
+    if (startPoint) {
+      display = true;
+      previewMagnetic = magnetic || { point: startPoint.slice(0), wire: null };
+      if (magnetic && !this.samePoint(startPoint, magnetic.point)) {
+        const preview = view.tracker.pointToPointPreview;
+        const canReuseWorkspace =
+          preview &&
+          preview.items === sheet.items &&
+          preview.grid === sheet.details.grid &&
+          this.samePoint(preview.start, startPoint);
+        const previewWorkspace = canReuseWorkspace
+          ? preview.workspace as ConstructorParameters<typeof PointToPointWireRouter>[1]
+          : undefined;
+        const router = new PointToPointWireRouter(
+          sheet,
+          previewWorkspace,
+        );
+        d_points = router.route(
+          startPoint,
+          magnetic.point,
+          canReuseWorkspace ? preview.route : null,
+        );
+        view.tracker.pointToPointPreview = {
+          start: startPoint.slice(0),
+          end: magnetic.point.slice(0),
+          route: d_points.map((point) => point.slice(0)),
+          workspace: router.getWorkspace(),
+          items: sheet.items,
+          grid: sheet.details.grid,
+        };
+      } else {
+        d_points = [startPoint.slice(0)];
+        view.tracker.pointToPointPreview = null;
+      }
+    }
+
+    return {
+      view: update(view, {
+        add: {
+          $set: update(add, {
+            _magnetic: { $set: previewMagnetic },
+            d_points: { $set: d_points },
+          }),
+        },
+        display_add: { $set: display },
+        cursor: { $set: 'copy' },
+      }),
+      sheet,
+    };
+  }
+
+  private click_add_point_to_point_wire(
+    view: dsnView,
+    sheet: dsnSheet,
+    p: Coordinate,
+  ): viewResult {
+    const add = view.add as dsnWire;
+    if (!add || add.NodeName !== DocItemTypes.Wire) {
+      return { view, sheet };
+    }
+
+    const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+    let magnetic = snap.snap_magnetic(p, false, sheet.items);
+    if (!magnetic) {
+      return { view, sheet };
+    }
+
+    if (add.d_points.length === 0) {
+      view.tracker.pointToPointPreview = null;
+      let items = sheet.items;
+      ({ magnetic, items } = this.split_magnetic_wire_if_needed(magnetic, items));
+      const nextSheet = items !== sheet.items
+        ? update(sheet, {
+            items: { $set: items },
+          })
+        : sheet;
+
+      return {
+        view: update(view, {
+          add: {
+            $set: update(add, {
+              _magnetic: { $set: magnetic },
+              d_points: { $set: [magnetic.point.slice(0)] },
+            }),
+          },
+          display_add: { $set: true },
+          in_add_rect: { $set: false },
+          cursor: { $set: 'copy' },
+          _in_select_rect: { $set: false },
+        }),
+        sheet: nextSheet,
+      };
+    }
+
+    if (this.samePoint(add.d_points[0], magnetic.point)) {
+      return { view, sheet };
+    }
+
+    const preview = view.tracker.pointToPointPreview;
+    const canReuseWorkspace =
+      preview &&
+      preview.items === sheet.items &&
+      preview.grid === sheet.details.grid &&
+      this.samePoint(preview.start, add.d_points[0]);
+    const previewWorkspace = canReuseWorkspace
+      ? preview.workspace as ConstructorParameters<typeof PointToPointWireRouter>[1]
+      : undefined;
+    const router = new PointToPointWireRouter(
+      sheet,
+      previewWorkspace,
+    );
+    const routePoints = router.route(
+      add.d_points[0],
+      magnetic.point,
+      canReuseWorkspace ? preview.route : null,
+    );
+    if (routePoints.length < 2) {
+      return { view, sheet };
+    }
+    view.tracker.pointToPointPreview = null;
+
+    const routedEnd = routePoints[routePoints.length - 1];
+    if (magnetic.wire && !this.samePoint(routedEnd, magnetic.point)) {
+      magnetic = {
+        point: [routedEnd[0], routedEnd[1]],
+        wire: magnetic.wire,
+      };
+    }
+
+    let items = sheet.items;
+    ({ magnetic, items } = this.split_magnetic_wire_if_needed(magnetic, items));
+
+    const newWires = this.make_wire_segments(routePoints);
+    if (newWires.length === 0) {
+      return { view, sheet };
+    }
+
+    let nextSheet = items !== sheet.items
+      ? update(sheet, {
+          items: { $set: items },
+        })
+      : sheet;
+
+    nextSheet = update(nextSheet, {
+      items: { $push: newWires },
+    });
+    nextSheet = this.tidy_wires(nextSheet);
+
+    const createdIds = new Set(newWires.map((wire) => wire._id));
+    const selectedIds = nextSheet.items
+      .filter((item) => item.NodeName === DocItemTypes.Wire && createdIds.has(item._id))
+      .map((item) => item._id);
+
+    return {
+      view: update(view, {
+        display_add: { $set: false },
+        add: { $set: null },
+        menu_command: { $set: '' },
+        cursor: { $set: 'auto' },
+        in_add_rect: { $set: false },
+        selectable: { $set: null },
+        hover_obj: { $set: null },
+        _drag_handle: { $set: -1 },
+        _selected_handle: { $set: 0 },
+        _selected_array: { $set: selectedIds },
+      }),
+      sheet: nextSheet,
+    };
+  }
+
+  private split_magnetic_wire_if_needed(
+    magnetic: { point: Coordinate; wire: dsnWire },
+    items: DocItem[],
+  ) {
+    if (!magnetic || !magnetic.wire) {
+      return { magnetic, items };
+    }
+
+    const updateMagWire = new updateWire(magnetic.wire);
+    const result = updateMagWire.split_wire(magnetic.point, items);
+    return {
+      magnetic: {
+        point: magnetic.point.slice(0),
+        wire: result.obj,
+      },
+      items: UtilityService.updateDupArray(result.items, magnetic.wire, result.obj),
+    };
+  }
+
+  private make_wire_segments(points: Coordinate[]): dsnWire[] {
+    const wires: dsnWire[] = [];
+
+    for (let index = 0; index < points.length - 1; ++index) {
+      if (this.samePoint(points[index], points[index + 1])) {
+        continue;
+      }
+
+      wires.push({
+        NodeName: DocItemTypes.Wire,
+        _id: get_global_id(),
+        _magnetic: null,
+        d_points: [points[index].slice(0), points[index + 1].slice(0)],
+      });
+    }
+
+    return wires;
+  }
+
+  private samePoint(a: Coordinate | null, b: Coordinate | null): boolean {
+    return !!a && !!b && a[0] === b[0] && a[1] === b[1];
+  }
+
   click_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
     const updater_add = updateSimpleAddFactory(view.add);
     const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
@@ -322,23 +742,16 @@ export class updateView {
   }
 
   complete_add(view: dsnView, sheet: dsnSheet): viewResult {
+    view.tracker.pointToPointPreview = null;
     const update_add = updateSimpleAddFactory(view.add);
     if (update_add) {
       let obj = update_add.complete_add();
-      const items = UtilityService.updateDupArray(sheet.items, view.add, obj);
-      if (items !== sheet.items) {
-        sheet = update(sheet, {
-          items: { $set: items },
-        });
-      }
-
       sheet = this.tidy_wires(
         update(sheet, {
-          items: { $push: [view.add] },
+          items: { $push: [obj] },
         }),
       );
 
-      const add = view.add;
       view = update(view, {
         display_add: { $set: false },
         add: { $set: null },
@@ -348,7 +761,7 @@ export class updateView {
       });
 
       return {
-        view: this.selectSingleItem(view, sheet, add, false),
+        view: this.selectSingleItem(view, sheet, obj, false),
         sheet: sheet,
       };
     } else {
@@ -357,6 +770,7 @@ export class updateView {
   }
 
   cancel_add(view: dsnView, sheet: dsnSheet): viewResult {
+    view.tracker.pointToPointPreview = null;
     return {
       sheet: sheet,
       view: update(view, {
@@ -476,8 +890,17 @@ export class updateView {
     });
 
     let hover_obj = is_inside.item;
-    if (event_name === 'lbuttondown' || event_name === 'rbuttondown') {
-      if (event_name === 'lbuttondown') {
+    if (
+      event_name === 'lbuttondown' ||
+      event_name === 'ldoubleclick' ||
+      event_name === 'ltripleclick' ||
+      event_name === 'rbuttondown'
+    ) {
+      if (
+        event_name === 'lbuttondown' ||
+        event_name === 'ldoubleclick' ||
+        event_name === 'ltripleclick'
+      ) {
         const click_threshold = 2.0;
         const is_same_spot =
           view.last_click_point &&
@@ -531,11 +954,38 @@ export class updateView {
       });
 
       if (hover_obj) {
-        if (!UtilityService.isSelected(view._selected_array, hover_obj)) {
+        const selectionItems =
+          event_name === 'ldoubleclick'
+            ? this.getWireSelectionItems(sheet, hover_obj, false)
+            : event_name === 'ltripleclick'
+              ? this.getWireSelectionItems(sheet, hover_obj, true)
+              : [hover_obj];
+        const isSelected = UtilityService.isSelected(view._selected_array, hover_obj);
+        const allSelectionItemsSelected = selectionItems.every((item) =>
+          UtilityService.isSelected(view._selected_array, item),
+        );
+        const toggleSelection =
+          append &&
+          (
+            event_name === 'lbuttondown' ||
+            event_name === 'ldoubleclick' ||
+            event_name === 'ltripleclick'
+          ) &&
+          allSelectionItemsSelected;
+
+        if (toggleSelection) {
+          view = this.unselectItems(view, sheet, selectionItems);
+        } else if (
+          event_name === 'ldoubleclick' ||
+          event_name === 'ltripleclick'
+        ) {
+          view = this.selectItems(view, sheet, selectionItems, append);
+        } else if (!isSelected) {
           view = this.selectSingleItem(view, sheet, hover_obj, append);
         }
 
         if (
+          !toggleSelection &&
           UtilityService.isSingleItemSelected(view._selected_array, hover_obj)
         ) {
           if (view._selected_handle !== is_inside.handle) {
@@ -682,6 +1132,8 @@ export class updateView {
 
     if (
       event_name === 'lbuttondown' ||
+      event_name === 'ldoubleclick' ||
+      event_name === 'ltripleclick' ||
       event_name === 'mousemove' ||
       event_name === 'dragstart'
     ) {
@@ -746,6 +1198,8 @@ export class updateView {
       let new_item = item;
       if (event_name === 'lbuttondown') {
         new_item = update_item.on_mouse_click(handle, p, true);
+      } else if (event_name === 'ldoubleclick') {
+        new_item = update_item.on_mouse_double_click(handle, p);
       } else if (event_name === 'mousedrag') {
         new_item = update_item.on_mouse_click(handle, p, false);
       }
@@ -1132,6 +1586,30 @@ export class updateView {
     return { view, sheet };
   }
 
+  command_replace_symbol(view: dsnView, sheet: dsnSheet): viewResult {
+    const item = this.getSelectedSymbol(view, sheet);
+    if (!item) {
+      return { view, sheet };
+    }
+
+    const currentName = item._symbol?.name?.value ||
+      item.text.find((field) => field.description === 'Name')?.value ||
+      '';
+
+    setTimeout(() => {
+      store.dispatch(
+        actionSelectDialog('replace_symbol', {
+          sourceUid: item._symbol?.uid,
+          targetSymbolId: item._id,
+          targetSheetIndex: view.selected_sheet,
+          initialSearch: currentName,
+        }),
+      );
+    }, 0);
+
+    return { view, sheet };
+  }
+
   ////////////////// KEYBOARD MOVEMENT HANDLERS //////////////////
 
   // Move selected objects by grid spacing
@@ -1286,6 +1764,16 @@ export class updateView {
       d_points: [],
     };
     return this.add_object(view, sheet, n, 'add_wire');
+  }
+
+  command_add_wire_point_to_point(view: dsnView, sheet: dsnSheet): viewResult {
+    const n: dsnWire = {
+      NodeName: DocItemTypes.Wire,
+      _id: get_global_id(),
+      _magnetic: null,
+      d_points: [],
+    };
+    return this.add_object(view, sheet, n, 'add_wire_point_to_point');
   }
 
   command_add_pin(view: dsnView, sheet: dsnSheet): viewResult {
@@ -1658,6 +2146,11 @@ export class updateView {
       view: this._updateSelection(view, sheet, view._selected_handle, []),
       sheet: sheet,
     };
+  }
+
+  unselectSingleItem(view: dsnView, sheet: dsnSheet, o: DocItem): dsnView {
+    const ns = view._selected_array.filter((id) => id !== o._id);
+    return this._updateSelection(view, sheet, view._selected_handle, ns);
   }
 
   _updateSelection(
@@ -2260,6 +2753,303 @@ export class updateView {
 
   ////////////////// Symbol operations //////////////////
 
+  private getLibrarySymbolUid(name: tclibLibraryEntry, items: DocItem[][]) {
+    return name.id || md5(JSON.stringify(items));
+  }
+
+  private ensureLibrarySymbolOnSheet(
+    sheet: dsnSheet,
+    name: tclibLibraryEntry,
+    items: DocItem[][],
+  ) {
+    const symbolUid = this.getLibrarySymbolUid(name, items);
+
+    let next_symbol_id = 1;
+    let selected_symboldef: libSymbol = null;
+    for (let s2_id in sheet.symbols) {
+      if (sheet.symbols.hasOwnProperty(s2_id)) {
+        if (sheet.symbols[s2_id].uid === symbolUid) {
+          selected_symboldef = sheet.symbols[s2_id];
+        }
+        next_symbol_id = Math.max(+s2_id + 1, next_symbol_id);
+      }
+    }
+
+    if (!selected_symboldef) {
+      const ioxml = new ioXML();
+      const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+      const heterogeneous = items.length > 1;
+      const outlines = items.map((item) =>
+        ioxml.normalize_symbol(item, snap, null, false, heterogeneous),
+      );
+
+      selected_symboldef = {
+        id: next_symbol_id,
+        description: null,
+        name: {
+          type: name.ShowName,
+          value: name.Name,
+        },
+        ref: {
+          type: name.ShowRef,
+          value: name.Reference,
+        },
+        outlines: outlines,
+        heterogeneous: heterogeneous,
+        parts: name.ppp,
+        uid: symbolUid,
+      };
+
+      sheet = update(sheet, {
+        symbols: {
+          [selected_symboldef.id]: { $set: selected_symboldef },
+        },
+      });
+    }
+
+    return {
+      sheet,
+      symbol: selected_symboldef,
+    };
+  }
+
+  private getAnchorPoint(symbol: dsnSymbol): Coordinate {
+    const updater = new updateSymbol(symbol);
+    const delta = { dx: 0, dy: 0 };
+    updater.calcDelta(delta);
+    const outline = updater.outline();
+
+    for (const activePoint of outline.active_points) {
+      if (activePoint.power) {
+        continue;
+      }
+
+      if (!symbol._symbol.heterogeneous && activePoint.part !== symbol.part) {
+        continue;
+      }
+
+      let point = [
+        activePoint.pos[0] * symbol.scale_x,
+        activePoint.pos[1] * symbol.scale_y,
+      ];
+      point = UtilityService.rotateSymCordinate(symbol.rotation, point);
+
+      return [
+        point[0] + delta.dx + symbol.point[0],
+        point[1] + delta.dy + symbol.point[1],
+      ];
+    }
+
+    return null;
+  }
+
+  private createReplacementText(
+    oldSymbol: dsnSymbol,
+    newSymbolDef: libSymbol,
+    name: tclibLibraryEntry,
+    keepFieldValues: boolean,
+    part: number,
+  ): SymbolTextItem[] {
+    const fallback = new updateSymbol(oldSymbol);
+    const existingFields = new Map(
+      oldSymbol.text.map((field) => [field.description, field]),
+    );
+    const fieldDefinitions = [
+      {
+        description: 'Name',
+        value: name.Name,
+        display: name.ShowName,
+      },
+      {
+        description: 'Ref',
+        value: name.Reference,
+        display: name.ShowRef,
+      },
+      ...name.Attributes.filter(
+        (attribute) =>
+          attribute.AttName !== 'Reference' &&
+          attribute.AttName.indexOf('$$') !== 0,
+      ).map((attribute) => ({
+        description: attribute.AttName,
+        value: attribute.AttValue,
+        display: attribute.ShowAtt,
+      })),
+    ];
+
+    const text = fieldDefinitions.map((field) => {
+      const existingField = existingFields.get(field.description);
+      const value = keepFieldValues && existingField
+        ? existingField.value
+        : field.value;
+
+      return {
+        description: field.description,
+        value,
+        show: fallback.show_text(field.display, value),
+        display: field.display,
+        position: [0, 0],
+      } as SymbolTextItem;
+    });
+
+    const layoutHelper = new updateSymbol({
+      ...oldSymbol,
+      _symbol: newSymbolDef,
+      part,
+      text,
+    });
+    const laidOut = layoutHelper.layout_text_fields(
+      oldSymbol.rotation,
+      text.map((field) => ({
+        ...field,
+        position: [...field.position],
+      })),
+    );
+
+    if (!keepFieldValues) {
+      return laidOut;
+    }
+
+    return laidOut.map((field) => {
+      const existingField = existingFields.get(field.description);
+      if (!existingField) {
+        return field;
+      }
+
+      return {
+        ...field,
+        position: existingField.position
+          ? [...existingField.position]
+          : field.position,
+      };
+    });
+  }
+
+  private replaceSymbolInstance(
+    item: dsnSymbol,
+    newSymbolDef: libSymbol,
+    name: tclibLibraryEntry,
+    keepFieldValues: boolean,
+  ) {
+    const nextPart = Math.min(item.part, Math.max(newSymbolDef.parts, 1) - 1);
+    let replacement: dsnSymbol = {
+      ...item,
+      point: [...item.point],
+      part: nextPart,
+      _symbol: newSymbolDef,
+      _active_points: null,
+      text: this.createReplacementText(
+        item,
+        newSymbolDef,
+        name,
+        keepFieldValues,
+        nextPart,
+      ),
+      textData: [],
+    };
+
+    const oldAnchor = this.getAnchorPoint(item);
+    const newAnchor = this.getAnchorPoint(replacement);
+    if (oldAnchor && newAnchor) {
+      replacement = {
+        ...replacement,
+        point: [
+          replacement.point[0] + oldAnchor[0] - newAnchor[0],
+          replacement.point[1] + oldAnchor[1] - newAnchor[1],
+        ],
+      };
+    }
+
+    return new updateSymbol(replacement).post_construction();
+  }
+
+  replaceSymbolsInDrawing(
+    drawing: dsnDrawing,
+    sourceUid: string,
+    targetSymbolId: number,
+    targetSheetIndex: number,
+    scope: ReplaceSymbolScope,
+    name: tclibLibraryEntry,
+    items: DocItem[][],
+    keepFieldValues: boolean,
+  ) {
+    if (!sourceUid || targetSheetIndex == null || targetSheetIndex < 0) {
+      return drawing;
+    }
+
+    let changed = false;
+    const sheets = drawing.sheets.map((sheet, sheetIndex) => {
+      if (sheetIndex !== targetSheetIndex) {
+        return sheet;
+      }
+
+      const hasMatches = sheet.items.some(
+        (item) =>
+          item.NodeName === DocItemTypes.Symbol &&
+          this.shouldReplaceSymbol(
+            item as dsnSymbol,
+            sourceUid,
+            targetSymbolId,
+            scope,
+          ),
+      );
+      if (!hasMatches) {
+        return sheet;
+      }
+
+      changed = true;
+      const ensured = this.ensureLibrarySymbolOnSheet(sheet, name, items);
+      const nextItems = ensured.sheet.items.map((item) => {
+        if (
+          item.NodeName !== DocItemTypes.Symbol ||
+          !this.shouldReplaceSymbol(
+            item as dsnSymbol,
+            sourceUid,
+            targetSymbolId,
+            scope,
+          )
+        ) {
+          return item;
+        }
+
+        return this.replaceSymbolInstance(
+          item as dsnSymbol,
+          ensured.symbol,
+          name,
+          keepFieldValues,
+        );
+      });
+
+      return update(ensured.sheet, {
+        items: { $set: nextItems },
+      });
+    });
+
+    if (!changed) {
+      return drawing;
+    }
+
+    return update(drawing, {
+      sheets: { $set: sheets },
+    });
+  }
+
+  private shouldReplaceSymbol(
+    item: dsnSymbol,
+    sourceUid: string,
+    targetSymbolId: number,
+    scope: ReplaceSymbolScope,
+  ) {
+    if (item._symbol?.uid !== sourceUid) {
+      return false;
+    }
+
+    if (scope === 'single_symbol') {
+      return item._id === targetSymbolId;
+    }
+
+    return true;
+  }
+
   showShowPower(view: dsnView, sheet: dsnSheet, show_power: boolean): dsnSheet {
     let _selectedSymbol = this.getSelectedSymbol(view, sheet);
     if (_selectedSymbol) {
@@ -2450,6 +3240,8 @@ export class updateView {
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ): dsnSheet {
     const item = this.getSelectedText(view, sheet);
     const update_item = updateTextFactory(item);
@@ -2459,6 +3251,8 @@ export class updateView {
         keyCode,
         shiftKey,
         ctrlKey,
+        altKey,
+        metaKey,
       );
       sheet = this.updateObject(sheet, item, newItem);
     }
@@ -2486,6 +3280,21 @@ export class updateView {
       const data = update_item.handleTextCopy(view._selected_handle, cut);
       sheet = this.updateObject(sheet, item, data.item);
       copy_data = data.copy_data;
+
+      if (copy_data !== null) {
+        if (copy_data.length > 0) {
+          navigator.clipboard
+            .writeText(copy_data)
+            .then(() => {
+              console.log('Text copied to clipboard');
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        }
+
+        return { view: view, sheet: sheet };
+      }
     }
 
     if (!copy_data) {
@@ -2514,54 +3323,9 @@ export class updateView {
     items: DocItem[][],
     point: Coordinate,
   ) {
-    // Generate the uid for this symbol
-    if (!name.id) {
-      let d = JSON.stringify(items);
-      name.id = md5(d);
-    }
-
-    let next_symbol_id = 1;
-    let selected_symboldef: libSymbol = null;
-    for (let s2_id in sheet.symbols) {
-      if (sheet.symbols.hasOwnProperty(s2_id)) {
-        if (sheet.symbols[s2_id].uid === name.id) {
-          selected_symboldef = sheet.symbols[s2_id];
-        }
-        next_symbol_id = Math.max(+s2_id + 1, next_symbol_id);
-      }
-    }
-
-    if (!selected_symboldef) {
-      const ioxml = new ioXML();
-      const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
-      const heterogeneous = items.length > 1;
-      const outlines = items.map((item) =>
-        ioxml.normalize_symbol(item, snap, null, false, heterogeneous),
-      );
-      // unknown symbol, so we must insert it
-      selected_symboldef = {
-        id: next_symbol_id,
-        description: null,
-        name: {
-          type: name.ShowName,
-          value: name.Name,
-        },
-        ref: {
-          type: name.ShowRef,
-          value: name.Reference,
-        },
-        outlines: outlines,
-        heterogeneous: heterogeneous,
-        parts: name.ppp,
-        uid: name.id,
-      };
-
-      sheet = update(sheet, {
-        symbols: {
-          [selected_symboldef.id]: { $set: selected_symboldef },
-        },
-      });
-    }
+    const ensured = this.ensureLibrarySymbolOnSheet(sheet, name, items);
+    sheet = ensured.sheet;
+    const selected_symboldef = ensured.symbol;
 
     let pos = -selected_symboldef.outlines[0].size[0] + 2.4 * 5;
     const posfn = (show: boolean) => {

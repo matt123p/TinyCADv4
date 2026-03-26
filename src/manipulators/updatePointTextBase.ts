@@ -166,6 +166,8 @@ export abstract class updatePointTextBase
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ): DocItem {
     if (handle === -2) {
       const UpdateTextArea = this.create_updateTextArea(
@@ -178,6 +180,8 @@ export abstract class updatePointTextBase
         keyCode,
         shiftKey,
         ctrlKey,
+        altKey,
+        metaKey,
       );
       return update(this.item as DocItem, {
         text: { $set: textData.drawText },
@@ -227,6 +231,20 @@ export abstract class updatePointTextBase
           edit_position,
           clear_selection,
         ),
+      },
+    });
+  }
+
+  on_mouse_double_click(handle: number, p: Coordinate): DocItem {
+    const UpdateTextArea = this.create_updateTextArea(
+      this.item,
+      this.item.point,
+      this.item.rotation,
+    );
+    const edit_position = UpdateTextArea.find_positon(this.item.textData, p);
+    return update(this.item as DocItem, {
+      textData: {
+        $set: UpdateTextArea.select_word(this.item.textData, edit_position),
       },
     });
   }

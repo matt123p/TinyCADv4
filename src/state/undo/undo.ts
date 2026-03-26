@@ -32,7 +32,8 @@ export const DocStoreWithHistory = undoable(DocStoreReducer, {
     }
     if (
       action.type === SymbolActionTypes.SymbolEditOutline ||
-      action.type === SymbolActionTypes.SymbolEditSymbol
+      action.type === SymbolActionTypes.SymbolEditSymbol ||
+      action.type === SymbolActionTypes.ReplaceSymbol
     ) {
       undoCheckpoint = true;
     }

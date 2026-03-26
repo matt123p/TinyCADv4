@@ -31,7 +31,14 @@ import {
   actionSelectLibrarySymbol,
 } from '../../state/dispatcher/AppDispatcher';
 import { ActionCreators } from 'redux-undo';
-import { imageFile, print } from '../../io/files';
+import {
+  fileSave,
+  fileSaveAs,
+  imageFile,
+  librarySave,
+  librarySaveAs,
+  print,
+} from '../../io/files';
 import { SelectSymbol } from '../libraryPanel/Search';
 import { Ruler } from '../controls/Ruler';
 import { actionSetMousePosition } from '../../state/actions/viewActions';
@@ -112,6 +119,8 @@ const accelerator: { [key: string]: any } = {
 //
 export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   private _div: HTMLDivElement;
+  private readonly autoScrollMargin = 48;
+  private readonly autoScrollMaxStep = 24;
 
   // The current scroll position
   private scroll: Coordinate = [0, 0];
@@ -119,6 +128,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   // Track mouse dragging
   private _mouse_drag_start = [0, 0];
   private _in_mouse_drag = false;
+  private _last_drag_client: Coordinate | null = null;
+  private _last_drag_key = 0;
+  private _auto_scroll_frame: number | null = null;
   private unsubscribeNetlist: (() => void) | null = null;
 
   // The page border
@@ -142,6 +154,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     this.onfocus = this.onfocus.bind(this);
     this.onblur = this.onblur.bind(this);
     this.onscroll = this.onscroll.bind(this);
+    this.handleDocumentMouseMove = this.handleDocumentMouseMove.bind(this);
+    this.handleDocumentMouseUp = this.handleDocumentMouseUp.bind(this);
+    this.runAutoScrollFrame = this.runAutoScrollFrame.bind(this);
   }
 
   private resizeObserver: ResizeObserver;
@@ -207,6 +222,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   }
 
   componentWillUnmount() {
+    this.stopDocumentDragTracking();
     if (this.resizeObserver) {
         this.resizeObserver.disconnect();
     }
@@ -239,6 +255,25 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       return;
     }
 
+    const hasPrimaryModifier = e.metaKey || e.ctrlKey;
+    const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
+
+    if (hasPrimaryModifier && !e.altKey && key === 's') {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.shiftKey) {
+        this.props.dispatch(
+          (this.props.editingLibrary ? librarySaveAs : fileSaveAs) as any,
+        );
+      } else {
+        this.props.dispatch(
+          (this.props.editingLibrary ? librarySave : fileSave) as any,
+        );
+      }
+      return;
+    }
+
     if (!this.wantKeyPress()) {
       // Handle arrow keys for moving selected objects or panning
       if (e.keyCode >= 37 && e.keyCode <= 40) {
@@ -268,8 +303,8 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       }
       
       // Check the accelerator
-      const key: string = e.ctrlKey ? '~' + e.key : e.key;
-      const action = accelerator[key];
+      const acceleratorKey: string = hasPrimaryModifier ? '~' + e.key : e.key;
+      const action = accelerator[acceleratorKey];
       if (action) {
         e.preventDefault();
         e.stopPropagation();
@@ -279,6 +314,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     }
 
     if (
+      ((e.metaKey || e.ctrlKey) && (e.key === 'a' || e.key === 'A')) ||
+      e.keyCode === 35 || // End
+      e.keyCode === 36 || // Home
       (e.keyCode >= 37 && e.keyCode <= 40) || // Cursor keys
       e.keyCode === 8 || // Backspace
       e.keyCode === 46 // Delete
@@ -286,7 +324,15 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       e.preventDefault();
       e.stopPropagation();
 
-      this.props.dispatch(actionKeyDown(e.keyCode, e.shiftKey, e.ctrlKey));
+      this.props.dispatch(
+        actionKeyDown(
+          e.keyCode,
+          e.shiftKey,
+          e.ctrlKey,
+          e.altKey,
+          e.metaKey,
+        ),
+      );
     }
   }
 
@@ -322,6 +368,272 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
         scrollX: e.target.scrollLeft,
         scrollY: e.target.scrollTop
     });
+  }
+
+  private getKeyState(e: {
+    altKey: boolean;
+    ctrlKey: boolean;
+    shiftKey: boolean;
+  }) {
+    let key = 0;
+
+    if (e.altKey) {
+      key += 4;
+    }
+    if (e.ctrlKey) {
+      key += 2;
+    }
+    if (e.shiftKey) {
+      key += 1;
+    }
+
+    return key;
+  }
+
+  private getEventLocationFromClient(clientX: number, clientY: number) {
+    const offset = this._div.getBoundingClientRect();
+    let event_x = clientX - offset.x;
+    let event_y = clientY - offset.y;
+
+    let x = event_x + this.scroll[0];
+    let y = event_y + this.scroll[1];
+
+    const scale = this.props.zoom / 100.0;
+
+    y /= scale;
+    x /= scale;
+
+    y -= this.border;
+    x -= this.border;
+
+    return [x, y, event_x, event_y] as const;
+  }
+
+  private updatePointerPosition(clientX: number, clientY: number) {
+    const [x, y] = this.getEventLocationFromClient(clientX, clientY);
+
+    this.setState({
+      mouseX: x,
+      mouseY: y,
+    });
+    this.props.dispatch(actionSetMousePosition([x, y]));
+
+    return [x, y] as const;
+  }
+
+  private dispatchEditorPointerEvent(
+    name: string,
+    clientX: number,
+    clientY: number,
+    key: number,
+  ) {
+    const [x, y, event_x, event_y] = this.getEventLocationFromClient(
+      clientX,
+      clientY,
+    );
+
+    this.setState({
+      mouseX: x,
+      mouseY: y,
+    });
+    this.props.dispatch(actionSetMousePosition([x, y]));
+
+    this.props.dispatch(
+      actionEditorEvent(
+        name,
+        [x, y],
+        [x - this._mouse_drag_start[0], y - this._mouse_drag_start[1]],
+        [event_x, event_y],
+        { x: clientX, y: clientY },
+        key,
+      ),
+    );
+
+    if (name === 'lbuttondown' && !this._in_mouse_drag) {
+      this._mouse_drag_start = [x, y];
+      this.props.dispatch(
+        actionEditorEvent(
+          'dragstart',
+          [x, y],
+          [0, 0],
+          [event_x, event_y],
+          { x: clientX, y: clientY },
+          key,
+        ),
+      );
+      this._in_mouse_drag = true;
+      this._last_drag_client = [clientX, clientY];
+      this._last_drag_key = key;
+      this.startDocumentDragTracking();
+    } else if (name === 'mousedrag') {
+      this._last_drag_client = [clientX, clientY];
+      this._last_drag_key = key;
+    }
+
+    if (name === 'lbuttonup' && this._in_mouse_drag) {
+      this.props.dispatch(
+        actionEditorEvent(
+          'dragend',
+          [x, y],
+          [0, 0],
+          [event_x, event_y],
+          { x: clientX, y: clientY },
+          key,
+        ),
+      );
+      this._in_mouse_drag = false;
+      this._last_drag_client = null;
+      this.stopDocumentDragTracking();
+    }
+
+    this._mouse_drag_start = [x, y];
+  }
+
+  private startDocumentDragTracking() {
+    document.addEventListener('mousemove', this.handleDocumentMouseMove);
+    document.addEventListener('mouseup', this.handleDocumentMouseUp);
+
+    if (this._auto_scroll_frame === null) {
+      this._auto_scroll_frame = window.requestAnimationFrame(
+        this.runAutoScrollFrame,
+      );
+    }
+  }
+
+  private stopDocumentDragTracking() {
+    document.removeEventListener('mousemove', this.handleDocumentMouseMove);
+    document.removeEventListener('mouseup', this.handleDocumentMouseUp);
+
+    if (this._auto_scroll_frame !== null) {
+      window.cancelAnimationFrame(this._auto_scroll_frame);
+      this._auto_scroll_frame = null;
+    }
+  }
+
+  private handleDocumentMouseMove(e: MouseEvent) {
+    if (!this._in_mouse_drag || !this._div) {
+      return;
+    }
+
+    e.preventDefault();
+    this.applyAutoScroll(e.clientX, e.clientY);
+    this.dispatchEditorPointerEvent(
+      'mousedrag',
+      e.clientX,
+      e.clientY,
+      this.getKeyState(e),
+    );
+  }
+
+  private handleDocumentMouseUp(e: MouseEvent) {
+    if (!this._in_mouse_drag || !this._div) {
+      return;
+    }
+
+    e.preventDefault();
+    this.applyAutoScroll(e.clientX, e.clientY);
+    this.dispatchEditorPointerEvent(
+      e.button === 0 ? 'lbuttonup' : 'rbuttonup',
+      e.clientX,
+      e.clientY,
+      this.getKeyState(e),
+    );
+  }
+
+  private getAutoScrollDelta(position: number, viewportSize: number) {
+    if (position < this.autoScrollMargin) {
+      const strength = Math.min(
+        1,
+        (this.autoScrollMargin - position) / this.autoScrollMargin,
+      );
+      return -Math.ceil(this.autoScrollMaxStep * strength);
+    }
+
+    if (position > viewportSize - this.autoScrollMargin) {
+      const strength = Math.min(
+        1,
+        (position - (viewportSize - this.autoScrollMargin)) /
+          this.autoScrollMargin,
+      );
+      return Math.ceil(this.autoScrollMaxStep * strength);
+    }
+
+    return 0;
+  }
+
+  private applyAutoScroll(clientX: number, clientY: number) {
+    if (!this._div) {
+      return false;
+    }
+
+    const rect = this._div.getBoundingClientRect();
+    const pointerX = clientX - rect.left;
+    const pointerY = clientY - rect.top;
+
+    const deltaX = this.getAutoScrollDelta(pointerX, rect.width);
+    const deltaY = this.getAutoScrollDelta(pointerY, rect.height);
+
+    if (deltaX === 0 && deltaY === 0) {
+      return false;
+    }
+
+    const nextScrollLeft = Math.max(
+      0,
+      Math.min(
+        this._div.scrollWidth - this._div.clientWidth,
+        this._div.scrollLeft + deltaX,
+      ),
+    );
+    const nextScrollTop = Math.max(
+      0,
+      Math.min(
+        this._div.scrollHeight - this._div.clientHeight,
+        this._div.scrollTop + deltaY,
+      ),
+    );
+
+    if (
+      nextScrollLeft === this._div.scrollLeft &&
+      nextScrollTop === this._div.scrollTop
+    ) {
+      return false;
+    }
+
+    this._div.scrollLeft = nextScrollLeft;
+    this._div.scrollTop = nextScrollTop;
+    this.scroll = [nextScrollLeft, nextScrollTop];
+
+    return true;
+  }
+
+  private runAutoScrollFrame() {
+    if (!this._in_mouse_drag || !this._last_drag_client) {
+      this._auto_scroll_frame = null;
+      return;
+    }
+
+    const didScroll = this.applyAutoScroll(
+      this._last_drag_client[0],
+      this._last_drag_client[1],
+    );
+
+    if (didScroll) {
+      this.dispatchEditorPointerEvent(
+        'mousedrag',
+        this._last_drag_client[0],
+        this._last_drag_client[1],
+        this._last_drag_key,
+      );
+    } else {
+      this.updatePointerPosition(
+        this._last_drag_client[0],
+        this._last_drag_client[1],
+      );
+    }
+
+    this._auto_scroll_frame = window.requestAnimationFrame(
+      this.runAutoScrollFrame,
+    );
   }
 
   oncontextmenu(e: any) {
@@ -387,24 +699,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   }
 
   getEventLocation(e: React.MouseEvent | React.DragEvent) {
-    // For firefox
-    const offset = this._div.getBoundingClientRect();
-    let event_x = e.clientX - offset.x;
-    let event_y = e.clientY - offset.y;
-
-    // Account for scrolling
-    let x = event_x + this.scroll[0];
-    let y = event_y + this.scroll[1];
-
-    const scale = this.props.zoom / 100.0;
-
-    y /= scale;
-    x /= scale;
-
-    y -= this.border;
-    x -= this.border;
-
-    return [x, y, event_x, event_y];
+    return this.getEventLocationFromClient(e.clientX, e.clientY);
   }
 
   onmouseevent(e: React.MouseEvent, ref: HTMLDivElement) {
@@ -412,36 +707,24 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       return;
     }
 
+    if (this._in_mouse_drag && (e.type === 'mousemove' || e.type === 'mouseup')) {
+      return;
+    }
+
     e.preventDefault();
 
-    const [x, y, event_x, event_y] = this.getEventLocation(e);
-    
-    // Update local mouse position for rulers
-    this.setState({
-        mouseX: x,
-        mouseY: y
-    });
-    
-    // Dispatch to store for sheetbar coordinate display
-    this.props.dispatch(actionSetMousePosition([x, y]));
-
-    let key = 0;
-
-    if (e.altKey) {
-      key += 4;
-    }
-    if (e.ctrlKey) {
-      key += 2;
-    }
-    if (e.shiftKey) {
-      key += 1;
-    }
+    const key = this.getKeyState(e);
 
     let name = e.type;
     if (name === 'mousedown') {
       this._div.focus();
       if (e.button === 0) {
-        name = 'lbuttondown';
+        name =
+          e.detail >= 3
+            ? 'ltripleclick'
+            : e.detail === 2
+              ? 'ldoubleclick'
+              : 'lbuttondown';
       } else {
         name = 'rbuttondown';
       }
@@ -459,47 +742,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       name = 'mousedrag';
     }
 
-    this.props.dispatch(
-      actionEditorEvent(
-        name,
-        [x, y],
-        [x - this._mouse_drag_start[0], y - this._mouse_drag_start[1]],
-        [event_x, event_y],
-        { x: e.clientX, y: e.clientY },
-        key,
-      ),
-    );
-
-    if (name === 'lbuttondown' && !this._in_mouse_drag) {
-      this._mouse_drag_start = [x, y];
-      this.props.dispatch(
-        actionEditorEvent(
-          'dragstart',
-          [x, y],
-          [0, 0],
-          [event_x, event_y],
-          { x: e.clientX, y: e.clientY },
-          key,
-        ),
-      );
-      this._in_mouse_drag = true;
-    }
-
-    if ((name === 'lbuttonup' || name === 'mouseout') && this._in_mouse_drag) {
-      this.props.dispatch(
-        actionEditorEvent(
-          'dragend',
-          [x, y],
-          [0, 0],
-          [event_x, event_y],
-          { x: e.clientX, y: e.clientY },
-          key,
-        ),
-      );
-      this._in_mouse_drag = false;
-    }
-
-    this._mouse_drag_start = [x, y];
+    this.dispatchEditorPointerEvent(name, e.clientX, e.clientY, key);
   }
 
   show(a: Coordinate) {
@@ -516,12 +759,19 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   //
   render() {
     // Is the user dragging out a selection rectangle?
+    const selectRectBounds = this.props._in_select_rect
+      ? UtilityService.normalizeRect(
+          this.props._select_rect_a,
+          this.props._select_rect_b,
+        )
+      : null;
+
     let selectrect = this.props._in_select_rect ? (
       <rect
-        x={this.props._select_rect_a[0]}
-        y={this.props._select_rect_a[1]}
-        width={this.props._select_rect_b[0] - this.props._select_rect_a[0]}
-        height={this.props._select_rect_b[1] - this.props._select_rect_a[1]}
+        x={selectRectBounds.a[0]}
+        y={selectRectBounds.a[1]}
+        width={selectRectBounds.b[0] - selectRectBounds.a[0]}
+        height={selectRectBounds.b[1] - selectRectBounds.a[1]}
         style={{
           fill: 'blue',
           fillOpacity: 0.25,

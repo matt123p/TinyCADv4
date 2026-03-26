@@ -20,6 +20,8 @@ export interface TextKeyDown {
   keyCode: number;
   shiftKey: boolean;
   ctrlKey: boolean;
+  altKey: boolean;
+  metaKey: boolean;
 }
 
 export interface TextKeyPress {

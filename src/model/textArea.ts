@@ -58,4 +58,5 @@ export interface TextAreaData {
   sel_end_pos: number;
   sel_start_pos: number;
   edit_position: number;
+  preferred_x: number | null;
 }

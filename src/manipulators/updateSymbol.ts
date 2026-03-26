@@ -24,6 +24,7 @@ import { updateFactory } from './updateFactory';
 import { ViewTracker, FindResult } from '../model/dsnView';
 import { DeltaCoordinate } from './updateView';
 import { TextDisplayMethod } from '../model/tclib';
+import i18n from '../i18n';
 
 //
 // The symbol object
@@ -121,6 +122,8 @@ export class updateSymbol
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ): DocItem {
     const index = -handle - 100;
     if (index >= 0 && index < this.item.text.length) {
@@ -133,6 +136,8 @@ export class updateSymbol
         keyCode,
         shiftKey,
         ctrlKey,
+        altKey,
+        metaKey,
       );
       return update(this.item, {
         text: {
@@ -206,6 +211,31 @@ export class updateSymbol
     }
   }
 
+  on_mouse_double_click(handle: number, p: Coordinate): DocItem {
+    const index = -handle - 100;
+    if (index >= 0 && index < this.item.text.length) {
+      const UpdateTextAreas = this.create_updateTextArea(
+        this.item,
+        this.item.point,
+      );
+      const edit_position = UpdateTextAreas[index].find_positon(
+        this.item.textData[index],
+        p,
+      );
+      const textData = UpdateTextAreas[index].select_word(
+        this.item.textData[index],
+        edit_position,
+      );
+      return update(this.item, {
+        textData: {
+          [index]: { $set: textData },
+        },
+      });
+    }
+
+    return this.item;
+  }
+
   handleTextPaste(handle: number, pasteText: string): DocItem {
     const index = -handle - 100;
     if (index >= 0 && index < this.item.text.length) {
@@ -259,7 +289,14 @@ export class updateSymbol
   }
 
   getContextMenu(items: ContextMenuList) {
-    return items;
+    return [
+      ...items.slice(0, 4),
+      {
+        key: 'replace_symbol',
+        text: i18n.t('toolbar.contextMenu.replaceSymbol'),
+      },
+      ...items.slice(4),
+    ];
   }
 
   getBoundingRect() {

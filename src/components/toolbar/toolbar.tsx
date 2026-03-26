@@ -188,6 +188,21 @@ const ImageIcon: React.FC<{ src: string; className?: string }> = ({ src, classNa
   <img src={src} width={18} height={18} className={className} alt="" />
 );
 
+const AutorouteWireIcon: React.FC = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+    <circle cx="3.5" cy="4" r="2" fill="currentColor" />
+    <circle cx="14.5" cy="14" r="2" fill="currentColor" />
+    <path
+      d="M5.5 4 H10 V14 H12.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 // Split button with dropdown menu
 const SplitMenuButton: React.FC<{
   text: string;
@@ -515,6 +530,14 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           icon={<ImageIcon src={wireImage} />}
           onClick={() => props.dispatch(actionCommand('add_wire'))}
           className={m === 'add_wire' ? styles.highlight : undefined}
+        />
+
+        <ToolbarButton
+          aria-label={t('toolbar.pointToPointWire')}
+          title={t('toolbar.pointToPointWire')}
+          icon={<AutorouteWireIcon />}
+          onClick={() => props.dispatch(actionCommand('add_wire_point_to_point'))}
+          className={m === 'add_wire_point_to_point' ? styles.highlight : undefined}
         />
 
         {/* No Connect */}

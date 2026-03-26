@@ -130,26 +130,83 @@ export class updateTextData {
     }
   }
 
+  private set_preferred_x(textAreaData: TextAreaData, preferredX: number | null) {
+    return update(textAreaData, {
+      preferred_x: { $set: preferredX },
+    });
+  }
+
+  private get_current_x(textAreaData: TextAreaData) {
+    return textAreaData.textEdit?.x ?? 1;
+  }
+
   mouse_click(
     textAreaData: TextAreaData,
     edit_position: number,
     clear_selection: boolean,
   ) {
-    // Does this hit one of our items?
     if (clear_selection) {
       textAreaData = update(textAreaData, {
         edit_position: { $set: edit_position },
         sel_start: { $set: edit_position },
         sel_end: { $set: edit_position },
       });
-      return this.makeTextArea(textAreaData, textAreaData.drawText);
+      return this.set_preferred_x(
+        this.makeTextArea(textAreaData, textAreaData.drawText),
+        null,
+      );
     } else {
       textAreaData = update(textAreaData, {
         sel_end: { $set: edit_position },
         edit_position: { $set: edit_position },
       });
-      return this.makeTextArea(textAreaData, textAreaData.drawText);
+      return this.set_preferred_x(
+        this.makeTextArea(textAreaData, textAreaData.drawText),
+        null,
+      );
     }
+  }
+
+  select_word(textAreaData: TextAreaData, edit_position: number) {
+    const text = textAreaData.drawText;
+    if (text.length === 0) {
+      return this.set_preferred_x(this.makeTextArea(textAreaData, text), null);
+    }
+
+    let anchor = Math.max(0, Math.min(edit_position, text.length - 1));
+    let category = this.get_char_category(text[anchor]);
+
+    if (
+      category === 'space' &&
+      anchor > 0 &&
+      this.get_char_category(text[anchor - 1]) !== 'space'
+    ) {
+      anchor -= 1;
+      category = this.get_char_category(text[anchor]);
+    }
+
+    let start = anchor;
+    let end = anchor + 1;
+
+    while (start > 0 && this.get_char_category(text[start - 1]) === category) {
+      --start;
+    }
+
+    while (end < text.length && this.get_char_category(text[end]) === category) {
+      ++end;
+    }
+
+    return this.set_preferred_x(
+      this.makeTextArea(
+        update(textAreaData, {
+          edit_position: { $set: end },
+          sel_start: { $set: start },
+          sel_end: { $set: end },
+        }),
+        text,
+      ),
+      null,
+    );
   }
 
   on_keydown(
@@ -157,38 +214,56 @@ export class updateTextData {
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean,
+    altKey: boolean,
+    metaKey: boolean,
   ) {
     let text = textAreaData.drawText;
+    const useWordNavigation = this.isWordNavigationModifier(ctrlKey, altKey);
+    const useLineNavigation = this.isLineNavigationModifier(ctrlKey, metaKey);
+    let preservePreferredX = false;
 
-    // Is this a special character?
     switch (keyCode) {
+      case 65: // A
+        if (ctrlKey || metaKey) {
+          textAreaData = this.select_all(textAreaData);
+        }
+        break;
+      case 35: // End
+        textAreaData = this.update_sel_begin(textAreaData, shiftKey);
+        textAreaData = this.change_edit_position(
+          textAreaData,
+          this.find_line_end(textAreaData),
+          false,
+          false,
+          text,
+        );
+        textAreaData = this.update_sel_end(textAreaData, shiftKey);
+        break;
+      case 36: // Home
+        textAreaData = this.update_sel_begin(textAreaData, shiftKey);
+        textAreaData = this.change_edit_position(
+          textAreaData,
+          this.find_line_start(textAreaData),
+          false,
+          false,
+          text,
+        );
+        textAreaData = this.update_sel_end(textAreaData, shiftKey);
+        break;
       case 37: // Left
         textAreaData = this.update_sel_begin(textAreaData, shiftKey);
-        if (ctrlKey) {
-          let first_check = true;
-          let check_for;
-          let edit_position = textAreaData.edit_position;
-          do {
-            if (textAreaData.edit_position > 0) {
-              --edit_position;
-            } else {
-              break;
-            }
-            if (first_check) {
-              check_for = this.is_letter(textAreaData.drawText[edit_position]);
-              first_check = false;
-            }
-          } while (
-            this.is_letter(textAreaData.drawText[edit_position]) === check_for
-          );
-          if (
-            this.is_letter(textAreaData.drawText[edit_position]) !== check_for
-          ) {
-            ++edit_position;
-          }
+        if (useLineNavigation) {
           textAreaData = this.change_edit_position(
             textAreaData,
-            edit_position,
+            this.find_line_start(textAreaData),
+            false,
+            false,
+            text,
+          );
+        } else if (useWordNavigation) {
+          textAreaData = this.change_edit_position(
+            textAreaData,
+            this.find_previous_word_boundary(text, textAreaData.edit_position),
             false,
             false,
             text,
@@ -207,6 +282,8 @@ export class updateTextData {
       case 38: // Up
         {
           textAreaData = this.update_sel_begin(textAreaData, shiftKey);
+          const preferredX = textAreaData.preferred_x ?? this.get_current_x(textAreaData);
+          textAreaData = this.set_preferred_x(textAreaData, preferredX);
           const pos = this.move_block(textAreaData, true);
           textAreaData = this.change_edit_position(
             textAreaData,
@@ -216,31 +293,23 @@ export class updateTextData {
             text,
           );
           textAreaData = this.update_sel_end(textAreaData, shiftKey);
+          preservePreferredX = true;
         }
         break;
       case 39: // Right
         textAreaData = this.update_sel_begin(textAreaData, shiftKey);
-        if (ctrlKey) {
-          let first_check = true;
-          let check_for;
-          let edit_position = textAreaData.edit_position;
-          do {
-            if (first_check) {
-              check_for = this.is_letter(textAreaData.drawText[edit_position]);
-              first_check = false;
-            }
-            if (edit_position < textAreaData.drawText.length) {
-              --edit_position;
-            } else {
-              break;
-            }
-          } while (
-            edit_position === textAreaData.drawText.length ||
-            this.is_letter(textAreaData.drawText[edit_position]) === check_for
-          );
+        if (useLineNavigation) {
           textAreaData = this.change_edit_position(
             textAreaData,
-            edit_position,
+            this.find_line_end(textAreaData),
+            false,
+            false,
+            text,
+          );
+        } else if (useWordNavigation) {
+          textAreaData = this.change_edit_position(
+            textAreaData,
+            this.find_next_word_boundary(text, textAreaData.edit_position),
             false,
             false,
             text,
@@ -259,6 +328,8 @@ export class updateTextData {
       case 40: // Down
         {
           textAreaData = this.update_sel_begin(textAreaData, shiftKey);
+          const preferredX = textAreaData.preferred_x ?? this.get_current_x(textAreaData);
+          textAreaData = this.set_preferred_x(textAreaData, preferredX);
           const pos = this.move_block(textAreaData, false);
           textAreaData = this.change_edit_position(
             textAreaData,
@@ -268,41 +339,78 @@ export class updateTextData {
             text,
           );
           textAreaData = this.update_sel_end(textAreaData, shiftKey);
+          preservePreferredX = true;
         }
         break;
       case 8: // Backspace
         if (textAreaData.sel_start !== textAreaData.sel_end) {
           textAreaData = this.delete_sel(textAreaData);
           text = textAreaData.drawText;
-        } else {
-          if (textAreaData.edit_position > 0) {
-            if (text.length > 0) {
-              text =
-                text.substring(0, textAreaData.edit_position - 1) +
-                text.substring(textAreaData.edit_position);
-              textAreaData = this.change_edit_position(
-                textAreaData,
-                -1,
-                false,
-                true,
-                text,
-              );
-            }
+        } else if (useLineNavigation) {
+          const lineStart = this.find_line_start(textAreaData);
+          if (lineStart !== textAreaData.edit_position) {
+            text =
+              text.substring(0, lineStart) +
+              text.substring(textAreaData.edit_position);
+            textAreaData = this.change_edit_position(
+              textAreaData,
+              lineStart,
+              false,
+              false,
+              text,
+            );
           }
+        } else if (useWordNavigation) {
+          const wordStart = this.find_previous_word_boundary(
+            text,
+            textAreaData.edit_position,
+          );
+          if (wordStart !== textAreaData.edit_position) {
+            text =
+              text.substring(0, wordStart) +
+              text.substring(textAreaData.edit_position);
+            textAreaData = this.change_edit_position(
+              textAreaData,
+              wordStart,
+              false,
+              false,
+              text,
+            );
+          }
+        } else if (textAreaData.edit_position > 0 && text.length > 0) {
+          text =
+            text.substring(0, textAreaData.edit_position - 1) +
+            text.substring(textAreaData.edit_position);
+          textAreaData = this.change_edit_position(
+            textAreaData,
+            -1,
+            false,
+            true,
+            text,
+          );
         }
         break;
       case 46: // Delete
         if (textAreaData.sel_start !== textAreaData.sel_end) {
           textAreaData = this.delete_sel(textAreaData);
           text = textAreaData.drawText;
-        } else {
-          if (textAreaData.edit_position < textAreaData.drawText.length) {
-            if (text.length > 0) {
-              text =
-                text.substring(0, textAreaData.edit_position) +
-                text.substring(textAreaData.edit_position + 1);
-            }
+        } else if (useWordNavigation) {
+          const wordEnd = this.find_next_word_boundary(
+            text,
+            textAreaData.edit_position,
+          );
+          if (wordEnd !== textAreaData.edit_position) {
+            text =
+              text.substring(0, textAreaData.edit_position) +
+              text.substring(wordEnd);
           }
+        } else if (
+          textAreaData.edit_position < textAreaData.drawText.length &&
+          text.length > 0
+        ) {
+          text =
+            text.substring(0, textAreaData.edit_position) +
+            text.substring(textAreaData.edit_position + 1);
         }
         break;
       default:
@@ -310,6 +418,10 @@ export class updateTextData {
     }
 
     textAreaData = this.makeTextArea(textAreaData, text);
+    textAreaData = this.set_preferred_x(
+      textAreaData,
+      preservePreferredX ? textAreaData.preferred_x : null,
+    );
     return textAreaData;
   }
 
@@ -323,6 +435,7 @@ export class updateTextData {
 
     r = this.change_edit_position(r, 1, false, true, text);
     r = this.makeTextArea(r, text);
+    r = this.set_preferred_x(r, null);
     return r;
   }
 
@@ -338,6 +451,7 @@ export class updateTextData {
       text.substring(textAreaData.edit_position);
     r = this.change_edit_position(r, pasteText.length, true, true, text);
     r = this.makeTextArea(r, text);
+    r = this.set_preferred_x(r, null);
 
     return r;
   }
@@ -350,8 +464,10 @@ export class updateTextData {
     const copy_data = textAreaData.drawText.substring(sel_start, sel_end);
 
     if (cut) {
+      const nextTextData = this.delete_sel(textAreaData);
       return {
-        ...this.delete_sel(textAreaData),
+        textData: this.set_preferred_x(nextTextData, null),
+        text: nextTextData.drawText,
         copy_data: copy_data,
       };
     } else {
@@ -406,15 +522,28 @@ export class updateTextData {
       scale_y: 1.0,
     };
     const p1 = this.rotateMsg(textAreaData, sd, p);
+    let nearestBlock = null;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
     for (let i = 0; i < textAreaData.textBlocks.length; ++i) {
       let b = textAreaData.textBlocks[i];
+      const top = b.y - b.height;
+      const bottom = b.y;
+
       if (b.y >= p1[1] && b.y - b.height <= p1[1]) {
-        // Does this block actually hit our x-co-ordinate?
-        if (p1[0] >= b.x && p1[0] <= b.x + b.width) {
-          let bt = this.find_best_text(b.value, p1[0] - b.x);
-          return b.start + bt.exact;
-        }
+        return this.get_position_in_block(b, p1[0]);
       }
+
+      const distance =
+        p1[1] < top ? top - p1[1] : p1[1] > bottom ? p1[1] - bottom : 0;
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestBlock = b;
+      }
+    }
+
+    if (nearestBlock) {
+      return this.get_position_in_block(nearestBlock, p1[0]);
     }
 
     return textAreaData.drawText.length;
@@ -423,12 +552,16 @@ export class updateTextData {
   // Find the block above (up=true) or below (up=false) the
   // current editing position and move to that block
   public move_block(textAreaData: TextAreaData, up: boolean) {
+    if (!textAreaData.textEdit) {
+      return textAreaData.edit_position;
+    }
+
     let best_dist_x = 0;
     let best_dist_y = 0;
     let best_block = null;
 
     // TODO: Keep track of the target position from moving up/down
-    const target_pos = textAreaData.textEdit.x;
+    const target_pos = textAreaData.preferred_x ?? textAreaData.textEdit.x;
 
     for (let i = 0; i < textAreaData.textBlocks.length; ++i) {
       let b = textAreaData.textBlocks[i];
@@ -471,6 +604,8 @@ export class updateTextData {
       }
       return best_block.start + bt.exact;
     }
+
+    return textAreaData.edit_position;
   }
 
   public is_inside_rect(
@@ -482,10 +617,16 @@ export class updateTextData {
     // Is this text block inside the rectangle?
     let pa = this.rotateMsg(textAreaData, sd, rect_a);
     let pb = this.rotateMsg(textAreaData, sd, rect_b);
+    const rect = UtilityService.normalizeRect(pa, pb);
     let a = [0, 0];
     let b = [textAreaData.width, textAreaData.height];
 
-    return a[0] >= pa[0] && a[1] >= pa[1] && b[0] <= pb[0] && b[1] <= pb[1];
+    return (
+      a[0] >= rect.a[0] &&
+      a[1] >= rect.a[1] &&
+      b[0] <= rect.b[0] &&
+      b[1] <= rect.b[1]
+    );
   }
 
   public on_isinside(
@@ -764,8 +905,133 @@ export class updateTextData {
     return rotation % 4;
   }
 
-  private is_letter(c: string) {
-    return c.toLowerCase() !== c.toUpperCase();
+  private select_all(textAreaData: TextAreaData) {
+    const textLength = textAreaData.drawText.length;
+    return update(textAreaData, {
+      edit_position: { $set: textLength },
+      sel_start: { $set: 0 },
+      sel_end: { $set: textLength },
+    });
+  }
+
+  private isWordNavigationModifier(ctrlKey: boolean, altKey: boolean) {
+    const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+    return isMac ? altKey : ctrlKey;
+  }
+
+  private isLineNavigationModifier(ctrlKey: boolean, metaKey: boolean) {
+    const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+    return isMac ? metaKey : false;
+  }
+
+  private find_previous_word_boundary(text: string, position: number) {
+    let nextPosition = position;
+
+    while (nextPosition > 0 && this.get_char_category(text[nextPosition - 1]) === 'space') {
+      --nextPosition;
+    }
+
+    const category = this.get_char_category(text[nextPosition - 1]);
+    while (
+      nextPosition > 0 &&
+      this.get_char_category(text[nextPosition - 1]) === category
+    ) {
+      --nextPosition;
+    }
+
+    return nextPosition;
+  }
+
+  private find_next_word_boundary(text: string, position: number) {
+    let nextPosition = position;
+
+    while (nextPosition < text.length && this.get_char_category(text[nextPosition]) === 'space') {
+      ++nextPosition;
+    }
+
+    const category = this.get_char_category(text[nextPosition]);
+    while (
+      nextPosition < text.length &&
+      this.get_char_category(text[nextPosition]) === category
+    ) {
+      ++nextPosition;
+    }
+
+    return nextPosition;
+  }
+
+  private find_current_block(textAreaData: TextAreaData) {
+    const position = textAreaData.edit_position;
+
+    for (let index = 0; index < textAreaData.textBlocks.length; ++index) {
+      const block = textAreaData.textBlocks[index];
+      const blockEnd = block.start + block.value.length;
+      if (position === block.start || position < blockEnd) {
+        return block;
+      }
+
+      if (position === blockEnd) {
+        const nextBlock = textAreaData.textBlocks[index + 1];
+        if (!nextBlock || nextBlock.start !== position) {
+          return block;
+        }
+      }
+    }
+
+    return textAreaData.textBlocks[textAreaData.textBlocks.length - 1] || null;
+  }
+
+  private get_block_end_position(block: { start: number; value: string }) {
+    const visibleLength = block.value.endsWith('\r')
+      ? block.value.length - 1
+      : block.value.length;
+    return block.start + visibleLength;
+  }
+
+  private get_position_in_block(
+    block: { start: number; value: string; x: number; width: number },
+    x: number,
+  ) {
+    if (x <= block.x) {
+      return block.start;
+    }
+
+    if (x >= block.x + block.width) {
+      return this.get_block_end_position(block);
+    }
+
+    let bt = this.find_best_text(block.value, x - block.x);
+    return block.start + bt.exact;
+  }
+
+  private find_line_start(textAreaData: TextAreaData) {
+    const block = this.find_current_block(textAreaData);
+    return block ? block.start : 0;
+  }
+
+  private find_line_end(textAreaData: TextAreaData) {
+    const block = this.find_current_block(textAreaData);
+    if (!block) {
+      return textAreaData.drawText.length;
+    }
+
+    return this.get_block_end_position(block);
+  }
+
+  private get_char_category(c: string | undefined) {
+    if (!c) {
+      return 'space';
+    }
+
+    if (/\s/.test(c)) {
+      return 'space';
+    }
+
+    if (/[A-Za-z0-9_]/.test(c)) {
+      return 'word';
+    }
+
+    return 'punct';
   }
 
   private makeTextArea(textAreaData: TextAreaData, drawText: string) {
@@ -775,6 +1041,7 @@ export class updateTextData {
         drawText: drawText,
         textEdit: null,
         edit_position: 0,
+        preferred_x: null,
         sel_start: -1,
         sel_end: -1,
         sel_end_pos: -1,
@@ -841,7 +1108,7 @@ export class updateTextData {
       if (
         trailing_cr &&
         textEdit == null &&
-        textAreaData.edit_position >= next_text.length
+        edit_position >= next_text.length
       ) {
         textEdit = {
           x: 1,

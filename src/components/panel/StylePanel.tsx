@@ -87,6 +87,24 @@ export const StylePanel: React.FC<StylePanelProps> = (props) => {
   const { t } = useTranslation();
   const { selectedStyle, dispatch } = props;
 
+  const getClampedSpinButtonValue = (
+    value: number | null | undefined,
+    displayValue: string | undefined,
+    min: number,
+    max: number,
+  ) => {
+    if (typeof value === 'number' && !Number.isNaN(value)) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    const parsedValue = Number(displayValue?.trim());
+    if (Number.isFinite(parsedValue)) {
+      return Math.min(max, Math.max(min, parsedValue));
+    }
+
+    return null;
+  };
+
   const lineWidthChange = (value: number) => {
     let style: MergedStyle = {
       fill: false,
@@ -210,13 +228,21 @@ export const StylePanel: React.FC<StylePanelProps> = (props) => {
               <SpinButton
                 style={{ width: '70px' }}
                 value={selectedStyle.line_width}
-                displayValue={selectedStyle.line_width?.toString()}
                 min={1}
                 max={64}
                 step={1}
-                onChange={(e, data) =>
-                  lineWidthChange(Math.min(64, Math.max(1, data.value ?? 1)))
-                }
+                onChange={(e, data) => {
+                  const nextValue = getClampedSpinButtonValue(
+                    data.value,
+                    data.displayValue,
+                    1,
+                    64,
+                  );
+
+                  if (nextValue !== null) {
+                    lineWidthChange(nextValue);
+                  }
+                }}
                 disabled={
                   !('line_width' in selectedStyle && selectedStyle.stroked)
                 }
@@ -359,13 +385,21 @@ export const StylePanel: React.FC<StylePanelProps> = (props) => {
               <SpinButton
                 style={{ width: '70px' }}
                 value={selectedStyle.font_size}
-                displayValue={selectedStyle.font_size?.toString()}
                 min={4}
                 max={200}
                 step={1}
-                onChange={(e, data) =>
-                  fontSizeChange(Math.min(200, Math.max(4, data.value ?? 12)))
-                }
+                onChange={(e, data) => {
+                  const nextValue = getClampedSpinButtonValue(
+                    data.value,
+                    data.displayValue,
+                    4,
+                    200,
+                  );
+
+                  if (nextValue !== null) {
+                    fontSizeChange(nextValue);
+                  }
+                }}
                 disabled={!('font_size' in selectedStyle)}
               />
               <PanelCheckbox
