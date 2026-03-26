@@ -134,6 +134,151 @@ export interface viewResult {
 export class updateView {
   constructor() {}
 
+  private wirePointKey(point: Coordinate): string {
+    return point[0] + ':' + point[1];
+  }
+
+  private addWireEndpoint(
+    endpointMap: Map<string, number[]>,
+    point: Coordinate,
+    wireId: number,
+  ) {
+    const key = this.wirePointKey(point);
+    const existing = endpointMap.get(key);
+    if (existing) {
+      existing.push(wireId);
+    } else {
+      endpointMap.set(key, [wireId]);
+    }
+  }
+
+  private extendWireChainFromEndpoint(
+    wiresById: Map<number, dsnWire>,
+    endpointMap: Map<string, number[]>,
+    selectedIds: Set<number>,
+    startWire: dsnWire,
+    endpointIndex: number,
+  ) {
+    let currentWire = startWire;
+    let currentEndpointIndex = endpointIndex;
+
+    while (currentWire.d_points.length > 1) {
+      const currentPoint = currentWire.d_points[currentEndpointIndex];
+      const connectedIds = (endpointMap.get(this.wirePointKey(currentPoint)) || [])
+        .filter((wireId) => wireId !== currentWire._id && !selectedIds.has(wireId));
+
+      if (connectedIds.length !== 1) {
+        return;
+      }
+
+      const nextWire = wiresById.get(connectedIds[0]);
+      if (!nextWire || nextWire.d_points.length < 2) {
+        return;
+      }
+
+      const lastIndex = nextWire.d_points.length - 1;
+      if (this.samePoint(nextWire.d_points[0], currentPoint)) {
+        selectedIds.add(nextWire._id);
+        currentWire = nextWire;
+        currentEndpointIndex = lastIndex;
+      } else if (this.samePoint(nextWire.d_points[lastIndex], currentPoint)) {
+        selectedIds.add(nextWire._id);
+        currentWire = nextWire;
+        currentEndpointIndex = 0;
+      } else {
+        return;
+      }
+    }
+  }
+
+  private extendWireNetFromSeed(
+    wiresById: Map<number, dsnWire>,
+    endpointMap: Map<string, number[]>,
+    selectedIds: Set<number>,
+    startWire: dsnWire,
+  ) {
+    const pending: number[] = [startWire._id];
+
+    while (pending.length > 0) {
+      const wireId = pending.pop();
+      const wire = wiresById.get(wireId);
+      if (!wire || wire.d_points.length < 2) {
+        continue;
+      }
+
+      const endpoints = [wire.d_points[0], wire.d_points[wire.d_points.length - 1]];
+      for (const endpoint of endpoints) {
+        const connectedIds = endpointMap.get(this.wirePointKey(endpoint)) || [];
+        for (const connectedId of connectedIds) {
+          if (selectedIds.has(connectedId)) {
+            continue;
+          }
+
+          selectedIds.add(connectedId);
+          pending.push(connectedId);
+        }
+      }
+    }
+  }
+
+  private getWireSelectionItems(
+    sheet: dsnSheet,
+    item: DocItem,
+    includeBranches: boolean,
+  ): DocItem[] {
+    if (item.NodeName !== DocItemTypes.Wire || item.d_points.length < 2) {
+      return [item];
+    }
+
+    const wiresById = new Map<number, dsnWire>();
+    const endpointMap = new Map<string, number[]>();
+    for (const candidate of sheet.items) {
+      if (candidate.NodeName !== DocItemTypes.Wire || candidate.d_points.length < 2) {
+        continue;
+      }
+
+      wiresById.set(candidate._id, candidate);
+      this.addWireEndpoint(endpointMap, candidate.d_points[0], candidate._id);
+      this.addWireEndpoint(
+        endpointMap,
+        candidate.d_points[candidate.d_points.length - 1],
+        candidate._id,
+      );
+    }
+
+    const selectedIds = new Set<number>([item._id]);
+    if (includeBranches) {
+      this.extendWireNetFromSeed(wiresById, endpointMap, selectedIds, item);
+    } else {
+      this.extendWireChainFromEndpoint(
+        wiresById,
+        endpointMap,
+        selectedIds,
+        item,
+        0,
+      );
+      this.extendWireChainFromEndpoint(
+        wiresById,
+        endpointMap,
+        selectedIds,
+        item,
+        item.d_points.length - 1,
+      );
+    }
+
+    return sheet.items.filter((candidate) => selectedIds.has(candidate._id));
+  }
+
+  private unselectItems(view: dsnView, sheet: dsnSheet, items: DocItem[]): dsnView {
+    const idsToRemove = new Set(items.map((item) => item._id));
+    return this._updateSelection(
+      view,
+      sheet,
+      view._selected_handle,
+      view._selected_array.filter((id) => !idsToRemove.has(id)),
+    );
+  }
+
   // Get the selected symbol
   getSelectedSymbol(view: dsnView, sheet: dsnSheet) {
     if (view._selected_array.length === 1) {
@@ -748,9 +893,14 @@ export class updateView {
     if (
       event_name === 'lbuttondown' ||
       event_name === 'ldoubleclick' ||
+      event_name === 'ltripleclick' ||
       event_name === 'rbuttondown'
     ) {
-      if (event_name === 'lbuttondown' || event_name === 'ldoubleclick') {
+      if (
+        event_name === 'lbuttondown' ||
+        event_name === 'ldoubleclick' ||
+        event_name === 'ltripleclick'
+      ) {
         const click_threshold = 2.0;
         const is_same_spot =
           view.last_click_point &&
@@ -804,17 +954,32 @@ export class updateView {
       });
 
       if (hover_obj) {
-        const isSelected = UtilityService.isSelected(
-          view._selected_array,
-          hover_obj,
+        const selectionItems =
+          event_name === 'ldoubleclick'
+            ? this.getWireSelectionItems(sheet, hover_obj, false)
+            : event_name === 'ltripleclick'
+              ? this.getWireSelectionItems(sheet, hover_obj, true)
+              : [hover_obj];
+        const isSelected = UtilityService.isSelected(view._selected_array, hover_obj);
+        const allSelectionItemsSelected = selectionItems.every((item) =>
+          UtilityService.isSelected(view._selected_array, item),
         );
         const toggleSelection =
           append &&
-          (event_name === 'lbuttondown' || event_name === 'ldoubleclick') &&
-          isSelected;
+          (
+            event_name === 'lbuttondown' ||
+            event_name === 'ldoubleclick' ||
+            event_name === 'ltripleclick'
+          ) &&
+          allSelectionItemsSelected;
 
         if (toggleSelection) {
-          view = this.unselectSingleItem(view, sheet, hover_obj);
+          view = this.unselectItems(view, sheet, selectionItems);
+        } else if (
+          event_name === 'ldoubleclick' ||
+          event_name === 'ltripleclick'
+        ) {
+          view = this.selectItems(view, sheet, selectionItems, append);
         } else if (!isSelected) {
           view = this.selectSingleItem(view, sheet, hover_obj, append);
         }
@@ -968,6 +1133,7 @@ export class updateView {
     if (
       event_name === 'lbuttondown' ||
       event_name === 'ldoubleclick' ||
+      event_name === 'ltripleclick' ||
       event_name === 'mousemove' ||
       event_name === 'dragstart'
     ) {
