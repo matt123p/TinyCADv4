@@ -978,6 +978,25 @@ export function DocStoreReducer(
       }
       break;
 
+    case SymbolActionTypes.ReplaceSymbol:
+      state = update(state, {
+        drawing: {
+          $set: update_view.replaceSymbolsInDrawing(
+            state.drawing,
+            action.sourceUid,
+            action.targetSymbolId,
+            action.targetSheetIndex,
+            action.scope,
+            action.name,
+            action.symbolData,
+            action.keepFieldValues,
+          ),
+        },
+        drawingVersion: { $set: state.drawingVersion + 1 },
+      });
+      sheet = activeSheet(state);
+      break;
+
     case LibraryActionTypes.SetPPP:
       // Is this changing the PPP of the symbol?
       if (state.editSymbol.ppp !== action.ppp) {

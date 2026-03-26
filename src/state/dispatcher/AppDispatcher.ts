@@ -74,6 +74,8 @@ import {
   SymbolEditPin,
   SymbolEditSymbol,
   SymbolEditOutline,
+  ReplaceSymbol,
+  ReplaceSymbolScope,
 } from '../actions/symbolActions';
 import {
   ContextMenuList,
@@ -665,6 +667,28 @@ export function actionSymbolEditOutline(heterogeneous: boolean) {
   const action: SymbolEditOutline = {
     type: SymbolActionTypes.SymbolEditOutline,
     heterogeneous,
+  };
+  return action;
+}
+
+export function actionReplaceSymbol(
+  sourceUid: string,
+  targetSymbolId: number,
+  targetSheetIndex: number,
+  scope: ReplaceSymbolScope,
+  name: tclibLibraryEntry,
+  symbolData: DocItem[][],
+  keepFieldValues: boolean,
+) {
+  const action: ReplaceSymbol = {
+    type: SymbolActionTypes.ReplaceSymbol,
+    sourceUid,
+    targetSymbolId,
+    targetSheetIndex,
+    scope,
+    name,
+    symbolData,
+    keepFieldValues,
   };
   return action;
 }

@@ -19,9 +19,16 @@ import {
   dsnSymbol,
   dsnImage,
   dsnPin,
+  SymbolTextItem,
 } from '../model/dsnItem';
 import { get_global_id } from '../util/global_id';
-import { dsnSheet, libImage, libSymbol, Size } from '../model/dsnDrawing';
+import {
+  dsnDrawing,
+  dsnSheet,
+  libImage,
+  libSymbol,
+  Size,
+} from '../model/dsnDrawing';
 import {
   isText,
   isStroked,
@@ -60,9 +67,13 @@ import { updateLabel } from './updateLabel';
 import { updateBusLabel } from './updateBusLabel';
 import { dsnBomEntry } from '../model/dsnBomEntry';
 import { tclibLibraryEntry } from '../model/tclib';
+import { ReplaceSymbolScope } from '../state/actions/symbolActions';
 import md5 from 'md5';
 import { store } from '../startup';
-import { actionMenuSetContextMenu } from '../state/dispatcher/AppDispatcher';
+import {
+  actionMenuSetContextMenu,
+  actionSelectDialog,
+} from '../state/dispatcher/AppDispatcher';
 import i18n from '../i18n';
 
 function StyleSet<T>(original: T, value: T): T {
@@ -1409,6 +1420,30 @@ export class updateView {
     return { view, sheet };
   }
 
+  command_replace_symbol(view: dsnView, sheet: dsnSheet): viewResult {
+    const item = this.getSelectedSymbol(view, sheet);
+    if (!item) {
+      return { view, sheet };
+    }
+
+    const currentName = item._symbol?.name?.value ||
+      item.text.find((field) => field.description === 'Name')?.value ||
+      '';
+
+    setTimeout(() => {
+      store.dispatch(
+        actionSelectDialog('replace_symbol', {
+          sourceUid: item._symbol?.uid,
+          targetSymbolId: item._id,
+          targetSheetIndex: view.selected_sheet,
+          initialSearch: currentName,
+        }),
+      );
+    }, 0);
+
+    return { view, sheet };
+  }
+
   ////////////////// KEYBOARD MOVEMENT HANDLERS //////////////////
 
   // Move selected objects by grid spacing
@@ -2552,6 +2587,303 @@ export class updateView {
 
   ////////////////// Symbol operations //////////////////
 
+  private getLibrarySymbolUid(name: tclibLibraryEntry, items: DocItem[][]) {
+    return name.id || md5(JSON.stringify(items));
+  }
+
+  private ensureLibrarySymbolOnSheet(
+    sheet: dsnSheet,
+    name: tclibLibraryEntry,
+    items: DocItem[][],
+  ) {
+    const symbolUid = this.getLibrarySymbolUid(name, items);
+
+    let next_symbol_id = 1;
+    let selected_symboldef: libSymbol = null;
+    for (let s2_id in sheet.symbols) {
+      if (sheet.symbols.hasOwnProperty(s2_id)) {
+        if (sheet.symbols[s2_id].uid === symbolUid) {
+          selected_symboldef = sheet.symbols[s2_id];
+        }
+        next_symbol_id = Math.max(+s2_id + 1, next_symbol_id);
+      }
+    }
+
+    if (!selected_symboldef) {
+      const ioxml = new ioXML();
+      const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+      const heterogeneous = items.length > 1;
+      const outlines = items.map((item) =>
+        ioxml.normalize_symbol(item, snap, null, false, heterogeneous),
+      );
+
+      selected_symboldef = {
+        id: next_symbol_id,
+        description: null,
+        name: {
+          type: name.ShowName,
+          value: name.Name,
+        },
+        ref: {
+          type: name.ShowRef,
+          value: name.Reference,
+        },
+        outlines: outlines,
+        heterogeneous: heterogeneous,
+        parts: name.ppp,
+        uid: symbolUid,
+      };
+
+      sheet = update(sheet, {
+        symbols: {
+          [selected_symboldef.id]: { $set: selected_symboldef },
+        },
+      });
+    }
+
+    return {
+      sheet,
+      symbol: selected_symboldef,
+    };
+  }
+
+  private getAnchorPoint(symbol: dsnSymbol): Coordinate {
+    const updater = new updateSymbol(symbol);
+    const delta = { dx: 0, dy: 0 };
+    updater.calcDelta(delta);
+    const outline = updater.outline();
+
+    for (const activePoint of outline.active_points) {
+      if (activePoint.power) {
+        continue;
+      }
+
+      if (!symbol._symbol.heterogeneous && activePoint.part !== symbol.part) {
+        continue;
+      }
+
+      let point = [
+        activePoint.pos[0] * symbol.scale_x,
+        activePoint.pos[1] * symbol.scale_y,
+      ];
+      point = UtilityService.rotateSymCordinate(symbol.rotation, point);
+
+      return [
+        point[0] + delta.dx + symbol.point[0],
+        point[1] + delta.dy + symbol.point[1],
+      ];
+    }
+
+    return null;
+  }
+
+  private createReplacementText(
+    oldSymbol: dsnSymbol,
+    newSymbolDef: libSymbol,
+    name: tclibLibraryEntry,
+    keepFieldValues: boolean,
+    part: number,
+  ): SymbolTextItem[] {
+    const fallback = new updateSymbol(oldSymbol);
+    const existingFields = new Map(
+      oldSymbol.text.map((field) => [field.description, field]),
+    );
+    const fieldDefinitions = [
+      {
+        description: 'Name',
+        value: name.Name,
+        display: name.ShowName,
+      },
+      {
+        description: 'Ref',
+        value: name.Reference,
+        display: name.ShowRef,
+      },
+      ...name.Attributes.filter(
+        (attribute) =>
+          attribute.AttName !== 'Reference' &&
+          attribute.AttName.indexOf('$$') !== 0,
+      ).map((attribute) => ({
+        description: attribute.AttName,
+        value: attribute.AttValue,
+        display: attribute.ShowAtt,
+      })),
+    ];
+
+    const text = fieldDefinitions.map((field) => {
+      const existingField = existingFields.get(field.description);
+      const value = keepFieldValues && existingField
+        ? existingField.value
+        : field.value;
+
+      return {
+        description: field.description,
+        value,
+        show: fallback.show_text(field.display, value),
+        display: field.display,
+        position: [0, 0],
+      } as SymbolTextItem;
+    });
+
+    const layoutHelper = new updateSymbol({
+      ...oldSymbol,
+      _symbol: newSymbolDef,
+      part,
+      text,
+    });
+    const laidOut = layoutHelper.layout_text_fields(
+      oldSymbol.rotation,
+      text.map((field) => ({
+        ...field,
+        position: [...field.position],
+      })),
+    );
+
+    if (!keepFieldValues) {
+      return laidOut;
+    }
+
+    return laidOut.map((field) => {
+      const existingField = existingFields.get(field.description);
+      if (!existingField) {
+        return field;
+      }
+
+      return {
+        ...field,
+        position: existingField.position
+          ? [...existingField.position]
+          : field.position,
+      };
+    });
+  }
+
+  private replaceSymbolInstance(
+    item: dsnSymbol,
+    newSymbolDef: libSymbol,
+    name: tclibLibraryEntry,
+    keepFieldValues: boolean,
+  ) {
+    const nextPart = Math.min(item.part, Math.max(newSymbolDef.parts, 1) - 1);
+    let replacement: dsnSymbol = {
+      ...item,
+      point: [...item.point],
+      part: nextPart,
+      _symbol: newSymbolDef,
+      _active_points: null,
+      text: this.createReplacementText(
+        item,
+        newSymbolDef,
+        name,
+        keepFieldValues,
+        nextPart,
+      ),
+      textData: [],
+    };
+
+    const oldAnchor = this.getAnchorPoint(item);
+    const newAnchor = this.getAnchorPoint(replacement);
+    if (oldAnchor && newAnchor) {
+      replacement = {
+        ...replacement,
+        point: [
+          replacement.point[0] + oldAnchor[0] - newAnchor[0],
+          replacement.point[1] + oldAnchor[1] - newAnchor[1],
+        ],
+      };
+    }
+
+    return new updateSymbol(replacement).post_construction();
+  }
+
+  replaceSymbolsInDrawing(
+    drawing: dsnDrawing,
+    sourceUid: string,
+    targetSymbolId: number,
+    targetSheetIndex: number,
+    scope: ReplaceSymbolScope,
+    name: tclibLibraryEntry,
+    items: DocItem[][],
+    keepFieldValues: boolean,
+  ) {
+    if (!sourceUid || targetSheetIndex == null || targetSheetIndex < 0) {
+      return drawing;
+    }
+
+    let changed = false;
+    const sheets = drawing.sheets.map((sheet, sheetIndex) => {
+      if (sheetIndex !== targetSheetIndex) {
+        return sheet;
+      }
+
+      const hasMatches = sheet.items.some(
+        (item) =>
+          item.NodeName === DocItemTypes.Symbol &&
+          this.shouldReplaceSymbol(
+            item as dsnSymbol,
+            sourceUid,
+            targetSymbolId,
+            scope,
+          ),
+      );
+      if (!hasMatches) {
+        return sheet;
+      }
+
+      changed = true;
+      const ensured = this.ensureLibrarySymbolOnSheet(sheet, name, items);
+      const nextItems = ensured.sheet.items.map((item) => {
+        if (
+          item.NodeName !== DocItemTypes.Symbol ||
+          !this.shouldReplaceSymbol(
+            item as dsnSymbol,
+            sourceUid,
+            targetSymbolId,
+            scope,
+          )
+        ) {
+          return item;
+        }
+
+        return this.replaceSymbolInstance(
+          item as dsnSymbol,
+          ensured.symbol,
+          name,
+          keepFieldValues,
+        );
+      });
+
+      return update(ensured.sheet, {
+        items: { $set: nextItems },
+      });
+    });
+
+    if (!changed) {
+      return drawing;
+    }
+
+    return update(drawing, {
+      sheets: { $set: sheets },
+    });
+  }
+
+  private shouldReplaceSymbol(
+    item: dsnSymbol,
+    sourceUid: string,
+    targetSymbolId: number,
+    scope: ReplaceSymbolScope,
+  ) {
+    if (item._symbol?.uid !== sourceUid) {
+      return false;
+    }
+
+    if (scope === 'single_symbol') {
+      return item._id === targetSymbolId;
+    }
+
+    return true;
+  }
+
   showShowPower(view: dsnView, sheet: dsnSheet, show_power: boolean): dsnSheet {
     let _selectedSymbol = this.getSelectedSymbol(view, sheet);
     if (_selectedSymbol) {
@@ -2825,54 +3157,9 @@ export class updateView {
     items: DocItem[][],
     point: Coordinate,
   ) {
-    // Generate the uid for this symbol
-    if (!name.id) {
-      let d = JSON.stringify(items);
-      name.id = md5(d);
-    }
-
-    let next_symbol_id = 1;
-    let selected_symboldef: libSymbol = null;
-    for (let s2_id in sheet.symbols) {
-      if (sheet.symbols.hasOwnProperty(s2_id)) {
-        if (sheet.symbols[s2_id].uid === name.id) {
-          selected_symboldef = sheet.symbols[s2_id];
-        }
-        next_symbol_id = Math.max(+s2_id + 1, next_symbol_id);
-      }
-    }
-
-    if (!selected_symboldef) {
-      const ioxml = new ioXML();
-      const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
-      const heterogeneous = items.length > 1;
-      const outlines = items.map((item) =>
-        ioxml.normalize_symbol(item, snap, null, false, heterogeneous),
-      );
-      // unknown symbol, so we must insert it
-      selected_symboldef = {
-        id: next_symbol_id,
-        description: null,
-        name: {
-          type: name.ShowName,
-          value: name.Name,
-        },
-        ref: {
-          type: name.ShowRef,
-          value: name.Reference,
-        },
-        outlines: outlines,
-        heterogeneous: heterogeneous,
-        parts: name.ppp,
-        uid: name.id,
-      };
-
-      sheet = update(sheet, {
-        symbols: {
-          [selected_symboldef.id]: { $set: selected_symboldef },
-        },
-      });
-    }
+    const ensured = this.ensureLibrarySymbolOnSheet(sheet, name, items);
+    sheet = ensured.sheet;
+    const selected_symboldef = ensured.symbol;
 
     let pos = -selected_symboldef.outlines[0].size[0] + 2.4 * 5;
     const posfn = (show: boolean) => {

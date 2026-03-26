@@ -118,6 +118,7 @@ const common = {
       copy: 'Copy',
       paste: 'Paste',
       delete: 'Delete',
+      replaceSymbol: 'Replace Symbol',
       undo: 'Undo',
       redo: 'Redo',
       moveToFront: 'Move to front',
@@ -175,6 +176,20 @@ const common = {
     deleteSymbol: {
       title: 'Delete Symbol',
       message: 'Do you wish to delete symbol "{{name}}" from the library?',
+    },
+    replaceSymbol: {
+      title: 'Replace Symbol',
+      message: 'Select a library symbol and choose whether to replace only this symbol or all matching symbols on the current sheet.',
+      searchLabel: 'Search libraries',
+      searchPlaceholder: 'Search by symbol or library name',
+      scopeLabel: 'Replace scope',
+      thisSymbolOnly: 'This symbol only',
+      allSymbolsOnSheet: 'All symbols on sheet',
+      keepFieldValues: 'Carry over existing field values',
+      noLibraries: 'No libraries are currently loaded.',
+      noMatches: 'No symbols match this search.',
+      replace: 'Replace',
+      selectedSymbol: 'Selected symbol',
     },
     unsavedChanges: {
       title: 'Unsaved Changes',

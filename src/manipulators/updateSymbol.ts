@@ -24,6 +24,7 @@ import { updateFactory } from './updateFactory';
 import { ViewTracker, FindResult } from '../model/dsnView';
 import { DeltaCoordinate } from './updateView';
 import { TextDisplayMethod } from '../model/tclib';
+import i18n from '../i18n';
 
 //
 // The symbol object
@@ -288,7 +289,14 @@ export class updateSymbol
   }
 
   getContextMenu(items: ContextMenuList) {
-    return items;
+    return [
+      ...items.slice(0, 4),
+      {
+        key: 'replace_symbol',
+        text: i18n.t('toolbar.contextMenu.replaceSymbol'),
+      },
+      ...items.slice(4),
+    ];
   }
 
   getBoundingRect() {
