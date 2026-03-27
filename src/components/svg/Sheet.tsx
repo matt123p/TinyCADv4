@@ -121,6 +121,14 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   private _div: HTMLDivElement;
   private readonly autoScrollMargin = 48;
   private readonly autoScrollMaxStep = 24;
+  private pendingZoomAnchor:
+    | {
+        clientX: number;
+        clientY: number;
+        worldX: number;
+        worldY: number;
+      }
+    | null = null;
 
   // The current scroll position
   private scroll: Coordinate = [0, 0];
@@ -199,9 +207,13 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     });
   }
   
-  componentDidUpdate() {
+  componentDidUpdate(prevProps: TSheetProps) {
     // Re-attach resize observer if the div ref changed
     this.attachResizeObserver();
+
+    if (prevProps.zoom !== this.props.zoom) {
+      this.applyPendingZoomAnchor();
+    }
   }
   
   private attachResizeObserver() {
@@ -219,6 +231,48 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
             height: this._div.clientHeight
         });
     }
+  }
+
+  private clampScroll(scroll: number, maxScroll: number) {
+    return Math.max(0, Math.min(scroll, maxScroll));
+  }
+
+  private applyPendingZoomAnchor() {
+    if (!this.pendingZoomAnchor || !this._div) {
+      return;
+    }
+
+    const nextScale = this.props.zoom / 100.0;
+    const { clientX, clientY, worldX, worldY } = this.pendingZoomAnchor;
+    const offset = this._div.getBoundingClientRect();
+    const eventX = clientX - offset.x;
+    const eventY = clientY - offset.y;
+    const contentWidth = (this.props.page_size[0] + this.border * 2) * nextScale;
+    const contentHeight = (this.props.page_size[1] + this.border * 2) * nextScale;
+    const nextScrollLeft = this.clampScroll(
+      (worldX + this.border) * nextScale - eventX,
+      Math.max(0, contentWidth - this._div.clientWidth),
+    );
+    const nextScrollTop = this.clampScroll(
+      (worldY + this.border) * nextScale - eventY,
+      Math.max(0, contentHeight - this._div.clientHeight),
+    );
+
+    this._div.scrollLeft = nextScrollLeft;
+    this._div.scrollTop = nextScrollTop;
+    this.scroll = [nextScrollLeft, nextScrollTop];
+    this.pendingZoomAnchor = null;
+  }
+
+  private setPendingZoomAnchor(clientX: number, clientY: number) {
+    const [worldX, worldY] = this.getEventLocationFromClient(clientX, clientY);
+
+    this.pendingZoomAnchor = {
+      clientX,
+      clientY,
+      worldX,
+      worldY,
+    };
   }
 
   componentWillUnmount() {
@@ -682,9 +736,19 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   }
 
   onwheel(e: React.WheelEvent) {
-    // Pinch-to-zoom on touchpad sets ctrlKey=true (browser standard)
-    // Shift+wheel also triggers zoom (original behavior)
-    if (e.ctrlKey || e.shiftKey) {
+    if (e.ctrlKey) {
+      const zoomFactor = Math.exp((-e.deltaY * Math.log(1.25)) / 100);
+      const clampedZoomFactor = Math.min(1.25, Math.max(1 / 1.25, zoomFactor));
+
+      this.setPendingZoomAnchor(e.clientX, e.clientY);
+      this.props.dispatch(actionCommand('zoom_scale', clampedZoomFactor));
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+
+    if (e.shiftKey) {
+      this.setPendingZoomAnchor(e.clientX, e.clientY);
       if (e.deltaY < 0) {
         this.props.dispatch(actionCommand('zoom_in'));
       } else {
