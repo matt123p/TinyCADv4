@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - production
-    tags:
+    tags-ignore:
       - 'v*'
   pull_request:
     branches:
@@ -52,3 +52,74 @@ jobs:
             release/*.deb
             release/*.snap
           if-no-files-found: warn
+
+  release:
+    name: Tag and Release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/production'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Determine Release Version
+        id: version
+        shell: bash
+        run: |
+          version=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
+          tag="v${version}"
+
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Download Release Artifacts
+        uses: actions/download-artifact@v6
+        with:
+          pattern: tinycad-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create or Validate Git Tag
+        shell: bash
+        run: |
+          tag="${{ steps.version.outputs.tag }}"
+          existing_commit=$(git rev-list -n 1 "$tag" 2>/dev/null || true)
+
+          if [ -n "$existing_commit" ]; then
+            if [ "$existing_commit" != "$GITHUB_SHA" ]; then
+              echo "Tag $tag already exists at $existing_commit and will not be moved to $GITHUB_SHA."
+              exit 1
+            fi
+
+            echo "Tag $tag already points at $GITHUB_SHA."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$tag" "$GITHUB_SHA"
+          git push origin "refs/tags/$tag"
+
+      - name: Create or Update GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          tag="${{ steps.version.outputs.tag }}"
+          title="TinyCAD ${{ steps.version.outputs.version }}"
+          mapfile -t files < <(find release-assets -type f | sort)
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No release artifacts were downloaded."
+            exit 1
+          fi
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "${files[@]}" --clobber
+          else
+            gh release create "$tag" "${files[@]}" --title "$title" --generate-notes --target "$GITHUB_SHA"
+          fi
