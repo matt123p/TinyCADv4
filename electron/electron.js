@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 const { app, ipcMain, BrowserWindow, Menu, dialog, shell } = await import('electron');
 const isDev = (await import('electron-is-dev')).default;
 const isMac = process.platform === 'darwin'
+const electronMajorVersion = Number.parseInt(process.versions.electron.split('.')[0] || '0', 10);
 
 const store = new Store(); // Create store instance
 let mainWindow;
@@ -576,24 +577,60 @@ function createWindow() {
       });
 
       try {
+        const waitForPrintLayout = () => printWindow.webContents.executeJavaScript(`
+          new Promise((resolve) => {
+            const waitForImages = Promise.all(
+              Array.from(document.images || []).map((image) => {
+                if (image.complete) {
+                  return Promise.resolve();
+                }
+
+                return new Promise((imageResolve) => {
+                  image.addEventListener('load', imageResolve, { once: true });
+                  image.addEventListener('error', imageResolve, { once: true });
+                });
+              })
+            );
+
+            const waitForFonts = document.fonts?.ready ?? Promise.resolve();
+
+            Promise.all([waitForImages, waitForFonts]).then(() => {
+              requestAnimationFrame(() => {
+                requestAnimationFrame(resolve);
+              });
+            });
+          });
+        `);
+
         await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(options.html)}`);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await waitForPrintLayout();
 
-        const printOptions = {
-          silent: true,
-          deviceName: options.printerName,
-          copies: options.copies || 1,
-          landscape: options.landscape || false,
-          printBackground: true,
-        };
-
-        printWindow.webContents.print(printOptions, (success, failureReason) => {
+        const printCallback = (success, failureReason) => {
           printWindow.close();
           mainWindow?.webContents.send('print-complete', {
             success,
             failureReason: failureReason || undefined
           });
-        });
+        };
+
+        if (process.platform === 'win32' && electronMajorVersion < 38) {
+          printWindow.webContents.print(undefined, printCallback);
+          return;
+        }
+
+        const printOptions = {
+          silent: true,
+          copies: options.copies || 1,
+          landscape: options.landscape || false,
+          printBackground: true,
+          usePrinterDefaultPageSize: true,
+        };
+
+        if (typeof options.printerName === 'string' && options.printerName.trim() !== '') {
+          printOptions.deviceName = options.printerName;
+        }
+
+        printWindow.webContents.print(printOptions, printCallback);
       } catch (err) {
         printWindow.close();
         mainWindow?.webContents.send('print-complete', {
