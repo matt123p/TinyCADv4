@@ -76,6 +76,10 @@ import {
 } from '../state/dispatcher/AppDispatcher';
 import i18n from '../i18n';
 
+const MIN_ZOOM = 10;
+const MAX_ZOOM = 400;
+const ZOOM_STEP = 1.25;
+
 function StyleSet<T>(original: T, value: T): T {
   if (original === undefined || original === value) {
     return value;
@@ -341,11 +345,15 @@ export class updateView {
 
   // Zoom
   can_zoom_in(view: dsnView, sheet: dsnSheet) {
-    return view.zoom < 400;
+    return view.zoom < MAX_ZOOM;
   }
 
   can_zoom_out(view: dsnView, sheet: dsnSheet) {
-    return view.zoom > 10;
+    return view.zoom > MIN_ZOOM;
+  }
+
+  clampZoom(zoom: number) {
+    return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
   }
 
   // Clipboard operations
@@ -1422,7 +1430,7 @@ export class updateView {
   command_zoom_in(view: dsnView, sheet: dsnSheet): viewResult {
     return {
       view: update(view, {
-        zoom: { $set: view.zoom * 1.25 },
+        zoom: { $set: this.clampZoom(view.zoom * ZOOM_STEP) },
       }),
       sheet,
     };
@@ -1431,7 +1439,18 @@ export class updateView {
   command_zoom_out(view: dsnView, sheet: dsnSheet): viewResult {
     return {
       view: update(view, {
-        zoom: { $set: view.zoom / 1.25 },
+        zoom: { $set: this.clampZoom(view.zoom / ZOOM_STEP) },
+      }),
+      sheet,
+    };
+  }
+
+  command_zoom_scale(view: dsnView, sheet: dsnSheet, factor?: number): viewResult {
+    const nextZoom = this.clampZoom(view.zoom * (factor && factor > 0 ? factor : 1));
+
+    return {
+      view: update(view, {
+        zoom: { $set: nextZoom },
       }),
       sheet,
     };
@@ -1440,7 +1459,7 @@ export class updateView {
   command_zoom_100(view: dsnView, sheet: dsnSheet): viewResult {
     return {
       view: update(view, {
-        zoom: { $set: 100 },
+        zoom: { $set: this.clampZoom(100) },
       }),
       sheet: sheet,
     };

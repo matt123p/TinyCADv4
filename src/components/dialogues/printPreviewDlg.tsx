@@ -138,7 +138,7 @@ class PrintPreviewDialog extends React.PureComponent<
 
   handleBrowserPrint() {
     const html = this.generatePrintHtml();
-    const printFrame = document.createElement('iframe');
+    const printFrame = document.createElement('iframe') as HTMLIFrameElement;
     printFrame.setAttribute('aria-hidden', 'true');
     printFrame.style.position = 'fixed';
     printFrame.style.right = '0';
@@ -177,22 +177,7 @@ class PrintPreviewDialog extends React.PureComponent<
     printFrame.onload = triggerPrint;
     document.body.appendChild(printFrame);
 
-    if ('srcdoc' in printFrame) {
-      printFrame.srcdoc = html;
-    } else {
-      const frameDocument = printFrame.contentDocument;
-      if (!frameDocument) {
-        cleanup();
-        this.setState({
-          error: this.props.t('dialogues.printPreview.printFailed'),
-        });
-        return;
-      }
-
-      frameDocument.open();
-      frameDocument.write(html);
-      frameDocument.close();
-    }
+    printFrame.srcdoc = html;
 
     this.props.dispatch(actionCancelDialog());
   }
@@ -374,6 +359,8 @@ class PrintPreviewDialog extends React.PureComponent<
     const sheets = this.props.drawing.sheets;
     const hasMultiplePages = sheets.length > 1;
     const isElectron = !!window.electronAPI?.printDocument;
+    const usesSystemPrintDialog =
+      isElectron && navigator.userAgent.toLowerCase().includes('windows');
 
     const selectedCount = this.state.selectedPages.filter(p => p).length;
 
@@ -420,7 +407,7 @@ class PrintPreviewDialog extends React.PureComponent<
                   
                   {/* Options panel */}
                   <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {isElectron && this.state.printers.length > 0 && (
+                    {isElectron && !usesSystemPrintDialog && this.state.printers.length > 0 && (
                       <Field label={t('dialogues.printPreview.printer')}>
                         <Dropdown
                           value={this.state.printers.find(p => p.name === this.state.selectedPrinter)?.displayName || this.state.selectedPrinter}
@@ -454,7 +441,7 @@ class PrintPreviewDialog extends React.PureComponent<
                       </Field>
                     )}
                     
-                    <Field label={t('dialogues.printPreview.copies')}>
+                    {!usesSystemPrintDialog && <Field label={t('dialogues.printPreview.copies')}>
                       <Input
                         type="number"
                         min={1}
@@ -468,7 +455,7 @@ class PrintPreviewDialog extends React.PureComponent<
                         }}
                         style={{ width: '100%' }}
                       />
-                    </Field>
+                    </Field>}
                   </div>
                 </div>
               )}

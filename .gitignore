@@ -38,3 +38,4 @@ packages/
 .certs/
 /todo.md
 /assets/
+/server.bundle.js
