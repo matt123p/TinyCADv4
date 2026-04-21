@@ -1178,7 +1178,7 @@ export class ioXML {
               NodeName: DocItemTypes.Power,
               _id: get_global_id(),
               point: this.coords(node.getAttribute('pos')),
-              rotation: this.rotation(node.getAttribute('direction')),
+              rotation,
               which: parseInt(node.getAttribute('which'), 10),
               text: this.nodeText(node),
               // The power's default style
