@@ -1,9 +1,10 @@
 import { Store } from 'redux';
 import { dsnDrawing, dsnSheet } from '../../model/dsnDrawing';
-import { DocItem, DocItemTypes } from '../../model/dsnItem';
+import { DocItem, DocItemTypes, dsnWire } from '../../model/dsnItem';
 import { NetlistData } from './netlistGenerator';
 import { docDrawing } from '../../state/undo/undo';
 import { wkrInitNetlist, wkrUpdateNetlistSheets } from '../../web-worker/worker';
+import { actionStampWireNetTypes } from '../../state/dispatcher/AppDispatcher';
 
 const netlistDebug = process.env.NODE_ENV === 'development';
 const netlistIdleDelayMs = 1000;
@@ -43,6 +44,25 @@ function toActiveItemMap(sheet: dsnSheet): Map<number, DocItem> {
   return result;
 }
 
+function areNetlistActiveItemsEqual(prevItem: DocItem, nextItem: DocItem): boolean {
+  if (prevItem === nextItem) return true;
+  // For wires, only d_points affect netlist topology — ignore net_type changes
+  if (
+    prevItem.NodeName === DocItemTypes.Wire &&
+    nextItem.NodeName === DocItemTypes.Wire
+  ) {
+    const pw = prevItem as dsnWire;
+    const nw = nextItem as dsnWire;
+    return (
+      pw.d_points[0][0] === nw.d_points[0][0] &&
+      pw.d_points[0][1] === nw.d_points[0][1] &&
+      pw.d_points[1][0] === nw.d_points[1][0] &&
+      pw.d_points[1][1] === nw.d_points[1][1]
+    );
+  }
+  return false;
+}
+
 function isNetlistActiveSheetChanged(prevSheet: dsnSheet, nextSheet: dsnSheet) {
   const prevActiveItems = toActiveItemMap(prevSheet);
   const nextActiveItems = toActiveItemMap(nextSheet);
@@ -53,7 +73,7 @@ function isNetlistActiveSheetChanged(prevSheet: dsnSheet, nextSheet: dsnSheet) {
 
   for (const [id, nextItem] of nextActiveItems) {
     const prevItem = prevActiveItems.get(id);
-    if (!prevItem || prevItem !== nextItem) {
+    if (!prevItem || !areNetlistActiveItemsEqual(prevItem, nextItem)) {
       return true;
     }
   }
@@ -152,6 +172,7 @@ export function initializeNetlistSync(store: Store) {
       });
       const netlist = await wkrInitNetlist(drawing);
       publishNetlist(netlist);
+      store.dispatch(actionStampWireNetTypes(netlist));
       previousDrawing = drawing;
       previousVersion = drawingVersion;
       return;
@@ -173,6 +194,7 @@ export function initializeNetlistSync(store: Store) {
         delta.removedSheets,
       );
       publishNetlist(netlist);
+      store.dispatch(actionStampWireNetTypes(netlist));
     } else {
       netlistLog('no netlist-active changes');
     }

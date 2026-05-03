@@ -131,6 +131,7 @@ function generatePdfBlob(
             options={sheet.options}
             images={sheet.images}
             hatches={sheet.hatches}
+            netlistTypes={state.docStore.present.drawing.netlistTypes}
           />
         );
 
@@ -168,6 +169,7 @@ function generatePrintHtml(state: docDrawing): string {
         options={sheet.options}
         images={sheet.images}
         hatches={sheet.hatches}
+        netlistTypes={state.docStore.present.drawing.netlistTypes}
       />
     );
 

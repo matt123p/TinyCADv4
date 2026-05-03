@@ -855,6 +855,9 @@ export class ioXML {
             a: root.makeCoords(item.d_points[0]),
             b: root.makeCoords(item.d_points[1]),
           };
+          if (item.net_type) {
+            a.net_type = item.net_type;
+          }
           root.appendChild('WIRE', null, a);
           break;
         case DocItemTypes.Ruler:
@@ -1115,8 +1118,8 @@ export class ioXML {
             o.polygon = parseInt(node.getAttribute('polygon'), 10) !== 0;
           }
           break;
-        case 'WIRE':
-          o = {
+        case 'WIRE': {
+          const wireItem: dsnWire = {
             NodeName: DocItemTypes.Wire,
             _id: get_global_id(),
             d_points: [
@@ -1124,7 +1127,13 @@ export class ioXML {
               this.coords(node.getAttribute('b')),
             ],
           } as dsnWire;
+          const netTypeAttr = node.getAttribute('net_type');
+          if (netTypeAttr) {
+            wireItem.net_type = netTypeAttr;
+          }
+          o = wireItem;
           break;
+        }
         case 'BUS':
           o = {
             NodeName: DocItemTypes.BusWire,
@@ -1178,7 +1187,7 @@ export class ioXML {
               NodeName: DocItemTypes.Power,
               _id: get_global_id(),
               point: this.coords(node.getAttribute('pos')),
-              rotation: this.rotation(node.getAttribute('direction')),
+              rotation,
               which: parseInt(node.getAttribute('which'), 10),
               text: this.nodeText(node),
               // The power's default style

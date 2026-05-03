@@ -12,6 +12,7 @@
   SaveInProgress,
   UpdateNetlistHints,
   UpdateNetlistTypes,
+  StampWireNetTypes,
 } from '../actions/docActions';
 import {
   MenuSetStyle,
@@ -286,6 +287,14 @@ export function actionUpdateNetlistTypes(
     netlist,
     netlistTypes,
     netTypeAssignments,
+  };
+  return action;
+}
+
+export function actionStampWireNetTypes(netlist: NetlistData) {
+  const action: StampWireNetTypes = {
+    type: DocActionTypes.StampWireNetTypes,
+    netlist,
   };
   return action;
 }

@@ -9,6 +9,7 @@ import {
   SheetOptions,
   libImage,
   libHatch,
+  NetlistTypes,
 } from '../../model/dsnDrawing';
 
 interface TPrintSheetProps {
@@ -18,6 +19,7 @@ interface TPrintSheetProps {
   options: SheetOptions;
   images: { [key: string]: libImage };
   hatches: libHatch[];
+  netlistTypes?: NetlistTypes;
 }
 
 //
@@ -62,6 +64,7 @@ const TPrintSheet: FunctionComponent<TPrintSheetProps> = (
           scale_y={1.0}
           editLibrary={false}
           heterogeneous={false}
+          netlistTypes={props.netlistTypes}
         />
       </g>
     </svg>

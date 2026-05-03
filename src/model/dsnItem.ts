@@ -220,6 +220,8 @@ export interface dsnWire extends dsnBase {
   _magnetic: MagenticCoordinate;
   line_colour?: string;
   line_width?: number;
+  /** Netlist type name (e.g. 'power', 'default'). Color is derived from this at render time. */
+  net_type?: string;
 }
 
 export type DocItem =

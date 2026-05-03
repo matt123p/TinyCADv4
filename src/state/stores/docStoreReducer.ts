@@ -255,6 +255,24 @@ export function DocStoreReducer(
       view = null;
       sheet = null;
       break;
+
+    // Stamp wire net_type without bumping drawingVersion (avoids re-triggering netlist recompute)
+    case DocActionTypes.StampWireNetTypes: {
+      const stamped = update_drawing.stampWireNetTypes(
+        state.drawing,
+        action.netlist,
+        state.drawing.netlistTypes,
+        state.drawing.netTypeAssignments,
+      );
+      if (stamped !== state.drawing) {
+        state = update(state, {
+          drawing: { $set: stamped },
+        });
+      }
+      view = null;
+      sheet = null;
+      break;
+    }
     //
     // The text actions
     //
