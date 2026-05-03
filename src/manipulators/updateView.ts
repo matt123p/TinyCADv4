@@ -1409,6 +1409,13 @@ export class updateView {
 
   ////////////////// MENU HANDLERS //////////////////
 
+  command_escape(view: dsnView, sheet: dsnSheet): viewResult {
+    if (view.add) {
+      return this.cancel_add(view, sheet);
+    }
+    return this.unselect(view, sheet);
+  }
+
   command_delete(view: dsnView, sheet: dsnSheet): viewResult {
     let items = sheet.items.filter((e, index) => {
       return !view._selected_array.find((id) => {

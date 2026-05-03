@@ -309,6 +309,13 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       return;
     }
 
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      this.props.dispatch(actionCommand('escape'));
+      return;
+    }
+
     const hasPrimaryModifier = e.metaKey || e.ctrlKey;
     const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
