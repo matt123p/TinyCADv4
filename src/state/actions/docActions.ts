@@ -16,6 +16,7 @@ export enum DocActionTypes {
   SaveInProgress = '[Document] SaveInProgress',
   UpdateNetlistHints = '[Document] UpdateNetlistHints',
   UpdateNetlistTypes = '[Document] UpdateNetlistTypes',
+  StampWireNetTypes = '[Document] StampWireNetTypes',
 }
 
 export interface SetDocument {
@@ -84,6 +85,11 @@ export interface UpdateNetlistTypes {
   netTypeAssignments: { [net: string]: string };
 }
 
+export interface StampWireNetTypes {
+  type: DocActionTypes.StampWireNetTypes;
+  netlist: NetlistData;
+}
+
 export type DocActions =
   | SetDocument
   | RenameDocument
@@ -95,4 +101,5 @@ export type DocActions =
   | AddImage
   | SaveInProgress
   | UpdateNetlistHints
-  | UpdateNetlistTypes;
+  | UpdateNetlistTypes
+  | StampWireNetTypes;

@@ -11,7 +11,7 @@ import {
 import update from 'immutability-helper';
 import { IsInsideResult } from './updateInterfaces';
 import { Panels } from '../state/dispatcher/AppDispatcher';
-import { Coordinate, DocItemTypes, dsnSymbolHint } from '../model/dsnItem';
+import { Coordinate, DocItemTypes, dsnSymbolHint, dsnWire } from '../model/dsnItem';
 import {
   dsnSheet,
   dsnDrawing,
@@ -20,6 +20,7 @@ import {
   AnnotateOptions,
   NetlistTypes,
   ensureNetlistTypes,
+  DEFAULT_NETLIST_TYPE_NAME,
 } from '../model/dsnDrawing';
 import { updateView } from './updateView';
 import { dsnView, FindResult } from '../model/dsnView';
@@ -167,11 +168,103 @@ export class updateDrawing {
     const resolvedAssignments: { [net: string]: string } = {
       ...(netTypeAssignments || {}),
     };
-    return {
+    const updatedDrawing = {
       ...drawing,
       netlistTypes: resolvedTypes,
       netTypeAssignments: resolvedAssignments,
     };
+    return this.stampWireNetTypes(updatedDrawing, netlist, resolvedTypes, resolvedAssignments);
+  }
+
+  /**
+   * Stamp each wire in the drawing with the net_type name of its net.
+   * Priority: explicit non-default assignment > non-default wire type already present
+   * > default / none.  Does NOT increment drawingVersion.
+   */
+  stampWireNetTypes(
+    drawing: dsnDrawing,
+    netlist: NetlistData,
+    netlistTypes: NetlistTypes,
+    netTypeAssignments: { [net: string]: string },
+  ): dsnDrawing {
+    const DEFAULT = DEFAULT_NETLIST_TYPE_NAME;
+
+    // Build map of wire _id → winning net_type
+    const wireNetTypeMap = new Map<number, string | undefined>();
+
+    for (const netName in netlist.nets) {
+      if (!Object.prototype.hasOwnProperty.call(netlist.nets, netName)) continue;
+      const nodes = netlist.nets[netName];
+
+      // Collect wires in this net
+      const wireIds: number[] = [];
+      const existingNonDefaultTypes = new Set<string>();
+
+      for (const node of nodes) {
+        if (node.parent?.NodeName === DocItemTypes.Wire) {
+          const wire = node.parent as dsnWire;
+          wireIds.push(wire._id);
+          if (wire.net_type && wire.net_type !== DEFAULT) {
+            existingNonDefaultTypes.add(wire.net_type);
+          }
+        }
+      }
+
+      if (wireIds.length === 0) continue;
+
+      // Determine winning type name
+      let winningType: string | undefined;
+      const explicit = netTypeAssignments?.[netName];
+      if (explicit && explicit !== DEFAULT && netlistTypes[explicit]) {
+        // Explicit non-default user assignment wins
+        winningType = explicit;
+      } else if (explicit === DEFAULT) {
+        // Explicit reset to default — clears even if wires carry a stale type
+        winningType = undefined;
+      } else if (existingNonDefaultTypes.size > 0) {
+        // No explicit assignment: infer from wires, but only types that still exist
+        const validNonDefault = Array.from(existingNonDefaultTypes)
+          .filter((t) => !!netlistTypes[t])
+          .sort();
+        winningType = validNonDefault.length > 0 ? validNonDefault[0] : undefined;
+      }
+      // else: no type → winningType stays undefined
+
+      for (const id of wireIds) {
+        wireNetTypeMap.set(id, winningType);
+      }
+    }
+
+    // Apply the map, creating new arrays only when something actually changed
+    let newSheets = drawing.sheets;
+    for (let si = 0; si < drawing.sheets.length; ++si) {
+      const sheet = drawing.sheets[si];
+      let newItems = sheet.items;
+      for (let ii = 0; ii < sheet.items.length; ++ii) {
+        const item = sheet.items[ii];
+        if (item.NodeName === DocItemTypes.Wire) {
+          const wire = item as dsnWire;
+          const targetType = wireNetTypeMap.get(wire._id);
+          if (wire.net_type !== targetType) {
+            if (newItems === sheet.items) {
+              newItems = sheet.items.slice();
+            }
+            newItems[ii] = { ...wire, net_type: targetType };
+          }
+        }
+      }
+      if (newItems !== sheet.items) {
+        if (newSheets === drawing.sheets) {
+          newSheets = drawing.sheets.slice();
+        }
+        newSheets[si] = { ...sheet, items: newItems };
+      }
+    }
+
+    if (newSheets === drawing.sheets) {
+      return drawing; // nothing changed
+    }
+    return { ...drawing, sheets: newSheets };
   }
 
   _addDrcError(

@@ -402,7 +402,12 @@ export class TDrawing extends React.PureComponent<TDrawingProps> {
               selected_handle={selected_handle}
             />
           );
-        case 'wire':
+        case 'wire': {
+          // Color priority: wire's own net_type → netlist-type assignment → global color_wire
+          const wireNetTypeStyle =
+            item.net_type && this.props.netlistTypes
+              ? this.props.netlistTypes[item.net_type] ?? null
+              : null;
           return (
             <TWire
               key={item._id}
@@ -413,12 +418,16 @@ export class TDrawing extends React.PureComponent<TDrawingProps> {
               scale_x={scale_x}
               scale_y={scale_y}
               color={
-                renderStyle && renderStyle.wireColor != null
+                wireNetTypeStyle?.wireColor
+                  ? wireNetTypeStyle.wireColor
+                  : renderStyle && renderStyle.wireColor != null
                   ? renderStyle.wireColor
                   : this.props.options.color_wire
               }
               lineWidth={
-                renderStyle && renderStyle.wireThickness != null
+                wireNetTypeStyle?.wireThickness
+                  ? wireNetTypeStyle.wireThickness
+                  : renderStyle && renderStyle.wireThickness != null
                   ? renderStyle.wireThickness
                   : 1
               }
@@ -427,6 +436,7 @@ export class TDrawing extends React.PureComponent<TDrawingProps> {
               selected_handle={selected_handle}
             />
           );
+        }
         case 'ruler':
           return (
             <TDesignRuler
