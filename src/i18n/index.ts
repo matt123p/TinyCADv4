@@ -20,6 +20,7 @@ const localeLoaders: Record<string, () => Promise<LocaleModule>> = {
   de: () => import('./locales/de/common'),
   it: () => import('./locales/it/common'),
   ja: () => import('./locales/ja/common'),
+  pl: () => import('./locales/pl/common'),
   'zh-CN': () => import('./locales/zh-CN/common'),
 };
 

@@ -13,6 +13,7 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { code: 'de', label: 'Deutsch' },
   { code: 'it', label: 'Italiano' },
   { code: 'ja', label: '日本語' },
+  { code: 'pl', label: 'Polski' },
   { code: 'zh-CN', label: '中文 (简体)' },
 ];
 
@@ -55,6 +56,10 @@ export const normalizeLanguageCode = (value: string | null | undefined): string 
 
   if (lower.startsWith('ja')) {
     return 'ja';
+  }
+
+  if (lower.startsWith('pl')) {
+    return 'pl';
   }
 
   return DEFAULT_LANGUAGE;
