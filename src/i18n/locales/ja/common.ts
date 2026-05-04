@@ -18,7 +18,7 @@ const common = {
     checkDesignRules: '設計ルールをチェック', discord: 'TinyCAD Discord', aboutTinyCAD: 'TinyCAD について', help: 'ヘルプ', manual: 'オンラインマニュアル', aboutTranslations: '翻訳について...', language: '言語', languageMenu: '言語メニュー', powerBar: 'バー', powerCircle: '円', powerWave: '波形',
     powerArrow: '矢印', powerEarth: 'アース', labelStandard: 'ラベル（標準）', labelInput: 'ラベル（入力）', labelOutput: 'ラベル（出力）', labelIO: 'ラベル（入出力）', rectangle: '長方形', ellipse: '楕円', line: '線',
     busConnection: '接続', horzRuler: '水平定規', vertRuler: '垂直定規', optionsSuffix: 'オプション',
-    contextMenu: { cut: '切り取り', copy: 'コピー', paste: '貼り付け', delete: '削除', undo: '元に戻す', redo: 'やり直し', moveToFront: '最前面へ移動', moveToBack: '最背面へ移動', zoomIn: '拡大', zoomOut: '縮小', zoom100: 'ズーム 100%' },
+    contextMenu: { cut: '切り取り', copy: 'コピー', paste: '貼り付け', delete: '削除', replaceSymbol: 'シンボルを置換', undo: '元に戻す', redo: 'やり直し', moveToFront: '最前面へ移動', moveToBack: '最背面へ移動', zoomIn: '拡大', zoomOut: '縮小', zoom100: 'ズーム 100%' },
     sheetbar: { addNewPart: '新しいパートを追加', addNewSheet: '新しいシートを追加', removeLastPart: '最後のパートを削除', hierarchicalSymbol: '階層シンボル', menu: { rename: '名前変更', moveRight: '右へ移動', moveLeft: '左へ移動', delete: '削除' } },
   },
   pages: {
@@ -37,6 +37,7 @@ const common = {
   dialogues: {
     deleteSheet: { title: 'シート削除', message: 'シート「{{name}}」を削除しますか？' },
     deleteSymbol: { title: 'シンボル削除', message: 'ライブラリからシンボル「{{name}}」を削除しますか？' },
+    replaceSymbol: { title: 'シンボルを置換', message: 'ライブラリシンボルを選択し、現在のシート上でこのシンボルだけを置換するか、一致するすべてのシンボルを置換するかを選択してください。', searchLabel: 'ライブラリを検索', searchPlaceholder: 'シンボル名またはライブラリ名で検索', scopeLabel: '置換範囲', thisSymbolOnly: 'このシンボルのみ', allSymbolsOnSheet: 'シート上のすべてのシンボル', keepFieldValues: '既存のフィールド値を引き継ぐ', noLibraries: '現在読み込まれているライブラリはありません。', noMatches: 'この検索に一致するシンボルはありません。', replace: '置換', selectedSymbol: '選択したシンボル' },
     unsavedChanges: { title: '未保存の変更', message: 'この図面は保存されていません。保存せずに続行しますか？', continueWithoutSaving: '保存せず続行' },
     clipboardFailure: { title: 'クリップボードにアクセスできません', message1: 'このアプリはクリップボードへ直接アクセスできません。Chrome、Edge、Safari の最新版では改善された体験が利用できます。', message2: 'Ctrl-X / Ctrl-V / Ctrl-C または Cmd-X / Cmd-V / Cmd-C で引き続き利用できます' },
     ioFailure: { title: 'ファイルにアクセスできません', message: 'ファイル操作に失敗しました。インターネット接続とサインイン状態を確認して再試行してください。' },
@@ -70,7 +71,7 @@ const common = {
     listMode: { symbols: 'シンボル', netlist: 'ネットリスト' },
   },
   library: {
-    searchOnline: 'TinyCAD.net を検索...', searchLibraries: 'ライブラリを検索...', hideSidePanel: 'サイドパネルを隠す', online: 'オンライン', myLibraries: 'マイライブラリ', libraries: 'ライブラリ', add: '追加', new: '新規', refresh: '更新', addExistingLibrary: '既存ライブラリを追加', createNewLibrary: '新しいライブラリを作成', refreshLibraries: 'ライブラリを更新', noLibrariesLine1: 'ライブラリが読み込まれていません。', noLibrariesLine2: '「追加」をクリックしてライブラリを取り込んでください。', learnAddLibraries1: 'カスタムライブラリの追加方法はこちら', learnAddLibraries2: 'TinyCAD for the Web へ', libraryMissingTooltip: 'ライブラリファイルが見つからないか読み込めません', libraryLoadErrorTooltip: 'ライブラリ読み込みエラーの詳細を表示', missing: '未検出', libraryOptions: 'ライブラリオプション', noSymbolsFound: 'シンボルが見つかりません', dragToAdd: 'ドラッグして図面に追加', selectSymbolToPreview: 'プレビューするシンボルを選択', newSymbol: '新規シンボル', deleteSymbol: 'シンボル削除', duplicateSymbol: 'シンボル複製', folder: 'フォルダー', createFolder: 'フォルダーを作成', renameFolder: 'フォルダー名を変更', removeFolder: 'フォルダーを削除', moveFolderUp: 'フォルダーを上へ移動', moveFolderDown: 'フォルダーを下へ移動', addToFolder: '追加先フォルダー', unfiled: '未分類', dropLibrariesHere: 'ここにライブラリをドロップしてグループ化', newFolderDefault: '新しいフォルダー', folderNamePrompt: 'フォルダー名を入力', renameFolderPrompt: 'フォルダー名を変更', removeFolderConfirm: 'このフォルダーを削除しますか？ 中のライブラリは未分類に移動します。',
+    searchOnline: 'TinyCAD.net を検索...', searchLibraries: 'ライブラリを検索...', hideSidePanel: 'サイドパネルを隠す', online: 'オンライン', myLibraries: 'マイライブラリ', libraries: 'ライブラリ', add: '追加', new: '新規', refresh: '更新', addExistingLibrary: '既存ライブラリを追加', createNewLibrary: '新しいライブラリを作成', refreshLibraries: 'ライブラリを更新', noLibrariesLine1: 'ライブラリが読み込まれていません。', noLibrariesLine2: '「追加」をクリックしてライブラリを取り込んでください。', learnAddLibraries1: 'カスタムライブラリの追加方法はこちら', learnAddLibraries2: 'TinyCAD for the Web へ', libraryMissingTooltip: 'ライブラリファイルが見つからないか読み込めません', libraryLoadErrorTooltip: 'ライブラリ読み込みエラーの詳細を表示', missing: '未検出', libraryOptions: 'ライブラリオプション', noSymbolsFound: 'シンボルが見つかりません', dragToAdd: 'ドラッグして図面に追加', selectSymbolToPreview: 'プレビューするシンボルを選択', newSymbol: '新規シンボル', deleteSymbol: 'シンボル削除', duplicateSymbol: 'シンボル複製', folder: 'フォルダー', createFolder: 'フォルダーを作成', renameFolder: 'フォルダー名を変更', removeFolder: 'フォルダーを削除', moveFolderUp: 'フォルダーを上へ移動', moveFolderDown: 'フォルダーを下へ移動', reorderFolder: 'フォルダーを並べ替え', addToFolder: '追加先フォルダー', unfiled: '未分類', dropLibrariesHere: 'ここにライブラリをドロップしてグループ化', newFolderDefault: '新しいフォルダー', folderNamePrompt: 'フォルダー名を入力', renameFolderPrompt: 'フォルダー名を変更', removeFolderConfirm: 'このフォルダーを削除しますか？ 中のライブラリは未分類に移動します。',
   },
   controls: {
     editableProperty: { displayOptions: '表示オプション', hideProperty: 'プロパティを隠す', showProperty: 'プロパティを表示', deleteProperty: 'プロパティを削除' },

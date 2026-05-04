@@ -17,7 +17,7 @@ const common = {
     settings: '设置', settingsDialog: '设置...', designDetails: '设计详情', pageSize: '页面尺寸', colours: '颜色', checkDesignRules: '检查设计规则', discord: 'TinyCAD Discord', aboutTinyCAD: '关于 TinyCAD', help: '帮助', manual: '在线手册', aboutTranslations: '关于翻译...', language: '语言',
     languageMenu: '语言菜单', powerBar: '横线', powerCircle: '圆形', powerWave: '波形', powerArrow: '箭头', powerEarth: '接地', labelStandard: '标签（标准）', labelInput: '标签（输入）',
     labelOutput: '标签（输出）', labelIO: '标签（输入/输出）', rectangle: '矩形', ellipse: '椭圆', line: '直线', busConnection: '连接', horzRuler: '水平标尺', vertRuler: '垂直标尺', optionsSuffix: '选项',
-    contextMenu: { cut: '剪切', copy: '复制', paste: '粘贴', delete: '删除', undo: '撤销', redo: '重做', moveToFront: '移到最前', moveToBack: '移到最后', zoomIn: '放大', zoomOut: '缩小', zoom100: '缩放 100%' },
+    contextMenu: { cut: '剪切', copy: '复制', paste: '粘贴', delete: '删除', replaceSymbol: '替换符号', undo: '撤销', redo: '重做', moveToFront: '移到最前', moveToBack: '移到最后', zoomIn: '放大', zoomOut: '缩小', zoom100: '缩放 100%' },
     sheetbar: { addNewPart: '添加新部件', addNewSheet: '添加新图纸', removeLastPart: '移除最后部件', hierarchicalSymbol: '层次符号', menu: { rename: '重命名', moveRight: '右移', moveLeft: '左移', delete: '删除' } },
   },
   pages: {
@@ -36,6 +36,7 @@ const common = {
   dialogues: {
     deleteSheet: { title: '删除图纸', message: '是否删除图纸“{{name}}”？' },
     deleteSymbol: { title: '删除符号', message: '是否从库中删除符号“{{name}}”？' },
+    replaceSymbol: { title: '替换符号', message: '选择一个库符号，并决定是仅替换这个符号，还是替换当前图纸上所有匹配的符号。', searchLabel: '搜索库', searchPlaceholder: '按符号或库名称搜索', scopeLabel: '替换范围', thisSymbolOnly: '仅此符号', allSymbolsOnSheet: '当前图纸上的所有符号', keepFieldValues: '保留现有字段值', noLibraries: '当前没有已加载的库。', noMatches: '没有符号与此次搜索匹配。', replace: '替换', selectedSymbol: '已选符号' },
     unsavedChanges: { title: '未保存更改', message: '此图纸尚未保存。是否不保存继续？', continueWithoutSaving: '不保存继续' },
     clipboardFailure: { title: '无法访问剪贴板', message1: '此应用无法直接访问剪贴板。Chrome、Edge 和 Safari 新版本可提供更好的剪贴板体验。', message2: '你仍可通过 Ctrl-X、Ctrl-V、Ctrl-C 或 Cmd-X、Cmd-V、Cmd-C 使用剪贴板' },
     ioFailure: { title: '无法访问文件', message: '文件操作失败。请检查网络连接并确认已正确登录后重试。' },
@@ -69,7 +70,7 @@ const common = {
     listMode: { symbols: '符号', netlist: '网表' },
   },
   library: {
-    searchOnline: '搜索 TinyCAD.net...', searchLibraries: '搜索库...', hideSidePanel: '隐藏侧边栏', online: '在线', myLibraries: '我的库', libraries: '库', add: '添加', new: '新建', refresh: '刷新', addExistingLibrary: '添加现有库', createNewLibrary: '创建新库', refreshLibraries: '刷新库', noLibrariesLine1: '未加载任何库。', noLibrariesLine2: '点击“添加”导入库。', learnAddLibraries1: '点击此处了解如何添加自定义库', learnAddLibraries2: '到 TinyCAD 网页版', libraryMissingTooltip: '库文件缺失或无法加载', libraryLoadErrorTooltip: '显示库加载错误详情', missing: '缺失', libraryOptions: '库选项', noSymbolsFound: '未找到符号', dragToAdd: '拖拽添加到图纸', selectSymbolToPreview: '选择符号进行预览', newSymbol: '新建符号', deleteSymbol: '删除符号', duplicateSymbol: '复制符号', folder: '文件夹', createFolder: '创建文件夹', renameFolder: '重命名文件夹', removeFolder: '删除文件夹', moveFolderUp: '上移文件夹', moveFolderDown: '下移文件夹', addToFolder: '添加到文件夹', unfiled: '未分组', dropLibrariesHere: '将库拖放到此处以进行分组', newFolderDefault: '新建文件夹', folderNamePrompt: '输入文件夹名称', renameFolderPrompt: '重命名文件夹', removeFolderConfirm: '删除此文件夹？其中的库将移到未分组。',
+    searchOnline: '搜索 TinyCAD.net...', searchLibraries: '搜索库...', hideSidePanel: '隐藏侧边栏', online: '在线', myLibraries: '我的库', libraries: '库', add: '添加', new: '新建', refresh: '刷新', addExistingLibrary: '添加现有库', createNewLibrary: '创建新库', refreshLibraries: '刷新库', noLibrariesLine1: '未加载任何库。', noLibrariesLine2: '点击“添加”导入库。', learnAddLibraries1: '点击此处了解如何添加自定义库', learnAddLibraries2: '到 TinyCAD 网页版', libraryMissingTooltip: '库文件缺失或无法加载', libraryLoadErrorTooltip: '显示库加载错误详情', missing: '缺失', libraryOptions: '库选项', noSymbolsFound: '未找到符号', dragToAdd: '拖拽添加到图纸', selectSymbolToPreview: '选择符号进行预览', newSymbol: '新建符号', deleteSymbol: '删除符号', duplicateSymbol: '复制符号', folder: '文件夹', createFolder: '创建文件夹', renameFolder: '重命名文件夹', removeFolder: '删除文件夹', moveFolderUp: '上移文件夹', moveFolderDown: '下移文件夹', reorderFolder: '重新排序文件夹', addToFolder: '添加到文件夹', unfiled: '未分组', dropLibrariesHere: '将库拖放到此处以进行分组', newFolderDefault: '新建文件夹', folderNamePrompt: '输入文件夹名称', renameFolderPrompt: '重命名文件夹', removeFolderConfirm: '删除此文件夹？其中的库将移到未分组。',
   },
   controls: {
     editableProperty: { displayOptions: '显示选项', hideProperty: '隐藏属性', showProperty: '显示属性', deleteProperty: '删除属性' },

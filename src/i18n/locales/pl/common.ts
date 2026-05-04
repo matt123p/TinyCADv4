@@ -536,6 +536,7 @@ const common = {
     removeFolder: 'Usuń folder',
     moveFolderUp: 'Przenieś folder w górę',
     moveFolderDown: 'Przenieś folder w dół',
+    reorderFolder: 'Zmień kolejność folderu',
     addToFolder: 'Dodaj do folderu',
     unfiled: 'Bez folderu',
     dropLibrariesHere: 'Upuść tutaj biblioteki, aby je pogrupować',
