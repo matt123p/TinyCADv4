@@ -12,6 +12,10 @@ const { app, ipcMain, BrowserWindow, Menu, dialog, shell } = await import('elect
 const isDev = (await import('electron-is-dev')).default;
 const isMac = process.platform === 'darwin'
 const electronMajorVersion = Number.parseInt(process.versions.electron.split('.')[0] || '0', 10);
+const appDisplayName = 'TinyCAD';
+const appCopyright = 'Copyright (c) 2026 Matt Pyne';
+
+app.setName(appDisplayName);
 
 const store = new Store(); // Create store instance
 let mainWindow;
@@ -94,7 +98,7 @@ function createWindow() {
       ...(isMac ? [{
         label: app.name,
         submenu: [
-          { role: 'about' },
+          { role: 'about', label: getMenuLabel('aboutTinyCAD', 'About TinyCAD') },
           { type: 'separator' },
           { role: 'services' },
           { type: 'separator' },
@@ -193,8 +197,10 @@ function createWindow() {
         submenu: [
           { label: getMenuLabel('discord', 'Discord'), click: () => shell.openExternal('https://discord.gg/bdXnjhrSYQ') },
           { label: getMenuLabel('manual', 'Manual'), click: () => shell.openExternal('https://docs.tinycad.net/v4/') },
-          { type: 'separator' },
-          { label: getMenuLabel('aboutTinyCAD', 'About TinyCAD'), click: () => mainWindow.webContents.send('menu-command', 'help-about') },
+          ...(isMac ? [] : [
+            { type: 'separator' },
+            { label: getMenuLabel('aboutTinyCAD', 'About TinyCAD'), click: () => mainWindow.webContents.send('menu-command', 'help-about') },
+          ]),
         ]
       }
     ];
@@ -725,7 +731,13 @@ app.on('open-file', (event, filePath) => {
 });
 
 app.whenReady().then(() => {
-  app.setName('TinyCAD');
+  app.setAboutPanelOptions({
+    applicationName: appDisplayName,
+    applicationVersion: app.getVersion(),
+    version: app.getVersion(),
+    copyright: appCopyright,
+  });
+
   if (process.platform === 'win32') {
     app.setAppUserModelId('com.tinycad.app');
   }
