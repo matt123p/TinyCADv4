@@ -15,8 +15,6 @@ const electronMajorVersion = Number.parseInt(process.versions.electron.split('.'
 const appDisplayName = 'TinyCAD';
 const appCopyright = 'Copyright (c) 2026 Matt Pyne';
 
-app.setName(appDisplayName);
-
 const store = new Store(); // Create store instance
 let mainWindow;
 let fileToOpen = null;
@@ -731,6 +729,8 @@ app.on('open-file', (event, filePath) => {
 });
 
 app.whenReady().then(() => {
+  app.setName(appDisplayName);
+
   app.setAboutPanelOptions({
     applicationName: appDisplayName,
     applicationVersion: app.getVersion(),
