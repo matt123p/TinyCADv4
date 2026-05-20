@@ -731,12 +731,14 @@ app.on('open-file', (event, filePath) => {
 app.whenReady().then(() => {
   app.setName(appDisplayName);
 
-  app.setAboutPanelOptions({
-    applicationName: appDisplayName,
-    applicationVersion: app.getVersion(),
-    version: app.getVersion(),
-    copyright: appCopyright,
-  });
+  if (isMac) {
+    app.setAboutPanelOptions({
+      applicationName: appDisplayName,
+      applicationVersion: app.getVersion(),
+      version: app.getVersion(),
+      copyright: appCopyright,
+    });
+}
 
   if (process.platform === 'win32') {
     app.setAppUserModelId('com.tinycad.app');
