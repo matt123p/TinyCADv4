@@ -21,7 +21,7 @@ import packageJson from '../../../package.json';
 const useStyles = makeStyles({
   surface: {
     maxWidth: '700px',
-    maxHeight: '80vh',
+    maxHeight: '90vh',
   },
   header: {
     display: 'flex',
@@ -48,7 +48,7 @@ const useStyles = makeStyles({
     marginBottom: '8px',
   },
   licenseContainer: {
-    maxHeight: '400px',
+    maxHeight: 'min(220px, 25vh)',
     overflow: 'auto',
     backgroundColor: tokens.colorNeutralBackground2,
     padding: '16px',

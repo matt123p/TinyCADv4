@@ -24,6 +24,128 @@ interface SymbolViewProps {
   height: number;
 }
 
+let activeGhost: HTMLDivElement | null = null;
+let dragPayload: any = null;
+
+const handleTouchStart = (e: React.TouchEvent<HTMLElement>, payload: any) => {
+  if (e.touches.length !== 1) return;
+  const touch = e.touches[0];
+  dragPayload = payload;
+
+  // Create the ghost element
+  const ghost = document.createElement('div');
+  ghost.style.position = 'fixed';
+  ghost.style.pointerEvents = 'none';
+  ghost.style.zIndex = '999999';
+  ghost.style.opacity = '0';
+  ghost.style.transform = 'translate(-50%, -120%) scale(0.8)';
+  ghost.style.transition = 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease';
+  
+  // Sleek dark-themed glassmorphic container to blend with premium layout
+  ghost.style.background = 'rgba(255, 255, 255, 0.9)';
+  ghost.style.backdropFilter = 'blur(10px)';
+  (ghost.style as any).WebkitBackdropFilter = 'blur(10px)';
+  ghost.style.border = '1px solid rgba(255, 255, 255, 0.6)';
+  ghost.style.borderRadius = '16px';
+  ghost.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3), 0 5px 15px rgba(0, 0, 0, 0.15)';
+  ghost.style.padding = '12px';
+  ghost.style.display = 'flex';
+  ghost.style.alignItems = 'center';
+  ghost.style.justifyContent = 'center';
+
+  // Clone target element
+  const clone = e.currentTarget.cloneNode(true) as HTMLElement;
+  clone.className = '';
+  clone.style.width = '70px';
+  clone.style.height = '70px';
+  clone.style.maxWidth = '70px';
+  clone.style.maxHeight = '70px';
+  clone.style.opacity = '1';
+  clone.style.margin = '0';
+  clone.style.display = 'block';
+  clone.style.pointerEvents = 'none';
+
+  // Ensure inner content scales nicely
+  const svg = clone.querySelector('svg');
+  if (svg) {
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.style.width = '100%';
+    svg.style.height = '100%';
+  }
+  const img = clone.querySelector('img') || (clone.tagName === 'IMG' ? clone : null);
+  if (img) {
+    (img as HTMLElement).style.width = '100%';
+    (img as HTMLElement).style.height = '100%';
+    (img as HTMLElement).style.objectFit = 'contain';
+  }
+
+  ghost.appendChild(clone);
+  document.body.appendChild(ghost);
+  activeGhost = ghost;
+
+  const clientX = touch.clientX;
+  const clientY = touch.clientY;
+  ghost.style.left = `${clientX}px`;
+  ghost.style.top = `${clientY}px`;
+
+  // Animate in
+  requestAnimationFrame(() => {
+    if (ghost) {
+      ghost.style.opacity = '0.95';
+      ghost.style.transform = 'translate(-50%, -120%) scale(1.15)';
+    }
+  });
+};
+
+const handleTouchMove = (e: React.TouchEvent<HTMLElement>) => {
+  if (!activeGhost) return;
+  const touch = e.touches[0];
+  const clientX = touch.clientX;
+  const clientY = touch.clientY;
+
+  activeGhost.style.left = `${clientX}px`;
+  activeGhost.style.top = `${clientY}px`;
+  
+  if (e.cancelable) {
+    e.preventDefault();
+  }
+};
+
+const handleTouchEnd = (e: React.TouchEvent<HTMLElement>) => {
+  if (!activeGhost) return;
+  
+  const touch = e.changedTouches[0];
+  const clientX = touch.clientX;
+  const clientY = touch.clientY;
+
+  // Clean up ghost
+  if (activeGhost && activeGhost.parentNode) {
+    activeGhost.parentNode.removeChild(activeGhost);
+  }
+  activeGhost = null;
+
+  // Dispatch custom drop event
+  const dropEvent = new CustomEvent('touchsymbol-drop', {
+    detail: {
+      clientX,
+      clientY,
+      payload: dragPayload,
+    },
+  });
+  window.dispatchEvent(dropEvent);
+  
+  dragPayload = null;
+};
+
+const handleTouchCancel = (e: React.TouchEvent<HTMLElement>) => {
+  if (activeGhost && activeGhost.parentNode) {
+    activeGhost.parentNode.removeChild(activeGhost);
+  }
+  activeGhost = null;
+  dragPayload = null;
+};
+
 const SymbolView: React.FunctionComponent<SymbolViewProps> = (
   props: SymbolViewProps,
 ) => {
@@ -83,6 +205,13 @@ const SymbolView: React.FunctionComponent<SymbolViewProps> = (
             }),
           );
         }}
+        onTouchStart={(e) => handleTouchStart(e, {
+          name: props.name,
+          symbolData: doc.sheets.map((i) => i.items),
+        })}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchCancel}
       >
         <svg
           id="svg-drawing"
@@ -127,6 +256,12 @@ const SymbolView: React.FunctionComponent<SymbolViewProps> = (
               }),
             );
           }}
+          onTouchStart={(e) => handleTouchStart(e, {
+            searchSymbol: props.searchSymbol,
+          })}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchCancel}
           style={{ maxWidth: '100%', maxHeight: 'calc(100% - 20px)', objectFit: 'contain' }}
           crossOrigin="anonymous"
           src={

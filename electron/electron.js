@@ -738,7 +738,7 @@ app.whenReady().then(() => {
       version: app.getVersion(),
       copyright: appCopyright,
     });
-}
+  }
 
   if (process.platform === 'win32') {
     app.setAppUserModelId('com.tinycad.app');
