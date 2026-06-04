@@ -18,9 +18,10 @@ export class Snap {
 
   // Perform the snapping
   snap(p: Coordinate): Coordinate {
+    const grid = this._grid_snap ? this._grid : 1;
     let r: Coordinate = [
-      Math.round(p[0] / this._grid) * this._grid,
-      Math.round(p[1] / this._grid) * this._grid,
+      Math.round(p[0] / grid) * grid,
+      Math.round(p[1] / grid) * grid,
     ];
     if (p.length > 2) {
       // For polygon control points
@@ -32,14 +33,15 @@ export class Snap {
 
   // Perform the snapping in a positive direction only
   snap_positive(p: Coordinate): Coordinate {
+    const grid = this._grid_snap ? this._grid : 1;
     let r = this.snap(p);
 
     // Make sure snapping is positive
     if (r[0] < p[0]) {
-      r[0] += this._grid;
+      r[0] += grid;
     }
     if (r[1] < p[1]) {
-      r[1] += this._grid;
+      r[1] += grid;
     }
     if (p.length > 2) {
       // For polygon control points
@@ -51,14 +53,15 @@ export class Snap {
 
   // Perform the snapping in a negative direction only
   snap_negative(p: Coordinate): Coordinate {
+    const grid = this._grid_snap ? this._grid : 1;
     let r = this.snap(p);
 
     // Make sure snapping is negative
     if (r[0] > p[0]) {
-      r[0] -= this._grid;
+      r[0] -= grid;
     }
     if (r[1] > p[1]) {
-      r[1] -= this._grid;
+      r[1] -= grid;
     }
     if (p.length > 2) {
       // For polygon control points

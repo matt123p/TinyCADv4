@@ -1623,6 +1623,16 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                 cursor={this.props.cursor}
               >
                 <TSvgDefs images={this.props.images} hatches={this.props.hatches} />
+                <defs>
+                  <pattern
+                    id="grid-pattern"
+                    width={this.props.details.grid}
+                    height={this.props.details.grid}
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <circle cx="0" cy="0" r="0.5" fill="#a0a0a0" />
+                  </pattern>
+                </defs>
       
                 <g id={"sheet-content-" + this.props.sheet_name.replace(/\s+/g, '-')}>
                   <rect
@@ -1662,6 +1672,16 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                   />
         
                   <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
+                    {this.props.options.show_grid ? (
+                      <rect
+                        x="0"
+                        y="0"
+                        width={this.props.page_size[0]}
+                        height={this.props.page_size[1]}
+                        fill="url(#grid-pattern)"
+                        pointerEvents="none"
+                      />
+                    ) : null}
                     {this.props.details.show_details ? (
                       <TDesignDetails
                         details={this.props.details}
@@ -1781,6 +1801,16 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
             cursor={this.props.cursor}
           >
             <TSvgDefs images={this.props.images} hatches={this.props.hatches} />
+            <defs>
+              <pattern
+                id="grid-pattern"
+                width={this.props.details.grid}
+                height={this.props.details.grid}
+                patternUnits="userSpaceOnUse"
+              >
+                <circle cx="0" cy="0" r="0.5" fill="#a0a0a0" />
+              </pattern>
+            </defs>
 
             <g id={"sheet-content-" + this.props.sheet_name.replace(/\s+/g, '-')}>
               <rect
@@ -1820,6 +1850,16 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
               />
 
               <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
+                {this.props.options.show_grid ? (
+                  <rect
+                    x="0"
+                    y="0"
+                    width={this.props.page_size[0]}
+                    height={this.props.page_size[1]}
+                    fill="url(#grid-pattern)"
+                    pointerEvents="none"
+                  />
+                ) : null}
                 {this.props.details.show_details ? (
                   <TDesignDetails
                     details={this.props.details}
