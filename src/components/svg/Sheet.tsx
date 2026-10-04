@@ -1626,11 +1626,18 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                 <defs>
                   <pattern
                     id="grid-pattern"
+                    x={-this.props.details.grid / 2}
+                    y={-this.props.details.grid / 2}
                     width={this.props.details.grid}
                     height={this.props.details.grid}
                     patternUnits="userSpaceOnUse"
                   >
-                    <circle cx="0" cy="0" r="0.5" fill="#a0a0a0" />
+                    <circle
+                      cx={this.props.details.grid / 2}
+                      cy={this.props.details.grid / 2}
+                      r="0.75"
+                      fill="#a0a0a0"
+                    />
                   </pattern>
                 </defs>
       
@@ -1804,11 +1811,18 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
             <defs>
               <pattern
                 id="grid-pattern"
+                x={-this.props.details.grid / 2}
+                y={-this.props.details.grid / 2}
                 width={this.props.details.grid}
                 height={this.props.details.grid}
                 patternUnits="userSpaceOnUse"
               >
-                <circle cx="0" cy="0" r="0.5" fill="#a0a0a0" />
+                <circle
+                  cx={this.props.details.grid / 2}
+                  cy={this.props.details.grid / 2}
+                  r="0.75"
+                  fill="#a0a0a0"
+                />
               </pattern>
             </defs>
 
