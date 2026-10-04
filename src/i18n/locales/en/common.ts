@@ -544,6 +544,9 @@ const common = {
     folderNamePrompt: 'Enter a folder name',
     renameFolderPrompt: 'Rename folder',
     removeFolderConfirm: 'Remove this folder? Libraries inside it will be moved to Unfiled.',
+    sortSymbolsDefault: 'Use library order',
+    sortSymbolsAZ: 'Sort symbols A to Z',
+    sortSymbolsZA: 'Sort symbols Z to A',
   },
   controls: {
     editableProperty: {

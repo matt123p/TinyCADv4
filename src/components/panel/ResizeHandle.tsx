@@ -39,6 +39,7 @@ const useStyles = makeStyles({
 interface ResizeHandleProps {
   direction: 'horizontal' | 'vertical';
   onResize: (delta: number) => void;
+  onDragStateChange?: (dragging: boolean) => void;
 }
 
 export const ResizeHandle: React.FunctionComponent<ResizeHandleProps> = (
@@ -52,7 +53,8 @@ export const ResizeHandle: React.FunctionComponent<ResizeHandleProps> = (
     e.preventDefault();
     setIsDragging(true);
     setStartPos(props.direction === 'horizontal' ? e.clientX : e.clientY);
-  }, [props.direction]);
+    props.onDragStateChange?.(true);
+  }, [props.direction, props.onDragStateChange]);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -66,6 +68,7 @@ export const ResizeHandle: React.FunctionComponent<ResizeHandleProps> = (
 
     const handlePointerUp = () => {
       setIsDragging(false);
+      props.onDragStateChange?.(false);
     };
 
     document.addEventListener('pointermove', handlePointerMove);
@@ -75,7 +78,7 @@ export const ResizeHandle: React.FunctionComponent<ResizeHandleProps> = (
       document.removeEventListener('pointermove', handlePointerMove);
       document.removeEventListener('pointerup', handlePointerUp);
     };
-  }, [isDragging, startPos, props.direction, props.onResize]);
+  }, [isDragging, startPos, props.direction, props.onResize, props.onDragStateChange]);
 
   return (
     <div

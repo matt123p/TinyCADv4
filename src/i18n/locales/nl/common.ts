@@ -544,6 +544,9 @@ const common = {
     folderNamePrompt: 'Voer een mapnaam in',
     renameFolderPrompt: 'Map hernoemen',
     removeFolderConfirm: 'Deze map verwijderen? De bibliotheken erin worden verplaatst naar Niet toegewezen.',
+    sortSymbolsDefault: 'Bibliotheekvolgorde gebruiken',
+    sortSymbolsAZ: 'Symbolen sorteren van A tot Z',
+    sortSymbolsZA: 'Symbolen sorteren van Z tot A',
   },
   controls: {
     editableProperty: {

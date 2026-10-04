@@ -544,6 +544,9 @@ const common = {
     folderNamePrompt: 'Wpisz nazwę folderu',
     renameFolderPrompt: 'Zmień nazwę folderu',
     removeFolderConfirm: 'Usunąć ten folder? Biblioteki w nim zostaną przeniesione do sekcji Bez folderu.',
+    sortSymbolsDefault: 'Użyj kolejności biblioteki',
+    sortSymbolsAZ: 'Sortuj symbole od A do Z',
+    sortSymbolsZA: 'Sortuj symbole od Z do A',
   },
   controls: {
     editableProperty: {
