@@ -2,6 +2,13 @@ const common = {
   language: {
     label: '言語', english: '英語', french: 'フランス語', spanish: 'スペイン語', german: 'ドイツ語', italian: 'イタリア語', japanese: '日本語', chineseSimplified: '中国語（簡体字）',
   },
+  touchLoupe: {
+    hint: 'キャンバスをドラッグして照準',
+    click: 'クリック',
+    drag: 'ドラッグ',
+    drop: 'ドロップ',
+    menu: 'メニュー',
+  },
   common: {
     ok: 'OK', cancel: 'キャンセル', close: '閉じる', delete: '削除', rename: '名前変更', add: '追加', insert: '挿入', edit: '編集', remove: '除去', find: '検索', selectAll: 'すべて選択', selectedCount: '{{count}} 件選択',
   },

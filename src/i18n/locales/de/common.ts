@@ -9,6 +9,13 @@ const common = {
     japanese: 'Japanisch',
     chineseSimplified: 'Chinesisch (Vereinfacht)',
   },
+  touchLoupe: {
+    hint: 'Zum Zielen auf Zeichenfläche ziehen',
+    click: 'Klick',
+    drag: 'Ziehen',
+    drop: 'Ablegen',
+    menu: 'Menü',
+  },
   common: {
     ok: 'OK', cancel: 'Abbrechen', close: 'Schließen', delete: 'Löschen', rename: 'Umbenennen', add: 'Hinzufügen', insert: 'Einfügen', edit: 'Bearbeiten', remove: 'Entfernen', find: 'Suchen', selectAll: 'Alles auswählen', selectedCount: '{{count}} ausgewählt',
   },

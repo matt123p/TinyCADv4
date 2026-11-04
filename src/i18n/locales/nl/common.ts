@@ -9,6 +9,13 @@ const common = {
     japanese: 'Japans',
     chineseSimplified: 'Chinees (Vereenvoudigd)',
   },
+  touchLoupe: {
+    hint: 'Sleep over het canvas om te richten',
+    click: 'Klik',
+    drag: 'Slepen',
+    drop: 'Loslaten',
+    menu: 'Menu',
+  },
   common: {
     ok: 'OK',
     cancel: 'Annuleren',

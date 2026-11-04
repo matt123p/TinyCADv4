@@ -2,6 +2,13 @@ const common = {
   language: {
     label: '语言', english: '英语', french: '法语', spanish: '西班牙语', german: '德语', italian: '意大利语', japanese: '日语', chineseSimplified: '简体中文',
   },
+  touchLoupe: {
+    hint: '拖动画布以精确定位',
+    click: '单击',
+    drag: '拖动',
+    drop: '放下',
+    menu: '菜单',
+  },
   common: {
     ok: '确定', cancel: '取消', close: '关闭', delete: '删除', rename: '重命名', add: '添加', insert: '插入', edit: '编辑', remove: '移除', find: '查找', selectAll: '全选', selectedCount: '已选择 {{count}} 项',
   },

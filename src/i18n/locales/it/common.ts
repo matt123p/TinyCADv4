@@ -2,6 +2,13 @@ const common = {
   language: {
     label: 'Lingua', english: 'Inglese', french: 'Francese', spanish: 'Spagnolo', german: 'Tedesco', italian: 'Italiano', japanese: 'Giapponese', chineseSimplified: 'Cinese (semplificato)',
   },
+  touchLoupe: {
+    hint: 'Trascina sul disegno per mirare',
+    click: 'Clic',
+    drag: 'Trascina',
+    drop: 'Rilascia',
+    menu: 'Menu',
+  },
   common: {
     ok: 'OK', cancel: 'Annulla', close: 'Chiudi', delete: 'Elimina', rename: 'Rinomina', add: 'Aggiungi', insert: 'Inserisci', edit: 'Modifica', remove: 'Rimuovi', find: 'Trova', selectAll: 'Seleziona tutto', selectedCount: '{{count}} selezionato/i',
   },

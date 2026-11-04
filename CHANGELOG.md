@@ -1,0 +1,25 @@
+# Changelog
+
+## v4.0.8 — 2026-11-04
+
+### Added
+
+- Touch support for schematic editing, including a touch loupe.
+- Resizable library panel and sorting of symbol search results.
+- Temporary hiding and restoring of selected objects.
+- Polish translation and translations for the Replace Symbol dialog.
+
+### Fixed
+
+- Touch loupe usability with a stable larger lens, labeled touch controls, editor hover updates, and reliable gesture and drag handling.
+
+- Grid visibility and snap-to-grid toggles, including keyboard movement when snapping is disabled.
+- Bitmap rendering in placed library symbols.
+- Escape cancellation of editing actions, including when toolbar controls have focus.
+- Application quit remaining pending after cancelling the unsaved-changes dialog.
+- Browser zoom compounding canvas pinch zoom.
+- Desktop application and macOS About dialog behavior.
+
+### Maintenance
+
+- Updated dependencies to address npm audit vulnerabilities.

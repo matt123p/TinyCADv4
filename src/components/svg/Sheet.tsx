@@ -3,7 +3,6 @@ import { TDrawing } from './Drawing';
 import TDesignDetails from './DesignDetails';
 import TDesignGuides from './DesignGuides';
 import { TouchLoupe } from './TouchLoupe';
-// PrecisionPad removed
 import { UtilityService } from '../../util/utilityService';
 import { Coordinate, DocItem, Filled } from '../../model/dsnItem';
 import { FindResult } from '../../model/dsnView';
@@ -179,7 +178,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       touchSvgX: null,
       touchSvgY: null,
       touchDragActive: false,
-      precisionPadButtonVisible: false,
+      precisionPadButtonVisible: typeof window !== 'undefined' && Boolean(window.matchMedia?.('(any-pointer: coarse)').matches),
       isFingerDown: false,
     };
 
@@ -246,14 +245,17 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
 
     if (prevProps.zoom !== this.props.zoom) {
       this.applyPendingZoomAnchor();
+      this.syncTouchPointer();
     }
   }
   
   private attachResizeObserver() {
     if (this._div && this._div !== this._prevDiv) {
         this._prevDiv?.removeEventListener('wheel', this.onwheel);
+        this.setTouchListeners(this._prevDiv, false);
         // React wheel handlers are passive, so they cannot suppress browser zoom.
         this._div.addEventListener('wheel', this.onwheel, { passive: false });
+        this.setTouchListeners(this._div, true);
         if (this._prevDiv && this.resizeObserver) {
             this.resizeObserver.unobserve(this._prevDiv);
         }
@@ -261,11 +263,34 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
             this.resizeObserver.observe(this._div);
         }
         this._prevDiv = this._div;
-        // Update size immediately
+        // Ruler toggles replace the scroll viewport. Restore its position before
+        // drawing the loupe, then read back any scroll limits applied by the DOM.
+        this._div.scrollLeft = this.scroll[0];
+        this._div.scrollTop = this.scroll[1];
+        this.scroll = [this._div.scrollLeft, this._div.scrollTop];
         this.setState({
             width: this._div.clientWidth,
-            height: this._div.clientHeight
+            height: this._div.clientHeight,
+            scrollX: this.scroll[0],
+            scrollY: this.scroll[1],
         });
+        this.syncTouchPointer();
+    }
+  }
+
+  private setTouchListeners(div: HTMLDivElement | null, attach: boolean) {
+    if (!div) return;
+    // React delegates touchstart/touchmove passively. Native listeners allow us
+    // to suppress compatibility mouse events and keep gestures on the canvas.
+    const handlers = {
+      touchstart: this.ontouchstart,
+      touchmove: this.ontouchmove,
+      touchend: this.ontouchend,
+      touchcancel: this.ontouchcancel,
+    };
+    for (const [type, handler] of Object.entries(handlers)) {
+      if (attach) div.addEventListener(type, handler as EventListener, { passive: false });
+      else div.removeEventListener(type, handler as EventListener);
     }
   }
 
@@ -313,6 +338,8 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
 
   componentWillUnmount() {
     this._prevDiv?.removeEventListener('wheel', this.onwheel);
+    this.setTouchListeners(this._prevDiv, false);
+    if (this._long_press_timer !== null) window.clearTimeout(this._long_press_timer);
     this.stopDocumentDragTracking();
     if (this.resizeObserver) {
         this.resizeObserver.disconnect();
@@ -348,6 +375,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     }
 
     if (e.key === 'Escape') {
+      if (this.state.touchDragActive) this.handleVirtualDragToggle();
       e.preventDefault();
       e.stopPropagation();
       this.props.dispatch(actionCommand('escape'));
@@ -467,6 +495,20 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
         scrollX: e.target.scrollLeft,
         scrollY: e.target.scrollTop
     });
+    this.syncTouchPointer();
+  }
+
+  private syncTouchPointer() {
+    if (!this.state.touchActive || !this._div) return;
+    const rect = this._div.getBoundingClientRect();
+    this.setState({
+      touchSvgX: this._virtual_client_x - rect.left + this.scroll[0],
+      touchSvgY: this._virtual_client_y - rect.top + this.scroll[1],
+    });
+    this.dispatchEditorPointerEvent(
+      this.state.touchDragActive ? 'mousedrag' : 'mousemove',
+      this._virtual_client_x, this._virtual_client_y, 0,
+    );
   }
 
   private getKeyState(e: {
@@ -741,7 +783,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     );
   }
 
-  ontouchstart(e: React.TouchEvent) {
+  ontouchstart(e: TouchEvent) {
+    if (e.cancelable) e.preventDefault();
+    if ((e.target as Element)?.closest?.('[data-loupe-control]')) return;
     if (this.props.contextMenu) {
       return;
     }
@@ -763,9 +807,12 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
         this._last_touch_x = touch.clientX;
         this._last_touch_y = touch.clientY;
         this.setState({ isFingerDown: true });
-        e.preventDefault();
         e.stopPropagation();
       } else if (e.touches.length >= 2) {
+        if (this.state.touchDragActive) {
+          this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, 0);
+          this.setState({ touchDragActive: false });
+        }
         this._touch_mode = 'gesture';
         this._touch_identifier = null;
         const touch1 = e.touches[0];
@@ -778,7 +825,6 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
           (touch1.clientX + touch2.clientX) / 2,
           (touch1.clientY + touch2.clientY) / 2,
         ];
-        e.preventDefault();
         e.stopPropagation();
       }
       return;
@@ -867,7 +913,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     }
   }
 
-  ontouchmove(e: React.TouchEvent) {
+  ontouchmove(e: TouchEvent) {
+    if (e.cancelable) e.preventDefault();
+    if ((e.target as Element)?.closest?.('[data-loupe-control]')) return;
     if (this.state.touchActive) {
       if (this._touch_mode === 'drag' && e.touches.length === 1) {
         const touch = e.touches[0];
@@ -883,8 +931,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
           this._last_touch_y = touch.clientY;
 
           const scaleFactor = 0.3;
-          this._virtual_client_x += dx * scaleFactor;
-          this._virtual_client_y += dy * scaleFactor;
+          const bounds = this._div.getBoundingClientRect();
+          this._virtual_client_x = Math.max(bounds.left, Math.min(bounds.left + this._div.clientWidth - 1, this._virtual_client_x + dx * scaleFactor));
+          this._virtual_client_y = Math.max(bounds.top, Math.min(bounds.top + this._div.clientHeight - 1, this._virtual_client_y + dy * scaleFactor));
 
           const rect = this._div.getBoundingClientRect();
           const event_x = this._virtual_client_x - rect.left;
@@ -902,9 +951,8 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
           if (this.state.touchDragActive) {
             this.dispatchEditorPointerEvent('mousedrag', this._virtual_client_x, this._virtual_client_y, key);
           } else {
-            this.updatePointerPosition(this._virtual_client_x, this._virtual_client_y);
+            this.dispatchEditorPointerEvent('mousemove', this._virtual_client_x, this._virtual_client_y, 0);
           }
-          e.preventDefault();
           e.stopPropagation();
         }
       } else if (this._touch_mode === 'gesture' && e.touches.length >= 2) {
@@ -942,7 +990,6 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
 
         this._lastTouchDistance = dist;
         this._lastTouchCenter = [cx, cy];
-        e.preventDefault();
         e.stopPropagation();
       }
       return;
@@ -1020,7 +1067,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     }
   }
 
-  ontouchend(e: React.TouchEvent) {
+  ontouchend(e: TouchEvent) {
+    if (e.cancelable) e.preventDefault();
+    if ((e.target as Element)?.closest?.('[data-loupe-control]')) return;
     if (this._long_press_timer !== null) {
       window.clearTimeout(this._long_press_timer);
       this._long_press_timer = null;
@@ -1042,10 +1091,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
         this._last_touch_x = touch.clientX;
         this._last_touch_y = touch.clientY;
         this.setState({
-          isFingerDown: false,
+          isFingerDown: true,
         });
       }
-      e.preventDefault();
       e.stopPropagation();
       return;
     }
@@ -1084,21 +1132,26 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     }
   }
 
-  ontouchcancel(e: React.TouchEvent) {
+  ontouchcancel(e: TouchEvent) {
+    if (e.cancelable) e.preventDefault();
+    if ((e.target as Element)?.closest?.('[data-loupe-control]')) return;
     if (this._long_press_timer !== null) {
       window.clearTimeout(this._long_press_timer);
       this._long_press_timer = null;
     }
 
     if (this.state.touchActive) {
+      if (this.state.touchDragActive) {
+        this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, 0);
+      }
       this.setState({
         isFingerDown: false,
+        touchDragActive: false,
       });
       this._touch_mode = 'none';
       this._touch_identifier = null;
       this._lastTouchDistance = null;
       this._lastTouchCenter = null;
-      e.preventDefault();
       e.stopPropagation();
       return;
     }
@@ -1171,6 +1224,10 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   }
 
   private handleVirtualClick = () => {
+    if (this.state.touchDragActive) {
+      this.handleVirtualDragToggle();
+      return;
+    }
     if (this.state.touchSvgX !== null && this.state.touchSvgY !== null) {
       const key = 0;
       this.dispatchEditorPointerEvent('lbuttondown', this._virtual_client_x, this._virtual_client_y, key);
@@ -1179,6 +1236,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   };
 
   private handleVirtualRightClick = () => {
+    if (this.state.touchDragActive) this.handleVirtualDragToggle();
     if (this.state.touchSvgX !== null && this.state.touchSvgY !== null) {
       const key = 0;
       this.dispatchEditorPointerEvent('rbuttondown', this._virtual_client_x, this._virtual_client_y, key);
@@ -1206,11 +1264,16 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     if (this.state.touchDragActive) {
       this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, 0);
     }
+    this._touch_mode = 'none';
+    this._touch_identifier = null;
+    this._lastTouchDistance = null;
+    this._lastTouchCenter = null;
     this.setState({
       touchActive: false,
       touchSvgX: null,
       touchSvgY: null,
       touchDragActive: false,
+      isFingerDown: false,
     });
   };
 
@@ -1262,7 +1325,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
           touchDragActive: false,
         });
         
-        this.updatePointerPosition(this._virtual_client_x, this._virtual_client_y);
+        this.dispatchEditorPointerEvent('mousemove', this._virtual_client_x, this._virtual_client_y, 0);
       }
     }
   };
@@ -1614,10 +1677,6 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                 onMouseMove={(e) => this.onmouseevent(e, this._div)}
                 onMouseDown={(e) => this.onmouseevent(e, this._div)}
                 onMouseUp={(e) => this.onmouseevent(e, this._div)}
-                onTouchStart={this.ontouchstart}
-                onTouchMove={this.ontouchmove}
-                onTouchEnd={this.ontouchend}
-                onTouchCancel={this.ontouchcancel}
                 onContextMenu={(e) => this.oncontextmenu(e)}
                 onDragOver={(e) => this.ondragover(e)}
                 onDrop={(e) => this.ondrop(e)}
@@ -1742,12 +1801,10 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                     touchSvgY={this.state.touchSvgY}
                     scrollX={this.scroll[0]}
                     scrollY={this.scroll[1]}
-                    zoom={this.props.zoom}
                     sheetName={this.props.sheet_name}
                     canvasWidth={this.state.width}
                     canvasHeight={this.state.height}
                     onClose={this.handleVirtualClose}
-                    isFingerDown={this.state.isFingerDown}
                     onLeftClick={this.handleVirtualClick}
                     onRightClick={this.handleVirtualRightClick}
                     onDragToggle={this.handleVirtualDragToggle}
@@ -1798,10 +1855,6 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
             onMouseMove={(e) => this.onmouseevent(e, this._div)}
             onMouseDown={(e) => this.onmouseevent(e, this._div)}
             onMouseUp={(e) => this.onmouseevent(e, this._div)}
-            onTouchStart={this.ontouchstart}
-            onTouchMove={this.ontouchmove}
-            onTouchEnd={this.ontouchend}
-            onTouchCancel={this.ontouchcancel}
             onContextMenu={(e) => this.oncontextmenu(e)}
             onDragOver={(e) => this.ondragover(e)}
             onDrop={(e) => this.ondrop(e)}
@@ -1926,12 +1979,10 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                 touchSvgY={this.state.touchSvgY}
                 scrollX={this.scroll[0]}
                 scrollY={this.scroll[1]}
-                zoom={this.props.zoom}
                 sheetName={this.props.sheet_name}
                 canvasWidth={this.state.width}
                 canvasHeight={this.state.height}
                 onClose={this.handleVirtualClose}
-                isFingerDown={this.state.isFingerDown}
                 onLeftClick={this.handleVirtualClick}
                 onRightClick={this.handleVirtualRightClick}
                 onDragToggle={this.handleVirtualDragToggle}
