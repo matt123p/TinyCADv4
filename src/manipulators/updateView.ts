@@ -1649,7 +1649,7 @@ export class updateView {
       return { view, sheet };
     }
 
-    const grid = sheet.details.grid || 10;
+    const grid = sheet.details.grid_snap ? sheet.details.grid || 10 : 1;
     const moveX = (dx || 0) * grid;
     const moveY = (dy || 0) * grid;
 
