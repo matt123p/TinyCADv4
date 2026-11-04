@@ -188,6 +188,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     this.onfocus = this.onfocus.bind(this);
     this.onblur = this.onblur.bind(this);
     this.onscroll = this.onscroll.bind(this);
+    this.onwheel = this.onwheel.bind(this);
     this.handleDocumentMouseMove = this.handleDocumentMouseMove.bind(this);
     this.handleDocumentMouseUp = this.handleDocumentMouseUp.bind(this);
     this.runAutoScrollFrame = this.runAutoScrollFrame.bind(this);
@@ -250,6 +251,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   
   private attachResizeObserver() {
     if (this._div && this._div !== this._prevDiv) {
+        this._prevDiv?.removeEventListener('wheel', this.onwheel);
+        // React wheel handlers are passive, so they cannot suppress browser zoom.
+        this._div.addEventListener('wheel', this.onwheel, { passive: false });
         if (this._prevDiv && this.resizeObserver) {
             this.resizeObserver.unobserve(this._prevDiv);
         }
@@ -308,6 +312,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   }
 
   componentWillUnmount() {
+    this._prevDiv?.removeEventListener('wheel', this.onwheel);
     this.stopDocumentDragTracking();
     if (this.resizeObserver) {
         this.resizeObserver.disconnect();
@@ -1360,7 +1365,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     }
   }
 
-  onwheel(e: React.WheelEvent) {
+  onwheel(e: WheelEvent) {
     if (e.ctrlKey) {
       const zoomFactor = Math.exp((-e.deltaY * Math.log(1.25)) / 100);
       const clampedZoomFactor = Math.min(1.25, Math.max(1 / 1.25, zoomFactor));
@@ -1613,7 +1618,6 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                 onTouchMove={this.ontouchmove}
                 onTouchEnd={this.ontouchend}
                 onTouchCancel={this.ontouchcancel}
-                onWheel={(e) => this.onwheel(e)}
                 onContextMenu={(e) => this.oncontextmenu(e)}
                 onDragOver={(e) => this.ondragover(e)}
                 onDrop={(e) => this.ondrop(e)}
@@ -1798,7 +1802,6 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
             onTouchMove={this.ontouchmove}
             onTouchEnd={this.ontouchend}
             onTouchCancel={this.ontouchcancel}
-            onWheel={(e) => this.onwheel(e)}
             onContextMenu={(e) => this.oncontextmenu(e)}
             onDragOver={(e) => this.ondragover(e)}
             onDrop={(e) => this.ondrop(e)}
