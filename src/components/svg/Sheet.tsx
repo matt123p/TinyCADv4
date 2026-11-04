@@ -1,7 +1,8 @@
-﻿import React, { Dispatch } from 'react';
+import React, { Dispatch } from 'react';
 import { TDrawing } from './Drawing';
 import TDesignDetails from './DesignDetails';
 import TDesignGuides from './DesignGuides';
+import { TouchLoupe } from './TouchLoupe';
 import { UtilityService } from '../../util/utilityService';
 import { Coordinate, DocItem, Filled } from '../../model/dsnItem';
 import { FindResult } from '../../model/dsnView';
@@ -86,6 +87,12 @@ interface TSheetState {
     mouseX: number | null;  // In drawing units (internal coordinates)
     mouseY: number | null;
   netlist: NetlistData | null;
+  touchActive: boolean;
+  touchSvgX: number | null;
+  touchSvgY: number | null;
+  touchDragActive: boolean;
+  precisionPadButtonVisible: boolean;
+  isFingerDown: boolean;
 }
 
 const accelerator: { [key: string]: any } = {
@@ -144,6 +151,18 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   // The page border
   private border = 100;
 
+  // Touch tracking variables
+  private _touch_mode: 'none' | 'drag' | 'gesture' = 'none';
+  private _touch_identifier: number | null = null;
+  private _last_touch_x = 0;
+  private _last_touch_y = 0;
+  private _lastTouchDistance: number | null = null;
+  private _lastTouchCenter: Coordinate | null = null;
+  private _long_press_timer: any = null;
+  private _virtual_client_x = 0;
+  private _virtual_client_y = 0;
+  // _trackpad_last variables removed
+
   constructor(props: TSheetProps) {
     super(props);
 
@@ -155,6 +174,12 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
         mouseX: null,
       mouseY: null,
       netlist: null,
+      touchActive: false,
+      touchSvgX: null,
+      touchSvgY: null,
+      touchDragActive: false,
+      precisionPadButtonVisible: typeof window !== 'undefined' && Boolean(window.matchMedia?.('(any-pointer: coarse)').matches),
+      isFingerDown: false,
     };
 
     this.onkeydown = this.onkeydown.bind(this);
@@ -162,9 +187,14 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     this.onfocus = this.onfocus.bind(this);
     this.onblur = this.onblur.bind(this);
     this.onscroll = this.onscroll.bind(this);
+    this.onwheel = this.onwheel.bind(this);
     this.handleDocumentMouseMove = this.handleDocumentMouseMove.bind(this);
     this.handleDocumentMouseUp = this.handleDocumentMouseUp.bind(this);
     this.runAutoScrollFrame = this.runAutoScrollFrame.bind(this);
+    this.ontouchstart = this.ontouchstart.bind(this);
+    this.ontouchmove = this.ontouchmove.bind(this);
+    this.ontouchend = this.ontouchend.bind(this);
+    this.ontouchcancel = this.ontouchcancel.bind(this);
   }
 
   private resizeObserver: ResizeObserver;
@@ -205,6 +235,8 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     this.unsubscribeNetlist = subscribeNetlist((value) => {
       this.setState({ netlist: value });
     });
+
+    window.addEventListener('touchsymbol-drop', this.handleTouchSymbolDrop as any);
   }
   
   componentDidUpdate(prevProps: TSheetProps) {
@@ -213,11 +245,17 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
 
     if (prevProps.zoom !== this.props.zoom) {
       this.applyPendingZoomAnchor();
+      this.syncTouchPointer();
     }
   }
   
   private attachResizeObserver() {
     if (this._div && this._div !== this._prevDiv) {
+        this._prevDiv?.removeEventListener('wheel', this.onwheel);
+        this.setTouchListeners(this._prevDiv, false);
+        // React wheel handlers are passive, so they cannot suppress browser zoom.
+        this._div.addEventListener('wheel', this.onwheel, { passive: false });
+        this.setTouchListeners(this._div, true);
         if (this._prevDiv && this.resizeObserver) {
             this.resizeObserver.unobserve(this._prevDiv);
         }
@@ -225,11 +263,34 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
             this.resizeObserver.observe(this._div);
         }
         this._prevDiv = this._div;
-        // Update size immediately
+        // Ruler toggles replace the scroll viewport. Restore its position before
+        // drawing the loupe, then read back any scroll limits applied by the DOM.
+        this._div.scrollLeft = this.scroll[0];
+        this._div.scrollTop = this.scroll[1];
+        this.scroll = [this._div.scrollLeft, this._div.scrollTop];
         this.setState({
             width: this._div.clientWidth,
-            height: this._div.clientHeight
+            height: this._div.clientHeight,
+            scrollX: this.scroll[0],
+            scrollY: this.scroll[1],
         });
+        this.syncTouchPointer();
+    }
+  }
+
+  private setTouchListeners(div: HTMLDivElement | null, attach: boolean) {
+    if (!div) return;
+    // React delegates touchstart/touchmove passively. Native listeners allow us
+    // to suppress compatibility mouse events and keep gestures on the canvas.
+    const handlers = {
+      touchstart: this.ontouchstart,
+      touchmove: this.ontouchmove,
+      touchend: this.ontouchend,
+      touchcancel: this.ontouchcancel,
+    };
+    for (const [type, handler] of Object.entries(handlers)) {
+      if (attach) div.addEventListener(type, handler as EventListener, { passive: false });
+      else div.removeEventListener(type, handler as EventListener);
     }
   }
 
@@ -276,6 +337,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   }
 
   componentWillUnmount() {
+    this._prevDiv?.removeEventListener('wheel', this.onwheel);
+    this.setTouchListeners(this._prevDiv, false);
+    if (this._long_press_timer !== null) window.clearTimeout(this._long_press_timer);
     this.stopDocumentDragTracking();
     if (this.resizeObserver) {
         this.resizeObserver.disconnect();
@@ -284,6 +348,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       this.unsubscribeNetlist();
       this.unsubscribeNetlist = null;
     }
+    window.removeEventListener('touchsymbol-drop', this.handleTouchSymbolDrop as any);
     setTimeout(() => this.props.dispatch(actionUnregisterTSheet(this)), 0);
   }
 
@@ -306,6 +371,14 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
 
   onkeydown(e: any) {
     if (this.props.contextMenu) {
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      if (this.state.touchDragActive) this.handleVirtualDragToggle();
+      e.preventDefault();
+      e.stopPropagation();
+      this.props.dispatch(actionCommand('escape'));
       return;
     }
 
@@ -422,6 +495,20 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
         scrollX: e.target.scrollLeft,
         scrollY: e.target.scrollTop
     });
+    this.syncTouchPointer();
+  }
+
+  private syncTouchPointer() {
+    if (!this.state.touchActive || !this._div) return;
+    const rect = this._div.getBoundingClientRect();
+    this.setState({
+      touchSvgX: this._virtual_client_x - rect.left + this.scroll[0],
+      touchSvgY: this._virtual_client_y - rect.top + this.scroll[1],
+    });
+    this.dispatchEditorPointerEvent(
+      this.state.touchDragActive ? 'mousedrag' : 'mousemove',
+      this._virtual_client_x, this._virtual_client_y, 0,
+    );
   }
 
   private getKeyState(e: {
@@ -565,6 +652,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   }
 
   private handleDocumentMouseMove(e: MouseEvent) {
+    if (this.state.touchDragActive) {
+      return;
+    }
     if (!this._in_mouse_drag || !this._div) {
       return;
     }
@@ -580,6 +670,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   }
 
   private handleDocumentMouseUp(e: MouseEvent) {
+    if (this.state.touchDragActive) {
+      return;
+    }
     if (!this._in_mouse_drag || !this._div) {
       return;
     }
@@ -690,6 +783,606 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     );
   }
 
+  ontouchstart(e: TouchEvent) {
+    if (e.cancelable) e.preventDefault();
+    if ((e.target as Element)?.closest?.('[data-loupe-control]')) return;
+    if (this.props.contextMenu) {
+      return;
+    }
+
+    if (this._long_press_timer !== null) {
+      window.clearTimeout(this._long_press_timer);
+      this._long_press_timer = null;
+    }
+
+    if (!this.state.precisionPadButtonVisible) {
+      this.setState({ precisionPadButtonVisible: true });
+    }
+
+    if (this.state.touchActive) {
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        this._touch_mode = 'drag';
+        this._touch_identifier = touch.identifier;
+        this._last_touch_x = touch.clientX;
+        this._last_touch_y = touch.clientY;
+        this.setState({ isFingerDown: true });
+        e.stopPropagation();
+      } else if (e.touches.length >= 2) {
+        if (this.state.touchDragActive) {
+          this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, 0);
+          this.setState({ touchDragActive: false });
+        }
+        this._touch_mode = 'gesture';
+        this._touch_identifier = null;
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        this._lastTouchDistance = Math.hypot(
+          touch1.clientX - touch2.clientX,
+          touch1.clientY - touch2.clientY,
+        );
+        this._lastTouchCenter = [
+          (touch1.clientX + touch2.clientX) / 2,
+          (touch1.clientY + touch2.clientY) / 2,
+        ];
+        e.stopPropagation();
+      }
+      return;
+    }
+
+    if (this.state.touchDragActive) {
+      const key = 0;
+      this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, key);
+      this.setState({ touchDragActive: false });
+    }
+
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      this._touch_mode = 'drag';
+      this._touch_identifier = touch.identifier;
+      this._last_touch_x = touch.clientX;
+      this._last_touch_y = touch.clientY;
+      
+      this._virtual_client_x = touch.clientX;
+      this._virtual_client_y = touch.clientY;
+
+      this._div.focus();
+      
+      const key = 0;
+      
+      const rect = this._div.getBoundingClientRect();
+      const event_x = touch.clientX - rect.left;
+      const event_y = touch.clientY - rect.top;
+      const svgTouchX = event_x + this.scroll[0];
+      const svgTouchY = event_y + this.scroll[1];
+
+      this.setState({
+        touchActive: false,
+        touchSvgX: svgTouchX,
+        touchSvgY: svgTouchY,
+        isFingerDown: true,
+      });
+
+      this.dispatchEditorPointerEvent('lbuttondown', touch.clientX, touch.clientY, key);
+
+      // Start long press timer for context menu (700ms)
+      this._long_press_timer = window.setTimeout(() => {
+        if (this._touch_mode === 'drag' && !this._in_mouse_drag) {
+          // Cancel active drag/selection
+          this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, key);
+          
+          // Trigger context menu
+          this.dispatchEditorPointerEvent('rbuttondown', this._virtual_client_x, this._virtual_client_y, key);
+          this.dispatchEditorPointerEvent('rbuttonup', this._virtual_client_x, this._virtual_client_y, key);
+          
+          this.setState({
+            touchActive: false,
+            touchSvgX: null,
+            touchSvgY: null,
+          });
+          this._touch_mode = 'none';
+          this._touch_identifier = null;
+        }
+      }, 700);
+    } else if (e.touches.length >= 2) {
+      // If we were dragging, cancel it
+      if (this._touch_mode === 'drag') {
+        const key = 0;
+        this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, key);
+      }
+
+      this.setState({
+        touchActive: false,
+        touchSvgX: null,
+        touchSvgY: null,
+      });
+      this._touch_mode = 'gesture';
+      this._touch_identifier = null;
+
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+
+      this._lastTouchDistance = Math.hypot(
+        touch1.clientX - touch2.clientX,
+        touch1.clientY - touch2.clientY,
+      );
+      this._lastTouchCenter = [
+        (touch1.clientX + touch2.clientX) / 2,
+        (touch1.clientY + touch2.clientY) / 2,
+      ];
+    }
+  }
+
+  ontouchmove(e: TouchEvent) {
+    if (e.cancelable) e.preventDefault();
+    if ((e.target as Element)?.closest?.('[data-loupe-control]')) return;
+    if (this.state.touchActive) {
+      if (this._touch_mode === 'drag' && e.touches.length === 1) {
+        const touch = e.touches[0];
+        if (touch.identifier === this._touch_identifier) {
+          const dx = touch.clientX - this._last_touch_x;
+          const dy = touch.clientY - this._last_touch_y;
+          if (Math.hypot(dx, dy) > 5 && this._long_press_timer !== null) {
+            window.clearTimeout(this._long_press_timer);
+            this._long_press_timer = null;
+          }
+
+          this._last_touch_x = touch.clientX;
+          this._last_touch_y = touch.clientY;
+
+          const scaleFactor = 0.3;
+          const bounds = this._div.getBoundingClientRect();
+          this._virtual_client_x = Math.max(bounds.left, Math.min(bounds.left + this._div.clientWidth - 1, this._virtual_client_x + dx * scaleFactor));
+          this._virtual_client_y = Math.max(bounds.top, Math.min(bounds.top + this._div.clientHeight - 1, this._virtual_client_y + dy * scaleFactor));
+
+          const rect = this._div.getBoundingClientRect();
+          const event_x = this._virtual_client_x - rect.left;
+          const event_y = this._virtual_client_y - rect.top;
+          const svgTouchX = event_x + this.scroll[0];
+          const svgTouchY = event_y + this.scroll[1];
+
+          this.setState({
+            touchActive: true,
+            touchSvgX: svgTouchX,
+            touchSvgY: svgTouchY,
+          });
+
+          const key = 0;
+          if (this.state.touchDragActive) {
+            this.dispatchEditorPointerEvent('mousedrag', this._virtual_client_x, this._virtual_client_y, key);
+          } else {
+            this.dispatchEditorPointerEvent('mousemove', this._virtual_client_x, this._virtual_client_y, 0);
+          }
+          e.stopPropagation();
+        }
+      } else if (this._touch_mode === 'gesture' && e.touches.length >= 2) {
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+
+        const dist = Math.hypot(
+          touch1.clientX - touch2.clientX,
+          touch1.clientY - touch2.clientY,
+        );
+        const cx = (touch1.clientX + touch2.clientX) / 2;
+        const cy = (touch1.clientY + touch2.clientY) / 2;
+
+        if (this._lastTouchCenter) {
+          const dx = cx - this._lastTouchCenter[0];
+          const dy = cy - this._lastTouchCenter[1];
+          if (dx !== 0 || dy !== 0) {
+            this._div.scrollLeft -= dx;
+            this._div.scrollTop -= dy;
+            this.scroll = [this._div.scrollLeft, this._div.scrollTop];
+            this.setState({
+              scrollX: this._div.scrollLeft,
+              scrollY: this._div.scrollTop,
+            });
+          }
+        }
+
+        if (this._lastTouchDistance && Math.abs(dist - this._lastTouchDistance) > 2) {
+          const factor = dist / this._lastTouchDistance;
+          const clampedFactor = Math.min(1.25, Math.max(1 / 1.25, factor));
+
+          this.setPendingZoomAnchor(cx, cy);
+          this.props.dispatch(actionCommand('zoom_scale', clampedFactor));
+        }
+
+        this._lastTouchDistance = dist;
+        this._lastTouchCenter = [cx, cy];
+        e.stopPropagation();
+      }
+      return;
+    }
+
+    if (this._touch_mode === 'drag' && e.touches.length === 1) {
+      const touch = e.touches[0];
+      if (touch.identifier === this._touch_identifier) {
+        const dx = touch.clientX - this._last_touch_x;
+        const dy = touch.clientY - this._last_touch_y;
+        if (Math.hypot(dx, dy) > 5 && this._long_press_timer !== null) {
+          window.clearTimeout(this._long_press_timer);
+          this._long_press_timer = null;
+        }
+
+        this._last_touch_x = touch.clientX;
+        this._last_touch_y = touch.clientY;
+
+        const scaleFactor = 1.0;
+        this._virtual_client_x += dx * scaleFactor;
+        this._virtual_client_y += dy * scaleFactor;
+
+        const rect = this._div.getBoundingClientRect();
+        const event_x = this._virtual_client_x - rect.left;
+        const event_y = this._virtual_client_y - rect.top;
+        const svgTouchX = event_x + this.scroll[0];
+        const svgTouchY = event_y + this.scroll[1];
+
+        this.setState({
+          touchActive: false,
+          touchSvgX: svgTouchX,
+          touchSvgY: svgTouchY,
+        });
+
+        const key = 0;
+        this.dispatchEditorPointerEvent('mousedrag', this._virtual_client_x, this._virtual_client_y, key);
+      }
+    } else if (this._touch_mode === 'gesture' && e.touches.length >= 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+
+      const dist = Math.hypot(
+        touch1.clientX - touch2.clientX,
+        touch1.clientY - touch2.clientY,
+      );
+      const cx = (touch1.clientX + touch2.clientX) / 2;
+      const cy = (touch1.clientY + touch2.clientY) / 2;
+
+      // Handle Panning
+      if (this._lastTouchCenter) {
+        const dx = cx - this._lastTouchCenter[0];
+        const dy = cy - this._lastTouchCenter[1];
+        if (dx !== 0 || dy !== 0) {
+          this._div.scrollLeft -= dx;
+          this._div.scrollTop -= dy;
+          this.scroll = [this._div.scrollLeft, this._div.scrollTop];
+          this.setState({
+            scrollX: this._div.scrollLeft,
+            scrollY: this._div.scrollTop,
+          });
+        }
+      }
+
+      // Handle Zooming
+      if (this._lastTouchDistance && Math.abs(dist - this._lastTouchDistance) > 2) {
+        const factor = dist / this._lastTouchDistance;
+        const clampedFactor = Math.min(1.25, Math.max(1 / 1.25, factor));
+
+        this.setPendingZoomAnchor(cx, cy);
+        this.props.dispatch(actionCommand('zoom_scale', clampedFactor));
+      }
+
+      this._lastTouchDistance = dist;
+      this._lastTouchCenter = [cx, cy];
+    }
+  }
+
+  ontouchend(e: TouchEvent) {
+    if (e.cancelable) e.preventDefault();
+    if ((e.target as Element)?.closest?.('[data-loupe-control]')) return;
+    if (this._long_press_timer !== null) {
+      window.clearTimeout(this._long_press_timer);
+      this._long_press_timer = null;
+    }
+
+    if (this.state.touchActive) {
+      if (e.touches.length === 0) {
+        this.setState({
+          isFingerDown: false,
+        });
+        this._touch_mode = 'none';
+        this._touch_identifier = null;
+        this._lastTouchDistance = null;
+        this._lastTouchCenter = null;
+      } else if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        this._touch_mode = 'drag';
+        this._touch_identifier = touch.identifier;
+        this._last_touch_x = touch.clientX;
+        this._last_touch_y = touch.clientY;
+        this.setState({
+          isFingerDown: true,
+        });
+      }
+      e.stopPropagation();
+      return;
+    }
+
+    if (this._touch_mode === 'drag') {
+      const changedTouches = Array.from(e.changedTouches);
+      const touch = changedTouches.find(t => t.identifier === this._touch_identifier);
+      if (touch) {
+        const key = 0;
+        this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, key);
+      }
+    }
+
+    if (e.touches.length === 0) {
+      this.setState({
+        touchActive: false,
+        touchSvgX: null,
+        touchSvgY: null,
+        isFingerDown: false,
+      });
+      this._touch_mode = 'none';
+      this._touch_identifier = null;
+      this._lastTouchDistance = null;
+      this._lastTouchCenter = null;
+    } else if (e.touches.length === 1) {
+      this.setState({
+        touchActive: false,
+        touchSvgX: null,
+        touchSvgY: null,
+        isFingerDown: false,
+      });
+      this._touch_mode = 'none';
+      this._touch_identifier = null;
+      this._lastTouchDistance = null;
+      this._lastTouchCenter = null;
+    }
+  }
+
+  ontouchcancel(e: TouchEvent) {
+    if (e.cancelable) e.preventDefault();
+    if ((e.target as Element)?.closest?.('[data-loupe-control]')) return;
+    if (this._long_press_timer !== null) {
+      window.clearTimeout(this._long_press_timer);
+      this._long_press_timer = null;
+    }
+
+    if (this.state.touchActive) {
+      if (this.state.touchDragActive) {
+        this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, 0);
+      }
+      this.setState({
+        isFingerDown: false,
+        touchDragActive: false,
+      });
+      this._touch_mode = 'none';
+      this._touch_identifier = null;
+      this._lastTouchDistance = null;
+      this._lastTouchCenter = null;
+      e.stopPropagation();
+      return;
+    }
+
+    if (this._touch_mode === 'drag') {
+      const changedTouches = Array.from(e.changedTouches);
+      const touch = changedTouches.find(t => t.identifier === this._touch_identifier);
+      if (touch) {
+        const key = 0;
+        this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, key);
+      }
+    }
+
+    this.setState({
+      touchActive: false,
+      touchSvgX: null,
+      touchSvgY: null,
+      isFingerDown: false,
+    });
+    this._touch_mode = 'none';
+    this._touch_identifier = null;
+    this._lastTouchDistance = null;
+    this._lastTouchCenter = null;
+  }
+
+
+
+  private renderTouchIndicator() {
+    if (!this.state.touchActive || this.state.touchSvgX === null || this.state.touchSvgY === null) {
+      return null;
+    }
+    
+    return (
+      <g style={{ pointerEvents: 'none' }}>
+        <circle
+          cx={this.state.touchSvgX}
+          cy={this.state.touchSvgY}
+          r="6"
+          fill="none"
+          stroke="#0078d4"
+          strokeWidth="1.5"
+          strokeDasharray="2,2"
+        />
+        <circle
+          cx={this.state.touchSvgX}
+          cy={this.state.touchSvgY}
+          r="1.5"
+          fill="#0078d4"
+        />
+        <line
+          x1={this.state.touchSvgX - 12}
+          y1={this.state.touchSvgY}
+          x2={this.state.touchSvgX + 12}
+          y2={this.state.touchSvgY}
+          stroke="#0078d4"
+          strokeWidth="1"
+          opacity="0.75"
+        />
+        <line
+          x1={this.state.touchSvgX}
+          y1={this.state.touchSvgY - 12}
+          x2={this.state.touchSvgX}
+          y2={this.state.touchSvgY + 12}
+          stroke="#0078d4"
+          strokeWidth="1"
+          opacity="0.75"
+        />
+      </g>
+    );
+  }
+
+  private handleVirtualClick = () => {
+    if (this.state.touchDragActive) {
+      this.handleVirtualDragToggle();
+      return;
+    }
+    if (this.state.touchSvgX !== null && this.state.touchSvgY !== null) {
+      const key = 0;
+      this.dispatchEditorPointerEvent('lbuttondown', this._virtual_client_x, this._virtual_client_y, key);
+      this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, key);
+    }
+  };
+
+  private handleVirtualRightClick = () => {
+    if (this.state.touchDragActive) this.handleVirtualDragToggle();
+    if (this.state.touchSvgX !== null && this.state.touchSvgY !== null) {
+      const key = 0;
+      this.dispatchEditorPointerEvent('rbuttondown', this._virtual_client_x, this._virtual_client_y, key);
+      this.dispatchEditorPointerEvent('rbuttonup', this._virtual_client_x, this._virtual_client_y, key);
+    }
+  };
+
+  private handleVirtualDragToggle = () => {
+    if (this.state.touchSvgX !== null && this.state.touchSvgY !== null) {
+      const key = 0;
+      if (!this.state.touchDragActive) {
+        this.dispatchEditorPointerEvent('lbuttondown', this._virtual_client_x, this._virtual_client_y, key);
+        this.setState({ touchDragActive: true });
+      } else {
+        this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, key);
+        this.setState({ touchDragActive: false });
+      }
+    }
+  };
+
+  private handleVirtualClose = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    if (this.state.touchDragActive) {
+      this.dispatchEditorPointerEvent('lbuttonup', this._virtual_client_x, this._virtual_client_y, 0);
+    }
+    this._touch_mode = 'none';
+    this._touch_identifier = null;
+    this._lastTouchDistance = null;
+    this._lastTouchCenter = null;
+    this.setState({
+      touchActive: false,
+      touchSvgX: null,
+      touchSvgY: null,
+      touchDragActive: false,
+      isFingerDown: false,
+    });
+  };
+
+  private handleTouchSymbolDrop = (e: any) => {
+    const { clientX, clientY, payload } = e.detail;
+
+    if (!this._div) return;
+    const rect = this._div.getBoundingClientRect();
+    if (
+      clientX >= rect.left &&
+      clientX <= rect.right &&
+      clientY >= rect.top &&
+      clientY <= rect.bottom
+    ) {
+      const [x, y] = this.getEventLocationFromClient(clientX, clientY);
+      try {
+        if (payload && payload.name && payload.symbolData) {
+          this.props.dispatch(
+            actionSelectLibrarySymbol(payload.name, payload.symbolData, [x, y]),
+          );
+        } else if (payload && payload.searchSymbol) {
+          this.props.dispatch(SelectSymbol(payload.searchSymbol, [x, y]));
+        }
+      } catch (err) {
+        console.error('Touch drop symbol error:', err);
+      }
+    }
+  };
+
+  private handleToggleButtonClick = () => {
+    if (this.state.touchActive) {
+      this.handleVirtualClose();
+    } else {
+      if (this._div) {
+        const rect = this._div.getBoundingClientRect();
+        const event_x = rect.width / 2;
+        const event_y = rect.height / 2;
+        const svgTouchX = event_x + this.scroll[0];
+        const svgTouchY = event_y + this.scroll[1];
+        
+        this._virtual_client_x = event_x + rect.left;
+        this._virtual_client_y = event_y + rect.top;
+        
+        this.setState({
+          touchActive: true,
+          touchSvgX: svgTouchX,
+          touchSvgY: svgTouchY,
+          isFingerDown: false,
+          touchDragActive: false,
+        });
+        
+        this.dispatchEditorPointerEvent('mousemove', this._virtual_client_x, this._virtual_client_y, 0);
+      }
+    }
+  };
+
+  private renderLoupeToggleButton() {
+    if (!this.state.precisionPadButtonVisible) {
+      return null;
+    }
+
+    const active = this.state.touchActive;
+    return (
+      <button
+        onClick={this.handleToggleButtonClick}
+        onTouchStart={(e) => {
+          e.stopPropagation();
+        }}
+        style={{
+          position: 'absolute',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '12px 24px',
+          borderRadius: '50px',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          background: active 
+            ? 'linear-gradient(135deg, #d83b01 0%, #b83200 100%)'
+            : 'linear-gradient(135deg, #0078d4 0%, #005a9e 100%)',
+          color: '#ffffff',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+          fontSize: '14px',
+          fontWeight: 600,
+          letterSpacing: '0.5px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+          cursor: 'pointer',
+          transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, box-shadow 0.2s ease',
+          outline: 'none',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateX(-50%) scale(1.05)';
+          e.currentTarget.style.boxShadow = '0 12px 38px rgba(0, 0, 0, 0.3)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateX(-50%) scale(1)';
+          e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.24)';
+        }}
+      >
+        <span style={{ fontSize: '16px' }}>{active ? '❌' : '🔍'}</span>
+        <span>{active ? 'Hide Loupe' : 'Show Loupe'}</span>
+      </button>
+    );
+  }
+
   oncontextmenu(e: any) {
     e.preventDefault();
     return false;
@@ -735,7 +1428,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     }
   }
 
-  onwheel(e: React.WheelEvent) {
+  onwheel(e: WheelEvent) {
     if (e.ctrlKey) {
       const zoomFactor = Math.exp((-e.deltaY * Math.log(1.25)) / 100);
       const clampedZoomFactor = Math.min(1.25, Math.max(1 / 1.25, zoomFactor));
@@ -938,60 +1631,258 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     // Only engage the grid layout if rulers are visible
     if (this.props.showRulers) {
         return (
-          <div style={{
-               display: 'grid', 
-               gridTemplateColumns: 'minmax(0, 1fr) 20px', 
-               gridTemplateRows: '20px minmax(0, 1fr)', 
-               flexGrow: 1, 
-               flexShrink: 1, 
-               flexBasis: 0, 
-               overflow: 'hidden',
-               minHeight: 0
-          }}>
-              <div style={{overflow: 'hidden'}}>
-                <Ruler 
-                    orientation="horizontal" 
-                    unit="mm" 
-                    zoom={this.props.zoom} 
-                    scrollOffset={this.state.scrollX}
-                    mousePosition={this.state.mouseX !== null ? this.state.mouseX / PIXELS_PER_MM : null}
-                    containerSize={this.state.width}
-                    zeroOffset={zeroOffset}
-                    scaleOrign={PIXELS_PER_MM}
-                />
-              </div>
-              <div style={{backgroundColor: '#e0e0e0', borderBottom: '1px solid #999', borderLeft: '1px solid #999'}} />
-              
-          <div
-            className="circuit-drawing"
-            style={{gridColumn: '1', gridRow: '2'}}
-            onScroll={(e) => this.onscroll(e)}
-            ref={(div) => {
-              this._div = div;
-            }}
-            tabIndex={-1}
-            onKeyDown={this.onkeydown}
-            onKeyPress={this.onkeypress}
-            onFocus={this.onfocus}
-            onBlur={this.onblur}
-          >
-           {/* SVG content */}
-            <svg
-              id="svg-drawing"
-              onMouseMove={(e) => this.onmouseevent(e, this._div)}
-              onMouseDown={(e) => this.onmouseevent(e, this._div)}
-              onMouseUp={(e) => this.onmouseevent(e, this._div)}
-              onWheel={(e) => this.onwheel(e)}
-              onContextMenu={(e) => this.oncontextmenu(e)}
-              onDragOver={(e) => this.ondragover(e)}
-              onDrop={(e) => this.ondrop(e)}
-              className="circuit-svg"
-              width={(this.props.page_size[0] + border * 2) * scale}
-              height={(this.props.page_size[1] + border * 2) * scale}
-              cursor={this.props.cursor}
+          <div style={{ position: 'relative', display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 0, overflow: 'hidden' }}>
+            <div style={{
+                 display: 'grid', 
+                 gridTemplateColumns: 'minmax(0, 1fr) 20px', 
+                 gridTemplateRows: '20px minmax(0, 1fr)', 
+                 flexGrow: 1, 
+                 flexShrink: 1, 
+                 flexBasis: 0, 
+                 overflow: 'hidden',
+                 minHeight: 0,
+                 width: '100%',
+                 height: '100%'
+            }}>
+                <div style={{overflow: 'hidden'}}>
+                  <Ruler 
+                      orientation="horizontal" 
+                      unit="mm" 
+                      zoom={this.props.zoom} 
+                      scrollOffset={this.state.scrollX}
+                      mousePosition={this.state.mouseX !== null ? this.state.mouseX / PIXELS_PER_MM : null}
+                      containerSize={this.state.width}
+                      zeroOffset={zeroOffset}
+                      scaleOrign={PIXELS_PER_MM}
+                  />
+                </div>
+                <div style={{backgroundColor: '#e0e0e0', borderBottom: '1px solid #999', borderLeft: '1px solid #999'}} />
+                
+            <div
+              className="circuit-drawing"
+              style={{gridColumn: '1', gridRow: '2'}}
+              onScroll={(e) => this.onscroll(e)}
+              ref={(div) => {
+                this._div = div;
+              }}
+              tabIndex={-1}
+              onKeyDown={this.onkeydown}
+              onKeyPress={this.onkeypress}
+              onFocus={this.onfocus}
+              onBlur={this.onblur}
             >
-              <TSvgDefs images={this.props.images} hatches={this.props.hatches} />
-    
+             {/* SVG content */}
+              <svg
+                id="svg-drawing"
+                onMouseMove={(e) => this.onmouseevent(e, this._div)}
+                onMouseDown={(e) => this.onmouseevent(e, this._div)}
+                onMouseUp={(e) => this.onmouseevent(e, this._div)}
+                onContextMenu={(e) => this.oncontextmenu(e)}
+                onDragOver={(e) => this.ondragover(e)}
+                onDrop={(e) => this.ondrop(e)}
+                className="circuit-svg"
+                width={(this.props.page_size[0] + border * 2) * scale}
+                height={(this.props.page_size[1] + border * 2) * scale}
+                cursor={this.props.cursor}
+              >
+                <TSvgDefs images={this.props.images} hatches={this.props.hatches} />
+                <defs>
+                  <pattern
+                    id="grid-pattern"
+                    x={-this.props.details.grid / 2}
+                    y={-this.props.details.grid / 2}
+                    width={this.props.details.grid}
+                    height={this.props.details.grid}
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <circle
+                      cx={this.props.details.grid / 2}
+                      cy={this.props.details.grid / 2}
+                      r="0.75"
+                      fill="#a0a0a0"
+                    />
+                  </pattern>
+                </defs>
+      
+                <g id={"sheet-content-" + this.props.sheet_name.replace(/\s+/g, '-')}>
+                  <rect
+                    x="0"
+                    y="0"
+                    width={(this.props.page_size[0] + border * 2) * scale}
+                    height={border * scale}
+                    className="offPageArea"
+                  />
+                  <rect
+                    x="0"
+                    y={border * scale}
+                    width={border * scale}
+                    height={(this.props.page_size[1] + border) * scale}
+                    className="offPageArea"
+                  />
+                  <rect
+                    x={(this.props.page_size[0] + border) * scale}
+                    y={border * scale}
+                    width={border * scale}
+                    height={(this.props.page_size[1] + border) * scale}
+                    className="offPageArea"
+                  />
+                  <rect
+                    x="0"
+                    y={(this.props.page_size[1] + border) * scale}
+                    width={(this.props.page_size[0] + border * 2) * scale}
+                    height={border * scale}
+                    className="offPageArea"
+                  />
+                  <rect
+                    x={border * scale}
+                    y={border * scale}
+                    width={this.props.page_size[0] * scale}
+                    height={this.props.page_size[1] * scale}
+                    className="pageRectangle"
+                  />
+        
+                  <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
+                    {this.props.options.show_grid ? (
+                      <rect
+                        x="0"
+                        y="0"
+                        width={this.props.page_size[0]}
+                        height={this.props.page_size[1]}
+                        fill="url(#grid-pattern)"
+                        pointerEvents="none"
+                      />
+                    ) : null}
+                    {this.props.details.show_details ? (
+                      <TDesignDetails
+                        details={this.props.details}
+                        page_size={this.props.page_size}
+                      />
+                    ) : null}
+                    {this.props.details.show_guides ? (
+                      <TDesignGuides
+                        details={this.props.details}
+                        page_size={this.props.page_size}
+                      />
+                    ) : null}
+                    <TDrawing
+                      dx={0}
+                      dy={0}
+                      dr={0}
+                      items={this.props.items}
+                      hover_obj={this.props.hover_obj}
+                      hover_ids={this.props.hover_ids}
+                      hover_pins={this.props.hover_pins}
+                      selection={this.props._selected_array}
+                      selected_handle={this.props._selected_handle}
+                      options={this.props.options}
+                      add={add}
+                      hover={false}
+                      parent={null}
+                      part={this.props.part}
+                      selected={false}
+                      show_power={this.props.show_power}
+                      editLibrary={this.props.editingLibrary}
+                      heterogeneous={this.props.heterogeneous}
+                      scale_x={1.0}
+                      scale_y={1.0}
+                      sheetName={this.props.sheet_name}
+                      netlist={this.state.netlist}
+                      netlistTypes={this.props.netlistTypes}
+                      netTypeAssignments={this.props.netTypeAssignments}
+                    />
+                    {markers}
+                    {selectrect}
+                    {handles}
+                  </g>
+                </g>
+                {this.state.touchActive && this.state.touchSvgX !== null && this.state.touchSvgY !== null && (
+                  <TouchLoupe
+                    touchSvgX={this.state.touchSvgX}
+                    touchSvgY={this.state.touchSvgY}
+                    scrollX={this.scroll[0]}
+                    scrollY={this.scroll[1]}
+                    sheetName={this.props.sheet_name}
+                    canvasWidth={this.state.width}
+                    canvasHeight={this.state.height}
+                    onClose={this.handleVirtualClose}
+                    onLeftClick={this.handleVirtualClick}
+                    onRightClick={this.handleVirtualRightClick}
+                    onDragToggle={this.handleVirtualDragToggle}
+                    isDragging={this.state.touchDragActive}
+                  />
+                )}
+                {this.renderTouchIndicator()}
+              </svg>
+            </div>
+      
+              <div style={{overflow: 'hidden'}}>
+                   <Ruler 
+                      orientation="vertical" 
+                      unit="mm" 
+                      zoom={this.props.zoom} 
+                      scrollOffset={this.state.scrollY}
+                      mousePosition={this.state.mouseY !== null ? this.state.mouseY / PIXELS_PER_MM : null}
+                      containerSize={this.state.height}
+                      zeroOffset={zeroOffset}
+                      scaleOrign={PIXELS_PER_MM}
+                      tickAlignment="start"
+                  />
+              </div>
+            </div>
+            {this.renderLoupeToggleButton()}
+          </div>
+        );
+    }
+
+    // Default layout (without rulers)
+    return (
+      <div style={{ position: 'relative', display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 0, overflow: 'hidden' }}>
+        <div
+          className="circuit-drawing"
+          onScroll={(e) => this.onscroll(e)}
+          ref={(div) => {
+            this._div = div;
+          }}
+          tabIndex={-1}
+          onKeyDown={this.onkeydown}
+          onKeyPress={this.onkeypress}
+          onFocus={this.onfocus}
+          onBlur={this.onblur}
+          style={{ width: '100%', height: '100%' }}
+        >
+          <svg
+            id="svg-drawing"
+            onMouseMove={(e) => this.onmouseevent(e, this._div)}
+            onMouseDown={(e) => this.onmouseevent(e, this._div)}
+            onMouseUp={(e) => this.onmouseevent(e, this._div)}
+            onContextMenu={(e) => this.oncontextmenu(e)}
+            onDragOver={(e) => this.ondragover(e)}
+            onDrop={(e) => this.ondrop(e)}
+            className="circuit-svg"
+            width={(this.props.page_size[0] + border * 2) * scale}
+            height={(this.props.page_size[1] + border * 2) * scale}
+            cursor={this.props.cursor}
+          >
+            <TSvgDefs images={this.props.images} hatches={this.props.hatches} />
+            <defs>
+              <pattern
+                id="grid-pattern"
+                x={-this.props.details.grid / 2}
+                y={-this.props.details.grid / 2}
+                width={this.props.details.grid}
+                height={this.props.details.grid}
+                patternUnits="userSpaceOnUse"
+              >
+                <circle
+                  cx={this.props.details.grid / 2}
+                  cy={this.props.details.grid / 2}
+                  r="0.75"
+                  fill="#a0a0a0"
+                />
+              </pattern>
+            </defs>
+
+            <g id={"sheet-content-" + this.props.sheet_name.replace(/\s+/g, '-')}>
               <rect
                 x="0"
                 y="0"
@@ -1027,8 +1918,18 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                 height={this.props.page_size[1] * scale}
                 className="pageRectangle"
               />
-    
+
               <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
+                {this.props.options.show_grid ? (
+                  <rect
+                    x="0"
+                    y="0"
+                    width={this.props.page_size[0]}
+                    height={this.props.page_size[1]}
+                    fill="url(#grid-pattern)"
+                    pointerEvents="none"
+                  />
+                ) : null}
                 {this.props.details.show_details ? (
                   <TDesignDetails
                     details={this.props.details}
@@ -1071,136 +1972,27 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                 {selectrect}
                 {handles}
               </g>
-            </svg>
-          </div>
-    
-            <div style={{overflow: 'hidden'}}>
-                 <Ruler 
-                    orientation="vertical" 
-                    unit="mm" 
-                    zoom={this.props.zoom} 
-                    scrollOffset={this.state.scrollY}
-                    mousePosition={this.state.mouseY !== null ? this.state.mouseY / PIXELS_PER_MM : null}
-                    containerSize={this.state.height}
-                    zeroOffset={zeroOffset}
-                    scaleOrign={PIXELS_PER_MM}
-                    tickAlignment="start"
-                />
-            </div>
-          </div>
-        );
-    }
-
-    // Default layout (without rulers)
-    return (
-      <div
-        className="circuit-drawing"
-        onScroll={(e) => this.onscroll(e)}
-        ref={(div) => {
-          this._div = div;
-        }}
-        tabIndex={-1}
-        onKeyDown={this.onkeydown}
-        onKeyPress={this.onkeypress}
-        onFocus={this.onfocus}
-        onBlur={this.onblur}
-      >
-        <svg
-          id="svg-drawing"
-          onMouseMove={(e) => this.onmouseevent(e, this._div)}
-          onMouseDown={(e) => this.onmouseevent(e, this._div)}
-          onMouseUp={(e) => this.onmouseevent(e, this._div)}
-          onWheel={(e) => this.onwheel(e)}
-          onContextMenu={(e) => this.oncontextmenu(e)}
-          onDragOver={(e) => this.ondragover(e)}
-          onDrop={(e) => this.ondrop(e)}
-          className="circuit-svg"
-          width={(this.props.page_size[0] + border * 2) * scale}
-          height={(this.props.page_size[1] + border * 2) * scale}
-          cursor={this.props.cursor}
-        >
-          <TSvgDefs images={this.props.images} hatches={this.props.hatches} />
-
-          <rect
-            x="0"
-            y="0"
-            width={(this.props.page_size[0] + border * 2) * scale}
-            height={border * scale}
-            className="offPageArea"
-          />
-          <rect
-            x="0"
-            y={border * scale}
-            width={border * scale}
-            height={(this.props.page_size[1] + border) * scale}
-            className="offPageArea"
-          />
-          <rect
-            x={(this.props.page_size[0] + border) * scale}
-            y={border * scale}
-            width={border * scale}
-            height={(this.props.page_size[1] + border) * scale}
-            className="offPageArea"
-          />
-          <rect
-            x="0"
-            y={(this.props.page_size[1] + border) * scale}
-            width={(this.props.page_size[0] + border * 2) * scale}
-            height={border * scale}
-            className="offPageArea"
-          />
-          <rect
-            x={border * scale}
-            y={border * scale}
-            width={this.props.page_size[0] * scale}
-            height={this.props.page_size[1] * scale}
-            className="pageRectangle"
-          />
-
-          <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
-            {this.props.details.show_details ? (
-              <TDesignDetails
-                details={this.props.details}
-                page_size={this.props.page_size}
+            </g>
+            {this.state.touchActive && this.state.touchSvgX !== null && this.state.touchSvgY !== null && (
+              <TouchLoupe
+                touchSvgX={this.state.touchSvgX}
+                touchSvgY={this.state.touchSvgY}
+                scrollX={this.scroll[0]}
+                scrollY={this.scroll[1]}
+                sheetName={this.props.sheet_name}
+                canvasWidth={this.state.width}
+                canvasHeight={this.state.height}
+                onClose={this.handleVirtualClose}
+                onLeftClick={this.handleVirtualClick}
+                onRightClick={this.handleVirtualRightClick}
+                onDragToggle={this.handleVirtualDragToggle}
+                isDragging={this.state.touchDragActive}
               />
-            ) : null}
-            {this.props.details.show_guides ? (
-              <TDesignGuides
-                details={this.props.details}
-                page_size={this.props.page_size}
-              />
-            ) : null}
-            <TDrawing
-              dx={0}
-              dy={0}
-              dr={0}
-              items={this.props.items}
-              hover_obj={this.props.hover_obj}
-              hover_ids={this.props.hover_ids}
-              hover_pins={this.props.hover_pins}
-              selection={this.props._selected_array}
-              selected_handle={this.props._selected_handle}
-              options={this.props.options}
-              add={add}
-              hover={false}
-              parent={null}
-              part={this.props.part}
-              selected={false}
-              show_power={this.props.show_power}
-              editLibrary={this.props.editingLibrary}
-              heterogeneous={this.props.heterogeneous}
-              scale_x={1.0}
-              scale_y={1.0}
-              sheetName={this.props.sheet_name}
-              netlist={this.state.netlist}
-              netlistTypes={this.props.netlistTypes}
-              netTypeAssignments={this.props.netTypeAssignments}
-            />
-            {markers}
-            {selectrect}
-            {handles}
-          </g>
-        </svg>
+            )}
+            {this.renderTouchIndicator()}
+          </svg>
+        </div>
+        {this.renderLoupeToggleButton()}
       </div>
     );
   }

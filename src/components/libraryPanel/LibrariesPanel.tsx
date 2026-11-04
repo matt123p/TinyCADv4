@@ -26,6 +26,9 @@ import {
   DocumentAddRegular,
   FolderAddRegular,
   ArrowClockwiseRegular,
+  ArrowSortRegular,
+  ArrowSortDownRegular,
+  ArrowSortUpRegular,
   ChevronDownRegular,
   ChevronRightRegular,
   DeleteRegular,
@@ -41,6 +44,11 @@ import {
   UserConfig,
 } from '../../state/stores/altStoreReducer';
 import { normalizeUserConfig, sortLibrariesByConfig } from '../../io/libraryConfig';
+import {
+  SymbolSortMode,
+  loadSymbolSortMode,
+  saveSymbolSortMode,
+} from './sorting';
 
 const ROOT_LIBRARY_FOLDER_ID = '__root__';
 
@@ -288,6 +296,7 @@ interface LibrariesPanelState {
   expandedLibraries: Record<string, boolean>;
   dragOverFolderId: string | null;
   draggedFolderId: string | null;
+  sortMode: SymbolSortMode;
 }
 
 interface SearchExpansionSnapshot {
@@ -375,6 +384,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     expandedLibraries: {},
     dragOverFolderId: null,
     draggedFolderId: null,
+    sortMode: loadSymbolSortMode(),
   });
   const config = normalizeUserConfig(props.config);
   const orderedLibraries = sortLibrariesByConfig(props.libraries, config);
@@ -554,6 +564,39 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
           searchResult: results,
         })),
       );
+    }
+  };
+
+  const handleSortModeChange = () => {
+    const nextMode: SymbolSortMode =
+      state.sortMode === 'default'
+        ? 'az'
+        : state.sortMode === 'az'
+          ? 'za'
+          : 'default';
+    saveSymbolSortMode(nextMode);
+    setState((prev) => ({ ...prev, sortMode: nextMode }));
+  };
+
+  const getSortTitle = () => {
+    switch (state.sortMode) {
+      case 'az':
+        return t('library.sortSymbolsAZ');
+      case 'za':
+        return t('library.sortSymbolsZA');
+      default:
+        return t('library.sortSymbolsDefault');
+    }
+  };
+
+  const getSortIcon = () => {
+    switch (state.sortMode) {
+      case 'az':
+        return <ArrowSortDownRegular />;
+      case 'za':
+        return <ArrowSortUpRegular />;
+      default:
+        return <ArrowSortRegular />;
     }
   };
 
@@ -801,6 +844,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
         key={lib.fileId + ''}
         selectedId={state.selectedId}
         findFilter={state.findFilter}
+        sortMode={state.sortMode}
         open={isLibraryOpen(state.expandedLibraries, `${lib.fileId}`)}
         draggable={canUseLibraryFolders}
         onLibraryClick={(selectedLibrary: tclib) => {
@@ -1004,6 +1048,15 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
                     </span>
                   </Button>
                 )}
+                <Button
+                  className={styles.addButton}
+                  appearance="subtle"
+                  size="small"
+                  icon={getSortIcon()}
+                  title={getSortTitle()}
+                  aria-label={getSortTitle()}
+                  onClick={handleSortModeChange}
+                />
               </div>
             </div>
             <div className={styles.treeContainer} ref={treeContainerRef}>
@@ -1235,6 +1288,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
             <OnlineView
               searchResult={state.searchResult}
               selectedId={state.selectedId}
+              sortMode={state.sortMode}
               onSelect={(s) => {
                 setState((prev) => ({
                   ...prev,

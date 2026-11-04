@@ -41,6 +41,9 @@ export interface dsnView {
   // Which sheet is visible?
   selected_sheet: number;
 
+  // Editor-only visibility; never written to the design or library.
+  hiddenItemIds?: number[];
+
   // Here is the selectable item (that is the item that
   // the mouse is over)
   selectable: DocItem;

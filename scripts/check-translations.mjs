@@ -11,6 +11,23 @@ function getDiffForEnSinceLastDeChange() {
   const deRelative = 'src/i18n/locales/de/common.ts';
   const enRelative = 'src/i18n/locales/en/common.ts';
 
+  try {
+    const deStatus = execSync(`git status --porcelain -- ${deRelative}`, { encoding: 'utf8' }).trim();
+    if (deStatus) {
+      return {
+        hasCommit: false,
+        diff: '',
+        skippedBecauseLocaleDirty: true,
+      };
+    }
+  } catch {
+    return {
+      hasCommit: false,
+      diff: '',
+      skippedBecauseLocaleDirty: false,
+    };
+  }
+
   let commit = '';
   try {
     commit = execSync(`git log -1 --format=%H -- ${deRelative}`, { encoding: 'utf8' }).trim();
@@ -18,6 +35,7 @@ function getDiffForEnSinceLastDeChange() {
     return {
       hasCommit: false,
       diff: '',
+      skippedBecauseLocaleDirty: false,
     };
   }
 
@@ -25,6 +43,7 @@ function getDiffForEnSinceLastDeChange() {
     return {
       hasCommit: false,
       diff: '',
+      skippedBecauseLocaleDirty: false,
     };
   }
 
@@ -32,6 +51,7 @@ function getDiffForEnSinceLastDeChange() {
   return {
     hasCommit: true,
     diff,
+    skippedBecauseLocaleDirty: false,
   };
 }
 
@@ -182,7 +202,9 @@ function main() {
 
   const enSinceDeDiff = getDiffForEnSinceLastDeChange();
 
-  if (!enSinceDeDiff.hasCommit) {
+  if (enSinceDeDiff.skippedBecauseLocaleDirty) {
+    console.log('\nGerman locale has uncommitted changes. Skipping existing-key diff check.');
+  } else if (!enSinceDeDiff.hasCommit) {
     console.log('\nNo commit found for src/i18n/locales/de/common.ts. Skipping existing-key diff check.');
   } else if (!enSinceDeDiff.diff.trim()) {
     console.log('\nNo changes found in src/i18n/locales/en/common.ts since the last de locale update.');

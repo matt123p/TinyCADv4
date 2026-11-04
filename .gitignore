@@ -39,3 +39,4 @@ packages/
 /todo.md
 /assets/
 /server.bundle.js
+.DS_Store

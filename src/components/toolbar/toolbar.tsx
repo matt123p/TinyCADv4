@@ -1,4 +1,4 @@
-﻿import React, { Dispatch } from 'react';
+import React, { Dispatch } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   actionCommand,
@@ -35,6 +35,8 @@ import {
   DismissRegular,
   ArrowDownloadRegular,
   ChevronDownRegular,
+  ChevronLeftRegular,
+  ChevronRightRegular,
   DocumentAddRegular,
   ImageRegular,
   SettingsRegular,
@@ -107,10 +109,18 @@ const useStyles = makeStyles({
     backgroundColor: 'rgb(230, 230, 230)',
     borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
     borderTop: '1px solid white',
+    overflowX: 'auto',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+    '&::-webkit-scrollbar': {
+      display: 'none',
+    },
   },
   toolbarContent: {
-      marginLeft: '-8px', // Shifts content left to reduce gap
-      flexGrow: 1,
+    marginLeft: '-8px', // Shifts content left to reduce gap
+    flexGrow: 1,
+    flexShrink: 0,
+    minWidth: 'max-content',
   },
   highlight: {
     backgroundColor: tokens.colorBrandBackground2,
@@ -249,6 +259,166 @@ const SplitMenuButton: React.FC<{
   );
 };
 
+const ScrollableToolbarWrapper: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = React.useState(false);
+  const [showRightArrow, setShowRightArrow] = React.useState(false);
+
+  const updateScrollButtons = React.useCallback(() => {
+    const el = containerRef.current;
+    if (el) {
+      const { scrollLeft, scrollWidth, clientWidth } = el;
+      setShowLeftArrow(scrollLeft > 2);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 2);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Check initial scroll state
+    updateScrollButtons();
+
+    // Set up ResizeObserver to track container resizing
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollButtons();
+    });
+    resizeObserver.observe(el);
+
+    // Also observe the child (FluentToolbar) resize to handle dynamic content loading
+    const child = el.firstElementChild;
+    if (child) {
+      resizeObserver.observe(child);
+    }
+
+    window.addEventListener('resize', updateScrollButtons);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateScrollButtons);
+    };
+  }, [updateScrollButtons]);
+
+  const scroll = (direction: 'left' | 'right') => {
+    const el = containerRef.current;
+    if (el) {
+      const amount = direction === 'left' ? -200 : 200;
+      el.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+      <div
+        ref={containerRef}
+        onScroll={updateScrollButtons}
+        className={className}
+      >
+        {children}
+      </div>
+      
+      {showLeftArrow && (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: '48px',
+            background: 'linear-gradient(to right, rgb(230, 230, 230) 40%, rgba(230, 230, 230, 0) 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            paddingLeft: '6px',
+            pointerEvents: 'none',
+            zIndex: 10,
+          }}
+        >
+          <button
+            onClick={() => scroll('left')}
+            style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 255, 255, 0.75)',
+              border: '1px solid rgba(0, 0, 0, 0.15)',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              pointerEvents: 'all',
+              padding: 0,
+              color: '#333',
+              transition: 'background-color 0.2s, box-shadow 0.2s',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.75)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.08)';
+            }}
+          >
+            <ChevronLeftRegular style={{ fontSize: '16px' }} />
+          </button>
+        </div>
+      )}
+
+      {showRightArrow && (
+        <div
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: '48px',
+            background: 'linear-gradient(to left, rgb(230, 230, 230) 40%, rgba(230, 230, 230, 0) 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            paddingRight: '6px',
+            pointerEvents: 'none',
+            zIndex: 10,
+          }}
+        >
+          <button
+            onClick={() => scroll('right')}
+            style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 255, 255, 0.75)',
+              border: '1px solid rgba(0, 0, 0, 0.15)',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              pointerEvents: 'all',
+              padding: 0,
+              color: '#333',
+              transition: 'background-color 0.2s, box-shadow 0.2s',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.75)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.08)';
+            }}
+          >
+            <ChevronRightRegular style={{ fontSize: '16px' }} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const Toolbar: React.FC<ToolbarProps> = (props) => {
   const styles = useStyles();
   const { t, i18n } = useTranslation();
@@ -263,7 +433,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
   // BOM sheet toolbar
   if (props.selected_sheet === -1) {
     return (
-      <div className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
+      <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
         <FluentToolbar>
           <ToolbarButton
             aria-label={t('toolbar.closeBomAria')}
@@ -280,14 +450,14 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             {t('toolbar.downloadBom')}
           </ToolbarButton>
         </FluentToolbar>
-      </div>
+      </ScrollableToolbarWrapper>
     );
   }
 
   // Browser sheet toolbar
   if (props.selected_sheet < -1) {
     return (
-      <div className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
+      <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
         <FluentToolbar>
           <ToolbarDivider className={styles.divider} />
           <ToolbarButton
@@ -298,14 +468,14 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             {t('toolbar.close')}
           </ToolbarButton>
         </FluentToolbar>
-      </div>
+      </ScrollableToolbarWrapper>
     );
   }
 
   // Library editor toolbar (no symbol selected)
   if (props.editLibrary && !props.editSymbol) {
     return (
-      <div className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
+      <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
         <FluentToolbar>
           {process.env.TARGET_SYSTEM === 'filesystem' && (
              <ToolbarButton
@@ -354,7 +524,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             onClick={() => props.dispatch(ActionCreators.redo())}
           />
         </FluentToolbar>
-      </div>
+      </ScrollableToolbarWrapper>
     );
   }
 
@@ -408,7 +578,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
   };
 
   return (
-    <div className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
+    <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
       <FluentToolbar className={styles.toolbarContent}>
         {/* File Menu */}
         {process.env.TARGET_SYSTEM !== 'electron' && (
@@ -778,6 +948,6 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         )}
         </>
       </FluentToolbar>
-    </div>
+    </ScrollableToolbarWrapper>
   );
 };

@@ -58,6 +58,12 @@ export const UnsavedChangesDialog: FunctionComponent<UnsavedChangesDialogProps> 
   }, [awaitingSave, dispatch, props.pendingAction, saveInProgress, saveNeeded]);
 
   const handleCancel = () => {
+    if (saveInProgress) {
+      return;
+    }
+    if (props.pendingAction.type === 'app-close') {
+      window.electronAPI?.sendAppClosingResponse(false);
+    }
     dispatch(actionCancelDialog());
   };
 
@@ -73,7 +79,14 @@ export const UnsavedChangesDialog: FunctionComponent<UnsavedChangesDialogProps> 
   };
 
   return (
-    <Dialog open={true} onOpenChange={() => dispatch(actionCancelDialog())}>
+    <Dialog
+      open={true}
+      onOpenChange={(_, data) => {
+        if (!data.open) {
+          handleCancel();
+        }
+      }}
+    >
       <DialogSurface>
         <DialogBody>
           <DialogTitle>{t('dialogues.unsavedChanges.title')}</DialogTitle>

@@ -1308,6 +1308,16 @@ export class updateView {
         disabled: !this.can_copy(view, sheet),
       },
       {
+        key: 'hide_selected',
+        text: i18n.t('toolbar.contextMenu.hideSelected'),
+        disabled: !this.can_copy(view, sheet),
+      },
+      {
+        key: 'show_all',
+        text: i18n.t('toolbar.contextMenu.showAll'),
+        disabled: !sheet.items.some((item) => view.hiddenItemIds?.includes(item._id)),
+      },
+      {
         key: 'divider_1',
         itemType: ContextualMenuItemType.Divider,
       },
@@ -1408,6 +1418,44 @@ export class updateView {
   }
 
   ////////////////// MENU HANDLERS //////////////////
+
+  command_escape(view: dsnView, sheet: dsnSheet): viewResult {
+    if (view.add) {
+      return this.cancel_add(view, sheet);
+    }
+    return this.unselect(view, sheet);
+  }
+
+  command_hide_selected(view: dsnView, sheet: dsnSheet): viewResult {
+    const hiddenItemIds = Array.from(
+      new Set([...(view.hiddenItemIds || []), ...view._selected_array]),
+    );
+    const result = this.unselect(view, sheet);
+    return {
+      view: update(result.view, {
+        hiddenItemIds: { $set: hiddenItemIds },
+        hover_obj: { $set: null },
+        hover_ids: { $set: [] },
+        hover_pins: { $set: [] },
+        selectable: { $set: null },
+        _selected_handle: { $set: 0 },
+        _drag_handle: { $set: 0 },
+      }),
+      sheet,
+    };
+  }
+
+  command_show_all(view: dsnView, sheet: dsnSheet): viewResult {
+    const sheetIds = new Set(sheet.items.map((item) => item._id));
+    return {
+      view: update(view, {
+        hiddenItemIds: {
+          $set: (view.hiddenItemIds || []).filter((id) => !sheetIds.has(id)),
+        },
+      }),
+      sheet,
+    };
+  }
 
   command_delete(view: dsnView, sheet: dsnSheet): viewResult {
     let items = sheet.items.filter((e, index) => {
@@ -1642,7 +1690,7 @@ export class updateView {
       return { view, sheet };
     }
 
-    const grid = sheet.details.grid || 10;
+    const grid = sheet.details.grid_snap ? sheet.details.grid || 10 : 1;
     const moveX = (dx || 0) * grid;
     const moveY = (dy || 0) * grid;
 
@@ -2178,6 +2226,8 @@ export class updateView {
     selected_handle: number,
     selected_array: number[],
   ): dsnView {
+    selected_array = selected_array.filter((id) => !view.hiddenItemIds?.includes(id));
+
     // Get a union of all of the styles of the selected objects
     let r: MergedStyle = {
       line: false,
@@ -2463,6 +2513,9 @@ export class updateView {
 
     for (let index = 0; index < sheet.items.length; ++index) {
       const item = sheet.items[index];
+      if (view.hiddenItemIds?.includes(item._id)) {
+        continue;
+      }
       const updater_item = updateFactory(item);
       const is_selected = selected === item;
       const i = updater_item.is_inside(delta, tp, is_selected);

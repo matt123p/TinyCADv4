@@ -39,6 +39,7 @@ const useStyles = makeStyles({
 interface ResizeHandleProps {
   direction: 'horizontal' | 'vertical';
   onResize: (delta: number) => void;
+  onDragStateChange?: (dragging: boolean) => void;
 }
 
 export const ResizeHandle: React.FunctionComponent<ResizeHandleProps> = (
@@ -48,39 +49,41 @@ export const ResizeHandle: React.FunctionComponent<ResizeHandleProps> = (
   const [isDragging, setIsDragging] = useState(false);
   const [startPos, setStartPos] = useState(0);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     setIsDragging(true);
     setStartPos(props.direction === 'horizontal' ? e.clientX : e.clientY);
-  }, [props.direction]);
+    props.onDragStateChange?.(true);
+  }, [props.direction, props.onDragStateChange]);
 
   useEffect(() => {
     if (!isDragging) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       const currentPos = props.direction === 'horizontal' ? e.clientX : e.clientY;
       const delta = currentPos - startPos;
       props.onResize(delta);
       setStartPos(currentPos);
     };
 
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
       setIsDragging(false);
+      props.onDragStateChange?.(false);
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
     };
-  }, [isDragging, startPos, props.direction, props.onResize]);
+  }, [isDragging, startPos, props.direction, props.onResize, props.onDragStateChange]);
 
   return (
     <div
       className={props.direction === 'horizontal' ? styles.horizontalHandle : styles.verticalHandle}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
     />
   );
 };

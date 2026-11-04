@@ -30,16 +30,64 @@ export interface DesignAppProps {
   editSymbol: tclibLibraryEntry;
   selected_sheet: number;
   browserSheets: BrowserSheetData[];
+  creating: boolean;
+  dialogOpen: boolean;
+  cancelCreation: () => void;
+}
+
+const SIDE_PANEL_WIDTH_STORAGE_KEY = 'tinycad.sidePanelWidth';
+const DEFAULT_SIDE_PANEL_WIDTH = 288;
+const MIN_SIDE_PANEL_WIDTH = 220;
+const MAX_SIDE_PANEL_WIDTH = 600;
+
+function loadSidePanelWidth(): number {
+  try {
+    const parsed = parseInt(
+      window.localStorage?.getItem(SIDE_PANEL_WIDTH_STORAGE_KEY) || '',
+      10,
+    );
+    if (isNaN(parsed)) {
+      return DEFAULT_SIDE_PANEL_WIDTH;
+    }
+
+    return Math.max(
+      MIN_SIDE_PANEL_WIDTH,
+      Math.min(MAX_SIDE_PANEL_WIDTH, parsed),
+    );
+  } catch {
+    return DEFAULT_SIDE_PANEL_WIDTH;
+  }
+}
+
+function saveSidePanelWidth(width: number) {
+  try {
+    window.localStorage?.setItem(SIDE_PANEL_WIDTH_STORAGE_KEY, String(width));
+  } catch {
+    return;
+  }
 }
 
 export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const styles = useStyles();
   const { t } = useTranslation();
   const [sidePanelVisible, setSidePanelVisible] = useState(true);
+  const [sidePanelWidth, setSidePanelWidth] = useState(loadSidePanelWidth);
+  const [sidePanelResizing, setSidePanelResizing] = useState(false);
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200);
 
   const toggleSidePanel = useCallback(() => {
     setSidePanelVisible(prev => !prev);
+  }, []);
+
+  const handleSidePanelResize = useCallback((delta: number) => {
+    setSidePanelWidth(prev => {
+      const next = Math.max(
+        MIN_SIDE_PANEL_WIDTH,
+        Math.min(MAX_SIDE_PANEL_WIDTH, prev + delta),
+      );
+      saveSidePanelWidth(next);
+      return next;
+    });
   }, []);
 
   const handleBottomPanelResize = useCallback((delta: number) => {
@@ -52,14 +100,41 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     }
   }, [props.editSymbol]);
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (
+      event.key !== 'Escape' || event.defaultPrevented ||
+      !props.creating || props.dialogOpen
+    ) {
+      return;
+    }
+    const target = event.target as HTMLElement;
+    if (target.closest('input, textarea, [contenteditable="true"], [role="dialog"], [role="menu"]')) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    props.cancelCreation();
+  };
+
   return (
     <div
+      onKeyDown={handleKeyDown}
       className="page-container"
       style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
     >
       <ToolbarContainer />
       <div className="mid-container">
-        <div className={sidePanelVisible ? "side-panel-container" : "side-panel-container side-panel-collapsed"}>
+        <div
+          className={`side-panel-container${sidePanelVisible ? '' : ' side-panel-collapsed'}${sidePanelResizing ? ' side-panel-resizing' : ''}`}
+          style={sidePanelVisible ? { width: sidePanelWidth } : undefined}
+        >
+          {sidePanelVisible && (
+            <ResizeHandle
+              direction="horizontal"
+              onResize={handleSidePanelResize}
+              onDragStateChange={setSidePanelResizing}
+            />
+          )}
           {!sidePanelVisible && (
             <Button
               className={styles.toggleButton}

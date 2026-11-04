@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { makeStyles, tokens, mergeClasses } from '@fluentui/react-components';
 import { DocumentRegular } from '@fluentui/react-icons';
 import { SearchResult, SearchSymbol } from './Search';
+import { SymbolSortMode, sortEntriesByName } from './sorting';
 
 const useStyles = makeStyles({
   list: {
@@ -74,6 +75,7 @@ const useStyles = makeStyles({
 interface OnlineViewProps {
   searchResult: SearchResult;
   selectedId: string;
+  sortMode?: SymbolSortMode;
   onSelect(symbol: SearchSymbol): void;
   onSelected(symbol: SearchSymbol): void;
 }
@@ -92,9 +94,15 @@ const OnlineView: React.FunctionComponent<OnlineViewProps> = (
     return <div className={styles.emptyMessage}>{t('library.noSymbolsFound')}</div>;
   }
 
+  const symbols = sortEntriesByName(
+    props.searchResult.symbols,
+    (entry) => entry.name,
+    props.sortMode ?? 'default',
+  );
+
   return (
     <ul className={styles.list}>
-      {props.searchResult.symbols.map((n) => {
+      {symbols.map((n) => {
         const isActive = props.selectedId === `:${n.nameID}`;
         return (
           <li

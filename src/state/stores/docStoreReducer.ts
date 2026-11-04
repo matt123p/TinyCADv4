@@ -177,6 +177,7 @@ export function DocStoreReducer(
         editSymbol: { $set: null },
         view: {
           selected_sheet: { $set: 0 },
+          hiddenItemIds: { $set: [] },
         },
       });
       view = null;

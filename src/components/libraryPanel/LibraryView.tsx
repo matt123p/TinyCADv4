@@ -13,6 +13,7 @@ import {
 import {
   actionSelectDialog,
 } from '../../state/dispatcher/AppDispatcher';
+import { SymbolSortMode, sortEntriesByName } from './sorting';
 
 const useStyles = makeStyles({
   treeItemGroup: {
@@ -188,6 +189,7 @@ interface LibraryViewProps {
   dispatch: Dispatch<any>;
   lib: tclib;
   findFilter: string;
+  sortMode?: SymbolSortMode;
   open: boolean;
   selectedId: string | null;
   draggable?: boolean;
@@ -233,7 +235,11 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
     );
   };
 
-  const names = getMatchingNames(props.lib, props.findFilter);
+  const names = sortEntriesByName(
+    getMatchingNames(props.lib, props.findFilter),
+    (entry) => entry.Name,
+    props.sortMode ?? 'default',
+  );
 
   if (!isBad && names?.length === 0 && props.findFilter?.length > 0) {
     return null;

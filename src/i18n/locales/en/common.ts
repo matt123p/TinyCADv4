@@ -9,6 +9,13 @@ const common = {
     japanese: 'Japanese',
     chineseSimplified: 'Chinese (Simplified)',
   },
+  touchLoupe: {
+    hint: 'Drag canvas to aim',
+    click: 'Click',
+    drag: 'Drag',
+    drop: 'Drop',
+    menu: 'Menu',
+  },
   common: {
     ok: 'OK',
     cancel: 'Cancel',
@@ -114,6 +121,8 @@ const common = {
     vertRuler: 'Vert Ruler',
     optionsSuffix: 'options',
     contextMenu: {
+      hideSelected: 'Hide selected',
+      showAll: 'Show all hidden objects',
       cut: 'Cut',
       copy: 'Copy',
       paste: 'Paste',
@@ -536,6 +545,7 @@ const common = {
     removeFolder: 'Remove folder',
     moveFolderUp: 'Move folder up',
     moveFolderDown: 'Move folder down',
+    reorderFolder: 'Reorder folder',
     addToFolder: 'Add to folder',
     unfiled: 'Unfiled',
     dropLibrariesHere: 'Drop libraries here to group them',
@@ -543,6 +553,9 @@ const common = {
     folderNamePrompt: 'Enter a folder name',
     renameFolderPrompt: 'Rename folder',
     removeFolderConfirm: 'Remove this folder? Libraries inside it will be moved to Unfiled.',
+    sortSymbolsDefault: 'Use library order',
+    sortSymbolsAZ: 'Sort symbols A to Z',
+    sortSymbolsZA: 'Sort symbols Z to A',
   },
   controls: {
     editableProperty: {
