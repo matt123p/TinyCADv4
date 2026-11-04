@@ -21,4 +21,5 @@
 
 ### Maintenance
 
+- Removed the Linux ARMv7 package target because Electron 44 provides Linux binaries only for x64 and ARM64.
 - Updated dependencies to address npm audit vulnerabilities.
