@@ -18,7 +18,7 @@ const common = {
     checkDesignRules: 'Comprobar reglas de diseño', discord: 'Discord de TinyCAD', aboutTinyCAD: 'Acerca de TinyCAD', help: 'Ayuda', manual: 'Manual en línea', aboutTranslations: 'Acerca de las traducciones...', language: 'Idioma', languageMenu: 'Menú de idioma', powerBar: 'Barra', powerCircle: 'Círculo', powerWave: 'Onda',
     powerArrow: 'Flecha', powerEarth: 'Tierra', labelStandard: 'Etiqueta (estándar)', labelInput: 'Etiqueta (entrada)', labelOutput: 'Etiqueta (salida)', labelIO: 'Etiqueta (E/S)', rectangle: 'Rectángulo', ellipse: 'Elipse', line: 'Línea',
     busConnection: 'Conexión', horzRuler: 'Regla horiz.', vertRuler: 'Regla vert.', optionsSuffix: 'opciones',
-    contextMenu: { cut: 'Cortar', copy: 'Copiar', paste: 'Pegar', delete: 'Eliminar', replaceSymbol: 'Reemplazar símbolo', undo: 'Deshacer', redo: 'Rehacer', moveToFront: 'Mover al frente', moveToBack: 'Mover al fondo', zoomIn: 'Acercar', zoomOut: 'Alejar', zoom100: 'Zoom 100%' },
+    contextMenu: { hideSelected: 'Ocultar selección', showAll: 'Mostrar todos los objetos ocultos', cut: 'Cortar', copy: 'Copiar', paste: 'Pegar', delete: 'Eliminar', replaceSymbol: 'Reemplazar símbolo', undo: 'Deshacer', redo: 'Rehacer', moveToFront: 'Mover al frente', moveToBack: 'Mover al fondo', zoomIn: 'Acercar', zoomOut: 'Alejar', zoom100: 'Zoom 100%' },
     sheetbar: { addNewPart: 'Agregar parte nueva', addNewSheet: 'Agregar hoja nueva', removeLastPart: 'Eliminar última parte', hierarchicalSymbol: 'Símbolo jerárquico', menu: { rename: 'Renombrar', moveRight: 'Mover a la derecha', moveLeft: 'Mover a la izquierda', delete: 'Eliminar' } },
   },
   pages: {

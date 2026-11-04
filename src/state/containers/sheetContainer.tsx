@@ -25,7 +25,9 @@ const mapStateToProps = (state: docDrawing) => {
   }
   return {
     sheet_name: sheet.name,
-    items: sheet.items,
+    items: view.hiddenItemIds?.length
+      ? sheet.items.filter((item) => !view.hiddenItemIds.includes(item._id))
+      : sheet.items,
     page_size: sheet.details.page_size,
     add: view.add,
     display_add: view.display_add,

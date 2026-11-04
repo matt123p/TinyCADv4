@@ -18,7 +18,7 @@ const common = {
     pageSize: 'Dimensione pagina', colours: 'Colori', checkDesignRules: 'Controlla regole di progettazione', discord: 'Discord di TinyCAD', aboutTinyCAD: 'Informazioni su TinyCAD', help: 'Aiuto', manual: 'Manuale online', aboutTranslations: 'Informazioni sulle traduzioni...', language: 'Lingua', languageMenu: 'Menu lingua',
     powerBar: 'Barra', powerCircle: 'Cerchio', powerWave: 'Onda', powerArrow: 'Freccia', powerEarth: 'Terra', labelStandard: 'Etichetta (standard)', labelInput: 'Etichetta (ingresso)',
     labelOutput: 'Etichetta (uscita)', labelIO: 'Etichetta (I/O)', rectangle: 'Rettangolo', ellipse: 'Ellisse', line: 'Linea', busConnection: 'Connessione', horzRuler: 'Righello orizz.', vertRuler: 'Righello vert.', optionsSuffix: 'opzioni',
-    contextMenu: { cut: 'Taglia', copy: 'Copia', paste: 'Incolla', delete: 'Elimina', replaceSymbol: 'Sostituisci simbolo', undo: 'Annulla', redo: 'Ripristina', moveToFront: 'Porta in primo piano', moveToBack: 'Porta sullo sfondo', zoomIn: 'Zoom avanti', zoomOut: 'Zoom indietro', zoom100: 'Zoom 100%' },
+    contextMenu: { hideSelected: 'Nascondi selezione', showAll: 'Mostra tutti gli oggetti nascosti', cut: 'Taglia', copy: 'Copia', paste: 'Incolla', delete: 'Elimina', replaceSymbol: 'Sostituisci simbolo', undo: 'Annulla', redo: 'Ripristina', moveToFront: 'Porta in primo piano', moveToBack: 'Porta sullo sfondo', zoomIn: 'Zoom avanti', zoomOut: 'Zoom indietro', zoom100: 'Zoom 100%' },
     sheetbar: { addNewPart: 'Aggiungi nuova parte', addNewSheet: 'Aggiungi nuovo foglio', removeLastPart: 'Rimuovi ultima parte', hierarchicalSymbol: 'Simbolo gerarchico', menu: { rename: 'Rinomina', moveRight: 'Sposta a destra', moveLeft: 'Sposta a sinistra', delete: 'Elimina' } },
   },
   pages: {

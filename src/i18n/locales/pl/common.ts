@@ -114,6 +114,8 @@ const common = {
     vertRuler: 'Linijka pionowa',
     optionsSuffix: 'opcje',
     contextMenu: {
+      hideSelected: 'Ukryj zaznaczone',
+      showAll: 'Pokaż wszystkie ukryte obiekty',
       cut: 'Wytnij',
       copy: 'Kopiuj',
       paste: 'Wklej',

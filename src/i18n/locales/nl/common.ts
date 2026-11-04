@@ -114,6 +114,8 @@ const common = {
     vertRuler: 'Vert. liniaal',
     optionsSuffix: 'opties',
     contextMenu: {
+      hideSelected: 'Selectie verbergen',
+      showAll: 'Alle verborgen objecten tonen',
       cut: 'Knippen',
       copy: 'Kopieren',
       paste: 'Plakken',

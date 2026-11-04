@@ -17,7 +17,7 @@ const common = {
     settings: '设置', settingsDialog: '设置...', designDetails: '设计详情', pageSize: '页面尺寸', colours: '颜色', checkDesignRules: '检查设计规则', discord: 'TinyCAD Discord', aboutTinyCAD: '关于 TinyCAD', help: '帮助', manual: '在线手册', aboutTranslations: '关于翻译...', language: '语言',
     languageMenu: '语言菜单', powerBar: '横线', powerCircle: '圆形', powerWave: '波形', powerArrow: '箭头', powerEarth: '接地', labelStandard: '标签（标准）', labelInput: '标签（输入）',
     labelOutput: '标签（输出）', labelIO: '标签（输入/输出）', rectangle: '矩形', ellipse: '椭圆', line: '直线', busConnection: '连接', horzRuler: '水平标尺', vertRuler: '垂直标尺', optionsSuffix: '选项',
-    contextMenu: { cut: '剪切', copy: '复制', paste: '粘贴', delete: '删除', replaceSymbol: '替换符号', undo: '撤销', redo: '重做', moveToFront: '移到最前', moveToBack: '移到最后', zoomIn: '放大', zoomOut: '缩小', zoom100: '缩放 100%' },
+    contextMenu: { hideSelected: '隐藏所选对象', showAll: '显示所有隐藏对象', cut: '剪切', copy: '复制', paste: '粘贴', delete: '删除', replaceSymbol: '替换符号', undo: '撤销', redo: '重做', moveToFront: '移到最前', moveToBack: '移到最后', zoomIn: '放大', zoomOut: '缩小', zoom100: '缩放 100%' },
     sheetbar: { addNewPart: '添加新部件', addNewSheet: '添加新图纸', removeLastPart: '移除最后部件', hierarchicalSymbol: '层次符号', menu: { rename: '重命名', moveRight: '右移', moveLeft: '左移', delete: '删除' } },
   },
   pages: {

@@ -114,6 +114,8 @@ const common = {
     vertRuler: 'Vert Ruler',
     optionsSuffix: 'options',
     contextMenu: {
+      hideSelected: 'Hide selected',
+      showAll: 'Show all hidden objects',
       cut: 'Cut',
       copy: 'Copy',
       paste: 'Paste',
