@@ -2,7 +2,6 @@
 
 import { UtilityService } from '../../util/utilityService';
 import { dsnImage } from '../../model/dsnItem';
-import { updateImage } from '../../manipulators/updateImage';
 
 interface TImageProps {
   dx: number;
@@ -45,15 +44,14 @@ const TImage: FunctionComponent<TImageProps> = (props: TImageProps) => {
 
   return (
     <>
-      <g transform={`scale(${scope.width} ${scope.height})`}>
-        <use
-          href={`#img_${props.data.imageData.id}`}
-          x={scope.x / scope.width}
-          y={scope.y / scope.height}
-          width={scope.width}
-          height={scope.height}
-        />
-      </g>
+      <image
+        href={props.data.imageData.imageData}
+        preserveAspectRatio="none"
+        x={scope.x}
+        y={scope.y}
+        width={scope.width}
+        height={scope.height}
+      />
       {selectable} {highlight}
     </>
   );
