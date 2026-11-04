@@ -30,6 +30,9 @@ export interface DesignAppProps {
   editSymbol: tclibLibraryEntry;
   selected_sheet: number;
   browserSheets: BrowserSheetData[];
+  creating: boolean;
+  dialogOpen: boolean;
+  cancelCreation: () => void;
 }
 
 const SIDE_PANEL_WIDTH_STORAGE_KEY = 'tinycad.sidePanelWidth';
@@ -97,8 +100,25 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     }
   }, [props.editSymbol]);
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (
+      event.key !== 'Escape' || event.defaultPrevented ||
+      !props.creating || props.dialogOpen
+    ) {
+      return;
+    }
+    const target = event.target as HTMLElement;
+    if (target.closest('input, textarea, [contenteditable="true"], [role="dialog"], [role="menu"]')) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    props.cancelCreation();
+  };
+
   return (
     <div
+      onKeyDown={handleKeyDown}
       className="page-container"
       style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
     >
