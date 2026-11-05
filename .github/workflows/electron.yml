@@ -71,11 +71,39 @@ jobs:
         run: npm ci
 
       - name: Build Electron App
+        if: runner.os != 'macOS'
         run: npm run dist
         env:
           # GitHub token is required for releasing
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPX_PUBLISHER: ${{ secrets.APPX_PUBLISHER }}
+
+      - name: Build unsigned macOS app for pull requests
+        if: runner.os == 'macOS' && github.event_name == 'pull_request'
+        run: npm run dist -- --mac -c.mac.identity=null -c.mac.notarize=false
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Build signed and notarized macOS app
+        if: runner.os == 'macOS' && github.event_name == 'push'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          for key in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing required macOS signing credential: $key"
+              exit 1
+            fi
+          done
+          npm run dist -- --mac -c.mac.forceCodeSigning=true -c.mac.notarize=true
+          codesign --verify --deep --strict --verbose=2 release/mac-arm64/TinyCAD.app
+          xcrun stapler validate release/mac-arm64/TinyCAD.app
 
       - name: Upload Artifacts
         if: github.ref == 'refs/heads/production'
