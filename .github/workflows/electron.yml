@@ -101,6 +101,22 @@ jobs:
               exit 1
             fi
           done
+          # Import explicitly: electron-builder 26.8.2 uses the certificate password
+          # instead of its generated keychain password for set-key-partition-list.
+          certificate_path="$RUNNER_TEMP/signing-certificate.p12"
+          keychain_path="$RUNNER_TEMP/app-signing.keychain-db"
+          keychain_password=$(openssl rand -hex 32)
+          echo "::add-mask::$keychain_password"
+          trap 'security delete-keychain "$keychain_path" >/dev/null 2>&1 || true; rm -f "$certificate_path"' EXIT
+          node -e 'require("fs").writeFileSync(process.argv[1], Buffer.from(process.env.CSC_LINK, "base64"))' "$certificate_path"
+          security create-keychain -p "$keychain_password" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$keychain_password" "$keychain_path"
+          security import "$certificate_path" -k "$keychain_path" -P "$CSC_KEY_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productbuild
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain_path"
+          security list-keychains -d user -s "$keychain_path" "$HOME/Library/Keychains/login.keychain-db"
+          export CSC_KEYCHAIN="$keychain_path"
+          unset CSC_LINK CSC_KEY_PASSWORD
           npm run dist -- --mac -c.mac.forceCodeSigning=true -c.mac.notarize=true
           codesign --verify --deep --strict --verbose=2 release/mac-arm64/TinyCAD.app
           xcrun stapler validate release/mac-arm64/TinyCAD.app
