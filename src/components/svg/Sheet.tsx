@@ -1742,7 +1742,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                   />
         
                   <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
-                    {this.props.options.show_grid ? (
+                    {this.props.options.show_grid && this.props.zoom > 100 ? (
                       <rect
                         x="0"
                         y="0"
@@ -1920,7 +1920,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
               />
 
               <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
-                {this.props.options.show_grid ? (
+                {this.props.options.show_grid && this.props.zoom > 100 ? (
                   <rect
                     x="0"
                     y="0"

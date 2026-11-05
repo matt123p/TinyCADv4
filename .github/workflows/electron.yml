@@ -71,11 +71,55 @@ jobs:
         run: npm ci
 
       - name: Build Electron App
+        if: runner.os != 'macOS'
         run: npm run dist
         env:
           # GitHub token is required for releasing
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPX_PUBLISHER: ${{ secrets.APPX_PUBLISHER }}
+
+      - name: Build unsigned macOS app for pull requests
+        if: runner.os == 'macOS' && github.event_name == 'pull_request'
+        run: npm run dist -- --mac -c.mac.identity=null -c.mac.notarize=false
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Build signed and notarized macOS app
+        if: runner.os == 'macOS' && github.event_name == 'push'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          for key in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing required macOS signing credential: $key"
+              exit 1
+            fi
+          done
+          # Import explicitly: electron-builder 26.8.2 uses the certificate password
+          # instead of its generated keychain password for set-key-partition-list.
+          certificate_path="$RUNNER_TEMP/signing-certificate.p12"
+          keychain_path="$RUNNER_TEMP/app-signing.keychain-db"
+          keychain_password=$(openssl rand -hex 32)
+          echo "::add-mask::$keychain_password"
+          trap 'security delete-keychain "$keychain_path" >/dev/null 2>&1 || true; rm -f "$certificate_path"' EXIT
+          node -e 'require("fs").writeFileSync(process.argv[1], Buffer.from(process.env.CSC_LINK, "base64"))' "$certificate_path"
+          security create-keychain -p "$keychain_password" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$keychain_password" "$keychain_path"
+          security import "$certificate_path" -k "$keychain_path" -P "$CSC_KEY_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productbuild
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain_path"
+          security list-keychains -d user -s "$keychain_path" "$HOME/Library/Keychains/login.keychain-db"
+          export CSC_KEYCHAIN="$keychain_path"
+          unset CSC_LINK CSC_KEY_PASSWORD
+          npm run dist -- --mac -c.mac.forceCodeSigning=true -c.mac.notarize=true
+          codesign --verify --deep --strict --verbose=2 release/mac-arm64/TinyCAD.app
+          xcrun stapler validate release/mac-arm64/TinyCAD.app
 
       - name: Upload Artifacts
         if: github.ref == 'refs/heads/production'
@@ -90,17 +134,6 @@ jobs:
             release/*.deb
             release/*.snap
           if-no-files-found: warn
-
-  publish-ms-store:
-    name: Publish Microsoft Store after Linux build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/production'
-    needs: build-linux
-    permissions:
-      contents: read
-    uses: ./.github/workflows/publish-store.yml
-    with:
-      publish_ms_store: true
-    secrets: inherit
 
   release:
     name: Tag and Release

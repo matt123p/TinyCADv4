@@ -4,8 +4,6 @@
 
 This is the source code for TinyCAD. The TinyCAD website is https://www.tinycad.net
 
-The manual for TinyCAD is here: https://docs.tinycad.net
-
 
 TinyCAD is a circuit diagram editor for creating and editing electronic schematics. It runs in a web browser or as a desktop app via Electron.
 
@@ -19,6 +17,33 @@ It is intended for:
 The focus is fast schematic editing, practical symbol/library workflows, and straightforward export options.
 
 This project is a complete re-write of the original C++ TinyCAD (https://github.com/matt123p/TinyCAD). 
+
+## Manual and documentation contributions
+
+Read the [TinyCAD manual](https://docs.tinycad.net/) for installation, drawing,
+symbol libraries, keyboard shortcuts, and other workflows. The v4 manual includes
+translations; the legacy v3 manual is also available on the documentation site.
+
+The manual is maintained in the separate
+[TinyCAD-docs repository](https://github.com/matt123p/TinyCAD-docs). Corrections,
+missing steps, clearer examples, and updated screenshots are welcome.
+
+- **Small fixes:** use **Edit this page on GitHub** in the manual, or open the
+  relevant English Markdown file under `docs/v4/` in TinyCAD-docs. Click the pencil
+  icon, make your change, and propose a pull request to `matt123p/TinyCAD-docs:main`.
+- **Larger changes:** fork and clone TinyCAD-docs, create a branch, and follow its
+  [setup and preview instructions](https://github.com/matt123p/TinyCAD-docs#local-setup).
+  Preview with `npm run serve`, check links and navigation, then submit a focused
+  pull request. Include screenshots when useful.
+- **Translation corrections:** edit the saved translation in `translations/v4/`
+  in TinyCAD-docs. See its
+  [translation guide](https://github.com/matt123p/TinyCAD-docs/blob/main/translations/README.md)
+  for cache behavior and local preview instructions.
+
+See [Contributing to the TinyCAD Manual](https://docs.tinycad.net/v4/Contributing-to-the-Manual/)
+for the full browser and local editing workflows, writing checklist, and pull
+request template. Submit manual changes to TinyCAD-docs; application code changes
+belong in this repository.
 
 ## Installation
 
