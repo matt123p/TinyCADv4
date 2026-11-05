@@ -1,6 +1,29 @@
 name: Publish to Stores
 
 on:
+  workflow_call:
+    inputs:
+      publish_snap:
+        description: 'Publish to Snap Store'
+        default: false
+        type: boolean
+      publish_ms_store:
+        description: 'Publish to Microsoft Store'
+        default: false
+        type: boolean
+    secrets:
+      APPX_PUBLISHER:
+        required: false
+      PARTNER_CENTER_TENANT_ID:
+        required: false
+      PARTNER_CENTER_SELLER_ID:
+        required: false
+      PARTNER_CENTER_CLIENT_ID:
+        required: false
+      PARTNER_CENTER_CLIENT_SECRET:
+        required: false
+      SNAPCRAFT_STORE_CREDENTIALS:
+        required: false
   workflow_dispatch:
     inputs:
       publish_snap:
@@ -64,6 +87,9 @@ jobs:
           release: stable
 
   publish-ms-store:
+    concurrency:
+      group: microsoft-store-submission
+      cancel-in-progress: false
     if: inputs.publish_ms_store == true
     runs-on: windows-latest
     permissions:
@@ -71,6 +97,15 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
+
+      - name: Validate Store Product ID
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:MICROSOFT_STORE_APP_ID)) {
+            throw "Set the repository Actions variable MICROSOFT_STORE_APP_ID to TinyCAD's Store ID from Product identity."
+          }
+        env:
+          MICROSOFT_STORE_APP_ID: ${{ vars.MICROSOFT_STORE_APP_ID }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -108,10 +143,12 @@ jobs:
       - name: Publish to Microsoft Store
         shell: pwsh
         run: |
-          $file = Get-ChildItem release/*.appx, release/*.msix | Select-Object -First 1
-          if ($file) {
-            Write-Host "Publishing $($file.FullName)..."
-            msstore publish . --inputFile "$($file.FullName)" --verbose
-          } else {
-            Write-Error "No AppX or MSIX file found in release folder."
+          $packages = @(Get-ChildItem -Path release/* -File -Include *.appx, *.msix, *.appxupload, *.msixupload)
+          if ($packages.Count -eq 0) {
+            throw "No AppX or MSIX packages found in release folder."
           }
+          Write-Host "Publishing $($packages.Count) package(s) from release/..."
+          msstore publish . --inputDirectory release --appId "$env:MICROSOFT_STORE_APP_ID" --verbose
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        env:
+          MICROSOFT_STORE_APP_ID: ${{ vars.MICROSOFT_STORE_APP_ID }}
