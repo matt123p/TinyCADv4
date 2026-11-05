@@ -11,7 +11,13 @@
   "license": "GPL-3.0-only",
   "main": "electron/electron.js",
   "targets": {
-    "main": false
+    "main": false,
+    "default": {
+      "context": "browser",
+      "outputFormat": "esmodule",
+      "distDir": "dist",
+      "publicUrl": "./"
+    }
   },
   "type": "module",
   "scripts": {
@@ -27,7 +33,7 @@
     "setup:test-appx": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-test-appx-cert.ps1",
     "dist:test-appx": "npm run setup:test-appx && npm run dist -- --win appx --test-appx",
     "start:electron": "cross-env TARGET_SYSTEM=electron parcel index-electron.html",
-    "build:electron": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=electron parcel build index-electron.html --no-cache --no-source-maps --public-url ./",
+    "build:electron": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=electron parcel build index-electron.html --no-cache --no-source-maps --public-url ./ && node scripts/check-electron-build.mjs",
     "electron": "wait-on tcp:1234 && electron ."
   },
   "build": {
