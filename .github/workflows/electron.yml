@@ -91,17 +91,6 @@ jobs:
             release/*.snap
           if-no-files-found: warn
 
-  publish-ms-store:
-    name: Publish Microsoft Store after Linux build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/production'
-    needs: build-linux
-    permissions:
-      contents: read
-    uses: ./.github/workflows/publish-store.yml
-    with:
-      publish_ms_store: true
-    secrets: inherit
-
   release:
     name: Tag and Release
     if: github.event_name == 'push' && github.ref == 'refs/heads/production'

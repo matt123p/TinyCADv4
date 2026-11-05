@@ -90,7 +90,7 @@ jobs:
     concurrency:
       group: microsoft-store-submission
       cancel-in-progress: false
-    if: inputs.publish_ms_store == true
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_ms_store == true
     runs-on: windows-latest
     permissions:
       contents: read
