@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v4.0.10 — 2026-11-06
+
+This is a small bugfix release that keeps the editor toolbar visible when editing symbols and schematics.
 
 ### Fixed
 

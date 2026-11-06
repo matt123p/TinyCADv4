@@ -193,6 +193,7 @@ jobs:
         run: |
           tag="${{ steps.version.outputs.tag }}"
           title="TinyCAD ${{ steps.version.outputs.version }}"
+          node scripts/release-notes.mjs > release-notes.md
           mapfile -t files < <(find release-assets -type f | sort)
 
           if [ "${#files[@]}" -eq 0 ]; then
@@ -201,7 +202,8 @@ jobs:
           fi
 
           if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --title "$title" --notes-file release-notes.md
             gh release upload "$tag" "${files[@]}" --clobber
           else
-            gh release create "$tag" "${files[@]}" --title "$title" --generate-notes --target "$GITHUB_SHA"
+            gh release create "$tag" "${files[@]}" --title "$title" --notes-file release-notes.md --target "$GITHUB_SHA"
           fi
