@@ -118,7 +118,7 @@ jobs:
 
       - name: Build AppX/MSIX
         # Force build of AppX/MSIX package
-        run: npm run dist -- --win appx
+        run: npm run dist -- --win appx --x64 --arm64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPX_PUBLISHER: ${{ secrets.APPX_PUBLISHER }}
@@ -146,6 +146,16 @@ jobs:
           $packages = @(Get-ChildItem -Path release/* -File -Include *.appx, *.msix, *.appxupload, *.msixupload)
           if ($packages.Count -eq 0) {
             throw "No AppX or MSIX packages found in release folder."
+          }
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          foreach ($arch in @('x64', 'arm64')) {
+            $expectedName = "TinyCAD Windows Setup $version-$arch.appx"
+            if (@($packages | Where-Object { $_.Name -eq $expectedName }).Count -ne 1) {
+              throw "Missing required Store package: $expectedName"
+            }
+          }
+          if ($packages.Count -ne 2) {
+            throw "Expected exactly two current-version Store packages; found $($packages.Count)."
           }
           Write-Host "Publishing $($packages.Count) package(s) from release/..."
           msstore publish . --inputDirectory release --appId "$env:MICROSOFT_STORE_APP_ID" --verbose
