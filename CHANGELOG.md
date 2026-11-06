@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.0.10 — 2026-11-06
+
+This is a small bugfix release that keeps the editor toolbar visible when editing symbols and schematics.
+
+### Fixed
+
+- Keep the editor toolbar visible when library or schematic panels need more vertical space (#31).
+
 ## v4.0.9 — 2026-11-04
 
 ### Added
