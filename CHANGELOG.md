@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Keep the editor toolbar visible when library or schematic panels need more vertical space (#31).
+
 ## v4.0.9 — 2026-11-04
 
 ### Added

@@ -309,7 +309,7 @@ const ScrollableToolbarWrapper: React.FC<{ children: React.ReactNode; className?
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: '100%', overflow: 'hidden', flexShrink: 0 }}>
       <div
         ref={containerRef}
         onScroll={updateScrollButtons}
