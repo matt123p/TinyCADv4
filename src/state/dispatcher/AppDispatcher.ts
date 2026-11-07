@@ -126,7 +126,7 @@ import {
 } from '../actions/configActions';
 import { FileIdType } from '../../io/files';
 import { BrowserError, UserLoginActions, UserLoginActionTypes, UserLoginLoginError, UserLoginLoginOK } from '../actions/userLogin';
-import { ToggleRulers } from '../actions/appActions';
+import { AppUiActions } from '../actions/appActions';
 
 export interface IPoint {
   x: number;
@@ -143,7 +143,7 @@ export type AppActionTypes =
   | TextActions
   | LibraryActions
   | ConfigUpdateConfig
-  | ToggleRulers;
+  | AppUiActions;
 
 export interface SetSettingModel {
   grid: number;

@@ -5,3 +5,4 @@ import './tests/issue-14.mjs';
 import './tests/issue-5.mjs';
 import './tests/issue-6.mjs';
 import './tests/touch-loupe.mjs';
+import './tests/wire-modes.mjs';
