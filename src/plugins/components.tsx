@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useSelector } from 'react-redux';
-import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle } from '@fluentui/react-components';
+import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem, MenuDivider, ToolbarButton } from '@fluentui/react-components';
 import type { docDrawing } from '../state/undo/undo';
 import { pluginManager, platform } from './manager';
 import { documentSessions } from './sessions';
@@ -71,25 +71,32 @@ export function PluginToolbarItems({ toolbar }: { toolbar: string }) {
       disabled={!pluginManager.enabled(item) || !pluginManager.enabled(command)} onClick={() => run(pluginManager.execute(command.id))}>{command.title}</Button>;
   })}</>;
 }
-export function PluginBar() {
+/** Commands stay in the existing toolbar; plugin management lives in File. */
+export function PluginQuickActions() {
   usePlugins(); useSessions();
-  const menus = pluginManager.contributions('menus').filter(v => !v.item.location.startsWith('context/'));
+  const menus = platform === 'browser' ? pluginManager.contributions('menus').filter(v => !v.item.location.startsWith('context/')) : [];
   const views = pluginManager.contributions('mainViews');
-  return <div className="plugin-application-bar">
-    <Button size="small" onClick={() => pluginManager.showManager()}>Plugins</Button>
-    {platform === 'browser' && menus.length > 0 && <details className="plugin-actions-menu"><summary>Plugin actions</summary><div role="menu">{menus.map(({ plugin, item }, i) => {
-      const command = plugin.current.manifest.contributes?.commands?.find(c => c.id === item.command);
-      return command && pluginManager.visible(command) ? <button role="menuitem" key={item.command + i} disabled={!pluginManager.enabled(item) || !pluginManager.enabled(command)} onClick={() => run(pluginManager.execute(item.command))}>{item.location.split('/')[0]} · {command.title}</button> : null;
-    })}</div></details>}
-    {views.length > 0 && <select aria-label="Open plugin view" value="" onChange={event => { if (event.target.value) pluginManager.openView(event.target.value, documentSessions.activeId); }}>
-      <option value="">Open plugin page…</option>{views.map(v => <option key={v.item.id} value={v.item.id}>{v.item.title}</option>)}
-    </select>}
-    {documentSessions.list().length > 1 && <Button size="small" onClick={() => run(documentSessions.saveAll().then(results => {
-      const failed = results.filter(r => !r.saved); pluginManager.notify(failed.length ? `${failed.length} document(s) could not be saved.` : 'All documents saved.');
-    }))}>Save all</Button>}
-    {pluginManager.safeMode && <span>Safe start: plugins disabled</span>}
-    {pluginManager.notifications.length > 0 && <span className="plugin-notification" role="status" title={pluginManager.notifications[pluginManager.notifications.length - 1]}>{pluginManager.notifications[pluginManager.notifications.length - 1]}</span>}
-  </div>;
+  const multipleDocuments = documentSessions.list().length > 1;
+  if (!menus.length && !views.length && !multipleDocuments) return null;
+  return <Menu><MenuTrigger disableButtonEnhancement><ToolbarButton>Plugin actions</ToolbarButton></MenuTrigger>
+    <MenuPopover><MenuList>
+      {menus.map(({ plugin, item }, i) => {
+        const command = plugin.current.manifest.contributes?.commands?.find(c => c.id === item.command);
+        return command && pluginManager.visible(command) ? <MenuItem key={item.command + i} disabled={!pluginManager.enabled(item) || !pluginManager.enabled(command)} onClick={() => run(pluginManager.execute(item.command))}>{command.title}</MenuItem> : null;
+      })}
+      {menus.length > 0 && views.length > 0 && <MenuDivider />}
+      {views.map(({ item }) => <MenuItem key={item.id} onClick={() => pluginManager.openView(item.id, documentSessions.activeId)}>Open {item.title}</MenuItem>)}
+      {multipleDocuments && <MenuItem onClick={() => run(documentSessions.saveAll().then(results => {
+        const failed = results.filter(result => !result.saved); pluginManager.notify(failed.length ? `${failed.length} document(s) could not be saved.` : 'All documents saved.');
+      }))}>Save all</MenuItem>}
+    </MenuList></MenuPopover>
+  </Menu>;
+}
+function PluginNotification() {
+  usePlugins(); const message = pluginManager.notifications[pluginManager.notifications.length - 1];
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { setVisible(!!message); const timer = setTimeout(() => setVisible(false), 6000); return () => clearTimeout(timer); }, [message]);
+  return visible && !pluginManager.managerOpen ? <div className="plugin-toast" role="status"><span>{message}</span><Button size="small" appearance="subtle" aria-label="Dismiss notification" onClick={() => setVisible(false)}>×</Button></div> : null;
 }
 export function PluginToolbars() {
   usePlugins();
@@ -111,7 +118,12 @@ export function PluginMainViews({ children }: { children: React.ReactNode }) {
 }
 export function PluginOverlays() {
   usePlugins(); const prompt = useSyncExternalStore(prompts.subscribe, prompts.snapshot, prompts.snapshot);
+  // File-menu management must work before the deferred plugin host finishes loading.
+  useEffect(() => window.electronAPI?.onPluginCommand?.(command => {
+    if (command === 'tinycad.managePlugins') pluginManager.showManager();
+  }), []);
   return <>
+    <PluginNotification />
     {pluginManager.managerOpen && <PluginManagerDialog suspended={!!prompt} />}
     {prompt && <Dialog open onOpenChange={(_, data) => { if (!data.open) prompts.answer('cancel'); }}><DialogSurface><DialogBody>
       <DialogTitle>{prompt.title}</DialogTitle><DialogContent><p>{prompt.message}</p>{prompt.preview && <pre className="plugin-edit-preview">{prompt.preview}</pre>}</DialogContent>

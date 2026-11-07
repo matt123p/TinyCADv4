@@ -52,6 +52,7 @@ import {
   RulerRegular,
   GlobeRegular,
   CheckmarkRegular,
+  PuzzlePieceRegular,
 } from '@fluentui/react-icons';
 import { ActionCreators } from 'redux-undo';
 import {
@@ -78,7 +79,8 @@ import {
   SUPPORTED_LANGUAGES,
 } from '../../i18n/languages';
 import { openCurrentAppUrl, openExternalUrl } from '../../util/navigation';
-import { PluginToolbarItems } from '../../plugins/components';
+import { PluginQuickActions, PluginToolbarItems } from '../../plugins/components';
+import { pluginManager } from '../../plugins/manager';
 
 
 // Images (ES module imports)
@@ -620,6 +622,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                 {t('toolbar.generateSpiceNetlist')}
               </MenuItem>
               <MenuDivider />
+              <MenuItem icon={<PuzzlePieceRegular />} onClick={() => pluginManager.showManager()}>Plugins…</MenuItem>
+              <MenuDivider />
               {/* New Custom Library */}
                <MenuItem icon={<LibraryRegular />} onClick={() => {
                   const qp = new URLSearchParams();
@@ -909,6 +913,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           </>
         )}
 
+        <PluginQuickActions />
         <PluginToolbarItems toolbar="main/plugins" />
         <PluginToolbarItems toolbar={props.editSymbol ? 'symbol/plugins' : 'schematic/plugins'} />
         <div className={styles.spacer} />

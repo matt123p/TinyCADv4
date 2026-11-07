@@ -132,6 +132,7 @@ export class DevelopmentPluginSource {
     const reader = this.readers.get(origin.id); check(reader, 'Choose the development folder again to reload its files.'); return reader;
   }
   async load(source: PluginVersion) { check(source.development, 'Missing development source.'); return load(await this.reader(source.development), source); }
+  async versions(origin: DevelopmentSource) { return discover(await this.reader(origin), origin); }
   async reload(source: PluginVersion) {
     const origin = source.development; check(origin, 'Only development plugins can be reloaded.');
     const reader = await this.reader(origin);

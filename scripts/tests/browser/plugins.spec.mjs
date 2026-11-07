@@ -6,24 +6,39 @@ import { createPluginDevelopmentServer } from '../../plugin-development-server.m
 import { createHash } from 'node:crypto';
 import { zipSync } from 'fflate';
 
-async function installExamples(page) {
-  await page.getByRole('button', { name: 'Plugins', exact: true }).click();
-  await page.getByRole('tab', { name: 'Discover', exact: true }).click();
-  await page.getByRole('button', { name: 'Browse bundled examples' }).click();
-  await page.getByRole('checkbox', { name: 'Circuit Inspector', exact: true }).check();
-  await page.getByRole('checkbox', { name: 'Project Home', exact: true }).check();
-  await page.getByRole('button', { name: 'Install selected plugins' }).click();
+async function openManager(page) {
+  await page.getByRole('button', { name: 'File', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Plugins…', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Plugin manager', exact: true })).toBeVisible();
+}
+async function installedCount(page, count) {
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tinycad.plugins.v1') || '{"plugins":[]}').plugins.length)).toBe(count);
+}
+async function installPlugin(page, name) {
+  await page.getByRole('tab', { name: 'Available', exact: true }).click();
+  await page.getByRole('option', { name, exact: true }).click();
+  await page.getByRole('button', { name: 'Install', exact: true }).click();
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Disable', exact: true })).toHaveCount(2, { timeout: 30000 });
+  await expect(page.getByRole('button', { name: 'Uninstall', exact: true })).toBeVisible();
+}
+async function settings(page) {
+  if (!await page.locator('details.plugin-settings').evaluate(node => node.open)) await page.getByText('Plugin settings', { exact: true }).click();
+}
+async function installExamples(page) {
+  await openManager(page);
+  await installPlugin(page, 'Circuit Inspector');
+  await installPlugin(page, 'Project Home');
+  await installedCount(page, 2);
+  await page.getByRole('option', { name: 'Circuit Inspector', exact: true }).click();
 }
 test('bundled plugins install, expose safe versioned Markdown, contribute panels/views, and survive reload', async ({ page }) => {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto('/'); await installExamples(page);
-  await page.getByRole('button', { name: 'Full documentation', exact: true }).first().click();
+  await page.getByRole('tab', { name: 'Full documentation', exact: true }).first().click();
   await expect(page.getByRole('heading', { name: 'Circuit Inspector documentation', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'symbol metadata instructions' }).click();
   await expect(page.getByRole('heading', { name: 'Symbol metadata', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Changelog', exact: true }).first().click();
+  await page.getByRole('tab', { name: 'Changelog', exact: true }).first().click();
   await expect(page.locator('.plugin-markdown')).toContainText('1.0.0');
   await page.getByRole('button', { name: 'Close plugin manager' }).click();
   await page.getByRole('combobox', { name: 'Left panel', exact: true }).selectOption('net.tinycad.inspector.summary');
@@ -44,8 +59,8 @@ test('bundled plugins install, expose safe versioned Markdown, contribute panels
   await project.getByRole('button', { name: 'New design', exact: true }).click();
   await expect(page.getByRole('tab', { name: /Untitled.dsn/ })).toBeVisible();
   await page.reload();
-  await page.getByRole('button', { name: 'Plugins', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Disable', exact: true })).toHaveCount(2);
+  await openManager(page);
+  await installedCount(page, 2);
   const library = await page.context().newPage(); library.on('pageerror', error => errors.push(error.message));
   await library.goto('/?action=new-library');
   await library.getByRole('tab', { name: 'Plugin metadata', exact: true }).click();
@@ -87,20 +102,26 @@ test('GitHub release catalogs install only selected plugins, automatically updat
     } else { await route.fulfill({ status: 404, body: '{}' }); return; }
     await route.fulfill({ status: 200, json: body, headers: { 'access-control-allow-origin': '*' } });
   });
-  await page.goto('/'); await page.getByRole('button', { name: 'Plugins', exact: true }).click(); await page.getByRole('tab', { name: 'Discover', exact: true }).click();
-  await page.getByLabel('GitHub repository URL').fill('https://github.com/test/plugins'); await page.getByRole('button', { name: 'Browse plugins', exact: true }).click();
-  await page.getByRole('checkbox', { name: 'Circuit Inspector', exact: true }).check();
-  await page.getByRole('button', { name: 'Install selected plugins' }).click(); await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Disable', exact: true })).toHaveCount(1);
+  await page.goto('/'); await openManager(page); await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByLabel('GitHub repository URL').fill('https://github.com/test/plugins'); await page.getByRole('button', { name: 'Add source', exact: true }).click();
+  await installPlugin(page, 'Circuit Inspector');
+  await installedCount(page, 1);
   let records = await page.evaluate(() => JSON.parse(localStorage.getItem('tinycad.plugins.v1')).plugins);
   expect(records.map(record => record.id)).toEqual(['net.tinycad.inspector']); expect(records[0].current.manifest.version).toBe('1.0.0');
-  latest = true; await page.getByRole('button', { name: 'Check for updates', exact: true }).click();
+  latest = true; await page.getByRole('button', { name: 'Refresh plugins', exact: true }).click();
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('tinycad.plugins.v1')).plugins[0].current.manifest.version)).toBe('1.1.0');
   records = await page.evaluate(() => JSON.parse(localStorage.getItem('tinycad.plugins.v1')).plugins);
+  await settings(page);
   await page.getByRole('combobox', { name: 'Circuit Inspector rollback', exact: true }).selectOption(records[0].history[0].digest);
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('tinycad.plugins.v1')).plugins[0].policy)).toBe('pinned');
   records = await page.evaluate(() => JSON.parse(localStorage.getItem('tinycad.plugins.v1')).plugins);
   expect(records[0].current.manifest.version).toBe('1.0.0'); expect(records).toHaveLength(1);
+  await page.getByRole('button', { name: 'Remove', exact: true }).click();
+  await expect(page.getByText('Source removed. Installed plugins have been kept.', { exact: true })).toBeVisible();
+  await page.reload(); await openManager(page);
+  await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeEnabled();
+  expect(await page.getByRole('combobox', { name: 'Plugin source', exact: true }).locator('option').evaluateAll(items => items.map(item => item.value))).not.toContain('github:https://github.com/test/plugins');
+  await installedCount(page, 1);
 });
 
 
@@ -113,24 +134,24 @@ test('local server catalog supports selection, same-version reload, offline star
     for (const entry of catalog.plugins) entry.package.manifest = entry.package.manifest.replace('examples/plugins/', '');
     await writeFile(path.join(directory, 'tinycad-plugins.json'), JSON.stringify(catalog));
     server = await createPluginDevelopmentServer(directory); await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-    await page.goto('/'); await page.getByRole('button', { name: 'Plugins', exact: true }).click();
-    await page.getByRole('tab', { name: 'Discover', exact: true }).click();
-    await page.getByText('Develop a plugin', { exact: true }).click();
+    await page.goto('/'); await openManager(page);
+    await page.getByRole('button', { name: 'Developer mode', exact: true }).click();
     await page.getByRole('textbox', { name: 'Local plugin server URL', exact: true }).fill('http://127.0.0.1:' + server.address().port + '/');
-    await page.getByRole('button', { name: 'Browse local server', exact: true }).click();
-    await page.getByRole('checkbox', { name: 'Circuit Inspector', exact: true }).check();
-    await expect(page.getByRole('checkbox', { name: 'Project Home', exact: true })).not.toBeChecked();
-    await page.getByRole('button', { name: 'Full documentation', exact: true }).first().click();
+    await page.getByRole('button', { name: 'Add source', exact: true }).click();
+    await page.getByRole('option', { name: 'Circuit Inspector', exact: true }).click();
+    await expect(page.getByRole('option', { name: 'Project Home', exact: true })).toHaveAttribute('aria-selected', 'false');
+    await page.getByRole('tab', { name: 'Full documentation', exact: true }).first().click();
     await expect(page.getByRole('heading', { name: 'Circuit Inspector documentation', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Install selected plugins', exact: true }).click();
+    await page.getByRole('button', { name: 'Install', exact: true }).click();
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Disable', exact: true })).toHaveCount(1);
+    await installedCount(page, 1);
     const original = await page.evaluate(() => JSON.parse(localStorage.getItem('tinycad.plugins.v1')).plugins[0]);
     expect(original.policy).toBe('manual'); expect(original.current.source.development.kind).toBe('server');
     const ui = path.join(directory, 'inspector/ui.js');
     await writeFile(ui, (await readFile(ui, 'utf8')).replaceAll('Circuit Inspector', 'Server Inspector'));
     await page.getByRole('button', { name: 'Reload from source', exact: true }).click();
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await settings(page);
     await expect(page.getByRole('combobox', { name: 'Circuit Inspector rollback', exact: true })).toBeVisible();
     const updated = await page.evaluate(() => JSON.parse(localStorage.getItem('tinycad.plugins.v1')).plugins[0]);
     expect(updated.current.digest).not.toBe(original.current.digest); expect(updated.current.manifest.version).toBe(original.current.manifest.version);
@@ -139,9 +160,10 @@ test('local server catalog supports selection, same-version reload, offline star
     await page.getByRole('combobox', { name: 'Left panel', exact: true }).selectOption('net.tinycad.inspector.summary');
     const inspector = page.frameLocator('iframe[title="Circuit Inspector"]').first();
     await expect(inspector.getByRole('heading', { name: 'Server Inspector', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Plugins', exact: true }).click();
-    await page.getByRole('combobox', { name: 'Circuit Inspector rollback', exact: true }).selectOption(original.current.digest);
-    await expect(page.locator('.plugin-manager-list')).toContainText(original.current.digest.slice(0, 8));
+    await openManager(page);
+    await settings(page);
+  await page.getByRole('combobox', { name: 'Circuit Inspector rollback', exact: true }).selectOption(original.current.digest);
+    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('tinycad.plugins.v1')).plugins[0].current.digest)).toBe(original.current.digest);
     await page.getByRole('button', { name: 'Close plugin manager' }).click();
     await expect(inspector.getByRole('heading', { name: 'Circuit Inspector', exact: true })).toBeVisible();
   } finally { if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } await rm(directory, { recursive: true, force: true }); }
@@ -151,23 +173,83 @@ test('browser folder imports and reloads selected files after restart', async ({
   const directory = await mkdtemp(path.join(tmpdir(), 'tinycad-browser-plugin-folder-')); const folder = path.join(directory, 'inspector');
   try {
     await cp('examples/plugins/inspector', folder, { recursive: true });
-    await page.goto('/'); await page.getByRole('button', { name: 'Plugins', exact: true }).click();
-    await page.getByRole('tab', { name: 'Discover', exact: true }).click();
-    await page.getByText('Develop a plugin', { exact: true }).click();
-    const chooserPromise = page.waitForEvent('filechooser'); await page.getByRole('button', { name: 'Import plugin folder', exact: true }).click();
+    await page.goto('/'); await openManager(page);
+    await page.getByRole('button', { name: 'Developer mode', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Development source', exact: true }).selectOption('directory');
+    const chooserPromise = page.waitForEvent('filechooser'); await page.getByRole('button', { name: 'Choose folder', exact: true }).click();
     await (await chooserPromise).setFiles(folder);
-    await page.getByRole('checkbox', { name: 'Circuit Inspector', exact: true }).check();
-    await page.getByRole('button', { name: 'Install selected plugins', exact: true }).click();
+    await page.getByRole('option', { name: 'Circuit Inspector', exact: true }).click();
+    await page.getByRole('button', { name: 'Install', exact: true }).click();
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Reload from folder…', exact: true })).toBeVisible();
-    await page.reload(); await page.getByRole('button', { name: 'Plugins', exact: true }).click();
+    await page.reload(); await openManager(page);
     const ui = path.join(folder, 'ui.js'); await writeFile(ui, (await readFile(ui, 'utf8')).replaceAll('Circuit Inspector', 'Folder Inspector'));
     const reloadChooser = page.waitForEvent('filechooser'); await page.getByRole('button', { name: 'Reload from folder…', exact: true }).click();
     await (await reloadChooser).setFiles(folder);
     await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await settings(page);
     await expect(page.getByRole('combobox', { name: 'Circuit Inspector rollback', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Close plugin manager' }).click();
     await page.getByRole('combobox', { name: 'Left panel', exact: true }).selectOption('net.tinycad.inspector.summary');
     await expect(page.frameLocator('iframe[title="Circuit Inspector"]').first().getByRole('heading', { name: 'Folder Inspector', exact: true })).toBeVisible();
   } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test('manager keeps its list and dialog fixed while searching, switching views, and reading long descriptions', async ({ page }) => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'tinycad-plugin-layout-')); let server;
+  try {
+    const example = JSON.parse(await readFile('src/plugins/bundledData.json', 'utf8'))[0]; const entries = [];
+    for (let i = 1; i <= 10; i++) {
+      const folder = `plugin-${i}`; const id = `org.example.plugin${i}`; const name = `Example plugin ${String(i).padStart(2, '0')}`;
+      await cp('examples/plugins/inspector', path.join(directory, folder), { recursive: true });
+      for (const [file, original] of Object.entries(example.files)) {
+        let content = original.replaceAll('net.tinycad.inspector', id).replaceAll('Circuit Inspector', name);
+        if (file === 'README.md') content += ('\n\n## More information\n\nA long plugin description must scroll inside the details pane.\n').repeat(40);
+        await writeFile(path.join(directory, folder, file), content);
+      }
+      entries.push({ ...example.metadata, id, name, package: { type: 'source', manifest: folder + '/tinycad-plugin.json' } });
+    }
+    await writeFile(path.join(directory, 'tinycad-plugins.json'), JSON.stringify({ catalogVersion: 1, plugins: entries }));
+    server = await createPluginDevelopmentServer(directory); await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: 'Plugins', exact: true })).toHaveCount(0);
+    await expect(page.locator('.plugin-application-bar')).toHaveCount(0);
+    await openManager(page);
+    await expect(page.getByRole('tab', { name: 'Discover', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Developer mode', exact: true }).click();
+    const address = 'http://127.0.0.1:' + server.address().port + '/';
+    await page.getByLabel('Local plugin server URL').fill(address); await page.getByRole('button', { name: 'Add source', exact: true }).click();
+    await expect(page.getByRole('option', { name: /Example plugin/ })).toHaveCount(10);
+    const bounds = async () => ({ dialog: await page.locator('.plugin-manager').boundingBox(), list: await page.locator('.plugin-manager-list').boundingBox() });
+    const originalBounds = await bounds();
+    await page.getByRole('searchbox', { name: 'Search plugins', exact: true }).fill('plugin 07');
+    await expect(page.getByRole('option', { name: /Example plugin/ })).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: 'Example plugin 07', exact: true })).toBeVisible();
+    expect(await bounds()).toEqual(originalBounds);
+    await page.getByRole('searchbox', { name: 'Search plugins', exact: true }).fill('does not exist');
+    await expect(page.getByText('No matching plugins', { exact: true })).toBeVisible(); expect(await bounds()).toEqual(originalBounds);
+    await page.getByRole('searchbox', { name: 'Search plugins', exact: true }).fill('');
+    await page.getByRole('option', { name: 'Example plugin 01', exact: true }).click();
+    await page.getByRole('option', { name: 'Example plugin 01', exact: true }).press('ArrowDown');
+    await expect(page.getByRole('option', { name: 'Example plugin 02', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await page.getByRole('option', { name: 'Example plugin 02', exact: true }).press('Home');
+    await expect(page.getByRole('option', { name: 'Example plugin 01', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('.plugin-markdown')).toContainText('More information');
+    const overflow = await page.locator('.plugin-manager-columns').evaluate(node => [...node.children].map(pane => ({ scroll: getComputedStyle(pane).overflowY, scrolls: pane.scrollHeight > pane.clientHeight })));
+    expect(overflow).toEqual([{ scroll: 'auto', scrolls: true }, { scroll: 'auto', scrolls: true }]);
+    await page.screenshot({ path: '/tmp/tinycad-plugin-manager-available.png' });
+    await page.getByRole('tab', { name: /^Installed/ }).click(); expect(await bounds()).toEqual(originalBounds);
+    await installPlugin(page, 'Example plugin 01'); expect(await bounds()).toEqual(originalBounds);
+    await page.screenshot({ path: '/tmp/tinycad-plugin-manager-installed.png' });
+    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await expect(page.getByText('Source removed. Installed plugins have been kept.', { exact: true })).toBeVisible();
+    await installedCount(page, 1);
+    await page.reload(); await openManager(page);
+    await expect(page.getByRole('option', { name: 'Example plugin 01', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeEnabled();
+    expect(await page.getByRole('combobox', { name: 'Plugin source', exact: true }).locator('option').allTextContents()).not.toContain(address);
+    await page.setViewportSize({ width: 700, height: 560 });
+    const small = await page.locator('.plugin-manager').boundingBox(); expect(small.width).toBeLessThanOrEqual(684); expect(small.height).toBeLessThanOrEqual(544);
+    const pageOverflow = await page.locator('.plugin-manager').evaluate(node => node.scrollWidth > node.clientWidth); expect(pageOverflow).toBe(false);
+  } finally { if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } await rm(directory, { recursive: true, force: true }); }
 });

@@ -12,7 +12,7 @@ import { ResizeHandle } from '../panel/ResizeHandle';
 import { Browser } from '../sheets/browser';
 import { tclibLibraryEntry } from '../../model/tclib';
 import { BrowserSheetData } from '../../model/dsnView';
-import { PluginBar, PluginMainViews, PluginPanelHost, PluginToolbars } from '../../plugins/components';
+import { PluginMainViews, PluginPanelHost, PluginToolbars } from '../../plugins/components';
 
 // TODO: These styles seem common, maybe they should be in a common CSS or utility?
 // For now, mirroring what was seen in mainAppElectron.tsx
@@ -123,7 +123,6 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       className="page-container"
       style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
     >
-      <PluginBar />
       <ToolbarContainer />
       <PluginToolbars />
       <div className="mid-container">

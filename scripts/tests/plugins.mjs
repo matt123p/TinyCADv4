@@ -24,6 +24,7 @@ import { unpackPlugin } from './src/plugins/archive';
 import { verifyPackage, GitHubPluginSource, githubPlugins } from './src/plugins/github';
 import { pluginStorage } from './src/plugins/storage';
 import { PluginManager } from './src/plugins/manager';
+import { githubSource, loadSourceSettings, saveSourceSettings } from './src/plugins/sources';
 import { DevelopmentPluginSource, developmentURL } from './src/plugins/development';
 import { createPluginDevelopmentServer } from './scripts/plugin-development-server.mjs';
 import { blank, ioXML } from './src/io/ioXml';
@@ -41,7 +42,9 @@ async function run() {
   const values = new Map();
   globalThis.window = { electronAPI: undefined, addEventListener() {} };
   globalThis.localStorage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
-  const packages = new Map(); const settings = new Map();
+  const packages = new Map(); const settings = new Map(); const metadataValues = new Map();
+  pluginStorage.get = async key => metadataValues.get(key);
+  pluginStorage.set = async (key, value) => { metadataValues.set(key, structuredClone(value)); };
   pluginStorage.setPackage = async pkg => { packages.set(pkg.digest, structuredClone(pkg)); };
   pluginStorage.getPackage = async digest => packages.get(digest);
   pluginStorage.getSettings = async id => settings.get(id) || {};
@@ -60,6 +63,12 @@ async function run() {
   assert.throws(() => parseManifest({ ...manifest, contributes: { panels: [{ id: 'other.plugin.panel', title: 'Test', surface: 'test', location: 'left' }] } }));
 
   const source = { repository: { id: 12, url: 'https://github.com/test/plugins', slug: 'test/plugins', defaultBranch: 'main' }, entry: parsed.plugins[0], commit: 'a'.repeat(40), catalogDigest: 'b'.repeat(64) };
+  const sourceSettings = await loadSourceSettings([source]);
+  const repositorySource = githubSource('https://github.com/test/plugins.git');
+  assert.ok(sourceSettings.sources.some(item => item.id === repositorySource.id));
+  await saveSourceSettings({ sources: sourceSettings.sources.filter(item => item.id !== repositorySource.id), catalogs: {} });
+  assert.ok(!(await loadSourceSettings([source])).sources.some(item => item.id === repositorySource.id), 'removing a URL stays removed even when its plugin remains installed');
+  assert.throws(() => githubSource('http://localhost/plugin'));
   const files = Object.fromEntries(Object.entries(metadata.files).map(([name, content]) => [name, new TextEncoder().encode(content)]));
   const pkg = await verifyPackage(files, source);
   const unpacked = unpackPlugin(zipSync(files)); assert.deepEqual(Object.keys(unpacked).sort(), Object.keys(files).sort());

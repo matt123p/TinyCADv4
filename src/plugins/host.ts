@@ -185,8 +185,7 @@ export function initializePluginHost(store: { getState(): docDrawing; dispatch(a
   });
   window.addEventListener('beforeunload', event => { if (documentSessions.anyDirty() || pluginManager.hasDrafts()) { event.preventDefault(); event.returnValue = ''; } });
   window.electronAPI?.onPluginCommand?.(command => {
-    if (command === 'tinycad.managePlugins') pluginManager.showManager();
-    else void pluginManager.execute(command).catch(error => pluginManager.notify(error.message));
+    if (command !== 'tinycad.managePlugins') void pluginManager.execute(command).catch(error => pluginManager.notify(error.message));
   });
   void pluginManager.init();
 }

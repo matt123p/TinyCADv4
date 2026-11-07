@@ -89,8 +89,8 @@ This project runs in multiple modes:
 
 ## Plugins
 
-Open **Plugins → Discover** to browse the bundled Circuit Inspector and Project Home
-examples, or enter a GitHub repository URL and select individual plugins. The
+Open **File → Plugins → Available** to browse the bundled Circuit Inspector and Project Home
+examples, or use **Add** to save a GitHub repository URL and select individual plugins. The
 manager shows descriptions, Markdown changelogs and full documentation, and
 supports release-based automatic updates, version pinning, and rollback.
 

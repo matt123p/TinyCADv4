@@ -145,6 +145,8 @@ function createWindow() {
           { type: 'separator' },
           { label: getMenuLabel('print', 'Print'), accelerator: 'CmdOrCtrl+P', click: () => mainWindow.webContents.send('menu-command', 'file-print') },
           { type: 'separator' },
+          { label: 'Plugins…', icon: path.join(__dirname, 'icons', 'plugins.png'), click: () => mainWindow.webContents.send('plugin-command', 'tinycad.managePlugins') },
+          { type: 'separator' },
           isMac ? { role: 'close' } : { role: 'quit' }
         ]
       },
@@ -220,9 +222,6 @@ function createWindow() {
         submenu.submenu.push(pluginEntry(item));
       } else target.submenu.push(pluginEntry(item));
     }
-    menuTemplate.push({ label: 'Plugins', submenu: [
-      { label: 'Manage plugins…', click: () => mainWindow.webContents.send('plugin-command', 'tinycad.managePlugins') }
-    ] });
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
   }

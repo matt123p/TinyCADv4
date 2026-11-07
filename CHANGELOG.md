@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- Move plugin management into the File menu and replace its browsing screens with a fixed-size searchable list/details layout, saved repository sources, and focused developer-mode controls.
 - Show the loupe button only after touch input on the drawing canvas, keeping it hidden on touchscreen PCs until touch is used.
 - Keep the first edit after loading a document undoable.
 - Preserve symbol-definition identities and plugin metadata when placing, copying, editing, and saving library symbols.
