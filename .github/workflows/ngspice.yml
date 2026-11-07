@@ -67,6 +67,15 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+        if: runner.os != 'Windows' || matrix.arch != 'arm64'
+      # Parcel's LMDB 2.8 dependency has no Windows ARM64 prebuild. Engine
+      # qualification uses esbuild and the native helper, not Parcel/Electron.
+      - name: Install engine-test dependencies on Windows ARM64
+        if: runner.os == 'Windows' && matrix.arch == 'arm64'
+        run: |
+          npm ci --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm rebuild esbuild
       - run: npm run typecheck
       - uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows'

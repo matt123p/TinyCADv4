@@ -48,3 +48,5 @@ The existing [TinyCAD manual](https://docs.tinycad.net/v4/) remains the guide to
 - [Drawing extensions and Drive deployment](11-drawing-extensions-and-drive.md) — automatic .dsn/.dzn selection and Drive UI registration.
 
 - [TODO and Windows/macOS handoff](12-todo-and-platform-handoff.md) — machine setup, platform blockers, acceptance checks, remaining implementation and evidence tracking.
+
+- [Result storage performance](13-result-storage-performance.md) — reproducible XML/ZIP memory and latency measurements, compact-copy recovery and the XML decoder allocation fix.

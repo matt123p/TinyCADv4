@@ -40,6 +40,7 @@
     "test:simulation": "node --test scripts/tests/simulation*.test.mjs",
     "test:engines": "node scripts/tests/qualify-engines.mjs",
     "typecheck": "tsc --noEmit",
+    "benchmark:simulation": "node scripts/benchmark-simulation.mjs",
     "generate:simulation-examples": "node scripts/generate-simulation-examples.mjs"
   },
   "build": {

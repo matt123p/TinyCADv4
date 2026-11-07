@@ -103,9 +103,9 @@ CSC_IDENTITY_AUTO_DISCOVERY=false npm run dist -- --mac --arm64 -c.mac.identity=
 
 Native Electron testing does not require rebuilding WASM. `npm run test:engines` requires **both** engines to be staged; use the native-only fixture command above until then.
 
-- [ ] Build WASM using the locked SDK instructions in [the implementation guide](10-implementation-status.md), or obtain a qualified `ngspice-wasm` CI artifact.
-- [ ] If using downloaded CI artifacts, extract them beneath `build/engine-artifacts/`, preserving each artifact directory and manifest, then run `node scripts/stage-engine-artifacts.mjs`.
-- [ ] Run `npm run test:engines` with both engines present to compare their numerical results.
+- [x] Obtain the passing `ngspice-wasm` artifact from [CI run 42419676381](https://github.com/matt123p/TinyCADv4/actions/runs/42419676381), commit `5d0ac5f`. WASM build ID `ngspice-47-7cc928e4d7afd1f6`.
+- [x] Extract beneath `build/engine-artifacts/ngspice-wasm` and run `node scripts/stage-engine-artifacts.mjs` on the Windows host.
+- [x] Run `npm run test:engines` on Windows x64: all eight native/WASM fixtures and numerical parity comparisons pass. Evidence: `build/qualification/windows-x64/engine-parity.log`.
 - [ ] Build and exercise the browser variant on each relevant browser. The filesystem variant needs File System Access support; browser support must be recorded separately from Electron support.
 - [x] Add `workflow_dispatch` to the engine, Electron and browser workflows. Dispatching a feature-branch run remains separate from this local qualification; no CI result is implied by adding the entry point.
 
@@ -138,7 +138,7 @@ Use prepared drawings with placed components carrying valid `$$SPICE` metadata. 
 - [ ] Add the simple ideal DC meter presentation; then build bench views on the existing analysis/result model.
 - [ ] Review keyboard, touch, accessibility, localization, narrow-window layouts and actionable error messages with educators.
 - [x] Resolve the repository-wide TypeScript errors and establish `npm run typecheck` as a clean baseline and engine CI check.
-- [ ] Review large-result performance on classroom machines. Retention accounting now includes UTF-8 logs and all complex/multiple-plot buffers; tests cover budget rejection without insertion. Existing 64 MiB/run and 256 MiB/document limits also cover Undo-retained buffers. Compact-copy/reopen recovery is documented. This accounting check is not a measured latency/peak-memory qualification.
+- [x] Add a reproducible large-result storage benchmark and fix the XML decoder's intermediate character-array allocation. [Windows measurements](13-result-storage-performance.md) cover 250,000/1,000,000 samples, XML/ZIP latency, peak RSS and compact-copy cache recovery. Classroom/browser/Electron rendering and larger run-family measurements remain pending. Retention tests include UTF-8 logs and all complex/multiple-plot buffers; existing 64 MiB/run and 256 MiB/document limits include Undo-retained buffers.
 
 ### Broader workbench, after the foundation is qualified
 
@@ -198,6 +198,10 @@ Evidence logs: `build/qualification/windows-x64/native-build-final.log`, `native
 Computer Use was unavailable on this host (native connection pipe unavailable and browser connection unavailable). Installed UI, double-click associations, real keyboard/touch/educator review, signing and AppX remain unverified. Windows ARM64 and macOS require their own hosts. No browser/WASM parity result is claimed for this Windows session.
 
 The user subsequently selected automated checks only. Interactive desktop/browser automation and OS double-click checks are excluded from this run; they remain release acceptance items, not failed automated tests. Cross-platform CI build, numerical and package checks can proceed independently.
+
+Automated follow-up: both filesystem and Google browser production bundles pass with the qualified WASM assets (`browser-fs.log`, `browser-ga.log`). All 39 focused tests and typecheck also pass after the XML memory fix described in [storage measurements](13-result-storage-performance.md). These bundle checks do not establish live browser behavior.
+
+The first CI run above passed WASM, Linux x64/ARM64 and macOS ARM64 engine builds, numerical fixtures and focused tests. Windows ARM64 failed before compilation because Parcel's LMDB 2.8.5 dependency lacks a Windows ARM64 prebuild. That engine-only job now installs dependencies without unrelated lifecycle scripts and explicitly rebuilds esbuild; compiler/helper execution remains native ARM64. This is not a claim that Parcel development runs natively on Windows ARM64. A subsequent CI run must verify the fix.
 
 | Platform | Commit / engine build ID | Build + numerical tests | Installed UI + associations | Signing | Findings |
 | --- | --- | --- | --- | --- | --- |

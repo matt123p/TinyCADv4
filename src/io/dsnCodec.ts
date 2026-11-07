@@ -156,7 +156,11 @@ export async function decodeDrawing(
       total += decoded.length;
       if (total > 256 * 1024 * 1024)
         throw new Error('Saved result data exceeds its limit.');
-      payloads[path] = Uint8Array.from(decoded, (c) => c.charCodeAt(0));
+      // Iterating a large string through Uint8Array.from materializes an
+      // intermediate array of characters. Fill the byte buffer directly.
+      const data = new Uint8Array(decoded.length);
+      for (let i = 0; i < decoded.length; ++i) data[i] = decoded.charCodeAt(i);
+      payloads[path] = data;
     }
   }
   const drawing = new ioXML().from_dsn(builder);

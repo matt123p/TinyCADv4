@@ -41,6 +41,7 @@ export function createTeachingDrawing(kind: TeachingExample) {
   if (index < 0) throw new Error('Unknown teaching example.');
   drawing.documentId = `594ae71f-836e-4aaf-8b30-00000000000${index + 1}`;
   const sheet = drawing.sheets[0];
+  sheet.id = `c34ae71f-836e-4aaf-8b30-00000000000${index + 1}`;
   sheet.name = 'Circuit';
   sheet.details.title = kind.replace(/-/g, ' ');
   sheet.details.author = 'TinyCAD';
