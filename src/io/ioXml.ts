@@ -1,3 +1,5 @@
+import { createSimulationSheet, validateSetup } from '../simulation/document';
+import { newIdentity } from '../simulation/contracts';
 import { XMLBuilder } from '../util/xmlbuilder';
 import {
   DocItemTypes,
@@ -142,6 +144,7 @@ export class ioXML {
   public from_dsn(xmlBuilder: XMLBuilder) {
     let r: dsnDrawing = {
       sheets: [],
+      documentId: newIdentity(),
       settings: {
         showRulers: true,
       },
@@ -190,6 +193,16 @@ export class ioXML {
           let sheet = this.from_tinycad(nodes[i], nodes[i], false);
           r.sheets.push(sheet);
         }
+        if (nodes[i].nodeName === 'DSNIDENTITY') {
+          r.documentId = nodes[i].getAttribute('id') || r.documentId;
+        }
+        if (nodes[i].nodeName === 'SimulationSheet') {
+          const base = blank().sheets[0];
+          const sheet = createSimulationSheet(base, nodes[i].getAttribute('name') || 'Simulation');
+          sheet.id = nodes[i].getAttribute('id') || sheet.id;
+          sheet.simulation = validateSetup(JSON.parse(this.nodeText(nodes[i])));
+          r.sheets.push(sheet);
+        }
         if (nodes[i].nodeName === 'NETLIST_TYPES') {
           const parsed = this.readNetlistTypes(nodes[i]);
           r.netlistTypes = parsed.types;
@@ -201,6 +214,9 @@ export class ioXML {
       }
     }
 
+    if (!r.sheets.some(sheet => sheet.kind !== 'simulation')) throw new Error('A drawing must contain a schematic sheet.');
+    const sheetIds = r.sheets.map(sheet => sheet.id);
+    if (new Set(sheetIds).size !== sheetIds.length) throw new Error('Duplicate sheet identity.');
     r.netlistTypes = ensureNetlistTypes(r.netlistTypes);
     if (!r.netTypeAssignments) {
       r.netTypeAssignments = {};
@@ -217,7 +233,13 @@ export class ioXML {
     // Create the root object
     let dsn = new XMLBuilder();
     dsn.createDoc('TinyCADSheets');
+    dsn.appendChild('DSNIDENTITY', null, { id: drawing.documentId || '' });
     for (var i = 0; i < drawing.sheets.length; ++i) {
+      const sheet = drawing.sheets[i];
+      if (sheet.kind === 'simulation') {
+        dsn.appendChild('SimulationSheet', JSON.stringify(sheet.simulation), { id: sheet.id, name: sheet.name, version: '1' });
+        continue;
+      }
       this.to_tinycad(
         drawing.sheets[i],
         dsn,
@@ -265,6 +287,8 @@ export class ioXML {
 
     // Create the resources and document for insertion later
     this.to_resources(root, items, fonts, styles, fills, symboldefs, images);
+
+    if (sheet.id) root.insert.setAttribute('id', sheet.id);
 
     // 1.. Add the sheet name
     root.appendChild('NAME', sheet.name, null);
@@ -871,6 +895,8 @@ export class ioXML {
     let r: DocItem[] = [];
     let nodes = sheet.childNodes;
     const newSheet: dsnSheet = {
+      id: sheet.getAttribute('id') || newIdentity(),
+      kind: 'schematic',
       name: 'Sheet',
       items: r,
       details: {

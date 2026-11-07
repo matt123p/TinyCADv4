@@ -1,5 +1,8 @@
 # Implementation architecture
 
+Implementation update: see [Running the simulation integration](10-implementation-status.md) for the code now present, build commands, verification and outstanding work. The design below also describes later capabilities.
+
+
 Status: implementation design, researched on 7 November 2026. This document proposes code boundaries and contracts; no engine, helper, build script, or new file schema has been implemented or compiled in this documentation change. The existing [UI requirements](04-requirements.md) remain the behavioral contract.
 
 ## 1. Fixed decisions
@@ -20,7 +23,7 @@ The shared-library interface supplies commands and callbacks suitable for embedd
 | Current code | Implementation change |
 | --- | --- |
 | [Drawing model](../src/model/dsnDrawing.ts) | Extend the sheet collection with a discriminated Simulation sheet type and persistent identities. Existing sheets default to schematic when loading old drawings. |
-| [XML reader/writer](../src/io/ioXml.ts) and platform storage adapters | Add versioned non-drawing sheet records and result references under the existing document root. Introduce a shared byte-based DSN codec for header-detected ZIP/XML input and binary-safe saving; keep `.dsn` as the file extension. |
+| [XML reader/writer](../src/io/ioXml.ts) and platform storage adapters | Add versioned non-drawing sheet records and result references under the existing document root. Introduce a shared byte-based DSN codec for header-detected ZIP/XML input and binary-safe saving; use `.dsn` for XML and `.dzn` for ZIP output, regardless of the input extension. |
 | [Drawing page](../src/components/pages/designApp.tsx) and [sheet bar](../src/components/toolbar/sheetbar.tsx) | Render schematic or Simulation content by sheet type; retain ordinary tab navigation and the optional result dock. |
 | [Netlist worker](../src/web-worker/main.ts) and [worker client](../src/web-worker/worker.ts) | Continue connectivity work independently of the solver. Filter inputs to schematic sheets. Do not run the solver in this existing worker. |
 | [Connectivity state](../src/web-worker/netlistState.ts) | Generate a versioned snapshot and source mapping from schematic sheets only. |
@@ -81,7 +84,7 @@ Keep definition edits in the existing document undo/dirty-state workflow. Store 
 
 ### Single-file serialization
 
-Keep one `.dsn` file and introduce the ZIP-based representation defined in [Compressed DSN format and result management](09-dsn-format-and-results.md). New drawings default to compression; the shared codec detects ZIP versus existing XML from the header and validates its contents. Remember an opened file's representation for normal Save and offer explicit conversion in Save as.
+Keep one `.dsn` or `.dzn` file and introduce the ZIP-based representation defined in [Compressed DSN format and result management](09-dsn-format-and-results.md). Default to XML .dsn; automatically choose ZIP .dzn when retained result buffers/logs total at least 1 MiB. Detect ZIP versus XML from the header, ignoring the filename. Allow explicit format overrides. Local format changes use a new save path and preserve the original; Drive updates the existing file ID with its new name, MIME type and content.
 
 The ZIP contains `drawing.xml` plus a format manifest and optional binary result entries. Keep the `TinyCADSheets` XML root and existing schematic records inside that document. Add an explicitly versioned `SimulationSheet` extension record for each non-drawing sheet, with a persistent ID and escaped structured setup. A proposed shape is:
 

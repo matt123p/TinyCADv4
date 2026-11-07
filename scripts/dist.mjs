@@ -90,6 +90,7 @@ await run(bin('npm'), ['run', 'generate:icons']);
 
 await run(bin('npm'), ['run', 'build:electron']);
 await run(bin('electron-builder'), builderArgs);
+await run(process.execPath, ['scripts/verify-packaged-engines.mjs']);
 
 if (isTestAppxBuild) {
   const signScriptPath = path.resolve(workspaceRoot, 'scripts', 'sign-test-appx.ps1');

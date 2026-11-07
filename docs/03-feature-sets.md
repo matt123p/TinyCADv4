@@ -4,7 +4,7 @@ The goal is a full circuit workbench with a small first-run surface. Priority co
 
 SPICE symbols are supplied and selected through work in a separate branch. Feature priorities below cover simulation of placed components; they do not require symbol providers, a component catalogue, symbol search/import/selection UI, or library maintenance.
 
-The document boundary is fixed: one `.dsn` drawing with schematic and non-drawing Simulation sheets. A Simulation sheet holds one saved analysis, its parameters/instructions, instrument views, and results. All analyses use the shared circuit across schematic sheets. This version adds no project manager, linked schematic files, or separate simulation workbook.
+The document boundary is fixed: one `.dsn` or `.dzn` drawing with schematic and non-drawing Simulation sheets. A Simulation sheet holds one saved analysis, its parameters/instructions, instrument views, and results. All analyses use the shared circuit across schematic sheets. This version adds no project manager, linked schematic files, or separate simulation workbook.
 
 ## Feature groups
 
@@ -26,7 +26,7 @@ The document boundary is fixed: one `.dsn` drawing with schematic and non-drawin
 | F14 | Inclusive interaction | Keyboard and touch equivalents; tables; readable states; localization-ready text | Extended instrument accessibility and small-screen bench layouts | Additional specialized accessible views | US21 / Q01–Q05 |
 | F15 | Multi-sheet document | Schematic and non-drawing Simulation tabs; setup, parameters, and short instructions; add/rename/reorder/duplicate/delete; shared circuit; same-file save | Richer instruction and instrument content within Simulation sheets | Additional specialized content within the same document model | US14, US22, US26 / R05, R31, R37–R38 |
 | F16 | Runtime and distribution | Browser WASM and bundled Electron native engine; shared protocol; pinned source builds; target/package verification | Qualified optional module and cooperative-control profiles | Additional verified engine capabilities | US14, US23 / R39–R40 |
-| F17 | Compact DSN format | ZIP-based `.dsn`, header-based ZIP/XML detection, binary result entries, existing XML read/write, safe conversion and save | Additional measured compression improvements within the same one-file contract | Future container versions with explicit compatibility handling | US14, US28, US29 / R31, R41, R43 |
+| F17 | Compact DSN format | ZIP-based `.dzn`, header-based ZIP/XML detection, binary result entries, existing XML read/write, safe conversion and save | Additional measured compression improvements within the same one-file contract | Future container versions with explicit compatibility handling | US14, US28, US29 / R31, R41, R43 |
 
 P0 scope includes **UI designs and representative prototype states** for its features. It does not imply ngspice integration has already been selected or implemented. Features from later priorities can be sketched now without appearing as nonfunctional toolbar controls in a first product release.
 

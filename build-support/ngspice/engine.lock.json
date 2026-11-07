@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "version": "47",
+  "source": {
+    "url": "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/47/ngspice-47.tar.gz",
+    "sha256": "894e649651f1838a14095e5a5439e7d3aa63e87ede14d283173fda4fcdef675f"
+  },
+  "emsdk": {
+    "version": "4.0.23",
+    "url": "https://github.com/emscripten-core/emsdk/archive/refs/tags/4.0.23.tar.gz",
+    "sha256": "a91a4c1f42dbb0345faac093161e27d43e9b6964840d8c8d80976ab8d3eaf2d3",
+    "compilerRevision": "aaa43392544d695232b70eda706d751f18980c2a"
+  },
+  "protocol": 1,
+  "configure": [
+    "--with-ngshared",
+    "--without-x",
+    "--with-readline=no",
+    "--with-fftw3=no",
+    "--disable-openmp",
+    "--disable-osdi",
+    "--disable-debug"
+  ],
+  "wasm": {
+    "xspice": false,
+    "maximumMemory": 536870912
+  },
+  "native": {
+    "xspice": true
+  },
+  "patches": {
+    "001-safe-startup.patch": "64402fb0bf16aaeab66360c662b8976881310f199f558dcc2590757c5f72a0bf",
+    "002-non-xspice-rshunt.patch": "a958763b95ecb96a401ad481aa11e12b5021bd6b7537bc2382b94b6e76d8a972",
+    "003-quoted-codemodel-path.patch": "4f7a4c5279e09576a8900232a2c18c2d558173f17ecc2a193bf8c2e4b2be53c9"
+  }
+}

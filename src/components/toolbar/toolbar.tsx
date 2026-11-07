@@ -167,6 +167,7 @@ const useStyles = makeStyles({
 });
 
 interface ToolbarProps {
+  simulationSheet?: boolean;
   menu_command: string;
   wireMode: WireMode;
   can_undo: boolean;
@@ -531,6 +532,12 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
     );
   }
 
+  if (props.simulationSheet) return <ScrollableToolbarWrapper className={mergeClasses('toolbar-container',styles.toolbarContainer)}><FluentToolbar>
+    <ToolbarButton icon={<SaveRegular />} onClick={()=>props.dispatch(fileSave)} disabled={props.saveInProgress}>{t('toolbar.save')}</ToolbarButton>
+    <ToolbarButton icon={<SaveCopyRegular />} onClick={()=>props.dispatch(fileSaveAs)} disabled={props.saveInProgress}>{t('toolbar.saveAs')}</ToolbarButton>
+    <ToolbarButton icon={<ArrowUndoRegular />} onClick={()=>props.dispatch(ActionCreators.undo())} disabled={!props.can_undo}>{t('toolbar.undo')}</ToolbarButton>
+    <ToolbarButton icon={<ArrowRedoRegular />} onClick={()=>props.dispatch(ActionCreators.redo())} disabled={!props.can_redo}>{t('toolbar.redo')}</ToolbarButton>
+  </FluentToolbar></ScrollableToolbarWrapper>;
   // Normal editor toolbar
   if (props.selected_sheet < 0) {
     return null;
@@ -737,6 +744,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           className={m === 'add_wire_point_to_point' ? styles.highlight : undefined}
         />
 
+        <ToolbarButton aria-label="Simulate" title="Add a Simulation sheet" onClick={() => props.dispatch({type:'simulation/add',name:'Simulation'})}>Simulate</ToolbarButton>
         {/* No Connect */}
         <ToolbarButton
           aria-label={t('toolbar.noConnect')}

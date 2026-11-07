@@ -12,7 +12,10 @@ on:
       - main
 
 jobs:
+  engines:
+    uses: ./.github/workflows/ngspice.yml
   build-linux:
+    needs: engines
     name: Build on ubuntu-latest
     runs-on: ubuntu-latest
     steps:
@@ -25,8 +28,17 @@ jobs:
           node-version: 24
           cache: 'npm'
 
+      - name: Install Snapcraft for the Ubuntu 24 runtime
+        run: sudo snap install snapcraft --classic
+
       - name: Install Dependencies
         run: npm ci
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: ngspice-*
+          path: build/engine-artifacts
+      - run: node scripts/stage-engine-artifacts.mjs
+
 
       - name: Build Electron App
         run: npm run dist
@@ -50,6 +62,7 @@ jobs:
           if-no-files-found: warn
 
   build:
+    needs: engines
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -69,6 +82,12 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: ngspice-*
+          path: build/engine-artifacts
+      - run: node scripts/stage-engine-artifacts.mjs
+
 
       - name: Build Electron App
         if: runner.os != 'macOS'

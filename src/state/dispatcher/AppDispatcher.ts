@@ -1,4 +1,5 @@
-﻿import {
+﻿import { SimulationAction } from '../../simulation/actions';
+import {
   SetDocument,
   DocActions,
   DocActionTypes,
@@ -134,6 +135,7 @@ export interface IPoint {
 }
 
 export type AppActionTypes =
+  | SimulationAction
   | UserLoginActions
   | DialogActions
   | DocActions

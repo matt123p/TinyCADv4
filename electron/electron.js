@@ -1,3 +1,5 @@
+import { isDrawingFile } from '../shared/drawingFiles.js';
+import { registerSimulation } from './simulation.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import Store from 'electron-store';
@@ -254,7 +256,7 @@ function createWindow() {
       qp.set('action', 'new-library');
     } else if (arg.toLowerCase().endsWith('.tclib')) {
       qp.set('library', arg);
-    } else if (arg.toLowerCase().endsWith('.dsn')) {
+    } else if (isDrawingFile(arg)) {
       qp.set('file', arg);
     }
   }
@@ -263,7 +265,7 @@ function createWindow() {
   if (fileToOpen) {
     if (fileToOpen.toLowerCase().endsWith('.tclib')) {
       qp.set('library', fileToOpen);
-    } else if (fileToOpen.toLowerCase().endsWith('.dsn')) {
+    } else if (isDrawingFile(fileToOpen)) {
       qp.set('file', fileToOpen);
     }
     fileToOpen = null;
@@ -355,6 +357,7 @@ function createWindow() {
 
   if (!ipcHandlersRegistered) {
     ipcHandlersRegistered = true;
+    registerSimulation();
 
     ipcMain.on('window-minimize', () => {
       mainWindow?.minimize();
@@ -718,8 +721,8 @@ app.on('open-file', (event, filePath) => {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
 
-    if (filePath.toLowerCase().endsWith('.dsn')) {
-      loadFile(mainWindow, filePath);
+    if (isDrawingFile(filePath)) {
+      loadFile(mainWindow, filePath, isLibraryMode, spawnNewWindow);
     } else if (filePath.toLowerCase().endsWith('.tclib')) {
       loadLibrary(mainWindow, filePath);
     }

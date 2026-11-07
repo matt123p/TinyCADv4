@@ -1,0 +1,54 @@
+--- a/src/sharedspice.c
++++ b/src/sharedspice.c
+@@ -800,13 +800,16 @@
+ }
+ #endif
+ 
++static bool tinycad_no_spinit = FALSE;
++static bool tinycad_no_spiceinit = FALSE;
++
+ /* Set variable no_spinit, if reading 'spinit' is not wanted. */
+ IMPEXP
+ int
+ ngSpice_nospinit(void)
+ {
+     bool t = TRUE;
+-    cp_vset("no_spinit", CP_BOOL, &t);
++    tinycad_no_spinit = t;
+     return 0;
+ }
+ 
+@@ -816,7 +819,7 @@
+ ngSpice_nospiceinit(void)
+ {
+     bool t = TRUE;
+-    cp_vset("no_spiceinit", CP_BOOL, &t);
++    tinycad_no_spiceinit = t;
+     return 0;
+ }
+ 
+@@ -925,6 +928,8 @@
+ 
+     /*IFsimulator struct initilised*/
+     SIMinit(&nutmeginfo, &ft_sim);
++    if (tinycad_no_spinit) cp_vset("no_spinit", CP_BOOL, &tinycad_no_spinit);
++    if (tinycad_no_spiceinit) cp_vset("no_spiceinit", CP_BOOL, &tinycad_no_spiceinit);
+ 
+     /* program name*/
+     cp_program = ft_sim->simulator;
+@@ -956,6 +961,7 @@
+     /*Command prompt stuff */
+     ft_cpinit();
+ 
++    if (!tinycad_no_spiceinit) {
+     /* Read the user config files */
+ #ifdef HAVE_PWD_H
+     /* Try to source either .spiceinit or ~/.spiceinit. */
+@@ -1047,6 +1053,7 @@
+     }
+ 
+ #endif /* ~ HAVE_PWD_H */
++    }
+ 
+     if (!cp_getvar("nosighandling", CP_BOOL, NULL, 0))
+         signal(SIGSEGV, old_sigsegv);

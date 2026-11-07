@@ -19,13 +19,16 @@ declare global {
             close: () => void;
             setTitle: (title: string) => void;
 
+            startSimulation: (request: import('./simulation/contracts').EngineRequest) => Promise<void>;
+            stopSimulation: (runId: string) => void;
+            onSimulation: (callback: (runId: string, event: import('./simulation/contracts').EngineEvent) => void) => () => void;
             // Files
             loadFile: (file?: { name: string, id: string }) => void;
             saveFile: (data: {
                 name: string;
                 id: FileIdType | string;
                 folderId: FileIdType | string;
-                content: string
+                content: string | Uint8Array
             }) => void;
 
             // Libraries
@@ -45,7 +48,7 @@ declare global {
             setMenuTranslations: (translations: Record<string, string>) => void;
 
             // Callbacks
-            fileLoaded: (callback: (data: { content: string, name: string, id: string }) => void) => () => void;
+            fileLoaded: (callback: (data: { content: string | Uint8Array, name: string, id: string }) => void) => () => void;
             fileSaved: (callback: (data: { success: boolean, name: string, id: string }) => void) => () => void;
             recentFiles: (callback: (data: { name: string, id: string }[]) => void) => () => void;
             libraryLoaded: (callback: (data: { content: ArrayBuffer, name: string, id: string, lastModified?: Date | string }) => void) => () => void;

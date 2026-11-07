@@ -1,3 +1,5 @@
+import { drawingFileName, isCompressedDrawing } from '../../shared/drawingFiles.js';
+import { encodeDrawing } from './dsnCodec';
 import React from 'react';
 
 import { ActionCreators } from 'redux-undo';
@@ -51,7 +53,7 @@ export type FileIdType = string | FileSystemFileHandle;
 export interface UserManager {
   initialize(dispatch: Dispatch): Promise<void>;
   fileOpen(dispatch: Dispatch, file?: CurrentFile): void;
-  saveFile(xml: string, file: CurrentFile): Promise<any>;
+  saveFile(xml: string | Uint8Array, file: CurrentFile): Promise<any>;
   login(): Promise<void>;
   renameFile(title: string, fileId: FileIdType): Promise<boolean>;
   loadLibrary(
@@ -180,11 +182,11 @@ function internalfileSave(
         drawing,
         netlist,
       );
-      const xml = io.to_dsn(drawing_with_hints, true, true);
-      return userManager.saveFile(xml.tostring(), {
+      return encodeDrawing(drawing_with_hints).then(bytes => userManager.saveFile(bytes, {
         ...file,
+        name: drawingFileName(file.name, isCompressedDrawing(bytes)),
         id: saveAs ? null : file.id,
-      });
+      }));
     })
     .then(
       (meta) => {

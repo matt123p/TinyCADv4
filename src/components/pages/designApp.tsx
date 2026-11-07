@@ -1,3 +1,4 @@
+import { SimulationSheet } from '../simulation/SimulationSheet';
 import React, { FunctionComponent, useState, useCallback, useEffect } from 'react';
 import { makeStyles, Button } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +28,7 @@ const useStyles = makeStyles({
 });
 
 export interface DesignAppProps {
+  simulationSheet: boolean;
   editSymbol: tclibLibraryEntry;
   selected_sheet: number;
   browserSheets: BrowserSheetData[];
@@ -126,7 +128,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       <div className="mid-container">
         <div
           className={`side-panel-container${sidePanelVisible ? '' : ' side-panel-collapsed'}${sidePanelResizing ? ' side-panel-resizing' : ''}`}
-          style={sidePanelVisible ? { width: sidePanelWidth } : undefined}
+          style={props.simulationSheet ? {display:'none'} : sidePanelVisible ? { width: sidePanelWidth } : undefined}
         >
           {sidePanelVisible && (
             <ResizeHandle
@@ -152,12 +154,12 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               props.editSymbol ? 'circuit-container-es' : 'circuit-container'
             }
           >
-            {props.selected_sheet >= 0 ? <SheetContainer /> : null}
+            {props.selected_sheet >= 0 ? props.simulationSheet ? <SimulationSheet /> : <SheetContainer /> : null}
             {props.selected_sheet === -1 ? <BomContainer /> : null}
             {props.selected_sheet < -1 ? <Browser url={props.browserSheets[-2 - props.selected_sheet].url} /> : null}
             <SheetbarContainer />
           </div>
-          <div className="bottom-panel-wrapper" style={{ height: bottomPanelHeight }}>
+          <div className="bottom-panel-wrapper" style={{ height: props.simulationSheet ? 0 : bottomPanelHeight, display: props.simulationSheet ? 'none' : undefined }}>
             <ResizeHandle direction="vertical" onResize={handleBottomPanelResize} />
             <BottomPanelContainer />
           </div>

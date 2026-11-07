@@ -1,5 +1,6 @@
 import { DocItem, Coordinate, dsnPin } from './dsnItem';
 import { Snap } from '../manipulators/snap';
+import type { SimulationSetup } from '../simulation/contracts';
 
 export interface SheetDetails {
   author: string;
@@ -128,6 +129,10 @@ export interface libHatch {
 }
 
 export interface dsnSheet {
+  id?: string;
+  kind?: 'schematic' | 'simulation';
+  // Non-drawing sheets keep empty geometry for legacy document consumers.
+  simulation?: SimulationSetup;
   items: DocItem[];
   details: SheetDetails;
 
@@ -201,6 +206,9 @@ export interface DsnSettings {
 }
 
 export interface dsnDrawing {
+  documentId?: string;
+  representation?: 'zip-v1' | 'xml';
+  saveFormat?: 'auto' | 'zip-v1' | 'xml';
   sheets: dsnSheet[];
 
   // Global document settings

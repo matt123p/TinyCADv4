@@ -1,5 +1,8 @@
 # Engine builds, bundling, and release verification
 
+Implementation update: see [Running the simulation integration](10-implementation-status.md) for the code now present, build commands, verification and outstanding work. The design below also describes later capabilities.
+
+
 Status: proposed build implementation, researched on 7 November 2026. This describes work to implement; no workflow, dependency lock, native binary, or WASM artifact has been created or qualified by this documentation change. Read alongside the [runtime architecture](07-implementation.md).
 
 ## 1. Recommended supply strategy

@@ -354,9 +354,9 @@ Removal marks the drawing dirty and is undoable within the documented memory bud
 
 ### Compressed drawing format
 
-New drawings default to ZIP-compressed `.dsn` files. The Open command auto-detects compressed versus XML drawings from their headers and validates the detected format. The extension and sheet workflow stay the same; the user does not unzip anything. The archive internally holds document XML and optional binary result payloads.
+New drawings default to XML `.dsn` files. Automatic saves use ZIP `.dzn` when retained numerical buffers and solver logs total at least 1 MiB; omitted or removed results do not count. The Open command auto-detects compressed versus XML drawings from their headers and validates the detected format. Both extensions use the same sheet workflow; the user does not unzip anything. The archive internally holds document XML and optional binary result payloads.
 
-Opening an existing XML DSN remembers its representation for ordinary Save. **Save as** can explicitly choose **Compressed DSN (.dsn)** or **XML DSN (.dsn)**. Compression is distinct from retention: a compressed file can include results or be setup-only. It is also distinct from compatibility: XML containing new Simulation records is not automatically safe to round-trip through older TinyCAD.
+Ordinary Save uses the automatic policy unless an explicit format is selected. **Save as** can explicitly choose **Compressed drawing (.dzn)** or **XML DSN (.dsn)**. Compression is distinct from retention: a compressed file can include results or be setup-only. It is also distinct from compatibility: XML containing new Simulation records is not automatically safe to round-trip through older TinyCAD.
 
 If a legacy-compatible drawing export omits non-drawing sheets or setup, explain that loss before exporting and retain the original complete drawing. Compatibility with older TinyCAD versions needs an explicit preservation check before release.
 

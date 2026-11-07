@@ -1,0 +1,16 @@
+{
+  "defaultFileExtensions": [
+    "dsn",
+    "dzn",
+    "tclib"
+  ],
+  "secondaryMimeTypes": [
+    "application/xml",
+    "text/xml",
+    "application/octet-stream"
+  ],
+  "note": "Reference settings for Google Cloud Console > Google Drive API > Drive UI integration. Keep the existing Open URL, New URL and OAuth client. This file does not deploy Console settings.",
+  "defaultMimeTypes": [
+    "application/x-tinycad-dsn+zip"
+  ]
+}

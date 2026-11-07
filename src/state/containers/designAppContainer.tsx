@@ -5,6 +5,7 @@ import { actionCommand } from '../dispatcher/AppDispatcher';
 
 const mapStateToProps = (state: docDrawing) => {
   return {
+    simulationSheet: !state.docStore.present.editSymbol && state.docStore.present.drawing.sheets[state.docStore.present.view.selected_sheet]?.kind === 'simulation',
     creating: !!state.docStore.present.view.add,
     dialogOpen: !!state.altStore.show_dialogue,
     selected_sheet: state.docStore.present.view.selected_sheet,

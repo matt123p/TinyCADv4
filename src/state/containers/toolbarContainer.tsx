@@ -9,6 +9,7 @@ const mapStateToProps = (state: docDrawing) => {
   const view = state.docStore.present.view;
   const update_view = new updateView();
   return {
+    simulationSheet: !state.docStore.present.editSymbol && sheet?.kind === 'simulation',
     menu_command: view.menu_command,
     wireMode: view.wireMode ?? '90',
     can_paste: update_view.can_paste(view, sheet),

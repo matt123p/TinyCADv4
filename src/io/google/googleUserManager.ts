@@ -1,3 +1,5 @@
+import { drawingFileName, isCompressedDrawing, drawingMimeType } from '../../../shared/drawingFiles.js';
+import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
 import { ActionCreators } from 'redux-undo';
 import { tclib } from '../../model/tclib';
@@ -169,11 +171,7 @@ export class GoogleUserManager implements UserManager {
                 dispatch(actionEditLibrary(lib, meta.title, meta.id, null));
               });
             } else {
-              return this.loadFileText(state.ids[0]).then((file) => {
-                const io = new ioXML();
-                const xmlBuilder = new XMLBuilder();
-                xmlBuilder.fromText(file);
-                const doc = io.from_dsn(xmlBuilder);
+              return fetch(`https://www.googleapis.com/drive/v3/files/${state.ids[0]}?alt=media`, { headers: { Authorization: `Bearer ${this.getToken()}` } }).then(r => { if (!r.ok) throw new Error('Unable to load drawing.'); return r.arrayBuffer(); }).then(decodeDrawing).then((doc) => {
                 dispatch(actionSetDocument(doc, meta.title, meta.id, null));
                 dispatch(ActionCreators.clearHistory());
               });
@@ -241,72 +239,35 @@ export class GoogleUserManager implements UserManager {
     );
   }
 
-  saveFile(xml: string, file: CurrentFile): Promise<any> {
-    return this.saveFileInternal(xml, file, 'application/xml');
+  saveFile(xml: string | Uint8Array, file: CurrentFile): Promise<any> {
+    return this.saveFileInternal(xml, { ...file, name: drawingFileName(file.name, isCompressedDrawing(xml)) }, drawingMimeType(xml));
   }
 
   private saveFileInternal(
-    xml: string,
+    xml: string | Uint8Array,
     file: CurrentFile,
     mimeType: string,
   ): Promise<any> {
-    // Does this file already exist?
-    if (!file?.id) {
-      // Create a new file
-      const headers = new Headers();
-      headers.append('Authorization', `Bearer ${this.getToken()}`);
-      headers.append('Content-Type', 'application/json');
-
-      const meta = {
-        name: file.name,
-        mimeType: mimeType,
-        parents: file?.folderId ? [file?.folderId] : undefined,
-      };
-
-      return fetch(`https://www.googleapis.com/drive/v3/files`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(meta),
-      })
-        .then((r) => r.json())
-        .then((response) => {
-          if (response.id) {
-            return this.saveFileInternal(
-              xml,
-              {
-                name: file.name,
-                id: response.id,
-                folderId: file.folderId,
-              },
-              mimeType,
-            );
-          } else {
-            return null;
-          }
-        });
-    }
-
-    const headers = new Headers();
-    headers.append('Authorization', `Bearer ${this.getToken()}`);
-    headers.append('Content-Type', mimeType);
-    headers.append('Content-Length', xml.length.toString());
-
-    return fetch(
-      `https://www.googleapis.com/upload/drive/v3/files/${file.id}?uploadType=media`,
-      {
-        method: 'PATCH',
-        headers,
-        body: xml,
-      },
-    )
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) {
-          throw data.message;
-        }
-
-        return data;
-      });
+    const headers = new Headers({
+      Authorization: `Bearer ${this.getToken()}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Upload-Content-Type': mimeType,
+    });
+    const metadata = { name: file.name, mimeType, ...(!file.id && file.folderId ? {parents:[file.folderId]} : {}) };
+    const suffix = file.id ? `/${file.id}` : '';
+    // Include name, MIME type and content in the same resumable upload,
+    // including when a drawing changes between .dsn and .dzn.
+    return fetch(`https://www.googleapis.com/upload/drive/v3/files${suffix}?uploadType=resumable&fields=id,name,mimeType`, {
+      method: file.id ? 'PATCH' : 'POST', headers, body: JSON.stringify(metadata),
+    }).then(async response => {
+      if (!response.ok) throw new Error(`Unable to start Drive upload (${response.status}).`);
+      const location = response.headers.get('Location');
+      if (!location || !/^https:\/\/(?:www\.)?googleapis\.com\//.test(location)) throw new Error('Drive returned an invalid upload location.');
+      const uploaded = await fetch(location, {method:'PUT',headers:{Authorization:`Bearer ${this.getToken()}`,'Content-Type':mimeType},body:typeof xml === 'string' ? xml : new Blob([new Uint8Array(xml).buffer])});
+      if (!uploaded.ok) throw new Error(`Drive upload failed (${uploaded.status}).`);
+      const result = await uploaded.json();
+      return {...result,name:result.name || file.name,mimeType:result.mimeType || mimeType};
+    });
   }
 
   saveFileArrayBuffer(data: ArrayBuffer, file: CurrentFile): Promise<any> {
@@ -360,7 +321,7 @@ export class GoogleUserManager implements UserManager {
       .then((r) => r.json())
       .then((data) => {
         if (data.error) {
-          throw data.message;
+          throw new Error(data.error.message || 'Drawing upload failed.');
         }
 
         return data;

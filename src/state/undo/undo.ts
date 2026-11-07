@@ -27,7 +27,7 @@ export const DocStoreWithHistory = undoable(DocStoreReducer, {
       needHistory ||
       currentState.drawing != previousHistory._latestUnfiltered?.drawing;
     let undoCheckpoint = now.getTime() - lastEvent.getTime() > 500;
-    if (action.type === MenuActionTypes.MenuCommand) {
+    if (action.type.startsWith('simulation/') || action.type === MenuActionTypes.MenuCommand) {
       undoCheckpoint = true;
     }
     if (

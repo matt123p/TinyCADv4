@@ -1,3 +1,4 @@
+import { createSimulationSheet, withoutResults } from '../../simulation/document';
 import {
   actionSelectPanel,
   actionSelectBottomPanel,
@@ -141,7 +142,21 @@ export function DocStoreReducer(
   state: docStore = intialState,
   action: AppActionTypes,
 ): docStore {
+  if (action.type === 'simulation/add') {
+    if (state.editSymbol) return state;
+    let name = action.name, suffix = 2;
+    while (state.drawing.sheets.some(sheet => sheet.name === name)) name = `${action.name} (${suffix++})`;
+    const added = createSimulationSheet(state.drawing.sheets.find(s => s.kind !== 'simulation') || blank().sheets[0], name);
+    return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, sheets: [...state.drawing.sheets, added] }, view: { ...state.view, selected_sheet: state.drawing.sheets.length, _selected_array: [], add: null } };
+  }
+  if (action.type === 'simulation/update') return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, sheets: state.drawing.sheets.map(s => s.id === action.sheetId && s.kind === 'simulation' ? { ...s, simulation: action.setup } : s) } };
+  if (action.type === 'simulation/remove-results') return { ...state, drawingVersion: state.drawingVersion + 1, drawing: withoutResults(state.drawing, action.ids) };
+  if (action.type === 'simulation/format') return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, saveFormat: action.representation } };
   let sheet = activeSheet(state);
+  if (sheet?.kind === 'simulation') {
+    const allowed = new Set<string>([DocActionTypes.SetDocument, DocActionTypes.UpdateNetlistHints, MenuActionTypes.MenuSheetSelect, MenuActionTypes.MenuSheetLeft, MenuActionTypes.MenuSheetRight, MenuActionTypes.MenuSheetMove, MenuActionTypes.MenuSheetRename, MenuActionTypes.MenuSheetAdd, MenuActionTypes.MenuSheetRemove, MenuActionTypes.BrowserOpen, MenuActionTypes.BrowserClose, DocActionTypes.BomClose]);
+    if (!allowed.has(action.type)) return state;
+  }
   let view = state.view;
   const prev_selected_array = view._selected_array;
   const update_view = new updateView();
@@ -172,7 +187,7 @@ export function DocStoreReducer(
     case DocActionTypes.SetDocument:
       let new_drawing = action.doc;
       for (let i = 0; i < new_drawing.sheets.length; ++i) {
-        new_drawing.sheets[i] = update_view.tidy_wires(new_drawing.sheets[i]);
+        if (new_drawing.sheets[i].kind !== 'simulation') new_drawing.sheets[i] = update_view.tidy_wires(new_drawing.sheets[i]);
       }
       state = update(state, {
         drawing: { $set: new_drawing },
@@ -621,7 +636,7 @@ export function DocStoreReducer(
       }
       break;
     case MenuActionTypes.MenuSheetRemove:
-      if (!state.editSymbol) {
+      if (!state.editSymbol && state.drawing.sheets.length > 1 && (sheet?.kind === 'simulation' || state.drawing.sheets.filter(s => s.kind !== 'simulation').length > 1)) {
         let sheets = state.drawing.sheets.slice();
         sheets.splice(view.selected_sheet, 1);
         let selected_sheet = view.selected_sheet;

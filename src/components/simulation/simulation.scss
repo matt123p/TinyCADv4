@@ -1,0 +1,74 @@
+.simulation-sheet {
+  font-size: 14px;
+  line-height: 1.5;
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  button,
+  select,
+  input:not([type='checkbox']):not([type='range']):not([type='file']),
+  textarea {
+    border: 1px solid #8a8886;
+    border-radius: 4px;
+    padding: 5px 10px;
+    background: #fff;
+    color: #242424;
+  }
+  button {
+    cursor: pointer;
+    min-height: 32px;
+  }
+  button:hover:not(:disabled) {
+    background: #eff6fc;
+    border-color: #0078d4;
+  }
+  button[aria-pressed='true'] {
+    color: #005a9e;
+    background: #eff6fc;
+    border-color: #0078d4;
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  :focus-visible {
+    outline: 2px solid #0078d4;
+    outline-offset: 2px;
+  }
+  table {
+    border-collapse: collapse;
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+  }
+  th,
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #ddd;
+    white-space: nowrap;
+  }
+  th {
+    font-weight: 600;
+  }
+  caption {
+    text-align: left;
+    font-weight: 600;
+    padding: 12px 0;
+  }
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 8px 0;
+  }
+  textarea {
+    max-width: 900px;
+  }
+  pre {
+    padding: 12px;
+    background: #f5f5f5;
+    color: #242424;
+    overflow: auto;
+  }
+}

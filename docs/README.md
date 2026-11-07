@@ -27,7 +27,7 @@ These documents specify a proposed UI for an integrated ngspice experience with 
 
 **Runtime and distribution:** Browser builds use local ngspice WASM; Electron uses native ngspice with its helper, libraries, and required modules bundled in the application. The implementation plan builds both from pinned upstream source in GitHub Actions and verifies each platform package. These engine installation resources do not introduce user projects or additional drawing files.
 
-**Compact drawings and exported results:** New drawings default to a ZIP-based `.dsn` format, auto-detected from its header; existing XML `.dsn` files remain readable. Users can export result data, remove stored results while retaining setup, or save a compact copy without results. All internal archive entries still belong to one drawing file.
+**Compact drawings and exported results:** Ordinary drawings default to XML `.dsn`; retained results of at least 1 MiB select ZIP `.dzn`, auto-detected from its header; existing XML `.dsn` files remain readable. Users can export result data, remove stored results while retaining setup, or save a compact copy without results. All internal archive entries still belong to one drawing file.
 
 The priority labels describe the intended product scope:
 
@@ -42,3 +42,7 @@ Priority is independent of visibility. An essential model-mapping control can be
 The specification now includes implementation architecture and build/distribution details as well as the UI design. The UI can still be reviewed using static screens or a prototype with clearly labeled sample results. The proposed engine recipes, schemas, and APIs require implementation and qualification; no simulator integration, binary build, or workflow change has been performed in this documentation change.
 
 The existing [TinyCAD manual](https://docs.tinycad.net/v4/) remains the guide to current functionality. These planning documents belong in this application repository; they do not replace that separately maintained manual.
+
+- [Running the simulation integration](10-implementation-status.md) — current implementation, build instructions, verification and remaining work.
+
+- [Drawing extensions and Drive deployment](11-drawing-extensions-and-drive.md) — automatic .dsn/.dzn selection and Drive UI registration.

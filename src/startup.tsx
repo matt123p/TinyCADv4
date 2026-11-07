@@ -1,4 +1,8 @@
-﻿import React from 'react';
+﻿import { invalidateSimulationDocument } from './simulation/session';
+import { activateResultDocument } from './simulation/resultStore';
+import { DocActionTypes } from './state/actions/docActions';
+import { Middleware } from 'redux';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { FluentProvider, webLightTheme } from '@fluentui/react-components';
 import { applyMiddleware, combineReducers, createStore } from 'redux';
@@ -17,10 +21,18 @@ import {
 import { imageFile } from './io/files';
 import i18n from './i18n';
 
+const simulationLifecycle: Middleware = () => next => action => {
+  if (action.type === DocActionTypes.SetDocument) {
+    invalidateSimulationDocument();
+    activateResultDocument(action.doc.documentId);
+  }
+  return next(action);
+};
+
 export const store = createStore(
   combineReducers({ docStore: DocStoreWithHistory, altStore: AltStoreReducer }),
   // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
-  applyMiddleware(ReduxThunk),
+  applyMiddleware(ReduxThunk, simulationLifecycle),
 );
 
 const scheduleAfterFirstPaint = (task: () => void | Promise<void>) => {

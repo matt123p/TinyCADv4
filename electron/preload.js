@@ -116,6 +116,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     sendAppClosingResponse: (response) => ipcRenderer.send('app-closing-response', response),
 
+    startSimulation: request => ipcRenderer.invoke('simulation-start', request),
+    stopSimulation: runId => ipcRenderer.send('simulation-stop', runId),
+    onSimulation: callback => {
+        const listener = (_, id, event) => callback(id, event);
+        ipcRenderer.on('simulation-event', listener);
+        return () => ipcRenderer.removeListener('simulation-event', listener);
+    },
     // Print a PDF using native print dialog (fallback - prints main window)
     printPdf: (pdfBase64) => ipcRenderer.send('print-pdf', pdfBase64),
     

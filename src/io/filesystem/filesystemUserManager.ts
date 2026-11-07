@@ -1,9 +1,12 @@
+import { drawingFileName, isCompressedDrawing, isDrawingFile, drawingMimeType } from '../../../shared/drawingFiles.js';
+import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
 import { ActionCreators } from 'redux-undo';
 import { tclib } from '../../model/tclib';
 import {
   actionEditLibrary,
   actionSetDocument,
+  actionSelectDialog,
   actionSetFileData,
   browserError,
   userLoginLoginError,
@@ -81,7 +84,7 @@ export class FileSystemUserManager implements UserManager {
         {
           description: 'TinyCAD drawings',
           accept: {
-            'application/xml': ['.dsn'],
+            'application/octet-stream': ['.dsn', '.dzn'],
           },
         },
         {
@@ -100,12 +103,8 @@ export class FileSystemUserManager implements UserManager {
       .then((files: FileSystemFileHandle[]) => {
         if (files.length > 0) {
           return files[0].getFile().then((file: File) => {
-            if (file.name.toLowerCase().indexOf('.dsn') !== -1) {
-              return file.text().then((text) => {
-                const io = new ioXML();
-                const xmlBuilder = new XMLBuilder();
-                xmlBuilder.fromText(text);
-                const doc = io.from_dsn(xmlBuilder);
+            if (isDrawingFile(file.name)) {
+              return file.arrayBuffer().then(decodeDrawing).then((doc) => {
                 dispatch(actionSetDocument(doc, file.name, files[0], null));
                 dispatch(ActionCreators.clearHistory());
               });
@@ -136,54 +135,29 @@ export class FileSystemUserManager implements UserManager {
             }
           });
         }
-      });
+      }).catch(error => { if (error?.name !== 'AbortError') dispatch(actionSelectDialog('io_failure',{message:String(error)})); });
   }
 
   loadFileMetadata(fileId: FileIdType) {
     return Promise.resolve(null);
   }
 
-  saveFile(xml: string, file: CurrentFile): Promise<any> {
-    if (file.id) {
-      const fsFile = file.id as FileSystemFileHandle;
-      return fsFile
-        .createWritable()
-        .then((writable: FileSystemWritableFileStream) => {
-          return writable.write(xml).then(() => writable.close());
-        })
-        .then(() => {
-          const meta = {
-            name: file.name,
-            id: file.id,
-            mimeType: 'application/xml',
-          };
-          return meta;
-        });
-    } else {
-      const pickerOpts = {
-        types: [
-          {
-            description: 'TinyCAD drawings',
-            accept: {
-              'application/xml': ['.dsn'],
-            },
-          },
-        ],
-        suggestedName: file.name,
-        excludeAcceptAllOption: true,
-      };
-      return window
-        .showSaveFilePicker(pickerOpts)
-        .then((file: FileSystemFileHandle) => {
-          if (file) {
-            return this.saveFile(xml, {
-              name: file.name,
-              id: file,
-              folderId: null,
-            });
-          }
-        });
+  async saveFile(xml: string | Uint8Array, file: CurrentFile): Promise<any> {
+    const compressed = isCompressedDrawing(xml);
+    const name = drawingFileName(file.name, compressed);
+    let handle = file.id as FileSystemFileHandle;
+    // A file handle cannot be renamed portably. On a format change save a new
+    // sibling through the picker, keeping the original file until save succeeds.
+    if (!handle || handle.name !== name) {
+      handle = await window.showSaveFilePicker({
+        types: [{description: compressed ? 'TinyCAD compressed drawings' : 'TinyCAD drawings',accept:{'application/octet-stream':[compressed ? '.dzn' : '.dsn']}}],
+        suggestedName:name,excludeAcceptAllOption:true,
+      });
     }
+    const writable = await handle.createWritable();
+    try { await writable.write(xml); await writable.close(); }
+    catch(error) { await writable.abort().catch(()=>{}); throw error; }
+    return {name:handle.name,id:handle,mimeType:drawingMimeType(xml)};
   }
 
   saveFileArrayBuffer(data: ArrayBuffer, file: CurrentFile): Promise<any> {

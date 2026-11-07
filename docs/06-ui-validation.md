@@ -102,7 +102,7 @@ The specification makes provisional choices so prototypes can proceed. These que
 | Panel layout | Existing sheet bar; main Simulation sheet view; optional left/bottom dock; no project tree | Setup and schematic references become hard to use at laptop size. |
 | Live trial tuning | New acquisition; explicit Apply/Discard | Users confuse trial and saved values despite labels and history. |
 | Guided unit entry | Explicit quantity units, normalized previews, ambiguity resolution | Users repeatedly misread prefixes or cannot enter familiar values efficiently. |
-| Result retention | Explicit export/removal/compact-copy commands; setup preserved; ZIP default for new drawings; both ZIP and XML readable | Users confuse compression with result removal, lose answers unexpectedly, or cannot predict reopen behavior. |
+| Result retention | Explicit export/removal/compact-copy commands; setup preserved; XML .dsn by default, ZIP .dzn for large retained results; both ZIP and XML readable | Users confuse compression with result removal, lose answers unexpectedly, or cannot predict reopen behavior. |
 
 Migration review can clarify supported model/netlist inputs within the current scope. It cannot expand this version into native project import or project management.
 

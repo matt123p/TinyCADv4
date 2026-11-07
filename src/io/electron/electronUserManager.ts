@@ -1,3 +1,5 @@
+import { drawingMimeType } from '../../../shared/drawingFiles.js';
+import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
 import { ActionCreators } from 'redux-undo';
 import {
@@ -11,6 +13,7 @@ import {
   actionEditLibrary,
   actionMenuSetRecentFileList,
   actionSetDocument,
+  actionSelectDialog,
   actionSetFileData,
   actionUpdateConfig,
   actionSetLibraryData,
@@ -61,13 +64,12 @@ export class ElectronUserManager implements UserManager {
 
     // Add the callbacks
     this.unsubs.push(
-      window.electronAPI.fileLoaded((data) => {
-        const io = new ioXML();
-        const xmlBuilder = new XMLBuilder();
-        xmlBuilder.fromText(data.content);
-        const doc = io.from_dsn(xmlBuilder);
-        dispatch(actionSetDocument(doc, data.name, data.id, data.id));
-        dispatch(ActionCreators.clearHistory());
+      window.electronAPI.fileLoaded(async (data) => {
+        try {
+          const doc = await decodeDrawing(data.content);
+          dispatch(actionSetDocument(doc, data.name, data.id, data.id));
+          dispatch(ActionCreators.clearHistory());
+        } catch (error) { dispatch(actionSelectDialog('io_failure',{message:String(error)})); }
       }),
     );
 
@@ -229,7 +231,7 @@ export class ElectronUserManager implements UserManager {
     return Promise.resolve(null);
   }
 
-  saveFile(xml: string, file: CurrentFile): Promise<any> {
+  saveFile(xml: string | Uint8Array, file: CurrentFile): Promise<any> {
 
     return new Promise((resolve, reject) => {
 
@@ -245,7 +247,7 @@ export class ElectronUserManager implements UserManager {
             name: data.name,
             id: data.id,
             folderId: data.id,
-            mimeType: 'application/xml',
+            mimeType: drawingMimeType(xml),
           });
         } else {
           reject();

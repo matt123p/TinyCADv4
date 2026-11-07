@@ -41,7 +41,10 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  engines:
+    uses: ./.github/workflows/ngspice.yml
   publish-snap:
+    needs: engines
     if: inputs.publish_snap == true
     runs-on: ubuntu-latest
     permissions:
@@ -56,8 +59,17 @@ jobs:
           node-version: 24
           cache: 'npm'
 
+      - name: Install Snapcraft for the Ubuntu 24 runtime
+        run: sudo snap install snapcraft --classic
+
       - name: Install Dependencies
         run: npm ci
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: ngspice-*
+          path: build/engine-artifacts
+      - run: node scripts/stage-engine-artifacts.mjs
+
 
       - name: Build Snap
         run: npm run dist -- --linux snap
@@ -87,6 +99,7 @@ jobs:
           release: stable
 
   publish-ms-store:
+    needs: engines
     concurrency:
       group: microsoft-store-submission
       cancel-in-progress: false
@@ -115,6 +128,12 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: ngspice-*
+          path: build/engine-artifacts
+      - run: node scripts/stage-engine-artifacts.mjs
+
 
       - name: Build AppX/MSIX
         # Force build of AppX/MSIX package

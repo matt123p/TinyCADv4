@@ -87,7 +87,7 @@ TinyCAD for the Web is a full rewrite of the original Windows-only C++ TinyCAD, 
 Compatibility notes:
 
 - This version of TinyCAD is file compatible with the previous version.  You should be able to simply
-  open existing `.dsn` and `.tclib` files.
+  open existing `.dsn` and `.tclib` files. ZIP-compressed drawings use `.dzn`; both drawing extensions load by content/header.
 - The project keeps TinyCAD's core schematic/library workflow and file association concepts.
 - Because this is a rewrite, some edge-case behavior may differ from the legacy C++ implementation.  This should be kept to a miniumum and is not intended. If you have an old design or library that does not behave as expected, please open an issue with a sample file.
 
