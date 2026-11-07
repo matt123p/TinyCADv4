@@ -16,7 +16,7 @@
       "documentation": "docs/README.md",
       "package": {
         "type": "source",
-        "manifest": "examples/plugins/inspector/tinycad-plugin.json"
+        "manifest": "inspector/tinycad-plugin.json"
       }
     },
     {
@@ -34,7 +34,7 @@
       "documentation": "docs/README.md",
       "package": {
         "type": "source",
-        "manifest": "examples/plugins/project/tinycad-plugin.json"
+        "manifest": "project/tinycad-plugin.json"
       }
     }
   ]

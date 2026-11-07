@@ -1,6 +1,6 @@
 # Writing TinyCAD plugins
 
-TinyCAD plugins run in isolated workers and frames in the browser and Electron. Open **File → Plugins → Available** to install the bundled Circuit Inspector and Project Home examples. Use **Add** to register a GitHub repository URL, then select a plugin in the list and install it from the details pane.
+TinyCAD plugins run in isolated workers and frames in the browser and Electron. TinyCAD ships without example plugins or a default example repository. Open **File → Plugins**, use **Add** to register a GitHub repository URL, then select a plugin under **Available** and install it from the details pane. The standalone [examples](../examples/plugins/README.md) can be imported explicitly through Developer mode.
 
 The implementation contracts are in [`src/plugins/api.ts`](../src/plugins/api.ts), [`types.ts`](../src/plugins/types.ts), and the [manifest](../schemas/tinycad-plugin.schema.json) and [catalog](../schemas/tinycad-plugins.schema.json) schemas. See [the architecture proposal](plugin.md) for the wider design.
 
@@ -8,7 +8,7 @@ The implementation contracts are in [`src/plugins/api.ts`](../src/plugins/api.ts
 
 Installed and Available share a fixed-size list on the left and a description/details pane on the right. Search filters names, IDs, and descriptions in either view. Select a source in the top bar to load its catalog; **Refresh** reloads sources and checks installed plugins for updates. Choose a version and use **Install**, **Update**, **Disable**, or **Uninstall** in the details pane. Markdown Description, Changelog, and Full documentation tabs are available before installation. **Plugin settings** contains update policy, channel, rollback, and startup-page preferences.
 
-**Add** saves a repository URL. **Remove** forgets the selected URL and its catalog while preserving installed plugins and their design data. Sources and loaded catalogs survive closing the manager or restarting TinyCAD. Bundled examples remain available offline. **Developer mode** adds local server/folder sources or an explicit GitHub tag/commit.
+**Add** saves a repository URL. **Remove** forgets the selected URL and its catalog while preserving installed plugins and their design data. Sources and loaded catalogs survive closing the manager or restarting TinyCAD. Installed packages remain available offline. Previously registered built-in example sources are removed when upgrading; explicitly installed copies retain their cached packages. **Developer mode** adds local server/folder sources or an explicit GitHub tag/commit.
 
 ## Repository layout
 
@@ -28,8 +28,8 @@ For example, from the TinyCAD checkout:
 ```sh
 # Serve one plugin on port 8080
 npm run plugins:serve -- examples/plugins/inspector
-# Or serve the repository catalog and choose either example (port 8081)
-npm run plugins:serve -- . 8081
+# Or serve the example catalog and choose either example (port 8081)
+npm run plugins:serve -- examples/plugins 8081
 ```
 
 Enter `http://127.0.0.1:8080/` or `http://127.0.0.1:8081/` in the manager. The helper binds to loopback, supplies CORS/no-cache headers, and serves only manifests, the catalog, and declared plugin resources. It rejects symlinks. Other static servers work if configured with CORS; your browser may also request local-network access.
@@ -95,9 +95,9 @@ Exported core commands currently include `core.file.save`, `core.file.open`, `co
 
 ## Release distribution and updates
 
-Run `npm run plugins:bundle` after changing the shipped examples, and `npm run plugins:package` to generate ready-to-upload ZIPs and a release catalog under `plugin-release/`. Attach the generated catalog and packages to a GitHub release. This command creates local artifacts only; it does not publish anything.
+Run `npm run plugins:catalog` after changing the standalone examples in `examples/plugins`, and `npm run plugins:package` to generate ready-to-upload ZIPs and a release catalog under `plugin-release/`. Attach the generated catalog and packages to a GitHub release. This command creates local artifacts only; it does not publish anything.
 
-Release catalog entries identify assets in that exact release. SHA-256 digests are supplied in the generated catalog and verified against GitHub's asset digest when available. A source-packaged entry can instead reference a manifest at the release's resolved source commit. Tags/commits are a fallback for repositories without releases or an explicit developer choice. The root source catalog in this repository demonstrates that layout.
+Release catalog entries identify assets in that exact release. SHA-256 digests are supplied in the generated catalog and verified against GitHub's asset digest when available. A source-packaged entry can instead reference a manifest at the release's resolved source commit. Tags/commits are a fallback for repositories without releases or an explicit developer choice. The source catalog in `examples/plugins/tinycad-plugins.json` demonstrates that layout. To create a plugin repository, place the contents of `examples/plugins` at its root. Examples and optional release artifacts are excluded from TinyCAD application builds.
 
 Each installed plugin has its own automatic/manual/pinned update policy, stable/prerelease channel, permissions, and retained version history. Compatible stable release updates are automatic by default; permission expansion or schema-version increases require review. Rollback pins the chosen version until the user resumes updates. Packages are cached in Electron's user-data directory or browser IndexedDB; browser `localStorage` stores the selected versions and policies.
 
@@ -114,6 +114,6 @@ Open TinyCAD with `?plugins=safe` to inspect files and plugin documentation with
 - `npm run test:plugins`: archive/manifest validation, XML/SQLite round trips, atomic edits, undo, independent sessions, update/rollback, and cache integrity.
 - `npm run test:plugins:browser`: real browser manager, isolation, Markdown, panel, page, and session checks against `dist/` (run `npm run build:fs` first).
 - `npm run test:plugins:electron`: actual Electron disk cache/restart, native menus, isolation, and documentation checks after `npm run build:electron`. Linux CI needs a virtual display, for example `xvfb-run npm run test:plugins:electron`.
-- `node scripts/package-plugins.mjs --check`: ensure bundled examples match their sources.
+- `node scripts/package-plugins.mjs --check`: ensure the standalone example catalog matches its sources.
 
-The included Project Home example manages open files; a portable `.tcproject` format, directory discovery, a production SPICE engine, and an AI service are separate plugins/features rather than hidden inside the runtime.
+The standalone Project Home example manages open files; a portable `.tcproject` format, directory discovery, a production SPICE engine, and an AI service are separate plugins/features rather than hidden inside the runtime.

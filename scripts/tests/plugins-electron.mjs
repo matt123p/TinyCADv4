@@ -38,6 +38,14 @@ try {
   app = await _electron.launch({ args, env, timeout: 30000 });
   let page = await app.firstWindow(); const errors = []; page.on('pageerror', error => errors.push(error.message));
   await openManager(app, page);
+  await page.getByRole('tab', { name: 'Available', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeEnabled();
+  await expect(page.getByRole('listbox', { name: 'Plugins', exact: true }).getByRole('option')).toHaveCount(0);
+  expect(await page.getByRole('combobox', { name: 'Plugin source', exact: true }).locator('option').allTextContents()).toEqual(['All sources']);
+  await app.evaluate(({ dialog }, folder) => { dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [folder] }); }, path.join(root, 'examples/plugins'));
+  await page.getByRole('button', { name: 'Developer mode', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Development source', exact: true }).selectOption('directory');
+  await page.getByRole('button', { name: 'Choose folder', exact: true }).click();
   await installPlugin(page, 'Circuit Inspector'); await installPlugin(page, 'Project Home');
   await installedCount(page, 2);
   const records = await page.evaluate(() => window.electronAPI.pluginStorage('get', 'records'));

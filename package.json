@@ -21,7 +21,7 @@
   },
   "type": "module",
   "scripts": {
-    "plugins:bundle": "node scripts/package-plugins.mjs",
+    "plugins:catalog": "node scripts/package-plugins.mjs",
     "plugins:package": "node scripts/package-plugins.mjs --release",
     "plugins:serve": "node scripts/plugin-development-server.mjs",
     "test:plugins": "node scripts/tests/plugins.mjs",

@@ -89,8 +89,8 @@ This project runs in multiple modes:
 
 ## Plugins
 
-Open **File → Plugins → Available** to browse the bundled Circuit Inspector and Project Home
-examples, or use **Add** to save a GitHub repository URL and select individual plugins. The
+Open **File → Plugins** and use **Add** to save a GitHub repository URL, then
+select individual plugins under **Available**. TinyCAD ships without example plugins. The
 manager shows descriptions, Markdown changelogs and full documentation, and
 supports release-based automatic updates, version pinning, and rollback.
 
@@ -101,7 +101,8 @@ to manage plugins without executing them.
 
 See the [plugin author guide and API](docs/plugin-api.md) and
 [architecture](docs/plugin.md). Run `npm run plugins:package` to prepare the example
-repository's release catalog and ZIP packages without publishing them.
+plugins' release catalog and ZIP packages without publishing them. The standalone
+[examples](examples/plugins/README.md) can be imported explicitly using **Developer mode**.
 
 ## Building from Source
 

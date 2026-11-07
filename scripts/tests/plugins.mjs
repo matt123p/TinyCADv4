@@ -3,8 +3,10 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadPluginExamples } from './plugin-examples.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
+const examples = await loadPluginExamples();
 const temporary = await mkdtemp(path.join(root, '.plugin-tests-'));
 try {
   const outfile = path.join(temporary, 'tests.cjs');
@@ -17,8 +19,8 @@ import { ActionCreators } from 'redux-undo';
 import { readFile, mkdtemp, writeFile, mkdir, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import nodePath from 'node:path';
-import catalog from './tinycad-plugins.json';
-import bundled from './src/plugins/bundledData.json';
+import catalog from './examples/plugins/tinycad-plugins.json';
+const examples = ${JSON.stringify(examples)};
 import { parseCatalog, parseManifest, path, evaluate, canonicalRepository } from './src/plugins/validation';
 import { unpackPlugin } from './src/plugins/archive';
 import { verifyPackage, GitHubPluginSource, githubPlugins } from './src/plugins/github';
@@ -50,7 +52,7 @@ async function run() {
   pluginStorage.getSettings = async id => settings.get(id) || {};
   pluginStorage.setSettings = async (id, value) => { settings.set(id, value); };
   const parsed = parseCatalog(catalog); assert.equal(parsed.plugins.length, 2);
-  const metadata = bundled[0]; const manifest = parseManifest(JSON.parse(metadata.files['tinycad-plugin.json']), parsed.plugins[0]);
+  const metadata = examples[0]; const manifest = parseManifest(JSON.parse(metadata.files['tinycad-plugin.json']), parsed.plugins[0]);
   for (const invalid of ['../secret', '/secret', 'a/../b', 'a\\\\b', 'a%2fb', 'a//b', 'a?query']) assert.throws(() => path(invalid));
   assert.equal(canonicalRepository('https://github.com/Owner/Repo.git').slug, 'owner/repo');
   assert.throws(() => canonicalRepository('https://github.com/owner/repo/tree/main'));
@@ -63,6 +65,18 @@ async function run() {
   assert.throws(() => parseManifest({ ...manifest, contributes: { panels: [{ id: 'other.plugin.panel', title: 'Test', surface: 'test', location: 'left' }] } }));
 
   const source = { repository: { id: 12, url: 'https://github.com/test/plugins', slug: 'test/plugins', defaultBranch: 'main' }, entry: parsed.plugins[0], commit: 'a'.repeat(40), catalogDigest: 'b'.repeat(64) };
+  assert.deepEqual(await loadSourceSettings([]), { sources: [], catalogs: {} }, 'fresh installations do not register example sources');
+  const legacy = { ...source, commit: 'bundled' };
+  const customSource = githubSource('https://github.com/test/custom');
+  metadataValues.set('manager-sources-v1', { sources: [
+    { id: 'bundled', name: 'Bundled examples', kind: 'bundled' },
+    { ...githubSource('https://github.com/matt123p/TinyCADv4'), name: 'TinyCAD example plugins' }, customSource,
+  ], catalogs: { bundled: [legacy], 'github:https://github.com/matt123p/tinycadv4': [source], [customSource.id]: [source] } });
+  const migratedSources = await loadSourceSettings([legacy]);
+  assert.deepEqual(migratedSources.sources, [customSource]); assert.deepEqual(Object.keys(migratedSources.catalogs), [customSource.id]);
+  assert.equal(legacy.commit, 'bundled', 'source migration does not modify existing installation locks');
+  metadataValues.delete('manager-sources-v1');
+  assert.deepEqual(await loadSourceSettings([legacy]), { sources: [], catalogs: {} }, 'cached legacy examples are not reintroduced as default sources');
   const sourceSettings = await loadSourceSettings([source]);
   const repositorySource = githubSource('https://github.com/test/plugins.git');
   assert.ok(sourceSettings.sources.some(item => item.id === repositorySource.id));
@@ -196,7 +210,7 @@ async function run() {
   await assert.rejects(() => development.directory(folderFiles().map(file => ({ ...file, webkitRelativePath: file.webkitRelativePath.replace('my-plugin/', 'different/') })), local1.source.development), /original development folder/);
   await development.directory(folderFiles(), local1.source.development);
   const multiFiles = [{ webkitRelativePath: 'repo/tinycad-plugins.json', size: JSON.stringify(catalog).length, arrayBuffer: async () => new TextEncoder().encode(JSON.stringify(catalog)).buffer }];
-  for (const example of bundled) for (const [file, content] of Object.entries(example.files)) multiFiles.push({ webkitRelativePath: 'repo/examples/plugins/' + example.name + '/' + file, size: new TextEncoder().encode(content).length, arrayBuffer: async () => new TextEncoder().encode(content).buffer });
+  for (const example of examples) for (const [file, content] of Object.entries(example.files)) multiFiles.push({ webkitRelativePath: 'repo/' + example.name + '/' + file, size: new TextEncoder().encode(content).length, arrayBuffer: async () => new TextEncoder().encode(content).buffer });
   const multi = await development.directory(multiFiles); assert.equal(multi.length, 2); assert.equal((await development.load(multi[1])).manifest.id, catalog.plugins[1].id);
 
   const serverDirectory = await mkdtemp(nodePath.join(tmpdir(), 'tinycad-plugin-server-'));

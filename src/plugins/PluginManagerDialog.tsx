@@ -8,10 +8,9 @@ import type { InstalledPlugin, PluginPackage, PluginVersion } from './types';
 import { sourceIdentity } from './types';
 import { MarkdownDocumentation } from './MarkdownDocumentation';
 import { prompts } from './prompts';
-import { loadBundledPlugins } from './bundled';
 import { openExternalUrl } from '../util/navigation';
 import { developmentPlugins } from './development';
-import { bundledSource, githubSource, loadSourceSettings, saveSourceSettings, versionSource } from './sources';
+import { githubSource, loadSourceSettings, saveSourceSettings, versionSource } from './sources';
 import type { PluginSource, PluginSourceSettings } from './sources';
 
 type View = 'installed' | 'available';
@@ -21,13 +20,13 @@ const rowKey = (v: PluginVersion) => `${sourceIdentity(v)}:${v.entry.id}`;
 const identity = (v: PluginVersion) => `${rowKey(v)}:${v.entry.version}:${v.release?.id || v.commit}`;
 const sourceLabel = (v: PluginVersion) => v.development
   ? v.development.kind === 'server' ? v.development.url : v.development.name
-  : v.commit === 'bundled' ? 'Bundled examples' : v.repository.url;
+  : v.commit === 'bundled' ? 'Previously installed example' : v.repository.url;
 const unique = (versions: PluginVersion[]) => versions.filter((v, i) => versions.findIndex(other => identity(v) === identity(other)) === i);
 
 export function PluginManagerDialog({ suspended = false }: { suspended?: boolean }) {
   useSyncExternalStore(pluginManager.subscribe, pluginManager.snapshot, pluginManager.snapshot);
   const [view, setView] = useState<View>('installed');
-  const [settings, setSettings] = useState<PluginSourceSettings>({ sources: [bundledSource], catalogs: {} });
+  const [settings, setSettings] = useState<PluginSourceSettings>({ sources: [], catalogs: {} });
   const [ready, setReady] = useState(false);
   const [sourceId, setSourceId] = useState('all');
   const [search, setSearch] = useState('');
@@ -44,7 +43,6 @@ export function PluginManagerDialog({ suspended = false }: { suspended?: boolean
   const [documentLoading, setDocumentLoading] = useState(false);
   const [editor, setEditor] = useState<SourceEditor>();
   const [editorError, setEditorError] = useState('');
-  const packages = useRef(new Map<string, PluginPackage>());
   const folderInput = useRef<HTMLInputElement>(null);
   const folderTarget = useRef<{ record?: InstalledPlugin; source?: PluginSource }>({});
   const list = useRef<HTMLDivElement>(null);
@@ -54,9 +52,7 @@ export function PluginManagerDialog({ suspended = false }: { suspended?: boolean
     let active = true;
     void (async () => {
       const saved = await loadSourceSettings(pluginManager.installed.map(record => record.current.source));
-      const examples = await loadBundledPlugins();
-      for (const item of examples) packages.current.set(identity(item.source), item);
-      if (active) setSettings({ ...saved, catalogs: { ...saved.catalogs, bundled: examples.map(item => item.source) } });
+      if (active) setSettings(saved);
     })().catch(err => { if (active) setError(err.message); }).finally(() => { if (active) setReady(true); });
     return () => { active = false; };
   }, []);
@@ -67,11 +63,6 @@ export function PluginManagerDialog({ suspended = false }: { suspended?: boolean
   };
   const remember = async (next: PluginSourceSettings) => { await saveSourceSettings(next); setSettings(next); };
   const readSource = async (item: PluginSource, refresh = false): Promise<PluginVersion[]> => {
-    if (item.kind === 'bundled') {
-      const examples = await loadBundledPlugins();
-      for (const example of examples) packages.current.set(identity(example.source), example);
-      return examples.map(example => example.source);
-    }
     if (item.kind === 'github') return pluginManager.discover(item.url, { ref: item.ref, prerelease, refresh });
     if (item.kind === 'server') return developmentPlugins.server(item.url);
     return developmentPlugins.versions(item.directory);
@@ -86,8 +77,7 @@ export function PluginManagerDialog({ suspended = false }: { suspended?: boolean
     const item = settings.sources.find(candidate => candidate.id === id);
     if (item && !settings.catalogs[id]) void perform('Loading plugin source…', async () => { await rememberCatalog(item, await readSource(item)); });
   };
-  const preview = (version: PluginVersion) => packages.current.get(identity(version))
-    ? Promise.resolve(packages.current.get(identity(version))) : pluginManager.preview(version);
+  const preview = (version: PluginVersion) => pluginManager.preview(version);
   const install = async (item: PluginPackage) => {
     const manifest = item.manifest;
     const answer = await prompts.ask('Install plugin', 'Run this plugin and grant the listed permissions?', undefined,
@@ -131,7 +121,7 @@ export function PluginManagerDialog({ suspended = false }: { suspended?: boolean
   const configured = new Set(settings.sources.map(item => item.id));
   const available = unique([...Object.values(settings.catalogs).flat(), ...pluginManager.available,
     ...pluginManager.installed.map(record => record.current.source)])
-    .filter(version => configured.has(versionSource(version).id));
+    .filter(version => version.commit !== 'bundled' && configured.has(versionSource(version).id));
   const candidates = view === 'installed' ? pluginManager.installed.map(record => record.current.source) : [...available].sort((a, b) => compare(b.entry.version, a.entry.version));
   const query = search.trim().toLowerCase();
   const rows = candidates.filter((version, index) => candidates.findIndex(other => rowKey(other) === rowKey(version)) === index)
@@ -192,7 +182,7 @@ export function PluginManagerDialog({ suspended = false }: { suspended?: boolean
               <option value="all">All sources</option>{settings.sources.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
             </select></label>
             <Button icon={<AddRegular />} disabled={!!busy || !ready} onClick={() => openEditor(false)}>Add</Button>
-            <Button icon={<DeleteRegular />} disabled={!!busy || !source || source.kind === 'bundled'} title="Remove the selected source; keep its installed plugins" onClick={(): void => void perform('Removing plugin source…', async () => {
+            <Button icon={<DeleteRegular />} disabled={!!busy || !source} title="Remove the selected source; keep its installed plugins" onClick={(): void => void perform('Removing plugin source…', async () => {
               const catalogs = { ...settings.catalogs }; delete catalogs[source.id];
               await remember({ sources: settings.sources.filter(item => item.id !== source.id), catalogs });
               setSourceId('all'); setNotice('Source removed. Installed plugins have been kept.');

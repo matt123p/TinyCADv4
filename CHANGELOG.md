@@ -10,10 +10,11 @@
 - Plugin descriptions, Markdown changelogs, and versioned full documentation available before installation and from cached packages.
 - Isolated plugin runtime and APIs for left/bottom panels, symbol editor tabs, main pages, menus, commands, toolbars, component libraries, and plugin data in design/library files.
 - Local plugin caching in Electron and browser package caching with installed-version tracking.
-- Bundled Circuit Inspector and Project Home examples, independent document sessions with separate undo/save state, and plugin authoring documentation, schemas, and release packaging tools.
+- Standalone Circuit Inspector and Project Home examples in `examples/plugins/`, independent document sessions with separate undo/save state, and plugin authoring documentation, schemas, and release packaging tools.
 
 ### Fixed
 
+- Keep example plugins and their catalog outside TinyCAD distributions; remove the default example source while preserving explicitly installed cached copies.
 - Move plugin management into the File menu and replace its browsing screens with a fixed-size searchable list/details layout, saved repository sources, and focused developer-mode controls.
 - Show the loupe button only after touch input on the drawing canvas, keeping it hidden on touchscreen PCs until touch is used.
 - Keep the first edit after loading a document undoable.

@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { createPluginDevelopmentServer } from '../../plugin-development-server.mjs';
 import { createHash } from 'node:crypto';
 import { zipSync } from 'fflate';
+import { loadPluginExamples } from '../plugin-examples.mjs';
 
 async function openManager(page) {
   await page.getByRole('button', { name: 'File', exact: true }).click();
@@ -26,12 +27,26 @@ async function settings(page) {
 }
 async function installExamples(page) {
   await openManager(page);
+  await page.getByRole('button', { name: 'Developer mode', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Development source', exact: true }).selectOption('directory');
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Choose folder', exact: true }).click();
+  await (await chooser).setFiles(path.resolve('examples/plugins'));
   await installPlugin(page, 'Circuit Inspector');
   await installPlugin(page, 'Project Home');
   await installedCount(page, 2);
   await page.getByRole('option', { name: 'Circuit Inspector', exact: true }).click();
 }
-test('bundled plugins install, expose safe versioned Markdown, contribute panels/views, and survive reload', async ({ page }) => {
+test('fresh installations contain no example plugins or default example sources', async ({ page }) => {
+  await page.goto('/'); await openManager(page);
+  await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeEnabled();
+  await page.getByRole('tab', { name: 'Available', exact: true }).click();
+  await expect(page.getByRole('listbox', { name: 'Plugins', exact: true }).getByRole('option')).toHaveCount(0);
+  expect(await page.getByRole('combobox', { name: 'Plugin source', exact: true }).locator('option').allTextContents()).toEqual(['All sources']);
+  await expect(page.getByRole('button', { name: 'Install', exact: true })).toHaveCount(0);
+  await installedCount(page, 0);
+});
+test('explicitly imported example plugins install, expose safe versioned Markdown, contribute panels/views, and survive reload', async ({ page }) => {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto('/'); await installExamples(page);
   await page.getByRole('tab', { name: 'Full documentation', exact: true }).first().click();
@@ -73,12 +88,12 @@ test('bundled plugins install, expose safe versioned Markdown, contribute panels
 });
 
 test('GitHub release catalogs install only selected plugins, automatically update, and roll back to a pinned version', async ({ page }) => {
-  const bundled = JSON.parse(await readFile(new URL('../../../src/plugins/bundledData.json', import.meta.url), 'utf8'));
+  const examples = await loadPluginExamples();
   let latest = false;
   const assets = new Map(); const releases = [];
   for (const [index, version] of ['1.0.0', '1.1.0'].entries()) {
     const entries = [];
-    for (const [pluginIndex, plugin] of bundled.entries()) {
+    for (const [pluginIndex, plugin] of examples.entries()) {
       const pluginVersion = pluginIndex === 0 ? version : '1.0.0';
       const manifest = JSON.parse(plugin.files['tinycad-plugin.json']); manifest.version = pluginVersion;
       const files = { ...plugin.files, 'tinycad-plugin.json': JSON.stringify(manifest) };
@@ -130,8 +145,7 @@ test('local server catalog supports selection, same-version reload, offline star
   try {
     await cp('examples/plugins/inspector', path.join(directory, 'inspector'), { recursive: true });
     await cp('examples/plugins/project', path.join(directory, 'project'), { recursive: true });
-    const catalog = JSON.parse(await readFile('tinycad-plugins.json', 'utf8'));
-    for (const entry of catalog.plugins) entry.package.manifest = entry.package.manifest.replace('examples/plugins/', '');
+    const catalog = JSON.parse(await readFile('examples/plugins/tinycad-plugins.json', 'utf8'));
     await writeFile(path.join(directory, 'tinycad-plugins.json'), JSON.stringify(catalog));
     server = await createPluginDevelopmentServer(directory); await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     await page.goto('/'); await openManager(page);
@@ -198,7 +212,7 @@ test('browser folder imports and reloads selected files after restart', async ({
 test('manager keeps its list and dialog fixed while searching, switching views, and reading long descriptions', async ({ page }) => {
   const directory = await mkdtemp(path.join(tmpdir(), 'tinycad-plugin-layout-')); let server;
   try {
-    const example = JSON.parse(await readFile('src/plugins/bundledData.json', 'utf8'))[0]; const entries = [];
+    const [example] = await loadPluginExamples(); const entries = [];
     for (let i = 1; i <= 10; i++) {
       const folder = `plugin-${i}`; const id = `org.example.plugin${i}`; const name = `Example plugin ${String(i).padStart(2, '0')}`;
       await cp('examples/plugins/inspector', path.join(directory, folder), { recursive: true });

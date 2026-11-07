@@ -1,6 +1,6 @@
 # TinyCAD plugin system proposal
 
-Status: architecture and implementation plan. The plugin runtime and manager are implemented; see the [plugin author guide and SDK](plugin-api.md) for the available API, shipped examples, packaging commands, and verification instructions. Domain-specific engines/services and portable project descriptors can be developed separately on top of these extension points.
+Status: architecture and implementation plan. The plugin runtime and manager are implemented; see the [plugin author guide and SDK](plugin-api.md) for the available API, standalone examples, packaging commands, and verification instructions. Domain-specific engines/services and portable project descriptors can be developed separately on top of these extension points.
 
 ## Recommended approach
 
@@ -234,9 +234,13 @@ Open plugin management from **File → Plugins** in both browser and Electron. I
 
 The top bar contains a source selector and **Add**, **Remove**, **Refresh**, and **Developer mode** controls. Repository URLs, developer sources, and loaded catalogs are persisted. Removing a source does not uninstall its plugins. Developer mode opens a focused source dialog for a loopback server URL, a folder, or a GitHub tag/commit. Plugin management does not reserve an extra application toolbar row.
 
+## Example distribution
+
+Example plugin code, manifests, documentation, and their source catalog live under `examples/plugins/`. They are excluded from TinyCAD builds and are not registered as default sources. Users load them explicitly through a folder/server development source or publish them separately in a plugin repository. Upgrades remove the former built-in example source/catalog; user-installed cached copies remain available.
+
 ## Curated starter repositories
 
-Ship a reviewed, pre-defined repository list with TinyCAD and show it in **File → Plugins → Available**, using the source selector on first use. Include name, canonical GitHub URL and repository ID, publisher, description, categories, supported platforms, review date, and the specific plugin/release versions reviewed. Adding a custom repository remains available alongside this starter set. Repository listings are discovery metadata, not executable catalogs or permission grants.
+Support a reviewed, pre-defined repository list with TinyCAD and show it in **File → Plugins → Available**, using the source selector on first use. Include name, canonical GitHub URL and repository ID, publisher, description, categories, supported platforms, review date, and the specific plugin/release versions reviewed. Adding a custom repository remains available alongside this starter set. Repository listings are discovery metadata, not executable catalogs or permission grants.
 
 TinyCAD maintainers own this list through normal repository review and application releases. Populate it with actual reviewed repositories when plugins exist; the example IDs above are illustrative, not an assertion that those plugins have already been reviewed. An optional remotely refreshed list must be authenticated by a bundled verification key, schema-validated, and cached with the bundled list as an offline fallback. A plugin repository cannot add itself or other repositories to the curated list.
 
