@@ -45,3 +45,14 @@ if (!found) throw new Error('No packaged native engine resources found.');
 console.log(
   `Packaged engines checked: ${found} targets, ${qualified} executable on this host.`,
 );
+// Verify the actual AppX container as well as the unpacked application tree.
+for (const file of await fs.readdir('release')) {
+  if (!file.endsWith('.appx')) continue;
+  const result = spawnSync(
+    process.execPath,
+    ['scripts/verify-appx-package.mjs', path.join('release', file)],
+    { stdio: 'inherit' },
+  );
+  if (result.status !== 0)
+    throw new Error(`AppX archive qualification failed: ${file}`);
+}
