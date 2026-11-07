@@ -46,8 +46,18 @@ export interface Release {
   draft: boolean; assets: ReleaseAsset[]; html_url: string;
 }
 export interface PluginVersion {
-  repository: Repository; entry: CatalogEntry; commit: string; release?: Release;
+  repository?: Repository; entry: CatalogEntry; commit: string; release?: Release;
   catalogDigest: string; ref?: string;
+  development?: DevelopmentSource;
+}
+/** Host-selected development roots. Directory paths stay in the Electron main process. */
+export type DevelopmentSource =
+  | { kind: 'server'; url: string; manifest: string }
+  | { kind: 'directory'; id: string; name: string; manifest: string };
+export function sourceIdentity(source: PluginVersion): string {
+  const dev = source.development;
+  return dev ? JSON.stringify(dev.kind === 'server' ? ['server', dev.url] : ['directory', dev.id])
+    : JSON.stringify(['github', source.repository?.id, source.repository?.url]);
 }
 export interface PluginPackage {
   manifest: PluginManifest; files: Record<string, Uint8Array>; digest: string;

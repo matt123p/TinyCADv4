@@ -10,6 +10,9 @@ declare global {
         electronAPI: {
             pluginStorage: (operation: 'get' | 'set' | 'remove', key: string, value?: unknown) => Promise<any>;
             pluginDownload: (url: string, binary: boolean) => Promise<Uint8Array>;
+            pluginDevelopmentDownload: (url: string) => Promise<Uint8Array | null>;
+            choosePluginDirectory: () => Promise<{ id: string; name: string } | null>;
+            readPluginDevelopmentFile: (id: string, file: string) => Promise<Uint8Array | null>;
             setPluginMenus: (items: import('./plugins/types').NativePluginMenu[]) => void;
             onPluginCommand: (callback: (command: string) => void) => () => void;
             choosePluginTool: (pluginId: string) => Promise<{ id: string; name: string } | null>;

@@ -23,6 +23,7 @@
   "scripts": {
     "plugins:bundle": "node scripts/package-plugins.mjs",
     "plugins:package": "node scripts/package-plugins.mjs --release",
+    "plugins:serve": "node scripts/plugin-development-server.mjs",
     "test:plugins": "node scripts/tests/plugins.mjs",
     "test:plugins:browser": "playwright test --config scripts/plugins-playwright.config.mjs",
     "test:plugins:electron": "node scripts/tests/plugins-electron.mjs",

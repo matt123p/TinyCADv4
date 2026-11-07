@@ -19,6 +19,7 @@ The main design decisions are:
 - All UI actions use the same command registry, including Electron native menu actions.
 - Document extension data belongs to the host document model, so normal saving works even when its plugin is unavailable.
 - Electron keeps verified plugin packages on disk. Browser `localStorage` records installed versions; IndexedDB can cache package bytes separately.
+- Development sources can use a loopback HTTP(S) server or a user-selected local folder, containing one manifest or a multi-plugin source catalog. They use the same validation, permission review, isolated runtime, and cached snapshots. Manual reloads allow changes without a version bump and retain snapshot rollback; startup never silently replaces a snapshot with moving development files. Electron remembers folder access; browser reloads require selecting the folder again. See [local development](plugin-api.md#local-development).
 - Application sessions and main views become explicit concepts, allowing a Project plugin to manage multiple designs without treating them as sheets of one circuit.
 
 ## Existing code and integration points
@@ -70,6 +71,8 @@ Plugin UI can use React, another framework, or plain DOM within its frame. Bundl
 ## Repository and manifest contract
 
 Initially support public repositories on `github.com`, with one or more plugins per repository. Accept `https://github.com/owner/repository` and an optional `.git` suffix. Reject other schemes, embedded credentials, and arbitrary download URLs. Select releases and fallback tags/commits inside TinyCAD rather than attempting to parse ambiguous branch names from `/tree/...` URLs.
+
+The manager also has an explicit development-source flow for loopback servers and selected folders. This is separate from repository discovery: development sources do not use GitHub release resolution or automatic updates, and reloading them deliberately creates a new cached content snapshot. They cannot replace a plugin installed from another source without uninstalling it first.
 
 ### Repository catalog and plugin selection
 

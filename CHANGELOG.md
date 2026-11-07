@@ -4,6 +4,7 @@
 
 ### Added
 
+- Local plugin development from loopback HTTP servers or selected folders, with manual reloads, cached snapshots, rollback, and a CORS-enabled development server command.
 - Compact toolbar selector for 90°, 45°, and free wire modes, with original TinyCAD 45° angle constraints. Selecting a mode activates the wire tool and preserves an active wire preview.
 - Plugin manager for selecting individual plugins from GitHub repositories or the curated starter list, with release-based automatic updates, version pinning, and rollback.
 - Plugin descriptions, Markdown changelogs, and versioned full documentation available before installation and from cached packages.

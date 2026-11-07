@@ -1,10 +1,11 @@
 import { compare, gt } from 'semver';
 import { githubPlugins } from './github';
+import { developmentPlugins } from './development';
 import { pluginStorage } from './storage';
 import { PluginConnection } from './runtime';
 import {
   HostAdapter, InstalledPlugin, Json, PluginContext, PluginManifest, PluginPackage,
-  PluginVersion, PluginView, SurfaceContext, VersionLock, Condition,
+  PluginVersion, PluginView, SurfaceContext, VersionLock, Condition, sourceIdentity,
 } from './types';
 import { check, compatible, evaluate, LIMITS, parseManifest, sha256 } from './validation';
 import starters from './repositories.json';
@@ -116,17 +117,16 @@ export class PluginManager {
   }
   async preview(version: PluginVersion) {
     const record = this.installed.find(p => p.id === version.entry.id);
-    const cached = record && [record.current, ...record.history].find(lock => lock.source.repository.id === version.repository.id && lock.source.commit === version.commit && lock.source.release?.id === version.release?.id && lock.manifest.version === version.entry.version);
-    return cached ? this.loadLock(cached) : githubPlugins.load(version);
+    const cached = record && [record.current, ...record.history].find(lock => sourceIdentity(lock.source) === sourceIdentity(version) && lock.source.commit === version.commit && lock.source.release?.id === version.release?.id && lock.manifest.version === version.entry.version);
+    return cached ? this.loadLock(cached) : version.development ? developmentPlugins.load(version) : githubPlugins.load(version);
   }
   async install(pkg: PluginPackage, grants: string[], automatic = true) {
     check(compatible(pkg.manifest, platform), 'Plugin is incompatible with this platform/API.');
     check(pkg.manifest.permissions.every(p => grants.includes(p)), 'All requested permissions must be explicitly granted.');
     return this.exclusive(async () => {
       const existing = this.installed.find(p => p.id === pkg.manifest.id);
-      check(!existing || existing.current.source.repository.id === pkg.source.repository.id, 'Another repository already owns that plugin ID.');
-      check(!existing || existing.current.source.repository.url === pkg.source.repository.url, 'Plugin source change requires a reinstall.');
-      check(!existing || existing.current.manifest.version !== pkg.manifest.version || existing.current.digest === pkg.digest, 'Publisher changed content without changing the plugin version.');
+      check(!existing || sourceIdentity(existing.current.source) === sourceIdentity(pkg.source), 'Another repository or development source owns that plugin ID. Uninstall it before changing sources.');
+      check(!existing || pkg.source.development || existing.current.manifest.version !== pkg.manifest.version || existing.current.digest === pkg.digest, 'Publisher changed content without changing the plugin version.');
       check(!existing || (this.adapter?.safeToUpdate() && !this.hasDrafts(existing.id) && !this.commandStack.length), 'Finish the current edit, plugin form, command, or save before changing plugins.');
       await pluginStorage.setPackage(pkg);
       const lock: VersionLock = { digest: pkg.digest, manifest: pkg.manifest, source: pkg.source, fileHashes: pkg.fileHashes, installedAt: new Date().toISOString() };
@@ -135,7 +135,7 @@ export class PluginManager {
         id: pkg.manifest.id, current: lock,
         history: existing ? [existing.current, ...existing.history].filter((v, i, all) => v.digest !== lock.digest && all.findIndex(x => x.digest === v.digest) === i).slice(0, 5) : [],
         grants: [...new Set(grants.filter(p => pkg.manifest.permissions.includes(p)))],
-        enabled: !this.safeMode, policy: automatic && !!pkg.source.release ? 'automatic' : 'manual', channel: existing?.channel || (pkg.source.release?.prerelease ? 'prerelease' : 'stable'),
+        enabled: !this.safeMode, policy: automatic && !pkg.source.development && !!pkg.source.release ? 'automatic' : 'manual', channel: existing?.channel || (pkg.source.release?.prerelease ? 'prerelease' : 'stable'),
         rejected: existing?.rejected || [], revision: (existing?.revision || 0) + 1,
         settingsSnapshots: { ...existing?.settingsSnapshots, ...(existing ? { [existing.current.digest]: settings } : {}) },
       };
@@ -156,7 +156,8 @@ export class PluginManager {
   }
   async policy(id: string, policy: InstalledPlugin['policy'], channel?: InstalledPlugin['channel']) {
     return this.exclusive(async () => {
-      const record = this.record(id); record.policy = policy; if (channel) record.channel = channel;
+      const record = this.record(id); check(!record.current.source.development || policy !== 'automatic', 'Development plugins are reloaded manually.');
+      record.policy = policy; if (channel) record.channel = channel;
       record.revision++; await this.persist(); this.changed();
     });
   }
@@ -198,7 +199,7 @@ export class PluginManager {
     this.checking = (async () => {
       const groups = new Map<string, PluginVersion[]>();
       for (const record of [...this.installed]) {
-        if (!record.current.source.release || record.policy === 'pinned') continue;
+        if (record.current.source.development || !record.current.source.release || record.policy === 'pinned') continue;
         const key = record.current.source.repository.url + ':' + record.channel;
         try {
           if (!groups.has(key)) groups.set(key, await githubPlugins.versions(record.current.source.repository.url, { prerelease: record.channel === 'prerelease', refresh: force }));
@@ -219,11 +220,14 @@ export class PluginManager {
   record(id: string) { const record = this.installed.find(p => p.id === id); check(record, 'Plugin is not installed.'); return record; }
   private async loadLock(lock: VersionLock) {
     let pkg = this.packages.get(lock.digest) || await pluginStorage.getPackage(lock.digest);
-    if (!pkg) { pkg = await githubPlugins.load(lock.source); check(pkg.digest === lock.digest, 'The exact locked plugin version is no longer available.'); await pluginStorage.setPackage(pkg); }
+    if (!pkg) {
+      check(!lock.source.development, 'The cached development snapshot is missing. Reload the plugin explicitly from its development source.');
+      pkg = await githubPlugins.load(lock.source); check(pkg.digest === lock.digest, 'The exact locked plugin version is no longer available.'); await pluginStorage.setPackage(pkg);
+    }
     parseManifest(pkg.manifest, lock.source.entry);
     check(JSON.stringify(pkg.manifest) === JSON.stringify(lock.manifest), 'Cached manifest does not match the version lock.');
     for (const [file, expected] of Object.entries(lock.fileHashes)) check(pkg.files[file] && await sha256(pkg.files[file]) === expected, 'Cached plugin resource is corrupt: ' + file);
-    this.packages.set(lock.digest, pkg); return pkg;
+    this.packages.set(lock.digest, pkg); return { ...pkg, source: lock.source };
   }
   package(id: string) { return this.loadLock(this.record(id).current); }
   private runtimeError(id: string, message: string) {

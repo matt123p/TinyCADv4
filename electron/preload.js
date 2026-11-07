@@ -3,6 +3,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 if (process.isMainFrame) contextBridge.exposeInMainWorld('electronAPI', {
     pluginStorage: (operation, key, value) => ipcRenderer.invoke('plugin-storage', operation, key, value),
     pluginDownload: (url, binary) => ipcRenderer.invoke('plugin-download', url, binary),
+    pluginDevelopmentDownload: (url) => ipcRenderer.invoke('plugin-development-download', url),
+    choosePluginDirectory: () => ipcRenderer.invoke('choose-plugin-directory'),
+    readPluginDevelopmentFile: (id, file) => ipcRenderer.invoke('read-plugin-development-file', id, file),
     setPluginMenus: (items) => ipcRenderer.send('set-plugin-menus', items),
     onPluginCommand: (callback) => {
         const listener = (_, command) => callback(command);

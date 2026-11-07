@@ -10,6 +10,28 @@ Use one `tinycad-plugins.json` catalog per repository/release and one `tinycad-p
 
 Each plugin must include a short `description` and Markdown `readme`, `changelog`, and `documentation` paths. These are relative to the plugin package, not the repository root. Declare every page and image in `files`. The manager reads these before installation without running code, and shows the installed or selected version's documents. Relative Markdown links work within the package; raw HTML and executable Markdown are disabled.
 
+## Local development
+
+Open **Plugins → Discover → Develop a plugin**. Build your controller/UI bundles first; importing a plugin never runs a build or installs its dependencies. Choose either:
+
+- **Import plugin folder**: select a directory containing `tinycad-plugin.json`, or a repository directory containing `tinycad-plugins.json`. A catalog lets you select individual plugins; local entries must use `package.type: "source"`. Electron remembers the chosen directory using a host-owned identifier. The browser imports the selected files and asks you to select that same folder again for each reload.
+- **Browse local server**: enter a loopback HTTP(S) URL using `localhost`, `127.0.0.1`, or `[::1]`. You can supply a directory URL, a catalog URL, or a single manifest URL. The server must allow browser CORS requests without credentials. Redirects are rejected.
+
+For example, from the TinyCAD checkout:
+
+```sh
+# Serve one plugin on port 8080
+npm run plugins:serve -- examples/plugins/inspector
+# Or serve the repository catalog and choose either example (port 8081)
+npm run plugins:serve -- . 8081
+```
+
+Enter `http://127.0.0.1:8080/` or `http://127.0.0.1:8081/` in the manager. The helper binds to loopback, supplies CORS/no-cache headers, and serves only manifests, the catalog, and declared plugin resources. It rejects symlinks. Other static servers work if configured with CORS; your browser may also request local-network access.
+
+Read the plugin's Markdown and select/install it as usual. After rebuilding, use **Reload from source** on its Installed card, or **Reload from folder…** in the browser. Reload re-reads the manifest and declared resources, reviews permissions again, and restarts the isolated runtime at a safe editing point. It does not require a version bump or an updated catalog. Unsaved plugin forms and running commands must finish before replacement.
+
+Development installs have manual reloads rather than release auto-updates. Each changed package gets a content hash; the previous five snapshots remain available for rollback, including snapshots with the same semantic version. Startup uses the cached installed snapshot even when the server is stopped or the folder is unavailable. A missing cache requires an explicit reload. Changing between development and GitHub sources, or between development roots, requires uninstalling the previous installation first; uninstall preserves design metadata. Publish production changes under new versions through the normal GitHub release workflow.
+
 ## Controller and UI
 
 Bundle the controller and UI as self-contained ES modules, with no runtime imports of npm packages or TinyCAD internals. Their entry points are:

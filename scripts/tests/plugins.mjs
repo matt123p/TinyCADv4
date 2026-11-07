@@ -14,7 +14,9 @@ import assert from 'node:assert/strict';
 import { zipSync } from 'fflate';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import { ActionCreators } from 'redux-undo';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdtemp, writeFile, mkdir, rm, symlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import nodePath from 'node:path';
 import catalog from './tinycad-plugins.json';
 import bundled from './src/plugins/bundledData.json';
 import { parseCatalog, parseManifest, path, evaluate, canonicalRepository } from './src/plugins/validation';
@@ -22,6 +24,8 @@ import { unpackPlugin } from './src/plugins/archive';
 import { verifyPackage, GitHubPluginSource, githubPlugins } from './src/plugins/github';
 import { pluginStorage } from './src/plugins/storage';
 import { PluginManager } from './src/plugins/manager';
+import { DevelopmentPluginSource, developmentURL } from './src/plugins/development';
+import { createPluginDevelopmentServer } from './scripts/plugin-development-server.mjs';
 import { blank, ioXML } from './src/io/ioXml';
 import { XMLBuilder } from './src/util/xmlbuilder';
 import { ensureDrawingIds, newIdentity } from './src/plugins/persistence';
@@ -139,6 +143,7 @@ async function run() {
   const package2 = await verifyPackage({ ...files, 'tinycad-plugin.json': new TextEncoder().encode(JSON.stringify(version2Manifest)) }, source2);
   await manager.install(package2, manifest.permissions, false); assert.equal(manager.record(manifest.id).history[0].digest, pkg.digest);
   await manager.rollback(manifest.id, pkg.digest); assert.equal(manager.record(manifest.id).current.manifest.version, '1.0.0'); assert.equal(manager.record(manifest.id).policy, 'pinned');
+  await assert.rejects(() => manager.install({ ...pkg, digest: 'f'.repeat(64) }, manifest.permissions), /without changing the plugin version/);
   manager.controller = async () => { throw new Error('activation failed'); };
   await assert.rejects(() => manager.install(package2, manifest.permissions, false), /activation failed/);
   assert.equal(manager.record(manifest.id).current.digest, pkg.digest); assert.ok(manager.record(manifest.id).rejected.includes(package2.digest));
@@ -157,7 +162,54 @@ async function run() {
   await assert.rejects(() => sourceReader.sourceFile(source.repository, source.commit, 'controller.js'), /symlink/);
   sourceReader.json = async endpoint => endpoint.includes('/git/commits/') ? { tree: { sha: 'c'.repeat(40) } } : endpoint.includes('/git/trees/') ? { tree: [{ path: 'controller.js', type: 'blob', mode: '100644', size: 3, sha: 'd'.repeat(40) }] } : { encoding: 'base64', content: 'YWJj' };
   assert.equal(new TextDecoder().decode(await sourceReader.sourceFile(source.repository, source.commit, 'controller.js')), 'abc');
-  console.log('Plugin checks passed: package validation, ZIP safety, XML/SQLite preservation, atomic edits, undo, sessions, release discovery, update rollback, and cache integrity.');
+  const development = new DevelopmentPluginSource();
+  for (const input of ['file:///tmp/plugin', 'https://github.com/test/repo', 'http://user:pass@localhost/', 'http://localhost/?token=secret', 'http://localhost/#fragment']) assert.throws(() => developmentURL(input));
+  const localFiles = new Map(Object.entries(files).map(([name, bytes]) => [name, bytes.slice()]));
+  const folderFiles = () => [...localFiles].map(([name]) => ({ webkitRelativePath: 'my-plugin/' + name, get size() { return localFiles.get(name).length; }, arrayBuffer: async () => localFiles.get(name).slice().buffer }));
+  const [localVersion] = await development.directory(folderFiles());
+  const local1 = await development.load(localVersion); assert.equal(local1.manifest.id, manifest.id); assert.equal(local1.source.development.kind, 'directory');
+  assert.equal(local1.source.commit, local1.digest);
+  values.delete('tinycad.plugins.v1');
+  const localManager = new PluginManager(); localManager.attach({ context: () => ({}), safeToUpdate: () => true, subscribe: () => () => {}, invoke: async () => undefined });
+  localManager.controller = async () => ({ call: async () => undefined, dispose() {} });
+  await localManager.install(local1, manifest.permissions); assert.equal(localManager.record(manifest.id).policy, 'manual');
+  await assert.rejects(() => localManager.policy(manifest.id, 'automatic'), /manually/);
+  localFiles.set('ui.js', new TextEncoder().encode(new TextDecoder().decode(files['ui.js']) + String.fromCharCode(10) + '// development edit'));
+  const local2 = await development.reload(local1.source); assert.notEqual(local2.digest, local1.digest); assert.equal(local2.manifest.version, local1.manifest.version);
+  await localManager.install(local2, manifest.permissions); assert.equal(localManager.record(manifest.id).history[0].digest, local1.digest);
+  await assert.rejects(() => localManager.install({ ...local2, source }, manifest.permissions), /source owns/);
+  await assert.rejects(() => localManager.install(local2, []), /permissions/);
+  localManager.drafts.set('form', manifest.id); await assert.rejects(() => localManager.install(local1, manifest.permissions), /Finish/); localManager.drafts.clear();
+  await localManager.rollback(manifest.id, local1.digest); assert.equal(localManager.record(manifest.id).current.digest, local1.digest);
+  development.readers.clear(); localManager.packages.clear(); assert.equal((await localManager.package(manifest.id)).digest, local1.digest, 'restart uses cached snapshot without reading development files');
+  packages.delete(local1.digest); localManager.packages.clear(); await assert.rejects(() => localManager.package(manifest.id), /cached development snapshot/);
+  await assert.rejects(() => development.reload(local1.source), /folder again/);
+  await assert.rejects(() => development.directory(folderFiles().map(file => ({ ...file, webkitRelativePath: file.webkitRelativePath.replace('my-plugin/', 'different/') })), local1.source.development), /original development folder/);
+  await development.directory(folderFiles(), local1.source.development);
+  const multiFiles = [{ webkitRelativePath: 'repo/tinycad-plugins.json', size: JSON.stringify(catalog).length, arrayBuffer: async () => new TextEncoder().encode(JSON.stringify(catalog)).buffer }];
+  for (const example of bundled) for (const [file, content] of Object.entries(example.files)) multiFiles.push({ webkitRelativePath: 'repo/examples/plugins/' + example.name + '/' + file, size: new TextEncoder().encode(content).length, arrayBuffer: async () => new TextEncoder().encode(content).buffer });
+  const multi = await development.directory(multiFiles); assert.equal(multi.length, 2); assert.equal((await development.load(multi[1])).manifest.id, catalog.plugins[1].id);
+
+  const serverDirectory = await mkdtemp(nodePath.join(tmpdir(), 'tinycad-plugin-server-'));
+  let server;
+  try {
+    for (const [name, bytes] of localFiles) { const file = nodePath.join(serverDirectory, name); await mkdir(nodePath.dirname(file), { recursive: true }); await writeFile(file, bytes); }
+    await writeFile(nodePath.join(serverDirectory, 'private.txt'), 'must not be served');
+    server = await createPluginDevelopmentServer(serverDirectory); await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    const address = 'http://127.0.0.1:' + server.address().port + '/';
+    const [serverVersion] = await development.server(address); const firstServerPackage = await development.load(serverVersion); assert.equal(firstServerPackage.digest, local2.digest);
+    assert.equal((await development.server(address + 'tinycad-plugin.json')).length, 1);
+    assert.equal((await fetch(address + 'README.md')).headers.get('access-control-allow-origin'), '*');
+    assert.equal((await fetch(address + 'private.txt')).status, 404);
+    await writeFile(nodePath.join(serverDirectory, 'ui.js'), 'export function mount() {}');
+    const secondServerPackage = await development.reload(firstServerPackage.source); assert.notEqual(secondServerPackage.digest, firstServerPackage.digest);
+    if (process.platform !== 'win32') {
+      await rm(nodePath.join(serverDirectory, 'ui.js')); await symlink(nodePath.join(serverDirectory, 'private.txt'), nodePath.join(serverDirectory, 'ui.js'));
+      await assert.rejects(() => development.reload(firstServerPackage.source), /failed/);
+    }
+  } finally { if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } await rm(serverDirectory, { recursive: true, force: true }); }
+
+  console.log('Plugin checks passed: package validation, ZIP safety, XML/SQLite preservation, atomic edits, undo, sessions, release discovery, update rollback, cache integrity, local folders, and local server development reloads.');
 }
 module.exports = run();
 ` },

@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { serialize, deserialize } from 'node:v8';
 import { spawn } from 'node:child_process';
 import { app, ipcMain, dialog, net } from 'electron';
+import { registerPluginDevelopment } from './pluginDevelopment.js';
 
 const MAX_BYTES = 128 * 1024 * 1024;
 const validId = value => typeof value === 'string' && /^[a-z][a-z0-9-]*(?:\.[a-z0-9-]+)+$/.test(value);
@@ -47,6 +48,7 @@ export function registerPluginServices(getWindow, setMenus) {
       if (lock) { await lock.close(); await fs.rm(file + '.lock', { force: true }); }
     }
   };
+  registerPluginDevelopment({ authorize, read, write, getWindow });
   ipcMain.handle('plugin-storage', async (event, operation, key, value) => {
     authorize(event);
     if (operation === 'get') return read(key);

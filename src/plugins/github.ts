@@ -121,6 +121,7 @@ export class GitHubPluginSource {
     return versions.filter(v => options.prerelease || !prerelease(v.entry.version)).sort((a, b) => compare(b.entry.version, a.entry.version));
   }
   async load(source: PluginVersion): Promise<PluginPackage> {
+    check(!source.development && source.repository, 'GitHub retrieval requires a GitHub source.');
     const { entry, repository } = source; let files: Record<string, Uint8Array>; let digest: string;
     if (entry.package.type === 'releaseAsset') {
       check(source.release, 'Release assets require a published release.');
