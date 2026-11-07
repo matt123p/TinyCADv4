@@ -290,7 +290,7 @@ const common = {
     about: {
       title: 'O TinyCAD',
       version: 'Wersja',
-      description: 'Program open source do tworzenia schematów dla Windows i sieci Web',
+      description: 'Program open source do tworzenia schematów dla systemów Windows, Linux i macOS oraz do użytku w przeglądarce internetowej',
       licenseTitle: 'Licencja (GNU GPL v3)',
     },
     printPreview: {

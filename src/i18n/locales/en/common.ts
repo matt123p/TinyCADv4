@@ -290,7 +290,7 @@ const common = {
     about: {
       title: 'About TinyCAD',
       version: 'Version',
-      description: 'An open source schematic capture program for Windows and the Web',
+      description: 'An open source schematic capture program for Windows, Linux, macOS and the Web',
       licenseTitle: 'License (GNU GPL v3)',
     },
     printPreview: {

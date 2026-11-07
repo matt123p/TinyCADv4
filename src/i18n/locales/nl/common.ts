@@ -290,7 +290,7 @@ const common = {
     about: {
       title: 'Over TinyCAD',
       version: 'Versie',
-      description: 'Een open-sourceprogramma voor schema-opname voor Windows en het web',
+      description: 'Een opensourceprogramma voor het tekenen van schema’s voor Windows, Linux, macOS en het web',
       licenseTitle: 'Licentie (GNU GPL v3)',
     },
     printPreview: {
