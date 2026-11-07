@@ -149,6 +149,7 @@ export class ioXML {
         showRulers: true,
       },
       drc: {
+        MissingSpice: false,
         DupRef: true, // Duplicated references
         UnConnect: true, // Unconnected items
         NoConnect: true, // Mode than one item on a no-connect net

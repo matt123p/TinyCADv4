@@ -76,6 +76,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const [sidePanelWidth, setSidePanelWidth] = useState(loadSidePanelWidth);
   const [sidePanelResizing, setSidePanelResizing] = useState(false);
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200);
+  const [simulationToolbarTarget, setSimulationToolbarTarget] = useState<HTMLSpanElement>(null);
 
   const toggleSidePanel = useCallback(() => {
     setSidePanelVisible(prev => !prev);
@@ -124,11 +125,11 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       className="page-container"
       style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
     >
-      <ToolbarContainer />
+      <ToolbarContainer simulationToolbarRef={setSimulationToolbarTarget} />
       <div className="mid-container">
         <div
           className={`side-panel-container${sidePanelVisible ? '' : ' side-panel-collapsed'}${sidePanelResizing ? ' side-panel-resizing' : ''}`}
-          style={props.simulationSheet ? {display:'none'} : sidePanelVisible ? { width: sidePanelWidth } : undefined}
+          style={sidePanelVisible ? { width: sidePanelWidth } : undefined}
         >
           {sidePanelVisible && (
             <ResizeHandle
@@ -154,12 +155,12 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               props.editSymbol ? 'circuit-container-es' : 'circuit-container'
             }
           >
-            {props.selected_sheet >= 0 ? props.simulationSheet ? <SimulationSheet /> : <SheetContainer /> : null}
+            {props.selected_sheet >= 0 ? props.simulationSheet ? <SimulationSheet toolbarTarget={simulationToolbarTarget} /> : <SheetContainer /> : null}
             {props.selected_sheet === -1 ? <BomContainer /> : null}
             {props.selected_sheet < -1 ? <Browser url={props.browserSheets[-2 - props.selected_sheet].url} /> : null}
             <SheetbarContainer />
           </div>
-          <div className="bottom-panel-wrapper" style={{ height: props.simulationSheet ? 0 : bottomPanelHeight, display: props.simulationSheet ? 'none' : undefined }}>
+          <div className="bottom-panel-wrapper" style={{ height: bottomPanelHeight }}>
             <ResizeHandle direction="vertical" onResize={handleBottomPanelResize} />
             <BottomPanelContainer />
           </div>

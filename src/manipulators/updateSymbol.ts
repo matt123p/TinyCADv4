@@ -888,6 +888,22 @@ export class updateSymbol
     });
   }
 
+  setSpiceProperty(name: string, value: string) {
+    if (!name.startsWith('$$SPICE')) return this.item;
+    const text = this.item.text.slice();
+    const index = text.findIndex(field => field.description === name);
+    const field: SymbolTextItem = {
+      ...(index >= 0 ? text[index] : { position: [0, 0] as Coordinate }),
+      description: name,
+      value,
+      show: false,
+      display: TextDisplayMethod.NeverShow,
+    };
+    if (index >= 0) text[index] = field;
+    else text.push(field);
+    return new updateSymbol({ ...this.item, text, _active_points: null }).post_construction();
+  }
+
   showValue(index: number, value: string) {
     const text = this.layout_text_fields(
       this.item.rotation,

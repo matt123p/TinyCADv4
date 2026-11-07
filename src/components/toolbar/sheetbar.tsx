@@ -152,6 +152,12 @@ export const Sheetbar: React.FC<SheetbarProps> = (props) => {
           key={index}
           canDelete={props.sheets.length > 1 && (sheet.kind === 'simulation' || props.sheets.filter(s => s.kind !== 'simulation').length > 1)}
           hierarchicalSymbol={sheet.hierarchicalSymbol}
+          additionalMenuItems={sheet.kind === 'simulation' ? [{
+            key: 'duplicate_setup',
+            text: 'Duplicate setup',
+            iconName: 'Copy',
+            onClick: () => props.dispatch({ type: 'simulation/duplicate', sheetId: sheet.id }),
+          }] : undefined}
           draggable={canDrag}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
@@ -213,7 +219,6 @@ export const Sheetbar: React.FC<SheetbarProps> = (props) => {
       <div className={`${styles.sheetAddButton} sheet-add-button`} onClick={handleAddClick} title={props.editSymbol ? t('toolbar.sheetbar.addNewPart') : t('toolbar.sheetbar.addNewSheet')}>
         <AddRegular />
       </div>
-      {!props.editSymbol && <button type="button" onClick={() => props.dispatch({type:'simulation/add',name:'Simulation'})} title="Add Simulation sheet" aria-label="Add Simulation sheet" style={{whiteSpace:'nowrap'}}>+ Simulation</button>}
       {props.editSymbol && props.editSymbol.ppp > 1 && (
         <div 
           className={`${styles.sheetAddButton} sheet-add-button`} 

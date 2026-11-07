@@ -165,6 +165,7 @@ export interface DrcError {
 }
 
 export interface DrcOptions {
+  MissingSpice?: boolean;
   DupRef: boolean;
   UnConnect: boolean;
   NoConnect: boolean;

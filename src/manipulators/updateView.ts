@@ -66,7 +66,7 @@ import { updatePin } from './updatePin';
 import { updateLabel } from './updateLabel';
 import { updateBusLabel } from './updateBusLabel';
 import { dsnBomEntry } from '../model/dsnBomEntry';
-import { tclibLibraryEntry } from '../model/tclib';
+import { tclibLibraryEntry, TextDisplayMethod } from '../model/tclib';
 import { ReplaceSymbolScope } from '../state/actions/symbolActions';
 import md5 from 'md5';
 import { store } from '../startup';
@@ -2970,11 +2970,11 @@ export class updateView {
       ...name.Attributes.filter(
         (attribute) =>
           attribute.AttName !== 'Reference' &&
-          attribute.AttName.indexOf('$$') !== 0,
+          (attribute.AttName.indexOf('$$') !== 0 || attribute.AttName.startsWith('$$SPICE')),
       ).map((attribute) => ({
         description: attribute.AttName,
         value: attribute.AttValue,
-        display: attribute.ShowAtt,
+        display: attribute.AttName.startsWith('$$SPICE') ? TextDisplayMethod.NeverShow : attribute.ShowAtt,
       })),
     ];
 
@@ -3238,6 +3238,12 @@ export class updateView {
     return sheet;
   }
 
+  setSpiceProperty(view: dsnView, sheet: dsnSheet, name: string, value: string): dsnSheet {
+    const symbol = this.getSelectedSymbol(view, sheet);
+    if (!symbol) return sheet;
+    return this.updateObject(sheet, symbol, new updateSymbol(symbol).setSpiceProperty(name, value));
+  }
+
   showValue(
     view: dsnView,
     sheet: dsnSheet,
@@ -3480,16 +3486,16 @@ export class updateView {
           ],
         },
         ...name.Attributes.filter(
-          (a) => a.AttName !== 'Reference' && a.AttName.indexOf('$$') !== 0,
+          (a) => a.AttName !== 'Reference' && (a.AttName.indexOf('$$') !== 0 || a.AttName.startsWith('$$SPICE')),
         ).map((a) => ({
           position: [
             5.0,
-            posfn(update_symbol.show_text(a.ShowAtt, a.AttValue)),
+            posfn(!a.AttName.startsWith('$$SPICE') && update_symbol.show_text(a.ShowAtt, a.AttValue)),
           ],
           value: a.AttValue,
           description: a.AttName,
-          show: update_symbol.show_text(a.ShowAtt, a.AttValue),
-          display: a.ShowAtt,
+          show: !a.AttName.startsWith('$$SPICE') && update_symbol.show_text(a.ShowAtt, a.AttValue),
+          display: a.AttName.startsWith('$$SPICE') ? TextDisplayMethod.NeverShow : a.ShowAtt,
         })),
       ],
       hints: [],

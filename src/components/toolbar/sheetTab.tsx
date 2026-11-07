@@ -18,6 +18,7 @@ import {
   ChevronRightRegular,
   ChevronLeftRegular,
   DeleteRegular,
+  CopyRegular,
 } from '@fluentui/react-icons';
 import {
   actionSheetSelect,
@@ -89,6 +90,7 @@ interface SheetTabProps {
   hierarchicalSymbol: boolean;
   dispatch: Dispatch<any>;
   menu?: MenuItemData[];
+  additionalMenuItems?: MenuItemData[];
   canDelete: boolean;
   draggable?: boolean;
   onDragStart?: (index: number) => void;
@@ -185,11 +187,13 @@ const SheetTab: React.FC<SheetTabProps> = (props) => {
         },
       ];
 
-  const menuItems = props.menu ?? defaultMenu;
+  const menuItems = props.menu ?? [...(props.additionalMenuItems || []), ...defaultMenu];
   const showMenu = !props.menu || props.menu.length > 0;
 
   const getIcon = (iconName?: string) => {
     switch (iconName) {
+      case 'Copy':
+        return <CopyRegular />;
       case 'rename':
         return <RenameRegular />;
       case 'ChevronRight':

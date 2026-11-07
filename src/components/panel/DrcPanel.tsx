@@ -54,15 +54,18 @@ export const DrcPanel: React.FC<DrcPanelProps> = ({
 
   const handleRowClick = (item: FindResult) => {
     // Mode 3: Center without selecting - switch to sheet and center the item
+    if (item.id < 0) return;
     dispatch(actionFindSelection(3, item));
+    // Center again after React has mounted the schematic when leaving a simulation sheet.
+    requestAnimationFrame(() => dispatch(actionFindSelection(3, item)));
   };
 
   const handleMouseEnter = (item: FindResult) => {
-    dispatch(actionFindSelection(1, item));
+    if (item.id >= 0) dispatch(actionFindSelection(1, item));
   };
 
   const handleMouseLeave = (item: FindResult) => {
-    dispatch(actionFindSelection(0, item));
+    if (item.id >= 0) dispatch(actionFindSelection(0, item));
   };
 
   const columns: TableColumnDefinition<FindResult>[] = [
@@ -74,7 +77,7 @@ export const DrcPanel: React.FC<DrcPanelProps> = ({
     },
     {
       columnId: 'symbol',
-      compare: (a, b) => a.symbol.localeCompare(b.symbol),
+      compare: (a, b) => (a.symbol || '').localeCompare(b.symbol || ''),
       renderHeaderCell: () => t('panel.drc.symbol'),
       renderCell: (item) => <TableCellLayout>{item.symbol}</TableCellLayout>,
     },
@@ -103,7 +106,7 @@ export const DrcPanel: React.FC<DrcPanelProps> = ({
           </span>
         </div>
       ),
-      renderCell: (item) => <TableCellLayout>{item.text}</TableCellLayout>,
+      renderCell: (item) => <TableCellLayout title={item.text}>{item.text}</TableCellLayout>,
     },
   ];
 

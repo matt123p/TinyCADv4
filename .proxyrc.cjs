@@ -1,8 +1,16 @@
 // Serve generated engine assets unchanged during Parcel development. Production
 // builds copy this same directory after verifying its manifest.
+// Parcel loads this file instead of .proxyrc, so retain its API routes too.
 const fs = require('node:fs');
 const path = require('node:path');
-module.exports = (app) =>
+const { createProxyMiddleware } = require('http-proxy-middleware');
+module.exports = (app) => {
+  const routes = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '.proxyrc'), 'utf8'),
+  );
+  for (const [route, options] of Object.entries(routes)) {
+    app.use(createProxyMiddleware(route, options));
+  }
   app.use('/engines/ngspice', (request, response) => {
     const name = (request.url || '').split('?')[0].replace(/^\//, '');
     if (!['ngspice.js', 'ngspice.wasm', 'manifest.json'].includes(name)) {
@@ -26,3 +34,4 @@ module.exports = (app) =>
     );
     fs.createReadStream(target).pipe(response);
   });
+};

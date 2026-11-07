@@ -1,74 +1,145 @@
 .simulation-sheet {
-  font-size: 14px;
-  line-height: 1.5;
-  button,
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-family: var(--fontFamilyBase);
+  font-size: var(--fontSizeBase300, 14px);
+  line-height: var(--lineHeightBase300, 20px);
+
+  > [role='status']:empty {
+    display: none;
+  }
+  > [role='status'] {
+    padding: 4px 12px;
+    margin: 0 !important;
+    color: var(--colorNeutralForeground2);
+  }
+  > [role='tablist'] {
+    overflow-x: auto;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--colorNeutralStroke1);
+  }
+  .simulation-content {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 12px;
+  }
+  .simulation-analysis {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .simulation-analysis > [role='tablist'] {
+    border-right: 1px solid var(--colorNeutralStroke1);
+  }
+  .simulation-analysis > [role='tablist'] button {
+    justify-content: flex-start;
+    text-align: left;
+  }
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+  }
+  legend,
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    padding: 0;
+  }
+  .simulation-analysis-settings > div {
+    margin: 8px 0 !important;
+  }
+  .simulation-setup-tables {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(300px, 1fr);
+    gap: 16px;
+    margin-top: 28px;
+  }
+  .simulation-parameters fieldset {
+    height: 200px;
+  }
+  .simulation-model-table {
+    width: 100%;
+    border: 1px solid var(--colorNeutralStroke1);
+  }
+  .simulation-model-table th {
+    background: var(--colorNeutralBackground3);
+    font-size: 11px;
+  }
+  .simulation-model-table td,
+  .simulation-model-table th {
+    padding: 2px 6px;
+  }
+  .simulation-model-editor fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .simulation-model-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .simulation-model-actions input {
+    min-width: 0;
+    width: 230px;
+  }
   input,
   select,
   textarea {
     font: inherit;
+    color: inherit;
   }
-  button,
-  select,
-  input:not([type='checkbox']):not([type='range']):not([type='file']),
-  textarea {
-    border: 1px solid #8a8886;
-    border-radius: 4px;
-    padding: 5px 10px;
-    background: #fff;
-    color: #242424;
-  }
-  button {
-    cursor: pointer;
-    min-height: 32px;
-  }
-  button:hover:not(:disabled) {
-    background: #eff6fc;
-    border-color: #0078d4;
-  }
-  button[aria-pressed='true'] {
-    color: #005a9e;
-    background: #eff6fc;
-    border-color: #0078d4;
-  }
-  button:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-  :focus-visible {
-    outline: 2px solid #0078d4;
-    outline-offset: 2px;
+  input:not([class]):not([type='checkbox']):not([type='range']):not(
+      [type='file']
+    ),
+  select:not([class]),
+  textarea:not([class]) {
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: var(--borderRadiusMedium, 4px);
+    padding: 3px 6px;
+    background: var(--colorNeutralBackground1);
   }
   table {
     border-collapse: collapse;
     text-align: left;
     font-variant-numeric: tabular-nums;
   }
-  th,
-  td {
-    padding: 7px 12px;
-    border-bottom: 1px solid #ddd;
+  table:not([class]) th,
+  table:not([class]) td {
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
     white-space: nowrap;
-  }
-  th {
-    font-weight: 600;
   }
   caption {
     text-align: left;
     font-weight: 600;
-    padding: 12px 0;
+    padding: 8px 0;
   }
   summary {
     cursor: pointer;
     font-weight: 600;
-    padding: 8px 0;
-  }
-  textarea {
-    max-width: 900px;
+    padding: 6px 0;
   }
   pre {
     padding: 12px;
-    background: #f5f5f5;
-    color: #242424;
+    background: var(--colorNeutralBackground3);
     overflow: auto;
+  }
+  @media (max-width: 1100px) {
+    .simulation-setup-tables {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 700px) {
+    .simulation-analysis {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 }

@@ -1,4 +1,6 @@
-import { dsnDrawing } from '../model/dsnDrawing';
+import { checkSpiceComponents, locateSpiceErrors } from './diagnostics';
+import { NetlistData } from '../io/netlists/netlistGenerator';
+import { dsnDrawing, DrcError } from '../model/dsnDrawing';
 import {
   SimulationSetup,
   SimulationRun,
@@ -51,6 +53,7 @@ export async function runSimulation(
   sheetId: string,
   setup: SimulationSetup,
   commit: (run: SimulationRun) => void,
+  reportDiagnostics?: (errors: DrcError[]) => void,
 ): Promise<void> {
   if (active)
     throw new Error(
@@ -66,6 +69,14 @@ export async function runSimulation(
     samples = 0,
     lastPublished = 0;
   let solverFailure = '';
+  let netlist: NetlistData;
+  let deck = '';
+  let diagnosticsReported = false;
+  const report = (errors: DrcError[]) => {
+    diagnosticsReported = true;
+    reportDiagnostics?.(errors);
+  };
+  reportDiagnostics?.([]);
   active = {
     sheetId,
     data,
@@ -81,8 +92,13 @@ export async function runSimulation(
       ...drawing,
       sheets: drawing.sheets.filter((sheet) => sheet.kind !== 'simulation'),
     };
-    const netlist = new NetlistWorkerState().init(circuit);
-    const deck = buildDeck(netlist, setup);
+    netlist = new NetlistWorkerState().init(circuit);
+    const errors = checkSpiceComponents(netlist, setup);
+    if (errors.length) {
+      report(errors);
+      throw new Error('Correct the SPICE errors listed below before running.');
+    }
+    deck = buildDeck(netlist, setup);
     if (process.env.TARGET_SYSTEM !== 'electron' && /^\s*A\S*\s/im.test(deck))
       throw new Error(
         'This circuit uses XSPICE code models. Run it in the Electron desktop app; the browser engine supports analogue models only.',
@@ -145,6 +161,8 @@ export async function runSimulation(
       if (event.state === 'failed' && !run.error)
         run.error =
           'ngspice could not complete this analysis. See Diagnostics for details.';
+      if (event.state === 'failed')
+        report(locateSpiceErrors(netlist, deck, run.error, data.log));
       if (event.state === 'stopped') run.stopMethod = 'terminated';
       try {
         if (data.vectors.length && samples) {
@@ -222,7 +240,7 @@ export async function runSimulation(
             if (plot === data) samples += event.rows.length;
           } else if (event.type === 'log') {
             if (
-              /^stderr\s+(?:Error(?:[:\s])|Fatal|doAnalyses:|.*(?:simulation.*aborted|timestep too small))/i.test(
+              /^(?:stderr\s+)?(?:Error(?:[:\s])|Fatal|doAnalyses:|.*(?:simulation.*aborted|timestep too small))/i.test(
                 event.message,
               )
             )
@@ -245,6 +263,14 @@ export async function runSimulation(
     );
     if (finished) job.dispose();
   } catch (error) {
+    if (!diagnosticsReported)
+      report(
+        locateSpiceErrors(
+          netlist,
+          deck,
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
     active = undefined;
     publish();
     throw error;

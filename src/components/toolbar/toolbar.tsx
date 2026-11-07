@@ -52,6 +52,7 @@ import {
   RulerRegular,
   GlobeRegular,
   CheckmarkRegular,
+  PulseRegular,
 } from '@fluentui/react-icons';
 import { ActionCreators } from 'redux-undo';
 import {
@@ -61,6 +62,7 @@ import {
   fileNew,
   fileOpen,
   fileSaveAs,
+  fileSaveWithoutResults,
   librarySaveAs,
   exportPdf,
   exportSvg,
@@ -106,6 +108,12 @@ import discordImage from 'url:../../../images/Discord-Logo-Black.png';
 
 const useStyles = makeStyles({
   toolbarContainer: {
+    '& .fui-ToolbarButton': {
+      fontFamily: tokens.fontFamilyBase,
+      fontSize: tokens.fontSizeBase200,
+      fontWeight: tokens.fontWeightRegular,
+      lineHeight: tokens.lineHeightBase200,
+    },
     display: 'flex',
     alignItems: 'center',
     backgroundColor: 'rgb(230, 230, 230)',
@@ -119,6 +127,7 @@ const useStyles = makeStyles({
     },
   },
   toolbarContent: {
+    fontFamily: tokens.fontFamilyBase,
     marginLeft: '-8px', // Shifts content left to reduce gap
     flexGrow: 1,
     flexShrink: 0,
@@ -167,6 +176,7 @@ const useStyles = makeStyles({
 });
 
 interface ToolbarProps {
+  simulationToolbarRef?: React.Ref<HTMLSpanElement>;
   simulationSheet?: boolean;
   menu_command: string;
   wireMode: WireMode;
@@ -496,7 +506,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             aria-label={t('toolbar.save')}
             title={t('toolbar.saveLibrary')}
             icon={<SaveRegular />}
-            disabled={!props.saveNeeded && !props.saveInProgress}
+            disabled={props.saveInProgress || !props.saveNeeded}
             onClick={() => props.dispatch(librarySave)}
           >
             {t('toolbar.save')}
@@ -532,12 +542,6 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
     );
   }
 
-  if (props.simulationSheet) return <ScrollableToolbarWrapper className={mergeClasses('toolbar-container',styles.toolbarContainer)}><FluentToolbar>
-    <ToolbarButton icon={<SaveRegular />} onClick={()=>props.dispatch(fileSave)} disabled={props.saveInProgress}>{t('toolbar.save')}</ToolbarButton>
-    <ToolbarButton icon={<SaveCopyRegular />} onClick={()=>props.dispatch(fileSaveAs)} disabled={props.saveInProgress}>{t('toolbar.saveAs')}</ToolbarButton>
-    <ToolbarButton icon={<ArrowUndoRegular />} onClick={()=>props.dispatch(ActionCreators.undo())} disabled={!props.can_undo}>{t('toolbar.undo')}</ToolbarButton>
-    <ToolbarButton icon={<ArrowRedoRegular />} onClick={()=>props.dispatch(ActionCreators.redo())} disabled={!props.can_redo}>{t('toolbar.redo')}</ToolbarButton>
-  </FluentToolbar></ScrollableToolbarWrapper>;
   // Normal editor toolbar
   if (props.selected_sheet < 0) {
     return null;
@@ -603,6 +607,9 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                     {t('toolbar.open')}
                   </MenuItem>
               )}
+              {!props.editLibrary && <MenuItem icon={<SaveCopyRegular />} disabled={props.saveInProgress} onClick={() => props.dispatch(fileSaveWithoutResults)}>
+                Save without results...
+              </MenuItem>}
               <MenuItem icon={<ImageRegular />} onClick={() => props.dispatch(exportSvg)}>
                 {t('toolbar.exportSvg')}
               </MenuItem>
@@ -672,6 +679,13 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
              />
           )}
 
+        {!props.editSymbol && !props.simulationSheet && <>
+        <ToolbarDivider className={styles.divider} />
+        <ToolbarButton
+          aria-label="Simulate" title="Add a simulation sheet" icon={<PulseRegular />}
+          onClick={() => props.dispatch({ type: 'simulation/add', name: 'Simulation' })}
+        >Simulate</ToolbarButton>
+        </>}
         <ToolbarDivider className={styles.divider} />
         {/* Undo/Redo */}
         <ToolbarButton
@@ -691,6 +705,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
 
         <ToolbarDivider className={styles.divider} />
         
+        <span ref={props.simulationToolbarRef} style={{ display: 'contents' }} />
+        {!props.simulationSheet && <>
         {/* Pin (Only if editing symbol) */}
         {props.editSymbol && process.env.TARGET_SYSTEM !== 'electron' && (
           <ToolbarButton
@@ -744,7 +760,6 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           className={m === 'add_wire_point_to_point' ? styles.highlight : undefined}
         />
 
-        <ToolbarButton aria-label="Simulate" title="Add a Simulation sheet" onClick={() => props.dispatch({type:'simulation/add',name:'Simulation'})}>Simulate</ToolbarButton>
         {/* No Connect */}
         <ToolbarButton
           aria-label={t('toolbar.noConnect')}
@@ -887,6 +902,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           className={props.showRulers ? styles.highlight : undefined}
           onClick={() => props.dispatch(actionToggleRulers())}
         />
+
+        </>}
 
         {process.env.TARGET_SYSTEM !== 'electron' && (
           <>

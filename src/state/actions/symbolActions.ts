@@ -9,6 +9,7 @@ export enum SymbolActionTypes {
   SymbolResetResize = '[Symbol] SymbolResetResize',
   SymbolShow = '[Symbol] SymbolShow',
   SetSymbolValue = '[Symbol] SetSymbolValue',
+  SetSymbolSpiceProperty = '[Symbol] SetSymbolSpiceProperty',
   SetSymbolPPP = '[Symbol] SetSymbolPPP',
   SetSymbolName = '[Symbol] SetSymbolName',
   SymbolDelete = '[Symbol] SymbolDelete',
@@ -41,6 +42,12 @@ export interface SymbolShow {
 export interface SetSymbolValue {
   type: SymbolActionTypes.SetSymbolValue;
   index: number;
+  value: string;
+}
+
+export interface SetSymbolSpiceProperty {
+  type: SymbolActionTypes.SetSymbolSpiceProperty;
+  name: string;
   value: string;
 }
 
@@ -96,6 +103,7 @@ export type SymbolActions =
   | SymbolResetResize
   | SymbolShow
   | SetSymbolValue
+  | SetSymbolSpiceProperty
   | SetSymbolPPP
   | SetSymbolName
   | SymbolDelete

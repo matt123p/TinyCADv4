@@ -142,11 +142,22 @@ export function DocStoreReducer(
   state: docStore = intialState,
   action: AppActionTypes,
 ): docStore {
-  if (action.type === 'simulation/add') {
+  if (action.type === 'simulation/diagnostics') {
+    if (action.documentId !== state.drawing.documentId) return state;
+    return { ...state, drawing: { ...state.drawing, drcTable: action.errors },
+      view: action.errors.length ? { ...state.view, _selected_array: [] } : state.view };
+  }
+  if (action.type === 'simulation/add' || action.type === 'simulation/duplicate') {
     if (state.editSymbol) return state;
-    let name = action.name, suffix = 2;
-    while (state.drawing.sheets.some(sheet => sheet.name === name)) name = `${action.name} (${suffix++})`;
-    const added = createSimulationSheet(state.drawing.sheets.find(s => s.kind !== 'simulation') || blank().sheets[0], name);
+    const source = action.type === 'simulation/duplicate'
+      ? state.drawing.sheets.find(sheet => sheet.id === action.sheetId && sheet.kind === 'simulation')
+      : undefined;
+    if (action.type === 'simulation/duplicate' && !source) return state;
+    const requestedName = action.type === 'simulation/add' ? action.name : source.name + ' copy';
+    let name = requestedName, suffix = 2;
+    while (state.drawing.sheets.some(sheet => sheet.name === name)) name = `${requestedName} (${suffix++})`;
+    const added = createSimulationSheet(source || state.drawing.sheets.find(s => s.kind !== 'simulation') || blank().sheets[0], name);
+    if (source) added.simulation = { ...source.simulation, runs: [] };
     return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, sheets: [...state.drawing.sheets, added] }, view: { ...state.view, selected_sheet: state.drawing.sheets.length, _selected_array: [], add: null } };
   }
   if (action.type === 'simulation/update') return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, sheets: state.drawing.sheets.map(s => s.id === action.sheetId && s.kind === 'simulation' ? { ...s, simulation: action.setup } : s) } };
@@ -154,7 +165,7 @@ export function DocStoreReducer(
   if (action.type === 'simulation/format') return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, saveFormat: action.representation } };
   let sheet = activeSheet(state);
   if (sheet?.kind === 'simulation') {
-    const allowed = new Set<string>([DocActionTypes.SetDocument, DocActionTypes.UpdateNetlistHints, MenuActionTypes.MenuSheetSelect, MenuActionTypes.MenuSheetLeft, MenuActionTypes.MenuSheetRight, MenuActionTypes.MenuSheetMove, MenuActionTypes.MenuSheetRename, MenuActionTypes.MenuSheetAdd, MenuActionTypes.MenuSheetRemove, MenuActionTypes.BrowserOpen, MenuActionTypes.BrowserClose, DocActionTypes.BomClose]);
+    const allowed = new Set<string>([DocActionTypes.SetDocument, DocActionTypes.UpdateNetlistHints, DialogActionTypes.SetDRC, FindActionTypes.SetFindSelection, MenuActionTypes.MenuSheetSelect, MenuActionTypes.MenuSheetLeft, MenuActionTypes.MenuSheetRight, MenuActionTypes.MenuSheetMove, MenuActionTypes.MenuSheetRename, MenuActionTypes.MenuSheetAdd, MenuActionTypes.MenuSheetRemove, MenuActionTypes.BrowserOpen, MenuActionTypes.BrowserClose, DocActionTypes.BomClose]);
     if (!allowed.has(action.type)) return state;
   }
   let view = state.view;
@@ -869,6 +880,10 @@ export function DocStoreReducer(
       if (sheet) {
         sheet = update_view.showShow(view, sheet, action.index);
       }
+      break;
+
+    case SymbolActionTypes.SetSymbolSpiceProperty:
+      if (sheet) sheet = update_view.setSpiceProperty(view, sheet, action.name, action.value);
       break;
 
     case SymbolActionTypes.SetSymbolValue:

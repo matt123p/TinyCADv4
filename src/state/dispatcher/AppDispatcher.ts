@@ -64,6 +64,7 @@ import { SearchSymbol } from '../../components/libraryPanel/Search';
 import {
   SymbolShow,
   SetSymbolValue,
+  SetSymbolSpiceProperty,
   SetSymbolPPP,
   SetSymbolName,
   SymbolDelete,
@@ -635,6 +636,10 @@ export function actionSymbolValue(index: number, value: string) {
     value,
   };
   return action;
+}
+
+export function actionSymbolSpiceProperty(name: string, value: string): SetSymbolSpiceProperty {
+  return { type: SymbolActionTypes.SetSymbolSpiceProperty, name, value };
 }
 
 export function actionSymbolPPP(value: string) {

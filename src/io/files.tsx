@@ -1,3 +1,4 @@
+import { withoutResults } from '../simulation/document';
 import { drawingFileName, isCompressedDrawing } from '../../shared/drawingFiles.js';
 import { encodeDrawing } from './dsnCodec';
 import React from 'react';
@@ -155,6 +156,26 @@ export function fileSave(dispatch: Dispatch, getState: { (): docDrawing }) {
 
 export function fileSaveAs(dispatch: Dispatch, getState: { (): docDrawing }) {
   return internalfileSave(dispatch, getState, true);
+}
+
+// Save a separate copy without changing the open drawing or its saved version.
+export async function fileSaveWithoutResults(dispatch: Dispatch, getState: { (): docDrawing }) {
+  const state = getState();
+  if (state.altStore.saveInProgress || state.docStore.present.editLibrary) return;
+  const { drawing } = state.docStore.present;
+  const file = state.altStore.file;
+  dispatch(actionSetSaveInProgress(true, null));
+  try {
+    const bytes = await encodeDrawing(withoutResults(drawing));
+    await userManager.saveFile(bytes, {
+      ...file, id: null,
+      name: drawingFileName(file.name.replace(/\.(dsn|dzn)$/i, '') + '-without-results', isCompressedDrawing(bytes)),
+    });
+  } catch (error) {
+    if (error) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+  } finally {
+    dispatch(actionSetSaveInProgress(false, null));
+  }
 }
 
 function internalfileSave(
@@ -778,6 +799,9 @@ export function handleMenuCommand(command: string) {
         } else {
           dispatch(fileSave as any);
         }
+        break;
+      case 'file-save-without-results':
+        dispatch(fileSaveWithoutResults as any);
         break;
       case 'file-save-as':
         if (editLibrary) {

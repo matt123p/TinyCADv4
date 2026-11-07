@@ -308,6 +308,10 @@ export class updateDrawing {
       let ax = netlist.symbols[i];
       let a = ax[1];
       let ref_a = a.text.find((t) => t.description === 'Ref')?.value;
+      if (drc_options.MissingSpice && !a.text.find(field => field.description === '$$SPICE')?.value?.trim()) {
+        r.push({ symbol: ref_a || 'Unnamed symbol', pin: '', text: 'No SPICE information',
+          a: [...a.point], id: a._id, sheet: ax[0] });
+      }
       let ref_ra = ref_a;
       const update_symbol_a = new updateSymbol(a);
       if (update_symbol_a.parts() > 1) {

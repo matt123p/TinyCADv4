@@ -395,6 +395,9 @@ export function AltStoreReducer(
       });
       break;
 
+    case 'simulation/diagnostics':
+      return action.errors.length ? { ...state, panel: Panels.DrcPanel } : state;
+
     case DialogActionTypes.SetDRC:
       state = update(state, {
         show_dialogue: { $set: null },

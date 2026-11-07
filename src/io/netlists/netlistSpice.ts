@@ -242,6 +242,9 @@ function expandSpice(
             mode = 'reading_macro';
         }
     }
+    if (mode.startsWith('reading_') || mode === 'awaiting_macro_escape') {
+        throw new Error('Unterminated SPICE template macro.');
+    }
     return res;
 }
 
