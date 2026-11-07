@@ -15,6 +15,11 @@ const common = {
   topbar: { unsavedWarning: 'Disegno non salvato: vuoi davvero uscire?' },
   designApp: { showSidePanel: 'Mostra pannello laterale' },
   toolbar: {
+    wireMode: 'Modalità cablaggio',
+    wireMode90: '90°',
+    wireModeFree: 'Libero',
+    wireMode45: '45°',
+    wireModeFreeShort: 'Libero',
     closeBomAria: 'Chiudi distinta base', closeBom: 'Chiudi BOM', downloadBomAria: 'Scarica distinta base', downloadBom: 'Scarica BOM', closeHelpAria: 'Chiudi aiuto', close: 'Chiudi', open: 'Apri',
     openLibrary: 'Apri libreria', save: 'Salva', saveLibrary: 'Salva libreria', saveAs: 'Salva con nome', saveLibraryAs: 'Salva libreria con nome', undo: 'Annulla (Ctrl-Z)', redo: 'Ripristina (Ctrl-Y)',
     file: 'File', new: 'Nuovo', edit: 'Modifica', view: 'Visualizza', tools: 'Strumenti', fileMenu: 'Menu file', openRecent: 'Apri recenti', noRecentFiles: 'Nessun file recente', import: 'Importa', print: 'Stampa', exportSvg: 'Esporta in SVG', exportPdf: 'Esporta in PDF', importKicad: 'Importa simboli KiCad', annotateSymbols: 'Annota simboli', billOfMaterials: 'Distinta base',

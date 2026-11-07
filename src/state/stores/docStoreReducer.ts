@@ -153,6 +153,10 @@ export function DocStoreReducer(
   let update_library;
 
   switch (action.type) {
+    case AppUiActionTypes.SetWireMode:
+      view = update_view.setWireMode(view, sheet, action.mode);
+      break;
+
     case AppUiActionTypes.ToggleRulers:
       state = update(state, {
         drawing: {

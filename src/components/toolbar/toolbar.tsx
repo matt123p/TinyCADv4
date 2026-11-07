@@ -17,6 +17,7 @@ import {
   MenuPopover,
   MenuList,
   MenuItem,
+  MenuItemRadio,
   makeStyles,
   tokens,
   mergeClasses,
@@ -68,8 +69,9 @@ import {
 } from '../../io/files';
 import { CurrentFile, ToolbarDefaults } from '../../state/stores/altStoreReducer';
 import { tclib, tclibLibraryEntry } from '../../model/tclib';
+import { WireMode } from '../../model/dsnView';
 import { Coordinate } from '../../model/dsnItem';
-import { actionToggleRulers } from '../../state/actions/appActions';
+import { actionToggleRulers, actionSetWireMode } from '../../state/actions/appActions';
 import {
   normalizeLanguageCode,
   persistLanguagePreference,
@@ -166,6 +168,7 @@ const useStyles = makeStyles({
 
 interface ToolbarProps {
   menu_command: string;
+  wireMode: WireMode;
   can_undo: boolean;
   can_redo: boolean;
   hover_point?: Coordinate;
@@ -701,6 +704,30 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           onClick={() => props.dispatch(actionCommand('add_wire'))}
           className={m === 'add_wire' ? styles.highlight : undefined}
         />
+
+        <Menu checkedValues={{ wireMode: [props.wireMode] }}>
+          <MenuTrigger disableButtonEnhancement>
+            <ToolbarButton
+              aria-label={t('toolbar.wireMode')}
+              title={t('toolbar.wireMode')}
+              appearance="subtle"
+              style={{ minWidth: 44, padding: '0 4px', fontSize: 11, color: tokens.colorNeutralForeground2 }}
+            >
+              {props.wireMode === 'free' ? t('toolbar.wireModeFreeShort') : props.wireMode + '°'}
+              <ChevronDownRegular style={{ fontSize: 12 }} />
+            </ToolbarButton>
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              {(['90', '45', 'free'] as WireMode[]).map(mode => (
+                <MenuItemRadio key={mode} name="wireMode" value={mode}
+                  onClick={() => props.dispatch(actionSetWireMode(mode))}>
+                  {t('toolbar.wireMode' + (mode === 'free' ? 'Free' : mode))}
+                </MenuItemRadio>
+              ))}
+            </MenuList>
+          </MenuPopover>
+        </Menu>
 
         <ToolbarButton
           aria-label={t('toolbar.pointToPointWire')}

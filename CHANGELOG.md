@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Compact toolbar selector for 90°, 45°, and free wire modes, with original TinyCAD 45° angle constraints. Selecting a mode activates the wire tool and preserves an active wire preview.
+
 ### Fixed
 
 - Show the loupe button only after touch input on the drawing canvas, keeping it hidden on touchscreen PCs until touch is used.

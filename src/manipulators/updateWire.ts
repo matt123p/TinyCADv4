@@ -18,10 +18,12 @@ import {
 } from './updateInterfaces';
 import { Coordinate, dsnWire, DocItem, DocItemTypes } from '../model/dsnItem';
 import { Snap } from './snap';
-import { ViewTracker, FindResult } from '../model/dsnView';
+import { ViewTracker, FindResult, WireMode } from '../model/dsnView';
 
 export class updateWire implements SimpleAdd, MoveAdd, SimpleDrag, IsInside {
-  public lock_90 = true;
+  public wireMode: WireMode = '90';
+
+  get lock_90() { return this.wireMode === '90'; }
 
   constructor(public item: dsnWire) {}
 
@@ -423,6 +425,11 @@ export class updateWire implements SimpleAdd, MoveAdd, SimpleDrag, IsInside {
   }
 
   begin_add(p: Coordinate, tracker: ViewTracker, snap: Snap, items: DocItem[]) {
+    if (!this.lock_90 && this.item.d_points.length) {
+      // Commit the same constrained endpoint that was shown in the preview.
+      const obj = this.move_add(p, snap, tracker, items);
+      return { obj: { ...obj, d_points: [...obj.d_points, obj.d_points[obj.d_points.length - 1]] }, end: false, items };
+    }
     let snap_p = snap.snap(p);
 
     let t = this.item.d_points.length;
@@ -447,7 +454,7 @@ export class updateWire implements SimpleAdd, MoveAdd, SimpleDrag, IsInside {
         let dr = update_mag_wire.split_wire(_magnetic.point, items);
         items = UtilityService.updateDupArray(
           dr.items,
-          this.item._magnetic.wire,
+          _magnetic.wire,
           dr.obj,
         );
         _magnetic.wire = dr.obj;
@@ -520,6 +527,18 @@ export class updateWire implements SimpleAdd, MoveAdd, SimpleDrag, IsInside {
       }
     }
 
+    if (this.wireMode === '45' && t > 0) {
+      const a = d_points[t - 1];
+      const dx = Math.abs(snap_p[0] - a[0]);
+      const dy = Math.abs(snap_p[1] - a[1]);
+      const diagonal = Math.abs(dx - dy);
+      // Match the original TinyCAD ToAngle thresholds and diagonal projection.
+      if (dx < dy && dx < diagonal) snap_p = [a[0], snap_p[1]];
+      else if (dy < diagonal) snap_p = [snap_p[0], a[1]];
+      else snap_p = [a[0] + (snap_p[0] > a[0] ? dy : -dy), snap_p[1]];
+      // A constrained wire must not claim a connection to an off-angle target.
+      if (_magnetic && (snap_p[0] !== _magnetic.point[0] || snap_p[1] !== _magnetic.point[1])) _magnetic = null;
+    }
     d_points[t] = snap_p;
 
     return update(this.item, {
@@ -766,6 +785,27 @@ export class updateWire implements SimpleAdd, MoveAdd, SimpleDrag, IsInside {
         items.push(ins);
 
         end = false;
+      }
+    }
+
+    if (!this.lock_90 && t > 1) {
+      const a = d_points[0];
+      const b = d_points[1];
+      const zeroLength = a[0] === b[0] && a[1] === b[1];
+      if (zeroLength) {
+        d_points = [a, b];
+        end = true;
+      } else if (this.item._magnetic) {
+        d_points.pop();
+        if (this.item._magnetic.wire) {
+          const wire = this.item._magnetic.wire;
+          const dr = new updateWire(wire).split_wire(this.item._magnetic.point, items);
+          items = UtilityService.updateDupArray(dr.items, wire, dr.obj);
+        }
+        end = true;
+      } else {
+        items = [...items, this.newWire([a, b])];
+        d_points = [b, b];
       }
     }
 

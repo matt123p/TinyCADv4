@@ -37,6 +37,11 @@ const common = {
     showSidePanel: 'Zijpaneel tonen',
   },
   toolbar: {
+    wireMode: 'Draadmodus',
+    wireMode90: '90°',
+    wireModeFree: 'Vrij',
+    wireMode45: '45°',
+    wireModeFreeShort: 'Vrij',
     closeBomAria: 'Stuklijst sluiten',
     closeBom: 'Stuklijst sluiten',
     downloadBomAria: 'Stuklijst downloaden',

@@ -22,6 +22,11 @@ const common = {
   topbar: { unsavedWarning: 'Entwurf nicht gespeichert – möchten Sie die Seite wirklich verlassen?' },
   designApp: { showSidePanel: 'Seitenleiste anzeigen' },
   toolbar: {
+    wireMode: 'Leitungsmodus',
+    wireMode90: '90°',
+    wireModeFree: 'Frei',
+    wireMode45: '45°',
+    wireModeFreeShort: 'Frei',
     closeBomAria: 'Stückliste schließen', closeBom: 'Stückliste schließen', downloadBomAria: 'Stückliste herunterladen', downloadBom: 'Stückliste herunterladen',
     closeHelpAria: 'Hilfe schließen', close: 'Schließen', open: 'Öffnen', openLibrary: 'Bibliothek öffnen', save: 'Speichern', saveLibrary: 'Bibliothek speichern', saveAs: 'Speichern unter',
     saveLibraryAs: 'Bibliothek speichern unter', undo: 'Rückgängig (Strg-Z)', redo: 'Wiederholen (Strg-Y)', file: 'Datei', new: 'Neu', edit: 'Bearbeiten', view: 'Ansicht', tools: 'Werkzeuge', fileMenu: 'Dateimenü', openRecent: 'Zuletzt geöffnet', noRecentFiles: 'Keine zuletzt verwendeten Dateien', import: 'Importieren', print: 'Drucken', exportSvg: 'Als SVG exportieren', exportPdf: 'Als PDF exportieren',

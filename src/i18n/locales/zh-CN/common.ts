@@ -15,6 +15,11 @@ const common = {
   topbar: { unsavedWarning: '设计尚未保存，确定要离开吗？' },
   designApp: { showSidePanel: '显示侧边栏' },
   toolbar: {
+    wireMode: '布线模式',
+    wireMode90: '90°',
+    wireModeFree: '自由',
+    wireMode45: '45°',
+    wireModeFreeShort: '自由',
     closeBomAria: '关闭物料清单', closeBom: '关闭 BOM', downloadBomAria: '下载物料清单', downloadBom: '下载 BOM', closeHelpAria: '关闭帮助', close: '关闭', open: '打开',
     openLibrary: '打开库', save: '保存', saveLibrary: '保存库', saveAs: '另存为', saveLibraryAs: '库另存为', undo: '撤销 (Ctrl-Z)', redo: '重做 (Ctrl-Y)', file: '文件', new: '新建', edit: '编辑', view: '视图', tools: '工具',
     fileMenu: '文件菜单', openRecent: '打开最近使用的文件', noRecentFiles: '没有最近使用的文件', import: '导入', print: '打印', exportSvg: '导出为 SVG', exportPdf: '导出为 PDF', importKicad: '导入 KiCad 符号', annotateSymbols: '标注符号', billOfMaterials: '物料清单', generateNetlist: '生成网表',

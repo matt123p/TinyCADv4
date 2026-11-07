@@ -37,6 +37,11 @@ const common = {
     showSidePanel: 'Pokaż panel boczny',
   },
   toolbar: {
+    wireMode: 'Tryb przewodu',
+    wireMode90: '90°',
+    wireModeFree: 'Dowolny',
+    wireMode45: '45°',
+    wireModeFreeShort: 'Dowolny',
     closeBomAria: 'Zamknij zestawienie materiałowe',
     closeBom: 'Zamknij BOM',
     downloadBomAria: 'Pobierz zestawienie materiałowe',

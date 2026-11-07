@@ -15,6 +15,11 @@ const common = {
   topbar: { unsavedWarning: 'Le schéma n’est pas enregistré. Voulez-vous vraiment quitter ?' },
   designApp: { showSidePanel: 'Afficher le panneau latéral' },
   toolbar: {
+    wireMode: 'Mode de câblage',
+    wireMode90: '90°',
+    wireModeFree: 'Libre',
+    wireMode45: '45°',
+    wireModeFreeShort: 'Libre',
     closeBomAria: 'Fermer la nomenclature', closeBom: 'Fermer la nomenclature', downloadBomAria: 'Télécharger la nomenclature', downloadBom: 'Télécharger la nomenclature', closeHelpAria: 'Fermer l’aide', close: 'Fermer',
     open: 'Ouvrir', openLibrary: 'Ouvrir la bibliothèque', save: 'Enregistrer', saveLibrary: 'Enregistrer la bibliothèque', saveAs: 'Enregistrer sous', saveLibraryAs: 'Enregistrer la bibliothèque sous',
     undo: 'Annuler (Ctrl-Z)', redo: 'Rétablir (Ctrl-Y)', file: 'Fichier', new: 'Nouveau', edit: 'Modifier', view: 'Affichage', tools: 'Outils', fileMenu: 'Menu fichier', openRecent: 'Ouvrir les récents', noRecentFiles: 'Aucun fichier récent', import: 'Importer', print: 'Imprimer', exportSvg: 'Exporter en SVG', exportPdf: 'Exporter en PDF', importKicad: 'Importer des symboles KiCad',

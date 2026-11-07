@@ -15,6 +15,11 @@ const common = {
   topbar: { unsavedWarning: '設計は保存されていません。このまま離れますか？' },
   designApp: { showSidePanel: 'サイドパネルを表示' },
   toolbar: {
+    wireMode: '配線モード',
+    wireMode90: '90°',
+    wireModeFree: '自由',
+    wireMode45: '45°',
+    wireModeFreeShort: '自由',
     closeBomAria: '部品表を閉じる', closeBom: 'BOMを閉じる', downloadBomAria: '部品表をダウンロード', downloadBom: 'BOMをダウンロード', closeHelpAria: 'ヘルプを閉じる', close: '閉じる',
     open: '開く', openLibrary: 'ライブラリを開く', save: '保存', saveLibrary: 'ライブラリを保存', saveAs: '名前を付けて保存', saveLibraryAs: 'ライブラリを名前を付けて保存', undo: '元に戻す (Ctrl-Z)',
     redo: 'やり直し (Ctrl-Y)', file: 'ファイル', new: '新規', edit: '編集', view: '表示', tools: 'ツール', fileMenu: 'ファイルメニュー', openRecent: '最近使ったファイルを開く', noRecentFiles: '最近使ったファイルはありません', import: 'インポート', print: '印刷', exportSvg: 'SVGとしてエクスポート', exportPdf: 'PDFとしてエクスポート', importKicad: 'KiCadシンボルをインポート', annotateSymbols: 'シンボル注釈',
