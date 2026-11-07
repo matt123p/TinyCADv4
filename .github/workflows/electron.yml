@@ -1,6 +1,7 @@
 name: Desktop Build
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -48,7 +49,7 @@ jobs:
           APPX_PUBLISHER: ${{ secrets.APPX_PUBLISHER }}
 
       - name: Upload Artifacts
-        if: github.ref == 'refs/heads/production'
+        if: github.ref == 'refs/heads/production' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v6
         with:
           name: tinycad-ubuntu-latest
@@ -97,8 +98,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPX_PUBLISHER: ${{ secrets.APPX_PUBLISHER }}
 
-      - name: Build unsigned macOS app for pull requests
-        if: runner.os == 'macOS' && github.event_name == 'pull_request'
+      - name: Build unsigned macOS app for pull requests and manual qualification
+        if: runner.os == 'macOS' && github.event_name != 'push'
         run: npm run dist -- --mac -c.mac.identity=null -c.mac.notarize=false
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -141,7 +142,7 @@ jobs:
           xcrun stapler validate release/mac-arm64/TinyCAD.app
 
       - name: Upload Artifacts
-        if: github.ref == 'refs/heads/production'
+        if: github.ref == 'refs/heads/production' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v6
         with:
           name: tinycad-${{ matrix.os }}

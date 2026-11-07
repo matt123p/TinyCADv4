@@ -79,7 +79,7 @@ export class FileSystemUserManager implements UserManager {
   }
 
   public fileOpen(dispatch: Dispatch) {
-    const pickerOpts = {
+    const pickerOpts: OpenFilePickerOptions = {
       types: [
         {
           description: 'TinyCAD drawings',
@@ -177,7 +177,7 @@ export class FileSystemUserManager implements UserManager {
           return meta;
         });
     } else {
-      const pickerOpts = {
+      const pickerOpts: SaveFilePickerOptions = {
         types: [
           {
             description: 'TinyCAD libraries',

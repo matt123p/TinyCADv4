@@ -7,14 +7,17 @@ export const MAX_RUN_BYTES = 64 * 1024 * 1024;
 export const MAX_RESULT_BYTES = 256 * 1024 * 1024;
 
 export function resultBytes(data: ResultData): number {
-  return [data, ...(data.plots || [])].reduce(
-    (total, plot) =>
-      total +
-      plot.vectors.reduce(
-        (n, v) => n + (v.real.length + (v.imaginary?.length || 0)) * 8,
-        0,
-      ),
-    0,
+  return (
+    new TextEncoder().encode(data.log || '').byteLength +
+    [data, ...(data.plots || [])].reduce(
+      (total, plot) =>
+        total +
+        plot.vectors.reduce(
+          (n, v) => n + (v.real.length + (v.imaginary?.length || 0)) * 8,
+          0,
+        ),
+      0,
+    )
   );
 }
 

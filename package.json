@@ -35,10 +35,12 @@
     "start:electron": "cross-env TARGET_SYSTEM=electron parcel index-electron.html",
     "build:electron": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=electron parcel build index-electron.html --no-cache --no-source-maps --public-url ./ && node scripts/check-electron-build.mjs",
     "electron": "wait-on tcp:1234 && electron .",
-    "engine:native": "python3 scripts/build-ngspice.py native",
+    "engine:native": "node scripts/build-native-engine.mjs",
     "engine:wasm": "python3 scripts/build-ngspice.py wasm",
     "test:simulation": "node --test scripts/tests/simulation*.test.mjs",
-    "test:engines": "node scripts/tests/qualify-engines.mjs"
+    "test:engines": "node scripts/tests/qualify-engines.mjs",
+    "typecheck": "tsc --noEmit",
+    "generate:simulation-examples": "node scripts/generate-simulation-examples.mjs"
   },
   "build": {
     "appId": "com.tinycad.app",
@@ -170,9 +172,14 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "examples/simulation",
+        "to": "examples/simulation"
       }
     ],
     "afterPack": "./scripts/verify-engine-package.cjs",
+    "afterSign": "./scripts/finalize-signed-engine.cjs",
     "snapcraft": {
       "base": "core24",
       "core24": {
@@ -213,6 +220,7 @@
     "@types/blob-stream": "^0.1.30",
     "@types/file-saver": "^2.0.3",
     "@types/fixed-data-table-2": "^0.8.6",
+    "@types/gapi.auth2": "^0.0.61",
     "@types/md5": "^2.2.0",
     "@types/node": "13.11.1",
     "@types/pdfkit": "^0.12.2",
@@ -222,6 +230,7 @@
     "@types/react-redux": "^7.1.9",
     "@types/sql.js": "^1.4.3",
     "@types/svg-to-pdfkit": "^0.1.0",
+    "@types/wicg-file-system-access": "^2023.10.7",
     "@typescript-eslint/eslint-plugin": "^8.72.0",
     "@typescript-eslint/parser": "^8.72.0",
     "assert": "^2.1.0",

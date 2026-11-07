@@ -1,0 +1,59 @@
+--- a/src/spicelib/devices/dev.c
++++ b/src/spicelib/devices/dev.c
+@@ -504,33 +504,29 @@
+ void *dlopen(const char *name, int type)
+ {
+     NG_IGNORE(type);
+-    /* Replace / by \\ */
+-    char* tmp, * tmpdel;
+-    tmp = tmpdel = copy(name);
+-    while (*tmp != '\0') {
+-        if (*tmp == '/')
+-            *tmp = '\\';
+-        tmp++;
+-    }
+-    /* LoadLibrary returns some value even if lib is not available (maybe
+-       due to relative path given) */
+-    void* ret;
+-    if (PathIsRelative(tmpdel)) {
+-        /* Replace relative by absolute path */
+-        char ngpath[512];
+-        GetModuleFileName(NULL, ngpath, 512);
+-        PathRemoveFileSpec(ngpath);
+-        PathCombine(ngpath, ngpath, tmpdel);
+-        if (PathFileExists(ngpath))
+-            ret = LoadLibrary(ngpath);
+-        else
+-            ret = NULL;
+-    }
+-    else {
+-        ret = LoadLibrary(tmpdel);
+-    }
+-    tfree(tmpdel);
+-    return ret;
++    /* TinyCAD passes UTF-8 paths, including paths beneath Unicode profiles.
++       Resolve relative paths against the job cwd and use the wide loader. */
++    int count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, name, -1, NULL, 0);
++    if (count < 1)
++        return NULL;
++    wchar_t *wide = TMALLOC(wchar_t, count);
++    if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, name, -1, wide, count)) {
++        tfree(wide);
++        return NULL;
++    }
++    DWORD length = GetFullPathNameW(wide, 0, NULL, NULL);
++    if (!length) {
++        tfree(wide);
++        return NULL;
++    }
++    wchar_t *absolute = TMALLOC(wchar_t, length + 1);
++    HMODULE library = NULL;
++    if (GetFullPathNameW(wide, length + 1, absolute, NULL))
++        library = LoadLibraryExW(absolute, NULL,
++            LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
++    tfree(absolute);
++    tfree(wide);
++    return library;
+ }
+ 
+ funptr_t dlsym(void *hDll, const char *funcname)

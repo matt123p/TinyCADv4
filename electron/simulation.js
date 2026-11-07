@@ -29,7 +29,7 @@ async function verifiedRuntime() {
     );
   const verified = new Set();
   for (const entry of manifest.files) {
-    if (!/^[A-Za-z0-9_.-]+$/.test(entry.path))
+    if (!/^[A-Za-z0-9_.+-]+$/.test(entry.path))
       throw new Error('Invalid bundled engine path.');
     const data = await fs.readFile(path.join(directory, entry.path));
     if (crypto.createHash('sha256').update(data).digest('hex') !== entry.sha256)

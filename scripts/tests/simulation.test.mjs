@@ -45,7 +45,7 @@ await build({
 await fs.symlink(
   path.resolve('node_modules'),
   path.join(output, 'node_modules'),
-  'dir',
+  process.platform === 'win32' ? 'junction' : 'dir',
 );
 const m = await import(pathToFileURL(path.join(output, 'test.mjs')));
 const encoder = new TextEncoder();
@@ -294,4 +294,24 @@ test('noise spectrum and integrated plots round trip independently', async () =>
 
 process.once('exit', () => {
   fs.rm(output, { recursive: true, force: true }).catch(() => {});
+});
+
+test('retention budgets include UTF-8 solver logs and all complex plots', () => {
+  const data = {
+    log: String.fromCodePoint(0x03a9),
+    scale: '',
+    vectors: [{ name: 'v', unit: 'V', real: [1, 2], imaginary: [0, 0] }],
+    plots: [{ scale: '', vectors: [{ name: 'other', unit: 'V', real: [3] }] }],
+  };
+  assert.equal(m.resultBytes(data), 42);
+  assert.throws(
+    () =>
+      m.putResult('oversized-log', {
+        vectors: [],
+        scale: '',
+        log: 'x'.repeat(m.MAX_RUN_BYTES + 1),
+      }),
+    /memory limit/,
+  );
+  assert.equal(m.getResult('oversized-log'), undefined);
 });

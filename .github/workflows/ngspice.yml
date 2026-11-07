@@ -3,6 +3,7 @@ on:
   pull_request:
   push:
     branches: [main, production]
+  workflow_dispatch:
   workflow_call:
 permissions:
   contents: read
@@ -20,6 +21,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run typecheck
       - run: python3 scripts/install-emsdk.py
       - name: Build and numerically qualify WASM
         shell: bash
@@ -65,6 +67,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run typecheck
       - uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows'
         with:

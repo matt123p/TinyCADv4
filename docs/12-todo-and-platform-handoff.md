@@ -1,6 +1,6 @@
 # TODO and Windows/macOS handoff
 
-Working branch: **`feature/spice`**. Starting implementation commit: `81b73f5`. Pull the latest branch before working; the handoff checklist is added in a subsequent commit.
+Upstream branch: **`feature/spice`** (local branch on the Windows host: `spice`). Starting implementation commit: `81b73f5`; Windows work started from merge `c415713c5c8ba3ebfaea5073ed1e106e129a1fa5`. Preserve local changes before pulling. Platform evidence below distinguishes the committed baseline from the subsequent working-tree fixes.
 
 The next milestone is a clean native build, passing numerical fixtures, and a working installed application on Windows and macOS. Complete those checks before expanding the workbench UI. Check an item only after recording evidence on the target machine.
 
@@ -39,7 +39,7 @@ Generated `build/`, `public/engines/` and `release/` output is ignored by Git. P
 
 ### Windows x64
 
-Run `npm ci` with Windows Node 24. Build the engine in an **MSYS2 UCRT64** shell, using the repository's actual checkout path:
+Run `npm ci` with Windows Node 24. Install the build dependencies in an **MSYS2 UCRT64** shell:
 
 ```sh
 cd /c/src/TinyCADv4
@@ -49,18 +49,19 @@ export CXX=g++
 python3 scripts/build-ngspice.py native
 ```
 
-Then return to a normal Windows terminal at the repository root:
+Alternatively, after installing those MSYS2 packages, use a normal PowerShell terminal at the repository root. The launcher selects UCRT64 automatically for x64 Node, searches `MSYS2_ROOT`, `build/toolchains/msys64`, then `C:/msys64`, and passes the checkout path without shell interpolation:
 
 ```sh
+npm run engine:native
 node scripts/tests/qualify-engines.mjs native
 npm run test:simulation
 npm run dev
 npm run dist -- --win nsis --x64 --publish never
 ```
 
-- [ ] First build succeeds from a fresh checkout without a system-installed ngspice.
-- [ ] If the builder reports an unreviewed patch, inspect Git newline conversion. Add repository `.gitattributes` rules to enforce LF for checksum-locked patch files; do not change expected digests merely to accept CRLF conversion.
-- [ ] Verify all dependent DLLs are copied and have the correct architecture. Check DLL discovery and missing-import diagnostics.
+- [x] Windows x64 builds from freshly extracted, checksum-verified source without a system-installed ngspice. This host used the existing checkout; a checkout path containing spaces still needs a full source-build check.
+- [x] Enforce LF for checksum-locked patches with `.gitattributes`. Original patch digests are unchanged; the reviewed Windows loader fix is a separate fourth locked patch.
+- [x] Verify Windows x64 DLL discovery and dependency closure: only MinGW's GCC, libstdc++ and pthread runtime DLLs accompany ngspice; no Windows OS DLLs are redistributed. Relocated native tests run with PATH limited to Windows System32. The packaged architecture/integrity hook is a separate package check.
 - [ ] Test checkout, installation and user-profile paths containing spaces and non-ASCII characters. Verify the private job-directory staging and wide-path library loading.
 - [ ] After x64 passes, repeat on Windows ARM64 using **CLANGARM64**, the package list in CI, `CC=clang`, `CXX=clang++`, and an ARM64 packaging target.
 - [ ] Check ARM64 helper static-link flags, libc++ selection and `llvm-objdump` fallback; these have not been qualified locally.
@@ -96,7 +97,7 @@ CSC_IDENTITY_AUTO_DISCOVERY=false npm run dist -- --mac --arm64 -c.mac.identity=
 - [ ] A missing, mismatched or corrupted bundled file produces a useful error; it never silently switches the Electron run to WASM or a system ngspice.
 - [ ] Run/Stop repeatedly, stop during startup and during a long transient, close a running window, and open another drawing during a run. Check for orphan helpers, late results attached to the wrong document, stale temporary files and inability to start another acquisition.
 - [ ] Check Windows executable/DLL signing against manifest verification: signing can alter PE bytes after an earlier hash was recorded.
-- [ ] Confirm packaged notices, source archive, patches and runtime dependency licences are present.
+- [x] Windows x64: confirm packaged notices, source archive, all four patches and runtime dependency licences are present. Repeat for other target packages.
 
 ### WASM and CI artifacts
 
@@ -106,7 +107,7 @@ Native Electron testing does not require rebuilding WASM. `npm run test:engines`
 - [ ] If using downloaded CI artifacts, extract them beneath `build/engine-artifacts/`, preserving each artifact directory and manifest, then run `node scripts/stage-engine-artifacts.mjs`.
 - [ ] Run `npm run test:engines` with both engines present to compare their numerical results.
 - [ ] Build and exercise the browser variant on each relevant browser. The filesystem variant needs File System Access support; browser support must be recorded separately from Electron support.
-- [ ] Enable a practical feature-branch CI entry point. Current workflows run on PRs targeting `main` or pushes to `main`/`production`; a plain `feature/spice` push does not run the matrix. Open a PR into `main` or add `workflow_dispatch`.
+- [x] Add `workflow_dispatch` to the engine, Electron and browser workflows. Dispatching a feature-branch run remains separate from this local qualification; no CI result is implied by adding the entry point.
 
 ## 3. Manual drawing and results checklist
 
@@ -133,11 +134,11 @@ Use prepared drawings with placed components carrying valid `$$SPICE` metadata. 
 - [ ] Fix and regression-test platform failures found above; keep source/patch changes and locked digests reviewable.
 - [ ] Finish schematic probe placement, two-way highlighting, current direction/reference presentation and operating-point overlays. Keep readings tied to a visible acquisition and freshness state.
 - [ ] Add readiness issue lists that locate the affected placed component/net, with model and pin-mapping recovery paths.
-- [ ] Provide prepared teaching drawings and first-run guidance using the agreed symbol-branch contract.
+- [x] Provide prepared teaching drawings and first-run guidance using placed symbols with embedded `$$SPICE` templates. [Divider, RC charging and RC low-pass](../examples/simulation/README.md) include expected readings and editable values; packaging includes them. Save/reopen, connectivity, readiness and native measurements have regression coverage. Visual classroom review remains pending.
 - [ ] Add the simple ideal DC meter presentation; then build bench views on the existing analysis/result model.
 - [ ] Review keyboard, touch, accessibility, localization, narrow-window layouts and actionable error messages with educators.
-- [ ] Resolve the repository-wide TypeScript errors and establish a clean typecheck baseline. Existing bundle/test success is not a passing `npx tsc --noEmit` result.
-- [ ] Review large-result performance and memory/Undo retention. Removing stored results currently preserves session buffers for Undo; confirm limits and recovery guidance are suitable for classroom machines.
+- [x] Resolve the repository-wide TypeScript errors and establish `npm run typecheck` as a clean baseline and engine CI check.
+- [ ] Review large-result performance on classroom machines. Retention accounting now includes UTF-8 logs and all complex/multiple-plot buffers; tests cover budget rejection without insertion. Existing 64 MiB/run and 256 MiB/document limits also cover Undo-retained buffers. Compact-copy/reopen recovery is documented. This accounting check is not a measured latency/peak-memory qualification.
 
 ### Broader workbench, after the foundation is qualified
 
@@ -154,9 +155,53 @@ Keep the one-drawing/multi-sheet model. No project support, linked schematic doc
 
 For each completed platform check, record the commit, OS version, CPU/Node/Python/compiler architecture and versions, engine manifest build ID, commands, pass/fail/skip counts, installer type and a reproducing drawing for any failure. Keep generated logs under ignored `build/` directories; put concise findings and follow-up issue links in this document. Never commit signing credentials or certificates.
 
+### Windows x64 host, 7 November 2026
+
+Host: Windows 11 Pro 10.0.26300, Intel Core i5-12400F, x64 Node 24.14.0. Build tools are repository-local MSYS2 UCRT64 Python 3.14 and GCC 16.2.0 (MSYS2 Rev6). No system ngspice is used. The portable MSYS2 base was `msys2-base-x86_64-20260927.sfx.exe`, SHA-256 `ad336cccfda47758b5e15cda993fbba421115cb0b126697daef1ee4dfe37209f`, followed by repository updates and the packages above. Generated tools and evidence are under ignored `build/`.
+
+Failures fixed on this host:
+
+- Native Windows Python accidentally launched WSL's `bash`; build commands now resolve the actual MSYS2 executable and convert configure paths with `cygpath`.
+- `shutil.which` did not discover MinGW DLLs because of Windows `PATHEXT`. Import discovery now checks actual DLL filenames and excludes resolved Windows system paths. Staging replaces its target directory to avoid shipping stale dependencies.
+- The broker rejected `libstdc++-6.dll` because its manifest filename whitelist excluded `+`; the validated filename grammar now includes it.
+- CRT ANSI arguments and upstream narrow code-model loading failed with Unicode paths. The helper now recovers wide Windows arguments and opens UTF-8 deck paths; locked patch 004 uses UTF-16 `LoadLibraryExW` for code models and resolves relative paths against the private job directory.
+- Directory-link tests now use Windows junctions, so the focused tests do not require administrator symlink privileges.
+
+Repository checks: `npm run typecheck` and `npm run check:i18n` pass. Tests now cover Stop during startup, repeated stopped acquisitions, document replacement with late results, the Electron window-destruction hook, and UTF-8 log/complex-buffer memory accounting. These automated hooks do not establish interactive installed UI behavior.
+
+Native build ID: **`ngspice-47-480b230f05a31d60`**, `win32/x64`, four locked patches and seven XSPICE modules. A fresh extraction/configure/compile/install completed, followed by a verified helper/dependency restage. All eight numerical fixtures pass. The focused suite passes **39 tests, 0 failures, 0 skips** (31 source tests, 4 native/example tests and 4 signing-hook tests). Relocation tests copy the whole runtime into paths with spaces and `Unicode Ω 测试`, run with System32-only PATH, and confirm local startup files are ignored. The teaching drawings are reopened from saved XML and produce their expected native divider, charging and AC measurements. Their static SVG renders were inspected for field overlap and source polarity; this is not a live UI test.
+
+An unsigned x64 NSIS installer was built with Electron 44.9.0 / electron-builder 26.15.3. The Electron bundle check passed (16 modules, 51 resource/chunk references), the package hook checked PE architecture and hashes, and the packaged engine passed all eight numerical fixtures. `Get-AuthenticodeSignature` confirmed the packaged helper is unsigned and its bytes still match the manifest. Windows signing happens after `afterPack`, so an `afterSign` hook now finalizes changed PE hashes/sizes and revalidates the package before archiving. Tests simulate signer byte changes and reject source-resource or architecture changes transactionally; they do **not** establish Authenticode validity. Real certificate signing/AppX and installed-app checks remain pending.
+
+Final artifact: `release/TinyCAD Windows Setup 4.0.10-x64.exe`, 174,278,965 bytes, SHA-256 `6e904a5276b7fcb0e0dc361e686132d1ed260d38458bd144e0f6e694b4df9cbc`. Its Authenticode status is `NotSigned`. `windows-nsis-final.log` records successful finalization and all eight packaged numerical fixtures. The package contains the upstream source archive, notices, four patches, runtime licences and all three teaching drawings.
+
+`scripts/dist.mjs` now launches Node/JavaScript CLIs without a shell, preserving paths and arguments containing spaces. This was exercised with Node installed under `C:\Program Files\nodejs`.
+
+Reproduce from PowerShell after building the engine:
+
+```powershell
+# A workspace-local temp directory also works in restricted agent sessions.
+New-Item -ItemType Directory -Force build/qualification/windows-x64 | Out-Null
+$env:TEMP = Join-Path (Get-Location) 'build/qualification/windows-x64'
+$env:TMP = $env:TEMP
+node scripts/tests/qualify-engines.mjs native
+npm run test:simulation
+node --test scripts/tests/symbol-spice.test.mjs scripts/tests/dev-proxy.test.mjs
+npm run typecheck
+npm run check:i18n
+$env:CSC_IDENTITY_AUTO_DISCOVERY = 'false'
+npm run dist -- --win nsis --x64 --publish never
+```
+
+Evidence logs: `build/qualification/windows-x64/native-build-final.log`, `native-restage-final.log`, `native-fixtures-final.log`, `focused-tests.log`, `native-runtime-tests-final.log`, `signing-hook-tests.log`, `typecheck.log`, `i18n.log`, `windows-nsis.log` and `windows-nsis-final.log`. The test suite was split into independent source/native/signing batches here; the commands above run the same coverage. The checked-in patch/build recipe and test sources are the durable reproducer; local generated logs are not committed.
+
+Computer Use was unavailable on this host (native connection pipe unavailable and browser connection unavailable). Installed UI, double-click associations, real keyboard/touch/educator review, signing and AppX remain unverified. Windows ARM64 and macOS require their own hosts. No browser/WASM parity result is claimed for this Windows session.
+
+The user subsequently selected automated checks only. Interactive desktop/browser automation and OS double-click checks are excluded from this run; they remain release acceptance items, not failed automated tests. Cross-platform CI build, numerical and package checks can proceed independently.
+
 | Platform | Commit / engine build ID | Build + numerical tests | Installed UI + associations | Signing | Findings |
 | --- | --- | --- | --- | --- | --- |
-| Windows x64 | Pending | Pending | Pending | Pending | |
+| Windows x64 | `c415713c5c8b` + working-tree fixes / `ngspice-47-480b230f05a31d60` | Clean source build; 8/8 development and packaged fixtures; 39 focused tests, 0 skips; unsigned x64 NSIS | Pending: Computer Use unavailable | Pending: real certificate; manifest finalization hook tested with simulated byte changes | UTF-8 loader, MinGW dependencies and Windows launcher fixed; see evidence above. |
 | Windows ARM64 | Pending | Pending | Pending | Pending | |
 | macOS ARM64 | Pending | Pending | Pending | Pending | |
 | macOS x64, if added | Pending | Pending | Pending | Pending | Not in the current release matrix. |

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <mutex>
@@ -17,6 +18,7 @@
 EM_JS(void, send_event, (const char* json), { globalThis.ngspiceEmit(UTF8ToString(json)); });
 #elif defined(_WIN32)
 #include <windows.h>
+#include <shellapi.h>
 #else
 #include <dlfcn.h>
 #endif
@@ -121,6 +123,27 @@ extern "C" EMSCRIPTEN_KEEPALIVE int tc_run(const char* deck) {
 }
 #else
 int main(int argc,char** argv) {
+#ifdef _WIN32
+  // The Windows CRT's narrow argv uses the system code page. Recover UTF-16
+  // command-line arguments before converting to the bridge's UTF-8 strings.
+  std::vector<std::string> utf8_arguments;
+  std::vector<char*> utf8_argv;
+  {
+    int count=0;
+    wchar_t** arguments=CommandLineToArgvW(GetCommandLineW(),&count);
+    if(!arguments) return 2;
+    for(int i=0;i<count;++i) {
+      const int size=WideCharToMultiByte(CP_UTF8,0,arguments[i],-1,nullptr,0,nullptr,nullptr);
+      if(size<1) { LocalFree(arguments); return 2; }
+      std::string value(size,'\0');
+      WideCharToMultiByte(CP_UTF8,0,arguments[i],-1,value.data(),size,nullptr,nullptr);
+      value.resize(size-1); utf8_arguments.push_back(std::move(value));
+    }
+    LocalFree(arguments);
+  }
+  for(auto& argument:utf8_arguments) utf8_argv.push_back(argument.data());
+  argc=int(utf8_argv.size()); argv=utf8_argv.data();
+#endif
   if(argc<3) { std::cerr << "Expected library path and deck path\n"; return 2; }
 #ifdef _WIN32
   SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_SEARCH_USER_DIRS);
@@ -139,7 +162,16 @@ int main(int argc,char** argv) {
   const auto library=dlopen(argv[1],RTLD_NOW|RTLD_LOCAL);
   auto symbol=[&](const char* n){return dlsym(library,n);};
 #endif
-  if(!library) { std::cerr << "Cannot load bundled ngspice library\n"; return 3; }
+  if(!library) {
+#ifdef _WIN32
+    const auto load_error=GetLastError();
+#endif
+    std::cerr << "Cannot load bundled ngspice library";
+#ifdef _WIN32
+    std::cerr << " (Windows error " << load_error << "; check bundled DLL dependencies)";
+#endif
+    std::cerr << '\n'; return 3;
+  }
   init=reinterpret_cast<Init>(symbol("ngSpice_Init"));
   circuit=reinterpret_cast<Circuit>(symbol("ngSpice_Circ"));
   command=reinterpret_cast<Command>(symbol("ngSpice_Command"));
@@ -155,7 +187,7 @@ int main(int argc,char** argv) {
     if(p.find('"')!=std::string::npos || p.find('\n')!=std::string::npos) return 5;
     if(execute("codemodel \""+p+"\"")) return 6;
   }
-  std::ifstream file(argv[2]); if(!file) return 7;
+  std::ifstream file(std::filesystem::u8path(argv[2])); if(!file) return 7;
   std::ostringstream deck; deck << file.rdbuf();
   // The parent can terminate this dedicated process without entering the solver
   // reentrantly. Accepted callback chunks remain in the application's store.

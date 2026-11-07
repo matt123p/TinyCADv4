@@ -2,14 +2,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 
-const bin = (name) => (process.platform === 'win32' ? `${name}.cmd` : name);
 const workspaceRoot = process.cwd();
 
 const run = (command, args) => new Promise((resolve, reject) => {
   const child = spawn(command, args, {
     stdio: 'inherit',
     env: process.env,
-    shell: true,
+    shell: false,
+    windowsHide: true,
   });
 
   child.on('error', reject);
@@ -86,10 +86,16 @@ if (process.env.APPX_PUBLISHER && process.env.APPX_PUBLISHER.trim() !== '') {
   builderArgs.push(`-c.appx.publisher=${process.env.APPX_PUBLISHER}`);
 }
 
-await run(bin('npm'), ['run', 'generate:icons']);
+// Launch JavaScript CLIs directly: Windows .cmd shims need a shell, which
+// otherwise breaks executable paths and arguments containing spaces.
+const npmCli = process.env.npm_execpath;
+if (!npmCli) throw new Error('Run this script through npm run dist.');
+const runNpm = (args) => run(process.execPath, [npmCli, ...args]);
+await runNpm(['run', 'generate:icons']);
+await runNpm(['run', 'generate:simulation-examples']);
 
-await run(bin('npm'), ['run', 'build:electron']);
-await run(bin('electron-builder'), builderArgs);
+await runNpm(['run', 'build:electron']);
+await run(process.execPath, [path.resolve('node_modules/electron-builder/cli.js'), ...builderArgs]);
 await run(process.execPath, ['scripts/verify-packaged-engines.mjs']);
 
 if (isTestAppxBuild) {

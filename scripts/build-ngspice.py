@@ -22,18 +22,28 @@ WORK = ROOT / 'build/ngspice'
 
 def run(args, cwd=None):
     print('+', ' '.join(map(str, args)), flush=True)
-    subprocess.run([arg.as_posix() if isinstance(arg,Path) else str(arg) for arg in args], cwd=cwd, check=True)
+    command = shutil.which(str(args[0])) or str(args[0])
+    subprocess.run([command, *[arg.as_posix() if isinstance(arg,Path) else str(arg) for arg in args[1:]]], cwd=cwd, check=True)
 
 
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def remove_generated(directory):
+    resolved = directory.resolve()
+    if not resolved.is_relative_to(ROOT.resolve() / 'build') or resolved == ROOT.resolve() / 'build':
+        raise RuntimeError(f'Refusing to remove a generated directory outside build/: {resolved}')
+    if directory.exists(): shutil.rmtree(directory)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('backend', choices=['native','wasm'])
     parser.add_argument('--source-archive', type=Path)
+    parser.add_argument('--stage-only', action='store_true', help='Rebuild the host and restage an existing verified native installation')
     args = parser.parse_args()
+    if args.stage_only and args.backend != 'native': raise RuntimeError('--stage-only is only supported for native builds')
     WORK.mkdir(parents=True,exist_ok=True)
     archive=args.source_archive or WORK / f'ngspice-{LOCK["version"]}.tar.gz'
     if not archive.exists():
@@ -43,20 +53,28 @@ def main():
     source=WORK / f'source-{args.backend}'
     build=WORK / f'build-{args.backend}'
     prefix=WORK / f'install-{args.backend}'
-    for directory in [source,build,prefix]:
-        if directory.exists(): shutil.rmtree(directory)
-        directory.mkdir()
-    with tarfile.open(archive) as tar:
-        tar.extractall(source,filter='data')
+    if not args.stage_only:
+        for directory in [source,build,prefix]:
+            remove_generated(directory)
+            directory.mkdir()
+        with tarfile.open(archive) as tar:
+            tar.extractall(source,filter='data')
     source=source / f'ngspice-{LOCK["version"]}'
     patch_records=[]
     for patch in sorted((ROOT/'build-support/ngspice/patches').glob('*.patch')):
         expected=LOCK['patches'].get(patch.name)
         if sha(patch) != expected: raise RuntimeError(f'Unreviewed patch: {patch.name}')
-        run(['patch','--batch','--forward','-p1','-i',patch],source)
+        if not args.stage_only: run(['patch','--batch','--forward','-p1','-i',patch],source)
         patch_records.append({'path':patch.name,'sha256':expected})
     (build/'package.json').write_text('{"type":"commonjs"}')
-    flags=LOCK['configure']+[f'--prefix={prefix.as_posix()}']
+    prefix_arg = prefix.as_posix()
+    configure_script = source / 'configure'
+    if args.backend == 'native' and os.name == 'nt':
+        cygpath = shutil.which('cygpath')
+        if not cygpath: raise RuntimeError('Windows native builds require the MSYS2 UCRT64 or CLANGARM64 shell')
+        prefix_arg = subprocess.check_output([cygpath, '-u', str(prefix)], text=True).strip()
+        configure_script = subprocess.check_output([cygpath, '-u', str(configure_script)], text=True).strip()
+    flags=LOCK['configure']+[f'--prefix={prefix_arg}']
     if args.backend == 'wasm':
         version=subprocess.check_output(['emcc','--version'],text=True)
         if LOCK['emsdk']['version'] not in version: raise RuntimeError('Wrong emsdk version')
@@ -68,20 +86,27 @@ def main():
         system,arch='wasm','wasm32'
         helper=library=None;modules=[]
     else:
-        run(['bash',source/'configure',*flags,'--enable-xspice'],build)
-        if os.environ.get('MSYSTEM') == 'CLANGARM64':
-            makefile=build/'src/Makefile'
-            makefile.write_text(makefile.read_text().replace('-lstdc++','-lc++'))
-        run(['make','-j4'],build)
-        run(['make','install'],build)
+        if not args.stage_only:
+            run(['bash',configure_script,*flags,'--enable-xspice'],build)
+            if os.environ.get('MSYSTEM') == 'CLANGARM64':
+                makefile=build/'src/Makefile'
+                makefile.write_text(makefile.read_text().replace('-lstdc++','-lc++'))
+            run(['make','-j4'],build)
+            run(['make','install'],build)
         output=ROOT/'build/engines/native'
-        if output.exists(): shutil.rmtree(output)
+        if args.stage_only:
+            previous=json.loads((output/'manifest.json').read_text())
+            installed=[p for p in prefix.rglob('*') if p.is_file() and 'ngspice' in p.name and p.suffix in ['.dll','.so','.dylib']]
+            recorded=next((entry['sha256'] for entry in previous['files'] if entry['path']==previous['library']),None)
+            if previous['source'] != LOCK['source'] or previous['patches'] != patch_records or previous['configure'] != flags or not installed or sha(installed[0]) != recorded:
+                raise RuntimeError('The existing native installation does not match the locked source/configuration. Run a full native build.')
+        remove_generated(output)
         output.mkdir(parents=True)
         system='win32' if os.name=='nt' or 'MSYS' in platform.system() or 'MINGW' in platform.system() else 'darwin' if platform.system()=='Darwin' else 'linux'
         arch='arm64' if platform.machine().lower() in ['aarch64','arm64'] else 'x64'
         helper='tinycad-ngspice-host'+('.exe' if system=='win32' else '')
         cxx=os.environ.get('CXX','c++')
-        link=['-static','-static-libgcc','-static-libstdc++'] if system=='win32' else ['-ldl'] if system=='linux' else []
+        link=['-static','-static-libgcc','-static-libstdc++','-lshell32'] if system=='win32' else ['-ldl'] if system=='linux' else []
         run([cxx,'-std=c++17','-O2','-pthread','-I',source/'src/include',ROOT/'native/ngspice-host/host.cpp',*link,'-o',output/helper])
         suffix='.dll' if system=='win32' else '.dylib' if system=='darwin' else '.so'
         candidates=[p for p in prefix.rglob('*') if p.is_file() and 'ngspice' in p.name and p.name.endswith(suffix)]
@@ -102,8 +127,9 @@ def main():
                 for line in imports.splitlines():
                     if 'DLL Name:' not in line: continue
                     name=line.split('DLL Name:')[1].strip()
-                    dependency=shutil.which(name)
-                    if dependency and not str(Path(dependency).resolve()).lower().startswith(os.environ.get('SystemRoot','C:/Windows').lower()) and not (output/name).exists():
+                    # Windows shutil.which applies PATHEXT and does not reliably find DLLs.
+                    dependency=next((str(Path(directory)/name) for directory in os.get_exec_path() if (Path(directory)/name).is_file()),None)
+                    if dependency and not Path(dependency).resolve().is_relative_to(Path(os.environ.get('SystemRoot','C:/Windows')).resolve()) and not (output/name).exists():
                         shutil.copy2(dependency,output/name);pending.append(output/name)
             licenses=Path(shutil.which(cxx)).resolve().parent.parent/'share/licenses'
             if licenses.exists(): shutil.copytree(licenses,output/'runtime-licenses',dirs_exist_ok=True)
@@ -129,7 +155,10 @@ def main():
     identity=hashlib.sha256((json.dumps(LOCK,sort_keys=True)+sha(ROOT/'native/ngspice-host/host.cpp')+sha(ROOT/'scripts/build-ngspice.py')+compiler+args.backend+system+arch).encode()).hexdigest()[:16]
     manifest={'protocol':1,'buildId':f'ngspice-{LOCK["version"]}-{identity}','version':LOCK['version'],'compiler':compiler,'configure':flags,'platform':system,'arch':arch,'helper':helper,'library':library,'modules':modules,'source':LOCK['source'],'patches':patch_records,'capabilities':{'pause':False,'live':False,'xspice':args.backend=='native'},'files':files}
     (output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
-    if args.backend == 'native': shutil.copytree(output,ROOT/f'build/engines/native-{arch}',dirs_exist_ok=True)
+    if args.backend == 'native':
+        staged=ROOT/f'build/engines/native-{arch}'
+        remove_generated(staged)
+        shutil.copytree(output,staged)
     print('Built',output)
 
 

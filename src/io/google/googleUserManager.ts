@@ -1,3 +1,4 @@
+import { normalizeUserConfig } from '../libraryConfig';
 import { drawingFileName, isCompressedDrawing, drawingMimeType } from '../../../shared/drawingFiles.js';
 import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
@@ -407,14 +408,10 @@ export class GoogleUserManager implements UserManager {
       .then((json) => {
         if (json?.files.length > 0) {
           return this.loadFileText(json?.files[0].id).then((config) => {
-            return { ...JSON.parse(config), fileId: json?.files[0].id };
+            return normalizeUserConfig({ ...JSON.parse(config), fileId: json?.files[0].id });
           });
         } else {
-          return {
-            fileId: null,
-            libraries: [],
-            libraryFolders: [],
-          };
+          return normalizeUserConfig({ fileId: null, libraries: [], libraryFolders: [] });
         }
       });
   }

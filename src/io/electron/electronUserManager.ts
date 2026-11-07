@@ -334,7 +334,11 @@ export class ElectronUserManager implements UserManager {
 
   saveConfig(config: UserConfig): Promise<void> {
     this.currentConfig = normalizeUserConfig(config);
-    window.electronAPI.saveLibraryConfig(this.currentConfig);
+    window.electronAPI.saveLibraryConfig({
+      ...this.currentConfig,
+      libraries: this.currentConfig.libraries.flatMap(library =>
+        typeof library.id === 'string' ? [{ ...library, id: library.id }] : []),
+    });
     return Promise.resolve();
   }
 

@@ -31,6 +31,7 @@
   "patches": {
     "001-safe-startup.patch": "64402fb0bf16aaeab66360c662b8976881310f199f558dcc2590757c5f72a0bf",
     "002-non-xspice-rshunt.patch": "a958763b95ecb96a401ad481aa11e12b5021bd6b7537bc2382b94b6e76d8a972",
-    "003-quoted-codemodel-path.patch": "4f7a4c5279e09576a8900232a2c18c2d558173f17ecc2a193bf8c2e4b2be53c9"
+    "003-quoted-codemodel-path.patch": "4f7a4c5279e09576a8900232a2c18c2d558173f17ecc2a193bf8c2e4b2be53c9",
+    "004-windows-utf8-codemodels.patch": "75a331f891f74a50ce5f6ae00e5be0a2a691a621739821acd9e85677259fadf0"
   }
 }

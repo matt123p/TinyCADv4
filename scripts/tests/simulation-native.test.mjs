@@ -18,9 +18,13 @@ test(
   { skip: !available },
   async () => {
     const handlers = new Map(),
-      listeners = new Map();
+      listeners = new Map(),
+      appListeners = new Map();
     globalThis.tinycadElectronMock = {
-      app: { isPackaged: false, on() {} },
+      app: {
+        isPackaged: false,
+        on: (name, listener) => appListeners.set(name, listener),
+      },
       ipcMain: {
         handle: (name, handler) => handlers.set(name, handler),
         on: (name, listener) => listeners.set(name, listener),
@@ -103,16 +107,52 @@ test(
         { sender: owner },
         {
           runId: 'long-transient',
-          deck: 'Transient\nV1 in 0 PULSE(0 1 0 1n 1n 1m 2m)\nR1 in out 1k\nC1 out 0 1u\n.tran 1p 1\n.end',
+          deck: 'Transient\nV1 in 0 PULSE(0 1 0 1n 1n 1m 2m)\nR1 in out 1k\nC1 out 0 1u\n.tran 1u 10\n.end',
           files: {},
         },
       );
-      assert.ok(messages.some((e) => e.type === 'data'));
+      assert.ok(
+        messages.some((e) => e.type === 'data'),
+        JSON.stringify(messages),
+      );
       assert.equal(messages.at(-1).state, 'stopped');
       listeners.get('simulation-stop')(
         { sender: { id: 999 } },
         'long-transient',
       );
+      // Exercise the same cleanup hook Electron invokes when its window closes.
+      let destroyed;
+      appListeners.get('web-contents-created')(undefined, {
+        id: owner.id,
+        once: (name, listener) => {
+          if (name === 'destroyed') destroyed = listener;
+        },
+      });
+      messages.length = 0;
+      owner.send = (_channel, _id, event) => {
+        messages.push(event);
+        if (event.type === 'data') destroyed();
+      };
+      await start(
+        { sender: owner },
+        {
+          runId: 'window-closed',
+          deck: 'Transient\nV1 in 0 PULSE(0 1 0 1n 1n 1m 2m)\nR1 in out 1k\nC1 out 0 1u\n.tran 1u 10\n.end',
+          files: {},
+        },
+      );
+      assert.equal(messages.at(-1).state, 'stopped');
+      messages.length = 0;
+      owner.send = (_channel, _id, event) => messages.push(event);
+      await start(
+        { sender: owner },
+        {
+          runId: 'after-cleanup',
+          deck: 'Divider\nV1 in 0 5\nR1 in out 1k\nR2 out 0 1k\n.op\n.end',
+          files: {},
+        },
+      );
+      assert.equal(messages.at(-1).state, 'complete');
     } finally {
       await fs.rm(output, { force: true });
       delete globalThis.tinycadElectronMock;
@@ -120,44 +160,53 @@ test(
   },
 );
 
-test(
-  'bundled native modules load from a path containing spaces and ignore user startup files',
-  { skip: !available },
-  async () => {
-    const directory = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'TinyCAD engine path with spaces '),
-    );
-    try {
-      await fs.cp('build/engines/native', directory, { recursive: true });
-      const manifest = JSON.parse(
-        await fs.readFile(path.join(directory, 'manifest.json'), 'utf8'),
+for (const pathSuffix of ['spaces', 'Unicode \u03a9 \u6d4b\u8bd5']) {
+  test(
+    `bundled native modules load from ${pathSuffix} paths without developer PATH or startup files`,
+    { skip: !available },
+    async () => {
+      const directory = await fs.mkdtemp(
+        path.join(os.tmpdir(), `TinyCAD engine ${pathSuffix} `),
       );
-      await fs.writeFile(
-        path.join(directory, '.spiceinit'),
-        'echo TINYCAD_STARTUP_MUST_NOT_RUN\n',
-      );
-      await fs.writeFile(
-        path.join(directory, 'divider.cir'),
-        'Divider\nV1 in 0 5\nR1 in out 1k\nR2 out 0 1k\n.op\n.end',
-      );
-      const result = spawnSync(
-        path.join(directory, manifest.helper),
-        [
-          path.join(directory, manifest.library),
+      try {
+        await fs.cp('build/engines/native', directory, { recursive: true });
+        const manifest = JSON.parse(
+          await fs.readFile(path.join(directory, 'manifest.json'), 'utf8'),
+        );
+        await fs.writeFile(
+          path.join(directory, '.spiceinit'),
+          'echo TINYCAD_STARTUP_MUST_NOT_RUN\n',
+        );
+        await fs.writeFile(
           path.join(directory, 'divider.cir'),
-          ...manifest.modules.map((name) => path.join(directory, name)),
-        ],
-        {
-          cwd: directory,
-          env: { ...process.env, HOME: directory, USERPROFILE: directory },
-          encoding: 'utf8',
-          timeout: 30000,
-        },
-      );
-      assert.equal(result.status, 0, result.stdout + result.stderr);
-      assert.ok(!result.stdout.includes('TINYCAD_STARTUP_MUST_NOT_RUN'));
-    } finally {
-      await fs.rm(directory, { recursive: true, force: true });
-    }
-  },
-);
+          'Divider\nV1 in 0 5\nR1 in out 1k\nR2 out 0 1k\n.op\n.end',
+        );
+        const result = spawnSync(
+          path.join(directory, manifest.helper),
+          [
+            path.join(directory, manifest.library),
+            path.join(directory, 'divider.cir'),
+            ...manifest.modules.map((name) => path.join(directory, name)),
+          ],
+          {
+            cwd: directory,
+            env: {
+              ...process.env,
+              HOME: directory,
+              USERPROFILE: directory,
+              ...(process.platform === 'win32'
+                ? { PATH: path.join(process.env.SystemRoot, 'System32') }
+                : {}),
+            },
+            encoding: 'utf8',
+            timeout: 30000,
+          },
+        );
+        assert.equal(result.status, 0, result.stdout + result.stderr);
+        assert.ok(!result.stdout.includes('TINYCAD_STARTUP_MUST_NOT_RUN'));
+      } finally {
+        await fs.rm(directory, { recursive: true, force: true });
+      }
+    },
+  );
+}

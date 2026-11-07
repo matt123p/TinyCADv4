@@ -23,7 +23,7 @@ import {
 } from '../state/dispatcher/AppDispatcher';
 import { Dispatch } from 'redux';
 import { docDrawing } from '../state/undo/undo';
-import { CurrentFile, UserConfig } from '../state/stores/altStoreReducer';
+import { CurrentFile, UserConfig, LibraryFile } from '../state/stores/altStoreReducer';
 import { saveAs } from 'file-saver';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../model/tclib';
 import { libCache } from './libCache';
@@ -319,7 +319,7 @@ export function removeLibrary(fileId: string) {
     const currentConfig = normalizeUserConfig(state.altStore.config);
     const updatedConfig = update(currentConfig, {
       libraries: {
-        $apply: (items) => items.filter((library) => `${library.id}` !== fileId),
+        $apply: (items: LibraryFile[]) => items.filter((library) => `${library.id}` !== fileId),
       },
     });
 

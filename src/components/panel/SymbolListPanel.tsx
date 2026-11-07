@@ -338,7 +338,7 @@ export const SymbolListPanel: React.FC<SymbolListPanelProps> = ({
       columnId: 'controls',
       compare: () => 0,
       renderHeaderCell: () => (
-        <div className={styles.controlsHeaderWrap} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.controlsHeaderWrap} onClick={(e: React.MouseEvent<HTMLElement>) => e.stopPropagation()}>
           <div
             ref={controlsHostRef}
             className={styles.controlsGroup}
@@ -367,8 +367,8 @@ export const SymbolListPanel: React.FC<SymbolListPanelProps> = ({
                     icon={<ChevronDownRegular />}
                     iconPosition="after"
                     className={styles.filtersMenuButton}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e: React.MouseEvent<HTMLElement>) => e.stopPropagation()}
+                    onClick={(e: React.MouseEvent<HTMLElement>) => e.stopPropagation()}
                   >
                     {t('panel.symbolList.filters')}
                   </Button>

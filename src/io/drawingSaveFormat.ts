@@ -12,7 +12,7 @@ export function drawingSaveFormat(drawing: dsnDrawing): 'xml' | 'zip-v1' {
     for (const run of sheet.simulation.runs) {
       const data = run.dataState === 'available' && getResult(run.id);
       if (data)
-        bytes += resultBytes(data) + new TextEncoder().encode(data.log).length;
+        bytes += resultBytes(data);
       if (bytes >= LARGE_RESULT_BYTES) return 'zip-v1';
     }
   }

@@ -1,6 +1,6 @@
 # TinyCAD simulation design and implementation specification
 
-Status: simulation foundation implemented; broader workbench features remain planned. Research checked on 7 November 2026. See [current implementation status](10-implementation-status.md) for verified behavior and [the TODO/platform handoff](12-todo-and-platform-handoff.md) for Windows and macOS testing and next implementation work.
+Status: simulation foundation implemented; broader workbench features remain planned. Research checked on 7 November 2026. Windows-host work adds native build/runtime fixes, a clean typecheck, bounded log retention and [three editable teaching drawings](../examples/simulation/README.md). See [current implementation status](10-implementation-status.md) for implemented behavior and [the TODO/platform handoff](12-todo-and-platform-handoff.md) for recorded platform evidence and outstanding acceptance checks.
 
 ## Start with the user stories
 
