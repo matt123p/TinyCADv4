@@ -5,6 +5,7 @@ import fs from 'fs';
 import { spawn } from 'child_process';
 import { loadFile, saveFile, sendRecentFiles } from './io.js';
 import { loadLibrary, loadLibraryToWebContents, saveLibrary, sendLibraries, removeLibrary, saveLibraryConfig } from './libraries.js';
+import { registerPluginServices } from './plugins.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,7 @@ let isLibraryMode = false;
 let menuTranslations = {};
 let refreshMenu = () => {};
 let ipcHandlersRegistered = false;
+let pluginMenus = [];
 
 const spawnNewWindow = (filePath) => {
   const args = [];
@@ -83,6 +85,9 @@ function createWindow() {
       contextIsolation: true, // Prevents direct access to Node APIs
       preload: path.join(__dirname, './preload.js')
     },
+  });
+  mainWindow.webContents.on('will-frame-navigate', details => {
+    if ((details.frame?.url === 'about:srcdoc' || details.initiator?.url === 'about:srcdoc' || details.frame?.name?.startsWith('tinycad-plugin-') || details.initiator?.name?.startsWith('tinycad-plugin-')) && details.url !== 'about:srcdoc') details.preventDefault();
   });
 
   function updateMenu() {
@@ -203,6 +208,21 @@ function createWindow() {
       }
     ];
 
+    const pluginEntry = item => ({ label: item.label, enabled: item.enabled, click: () => mainWindow.webContents.send('plugin-command', item.command) });
+    for (const item of pluginMenus) {
+      const group = item.location.split('/')[0];
+      let target = group === 'help' ? menuTemplate.find(menu => menu.role === 'help') : menuTemplate.find(menu => menu.label === getMenuLabel(group, group[0].toUpperCase() + group.slice(1)));
+      if (!target) { target = { label: getMenuLabel(group, group[0].toUpperCase() + group.slice(1)), submenu: [] }; menuTemplate.push(target); }
+      const slot = item.location.split('/')[1];
+      if (group === 'file') {
+        let submenu = target.submenu.find(menu => menu.label === getMenuLabel(slot, slot[0].toUpperCase() + slot.slice(1)));
+        if (!submenu) { submenu = { label: getMenuLabel(slot, slot[0].toUpperCase() + slot.slice(1)), submenu: [] }; target.submenu.push(submenu); }
+        submenu.submenu.push(pluginEntry(item));
+      } else target.submenu.push(pluginEntry(item));
+    }
+    menuTemplate.push({ label: 'Plugins', submenu: [
+      { label: 'Manage plugins…', click: () => mainWindow.webContents.send('plugin-command', 'tinycad.managePlugins') }
+    ] });
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
   }
@@ -355,6 +375,7 @@ function createWindow() {
 
   if (!ipcHandlersRegistered) {
     ipcHandlersRegistered = true;
+    registerPluginServices(() => mainWindow, menus => { pluginMenus = menus; refreshMenu(); });
 
     ipcMain.on('window-minimize', () => {
       mainWindow?.minimize();

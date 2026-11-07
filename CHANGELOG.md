@@ -5,10 +5,17 @@
 ### Added
 
 - Compact toolbar selector for 90°, 45°, and free wire modes, with original TinyCAD 45° angle constraints. Selecting a mode activates the wire tool and preserves an active wire preview.
+- Plugin manager for selecting individual plugins from GitHub repositories or the curated starter list, with release-based automatic updates, version pinning, and rollback.
+- Plugin descriptions, Markdown changelogs, and versioned full documentation available before installation and from cached packages.
+- Isolated plugin runtime and APIs for left/bottom panels, symbol editor tabs, main pages, menus, commands, toolbars, component libraries, and plugin data in design/library files.
+- Local plugin caching in Electron and browser package caching with installed-version tracking.
+- Bundled Circuit Inspector and Project Home examples, independent document sessions with separate undo/save state, and plugin authoring documentation, schemas, and release packaging tools.
 
 ### Fixed
 
 - Show the loupe button only after touch input on the drawing canvas, keeping it hidden on touchscreen PCs until touch is used.
+- Keep the first edit after loading a document undoable.
+- Preserve symbol-definition identities and plugin metadata when placing, copying, editing, and saving library symbols.
 
 ## v4.0.10 — 2026-11-06
 

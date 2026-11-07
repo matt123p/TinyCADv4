@@ -1,6 +1,7 @@
 import { libImage, libSymbol } from './dsnDrawing';
 import { TextDisplayMethod } from './tclib';
 import { TextAreaData } from './textArea';
+import type { ExtensionOwner } from '../plugins/types';
 
 export type Coordinate = any[];
 
@@ -62,7 +63,7 @@ export interface SymbolTextItem {
   display: TextDisplayMethod;
 }
 
-export interface dsnBase {
+export interface dsnBase extends ExtensionOwner {
   // What type of object is this?
   NodeName: DocItemTypes;
 

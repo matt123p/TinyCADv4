@@ -200,13 +200,13 @@ const SymbolView: React.FunctionComponent<SymbolViewProps> = (
           ev.dataTransfer.setData(
             'application/json',
             JSON.stringify({
-              name: props.name,
+              name: { ...props.name, definitionMetadata: { persistentId: props.symbol?.persistentId, pluginData: props.symbol?.pluginData || doc.pluginData, pluginDataXml: props.symbol?.pluginDataXml || doc.pluginDataXml } },
               symbolData: doc.sheets.map((i) => i.items),
             }),
           );
         }}
         onTouchStart={(e) => handleTouchStart(e, {
-          name: props.name,
+          name: { ...props.name, definitionMetadata: { persistentId: props.symbol?.persistentId, pluginData: props.symbol?.pluginData || doc.pluginData, pluginDataXml: props.symbol?.pluginDataXml || doc.pluginDataXml } },
           symbolData: doc.sheets.map((i) => i.items),
         })}
         onTouchMove={handleTouchMove}

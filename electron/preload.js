@@ -1,6 +1,18 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('electronAPI', {
+if (process.isMainFrame) contextBridge.exposeInMainWorld('electronAPI', {
+    pluginStorage: (operation, key, value) => ipcRenderer.invoke('plugin-storage', operation, key, value),
+    pluginDownload: (url, binary) => ipcRenderer.invoke('plugin-download', url, binary),
+    setPluginMenus: (items) => ipcRenderer.send('set-plugin-menus', items),
+    onPluginCommand: (callback) => {
+        const listener = (_, command) => callback(command);
+        ipcRenderer.on('plugin-command', listener);
+        return () => ipcRenderer.removeListener('plugin-command', listener);
+    },
+    choosePluginTool: (pluginId) => ipcRenderer.invoke('choose-plugin-tool', pluginId),
+    listPluginTools: (pluginId) => ipcRenderer.invoke('list-plugin-tools', pluginId),
+    runPluginTool: (pluginId, toolId, input) => ipcRenderer.invoke('run-plugin-tool', pluginId, toolId, input),
+    cancelPluginTasks: (pluginId) => ipcRenderer.send('cancel-plugin-tasks', pluginId),
     onMenuCommand: (callback) => {
         const listener = (_, command) => callback(command);
         ipcRenderer.on('menu-command', listener);

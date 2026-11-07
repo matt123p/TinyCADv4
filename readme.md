@@ -87,6 +87,22 @@ This project runs in multiple modes:
 - **Web (browser)**: Windows, macOS, Linux, ChromeOS, and any modern browser that supports ES modules and the File System Access API.
 - **Desktop App**: Windows, macOS, and Linux.
 
+## Plugins
+
+Open **Plugins → Discover** to browse the bundled Circuit Inspector and Project Home
+examples, or enter a GitHub repository URL and select individual plugins. The
+manager shows descriptions, Markdown changelogs and full documentation, and
+supports release-based automatic updates, version pinning, and rollback.
+
+Plugin packages are cached locally in Electron and in browser IndexedDB; browser
+`localStorage` records the installed versions. Plugin data is preserved in designs
+and libraries when its plugin is disabled or uninstalled. Start with `?plugins=safe`
+to manage plugins without executing them.
+
+See the [plugin author guide and API](docs/plugin-api.md) and
+[architecture](docs/plugin.md). Run `npm run plugins:package` to prepare the example
+repository's release catalog and ZIP packages without publishing them.
+
 ## Building from Source
 
 1. Make sure you have the latest version of Node.js installed

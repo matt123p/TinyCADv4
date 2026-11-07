@@ -356,7 +356,9 @@ function selectSymbol(lib: tclib, name: tclibLibraryEntry) {
     xmlBuilder.fromText(symbol.Data);
     const doc = io.from_dsn(xmlBuilder);
     const items = doc.sheets.map((sheet) => sheet.items);
-    dispatch(actionSelectLibrarySymbol(name, items, null));
+    dispatch(actionSelectLibrarySymbol({ ...name, definitionMetadata: {
+      persistentId: symbol.persistentId, pluginData: symbol.pluginData || doc.pluginData, pluginDataXml: symbol.pluginDataXml || doc.pluginDataXml,
+    } }, items, null));
   };
 }
 

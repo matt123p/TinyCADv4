@@ -8,6 +8,8 @@ import { handleMenuCommand, handleMenuCommandWithData, initialise } from '../../
 import { BrowserSheetData } from '../../model/dsnView';
 import { CurrentFile } from '../../state/stores/altStoreReducer';
 import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
+import { documentSessions } from '../../plugins/sessions';
+import { pluginManager } from '../../plugins/manager';
 
 export interface MainAppElectronProps {
   selected_sheet: number;
@@ -60,7 +62,12 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
 
   useEffect(() => {
     if (window.electronAPI?.onAppClosing) {
-      const unsubscribe = window.electronAPI.onAppClosing(() => {
+      const unsubscribe = window.electronAPI.onAppClosing(async () => {
+        if (!await pluginManager.confirmDiscardDrafts()) { window.electronAPI.sendAppClosingResponse(false); return; }
+        if (documentSessions.list().length > 1) {
+          window.electronAPI.sendAppClosingResponse(await documentSessions.resolveCloseAll());
+          return;
+        }
         if (props.saveNeeded) {
           props.dispatch(
             actionSelectDialog('unsaved_changes', {

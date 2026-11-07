@@ -7,6 +7,8 @@ import {
   tclibLibraryAttributes,
 } from '../model/tclib';
 import { FileIdType } from './files';
+import { newIdentity } from '../plugins/persistence';
+import type { ExtensionOwner } from '../plugins/types';
 
 let loadedSQL: SqlJsStatic = null;
 let loadingSQL: Promise<SqlJsStatic> = null;
@@ -58,6 +60,7 @@ function loadTcLibImplementation(
       name: name,
       names: [],
       symbols: [],
+      persistentId: newIdentity(),
     };
 
     let db: Database;
@@ -99,6 +102,7 @@ function loadTcLibImplementation(
         stmtAttr.free();
 
         r.names.push({
+          persistentId: newIdentity(),
           id: null,
           NameID: Number(row.NameID),
           Name: row.Name.toString(),
@@ -118,9 +122,24 @@ function loadTcLibImplementation(
           const data = stmtData.getAsObject({ $id: row.SymbolID })
             .Data as Uint8Array;
           r.symbols.push({
+            persistentId: newIdentity(),
             SymbolId: Number(row.SymbolID),
             Data: new TextDecoder('utf-8').decode(data),
           });
+        }
+      }
+      const tables = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='TinyCADPluginData'");
+      if (tables.length) {
+        const rows = db.exec('SELECT Scope, Target, Data FROM TinyCADPluginData');
+        for (const row of rows[0]?.values || []) {
+          const [scope, target, data] = row.map(String);
+          const owner = scope === 'library' ? r : scope === 'name' ? r.names.find(n => String(n.NameID) === target) : scope === 'definition' ? r.symbols.find(s => String(s.SymbolId) === target) : undefined;
+          if (owner) {
+            const extension = JSON.parse(data);
+            if (!extension || typeof extension !== 'object') throw new Error('Invalid library plugin metadata.');
+            owner.persistentId = extension.persistentId || owner.persistentId;
+            owner.pluginData = extension.pluginData; owner.pluginDataXml = extension.pluginDataXml;
+          } else (r.pluginRows ||= []).push({ scope, target, data });
         }
       }
     } catch (e) {
@@ -174,6 +193,16 @@ function saveTcLibImplementation(library: tclib): Promise<ArrayBuffer> {
         [SymbolID] INTEGER PRIMARY KEY,
         [Data] BLOB
       )`);
+    db.exec('CREATE TABLE TinyCADPluginData (Scope TEXT NOT NULL, Target TEXT NOT NULL, Data TEXT NOT NULL, PRIMARY KEY (Scope, Target))');
+    const pluginStatement = db.prepare('INSERT INTO TinyCADPluginData (Scope, Target, Data) VALUES (?, ?, ?)');
+    const writeOwner = (scope: string, target: string, owner: ExtensionOwner) => {
+      pluginStatement.run([scope, target, JSON.stringify({ persistentId: owner.persistentId || newIdentity(), pluginData: owner.pluginData, pluginDataXml: owner.pluginDataXml })]);
+    };
+    writeOwner('library', '', library);
+    for (const name of library.names) writeOwner('name', String(name.NameID), name);
+    for (const symbol of library.symbols) writeOwner('definition', String(symbol.SymbolId), symbol);
+    for (const row of library.pluginRows || []) pluginStatement.run([row.scope, row.target, row.data]);
+    pluginStatement.free();
 
     // Write the data from library in to the database tables
     const stmtNames = db.prepare(

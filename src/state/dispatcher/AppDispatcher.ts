@@ -127,6 +127,7 @@ import {
 import { FileIdType } from '../../io/files';
 import { BrowserError, UserLoginActions, UserLoginActionTypes, UserLoginLoginError, UserLoginLoginOK } from '../actions/userLogin';
 import { AppUiActions } from '../actions/appActions';
+import type { PluginActions } from '../../plugins/actions';
 
 export interface IPoint {
   x: number;
@@ -143,7 +144,8 @@ export type AppActionTypes =
   | TextActions
   | LibraryActions
   | ConfigUpdateConfig
-  | AppUiActions;
+  | AppUiActions
+  | PluginActions;
 
 export interface SetSettingModel {
   grid: number;

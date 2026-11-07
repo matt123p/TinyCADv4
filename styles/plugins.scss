@@ -1,0 +1,44 @@
+.plugin-application-bar, .plugin-owned-toolbar, .plugin-main-tabs {
+  display: flex; align-items: center; gap: 6px; padding: 3px 8px; flex-shrink: 0;
+  background: #f3f3f3; border-bottom: 1px solid #ddd; font: 12px system-ui;
+}
+.plugin-application-bar { min-height: 28px; }
+.plugin-notification { margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55vw; }
+.plugin-actions-menu { position: relative; }
+.plugin-actions-menu > div { position: absolute; z-index: 3000; min-width: 240px; padding: 8px; background: white; box-shadow: 0 4px 16px #0003; display: flex; flex-direction: column; }
+.plugin-actions-menu button { text-align: left; padding: 7px; border: none; background: white; }
+.plugin-panel-slot { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; }
+.plugin-panel-selector { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: #f5f5f5; font: 12px system-ui; flex-shrink: 0; }
+.plugin-panel-selector select { min-width: 0; flex: 1; }
+.plugin-panel-content, .plugin-surface, .plugin-built-in-view { flex: 1; min-height: 0; min-width: 0; height: 100%; overflow: auto; }
+.plugin-built-in-view { display: flex; flex-direction: column; position: relative; }
+.plugin-frame { display: block; border: none; width: 100%; height: 100%; min-height: 80px; }
+.plugin-frame[hidden] { display: none; }
+.plugin-main-tabs { overflow-x: auto; }
+.plugin-main-tab { display: flex; flex-shrink: 0; }
+.plugin-main-tab button { border: 0; background: #e8e8e8; padding: 6px 9px; cursor: pointer; }
+.plugin-main-tab [aria-selected=true] { background: #fff; box-shadow: inset 0 -2px #0f6cbd; }
+.plugin-owned-toolbar > span { font-weight: 600; margin-right: 6px; }
+.plugin-manager { max-width: min(1180px, 96vw) !important; width: 1180px !important; height: 88vh; }
+.plugin-manager > div { height: 100%; min-height: 0; }
+.plugin-manager-content { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.plugin-manager-columns { display: grid; grid-template-columns: minmax(260px, 36%) 1fr; gap: 20px; flex: 1; min-height: 0; padding-top: 12px; }
+.plugin-manager-list, .plugin-manager-details { overflow: auto; min-width: 0; padding: 0 8px 12px 0; }
+.plugin-card { padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; }
+.plugin-card p { margin: 7px 0; }
+.plugin-card small { display: block; overflow-wrap: anywhere; }
+.plugin-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0; }
+.plugin-card label, .plugin-repository-form label { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; align-items: center; }
+.plugin-card label select { max-width: 100%; }
+.plugin-card > select, .plugin-repository-form input[type=url], .plugin-repository-form details input { width: 100%; box-sizing: border-box; padding: 6px; }
+.plugin-busy { display: flex; gap: 8px; padding: 8px; }
+.plugin-error { color: #a4262c; white-space: pre-wrap; }
+.plugin-documentation-location { margin: 12px 0; color: #666; font-size: 12px; }
+.plugin-markdown { overflow-wrap: anywhere; line-height: 1.6; }
+.plugin-markdown pre, .plugin-edit-preview { overflow: auto; max-height: 45vh; background: #f5f5f5; padding: 12px; white-space: pre-wrap; }
+.plugin-markdown table { border-collapse: collapse; width: 100%; }
+.plugin-markdown th, .plugin-markdown td { border: 1px solid #ddd; padding: 6px; }
+.plugin-library { padding: 10px; }
+.plugin-library input { width: 95%; margin-top: 6px; }
+.plugin-library-item { border-bottom: 1px solid #ddd; padding: 8px 0; }
+@media (max-width: 650px) { .plugin-manager-columns { grid-template-columns: 1fr; overflow: auto; } .plugin-manager-list, .plugin-manager-details { overflow: visible; } }

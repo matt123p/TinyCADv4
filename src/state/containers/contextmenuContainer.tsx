@@ -1,4 +1,4 @@
-import React, { Dispatch } from 'react';
+import React, { Dispatch, useSyncExternalStore } from 'react';
 import {
   Menu,
   MenuTrigger,
@@ -18,6 +18,7 @@ import { connect } from 'react-redux';
 import { ActionCreators } from 'redux-undo';
 import { docDrawing } from '../undo/undo';
 import { ContextMenuItem } from '../../manipulators/updateInterfaces';
+import { pluginManager } from '../../plugins/manager';
 
 interface ContextMenuProps {
   hidden: boolean;
@@ -25,6 +26,7 @@ interface ContextMenuProps {
   items: ContextMenuItem[];
   onDismiss: () => void;
   onItemClick: (key: string) => void;
+  isSymbolContext: boolean;
 }
 
 const ContextMenuComponent: React.FC<ContextMenuProps> = ({
@@ -33,7 +35,10 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
   items,
   onDismiss,
   onItemClick,
+  isSymbolContext,
 }) => {
+  useSyncExternalStore(pluginManager.subscribe, pluginManager.snapshot, pluginManager.snapshot);
+  const pluginItems = pluginManager.contributions('menus').filter(v => v.item.location === 'context/editor' || (isSymbolContext && v.item.location === 'context/symbol'));
   if (hidden || !target || !items) {
     return null;
   }
@@ -96,7 +101,15 @@ const ContextMenuComponent: React.FC<ContextMenuProps> = ({
       }}
     >
       <MenuPopover>
-        <MenuList>{renderItems(items)}</MenuList>
+        <MenuList>{renderItems(items)}
+          {pluginItems.length > 0 && <MenuDivider />}
+          {pluginItems.map(({ plugin, item }) => {
+            const command = plugin.current.manifest.contributes?.commands?.find(c => c.id === item.command);
+            return command && pluginManager.visible(command) ? <MenuItem key={item.command} disabled={!pluginManager.enabled(item) || !pluginManager.enabled(command)} onClick={() => {
+              onDismiss(); void pluginManager.execute(item.command).catch(error => pluginManager.notify(error.message));
+            }}>{command.title}</MenuItem> : null;
+          })}
+        </MenuList>
       </MenuPopover>
     </Menu>
   );
@@ -127,6 +140,7 @@ const mapStateToProps = (state: docDrawing) => {
     hidden: state.altStore.contextMenu?.hidden,
     target: target,
     items: items,
+    isSymbolContext: state.docStore.present.drawing.sheets.some(sheet => sheet.items.some(item => item.NodeName === 'symbol' && state.docStore.present.view._selected_array.includes(item._id))),
   };
 };
 

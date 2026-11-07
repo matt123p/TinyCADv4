@@ -11,6 +11,8 @@ import { dsnDrawing } from '../../model/dsnDrawing';
 import EditSymbolPanelContainer from '../../state/containers/editSymbolPanelContainer';
 import EditSpicePanelContainer from '../../state/containers/editSpicePanelContainer';
 import { PinTable } from './PinTable';
+import { PluginSurface, usePlugins } from '../../plugins/components';
+import { pluginManager } from '../../plugins/manager';
 
 const useStyles = makeStyles({
   root: {
@@ -55,18 +57,24 @@ export const PinListPanel: React.FC<PinListPanelProps> = ({
   const styles = useStyles();
   const { t } = useTranslation();
   const [selectedTab, setSelectedTab] = useState<TabValue>('symbol');
+  usePlugins();
+  const tabs = pluginManager.contributions('symbolEditorTabs');
+  const pluginTab = tabs.find(tab => tab.item.id === selectedTab);
+  const currentTab = pluginTab || ['symbol', 'pins', 'spice'].includes(String(selectedTab)) ? selectedTab : 'symbol';
 
   return (
     <div className={styles.root}>
       <div className={styles.tabContainer}>
-        <TabList selectedValue={selectedTab} onTabSelect={(e, data) => setSelectedTab(data.value)}>
+        <TabList selectedValue={currentTab} onTabSelect={(e, data) => setSelectedTab(data.value)}>
           <Tab value="symbol">{t('panel.pinList.symbol')}</Tab>
           <Tab value="pins">{t('panel.pinList.pins')}</Tab>
           <Tab value="spice">{t('panel.pinList.spice')}</Tab>
+          {tabs.map(tab => <Tab key={tab.item.id} value={tab.item.id}>{tab.item.title}</Tab>)}
         </TabList>
       </div>
       <div className={styles.contentContainer}>
-        {selectedTab === 'symbol' && (
+        {pluginTab && <PluginSurface pluginId={pluginTab.plugin.id} surface={pluginTab.item.surface} />}
+        {currentTab === 'symbol' && (
           <div className={styles.panelContent}>
              <EditSymbolPanelContainer />
           </div>

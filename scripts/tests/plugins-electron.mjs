@@ -1,0 +1,50 @@
+import { _electron, expect } from '@playwright/test';
+import { mkdtemp, writeFile, mkdir, readdir, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const root = fileURLToPath(new URL('../../', import.meta.url));
+const directory = await mkdtemp(path.join(tmpdir(), 'tinycad-plugin-electron-'));
+const profile = path.join(directory, 'profile'); await mkdir(profile);
+const entry = path.join(directory, 'main.mjs');
+await writeFile(entry, `import { app } from 'electron'; app.setPath('userData', ${JSON.stringify(profile)}); await import(${JSON.stringify(pathToFileURL(path.join(root, 'electron/electron.js')).href)});`);
+const env = { ...process.env, ELECTRON_IS_DEV: '0' }; delete env.ELECTRON_RUN_AS_NODE;
+const args = [entry, '--no-sandbox', '--disable-gpu'];
+let app;
+try {
+  app = await _electron.launch({ args, env, timeout: 30000 });
+  let page = await app.firstWindow(); const errors = []; page.on('pageerror', error => errors.push(error.message));
+  await page.getByRole('button', { name: 'Plugins', exact: true }).click();
+  await page.getByRole('tab', { name: 'Discover', exact: true }).click();
+  await page.getByRole('button', { name: 'Browse bundled examples' }).click();
+  await page.getByRole('checkbox', { name: 'Circuit Inspector', exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Project Home', exact: true }).check();
+  await page.getByRole('button', { name: 'Install selected plugins' }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Disable', exact: true })).toHaveCount(2, { timeout: 30000 });
+  const records = await page.evaluate(() => window.electronAPI.pluginStorage('get', 'records'));
+  expect(records.plugins).toHaveLength(2);
+  const cached = await readdir(path.join(profile, 'plugins'));
+  expect(cached.some(file => file.startsWith('package-') && file.endsWith('.bin'))).toBe(true);
+  const menuLabels = await app.evaluate(({ Menu }) => Menu.getApplicationMenu().items.flatMap(menu => menu.submenu?.items.map(item => item.label) || []));
+  expect(menuLabels).toContain('Manage plugins…'); expect(menuLabels).toContain('Inspect circuit'); expect(menuLabels).toContain('Project Home');
+  await page.getByRole('button', { name: 'Close plugin manager' }).click();
+  await app.evaluate(({ Menu }) => {
+    const item = Menu.getApplicationMenu().items.flatMap(menu => menu.submenu?.items || []).find(item => item.label === 'Inspect circuit');
+    item.click();
+  });
+  await expect(page.getByRole('tab', { name: 'Circuit report', exact: true })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Left panel', exact: true }).selectOption('net.tinycad.inspector.summary');
+  await expect(page.frameLocator('iframe[title="Circuit Inspector"]').first().getByRole('heading', { name: 'Circuit Inspector', exact: true })).toBeVisible();
+  const isolation = await page.frames().find(frame => frame !== page.mainFrame() && frame.url() === 'about:srcdoc').evaluate(() => ({ bridge: typeof window.electronAPI, require: typeof window.require }));
+  expect(isolation).toEqual({ bridge: 'undefined', require: 'undefined' });
+  expect(errors).toEqual([]);
+  await app.close(); app = undefined;
+  app = await _electron.launch({ args, env, timeout: 30000 });
+  page = await app.firstWindow(); await page.getByRole('button', { name: 'Plugins', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Disable', exact: true })).toHaveCount(2);
+  await page.getByRole('button', { name: 'Full documentation', exact: true }).first().click();
+  await expect(page.getByRole('heading', { name: 'Circuit Inspector documentation', exact: true })).toBeVisible();
+  console.log('Electron plugin integration passed: isolated runtime, disk cache/restart, native menus, and Markdown documentation.');
+} finally { if (app) await app.close(); await rm(directory, { recursive: true, force: true }); }

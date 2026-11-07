@@ -1,4 +1,5 @@
 import { FileIdType } from '../io/files';
+import type { ExtensionOwner } from '../plugins/types';
 
 export interface tclibLoadError {
   summary: string;
@@ -60,7 +61,7 @@ export function normalizeTclibLoadError(
   };
 }
 
-export interface tclibSymbol {
+export interface tclibSymbol extends ExtensionOwner {
   SymbolId: number;
   Data: string;
 }
@@ -81,7 +82,9 @@ export enum TextDisplayMethod {
   ShowValuePresent = 6,
 }
 
-export interface tclibLibraryEntry {
+export interface tclibLibraryEntry extends ExtensionOwner {
+  /** Transient placement metadata; persisted on the definition, not the name row. */
+  definitionMetadata?: ExtensionOwner;
   id?: string;
   NameID: number;
   Name: string;
@@ -94,7 +97,8 @@ export interface tclibLibraryEntry {
   Attributes: tclibLibraryAttributes[];
 }
 
-export interface tclib {
+export interface tclib extends ExtensionOwner {
+  pluginRows?: { scope: string; target: string; data: string }[];
   fileId: FileIdType;
   modified: string;
   name: string;

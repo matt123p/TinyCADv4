@@ -78,6 +78,7 @@ import {
   SUPPORTED_LANGUAGES,
 } from '../../i18n/languages';
 import { openCurrentAppUrl, openExternalUrl } from '../../util/navigation';
+import { PluginToolbarItems } from '../../plugins/components';
 
 
 // Images (ES module imports)
@@ -908,6 +909,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           </>
         )}
 
+        <PluginToolbarItems toolbar="main/plugins" />
+        <PluginToolbarItems toolbar={props.editSymbol ? 'symbol/plugins' : 'schematic/plugins'} />
         <div className={styles.spacer} />
 
         {/* Far Items */}

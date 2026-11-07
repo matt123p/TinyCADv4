@@ -8,6 +8,14 @@ interface ElectronLibraryLoadError {
 declare global {
     interface Window {
         electronAPI: {
+            pluginStorage: (operation: 'get' | 'set' | 'remove', key: string, value?: unknown) => Promise<any>;
+            pluginDownload: (url: string, binary: boolean) => Promise<Uint8Array>;
+            setPluginMenus: (items: import('./plugins/types').NativePluginMenu[]) => void;
+            onPluginCommand: (callback: (command: string) => void) => () => void;
+            choosePluginTool: (pluginId: string) => Promise<{ id: string; name: string } | null>;
+            listPluginTools: (pluginId: string) => Promise<{ id: string; name: string }[]>;
+            runPluginTool: (pluginId: string, toolId: string, input: string) => Promise<{ code: number; stdout: string; stderr: string }>;
+            cancelPluginTasks: (pluginId: string) => void;
             onMenuCommand: (callback: (command: string) => void) => () => void;
             onMenuCommandWithData: (callback: (command: string, data: any) => void) => () => void;
             // Context menu

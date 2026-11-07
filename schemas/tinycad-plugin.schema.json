@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://www.tinycad.net/schemas/tinycad-plugin.schema.json",
+  "title": "TinyCAD plugin manifest",
+  "type": "object",
+  "required": ["manifestVersion", "id", "name", "description", "version", "apiVersion", "platforms", "readme", "changelog", "documentation", "controller", "files", "permissions"],
+  "properties": {
+    "manifestVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z0-9-]+)+$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "version": { "type": "string", "minLength": 1 },
+    "apiVersion": { "type": "string", "minLength": 1 },
+    "platforms": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["browser", "electron"] } },
+    "readme": { "$ref": "#/$defs/markdown" },
+    "changelog": { "$ref": "#/$defs/markdown" },
+    "documentation": { "$ref": "#/$defs/markdown" },
+    "controller": { "$ref": "#/$defs/path" },
+    "ui": { "$ref": "#/$defs/path" },
+    "files": { "type": "array", "maxItems": 512, "uniqueItems": true, "items": { "$ref": "#/$defs/path" } },
+    "permissions": { "type": "array", "maxItems": 50, "uniqueItems": true, "items": { "type": "string", "pattern": "^(document\\.(read|write)|symbols\\.(read|write)|netlist\\.read|extensionData\\.write|libraries\\.provide|files\\.(read|write)|desktop\\.tools|network:https://[^/]+)$" } },
+    "activationEvents": { "type": "array", "items": { "type": "string" } },
+    "contributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "commands": { "type": "array", "items": { "allOf": [{ "$ref": "#/$defs/condition" }, { "type": "object", "required": ["id", "title"], "properties": { "id": { "type": "string" }, "title": { "type": "string", "maxLength": 100 }, "exported": { "type": "boolean" } } }] } },
+        "panels": { "type": "array", "items": { "allOf": [{ "$ref": "#/$defs/surface" }, { "type": "object", "required": ["location"], "properties": { "location": { "enum": ["left", "bottom"] } } }] } },
+        "symbolEditorTabs": { "type": "array", "items": { "$ref": "#/$defs/surface" } },
+        "mainViews": { "type": "array", "items": { "allOf": [{ "$ref": "#/$defs/surface" }, { "type": "object", "required": ["scope"], "properties": { "scope": { "enum": ["application", "document"] }, "multiple": { "type": "boolean" } } }] } },
+        "menus": { "type": "array", "items": { "allOf": [{ "$ref": "#/$defs/condition" }, { "type": "object", "required": ["location", "command"], "properties": { "location": { "type": "string", "pattern": "^(file/(import|export)|edit/plugins|view/(panels|main)|tools/plugins|help/plugins|context/(editor|symbol))$" }, "command": { "type": "string" }, "group": { "type": "string" }, "order": { "type": "number" } } }] } },
+        "toolbars": { "type": "array", "items": { "type": "object", "required": ["id", "title"], "properties": { "id": { "type": "string" }, "title": { "type": "string" } } } },
+        "toolbarItems": { "type": "array", "items": { "allOf": [{ "$ref": "#/$defs/condition" }, { "type": "object", "required": ["toolbar", "command"], "properties": { "toolbar": { "type": "string" }, "command": { "type": "string" }, "icon": { "type": "string" }, "order": { "type": "number" } } }] } },
+        "libraryProviders": { "type": "array", "items": { "type": "object", "required": ["id", "title"], "properties": { "id": { "type": "string" }, "title": { "type": "string" } } } },
+        "dataSchemas": { "type": "array", "items": { "type": "object", "required": ["scope", "version"], "properties": { "scope": { "enum": ["document", "sheet", "symbolDefinition", "symbolInstance", "library", "libraryName"] }, "version": { "type": "integer", "minimum": 1 } } } }
+      }
+    }
+  },
+  "$defs": {
+    "path": { "type": "string", "minLength": 1, "maxLength": 240, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*[\\\\:#?%])[^\\u0000-\\u001f]+$" },
+    "markdown": { "allOf": [{ "$ref": "#/$defs/path" }, { "pattern": "\\.[mM][dD]$" }] },
+    "condition": { "type": "object", "properties": { "when": { "type": "string", "maxLength": 500 }, "enablement": { "type": "string", "maxLength": 500 }, "platforms": { "type": "array", "items": { "enum": ["browser", "electron"] } } } },
+    "surface": { "allOf": [{ "$ref": "#/$defs/condition" }, { "type": "object", "required": ["id", "title", "surface"], "properties": { "id": { "type": "string" }, "title": { "type": "string", "maxLength": 100 }, "surface": { "type": "string", "minLength": 1, "maxLength": 100 }, "order": { "type": "number" } } }] }
+  }
+}

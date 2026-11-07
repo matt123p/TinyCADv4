@@ -172,7 +172,7 @@ function internalfileSave(
 
   dispatch(actionSetSaveInProgress(true, null));
 
-  wkrGenerateNetlist(drawing)
+  return wkrGenerateNetlist(drawing)
     .then((netlist) => {
       const io = new ioXML();
       const update_drawing = new updateDrawing();
@@ -239,7 +239,7 @@ function internalLibrarySave(
 
   dispatch(actionSetSaveInProgress(true, null));
 
-  userManager
+  return userManager
     .saveLibrary(library, { ...file, id: saveAs ? null : file.id })
     .then(
       (meta) => {
@@ -336,9 +336,6 @@ function createSymbolXml(items: any[][]): string {
   }));
 
   let xml = io.to_dsn(drawing, false, false).tostring();
-  if (drawing.sheets.length === 1) {
-    xml = xml.replace('<TinyCADSheets>', '').replace('</TinyCADSheets>', '');
-  }
   return xml;
 }
 

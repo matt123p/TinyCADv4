@@ -1,5 +1,6 @@
 import { DocItem, Coordinate, dsnPin } from './dsnItem';
 import { Snap } from '../manipulators/snap';
+import type { ExtensionOwner } from '../plugins/types';
 
 export interface SheetDetails {
   author: string;
@@ -47,7 +48,7 @@ export interface libSymbolPart {
   ref_point: Coordinate;
 }
 
-export interface libSymbol {
+export interface libSymbol extends ExtensionOwner {
   // ID for this drawing
   id: number;
 
@@ -127,7 +128,7 @@ export interface libHatch {
   color: string;
 }
 
-export interface dsnSheet {
+export interface dsnSheet extends ExtensionOwner {
   items: DocItem[];
   details: SheetDetails;
 
@@ -200,7 +201,7 @@ export interface DsnSettings {
   showRulers: boolean;
 }
 
-export interface dsnDrawing {
+export interface dsnDrawing extends ExtensionOwner {
   sheets: dsnSheet[];
 
   // Global document settings

@@ -4,6 +4,7 @@ import { tclib, tclibLibraryEntry, tclibSymbol } from '../model/tclib';
 import { XMLBuilder } from '../util/xmlbuilder';
 import update from 'immutability-helper';
 import { DocItemTypes } from '../model/dsnItem';
+import { copyOwnerIdentity, ensureDrawingIds, newIdentity } from '../plugins/persistence';
 
 export class updateLibrary {
   constructor(public lib: tclib) {}
@@ -43,9 +44,7 @@ export class updateLibrary {
     }));
 
     let xml = io.to_dsn({ ...doc, sheets: sheets }, false, false).tostring();
-    if (doc.sheets.length === 1) {
-      xml = xml.replace('<TinyCADSheets>', '').replace('</TinyCADSheets>', '');
-    }
+    // Keep a single XML root: document-level plugin data and identity must survive.
 
     return update(this.lib, {
       symbols: {
@@ -78,15 +77,18 @@ export class updateLibrary {
       this.lib.symbols.reduce((id, s) => Math.max(s.SymbolId, id), 0) + 1;
 
     const newName: tclibLibraryEntry = {
-      ...name,
+      ...copyOwnerIdentity(name),
       NameID: newNameId,
       Name: name.Name + '_copy',
       SymbolID: newSymbolId,
     };
     const newSymbol: tclibSymbol = {
-      ...symbol,
+      ...copyOwnerIdentity(symbol),
       SymbolId: newSymbolId,
     };
+    const copied = this.getSymbolDoc(name);
+    const fresh = { ...copied, persistentId: newIdentity(), sheets: copied.sheets.map(sheet => ({ ...sheet, persistentId: newIdentity(), items: sheet.items.map(item => ({ ...item, persistentId: newIdentity() })) })) };
+    newSymbol.Data = new ioXML().to_dsn(ensureDrawingIds(fresh), false, false).tostring();
 
     return {
       name: newName,

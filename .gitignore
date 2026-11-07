@@ -40,3 +40,6 @@ packages/
 /assets/
 /server.bundle.js
 .DS_Store
+/plugin-release/
+/playwright-report/
+/test-results/

@@ -24,6 +24,8 @@ import { tclib, tclibLibraryEntry } from '../../model/tclib';
 import { updateLibrary } from '../../manipulators/updateLibrary';
 import { DocItemTypes } from '../../model/dsnItem';
 import { AppUiActionTypes } from '../actions/appActions';
+import { PLUGIN_EDIT, PLUGIN_SELECTION } from '../../plugins/actions';
+import { ensureDrawingIds, ensureLibraryIds } from '../../plugins/persistence';
 
 // Lazy import to avoid circular dependency
 let storeModule: typeof import('../../startup') | null = null;
@@ -153,6 +155,15 @@ export function DocStoreReducer(
   let update_library;
 
   switch (action.type) {
+    case PLUGIN_EDIT:
+      if (action.expectedVersion !== state.drawingVersion) return state;
+      return {
+        ...state, drawing: ensureDrawingIds(action.drawing),
+        editLibrary: action.library || state.editLibrary, editSymbol: action.symbol || state.editSymbol,
+        drawingVersion: state.drawingVersion + 1,
+      };
+    case PLUGIN_SELECTION:
+      return { ...state, view: { ...state.view, selected_sheet: action.sheetIndex, _selected_array: action.ids } };
     case AppUiActionTypes.SetWireMode:
       view = update_view.setWireMode(view, sheet, action.mode);
       break;
@@ -1158,7 +1169,7 @@ export function DocStoreReducer(
     });
   }
 
-  if (state.editSymbol != prev_edit_symbol) {
+  if (state.editSymbol && state.editSymbol != prev_edit_symbol) {
     // Has the name changed?
     if (state.editSymbol.NameID === prev_edit_symbol?.NameID) {
       // No, so write back the new name data
@@ -1205,5 +1216,14 @@ export function DocStoreReducer(
     });
   }
 
+  if (state.drawing !== prev_drawing) {
+    const normalized = ensureDrawingIds(state.drawing);
+    if (normalized !== state.drawing) state = { ...state, drawing: normalized };
+  }
+  if (state.editLibrary) {
+    const normalized = ensureLibraryIds(state.editLibrary);
+    if (normalized !== state.editLibrary) state = { ...state, editLibrary: normalized,
+      editSymbol: state.editSymbol ? normalized.names.find(name => name.NameID === state.editSymbol.NameID) || state.editSymbol : null };
+  }
   return state;
 }

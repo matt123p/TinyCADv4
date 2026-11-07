@@ -12,6 +12,7 @@ import { ResizeHandle } from '../panel/ResizeHandle';
 import { Browser } from '../sheets/browser';
 import { tclibLibraryEntry } from '../../model/tclib';
 import { BrowserSheetData } from '../../model/dsnView';
+import { PluginBar, PluginMainViews, PluginPanelHost, PluginToolbars } from '../../plugins/components';
 
 // TODO: These styles seem common, maybe they should be in a common CSS or utility?
 // For now, mirroring what was seen in mainAppElectron.tsx
@@ -122,7 +123,9 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       className="page-container"
       style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
     >
+      <PluginBar />
       <ToolbarContainer />
+      <PluginToolbars />
       <div className="mid-container">
         <div
           className={`side-panel-container${sidePanelVisible ? '' : ' side-panel-collapsed'}${sidePanelResizing ? ' side-panel-resizing' : ''}`}
@@ -144,7 +147,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               title={t('designApp.showSidePanel')}
             />
           )}
-          <SidePanelContainer toggleSidePanel={toggleSidePanel} />
+          <PluginPanelHost location="left"><SidePanelContainer toggleSidePanel={toggleSidePanel} /></PluginPanelHost>
         </div>
         <div className="main-content-area">
           <div
@@ -152,14 +155,16 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               props.editSymbol ? 'circuit-container-es' : 'circuit-container'
             }
           >
+            <PluginMainViews>
             {props.selected_sheet >= 0 ? <SheetContainer /> : null}
             {props.selected_sheet === -1 ? <BomContainer /> : null}
             {props.selected_sheet < -1 ? <Browser url={props.browserSheets[-2 - props.selected_sheet].url} /> : null}
             <SheetbarContainer />
+            </PluginMainViews>
           </div>
           <div className="bottom-panel-wrapper" style={{ height: bottomPanelHeight }}>
             <ResizeHandle direction="vertical" onResize={handleBottomPanelResize} />
-            <BottomPanelContainer />
+            <PluginPanelHost location="bottom"><BottomPanelContainer /></PluginPanelHost>
           </div>
         </div>
       </div>

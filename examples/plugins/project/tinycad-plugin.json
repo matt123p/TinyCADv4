@@ -1,0 +1,24 @@
+{
+  "manifestVersion": 1,
+  "id": "net.tinycad.project",
+  "name": "Project Home",
+  "description": "Work with multiple open circuit files, each with its own save state and undo history.",
+  "version": "1.0.0",
+  "apiVersion": "^1.0.0",
+  "platforms": ["browser", "electron"],
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "documentation": "docs/README.md",
+  "controller": "controller.js",
+  "ui": "ui.js",
+  "files": ["controller.js", "ui.js", "README.md", "CHANGELOG.md", "docs/README.md"],
+  "permissions": ["document.read", "document.write", "files.read", "files.write"],
+  "activationEvents": ["onCommand:net.tinycad.project.open", "onView:net.tinycad.project.home"],
+  "contributes": {
+    "commands": [{ "id": "net.tinycad.project.open", "title": "Project Home" }],
+    "mainViews": [{ "id": "net.tinycad.project.home", "title": "Project Home", "surface": "home", "scope": "application" }],
+    "panels": [{ "id": "net.tinycad.project.files", "title": "Project files", "surface": "files", "location": "left" }],
+    "menus": [{ "location": "view/main", "command": "net.tinycad.project.open" }],
+    "toolbarItems": [{ "toolbar": "main/plugins", "command": "net.tinycad.project.open" }]
+  }
+}

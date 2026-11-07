@@ -7,6 +7,7 @@ import { MenuActionTypes } from '../actions/menuActions';
 import { altStore } from '../stores/altStoreReducer';
 import { SymbolActionTypes } from '../actions/symbolActions';
 import { LibraryActionTypes } from '../actions/libraryActions';
+import { PLUGIN_EDIT } from '../../plugins/actions';
 
 let lastEvent = new Date();
 let needHistory = false;
@@ -23,6 +24,7 @@ export const DocStoreWithHistory = undoable(DocStoreReducer, {
     previousHistory: StateWithHistory<docStore>,
   ) => {
     const now = new Date();
+    if (action.type === PLUGIN_EDIT) { needHistory = false; lastEvent = now; return true; }
     needHistory =
       needHistory ||
       currentState.drawing != previousHistory._latestUnfiltered?.drawing;
@@ -62,5 +64,6 @@ export const DocStoreWithHistory = undoable(DocStoreReducer, {
 
     return r;
   },
-  ignoreInitialState: true,
+  // A loaded document is the baseline for undoing its very first edit.
+  ignoreInitialState: false,
 });

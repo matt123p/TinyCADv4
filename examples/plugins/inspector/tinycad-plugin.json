@@ -1,0 +1,34 @@
+{
+  "manifestVersion": 1,
+  "id": "net.tinycad.inspector",
+  "name": "Circuit Inspector",
+  "description": "Inspect circuit connectivity, save design notes, and extend symbol editing.",
+  "version": "1.0.0",
+  "apiVersion": "^1.0.0",
+  "platforms": ["browser", "electron"],
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "documentation": "docs/README.md",
+  "controller": "controller.js",
+  "ui": "ui.js",
+  "files": ["controller.js", "ui.js", "README.md", "CHANGELOG.md", "docs/README.md", "docs/symbols.md"],
+  "permissions": ["document.read", "symbols.read", "netlist.read", "extensionData.write", "libraries.provide"],
+  "activationEvents": ["onCommand:net.tinycad.inspector.report", "onPanel:net.tinycad.inspector.summary", "onPanel:net.tinycad.inspector.notes", "onSymbolEditorTab:net.tinycad.inspector.model"],
+  "contributes": {
+    "commands": [{ "id": "net.tinycad.inspector.report", "title": "Inspect circuit" }],
+    "panels": [
+      { "id": "net.tinycad.inspector.summary", "title": "Circuit Inspector", "surface": "summary", "location": "left" },
+      { "id": "net.tinycad.inspector.notes", "title": "Design notes", "surface": "notes", "location": "bottom", "when": "editorKind == 'schematic'" }
+    ],
+    "symbolEditorTabs": [{ "id": "net.tinycad.inspector.model", "title": "Plugin metadata", "surface": "model" }],
+    "mainViews": [{ "id": "net.tinycad.inspector.report-view", "title": "Circuit report", "surface": "report", "scope": "document" }],
+    "menus": [{ "location": "tools/plugins", "command": "net.tinycad.inspector.report" }],
+    "toolbars": [{ "id": "net.tinycad.inspector.toolbar", "title": "Circuit Inspector" }],
+    "toolbarItems": [
+      { "toolbar": "main/plugins", "command": "net.tinycad.inspector.report" },
+      { "toolbar": "net.tinycad.inspector.toolbar", "command": "net.tinycad.inspector.report" }
+    ],
+    "libraryProviders": [{ "id": "net.tinycad.inspector.components", "title": "Example components" }],
+    "dataSchemas": [{ "scope": "document", "version": 1 }, { "scope": "symbolDefinition", "version": 1 }]
+  }
+}

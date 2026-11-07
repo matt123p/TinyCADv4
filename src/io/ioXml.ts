@@ -1,4 +1,5 @@
 import { XMLBuilder } from '../util/xmlbuilder';
+import { ensureDrawingIds, readExtensionOwner, writeExtensionOwner } from '../plugins/persistence';
 import {
   DocItemTypes,
   DocItem,
@@ -201,12 +202,13 @@ export class ioXML {
       }
     }
 
+    if (root[0]) Object.assign(r, readExtensionOwner(root[0]));
     r.netlistTypes = ensureNetlistTypes(r.netlistTypes);
     if (!r.netTypeAssignments) {
       r.netTypeAssignments = {};
     }
 
-    return r;
+    return ensureDrawingIds(r);
   }
 
   public to_dsn(
@@ -217,6 +219,7 @@ export class ioXML {
     // Create the root object
     let dsn = new XMLBuilder();
     dsn.createDoc('TinyCADSheets');
+    writeExtensionOwner(dsn, drawing);
     for (var i = 0; i < drawing.sheets.length; ++i) {
       this.to_tinycad(
         drawing.sheets[i],
@@ -262,6 +265,7 @@ export class ioXML {
     let root = dsn.appendChild(
       sheet.hierarchicalSymbol ? 'HierarchicalSymbol' : 'TinyCAD',
     );
+    writeExtensionOwner(root, sheet);
 
     // Create the resources and document for insertion later
     this.to_resources(root, items, fonts, styles, fills, symboldefs, images);
@@ -328,6 +332,7 @@ export class ioXML {
         });
 
         let symbol = symboldefs[symbol_id].symbol;
+        writeExtensionOwner(symboldef, symbol);
         symboldef.appendChild('NAME', symbol.name.value, {
           type: symbol.name.type,
         });
@@ -530,6 +535,7 @@ export class ioXML {
     for (let i = 0; i < items.length; ++i) {
       let item = items[i];
       let o = null;
+      const previousNode = root.insert.lastChild;
       let a: any = {};
       switch (item.NodeName) {
         case DocItemTypes.BusLabel:
@@ -864,6 +870,10 @@ export class ioXML {
           o = root.appendChild('ruler');
           break;
       }
+      if (root.insert.lastChild && root.insert.lastChild !== previousNode) {
+        const itemRoot = new XMLBuilder(); itemRoot.xmlDoc = root.xmlDoc; itemRoot.insert = root.insert.lastChild;
+        writeExtensionOwner(itemRoot, item);
+      }
     }
   }
 
@@ -906,6 +916,7 @@ export class ioXML {
       },
 
       hierarchicalSymbol: hierarchicalSymbol,
+      ...readExtensionOwner(sheet),
     };
 
     for (let i = 0; i < nodes.length; ++i) {
@@ -923,6 +934,7 @@ export class ioXML {
         case 'FILL':
         case 'SYMBOLDEF':
         case 'IMAGE':
+        case 'PLUGIN_DATA':
           // Ignore, we can always go back and get these
           break;
         case 'OPTIONS':
@@ -1386,6 +1398,7 @@ export class ioXML {
       }
 
       if (o != null) {
+        Object.assign(o, readExtensionOwner(node));
         r.push(o);
       }
     }
@@ -1887,6 +1900,7 @@ export class ioXML {
     for (let k = 0; k < symbols.length; ++k) {
       let symbol = symbols[k];
       if (parseInt(symbol.getAttribute('id'), 10) === s) {
+        Object.assign(selected_symboldef, readExtensionOwner(symbol));
         let selected_nodes = symbol.childNodes;
         let ref_point = null;
         selected_symboldef.id = s;

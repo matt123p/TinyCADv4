@@ -2856,7 +2856,7 @@ export class updateView {
   ////////////////// Symbol operations //////////////////
 
   private getLibrarySymbolUid(name: tclibLibraryEntry, items: DocItem[][]) {
-    return name.id || md5(JSON.stringify(items));
+    return name.id || name.persistentId || md5(JSON.stringify(items, (key, value) => key === 'persistentId' ? undefined : value));
   }
 
   private ensureLibrarySymbolOnSheet(
@@ -2886,6 +2886,7 @@ export class updateView {
       );
 
       selected_symboldef = {
+        ...name.definitionMetadata,
         id: next_symbol_id,
         description: null,
         name: {

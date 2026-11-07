@@ -16,12 +16,17 @@ import {
 } from './state/dispatcher/AppDispatcher';
 import { imageFile } from './io/files';
 import i18n from './i18n';
+import { documentSessions, restoreSessionState, sessionMiddleware } from './plugins/sessions';
+import { RESTORE_SESSION } from './plugins/actions';
+import { PluginOverlays } from './plugins/components';
 
+const appReducer = combineReducers({ docStore: DocStoreWithHistory, altStore: AltStoreReducer });
 export const store = createStore(
-  combineReducers({ docStore: DocStoreWithHistory, altStore: AltStoreReducer }),
+  (state: any, action: any) => action.type === RESTORE_SESSION ? restoreSessionState(state, action.snapshot) : appReducer(state, action),
   // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
-  applyMiddleware(ReduxThunk),
+  applyMiddleware(ReduxThunk, sessionMiddleware),
 );
+documentSessions.attach(store);
 
 const scheduleAfterFirstPaint = (task: () => void | Promise<void>) => {
   const run = () => {
@@ -224,9 +229,15 @@ root.render(
       ) : (
         <MainAppBrowserContainer />
       )}
+      <PluginOverlays />
     </Provider>
   </FluentProvider>,
 );
+
+scheduleAfterFirstPaint(async () => {
+  const { initializePluginHost } = await import('./plugins/host');
+  initializePluginHost(store);
+});
 
 scheduleAfterFirstPaint(async () => {
   const { initializeNetlistSync } = await import('./io/netlists/netlistSync');

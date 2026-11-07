@@ -1,0 +1,41 @@
+{
+  "catalogVersion": 1,
+  "plugins": [
+    {
+      "id": "net.tinycad.inspector",
+      "name": "Circuit Inspector",
+      "description": "Inspect circuit connectivity, save design notes, and extend symbol editing.",
+      "version": "1.0.0",
+      "apiVersion": "^1.0.0",
+      "platforms": [
+        "browser",
+        "electron"
+      ],
+      "readme": "README.md",
+      "changelog": "CHANGELOG.md",
+      "documentation": "docs/README.md",
+      "package": {
+        "type": "source",
+        "manifest": "examples/plugins/inspector/tinycad-plugin.json"
+      }
+    },
+    {
+      "id": "net.tinycad.project",
+      "name": "Project Home",
+      "description": "Work with multiple open circuit files, each with its own save state and undo history.",
+      "version": "1.0.0",
+      "apiVersion": "^1.0.0",
+      "platforms": [
+        "browser",
+        "electron"
+      ],
+      "readme": "README.md",
+      "changelog": "CHANGELOG.md",
+      "documentation": "docs/README.md",
+      "package": {
+        "type": "source",
+        "manifest": "examples/plugins/project/tinycad-plugin.json"
+      }
+    }
+  ]
+}
