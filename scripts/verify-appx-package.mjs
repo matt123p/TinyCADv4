@@ -54,8 +54,12 @@ try {
     new RegExp('ProcessorArchitecture="' + manifest.arch + '"'),
   );
   const workspace = await fs.realpath(process.cwd());
-  const parent = await fs.realpath(path.join(workspace, 'build/qualification'));
-  assert.ok(parent.startsWith(workspace + path.sep));
+  await fs.mkdir(path.join(workspace, 'build'), { recursive: true });
+  const buildRoot = await fs.realpath(path.join(workspace, 'build'));
+  assert.ok(buildRoot.startsWith(workspace + path.sep));
+  await fs.mkdir(path.join(buildRoot, 'qualification'), { recursive: true });
+  const parent = await fs.realpath(path.join(buildRoot, 'qualification'));
+  assert.ok(parent.startsWith(buildRoot + path.sep));
   const directory = path.join(parent, 'appx-runtime-' + manifest.arch);
   // This is a dedicated generated tree beneath build/qualification.
   assert.ok(directory.startsWith(parent + path.sep));
