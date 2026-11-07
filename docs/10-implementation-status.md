@@ -1,5 +1,7 @@
 # Running the simulation integration
 
+For the next Windows or Mac session, start with [TODO and platform handoff](12-todo-and-platform-handoff.md).
+
 Simulation lives in the existing drawing: use **Simulate** or **+ Simulation** to add a sheet. Place/configure components through the existing editor and their SPICE properties. This integration consumes their `$$SPICE` templates; symbol supply and selection remain separate work.
 
 ## Implemented

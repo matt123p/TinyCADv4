@@ -1,6 +1,6 @@
 # TinyCAD simulation design and implementation specification
 
-Status: proposal for review. Research checked on 7 November 2026.
+Status: simulation foundation implemented; broader workbench features remain planned. Research checked on 7 November 2026. See [current implementation status](10-implementation-status.md) for verified behavior and [the TODO/platform handoff](12-todo-and-platform-handoff.md) for Windows and macOS testing and next implementation work.
 
 ## Start with the user stories
 
@@ -19,7 +19,7 @@ Then work through:
 
 ## Scope and status
 
-These documents specify a proposed UI for an integrated ngspice experience with the approachable circuit-and-instruments workflow associated with Multisim. All new simulation screens and behavior described here are proposed; they are not present in TinyCAD today. User stories are research-informed hypotheses, pending user testing.
+These documents describe an integrated ngspice experience with the approachable circuit-and-instruments workflow associated with Multisim. The feature catalogue includes both implemented foundation features and planned workbench features; it is not a claim that the whole catalogue is available. User stories remain research-informed hypotheses pending user testing. Use the implementation status and TODO documents to distinguish working code, local verification and outstanding platform qualification.
 
 **One drawing file, multiple sheets.** This version extends TinyCAD's existing multi-sheet document. Schematic sheets contain the shared circuit; non-drawing **Simulation** sheets contain analysis setup, parameters, instructions, instrument views, and results. For example, `Lesson.dsn` can contain `Circuit`, `DC checks`, and `Frequency response` tabs. Save/Open applies to that one drawing file. There is no project file, project manager, linked schematic files, separate simulation workbook, or required setup/results sidecar. Existing model dependencies remain inputs, not a new project structure.
 
@@ -39,10 +39,12 @@ The priority labels describe the intended product scope:
 
 Priority is independent of visibility. An essential model-mapping control can be contextual; an advanced analysis can remain easy to find through search.
 
-The specification now includes implementation architecture and build/distribution details as well as the UI design. The UI can still be reviewed using static screens or a prototype with clearly labeled sample results. The proposed engine recipes, schemas, and APIs require implementation and qualification; no simulator integration, binary build, or workflow change has been performed in this documentation change.
+The specification includes implementation architecture and build/distribution details as well as the UI design. Runtime code, pinned engine recipes, document codecs, tests and CI workflows are now present. Linux/browser verification does not establish Windows/macOS qualification, and planned controls should still be reviewed before implementation.
 
 The existing [TinyCAD manual](https://docs.tinycad.net/v4/) remains the guide to current functionality. These planning documents belong in this application repository; they do not replace that separately maintained manual.
 
 - [Running the simulation integration](10-implementation-status.md) — current implementation, build instructions, verification and remaining work.
 
 - [Drawing extensions and Drive deployment](11-drawing-extensions-and-drive.md) — automatic .dsn/.dzn selection and Drive UI registration.
+
+- [TODO and Windows/macOS handoff](12-todo-and-platform-handoff.md) — machine setup, platform blockers, acceptance checks, remaining implementation and evidence tracking.
