@@ -75,6 +75,12 @@ def main():
         prefix_arg = subprocess.check_output([cygpath, '-u', str(prefix)], text=True).strip()
         configure_script = subprocess.check_output([cygpath, '-u', str(configure_script)], text=True).strip()
     flags=LOCK['configure']+[f'--prefix={prefix_arg}']
+    if args.backend == 'native' and os.environ.get('MSYSTEM') == 'CLANGARM64':
+        # The release's libtool file-magic check recognizes only x86 COFF
+        # import libraries and otherwise silently builds a static-only library.
+        # Let the native ARM64 linker validate imports instead; record this
+        # configure cache override in the engine's build provenance.
+        flags.append('lt_cv_deplibs_check_method=pass_all')
     if args.backend == 'wasm':
         version=subprocess.check_output(['emcc','--version'],text=True)
         if LOCK['emsdk']['version'] not in version: raise RuntimeError('Wrong emsdk version')
