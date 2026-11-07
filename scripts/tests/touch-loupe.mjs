@@ -3,7 +3,14 @@ import React from 'react';
 import { loadComponent } from './load-component.mjs';
 
 const { TSheet } = loadComponent('src/components/svg/Sheet.tsx', {});
+// Touch capability alone must not reveal the loupe button on hybrid PCs.
+const previousWindow = globalThis.window;
+globalThis.window = { ...previousWindow, matchMedia: () => ({ matches: true }) };
 const sheet = new TSheet({ zoom: 100, dispatch() {} });
+if (previousWindow === undefined) delete globalThis.window;
+else globalThis.window = previousWindow;
+assert.equal(sheet.state.precisionPadButtonVisible, false);
+assert.equal(sheet.renderLoupeToggleButton(), null);
 sheet.setState = (patch) => Object.assign(sheet.state, patch);
 const events = [];
 sheet.dispatchEditorPointerEvent = (...args) => events.push(args);
@@ -25,6 +32,8 @@ assert.deepEqual(events.pop(), ['mousemove', 420, 330, 0]);
 assert.equal(sheet.state.touchSvgX, 520);
 const start = event([touch(200, 200)]);
 sheet.ontouchstart(start);
+assert.equal(sheet.state.precisionPadButtonVisible, true, 'actual touch input reveals the loupe button');
+assert.notEqual(sheet.renderLoupeToggleButton(), null);
 assert.equal(start.defaultPrevented, true, 'native touch input suppresses compatibility mouse clicks');
 sheet.ontouchmove(event([touch(300, 250)]));
 assert.deepEqual(events.pop(), ['mousemove', 450, 345, 0], 'precision movement must reach the editor hover/creation logic');
@@ -61,6 +70,7 @@ assert.equal(sheet._touch_mode, mode, 'loupe controls must not initiate canvas g
 sheet.handleVirtualClose();
 assert.equal(sheet._touch_mode, 'none');
 assert.equal(sheet.state.touchActive, false);
+assert.notEqual(sheet.renderLoupeToggleButton(), null, 'the button stays available after closing the loupe');
 
 // Touch handlers must be removable when switching sheets or unmounting.
 const listeners = new Map();
