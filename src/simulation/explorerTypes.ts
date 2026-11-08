@@ -1,4 +1,5 @@
 export const metricKinds = [
+  'absolutePeak', 'efficiency', 'loss', 'impedance', 'groupDelay', 'passbandRipple', 'attenuation', 'bandpassQ',
   'value',
   'minimum',
   'maximum',

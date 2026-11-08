@@ -7,6 +7,7 @@ import {
   metricKinds,
 } from './explorerTypes';
 import { parseQuantity } from './numbers';
+import { advancedMetric, advancedKinds } from './advancedMetrics';
 
 export const metricAlgorithm = 'tinycad-metrics-1' as const;
 const vector = (data: ResultData, name: string) =>
@@ -53,6 +54,7 @@ export function measure(
   data?: ResultData,
 ): MeasurementResult {
   const base = { id: def.id, unit: '', explanation: '' };
+  if ((advancedKinds as readonly string[]).includes(def.kind)) return advancedMetric(def,data,measure);
   if (!metricKinds.includes(def.kind))
     return {
       ...base,

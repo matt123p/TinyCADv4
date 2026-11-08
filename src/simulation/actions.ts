@@ -6,11 +6,11 @@ import { ControlTool } from './controlSymbols';
 export type SimulationAction =
   | { type: 'simulation/apply-tuning'; sheetId: string; overrides: Record<string, string> }
   | { type: 'simulation/insert-control'; tool: ControlTool | 'ground' }
-  | { type: 'simulation/configure-control'; config: SpiceControl }
+  | { type: 'simulation/configure-control'; config: SpiceControl; sheetId?:string; symbolId?:number }
   | { type: 'simulation/compact-control' }
   | { type: 'simulation/control-reference'; value: string }
   | { type: 'simulation/diagnostics'; documentId: string; errors: DrcError[] }
-  | { type: 'simulation/add'; name: string }
+  | { type: 'simulation/add'; name: string; preserveSelection?: boolean }
   | { type: 'simulation/duplicate'; sheetId: string }
   | { type: 'simulation/update'; sheetId: string; setup: SimulationSetup }
   | { type: 'simulation/remove-results'; ids?: string[] }

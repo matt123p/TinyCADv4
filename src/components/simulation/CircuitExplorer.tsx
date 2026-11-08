@@ -40,6 +40,7 @@ import {
 import { deriveTraces } from '../../simulation/traces';
 import { readControl, SourceConfig } from '../../simulation/controls';
 import { getResult } from '../../simulation/resultStore';
+import { instrumentFields } from '../../simulation/instruments';
 import {
   exploreOnce,
   ExplorationPoint,
@@ -49,6 +50,7 @@ import {
 import { getSession } from '../../simulation/session';
 import { download } from '../../simulation/export';
 import { Waveform } from './Waveform';
+import { AdvancedAnalysis } from './AdvancedAnalysis';
 import { setOverlayMode, overlayMode } from '../../simulation/operatingPoint';
 import {
   actionFindSelection,
@@ -136,6 +138,7 @@ export function CircuitExplorer({
     setup.sweeps?.at(-1)?.measurements || setup.measurements || [],
   );
   const [overlaySignal, setOverlaySignal] = useState('');
+  const [advancedOpened, setAdvancedOpened] = useState(false);
   const selection = useSelector((s: docDrawing) => {
     const active =
       s.docStore.present.drawing.sheets[s.docStore.present.view.selected_sheet];
@@ -440,6 +443,7 @@ export function CircuitExplorer({
               : ''),
           value: c[key as keyof SourceConfig],
         });
+    else if (c?.kind === 'instrument') properties.push(...instrumentFields(c));
     else
       for (const f of selectedTarget.symbol.text) {
         if (
@@ -579,15 +583,32 @@ export function CircuitExplorer({
     <section style={section} aria-label="Circuit Explorer">
       <strong>Circuit Explorer</strong>
       <TabList
+        style={{ flexWrap: 'wrap' }}
         size="small"
         selectedValue={tab}
-        onTabSelect={(_, d) => setTab(String(d.value))}
+        onTabSelect={(_, d) => {
+          setTab(String(d.value));
+          if (d.value === 'advanced') setAdvancedOpened(true);
+        }}
       >
         <Tab value="measure">Measurements</Tab>
         <Tab value="tune">Tune / sweep</Tab>
         <Tab value="checks">Requirements</Tab>
         <Tab value="op">DC overlay</Tab>
+        <Tab value="advanced">Analysis lab</Tab>
       </TabList>
+      {advancedOpened && (
+        <div style={{ display: tab === 'advanced' ? undefined : 'none' }}>
+          <AdvancedAnalysis
+            drawing={drawing}
+            sheet={sheet}
+            data={data}
+            run={run}
+            fresh={fresh}
+            onAcquisition={onAcquisition}
+          />
+        </div>
+      )}
       {tab === 'measure' && (
         <>
           <p style={{ fontSize: 12 }}>
@@ -653,6 +674,13 @@ export function CircuitExplorer({
                   'bandwidth',
                   'resonance',
                   'delay',
+                  'efficiency',
+                  'loss',
+                  'impedance',
+                  'groupDelay',
+                  'passbandRipple',
+                  'attenuation',
+                  'bandpassQ',
                 ].includes(def.kind) && (
                   <Field label="Input reference" size="small">
                     {selectSource(
@@ -672,14 +700,21 @@ export function CircuitExplorer({
                     />
                   ))}
                 </div>
-                {['value', 'gain', 'phase'].includes(def.kind) && (
+                {[
+                  'value',
+                  'gain',
+                  'phase',
+                  'impedance',
+                  'groupDelay',
+                  'attenuation',
+                ].includes(def.kind) && (
                   <Text
                     label="At (s or Hz; blank = start)"
                     value={def.at || ''}
                     onChange={(at) => editMetric({ ...def, at })}
                   />
                 )}
-                {['cutoff', 'bandwidth'].includes(def.kind) && (
+                {['cutoff', 'bandwidth', 'attenuation'].includes(def.kind) && (
                   <Text
                     label="Reference gain (ratio, or peak)"
                     value={def.referenceGain || '1'}

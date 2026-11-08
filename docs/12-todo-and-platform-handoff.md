@@ -145,11 +145,13 @@ Use prepared drawings with placed components carrying valid `$$SPICE` metadata. 
 
 ### Broader workbench, after the foundation is qualified
 
-- [ ] Scope, Bode, supply/generator, expanded meter and capability-backed logic-analyzer views.
-- [ ] Parameter/temperature sweep execution, trial tuning and richer run-family comparisons.
+- [x] P1 scope, guided Bode/transfer-function, supply/generator and DC/AC/resistance meter components, with bottom panels and persistent Electron instrument windows. Windows native numerical and hidden Electron DOM checks pass; installed/classroom acceptance remains separate. See [P1 models and qualification](16-virtual-laboratory-and-p1-analysis.md).
+- [x] P0 binding sweeps/trial tuning and P1 saved multi-condition/temperature test cases, run-family comparisons and reports.
+- [ ] Arbitrary nested parameter/temperature sweeps and capability-backed logic-analyser views.
 - [ ] FFT/Fourier processing with explicit sample interval, resampling/window choices and units.
 - [ ] Live/Pause/Resume only after the selected backend demonstrates safe cooperative control. Current Stop terminates the solver; label that behavior honestly.
-- [ ] Monte Carlo/corner experiments and specialist analyses, prioritized against the existing user stories.
+- [x] Seeded Monte Carlo and bounded corner experiments, with distribution assumptions, correlation groups, metrics, failures and persistent reports.
+- [ ] P2 fault injection, FFT/harmonics, optimisation and advanced noise/stability workflows. Fault injection and FFT are explicitly excluded from P1 by the user's scope decision.
 - [ ] Extend model compatibility and file-backed stimuli only with a defined, document-owned data-file boundary. Current file-backed device models are deliberately rejected.
 
 Keep the one-drawing/multi-sheet model. No project support, linked schematic documents or symbol-provider UI is added by these TODOs. The full acceptance requirements remain in [the requirements catalogue](04-requirements.md).

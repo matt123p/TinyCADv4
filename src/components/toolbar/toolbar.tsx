@@ -696,6 +696,11 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'differential-probe' })}>Insert Differential Probe</MenuItem>
             <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'current-probe' })}>Insert Current Probe</MenuItem>
             <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'controlled' })}>Insert Controlled Source</MenuItem>
+            <MenuDivider />
+            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'scope' })}>Insert Oscilloscope</MenuItem>
+            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'meter' })}>Insert Multimeter</MenuItem>
+            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'generator' })}>Insert Function Generator</MenuItem>
+            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'supply' })}>Insert Bench Supply</MenuItem>
           </MenuList></MenuPopover>
         </Menu>
         </>}

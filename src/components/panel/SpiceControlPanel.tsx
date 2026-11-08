@@ -79,7 +79,8 @@ export function SpiceControlPanel({
   drawing: dsnDrawing;
   dispatch: Dispatch<any>;
 }) {
-  const config = readControl(symbol);
+  const selectedControl = readControl(symbol);
+  const config = selectedControl?.kind === 'instrument' ? undefined : selectedControl;
   const [selectedRun, setSelectedRun] = useState('');
   const [verifiedRun, setVerifiedRun] = useState<{
     id: string;

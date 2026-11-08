@@ -6,6 +6,7 @@ import { probeResult, readControl } from './controls';
 import { symbolReference } from './bindings';
 import { ResultData, ResultVector } from './contracts';
 import { parseQuantity } from './numbers';
+import { measuredDevice } from './deviceReadings';
 import { FindResult } from '../model/dsnView';
 import { MeasurementDefinition } from './explorerTypes';
 import { TraceDefinition } from './traces';
@@ -153,7 +154,15 @@ export function resolvedSignals(
         ),
       };
       vectors.push(voltage);
+      const actual = data.scale !== 'frequency' ? measuredDevice(net,item,data) : {};
       let current = find(`${ref}#branch`) || find(`i(${ref})`);
+      current ||= actual.current;
+      if(actual.power) vectors.push({...actual.power,name:key('power')});
+      if(control?.kind==='instrument') {
+        if(control.type==='supply') {const delivered=find(`v_${ref}_sense#branch`);if(delivered)current={...delivered,real:delivered.real.map(n=>-n),imaginary:delivered.imaginary?.map(n=>-n)};}
+        else if(control.type==='generator') current=find(`v_${ref}#branch`);
+        else if(control.type==='meter'&&control.mode.endsWith('A'))current=find(`v_${ref}_sense#branch`);
+      }
       // Only ideal primitive R devices can safely use Ohm's law. Models and arbitrary templates cannot.
       const template = item.text
         .find((f) => f.description === '$$SPICE')
@@ -186,7 +195,7 @@ export function resolvedSignals(
       }
       if (current) {
         vectors.push({ ...current, name: key('current') });
-        if (data.scale !== 'frequency')
+        if (data.scale !== 'frequency' && !actual.power)
           vectors.push({
             name: key('power'),
             unit: 'W',

@@ -1,5 +1,10 @@
 # TinyCAD: Advanced Circuit Analysis Beyond Basic ngspice Simulation
 
+P1 implementation note: [Virtual laboratory and P1 analysis](16-virtual-laboratory-and-p1-analysis.md)
+documents the implemented instruments, guided response analysis, tolerance studies,
+test cases and power/stress workflows. The user's scope decision assigns fault
+injection and FFT to P2; they are not included in P1.
+
 Implementation note (8 November 2026): the first P0 slice is implemented in Circuit Explorer.
 See [the user guide and qualification scope](15-circuit-explorer.md) for tuning,
 one-variable sweeps, persistent named measurements/requirements, DC annotations,

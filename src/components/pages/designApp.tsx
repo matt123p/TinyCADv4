@@ -10,6 +10,7 @@ import SheetContainer from '../../state/containers/sheetContainer';
 import BomContainer from '../../state/containers/bomContainer';
 import SheetbarContainer from '../../state/containers/sheetbarContainer';
 import BottomPanelContainer from '../../state/containers/bottomPanelContainer';
+import { InstrumentWindowHost } from '../simulation/InstrumentWindows';
 import { ResizeHandle } from '../panel/ResizeHandle';
 import { Browser } from '../sheets/browser';
 import { tclibLibraryEntry } from '../../model/tclib';
@@ -170,6 +171,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           </div>
         </div>
         {!props.editSymbol && <ChartWorkspace />}
+        {!props.editSymbol && <InstrumentWindowHost />}
       </div>
     </div>
   );

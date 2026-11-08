@@ -51,6 +51,7 @@ export function checkSpiceComponents(
     const symbol = source[1];
     const ref = reference(source);
     const control = readControl(symbol);
+    if(!control&&symbol.text.some(f=>f.description==='$$SPICE_CONTROL'&&f.value.trim())){errors.push(componentError(source,'Invalid built-in control metadata. Edit or replace this control.'));continue;}
     if (control) {
       try { controlTemplate(control); }
       catch (error) {

@@ -28,6 +28,13 @@ await build({
     import { ChartWorkspace } from './src/components/simulation/ChartWorkspace';
     import { OperatingPointOverlay } from './src/components/simulation/OperatingPointOverlay';
     import { createTeachingDrawing } from './src/simulation/examples';
+    import { createLaboratoryDrawing } from './src/simulation/laboratoryExample';
+    import { InstrumentPanel } from './src/components/panel/InstrumentPanel';
+    import { InstrumentWindowHost } from './src/components/simulation/InstrumentWindows';
+    import { getResult,putResult } from './src/simulation/resultStore';
+    import { digest } from './src/io/dsnContainer';
+    import { buildDeck } from './src/simulation/deck';
+    import { NetlistWorkerState } from './src/web-worker/netlistState';
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     const assert = (condition, message) => { if (!condition) throw Error(message); };
     async function waitFor(test) { for(let i=0;i<100;i++){if(test())return;await delay(50);}throw Error('Chart window timed out'); }
@@ -92,7 +99,11 @@ await build({
         const send=event=>events.forEach(fn=>fn(request.runId,event));
         send({type:'ready',info:{backend:'native',buildId:'ui-fixture'}});
         const resistance=Number(/^R1\\s+\\S+\\s+\\S+\\s+(\\S+)/im.exec(request.deck)?.[1]?.replace('k','e3')||1000);
-        if(request.deck.includes('.op')){
+        if(request.deck.includes('.tran')){
+          const time=Array.from({length:1001},(_,i)=>i*.000005);
+          send({type:'vectors',names:['time','in','out','bench','vp1#branch','v_psu1_sense#branch','@r3[i]']});
+          send({type:'data',rows:time.map(t=>[t,Math.sin(2*Math.PI*1000*t),.15*Math.sin(2*Math.PI*1000*t-1.4),5,.001,.005,.005])});
+        }else if(request.deck.includes('.op')){
           send({type:'vectors',names:['in','out','v1#branch','vp1#branch']});send({type:'data',rows:[[5,2.5,-.0025,.0025]]});
         }else{
           const frequency=Array.from({length:401},(_,i)=>10*10**(i/100));
@@ -153,7 +164,44 @@ await build({
       await waitFor(()=>Array.from(document.querySelectorAll('svg text')).some(t=>t.textContent.includes('2.5 V')));
       dcStore.dispatch({type:'simulation/apply-tuning',sheetId:dcDrawing.sheets[1].id,overrides:{resistance:'2kOhm'}});
       await waitFor(()=>!document.querySelector('g[aria-label="DC operating point"]'));
-      window.chartSmoke.report({ok:true,windows:2,unitAxes:2,liveValue:7,returnedToPanel:docked,sourceWaveform:readControl(source).waveform,sourceAmplitude:readControl(source).amplitude,explorer:{temporaryTuning:true,cachedReset:true,apply:true,sweepCurves:5,metricPoints:5,restoredSweep:true,typedRequirement:checks[0].state,dcOverlay:true,staleOverlayHidden:true}});
+      const lab=createLaboratoryDrawing(),labSetup=lab.sheets[1].simulation;
+      const time=Array.from({length:1001},(_,i)=>i*.000005);
+      const labData={scale:'time',log:'',vectors:[{name:'time',unit:'s',real:time},{name:'in',unit:'V',real:time.map(t=>Math.sin(2*Math.PI*1000*t))},{name:'out',unit:'V',real:time.map(t=>.15*Math.sin(2*Math.PI*1000*t-1.4))},{name:'bench',unit:'V',real:time.map(()=>5)},{name:'v_psu1_sense#branch',unit:'A',real:time.map(()=>.005)}]};
+      const hash=await digest(new TextEncoder().encode(buildDeck(new NetlistWorkerState().init({...lab,sheets:[lab.sheets[0]]}),labSetup)+JSON.stringify(labSetup.models)));
+      const labRun={id:'lab-ui-acquisition',created:new Date().toISOString(),state:'complete',backend:'native',buildId:'ui-fixture',circuitHash:hash,setupHash:hash,analysis:{...labSetup.analysis},parameters:{},samples:time.length,pinned:false,dataState:'available'};
+      putResult(labRun.id,labData);labSetup.runs=[labRun];
+      const labInitial={...DocStoreReducer(undefined,{type:'@@INIT'}),drawing:lab};
+      const labStore=createStore((state={docStore:{present:labInitial}},action)=>({docStore:{present:DocStoreReducer(state.docStore.present,action)}}));
+      const labSymbols=lab.sheets[0].items.filter(i=>i.NodeName==='symbol'&&readControl(i)?.kind==='instrument');
+      const scopeSymbol=labSymbols.find(i=>readControl(i).type==='scope'),meterSymbol=labSymbols.find(i=>readControl(i).type==='meter');
+      const renderLab=symbol=>root.render(<Provider key="laboratory" store={labStore}><FluentProvider theme={webLightTheme} style={{height:1200}}><InstrumentPanel symbol={symbol} drawing={labStore.getState().docStore.present.drawing} dispatch={labStore.dispatch}/><InstrumentWindowHost/><ChartWorkspace/></FluentProvider></Provider>);
+      const children=[],nativeOpen=window.open;window.open=(...args)=>{const child=nativeOpen.apply(window,args);if(child)children.push(child);return child;};
+      renderLab(scopeSymbol);await waitFor(()=>!!document.querySelector('[aria-label="scope instrument"] canvas'));
+      button('Pop out instrument').click();await waitFor(()=>children.length===1 && !!children[0].document.querySelector('canvas'));
+      const scopeChart=()=>Chart.getChart(children[0].document.querySelector('canvas'));
+      await waitFor(()=>!!scopeChart());
+      assert(scopeChart().options.scales.y0.min===-4 && scopeChart().options.scales.y1.max===.4,'Independent scope volts/div settings were not applied');
+      await window.chartSmoke.capture('OSC1','instrument-scope.png');
+      renderLab(meterSymbol);await waitFor(()=>!!document.querySelector('[aria-label="meter instrument"]'));
+      assert(!children[0].closed,'Changing selection closed the scope instrument');
+      button('Pop out instrument').click();await waitFor(()=>children.length===2 && !!children[1].document.querySelector('[aria-label="Multimeter display"]'));
+      await window.chartSmoke.capture('DMM1','instrument-meter.png');
+      const timebaseLabel=Array.from(children[0].document.querySelectorAll('label')).find(l=>l.textContent==='Time / division (s)');
+      const timebase=children[0].document.getElementById(timebaseLabel.htmlFor);
+      Object.getOwnPropertyDescriptor(children[0].HTMLInputElement.prototype,'value').set.call(timebase,'2ms');timebase.dispatchEvent(new children[0].Event('input',{bubbles:true}));
+      await waitFor(()=>readControl(labStore.getState().docStore.present.drawing.sheets[0].items.find(i=>i._id===scopeSymbol._id)).timebase==='2ms');
+      assert(readControl(labStore.getState().docStore.present.drawing.sheets[0].items.find(i=>i._id===meterSymbol._id)).type==='meter','Scope popup edited the wrong symbol');
+      children[0].close();await delay(100);assert(!children[1].closed,'Closing the scope closed the meter');children[1].close();window.open=nativeOpen;
+      button('Analysis lab').click();await waitFor(()=>Array.from(document.querySelectorAll('label')).some(l=>l.textContent==='Workflow'));
+      const workflowLabel=Array.from(document.querySelectorAll('label')).find(l=>l.textContent==='Workflow'),workflowSelect=document.getElementById(workflowLabel.htmlFor);
+      assert(!Array.from(workflowSelect.options).some(o=>['fault','spectrum'].includes(o.value)),'P2 workflows leaked into P1');
+      workflowSelect.value='variation';workflowSelect.dispatchEvent(new Event('change',{bubbles:true}));
+      await waitFor(()=>!!button('Run study'));
+      const samplesLabel=Array.from(document.querySelectorAll('label')).find(l=>l.textContent==='Samples (2–100)');const samples=document.getElementById(samplesLabel.htmlFor);
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(samples,'2');samples.dispatchEvent(new Event('input',{bubbles:true}));
+      await delay(30);button('Run study').click();await waitFor(()=>labStore.getState().docStore.present.drawing.sheets[1].simulation.studyRuns?.at(-1)?.state==='complete'&&labStore.getState().docStore.present.drawing.sheets[1].simulation.studyRuns.at(-1).points.length===2);
+      assert(labStore.getState().docStore.present.drawing.sheets[1].simulation.studyRuns.at(-1).points.every(p=>p.state==='complete'),'UI tolerance study failed');
+      window.chartSmoke.report({ok:true,windows:2,unitAxes:2,liveValue:7,returnedToPanel:docked,sourceWaveform:readControl(source).waveform,sourceAmplitude:readControl(source).amplitude,explorer:{temporaryTuning:true,cachedReset:true,apply:true,sweepCurves:5,metricPoints:5,restoredSweep:true,typedRequirement:checks[0].state,dcOverlay:true,staleOverlayHidden:true},laboratory:{instrumentWindows:2,independentClosure:true,selectionPreserved:true,targetedControls:true,dualScale:true,monteCarloPoints:2,p2Excluded:true}});
     }
     verify().catch(error=>window.chartSmoke.report({ok:false,error:error.stack}));
   `,
@@ -194,7 +242,7 @@ await fs.writeFile(
 );
 await fs.writeFile(
   path.join(directory, 'preload.cjs'),
-  `const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('chartSmoke',{report:data=>ipcRenderer.send('chart-smoke',data)});`,
+  `const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('chartSmoke',{report:data=>ipcRenderer.send('chart-smoke',data),capture:(title,name)=>ipcRenderer.invoke('lab-capture',title,name)});`,
 );
 await fs.writeFile(
   path.join(directory, 'main.cjs'),
@@ -209,6 +257,7 @@ app.commandLine.appendSwitch('disable-gpu');
  )});
  await app.whenReady();
  const owner=new BrowserWindow({show:false,webPreferences:{nodeIntegration:false,contextIsolation:true,preload:path.join(__dirname,'preload.cjs')}});
+ ipcMain.handle('lab-capture',async(_event,title,name)=>{if(!['instrument-scope.png','instrument-meter.png'].includes(name))throw Error('Unexpected capture name');const instrument=BrowserWindow.getAllWindows().find(w=>w.getTitle()===title);if(!instrument)throw Error('No instrument window to capture');const png=await instrument.webContents.capturePage();require('node:fs').writeFileSync(path.join(__dirname,name),png.toPNG());});
  owner.webContents.setWindowOpenHandler(details=>{
    const allowed=chartWindowOptions(details,owner);
    return allowed?{...allowed,overrideBrowserWindowOptions:{...allowed.overrideBrowserWindowOptions,show:false}}:{action:'deny'};

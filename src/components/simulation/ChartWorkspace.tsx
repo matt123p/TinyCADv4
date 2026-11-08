@@ -321,7 +321,12 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
       try {
         let captured = running
           ? setup
-          : { ...setup, analysis: run.analysis, parameters: run.parameters };
+          : {
+              ...setup,
+              analysis: run.analysis,
+              parameters: run.parameters,
+              measurements: run.explorer?.definitions || setup.measurements,
+            };
         let capturedNet = net;
         if (
           !running &&
@@ -382,7 +387,8 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
             fresh:
               fresh &&
               !running &&
-              !Object.keys(run.explorer?.overrides || {}).length,
+              !Object.keys(run.explorer?.overrides || {}).length &&
+              !run.resistanceTest,
           }
         : undefined,
     );

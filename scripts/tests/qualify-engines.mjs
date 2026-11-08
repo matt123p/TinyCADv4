@@ -8,6 +8,21 @@ import { pathToFileURL } from 'node:url';
 
 const fixtures = [
   {
+    name: 'laboratory meter loading',
+    deck: 'V1 in 0 10\nR1 in out 1k\nRmeter out 0 1k\n.op',
+    check(names, rows) {
+      assert.ok(Math.abs(rows[0][names.indexOf('out')] - 5) < 1e-9);
+    },
+  },
+  {
+    name: 'laboratory supply current limit',
+    deck: 'Vset set 0 5\nBdrive 0 internal I={0.01*tanh((v(set)-v(internal))/(0.1*0.01))}\nVsense internal out 0\nRleak out 0 1e12\nRload out 0 100\n.op',
+    check(names, rows) {
+      assert.ok(Math.abs(rows[0][names.indexOf('out')] - 1) < 1e-6);
+      assert.ok(Math.abs(rows[0][names.indexOf('vsense#branch')] - .01) < 1e-9);
+    },
+  },
+  {
     name: 'divider',
     deck: 'V1 in 0 DC 5\nR1 in out 1k\nR2 out 0 1k\n.op',
     check(names, rows) {

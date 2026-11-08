@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, 'build/example-generator/examples.cjs');
 await build({
   stdin: {
-    contents: `export { teachingExamples, createTeachingDrawing } from './src/simulation/examples'; export { encodeDrawing } from './src/io/dsnCodec';`,
+    contents: `export { teachingExamples, createTeachingDrawing } from './src/simulation/examples'; export { createLaboratoryDrawing } from './src/simulation/laboratoryExample'; export { encodeDrawing } from './src/io/dsnCodec';`,
     resolveDir: root,
   },
   bundle: true,
@@ -38,7 +38,7 @@ await build({
     },
   ],
 });
-const { teachingExamples, createTeachingDrawing, encodeDrawing } =
+const { teachingExamples, createTeachingDrawing, createLaboratoryDrawing, encodeDrawing } =
   createRequire(import.meta.url)(output);
 // Text-layout caches need a canvas while constructing editor components; they
 // are not serialized. Fixture generation only needs deterministic font metrics.
@@ -63,3 +63,5 @@ for (const name of teachingExamples) {
   );
   console.log(`Generated examples/simulation/${name}.dzn`);
 }
+await fs.writeFile(path.join(root,'examples/simulation/virtual-laboratory.dzn'),await encodeDrawing(createLaboratoryDrawing()));
+console.log('Generated examples/simulation/virtual-laboratory.dzn');

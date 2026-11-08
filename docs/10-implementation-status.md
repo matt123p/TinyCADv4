@@ -6,6 +6,8 @@ Simulation lives in the existing drawing: use **Simulate** to add a sheet. Run a
 
 ## Implemented
 
+- P1 virtual instruments are schematic components with instrument-style bottom panels: two-channel differential scope, loading-aware DC/AC meter and separate unpowered resistance test, function generator and soft-current-limited bench supply. Electron scope/meter windows persist across selection and target their own components. Analysis lab adds guided AC/transfer-function metrics, seeded Monte Carlo/corner studies, saved multi-condition test suites and power/stress checks. Definitions, conditions and study history persist; failures remain explicit. See [P1 scope, models and qualification](16-virtual-laboratory-and-p1-analysis.md). Fault injection and FFT remain P2 by explicit scope decision.
+
 - Circuit Explorer implements the first P0 advanced-analysis slice: session-only tuning overrides with Reset/Undo/Apply and debounced reruns, numeric property/source/parameter bindings, preferred-value sliders, cancellable one-variable sweeps, persistent sweep groups, overlaid curves and metric-versus-parameter plots. Named time-weighted/transient/complex-AC measurements and typed requirements persist with the setup; runs capture definitions, results, units and provenance. Fresh DC voltage/current/power annotations use stable schematic/net mapping. See [Circuit Explorer](15-circuit-explorer.md) for semantics, bounds and automated qualification.
 
 - Browser ngspice 47 runs in a fresh WASM worker per acquisition. Electron runs the same upstream release through a dedicated native helper process. Neither path needs a user-installed simulator or downloads a runtime on first use.
@@ -52,6 +54,15 @@ Engine output includes the upstream source archive, licensing inventory, patches
 
 ## Verification and remaining work
 
+P1 passes 62 automated regression tests, TypeScript checking, isolated browser
+and Electron production bundles, and all 10 native/WASM numerical/parity fixtures
+on the Windows host. The two added parity fixtures cover meter loading and
+behavioural current limiting. Hidden Electron checks verify persistent scope/meter
+windows, independent closure, correct edit targets, dual channel scales,
+cursor/graticule rendering and P1 study execution. Panel PNGs are captured in
+`build/qualification/chart-windows/` for visual review. This does not replace
+installed-application or classroom acceptance.
+
 ```sh
 npm run test:simulation
 npm run test:engines       # both staged engines
@@ -71,7 +82,7 @@ gain curves, metric plots, restored sweep groups, typed requirement failures and
 immediate suppression of stale DC annotations. UI solver events in that check
 are deterministic fixtures; the separate native regression uses bundled ngspice.
 
-The feature catalogue also describes later workbench features. Bench instrument panels, general two-way schematic probe highlighting, multidimensional/Monte Carlo sweeps, FFT, Live/Pause, specialist analyses and a full localization pass remain planned. Circuit Explorer provides one-variable sweeps, operating-point overlays and navigation from named measurement/requirement evidence. Existing placed-component SPICE properties remain editable; embedded sources and probes have dedicated configuration panels. File-backed device models (including XSPICE filesource/table models) are rejected; external device data files are not part of this profile.
+The feature catalogue also describes later workbench features. General two-way schematic probe highlighting, unrestricted multidimensional sweeps, fault injection, FFT, Live/Pause, specialist analyses and a full localization pass remain planned. P1 adds bench instruments, seeded Monte Carlo and bounded corner enumeration to Circuit Explorer's one-variable sweeps, operating-point overlays and named measurement/requirement evidence. Existing placed-component SPICE properties remain editable; embedded sources and probes have dedicated configuration panels. File-backed device models (including XSPICE filesource/table models) are rejected; external device data files are not part of this profile.
 
 Automated qualification on 8 November 2026 passes all six engine jobs: WASM and native Windows x64/ARM64, macOS ARM64 and Linux x64/ARM64. Each native job passes eight numerical fixtures and 41 simulation tests without skips. Windows also passes all 46 local focused tests, native/WASM parity, typecheck, localization checks and both browser production bundles. Packaging passes Windows NSIS/AppX for both architectures, macOS ARM64 DMG, Linux x64/ARM64 Debian and x64 core24 Snap. Host-compatible packaged runtimes pass the numerical fixtures; cross-architecture payloads pass architecture and integrity checks. See the [platform handoff](12-todo-and-platform-handoff.md) for reproducible commands, build identities and CI evidence.
 

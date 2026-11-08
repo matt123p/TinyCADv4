@@ -6,6 +6,11 @@ import { updateSymbol } from '../manipulators/updateSymbol';
 import { updatePin } from '../manipulators/updatePin';
 import { updateWire } from '../manipulators/updateWire';
 import {
+  defaultInstrument,
+  instrumentNames,
+  InstrumentType,
+} from './instruments';
+import {
   CONTROL_ATTRIBUTE,
   SpiceControl,
   controlTemplate,
@@ -15,6 +20,7 @@ import {
 } from './controls';
 
 export type ControlTool =
+  | InstrumentType
   | 'source'
   | 'probe'
   | 'current-probe'
@@ -60,6 +66,7 @@ function controlPins(config: SpiceControl, scale = COMPACT_SCALE): dsnPin[] {
       which: 0,
       elec: 4,
       show_name:
+        config.kind === 'instrument' ||
         Number(number) > 2 ||
         (config.kind === 'probe' && config.mode !== 'voltage'),
       show_number: false,
@@ -67,10 +74,27 @@ function controlPins(config: SpiceControl, scale = COMPACT_SCALE): dsnPin[] {
       textData: null,
     }).post_construction();
   return [
-    pin('1', '+', [0, 0], 1),
+    pin(
+      '1',
+      config.kind === 'instrument' && config.type === 'scope' ? 'A+' : '+',
+      [0, 0],
+      1,
+    ),
     ...(config.kind === 'probe' && config.mode === 'voltage'
       ? []
-      : [pin('2', '−', [0, 160], 3)]),
+      : [
+          pin(
+            '2',
+            config.kind === 'instrument' && config.type === 'scope'
+              ? 'A−'
+              : '−',
+            [0, 160],
+            3,
+          ),
+        ]),
+    ...(config.kind === 'instrument' && config.type === 'scope'
+      ? [pin('3', 'B+', [-140, 0], 1), pin('4', 'B−', [-140, 160], 3)]
+      : []),
     ...(config.kind === 'controlled'
       ? [pin('3', 'C+', [-140, 40], 0), pin('4', 'C−', [-140, 120], 0)]
       : []),
@@ -150,6 +174,93 @@ function controlBody(
     polygon: false,
   });
   const controlled = config.kind === 'controlled';
+  if (config.kind === 'instrument') {
+    const scope = config.type === 'scope',
+      left = scope ? -140 : -40;
+    const body = [
+      line([
+        [left, 40],
+        [40, 40],
+        [40, 120],
+        [left, 120],
+        [left, 40],
+      ]),
+      line([
+        [left + 8, 50],
+        [30, 50],
+        [30, 100],
+        [left + 8, 100],
+        [left + 8, 50],
+      ]),
+    ];
+    if (config.type === 'scope' || config.type === 'generator')
+      body.push(
+        line(
+          waveformGlyph(
+            config.type === 'generator'
+              ? config.source
+              : { ...defaultSource(), waveform: 'sine' },
+            75,
+            15,
+          ).map(([x, y]) => [scope ? x - 45 : x, y]),
+        ),
+      );
+    else if (config.type === 'supply')
+      body.push(
+        line([
+          [-20, 66],
+          [20, 66],
+        ]),
+        line([
+          [-10, 79],
+          [10, 79],
+        ]),
+        line([
+          [0, 55],
+          [0, 75],
+        ]),
+      );
+    else
+      body.push(
+        line(
+          config.mode.endsWith('A')
+            ? [
+                [-18, 90],
+                [0, 60],
+                [18, 90],
+                [10, 77],
+                [-10, 77],
+              ]
+            : config.mode === 'ohm'
+            ? [
+                [-22, 90],
+                [-12, 90],
+                [-12, 80],
+                [-18, 72],
+                [-12, 60],
+                [12, 60],
+                [18, 72],
+                [12, 80],
+                [12, 90],
+                [22, 90],
+              ]
+            : [
+                [-18, 60],
+                [0, 90],
+                [18, 60],
+              ],
+        ),
+      );
+    body.push({
+      ...stroke,
+      stroked: false,
+      NodeName: DocItemTypes.Rectangle,
+      _id: nextId(),
+      point: [left * scale, 0],
+      point_b: [40 * scale, 160 * scale],
+    });
+    return body;
+  }
   const body: DocItem[] = controlled
     ? [
         line([
@@ -277,7 +388,11 @@ export function sourceDrawingItems(symbol: dsnSymbol): DocItem[] | undefined {
   ];
 }
 export function controlPrefix(config: SpiceControl) {
-  return config.kind === 'source'
+  return config.kind === 'instrument'
+    ? { scope: 'OSC', meter: 'DMM', generator: 'GEN', supply: 'PSU' }[
+        config.type
+      ]
+    : config.kind === 'source'
     ? config.type === 'voltage'
       ? 'V'
       : 'I'
@@ -336,7 +451,9 @@ export function updateControl(
     );
   }
   const name =
-    config.kind === 'probe'
+    config.kind === 'instrument'
+      ? instrumentNames[config.type]
+      : config.kind === 'probe'
       ? config.mode === 'current'
         ? 'I'
         : config.mode === 'differential'
@@ -369,6 +486,14 @@ export function updateControl(
     const variant =
       config.kind === 'probe'
         ? config.mode
+        : config.kind === 'instrument'
+        ? `${config.type}-${
+            config.type === 'generator'
+              ? config.source.waveform
+              : config.type === 'meter'
+              ? config.mode
+              : 'default'
+          }`
         : config.kind === 'source'
         ? `${config.type}-${config.waveform}`
         : config.type;
@@ -385,7 +510,10 @@ export function updateControl(
             ...outline,
             ref_point: [40 * scale, 160 * scale],
             size: [
-              (config.kind === 'controlled' ? 180 : 80) * scale,
+              (config.kind === 'controlled' ||
+              (config.kind === 'instrument' && config.type === 'scope')
+                ? 180
+                : 80) * scale,
               160 * scale,
             ],
             items: [...controlBody(config, scale), ...pins],
@@ -407,22 +535,30 @@ export function createControl(
   sheet: dsnSheet,
   drawing: dsnDrawing,
 ) {
-  const config: SpiceControl =
-    tool === 'source'
-      ? defaultSource()
-      : tool === 'controlled'
-      ? { kind: 'controlled', type: 'voltage', gain: '1' }
-      : {
-          kind: 'probe',
-          mode:
-            tool === 'current-probe'
-              ? 'current'
-              : tool === 'differential-probe'
-              ? 'differential'
-              : 'voltage',
-          invert: false,
-        };
-  const controlled = config.kind === 'controlled';
+  const config: SpiceControl = [
+    'scope',
+    'meter',
+    'generator',
+    'supply',
+  ].includes(tool)
+    ? defaultInstrument(tool as InstrumentType)
+    : tool === 'source'
+    ? defaultSource()
+    : tool === 'controlled'
+    ? { kind: 'controlled', type: 'voltage', gain: '1' }
+    : {
+        kind: 'probe',
+        mode:
+          tool === 'current-probe'
+            ? 'current'
+            : tool === 'differential-probe'
+            ? 'differential'
+            : 'voltage',
+        invert: false,
+      };
+  const controlled =
+    config.kind === 'controlled' ||
+    (config.kind === 'instrument' && config.type === 'scope');
   const scale = COMPACT_SCALE;
   const pins = controlPins(config);
   const body = controlBody(config);

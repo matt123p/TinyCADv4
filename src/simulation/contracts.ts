@@ -20,6 +20,7 @@ export interface AnalysisDefinition {
 }
 
 export interface SimulationRun {
+  resistanceTest?: import('./resistanceTest').ResistanceTest;
   explorer?: import('./explorerTypes').ExplorerSnapshot;
   id: string;
   created: string;
@@ -38,6 +39,9 @@ export interface SimulationRun {
 }
 
 export interface SimulationSetup {
+  studies?: import('./studies').StudyDefinition[];
+  studyRuns?: import('./studies').StudyRecord[];
+  testCases?: import('./studies').TestCase[];
   measurements?: import('./explorerTypes').MeasurementDefinition[];
   requirements?: import('./explorerTypes').RequirementDefinition[];
   bindings?: import('./explorerTypes').ParameterBinding[];

@@ -3,6 +3,7 @@ import { ResultData } from './contracts';
 import { parseQuantity, positiveQuantity } from './numbers';
 import { NetlistData } from '../io/netlists/netlistGenerator';
 import { spicePinLabel } from '../io/netlists/netlistSpice';
+import { InstrumentConfig, instrumentTemplate, isInstrumentConfig } from './instruments';
 
 export type WaveShape =
   | 'dc'
@@ -49,7 +50,7 @@ export interface ControlledConfig {
   type: 'voltage' | 'current';
   gain: string;
 }
-export type SpiceControl = SourceConfig | ProbeConfig | ControlledConfig;
+export type SpiceControl = SourceConfig | ProbeConfig | ControlledConfig | InstrumentConfig;
 export const CONTROL_ATTRIBUTE = '$$SPICE_CONTROL';
 export const defaultSource = (): SourceConfig => ({
   kind: 'source',
@@ -85,7 +86,8 @@ export function readControl(symbol: dsnSymbol): SpiceControl | undefined {
   if (!text) return;
   try {
     const value = JSON.parse(text);
-    if (value && ['source', 'probe', 'controlled'].includes(value.kind))
+    if(value?.kind==='instrument'&&!isInstrumentConfig(value))return;
+    if (value && ['source', 'probe', 'controlled', 'instrument'].includes(value.kind))
       return value;
   } catch {
     /* Ordinary symbols have no built-in configuration. */
@@ -247,6 +249,7 @@ export function compileSource(c: SourceConfig) {
 }
 export function controlTemplate(control: SpiceControl): string {
   switch (control.kind) {
+    case 'instrument': return instrumentTemplate(control);
     case 'source':
       return `$(ref) %(1) %(2) ${compileSource(control).statement}`;
     case 'controlled': {

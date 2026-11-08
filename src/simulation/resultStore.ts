@@ -71,6 +71,8 @@ export function activateResultDocument(documentId: string): void {
 }
 
 export function vectorUnit(name: string): string {
+  if (/\[(?:i|id|ic|ib|ie|ig|is)\]$/i.test(name)) return 'A';
+  if (/\[p\]$/i.test(name)) return 'W';
   if (/impedance/i.test(name)) return 'Ohm';
   if (/transfer_function/i.test(name)) return 'V/V';
   if (/^(?:pole|zero)\(/i.test(name)) return 'rad/s';

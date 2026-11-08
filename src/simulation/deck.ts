@@ -2,6 +2,7 @@ import { NetlistData } from '../io/netlists/netlistGenerator';
 import { writeSpice } from '../io/netlists/netlistSpice';
 import { AnalysisDefinition, SimulationSetup } from './contracts';
 import { parseQuantity, positiveQuantity } from './numbers';
+import { deviceSaveLine } from './deviceReadings';
 
 const token = (value: string) => {
   if (!/^[A-Za-z0-9_.$:#-]+$/.test(value))
@@ -168,9 +169,10 @@ export function buildDeck(
   const parameters = Object.entries(setup.parameters)
     .map(([name, value]) => `.param ${token(name)}=${parseQuantity(value)}`)
     .join('\n');
+  const savedDevices = deviceSaveLine(netlist, setup);
   const deck = `TinyCAD simulation\n${parameters}\n.temp ${parseQuantity(
     setup.analysis.temperature,
-  )}\n${body}\n${analysisCommand(setup.analysis)}\n.end\n`;
+  )}\n${body}\n${savedDevices ? savedDevices + '\n' : ''}${analysisCommand(setup.analysis)}\n.end\n`;
   for (const [name, content] of Object.entries(setup.models)) {
     if (!/^[A-Za-z0-9_-]+\.(?:lib|cir|mod)$/i.test(name))
       throw new Error(`Invalid attached model filename: ${name}`);

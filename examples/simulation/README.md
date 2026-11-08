@@ -1,5 +1,11 @@
 # Simulation teaching drawings
 
+[Virtual laboratory](virtual-laboratory.dzn) adds a wired function generator,
+two-channel oscilloscope, multimeter and current-limited bench supply, plus
+seeded tolerances and saved bench-voltage conditions. Select an instrument for
+its bottom-panel controls; Electron scopes/meters can pop out independently.
+See [the laboratory guide](../../docs/16-virtual-laboratory-and-p1-analysis.md).
+
 Each example includes saved Circuit Explorer measurements, a nominal pass/fail requirement,
 an R1 tuning control and a five-value resistance sweep definition. Use the right-hand
 chart panel's **Measurements**, **Tune / sweep**, **Requirements** and **DC overlay** tabs.

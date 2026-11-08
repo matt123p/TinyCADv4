@@ -1,7 +1,13 @@
 import { dsnDrawing } from '../model/dsnDrawing';
 import { DocItemTypes, dsnSymbol } from '../model/dsnItem';
 import { updateSymbol } from '../manipulators/updateSymbol';
-import { readControl, compileSource, SourceConfig } from './controls';
+import {
+  readControl,
+  compileSource,
+  SourceConfig,
+  controlTemplate,
+} from './controls';
+import { instrumentFields, instrumentOverride } from './instruments';
 import { updateControl } from './controlSymbols';
 import { ParameterBinding, SweepDefinition } from './explorerTypes';
 import { SimulationSetup } from './contracts';
@@ -63,6 +69,14 @@ export function bindingValue(
     return setup.parameters[binding.property];
   }
   const symbol = bindingSymbol(drawing, binding);
+  if (binding.property.startsWith('instrument:')) {
+    const c = readControl(symbol),
+      field =
+        c?.kind === 'instrument' &&
+        instrumentFields(c).find((f) => f.key === binding.property);
+    if (!field) throw new Error('Instrument parameter no longer exists.');
+    return field.value;
+  }
   if (binding.property.startsWith('source:')) {
     const key = binding.property.slice(7),
       control = readControl(symbol);
@@ -102,16 +116,22 @@ export function applyBindings(
     }
     const symbol = bindingSymbol(result, binding);
     let changed: dsnSymbol;
-    if (binding.property.startsWith('source:')) {
+    if (
+      binding.property.startsWith('source:') ||
+      binding.property.startsWith('instrument:')
+    ) {
       const control = readControl(symbol);
-      if (control?.kind !== 'source')
+      if (control?.kind !== 'source' && control?.kind !== 'instrument')
         throw new Error('Source no longer exists.');
-      const config = {
-        ...control,
-        [binding.property.slice(7)]: String(number),
-      };
-      compileSource(config);
-      changed = updateControl(symbol, config, result);
+      const config =
+        control.kind === 'instrument'
+          ? instrumentOverride(control, binding.property, String(number))
+          : {
+              ...control,
+              [binding.property.slice(7)]: String(number),
+            };
+      controlTemplate(config);
+      changed = updateControl({...symbol,text:symbol.text.map(f=>({...f,position:[...f.position]}))}, config, result);
       const sheet = result.sheets.find(
         (s) => (s.id || s.name) === binding.sheet,
       );

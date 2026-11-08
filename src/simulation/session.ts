@@ -64,6 +64,7 @@ export async function runSimulation(
   exploration?: {
     overrides: Record<string, string>;
     settled?: (run?: SimulationRun) => void;
+    resistanceTest?: SimulationRun['resistanceTest'];
   },
 ): Promise<void> {
   if (active)
@@ -151,6 +152,7 @@ export async function runSimulation(
       samples: 0,
       pinned: false,
       dataState: 'not-retained',
+      ...(exploration?.resistanceTest ? { resistanceTest: structuredClone(exploration.resistanceTest) } : {}),
     };
     const finish = (event: Extract<EngineEvent, { type: 'finished' }>) => {
       if (finished) return;

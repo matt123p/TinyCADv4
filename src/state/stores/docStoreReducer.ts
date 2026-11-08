@@ -2,6 +2,7 @@ import { createSimulationSheet, withoutResults } from '../../simulation/document
 import { createControl, updateControl, compactControl } from '../../simulation/controlSymbols';
 import { updatePower } from '../../manipulators/updatePower';
 import { applyBindings } from '../../simulation/bindings';
+import { dsnSymbol } from '../../model/dsnItem';
 import { updateSymbol } from '../../manipulators/updateSymbol';
 import {
   actionSelectPanel,
@@ -175,10 +176,10 @@ export function DocStoreReducer(
       drawing: { ...state.drawing, sheets: state.drawing.sheets.map((s, i) => i === index ? sheet : s) } };
   }
   if (action.type === 'simulation/configure-control' || action.type === 'simulation/compact-control' || action.type === 'simulation/control-reference') {
-    const sheet = activeSheet(state);
+    const sheet = action.type==='simulation/configure-control'&&action.sheetId ? state.drawing.sheets.find(s=>s.id===action.sheetId) : activeSheet(state);
     if (!sheet || sheet.kind === 'simulation' || state.editSymbol) return state;
     const updater = new updateView();
-    const selected = updater.getSelectedSymbol(state.view, sheet);
+    const selected = action.type==='simulation/configure-control'&&action.symbolId!==undefined ? sheet.items.find((i):i is dsnSymbol=>i.NodeName===DocItemTypes.Symbol&&i._id===action.symbolId) : updater.getSelectedSymbol(state.view, sheet);
     const symbol = selected || (state.view.add?.NodeName === DocItemTypes.Symbol ? state.view.add : undefined);
     if (!symbol) return state;
     const edited = action.type === 'simulation/compact-control'
@@ -218,8 +219,8 @@ export function DocStoreReducer(
     let name = requestedName, suffix = 2;
     while (state.drawing.sheets.some(sheet => sheet.name === name)) name = `${requestedName} (${suffix++})`;
     const added = createSimulationSheet(source || state.drawing.sheets.find(s => s.kind !== 'simulation') || blank().sheets[0], name);
-    if (source) added.simulation = { ...source.simulation, runs: [], ...(source.simulation.sweeps ? { sweeps: [] } : {}) };
-    return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, sheets: [...state.drawing.sheets, added] }, view: { ...state.view, selected_sheet: state.drawing.sheets.length, _selected_array: [], add: null } };
+    if (source) added.simulation = { ...source.simulation, runs: [], ...(source.simulation.sweeps ? { sweeps: [] } : {}), ...(source.simulation.studyRuns ? { studyRuns: [] } : {}) };
+    return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, sheets: [...state.drawing.sheets, added] }, view: action.type === 'simulation/add' && action.preserveSelection ? state.view : { ...state.view, selected_sheet: state.drawing.sheets.length, _selected_array: [], add: null } };
   }
   if (action.type === 'simulation/update') return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, sheets: state.drawing.sheets.map(s => s.id === action.sheetId && s.kind === 'simulation' ? { ...s, simulation: action.setup } : s) } };
   if (action.type === 'simulation/remove-results') return { ...state, drawingVersion: state.drawingVersion + 1, drawing: withoutResults(state.drawing, action.ids) };

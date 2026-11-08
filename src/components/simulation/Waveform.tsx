@@ -46,6 +46,8 @@ export function Waveform({
   overlays,
   evidence,
   initialMode = 'real',
+  channelScales,
+  showCursors = false,
 }: {
   data: ResultData;
   signals: string[];
@@ -54,6 +56,11 @@ export function Waveform({
   overlays?: { label: string; data: ResultData }[];
   evidence?: { from: number; to: number };
   initialMode?: DisplayMode;
+  channelScales?: Record<
+    string,
+    { scale: number; offset: number; color: string }
+  >;
+  showCursors?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const chart = useRef<Chart<'line'>>();
@@ -64,6 +71,8 @@ export function Waveform({
   const [axisLabels, setAxisLabels] = useState<Record<string, string>>({});
   const [cursor, setCursor] = useState(0),
     [second, setSecond] = useState(0);
+  const cursorMarkers = useRef({ a: 0, b: 0 });
+  cursorMarkers.current = { a: cursor, b: second };
   const selected = useMemo(
     () =>
       data.vectors.filter(
@@ -73,7 +82,9 @@ export function Waveform({
       ),
     [data, signals],
   );
-  const units = [...new Set(selected.map((v) => displayUnit(v, mode)))];
+  const axisKey = (v: ResultData['vectors'][number]) =>
+    channelScales?.[v.name] ? v.name : displayUnit(v, mode);
+  const units = [...new Set(selected.map(axisKey))];
   const scale = data.vectors.find((v) => v.name === data.scale);
   const count = scale?.real.length || selected[0]?.real.length || 0;
   const xLabel =
@@ -114,8 +125,9 @@ export function Waveform({
       instance.update('none');
     };
     selected.forEach((v, index) => {
-      const axis = `y${units.indexOf(displayUnit(v, mode))}`;
-      const color = colors[index % colors.length];
+      const axis = `y${units.indexOf(axisKey(v))}`;
+      const color =
+        channelScales?.[v.name]?.color || colors[index % colors.length];
       append(
         {
           label: `${signalLabel(v.name)} (${displayUnit(v, mode)})`,
@@ -157,7 +169,7 @@ export function Waveform({
           append(
             {
               label: `${overlay.label} · ${signalLabel(v.name)}`,
-              yAxisID: `y${units.indexOf(displayUnit(v, mode))}`,
+              yAxisID: `y${units.indexOf(axisKey(v))}`,
               data: [],
               borderColor: colors[(index + 1) % colors.length],
               borderWidth: 1,
@@ -171,37 +183,121 @@ export function Waveform({
     const scales: ChartOptions<'line'>['scales'] = {
       x: {
         type: logX ? 'logarithmic' : 'linear',
-        title: { display: true, text: axisLabels.x || xLabel },
-        grid: { display: grid },
-        ticks: { maxTicksLimit: 10 },
+        title: {
+          display: true,
+          text:
+            axisLabels.x || (channelScales ? 'Time from trigger (ms)' : xLabel),
+          ...(channelScales ? { color: '#dbeaf4' } : {}),
+        },
+        grid: {
+          display: grid,
+          ...(channelScales ? { color: 'rgba(210,230,245,.15)' } : {}),
+        },
+        ticks: {
+          maxTicksLimit: 10,
+          ...(channelScales ? { color: '#dbeaf4' } : {}),
+        },
+        ...(channelScales
+          ? {
+              afterBuildTicks: (scale) => {
+                scale.ticks = Array.from({ length: 11 }, (_, i) => ({
+                  value: scale.min + ((scale.max - scale.min) * i) / 10,
+                }));
+              },
+              ticks: {
+                autoSkip: false,
+                maxRotation: 0,
+                minRotation: 0,
+                callback: (value, index) =>
+                  index % 2
+                    ? ''
+                    : (
+                        (Number(value) - (evidence?.from || 0)) *
+                        1000
+                      ).toPrecision(3),
+                color: '#dbeaf4',
+              },
+            }
+          : {}),
         ...(evidence ? { min: evidence.from, max: evidence.to } : {}),
       },
     };
     units.forEach((unit, index) => {
+      const channel = channelScales?.[unit];
       scales[`y${index}`] = {
+        ...(channel
+          ? {
+              min: channel.offset - 4 * channel.scale,
+              max: channel.offset + 4 * channel.scale,
+            }
+          : {}),
         type: 'linear',
         axis: 'y',
         position: index % 2 ? 'right' : 'left',
         title: {
           display: true,
-          text:
-            axisLabels[unit] ||
-            {
-              V: 'Voltage (V)',
-              A: 'Current (A)',
-              W: 'Power (W)',
-              '°': 'Phase (°)',
-              dB: 'Magnitude (dB)',
-            }[unit] ||
-            unit,
+          ...(channel ? { color: channel.color } : {}),
+          text: channel
+            ? `${unit} (V)`
+            : axisLabels[unit] ||
+              {
+                V: 'Voltage (V)',
+                A: 'Current (A)',
+                W: 'Power (W)',
+                '°': 'Phase (°)',
+                dB: 'Magnitude (dB)',
+              }[unit] ||
+              unit,
         },
-        grid: { display: grid, drawOnChartArea: index === 0 },
-        ticks: { maxTicksLimit: compact ? 5 : 8 },
+        grid: {
+          display: grid,
+          drawOnChartArea: index === 0,
+          ...(channel ? { color: 'rgba(210,230,245,.15)' } : {}),
+        },
+        ticks: {
+          maxTicksLimit: channel ? 9 : compact ? 5 : 8,
+          ...(channel ? { stepSize: channel.scale, color: channel.color } : {}),
+          ...(channel ? { autoSkip: false } : {}),
+        },
       };
     });
     const instance = new Chart(canvas.current, {
       type: 'line',
       data: { datasets },
+      plugins: showCursors
+        ? [
+            {
+              id: 'instrument-cursors',
+              afterDraw(instance) {
+                const { ctx, chartArea } = instance;
+                if (!chartArea || !scale) return;
+                [cursorMarkers.current.a, cursorMarkers.current.b].forEach(
+                  (sample, i) => {
+                    const time = scale.real[sample];
+                    if (time === undefined) return;
+                    const x = instance.scales.x.getPixelForValue(time);
+                    if (x < chartArea.left || x > chartArea.right) return;
+                    ctx.save();
+                    ctx.strokeStyle = i ? '#7fe3bf' : '#efefef';
+                    ctx.fillStyle = ctx.strokeStyle;
+                    ctx.setLineDash([4, 3]);
+                    ctx.beginPath();
+                    ctx.moveTo(x, chartArea.top);
+                    ctx.lineTo(x, chartArea.bottom);
+                    ctx.stroke();
+                    ctx.font = '10px Segoe UI';
+                    ctx.fillText(
+                      `Cursor ${i ? 'B' : 'A'}`,
+                      Math.min(x + 3, chartArea.right - 48),
+                      chartArea.top + 11 + i * 12,
+                    );
+                    ctx.restore();
+                  },
+                );
+              },
+            },
+          ]
+        : [],
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -214,7 +310,11 @@ export function Waveform({
           legend: {
             display: true,
             position: 'top',
-            labels: { boxWidth: 16, font: { family: 'Segoe UI, sans-serif' } },
+            labels: {
+              boxWidth: 16,
+              font: { family: 'Segoe UI, sans-serif' },
+              ...(channelScales ? { color: '#dbeaf4' } : {}),
+            },
           },
           tooltip: {
             callbacks: {
@@ -224,15 +324,15 @@ export function Waveform({
           },
           zoom: {
             pan: {
-              enabled: true,
+              enabled: !channelScales,
               mode: 'x',
               onPanComplete: detail,
               onPan: detail,
             },
             zoom: {
-              wheel: { enabled: true },
-              pinch: { enabled: true },
-              drag: { enabled: true, modifierKey: 'shift' },
+              wheel: { enabled: !channelScales },
+              pinch: { enabled: !channelScales },
+              drag: { enabled: !channelScales, modifierKey: 'shift' },
               mode: 'x',
               onZoomComplete: detail,
               onZoom: ({ chart, trigger }) => {
@@ -264,7 +364,27 @@ export function Waveform({
     grid,
     axisLabels,
     compact,
+    channelScales,
+    showCursors,
   ]);
+  useEffect(() => {
+    chart.current?.draw?.();
+  }, [cursor, second]);
+  useEffect(() => {
+    if (showCursors && scale?.real.length) {
+      const first = Math.max(
+        0,
+        scale.real.findIndex((n) => n >= (evidence?.from ?? scale.real[0])),
+      );
+      setCursor(first);
+      setSecond(
+        Math.min(
+          scale.real.length - 1,
+          first + Math.max(1, Math.floor(scale.real.length / 10)),
+        ),
+      );
+    }
+  }, [scale?.real, showCursors]);
 
   return (
     <div style={{ minWidth: 0 }}>
@@ -284,15 +404,19 @@ export function Waveform({
             </Select>
           </Field>
         )}
-        <Button size="small" onClick={() => chart.current?.resetZoom()}>
-          Fit
-        </Button>
-        <Button size="small" onClick={() => chart.current?.zoom(1.5)}>
-          Zoom in
-        </Button>
-        <Button size="small" onClick={() => chart.current?.zoom(1 / 1.5)}>
-          Zoom out
-        </Button>
+        {!channelScales && (
+          <>
+            <Button size="small" onClick={() => chart.current?.resetZoom()}>
+              Fit
+            </Button>
+            <Button size="small" onClick={() => chart.current?.zoom(1.5)}>
+              Zoom in
+            </Button>
+            <Button size="small" onClick={() => chart.current?.zoom(1 / 1.5)}>
+              Zoom out
+            </Button>
+          </>
+        )}
         <Button
           size="small"
           onClick={() =>
@@ -340,58 +464,65 @@ export function Waveform({
           aria-label="Simulation chart. Use the controls to zoom and pan, or download CSV for all samples."
         />
       </div>
-      {!compact && (
+      {(!compact || showCursors) && (
         <>
-          <div style={row}>
-            <span>
-              Wheel or pinch to zoom · Drag to pan · Shift-drag to zoom a region
-              · Click legend to hide a trace
-            </span>
-            <Button size="small" onClick={() => chart.current?.pan({ x: 100 })}>
-              Scroll left
-            </Button>
-            <Button
-              size="small"
-              onClick={() => chart.current?.pan({ x: -100 })}
-            >
-              Scroll right
-            </Button>
-          </div>
+          {!channelScales && (
+            <div style={row}>
+              <span>
+                Wheel or pinch to zoom · Drag to pan · Shift-drag to zoom a
+                region · Click legend to hide a trace
+              </span>
+              <Button
+                size="small"
+                onClick={() => chart.current?.pan({ x: 100 })}
+              >
+                Scroll left
+              </Button>
+              <Button
+                size="small"
+                onClick={() => chart.current?.pan({ x: -100 })}
+              >
+                Scroll right
+              </Button>
+            </div>
+          )}
           <details style={{ marginTop: 8 }}>
             <summary>Chart options and cursors</summary>
-            <div style={row}>
-              <Checkbox
-                label="Logarithmic horizontal axis"
-                checked={logX}
-                onChange={(_, d) => setLogX(!!d.checked)}
-              />
-              <Checkbox
-                label="Grid"
-                checked={grid}
-                onChange={(_, d) => setGrid(!!d.checked)}
-              />
-              <Field label="Horizontal axis" size="small">
-                <Input
-                  size="small"
-                  value={axisLabels.x ?? xLabel}
-                  onChange={(_, d) =>
-                    setAxisLabels({ ...axisLabels, x: d.value })
-                  }
+            {!channelScales && (
+              <div style={row}>
+                <Checkbox
+                  label="Logarithmic horizontal axis"
+                  checked={logX}
+                  onChange={(_, d) => setLogX(!!d.checked)}
                 />
-              </Field>
-              {units.map((unit) => (
-                <Field key={unit} label={`${unit} axis label`} size="small">
+                <Checkbox
+                  label="Grid"
+                  checked={grid}
+                  onChange={(_, d) => setGrid(!!d.checked)}
+                />
+                <Field label="Horizontal axis" size="small">
                   <Input
                     size="small"
-                    value={axisLabels[unit] ?? ''}
-                    placeholder={`Automatic (${unit})`}
+                    value={axisLabels.x ?? xLabel}
                     onChange={(_, d) =>
-                      setAxisLabels({ ...axisLabels, [unit]: d.value })
+                      setAxisLabels({ ...axisLabels, x: d.value })
                     }
                   />
                 </Field>
-              ))}
-            </div>
+                {units.map((unit) => (
+                  <Field key={unit} label={`${unit} axis label`} size="small">
+                    <Input
+                      size="small"
+                      value={axisLabels[unit] ?? ''}
+                      placeholder={`Automatic (${unit})`}
+                      onChange={(_, d) =>
+                        setAxisLabels({ ...axisLabels, [unit]: d.value })
+                      }
+                    />
+                  </Field>
+                ))}
+              </div>
+            )}
             {count > 0 && (
               <>
                 <label>

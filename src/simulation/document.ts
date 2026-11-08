@@ -2,6 +2,7 @@ import { dsnDrawing, dsnSheet } from '../model/dsnDrawing';
 import { defaultSetup, newIdentity, SimulationSetup } from './contracts';
 import { getResult, resultBytes } from './resultStore';
 import { validateExplorer, validateSnapshot } from './explorerValidation';
+import { validateStudies } from './studyValidation';
 
 export function isSimulationSheet(sheet: dsnSheet): boolean {
   return sheet?.kind === 'simulation';
@@ -105,6 +106,7 @@ export function validateSetup(value: unknown): SimulationSetup {
       throw new Error('Invalid saved simulation run.');
   }
   validateExplorer(setup);
+  validateStudies(setup);
   return { ...defaultSetup(), ...setup };
 }
 
