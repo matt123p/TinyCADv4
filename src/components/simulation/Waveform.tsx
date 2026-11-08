@@ -7,7 +7,24 @@ import {
   Field,
   Input,
   Select,
+  Menu,
+  MenuTrigger,
+  MenuPopover,
+  MenuList,
+  MenuItem,
 } from '@fluentui/react-components';
+import {
+  ZoomInRegular,
+  ZoomOutRegular,
+  ZoomFitRegular,
+  SearchRegular,
+  MoreHorizontalRegular,
+  ArrowDownloadRegular,
+  ImageRegular,
+  OptionsRegular,
+  ArrowLeftRegular,
+  ArrowRightRegular,
+} from '@fluentui/react-icons';
 import { ResultData } from '../../simulation/contracts';
 import { csv, download } from '../../simulation/export';
 import { signalLabel } from '../../simulation/signals';
@@ -38,9 +55,35 @@ const number = (n: number) =>
     ? n.toLocaleString(undefined, { maximumSignificantDigits: 6 })
     : '—';
 
+export interface WaveformPreferences {
+  mode: DisplayMode;
+  logX: boolean;
+  grid: boolean;
+  axisLabels: Record<string, string>;
+  cursor: number;
+  second: number;
+}
+
+function usePreference<K extends keyof WaveformPreferences>(
+  key: K,
+  initial: WaveformPreferences[K],
+  preferences: Partial<WaveformPreferences>,
+  change?: React.Dispatch<React.SetStateAction<Partial<WaveformPreferences>>>,
+): [WaveformPreferences[K], (value: WaveformPreferences[K]) => void] {
+  const [local, setLocal] = useState(initial);
+  return [
+    (preferences?.[key] ?? local) as WaveformPreferences[K],
+    (value) => {
+      setLocal(value);
+      change?.((current) => ({ ...current, [key]: value }));
+    },
+  ];
+}
+
 export function Waveform({
   data,
   signals,
+  emptyMeansAll = true,
   baseline,
   compact = false,
   overlays,
@@ -48,9 +91,15 @@ export function Waveform({
   initialMode = 'real',
   channelScales,
   showCursors = false,
+  preferences,
+  onPreferencesChange,
+  viewportRef,
+  signalLabels,
+  fillHeight = false,
 }: {
   data: ResultData;
   signals: string[];
+  emptyMeansAll?: boolean;
   baseline?: ResultData;
   compact?: boolean;
   overlays?: { label: string; data: ResultData }[];
@@ -61,16 +110,54 @@ export function Waveform({
     { scale: number; offset: number; color: string }
   >;
   showCursors?: boolean;
+  preferences?: Partial<WaveformPreferences>;
+  onPreferencesChange?: React.Dispatch<
+    React.SetStateAction<Partial<WaveformPreferences>>
+  >;
+  viewportRef?: React.MutableRefObject<{ min: number; max: number }>;
+  signalLabels?: Record<string, string>;
+  fillHeight?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const chart = useRef<Chart<'line'>>();
-  const viewport = useRef<{ min: number; max: number }>();
-  const [mode, setMode] = useState<DisplayMode>(initialMode);
-  const [logX, setLogX] = useState(data.scale === 'frequency');
-  const [grid, setGrid] = useState(true);
-  const [axisLabels, setAxisLabels] = useState<Record<string, string>>({});
-  const [cursor, setCursor] = useState(0),
-    [second, setSecond] = useState(0);
+  const localViewport = useRef<{ min: number; max: number }>();
+  const viewport = viewportRef || localViewport;
+  const [mode, setMode] = usePreference(
+    'mode',
+    initialMode,
+    preferences,
+    onPreferencesChange,
+  );
+  const [logX, setLogX] = usePreference(
+    'logX',
+    data.scale === 'frequency',
+    preferences,
+    onPreferencesChange,
+  );
+  const [grid, setGrid] = usePreference(
+    'grid',
+    true,
+    preferences,
+    onPreferencesChange,
+  );
+  const [axisLabels, setAxisLabels] = usePreference(
+    'axisLabels',
+    {},
+    preferences,
+    onPreferencesChange,
+  );
+  const [cursor, setCursor] = usePreference(
+      'cursor',
+      0,
+      preferences,
+      onPreferencesChange,
+    ),
+    [second, setSecond] = usePreference(
+      'second',
+      0,
+      preferences,
+      onPreferencesChange,
+    );
   const cursorMarkers = useRef({ a: 0, b: 0 });
   cursorMarkers.current = { a: cursor, b: second };
   const selected = useMemo(
@@ -78,9 +165,9 @@ export function Waveform({
       data.vectors.filter(
         (v) =>
           v.name !== data.scale &&
-          (!signals.length || signals.includes(v.name)),
+          ((emptyMeansAll && !signals.length) || signals.includes(v.name)),
       ),
-    [data, signals],
+    [data, signals, emptyMeansAll],
   );
   const axisKey = (v: ResultData['vectors'][number]) =>
     channelScales?.[v.name] ? v.name : displayUnit(v, mode);
@@ -130,7 +217,9 @@ export function Waveform({
         channelScales?.[v.name]?.color || colors[index % colors.length];
       append(
         {
-          label: `${signalLabel(v.name)} (${displayUnit(v, mode)})`,
+          label: `${
+            signalLabels?.[v.name] || signalLabel(v.name)
+          } (${displayUnit(v, mode)})`,
           yAxisID: axis,
           data: [],
           borderColor: color,
@@ -148,7 +237,9 @@ export function Waveform({
       if (previous)
         append(
           {
-            label: `${signalLabel(v.name)} baseline (${displayUnit(v, mode)})`,
+            label: `${
+              signalLabels?.[v.name] || signalLabel(v.name)
+            } baseline (${displayUnit(v, mode)})`,
             yAxisID: axis,
             data: [],
             borderColor: color,
@@ -168,7 +259,9 @@ export function Waveform({
         if (source && overlay.data.scale === data.scale)
           append(
             {
-              label: `${overlay.label} · ${signalLabel(v.name)}`,
+              label: `${overlay.label} · ${
+                signalLabels?.[v.name] || signalLabel(v.name)
+              }`,
               yAxisID: `y${units.indexOf(axisKey(v))}`,
               data: [],
               borderColor: colors[(index + 1) % colors.length],
@@ -346,7 +439,15 @@ export function Waveform({
     if (viewport.current && !evidence)
       instance.zoomScale('x', viewport.current, 'none');
     chart.current = instance;
+    // The chart library's observer schedules work on the main window. Popup
+    // windows also need their own resize event, including while the owner is idle.
+    const owner = fillHeight
+      ? canvas.current.ownerDocument.defaultView
+      : undefined;
+    const resize = () => instance.resize();
+    owner?.addEventListener('resize', resize);
     return () => {
+      owner?.removeEventListener('resize', resize);
       viewport.current = instance.isZoomedOrPanned?.()
         ? { min: instance.scales.x.min, max: instance.scales.x.max }
         : undefined;
@@ -366,6 +467,8 @@ export function Waveform({
     compact,
     channelScales,
     showCursors,
+    signalLabels,
+    fillHeight,
   ]);
   useEffect(() => {
     chart.current?.draw?.();
@@ -387,190 +490,261 @@ export function Waveform({
   }, [scale?.real, showCursors]);
 
   return (
-    <div style={{ minWidth: 0 }}>
-      <div style={row}>
-        {(!compact ||
-          selected.some((v) => v.imaginary?.some((n) => n !== 0))) && (
-          <Field label="Display" orientation="horizontal" size="small">
-            <Select
-              size="small"
-              value={mode}
-              onChange={(_, d) => setMode(d.value as DisplayMode)}
-            >
-              <option value="real">Real</option>
-              <option value="magnitude">Magnitude</option>
-              <option value="db">Magnitude (dB)</option>
-              <option value="phase">Phase (°)</option>
-            </Select>
-          </Field>
-        )}
+    <div
+      style={{
+        minWidth: 0,
+        ...(fillHeight
+          ? ({
+              display: 'flex',
+              flexDirection: 'column',
+              flex: '1 1 0',
+              minHeight: 0,
+            } as React.CSSProperties)
+          : {}),
+      }}
+    >
+      <div style={{ ...row, justifyContent: 'flex-end', flexShrink: 0 }}>
         {!channelScales && (
-          <>
-            <Button size="small" onClick={() => chart.current?.resetZoom()}>
-              Fit
-            </Button>
-            <Button size="small" onClick={() => chart.current?.zoom(1.5)}>
-              Zoom in
-            </Button>
-            <Button size="small" onClick={() => chart.current?.zoom(1 / 1.5)}>
-              Zoom out
-            </Button>
-          </>
+          <Menu>
+            <MenuTrigger disableButtonEnhancement>
+              <Button
+                size="small"
+                appearance="subtle"
+                icon={<SearchRegular />}
+                aria-label="Zoom"
+                title="Zoom"
+              />
+            </MenuTrigger>
+            <MenuPopover>
+              <MenuList>
+                <MenuItem
+                  icon={<ZoomFitRegular />}
+                  onClick={() => chart.current?.resetZoom()}
+                >
+                  Fit
+                </MenuItem>
+                <MenuItem
+                  icon={<ZoomInRegular />}
+                  onClick={() => chart.current?.zoom(1.5)}
+                >
+                  Zoom in
+                </MenuItem>
+                <MenuItem
+                  icon={<ZoomOutRegular />}
+                  onClick={() => chart.current?.zoom(1 / 1.5)}
+                >
+                  Zoom out
+                </MenuItem>
+                <MenuItem
+                  icon={<ArrowLeftRegular />}
+                  onClick={() => chart.current?.pan({ x: 100 })}
+                >
+                  Scroll left
+                </MenuItem>
+                <MenuItem
+                  icon={<ArrowRightRegular />}
+                  onClick={() => chart.current?.pan({ x: -100 })}
+                >
+                  Scroll right
+                </MenuItem>
+              </MenuList>
+            </MenuPopover>
+          </Menu>
         )}
-        <Button
-          size="small"
-          onClick={() =>
-            download(
-              'simulation.csv',
-              csv({
-                ...data,
-                vectors: [...(scale ? [scale] : []), ...selected],
-              }),
-              'text/csv;charset=utf-8',
-            )
-          }
-        >
-          Download CSV
-        </Button>
-        {!compact && (
-          <Button
-            size="small"
-            onClick={() =>
-              canvas.current?.toBlob((blob) => {
-                if (!blob) return;
-                const link = document.createElement('a'),
-                  url = URL.createObjectURL(blob);
-                link.href = url;
-                link.download = 'simulation.png';
-                link.click();
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-              })
-            }
-          >
-            Download image
-          </Button>
-        )}
+        <Menu>
+          <MenuTrigger disableButtonEnhancement>
+            <Button
+              size="small"
+              appearance="subtle"
+              icon={<MoreHorizontalRegular />}
+              aria-label="Chart menu"
+              title="Chart menu"
+            />
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              <Menu>
+                <MenuTrigger disableButtonEnhancement>
+                  <MenuItem icon={<OptionsRegular />}>
+                    Chart options and cursors
+                  </MenuItem>
+                </MenuTrigger>
+                <MenuPopover>
+                  <div
+                    role="group"
+                    aria-label="Chart options and cursors"
+                    style={{
+                      padding: 12,
+                      width: 320,
+                      maxHeight: '70vh',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    <Field label="Display" size="small">
+                      <Select
+                        size="small"
+                        value={mode}
+                        onChange={(_, d) => setMode(d.value as DisplayMode)}
+                      >
+                        <option value="real">Real</option>
+                        <option value="magnitude">Magnitude</option>
+                        <option value="db">Magnitude (dB)</option>
+                        <option value="phase">Phase (°)</option>
+                      </Select>
+                    </Field>
+
+                    {!channelScales && (
+                      <div style={row}>
+                        <Checkbox
+                          label="Logarithmic horizontal axis"
+                          checked={logX}
+                          onChange={(_, d) => setLogX(!!d.checked)}
+                        />
+                        <Checkbox
+                          label="Grid"
+                          checked={grid}
+                          onChange={(_, d) => setGrid(!!d.checked)}
+                        />
+                        <Field label="Horizontal axis" size="small">
+                          <Input
+                            size="small"
+                            value={axisLabels.x ?? xLabel}
+                            onChange={(_, d) =>
+                              setAxisLabels({ ...axisLabels, x: d.value })
+                            }
+                          />
+                        </Field>
+                        {units.map((unit) => (
+                          <Field
+                            key={unit}
+                            label={`${unit} axis label`}
+                            size="small"
+                          >
+                            <Input
+                              size="small"
+                              value={axisLabels[unit] ?? ''}
+                              placeholder={`Automatic (${unit})`}
+                              onChange={(_, d) =>
+                                setAxisLabels({
+                                  ...axisLabels,
+                                  [unit]: d.value,
+                                })
+                              }
+                            />
+                          </Field>
+                        ))}
+                      </div>
+                    )}
+                    {count > 0 && (
+                      <>
+                        <label>
+                          Cursor A{' '}
+                          <input
+                            type="range"
+                            min={0}
+                            max={count - 1}
+                            value={cursor}
+                            onChange={(e) => setCursor(Number(e.target.value))}
+                          />
+                        </label>
+                        <label>
+                          Cursor B{' '}
+                          <input
+                            type="range"
+                            min={0}
+                            max={count - 1}
+                            value={second}
+                            onChange={(e) => setSecond(Number(e.target.value))}
+                          />
+                        </label>
+                        <div>
+                          {xLabel}: A = {number(scale?.real[cursor] ?? cursor)},
+                          B = {number(scale?.real[second] ?? second)}, Δ ={' '}
+                          {number(
+                            (scale?.real[second] ?? second) -
+                              (scale?.real[cursor] ?? cursor),
+                          )}
+                        </div>
+                        {selected.map((v) => (
+                          <div key={v.name}>
+                            {v.name}: A ={' '}
+                            {number(
+                              displayValue(
+                                v.real[cursor],
+                                v.imaginary?.[cursor],
+                                mode,
+                              ),
+                            )}
+                            , B ={' '}
+                            {number(
+                              displayValue(
+                                v.real[second],
+                                v.imaginary?.[second],
+                                mode,
+                              ),
+                            )}{' '}
+                            {displayUnit(v, mode)}
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </MenuPopover>
+              </Menu>
+              <MenuItem
+                icon={<ArrowDownloadRegular />}
+                onClick={() =>
+                  download(
+                    'simulation.csv',
+                    csv({
+                      ...data,
+                      vectors: [...(scale ? [scale] : []), ...selected],
+                    }),
+                    'text/csv;charset=utf-8',
+                  )
+                }
+              >
+                Download CSV
+              </MenuItem>
+              <MenuItem
+                icon={<ImageRegular />}
+                onClick={() =>
+                  canvas.current?.toBlob((blob) => {
+                    if (!blob) return;
+                    const link = document.createElement('a'),
+                      url = URL.createObjectURL(blob);
+                    link.href = url;
+                    link.download = 'simulation.png';
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                  })
+                }
+              >
+                Download image
+              </MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
       </div>
       <div
         style={{
           position: 'relative',
-          height: compact ? 180 : 360,
+          ...(fillHeight
+            ? { flex: '1 1 0', minHeight: 120 }
+            : { height: compact ? 180 : 360 }),
           marginTop: 8,
         }}
       >
         <canvas
           ref={canvas}
           role="img"
-          aria-label="Simulation chart. Use the controls to zoom and pan, or download CSV for all samples."
+          aria-label={`Simulation chart. Signals: ${
+            selected
+              .map((v) => signalLabels?.[v.name] || signalLabel(v.name))
+              .join(', ') || 'none selected'
+          }. Use the controls to zoom and pan, or download CSV for all samples.`}
         />
       </div>
-      {(!compact || showCursors) && (
-        <>
-          {!channelScales && (
-            <div style={row}>
-              <span>
-                Wheel or pinch to zoom · Drag to pan · Shift-drag to zoom a
-                region · Click legend to hide a trace
-              </span>
-              <Button
-                size="small"
-                onClick={() => chart.current?.pan({ x: 100 })}
-              >
-                Scroll left
-              </Button>
-              <Button
-                size="small"
-                onClick={() => chart.current?.pan({ x: -100 })}
-              >
-                Scroll right
-              </Button>
-            </div>
-          )}
-          <details style={{ marginTop: 8 }}>
-            <summary>Chart options and cursors</summary>
-            {!channelScales && (
-              <div style={row}>
-                <Checkbox
-                  label="Logarithmic horizontal axis"
-                  checked={logX}
-                  onChange={(_, d) => setLogX(!!d.checked)}
-                />
-                <Checkbox
-                  label="Grid"
-                  checked={grid}
-                  onChange={(_, d) => setGrid(!!d.checked)}
-                />
-                <Field label="Horizontal axis" size="small">
-                  <Input
-                    size="small"
-                    value={axisLabels.x ?? xLabel}
-                    onChange={(_, d) =>
-                      setAxisLabels({ ...axisLabels, x: d.value })
-                    }
-                  />
-                </Field>
-                {units.map((unit) => (
-                  <Field key={unit} label={`${unit} axis label`} size="small">
-                    <Input
-                      size="small"
-                      value={axisLabels[unit] ?? ''}
-                      placeholder={`Automatic (${unit})`}
-                      onChange={(_, d) =>
-                        setAxisLabels({ ...axisLabels, [unit]: d.value })
-                      }
-                    />
-                  </Field>
-                ))}
-              </div>
-            )}
-            {count > 0 && (
-              <>
-                <label>
-                  Cursor A{' '}
-                  <input
-                    type="range"
-                    min={0}
-                    max={count - 1}
-                    value={cursor}
-                    onChange={(e) => setCursor(Number(e.target.value))}
-                  />
-                </label>
-                <label>
-                  Cursor B{' '}
-                  <input
-                    type="range"
-                    min={0}
-                    max={count - 1}
-                    value={second}
-                    onChange={(e) => setSecond(Number(e.target.value))}
-                  />
-                </label>
-                <div>
-                  {xLabel}: A = {number(scale?.real[cursor] ?? cursor)}, B ={' '}
-                  {number(scale?.real[second] ?? second)}, Δ ={' '}
-                  {number(
-                    (scale?.real[second] ?? second) -
-                      (scale?.real[cursor] ?? cursor),
-                  )}
-                </div>
-                {selected.map((v) => (
-                  <div key={v.name}>
-                    {v.name}: A ={' '}
-                    {number(
-                      displayValue(v.real[cursor], v.imaginary?.[cursor], mode),
-                    )}
-                    , B ={' '}
-                    {number(
-                      displayValue(v.real[second], v.imaginary?.[second], mode),
-                    )}{' '}
-                    {displayUnit(v, mode)}
-                  </div>
-                ))}
-              </>
-            )}
-          </details>
-        </>
-      )}
     </div>
   );
 }

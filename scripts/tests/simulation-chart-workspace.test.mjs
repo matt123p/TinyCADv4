@@ -26,7 +26,7 @@ test('chart panel renders startup drawings without an active simulation session'
       useDispatch: () => () => {}, useStore: () => ({}),
     },
     '../../simulation/session': { getSession: () => active },
-    '../../simulation/chartWorkspace': { drawingProbes: () => [] },
+    '../../simulation/chartWorkspace': { drawingProbes: () => [], workspaceChartData: () => undefined, suggestedCharts: () => [] },
     '../../simulation/resultStore': { getResult: () => undefined },
     '../../io/drawingSaveFormat': { hasSimulation: doc => doc.simulationContent },
     '../../web-worker/netlistState': { NetlistWorkerState: class { init() { return emptyNet; } } },
@@ -46,11 +46,11 @@ test('chart panel renders startup drawings without an active simulation session'
   assert.equal(render().type, 'aside', 'another experiment must not be treated as the selected live run');
 });
 
-test('chart workspace defaults to probes, respects removal and supports custom charts without stale results', async () => {
+test('charts stay independent of probes and offer raw, probe and derived signals without stale results', async () => {
   await runRegression(String.raw`
     import assert from 'node:assert/strict';
     import { createTeachingDrawing } from './src/simulation/examples';
-    import { drawingProbes, reconcileCharts, workspaceChartData } from './src/simulation/chartWorkspace';
+    import { drawingProbes, reconcileCharts, workspaceChartData, suggestedCharts, chartSignalLabel } from './src/simulation/chartWorkspace';
     import { NetlistWorkerState } from './src/web-worker/netlistState';
     const before=globalThis.document;
     globalThis.document={createElement:()=>({getContext:()=>({font:'',measureText:text=>({width:String(text).length*8,actualBoundingBoxDescent:3})})})};
@@ -60,29 +60,44 @@ test('chart workspace defaults to probes, respects removal and supports custom c
       assert.equal(probes.length,3);
       let charts=reconcileCharts([],probes,new Set(),true);
       assert.equal(charts.length,3);
+      assert.ok(charts.every(c=>c.signals.length===1),'each placed probe gets a useful default chart');
       assert.equal(reconcileCharts(charts,probes,new Set(),true),charts,'unchanged reconciliation preserves chart state');
-      const removed=charts[0];
-      const hidden=new Set([removed.probeId]);
-      charts=reconcileCharts(charts.slice(1),probes,hidden,true);
-      assert.equal(charts.length,2,'a removed probe chart must stay removed');
-      charts=reconcileCharts(charts,probes.slice(1),hidden,true);
-      assert.ok(charts.every(c=>c.probeId!==removed.probeId));
+      const hidden=new Set(['outputs']);
+      assert.deepEqual(reconcileCharts([],probes,hidden,true),[],'a removed chart must stay removed');
+      assert.equal(reconcileCharts(charts,probes.slice(1),hidden,true),charts,'removing a probe must preserve user charts');
       const outputs=reconcileCharts([],[],new Set(),true);
-      assert.equal(outputs[0].id,'outputs');
+      assert.deepEqual(outputs,[],'wait for data instead of creating an empty default');
       assert.deepEqual(reconcileCharts([],[],new Set(['outputs']),true),[]);
-      const custom={id:'custom',title:'Custom',signals:['out']};
+      const custom={id:'custom',signals:['out']};
       assert.deepEqual(reconcileCharts([custom],[],new Set(),true),[custom]);
       const net=new NetlistWorkerState().init(drawing);
+      assert.match(chartSignalLabel('pr2','V',probes,net),/^PR2: V\(OUT\)$/i,'probe legends identify both probe and measured node');
+      assert.equal(chartSignalLabel('out','V',probes,net),'V(out)');
+      assert.equal(chartSignalLabel('v1#branch','A',probes,net),'I(V1)');
       const data={scale:'time',log:'',vectors:[{name:'time',unit:'s',real:[0,1]},
         {name:'in',unit:'V',real:[5,5]},{name:'out',unit:'V',real:[2.5,2.5]},
         {name:'vp1#branch',unit:'A',real:[.0025,.0025]}]};
-      const outProbe=probes.find(p=>p.title.startsWith('PR2'));
-      const probeChart={id:outProbe.id,title:outProbe.title,probeId:outProbe.id,signals:[]};
+      const defaults=suggestedCharts([],data);
+      assert.deepEqual(defaults.map(c=>c.signals),[['out','in'],['vp1#branch']],'without probes, group voltage and current separately and prefer output nodes');
+      assert.deepEqual(suggestedCharts([],data,['out']).map(c=>c.signals),[['out']],'saved output selections express user intent');
+      const crowded={...data,vectors:[data.vectors[0],{name:'0',unit:'V',real:[0,0]},
+        ...Array.from({length:20},(_,i)=>({name:'node'+i,unit:'V',real:[1,1]})),
+        {name:'@r1[i]',unit:'A',real:[1,1]}]};
+      assert.deepEqual(suggestedCharts([],crowded).map(c=>c.signals.length),[4],'limit clutter and skip internal device vectors when ordinary outputs exist');
+      const waiting=[{id:'manual-before-run',signals:[],awaitingSignals:true}];
+      assert.equal(reconcileCharts(waiting,[],new Set(),true),waiting);
+      const filled=reconcileCharts(waiting,[],new Set(),true,data);
+      assert.deepEqual(filled[0].signals,['out','in'],'charts opened before the first run get useful signals when data arrives');
+      const cleared=[{id:'manually-cleared',signals:[]}];
+      assert.equal(reconcileCharts(cleared,[],new Set(),true,data),cleared,'never refill a chart the user cleared');
+      assert.deepEqual(reconcileCharts([],[],hidden,true,data),[],'deleted charts stay deleted when more data arrives');
+      const probeChart={id:'chart',signals:['pr2','in']};
       const result=workspaceChartData(probeChart,probes,net,data,[],true);
-      assert.deepEqual(result.vectors.at(-1).real,[2.5,2.5]);
-      assert.equal(result.vectors.at(-1).real,data.vectors[2].real,'voltage charts share read-only numerical buffers');
+      assert.deepEqual(result.vectors.find(v=>v.name==='pr2').real,[2.5,2.5]);
+      assert.equal(result.vectors.find(v=>v.name==='pr2').real,data.vectors[2].real,'voltage charts share read-only numerical buffers');
+      assert.ok(result.vectors.some(v=>v.name==='in'),'probe charts can also select raw outputs');
       assert.equal(workspaceChartData(probeChart,probes,net,data,[],false),undefined);
-      assert.equal(workspaceChartData(probeChart,[],net,data,[],true),undefined);
+      assert.ok(workspaceChartData(probeChart,[],net,data,[],true).vectors.some(v=>v.name==='out'),'a chart can use other signals if a probe is removed');
       const derived=workspaceChartData(custom,probes,net,data,[{name:'Gain',left:'out',right:'in',operation:'divide'}],true);
       assert.deepEqual(derived.vectors.at(-1).real,[.5,.5]);
     } finally {globalThis.document=before;}

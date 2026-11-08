@@ -81,6 +81,7 @@ test('Chart.js uses independent unit axes, labelled scale, baseline and full-dat
   const cleanup = effect[0]();
   assert.equal(configuration.options.scales.x.title.text, 'Time (s)');
   assert.equal(configuration.data.datasets[0].label, 'out (V)');
+  assert.equal(configuration.options.plugins.legend.display, true);
   assert.equal(configuration.options.scales.y0.position, 'left');
   assert.equal(configuration.options.scales.y1.position, 'right');
   assert.equal(configuration.options.scales.y0.title.text, 'Voltage (V)');
@@ -101,4 +102,10 @@ test('Chart.js uses independent unit axes, labelled scale, baseline and full-dat
   assert.deepEqual(JSON.parse(downloads[0][1]).vectors, data.vectors);
   cleanup();
   assert.equal(destroyed, true);
+  reference = 0;
+  module.Waveform({ data, signals: ['out'], compact: true, signalLabels: {out:'PR2: V(OUT)'} });
+  effect[3]();
+  assert.equal(configuration.data.datasets.length, 1);
+  assert.equal(configuration.data.datasets[0].label, 'PR2: V(OUT) (V)');
+  assert.equal(configuration.options.plugins.legend.display, true, 'single-line compact charts must retain their legend');
 });

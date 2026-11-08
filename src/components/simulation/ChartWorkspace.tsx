@@ -7,9 +7,12 @@
 } from 'react';
 import {
   Button,
-  Checkbox,
+  Menu,
+  MenuTrigger,
+  MenuPopover,
+  MenuList,
+  MenuItemCheckbox,
   Field,
-  Input,
   Select,
   tokens,
 } from '@fluentui/react-components';
@@ -19,12 +22,15 @@ import {
   OpenRegular,
   PlayRegular,
   StopRegular,
+  DataLineRegular,
 } from '@fluentui/react-icons';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { docDrawing } from '../../state/undo/undo';
 import {
   drawingProbes,
   reconcileCharts,
+  suggestedCharts,
+  chartSignalLabel,
   WorkspaceChart,
   workspaceChartData,
   ChartProbe,
@@ -43,10 +49,9 @@ import { ResultData, SimulationSetup } from '../../simulation/contracts';
 import { hasSimulation } from '../../io/drawingSaveFormat';
 import { buildDeck } from '../../simulation/deck';
 import { digest } from '../../io/dsnContainer';
-import { Waveform } from './Waveform';
+import { Waveform, WaveformPreferences } from './Waveform';
 import { ChartPopup, ChartPopupPortal, openChartPopup } from './ChartPopup';
 import { ResizeHandle } from '../panel/ResizeHandle';
-import { CircuitExplorer } from './CircuitExplorer';
 import { applyBindings } from '../../simulation/bindings';
 import { setOperatingPoint } from '../../simulation/operatingPoint';
 import {
@@ -66,6 +71,7 @@ function WorkspaceChartView({
   probes,
   net,
   data,
+  baseline,
   traces,
   fresh,
   message,
@@ -76,6 +82,7 @@ function WorkspaceChartView({
   probes: ChartProbe[];
   net: NetlistData;
   data?: ResultData;
+  baseline?: ResultData;
   traces: SimulationSetup['traces'];
   fresh: boolean;
   message: string;
@@ -84,6 +91,10 @@ function WorkspaceChartView({
 }) {
   const [popup, setPopup] = useState<ChartPopup>();
   const [error, setError] = useState('');
+  const [preferences, setPreferences] = useState<Partial<WaveformPreferences>>(
+    {},
+  );
+  const viewport = useRef<{ min: number; max: number }>();
   const activePopup = useRef<ChartPopup>();
   activePopup.current = popup;
   useEffect(
@@ -92,9 +103,6 @@ function WorkspaceChartView({
     },
     [],
   );
-  useEffect(() => {
-    if (popup && !popup.child.closed) popup.child.document.title = chart.title;
-  }, [popup, chart.title]);
   const returnToPanel = () => {
     const prior = activePopup.current;
     activePopup.current = undefined;
@@ -107,129 +115,156 @@ function WorkspaceChartView({
   );
   const available =
     result?.vectors.filter((v) => v.name !== result.scale) || [];
-  const content = (
-    <>
-      <div style={row}>
-        <strong style={{ flex: 1 }}>{chart.title}</strong>
-        {popup && (
-          <Button size="small" onClick={returnToPanel}>
-            Return to panel
-          </Button>
-        )}
-      </div>
-      {result && available.length ? (
-        <>
-          <Waveform data={result} signals={chart.signals} compact={!popup} />
-          {!result.scale && (
-            <div>
-              {available
-                .filter(
-                  (v) =>
-                    !chart.signals.length || chart.signals.includes(v.name),
-                )
-                .map((v) => (
-                  <div key={v.name}>
-                    {v.name}: {v.real[0]?.toPrecision(7)} {v.unit}
-                  </div>
-                ))}
-            </div>
-          )}
-        </>
-      ) : (
-        <p role="status">
-          {message ||
-            'No matching signal. Check the probe connections and selected acquisition.'}
-        </p>
-      )}
-    </>
+  const choices = [
+    ...available,
+    ...chart.signals
+      .filter((name) => !available.some((v) => v.name === name))
+      .map((name) => ({ name, unit: 'unavailable' })),
+  ];
+  const baselineResult = useMemo(
+    () => workspaceChartData(chart, probes, net, baseline, traces, fresh),
+    [chart, probes, net, baseline, traces, fresh],
   );
-  return (
+  const signalLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        choices.map((v) => [
+          v.name,
+          chartSignalLabel(v.name, v.unit, probes, net),
+        ]),
+      ),
+    [result, chart.signals, probes, net],
+  );
+  const content = (
     <section
+      aria-label="Chart"
       style={{
         padding: 12,
         borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+        ...(popup
+          ? ({
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+              minHeight: 0,
+              boxSizing: 'border-box',
+            } as React.CSSProperties)
+          : {}),
       }}
     >
-      <div style={row}>
-        <Input
-          size="small"
-          aria-label="Chart title"
-          value={chart.title}
-          style={{ flex: 1, minWidth: 0 }}
-          onChange={(_, d) => update({ ...chart, title: d.value })}
-        />
-        {process.env.TARGET_SYSTEM === 'electron' && (
+      <div style={{ ...row, justifyContent: 'space-between' }}>
+        <Menu
+          checkedValues={{ signals: chart.signals }}
+          onCheckedValueChange={(_, d) =>
+            update({ ...chart, signals: d.checkedItems })
+          }
+        >
+          <MenuTrigger disableButtonEnhancement>
+            <Button
+              size="small"
+              appearance="subtle"
+              icon={<DataLineRegular />}
+              aria-label="Signals"
+            >
+              Signals
+            </Button>
+          </MenuTrigger>
+          <MenuPopover
+            style={{ minWidth: 260, maxWidth: 'calc(100vw - 48px)' }}
+          >
+            <MenuList
+              aria-label="Chart signals"
+              style={{ maxHeight: 300, overflowY: 'auto', overflowX: 'hidden' }}
+            >
+              {choices.map((v) => (
+                <MenuItemCheckbox
+                  key={v.name}
+                  name="signals"
+                  value={v.name}
+                  persistOnClick
+                >
+                  {signalLabels[v.name]} ({v.unit})
+                </MenuItemCheckbox>
+              ))}
+              {!available.length && <p>Run a simulation to choose signals.</p>}
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+        <div style={row}>
+          {popup ? (
+            <Button size="small" onClick={returnToPanel}>
+              Return to panel
+            </Button>
+          ) : (
+            process.env.TARGET_SYSTEM === 'electron' && (
+              <Button
+                size="small"
+                appearance="subtle"
+                icon={<OpenRegular />}
+                aria-label="Open chart in a new window"
+                title="Open chart in a new window"
+                onClick={() => {
+                  const opened = openChartPopup('Simulation chart');
+                  if (!opened)
+                    setError('The chart window could not be opened.');
+                  else {
+                    setError('');
+                    setPopup(opened);
+                  }
+                }}
+              />
+            )
+          )}
           <Button
             size="small"
             appearance="subtle"
-            icon={<OpenRegular />}
-            title={popup ? 'Focus chart window' : 'Open chart in a new window'}
-            aria-label={
-              popup ? 'Focus chart window' : 'Open chart in a new window'
-            }
-            onClick={() => {
-              if (popup && !popup.child.closed) {
-                popup.child.focus();
-                return;
-              }
-              const opened = openChartPopup(chart.title);
-              if (!opened) setError('The chart window could not be opened.');
-              else {
-                setError('');
-                setPopup(opened);
-              }
-            }}
+            icon={<DismissRegular />}
+            aria-label="Remove chart"
+            title="Remove chart"
+            onClick={remove}
           />
-        )}
-        <Button
-          size="small"
-          appearance="subtle"
-          icon={<DismissRegular />}
-          aria-label="Remove chart"
-          title="Remove chart"
-          onClick={remove}
-        />
+        </div>
       </div>
-      {!chart.probeId && (
-        <details style={{ marginTop: 6 }}>
-          <summary>Choose signals</summary>
-          <p style={{ fontSize: 12, margin: '4px 0' }}>
-            No selection shows all signals. Different units use separate axes.
-          </p>
-          <div style={row}>
-            {available.map((v) => (
-              <Checkbox
-                key={v.name}
-                label={`${v.name} (${v.unit})`}
-                checked={chart.signals.includes(v.name)}
-                onChange={(_, d) =>
-                  update({
-                    ...chart,
-                    signals: d.checked
-                      ? [...chart.signals, v.name]
-                      : chart.signals.filter((s) => s !== v.name),
-                  })
-                }
-              />
-            ))}
-          </div>
-        </details>
-      )}
       {error && <p role="alert">{error}</p>}
-      {popup ? (
+      {result && available.length ? (
         <>
-          <p>Displayed in a separate window.</p>
-          <Button size="small" onClick={returnToPanel}>
-            Return to panel
-          </Button>
-          <ChartPopupPortal popup={popup} onClose={returnToPanel}>
-            {content}
-          </ChartPopupPortal>
+          <Waveform
+            data={result}
+            signalLabels={signalLabels}
+            signals={chart.signals}
+            emptyMeansAll={false}
+            baseline={baselineResult}
+            preferences={preferences}
+            onPreferencesChange={setPreferences}
+            viewportRef={viewport}
+            compact
+            fillHeight={!!popup}
+          />
+          {!chart.signals.length && (
+            <p>Choose signals to display on this chart.</p>
+          )}
+          {!result.scale &&
+            available
+              .filter((v) => chart.signals.includes(v.name))
+              .map((v) => (
+                <div key={v.name}>
+                  {signalLabels[v.name]}: {v.real[0]?.toPrecision(7)} {v.unit}
+                </div>
+              ))}
         </>
       ) : (
-        <div style={{ marginTop: 8 }}>{content}</div>
+        <p role="status">
+          {message || 'No matching signals in this acquisition.'}
+        </p>
       )}
     </section>
+  );
+  return popup ? (
+    <ChartPopupPortal popup={popup} onClose={returnToPanel}>
+      {content}
+    </ChartPopupPortal>
+  ) : (
+    content
   );
 }
 
@@ -242,17 +277,21 @@ export function ChartWorkspace() {
 function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
   const dispatch = useDispatch(),
     store = useStore<docDrawing>();
-  const visible = useSelector((state: docDrawing) => state.altStore?.simulationPanelVisible ?? true);
-  const activated = useSelector((state: docDrawing) => state.altStore?.simulationPanelActivated ?? false);
-  const setVisible = (visible: boolean) => dispatch({ type: 'simulation/panel', visible });
+  const visible = useSelector(
+    (state: docDrawing) => state.altStore?.simulationPanelVisible ?? true,
+  );
+  const activated = useSelector(
+    (state: docDrawing) => state.altStore?.simulationPanelActivated ?? false,
+  );
+  const setVisible = (visible: boolean) =>
+    dispatch({ type: 'simulation/panel', visible });
   const [width, setWidth] = useState(430);
   const [charts, setCharts] = useState<WorkspaceChart[]>([]);
   const hidden = useRef(new Set<string>());
   const [revision, setRevision] = useState(0);
   const [simulationId, setSimulationId] = useState(''),
     [runId, setRunId] = useState('latest');
-  const [plotIndex, setPlotIndex] = useState(0),
-    [addChoice, setAddChoice] = useState('custom');
+  const [plotIndex, setPlotIndex] = useState(0);
   const [error, setError] = useState('');
   const [verified, setVerified] = useState<{
     drawing: dsnDrawing;
@@ -270,6 +309,26 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
       (r) => r.dataState === 'available' && getResult(r.id),
     ) || [];
   const run = runs.find((r) => r.id === runId) || runs.at(-1);
+  const baselineRun = runs.find(
+    (r) =>
+      r.pinned &&
+      r.id !== run?.id &&
+      r.analysis.kind === run?.analysis.kind &&
+      r.circuitHash === run?.circuitHash,
+  );
+  const baselineRaw = baselineRun ? getResult(baselineRun.id) : undefined;
+  const baseline = useMemo(
+    () =>
+      baselineRaw
+        ? {
+            ...(plotIndex
+              ? baselineRaw.plots?.[plotIndex - 1] || baselineRaw
+              : baselineRaw),
+            log: baselineRaw.log,
+          }
+        : undefined,
+    [baselineRaw, plotIndex],
+  );
   const raw = running ? session.data : run ? getResult(run.id) : undefined;
   const data = useMemo(
     () =>
@@ -304,13 +363,6 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
     window.addEventListener('tinycad:show-charts', show);
     return () => window.removeEventListener('tinycad:show-charts', show);
   }, []);
-  useEffect(
-    () =>
-      setCharts((previous) =>
-        reconcileCharts(previous, probes, hidden.current, !!selected),
-      ),
-    [probes, !!selected],
-  );
   useEffect(() => {
     setRunId('latest');
     setPlotIndex(0);
@@ -383,6 +435,36 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
     verified?.drawing === drawing &&
     verified.key === acquisitionKey &&
     verified.matches;
+  const suggestedData = useMemo(
+    () =>
+      workspaceChartData(
+        { id: 'suggestions', signals: [] },
+        probes,
+        net,
+        data,
+        selected?.simulation.traces,
+        fresh,
+      ),
+    [probes, net, data, selected?.simulation.traces, fresh],
+  );
+  const suggestions = useMemo(
+    () => suggestedCharts(probes, suggestedData, selected?.simulation.signals),
+    [probes, suggestedData, selected?.simulation.signals],
+  );
+  useEffect(
+    () =>
+      setCharts((previous) =>
+        reconcileCharts(
+          previous,
+          probes,
+          hidden.current,
+          !!selected,
+          suggestedData,
+          selected?.simulation.signals,
+        ),
+      ),
+    [probes, !!selected, suggestedData, selected?.simulation.signals],
+  );
   useEffect(() => {
     setOperatingPoint(
       net && data && run
@@ -459,7 +541,12 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
     (delta: number) => setWidth((w) => Math.max(320, Math.min(900, w - delta))),
     [],
   );
-  if (!activated && drawing.representation !== 'zip-v1' && !hasSimulation(drawing)) return null;
+  if (
+    !activated &&
+    drawing.representation !== 'zip-v1' &&
+    !hasSimulation(drawing)
+  )
+    return null;
   return (
     <aside
       aria-label="Simulation charts"
@@ -587,36 +674,29 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
               </Select>
             )}
             <div style={{ ...row, marginTop: 8 }}>
-              <Select
-                size="small"
-                aria-label="Chart to add"
-                value={addChoice}
-                style={{ flex: 1, minWidth: 0 }}
-                onChange={(_, d) => setAddChoice(d.value)}
-              >
-                <option value="custom">Custom signal chart</option>
-                {probes.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title}
-                  </option>
-                ))}
-              </Select>
               <Button
                 size="small"
                 icon={<AddRegular />}
                 onClick={() => {
-                  const probe = probes.find((p) => p.id === addChoice);
-                  setCharts((current) => [
-                    ...current,
-                    {
-                      id: crypto.randomUUID(),
-                      title: probe?.title || 'Signal chart',
-                      probeId: probe?.id,
-                      signals: probe
-                        ? []
-                        : [...(selected?.simulation.signals || [])],
-                    },
-                  ]);
+                  setCharts((current) => {
+                    const suggested =
+                      suggestions.find((c) =>
+                        c.signals.some(
+                          (s) =>
+                            !current.some((existing) =>
+                              existing.signals.includes(s),
+                            ),
+                        ),
+                      ) || suggestions[0];
+                    return [
+                      ...current,
+                      {
+                        id: crypto.randomUUID(),
+                        signals: suggested ? [...suggested.signals] : [],
+                        awaitingSignals: !suggested,
+                      },
+                    ];
+                  });
                 }}
               >
                 Add chart
@@ -644,22 +724,8 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
           display: visible ? undefined : 'none',
         }}
       >
-        {selected && (
-          <CircuitExplorer
-            key={selected.id}
-            drawing={drawing}
-            sheet={selected}
-            net={net}
-            data={data}
-            run={run}
-            fresh={fresh}
-            onAcquisition={setRunId}
-          />
-        )}
         {!charts.length && (
-          <p style={{ padding: 12 }}>
-            Add a chart or place a probe to see results here.
-          </p>
+          <p style={{ padding: 12 }}>Add a chart, then choose its signals.</p>
         )}
         {charts.map((chart) => (
           <WorkspaceChartView
@@ -668,16 +734,21 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
             probes={probes}
             net={net}
             data={data}
+            baseline={baseline}
             traces={selected?.simulation.traces}
             fresh={fresh}
             message={message}
             update={(next) =>
               setCharts((current) =>
-                current.map((c) => (c.id === chart.id ? next : c)),
+                current.map((c) =>
+                  c.id === chart.id
+                    ? { ...next, awaitingSignals: undefined }
+                    : c,
+                ),
               )
             }
             remove={() => {
-              hidden.current.add(chart.probeId || chart.id);
+              hidden.current.add('outputs');
               setCharts((current) => current.filter((c) => c.id !== chart.id));
             }}
           />

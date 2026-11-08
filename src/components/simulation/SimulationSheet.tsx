@@ -3,7 +3,6 @@ import {
   checkSpiceComponents,
   locateSpiceErrors,
 } from '../../simulation/diagnostics';
-import { digest } from '../../io/dsnContainer';
 import { deriveTraces } from '../../simulation/traces';
 import { DerivedTraces } from './DerivedTraces';
 import './simulation.scss';
@@ -41,7 +40,8 @@ import {
 import { exportResult, download, measurements } from '../../simulation/export';
 import { buildDeck } from '../../simulation/deck';
 import { NetlistWorkerState } from '../../web-worker/netlistState';
-import { Waveform } from './Waveform';
+import { CircuitExplorer } from './CircuitExplorer';
+import { useInstrumentAcquisition } from './useInstrumentAcquisition';
 
 const analyses: [AnalysisKind, string][] = [
   ['op', 'Measure DC — Operating Point'],
@@ -84,11 +84,9 @@ export function SimulationSheet({
     [error, setError] = useState(''),
     [selectedRun, setSelectedRun] = useState(''),
     [deck, setDeck] = useState('');
-  const [currentHash, setCurrentHash] = useState('');
   const [row, setRow] = useState(0),
     [modelName, setModelName] = useState('device.lib'),
     [modelText, setModelText] = useState('');
-  const [modelEditorOpen, setModelEditorOpen] = useState(false);
   useEffect(() => subscribeSession(() => refresh((n) => n + 1)), []);
   useEffect(() => {
     setSelectedRun('');
@@ -97,7 +95,6 @@ export function SimulationSheet({
     setError('');
     setModelName('device.lib');
     setModelText('');
-    setModelEditorOpen(false);
     setPlotIndex(0);
   }, [sheet.id]);
   const session = getSession(),
@@ -125,14 +122,6 @@ export function SimulationSheet({
       )
     : undefined;
   const data = derived?.data;
-  const baselineRun = setup.runs.find(
-    (r) =>
-      r.pinned &&
-      r.id !== run?.id &&
-      r.analysis.kind === run?.analysis.kind &&
-      r.dataState === 'available',
-  );
-  const baseline = baselineRun ? getResult(baselineRun.id) : undefined;
   const update = (patch: Partial<SimulationSetup>) =>
     dispatch({
       type: 'simulation/update',
@@ -166,7 +155,7 @@ export function SimulationSheet({
   };
   const execute = async () => {
     setError('');
-    setTab('plot');
+    setTab('diagnostics');
     const id = sheet.id,
       document = drawing;
     try {
@@ -230,30 +219,17 @@ export function SimulationSheet({
         v.name !== data.scale &&
         (!setup.signals.length || setup.signals.includes(v.name)),
     ) || [];
-  useEffect(() => {
-    let valid = true;
-    const timer = setTimeout(() => {
-      try {
-        const circuit = {
-          ...drawing,
-          sheets: drawing.sheets.filter((s) => s.kind !== 'simulation'),
-        };
-        const text =
-          buildDeck(new NetlistWorkerState().init(circuit), setup) +
-          JSON.stringify(setup.models);
-        digest(new TextEncoder().encode(text)).then((hash) => {
-          if (valid) setCurrentHash(hash);
-        });
-      } catch {
-        if (valid) setCurrentHash('invalid');
-      }
-    }, 200);
-    return () => {
-      valid = false;
-      clearTimeout(timer);
-    };
-  }, [drawing.sheets, setup.analysis, setup.parameters, setup.models]);
-  const stale = run && currentHash && currentHash !== run.circuitHash;
+  const acquisition = useInstrumentAcquisition(drawing, run?.id || '');
+  const fresh = acquisition.chosen?.run.id === run?.id && acquisition.fresh;
+  const stale = !!run && !!originalData && !acquisition.checking && !fresh;
+  const net = acquisition.net;
+  const hasData = !!data?.vectors.some((v) => v.real.length);
+  const tabs = [
+    'setup',
+    ...(hasData ? ['measurements', 'data'] : []),
+    ...(setup.runs.length ? ['history', 'diagnostics'] : []),
+  ];
+  const activeTab = tabs.includes(tab) ? tab : 'setup';
 
   return (
     <section
@@ -288,16 +264,12 @@ export function SimulationSheet({
           </>,
           toolbarTarget,
         )}
-      <div role="status" aria-live="polite" style={{ marginBottom: 12 }}>
-        {running
-          ? session.status
-          : run
-          ? `${run.state} · ${run.samples.toLocaleString()} samples · ${
-              run.backend
-            } · ${run.buildId}`
-          : ''}
-        {stale ? ' · Circuit or settings changed since this run' : ''}
-      </div>
+      {(running || stale) && (
+        <div role="status" aria-live="polite" style={{ marginBottom: 12 }}>
+          {running ? session.status : ''}
+          {stale ? 'Circuit or settings changed since this run' : ''}
+        </div>
+      )}
       {error && (
         <div
           role="alert"
@@ -313,141 +285,184 @@ export function SimulationSheet({
       <TabList
         aria-label="Simulation views"
         size="small"
-        selectedValue={tab}
+        selectedValue={activeTab}
         onTabSelect={(_, data) => setTab(String(data.value))}
       >
-        {[
-          'setup',
-          'plot',
-          'measurements',
-          'data',
-          'history',
-          'diagnostics',
-        ].map((name) => (
+        {tabs.map((name) => (
           <Tab key={name} value={name}>
             {name[0].toUpperCase() + name.slice(1)}
           </Tab>
         ))}
       </TabList>
-      <div className="simulation-content" role="tabpanel" aria-label={tab}>
-        {tab === 'measurements' && (
+      <div
+        className="simulation-content"
+        role="tabpanel"
+        aria-label={activeTab}
+      >
+        {activeTab === 'measurements' && (
           <section style={{ marginBottom: 20 }}>
             <h3>Named measurements</h3>
-            <Button size="small" onClick={() => window.dispatchEvent(new Event('tinycad:show-charts'))}>
-              Edit measurements and requirements in Circuit Explorer
+            <Button
+              size="small"
+              onClick={() => {
+                setTab('setup');
+                requestAnimationFrame(() =>
+                  document
+                    .getElementById('simulation-explorer')
+                    ?.scrollIntoView({ block: 'start' }),
+                );
+              }}
+            >
+              Edit measurements and requirements
             </Button>
             {run?.explorer ? (
               <table>
-                <thead><tr><th>Measurement</th><th>Result</th><th>Evidence</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Measurement</th>
+                    <th>Result</th>
+                    <th>Evidence</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  {run.explorer.measurements.map(result => (
+                  {run.explorer.measurements.map((result) => (
                     <tr key={result.id}>
-                      <th>{run.explorer.definitions.find(d => d.id === result.id)?.name || result.id}</th>
-                      <td>{result.state === 'valid' ? `${result.value.toPrecision(7)} ${result.unit}` : result.state}</td>
+                      <th>
+                        {run.explorer.definitions.find(
+                          (d) => d.id === result.id,
+                        )?.name || result.id}
+                      </th>
+                      <td>
+                        {result.state === 'valid'
+                          ? `${result.value.toPrecision(7)} ${result.unit}`
+                          : result.state}
+                      </td>
                       <td>{result.explanation}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            ) : <p>Define measurements in Circuit Explorer and run the analysis to capture results.</p>}
+            ) : (
+              <p>
+                Define measurements in Circuit Explorer and run the analysis to
+                capture results.
+              </p>
+            )}
             {run?.explorer && (
-              <Button size="small" onClick={() => download('named-measurements.json', JSON.stringify({ run, snapshot: run.explorer }, null, 2), 'application/json')}>
+              <Button
+                size="small"
+                onClick={() =>
+                  download(
+                    'named-measurements.json',
+                    JSON.stringify({ run, snapshot: run.explorer }, null, 2),
+                    'application/json',
+                  )
+                }
+              >
                 Export named measurements
               </Button>
             )}
           </section>
         )}
-        {tab === 'setup' && (
-          <div>
-            <div className="simulation-analysis">
-              <TabList
-                vertical
-                size="small"
-                aria-label="Analysis type"
-                selectedValue={setup.analysis.kind}
-                onTabSelect={(_, data) =>
-                  analysis({ kind: data.value as AnalysisKind })
-                }
-              >
-                {analyses.map(([value, label]) => (
-                  <Tab key={value} value={value} disabled={running}>
-                    {label}
-                  </Tab>
-                ))}
-              </TabList>
-              <fieldset
-                disabled={running}
-                className="simulation-analysis-settings"
-              >
-                <legend>
-                  {analyses.find(([kind]) => kind === setup.analysis.kind)?.[1]}
-                </legend>
+        <div hidden={activeTab !== 'setup'}>
+          <div className="simulation-analysis">
+            <TabList
+              vertical
+              size="small"
+              aria-label="Analysis type"
+              selectedValue={setup.analysis.kind}
+              onTabSelect={(_, data) =>
+                analysis({ kind: data.value as AnalysisKind })
+              }
+            >
+              {analyses.map(([value, label]) => (
+                <Tab key={value} value={value} disabled={running}>
+                  {label}
+                </Tab>
+              ))}
+            </TabList>
+            <fieldset
+              disabled={running}
+              className="simulation-analysis-settings"
+            >
+              <legend>
+                {analyses.find(([kind]) => kind === setup.analysis.kind)?.[1]}
+              </legend>
+              <div style={rowStyle}>
+                {input('temperature', 'Temperature (°C)')}
+              </div>
+              {setup.analysis.kind === 'tran' && (
                 <div style={rowStyle}>
-                  {input('temperature', 'Temperature (°C)')}
+                  {input('duration', 'Duration (e.g. 5ms)')}
+                  {input('maxStep', 'Maximum step (e.g. 10us)')}
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={setup.analysis.initialConditions}
+                      onChange={(e) =>
+                        analysis({ initialConditions: e.target.checked })
+                      }
+                    />
+                    Use initial conditions without bias solve (UIC)
+                  </label>
                 </div>
-                {setup.analysis.kind === 'tran' && (
-                  <div style={rowStyle}>
-                    {input('duration', 'Duration (e.g. 5ms)')}
-                    {input('maxStep', 'Maximum step (e.g. 10us)')}
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={setup.analysis.initialConditions}
-                        onChange={(e) =>
-                          analysis({ initialConditions: e.target.checked })
-                        }
-                      />
-                      Use initial conditions without bias solve (UIC)
-                    </label>
-                  </div>
-                )}
-                {['ac', 'noise'].includes(setup.analysis.kind) && (
-                  <div style={rowStyle}>
-                    {input('startFrequency', 'Start frequency (Hz)')}
-                    {input('stopFrequency', 'Stop frequency (Hz)')}
-                    <label style={fieldStyle}>
-                      Points per decade
-                      <input
-                        type="number"
-                        min="1"
-                        max="10000"
-                        value={setup.analysis.pointsPerDecade}
-                        onChange={(e) =>
-                          analysis({ pointsPerDecade: Number(e.target.value) })
-                        }
-                      />
-                    </label>
-                  </div>
-                )}
-                {setup.analysis.kind === 'dc' && (
-                  <div style={rowStyle}>
-                    {input('source', 'Source reference (e.g. V1)')}
-                    {input('sweepStart', 'Start value')}
-                    {input('sweepStop', 'Stop value')}
-                    {input('sweepStep', 'Step')}
-                  </div>
-                )}
-                {['noise', 'tf', 'pz'].includes(setup.analysis.kind) && (
-                  <div style={rowStyle}>
-                    {input(
-                      'input',
-                      setup.analysis.kind === 'pz'
-                        ? 'Input node'
-                        : 'Input source (e.g. V1)',
-                    )}
-                    {input('output', 'Output node')}
-                    {input('reference', 'Reference node')}
-                  </div>
-                )}
-                {setup.analysis.kind === 'ac' && (
-                  <p>
-                    AC analysis uses each source’s AC amplitude, not its
-                    transient sine/pulse settings. Set AC 1 on the input source
-                    to read its transfer response directly.
-                  </p>
-                )}
-              </fieldset>
-            </div>
+              )}
+              {['ac', 'noise'].includes(setup.analysis.kind) && (
+                <div style={rowStyle}>
+                  {input('startFrequency', 'Start frequency (Hz)')}
+                  {input('stopFrequency', 'Stop frequency (Hz)')}
+                  <label style={fieldStyle}>
+                    Points per decade
+                    <input
+                      type="number"
+                      min="1"
+                      max="10000"
+                      value={setup.analysis.pointsPerDecade}
+                      onChange={(e) =>
+                        analysis({ pointsPerDecade: Number(e.target.value) })
+                      }
+                    />
+                  </label>
+                </div>
+              )}
+              {setup.analysis.kind === 'dc' && (
+                <div style={rowStyle}>
+                  {input('source', 'Source reference (e.g. V1)')}
+                  {input('sweepStart', 'Start value')}
+                  {input('sweepStop', 'Stop value')}
+                  {input('sweepStep', 'Step')}
+                </div>
+              )}
+              {['noise', 'tf', 'pz'].includes(setup.analysis.kind) && (
+                <div style={rowStyle}>
+                  {input(
+                    'input',
+                    setup.analysis.kind === 'pz'
+                      ? 'Input node'
+                      : 'Input source (e.g. V1)',
+                  )}
+                  {input('output', 'Output node')}
+                  {input('reference', 'Reference node')}
+                </div>
+              )}
+              {setup.analysis.kind === 'ac' && (
+                <p>
+                  AC analysis uses each source’s AC amplitude, not its transient
+                  sine/pulse settings. Set AC 1 on the input source to read its
+                  transfer response directly.
+                </p>
+              )}
+            </fieldset>
+          </div>
+          <details className="simulation-optional-section">
+            <summary>
+              Experiment notes{' '}
+              <span>
+                {setup.instructions
+                  ? 'View instructions'
+                  : 'Add notes for this experiment'}
+              </span>
+            </summary>
             <label style={{ ...fieldStyle, maxWidth: 800 }}>
               Instructions / experiment notes
               <Textarea
@@ -458,12 +473,32 @@ export function SimulationSheet({
                 onChange={(e) => update({ instructions: e.target.value })}
               />
             </label>
-            <div className="simulation-setup-tables">
+          </details>
+          <div className="simulation-setup-tables">
+            <details className="simulation-optional-section">
+              <summary>
+                Parameters{' '}
+                <span>
+                  {Object.keys(setup.parameters).length
+                    ? `${Object.keys(setup.parameters).length} defined`
+                    : 'Reuse named values in your circuit'}
+                </span>
+              </summary>
               <SimulationParameters
                 parameters={setup.parameters}
                 disabled={running}
                 change={(parameters) => update({ parameters })}
               />
+            </details>
+            <details className="simulation-optional-section">
+              <summary>
+                SPICE models{' '}
+                <span>
+                  {Object.keys(setup.models).length
+                    ? `${Object.keys(setup.models).length} attached`
+                    : 'Attach a device model when needed'}
+                </span>
+              </summary>
               <section
                 className="simulation-models"
                 aria-label="Attached SPICE models"
@@ -483,7 +518,6 @@ export function SimulationSheet({
                           onClick={() => {
                             setModelName('device.lib');
                             setModelText('');
-                            setModelEditorOpen(true);
                           }}
                         >
                           Add model
@@ -501,7 +535,6 @@ export function SimulationSheet({
                             onClick={() => {
                               setModelName(name);
                               setModelText(text);
-                              setModelEditorOpen(true);
                             }}
                           >
                             {name}
@@ -531,12 +564,7 @@ export function SimulationSheet({
                     ))}
                   </tbody>
                 </table>
-                <details
-                  className="simulation-model-editor"
-                  open={modelEditorOpen}
-                  onToggle={(e) => setModelEditorOpen(e.currentTarget.open)}
-                >
-                  <summary>Edit / attach model</summary>
+                <div className="simulation-model-editor">
                   <fieldset disabled={running}>
                     <label style={fieldStyle}>
                       Filename
@@ -580,12 +608,24 @@ export function SimulationSheet({
                       </Button>
                     </div>
                   </fieldset>
-                </details>
+                </div>
               </section>
-            </div>
+            </details>
           </div>
-        )}
-        {['plot', 'measurements', 'data'].includes(tab) && (
+          <div id="simulation-explorer" style={{ marginTop: 24 }}>
+            <CircuitExplorer
+              key={sheet.id}
+              drawing={drawing}
+              sheet={sheet}
+              net={net}
+              data={data}
+              run={run}
+              fresh={!running && !!data && fresh}
+              onAcquisition={setSelectedRun}
+            />
+          </div>
+        </div>
+        {['measurements', 'data'].includes(activeTab) && (
           <div>
             {plots.length > 1 && (
               <label>
@@ -648,45 +688,7 @@ export function SimulationSheet({
                     {message}
                   </p>
                 ))}
-                {tab === 'plot' &&
-                  (data.scale ? (
-                    <>
-                      <Waveform
-                        key={`${sheet.id}-${run?.id || 'running'}-${plotIndex}`}
-                        data={data}
-                        signals={selectedVectors.map(vector => vector.name)}
-                        baseline={baseline}
-                      />
-                    </>
-                  ) : (
-                    <table>
-                      <caption>Operating point / scalar values</caption>
-                      <thead>
-                        <tr>
-                          <th>Signal</th>
-                          <th>Value</th>
-                          <th>Unit</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedVectors.map((v) => (
-                          <tr key={v.name}>
-                            <th>{v.name}</th>
-                            <td>
-                              {v.real[0]?.toPrecision(8)}
-                              {v.imaginary?.[0]
-                                ? ` ${
-                                    v.imaginary[0] < 0 ? '−' : '+'
-                                  } j${Math.abs(v.imaginary[0]).toPrecision(8)}`
-                                : ''}
-                            </td>
-                            <td>{v.unit}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ))}
-                {tab === 'measurements' && (
+                {activeTab === 'measurements' && (
                   <>
                     <p>
                       Statistics over the real component of all accepted samples
@@ -747,8 +749,12 @@ export function SimulationSheet({
                     </Button>
                   </>
                 )}
-                {tab === 'data' && (
+                {activeTab === 'data' && (
                   <>
+                    <p>
+                      {(data.vectors[0]?.real.length ?? 0).toLocaleString()}{' '}
+                      samples
+                    </p>
                     <div style={rowStyle}>
                       <Button
                         disabled={row === 0}
@@ -843,7 +849,7 @@ export function SimulationSheet({
             )}
           </div>
         )}
-        {tab === 'history' && (
+        {activeTab === 'history' && (
           <div>
             <p>
               Each run records its own settings and solver identity. Pin a
@@ -870,7 +876,14 @@ export function SimulationSheet({
                           onClick={() => {
                             setSelectedRun(r.id);
                             setRow(0);
-                            setTab('plot');
+                            setTab(
+                              r.dataState === 'available' &&
+                                getResult(r.id)?.vectors.some(
+                                  (v) => v.real.length,
+                                )
+                                ? 'data'
+                                : 'diagnostics',
+                            );
                           }}
                         >
                           {new Date(r.created).toLocaleString()}
@@ -925,8 +938,13 @@ export function SimulationSheet({
             )}
           </div>
         )}
-        {tab === 'diagnostics' && (
+        {activeTab === 'diagnostics' && (
           <div>
+            {run && (
+              <p>
+                Solver: {run.backend} · {run.buildId}
+              </p>
+            )}
             <p>
               Browser: isolated WebAssembly worker, analogue models. Electron:
               isolated native process with bundled XSPICE modules. Stop

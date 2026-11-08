@@ -165,6 +165,12 @@ export function initializeNetlistSync(store: Store) {
       return;
     }
 
+    // Publishing a netlist dispatches an internal action. At version zero that
+    // notification must not initialize the same drawing again indefinitely.
+    if (drawing === previousDrawing) {
+      return;
+    }
+
     if (previousDrawing === null || drawingVersion === 0) {
       netlistLog('full init', {
         drawingVersion,
@@ -178,7 +184,7 @@ export function initializeNetlistSync(store: Store) {
       return;
     }
 
-    if (drawing === previousDrawing || drawingVersion === previousVersion) {
+    if (drawingVersion === previousVersion) {
       return;
     }
 

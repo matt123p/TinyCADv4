@@ -144,6 +144,9 @@ function getWorker(): Worker {
 
     myWorker.onmessage = (event: MessageEvent<WorkerResponse>) => {
       const response = event.data;
+      if (!response || !Number.isInteger(response.id) || typeof response.ok !== 'boolean') {
+        return;
+      }
       const waiter = pending.get(response.id);
       if (!waiter) {
         return;

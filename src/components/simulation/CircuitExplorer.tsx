@@ -7,7 +7,6 @@ import {
   Select,
   Tab,
   TabList,
-  tokens,
 } from '@fluentui/react-components';
 import { useDispatch, useStore, useSelector } from 'react-redux';
 import { docDrawing } from '../../state/undo/undo';
@@ -66,13 +65,54 @@ const row: React.CSSProperties = {
   alignItems: 'end',
   margin: '8px 0',
 };
-const section: React.CSSProperties = {
-  padding: 12,
-  borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
-};
 const format = (n?: number) =>
   n === undefined ? '—' : Number(n.toPrecision(6)).toString();
 const uid = () => crypto.randomUUID();
+const tools = [
+  {
+    id: 'measure',
+    label: 'Measurements',
+    description:
+      'Read values such as gain, rise time or RMS from an acquisition.',
+  },
+  {
+    id: 'tune',
+    label: 'Tune / sweep',
+    description:
+      'Try component values and compare their effect without changing the saved circuit.',
+  },
+  {
+    id: 'checks',
+    label: 'Requirements',
+    description: 'Check named measurements against the limits you choose.',
+  },
+  {
+    id: 'op',
+    label: 'DC overlay',
+    description:
+      'Show DC voltages, currents or power directly on the schematic.',
+  },
+  {
+    id: 'advanced',
+    label: 'Analysis lab',
+    description:
+      'Explore frequency response, component tolerances and test cases with guided studies.',
+  },
+];
+
+function configuredTools(setup: dsnSheet['simulation'], document: string) {
+  return new Set([
+    ...(setup.measurements?.length ? ['measure'] : []),
+    ...(setup.bindings?.length || setup.sweeps?.length ? ['tune'] : []),
+    ...(setup.requirements?.length ? ['checks'] : []),
+    ...(overlayMode(document) !== 'off' ? ['op'] : []),
+    ...(setup.studies?.length ||
+    setup.studyRuns?.length ||
+    setup.testCases?.length
+      ? ['advanced']
+      : []),
+  ]);
+}
 function Text({
   label,
   value,
@@ -116,7 +156,14 @@ export function CircuitExplorer({
   const dispatch = useDispatch(),
     store = useStore<docDrawing>(),
     setup = sheet.simulation;
-  const [tab, setTab] = useState('measure'),
+  const [enabledTools, setEnabledTools] = useState(() =>
+    configuredTools(setup, drawing.documentId),
+  );
+  const [tab, setTab] = useState(
+      () =>
+        configuredTools(setup, drawing.documentId).values().next().value ||
+        'tools',
+    ),
     [error, setError] = useState(''),
     [target, setTarget] = useState(''),
     [property, setProperty] = useState('');
@@ -138,7 +185,12 @@ export function CircuitExplorer({
     setup.sweeps?.at(-1)?.measurements || setup.measurements || [],
   );
   const [overlaySignal, setOverlaySignal] = useState('');
-  const [advancedOpened, setAdvancedOpened] = useState(false);
+  const [advancedOpened, setAdvancedOpened] = useState(tab === 'advanced');
+  const showTool = (id: string) => {
+    setEnabledTools((current) => new Set([...current, id]));
+    setTab(id);
+    if (id === 'advanced') setAdvancedOpened(true);
+  };
   const selection = useSelector((s: docDrawing) => {
     const active =
       s.docStore.present.drawing.sheets[s.docStore.present.view.selected_sheet];
@@ -580,897 +632,449 @@ export function CircuitExplorer({
     </Select>
   );
   return (
-    <section style={section} aria-label="Circuit Explorer">
-      <strong>Circuit Explorer</strong>
-      <TabList
-        style={{ flexWrap: 'wrap' }}
-        size="small"
-        selectedValue={tab}
-        onTabSelect={(_, d) => {
-          setTab(String(d.value));
-          if (d.value === 'advanced') setAdvancedOpened(true);
-        }}
-      >
-        <Tab value="measure">Measurements</Tab>
-        <Tab value="tune">Tune / sweep</Tab>
-        <Tab value="checks">Requirements</Tab>
-        <Tab value="op">DC overlay</Tab>
-        <Tab value="advanced">Analysis lab</Tab>
-      </TabList>
-      {advancedOpened && (
-        <div style={{ display: tab === 'advanced' ? undefined : 'none' }}>
-          <AdvancedAnalysis
-            drawing={drawing}
-            sheet={sheet}
-            data={data}
-            run={run}
-            fresh={fresh}
-            onAcquisition={onAcquisition}
-          />
-        </div>
-      )}
-      {tab === 'measure' && (
-        <>
-          <p style={{ fontSize: 12 }}>
-            {captured && sameDefinitions
-              ? `Captured results · ${new Date(
-                  run.created,
-                ).toLocaleString()} · ${run.analysis.kind} · ${run.state}${
-                  fresh ? '' : ' · circuit changed'
-                }`
-              : 'Current definitions; run again to capture reproducible results.'}
-          </p>
-          {definitions.map((def) => {
-            const result = results.find((r) => r.id === def.id);
-            return (
-              <details key={def.id} style={{ margin: '10px 0' }}>
-                <summary>
-                  <b>{def.name}</b> —{' '}
-                  <Button
-                    size="small"
-                    appearance="transparent"
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                      e.preventDefault();
-                      openEvidence(def);
-                    }}
-                  >
-                    {result?.state === 'valid'
-                      ? `${format(result.value)} ${result.unit}`
-                      : result?.state || 'unavailable'}
-                  </Button>
-                </summary>
-                <div style={row}>
-                  <Text
-                    label="Name"
-                    value={def.name}
-                    onChange={(name) => editMetric({ ...def, name })}
-                  />
-                  <Field label="Measurement" size="small">
-                    <Select
+    <section className="circuit-explorer" aria-label="Circuit Explorer">
+      <h3>Circuit Explorer</h3>
+      <div className="simulation-tool-layout">
+        <TabList
+          vertical
+          aria-label="Circuit Explorer tools"
+          size="small"
+          selectedValue={tab}
+          onTabSelect={(_, d) => {
+            if (d.value === 'tools') setTab('tools');
+            else showTool(String(d.value));
+          }}
+        >
+          {tools
+            .filter((tool) => enabledTools.has(tool.id))
+            .map((tool) => (
+              <Tab key={tool.id} value={tool.id}>
+                {tool.label}
+              </Tab>
+            ))}
+          <Tab value="tools">Add tools</Tab>
+        </TabList>
+        <div
+          className="simulation-tool-content"
+          role="tabpanel"
+          aria-label={
+            tools.find((tool) => tool.id === tab)?.label || 'Add tools'
+          }
+        >
+          {tab === 'tools' ? (
+            <>
+              <h3>Add an exploration tool</h3>
+              <p className="simulation-help">
+                Choose a tool when you need it. Its controls appear in the list
+                on the left.
+              </p>
+              <div className="simulation-tool-catalog">
+                {tools.map((tool) => (
+                  <div key={tool.id} className="simulation-tool-choice">
+                    <div>
+                      <strong>{tool.label}</strong>
+                      <p className="simulation-help">{tool.description}</p>
+                    </div>
+                    <Button
                       size="small"
-                      value={def.kind}
-                      onChange={(_, d) =>
-                        editMetric({
-                          ...def,
-                          kind: d.value as MeasurementDefinition['kind'],
+                      aria-label={`${
+                        enabledTools.has(tool.id) ? 'Open' : 'Add'
+                      } ${tool.label}`}
+                      onClick={() => showTool(tool.id)}
+                    >
+                      {enabledTools.has(tool.id) ? 'Open' : 'Add'}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="simulation-tool-heading">
+                <h3>{tools.find((tool) => tool.id === tab)?.label}</h3>
+                <Button
+                  size="small"
+                  appearance="subtle"
+                  title="Hide these controls; saved settings are kept"
+                  onClick={() => {
+                    setEnabledTools((current) => {
+                      const next = new Set(current);
+                      next.delete(tab);
+                      return next;
+                    });
+                    setTab('tools');
+                  }}
+                >
+                  Hide tool
+                </Button>
+              </div>
+              <p className="simulation-help">
+                {tools.find((tool) => tool.id === tab)?.description}
+              </p>
+            </>
+          )}
+          {advancedOpened && (
+            <div style={{ display: tab === 'advanced' ? undefined : 'none' }}>
+              <AdvancedAnalysis
+                drawing={drawing}
+                sheet={sheet}
+                data={data}
+                run={run}
+                fresh={fresh}
+                onAcquisition={onAcquisition}
+              />
+            </div>
+          )}
+          {tab === 'measure' && (
+            <>
+              <p style={{ fontSize: 12 }}>
+                {captured && sameDefinitions
+                  ? `Captured results · ${new Date(
+                      run.created,
+                    ).toLocaleString()} · ${run.analysis.kind} · ${run.state}${
+                      fresh ? '' : ' · circuit changed'
+                    }`
+                  : 'Current definitions; run again to capture reproducible results.'}
+              </p>
+              {definitions.map((def) => {
+                const result = results.find((r) => r.id === def.id);
+                return (
+                  <details key={def.id} style={{ margin: '10px 0' }}>
+                    <summary>
+                      <b>{def.name}</b> —{' '}
+                      <Button
+                        size="small"
+                        appearance="transparent"
+                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                          e.preventDefault();
+                          openEvidence(def);
+                        }}
+                      >
+                        {result?.state === 'valid'
+                          ? `${format(result.value)} ${result.unit}`
+                          : result?.state || 'unavailable'}
+                      </Button>
+                    </summary>
+                    <div style={row}>
+                      <Text
+                        label="Name"
+                        value={def.name}
+                        onChange={(name) => editMetric({ ...def, name })}
+                      />
+                      <Field label="Measurement" size="small">
+                        <Select
+                          size="small"
+                          value={def.kind}
+                          onChange={(_, d) =>
+                            editMetric({
+                              ...def,
+                              kind: d.value as MeasurementDefinition['kind'],
+                            })
+                          }
+                        >
+                          {metricKinds.map((kind) => (
+                            <option key={kind}>{kind}</option>
+                          ))}
+                        </Select>
+                      </Field>
+                    </div>
+                    <Field label="Signal / component" size="small">
+                      {selectSource(def.source, (source) =>
+                        editMetric({ ...def, source }),
+                      )}
+                    </Field>
+                    {[
+                      'gain',
+                      'phase',
+                      'cutoff',
+                      'bandwidth',
+                      'resonance',
+                      'delay',
+                      'efficiency',
+                      'loss',
+                      'impedance',
+                      'groupDelay',
+                      'passbandRipple',
+                      'attenuation',
+                      'bandpassQ',
+                    ].includes(def.kind) && (
+                      <Field label="Input reference" size="small">
+                        {selectSource(
+                          def.reference || '',
+                          (reference) => editMetric({ ...def, reference }),
+                          true,
+                        )}
+                      </Field>
+                    )}
+                    <div style={row}>
+                      {(['from', 'to'] as const).map((key) => (
+                        <Text
+                          key={key}
+                          label={`${key} (s or Hz; blank = full range)`}
+                          value={def[key] || ''}
+                          onChange={(value) =>
+                            editMetric({ ...def, [key]: value })
+                          }
+                        />
+                      ))}
+                    </div>
+                    {[
+                      'value',
+                      'gain',
+                      'phase',
+                      'impedance',
+                      'groupDelay',
+                      'attenuation',
+                    ].includes(def.kind) && (
+                      <Text
+                        label="At (s or Hz; blank = start)"
+                        value={def.at || ''}
+                        onChange={(at) => editMetric({ ...def, at })}
+                      />
+                    )}
+                    {['cutoff', 'bandwidth', 'attenuation'].includes(
+                      def.kind,
+                    ) && (
+                      <Text
+                        label="Reference gain (ratio, or peak)"
+                        value={def.referenceGain || '1'}
+                        onChange={(referenceGain) =>
+                          editMetric({ ...def, referenceGain })
+                        }
+                      />
+                    )}
+                    {[
+                      'riseTime',
+                      'fallTime',
+                      'overshoot',
+                      'undershoot',
+                      'settlingTime',
+                      'timeConstant',
+                    ].includes(def.kind) && (
+                      <div style={row}>
+                        <Text
+                          label="Initial / low level"
+                          value={def.initial || ''}
+                          onChange={(initial) =>
+                            editMetric({ ...def, initial })
+                          }
+                        />
+                        <Text
+                          label="Final / high level"
+                          value={def.final || ''}
+                          onChange={(final) => editMetric({ ...def, final })}
+                        />
+                      </div>
+                    )}
+                    {[
+                      'period',
+                      'frequency',
+                      'dutyCycle',
+                      'pulseWidth',
+                      'delay',
+                    ].includes(def.kind) && (
+                      <Text
+                        label="Crossing level (blank = midpoint)"
+                        value={def.threshold || ''}
+                        onChange={(threshold) =>
+                          editMetric({ ...def, threshold })
+                        }
+                      />
+                    )}
+                    {def.kind === 'settlingTime' && (
+                      <Text
+                        label="Settling tolerance (%)"
+                        value={def.tolerance || '2'}
+                        onChange={(tolerance) =>
+                          editMetric({ ...def, tolerance })
+                        }
+                      />
+                    )}
+                    <p style={{ fontSize: 12 }}>
+                      {result?.explanation} Timing uses the first complete
+                      transition in the window.
+                    </p>
+                    <Button
+                      size="small"
+                      onClick={() =>
+                        update({
+                          measurements: definitions.filter(
+                            (d) => d.id !== def.id,
+                          ),
                         })
                       }
                     >
-                      {metricKinds.map((kind) => (
-                        <option key={kind}>{kind}</option>
-                      ))}
-                    </Select>
-                  </Field>
-                </div>
-                <Field label="Signal / component" size="small">
-                  {selectSource(def.source, (source) =>
-                    editMetric({ ...def, source }),
-                  )}
-                </Field>
-                {[
-                  'gain',
-                  'phase',
-                  'cutoff',
-                  'bandwidth',
-                  'resonance',
-                  'delay',
-                  'efficiency',
-                  'loss',
-                  'impedance',
-                  'groupDelay',
-                  'passbandRipple',
-                  'attenuation',
-                  'bandpassQ',
-                ].includes(def.kind) && (
-                  <Field label="Input reference" size="small">
-                    {selectSource(
-                      def.reference || '',
-                      (reference) => editMetric({ ...def, reference }),
-                      true,
-                    )}
-                  </Field>
-                )}
-                <div style={row}>
-                  {(['from', 'to'] as const).map((key) => (
-                    <Text
-                      key={key}
-                      label={`${key} (s or Hz; blank = full range)`}
-                      value={def[key] || ''}
-                      onChange={(value) => editMetric({ ...def, [key]: value })}
-                    />
-                  ))}
-                </div>
-                {[
-                  'value',
-                  'gain',
-                  'phase',
-                  'impedance',
-                  'groupDelay',
-                  'attenuation',
-                ].includes(def.kind) && (
-                  <Text
-                    label="At (s or Hz; blank = start)"
-                    value={def.at || ''}
-                    onChange={(at) => editMetric({ ...def, at })}
-                  />
-                )}
-                {['cutoff', 'bandwidth', 'attenuation'].includes(def.kind) && (
-                  <Text
-                    label="Reference gain (ratio, or peak)"
-                    value={def.referenceGain || '1'}
-                    onChange={(referenceGain) =>
-                      editMetric({ ...def, referenceGain })
-                    }
-                  />
-                )}
-                {[
-                  'riseTime',
-                  'fallTime',
-                  'overshoot',
-                  'undershoot',
-                  'settlingTime',
-                  'timeConstant',
-                ].includes(def.kind) && (
-                  <div style={row}>
-                    <Text
-                      label="Initial / low level"
-                      value={def.initial || ''}
-                      onChange={(initial) => editMetric({ ...def, initial })}
-                    />
-                    <Text
-                      label="Final / high level"
-                      value={def.final || ''}
-                      onChange={(final) => editMetric({ ...def, final })}
-                    />
-                  </div>
-                )}
-                {[
-                  'period',
-                  'frequency',
-                  'dutyCycle',
-                  'pulseWidth',
-                  'delay',
-                ].includes(def.kind) && (
-                  <Text
-                    label="Crossing level (blank = midpoint)"
-                    value={def.threshold || ''}
-                    onChange={(threshold) => editMetric({ ...def, threshold })}
-                  />
-                )}
-                {def.kind === 'settlingTime' && (
-                  <Text
-                    label="Settling tolerance (%)"
-                    value={def.tolerance || '2'}
-                    onChange={(tolerance) => editMetric({ ...def, tolerance })}
-                  />
-                )}
-                <p style={{ fontSize: 12 }}>
-                  {result?.explanation} Timing uses the first complete
-                  transition in the window.
-                </p>
-                <Button
-                  size="small"
-                  onClick={() =>
-                    update({
-                      measurements: definitions.filter((d) => d.id !== def.id),
-                    })
-                  }
-                >
-                  Remove measurement
-                </Button>
-              </details>
-            );
-          })}
-          <Button
-            size="small"
-            disabled={definitions.length >= 100}
-            onClick={() =>
-              update({
-                measurements: [
-                  ...definitions,
-                  {
-                    id: uid(),
-                    name: `Measurement ${definitions.length + 1}`,
-                    kind: 'value',
-                    source: sources.keys().next().value || '',
-                  },
-                ],
-              })
-            }
-          >
-            Add measurement
-          </Button>
-        </>
-      )}
-      {tab === 'checks' && (
-        <>
-          {rules.map((rule) => {
-            const result = checks.find((c) => c.id === rule.id);
-            return (
-              <details key={rule.id} style={{ margin: '10px 0' }}>
-                <summary>
-                  {rule.name} —{' '}
-                  <Button
-                    size="small"
-                    appearance="transparent"
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                      e.preventDefault();
-                      openEvidence(
-                        definitions.find((d) => d.id === rule.measurement),
-                      );
-                    }}
-                  >
-                    {result?.state}
-                  </Button>
-                </summary>
-                <Text
-                  label="Requirement name"
-                  value={rule.name}
-                  onChange={(name) => editRule({ ...rule, name })}
-                />
-                <Field label="Named measurement" size="small">
-                  <Select
-                    size="small"
-                    value={rule.measurement}
-                    onChange={(_, d) =>
-                      editRule({ ...rule, measurement: d.value })
-                    }
-                  >
-                    {!definitions.some((d) => d.id === rule.measurement) && (
-                      <option value={rule.measurement}>
-                        Missing measurement
-                      </option>
-                    )}
-                    {definitions.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Select
-                  size="small"
-                  aria-label="Requirement comparison"
-                  value={rule.comparison}
-                  onChange={(_, d) =>
-                    editRule({
-                      ...rule,
-                      comparison:
-                        d.value as RequirementDefinition['comparison'],
-                    })
-                  }
-                >
-                  <option value="between">Between (inclusive)</option>
-                  <option value="atLeast">At least</option>
-                  <option value="atMost">At most</option>
-                </Select>
-                <div style={row}>
-                  {rule.comparison !== 'atMost' && (
-                    <Text
-                      label="Lower limit"
-                      value={rule.lower}
-                      onChange={(lower) => editRule({ ...rule, lower })}
-                    />
-                  )}{' '}
-                  {rule.comparison !== 'atLeast' && (
-                    <Text
-                      label="Upper limit"
-                      value={rule.upper}
-                      onChange={(upper) => editRule({ ...rule, upper })}
-                    />
-                  )}
-                  <Text
-                    label="Unit (must match metric)"
-                    value={rule.unit}
-                    onChange={(unit) => editRule({ ...rule, unit })}
-                  />
-                </div>
-                <p>{result?.explanation}</p>
-                <Button
-                  size="small"
-                  onClick={() =>
-                    update({
-                      requirements: rules.filter((r) => r.id !== rule.id),
-                    })
-                  }
-                >
-                  Remove requirement
-                </Button>
-              </details>
-            );
-          })}
-          <Button
-            size="small"
-            disabled={!definitions.length || rules.length >= 100}
-            onClick={() =>
-              update({
-                requirements: [
-                  ...rules,
-                  {
-                    id: uid(),
-                    name: `Requirement ${rules.length + 1}`,
-                    measurement: definitions[0].id,
-                    comparison: 'between',
-                    lower: '0',
-                    upper: '1',
-                    unit: results[0]?.unit || '',
-                  },
-                ],
-              })
-            }
-          >
-            Add requirement
-          </Button>
-          <Button
-            size="small"
-            onClick={() =>
-              download(
-                'circuit-requirements.json',
-                JSON.stringify(
-                  {
-                    schema: 1,
-                    documentId: drawing.documentId,
-                    currentDefinitions: {
-                      measurements: definitions,
-                      requirements: rules,
-                    },
-                    evaluation: checks,
-                    run,
-                  },
-                  null,
-                  2,
-                ),
-                'application/json',
-              )
-            }
-          >
-            Export report
-          </Button>
-        </>
-      )}
-      {tab === 'tune' && (
-        <>
-          <p style={{ fontSize: 12 }}>
-            Tuning values are temporary until Apply. Select a component and its
-            numeric property, source setting or named parameter.
-          </p>
-          <Field label="Component" size="small">
-            <Select
-              size="small"
-              value={target}
-              onChange={(_, d) => {
-                setTarget(d.value);
-                setProperty('');
-              }}
-            >
-              <option value="">Choose component</option>
-              {targets.map((t) => (
-                <option key={t.key} value={t.key}>
-                  {t.label}
-                </option>
-              ))}
-              <option value="$parameter">Setup parameter</option>
-            </Select>
-          </Field>
-          <div style={row}>
-            <Field label="Property" size="small">
-              <Select
-                size="small"
-                value={property || properties[0]?.key || ''}
-                onChange={(_, d) => setProperty(d.value)}
-              >
-                {properties.map((p) => (
-                  <option key={p.key} value={p.key}>
-                    {p.key} ({p.unit})
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Button
-              size="small"
-              disabled={!properties.length || bindings.length >= 100}
-              onClick={addBinding}
-            >
-              Add tuning control
-            </Button>
-          </div>
-          {bindings.map((binding) => {
-            let original = '',
-              issue = '',
-              value = 0,
-              min = 0,
-              max = 1;
-            try {
-              original = bindingValue(drawing, setup, binding);
-              value = parseQuantity(
-                overrides[binding.id] ?? original,
-                binding.unit,
-              );
-              min = parseQuantity(binding.minimum, binding.unit);
-              max = parseQuantity(binding.maximum, binding.unit);
-              if (min >= max || (binding.logarithmic && min <= 0))
-                throw new Error(
-                  'Choose increasing bounds; log bounds must be positive.',
+                      Remove measurement
+                    </Button>
+                  </details>
                 );
-            } catch (e) {
-              issue = String(e);
-            }
-            const edit = (changes: Partial<ParameterBinding>) =>
-              update({
-                bindings: bindings.map((b) =>
-                  b.id === binding.id ? { ...b, ...changes } : b,
-                ),
-              });
-            const position = binding.logarithmic
-              ? (Math.log(value) - Math.log(min)) /
-                (Math.log(max) - Math.log(min))
-              : (value - min) / (max - min);
-            return (
-              <details key={binding.id} open style={{ margin: '12px 0' }}>
-                <summary>
-                  {binding.name} ({binding.unit}) · saved {original}
-                </summary>
-                <div style={row}>
-                  <Text
-                    label="Control name"
-                    value={binding.name}
-                    onChange={(name) => edit({ name })}
-                  />
-                  <Text
-                    label="Unit"
-                    value={binding.unit}
-                    onChange={(unit) => edit({ unit })}
-                  />
-                </div>
-                <Input
-                  size="small"
-                  aria-label={`${binding.name} temporary value`}
-                  value={overrides[binding.id] ?? original}
-                  onChange={(_, d) => changeOverride(binding.id, d.value)}
-                />
-                <input
-                  type="range"
-                  aria-label={`${binding.name} slider`}
-                  disabled={!!issue}
-                  min={0}
-                  max={1000}
-                  value={Math.min(1000, Math.max(0, position * 1000)) || 0}
-                  style={{ width: '100%' }}
-                  onChange={(e) => {
-                    try {
-                      const fraction = Number(e.target.value) / 1000,
-                        n = binding.logarithmic
-                          ? Math.exp(
-                              Math.log(min) +
-                                (Math.log(max) - Math.log(min)) * fraction,
-                            )
-                          : min + (max - min) * fraction;
-                      changeOverride(
-                        binding.id,
-                        String(preferredValue(n, binding.series)),
-                      );
-                    } catch (e) {
-                      setError(String(e));
-                    }
-                  }}
-                />
-                <div style={row}>
-                  <Text
-                    label="Minimum"
-                    value={binding.minimum}
-                    onChange={(minimum) => edit({ minimum })}
-                  />
-                  <Text
-                    label="Maximum"
-                    value={binding.maximum}
-                    onChange={(maximum) => edit({ maximum })}
-                  />
-                </div>
-                <div style={row}>
-                  <Checkbox
-                    label="Log slider"
-                    checked={binding.logarithmic}
-                    onChange={(_, d) => edit({ logarithmic: !!d.checked })}
-                  />
-                  <Select
-                    size="small"
-                    aria-label={`${binding.name} preferred values`}
-                    value={binding.series}
-                    onChange={(_, d) =>
-                      edit({ series: d.value as ParameterBinding['series'] })
-                    }
-                  >
-                    {['continuous', 'E12', 'E24', 'E96'].map((s) => (
-                      <option key={s}>{s}</option>
-                    ))}
-                  </Select>
-                  <Button
-                    size="small"
-                    onClick={() => {
-                      const next = { ...overrides };
-                      delete next[binding.id];
-                      setOverrides(next);
-                      update({
-                        bindings: bindings.filter((b) => b.id !== binding.id),
-                      });
-                    }}
-                  >
-                    Remove
-                  </Button>
-                </div>
-                {issue && <p role="alert">{issue}</p>}
-              </details>
-            );
-          })}
-          <div style={row}>
-            <Checkbox
-              label="Automatically rerun"
-              checked={auto}
-              onChange={(_, d) => setAuto(!!d.checked)}
-            />
-            <Checkbox
-              label="Compare curves"
-              checked={compare}
-              onChange={(_, d) => setCompare(!!d.checked)}
-            />
-          </div>
-          <div style={row}>
-            <Button
-              size="small"
-              onClick={() =>
-                start(async (c) => {
-                  await execute(overrides, c);
-                })
-              }
-              disabled={busy}
-            >
-              Run tuning
-            </Button>
-            <Button size="small" onClick={reset}>
-              Reset
-            </Button>
-            <Button
-              size="small"
-              disabled={!undo.length}
-              onClick={() => {
-                abort.current?.abort();
-                const restored = undo.at(-1);
-                setOverrides(restored);
-                setUndo(undo.slice(0, -1));
-                if (!auto || !Object.keys(restored).length)
-                  start(async (controller) => {
-                    await execute(restored, controller);
-                  });
-              }}
-            >
-              Undo tuning
-            </Button>
-            <Button
-              size="small"
-              disabled={!Object.keys(overrides).length || busy}
-              onClick={() => {
-                try {
-                  applyBindings(drawing, setup, overrides);
-                  dispatch({
-                    type: 'simulation/apply-tuning',
-                    sheetId: sheet.id,
-                    overrides,
-                  });
-                  setOverrides({});
-                  setUndo([]);
-                } catch (e) {
-                  setError(String(e));
-                }
-              }}
-            >
-              Apply
-            </Button>
-          </div>
-          {compare && resolved && baseline && !points.length && (
-            <>
-              <p style={{ fontSize: 12 }}>
-                Previous acquisition: {previousRun.created}. Dashed curves are
-                the previous values.
-              </p>
-              <Waveform
-                compact
-                data={resolved}
-                signals={setup.signals}
-                baseline={baseline}
-              />
-            </>
-          )}
-          {!!bindings.length && (
-            <details>
-              <summary>One-variable sweep</summary>
-              <Field label="Variable" size="small">
-                <Select
-                  size="small"
-                  value={selectedBinding?.id || ''}
-                  onChange={(_, d) =>
-                    update({ sweep: { ...sweep, binding: d.value } })
-                  }
-                >
-                  {bindings.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <Select
+              })}
+              <Button
                 size="small"
-                aria-label="Sweep spacing"
-                value={sweep.mode}
-                onChange={(_, d) =>
+                disabled={definitions.length >= 100}
+                onClick={() =>
                   update({
-                    sweep: {
-                      ...sweep,
-                      binding: selectedBinding.id,
-                      mode: d.value as typeof sweep.mode,
-                    },
+                    measurements: [
+                      ...definitions,
+                      {
+                        id: uid(),
+                        name: `Measurement ${definitions.length + 1}`,
+                        kind: 'value',
+                        source: sources.keys().next().value || '',
+                      },
+                    ],
                   })
                 }
               >
-                <option value="list">Explicit values</option>
-                <option value="linear">Linear</option>
-                <option value="log">Logarithmic</option>
-              </Select>
-              {sweep.mode === 'list' ? (
-                <Text
-                  label="Values (space or semicolon separated)"
-                  value={sweep.values}
-                  onChange={(values) =>
-                    update({
-                      sweep: { ...sweep, binding: selectedBinding.id, values },
-                    })
-                  }
-                />
-              ) : (
-                <div style={row}>
-                  <Text
-                    label="Start"
-                    value={sweep.start}
-                    onChange={(start) =>
-                      update({
-                        sweep: { ...sweep, binding: selectedBinding.id, start },
-                      })
-                    }
-                  />
-                  <Text
-                    label="Stop"
-                    value={sweep.stop}
-                    onChange={(stop) =>
-                      update({
-                        sweep: { ...sweep, binding: selectedBinding.id, stop },
-                      })
-                    }
-                  />
-                  <Field label="Points (2–100)" size="small">
-                    <Input
-                      size="small"
-                      type="number"
-                      min={2}
-                      max={100}
-                      value={String(sweep.count)}
-                      onChange={(_, d) => {
-                        const count = Number(d.value);
-                        if (
-                          Number.isInteger(count) &&
-                          count >= 2 &&
-                          count <= 100
-                        )
-                          update({
-                            sweep: {
-                              ...sweep,
-                              binding: selectedBinding.id,
-                              count,
-                            },
-                          });
-                      }}
-                    />
-                  </Field>
-                </div>
+                Add measurement
+              </Button>
+            </>
+          )}
+          {tab === 'checks' && (
+            <>
+              {!definitions.length && (
+                <p>
+                  Add a measurement before defining a requirement.{' '}
+                  <Button size="small" onClick={() => showTool('measure')}>
+                    Add measurements
+                  </Button>
+                </p>
               )}
+              {rules.map((rule) => {
+                const result = checks.find((c) => c.id === rule.id);
+                return (
+                  <details key={rule.id} style={{ margin: '10px 0' }}>
+                    <summary>
+                      {rule.name} —{' '}
+                      <Button
+                        size="small"
+                        appearance="transparent"
+                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                          e.preventDefault();
+                          openEvidence(
+                            definitions.find((d) => d.id === rule.measurement),
+                          );
+                        }}
+                      >
+                        {result?.state}
+                      </Button>
+                    </summary>
+                    <Text
+                      label="Requirement name"
+                      value={rule.name}
+                      onChange={(name) => editRule({ ...rule, name })}
+                    />
+                    <Field label="Named measurement" size="small">
+                      <Select
+                        size="small"
+                        value={rule.measurement}
+                        onChange={(_, d) =>
+                          editRule({ ...rule, measurement: d.value })
+                        }
+                      >
+                        {!definitions.some(
+                          (d) => d.id === rule.measurement,
+                        ) && (
+                          <option value={rule.measurement}>
+                            Missing measurement
+                          </option>
+                        )}
+                        {definitions.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Select
+                      size="small"
+                      aria-label="Requirement comparison"
+                      value={rule.comparison}
+                      onChange={(_, d) =>
+                        editRule({
+                          ...rule,
+                          comparison:
+                            d.value as RequirementDefinition['comparison'],
+                        })
+                      }
+                    >
+                      <option value="between">Between (inclusive)</option>
+                      <option value="atLeast">At least</option>
+                      <option value="atMost">At most</option>
+                    </Select>
+                    <div style={row}>
+                      {rule.comparison !== 'atMost' && (
+                        <Text
+                          label="Lower limit"
+                          value={rule.lower}
+                          onChange={(lower) => editRule({ ...rule, lower })}
+                        />
+                      )}{' '}
+                      {rule.comparison !== 'atLeast' && (
+                        <Text
+                          label="Upper limit"
+                          value={rule.upper}
+                          onChange={(upper) => editRule({ ...rule, upper })}
+                        />
+                      )}
+                      <Text
+                        label="Unit (must match metric)"
+                        value={rule.unit}
+                        onChange={(unit) => editRule({ ...rule, unit })}
+                      />
+                    </div>
+                    <p>{result?.explanation}</p>
+                    <Button
+                      size="small"
+                      onClick={() =>
+                        update({
+                          requirements: rules.filter((r) => r.id !== rule.id),
+                        })
+                      }
+                    >
+                      Remove requirement
+                    </Button>
+                  </details>
+                );
+              })}
               <Button
                 size="small"
-                disabled={busy || !!getSession()}
-                onClick={() => {
-                  try {
-                    const values = sweepValues(sweep, selectedBinding);
-                    setPoints([]);
-                    const capturedDrawing = drawing,
-                      capturedSetup = setup;
-                    let batch: SweepRun = {
-                      id: uid(),
-                      created: new Date().toISOString(),
-                      state: 'running',
-                      binding: structuredClone(selectedBinding),
-                      definition: { ...sweep, binding: selectedBinding.id },
-                      measurements: structuredClone(definitions),
-                      points: [],
-                    };
-                    setBatchId(batch.id);
-                    setBatchBinding(batch.binding);
-                    setBatchDefinitions(batch.measurements);
-                    start(async (controller) => {
-                      persistSweep(batch);
-                      try {
-                        await runSweep(
-                          values,
-                          (value) =>
-                            exploreOnce(
-                              capturedDrawing,
-                              sheet.id,
-                              {
-                                ...capturedSetup,
-                                runs:
-                                  store
-                                    .getState()
-                                    .docStore.present.drawing.sheets.find(
-                                      (s) => s.id === sheet.id,
-                                    )?.simulation.runs || [],
-                              },
-                              {
-                                ...overrides,
-                                [selectedBinding.id]: String(value),
-                              },
-                              commit,
-                              controller.signal,
-                              reportDiagnostics,
-                            ),
-                          (point, index) => {
-                            batch = {
-                              ...batch,
-                              state:
-                                point.run.state === 'complete'
-                                  ? batch.state
-                                  : point.run.state === 'stopped'
-                                  ? 'stopped'
-                                  : 'failed',
-                              points: [
-                                ...batch.points,
-                                { value: point.value, runId: point.run.id },
-                              ],
-                            };
-                            persistSweep(batch);
-                            if (alive.current) {
-                              onAcquisition?.(point.run.id);
-                              setPoints((previous) => [...previous, point]);
-                              setProgress(`${index + 1} / ${values.length}`);
-                            }
-                          },
-                          controller.signal,
-                        );
-                        batch = {
-                          ...batch,
-                          state:
-                            batch.state === 'running'
-                              ? 'complete'
-                              : batch.state,
-                        };
-                      } catch (error) {
-                        batch = {
-                          ...batch,
-                          state: controller.signal.aborted
-                            ? 'stopped'
-                            : 'failed',
-                        };
-                        throw error;
-                      } finally {
-                        persistSweep(batch);
-                      }
-                    });
-                  } catch (e) {
-                    setError(String(e));
-                  }
-                }}
+                disabled={!definitions.length || rules.length >= 100}
+                onClick={() =>
+                  update({
+                    requirements: [
+                      ...rules,
+                      {
+                        id: uid(),
+                        name: `Requirement ${rules.length + 1}`,
+                        measurement: definitions[0].id,
+                        comparison: 'between',
+                        lower: '0',
+                        upper: '1',
+                        unit: results[0]?.unit || '',
+                      },
+                    ],
+                  })
+                }
               >
-                Run sweep
+                Add requirement
               </Button>
-            </details>
-          )}
-          {busy && (
-            <div style={row}>
-              <span role="status">Running {progress}</span>
-              <Button size="small" onClick={() => abort.current?.abort()}>
-                Cancel
-              </Button>
-            </div>
-          )}
-          {!!setup.sweeps?.length && (
-            <Field label="Saved sweep" size="small">
-              <Select
-                size="small"
-                value={batchId}
-                disabled={busy}
-                onChange={(_, d) => {
-                  const batch = setup.sweeps.find((b) => b.id === d.value);
-                  if (!batch) return;
-                  setBatchId(batch.id);
-                  setBatchBinding(batch.binding);
-                  setBatchDefinitions(batch.measurements);
-                  setPoints(restoredSweep(batch, setup));
-                }}
-              >
-                {setup.sweeps.map((batch) => (
-                  <option key={batch.id} value={batch.id}>
-                    {new Date(batch.created).toLocaleString()} ·{' '}
-                    {batch.binding.name} ·{' '}
-                    {batch.state === 'running' && !busy
-                      ? 'interrupted'
-                      : batch.state}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-          )}
-          {!!points.length && (
-            <>
-              <div style={{ overflowX: 'auto' }}>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>
-                        {resultBinding?.name} ({resultBinding?.unit})
-                      </th>
-                      <th>Run</th>
-                      {batchDefinitions.map((d) => (
-                        <th key={d.id}>{d.name}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {points.map((p, i) => (
-                      <tr key={i}>
-                        <td>{format(p.value)}</td>
-                        <td title={`${p.run.id} ${p.run.buildId}`}>
-                          {p.run.state}
-                        </td>
-                        {batchDefinitions.map((d) => {
-                          const r = p.run.explorer?.measurements.find(
-                            (m) => m.id === d.id,
-                          );
-                          return (
-                            <td key={d.id} title={r?.explanation}>
-                              {r?.state === 'valid'
-                                ? `${format(r.value)} ${r.unit}`
-                                : r?.state || 'unavailable'}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
               <Button
                 size="small"
                 onClick={() =>
                   download(
-                    'parameter-sweep.json',
+                    'circuit-requirements.json',
                     JSON.stringify(
-                      points.map(({ value, run }) => ({ value, run })),
+                      {
+                        schema: 1,
+                        documentId: drawing.documentId,
+                        currentDefinitions: {
+                          measurements: definitions,
+                          requirements: rules,
+                        },
+                        evaluation: checks,
+                        run,
+                      },
                       null,
                       2,
                     ),
@@ -1478,147 +1082,706 @@ export function CircuitExplorer({
                   )
                 }
               >
-                Export sweep report
+                Export report
               </Button>
-              {compare && plotPoints.length > 0 && (
+            </>
+          )}
+          {tab === 'tune' && (
+            <>
+              <p style={{ fontSize: 12 }}>
+                Tuning values are temporary until Apply. Select a component and
+                its numeric property, source setting or named parameter.
+              </p>
+              <Field label="Component" size="small">
+                <Select
+                  size="small"
+                  value={target}
+                  onChange={(_, d) => {
+                    setTarget(d.value);
+                    setProperty('');
+                  }}
+                >
+                  <option value="">Choose component</option>
+                  {targets.map((t) => (
+                    <option key={t.key} value={t.key}>
+                      {t.label}
+                    </option>
+                  ))}
+                  <option value="$parameter">Setup parameter</option>
+                </Select>
+              </Field>
+              <div style={row}>
+                <Field label="Property" size="small">
+                  <Select
+                    size="small"
+                    value={property || properties[0]?.key || ''}
+                    onChange={(_, d) => setProperty(d.value)}
+                  >
+                    {properties.map((p) => (
+                      <option key={p.key} value={p.key}>
+                        {p.key} ({p.unit})
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Button
+                  size="small"
+                  disabled={!properties.length || bindings.length >= 100}
+                  onClick={addBinding}
+                >
+                  Add tuning control
+                </Button>
+              </div>
+              {bindings.map((binding) => {
+                let original = '',
+                  issue = '',
+                  value = 0,
+                  min = 0,
+                  max = 1;
+                try {
+                  original = bindingValue(drawing, setup, binding);
+                  value = parseQuantity(
+                    overrides[binding.id] ?? original,
+                    binding.unit,
+                  );
+                  min = parseQuantity(binding.minimum, binding.unit);
+                  max = parseQuantity(binding.maximum, binding.unit);
+                  if (min >= max || (binding.logarithmic && min <= 0))
+                    throw new Error(
+                      'Choose increasing bounds; log bounds must be positive.',
+                    );
+                } catch (e) {
+                  issue = String(e);
+                }
+                const edit = (changes: Partial<ParameterBinding>) =>
+                  update({
+                    bindings: bindings.map((b) =>
+                      b.id === binding.id ? { ...b, ...changes } : b,
+                    ),
+                  });
+                const position = binding.logarithmic
+                  ? (Math.log(value) - Math.log(min)) /
+                    (Math.log(max) - Math.log(min))
+                  : (value - min) / (max - min);
+                return (
+                  <details key={binding.id} open style={{ margin: '12px 0' }}>
+                    <summary>
+                      {binding.name} ({binding.unit}) · saved {original}
+                    </summary>
+                    <div style={row}>
+                      <Text
+                        label="Control name"
+                        value={binding.name}
+                        onChange={(name) => edit({ name })}
+                      />
+                      <Text
+                        label="Unit"
+                        value={binding.unit}
+                        onChange={(unit) => edit({ unit })}
+                      />
+                    </div>
+                    <Input
+                      size="small"
+                      aria-label={`${binding.name} temporary value`}
+                      value={overrides[binding.id] ?? original}
+                      onChange={(_, d) => changeOverride(binding.id, d.value)}
+                    />
+                    <input
+                      type="range"
+                      aria-label={`${binding.name} slider`}
+                      disabled={!!issue}
+                      min={0}
+                      max={1000}
+                      value={Math.min(1000, Math.max(0, position * 1000)) || 0}
+                      style={{ width: '100%' }}
+                      onChange={(e) => {
+                        try {
+                          const fraction = Number(e.target.value) / 1000,
+                            n = binding.logarithmic
+                              ? Math.exp(
+                                  Math.log(min) +
+                                    (Math.log(max) - Math.log(min)) * fraction,
+                                )
+                              : min + (max - min) * fraction;
+                          changeOverride(
+                            binding.id,
+                            String(preferredValue(n, binding.series)),
+                          );
+                        } catch (e) {
+                          setError(String(e));
+                        }
+                      }}
+                    />
+                    <div style={row}>
+                      <Text
+                        label="Minimum"
+                        value={binding.minimum}
+                        onChange={(minimum) => edit({ minimum })}
+                      />
+                      <Text
+                        label="Maximum"
+                        value={binding.maximum}
+                        onChange={(maximum) => edit({ maximum })}
+                      />
+                    </div>
+                    <div style={row}>
+                      <Checkbox
+                        label="Log slider"
+                        checked={binding.logarithmic}
+                        onChange={(_, d) => edit({ logarithmic: !!d.checked })}
+                      />
+                      <Select
+                        size="small"
+                        aria-label={`${binding.name} preferred values`}
+                        value={binding.series}
+                        onChange={(_, d) =>
+                          edit({
+                            series: d.value as ParameterBinding['series'],
+                          })
+                        }
+                      >
+                        {['continuous', 'E12', 'E24', 'E96'].map((s) => (
+                          <option key={s}>{s}</option>
+                        ))}
+                      </Select>
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          const next = { ...overrides };
+                          delete next[binding.id];
+                          setOverrides(next);
+                          update({
+                            bindings: bindings.filter(
+                              (b) => b.id !== binding.id,
+                            ),
+                          });
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                    {issue && <p role="alert">{issue}</p>}
+                  </details>
+                );
+              })}
+              <div style={row}>
+                <Checkbox
+                  label="Automatically rerun"
+                  checked={auto}
+                  onChange={(_, d) => setAuto(!!d.checked)}
+                />
+                <Checkbox
+                  label="Compare curves"
+                  checked={compare}
+                  onChange={(_, d) => setCompare(!!d.checked)}
+                />
+              </div>
+              <div style={row}>
+                <Button
+                  size="small"
+                  onClick={() =>
+                    start(async (c) => {
+                      await execute(overrides, c);
+                    })
+                  }
+                  disabled={busy}
+                >
+                  Run tuning
+                </Button>
+                <Button size="small" onClick={reset}>
+                  Reset
+                </Button>
+                <Button
+                  size="small"
+                  disabled={!undo.length}
+                  onClick={() => {
+                    abort.current?.abort();
+                    const restored = undo.at(-1);
+                    setOverrides(restored);
+                    setUndo(undo.slice(0, -1));
+                    if (!auto || !Object.keys(restored).length)
+                      start(async (controller) => {
+                        await execute(restored, controller);
+                      });
+                  }}
+                >
+                  Undo tuning
+                </Button>
+                <Button
+                  size="small"
+                  disabled={!Object.keys(overrides).length || busy}
+                  onClick={() => {
+                    try {
+                      applyBindings(drawing, setup, overrides);
+                      dispatch({
+                        type: 'simulation/apply-tuning',
+                        sheetId: sheet.id,
+                        overrides,
+                      });
+                      setOverrides({});
+                      setUndo([]);
+                    } catch (e) {
+                      setError(String(e));
+                    }
+                  }}
+                >
+                  Apply
+                </Button>
+              </div>
+              {compare && resolved && baseline && !points.length && (
                 <>
-                  <Field label="Overlay signal" size="small">
-                    {selectSource(
-                      overlaySignal ||
-                        sweepTraces[0]?.name ||
-                        setup.signals[0] ||
-                        '',
-                      setOverlaySignal,
-                    )}
-                  </Field>
                   <p style={{ fontSize: 12 }}>
-                    First curve: {resultBinding?.name} = {plotPoints[0].value}{' '}
-                    {resultBinding?.unit}
+                    Previous acquisition: {previousRun.created}. Dashed curves
+                    are the previous values.
                   </p>
                   <Waveform
                     compact
-                    initialMode={setup.analysis.kind === 'ac' ? 'db' : 'real'}
-                    data={deriveTraces(plotPoints[0].data, sweepTraces).data}
-                    signals={[
-                      overlaySignal ||
-                        sweepTraces[0]?.name ||
-                        setup.signals[0] ||
-                        '',
-                    ]}
-                    overlays={plotPoints.slice(1).map((p) => ({
-                      label: `${resultBinding?.name}=${p.value}`,
-                      data: deriveTraces(
-                        p.data,
-                        p.run.explorer?.traces || sweepTraces,
-                      ).data,
-                    }))}
+                    data={resolved}
+                    signals={setup.signals}
+                    baseline={baseline}
                   />
                 </>
               )}
-              {sweepMetric && (
-                <>
-                  <Field label="Metric versus parameter" size="small">
+              {!!bindings.length && (
+                <details>
+                  <summary>One-variable sweep</summary>
+                  <Field label="Variable" size="small">
                     <Select
                       size="small"
-                      value={sweepMetric.id}
-                      onChange={(_, d) => setMetricId(d.value)}
+                      value={selectedBinding?.id || ''}
+                      onChange={(_, d) =>
+                        update({ sweep: { ...sweep, binding: d.value } })
+                      }
                     >
-                      {batchDefinitions.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name}
+                      {bindings.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name}
                         </option>
                       ))}
                     </Select>
                   </Field>
-                  {trend.vectors[0].real.length > 0 && (
-                    <Waveform
-                      compact
-                      data={trend}
-                      signals={[sweepMetric.name]}
+                  <Select
+                    size="small"
+                    aria-label="Sweep spacing"
+                    value={sweep.mode}
+                    onChange={(_, d) =>
+                      update({
+                        sweep: {
+                          ...sweep,
+                          binding: selectedBinding.id,
+                          mode: d.value as typeof sweep.mode,
+                        },
+                      })
+                    }
+                  >
+                    <option value="list">Explicit values</option>
+                    <option value="linear">Linear</option>
+                    <option value="log">Logarithmic</option>
+                  </Select>
+                  {sweep.mode === 'list' ? (
+                    <Text
+                      label="Values (space or semicolon separated)"
+                      value={sweep.values}
+                      onChange={(values) =>
+                        update({
+                          sweep: {
+                            ...sweep,
+                            binding: selectedBinding.id,
+                            values,
+                          },
+                        })
+                      }
                     />
+                  ) : (
+                    <div style={row}>
+                      <Text
+                        label="Start"
+                        value={sweep.start}
+                        onChange={(start) =>
+                          update({
+                            sweep: {
+                              ...sweep,
+                              binding: selectedBinding.id,
+                              start,
+                            },
+                          })
+                        }
+                      />
+                      <Text
+                        label="Stop"
+                        value={sweep.stop}
+                        onChange={(stop) =>
+                          update({
+                            sweep: {
+                              ...sweep,
+                              binding: selectedBinding.id,
+                              stop,
+                            },
+                          })
+                        }
+                      />
+                      <Field label="Points (2–100)" size="small">
+                        <Input
+                          size="small"
+                          type="number"
+                          min={2}
+                          max={100}
+                          value={String(sweep.count)}
+                          onChange={(_, d) => {
+                            const count = Number(d.value);
+                            if (
+                              Number.isInteger(count) &&
+                              count >= 2 &&
+                              count <= 100
+                            )
+                              update({
+                                sweep: {
+                                  ...sweep,
+                                  binding: selectedBinding.id,
+                                  count,
+                                },
+                              });
+                          }}
+                        />
+                      </Field>
+                    </div>
+                  )}
+                  <Button
+                    size="small"
+                    disabled={busy || !!getSession()}
+                    onClick={() => {
+                      try {
+                        const values = sweepValues(sweep, selectedBinding);
+                        setPoints([]);
+                        const capturedDrawing = drawing,
+                          capturedSetup = setup;
+                        let batch: SweepRun = {
+                          id: uid(),
+                          created: new Date().toISOString(),
+                          state: 'running',
+                          binding: structuredClone(selectedBinding),
+                          definition: { ...sweep, binding: selectedBinding.id },
+                          measurements: structuredClone(definitions),
+                          points: [],
+                        };
+                        setBatchId(batch.id);
+                        setBatchBinding(batch.binding);
+                        setBatchDefinitions(batch.measurements);
+                        start(async (controller) => {
+                          persistSweep(batch);
+                          try {
+                            await runSweep(
+                              values,
+                              (value) =>
+                                exploreOnce(
+                                  capturedDrawing,
+                                  sheet.id,
+                                  {
+                                    ...capturedSetup,
+                                    runs:
+                                      store
+                                        .getState()
+                                        .docStore.present.drawing.sheets.find(
+                                          (s) => s.id === sheet.id,
+                                        )?.simulation.runs || [],
+                                  },
+                                  {
+                                    ...overrides,
+                                    [selectedBinding.id]: String(value),
+                                  },
+                                  commit,
+                                  controller.signal,
+                                  reportDiagnostics,
+                                ),
+                              (point, index) => {
+                                batch = {
+                                  ...batch,
+                                  state:
+                                    point.run.state === 'complete'
+                                      ? batch.state
+                                      : point.run.state === 'stopped'
+                                      ? 'stopped'
+                                      : 'failed',
+                                  points: [
+                                    ...batch.points,
+                                    { value: point.value, runId: point.run.id },
+                                  ],
+                                };
+                                persistSweep(batch);
+                                if (alive.current) {
+                                  onAcquisition?.(point.run.id);
+                                  setPoints((previous) => [...previous, point]);
+                                  setProgress(
+                                    `${index + 1} / ${values.length}`,
+                                  );
+                                }
+                              },
+                              controller.signal,
+                            );
+                            batch = {
+                              ...batch,
+                              state:
+                                batch.state === 'running'
+                                  ? 'complete'
+                                  : batch.state,
+                            };
+                          } catch (error) {
+                            batch = {
+                              ...batch,
+                              state: controller.signal.aborted
+                                ? 'stopped'
+                                : 'failed',
+                            };
+                            throw error;
+                          } finally {
+                            persistSweep(batch);
+                          }
+                        });
+                      } catch (e) {
+                        setError(String(e));
+                      }
+                    }}
+                  >
+                    Run sweep
+                  </Button>
+                </details>
+              )}
+              {busy && (
+                <div style={row}>
+                  <span role="status">Running {progress}</span>
+                  <Button size="small" onClick={() => abort.current?.abort()}>
+                    Cancel
+                  </Button>
+                </div>
+              )}
+              {!!setup.sweeps?.length && (
+                <Field label="Saved sweep" size="small">
+                  <Select
+                    size="small"
+                    value={batchId}
+                    disabled={busy}
+                    onChange={(_, d) => {
+                      const batch = setup.sweeps.find((b) => b.id === d.value);
+                      if (!batch) return;
+                      setBatchId(batch.id);
+                      setBatchBinding(batch.binding);
+                      setBatchDefinitions(batch.measurements);
+                      setPoints(restoredSweep(batch, setup));
+                    }}
+                  >
+                    {setup.sweeps.map((batch) => (
+                      <option key={batch.id} value={batch.id}>
+                        {new Date(batch.created).toLocaleString()} ·{' '}
+                        {batch.binding.name} ·{' '}
+                        {batch.state === 'running' && !busy
+                          ? 'interrupted'
+                          : batch.state}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              )}
+              {!!points.length && (
+                <>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>
+                            {resultBinding?.name} ({resultBinding?.unit})
+                          </th>
+                          <th>Run</th>
+                          {batchDefinitions.map((d) => (
+                            <th key={d.id}>{d.name}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {points.map((p, i) => (
+                          <tr key={i}>
+                            <td>{format(p.value)}</td>
+                            <td title={`${p.run.id} ${p.run.buildId}`}>
+                              {p.run.state}
+                            </td>
+                            {batchDefinitions.map((d) => {
+                              const r = p.run.explorer?.measurements.find(
+                                (m) => m.id === d.id,
+                              );
+                              return (
+                                <td key={d.id} title={r?.explanation}>
+                                  {r?.state === 'valid'
+                                    ? `${format(r.value)} ${r.unit}`
+                                    : r?.state || 'unavailable'}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Button
+                    size="small"
+                    onClick={() =>
+                      download(
+                        'parameter-sweep.json',
+                        JSON.stringify(
+                          points.map(({ value, run }) => ({ value, run })),
+                          null,
+                          2,
+                        ),
+                        'application/json',
+                      )
+                    }
+                  >
+                    Export sweep report
+                  </Button>
+                  {compare && plotPoints.length > 0 && (
+                    <>
+                      <Field label="Overlay signal" size="small">
+                        {selectSource(
+                          overlaySignal ||
+                            sweepTraces[0]?.name ||
+                            setup.signals[0] ||
+                            '',
+                          setOverlaySignal,
+                        )}
+                      </Field>
+                      <p style={{ fontSize: 12 }}>
+                        First curve: {resultBinding?.name} ={' '}
+                        {plotPoints[0].value} {resultBinding?.unit}
+                      </p>
+                      <Waveform
+                        compact
+                        initialMode={
+                          setup.analysis.kind === 'ac' ? 'db' : 'real'
+                        }
+                        data={
+                          deriveTraces(plotPoints[0].data, sweepTraces).data
+                        }
+                        signals={[
+                          overlaySignal ||
+                            sweepTraces[0]?.name ||
+                            setup.signals[0] ||
+                            '',
+                        ]}
+                        overlays={plotPoints.slice(1).map((p) => ({
+                          label: `${resultBinding?.name}=${p.value}`,
+                          data: deriveTraces(
+                            p.data,
+                            p.run.explorer?.traces || sweepTraces,
+                          ).data,
+                        }))}
+                      />
+                    </>
+                  )}
+                  {sweepMetric && (
+                    <>
+                      <Field label="Metric versus parameter" size="small">
+                        <Select
+                          size="small"
+                          value={sweepMetric.id}
+                          onChange={(_, d) => setMetricId(d.value)}
+                        >
+                          {batchDefinitions.map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {d.name}
+                            </option>
+                          ))}
+                        </Select>
+                      </Field>
+                      {trend.vectors[0].real.length > 0 && (
+                        <Waveform
+                          compact
+                          data={trend}
+                          signals={[sweepMetric.name]}
+                        />
+                      )}
+                    </>
                   )}
                 </>
               )}
             </>
           )}
-        </>
-      )}
-      {tab === 'op' && (
-        <>
-          <p style={{ fontSize: 12 }}>
-            Fresh, completed operating-point acquisitions only. Currents and
-            signed consumed power use solver branch currents or an ideal
-            resistor’s V/R. Other device information is shown only when supplied
-            by the solver.
-          </p>
-          <Select
-            size="small"
-            aria-label="Schematic DC annotations"
-            value={mode}
-            onChange={(_, d) => {
-              const next = d.value as typeof mode;
-              setMode(next);
-              setOverlayMode(drawing.documentId, next);
-            }}
-          >
-            {['off', 'voltages', 'currents', 'power', 'diagnostics'].map(
-              (m) => (
-                <option key={m}>{m}</option>
-              ),
-            )}
-          </Select>
-          <p role="status">
-            {run?.analysis.kind !== 'op'
-              ? 'Run Operating Point to annotate the drawing.'
-              : !fresh
-              ? 'Acquisition is stale; run again.'
-              : Object.keys(run.explorer?.overrides || {}).length
-              ? 'Run the saved circuit without temporary tuning to annotate the drawing.'
-              : `${run.analysis.temperature} °C · ${run.created} · ${run.backend} ${run.buildId}`}
-          </p>
-          {mode === 'diagnostics' &&
-            data?.vectors
-              .filter((v) => /^@/.test(v.name))
-              .map((v) => (
-                <div key={v.name}>
-                  {v.name}: {format(v.real[0])} {v.unit}
-                </div>
-              ))}
-          {mode === 'diagnostics' &&
-            !data?.vectors.some((v) => /^@/.test(v.name)) && (
-              <p>
-                No device operating-point vectors were supplied for this
-                acquisition.
+          {tab === 'op' && (
+            <>
+              <p style={{ fontSize: 12 }}>
+                Fresh, completed operating-point acquisitions only. Currents and
+                signed consumed power use solver branch currents or an ideal
+                resistor’s V/R. Other device information is shown only when
+                supplied by the solver.
               </p>
-            )}
-        </>
-      )}
-      {evidence && (
-        <div style={{ marginTop: 12 }}>
-          <b>{evidence.name} — evidence</b>
-          <p>{results.find((r) => r.id === evidence.id)?.explanation}</p>
-          {evidenceData ? (
-            <Waveform
-              compact
-              data={evidenceData}
-              signals={[
-                evidence.source,
-                ...(evidence.reference ? [evidence.reference] : []),
-              ]}
-              evidence={results.find((r) => r.id === evidence.id)?.evidence}
-            />
-          ) : (
-            <p>
-              The captured value is retained; waveform evidence is unavailable
-              for this circuit or the numerical results were removed.
-            </p>
+              <Select
+                size="small"
+                aria-label="Schematic DC annotations"
+                value={mode}
+                onChange={(_, d) => {
+                  const next = d.value as typeof mode;
+                  setMode(next);
+                  setOverlayMode(drawing.documentId, next);
+                }}
+              >
+                {['off', 'voltages', 'currents', 'power', 'diagnostics'].map(
+                  (m) => (
+                    <option key={m}>{m}</option>
+                  ),
+                )}
+              </Select>
+              <p role="status">
+                {run?.analysis.kind !== 'op'
+                  ? 'Run Operating Point to annotate the drawing.'
+                  : !fresh
+                  ? 'Acquisition is stale; run again.'
+                  : Object.keys(run.explorer?.overrides || {}).length
+                  ? 'Run the saved circuit without temporary tuning to annotate the drawing.'
+                  : `${run.analysis.temperature} °C · ${run.created} · ${run.backend} ${run.buildId}`}
+              </p>
+              {mode === 'diagnostics' &&
+                data?.vectors
+                  .filter((v) => /^@/.test(v.name))
+                  .map((v) => (
+                    <div key={v.name}>
+                      {v.name}: {format(v.real[0])} {v.unit}
+                    </div>
+                  ))}
+              {mode === 'diagnostics' &&
+                !data?.vectors.some((v) => /^@/.test(v.name)) && (
+                  <p>
+                    No device operating-point vectors were supplied for this
+                    acquisition.
+                  </p>
+                )}
+            </>
           )}
-          <Button size="small" onClick={() => setEvidence(undefined)}>
-            Close evidence
-          </Button>
+          {evidence && (
+            <div style={{ marginTop: 12 }}>
+              <b>{evidence.name} — evidence</b>
+              <p>{results.find((r) => r.id === evidence.id)?.explanation}</p>
+              {evidenceData ? (
+                <Waveform
+                  compact
+                  data={evidenceData}
+                  signals={[
+                    evidence.source,
+                    ...(evidence.reference ? [evidence.reference] : []),
+                  ]}
+                  evidence={results.find((r) => r.id === evidence.id)?.evidence}
+                />
+              ) : (
+                <p>
+                  The captured value is retained; waveform evidence is
+                  unavailable for this circuit or the numerical results were
+                  removed.
+                </p>
+              )}
+              <Button size="small" onClick={() => setEvidence(undefined)}>
+                Close evidence
+              </Button>
+            </div>
+          )}
+          {error && <p role="alert">{error}</p>}
         </div>
-      )}
-      {error && <p role="alert">{error}</p>}
+      </div>
     </section>
   );
 }

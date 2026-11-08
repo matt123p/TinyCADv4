@@ -37,7 +37,7 @@ import {
 } from '../../simulation/session';
 import { useInstrumentAcquisition } from '../simulation/useInstrumentAcquisition';
 import { Waveform } from '../simulation/Waveform';
-import { openInstrumentWindow } from '../simulation/InstrumentWindows';
+import { openInstrumentWindow } from '../simulation/instrumentWindowState';
 import { measure } from '../../simulation/metrics';
 import { symbolReference } from '../../simulation/bindings';
 import {

@@ -1,8 +1,9 @@
-﻿import fs from 'node:fs/promises';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { build } from 'esbuild';
+import { compileString } from 'sass';
 
 const root = process.cwd();
 const directory = path.join(root, 'build/qualification/chart-windows');
@@ -25,6 +26,7 @@ await build({
     import { Provider } from 'react-redux';
     import { createStore } from 'redux';
     import { DocStoreReducer } from './src/state/stores/docStoreReducer';
+    import { SimulationSheet } from './src/components/simulation/SimulationSheet';
     import { ChartWorkspace } from './src/components/simulation/ChartWorkspace';
     import { OperatingPointOverlay } from './src/components/simulation/OperatingPointOverlay';
     import { createTeachingDrawing } from './src/simulation/examples';
@@ -40,6 +42,12 @@ await build({
     const assert = (condition, message) => { if (!condition) throw Error(message); };
     async function waitFor(test) { for(let i=0;i<100;i++){if(test())return;await delay(50);}throw Error('Chart window timed out'); }
     async function verify() {
+      let updateDepthWarning = false;
+      const originalError = console.error;
+      console.error = (...args) => {
+        if (args.some(arg => String(arg).includes('Maximum update depth exceeded'))) updateDepthWarning = true;
+        originalError(...args);
+      };
       const root = createRoot(document.getElementById('app'));
       const popup = openChartPopup('Chart window qualification');
       assert(popup, 'No scriptable chart popup');
@@ -114,13 +122,125 @@ await build({
         send({type:'finished',state:'complete'});
       }};
       const fixtureDrawing=createTeachingDrawing('rc-low-pass');
-      const initial={...DocStoreReducer(undefined,{type:'@@INIT'}),drawing:fixtureDrawing};
+      const base=DocStoreReducer(undefined,{type:'@@INIT'});
+      const initial={...base,drawing:fixtureDrawing,view:{...base.view,selected_sheet:1}};
       const store=createStore((state={docStore:{present:initial}},action)=>({docStore:{present:DocStoreReducer(state.docStore.present,action)}}));
-      root.render(<Provider store={store}><FluentProvider theme={webLightTheme} style={{height:1000}}><ChartWorkspace/><svg><OperatingPointOverlay sheetName={fixtureDrawing.sheets[0].name}/></svg></FluentProvider></Provider>);
+      const discoveryDrawing={...fixtureDrawing,sheets:fixtureDrawing.sheets.map(s=>s.kind==='simulation'?{...s,simulation:{...s.simulation,measurements:[],requirements:[],bindings:[],studies:[],studyRuns:[],testCases:[],sweeps:[],runs:[]}}:s)};
+      const discoveryInitial={...initial,drawing:discoveryDrawing};
+      const discoveryStore=createStore((state={docStore:{present:discoveryInitial}},action)=>({docStore:{present:DocStoreReducer(state.docStore.present,action)}}));
+      root.render(<Provider key="tool-discovery" store={discoveryStore}><FluentProvider theme={webLightTheme}><SimulationSheet toolbarTarget={null}/></FluentProvider></Provider>);
+      await waitFor(()=>!!document.querySelector('[aria-label="Circuit Explorer tools"]'));
+      const emptyToolTabs=Array.from(document.querySelector('[aria-label="Circuit Explorer tools"]').querySelectorAll('[role="tab"]'));
+      assert(emptyToolTabs.length===1 && emptyToolTabs[0].getAttribute('value')==='tools','New setups should start with the tool catalog only');
+      document.querySelector('button[aria-label="Add Measurements"]').click();await delay(30);
+      assert(!!Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Add measurement'),'Adding measurements should reveal its editor');
+      root.render(<Provider store={store}><FluentProvider theme={webLightTheme} style={{height:1000}}><SimulationSheet toolbarTarget={null}/><ChartWorkspace/><svg><OperatingPointOverlay sheetName={fixtureDrawing.sheets[0].name}/></svg></FluentProvider></Provider>);
       const button=(name)=>Array.from(document.querySelectorAll('button,[role="tab"]')).find(b=>b.textContent.trim()===name || (b.getAttribute('role')==='tab' && b.textContent.trim().startsWith(name)));
+      const openExplorerTool=async name=>{
+        const nav=document.querySelector('[aria-label="Circuit Explorer tools"]');
+        const existing=Array.from(nav.querySelectorAll('[role="tab"]')).find(t=>t.textContent.startsWith(name));
+        if(existing)existing.click();
+        else {
+          Array.from(nav.querySelectorAll('[role="tab"]')).find(t=>t.textContent.startsWith('Add tools')).click();
+          await waitFor(()=>!!document.querySelector('button[aria-label="Add '+name+'"]'));
+          document.querySelector('button[aria-label="Add '+name+'"]').click();
+        }
+        await delay(30);
+      };
+      await waitFor(()=>!!document.querySelector('[aria-label="Simulation views"]'));
+      await waitFor(()=>document.querySelector('[aria-label="Circuit Explorer"]')?.textContent.includes('Low-pass cutoff'));
+      const sheetTabs=()=>Array.from(document.querySelector('[aria-label="Simulation views"]').querySelectorAll('[role="tab"]')).map(t=>t.getAttribute('value'));
+      assert(JSON.stringify(sheetTabs())===JSON.stringify(['setup']),'Empty simulation sheets must only show Setup');
+      assert(!!document.querySelector('[aria-label="Simulation sheet"] [aria-label="Circuit Explorer"]'),'Circuit Explorer is missing from the simulation sheet');
+      assert(!document.querySelector('[aria-label="Simulation charts"] [aria-label="Circuit Explorer"]'),'Circuit Explorer is still in the chart panel');
+      const toolNav=document.querySelector('[aria-label="Circuit Explorer tools"]');
+      assert(toolNav.getAttribute('aria-orientation')==='vertical','Explorer tools must use vertical navigation');
+      assert(!Array.from(toolNav.querySelectorAll('[role="tab"]')).some(t=>t.textContent.startsWith('DC overlay')),'Unused tools should be hidden');
+      assert(Array.from(document.querySelectorAll('.simulation-optional-section')).every(d=>!d.open),'Optional setup editors should start collapsed');
+      const models=document.querySelector('[aria-label="Attached SPICE models"]');
+      const modelsDisclosure=models.closest('details');
+      modelsDisclosure.open=true;await delay(30);
+      assert(!models.querySelector('details'),'SPICE models should not have another disclosure inside');
+      assert(models.querySelector('input[aria-label="Attach SPICE model file"]').getBoundingClientRect().height>0,'Opening SPICE models must reveal the editor directly');
+      modelsDisclosure.open=false;
+      const beforeTools=JSON.stringify(store.getState().docStore.present.drawing.sheets[1].simulation);
+      await openExplorerTool('DC overlay');
+      assert(!!document.querySelector('select[aria-label="Schematic DC annotations"]'),'Adding a tool must reveal its controls');
+      button('Hide tool').click();await delay(30);
+      assert(!document.querySelector('select[aria-label="Schematic DC annotations"]'),'Hidden tool controls should not remain visible');
+      assert(JSON.stringify(store.getState().docStore.present.drawing.sheets[1].simulation)===beforeTools,'Showing and hiding tools must preserve the saved setup');
+      await openExplorerTool('Measurements');
       await waitFor(()=>!!button('Run'));button('Run').click();
       const setup=()=>store.getState().docStore.present.drawing.sheets[1].simulation;
       await waitFor(()=>setup().runs.length===1);
+      await waitFor(()=>sheetTabs().includes('data'));
+      assert(!sheetTabs().includes('plot') && sheetTabs().includes('data') && sheetTabs().includes('diagnostics'),'Simulation result tabs are incorrect');
+      button('Data').click();await waitFor(()=>document.querySelector('[role="tabpanel"][aria-label="data"]')?.textContent.includes('samples'));
+      button('Diagnostics').click();await waitFor(()=>document.querySelector('[role="tabpanel"][aria-label="diagnostics"]')?.textContent.includes('ui-fixture'));
+      button('Setup').click();await waitFor(()=>!!document.querySelector('[aria-label="Circuit Explorer"]'));
+      const panel=document.querySelector('[aria-label="Simulation charts"]');
+      assert(!panel.querySelector('input[aria-label="Chart title"]'),'Charts still have editable names');
+      button('Add chart').click();await delay(50);
+      const chartSections=()=>Array.from(panel.querySelectorAll('section[aria-label="Chart"]'));
+      const added=chartSections().at(-1);
+      const chartOf=section=>Chart.getChart(section.querySelector('canvas'));
+      await waitFor(()=>!!chartOf(added));
+      assert(chartOf(added).data.datasets.length>0,'A new chart should start with sensible signals');
+      added.querySelector('button[aria-label="Signals"]').click();await delay(30);
+      const toggleSignal=async(section,name)=>{const item=Array.from(section.ownerDocument.querySelectorAll('[role="menuitemcheckbox"]')).find(l=>l.textContent===name);assert(item,'Missing signal '+name);item.click();await delay(30);};
+      for(const dataset of [...chartOf(added).data.datasets])await toggleSignal(added,dataset.label);
+      await waitFor(()=>chartOf(added)?.data.datasets.length===0);
+      await toggleSignal(added,'V(out) (V)');await toggleSignal(added,'I(VP1) (A)');
+      await waitFor(()=>chartOf(added)?.data.datasets.length===2);
+      assert(Object.keys(chartOf(added).scales).filter(k=>k.startsWith('y')).length===2,'Mixed signals must keep separate unit axes');
+      added.querySelector('button[aria-label="Zoom"]').click();await delay(30);
+      const menuItem=(doc,text)=>Array.from(doc.querySelectorAll('[role="menuitem"]')).find(e=>e.textContent===text);
+      assert(menuItem(document,'Zoom in') && menuItem(document,'Zoom out') && menuItem(document,'Fit'),'Zoom commands are missing from the menu');
+      menuItem(document,'Zoom in').click();await delay(30);
+      added.querySelector('button[aria-label="Chart menu"]').click();await delay(30);
+      assert(menuItem(document,'Download CSV') && menuItem(document,'Download image') && menuItem(document,'Chart options and cursors'),'Chart actions are missing');
+      menuItem(document,'Chart options and cursors').click();
+      await waitFor(()=>!!document.querySelector('[role="group"][aria-label="Chart options and cursors"]'));
+      const optionsGroup=document.querySelector('[role="group"][aria-label="Chart options and cursors"]');
+      const gridLabel=Array.from(optionsGroup.querySelectorAll('label')).find(l=>l.textContent==='Grid');
+      optionsGroup.querySelector('#'+CSS.escape(gridLabel.htmlFor)).click();
+      await waitFor(()=>chartOf(added)?.options.scales.x.grid.display===false);
+      for(let i=0;i<2;i++){document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));await delay(30);}
+      const beforePop=chartSections().length;
+      const nativeOpenChart=window.open;let chartChild;
+      window.open=(...args)=>(chartChild=nativeOpenChart.apply(window,args));
+      added.querySelector('button[aria-label="Open chart in a new window"]').click();
+      await waitFor(()=>!!chartChild?.document.querySelector('section[aria-label="Chart"] canvas'));
+      assert(chartSections().length===beforePop-1,'Popped out charts must leave no panel card');
+      const popupSection=chartChild.document.querySelector('section[aria-label="Chart"]');
+      assert(popupSection.querySelector('button[aria-label="Zoom"]') && popupSection.querySelector('button[aria-label="Chart menu"]'),'Popup chart controls differ from the panel');
+      assert(chartOf(popupSection).options.scales.x.grid.display===false,'Chart options were lost when popping out');
+      const popupRoot=popupSection.parentElement.parentElement;
+      popupRoot.style.height='820px';
+      chartChild.dispatchEvent(new chartChild.Event('resize'));
+      await waitFor(()=>chartOf(popupSection)?.height>600);
+      const tallHeight=chartOf(popupSection).height;
+      popupRoot.style.height='420px';
+      chartChild.dispatchEvent(new chartChild.Event('resize'));
+      await waitFor(()=>chartOf(popupSection)?.height<tallHeight-300);
+      assert(chartOf(popupSection).height>120,'A shorter popup must retain a usable plot');
+      popupRoot.style.height='100%';
+      chartChild.dispatchEvent(new chartChild.Event('resize'));
+      popupSection.querySelector('button[aria-label="Chart menu"]').click();await delay(30);
+      assert(menuItem(chartChild.document,'Download CSV') && menuItem(chartChild.document,'Download image'),'Popup downloads are missing');
+      chartChild.document.dispatchEvent(new chartChild.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));await delay(30);
+      popupSection.querySelector('button[aria-label="Signals"]').click();await delay(30);await toggleSignal(popupSection,'V(out) (V)');await toggleSignal(popupSection,'I(VP1) (A)');
+      await waitFor(()=>chartOf(popupSection)?.data.datasets.length===0);
+      chartChild.close();window.open=nativeOpenChart;await waitFor(()=>chartSections().length===beforePop);
+      chartSections().at(-1).querySelector('button[aria-label="Remove chart"]').click();
+      const successfulSetup=setup();
+      const failedRun={...successfulSetup.runs[0],id:'failed-without-data',state:'failed',samples:0,dataState:'not-retained',buildId:'no-data-solver',error:'Fixture failure'};
+      store.dispatch({type:'simulation/update',sheetId:fixtureDrawing.sheets[1].id,setup:{...successfulSetup,runs:[...successfulSetup.runs,failedRun]}});
+      await waitFor(()=>sheetTabs().includes('diagnostics')&&!sheetTabs().includes('data'));
+      assert(!sheetTabs().includes('measurements'),'A run without numerical data must hide result tabs');
+      button('Diagnostics').click();await waitFor(()=>document.querySelector('[role="tabpanel"][aria-label="diagnostics"]')?.textContent.includes('no-data-solver'));
+      store.dispatch({type:'simulation/update',sheetId:fixtureDrawing.sheets[1].id,setup:successfulSetup});
+      button('Setup').click();await waitFor(()=>!!document.querySelector('[aria-label="Circuit Explorer"]'));
       assert(setup().runs[0].explorer.measurements[0].state==='valid','Named metric did not capture');
       button('Tune / sweep').click();
       const tuningInput=()=>document.querySelector('input[aria-label="R1 resistance temporary value"]');
@@ -149,17 +269,17 @@ await build({
       const checks=setup().runs.at(-1).explorer.checks;
       assert(checks[0].state==='fail','Changed design should fail the nominal cutoff requirement');
       assert(setup().sweeps.length===1 && setup().sweeps[0].state==='complete' && setup().sweeps[0].points.length===5,'Sweep history was not captured');
-      root.render(<Provider key="restored-sweep" store={store}><FluentProvider theme={webLightTheme} style={{height:1000}}><ChartWorkspace/></FluentProvider></Provider>);
+      root.render(<Provider key="restored-sweep" store={store}><FluentProvider theme={webLightTheme} style={{height:1000}}><SimulationSheet toolbarTarget={null}/><ChartWorkspace/></FluentProvider></Provider>);
       await waitFor(()=>document.querySelector('[aria-label="Circuit Explorer"]')?.textContent.includes('Captured results'));button('Tune / sweep').click();
       await waitFor(()=>Array.from(document.querySelectorAll('canvas')).some(canvas=>Chart.getChart(canvas)?.data.datasets.length===5));
       assert(document.querySelector('[aria-label="Circuit Explorer"]').querySelectorAll('tbody tr').length===5,'Reopened sweep table is incomplete');
       const dcDrawing=createTeachingDrawing('voltage-divider');
-      const dcInitial={...DocStoreReducer(undefined,{type:'@@INIT'}),drawing:dcDrawing};
+      const dcInitial={...base,drawing:dcDrawing,view:{...base.view,selected_sheet:1}};
       const dcStore=createStore((state={docStore:{present:dcInitial}},action)=>({docStore:{present:DocStoreReducer(state.docStore.present,action)}}));
-      root.render(<Provider key="dc-check" store={dcStore}><FluentProvider theme={webLightTheme} style={{height:1000}}><ChartWorkspace/><svg><OperatingPointOverlay sheetName={dcDrawing.sheets[0].name}/></svg></FluentProvider></Provider>);
+      root.render(<Provider key="dc-check" store={dcStore}><FluentProvider theme={webLightTheme} style={{height:1000}}><SimulationSheet toolbarTarget={null}/><ChartWorkspace/><svg><OperatingPointOverlay sheetName={dcDrawing.sheets[0].name}/></svg></FluentProvider></Provider>);
       await waitFor(()=>document.querySelector('[aria-label="Circuit Explorer"]')?.textContent.includes('Output voltage'));button('Run').click();
       await waitFor(()=>dcStore.getState().docStore.present.drawing.sheets[1].simulation.runs.length===1);
-      button('DC overlay').click();
+      await openExplorerTool('DC overlay');
       await waitFor(()=>!!document.querySelector('select[aria-label="Schematic DC annotations"]'));
       const overlaySelect=document.querySelector('select[aria-label="Schematic DC annotations"]');overlaySelect.value='voltages';overlaySelect.dispatchEvent(new Event('change',{bubbles:true}));
       await waitFor(()=>Array.from(document.querySelectorAll('svg text')).some(t=>t.textContent.includes('2.5 V')));
@@ -180,13 +300,17 @@ await build({
       const hash=await digest(new TextEncoder().encode(buildDeck(new NetlistWorkerState().init({...lab,sheets:[lab.sheets[0]]}),labSetup)+JSON.stringify(labSetup.models)));
       const labRun={id:'lab-ui-acquisition',created:new Date().toISOString(),state:'complete',backend:'native',buildId:'ui-fixture',circuitHash:hash,setupHash:hash,analysis:{...labSetup.analysis},parameters:{},samples:time.length,pinned:false,dataState:'available'};
       activateResultDocument(lab.documentId);putResult(labRun.id,labData);labSetup.runs=[labRun];
-      const labInitial={...DocStoreReducer(undefined,{type:'@@INIT'}),drawing:lab};
+      const labInitial={...base,drawing:lab,view:{...base.view,selected_sheet:1}};
       const labStore=createStore((state={docStore:{present:labInitial}},action)=>({docStore:{present:DocStoreReducer(state.docStore.present,action)}}));
       const labSymbols=lab.sheets[0].items.filter(i=>i.NodeName==='symbol'&&readControl(i)?.kind==='instrument');
       const scopeSymbol=labSymbols.find(i=>readControl(i).type==='scope'),meterSymbol=labSymbols.find(i=>readControl(i).type==='meter');
-      const renderLab=symbol=>root.render(<Provider key="laboratory" store={labStore}><FluentProvider theme={webLightTheme} style={{height:1200}}><InstrumentPanel symbol={symbol} drawing={labStore.getState().docStore.present.drawing} dispatch={labStore.dispatch}/><InstrumentWindowHost/><ChartWorkspace/></FluentProvider></Provider>);
+      const renderLab=symbol=>root.render(<Provider key="laboratory" store={labStore}><FluentProvider theme={webLightTheme} style={{height:1200}}><InstrumentPanel symbol={symbol} drawing={labStore.getState().docStore.present.drawing} dispatch={labStore.dispatch}/><InstrumentWindowHost/><SimulationSheet toolbarTarget={null}/><ChartWorkspace/></FluentProvider></Provider>);
       const children=[],nativeOpen=window.open;window.open=(...args)=>{const child=nativeOpen.apply(window,args);if(child)children.push(child);return child;};
       renderLab(scopeSymbol);await waitFor(()=>!!document.querySelector('[aria-label="scope instrument"] canvas'));
+      const previousRuns=labStore.getState().docStore.present.drawing.sheets[1].simulation.runs.length;
+      button('Acquire').click();
+      await waitFor(()=>labStore.getState().docStore.present.drawing.sheets[1].simulation.runs.length===previousRuns+1);
+      assert(labStore.getState().docStore.present.drawing.sheets[1].simulation.runs.at(-1).state==='complete','Scope Acquire did not complete');
       button('Pop out instrument').click();await waitFor(()=>children.length===1 && !!children[0].document.querySelector('canvas'));
       const scopeChart=()=>Chart.getChart(children[0].document.querySelector('canvas'));
       await waitFor(()=>!!scopeChart());
@@ -221,7 +345,8 @@ await build({
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(samples,'2');samples.dispatchEvent(new Event('input',{bubbles:true}));
       await delay(30);button('Run study').click();await waitFor(()=>labStore.getState().docStore.present.drawing.sheets[1].simulation.studyRuns?.at(-1)?.state==='complete'&&labStore.getState().docStore.present.drawing.sheets[1].simulation.studyRuns.at(-1).points.length===2);
       assert(labStore.getState().docStore.present.drawing.sheets[1].simulation.studyRuns.at(-1).points.every(p=>p.state==='complete'),'UI tolerance study failed');
-      window.chartSmoke.report({ok:true,windows:2,unitAxes:2,liveValue:7,returnedToPanel:docked,sourceWaveform:readControl(source).waveform,sourceAmplitude:readControl(source).amplitude,explorer:{temporaryTuning:true,cachedReset:true,apply:true,sweepCurves:5,metricPoints:5,restoredSweep:true,typedRequirement:checks[0].state,dcOverlay:true,staleOverlayHidden:true},laboratory:{instrumentWindows:2,independentClosure:true,selectionPreserved:true,targetedControls:true,dualScale:true,monteCarloPoints:2,p2Excluded:true}});
+      assert(!updateDepthWarning,'Scope acquisition or controls caused a React update loop');
+      window.chartSmoke.report({ok:true,windows:2,unitAxes:2,liveValue:7,returnedToPanel:docked,sourceWaveform:readControl(source).waveform,sourceAmplitude:readControl(source).amplitude,explorer:{temporaryTuning:true,cachedReset:true,apply:true,sweepCurves:5,metricPoints:5,restoredSweep:true,typedRequirement:checks[0].state,dcOverlay:true,staleOverlayHidden:true},laboratory:{acquireButton:true,instrumentWindows:2,independentClosure:true,selectionPreserved:true,targetedControls:true,dualScale:true,monteCarloPoints:2,p2Excluded:true}});
     }
     verify().catch(error=>window.chartSmoke.report({ok:false,error:error.stack}));
   `,
@@ -232,13 +357,17 @@ await build({
   outfile: path.join(directory, 'renderer.js'),
   define: {
     'process.env.TARGET_SYSTEM': '"electron"',
-    'process.env.NODE_ENV': '"production"',
+    'process.env.NODE_ENV': '"development"',
   },
   logLevel: 'error',
   plugins: [
     {
       name: 'isolate-application-startup',
       setup(builder) {
+        builder.onLoad({ filter: /\.scss$/ }, async ({ path: filename }) => ({
+          contents: compileString(await fs.readFile(filename, 'utf8')).css,
+          loader: 'css',
+        }));
         builder.onResolve({ filter: /\/(?:startup|i18n)$/ }, (args) => ({
           path: args.path.endsWith('/startup') ? 'startup' : 'i18n',
           namespace: 'fixture',
@@ -258,7 +387,7 @@ await build({
 });
 await fs.writeFile(
   path.join(directory, 'index.html'),
-  '<!doctype html><html><body><div id="app"></div><script src="renderer.js"></script></body></html>',
+  '<!doctype html><html><head><link rel="stylesheet" href="renderer.css"></head><body><div id="app"></div><script src="renderer.js"></script></body></html>',
 );
 await fs.writeFile(
   path.join(directory, 'preload.cjs'),
@@ -289,6 +418,7 @@ app.commandLine.appendSwitch('disable-gpu');
 })().catch(error=>{console.error(error);app.exit(1);});
 `,
 );
+if (!process.argv.includes('--build-only')) {
 const executable = createRequire(import.meta.url)('electron');
 const env = { ...process.env };
 delete env.ELECTRON_RUN_AS_NODE;
@@ -303,3 +433,4 @@ const result = await new Promise((resolve, reject) => {
   child.once('exit', (code) => resolve(code));
 });
 process.exitCode = result ?? 1;
+}

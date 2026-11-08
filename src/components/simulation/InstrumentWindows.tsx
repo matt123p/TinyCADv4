@@ -2,39 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { docDrawing } from '../../state/undo/undo';
 import { DocItemTypes } from '../../model/dsnItem';
-import { ChartPopup, ChartPopupPortal, openChartPopup } from './ChartPopup';
+import { ChartPopupPortal } from './ChartPopup';
 import { InstrumentPanel } from '../panel/InstrumentPanel';
 import { readControl } from '../../simulation/controls';
-const entries = new Map<
-    string,
-    { document: string; sheet: string; id: number; popup: ChartPopup }
-  >(),
-  listeners = new Set<() => void>();
-const publish = () => listeners.forEach((fn) => fn());
-export function openInstrumentWindow(
-  document: string,
-  sheet: string,
-  id: number,
-  title: string,
-): boolean {
-  const key = `${document}:${sheet}:${id}`,
-    existing = entries.get(key);
-  if (existing && !existing.popup.child.closed) {
-    existing.popup.child.focus();
-    return true;
-  }
-  const popup = openChartPopup(title);
-  if (!popup) return false;
-  entries.set(key, { document, sheet, id, popup });
-  publish();
-  return true;
-}
-function close(key: string) {
-  const entry = entries.get(key);
-  entries.delete(key);
-  if (entry && !entry.popup.child.closed) entry.popup.child.close();
-  publish();
-}
+import {
+  instrumentWindows as entries,
+  instrumentWindowListeners as listeners,
+  closeInstrumentWindow as close,
+} from './instrumentWindowState';
 export function InstrumentWindowHost() {
   const drawing = useSelector((s: docDrawing) => s.docStore.present.drawing),
     dispatch = useDispatch(),
