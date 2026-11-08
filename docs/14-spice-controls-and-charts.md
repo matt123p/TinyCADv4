@@ -26,6 +26,11 @@ source statement, including delay, ramps, damping and modulation. Invalid settin
 show an error and prevent simulation startup. Source type changes update the
 reference prefix and symbol artwork. Standard component references remain editable.
 
+The source symbol itself shows the selected signal type: sine, pulse, triangle,
+piecewise-linear, exponential or FM. DC keeps the standard voltage/current mark;
+time-varying current sources also retain a direction arrow. Changing Signal type
+updates the schematic icon immediately, including sources from older drawings.
+
 New sources and probes use an 8 mm terminal span, comparable to normal library
 parts. Their reference/value labels retain normal text sizes. Older large controls
 offer **Use compact symbol** in the bottom editor; this keeps the first terminal

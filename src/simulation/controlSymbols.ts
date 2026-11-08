@@ -11,6 +11,7 @@ import {
   controlTemplate,
   defaultSource,
   readControl,
+  SourceConfig,
 } from './controls';
 
 export type ControlTool =
@@ -75,11 +76,76 @@ function controlPins(config: SpiceControl, scale = COMPACT_SCALE): dsnPin[] {
       : []),
   ];
 }
-function controlBody(config: SpiceControl, scale = COMPACT_SCALE): DocItem[] {
+function waveformGlyph(
+  config: SourceConfig,
+  center: number,
+  amplitude: number,
+): [number, number][] {
+  const points = (values: [number, number][]): [number, number][] =>
+    values.map(([x, y]) => [x, center + y * amplitude]);
+  switch (config.waveform) {
+    case 'pulse':
+      return points([
+        [-24, 1],
+        [-14, 1],
+        [-14, -1],
+        [9, -1],
+        [9, 1],
+        [24, 1],
+      ]);
+    case 'triangle':
+      return points([
+        [-24, 1],
+        [-12, -1],
+        [0, 1],
+        [12, -1],
+        [24, 1],
+      ]);
+    case 'pwl':
+      return points([
+        [-24, 1],
+        [-12, 1],
+        [-4, -1],
+        [8, -0.3],
+        [16, -0.3],
+        [24, -1],
+      ]);
+    case 'exponential':
+      return Array.from({ length: 33 }, (_, i) => {
+        const t = i / 32;
+        const rise =
+          (1 - Math.exp(-4 * (t < 0.5 ? t * 2 : (t - 0.5) * 2))) /
+          (1 - Math.exp(-4));
+        return [
+          -24 + t * 48,
+          center + amplitude * (t < 0.5 ? 1 - 2 * rise : -1 + 2 * rise),
+        ];
+      });
+    case 'fm':
+      return Array.from({ length: 65 }, (_, i) => {
+        const t = i / 64;
+        return [
+          -24 + t * 48,
+          center - amplitude * Math.sin(2 * Math.PI * (1.5 * t + 1.5 * t * t)),
+        ];
+      });
+    default:
+      return Array.from({ length: 33 }, (_, i) => [
+        -24 + i * 1.5,
+        center - amplitude * Math.sin((i * Math.PI) / 16),
+      ]);
+  }
+}
+
+function controlBody(
+  config: SpiceControl,
+  scale = COMPACT_SCALE,
+  nextId = get_global_id,
+): DocItem[] {
   const line = (points: [number, number][]): DocItem => ({
     ...stroke,
     NodeName: DocItemTypes.Line,
-    _id: get_global_id(),
+    _id: nextId(),
     d_points: points.map((p) => [p[0] * scale, p[1] * scale]),
     polygon: false,
   });
@@ -108,7 +174,7 @@ function controlBody(config: SpiceControl, scale = COMPACT_SCALE): DocItem[] {
         {
           ...stroke,
           NodeName: DocItemTypes.Ellipse,
-          _id: get_global_id(),
+          _id: nextId(),
           point: [-40 * scale, 40 * scale],
           point_b: [40 * scale, 120 * scale],
         },
@@ -119,7 +185,7 @@ function controlBody(config: SpiceControl, scale = COMPACT_SCALE): DocItem[] {
     ...stroke,
     stroked: false,
     NodeName: DocItemTypes.Rectangle,
-    _id: get_global_id(),
+    _id: nextId(),
     point: [(controlled ? -140 : -40) * scale, 0],
     point_b: [40 * scale, 160 * scale],
   });
@@ -145,6 +211,23 @@ function controlBody(config: SpiceControl, scale = COMPACT_SCALE): DocItem[] {
             ]),
           ]),
     );
+  } else if (config.kind === 'source' && config.waveform !== 'dc') {
+    const current = config.type === 'current';
+    body.push(
+      line(waveformGlyph(config, current ? 70 : 80, current ? 10 : 16)),
+    );
+    if (current)
+      body.push(
+        line([
+          [0, 92],
+          [0, 110],
+        ]),
+        line([
+          [-7, 102],
+          [0, 110],
+          [7, 102],
+        ]),
+      );
   } else if (config.type === 'current') {
     body.push(
       line([
@@ -174,6 +257,24 @@ function controlBody(config: SpiceControl, scale = COMPACT_SCALE): DocItem[] {
     );
   }
   return body;
+}
+
+// Refresh older saved source artwork for display without editing the drawing.
+export function sourceDrawingItems(symbol: dsnSymbol): DocItem[] | undefined {
+  const config = readControl(symbol);
+  if (
+    config?.kind !== 'source' ||
+    !symbol._symbol.uid?.startsWith('tinycad-spice-')
+  )
+    return;
+  const scale = symbol._symbol.uid.endsWith('-v1') ? 1 : COMPACT_SCALE;
+  let id = 0;
+  return [
+    ...controlBody(config, scale, () => --id),
+    ...symbol._symbol.outlines[0].items.filter(
+      (item) => item.NodeName === DocItemTypes.Pin,
+    ),
+  ];
 }
 export function controlPrefix(config: SpiceControl) {
   return config.kind === 'source'
@@ -265,7 +366,12 @@ export function updateControl(
     const scale =
       !forceCompact && result._symbol.uid.endsWith('-v1') ? 1 : COMPACT_SCALE;
     const pins = controlPins(config, scale);
-    const variant = config.kind === 'probe' ? config.mode : config.type;
+    const variant =
+      config.kind === 'probe'
+        ? config.mode
+        : config.kind === 'source'
+        ? `${config.type}-${config.waveform}`
+        : config.type;
     result = new updateSymbol({
       ...result,
       _active_points: null,

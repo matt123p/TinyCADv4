@@ -1,10 +1,11 @@
-﻿import React, { FunctionComponent, memo } from 'react';
+﻿import React, { FunctionComponent, memo, useMemo } from 'react';
 
 import { TDrawing } from './Drawing';
 import { UtilityService } from '../../util/utilityService';
 import TTextEditArea from './TextEditArea';
 import { dsnSymbol } from '../../model/dsnItem';
 import { updateSymbol } from '../../manipulators/updateSymbol';
+import { sourceDrawingItems } from '../../simulation/controlSymbols';
 
 interface TSymbolProps {
   dx: number;
@@ -21,6 +22,7 @@ interface TSymbolProps {
 
 const TSymbol: FunctionComponent<TSymbolProps> = (props: TSymbolProps) => {
   const item = props.data;
+  const sourceItems = useMemo(() => sourceDrawingItems(item), [item]);
 
   var scope = {
     dx: item.point[0],
@@ -73,7 +75,7 @@ const TSymbol: FunctionComponent<TSymbolProps> = (props: TSymbolProps) => {
         show_power={item.show_power}
         scale_x={item.scale_x}
         scale_y={item.scale_y}
-        items={outline.items}
+        items={sourceItems || outline.items}
         parent={item}
         hover={props.hover}
         selected={props.selected}
