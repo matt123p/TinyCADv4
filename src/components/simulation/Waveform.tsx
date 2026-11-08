@@ -10,6 +10,7 @@ import {
 } from '@fluentui/react-components';
 import { ResultData } from '../../simulation/contracts';
 import { csv, download } from '../../simulation/export';
+import { signalLabel } from '../../simulation/signals';
 import {
   chartPoints,
   DisplayMode,
@@ -42,16 +43,22 @@ export function Waveform({
   signals,
   baseline,
   compact = false,
+  overlays,
+  evidence,
+  initialMode = 'real',
 }: {
   data: ResultData;
   signals: string[];
   baseline?: ResultData;
   compact?: boolean;
+  overlays?: { label: string; data: ResultData }[];
+  evidence?: { from: number; to: number };
+  initialMode?: DisplayMode;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const chart = useRef<Chart<'line'>>();
   const viewport = useRef<{ min: number; max: number }>();
-  const [mode, setMode] = useState<DisplayMode>('real');
+  const [mode, setMode] = useState<DisplayMode>(initialMode);
   const [logX, setLogX] = useState(data.scale === 'frequency');
   const [grid, setGrid] = useState(true);
   const [axisLabels, setAxisLabels] = useState<Record<string, string>>({});
@@ -111,7 +118,7 @@ export function Waveform({
       const color = colors[index % colors.length];
       append(
         {
-          label: `${v.name} (${displayUnit(v, mode)})`,
+          label: `${signalLabel(v.name)} (${displayUnit(v, mode)})`,
           yAxisID: axis,
           data: [],
           borderColor: color,
@@ -129,7 +136,7 @@ export function Waveform({
       if (previous)
         append(
           {
-            label: `${v.name} baseline (${displayUnit(v, mode)})`,
+            label: `${signalLabel(v.name)} baseline (${displayUnit(v, mode)})`,
             yAxisID: axis,
             data: [],
             borderColor: color,
@@ -141,12 +148,33 @@ export function Waveform({
           previous,
         );
     });
+    overlays?.forEach((overlay, index) => {
+      selected.forEach((v) => {
+        const source = overlay.data.vectors.find(
+          (b) => b.name === v.name && b.unit === v.unit,
+        );
+        if (source && overlay.data.scale === data.scale)
+          append(
+            {
+              label: `${overlay.label} · ${signalLabel(v.name)}`,
+              yAxisID: `y${units.indexOf(displayUnit(v, mode))}`,
+              data: [],
+              borderColor: colors[(index + 1) % colors.length],
+              borderWidth: 1,
+              pointRadius: 0,
+            },
+            overlay.data,
+            source,
+          );
+      });
+    });
     const scales: ChartOptions<'line'>['scales'] = {
       x: {
         type: logX ? 'logarithmic' : 'linear',
         title: { display: true, text: axisLabels.x || xLabel },
         grid: { display: grid },
         ticks: { maxTicksLimit: 10 },
+        ...(evidence ? { min: evidence.from, max: evidence.to } : {}),
       },
     };
     units.forEach((unit, index) => {
@@ -215,7 +243,8 @@ export function Waveform({
         },
       },
     });
-    if (viewport.current) instance.zoomScale('x', viewport.current, 'none');
+    if (viewport.current && !evidence)
+      instance.zoomScale('x', viewport.current, 'none');
     chart.current = instance;
     return () => {
       viewport.current = instance.isZoomedOrPanned?.()
@@ -224,7 +253,18 @@ export function Waveform({
       instance.destroy();
       chart.current = undefined;
     };
-  }, [data, baseline, selected, mode, logX, grid, axisLabels, compact]);
+  }, [
+    data,
+    baseline,
+    overlays,
+    evidence,
+    selected,
+    mode,
+    logX,
+    grid,
+    axisLabels,
+    compact,
+  ]);
 
   return (
     <div style={{ minWidth: 0 }}>

@@ -46,6 +46,9 @@ import { digest } from '../../io/dsnContainer';
 import { Waveform } from './Waveform';
 import { ChartPopup, ChartPopupPortal, openChartPopup } from './ChartPopup';
 import { ResizeHandle } from '../panel/ResizeHandle';
+import { CircuitExplorer } from './CircuitExplorer';
+import { applyBindings } from '../../simulation/bindings';
+import { setOperatingPoint } from '../../simulation/operatingPoint';
 import {
   actionSelectPanel,
   Panels,
@@ -316,12 +319,31 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
     let valid = true;
     if (net && setup && expectedHash) {
       try {
-        const captured = running
+        let captured = running
           ? setup
           : { ...setup, analysis: run.analysis, parameters: run.parameters };
+        let capturedNet = net;
+        if (
+          !running &&
+          run.explorer &&
+          Object.keys(run.explorer.overrides).length
+        ) {
+          const changed = applyBindings(
+            drawing,
+            { ...captured, bindings: run.explorer.bindings },
+            run.explorer.overrides,
+          );
+          captured = { ...changed.setup, parameters: run.parameters };
+          capturedNet = new NetlistWorkerState().init({
+            ...changed.drawing,
+            sheets: changed.drawing.sheets.filter(
+              (s) => s.kind !== 'simulation',
+            ),
+          });
+        }
         digest(
           new TextEncoder().encode(
-            buildDeck(net, captured) + JSON.stringify(captured.models),
+            buildDeck(capturedNet, captured) + JSON.stringify(captured.models),
           ),
         )
           .then((hash) => {
@@ -349,6 +371,23 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
     verified?.drawing === drawing &&
     verified.key === acquisitionKey &&
     verified.matches;
+  useEffect(() => {
+    setOperatingPoint(
+      net && data && run
+        ? {
+            drawing,
+            net,
+            data,
+            run,
+            fresh:
+              fresh &&
+              !running &&
+              !Object.keys(run.explorer?.overrides || {}).length,
+          }
+        : undefined,
+    );
+    return () => setOperatingPoint(undefined);
+  }, [drawing, net, data, run, fresh, running]);
   const message = !net
     ? 'Check schematic component references and pin definitions before plotting.'
     : !selected
@@ -592,6 +631,18 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
           display: visible ? undefined : 'none',
         }}
       >
+        {selected && (
+          <CircuitExplorer
+            key={selected.id}
+            drawing={drawing}
+            sheet={selected}
+            net={net}
+            data={data}
+            run={run}
+            fresh={fresh}
+            onAcquisition={setRunId}
+          />
+        )}
         {!charts.length && (
           <p style={{ padding: 12 }}>
             Add a chart or place a probe to see results here.

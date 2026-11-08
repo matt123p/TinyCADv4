@@ -20,6 +20,11 @@ import {
   activateResultDocument,
 } from './resultStore';
 import { NetlistWorkerState } from '../web-worker/netlistState';
+import { measure, checkRequirement, metricAlgorithm } from './metrics';
+import { resolvedSignals } from './signals';
+import { deriveTraces } from './traces';
+import { ExplorerSnapshot, MeasurementResult } from './explorerTypes';
+import { analysisKey, rememberAnalysis } from './analysisCache';
 
 export interface RunningSession {
   sheetId: string;
@@ -56,6 +61,10 @@ export async function runSimulation(
   setup: SimulationSetup,
   commit: (run: SimulationRun) => void,
   reportDiagnostics?: (errors: DrcError[]) => void,
+  exploration?: {
+    overrides: Record<string, string>;
+    settled?: (run?: SimulationRun) => void;
+  },
 ): Promise<void> {
   if (active)
     throw new Error(
@@ -120,6 +129,7 @@ export async function runSimulation(
     if (cancelled) {
       active = undefined;
       publish();
+      exploration?.settled?.();
       return;
     }
     if (setup.runs.length >= 1000)
@@ -149,6 +159,7 @@ export async function runSimulation(
         job?.dispose();
         active = undefined;
         publish();
+        exploration?.settled?.();
         return;
       }
       if (event.state === 'complete' && (solverFailure || !samples))
@@ -162,6 +173,39 @@ export async function runSimulation(
       run.state = event.state;
       run.error = event.error;
       run.samples = samples;
+      const definitions = structuredClone(setup.measurements || []);
+      const requirements = structuredClone(setup.requirements || []);
+      let measured: ResultData;
+      if (definitions.length && event.state === 'complete') {
+        try {
+          measured = deriveTraces(
+            resolvedSignals(
+              drawing,
+              netlist,
+              data,
+              definitions.flatMap((d) =>
+                [d.source, d.reference].filter(Boolean),
+              ),
+            ),
+            setup.traces || [],
+          ).data;
+        } catch {
+          /* Keep the solver acquisition and report unavailable measurements. */
+        }
+      }
+      const results = definitions.map((definition) =>
+        measure(definition, event.state === 'complete' ? measured : undefined),
+      );
+      run.explorer = {
+        algorithm: metricAlgorithm,
+        traces: structuredClone(setup.traces || []),
+        definitions,
+        requirements,
+        measurements: results,
+        checks: requirements.map((rule) => checkRequirement(rule, results)),
+        overrides: { ...exploration?.overrides },
+        bindings: structuredClone(setup.bindings || []),
+      } satisfies ExplorerSnapshot;
       if (event.state === 'failed' && !run.error)
         run.error =
           'ngspice could not complete this analysis. See Diagnostics for details.';
@@ -176,11 +220,34 @@ export async function runSimulation(
       } catch (error) {
         run.state = 'failed';
         run.error = String(error);
+        run.explorer.measurements =
+          run.explorer.measurements.map<MeasurementResult>((result) => ({
+            ...result,
+            state: 'unavailable',
+            value: undefined,
+            explanation: run.error,
+          }));
+        run.explorer.checks = run.explorer.checks.map((result) => ({
+          ...result,
+          state: 'unavailable',
+          explanation: run.error,
+        }));
       }
       job?.dispose();
       active = undefined;
+      rememberAnalysis(
+        analysisKey(
+          drawing.documentId,
+          sheetId,
+          circuitHash,
+          setup,
+          exploration?.overrides || {},
+        ),
+        run,
+      );
       commit(run);
       publish();
+      exploration?.settled?.(run);
     };
     active.status = 'Running…';
     publish();

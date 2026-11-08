@@ -20,6 +20,7 @@ export interface AnalysisDefinition {
 }
 
 export interface SimulationRun {
+  explorer?: import('./explorerTypes').ExplorerSnapshot;
   id: string;
   created: string;
   state: RunState;
@@ -37,6 +38,11 @@ export interface SimulationRun {
 }
 
 export interface SimulationSetup {
+  measurements?: import('./explorerTypes').MeasurementDefinition[];
+  requirements?: import('./explorerTypes').RequirementDefinition[];
+  bindings?: import('./explorerTypes').ParameterBinding[];
+  sweep?: import('./explorerTypes').SweepDefinition;
+  sweeps?: import('./explorerTypes').SweepRun[];
   version: 1;
   instructions: string;
   analysis: AnalysisDefinition;

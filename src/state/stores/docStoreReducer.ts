@@ -1,6 +1,7 @@
 import { createSimulationSheet, withoutResults } from '../../simulation/document';
 import { createControl, updateControl, compactControl } from '../../simulation/controlSymbols';
 import { updatePower } from '../../manipulators/updatePower';
+import { applyBindings } from '../../simulation/bindings';
 import { updateSymbol } from '../../manipulators/updateSymbol';
 import {
   actionSelectPanel,
@@ -145,6 +146,13 @@ export function DocStoreReducer(
   state: docStore = intialState,
   action: AppActionTypes,
 ): docStore {
+  if (action.type === 'simulation/apply-tuning') {
+    const target = state.drawing.sheets.find(s => s.id === action.sheetId && s.kind === 'simulation');
+    if (!target || state.editSymbol) return state;
+    const changed = applyBindings(state.drawing, target.simulation, action.overrides);
+    return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...changed.drawing,
+      sheets: changed.drawing.sheets.map(s => s.id === target.id ? { ...s, simulation: changed.setup } : s) } };
+  }
   if (action.type === 'simulation/insert-control') {
     if (state.editSymbol) return state;
     const index = state.drawing.sheets[state.view.selected_sheet]?.kind === 'simulation'
@@ -210,7 +218,7 @@ export function DocStoreReducer(
     let name = requestedName, suffix = 2;
     while (state.drawing.sheets.some(sheet => sheet.name === name)) name = `${requestedName} (${suffix++})`;
     const added = createSimulationSheet(source || state.drawing.sheets.find(s => s.kind !== 'simulation') || blank().sheets[0], name);
-    if (source) added.simulation = { ...source.simulation, runs: [] };
+    if (source) added.simulation = { ...source.simulation, runs: [], ...(source.simulation.sweeps ? { sweeps: [] } : {}) };
     return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, sheets: [...state.drawing.sheets, added] }, view: { ...state.view, selected_sheet: state.drawing.sheets.length, _selected_array: [], add: null } };
   }
   if (action.type === 'simulation/update') return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, sheets: state.drawing.sheets.map(s => s.id === action.sheetId && s.kind === 'simulation' ? { ...s, simulation: action.setup } : s) } };

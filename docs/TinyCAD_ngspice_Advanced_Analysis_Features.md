@@ -1,5 +1,12 @@
 # TinyCAD: Advanced Circuit Analysis Beyond Basic ngspice Simulation
 
+Implementation note (8 November 2026): the first P0 slice is implemented in Circuit Explorer.
+See [the user guide and qualification scope](15-circuit-explorer.md) for tuning,
+one-variable sweeps, persistent named measurements/requirements, DC annotations,
+measurement semantics and remaining P1/P2 boundaries. This research document remains
+the broader feature proposal; its later instruments, Monte Carlo, FFT and optimisation
+recommendations are not claims of implemented functionality.
+
 **Product research and feature recommendations**  
 **Date:** 8 November 2026  
 **Audience:** TinyCAD maintainers, contributors, educators and engineering users  

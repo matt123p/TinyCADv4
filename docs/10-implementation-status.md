@@ -6,6 +6,8 @@ Simulation lives in the existing drawing: use **Simulate** to add a sheet. Run a
 
 ## Implemented
 
+- Circuit Explorer implements the first P0 advanced-analysis slice: session-only tuning overrides with Reset/Undo/Apply and debounced reruns, numeric property/source/parameter bindings, preferred-value sliders, cancellable one-variable sweeps, persistent sweep groups, overlaid curves and metric-versus-parameter plots. Named time-weighted/transient/complex-AC measurements and typed requirements persist with the setup; runs capture definitions, results, units and provenance. Fresh DC voltage/current/power annotations use stable schematic/net mapping. See [Circuit Explorer](15-circuit-explorer.md) for semantics, bounds and automated qualification.
+
 - Browser ngspice 47 runs in a fresh WASM worker per acquisition. Electron runs the same upstream release through a dedicated native helper process. Neither path needs a user-installed simulator or downloads a runtime on first use.
 - Simulation sheets contain analysis settings, parameters, attached model text, instructions, signal selection, derived differential/gain/power traces and run history. All schematic sheets contribute to one circuit. No project or linked drawing format was added.
 - Operating point, transient, AC, DC sweep, noise, transfer function and pole-zero analyses have forms and validated commands. Noise keeps spectral and integrated plots separately. Native builds load bundled XSPICE code models; browser circuits using code-model devices receive an explanation.
@@ -59,7 +61,17 @@ node scripts/tests/qualify-engines.mjs native
 
 Numerical fixtures cover a divider and source-current sign, RC charging, complex AC response, DC sweep, noise's two plots, transfer function, pole-zero and a diode. Both engines are compared numerically. Persistence tests exercise XML/ZIP conversion, UTF-16 XML, complex and multi-plot buffers, compact copies, unsafe/corrupt archive rejection, transactional cache replacement, quantity parsing, complex traces and exports.
 
-The feature catalogue also describes later workbench features. Bench instrument panels, two-way schematic probe highlighting and operating-point overlays, automatic parameter/Monte Carlo sweeps, FFT, Live/Pause, specialist analyses and a full localization pass remain planned. These are not represented by inert controls. Existing placed-component SPICE properties remain editable; embedded sources and probes have dedicated configuration panels. File-backed device models (including XSPICE filesource/table models) are rejected; external device data files are not part of this profile.
+The Circuit Explorer P0 changes pass 60 local automated tests, TypeScript checking,
+filesystem-browser and Electron production bundles, and all eight WASM numerical
+fixtures on the Windows host. The new native regression verifies a five-value RC
+sweep against theoretical cutoff within 0.1%, immutable tuning, cached reuse,
+cancelled scheduling, saved sweep restoration and divider voltage/current/power
+annotations. Hidden Electron DOM checks verify tuning, cached Reset, Apply, five
+gain curves, metric plots, restored sweep groups, typed requirement failures and
+immediate suppression of stale DC annotations. UI solver events in that check
+are deterministic fixtures; the separate native regression uses bundled ngspice.
+
+The feature catalogue also describes later workbench features. Bench instrument panels, general two-way schematic probe highlighting, multidimensional/Monte Carlo sweeps, FFT, Live/Pause, specialist analyses and a full localization pass remain planned. Circuit Explorer provides one-variable sweeps, operating-point overlays and navigation from named measurement/requirement evidence. Existing placed-component SPICE properties remain editable; embedded sources and probes have dedicated configuration panels. File-backed device models (including XSPICE filesource/table models) are rejected; external device data files are not part of this profile.
 
 Automated qualification on 8 November 2026 passes all six engine jobs: WASM and native Windows x64/ARM64, macOS ARM64 and Linux x64/ARM64. Each native job passes eight numerical fixtures and 41 simulation tests without skips. Windows also passes all 46 local focused tests, native/WASM parity, typecheck, localization checks and both browser production bundles. Packaging passes Windows NSIS/AppX for both architectures, macOS ARM64 DMG, Linux x64/ARM64 Debian and x64 core24 Snap. Host-compatible packaged runtimes pass the numerical fixtures; cross-architecture payloads pass architecture and integrity checks. See the [platform handoff](12-todo-and-platform-handoff.md) for reproducible commands, build identities and CI evidence.
 

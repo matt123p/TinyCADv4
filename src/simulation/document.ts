@@ -1,6 +1,7 @@
 import { dsnDrawing, dsnSheet } from '../model/dsnDrawing';
 import { defaultSetup, newIdentity, SimulationSetup } from './contracts';
 import { getResult, resultBytes } from './resultStore';
+import { validateExplorer, validateSnapshot } from './explorerValidation';
 
 export function isSimulationSheet(sheet: dsnSheet): boolean {
   return sheet?.kind === 'simulation';
@@ -85,6 +86,7 @@ export function validateSetup(value: unknown): SimulationSetup {
   )
     throw new Error('Invalid derived traces.');
   for (const run of setup.runs) {
+    validateSnapshot(run?.explorer);
     if (
       !run ||
       !/^[A-Za-z0-9_-]{1,80}$/.test(run.id) ||
@@ -102,6 +104,7 @@ export function validateSetup(value: unknown): SimulationSetup {
     )
       throw new Error('Invalid saved simulation run.');
   }
+  validateExplorer(setup);
   return { ...defaultSetup(), ...setup };
 }
 

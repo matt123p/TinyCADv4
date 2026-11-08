@@ -58,6 +58,7 @@ test('Chart.js uses independent unit axes, labelled scale, baseline and full-dat
     'chart.js': { Chart: FakeChart, registerables: [] },
     'chartjs-plugin-zoom': {},
     '../../simulation/chartData': actualData,
+    '../../simulation/signals': loadComponent('src/simulation/signals.ts', {}),
     '../../simulation/export': {
       csv: (data) => JSON.stringify(data),
       download: (...args) => downloads.push(args),
@@ -79,6 +80,7 @@ test('Chart.js uses independent unit axes, labelled scale, baseline and full-dat
   });
   const cleanup = effect[0]();
   assert.equal(configuration.options.scales.x.title.text, 'Time (s)');
+  assert.equal(configuration.data.datasets[0].label, 'out (V)');
   assert.equal(configuration.options.scales.y0.position, 'left');
   assert.equal(configuration.options.scales.y1.position, 'right');
   assert.equal(configuration.options.scales.y0.title.text, 'Voltage (V)');

@@ -1,5 +1,7 @@
 # TinyCAD simulation design and implementation specification
 
+The first P0 slice of the [advanced-analysis recommendations](TinyCAD_ngspice_Advanced_Analysis_Features.md) is implemented in [Circuit Explorer](15-circuit-explorer.md): temporary tuning, one-variable sweeps, persistent named measurements/requirements and fresh DC schematic annotations. The guide distinguishes these features from the later P1/P2 workbench scope.
+
 Status: simulation foundation implemented; broader workbench features remain planned. Research checked on 7 November 2026. Automated qualification completed on 8 November: all six engine jobs and Windows, macOS and Linux packaging pass. Windows-host work also adds runtime fixes, lower XML result memory use, bounded log retention and [three editable teaching drawings](../examples/simulation/README.md). See [current implementation status](10-implementation-status.md) for implemented behavior and [the TODO/platform handoff](12-todo-and-platform-handoff.md) for evidence and outstanding manual acceptance checks.
 
 ## Start with the user stories

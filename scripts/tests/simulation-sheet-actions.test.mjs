@@ -12,11 +12,12 @@ test('duplicating a simulation sheet copies its setup without results in one act
     sheet.simulation.instructions = 'Compare the response';
     sheet.simulation.models = { 'device.lib': '.model test D' };
     sheet.simulation.runs = [{ id: 'run1', dataState: 'available' }];
+    sheet.simulation.sweeps = [{ id: 'batch', points: [{ value: 1000, runId: 'run1' }] }];
     const copy = DocStoreReducer(state, { type: 'simulation/duplicate', sheetId: sheet.id });
     const added = copy.drawing.sheets[copy.view.selected_sheet];
     assert.notEqual(added.id, sheet.id);
     assert.equal(added.name, 'Experiment copy');
-    assert.deepEqual(added.simulation, { ...sheet.simulation, runs: [] });
+    assert.deepEqual(added.simulation, { ...sheet.simulation, runs: [], sweeps: [] });
     assert.equal(sheet.simulation.runs.length, 1);
     assert.equal(copy.drawingVersion, state.drawingVersion + 1);
     const repeated = DocStoreReducer(copy, { type: 'simulation/duplicate', sheetId: sheet.id });

@@ -342,6 +342,106 @@ export function createTeachingDrawing(kind: TeachingExample) {
     setup.traces = [
       { name: 'Gain OUT/IN', operation: 'divide', left: 'out', right: 'in' },
     ];
+  setup.bindings = [
+    {
+      id: 'resistance',
+      name: 'R1 resistance',
+      sheet: sheet.id,
+      reference: 'R1',
+      property: 'Value',
+      unit: 'Ohm',
+      minimum: '100Ohm',
+      maximum: '10kOhm',
+      logarithmic: true,
+      series: 'continuous',
+    },
+  ];
+  setup.sweep = {
+    binding: 'resistance',
+    mode: 'list',
+    start: '1kOhm',
+    stop: '10kOhm',
+    count: 5,
+    values: '1kOhm 2.2kOhm 4.7kOhm 6.8kOhm 10kOhm',
+  };
+  setup.measurements =
+    kind === 'rc-low-pass'
+      ? [
+          {
+            id: 'cutoff',
+            name: 'Low-pass cutoff',
+            kind: 'cutoff',
+            source: 'out',
+            reference: 'in',
+            referenceGain: '1',
+          },
+          {
+            id: 'gain',
+            name: 'Gain at 100 Hz',
+            kind: 'gain',
+            source: 'out',
+            reference: 'in',
+            at: '100Hz',
+          },
+          {
+            id: 'phase',
+            name: 'Phase at ideal corner',
+            kind: 'phase',
+            source: 'out',
+            reference: 'in',
+            at: '159.154943Hz',
+          },
+        ]
+      : kind === 'rc-charging'
+      ? [
+          {
+            id: 'tau',
+            name: 'RC time constant',
+            kind: 'timeConstant',
+            source: 'out',
+            initial: '0V',
+            final: '1V',
+          },
+          {
+            id: 'rise',
+            name: '10–90% rise time',
+            kind: 'riseTime',
+            source: 'out',
+            initial: '0V',
+            final: '1V',
+          },
+        ]
+      : [
+          {
+            id: 'output',
+            name: 'Output voltage',
+            kind: 'value',
+            source: 'out',
+          },
+        ];
+  setup.requirements = [
+    {
+      id: 'nominal',
+      name: 'Nominal component check',
+      measurement: setup.measurements[0].id,
+      comparison: 'between',
+      lower:
+        kind === 'rc-low-pass'
+          ? '150Hz'
+          : kind === 'rc-charging'
+          ? '.99ms'
+          : '2.49V',
+      upper:
+        kind === 'rc-low-pass'
+          ? '170Hz'
+          : kind === 'rc-charging'
+          ? '1.01ms'
+          : '2.51V',
+      unit: kind === 'rc-low-pass' ? 'Hz' : kind === 'rc-charging' ? 's' : 'V',
+    },
+  ];
+  setup.instructions +=
+    ' Circuit Explorer in the right-hand chart panel contains saved measurements, a nominal pass/fail requirement, and an R1 tuning control. Tune values temporarily, use Reset to recover the saved value or Apply to commit it. Run the prepared five-value resistance sweep to compare curves, metric tables and metric-versus-resistance charts. DC overlay is available after a fresh Operating Point run.';
   drawing.sheets.push(simulation);
   return drawing;
 }

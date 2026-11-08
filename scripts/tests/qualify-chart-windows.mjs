@@ -22,6 +22,12 @@ await build({
     import { createControl, updateControl } from './src/simulation/controlSymbols';
     import { defaultSource, readControl } from './src/simulation/controls';
     import { blank } from './src/io/ioXml';
+    import { Provider } from 'react-redux';
+    import { createStore } from 'redux';
+    import { DocStoreReducer } from './src/state/stores/docStoreReducer';
+    import { ChartWorkspace } from './src/components/simulation/ChartWorkspace';
+    import { OperatingPointOverlay } from './src/components/simulation/OperatingPointOverlay';
+    import { createTeachingDrawing } from './src/simulation/examples';
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     const assert = (condition, message) => { if (!condition) throw Error(message); };
     async function waitFor(test) { for(let i=0;i<100;i++){if(test())return;await delay(50);}throw Error('Chart window timed out'); }
@@ -78,7 +84,76 @@ await build({
       amplitude.dispatchEvent(new Event('input',{bubbles:true}));
       await waitFor(()=>readControl(source).amplitude==='2');
       await waitFor(()=>Chart.getChart(document.querySelector('canvas'))?.data.datasets[0].data.some(point=>point.y>1.99));
-      window.chartSmoke.report({ok:true,windows:2,unitAxes:2,liveValue:7,returnedToPanel:docked,sourceWaveform:readControl(source).waveform,sourceAmplitude:readControl(source).amplitude});
+      // DOM integration checks use deterministic solver events; the separate native
+      // Explorer regression runs the exact same orchestration against ngspice.
+      const events = new Set(); let acquisitions=0;
+      window.electronAPI={onSimulation:fn=>{events.add(fn);return()=>events.delete(fn);},stopSimulation(){},async startSimulation(request){
+        acquisitions++;await delay(20);
+        const send=event=>events.forEach(fn=>fn(request.runId,event));
+        send({type:'ready',info:{backend:'native',buildId:'ui-fixture'}});
+        const resistance=Number(/^R1\\s+\\S+\\s+\\S+\\s+(\\S+)/im.exec(request.deck)?.[1]?.replace('k','e3')||1000);
+        if(request.deck.includes('.op')){
+          send({type:'vectors',names:['in','out','v1#branch','vp1#branch']});send({type:'data',rows:[[5,2.5,-.0025,.0025]]});
+        }else{
+          const frequency=Array.from({length:401},(_,i)=>10*10**(i/100));
+          send({type:'vectors',names:['frequency','in','out','vp1#branch']});
+          send({type:'data',rows:frequency.map(f=>{const w=2*Math.PI*f*resistance*1e-6;return[f,1,1/(1+w*w),0];}),imaginary:frequency.map(f=>{const w=2*Math.PI*f*resistance*1e-6;return[0,0,-w/(1+w*w),0];})});
+        }
+        send({type:'finished',state:'complete'});
+      }};
+      const fixtureDrawing=createTeachingDrawing('rc-low-pass');
+      const initial={...DocStoreReducer(undefined,{type:'@@INIT'}),drawing:fixtureDrawing};
+      const store=createStore((state={docStore:{present:initial}},action)=>({docStore:{present:DocStoreReducer(state.docStore.present,action)}}));
+      root.render(<Provider store={store}><FluentProvider theme={webLightTheme} style={{height:1000}}><ChartWorkspace/><svg><OperatingPointOverlay sheetName={fixtureDrawing.sheets[0].name}/></svg></FluentProvider></Provider>);
+      const button=(name)=>Array.from(document.querySelectorAll('button,[role="tab"]')).find(b=>b.textContent.trim()===name || (b.getAttribute('role')==='tab' && b.textContent.trim().startsWith(name)));
+      await waitFor(()=>!!button('Run'));button('Run').click();
+      const setup=()=>store.getState().docStore.present.drawing.sheets[1].simulation;
+      await waitFor(()=>setup().runs.length===1);
+      assert(setup().runs[0].explorer.measurements[0].state==='valid','Named metric did not capture');
+      button('Tune / sweep').click();
+      const tuningInput=()=>document.querySelector('input[aria-label="R1 resistance temporary value"]');
+      await waitFor(()=>!!tuningInput());
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(tuningInput(),'2.2kOhm');tuningInput().dispatchEvent(new Event('input',{bubbles:true}));
+      await waitFor(()=>setup().runs.length===2 && !button('Apply').disabled);
+      assert(setup().runs.at(-1).explorer.measurements[0].value>72 && setup().runs.at(-1).explorer.measurements[0].value<73,'Tuned cutoff is wrong');
+      const resistor=()=>store.getState().docStore.present.drawing.sheets[0].items.find(i=>i.text?.find?.(f=>f.description==='Ref'&&f.value==='R1'));
+      assert(resistor().text.find(f=>f.description==='Value').value==='1k','Tuning changed the saved value');
+      button('Reset').click();
+      await waitFor(()=>tuningInput().value==='1k' && !button('Run tuning').disabled);
+      assert(acquisitions===2,'Reset failed to reuse the original acquisition');
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(tuningInput(),'2.2kOhm');tuningInput().dispatchEvent(new Event('input',{bubbles:true}));
+      await delay(600);await waitFor(()=>!button('Apply').disabled);button('Apply').click();
+      await waitFor(()=>resistor().text.find(f=>f.description==='Value').value==='2200');
+      Array.from(document.querySelectorAll('summary')).find(s=>s.textContent==='One-variable sweep').click();
+      button('Run sweep').click();
+      await waitFor(()=>Array.from(document.querySelectorAll('canvas')).some(canvas=>Chart.getChart(canvas)?.data.datasets.length===5));
+      const trend=Array.from(document.querySelectorAll('canvas')).map(canvas=>Chart.getChart(canvas)).find(chart=>chart?.data.datasets[0]?.label?.startsWith('Low-pass cutoff'));
+      assert(trend?.data.datasets[0].data.length===5,'Metric versus parameter chart is missing');
+      assert(trend.options.scales.y0.title.text==='Hz','Metric axis has the wrong unit');
+      const explorerRows=Array.from(document.querySelector('[aria-label="Circuit Explorer"]').querySelectorAll('tbody tr'));
+      assert(explorerRows.length===5,'Sweep table does not contain all values');
+      assert(explorerRows.every(tr=>tr.textContent.includes('complete')),'Sweep contains failed acquisitions');
+      button('Requirements').click();await waitFor(()=>document.querySelector('[aria-label="Circuit Explorer"]').textContent.includes('Nominal component check'));
+      const checks=setup().runs.at(-1).explorer.checks;
+      assert(checks[0].state==='fail','Changed design should fail the nominal cutoff requirement');
+      assert(setup().sweeps.length===1 && setup().sweeps[0].state==='complete' && setup().sweeps[0].points.length===5,'Sweep history was not captured');
+      root.render(<Provider key="restored-sweep" store={store}><FluentProvider theme={webLightTheme} style={{height:1000}}><ChartWorkspace/></FluentProvider></Provider>);
+      await waitFor(()=>document.querySelector('[aria-label="Circuit Explorer"]')?.textContent.includes('Captured results'));button('Tune / sweep').click();
+      await waitFor(()=>Array.from(document.querySelectorAll('canvas')).some(canvas=>Chart.getChart(canvas)?.data.datasets.length===5));
+      assert(document.querySelector('[aria-label="Circuit Explorer"]').querySelectorAll('tbody tr').length===5,'Reopened sweep table is incomplete');
+      const dcDrawing=createTeachingDrawing('voltage-divider');
+      const dcInitial={...DocStoreReducer(undefined,{type:'@@INIT'}),drawing:dcDrawing};
+      const dcStore=createStore((state={docStore:{present:dcInitial}},action)=>({docStore:{present:DocStoreReducer(state.docStore.present,action)}}));
+      root.render(<Provider key="dc-check" store={dcStore}><FluentProvider theme={webLightTheme} style={{height:1000}}><ChartWorkspace/><svg><OperatingPointOverlay sheetName={dcDrawing.sheets[0].name}/></svg></FluentProvider></Provider>);
+      await waitFor(()=>document.querySelector('[aria-label="Circuit Explorer"]')?.textContent.includes('Output voltage'));button('Run').click();
+      await waitFor(()=>dcStore.getState().docStore.present.drawing.sheets[1].simulation.runs.length===1);
+      button('DC overlay').click();
+      await waitFor(()=>!!document.querySelector('select[aria-label="Schematic DC annotations"]'));
+      const overlaySelect=document.querySelector('select[aria-label="Schematic DC annotations"]');overlaySelect.value='voltages';overlaySelect.dispatchEvent(new Event('change',{bubbles:true}));
+      await waitFor(()=>Array.from(document.querySelectorAll('svg text')).some(t=>t.textContent.includes('2.5 V')));
+      dcStore.dispatch({type:'simulation/apply-tuning',sheetId:dcDrawing.sheets[1].id,overrides:{resistance:'2kOhm'}});
+      await waitFor(()=>!document.querySelector('g[aria-label="DC operating point"]'));
+      window.chartSmoke.report({ok:true,windows:2,unitAxes:2,liveValue:7,returnedToPanel:docked,sourceWaveform:readControl(source).waveform,sourceAmplitude:readControl(source).amplitude,explorer:{temporaryTuning:true,cachedReset:true,apply:true,sweepCurves:5,metricPoints:5,restoredSweep:true,typedRequirement:checks[0].state,dcOverlay:true,staleOverlayHidden:true}});
     }
     verify().catch(error=>window.chartSmoke.report({ok:false,error:error.stack}));
   `,

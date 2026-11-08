@@ -12,6 +12,14 @@ const PREFIX: Record<string, number> = {
 
 export function parseQuantity(text: string, unit = ''): number {
   let value = text.trim().replace(/[µμ]/g, 'u').replace(/Ω/g, 'Ohm');
+  if (
+    unit &&
+    /[^a-zA-Z]/.test(unit) &&
+    value.toLowerCase().endsWith(unit.toLowerCase())
+  ) {
+    value = value.slice(0, -unit.length).trim();
+    unit = '';
+  }
   if (/\dM$/.test(value))
     throw new Error('Use meg for mega or m for milli; bare M is ambiguous.');
   if (value.includes(',')) {

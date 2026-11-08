@@ -1,5 +1,6 @@
 import React, { Dispatch } from 'react';
 import { TDrawing } from './Drawing';
+import { OperatingPointOverlay } from '../simulation/OperatingPointOverlay';
 import TDesignDetails from './DesignDetails';
 import TDesignGuides from './DesignGuides';
 import { TouchLoupe } from './TouchLoupe';
@@ -1790,6 +1791,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                       netlistTypes={this.props.netlistTypes}
                       netTypeAssignments={this.props.netTypeAssignments}
                     />
+                    <OperatingPointOverlay sheetName={this.props.sheet_name}/>
                     {markers}
                     {selectrect}
                     {handles}
@@ -1968,6 +1970,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                   netlistTypes={this.props.netlistTypes}
                   netTypeAssignments={this.props.netTypeAssignments}
                 />
+                <OperatingPointOverlay sheetName={this.props.sheet_name}/>
                 {markers}
                 {selectrect}
                 {handles}

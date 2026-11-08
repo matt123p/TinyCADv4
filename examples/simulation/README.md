@@ -1,5 +1,11 @@
 # Simulation teaching drawings
 
+Each example includes saved Circuit Explorer measurements, a nominal pass/fail requirement,
+an R1 tuning control and a five-value resistance sweep definition. Use the right-hand
+chart panel's **Measurements**, **Tune / sweep**, **Requirements** and **DC overlay** tabs.
+The RC low-pass sweep produces gain overlays, cutoff tables and cutoff-versus-resistance
+plots while preserving the saved component value. See [Circuit Explorer](../../docs/15-circuit-explorer.md).
+
 Open a drawing using TinyCAD's normal **File → Open** command, select its
 Simulation sheet and choose **Run**. These files contain the circuit, embedded
 symbol definitions, editable component values, SPICE templates, analysis setup

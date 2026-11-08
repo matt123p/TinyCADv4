@@ -326,6 +326,33 @@ export function SimulationSheet({
         ))}
       </TabList>
       <div className="simulation-content" role="tabpanel" aria-label={tab}>
+        {tab === 'measurements' && (
+          <section style={{ marginBottom: 20 }}>
+            <h3>Named measurements</h3>
+            <Button size="small" onClick={() => window.dispatchEvent(new Event('tinycad:show-charts'))}>
+              Edit measurements and requirements in Circuit Explorer
+            </Button>
+            {run?.explorer ? (
+              <table>
+                <thead><tr><th>Measurement</th><th>Result</th><th>Evidence</th></tr></thead>
+                <tbody>
+                  {run.explorer.measurements.map(result => (
+                    <tr key={result.id}>
+                      <th>{run.explorer.definitions.find(d => d.id === result.id)?.name || result.id}</th>
+                      <td>{result.state === 'valid' ? `${result.value.toPrecision(7)} ${result.unit}` : result.state}</td>
+                      <td>{result.explanation}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : <p>Define measurements in Circuit Explorer and run the analysis to capture results.</p>}
+            {run?.explorer && (
+              <Button size="small" onClick={() => download('named-measurements.json', JSON.stringify({ run, snapshot: run.explorer }, null, 2), 'application/json')}>
+                Export named measurements
+              </Button>
+            )}
+          </section>
+        )}
         {tab === 'setup' && (
           <div>
             <div className="simulation-analysis">
