@@ -95,7 +95,11 @@ await runNpm(['run', 'generate:icons']);
 await runNpm(['run', 'generate:simulation-examples']);
 
 await runNpm(['run', 'build:electron']);
-await run(process.execPath, [path.resolve('node_modules/electron-builder/cli.js'), ...builderArgs]);
+await run(process.execPath, [
+  ...(process.platform === 'linux' ? ['--require', path.resolve('scripts/fix-snap-desktop.cjs')] : []),
+  path.resolve('node_modules/electron-builder/cli.js'),
+  ...builderArgs,
+]);
 await run(process.execPath, ['scripts/verify-packaged-engines.mjs']);
 
 if (isTestAppxBuild) {
