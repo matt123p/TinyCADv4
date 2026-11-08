@@ -1,6 +1,6 @@
 # TinyCAD simulation design and implementation specification
 
-Status: simulation foundation implemented; broader workbench features remain planned. Research checked on 7 November 2026. Windows-host work adds native build/runtime fixes, a clean typecheck, bounded log retention and [three editable teaching drawings](../examples/simulation/README.md). See [current implementation status](10-implementation-status.md) for implemented behavior and [the TODO/platform handoff](12-todo-and-platform-handoff.md) for recorded platform evidence and outstanding acceptance checks.
+Status: simulation foundation implemented; broader workbench features remain planned. Research checked on 7 November 2026. Automated qualification completed on 8 November: all six engine jobs and Windows, macOS and Linux packaging pass. Windows-host work also adds runtime fixes, lower XML result memory use, bounded log retention and [three editable teaching drawings](../examples/simulation/README.md). See [current implementation status](10-implementation-status.md) for implemented behavior and [the TODO/platform handoff](12-todo-and-platform-handoff.md) for evidence and outstanding manual acceptance checks.
 
 ## Start with the user stories
 
@@ -39,7 +39,7 @@ The priority labels describe the intended product scope:
 
 Priority is independent of visibility. An essential model-mapping control can be contextual; an advanced analysis can remain easy to find through search.
 
-The specification includes implementation architecture and build/distribution details as well as the UI design. Runtime code, pinned engine recipes, document codecs, tests and CI workflows are now present. Linux/browser verification does not establish Windows/macOS qualification, and planned controls should still be reviewed before implementation.
+The specification includes implementation architecture and build/distribution details as well as the UI design. Runtime code, pinned engine recipes, document codecs, tests and CI workflows are now present. Automated platform qualification does not establish installed UI behavior or production signing, and planned controls should still be reviewed before implementation.
 
 The existing [TinyCAD manual](https://docs.tinycad.net/v4/) remains the guide to current functionality. These planning documents belong in this application repository; they do not replace that separately maintained manual.
 
