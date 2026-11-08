@@ -2,6 +2,12 @@ name: Desktop Build
 
 on:
   workflow_dispatch:
+    inputs:
+      engine_run_id:
+        description: 'Reuse a run with all six engine jobs passing; blank rebuilds engines'
+        type: string
+        required: false
+        default: ''
   push:
     branches:
       - main
@@ -12,13 +18,31 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   engines:
+    if: inputs.engine_run_id == ''
     uses: ./.github/workflows/ngspice.yml
+  qualified-engines:
+    if: inputs.engine_run_id != ''
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Verify source run completed all engine qualifications
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENGINE_RUN_ID: ${{ inputs.engine_run_id }}
+        run: |
+          [[ "$ENGINE_RUN_ID" =~ ^[0-9]+$ ]] || { echo 'Invalid engine run ID'; exit 1; }
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ENGINE_RUN_ID/jobs?per_page=100" > engine-jobs.json
+          node -e "const jobs=require('./engine-jobs.json').jobs.filter(j=>j.name.startsWith('engines /'));if(jobs.length!==6||jobs.some(j=>j.conclusion!=='success'))throw new Error('Source run must have all six engine jobs passing');console.log('Qualified engine source run accepted');"
   build-linux:
-    needs: engines
-    name: Build on ubuntu-latest
-    runs-on: ubuntu-latest
+    needs: [engines, qualified-engines]
+    if: ${{ !cancelled() && (needs.engines.result == 'success' || needs.qualified-engines.result == 'success') }}
+    name: Build on Ubuntu 24.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
@@ -38,11 +62,13 @@ jobs:
         with:
           pattern: ngspice-*
           path: build/engine-artifacts
+          run-id: ${{ inputs.engine_run_id || github.run_id }}
+          github-token: ${{ github.token }}
       - run: node scripts/stage-engine-artifacts.mjs
 
 
       - name: Build Electron App
-        run: npm run dist
+        run: npm run dist -- --publish never
         env:
           # GitHub token is required for releasing
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -63,7 +89,8 @@ jobs:
           if-no-files-found: warn
 
   build:
-    needs: engines
+    needs: [engines, qualified-engines]
+    if: ${{ !cancelled() && (needs.engines.result == 'success' || needs.qualified-engines.result == 'success') }}
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -87,12 +114,14 @@ jobs:
         with:
           pattern: ngspice-*
           path: build/engine-artifacts
+          run-id: ${{ inputs.engine_run_id || github.run_id }}
+          github-token: ${{ github.token }}
       - run: node scripts/stage-engine-artifacts.mjs
 
 
       - name: Build Electron App
         if: runner.os != 'macOS'
-        run: npm run dist
+        run: npm run dist -- --publish never
         env:
           # GitHub token is required for releasing
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -100,7 +129,7 @@ jobs:
 
       - name: Build unsigned macOS app for pull requests and manual qualification
         if: runner.os == 'macOS' && github.event_name != 'push'
-        run: npm run dist -- --mac -c.mac.identity=null -c.mac.notarize=false
+        run: npm run dist -- --mac -c.mac.identity=null -c.mac.notarize=false --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
@@ -137,7 +166,7 @@ jobs:
           security list-keychains -d user -s "$keychain_path" "$HOME/Library/Keychains/login.keychain-db"
           export CSC_KEYCHAIN="$keychain_path"
           unset CSC_LINK CSC_KEY_PASSWORD
-          npm run dist -- --mac -c.mac.forceCodeSigning=true -c.mac.notarize=true
+          npm run dist -- --mac -c.mac.forceCodeSigning=true -c.mac.notarize=true --publish never
           codesign --verify --deep --strict --verbose=2 release/mac-arm64/TinyCAD.app
           xcrun stapler validate release/mac-arm64/TinyCAD.app
 

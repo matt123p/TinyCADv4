@@ -1,10 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { verifyEngineArtifact } from './engine-artifact.mjs';
 for (const directory of await fs.readdir('build/engine-artifacts')) {
   const source = path.join('build/engine-artifacts', directory);
-  const manifest = JSON.parse(
-    await fs.readFile(path.join(source, 'manifest.json'), 'utf8'),
-  );
+  const manifest = await verifyEngineArtifact(source);
   if (manifest.platform === 'wasm') {
     await fs.cp(source, 'public/engines/ngspice', { recursive: true });
   } else if (manifest.platform === process.platform) {
