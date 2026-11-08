@@ -4,17 +4,20 @@ Open a drawing using TinyCAD's normal **File → Open** command, select its
 Simulation sheet and choose **Run**. These files contain the circuit, embedded
 symbol definitions, editable component values, SPICE templates, analysis setup
 and instructions. Each uses the built-in configurable source, IN/OUT voltage
-probes, a series-current probe and Earth ground valued `0`. They contain no saved
-or sample results.
+probes, a series-current probe and Earth ground valued `0`. They are ZIP `.dzn` drawings even without saved
+or sample results, because they contain simulation components and setup.
 
 | Drawing | Simulation | Expected result |
 | --- | --- | --- |
-| [Voltage divider](voltage-divider.dsn) | Operating Point | OUT = 2.50 V relative to node 0; VP1 = +2.50 mA and V1 branch current = −2.50 mA. Changing R2's Value to `2k` gives approximately 3.33 V after another run. |
-| [RC charging](rc-charging.dsn) | Transient, 5 ms | A 1 V step charges 1 µF through 1 kΩ. OUT reaches approximately 0.632 V at 1 ms. |
-| [RC low-pass](rc-low-pass.dsn) | AC, 10 Hz–100 kHz | Cutoff near 159.15 Hz: gain approximately −3.01 dB and phase −45°. The configured derived trace is OUT / IN. |
+| [Voltage divider](voltage-divider.dzn) | Operating Point | OUT = 2.50 V relative to node 0; VP1 = +2.50 mA and V1 branch current = −2.50 mA. Changing R2's Value to `2k` gives approximately 3.33 V after another run. |
+| [RC charging](rc-charging.dzn) | Transient, 5 ms | A 1 V step charges 1 µF through 1 kΩ. OUT reaches approximately 0.632 V at 1 ms. |
+| [RC low-pass](rc-low-pass.dzn) | AC, 10 Hz–100 kHz | Cutoff near 159.15 Hz: gain approximately −3.01 dB and phase −45°. The configured derived trace is OUT / IN. |
 
 Select **V1** on the Circuit sheet to edit its source settings and see a waveform
-preview in the bottom panel. The charging example uses a 0–1 V pulse with a 1 µs
+preview in the bottom panel. **Signal type** changes between pulse, sine and the
+other waveforms; the fields below it control amplitude, timing and frequency.
+These examples use compact symbols at normal library scale.
+The charging example uses a 0–1 V pulse with a 1 µs
 rise, 10 ms width and 20 ms period; its first pulse covers the 5 ms simulation.
 The low-pass example sets AC amplitude to 1 V in the source panel.
 

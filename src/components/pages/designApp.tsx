@@ -1,4 +1,5 @@
 import { SimulationSheet } from '../simulation/SimulationSheet';
+import { ChartWorkspace } from '../simulation/ChartWorkspace';
 import React, { FunctionComponent, useState, useCallback, useEffect } from 'react';
 import { makeStyles, Button } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +29,7 @@ const useStyles = makeStyles({
 });
 
 export interface DesignAppProps {
+  selectedSpiceControl?: boolean;
   simulationSheet: boolean;
   editSymbol: tclibLibraryEntry;
   selected_sheet: number;
@@ -100,8 +102,10 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   useEffect(() => {
     if (props.editSymbol) {
       setBottomPanelHeight(350);
+    } else if (props.selectedSpiceControl) {
+      setBottomPanelHeight(340);
     }
-  }, [props.editSymbol]);
+  }, [props.editSymbol, props.selectedSpiceControl]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (
@@ -165,6 +169,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
             <BottomPanelContainer />
           </div>
         </div>
+        {!props.editSymbol && <ChartWorkspace />}
       </div>
     </div>
   );

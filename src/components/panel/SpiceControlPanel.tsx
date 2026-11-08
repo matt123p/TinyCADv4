@@ -1,5 +1,6 @@
 ﻿import React, { Dispatch, useEffect, useMemo, useState } from 'react';
 import {
+  Button,
   Checkbox,
   Field,
   Input,
@@ -22,7 +23,6 @@ import { getResult } from '../../simulation/resultStore';
 import { buildDeck } from '../../simulation/deck';
 import { digest } from '../../io/dsnContainer';
 import { parseQuantity } from '../../simulation/numbers';
-import { actionSymbolValue } from '../../state/dispatcher/AppDispatcher';
 
 const sourceFields: Record<
   SourceConfig['waveform'],
@@ -188,8 +188,17 @@ export function SpiceControlPanel({
             ? 'Probe'
             : config.kind === 'controlled'
             ? 'Controlled source'
-            : 'Source'}
+            : 'Source settings'}
         </strong>
+        {symbol._symbol.uid?.endsWith('-v1') && (
+          <Button
+            size="small"
+            style={{ marginLeft: 12 }}
+            onClick={() => dispatch({ type: 'simulation/compact-control' })}
+          >
+            Use compact symbol
+          </Button>
+        )}
         <div
           style={{
             display: 'grid',
@@ -203,12 +212,10 @@ export function SpiceControlPanel({
               size="small"
               value={ref}
               onChange={(_, d) =>
-                dispatch(
-                  actionSymbolValue(
-                    symbol.text.findIndex((f) => f.description === 'Ref'),
-                    d.value,
-                  ),
-                )
+                dispatch({
+                  type: 'simulation/control-reference',
+                  value: d.value,
+                })
               }
             />
           </Field>
@@ -226,7 +233,7 @@ export function SpiceControlPanel({
                   <option value="current">Current (A)</option>
                 </Select>
               </Field>
-              <Field label="Waveform" size="small">
+              <Field label="Signal type" size="small">
                 <Select
                   size="small"
                   value={config.waveform}

@@ -84,7 +84,7 @@ Keep definition edits in the existing document undo/dirty-state workflow. Store 
 
 ### Single-file serialization
 
-Keep one `.dsn` or `.dzn` file and introduce the ZIP-based representation defined in [Compressed DSN format and result management](09-dsn-format-and-results.md). Default to XML .dsn; automatically choose ZIP .dzn when retained result buffers/logs total at least 1 MiB. Detect ZIP versus XML from the header, ignoring the filename. Allow explicit format overrides. Local format changes use a new save path and preserve the original; Drive updates the existing file ID with its new name, MIME type and content.
+Keep one `.dsn` or `.dzn` file and introduce the ZIP-based representation defined in [Compressed DSN format and result management](09-dsn-format-and-results.md). Use XML .dsn for ordinary drawings and ZIP .dzn whenever simulation components, settings or results are present, irrespective of size. Detect ZIP versus XML from the header, ignoring the filename. Simulation presence takes precedence over stored XML format preferences. Local format changes use a new save path and preserve the original; Drive updates the existing file ID with its new name, MIME type and content.
 
 The ZIP contains `drawing.xml` plus a format manifest and optional binary result entries. Keep the `TinyCADSheets` XML root and existing schematic records inside that document. Add an explicitly versioned `SimulationSheet` extension record for each non-drawing sheet, with a persistent ID and escaped structured setup. A proposed shape is:
 

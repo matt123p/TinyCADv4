@@ -687,6 +687,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           </MenuTrigger>
           <MenuPopover><MenuList>
             <MenuItem onClick={() => props.dispatch({ type: 'simulation/add', name: 'Simulation' })}>Simulate</MenuItem>
+            <MenuItem onClick={() => window.dispatchEvent(new Event('tinycad:show-charts'))}>Show charts</MenuItem>
             <MenuDivider />
             <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'probe' })}>Insert Probe</MenuItem>
             <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'source' })}>Insert Source</MenuItem>

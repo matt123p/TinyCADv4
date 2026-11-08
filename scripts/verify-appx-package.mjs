@@ -122,7 +122,7 @@ try {
   for (const name of ['voltage-divider', 'rc-charging', 'rc-low-pass'])
     assert.ok(
       entries.some((item) =>
-        item.filename.endsWith('/examples/simulation/' + name + '.dsn'),
+        item.filename.endsWith('/examples/simulation/' + name + '.dzn'),
       ),
       'Missing teaching drawing: ' + name,
     );

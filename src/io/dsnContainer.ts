@@ -66,6 +66,9 @@ export async function packDsn(
     inventory.push({ path, size: data.length, sha256: await digest(data) });
   }
   const writer = new ZipWriter(new Uint8ArrayWriter(), {
+    // Entry timestamps carry no drawing metadata; keep identical saves stable.
+    lastModDate: new Date(1980, 0, 1),
+    extendedTimestamp: false,
     useWebWorkers: false,
     useCompressionStream: false,
     zip64: false,

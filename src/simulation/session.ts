@@ -25,6 +25,8 @@ export interface RunningSession {
   sheetId: string;
   status: string;
   data: ResultData;
+  circuitHash?: string;
+  requestSetup?: SimulationSetup;
   stop(): void;
 }
 let active: RunningSession;
@@ -124,6 +126,8 @@ export async function runSimulation(
       throw new Error(
         'This sheet has reached its 1000-run history limit. Duplicate its setup to start a new history.',
       );
+    active.circuitHash = circuitHash;
+    active.requestSetup = setup;
     const run: SimulationRun = {
       id: newIdentity(),
       created: new Date().toISOString(),

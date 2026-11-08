@@ -34,7 +34,7 @@ async function fixture(failure) {
     './dsnCodec': {
       async encodeDrawing(drawing) {
         assert.equal(drawing, compact);
-        return new TextEncoder().encode('<TinyCADSheets/>');
+        return Uint8Array.of(80, 75, 3, 4);
       },
     },
     '../state/dispatcher/AppDispatcher': {
@@ -75,7 +75,7 @@ test('save without results creates a separate copy and preserves the open file, 
   await f.files.fileSaveWithoutResults(f.dispatch, () => f.state);
   assert.equal(f.saves.length, 1);
   assert.equal(f.saves[0].file.id, null);
-  assert.equal(f.saves[0].file.name, 'example-without-results.dsn');
+  assert.equal(f.saves[0].file.name, 'example-without-results.dzn');
   assert.equal(f.saves[0].file.folderId, 'folder');
   assert.equal(f.state.altStore.file.id, 'original');
   assert.equal(f.original.sheets[0].simulation.runs[0].dataState, 'available');

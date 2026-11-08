@@ -34,7 +34,7 @@ test('SPICE controls place, configure, validate and round-trip with their embedd
       assert.equal(source.text.find(f=>f.description==='Ref').value,'V1');
       assert.equal(new updateSymbol(source).active_points().find(p=>p[2].number==='1')[0],100);
       const sourceBounds = new updateSymbol(source).getBoundingRect();
-      assert.ok(sourceBounds.x1 <= 100 && sourceBounds.x2 >= 100 && sourceBounds.y1 <= 180 && sourceBounds.y2 >= 180,
+      assert.ok(sourceBounds.x1 <= 100 && sourceBounds.x2 >= 100 && sourceBounds.y1 <= 120 && sourceBounds.y2 >= 120,
         'the visible source body must lie inside its selection bounds');
       assert.deepEqual(state.view._selected_array,[source._id]);
       state = DocStoreReducer(state,{type:'simulation/configure-control',config:{...defaultSource(),type:'current',waveform:'sine'}});

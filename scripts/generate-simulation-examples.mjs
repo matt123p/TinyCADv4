@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, 'build/example-generator/examples.cjs');
 await build({
   stdin: {
-    contents: `export { teachingExamples, createTeachingDrawing } from './src/simulation/examples'; export { ioXML } from './src/io/ioXml';`,
+    contents: `export { teachingExamples, createTeachingDrawing } from './src/simulation/examples'; export { encodeDrawing } from './src/io/dsnCodec';`,
     resolveDir: root,
   },
   bundle: true,
@@ -38,9 +38,8 @@ await build({
     },
   ],
 });
-const { teachingExamples, createTeachingDrawing, ioXML } = createRequire(
-  import.meta.url,
-)(output);
+const { teachingExamples, createTeachingDrawing, encodeDrawing } =
+  createRequire(import.meta.url)(output);
 // Text-layout caches need a canvas while constructing editor components; they
 // are not serialized. Fixture generation only needs deterministic font metrics.
 globalThis.document = {
@@ -57,10 +56,10 @@ globalThis.document = {
 await fs.mkdir(path.join(root, 'examples/simulation'), { recursive: true });
 for (const name of teachingExamples) {
   const drawing = createTeachingDrawing(name);
-  const xml = new ioXML().to_dsn(drawing, true, true).tostring();
+  const bytes = await encodeDrawing(drawing);
   await fs.writeFile(
-    path.join(root, 'examples/simulation', name + '.dsn'),
-    xml + '\n',
+    path.join(root, 'examples/simulation', name + '.dzn'),
+    bytes,
   );
-  console.log(`Generated examples/simulation/${name}.dsn`);
+  console.log(`Generated examples/simulation/${name}.dzn`);
 }

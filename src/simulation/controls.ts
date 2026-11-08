@@ -303,8 +303,10 @@ export function probeResult(
     measured = {
       ...current,
       name: ref,
-      real: current.real.map((n) => (control.invert ? -n : n)),
-      imaginary: current.imaginary?.map((n) => (control.invert ? -n : n)),
+      real: control.invert ? current.real.map((n) => -n) : current.real,
+      imaginary: control.invert
+        ? current.imaginary?.map((n) => -n)
+        : current.imaginary,
     };
   } else {
     const plus = spicePinLabel('1', symbol, net);
@@ -319,12 +321,17 @@ export function probeResult(
     measured = {
       name: ref,
       unit: 'V',
-      real: Array.from(
-        { length: count },
-        (_, i) => sign * ((a?.real[i] ?? 0) - (b?.real[i] ?? 0)),
-      ),
+      real:
+        !b && a && !control.invert
+          ? a.real
+          : Array.from(
+              { length: count },
+              (_, i) => sign * ((a?.real[i] ?? 0) - (b?.real[i] ?? 0)),
+            ),
       imaginary:
-        a?.imaginary || b?.imaginary
+        !b && a && !control.invert
+          ? a.imaginary
+          : a?.imaginary || b?.imaginary
           ? Array.from(
               { length: count },
               (_, i) =>

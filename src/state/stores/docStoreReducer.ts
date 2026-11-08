@@ -1,6 +1,7 @@
 import { createSimulationSheet, withoutResults } from '../../simulation/document';
-import { createControl, updateControl } from '../../simulation/controlSymbols';
+import { createControl, updateControl, compactControl } from '../../simulation/controlSymbols';
 import { updatePower } from '../../manipulators/updatePower';
+import { updateSymbol } from '../../manipulators/updateSymbol';
 import {
   actionSelectPanel,
   actionSelectBottomPanel,
@@ -165,19 +166,31 @@ export function DocStoreReducer(
     return { ...state, view, drawingVersion: state.drawingVersion + 1,
       drawing: { ...state.drawing, sheets: state.drawing.sheets.map((s, i) => i === index ? sheet : s) } };
   }
-  if (action.type === 'simulation/configure-control') {
+  if (action.type === 'simulation/configure-control' || action.type === 'simulation/compact-control' || action.type === 'simulation/control-reference') {
     const sheet = activeSheet(state);
     if (!sheet || sheet.kind === 'simulation' || state.editSymbol) return state;
-    const updater = new updateView(), symbol = updater.getSelectedSymbol(state.view, sheet);
+    const updater = new updateView();
+    const selected = updater.getSelectedSymbol(state.view, sheet);
+    const symbol = selected || (state.view.add?.NodeName === DocItemTypes.Symbol ? state.view.add : undefined);
     if (!symbol) return state;
-    let configured = updateControl(symbol, action.config, state.drawing);
+    const edited = action.type === 'simulation/compact-control'
+      ? compactControl(symbol, sheet, state.drawing)
+      : action.type === 'simulation/control-reference'
+      ? { symbol: new updateSymbol(symbol).showValue(symbol.text.findIndex(f => f.description === 'Ref'), action.value), bridges: [] }
+      : { symbol: updateControl(symbol, action.config, state.drawing), bridges: [] };
+    let configured = edited.symbol;
+    if (!selected) return { ...state, drawingVersion: state.drawingVersion + 1,
+      view: { ...state.view, add: configured }, drawing: { ...state.drawing,
+        sheets: state.drawing.sheets.map(s => s === sheet
+          ? { ...sheet, symbols: { ...sheet.symbols, [configured._symbol.id]: configured._symbol } } : s) } };
     // A copied control may share its embedded definition. Give this instance
     // its own artwork before changing source/probe type.
     if (sheet.items.some(i => i.NodeName === DocItemTypes.Symbol && i !== symbol && i._symbol.id === symbol._symbol.id)) {
       const id = Math.max(0, ...Object.keys(sheet.symbols).map(Number)) + 1;
       configured = { ...configured, _symbol: { ...configured._symbol, id } };
     }
-    const changed = { ...updater.updateObject(sheet, symbol, configured),
+    const updated = updater.updateObject(sheet, symbol, configured);
+    const changed = { ...updated, items: [...updated.items, ...edited.bridges],
       symbols: { ...sheet.symbols, [configured._symbol.id]: configured._symbol } };
     return { ...state, drawingVersion: state.drawingVersion + 1,
       drawing: { ...state.drawing, sheets: state.drawing.sheets.map(s => s === sheet ? changed : s) } };

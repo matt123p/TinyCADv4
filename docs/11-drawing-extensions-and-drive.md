@@ -1,6 +1,6 @@
 # Drawing extensions and automatic compression
 
-`.dsn` contains XML and `.dzn` contains a ZIP drawing. They describe the same single drawing and its sheets. Ordinary drawings save as `.dsn`. Automatic saving chooses `.dzn` when retained numerical buffers and solver logs total **at least 1 MiB**, measured before compression/base64 encoding. Removed results and sheets whose results are excluded from saving do not count. Storage settings also allow explicit XML or ZIP selection. A deliberately compressed compact copy uses `.dzn` even though it has no results.
+`.dsn` contains XML and `.dzn` contains a ZIP drawing. They describe the same single drawing and its sheets. Ordinary drawings save as `.dsn`. Any simulation components, settings or results always select `.dzn`, irrespective of size or result retention. This includes source/probe/controlled components, Earth ground named `0`, populated SPICE attributes, simulation sheets and compact copies retaining setup. Earlier XML preferences cannot override this. Legacy XML files remain readable and simulation drawings change to `.dzn` on their next save.
 
 Loading always inspects content. XML named `.dzn` and ZIP named `.dsn` remain readable; an invalid ZIP never falls back to XML. The extension determines the suggested output name, not the decoder. The ZIP manifest and internal MIME identifier are unchanged.
 

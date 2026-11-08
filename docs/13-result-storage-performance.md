@@ -40,8 +40,8 @@ references for validation, so it does not claim that process RSS immediately
 falls after removal or compact reopen. Interactive Undo behavior and plots still
 need their separate acceptance review.
 
-Automatic saves already select ZIP at 1 MiB of retained data. Prefer that format
-for large acquisitions; explicit XML uses base64 and has a higher temporary
-memory cost. Existing limits remain 64 MiB per run and 256 MiB per document,
+Simulation drawings now always save as ZIP `.dzn`, independent of result size.
+The explicit XML codec path used for these historical measurements uses base64
+and has a higher temporary memory cost. Existing limits remain 64 MiB per run and 256 MiB per document,
 including logs and Undo-retained buffers. Classroom-device responsiveness,
 browser/Electron peak memory and larger run families still need measurements.

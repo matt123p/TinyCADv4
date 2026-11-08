@@ -35,7 +35,7 @@ export async function runRegression(contents) {
         },
       }],
     });
-    createRequire(import.meta.url)(outfile);
+    await createRequire(import.meta.url)(outfile);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

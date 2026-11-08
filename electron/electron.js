@@ -1,5 +1,6 @@
 import { isDrawingFile } from '../shared/drawingFiles.js';
 import { registerSimulation } from './simulation.js';
+import { chartWindowOptions, configureChartWindow } from './chartWindows.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import Store from 'electron-store';
@@ -225,7 +226,10 @@ function createWindow() {
   }
 
   // Allow TinyCAD to open another app window, but send true external links to the OS browser.
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+  mainWindow.webContents.setWindowOpenHandler((details) => {
+    const chart = chartWindowOptions(details, mainWindow, windowIcon);
+    if (chart) return chart;
+    const { url } = details;
     if (typeof url === 'string' && url.startsWith(appWindowUrl)) {
       return {
         action: 'allow',
@@ -248,6 +252,10 @@ function createWindow() {
     return {
       action: 'deny'
     };
+  });
+
+  mainWindow.webContents.on('did-create-window', (child, details) => {
+    configureChartWindow(child, details, mainWindow);
   });
 
   // Check for command line arguments

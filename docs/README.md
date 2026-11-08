@@ -30,7 +30,7 @@ These documents describe an integrated ngspice experience with the approachable 
 
 **Runtime and distribution:** Browser builds use local ngspice WASM; Electron uses native ngspice with its helper, libraries, and required modules bundled in the application. The implementation plan builds both from pinned upstream source in GitHub Actions and verifies each platform package. These engine installation resources do not introduce user projects or additional drawing files.
 
-**Compact drawings and exported results:** Ordinary drawings default to XML `.dsn`; retained results of at least 1 MiB select ZIP `.dzn`, auto-detected from its header; existing XML `.dsn` files remain readable. Users can export result data, remove stored results while retaining setup, or save a compact copy without results. All internal archive entries still belong to one drawing file.
+**Compact drawings and exported results:** Ordinary drawings default to XML `.dsn`; any simulation components, settings or results select ZIP `.dzn`, regardless of size, auto-detected from its header; existing XML `.dsn` files remain readable. Users can export result data, remove stored results while retaining setup, or save a compact copy without results. All internal archive entries still belong to one drawing file.
 
 The priority labels describe the intended product scope:
 

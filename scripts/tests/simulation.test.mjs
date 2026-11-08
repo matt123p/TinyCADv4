@@ -137,40 +137,84 @@ test('ZIP header auto detection and exact complex vector round trip', async () =
   assert.equal(restored.representation, 'zip-v1');
   assert.deepEqual(m.getResult(run.id).vectors[1].imaginary, [0, 0.1, 0]);
 });
-test('automatic saves use XML .dsn for ordinary drawings and ZIP .dzn for large retained results', async () => {
+test('simulation content always selects DZN without a result-size threshold', async () => {
+  const ordinary = m.blank();
+  assert.equal(m.drawingSaveFormat(ordinary), 'xml');
+  assert.equal(m.isCompressedDrawing(await m.encodeDrawing(ordinary)), false);
+  ordinary.saveFormat = 'zip-v1';
+  assert.equal(m.drawingSaveFormat(ordinary), 'zip-v1');
   const doc = drawing();
-  assert.equal(m.drawingSaveFormat(doc), 'xml');
-  assert.equal(m.isCompressedDrawing(await m.encodeDrawing(doc)), false);
-  const run = addResult(doc),
-    count = m.LARGE_RESULT_BYTES / 8;
-  run.samples = count;
-  m.putResult(run.id, {
-    scale: '',
-    log: '',
-    vectors: [{ name: 'out', unit: 'V', real: Array(count).fill(2.5) }],
-  });
-  assert.equal(m.drawingSaveFormat(doc), 'zip-v1');
+  assert.equal(
+    m.drawingSaveFormat(doc),
+    'zip-v1',
+    'an unused default simulation sheet counts',
+  );
+  doc.saveFormat = 'xml';
+  assert.equal(
+    m.drawingSaveFormat(doc),
+    'zip-v1',
+    'simulation overrides an old XML preference',
+  );
+  const run = addResult(doc);
   const bytes = await m.encodeDrawing(doc);
   assert.equal(m.isCompressedDrawing(bytes), true);
+  doc.sheets[1].simulation.retainResults = false;
+  assert.equal(m.drawingSaveFormat(doc), 'zip-v1');
+  assert.equal(m.drawingSaveFormat(m.withoutResults(doc)), 'zip-v1');
+  run.dataState = 'removed';
+  assert.equal(m.drawingSaveFormat(doc), 'zip-v1');
+  const settingsOnly = m.blank();
+  settingsOnly.sheets[0].simulation = m.defaultSetup();
+  assert.equal(m.drawingSaveFormat(settingsOnly), 'zip-v1');
+  for (const item of [
+    {
+      NodeName: 'symbol',
+      text: [],
+      _symbol: { uid: 'tinycad-spice-source-voltage-v1' },
+    },
+    {
+      NodeName: 'symbol',
+      text: [{ description: '$$SPICE_CONTROL', value: '{}' }],
+    },
+    {
+      NodeName: 'symbol',
+      text: [{ description: '$$SPICE', value: 'R1 1 0 1k' }],
+    },
+    { NodeName: 'power', which: 4, text: '0' },
+  ]) {
+    const componentOnly = m.blank();
+    componentOnly.sheets[0].items.push(item);
+    assert.equal(
+      m.drawingSaveFormat(componentOnly),
+      'zip-v1',
+      JSON.stringify(item),
+    );
+  }
+  const noSpice = m.blank();
+  noSpice.sheets[0].items.push({
+    NodeName: 'symbol',
+    text: [
+      { description: '$$SPICE', value: '' },
+      { description: '$$SPICE_PROLOG_PRIORITY', value: '5' },
+    ],
+  });
+  assert.equal(
+    m.drawingSaveFormat(noSpice),
+    'xml',
+    'empty SPICE forms do not add simulation',
+  );
   assert.equal(m.drawingFileName('lesson.dsn', true), 'lesson.dzn');
   assert.equal(m.drawingFileName('lesson.dzn', false), 'lesson.dsn');
   assert.equal(m.drawingFileName('lesson.dsn.dzn', true), 'lesson.dzn');
-  doc.sheets[1].simulation.retainResults = false;
-  assert.equal(m.drawingSaveFormat(doc), 'xml');
-  doc.sheets[1].simulation.retainResults = true;
-  assert.equal(m.drawingSaveFormat(m.withoutResults(doc)), 'xml');
-  doc.saveFormat = 'xml';
-  assert.equal(m.drawingSaveFormat(doc), 'xml');
-  doc.saveFormat = 'zip-v1';
-  assert.equal(m.drawingSaveFormat(doc), 'zip-v1');
-  // The decoder has no filename input: renamed .dsn/.dzn content is interpreted
-  // solely from the ZIP/XML header, including legacy compressed .dsn files.
+  // Keep legacy XML decoding/conversion covered independently of normal saves.
   assert.equal((await m.decodeDrawing(bytes)).representation, 'zip-v1');
+  doc.sheets[1].simulation.retainResults = true;
   assert.equal(
     (await m.decodeDrawing(await m.encodeDrawing(doc, 'xml'))).representation,
     'xml',
   );
 });
+
 test('legacy XML, UTF-16, XML with inline vectors and compressed conversion are readable', async () => {
   assert.equal((await m.decodeDrawing(m.blankXML())).sheets.length, 1);
   const utf16 = new Uint8Array(

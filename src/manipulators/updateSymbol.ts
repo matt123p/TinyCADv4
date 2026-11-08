@@ -1356,6 +1356,11 @@ export class updateSymbol
         handle: 0,
       });
     }
+    if (!best_match && this.item._symbol.uid?.startsWith('tinycad-spice-')) {
+      const bounds = this.getBoundingRect();
+      if (tp[0] >= bounds.x1 && tp[0] <= bounds.x2 && tp[1] >= bounds.y1 && tp[1] <= bounds.y2)
+        candidates.push({ item: this.item, handle: 0, distance: 0 });
+    }
 
     // Now do the text:
     const UpdateTextAreas = this.create_updateTextArea(

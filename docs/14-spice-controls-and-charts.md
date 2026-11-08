@@ -10,7 +10,11 @@ to a schematic sheet.
 
 ## Sources
 
-Select a source to edit it in the bottom panel. Choose voltage or current, then
+The bottom editor opens immediately after **Insert Source**, before placement.
+Click a placed source's body to reopen it; the panel expands to expose its settings.
+Use **Signal type** to switch a pulse to a sine wave or another waveform; sine
+settings include amplitude, offset, frequency, phase, delay and damping, with the
+preview updating as fields change. Choose voltage or current, then
 DC, sine, square/pulse, triangle, piecewise-linear, exponential or FM. Fields
 accept engineering prefixes, for example `1kHz`, `5ms`, `10us` and `1mA`.
 Piecewise-linear input uses one time/value pair per line with increasing times.
@@ -21,6 +25,13 @@ The waveform chart previews the actual numeric settings used in the generated
 source statement, including delay, ramps, damping and modulation. Invalid settings
 show an error and prevent simulation startup. Source type changes update the
 reference prefix and symbol artwork. Standard component references remain editable.
+
+New sources and probes use an 8 mm terminal span, comparable to normal library
+parts. Their reference/value labels retain normal text sizes. Older large controls
+offer **Use compact symbol** in the bottom editor; this keeps the first terminal
+anchored and extends existing connections to the resized terminals. The conversion
+is a single undoable edit. Ordinary setting edits preserve an older symbol's size
+until that conversion is requested.
 
 Controlled sources offer a voltage-controlled voltage source (E) or
 voltage-controlled current source (G). Output pins are +/− (1/2); control pins
@@ -57,7 +68,34 @@ baselines remain dashed overlays.
 including imaginary values, independently of zoom and chart sampling. Main charts
 also offer a PNG image download. Probe and source-preview charts provide CSV too.
 
+## Charts beside the schematic
+
+The right-hand **Simulation charts** panel is available in browser and Electron.
+It opens for simulation drawings and automatically adds a chart for each probe.
+Without probes, a simulation setup gets an output chart. **SPICE → Show charts**
+opens the panel again after it is hidden. Drag its left edge to resize it.
+
+Choose a simulation setup and acquisition, then use **Run** or **Stop** without
+leaving the drawing. Charts update during acquisition. Saved acquisitions remain
+selectable, and changed circuits show a rerun message instead of attributing old
+values to the current wiring. Multi-plot analyses expose a result-plot selector.
+
+Use **Add chart** for another probe view or a custom chart, **Choose signals** to
+configure a custom chart, and its × button to remove it. Titles are editable.
+Removing an automatic probe chart keeps it removed until explicitly added again.
+Chart layout and panel width are kept for the current drawing session.
+
+In Electron, each chart has an **Open chart in a new window** button. Multiple
+charts can be detached independently and continue receiving the same results.
+**Return to panel**, or closing the chart window, docks it again. Removing its
+chart, replacing its drawing or closing the owning app closes the detached view.
+Pop-outs share the existing numerical buffers rather than copying results into
+another drawing or starting another simulation.
+
 Automated regression checks cover native waveform/preview parity, current
 direction, controlled-source gain, embedded component persistence, wire insertion,
-unit axes, complex data and full-resolution CSV. Interactive UI acceptance was
-excluded from the current automated-only validation.
+unit axes, complex data and full-resolution CSV. A hidden Electron qualification
+(`node scripts/tests/qualify-chart-windows.mjs`) also verifies two independent
+windows, actual Chart.js canvas rendering and unit axes, updated values and
+returning a closed window to its panel. Interactive usability acceptance remains
+separate from these automated checks.

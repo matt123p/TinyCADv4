@@ -24,11 +24,15 @@ export const teachingExamples: TeachingExample[] = [
 ];
 const font = {
   font_name: 'Arial',
-  font_size: 12,
+  font_size: 10,
   font_colour: '#000000',
   font_bold: false,
   font_italic: false,
 };
+const examplePoint = (point: [number, number]): [number, number] => [
+  point[0] / 4,
+  point[1] / 4,
+];
 const stroke = {
   stroked: true,
   line_colour: '#000000',
@@ -60,11 +64,11 @@ export function createTeachingDrawing(kind: TeachingExample) {
     ...font,
     NodeName: DocItemTypes.Pin,
     _id: get_global_id(),
-    point,
+    point: examplePoint(point),
     number,
     name: number,
     rotation,
-    length,
+    length: length / 4,
     number_pos: 0,
     centre_name: false,
     which: 0,
@@ -82,14 +86,14 @@ export function createTeachingDrawing(kind: TeachingExample) {
     ...stroke,
     NodeName: type,
     _id: get_global_id(),
-    point: a,
-    point_b: b,
+    point: examplePoint(a),
+    point_b: examplePoint(b),
   });
   const line = (points: [number, number][]): DocItem => ({
     ...stroke,
     NodeName: DocItemTypes.Line,
     _id: get_global_id(),
-    d_points: points,
+    d_points: points.map(examplePoint),
     polygon: false,
   });
   const definition = (
@@ -114,7 +118,7 @@ export function createTeachingDrawing(kind: TeachingExample) {
       outlines: [
         new ioXML().normalize_symbol(
           [...body, ...pins],
-          new Snap(10, true),
+          new Snap(2.5, true),
           null,
           false,
           false,
@@ -152,6 +156,7 @@ export function createTeachingDrawing(kind: TeachingExample) {
     point: [number, number],
     vertical: boolean,
   ) => {
+    point = examplePoint(point);
     const field = (
       description: string,
       value: string,
@@ -180,8 +185,8 @@ export function createTeachingDrawing(kind: TeachingExample) {
       textData: [],
       hints: [],
       text: [
-        field('Ref', ref, vertical ? [65, 75] : [65, -70]),
-        field('Value', value, vertical ? [65, 100] : [65, -45]),
+        field('Ref', ref, vertical ? [16, 18] : [16, -26]),
+        field('Value', value, vertical ? [16, 30] : [16, -14]),
         field('$$SPICE', '$(ref) %(1) %(2) $(Value)', [0, 0], false),
       ],
     };
@@ -207,6 +212,7 @@ export function createTeachingDrawing(kind: TeachingExample) {
     config?: SourceConfig,
     rotation = 0,
   ) => {
+    tip = examplePoint(tip);
     const created = createControl(tool, sheet, drawing);
     sheet.symbols = created.sheet.symbols;
     let symbol = config
@@ -232,9 +238,9 @@ export function createTeachingDrawing(kind: TeachingExample) {
           ...field,
           position:
             field.description === 'Ref'
-              ? [545 - symbol.point[0], 330 - symbol.point[1]]
+              ? [545 / 4 - symbol.point[0], 300 / 4 - symbol.point[1]]
               : field.description === 'Name'
-              ? [545 - symbol.point[0], 350 - symbol.point[1]]
+              ? [545 / 4 - symbol.point[0], 300 / 4 + 12 - symbol.point[1]]
               : field.position,
         })),
       }).post_construction();
@@ -270,7 +276,7 @@ export function createTeachingDrawing(kind: TeachingExample) {
     sheet.items.push({
       NodeName: DocItemTypes.Wire,
       _id: get_global_id(),
-      d_points: [a, b],
+      d_points: [examplePoint(a), examplePoint(b)],
       _magnetic: null,
     });
   wire([100, 400], [400, 400]);
@@ -290,7 +296,7 @@ export function createTeachingDrawing(kind: TeachingExample) {
       ...font,
       NodeName: DocItemTypes.Label,
       _id: get_global_id(),
-      point,
+      point: examplePoint(point),
       text,
       which: 0,
       rotation: 0,
@@ -301,7 +307,7 @@ export function createTeachingDrawing(kind: TeachingExample) {
     ...font,
     NodeName: DocItemTypes.Power,
     _id: get_global_id(),
-    point: [600, 680],
+    point: examplePoint([600, 680]),
     text: '0',
     which: 4,
     rotation: 0,

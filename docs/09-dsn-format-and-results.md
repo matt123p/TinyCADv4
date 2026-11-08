@@ -7,7 +7,7 @@ Status: proposed format and implementation contract. This extends the [implement
 
 ## 1. User-facing behavior
 
-Keep **one drawing file**, using `.dsn` for XML or `.dzn` for ZIP. Automatic saving chooses XML normally and ZIP when retained result buffers/logs total at least 1 MiB. Explicit format choices override this policy. Opening automatically detects compressed DSN or existing XML DSN from bytes at the start of the file; users do not need to select an import format or unzip anything.
+Keep **one drawing file**, using `.dsn` for XML or `.dzn` for ZIP. Saving chooses XML for ordinary drawings and ZIP whenever simulation components, settings or results are present, regardless of size. Simulation drawings always use `.dzn`, including copies without results; stored XML preferences do not override this rule. Opening automatically detects compressed DSN or existing XML DSN from bytes at the start of the file; users do not need to select an import format or unzip anything.
 
 Schematic and Simulation sheets remain tabs in the same drawing. Archive entries are internal storage, not linked schematic documents, a project folder, or a required sidecar. Compression changes how the drawing is stored, not how circuits or analyses are organized.
 
@@ -78,7 +78,7 @@ Use ZIP Store or Deflate, UTF-8 filenames, no encryption, no spanning/split volu
 
 The `.dsn`/`.dzn` extensions and storage-service MIME metadata remain useful labels but never determine the decoder. Do not scan past an arbitrary executable prefix looking for a ZIP header; self-extracting or prefixed archives are outside this format.
 
-Automatic saves use XML `.dsn` normally and ZIP `.dzn` for retained result buffers/logs totalling at least 1 MiB; **Save as → Compressed drawing (.dzn)** converts explicitly. **Save as → XML DSN (.dsn)** offers an uncompressed representation when needed. XML representation and old-version compatibility are separate: current XML may contain new Simulation records that an older TinyCAD cannot preserve. A legacy-compatible export still warns before omitting unsupported content and retains the complete original.
+Automatic saves use XML `.dsn` for ordinary drawings and ZIP `.dzn` whenever simulation components, settings or results are present. The presence check also covers configured SPICE symbol attributes and Earth ground named `0`. Removing results does not change this while simulation content remains. Legacy XML simulation files remain readable and use `.dzn` on their next save. XML representation and old-version compatibility are separate: current XML may contain new Simulation records that an older TinyCAD cannot preserve. A legacy-compatible export still warns before omitting unsupported content and retains the complete original.
 
 ## 3. Document and numerical payload encoding
 
@@ -142,7 +142,7 @@ Reject duplicate entry names, conflicting local/central-directory records, inval
 
 | Fixture/action | Required outcome |
 | --- | --- |
-| Open XML .dsn and ZIP .dzn, including files renamed to the other extension | Decoder follows header/validated contents; both produce equivalent drawing state. Automatic saving uses .dsn normally and .dzn for retained results of at least 1 MiB. |
+| Open XML .dsn and ZIP .dzn, including files renamed to the other extension | Decoder follows header/validated contents; both produce equivalent drawing state. Automatic saving uses .dsn for ordinary drawings and .dzn for any simulation components, settings or results, independent of size. |
 | XML↔ZIP round trip with schematic/Simulation sheets and real/complex results | IDs, setup, instructions, exact retained samples, units, status, and metadata survive. Only storage representation changes. |
 | Export full data from a decimated plot, an interval, and partial/stale/trial runs | Numerical samples and status match the selected retained snapshot. JSON/CSV and plot/measurement outputs declare their scope and units. |
 | Cancel/fail export; request a browser download | No removal or retention-policy changes. Unobservable download completion is not reported as verified persistence. |

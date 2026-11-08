@@ -101,7 +101,7 @@ export function SimulationSheet({
     setPlotIndex(0);
   }, [sheet.id]);
   const session = getSession(),
-    running = session?.sheetId === sheet.id;
+    running = !!session && session.sheetId === sheet.id;
   const run =
     setup.runs.find((r) => r.id === selectedRun) ||
     setup.runs[setup.runs.length - 1];

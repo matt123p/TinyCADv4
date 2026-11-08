@@ -9,21 +9,23 @@ test('teaching drawings reopen as configured shared circuits and produce the exp
   import os from 'node:os';
   import { spawnSync } from 'node:child_process';
   import { teachingExamples } from './src/simulation/examples';
-  import { XMLBuilder } from './src/util/xmlbuilder';
-  import { ioXML } from './src/io/ioXml';
+  import { decodeDrawing } from './src/io/dsnCodec';
+  import { drawingSaveFormat } from './src/io/drawingSaveFormat';
   import { NetlistWorkerState } from './src/web-worker/netlistState';
   import { buildDeck } from './src/simulation/deck';
   import { checkSpiceComponents } from './src/simulation/diagnostics';
   import { readControl, probeResult, compileSource } from './src/simulation/controls';
   import { vectorUnit } from './src/simulation/resultStore';
+  async function verifyExamples() {
   const previousDocument=globalThis.document;
   globalThis.document={createElement:()=>({getContext:()=>({font:'',measureText:text=>({width:String(text).length*8,actualBoundingBoxDescent:3})})})};
   const runtime=path.resolve('build/engines/native');
   const manifest=fs.existsSync(path.join(runtime,'manifest.json')) ? JSON.parse(fs.readFileSync(path.join(runtime,'manifest.json'),'utf8')) : undefined;
   try {
    for(const name of teachingExamples){
-    const xml=new XMLBuilder();xml.fromText(fs.readFileSync('examples/simulation/'+name+'.dsn','utf8'));
-    const drawing=new ioXML().from_dsn(xml);
+    const drawing=await decodeDrawing(fs.readFileSync('examples/simulation/'+name+'.dzn'));
+    assert.equal(drawing.representation,'zip-v1');
+    assert.equal(drawingSaveFormat(drawing),'zip-v1');
     assert.equal(drawing.sheets.length,2);
     const simulation=drawing.sheets.find(sheet=>sheet.kind==='simulation');
     assert.ok(simulation.simulation.instructions);
@@ -80,5 +82,7 @@ test('teaching drawings reopen as configured shared circuits and produce the exp
     } finally {fs.rmSync(directory,{recursive:true,force:true});}
    }
   } finally {globalThis.document=previousDocument;}
+  }
+  module.exports=verifyExamples();
  `);
 });

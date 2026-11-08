@@ -121,7 +121,7 @@ Use prepared drawings with placed components carrying valid `$$SPICE` metadata. 
 - [ ] Check missing models/attributes, duplicate references, missing ground, invalid quantities and unsupported browser code models. Errors should explain how to recover.
 - [ ] Exercise signal selection, differential/gain/power traces, unit-separated plots, Fit/zoom/pan, both cursors, pinned baselines, history selection and stale-result indications.
 - [ ] Export CSV, JSON, raw data, measurements and SVG; reopen exports in another suitable tool and check complex values, units, sample counts and partial-run status.
-- [ ] Save an ordinary drawing as XML `.dsn`. Grow retained results/logs to at least **1 MiB** and confirm automatic ZIP `.dzn` selection. Test explicit XML/ZIP overrides.
+- [ ] Save an ordinary drawing as XML `.dsn`. Add a simulation component, settings or results and confirm ZIP `.dzn` selection regardless of size or previous XML preference. Confirm Save without results remains `.dzn` while setup is retained.
 - [ ] Remove or exclude results and confirm automatic selection returns to `.dsn`. Cancel a format-change destination dialog and confirm the original file/association and dirty state remain correct.
 - [ ] Reopen `.dsn` and `.dzn` through the dialog, recent-file list, command line and OS double-click. Also open ZIP deliberately renamed `.dsn` and XML renamed `.dzn`: content decides the decoder.
 - [ ] Open either drawing type while editing a library; confirm the correct drawing window/workflow is used.
