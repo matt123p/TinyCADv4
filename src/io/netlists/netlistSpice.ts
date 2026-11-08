@@ -2,6 +2,13 @@ import { NetlistData } from './netlistGenerator';
 import { updateSymbol } from '../../manipulators/updateSymbol';
 import { dsnSymbol } from '../../model/dsnItem';
 
+function findSpiceAttribute(symbol: dsnSymbol, name: string) {
+    // Legacy library templates use $(NAME) for the editor's Name property.
+    // Prefer an exact match when present, then accept other capitalization.
+    return symbol.text.find(t => t.description === name)
+        ?? symbol.text.find(t => t.description.toLowerCase() === name.toLowerCase());
+}
+
 function getPinInfo(val: string, symbol: dsnSymbol, netlist: NetlistData) {
     const updater = new updateSymbol(symbol);
     const pins = updater.active_points();
@@ -29,6 +36,14 @@ function getPinInfo(val: string, symbol: dsnSymbol, netlist: NetlistData) {
     return null;
 }
 
+export function spicePinLabel(val: string, symbol: dsnSymbol, netlist: NetlistData): string | null {
+    const info = getPinInfo(val, symbol, netlist);
+    if (!info?.netId) return null;
+    if (netlist.labels['0'] === info.netId) return '0';
+    return Object.keys(netlist.labels).find(key => netlist.labels[key] === info.netId)
+        ?? `_N_${info.netId}`;
+}
+
 function evalSpiceMacro(
     macro: string,
     symbol: dsnSymbol,
@@ -46,14 +61,14 @@ function evalSpiceMacro(
     value = value.trim();
 
     if (op === 'defined') {
-        return !!symbol.text.find(t => t.description === value);
+        return !!findSpiceAttribute(symbol, value);
     } else if (op === 'not_defined') {
-        return !symbol.text.find(t => t.description === value);
+        return !findSpiceAttribute(symbol, value);
     } else if (op === 'empty') {
-        const attr = symbol.text.find(t => t.description === value);
+        const attr = findSpiceAttribute(symbol, value);
         return !attr || attr.value === '';
     } else if (op === 'not_empty') {
-        const attr = symbol.text.find(t => t.description === value);
+        const attr = findSpiceAttribute(symbol, value);
         return !!(attr && attr.value !== '');
     } else if (op === 'connected') {
         const info = getPinInfo(value, symbol, netlist);
@@ -89,17 +104,7 @@ function expandSpice(
 
     // Returns the net label (for %) or null if not found
     const findNetLabel = (val: string): string | null => {
-        const info = getPinInfo(val, symbol, netlist);
-        if (info && info.netId) {
-            // Check preferredLabel first (user-assigned labels)
-            let label = Object.keys(netlist.labels).find(key => netlist.labels[key] === info.netId);
-            if (label) {
-                return label;
-            }
-            // Construct a label from the net id
-            return `_N_${info.netId}`;
-        }
-        return null;
+        return spicePinLabel(val, symbol, netlist);
     };
 
     // Returns the raw net number (for @)
@@ -125,7 +130,7 @@ function expandSpice(
             }
             return { found: !!refDes, value: refDes };
         }
-        const attr = symbol.text.find(t => t.description === val);
+        const attr = findSpiceAttribute(symbol, val);
         return { found: !!attr, value: attr ? attr.value : '' };
     };
 
@@ -287,6 +292,11 @@ export function writeSpice(netlist: NetlistData) {
         const symbol = symRef[1];
         
         let spice = symbol.text.find(t => t.description === '$$SPICE')?.value;
+        // Non-loading built-in probes only read recorded node voltages. Keep
+        // their annotation out of the electrical deck so adding one after a
+        // run does not invalidate an otherwise identical acquisition.
+        if (spice?.trim() === '* Voltage probe $(ref)'
+            && symbol.text.some(t => t.description === '$$SPICE_CONTROL')) continue;
         if (spice) {
             const expanded = expandSpice(spice, symbol, netlist, symRef[0]);
             if (expanded) txt += `${expanded}\n`;

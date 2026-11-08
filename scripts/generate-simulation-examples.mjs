@@ -41,6 +41,19 @@ await build({
 const { teachingExamples, createTeachingDrawing, ioXML } = createRequire(
   import.meta.url,
 )(output);
+// Text-layout caches need a canvas while constructing editor components; they
+// are not serialized. Fixture generation only needs deterministic font metrics.
+globalThis.document = {
+  createElement: () => ({
+    getContext: () => ({
+      font: '',
+      measureText: (text) => ({
+        width: String(text).length * 8,
+        actualBoundingBoxDescent: 3,
+      }),
+    }),
+  }),
+};
 await fs.mkdir(path.join(root, 'examples/simulation'), { recursive: true });
 for (const name of teachingExamples) {
   const drawing = createTeachingDrawing(name);

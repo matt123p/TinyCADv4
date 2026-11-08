@@ -3,6 +3,8 @@ import { makeStyles, tokens } from '@fluentui/react-components';
 import { DocItem, DocItemTypes, dsnPin, dsnSymbol } from '../../model/dsnItem';
 import StylePanelContainer from '../../state/containers/stylePanelContainer';
 import SymbolPanelContainer from '../../state/containers/symbolPanelContainer';
+import { SpiceControlPanel } from './SpiceControlPanel';
+import { readControl } from '../../simulation/controls';
 import PinPanelContainer from '../../state/containers/pinPanelContainer';
 import DrcPanelContainer from '../../state/containers/drcPanelContainer';
 import { SymbolListPanel } from './SymbolListPanel';
@@ -92,7 +94,10 @@ export const BottomPanel: React.FunctionComponent<BottomPanelProps> = (
       <div className={styles.content}>
         {panelType === 'symbol' && (
           <div className={styles.panelContent}>
-            <SymbolPanelContainer />
+            {readControl(props.selectedSymbol) ? (
+              <SpiceControlPanel key={props.selectedSymbol._id}
+                symbol={props.selectedSymbol} drawing={props.drawing} dispatch={props.dispatch} />
+            ) : <SymbolPanelContainer />}
           </div>
         )}
         {panelType === 'pin' && (

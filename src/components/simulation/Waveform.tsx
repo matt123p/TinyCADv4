@@ -1,7 +1,23 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Chart, registerables, ChartDataset, ChartOptions } from 'chart.js';
+import zoomPlugin from 'chartjs-plugin-zoom';
+import {
+  Button,
+  Checkbox,
+  Field,
+  Input,
+  Select,
+} from '@fluentui/react-components';
 import { ResultData } from '../../simulation/contracts';
-import { download } from '../../simulation/export';
+import { csv, download } from '../../simulation/export';
+import {
+  chartPoints,
+  DisplayMode,
+  displayUnit,
+  displayValue,
+} from '../../simulation/chartData';
 
+Chart.register(...registerables, zoomPlugin);
 const colors = [
   '#0078d4',
   '#ca5010',
@@ -10,346 +26,379 @@ const colors = [
   '#c239b3',
   '#008575',
 ];
+const row: React.CSSProperties = {
+  display: 'flex',
+  gap: 8,
+  flexWrap: 'wrap',
+  alignItems: 'center',
+};
+const number = (n: number) =>
+  Number.isFinite(n)
+    ? n.toLocaleString(undefined, { maximumSignificantDigits: 6 })
+    : '—';
+
 export function Waveform({
   data,
   signals,
   baseline,
+  compact = false,
 }: {
   data: ResultData;
   signals: string[];
   baseline?: ResultData;
+  compact?: boolean;
 }) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [mode, setMode] = useState('real'),
-    [zoom, setZoom] = useState(1),
-    [pan, setPan] = useState(0),
-    [cursor, setCursor] = useState<number>(),
-    [second, setSecond] = useState<number>();
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const chart = useRef<Chart<'line'>>();
+  const viewport = useRef<{ min: number; max: number }>();
+  const [mode, setMode] = useState<DisplayMode>('real');
   const [logX, setLogX] = useState(data.scale === 'frequency');
-  const selected = data.vectors.filter(
-    (v) =>
-      v.name !== data.scale &&
-      (signals.length ? signals.includes(v.name) : true),
+  const [grid, setGrid] = useState(true);
+  const [axisLabels, setAxisLabels] = useState<Record<string, string>>({});
+  const [cursor, setCursor] = useState(0),
+    [second, setSecond] = useState(0);
+  const selected = useMemo(
+    () =>
+      data.vectors.filter(
+        (v) =>
+          v.name !== data.scale &&
+          (!signals.length || signals.includes(v.name)),
+      ),
+    [data, signals],
   );
-  const transform = (r: number, i: number) =>
-    mode === 'phase'
-      ? (Math.atan2(i, r) * 180) / Math.PI
-      : mode === 'db'
-      ? 20 * Math.log10(Math.max(1e-30, Math.hypot(r, i)))
-      : mode === 'magnitude'
-      ? Math.hypot(r, i)
-      : r;
+  const units = [...new Set(selected.map((v) => displayUnit(v, mode)))];
   const scale = data.vectors.find((v) => v.name === data.scale);
   const count = scale?.real.length || selected[0]?.real.length || 0;
-  const xvalue = (i: number) => {
-    const x = scale?.real[i] ?? i;
-    return logX ? Math.log10(Math.max(1e-30, x)) : x;
-  };
-  const fullMin = count ? Math.min(xvalue(0), xvalue(count - 1)) : 0,
-    fullMax = count ? Math.max(xvalue(0), xvalue(count - 1)) : 1,
-    fullSpan = fullMax - fullMin || 1;
-  const xmin = fullMin + pan * fullSpan,
-    xmax = xmin + fullSpan / zoom;
-  let ymin = Infinity,
-    ymax = -Infinity;
-  const series = selected.flatMap((v, j) => [
-    { v, color: colors[j % colors.length], dashed: false },
-    ...(baseline?.scale === data.scale &&
-    baseline.vectors.find((b) => b.name === v.name && b.unit === v.unit)
-      ? [
+  const xLabel =
+    data.scale === 'time'
+      ? 'Time (s)'
+      : data.scale === 'frequency'
+      ? 'Frequency (Hz)'
+      : scale
+      ? `${scale.name} (${scale.unit})`
+      : 'Sample';
+
+  useEffect(() => {
+    if (!canvas.current) return;
+    const datasets: ChartDataset<'line'>[] = [];
+    const refine: ((range: { min: number; max: number }) => void)[] = [];
+    const append = (
+      dataset: ChartDataset<'line'>,
+      source: ResultData,
+      vector: ResultData['vectors'][number],
+    ) => {
+      const full = chartPoints(source, vector, mode, logX).sort(
+        (a, b) => a.x - b.x,
+      );
+      dataset.data = full;
+      datasets.push(dataset);
+      refine.push((range) => {
+        const detailed = chartPoints(source, vector, mode, logX, range);
+        dataset.data = [
+          ...new Map(
+            [...full, ...detailed].map((point) => [point.x, point]),
+          ).values(),
+        ].sort((a, b) => a.x - b.x);
+      });
+    };
+    const detail = ({ chart: instance }: { chart: Chart }) => {
+      const range = { min: instance.scales.x.min, max: instance.scales.x.max };
+      refine.forEach((fn) => fn(range));
+      instance.update('none');
+    };
+    selected.forEach((v, index) => {
+      const axis = `y${units.indexOf(displayUnit(v, mode))}`;
+      const color = colors[index % colors.length];
+      append(
+        {
+          label: `${v.name} (${displayUnit(v, mode)})`,
+          yAxisID: axis,
+          data: [],
+          borderColor: color,
+          backgroundColor: color,
+          borderWidth: 1.5,
+          pointRadius: count === 1 ? 4 : 0,
+          pointHitRadius: 8,
+        },
+        data,
+        v,
+      );
+      const previous =
+        baseline?.scale === data.scale &&
+        baseline.vectors.find((b) => b.name === v.name && b.unit === v.unit);
+      if (previous)
+        append(
           {
-            v: baseline.vectors.find((b) => b.name === v.name),
-            color: colors[j % colors.length],
-            dashed: true,
+            label: `${v.name} baseline (${displayUnit(v, mode)})`,
+            yAxisID: axis,
+            data: [],
+            borderColor: color,
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            pointRadius: 0,
           },
-        ]
-      : []),
-  ]);
-  for (const { v, dashed } of series) {
-    const xs = dashed
-      ? baseline.vectors.find((b) => b.name === baseline.scale)
-      : scale;
-    for (let i = 0; i < v.real.length; i++) {
-      const raw = xs?.real[i] ?? i;
-      const x = logX ? Math.log10(Math.max(raw, 1e-30)) : raw;
-      if (x < xmin || x > xmax) continue;
-      const y = transform(v.real[i], v.imaginary?.[i] || 0);
-      ymin = Math.min(ymin, y);
-      ymax = Math.max(ymax, y);
-    }
-  }
-  if (!Number.isFinite(ymin)) {
-    ymin = -1;
-    ymax = 1;
-  }
-  if (ymin === ymax) {
-    ymin -= 1;
-    ymax += 1;
-  }
-  const padding = (ymax - ymin) * 0.08;
-  ymin -= padding;
-  ymax += padding;
-  const px = (x: number) => 70 + ((x - xmin) / (xmax - xmin)) * 800,
-    py = (y: number) => 320 - ((y - ymin) / (ymax - ymin)) * 290;
-  const paths = series.map(({ v, color, dashed }, j) => {
-    const xs = dashed
-      ? baseline.vectors.find((b) => b.name === baseline.scale)
-      : scale;
-    // Min/max bucket envelope preserves narrow spikes while bounding SVG cost.
-    const points: string[] = [];
-    const stride = Math.max(1, Math.floor(v.real.length / 1600));
-    for (let i = 0; i < v.real.length; i += stride) {
-      let lo = i,
-        hi = i;
-      for (let k = i + 1; k < Math.min(v.real.length, i + stride); k++) {
-        if (
-          transform(v.real[k], v.imaginary?.[k] || 0) <
-          transform(v.real[lo], v.imaginary?.[lo] || 0)
-        )
-          lo = k;
-        if (
-          transform(v.real[k], v.imaginary?.[k] || 0) >
-          transform(v.real[hi], v.imaginary?.[hi] || 0)
-        )
-          hi = k;
-      }
-      for (const k of [
-        ...new Set([i, lo, hi, Math.min(i + stride - 1, v.real.length - 1)]),
-      ].sort((a, b) => a - b)) {
-        const raw = xs?.real[k] ?? k,
-          x = logX ? Math.log10(Math.max(1e-30, raw)) : raw;
-        if (x < xmin || x > xmax) continue;
-        points.push(
-          `${px(x)},${py(transform(v.real[k], v.imaginary?.[k] || 0))}`,
+          baseline,
+          previous,
         );
-      }
-    }
-    return (
-      <polyline
-        key={j}
-        points={points.join(' ')}
-        fill="none"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeDasharray={dashed ? '6 4' : undefined}
-      >
-        <title>
-          {v.name} [{v.unit}]{dashed ? ' baseline' : ''}
-        </title>
-      </polyline>
-    );
-  });
-  const cursorX = (index: number) => px(xvalue(index));
+    });
+    const scales: ChartOptions<'line'>['scales'] = {
+      x: {
+        type: logX ? 'logarithmic' : 'linear',
+        title: { display: true, text: axisLabels.x || xLabel },
+        grid: { display: grid },
+        ticks: { maxTicksLimit: 10 },
+      },
+    };
+    units.forEach((unit, index) => {
+      scales[`y${index}`] = {
+        type: 'linear',
+        axis: 'y',
+        position: index % 2 ? 'right' : 'left',
+        title: {
+          display: true,
+          text:
+            axisLabels[unit] ||
+            {
+              V: 'Voltage (V)',
+              A: 'Current (A)',
+              W: 'Power (W)',
+              '°': 'Phase (°)',
+              dB: 'Magnitude (dB)',
+            }[unit] ||
+            unit,
+        },
+        grid: { display: grid, drawOnChartArea: index === 0 },
+        ticks: { maxTicksLimit: compact ? 5 : 8 },
+      };
+    });
+    const instance = new Chart(canvas.current, {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        parsing: false,
+        font: { family: 'Segoe UI, sans-serif' },
+        interaction: { mode: 'nearest', intersect: false },
+        scales,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { boxWidth: 16, font: { family: 'Segoe UI, sans-serif' } },
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) =>
+                `${context.dataset.label}: ${number(context.parsed.y)}`,
+            },
+          },
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: 'x',
+              onPanComplete: detail,
+              onPan: detail,
+            },
+            zoom: {
+              wheel: { enabled: true },
+              pinch: { enabled: true },
+              drag: { enabled: true, modifierKey: 'shift' },
+              mode: 'x',
+              onZoomComplete: detail,
+              onZoom: ({ chart, trigger }) => {
+                if (trigger === 'api') detail({ chart });
+              },
+            },
+          },
+        },
+      },
+    });
+    if (viewport.current) instance.zoomScale('x', viewport.current, 'none');
+    chart.current = instance;
+    return () => {
+      viewport.current = instance.isZoomedOrPanned?.()
+        ? { min: instance.scales.x.min, max: instance.scales.x.max }
+        : undefined;
+      instance.destroy();
+      chart.current = undefined;
+    };
+  }, [data, baseline, selected, mode, logX, grid, axisLabels, compact]);
+
   return (
-    <div>
+    <div style={{ minWidth: 0 }}>
+      <div style={row}>
+        {(!compact ||
+          selected.some((v) => v.imaginary?.some((n) => n !== 0))) && (
+          <Field label="Display" orientation="horizontal" size="small">
+            <Select
+              size="small"
+              value={mode}
+              onChange={(_, d) => setMode(d.value as DisplayMode)}
+            >
+              <option value="real">Real</option>
+              <option value="magnitude">Magnitude</option>
+              <option value="db">Magnitude (dB)</option>
+              <option value="phase">Phase (°)</option>
+            </Select>
+          </Field>
+        )}
+        <Button size="small" onClick={() => chart.current?.resetZoom()}>
+          Fit
+        </Button>
+        <Button size="small" onClick={() => chart.current?.zoom(1.5)}>
+          Zoom in
+        </Button>
+        <Button size="small" onClick={() => chart.current?.zoom(1 / 1.5)}>
+          Zoom out
+        </Button>
+        <Button
+          size="small"
+          onClick={() =>
+            download(
+              'simulation.csv',
+              csv({
+                ...data,
+                vectors: [...(scale ? [scale] : []), ...selected],
+              }),
+              'text/csv;charset=utf-8',
+            )
+          }
+        >
+          Download CSV
+        </Button>
+        {!compact && (
+          <Button
+            size="small"
+            onClick={() =>
+              canvas.current?.toBlob((blob) => {
+                if (!blob) return;
+                const link = document.createElement('a'),
+                  url = URL.createObjectURL(blob);
+                link.href = url;
+                link.download = 'simulation.png';
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+              })
+            }
+          >
+            Download image
+          </Button>
+        )}
+      </div>
       <div
         style={{
-          display: 'flex',
-          gap: 8,
-          flexWrap: 'wrap',
-          alignItems: 'center',
+          position: 'relative',
+          height: compact ? 180 : 360,
+          marginTop: 8,
         }}
       >
-        <label>
-          Display{' '}
-          <select value={mode} onChange={(e) => setMode(e.target.value)}>
-            <option value="real">Real</option>
-            <option value="magnitude">Magnitude</option>
-            <option value="db">Magnitude (dB)</option>
-            <option value="phase">Phase (°)</option>
-          </select>
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={logX}
-            onChange={(e) => setLogX(e.target.checked)}
-          />
-          Log horizontal axis
-        </label>
-        <button
-          onClick={() => {
-            setZoom(1);
-            setPan(0);
-          }}
-        >
-          Fit
-        </button>
-        <button onClick={() => setZoom(Math.min(100, zoom * 2))}>
-          Zoom in
-        </button>
-        <button
-          onClick={() => {
-            setZoom(Math.max(1, zoom / 2));
-            setPan(0);
-          }}
-        >
-          Zoom out
-        </button>
-        {zoom > 1 && (
-          <label>
-            Pan
-            <input
-              aria-label="Pan plot"
-              type="range"
-              min="0"
-              max={1 - 1 / zoom}
-              step="0.001"
-              value={pan}
-              onChange={(e) => setPan(Number(e.target.value))}
-            />
-          </label>
-        )}
-        <button
-          onClick={() => {
-            const svg = svgRef.current;
-            if (svg)
-              download(
-                'simulation.svg',
-                new XMLSerializer().serializeToString(svg),
-                'image/svg+xml',
-              );
-          }}
-        >
-          Export SVG
-        </button>
-      </div>
-      <svg
-        ref={svgRef}
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 920 370"
-        role="img"
-        aria-label="Simulation waveform plot. Use the cursor sliders or Data table for precise values."
-        style={{
-          width: '100%',
-          minHeight: 230,
-          background: 'white',
-          color: 'black',
-        }}
-        onClick={(e) => {
-          if (!count) return;
-          const rect = e.currentTarget.getBoundingClientRect(),
-            x =
-              xmin +
-              ((((e.clientX - rect.left) / rect.width) * 920 - 70) / 800) *
-                (xmax - xmin);
-          let best = 0;
-          for (let i = 1; i < count; i++)
-            if (Math.abs(xvalue(i) - x) < Math.abs(xvalue(best) - x)) best = i;
-          e.shiftKey ? setSecond(best) : setCursor(best);
-        }}
-      >
-        <rect
-          x="70"
-          y="30"
-          width="800"
-          height="290"
-          fill="none"
-          stroke="#888"
+        <canvas
+          ref={canvas}
+          role="img"
+          aria-label="Simulation chart. Use the controls to zoom and pan, or download CSV for all samples."
         />
-        {[0, 1, 2, 3, 4].map((i) => (
-          <g key={i} fontSize="11" fill="#333">
-            <line
-              x1="70"
-              y1={30 + i * 72.5}
-              x2="870"
-              y2={30 + i * 72.5}
-              stroke="#ddd"
-            />
-            <text x="65" y={34 + i * 72.5} textAnchor="end">
-              {(ymax - (i * (ymax - ymin)) / 4).toPrecision(4)}
-            </text>
-            <text x={70 + i * 200} y="340" textAnchor="middle">
-              {(logX
-                ? 10 ** (xmin + (i * (xmax - xmin)) / 4)
-                : xmin + (i * (xmax - xmin)) / 4
-              ).toPrecision(4)}
-            </text>
-          </g>
-        ))}
-        {paths}
-        {[cursor, second]
-          .filter((i) => i !== undefined && i < count)
-          .map((i, j) => (
-            <line
-              key={j}
-              x1={cursorX(i)}
-              x2={cursorX(i)}
-              y1="30"
-              y2="320"
-              stroke={j ? '#666' : '#111'}
-              strokeDasharray="4 3"
-            />
-          ))}
-        <text x="470" y="362" textAnchor="middle" fill="black" fontSize="12">
-          {data.scale || 'Sample'} {scale ? `[${scale.unit}]` : ''}
-        </text>
-      </svg>
-      <div>
-        {selected.map((v, j) => (
-          <span
-            key={v.name}
-            style={{ color: colors[j % colors.length], marginRight: 16 }}
-          >
-            {v.name} [{mode === 'phase' ? '°' : mode === 'db' ? 'dB' : v.unit}]
-          </span>
-        ))}
       </div>
-      {count > 0 && (
-        <div>
-          <label>
-            Cursor A{' '}
-            <input
-              type="range"
-              min="0"
-              max={count - 1}
-              value={cursor ?? 0}
-              onChange={(e) => setCursor(Number(e.target.value))}
-            />
-          </label>
-          <label>
-            Cursor B{' '}
-            <input
-              type="range"
-              min="0"
-              max={count - 1}
-              value={second ?? 0}
-              onChange={(e) => setSecond(Number(e.target.value))}
-            />
-          </label>
-          <output>
-            {cursor !== undefined
-              ? `${data.scale || 'Sample'}: ${scale?.real[cursor] ?? cursor}${
-                  second !== undefined
-                    ? `; Δ: ${
-                        (scale?.real[second] ?? second) -
-                        (scale?.real[cursor] ?? cursor)
-                      }`
-                    : ''
-                }`
-              : ''}
-          </output>
-          {cursor !== undefined && (
-            <ul>
-              {selected.map((v) => (
-                <li key={v.name}>
-                  {v.name}:{' '}
-                  {transform(
-                    v.real[cursor],
-                    v.imaginary?.[cursor] || 0,
-                  ).toPrecision(7)}{' '}
-                  {mode === 'phase' ? '°' : mode === 'db' ? 'dB' : v.unit}
-                  {second !== undefined
-                    ? `; Δ ${
-                        transform(v.real[second], v.imaginary?.[second] || 0) -
-                        transform(v.real[cursor], v.imaginary?.[cursor] || 0)
-                      }`
-                    : ''}
-                </li>
+      {!compact && (
+        <>
+          <div style={row}>
+            <span>
+              Wheel or pinch to zoom · Drag to pan · Shift-drag to zoom a region
+              · Click legend to hide a trace
+            </span>
+            <Button size="small" onClick={() => chart.current?.pan({ x: 100 })}>
+              Scroll left
+            </Button>
+            <Button
+              size="small"
+              onClick={() => chart.current?.pan({ x: -100 })}
+            >
+              Scroll right
+            </Button>
+          </div>
+          <details style={{ marginTop: 8 }}>
+            <summary>Chart options and cursors</summary>
+            <div style={row}>
+              <Checkbox
+                label="Logarithmic horizontal axis"
+                checked={logX}
+                onChange={(_, d) => setLogX(!!d.checked)}
+              />
+              <Checkbox
+                label="Grid"
+                checked={grid}
+                onChange={(_, d) => setGrid(!!d.checked)}
+              />
+              <Field label="Horizontal axis" size="small">
+                <Input
+                  size="small"
+                  value={axisLabels.x ?? xLabel}
+                  onChange={(_, d) =>
+                    setAxisLabels({ ...axisLabels, x: d.value })
+                  }
+                />
+              </Field>
+              {units.map((unit) => (
+                <Field key={unit} label={`${unit} axis label`} size="small">
+                  <Input
+                    size="small"
+                    value={axisLabels[unit] ?? ''}
+                    placeholder={`Automatic (${unit})`}
+                    onChange={(_, d) =>
+                      setAxisLabels({ ...axisLabels, [unit]: d.value })
+                    }
+                  />
+                </Field>
               ))}
-            </ul>
-          )}
-        </div>
+            </div>
+            {count > 0 && (
+              <>
+                <label>
+                  Cursor A{' '}
+                  <input
+                    type="range"
+                    min={0}
+                    max={count - 1}
+                    value={cursor}
+                    onChange={(e) => setCursor(Number(e.target.value))}
+                  />
+                </label>
+                <label>
+                  Cursor B{' '}
+                  <input
+                    type="range"
+                    min={0}
+                    max={count - 1}
+                    value={second}
+                    onChange={(e) => setSecond(Number(e.target.value))}
+                  />
+                </label>
+                <div>
+                  {xLabel}: A = {number(scale?.real[cursor] ?? cursor)}, B ={' '}
+                  {number(scale?.real[second] ?? second)}, Δ ={' '}
+                  {number(
+                    (scale?.real[second] ?? second) -
+                      (scale?.real[cursor] ?? cursor),
+                  )}
+                </div>
+                {selected.map((v) => (
+                  <div key={v.name}>
+                    {v.name}: A ={' '}
+                    {number(
+                      displayValue(v.real[cursor], v.imaginary?.[cursor], mode),
+                    )}
+                    , B ={' '}
+                    {number(
+                      displayValue(v.real[second], v.imaginary?.[second], mode),
+                    )}{' '}
+                    {displayUnit(v, mode)}
+                  </div>
+                ))}
+              </>
+            )}
+          </details>
+        </>
       )}
     </div>
   );

@@ -620,24 +620,12 @@ export function SimulationSheet({
                 {tab === 'plot' &&
                   (data.scale ? (
                     <>
-                      {Object.entries(
-                        selectedVectors.reduce((groups, vector) => {
-                          (groups[vector.unit] ||= []).push(vector.name);
-                          return groups;
-                        }, {} as Record<string, string[]>),
-                      ).map(([unit, signals]) => (
-                        <div key={unit}>
-                          <h3>{unit}</h3>
-                          <Waveform
-                            key={`${sheet.id}-${
-                              run?.id || 'running'
-                            }-${plotIndex}-${unit}`}
-                            data={data}
-                            signals={signals}
-                            baseline={baseline}
-                          />
-                        </div>
-                      ))}
+                      <Waveform
+                        key={`${sheet.id}-${run?.id || 'running'}-${plotIndex}`}
+                        data={data}
+                        signals={selectedVectors.map(vector => vector.name)}
+                        baseline={baseline}
+                      />
                     </>
                   ) : (
                     <table>

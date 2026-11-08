@@ -679,12 +679,24 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
              />
           )}
 
-        {!props.editSymbol && !props.simulationSheet && <>
+        {!props.editSymbol && <>
         <ToolbarDivider className={styles.divider} />
-        <ToolbarButton
-          aria-label="Simulate" title="Add a simulation sheet" icon={<PulseRegular />}
-          onClick={() => props.dispatch({ type: 'simulation/add', name: 'Simulation' })}
-        >Simulate</ToolbarButton>
+        <Menu>
+          <MenuTrigger disableButtonEnhancement>
+            <ToolbarButton aria-label="SPICE" icon={<PulseRegular />}>SPICE <ChevronDownRegular /></ToolbarButton>
+          </MenuTrigger>
+          <MenuPopover><MenuList>
+            <MenuItem onClick={() => props.dispatch({ type: 'simulation/add', name: 'Simulation' })}>Simulate</MenuItem>
+            <MenuDivider />
+            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'probe' })}>Insert Probe</MenuItem>
+            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'source' })}>Insert Source</MenuItem>
+            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'ground' })}>Insert Ground</MenuItem>
+            <MenuDivider />
+            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'differential-probe' })}>Insert Differential Probe</MenuItem>
+            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'current-probe' })}>Insert Current Probe</MenuItem>
+            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'controlled' })}>Insert Controlled Source</MenuItem>
+          </MenuList></MenuPopover>
+        </Menu>
         </>}
         <ToolbarDivider className={styles.divider} />
         {/* Undo/Redo */}

@@ -3,6 +3,7 @@ import { NetlistData, SymbolRef } from '../io/netlists/netlistGenerator';
 import { writeSpice } from '../io/netlists/netlistSpice';
 import { SimulationSetup } from './contracts';
 import { validateSpiceText } from './deck';
+import { readControl, controlTemplate } from './controls';
 
 const reference = ([, symbol]: SymbolRef) =>
   symbol.text.find((field) => field.description === 'Ref')?.value || '';
@@ -49,6 +50,14 @@ export function checkSpiceComponents(
   for (const source of netlist.symbols) {
     const symbol = source[1];
     const ref = reference(source);
+    const control = readControl(symbol);
+    if (control) {
+      try { controlTemplate(control); }
+      catch (error) {
+        errors.push(componentError(source, error instanceof Error ? error.message : String(error)));
+        continue;
+      }
+    }
     if (!ref || ref.includes('?'))
       errors.push(
         componentError(source, 'Assign a component reference before running.'),

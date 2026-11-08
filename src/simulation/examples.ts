@@ -10,6 +10,11 @@ import { libSymbol } from '../model/dsnDrawing';
 import { TextDisplayMethod } from '../model/tclib';
 import { get_global_id } from '../util/global_id';
 import { createSimulationSheet } from './document';
+import { createControl, ControlTool, updateControl } from './controlSymbols';
+import { defaultSource, SourceConfig } from './controls';
+import { updateSymbol } from '../manipulators/updateSymbol';
+import { ioXML } from '../io/ioXml';
+import { Snap } from '../manipulators/snap';
 
 export type TeachingExample = 'voltage-divider' | 'rc-charging' | 'rc-low-pass';
 export const teachingExamples: TeachingExample[] = [
@@ -107,35 +112,16 @@ export function createTeachingDrawing(kind: TeachingExample) {
       uid: `tinycad-teaching-${name}`,
       heterogeneous: false,
       outlines: [
-        {
-          items: [...body, ...pins],
-          ref_point: [0, 0],
-          size: [200, 200],
-          active_points: pins.map((p) => ({
-            pos: p.point,
-            power: false,
-            part: 0,
-            pin: p,
-          })),
-        },
+        new ioXML().normalize_symbol(
+          [...body, ...pins],
+          new Snap(10, true),
+          null,
+          false,
+          false,
+        ),
       ],
     };
   };
-  const source = definition('Voltage source', true, [
-    shape(DocItemTypes.Ellipse, [-50, 50], [50, 150]),
-    line([
-      [-12, 80],
-      [12, 80],
-    ]),
-    line([
-      [0, 68],
-      [0, 92],
-    ]),
-    line([
-      [-12, 120],
-      [12, 120],
-    ]),
-  ]);
   const resistor = definition('Resistor', false, [
     shape(DocItemTypes.Rectangle, [50, -20], [150, 20]),
   ]);
@@ -195,59 +181,110 @@ export function createTeachingDrawing(kind: TeachingExample) {
       hints: [],
       text: [
         field('Ref', ref, vertical ? [65, 75] : [65, -70]),
-        field(
-          'Value',
-          value,
-          ref === 'V1' ? [0, 260] : vertical ? [65, 100] : [65, -45],
-        ),
+        field('Value', value, vertical ? [65, 100] : [65, -45]),
         field('$$SPICE', '$(ref) %(1) %(2) $(Value)', [0, 0], false),
       ],
     };
+    const first = new updateSymbol(symbol)
+      .active_points()
+      .find((p) => p[2].number === '1');
+    const shift = [point[0] - first[0], point[1] - first[1]];
+    const placed = new updateSymbol({
+      ...symbol,
+      point: [point[0] + shift[0], point[1] + shift[1]],
+      _active_points: null,
+      text: symbol.text.map((field) => ({
+        ...field,
+        position: [field.position[0] - shift[0], field.position[1] - shift[1]],
+      })),
+    }).post_construction();
     sheet.symbols[definition.id] = definition;
+    sheet.items.push(placed);
+  };
+  const control = (
+    tool: ControlTool,
+    tip: [number, number],
+    config?: SourceConfig,
+    rotation = 0,
+  ) => {
+    const created = createControl(tool, sheet, drawing);
+    sheet.symbols = created.sheet.symbols;
+    let symbol = config
+      ? updateControl(created.symbol, config, drawing)
+      : created.symbol;
+    if (rotation)
+      symbol = new updateSymbol(symbol).rotate(rotation) as dsnSymbol;
+    const first = new updateSymbol(symbol)
+      .active_points()
+      .find((p) => p[2].number === '1');
+    symbol = new updateSymbol({
+      ...symbol,
+      point: [
+        symbol.point[0] + tip[0] - first[0],
+        symbol.point[1] + tip[1] - first[1],
+      ],
+      _active_points: null,
+    }).post_construction();
+    if (tool === 'current-probe') {
+      symbol = new updateSymbol({
+        ...symbol,
+        text: symbol.text.map((field) => ({
+          ...field,
+          position:
+            field.description === 'Ref'
+              ? [545 - symbol.point[0], 330 - symbol.point[1]]
+              : field.description === 'Name'
+              ? [545 - symbol.point[0], 350 - symbol.point[1]]
+              : field.position,
+        })),
+      }).post_construction();
+    }
+    sheet.symbols[symbol._symbol.id] = symbol._symbol;
     sheet.items.push(symbol);
   };
-  instance(
-    source,
-    'V1',
-    kind === 'rc-charging'
-      ? 'PULSE(0 1 0 1n 1n 1 2)'
-      : kind === 'rc-low-pass'
-      ? 'DC 0 AC 1'
-      : 'DC 5',
-    [400, 400],
-    true,
-  );
-  instance(resistor, 'R1', '1k', [400, 400], false);
+  control('source', [400, 400], {
+    ...defaultSource(),
+    dc: kind === 'voltage-divider' ? '5' : '0',
+    acMagnitude: kind === 'rc-low-pass' ? '1' : '0',
+    waveform: kind === 'rc-charging' ? 'pulse' : 'dc',
+    low: '0',
+    high: '1',
+    delay: '0',
+    rise: '1us',
+    fall: '1us',
+    width: '10ms',
+    period: '20ms',
+  });
+  instance(resistor, 'R1', '1k', [760, 400], false);
   instance(
     lower,
     kind === 'voltage-divider' ? 'R2' : 'C1',
     kind === 'voltage-divider' ? '1k' : '1u',
-    [600, 400],
+    [1060, 400],
     true,
   );
-  sheet.items.push(
-    {
+  control('current-probe', [500, 400], undefined, 3);
+  control('probe', [100, 400]);
+  control('probe', [1240, 400]);
+  const wire = (a: [number, number], b: [number, number]) =>
+    sheet.items.push({
       NodeName: DocItemTypes.Wire,
       _id: get_global_id(),
-      d_points: [
-        [400, 600],
-        [500, 600],
-      ],
+      d_points: [a, b],
       _magnetic: null,
-    },
-    {
-      NodeName: DocItemTypes.Wire,
-      _id: get_global_id(),
-      d_points: [
-        [500, 600],
-        [600, 600],
-      ],
-      _magnetic: null,
-    },
-  );
+    });
+  wire([100, 400], [400, 400]);
+  wire([400, 400], [500, 400]);
+  wire([660, 400], [760, 400]);
+  wire([960, 400], [1060, 400]);
+  wire([1060, 400], [1240, 400]);
+  wire([400, 560], [400, 680]);
+  wire([400, 680], [600, 680]);
+  wire([600, 680], [1060, 680]);
+  wire([1060, 600], [1060, 680]);
   for (const [text, point] of [
     ['IN', [400, 400]],
-    ['OUT', [600, 400]],
+    ['OUT', [1060, 400]],
   ] as [string, [number, number]][])
     sheet.items.push({
       ...font,
@@ -264,9 +301,9 @@ export function createTeachingDrawing(kind: TeachingExample) {
     ...font,
     NodeName: DocItemTypes.Power,
     _id: get_global_id(),
-    point: [500, 600],
+    point: [600, 680],
     text: '0',
-    which: 0,
+    which: 4,
     rotation: 0,
     textData: null,
     hints: [],
@@ -286,13 +323,15 @@ export function createTeachingDrawing(kind: TeachingExample) {
   setup.analysis.kind =
     kind === 'voltage-divider' ? 'op' : kind === 'rc-charging' ? 'tran' : 'ac';
   setup.signals =
-    kind === 'voltage-divider' ? ['out', 'v1#branch'] : ['in', 'out'];
+    kind === 'voltage-divider'
+      ? ['out', 'vp1#branch']
+      : ['in', 'out', 'vp1#branch'];
   setup.instructions =
     kind === 'voltage-divider'
-      ? 'Run Operating Point. OUT should be 2.50 V relative to node 0; V1 branch current should be -2.50 mA. Change R2 Value to 2k and run again: OUT should become approximately 3.33 V. Positive source current follows the SPICE terminal order.'
+      ? 'Run Operating Point. OUT should be 2.50 V relative to node 0; VP1 should read +2.50 mA from IN towards R1; V1 branch current is -2.50 mA. Change R2 Value to 2k and run again: OUT should become approximately 3.33 V. Select V1 to edit its DC level in the source panel; select PR1 (IN), PR2 (OUT) or VP1 to see their readings.'
       : kind === 'rc-charging'
-      ? 'Run Transient for 5 ms. R1 = 1k and C1 = 1u give a 1 ms time constant. OUT should reach about 0.632 V at 1 ms and approach the 1 V input. Change Value in the component properties to explore the time constant.'
-      : 'Run AC. The ideal source has AC amplitude 1 V; gain OUT/IN has a -3.01 dB corner near 159.15 Hz and phase near -45 degrees. Change R1 or C1 Value to move the corner. AC amplitude is independent of transient stimulus settings.';
+      ? 'Run Transient for 5 ms. R1 = 1k and C1 = 1u give a 1 ms time constant. OUT should reach about 0.632 V at 1 ms and approach the 1 V input. Select V1 to edit its pulse and preview it. Select PR1 (IN), PR2 (OUT) or VP1 for probe charts. Change R1 or C1 Value to explore the time constant.'
+      : 'Run AC. The ideal source has AC amplitude 1 V; gain OUT/IN has a -3.01 dB corner near 159.15 Hz and phase near -45 degrees. Change R1 or C1 Value to move the corner. Select V1 to change AC amplitude/phase in the source panel. Select PR1 (IN), PR2 (OUT) or VP1 for probe charts; AC amplitude is independent of transient waveform settings.';
   if (kind === 'rc-low-pass')
     setup.traces = [
       { name: 'Gain OUT/IN', operation: 'divide', left: 'out', right: 'in' },

@@ -17,6 +17,9 @@ Then work through:
 7. [Engine builds and bundling](08-engine-build-and-bundling.md): upstream/repository assessment, pinned source builds, GitHub Actions, target matrix, packaged dependencies, signing, and release gates.
 8. [DSN format and result management](09-dsn-format-and-results.md): header-detected ZIP/XML drawings, numerical exports, result stripping, compact copies, binary-safe I/O, and compatibility.
 
+For the implemented source/probe tools and plot controls, see
+[Sources, probes and charts](14-spice-controls-and-charts.md).
+
 ## Scope and status
 
 These documents describe an integrated ngspice experience with the approachable circuit-and-instruments workflow associated with Multisim. The feature catalogue includes both implemented foundation features and planned workbench features; it is not a claim that the whole catalogue is available. User stories remain research-informed hypotheses pending user testing. Use the implementation status and TODO documents to distinguish working code, local verification and outstanding platform qualification.

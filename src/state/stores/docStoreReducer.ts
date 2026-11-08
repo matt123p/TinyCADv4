@@ -1,4 +1,6 @@
 import { createSimulationSheet, withoutResults } from '../../simulation/document';
+import { createControl, updateControl } from '../../simulation/controlSymbols';
+import { updatePower } from '../../manipulators/updatePower';
 import {
   actionSelectPanel,
   actionSelectBottomPanel,
@@ -142,6 +144,44 @@ export function DocStoreReducer(
   state: docStore = intialState,
   action: AppActionTypes,
 ): docStore {
+  if (action.type === 'simulation/insert-control') {
+    if (state.editSymbol) return state;
+    const index = state.drawing.sheets[state.view.selected_sheet]?.kind === 'simulation'
+      ? state.drawing.sheets.findIndex(s => s.kind !== 'simulation') : state.view.selected_sheet;
+    const target = state.drawing.sheets[index];
+    if (!target) return state;
+    const updater = new updateView();
+    let view = updater.cancel_add({ ...state.view, selected_sheet: index, _selected_array: [] }, target).view;
+    let sheet = target;
+    if (action.tool === 'ground') {
+      view = updater.command_add_power(view, sheet, 4).view;
+      if (view.add?.NodeName === DocItemTypes.Power)
+        view = { ...view, add: new updatePower(view.add).updateText(-2, '0'), menu_command: 'add_spice_ground' };
+    } else {
+      const added = createControl(action.tool, sheet, state.drawing);
+      sheet = added.sheet;
+      view = { ...view, add: added.symbol, menu_command: 'add_spice_control', cursor: 'copy' };
+    }
+    return { ...state, view, drawingVersion: state.drawingVersion + 1,
+      drawing: { ...state.drawing, sheets: state.drawing.sheets.map((s, i) => i === index ? sheet : s) } };
+  }
+  if (action.type === 'simulation/configure-control') {
+    const sheet = activeSheet(state);
+    if (!sheet || sheet.kind === 'simulation' || state.editSymbol) return state;
+    const updater = new updateView(), symbol = updater.getSelectedSymbol(state.view, sheet);
+    if (!symbol) return state;
+    let configured = updateControl(symbol, action.config, state.drawing);
+    // A copied control may share its embedded definition. Give this instance
+    // its own artwork before changing source/probe type.
+    if (sheet.items.some(i => i.NodeName === DocItemTypes.Symbol && i !== symbol && i._symbol.id === symbol._symbol.id)) {
+      const id = Math.max(0, ...Object.keys(sheet.symbols).map(Number)) + 1;
+      configured = { ...configured, _symbol: { ...configured._symbol, id } };
+    }
+    const changed = { ...updater.updateObject(sheet, symbol, configured),
+      symbols: { ...sheet.symbols, [configured._symbol.id]: configured._symbol } };
+    return { ...state, drawingVersion: state.drawingVersion + 1,
+      drawing: { ...state.drawing, sheets: state.drawing.sheets.map(s => s === sheet ? changed : s) } };
+  }
   if (action.type === 'simulation/diagnostics') {
     if (action.documentId !== state.drawing.documentId) return state;
     return { ...state, drawing: { ...state.drawing, drcTable: action.errors },

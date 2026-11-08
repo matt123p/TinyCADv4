@@ -749,6 +749,17 @@ export class updateView {
   }
 
   click_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
+    if ((view.menu_command === 'add_spice_control' && view.add?.NodeName === DocItemTypes.Symbol)
+      || (view.menu_command === 'add_spice_ground' && view.add?.NodeName === DocItemTypes.Power)) {
+      const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+      const magnetic = snap.snap_magnetic(p, false, sheet.items);
+      if (magnetic?.wire) {
+        const split = this.split_magnetic_wire_if_needed(magnetic, sheet.items);
+        sheet = { ...sheet, items: split.items };
+      }
+      const moved = this.mousemove_add(view, sheet, p).view;
+      return this.complete_add(moved, sheet);
+    }
     const updater_add = updateSimpleAddFactory(view.add);
     if (updater_add instanceof updateWire) updater_add.wireMode = view.wireMode ?? '90';
     const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
@@ -834,6 +845,22 @@ export class updateView {
   }
 
   mousemove_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
+    if (view.menu_command === 'add_spice_ground' && view.add?.NodeName === DocItemTypes.Power) {
+      const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+      const point = snap.snap_magnetic(p, false, sheet.items)?.point ?? snap.snap(p);
+      const add = new updatePower({ ...view.add, point, _no_show: false, _magnetic: null }).post_construction();
+      return { sheet, view: { ...view, add, display_add: true, cursor: 'copy' } };
+    }
+    if (view.menu_command === 'add_spice_control' && view.add?.NodeName === DocItemTypes.Symbol) {
+      const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+      const target = snap.snap_magnetic(p, false, sheet.items)?.point ?? snap.snap(p);
+      const pin = new updateSymbol(view.add).active_points().find(p => p[2].number === '1');
+      const point: Coordinate = pin
+        ? [target[0] - (pin[0] - view.add.point[0]), target[1] - (pin[1] - view.add.point[1])]
+        : target;
+      const add = new updateSymbol({ ...view.add, point, _active_points: null }).post_construction();
+      return { sheet, view: { ...view, add, display_add: true, cursor: 'copy' } };
+    }
     const update_add = updateMoveAddFactory(view.add);
     if (update_add instanceof updateWire) update_add.wireMode = view.wireMode ?? '90';
     const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);

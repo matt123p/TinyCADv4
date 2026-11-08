@@ -134,7 +134,8 @@ Use prepared drawings with placed components carrying valid `$$SPICE` metadata. 
 ### First useful education release
 
 - [ ] Fix and regression-test platform failures found above; keep source/patch changes and locked digests reviewable.
-- [ ] Finish schematic probe placement, two-way highlighting, current direction/reference presentation and operating-point overlays. Keep readings tied to a visible acquisition and freshness state.
+- [x] Add embedded source/probe/ground insertion, source waveform previews, probe result charts and Chart.js result plotting. Sources support voltage/current, DC/sine/pulse/triangle/PWL/exponential/FM and AC settings; extra tools include differential/current probes and VCVS/VCCS. Automated checks cover native preview parity, insertion/wire connectivity, definitions/configuration after save/reopen, probe polarity and complex differences, chart unit axes, peak preservation and full-resolution CSV.
+- [ ] Finish two-way probe highlighting and schematic operating-point overlays. Probe panels now identify the selected acquisition, explain direction/reference and reject readings after circuit changes; installed visual acceptance remains separate.
 - [ ] Add readiness issue lists that locate the affected placed component/net, with model and pin-mapping recovery paths.
 - [x] Provide prepared teaching drawings and first-run guidance using placed symbols with embedded `$$SPICE` templates. [Divider, RC charging and RC low-pass](../examples/simulation/README.md) include expected readings and editable values; packaging includes them. Save/reopen, connectivity, readiness and native measurements have regression coverage. Visual classroom review remains pending.
 - [ ] Add the simple ideal DC meter presentation; then build bench views on the existing analysis/result model.

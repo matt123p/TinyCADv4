@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import {
   Checkbox,
   Field,
-  Input,
   Textarea,
   Tab,
   TabList,
@@ -11,8 +10,8 @@ import {
   Option,
   Button,
   makeStyles,
-  tokens,
 } from '@fluentui/react-components';
+import { SpiceFields } from '../controls/SpiceFields';
 import { ArrowResetRegular, PulseRegular } from '@fluentui/react-icons';
 import { dsnSymbol } from '../../model/dsnItem';
 import { updateSymbol } from '../../manipulators/updateSymbol';
@@ -79,7 +78,7 @@ const useStyles = makeStyles({
     overflow: 'hidden',
   },
   optionsSection: {
-    width: '320px',
+    width: '360px',
     flexShrink: 0,
     display: 'flex',
     flexDirection: 'column',
@@ -96,10 +95,6 @@ const useStyles = makeStyles({
     gap: '8px',
     overflowY: 'auto',
     minHeight: 0,
-  },
-  spiceText: {
-    fontFamily: tokens.fontFamilyMonospace,
-    fontSize: tokens.fontSizeBase200,
   },
   optionsContent: {
     display: 'flex',
@@ -122,13 +117,16 @@ interface SymbolPanelProps {
   dispatch: Dispatch<any>;
 }
 
+// Remember the user's choice across panel unmounts for this application session.
+let lastSelectedTab = 'options';
+
 export const SymbolPanel: React.FC<SymbolPanelProps> = ({
   selectedSymbol,
   dispatch,
 }) => {
   const styles = useStyles();
   const { t } = useTranslation();
-  const [selectedTab, setSelectedTab] = useState('options');
+  const [selectedTab, setSelectedTab] = useState(lastSelectedTab);
 
   // Build the property items list including Ref as the first row
   const propertyItems: PropertyItem[] = useMemo(() => {
@@ -218,36 +216,16 @@ export const SymbolPanel: React.FC<SymbolPanelProps> = ({
     return null;
   }
 
-  const spiceNames = [
+  const existingSpice = selectedSymbol.text.filter((property) =>
+    property.description.startsWith('$$SPICE'),
+  );
+  const standardSpiceNames = new Set([
     '$$SPICE',
     '$$SPICE_PROLOG',
     '$$SPICE_EPILOG',
     '$$SPICE_PROLOG_PRIORITY',
     '$$SPICE_EPILOG_PRIORITY',
-  ];
-  const existingSpice = selectedSymbol.text.filter((property) =>
-    property.description.startsWith('$$SPICE'),
-  );
-  const spiceProperties = [
-    ...new Set([
-      ...spiceNames,
-      ...existingSpice.map((property) => property.description),
-    ]),
-  ].map((description) => ({
-    description,
-    value:
-      existingSpice.find((property) => property.description === description)
-        ?.value ?? (description.endsWith('_PRIORITY') ? '5' : ''),
-  }));
-  const spiceLabels: Record<string, string> = {
-    $$SPICE: t('panel.editSpice.model'),
-    $$SPICE_PROLOG: t('panel.editSpice.prologue'),
-    $$SPICE_EPILOG: t('panel.editSpice.epilogue'),
-    $$SPICE_PROLOG_PRIORITY:
-      t('panel.editSpice.prologue') + ' / ' + t('panel.editSpice.priority'),
-    $$SPICE_EPILOG_PRIORITY:
-      t('panel.editSpice.epilogue') + ' / ' + t('panel.editSpice.priority'),
-  };
+  ]);
 
   // Check for multi-part symbol
   const updateSymbolHelper = new updateSymbol(selectedSymbol);
@@ -307,7 +285,10 @@ export const SymbolPanel: React.FC<SymbolPanelProps> = ({
             size="small"
             aria-label="Symbol settings"
             selectedValue={selectedTab}
-            onTabSelect={(_, data) => setSelectedTab(String(data.value))}
+            onTabSelect={(_, data) => {
+              lastSelectedTab = String(data.value);
+              setSelectedTab(lastSelectedTab);
+            }}
           >
             <Tab value="options">{t('panel.symbol.options')}</Tab>
             <Tab
@@ -358,47 +339,33 @@ export const SymbolPanel: React.FC<SymbolPanelProps> = ({
               role="tabpanel"
               aria-label="SPICE properties"
             >
-              {spiceProperties.map((property) => (
+              <SpiceFields
+                key={selectedSymbol._id}
+                value={(name) =>
+                  existingSpice.find((property) => property.description === name)
+                    ?.value
+                }
+                onChange={(name, value) =>
+                  dispatch(actionSymbolSpiceProperty(name, value))
+                }
+              />
+              {existingSpice.filter((property) =>
+                !standardSpiceNames.has(property.description),
+              ).map((property) => (
                 <Field
                   key={property.description}
-                  label={
-                    spiceLabels[property.description] || property.description
-                  }
+                  label={property.description}
                   size="small"
                 >
-                  {property.description.endsWith('_PRIORITY') ? (
-                    <Input
-                      size="small"
-                      type="number"
-                      value={property.value}
-                      title={property.description}
-                      onChange={(_, data) =>
-                        dispatch(
-                          actionSymbolSpiceProperty(
-                            property.description,
-                            data.value,
-                          ),
-                        )
-                      }
-                    />
-                  ) : (
-                    <Textarea
-                      size="small"
-                      resize="vertical"
-                      rows={2}
-                      textarea={{ className: styles.spiceText }}
-                      value={property.value}
-                      title={property.description}
-                      onChange={(_, data) =>
-                        dispatch(
-                          actionSymbolSpiceProperty(
-                            property.description,
-                            data.value,
-                          ),
-                        )
-                      }
-                    />
-                  )}
+                  <Textarea
+                    size="small"
+                    resize="vertical"
+                    rows={2}
+                    value={property.value}
+                    onChange={(_, data) => dispatch(
+                      actionSymbolSpiceProperty(property.description, data.value),
+                    )}
+                  />
                 </Field>
               ))}
             </div>
