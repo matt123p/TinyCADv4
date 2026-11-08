@@ -105,6 +105,10 @@ export function SimulationSheet({
   const run =
     setup.runs.find((r) => r.id === selectedRun) ||
     setup.runs[setup.runs.length - 1];
+  useEffect(() => {
+    setSelectedRun('');
+    setPlotIndex(0);
+  }, [setup.runs.at(-1)?.id]);
   const originalData = running
     ? session.data
     : run?.dataState === 'available'

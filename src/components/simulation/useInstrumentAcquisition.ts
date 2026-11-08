@@ -15,7 +15,7 @@ export function useInstrumentAcquisition(
   useEffect(() => subscribeSession(() => refresh((n) => n + 1)), []);
   const available = drawing.sheets
     .flatMap((sheet) =>
-      (sheet.simulation?.runs || [])
+      [...(sheet.simulation?.runs || [])].reverse()
         .filter((run) => run.dataState === 'available' && getResult(run.id))
         .map((run) => ({ sheet, run })),
     )
@@ -102,6 +102,9 @@ export function useInstrumentAcquisition(
     chosen,
     net,
     fresh,
+    checking:
+      !!chosen &&
+      (verified?.drawing !== drawing || verified?.runId !== chosen.run.id),
     data:
       fresh && chosen?.run.state === 'complete'
         ? getResult(chosen.run.id)

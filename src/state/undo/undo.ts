@@ -22,7 +22,7 @@ export const DocStoreWithHistory = undoable(DocStoreReducer, {
     currentState: docStore,
     previousHistory: StateWithHistory<docStore>,
   ) => {
-    if (action.type === 'simulation/diagnostics') return false;
+    if (action.type === 'simulation/diagnostics' || action.type === 'simulation/panel') return false;
     const now = new Date();
     needHistory =
       needHistory ||

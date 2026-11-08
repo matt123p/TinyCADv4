@@ -91,3 +91,13 @@ Earlier browser checks cover the divider, Noise plot switching, CSV export, comp
 The native Linux qualification profile builds on Ubuntu 24.04, and Snap uses core24 to match its glibc runtime; support for older distributions is not established by this profile. The Windows workflow uses UCRT64 and CLANGARM64, following [MSYS2’s supported environments](https://github.com/msys2/setup-msys2/blob/main/README.md). Artifact transfer uses the Node 24 [download-artifact v7 action](https://github.com/actions/download-artifact/releases/tag/v7.0.0).
 
 See [Drawing extensions and Drive deployment](11-drawing-extensions-and-drive.md) for naming, automatic compression and the external Google Cloud Console registration step.
+
+SPICE engine startup uses a dynamic JavaScript import after circuit validation;
+the browser worker fetches the ngspice module and WASM only when a run starts.
+Simulation sheets, chart panels and instrument controls also load on demand.
+Selecting a simulation tool or opening a DZN opens the right-hand panel, with
+Show charts / Hide charts available in the SPICE menu. New acquisitions update
+the chart and instrument selections after a design edit; oscilloscope Single
+mode retains its deliberate acquisition hold. Automated checks cover deferred
+engine imports, panel visibility and reruns in docked charts and Electron scope
+windows.

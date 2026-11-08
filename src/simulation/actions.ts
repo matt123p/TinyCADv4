@@ -4,6 +4,7 @@ import { SpiceControl } from './controls';
 import { ControlTool } from './controlSymbols';
 
 export type SimulationAction =
+  | { type: 'simulation/panel'; visible: boolean }
   | { type: 'simulation/apply-tuning'; sheetId: string; overrides: Record<string, string> }
   | { type: 'simulation/insert-control'; tool: ControlTool | 'ground' }
   | { type: 'simulation/configure-control'; config: SpiceControl; sheetId?:string; symbolId?:number }

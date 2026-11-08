@@ -242,8 +242,9 @@ export function ChartWorkspace() {
 function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
   const dispatch = useDispatch(),
     store = useStore<docDrawing>();
-  const [visible, setVisible] = useState(true),
-    [forced, setForced] = useState(false);
+  const visible = useSelector((state: docDrawing) => state.altStore?.simulationPanelVisible ?? true);
+  const activated = useSelector((state: docDrawing) => state.altStore?.simulationPanelActivated ?? false);
+  const setVisible = (visible: boolean) => dispatch({ type: 'simulation/panel', visible });
   const [width, setWidth] = useState(430);
   const [charts, setCharts] = useState<WorkspaceChart[]>([]);
   const hidden = useRef(new Set<string>());
@@ -299,7 +300,6 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
   useEffect(() => {
     const show = () => {
       setVisible(true);
-      setForced(true);
     };
     window.addEventListener('tinycad:show-charts', show);
     return () => window.removeEventListener('tinycad:show-charts', show);
@@ -314,7 +314,14 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
   useEffect(() => {
     setRunId('latest');
     setPlotIndex(0);
-  }, [selected?.id]);
+  }, [selected?.id, runs.at(-1)?.id]);
+  useEffect(() => {
+    if (session?.sheetId) {
+      setSimulationId(session.sheetId);
+      setRunId('latest');
+      setPlotIndex(0);
+    }
+  }, [session?.sheetId]);
   useEffect(() => {
     let valid = true;
     if (net && setup && expectedHash) {
@@ -452,7 +459,7 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
     (delta: number) => setWidth((w) => Math.max(320, Math.min(900, w - delta))),
     [],
   );
-  if (!forced && !hasSimulation(drawing)) return null;
+  if (!activated && drawing.representation !== 'zip-v1' && !hasSimulation(drawing)) return null;
   return (
     <aside
       aria-label="Simulation charts"

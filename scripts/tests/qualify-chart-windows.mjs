@@ -31,10 +31,11 @@ await build({
     import { createLaboratoryDrawing } from './src/simulation/laboratoryExample';
     import { InstrumentPanel } from './src/components/panel/InstrumentPanel';
     import { InstrumentWindowHost } from './src/components/simulation/InstrumentWindows';
-    import { getResult,putResult } from './src/simulation/resultStore';
+    import { getResult,putResult,activateResultDocument } from './src/simulation/resultStore';
     import { digest } from './src/io/dsnContainer';
     import { buildDeck } from './src/simulation/deck';
     import { NetlistWorkerState } from './src/web-worker/netlistState';
+    import { runSimulation } from './src/simulation/session';
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     const assert = (condition, message) => { if (!condition) throw Error(message); };
     async function waitFor(test) { for(let i=0;i<100;i++){if(test())return;await delay(50);}throw Error('Chart window timed out'); }
@@ -162,14 +163,23 @@ await build({
       await waitFor(()=>!!document.querySelector('select[aria-label="Schematic DC annotations"]'));
       const overlaySelect=document.querySelector('select[aria-label="Schematic DC annotations"]');overlaySelect.value='voltages';overlaySelect.dispatchEvent(new Event('change',{bubbles:true}));
       await waitFor(()=>Array.from(document.querySelectorAll('svg text')).some(t=>t.textContent.includes('2.5 V')));
+      const acquisition=()=>Array.from(document.querySelectorAll('select')).find(s=>Array.from(s.options).some(o=>o.value===dcStore.getState().docStore.present.drawing.sheets[1].simulation.runs[0].id));
+      acquisition().value=dcStore.getState().docStore.present.drawing.sheets[1].simulation.runs[0].id;acquisition().dispatchEvent(new Event('change',{bubbles:true}));
       dcStore.dispatch({type:'simulation/apply-tuning',sheetId:dcDrawing.sheets[1].id,overrides:{resistance:'2kOhm'}});
       await waitFor(()=>!document.querySelector('g[aria-label="DC operating point"]'));
+      const changed=dcStore.getState().docStore.present.drawing,changedSheet=changed.sheets[1];
+      await runSimulation(changed,changedSheet.id,changedSheet.simulation,run=>{
+        const current=dcStore.getState().docStore.present.drawing.sheets[1];
+        dcStore.dispatch({type:'simulation/update',sheetId:current.id,setup:{...current.simulation,runs:[...current.simulation.runs,run]}});
+      });
+      await waitFor(()=>dcStore.getState().docStore.present.drawing.sheets[1].simulation.runs.length===2 && acquisition().value==='latest' && !!document.querySelector('canvas'));
+      await waitFor(()=>!!document.querySelector('g[aria-label="DC operating point"]'));
       const lab=createLaboratoryDrawing(),labSetup=lab.sheets[1].simulation;
       const time=Array.from({length:1001},(_,i)=>i*.000005);
       const labData={scale:'time',log:'',vectors:[{name:'time',unit:'s',real:time},{name:'in',unit:'V',real:time.map(t=>Math.sin(2*Math.PI*1000*t))},{name:'out',unit:'V',real:time.map(t=>.15*Math.sin(2*Math.PI*1000*t-1.4))},{name:'bench',unit:'V',real:time.map(()=>5)},{name:'v_psu1_sense#branch',unit:'A',real:time.map(()=>.005)}]};
       const hash=await digest(new TextEncoder().encode(buildDeck(new NetlistWorkerState().init({...lab,sheets:[lab.sheets[0]]}),labSetup)+JSON.stringify(labSetup.models)));
       const labRun={id:'lab-ui-acquisition',created:new Date().toISOString(),state:'complete',backend:'native',buildId:'ui-fixture',circuitHash:hash,setupHash:hash,analysis:{...labSetup.analysis},parameters:{},samples:time.length,pinned:false,dataState:'available'};
-      putResult(labRun.id,labData);labSetup.runs=[labRun];
+      activateResultDocument(lab.documentId);putResult(labRun.id,labData);labSetup.runs=[labRun];
       const labInitial={...DocStoreReducer(undefined,{type:'@@INIT'}),drawing:lab};
       const labStore=createStore((state={docStore:{present:labInitial}},action)=>({docStore:{present:DocStoreReducer(state.docStore.present,action)}}));
       const labSymbols=lab.sheets[0].items.filter(i=>i.NodeName==='symbol'&&readControl(i)?.kind==='instrument');
@@ -191,6 +201,16 @@ await build({
       Object.getOwnPropertyDescriptor(children[0].HTMLInputElement.prototype,'value').set.call(timebase,'2ms');timebase.dispatchEvent(new children[0].Event('input',{bubbles:true}));
       await waitFor(()=>readControl(labStore.getState().docStore.present.drawing.sheets[0].items.find(i=>i._id===scopeSymbol._id)).timebase==='2ms');
       assert(readControl(labStore.getState().docStore.present.drawing.sheets[0].items.find(i=>i._id===meterSymbol._id)).type==='meter','Scope popup edited the wrong symbol');
+      const scopeAcquisition=()=>Array.from(children[0].document.querySelectorAll('select')).find(s=>Array.from(s.options).some(o=>o.value===labRun.id));
+      scopeAcquisition().value=labRun.id;scopeAcquisition().dispatchEvent(new children[0].Event('change',{bubbles:true}));
+      labStore.dispatch({type:'simulation/apply-tuning',sheetId:lab.sheets[1].id,overrides:{resistance:'2kOhm'}});
+      await waitFor(()=>!children[0].document.querySelector('canvas'));
+      const updatedLab=labStore.getState().docStore.present.drawing,updatedSetup=updatedLab.sheets[1];
+      await runSimulation(updatedLab,updatedSetup.id,updatedSetup.simulation,run=>{
+        const current=labStore.getState().docStore.present.drawing.sheets[1];
+        labStore.dispatch({type:'simulation/update',sheetId:current.id,setup:{...current.simulation,runs:[...current.simulation.runs,run]}});
+      });
+      await waitFor(()=>!!children[0].document.querySelector('canvas') && scopeAcquisition()?.value===labStore.getState().docStore.present.drawing.sheets[1].simulation.runs.at(-1).id);
       children[0].close();await delay(100);assert(!children[1].closed,'Closing the scope closed the meter');children[1].close();window.open=nativeOpen;
       button('Analysis lab').click();await waitFor(()=>Array.from(document.querySelectorAll('label')).some(l=>l.textContent==='Workflow'));
       const workflowLabel=Array.from(document.querySelectorAll('label')).find(l=>l.textContent==='Workflow'),workflowSelect=document.getElementById(workflowLabel.htmlFor);

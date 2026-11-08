@@ -53,6 +53,15 @@ import {
   GlobeRegular,
   CheckmarkRegular,
   PulseRegular,
+  DataLineRegular,
+  TargetRegular,
+  PulseSquareRegular,
+  ArrowBidirectionalUpDownRegular,
+  ArrowRightRegular,
+  OptionsRegular,
+  DesktopPulseRegular,
+  GaugeRegular,
+  BatteryChargeRegular,
 } from '@fluentui/react-icons';
 import { ActionCreators } from 'redux-undo';
 import {
@@ -176,6 +185,7 @@ const useStyles = makeStyles({
 });
 
 interface ToolbarProps {
+  simulationPanelVisible?: boolean;
   simulationToolbarRef?: React.Ref<HTMLSpanElement>;
   simulationSheet?: boolean;
   menu_command: string;
@@ -686,21 +696,21 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             <ToolbarButton aria-label="SPICE" icon={<PulseRegular />}>SPICE <ChevronDownRegular /></ToolbarButton>
           </MenuTrigger>
           <MenuPopover><MenuList>
-            <MenuItem onClick={() => props.dispatch({ type: 'simulation/add', name: 'Simulation' })}>Simulate</MenuItem>
-            <MenuItem onClick={() => window.dispatchEvent(new Event('tinycad:show-charts'))}>Show charts</MenuItem>
+            <MenuItem icon={<PulseRegular />} onClick={() => props.dispatch({ type: 'simulation/add', name: 'Simulation' })}>Simulate</MenuItem>
+            <MenuItem icon={<DataLineRegular />} onClick={() => props.dispatch({ type: 'simulation/panel', visible: !props.simulationPanelVisible })}>{props.simulationPanelVisible ? 'Hide charts' : 'Show charts'}</MenuItem>
             <MenuDivider />
-            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'probe' })}>Insert Probe</MenuItem>
-            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'source' })}>Insert Source</MenuItem>
-            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'ground' })}>Insert Ground</MenuItem>
+            <MenuItem icon={<TargetRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'probe' })}>Insert Probe</MenuItem>
+            <MenuItem icon={<PulseSquareRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'source' })}>Insert Source</MenuItem>
+            <MenuItem icon={<ImageIcon src={power5Image} />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'ground' })}>Insert Ground</MenuItem>
             <MenuDivider />
-            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'differential-probe' })}>Insert Differential Probe</MenuItem>
-            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'current-probe' })}>Insert Current Probe</MenuItem>
-            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'controlled' })}>Insert Controlled Source</MenuItem>
+            <MenuItem icon={<ArrowBidirectionalUpDownRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'differential-probe' })}>Insert Differential Probe</MenuItem>
+            <MenuItem icon={<ArrowRightRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'current-probe' })}>Insert Current Probe</MenuItem>
+            <MenuItem icon={<OptionsRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'controlled' })}>Insert Controlled Source</MenuItem>
             <MenuDivider />
-            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'scope' })}>Insert Oscilloscope</MenuItem>
-            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'meter' })}>Insert Multimeter</MenuItem>
-            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'generator' })}>Insert Function Generator</MenuItem>
-            <MenuItem onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'supply' })}>Insert Bench Supply</MenuItem>
+            <MenuItem icon={<DesktopPulseRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'scope' })}>Insert Oscilloscope</MenuItem>
+            <MenuItem icon={<GaugeRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'meter' })}>Insert Multimeter</MenuItem>
+            <MenuItem icon={<PulseSquareRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'generator' })}>Insert Function Generator</MenuItem>
+            <MenuItem icon={<BatteryChargeRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'supply' })}>Insert Bench Supply</MenuItem>
           </MenuList></MenuPopover>
         </Menu>
         </>}

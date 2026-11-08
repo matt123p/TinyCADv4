@@ -9,7 +9,7 @@ import {
   EngineEvent,
   newIdentity,
 } from './contracts';
-import { startEngine, EngineJob } from './engine';
+import type { EngineJob } from './engine';
 import { buildDeck } from './deck';
 import { digest } from '../io/dsnContainer';
 import {
@@ -253,6 +253,13 @@ export async function runSimulation(
     };
     active.status = 'Running…';
     publish();
+    const { startEngine } = await import('./engine');
+    if (cancelled || epoch !== documentEpoch) {
+      active = undefined;
+      publish();
+      exploration?.settled?.();
+      return;
+    }
     job = startEngine(
       { runId: run.id, deck, files: setup.models, maxBytes: MAX_RUN_BYTES },
       (event) => {

@@ -155,6 +155,9 @@ export function InstrumentPanel({
   const [, refresh] = useState(0);
   useEffect(() => subscribeSession(() => refresh((n) => n + 1)), []);
   const acq = useInstrumentAcquisition(drawing, selected);
+  useEffect(() => {
+    if (config?.acquisition !== 'single') setSelected('');
+  }, [acq.available[0]?.run.id]);
   if (!config) return null;
   const c = config,
     ref = symbolReference(symbol),

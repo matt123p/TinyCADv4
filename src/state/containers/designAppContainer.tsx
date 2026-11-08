@@ -13,6 +13,7 @@ const mapStateToProps = (state: docDrawing) => {
   const symbol = (sheet && new updateView().getSelectedSymbol(present.view, sheet)) ||
     (present.view.add?.NodeName === DocItemTypes.Symbol ? present.view.add : null);
   return {
+    simulationPanelActivated: state.altStore.simulationPanelActivated,
     selectedSpiceControl: !!symbol && !!readControl(symbol),
     simulationSheet: !state.docStore.present.editSymbol && state.docStore.present.drawing.sheets[state.docStore.present.view.selected_sheet]?.kind === 'simulation',
     creating: !!state.docStore.present.view.add,

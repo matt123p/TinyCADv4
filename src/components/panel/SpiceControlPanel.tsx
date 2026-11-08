@@ -1,4 +1,4 @@
-﻿import React, { Dispatch, useEffect, useMemo, useState } from 'react';
+﻿import React, { Dispatch, useEffect, useState } from 'react';
 import {
   Button,
   Checkbox,
@@ -18,10 +18,8 @@ import {
   sourcePreview,
 } from '../../simulation/controls';
 import { Waveform } from '../simulation/Waveform';
-import { NetlistWorkerState } from '../../web-worker/netlistState';
-import { getResult } from '../../simulation/resultStore';
-import { buildDeck } from '../../simulation/deck';
-import { digest } from '../../io/dsnContainer';
+import { useInstrumentAcquisition } from '../simulation/useInstrumentAcquisition';
+
 import { parseQuantity } from '../../simulation/numbers';
 
 const sourceFields: Record<
@@ -80,64 +78,18 @@ export function SpiceControlPanel({
   dispatch: Dispatch<any>;
 }) {
   const selectedControl = readControl(symbol);
-  const config = selectedControl?.kind === 'instrument' ? undefined : selectedControl;
+  const config =
+    selectedControl?.kind === 'instrument' ? undefined : selectedControl;
   const [selectedRun, setSelectedRun] = useState('');
-  const [verifiedRun, setVerifiedRun] = useState<{
-    id: string;
-    matches: boolean;
-  }>();
-  const available = drawing.sheets
-    .flatMap((sheet) =>
-      (sheet.simulation?.runs || []).map((run) => ({ sheet, run })),
-    )
-    .filter(({ run }) => run.dataState === 'available' && getResult(run.id))
-    .sort((a, b) => b.run.created.localeCompare(a.run.created));
-  const chosen =
-    available.find(({ run }) => run.id === selectedRun) || available[0];
-  const net = useMemo(
-    () =>
-      config?.kind === 'probe'
-        ? new NetlistWorkerState().init({
-            ...drawing,
-            sheets: drawing.sheets.filter((s) => s.kind !== 'simulation'),
-          })
-        : undefined,
-    [drawing, config?.kind],
-  );
-  useEffect(() => {
-    let cancelled = false;
-    setVerifiedRun(undefined);
-    if (net && chosen) {
-      const setup = {
-        ...chosen.sheet.simulation,
-        analysis: chosen.run.analysis,
-        parameters: chosen.run.parameters,
-      };
-      try {
-        digest(
-          new TextEncoder().encode(
-            buildDeck(net, setup) + JSON.stringify(setup.models),
-          ),
-        )
-          .then((hash) => {
-            if (!cancelled)
-              setVerifiedRun({
-                id: chosen.run.id,
-                matches: hash === chosen.run.circuitHash,
-              });
-          })
-          .catch(() => {
-            if (!cancelled)
-              setVerifiedRun({ id: chosen.run.id, matches: false });
-          });
-      } catch {
-        setVerifiedRun({ id: chosen.run.id, matches: false });
-      }
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [net, chosen?.run.id]);
+  const {
+    available,
+    chosen,
+    net,
+    fresh,
+    checking,
+    data: acquisitionData,
+  } = useInstrumentAcquisition(drawing, selectedRun);
+  useEffect(() => setSelectedRun(''), [available[0]?.run.id]);
   if (!config) return null;
   const change = (patch: Partial<SpiceControl> | Partial<SourceConfig>) =>
     dispatch({
@@ -153,11 +105,8 @@ export function SpiceControlPanel({
   const preview =
     config.kind === 'source' && !error ? sourcePreview(config) : undefined;
   const data =
-    config.kind === 'probe' &&
-    chosen &&
-    verifiedRun?.id === chosen.run.id &&
-    verifiedRun.matches
-      ? probeResult(net, symbol, getResult(chosen.run.id))
+    config.kind === 'probe' && chosen && acquisitionData
+      ? probeResult(net, symbol, acquisitionData)
       : undefined;
   const field = (key: keyof SourceConfig, label: string) =>
     config.kind === 'source' && (
@@ -427,9 +376,9 @@ export function SpiceControlPanel({
               <p role="status">
                 {!chosen
                   ? 'Run a simulation to see the probe output here.'
-                  : !verifiedRun
+                  : checking
                   ? 'Checking result…'
-                  : !verifiedRun.matches
+                  : !fresh
                   ? 'The circuit has changed since this result. Run the simulation again.'
                   : 'No matching signal. Check probe connections and select a result containing the measured voltage or current.'}
               </p>

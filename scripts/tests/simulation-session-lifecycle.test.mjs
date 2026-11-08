@@ -2,8 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadComponent } from './load-component.mjs';
 
-function fixture(digest) {
+function fixture(digest, onEngineLoad) {
   let events,
+    loads = 0,
     starts = 0,
     stops = 0,
     sequence = 0;
@@ -13,17 +14,21 @@ function fixture(digest) {
       checkSpiceComponents: () => [],
       locateSpiceErrors: () => [],
     },
-    './engine': {
-      startEngine: (_request, callback) => {
-        starts++;
-        events = callback;
-        return {
-          stop() {
-            stops++;
-          },
-          dispose() {},
-        };
-      },
+    get './engine'() {
+      loads++;
+      onEngineLoad?.();
+      return {
+        startEngine: (_request, callback) => {
+          starts++;
+          events = callback;
+          return {
+            stop() {
+              stops++;
+            },
+            dispose() {},
+          };
+        },
+      };
     },
     './deck': { buildDeck: () => 'title\nR1 1 0 1k\n.op\n.end' },
     '../io/dsnContainer': { digest: digest || (async () => 'hash') },
@@ -46,6 +51,9 @@ function fixture(digest) {
   return {
     module,
     commits,
+    get loads() {
+      return loads;
+    },
     get events() {
       return events;
     },
@@ -64,6 +72,27 @@ function fixture(digest) {
       ),
   };
 }
+
+test('engine module stays unloaded until a validated run and Stop cancels module startup', async () => {
+  const f = fixture(undefined, () => f.module.stopSimulation());
+  assert.equal(
+    f.loads,
+    0,
+    'opening the application must not import the engine',
+  );
+  await f.run();
+  assert.equal(f.loads, 1);
+  assert.equal(f.starts, 0, 'Stop while importing must not launch a worker');
+  assert.equal(f.module.getSession(), undefined);
+});
+
+test('failed validation never imports the engine', async () => {
+  const f = fixture(async () => {
+    throw new Error('invalid circuit');
+  });
+  await assert.rejects(f.run(), /invalid circuit/);
+  assert.equal(f.loads, 0);
+});
 
 test('Stop during checking cancels startup and permits a new acquisition', async () => {
   let release;

@@ -5,6 +5,7 @@ import {
   BottomPanels,
 } from '../dispatcher/AppDispatcher';
 import update from 'immutability-helper';
+import { hasSimulation } from '../../io/drawingSaveFormat';
 
 import { DocActionTypes } from '../actions/docActions';
 import { MenuActionTypes } from '../actions/menuActions';
@@ -71,6 +72,8 @@ export interface ToolbarDefaults {
 }
 
 export interface altStore {
+  simulationPanelVisible: boolean;
+  simulationPanelActivated: boolean;
   // Which dialogue is currently being shown?
   show_dialogue: string;
   dialogue_props: any;
@@ -127,6 +130,8 @@ export interface altStore {
 }
 
 const intialState: altStore = {
+  simulationPanelVisible: false,
+  simulationPanelActivated: false,
   dialogue_props: null,
   show_dialogue: null,
 
@@ -202,6 +207,20 @@ export function AltStoreReducer(
   action: AppActionTypes | ViewActions,
 ): altStore {
   switch (action.type) {
+    case 'simulation/panel':
+      return {
+        ...state,
+        simulationPanelVisible: action.visible,
+        simulationPanelActivated: state.simulationPanelActivated || action.visible,
+      };
+    case 'simulation/add':
+    case 'simulation/duplicate':
+    case 'simulation/insert-control':
+      return {
+        ...state,
+        simulationPanelVisible: true,
+        simulationPanelActivated: true,
+      };
     case ViewActionTypes.SetMousePosition:
       return update(state, {
         mousePosition: { $set: action.position },
@@ -230,8 +249,12 @@ export function AltStoreReducer(
       });
 
     // Load a completely new document
-    case DocActionTypes.SetDocument:
+    case DocActionTypes.SetDocument: {
+      const showSimulation = hasSimulation(action.doc) ||
+        action.doc.representation === 'zip-v1' || /\.dzn$/i.test(action.filename);
       return update(state, {
+        simulationPanelVisible: { $set: showSimulation },
+        simulationPanelActivated: { $set: showSimulation },
         loginState: { $set: 3 },
         loginError: { $set: null },
 
@@ -242,6 +265,7 @@ export function AltStoreReducer(
         },
         savedVersion: { $set: 1 },
       });
+    }
 
     case DocActionTypes.SetFileData:
       return update(state, {
