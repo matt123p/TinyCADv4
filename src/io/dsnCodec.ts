@@ -1,4 +1,5 @@
 import { dsnDrawing } from '../model/dsnDrawing';
+import { DocItemTypes } from '../model/dsnItem';
 import { drawingSaveFormat } from './drawingSaveFormat';
 import { ioXML } from './ioXml';
 import { XMLBuilder } from '../util/xmlbuilder';
@@ -164,6 +165,40 @@ export async function decodeDrawing(
     }
   }
   const drawing = new ioXML().from_dsn(builder);
+  // Older browser saves may already have flattened a built-in template. Repair
+  // only an exact whitespace-flattened match to its embedded configuration;
+  // custom SPICE statements must remain untouched.
+  const flattened = drawing.sheets
+    .flatMap((sheet) => sheet.items)
+    .filter(
+      (item) =>
+        item.NodeName === DocItemTypes.Symbol &&
+        item.text.some((f) => f.description === '$$SPICE_CONTROL') &&
+        item.text.some(
+          (f) => f.description === '$$SPICE' && !/[\r\n]/.test(f.value),
+        ),
+    );
+  if (flattened.length) {
+    const { readControl, controlTemplate } = await import(
+      '../simulation/controls'
+    );
+    for (const symbol of flattened) {
+      if (symbol.NodeName !== DocItemTypes.Symbol) continue;
+      const config = readControl(symbol);
+      const field = symbol.text.find((f) => f.description === '$$SPICE');
+      if (!config || !field) continue;
+      try {
+        const template = controlTemplate(config);
+        if (
+          template.includes('\n') &&
+          field.value === template.replace(/\r\n?|\n|\t/g, ' ')
+        )
+          field.value = template;
+      } catch {
+        /* Invalid control settings retain their original diagnostics. */
+      }
+    }
+  }
   drawing.representation = representation;
   const used = new Set<string>();
   const restored: [string, ResultData][] = [];

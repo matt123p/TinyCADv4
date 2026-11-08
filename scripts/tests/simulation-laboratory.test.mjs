@@ -49,6 +49,21 @@ test('laboratory models produce native loading, current limiting, generator and 
   }
   for(const test of labSetup.testCases){const changed=applyBindings(laboratory,{...labSetup,bindings:test.bindings},test.overrides),net=new NetlistWorkerState().init({...changed.drawing,sheets:[changed.drawing.sheets[0]]});const actual=run(buildDeck(net,{...changed.setup,analysis:{...test.analysis,kind:'op'}}).replace(/^TinyCAD simulation\n/,'').replace(/\.end\s*$/,''));assert.ok(Math.abs(actual.get('bench')-Number(test.overrides['bench-voltage']))<.002);}
   const reopenedLab=await decodeDrawing(await encodeDrawing(laboratory));assert.deepEqual(reopenedLab.sheets[1].simulation.studies,labSetup.studies);assert.deepEqual(reopenedLab.sheets[1].simulation.testCases,labSetup.testCases);
+  const reopenedNet=new NetlistWorkerState().init({...reopenedLab,sheets:[reopenedLab.sheets[0]]});
+  const reopenedDeck=buildDeck(reopenedNet,reopenedLab.sheets[1].simulation);
+  assert.match(reopenedDeck,/^R_OSC1_A[^\n]+\nR_OSC1_B /im);
+  const reopenedAcquisition=run(reopenedDeck.replace(/^TinyCAD simulation\n/,'').replace(/\.end\s*$/,''));
+  assert.ok(reopenedAcquisition.rows.length>0,'The saved and reopened laboratory must still simulate');
+  const damaged=structuredClone(laboratory);
+  const damagedScope=damaged.sheets[0].items.find(i=>i.NodeName===DocItemTypes.Symbol&&readControl(i)?.type==='scope');
+  const damagedTemplate=damagedScope.text.find(f=>f.description==='$$SPICE');
+  const intactTemplate=damagedTemplate.value;damagedTemplate.value=damagedTemplate.value.replace(/\n/g,' ');
+  const recovered=await decodeDrawing(await encodeDrawing(damaged));
+  const recoveredScope=recovered.sheets[0].items.find(i=>i.NodeName===DocItemTypes.Symbol&&readControl(i)?.type==='scope');
+  assert.equal(recoveredScope.text.find(f=>f.description==='$$SPICE').value,intactTemplate,'Repair exact built-in templates flattened by older browser saves');
+  damagedTemplate.value+=' * custom';
+  const customReopened=await decodeDrawing(await encodeDrawing(damaged));
+  assert.equal(customReopened.sheets[0].items.find(i=>i.NodeName===DocItemTypes.Symbol&&readControl(i)?.type==='scope').text.find(f=>f.description==='$$SPICE').value,damagedTemplate.value,'Never replace a custom SPICE template');
   let drawing=blank(),sheet=drawing.sheets[0];
   for(const tool of ['scope','meter','generator','supply']){const added=createControl(tool,sheet,drawing);sheet={...added.sheet,items:[...sheet.items,added.symbol]};drawing={...drawing,sheets:[sheet]};assert.equal(readControl(added.symbol).type,tool);assert.equal(new updateSymbol(added.symbol).active_points().length,tool==='scope'?4:2);assert.match(added.symbol._symbol.uid,/tinycad-spice-instrument/);}
   const encoded=await encodeDrawing(drawing);const reopened=await decodeDrawing(encoded);assert.equal(reopened.sheets[0].items.filter(i=>i.NodeName===DocItemTypes.Symbol).length,4);

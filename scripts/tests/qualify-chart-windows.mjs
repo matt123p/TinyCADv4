@@ -31,6 +31,8 @@ await build({
     import { OperatingPointOverlay } from './src/components/simulation/OperatingPointOverlay';
     import { createTeachingDrawing } from './src/simulation/examples';
     import { createLaboratoryDrawing } from './src/simulation/laboratoryExample';
+    import { XMLBuilder } from './src/util/xmlbuilder';
+    import { decodeDrawing } from './src/io/dsnCodec';
     import { InstrumentPanel } from './src/components/panel/InstrumentPanel';
     import { InstrumentWindowHost } from './src/components/simulation/InstrumentWindows';
     import { getResult,putResult,activateResultDocument } from './src/simulation/resultStore';
@@ -42,6 +44,12 @@ await build({
     const assert = (condition, message) => { if (!condition) throw Error(message); };
     async function waitFor(test) { for(let i=0;i<100;i++){if(test())return;await delay(50);}throw Error('Chart window timed out'); }
     async function verify() {
+      const xmlWhitespace=new XMLBuilder();
+      xmlWhitespace.fromText('<x value="first\\nsecond\\tthird\\rfourth"/>');
+      assert(xmlWhitespace.getElementsByTagName('x')[0].getAttribute('value')==='first\\nsecond\\tthird\\rfourth','Browser parsing must preserve multiline attributes from legacy Node serializers');
+      const savedExample=await decodeDrawing(Uint8Array.from(atob(${JSON.stringify((await fs.readFile(path.join(root,'examples/simulation/virtual-laboratory.dzn'))).toString('base64'))}),c=>c.charCodeAt(0)));
+      const savedDeck=buildDeck(new NetlistWorkerState().init({...savedExample,sheets:savedExample.sheets.filter(s=>s.kind!=='simulation')}),savedExample.sheets.find(s=>s.kind==='simulation').simulation);
+      assert(/^R_OSC1_A[^\\n]+\\nR_OSC1_B /im.test(savedDeck),'The shipped laboratory example must keep oscilloscope channels on separate SPICE lines');
       let updateDepthWarning = false;
       const originalError = console.error;
       console.error = (...args) => {

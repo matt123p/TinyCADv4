@@ -1,6 +1,21 @@
 import * as XMLFeatures from 'common-xml-features';
 import { Coordinate } from '../model/dsnItem';
 
+// XML parsers normalize literal attribute whitespace to spaces. Older Node
+// serializers emitted it verbatim, losing multiline SPICE templates on opening
+// in a browser. Character references preserve the original attribute value.
+function preserveAttributeWhitespace(xml: string): string {
+  return xml.replace(
+    /<!\[CDATA\[[\s\S]*?\]\]>|<!--[\s\S]*?-->|<(?:(?:"[^"]*")|(?:'[^']*')|[^'">])*>/g,
+    (markup) =>
+      markup.startsWith('<!')
+        ? markup
+        : markup.replace(/"[^"]*"|'[^']*'/g, (attribute) =>
+            attribute.replace(/[\t\r\n]/g, (c) => `&#${c.charCodeAt(0)};`),
+          ),
+  );
+}
+
 //
 // The xml service
 //
@@ -35,12 +50,17 @@ export class XMLBuilder {
 
   fromText(text: string) {
     let parser = new XMLFeatures.DOMParser();
-    this.xmlDoc = parser.parseFromString(text, 'text/xml');
+    this.xmlDoc = parser.parseFromString(
+      preserveAttributeWhitespace(text),
+      'text/xml',
+    );
   }
 
   tostring(): string {
     let serializer = new XMLFeatures.XMLSerializer();
-    return serializer.serializeToString(this.xmlDoc);
+    return preserveAttributeWhitespace(
+      serializer.serializeToString(this.xmlDoc),
+    );
   }
 
   //
