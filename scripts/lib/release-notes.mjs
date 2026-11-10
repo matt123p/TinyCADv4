@@ -69,6 +69,8 @@ export function plainReleaseNotes(markdown) {
 export function withStoreReleaseNotes(submission, notes) {
   if (typeof notes !== 'string' || !notes.trim())
     throw new Error('Store release notes are empty.');
+  if (notes.trim().length > 1500)
+    throw new Error('Store release notes exceed the 1500-character limit. Shorten the changelog entry.');
   const updated = structuredClone(submission);
   const listings = updated?.Listings ?? updated?.listings;
   if (!listings || typeof listings !== 'object' || Array.isArray(listings)) {
