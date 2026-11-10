@@ -7,6 +7,9 @@ import { DocItemTypes } from '../../../src/model/dsnItem';
 import { updateTextData } from '../../../src/manipulators/updateTextArea';
 import { measureText } from '../../../src/util/measureText';
 import { markdownSourceRuns } from '../../../src/util/markdownSource';
+import { blank, ioXML } from '../../../src/io/ioXml';
+import { XMLBuilder } from '../../../src/util/xmlbuilder';
+import { dsnText } from '../../../src/model/dsnItem';
 
 function check(value, message) {
   if (!value) throw new Error(message);
@@ -372,6 +375,63 @@ window.runMarkdownChecks = async () => {
   window.showMarkdownEditor = () =>
     draw({ selected: true, selected_handle: -2 });
   window.showMarkdownPreview = () => draw();
+  const savedSources = [
+    source,
+    '',
+    '# Heading\r\n\r\n- [x] Done\r\n- [ ] Pending\r\n',
+    'Unicode: Ω τ 中文 日本語 café\n<&> "quoted" &amp;\n',
+    '```xml\n<node value="a & b">\n    **literal**\n</node>\n```\n\n- [x]\n- [ ]',
+  ];
+  window.createMarkdownFile = () => {
+    const drawing = blank();
+    drawing.sheets[0].items = savedSources.map((text, index) =>
+      new updateText({
+        ...item,
+        _id: 100 + index,
+        text,
+        rotation: index % 4,
+        font_name: 'Georgia',
+        font_size: 24,
+        font_bold: true,
+        font_italic: true,
+      }).post_construction(),
+    );
+    return new ioXML().to_dsn(drawing, true, true).tostring();
+  };
+  window.reloadMarkdownFile = (xml: string) => {
+    const builder = new XMLBuilder();
+    builder.fromText(xml);
+    const drawing = new ioXML().from_dsn(builder);
+    const loaded = drawing.sheets[0].items as dsnText[];
+    check(loaded.length === savedSources.length, 'All saved notes reload');
+    const normalize = (text: string) => text.replace(/\r\n?|\n/g, '\n');
+    loaded.forEach((note, index) => {
+      check(
+        normalize(note.text) === normalize(savedSources[index]),
+        'Saved Markdown source survives XML round trip: ' + index,
+      );
+      check(
+        note.font_name === 'Georgia' && note.font_size === 24 &&
+          note.font_bold && note.font_italic &&
+          note.font_colour === item.font_colour && note.rotation === index % 4,
+        'Base font, colour and rotation survive saving: ' + index,
+      );
+      check(
+        JSON.stringify(note.point) === JSON.stringify(item.point) &&
+          JSON.stringify(note.point_b) === JSON.stringify(item.point_b),
+        'Text box bounds survive saving: ' + index,
+      );
+      draw({ data: note });
+      check(root.querySelector('[data-markdown]'), 'Reloaded note renders');
+      check(
+        JSON.stringify(layoutMarkdown(note.text, note, 520)) ===
+          JSON.stringify(layoutMarkdown(savedSources[index], note, 520)),
+        'Reloaded Markdown produces the same vector layout: ' + index,
+      );
+    });
+    draw();
+    return new ioXML().to_dsn(drawing, true, true).tostring();
+  };
   window.finishMarkdownChecks = async () => {
     const svg = root.querySelector('svg');
     check(

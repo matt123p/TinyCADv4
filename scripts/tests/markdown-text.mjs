@@ -63,6 +63,14 @@ app.whenReady().then(async () => {
   try {
     await window.loadFile(path.join(__dirname, 'index.html'));
     console.log(await window.webContents.executeJavaScript('window.runMarkdownChecks()'));
+    let saved = await window.webContents.executeJavaScript('window.createMarkdownFile()');
+    const drawingFile = path.join(__dirname, 'markdown-roundtrip.dsn');
+    for (let pass = 0; pass < 2; pass++) {
+      fs.writeFileSync(drawingFile, saved, 'utf8');
+      const reopened = fs.readFileSync(drawingFile, 'utf8');
+      saved = await window.webContents.executeJavaScript('window.reloadMarkdownFile(' + JSON.stringify(reopened) + ')');
+    }
+    console.log('Markdown DSN disk save/reload checks passed twice for five notes, including Unicode, code, task lists and empty notes');
     await window.webContents.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
     fs.writeFileSync(path.join(__dirname,'preview.png'), (await window.webContents.capturePage()).toPNG());
     await window.webContents.executeJavaScript('window.showMarkdownEditor(); new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
