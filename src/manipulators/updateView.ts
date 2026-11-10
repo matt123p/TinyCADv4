@@ -66,7 +66,7 @@ import { updatePin } from './updatePin';
 import { updateLabel } from './updateLabel';
 import { updateBusLabel } from './updateBusLabel';
 import { dsnBomEntry } from '../model/dsnBomEntry';
-import { tclibLibraryEntry } from '../model/tclib';
+import { tclibLibraryEntry, TextDisplayMethod } from '../model/tclib';
 import { ReplaceSymbolScope } from '../state/actions/symbolActions';
 import md5 from 'md5';
 import { store } from '../startup';
@@ -2968,21 +2968,22 @@ export class updateView {
         display: name.ShowRef,
       },
       ...name.Attributes.filter(
-        (attribute) =>
-          attribute.AttName !== 'Reference' &&
-          attribute.AttName.indexOf('$$') !== 0,
+        (attribute) => attribute.AttName !== 'Reference',
       ).map((attribute) => ({
         description: attribute.AttName,
         value: attribute.AttValue,
-        display: attribute.ShowAtt,
+        display: attribute.AttName.startsWith('$$')
+          ? TextDisplayMethod.NeverShow
+          : attribute.ShowAtt,
       })),
     ];
 
     const text = fieldDefinitions.map((field) => {
       const existingField = existingFields.get(field.description);
-      const value = keepFieldValues && existingField
-        ? existingField.value
-        : field.value;
+      const value =
+        keepFieldValues && existingField && !field.description.startsWith('$$')
+          ? existingField.value
+          : field.value;
 
       return {
         description: field.description,
@@ -3480,16 +3481,23 @@ export class updateView {
           ],
         },
         ...name.Attributes.filter(
-          (a) => a.AttName !== 'Reference' && a.AttName.indexOf('$$') !== 0,
+          (a) => a.AttName !== 'Reference',
         ).map((a) => ({
           position: [
             5.0,
-            posfn(update_symbol.show_text(a.ShowAtt, a.AttValue)),
+            posfn(
+              !a.AttName.startsWith('$$') &&
+                update_symbol.show_text(a.ShowAtt, a.AttValue),
+            ),
           ],
           value: a.AttValue,
           description: a.AttName,
-          show: update_symbol.show_text(a.ShowAtt, a.AttValue),
-          display: a.ShowAtt,
+          show:
+            !a.AttName.startsWith('$$') &&
+            update_symbol.show_text(a.ShowAtt, a.AttValue),
+          display: a.AttName.startsWith('$$')
+            ? TextDisplayMethod.NeverShow
+            : a.ShowAtt,
         })),
       ],
       hints: [],

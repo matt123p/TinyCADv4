@@ -1,0 +1,1277 @@
+{
+  "version": 1,
+  "id": "spice",
+  "name": "SPICE essentials",
+  "author": "onetransistor",
+  "output": "bundled-libraries/spice/spice.tclib",
+  "requireSpice": true,
+  "notes": "Curated onetransistor drawings with existing aryajur SPICE templates and definition symbols. Generic device models and the 741-style behavioral model are original teaching approximations, not manufacturer-validated models. See docs/spice-library.md for defaults, terminal mapping, and limitations.",
+  "references": [
+    {
+      "title": "ngspice manual",
+      "url": "https://ngspice.sourceforge.io/docs/ngspice-manual.pdf"
+    },
+    {
+      "title": "TI UA741 data sheet",
+      "url": "https://www.ti.com/lit/ds/symlink/ua741.pdf"
+    }
+  ],
+  "components": [
+    {
+      "id": "resistor",
+      "source": {
+        "nameId": 9496
+      },
+      "name": "Resistor",
+      "folder": "Passive/Resistors",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9964,
+        "author": "aryajur"
+      },
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "1k",
+          "show": 0
+        }
+      }
+    },
+    {
+      "id": "potentiometer",
+      "source": {
+        "nameId": 9497
+      },
+      "name": "Potentiometer",
+      "folder": "Passive/Resistors",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9964,
+        "author": "aryajur"
+      },
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "pins": [
+        {
+          "at": [
+            84,
+            42
+          ],
+          "number": "3",
+          "name": "Wiper"
+        }
+      ],
+      "notes": "The source wiper repeated terminal 1; renumbered to 3. Two resistors model the wiper, with a 1 micro-ohm lower bound.",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "10k",
+          "show": 0
+        },
+        "Wiper": {
+          "value": "0.5",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "R$(refnum)A %(1) %(3) {max(1u,$(Value)*$(Wiper))}\nR$(refnum)B %(3) %(2) {max(1u,$(Value)*(1-$(Wiper)))}",
+          "show": 2
+        }
+      }
+    },
+    {
+      "id": "trimmer-resistor",
+      "source": {
+        "nameId": 9498
+      },
+      "name": "Trimmer resistor",
+      "folder": "Passive/Resistors",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9964,
+        "author": "aryajur"
+      },
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "pins": [
+        {
+          "at": [
+            84,
+            42
+          ],
+          "number": "3",
+          "name": "Wiper"
+        }
+      ],
+      "notes": "The source wiper repeated terminal 1; renumbered to 3. Two resistors model the wiper, with a 1 micro-ohm lower bound.",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "10k",
+          "show": 0
+        },
+        "Wiper": {
+          "value": "0.5",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "R$(refnum)A %(1) %(3) {max(1u,$(Value)*$(Wiper))}\nR$(refnum)B %(3) %(2) {max(1u,$(Value)*(1-$(Wiper)))}",
+          "show": 2
+        }
+      }
+    },
+    {
+      "id": "capacitor",
+      "source": {
+        "nameId": 9524
+      },
+      "name": "Capacitor",
+      "folder": "Passive/Capacitors",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9965,
+        "author": "aryajur"
+      },
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "100n",
+          "show": 0
+        }
+      }
+    },
+    {
+      "id": "electrolytic-capacitor",
+      "source": {
+        "nameId": 9523
+      },
+      "name": "Electrolytic capacitor",
+      "folder": "Passive/Capacitors",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9965,
+        "author": "aryajur"
+      },
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "notes": "Polarized drawing; linear capacitor model does not simulate reverse-voltage damage.",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "10u",
+          "show": 0
+        }
+      }
+    },
+    {
+      "id": "trimmer-capacitor",
+      "source": {
+        "nameId": 9525
+      },
+      "name": "Trimmer capacitor",
+      "folder": "Passive/Capacitors",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9965,
+        "author": "aryajur"
+      },
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "20p",
+          "show": 0
+        }
+      }
+    },
+    {
+      "id": "inductor",
+      "source": {
+        "nameId": 9513
+      },
+      "name": "Inductor",
+      "folder": "Passive/Inductors",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9961,
+        "author": "aryajur"
+      },
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "1m",
+          "show": 0
+        }
+      }
+    },
+    {
+      "id": "core-inductor",
+      "source": {
+        "nameId": 9514
+      },
+      "name": "Inductor with core",
+      "folder": "Passive/Inductors",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9961,
+        "author": "aryajur"
+      },
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "notes": "Core artwork retained; default inductance is linear and does not model saturation.",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "1m",
+          "show": 0
+        }
+      }
+    },
+    {
+      "id": "npn",
+      "source": {
+        "nameId": 9506
+      },
+      "name": "NPN transistor",
+      "folder": "Semiconductors/Transistors",
+      "removeAttributes": [
+        "None"
+      ],
+      "reference": "Q?",
+      "pins": [
+        {
+          "at": [
+            52,
+            50
+          ],
+          "name": "B"
+        },
+        {
+          "at": [
+            60,
+            56
+          ],
+          "name": "E"
+        },
+        {
+          "at": [
+            60,
+            44
+          ],
+          "name": "C"
+        }
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model": {
+          "value": "TC_NPN",
+          "show": 1
+        },
+        "Model File": {
+          "value": "",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "Q$(refnum) %(3) %(1) %(2) $(Model)",
+          "show": 2
+        },
+        "$$SPICE_PROLOG": {
+          "value": "?(empty(Model File),.model TC_NPN NPN(Is=1e-14 Bf=200 Vaf=100 Cje=10p Cjc=5p Tf=500p),.include \"$(Model File)\")",
+          "show": 2
+        }
+      },
+      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names added without moving geometry."
+    },
+    {
+      "id": "pnp",
+      "source": {
+        "nameId": 9507
+      },
+      "name": "PNP transistor",
+      "folder": "Semiconductors/Transistors",
+      "removeAttributes": [
+        "None"
+      ],
+      "reference": "Q?",
+      "pins": [
+        {
+          "at": [
+            52,
+            60
+          ],
+          "name": "B"
+        },
+        {
+          "at": [
+            60,
+            66
+          ],
+          "name": "E"
+        },
+        {
+          "at": [
+            60,
+            54
+          ],
+          "name": "C"
+        }
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model": {
+          "value": "TC_PNP",
+          "show": 1
+        },
+        "Model File": {
+          "value": "",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "Q$(refnum) %(3) %(1) %(2) $(Model)",
+          "show": 2
+        },
+        "$$SPICE_PROLOG": {
+          "value": "?(empty(Model File),.model TC_PNP PNP(Is=1e-14 Bf=100 Vaf=100 Cje=10p Cjc=5p Tf=500p),.include \"$(Model File)\")",
+          "show": 2
+        }
+      },
+      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names added without moving geometry."
+    },
+    {
+      "id": "nmos",
+      "source": {
+        "nameId": 9509
+      },
+      "name": "N-channel MOSFET",
+      "folder": "Semiconductors/Transistors",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9959,
+        "author": "aryajur"
+      },
+      "reference": "M?",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model Name": {
+          "value": "TC_NMOS",
+          "show": 1
+        },
+        "Model File": {
+          "value": "",
+          "show": 1
+        },
+        "Length": {
+          "value": "10u",
+          "show": 1
+        },
+        "Width": {
+          "value": "100u",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "M$(refnum) %(D) %(G) %(S) %(S) $(Model Name) L=$(Length) W=$(Width)",
+          "show": 2
+        },
+        "$$SPICE_PROLOG": {
+          "value": "?(empty(Model File),.model TC_NMOS NMOS(Level=1 Vto=1.5 Kp=20u Lambda=0.02 Gamma=0.5 Phi=0.7),.include \"$(Model File)\")",
+          "show": 2
+        }
+      },
+      "notes": "Adapted from the existing MOSFET SPICE template. Four electrical nodes are emitted, with bulk tied to source. Onetransistor enhancement MOSFET artwork retained."
+    },
+    {
+      "id": "pmos",
+      "source": {
+        "nameId": 9509
+      },
+      "name": "P-channel MOSFET",
+      "folder": "Semiconductors/Transistors",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9959,
+        "author": "aryajur"
+      },
+      "reference": "M?",
+      "polygons": [
+        {
+          "at": [
+            58,
+            49.4
+          ],
+          "mirror": "x"
+        }
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model Name": {
+          "value": "TC_PMOS",
+          "show": 1
+        },
+        "Model File": {
+          "value": "",
+          "show": 1
+        },
+        "Length": {
+          "value": "10u",
+          "show": 1
+        },
+        "Width": {
+          "value": "100u",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "M$(refnum) %(D) %(G) %(S) %(S) $(Model Name) L=$(Length) W=$(Width)",
+          "show": 2
+        },
+        "$$SPICE_PROLOG": {
+          "value": "?(empty(Model File),.model TC_PMOS PMOS(Level=1 Vto=-1.5 Kp=10u Lambda=0.02 Gamma=0.5 Phi=0.7),.include \"$(Model File)\")",
+          "show": 2
+        }
+      },
+      "notes": "Adapted from the existing MOSFET SPICE template. Four electrical nodes are emitted, with bulk tied to source. Derived from onetransistor NMOS artwork with the channel arrow reversed."
+    },
+    {
+      "id": "diode",
+      "source": {
+        "nameId": 9501
+      },
+      "name": "Diode",
+      "folder": "Semiconductors/Diodes",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9957,
+        "author": "aryajur"
+      },
+      "reference": "D?",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model": {
+          "value": "TC_D",
+          "show": 1
+        },
+        "Model File": {
+          "value": "",
+          "show": 1
+        },
+        "$$SPICE_PROLOG": {
+          "value": "?(empty(Model File),.model TC_D D(Is=1n N=1.8 Rs=0.5 Cjo=2p Tt=4n Bv=100 Ibv=10u),.include \"$(Model File)\")",
+          "show": 2
+        }
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2."
+    },
+    {
+      "id": "zener",
+      "source": {
+        "nameId": 9500
+      },
+      "name": "Zener diode (5.1 V)",
+      "folder": "Semiconductors/Diodes",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9957,
+        "author": "aryajur"
+      },
+      "reference": "D?",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model": {
+          "value": "TC_ZENER5V1",
+          "show": 1
+        },
+        "Model File": {
+          "value": "",
+          "show": 1
+        },
+        "$$SPICE_PROLOG": {
+          "value": "?(empty(Model File),.model TC_ZENER5V1 D(Is=1n N=1.6 Rs=2 Bv=5.1 Ibv=1m Cjo=80p),.include \"$(Model File)\")",
+          "show": 2
+        }
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2."
+    },
+    {
+      "id": "led-red",
+      "source": {
+        "nameId": 9504
+      },
+      "name": "LED (red)",
+      "folder": "Semiconductors/LEDs",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9957,
+        "author": "aryajur"
+      },
+      "reference": "D?",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model": {
+          "value": "TC_LED_RED",
+          "show": 1
+        },
+        "Model File": {
+          "value": "",
+          "show": 1
+        },
+        "$$SPICE_PROLOG": {
+          "value": "?(empty(Model File),.model TC_LED_RED D(Is=1e-18 N=2 Rs=8 Eg=1.8 Cjo=10p),.include \"$(Model File)\")",
+          "show": 2
+        }
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2."
+    },
+    {
+      "id": "led-green",
+      "source": {
+        "nameId": 9503
+      },
+      "name": "LED (green)",
+      "folder": "Semiconductors/LEDs",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9957,
+        "author": "aryajur"
+      },
+      "reference": "D?",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model": {
+          "value": "TC_LED_GREEN",
+          "show": 1
+        },
+        "Model File": {
+          "value": "",
+          "show": 1
+        },
+        "$$SPICE_PROLOG": {
+          "value": "?(empty(Model File),.model TC_LED_GREEN D(Is=1e-21 N=2 Rs=10 Eg=2.2 Cjo=10p),.include \"$(Model File)\")",
+          "show": 2
+        }
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2."
+    },
+    {
+      "id": "led-blue",
+      "source": {
+        "nameId": 9511
+      },
+      "name": "LED (blue)",
+      "folder": "Semiconductors/LEDs",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9957,
+        "author": "aryajur"
+      },
+      "reference": "D?",
+      "colours": [
+        {
+          "id": 1,
+          "rgb": "#0000ff"
+        }
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model": {
+          "value": "TC_LED_BLUE",
+          "show": 1
+        },
+        "Model File": {
+          "value": "",
+          "show": 1
+        },
+        "$$SPICE_PROLOG": {
+          "value": "?(empty(Model File),.model TC_LED_BLUE D(Is=1e-26 N=2 Rs=12 Eg=2.8 Cjo=10p),.include \"$(Model File)\")",
+          "show": 2
+        }
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Colour variant derived from the onetransistor LED drawing."
+    },
+    {
+      "id": "led-yellow",
+      "source": {
+        "nameId": 9511
+      },
+      "name": "LED (yellow)",
+      "folder": "Semiconductors/LEDs",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9957,
+        "author": "aryajur"
+      },
+      "reference": "D?",
+      "colours": [
+        {
+          "id": 1,
+          "rgb": "#ffff00"
+        }
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model": {
+          "value": "TC_LED_YELLOW",
+          "show": 1
+        },
+        "Model File": {
+          "value": "",
+          "show": 1
+        },
+        "$$SPICE_PROLOG": {
+          "value": "?(empty(Model File),.model TC_LED_YELLOW D(Is=1e-20 N=2 Rs=10 Eg=2 Cjo=10p),.include \"$(Model File)\")",
+          "show": 2
+        }
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Colour variant derived from the onetransistor LED drawing."
+    },
+    {
+      "id": "ua741",
+      "source": {
+        "nameId": 9537
+      },
+      "name": "741 op-amp",
+      "folder": "Integrated circuits",
+      "removeAttributes": [
+        "None"
+      ],
+      "reference": "U?",
+      "pins": [
+        {
+          "at": [
+            44,
+            52
+          ],
+          "number": "3",
+          "name": "+"
+        },
+        {
+          "at": [
+            44,
+            56
+          ],
+          "number": "2",
+          "name": "-"
+        },
+        {
+          "at": [
+            60,
+            54
+          ],
+          "number": "6",
+          "name": "OUT",
+          "electrical": 1
+        },
+        {
+          "at": [
+            52,
+            60
+          ],
+          "number": "4",
+          "name": "V-"
+        },
+        {
+          "at": [
+            52,
+            48
+          ],
+          "number": "7",
+          "name": "V+"
+        }
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model": {
+          "value": "TC_UA741",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "X$(ref) %(3) %(2) %(7) %(4) %(6) $(Model)",
+          "show": 2
+        },
+        "$$SPICE_PROLOG": {
+          "value": ".subckt TC_UA741 P N VP VN OUT\nRin P N 2Meg\nBdrive 0 pole I=max(-15.9154943m,min(15.9154943m,0.2*(v(P)-v(N))))\nRpole pole 0 1Meg\nCpole pole 0 31.8309886n\nBlimit drive 0 V=max(v(VN)+2,min(v(VP)-2,v(pole)))\nRout drive OUT 75\n.ends TC_UA741",
+          "show": 2
+        },
+        "$$SPICE_PROLOG_PRIORITY": {
+          "value": "1",
+          "show": 2
+        }
+      },
+      "notes": "Corrected repeated source pin numbers to the 741 signal/supply pinout. Original educational behavioral model: 200k DC gain, 1 MHz approximate GBW, 0.5 V/us nominal slew limit, 2 Mohm differential input, 75 ohm output, and rail headroom. Not the manufacturer transistor-level model; no bias/noise/thermal/current-limit/common-mode effects or offset pins."
+    },
+    {
+      "id": "transformer",
+      "source": {
+        "nameId": 9519
+      },
+      "name": "Transformer",
+      "folder": "Passive/Magnetics",
+      "removeAttributes": [
+        "None"
+      ],
+      "reference": "T?",
+      "pins": [
+        {
+          "at": [
+            86,
+            42
+          ],
+          "number": "3"
+        },
+        {
+          "at": [
+            86,
+            58
+          ],
+          "number": "4"
+        },
+        {
+          "at": [
+            88,
+            50
+          ],
+          "remove": true
+        }
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Primary inductance": {
+          "value": "10m",
+          "show": 1
+        },
+        "Secondary inductance": {
+          "value": "10m",
+          "show": 1
+        },
+        "Coupling": {
+          "value": "0.999",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "LT$(refnum)P %(1) %(2) $(Primary inductance)\nLT$(refnum)S %(3) %(4) $(Secondary inductance)\nKT$(refnum) LT$(refnum)P LT$(refnum)S $(Coupling)",
+          "show": 2
+        }
+      },
+      "notes": "Derived four-terminal two-winding transformer. Removed the source secondary centre-tap pin and assigned distinct secondary terminals 3/4. Linear coupled inductors; turns ratio is sqrt(Lprimary/Lsecondary), top terminals have the same polarity."
+    },
+    {
+      "id": "xtal",
+      "source": {
+        "nameId": 9518
+      },
+      "name": "XTAL (quartz crystal)",
+      "folder": "Passive/Resonators",
+      "removeAttributes": [
+        "None"
+      ],
+      "reference": "Y?",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Frequency": {
+          "value": "8Meg",
+          "show": 0
+        },
+        "Motional resistance": {
+          "value": "20",
+          "show": 1
+        },
+        "Motional capacitance": {
+          "value": "20f",
+          "show": 1
+        },
+        "Shunt capacitance": {
+          "value": "3p",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "X$(ref) %(1) %(2) TC_XTAL PARAMS: FREQ=$(Frequency) RM=$(Motional resistance) CM=$(Motional capacitance) C0=$(Shunt capacitance)",
+          "show": 2
+        },
+        "$$SPICE_PROLOG": {
+          "value": ".subckt TC_XTAL A B params: FREQ=8Meg RM=20 CM=20f C0=3p\nRmot A mot1 {RM}\nLmot mot1 mot2 {1/(39.47841760435743*FREQ*FREQ*CM)}\nCmot mot2 B {CM}\nCshunt A B {C0}\n.ends TC_XTAL",
+          "show": 2
+        },
+        "$$SPICE_PROLOG_PRIORITY": {
+          "value": "1",
+          "show": 2
+        }
+      },
+      "notes": "Quartz variant derived from onetransistor two-terminal ceramic resonator artwork. Generic motional series RLC with a shunt capacitor; nominal series resonance is set by Frequency in Hz. No manufacturer-specific temperature, drive-level, or nonlinear behavior."
+    },
+    {
+      "id": "ceramic-resonator",
+      "source": {
+        "nameId": 9518
+      },
+      "name": "Ceramic resonator",
+      "folder": "Passive/Resonators",
+      "removeAttributes": [
+        "None"
+      ],
+      "reference": "Y?",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Frequency": {
+          "value": "4Meg",
+          "show": 0
+        },
+        "Motional resistance": {
+          "value": "10",
+          "show": 1
+        },
+        "Motional capacitance": {
+          "value": "10p",
+          "show": 1
+        },
+        "Shunt capacitance": {
+          "value": "30p",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "X$(ref) %(1) %(2) TC_CERAMIC PARAMS: FREQ=$(Frequency) RM=$(Motional resistance) CM=$(Motional capacitance) C0=$(Shunt capacitance)",
+          "show": 2
+        },
+        "$$SPICE_PROLOG": {
+          "value": ".subckt TC_CERAMIC A B params: FREQ=4Meg RM=10 CM=10p C0=30p\nRmot A mot1 {RM}\nLmot mot1 mot2 {1/(39.47841760435743*FREQ*FREQ*CM)}\nCmot mot2 B {CM}\nCshunt A B {C0}\n.ends TC_CERAMIC",
+          "show": 2
+        },
+        "$$SPICE_PROLOG_PRIORITY": {
+          "value": "1",
+          "show": 2
+        }
+      },
+      "notes": "Source two-terminal ceramic resonator artwork retained. Generic motional series RLC with a shunt capacitor; nominal series resonance is set by Frequency in Hz. No manufacturer-specific temperature, drive-level, or nonlinear behavior."
+    },
+    {
+      "id": "voltage-source",
+      "source": {
+        "nameId": 9945,
+        "author": "aryajur"
+      },
+      "name": "DC / AC voltage source",
+      "folder": "SPICE sources",
+      "removeAttributes": [
+        "None"
+      ],
+      "reference": "V?",
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "5",
+          "show": 0
+        },
+        "AC Phase": {
+          "value": "0",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "V$(refnum) %(1) %(2) DC $(Value)?(not_empty(AC magnitude), AC $(AC magnitude) $(AC Phase),)",
+          "show": 2
+        }
+      },
+      "notes": "Existing source symbol and parameter names reused; NAME was replaced with an explicit Value field and AC syntax normalized for ngspice."
+    },
+    {
+      "id": "current-source",
+      "source": {
+        "nameId": 9944,
+        "author": "aryajur"
+      },
+      "name": "DC / AC current source",
+      "folder": "SPICE sources",
+      "removeAttributes": [
+        "None"
+      ],
+      "reference": "I?",
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "1m",
+          "show": 0
+        },
+        "AC Phase": {
+          "value": "0",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "I$(refnum) %(1) %(2) DC $(Value)?(not_empty(AC magnitude), AC $(AC magnitude) $(AC Phase),)",
+          "show": 2
+        }
+      },
+      "notes": "Existing source symbol and parameter names reused; NAME was replaced with an explicit Value field and AC syntax normalized for ngspice."
+    },
+    {
+      "id": "end",
+      "source": {
+        "nameId": 9946,
+        "author": "aryajur"
+      },
+      "name": "SPICE end",
+      "folder": "SPICE definitions",
+      "removeAttributes": [
+        "None"
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        }
+      }
+    },
+    {
+      "id": "dc-analysis",
+      "source": {
+        "nameId": 9947,
+        "author": "aryajur"
+      },
+      "name": "SPICE DC analysis",
+      "folder": "SPICE definitions",
+      "removeAttributes": [
+        "None"
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Source1": {
+          "value": "V1",
+          "show": 1
+        },
+        "Start1": {
+          "value": "0",
+          "show": 1
+        },
+        "Stop1": {
+          "value": "5",
+          "show": 1
+        },
+        "Step1": {
+          "value": "0.1",
+          "show": 1
+        }
+      }
+    },
+    {
+      "id": "operating-point",
+      "source": {
+        "nameId": 9948,
+        "author": "aryajur"
+      },
+      "name": "SPICE operating point",
+      "folder": "SPICE definitions",
+      "removeAttributes": [
+        "None"
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        }
+      }
+    },
+    {
+      "id": "transient-analysis",
+      "source": {
+        "nameId": 9949,
+        "author": "aryajur"
+      },
+      "name": "SPICE transient analysis",
+      "folder": "SPICE definitions",
+      "removeAttributes": [
+        "None"
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        }
+      }
+    },
+    {
+      "id": "comment",
+      "source": {
+        "nameId": 9950,
+        "author": "aryajur"
+      },
+      "name": "SPICE comment",
+      "folder": "SPICE definitions",
+      "removeAttributes": [
+        "None"
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        }
+      }
+    },
+    {
+      "id": "parameters",
+      "source": {
+        "nameId": 9951,
+        "author": "aryajur"
+      },
+      "name": "SPICE parameters",
+      "folder": "SPICE definitions",
+      "removeAttributes": [
+        "None"
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "PAR1=Value1": {
+          "value": "RLOAD=1k",
+          "show": 1
+        },
+        "$$SPICE_PROLOG": {
+          "value": "?(not_empty(PAR1=Value1),.PARAM $(PAR1=Value1),)\n?(not_empty(PAR2=Value2),.PARAM $(PAR2=Value2),)\n?(not_empty(PAR3=Value3),.PARAM $(PAR3=Value3),)\n?(not_empty(PAR4=Value4),.PARAM $(PAR4=Value4),)\n?(not_empty(PAR5=Value5),.PARAM $(PAR5=Value5),)",
+          "show": 2
+        },
+        "$$SPICE_PROLOG_PRIORITY": {
+          "value": "0",
+          "show": 2
+        }
+      },
+      "notes": "Each nonempty parameter is emitted separately; an empty parameter list no longer produces an invalid bare .PARAM."
+    },
+    {
+      "id": "diode-model",
+      "source": {
+        "nameId": 9952,
+        "author": "aryajur"
+      },
+      "name": "SPICE diode model",
+      "folder": "SPICE definitions",
+      "removeAttributes": [
+        "$$SPICE_EPILOG"
+      ],
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Model Name": {
+          "value": "USER_D",
+          "show": 1
+        },
+        "BV": {
+          "value": "",
+          "show": 1
+        },
+        "IBV": {
+          "value": "1m",
+          "show": 1
+        },
+        "$$SPICE_PROLOG": {
+          "value": ".MODEL $(Model Name) D(IS=$(IS) N=$(N)?(not_empty(BV), BV=$(BV) IBV=$(IBV),))",
+          "show": 2
+        },
+        "$$SPICE_PROLOG_PRIORITY": {
+          "value": "1",
+          "show": 2
+        }
+      },
+      "notes": "Existing model-definition symbol; moved model text to the prolog and added optional Zener breakdown parameters. Use USER_D as the diode Model to select this definition."
+    },
+    {
+      "id": "subcircuit",
+      "source": {
+        "nameId": 9953,
+        "author": "aryajur"
+      },
+      "name": "SPICE subcircuit definition",
+      "folder": "SPICE definitions",
+      "removeAttributes": [
+        "None"
+      ],
+      "attributeRenames": {
+        "NAME": "Subcircuit"
+      },
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Subcircuit": {
+          "value": "USER_SUBCKT",
+          "show": 1
+        },
+        "PIN1": {
+          "value": "IN",
+          "show": 1
+        },
+        "PIN2": {
+          "value": "OUT",
+          "show": 1
+        },
+        "$$SPICE_PROLOG": {
+          "value": ".SUBCKT $(Subcircuit)?(not_empty(PIN1), $(PIN1),)?(not_empty(PIN2), $(PIN2),)?(not_empty(PIN3), $(PIN3),)?(not_empty(PIN4), $(PIN4),)?(not_empty(PIN5), $(PIN5),)?(not_empty(PIN6), $(PIN6),)?(not_empty(PIN7), $(PIN7),)?(not_empty(PIN8), $(PIN8),)?(not_empty(PIN9), $(PIN9),)",
+          "show": 2
+        },
+        "$$SPICE_EPILOG_PRIORITY": {
+          "value": "1",
+          "show": 2
+        }
+      },
+      "notes": "Rebuilt the truncated 255-character source template to preserve all nine formal pins. .ENDS is emitted before .END."
+    },
+    {
+      "id": "raw-definition",
+      "source": {
+        "nameId": 9950,
+        "author": "aryajur"
+      },
+      "name": "SPICE model / directive",
+      "folder": "SPICE definitions",
+      "removeAttributes": [
+        "Comment"
+      ],
+      "reference": "SP?",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Definition": {
+          "value": ".model USER_NPN NPN(Is=1e-14 Bf=100)",
+          "show": 0
+        },
+        "$$SPICE_PROLOG": {
+          "value": "$(Definition)",
+          "show": 2
+        },
+        "$$SPICE_PROLOG_PRIORITY": {
+          "value": "1",
+          "show": 2
+        }
+      },
+      "notes": "Derived from the existing comment/definition artwork. Definition accepts a full model, .include, or other multiline SPICE prolog text."
+    }
+  ],
+  "showName": 1
+}

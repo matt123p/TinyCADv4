@@ -38,7 +38,9 @@
     "libraries:package": "node scripts/package-libraries.mjs",
     "test:libraries": "node scripts/tests/bundled-libraries.mjs",
     "examples:package": "node scripts/package-examples.mjs",
-    "test:examples": "node scripts/tests/bundled-examples.mjs"
+    "test:examples": "node scripts/tests/bundled-examples.mjs",
+    "libraries:sql": "node scripts/build-library-from-sql.mjs",
+    "test:spice": "node scripts/tests/spice-library.mjs"
   },
   "build": {
     "appId": "com.tinycad.app",

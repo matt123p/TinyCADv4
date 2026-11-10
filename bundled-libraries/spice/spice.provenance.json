@@ -1,0 +1,1419 @@
+{
+  "version": 1,
+  "id": "spice",
+  "name": "SPICE essentials",
+  "sourceSha256": "3efbdf682121249aa4c2c8f8fdd1dc807025b26c5e46c369eb41c3f28a34d47e",
+  "recipeSha256": "48f8ad1f029dd367da3dbbf3cb3a30b0eaa0e772a45dc929b8b3250c7e81339d",
+  "contributors": [
+    "onetransistor",
+    "aryajur"
+  ],
+  "notes": "Curated onetransistor drawings with existing aryajur SPICE templates and definition symbols. Generic device models and the 741-style behavioral model are original teaching approximations, not manufacturer-validated models. See docs/spice-library.md for defaults, terminal mapping, and limitations.",
+  "references": [
+    {
+      "title": "ngspice manual",
+      "url": "https://ngspice.sourceforge.io/docs/ngspice-manual.pdf"
+    },
+    {
+      "title": "TI UA741 data sheet",
+      "url": "https://www.ti.com/lit/ds/symlink/ua741.pdf"
+    }
+  ],
+  "entries": [
+    {
+      "id": "resistor",
+      "name": "Resistor",
+      "nameId": 1,
+      "symbolId": 1,
+      "folder": "Passive/Resistors",
+      "source": {
+        "nameId": 9496,
+        "symbolId": 377,
+        "author": "onetransistor",
+        "name": "R",
+        "description": "Resistor",
+        "xmlSha256": "38877268df1717af81bc7922afaae99a07f2581fc8b2279168dba778d4e4c162"
+      },
+      "spiceFrom": {
+        "nameId": 9964,
+        "symbolId": 809,
+        "author": "aryajur",
+        "name": "1K",
+        "description": "Small Resistor",
+        "xmlSha256": "b9d18caf8df0937c7515f2b457704799835c55d5e71a2bdbcc59558302d4ade7"
+      },
+      "notes": "",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,48.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,40.00000"
+        }
+      ],
+      "xmlSha256": "38877268df1717af81bc7922afaae99a07f2581fc8b2279168dba778d4e4c162"
+    },
+    {
+      "id": "potentiometer",
+      "name": "Potentiometer",
+      "nameId": 2,
+      "symbolId": 2,
+      "folder": "Passive/Resistors",
+      "source": {
+        "nameId": 9497,
+        "symbolId": 378,
+        "author": "onetransistor",
+        "name": "R",
+        "description": "Resistor - Pot",
+        "xmlSha256": "e4b2b8d7924c6e2f281e2253b6b99b6d7c093cbda1bc36927150c488677e10ac"
+      },
+      "spiceFrom": {
+        "nameId": 9964,
+        "symbolId": 809,
+        "author": "aryajur",
+        "name": "1K",
+        "description": "Small Resistor",
+        "xmlSha256": "b9d18caf8df0937c7515f2b457704799835c55d5e71a2bdbcc59558302d4ade7"
+      },
+      "notes": "The source wiper repeated terminal 1; renumbered to 3. Two resistors model the wiper, with a 1 micro-ohm lower bound.",
+      "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "84.00000,42.00000"
+          },
+          "edit": {
+            "at": [
+              84,
+              42
+            ],
+            "number": "3",
+            "name": "Wiper"
+          }
+        }
+      ],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,48.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,40.00000"
+        },
+        {
+          "number": "3",
+          "name": "Wiper",
+          "part": 0,
+          "at": "84.00000,42.00000"
+        }
+      ],
+      "xmlSha256": "8c4567087e6afb8f7235f4c27ad4e36e2f39ee0d4ff35bd8f4cc9d03aac7cf4d"
+    },
+    {
+      "id": "trimmer-resistor",
+      "name": "Trimmer resistor",
+      "nameId": 3,
+      "symbolId": 3,
+      "folder": "Passive/Resistors",
+      "source": {
+        "nameId": 9498,
+        "symbolId": 379,
+        "author": "onetransistor",
+        "name": "R",
+        "description": "Resistor - Trimmer",
+        "xmlSha256": "e9024e3eb62389055e619b06a5128c47b767079e8093bb70d21865d5637f9fbe"
+      },
+      "spiceFrom": {
+        "nameId": 9964,
+        "symbolId": 809,
+        "author": "aryajur",
+        "name": "1K",
+        "description": "Small Resistor",
+        "xmlSha256": "b9d18caf8df0937c7515f2b457704799835c55d5e71a2bdbcc59558302d4ade7"
+      },
+      "notes": "The source wiper repeated terminal 1; renumbered to 3. Two resistors model the wiper, with a 1 micro-ohm lower bound.",
+      "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "84.00000,42.00000"
+          },
+          "edit": {
+            "at": [
+              84,
+              42
+            ],
+            "number": "3",
+            "name": "Wiper"
+          }
+        }
+      ],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,48.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,40.00000"
+        },
+        {
+          "number": "3",
+          "name": "Wiper",
+          "part": 0,
+          "at": "84.00000,42.00000"
+        }
+      ],
+      "xmlSha256": "67467a5ab4321ffb5d3ba6aab156efbb8321a6a0be4b226763add28cdf44d48f"
+    },
+    {
+      "id": "capacitor",
+      "name": "Capacitor",
+      "nameId": 4,
+      "symbolId": 4,
+      "folder": "Passive/Capacitors",
+      "source": {
+        "nameId": 9524,
+        "symbolId": 405,
+        "author": "onetransistor",
+        "name": "C",
+        "description": "Capacitor",
+        "xmlSha256": "9f68ff398514ee1da644fffe919e995db4bc3bd3de146d3295133fa8bc6353c6"
+      },
+      "spiceFrom": {
+        "nameId": 9965,
+        "symbolId": 810,
+        "author": "aryajur",
+        "name": "1p",
+        "description": "Capacitor",
+        "xmlSha256": "1fbe0e9101ce5e97eb12067335dabd92f1d5fca7f7a61c62f5413c8c8b1554c4"
+      },
+      "notes": "",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "94.00000,27.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "94.00000,35.00000"
+        }
+      ],
+      "xmlSha256": "9f68ff398514ee1da644fffe919e995db4bc3bd3de146d3295133fa8bc6353c6"
+    },
+    {
+      "id": "electrolytic-capacitor",
+      "name": "Electrolytic capacitor",
+      "nameId": 5,
+      "symbolId": 5,
+      "folder": "Passive/Capacitors",
+      "source": {
+        "nameId": 9523,
+        "symbolId": 404,
+        "author": "onetransistor",
+        "name": "CE",
+        "description": "Capacitor Electrolytic",
+        "xmlSha256": "a723e4101a42d9ac2e36e2a121514732d1bd4e30a5718b9bdec2a7e869365e30"
+      },
+      "spiceFrom": {
+        "nameId": 9965,
+        "symbolId": 810,
+        "author": "aryajur",
+        "name": "1p",
+        "description": "Capacitor",
+        "xmlSha256": "1fbe0e9101ce5e97eb12067335dabd92f1d5fca7f7a61c62f5413c8c8b1554c4"
+      },
+      "notes": "Polarized drawing; linear capacitor model does not simulate reverse-voltage damage.",
+      "changes": [],
+      "pins": [
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "90.00000,32.00000"
+        },
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "90.00000,24.00000"
+        }
+      ],
+      "xmlSha256": "a723e4101a42d9ac2e36e2a121514732d1bd4e30a5718b9bdec2a7e869365e30"
+    },
+    {
+      "id": "trimmer-capacitor",
+      "name": "Trimmer capacitor",
+      "nameId": 6,
+      "symbolId": 6,
+      "folder": "Passive/Capacitors",
+      "source": {
+        "nameId": 9525,
+        "symbolId": 406,
+        "author": "onetransistor",
+        "name": "C",
+        "description": "Capacitor Trimmer",
+        "xmlSha256": "8ea063d8a3707dcdf7fee6eb7b8502d8bf7295681c939644875f6884b07c9324"
+      },
+      "spiceFrom": {
+        "nameId": 9965,
+        "symbolId": 810,
+        "author": "aryajur",
+        "name": "1p",
+        "description": "Capacitor",
+        "xmlSha256": "1fbe0e9101ce5e97eb12067335dabd92f1d5fca7f7a61c62f5413c8c8b1554c4"
+      },
+      "notes": "",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,30.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,38.00000"
+        }
+      ],
+      "xmlSha256": "8ea063d8a3707dcdf7fee6eb7b8502d8bf7295681c939644875f6884b07c9324"
+    },
+    {
+      "id": "inductor",
+      "name": "Inductor",
+      "nameId": 7,
+      "symbolId": 7,
+      "folder": "Passive/Inductors",
+      "source": {
+        "nameId": 9513,
+        "symbolId": 394,
+        "author": "onetransistor",
+        "name": "L",
+        "description": "Coil",
+        "xmlSha256": "0b67d487a972f1e8abbd059699fa9ae1013314c74ca67b85db5f68d3111f999e"
+      },
+      "spiceFrom": {
+        "nameId": 9961,
+        "symbolId": 806,
+        "author": "aryajur",
+        "name": "1n",
+        "description": "Inductor",
+        "xmlSha256": "8ef5280b6f2049b7eeb2b2f372701ee774256aaed6d65fe9383ae27427e5de29"
+      },
+      "notes": "",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,45.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,53.00000"
+        }
+      ],
+      "xmlSha256": "0b67d487a972f1e8abbd059699fa9ae1013314c74ca67b85db5f68d3111f999e"
+    },
+    {
+      "id": "core-inductor",
+      "name": "Inductor with core",
+      "nameId": 8,
+      "symbolId": 8,
+      "folder": "Passive/Inductors",
+      "source": {
+        "nameId": 9514,
+        "symbolId": 395,
+        "author": "onetransistor",
+        "name": "L",
+        "description": "Coil with core",
+        "xmlSha256": "0a928eec7297ea43d55d756b59fc680641aefe3d93012a33b589cf41c0a60bc1"
+      },
+      "spiceFrom": {
+        "nameId": 9961,
+        "symbolId": 806,
+        "author": "aryajur",
+        "name": "1n",
+        "description": "Inductor",
+        "xmlSha256": "8ef5280b6f2049b7eeb2b2f372701ee774256aaed6d65fe9383ae27427e5de29"
+      },
+      "notes": "Core artwork retained; default inductance is linear and does not model saturation.",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,45.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,53.00000"
+        }
+      ],
+      "xmlSha256": "0a928eec7297ea43d55d756b59fc680641aefe3d93012a33b589cf41c0a60bc1"
+    },
+    {
+      "id": "npn",
+      "name": "NPN transistor",
+      "nameId": 9,
+      "symbolId": 9,
+      "folder": "Semiconductors/Transistors",
+      "source": {
+        "nameId": 9506,
+        "symbolId": 387,
+        "author": "onetransistor",
+        "name": "NPN1",
+        "description": "Bipolar, small, circle",
+        "xmlSha256": "d02d2b7946eb74c61dd6fa9ca13a211e850a5833ebad4e8b5c900e6d970e0745"
+      },
+      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names added without moving geometry.",
+      "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "52.00000,50.00000"
+          },
+          "edit": {
+            "at": [
+              52,
+              50
+            ],
+            "name": "B"
+          }
+        },
+        {
+          "pin": {
+            "number": "2",
+            "name": "",
+            "at": "60.00000,56.00000"
+          },
+          "edit": {
+            "at": [
+              60,
+              56
+            ],
+            "name": "E"
+          }
+        },
+        {
+          "pin": {
+            "number": "3",
+            "name": "",
+            "at": "60.00000,44.00000"
+          },
+          "edit": {
+            "at": [
+              60,
+              44
+            ],
+            "name": "C"
+          }
+        }
+      ],
+      "pins": [
+        {
+          "number": "1",
+          "name": "B",
+          "part": 0,
+          "at": "52.00000,50.00000"
+        },
+        {
+          "number": "2",
+          "name": "E",
+          "part": 0,
+          "at": "60.00000,56.00000"
+        },
+        {
+          "number": "3",
+          "name": "C",
+          "part": 0,
+          "at": "60.00000,44.00000"
+        }
+      ],
+      "xmlSha256": "9a4800d4f826d0e62d40473f7a2ed476fa44dfe8b00f6c563167cf699589e613"
+    },
+    {
+      "id": "pnp",
+      "name": "PNP transistor",
+      "nameId": 10,
+      "symbolId": 10,
+      "folder": "Semiconductors/Transistors",
+      "source": {
+        "nameId": 9507,
+        "symbolId": 388,
+        "author": "onetransistor",
+        "name": "PNP1",
+        "description": "Bipolar, small, circle",
+        "xmlSha256": "5d36784957ab1ddcde0f9dd989c4ada0f522c650caf24a7d7ad3757c44b41a14"
+      },
+      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names added without moving geometry.",
+      "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "52.00000,60.00000"
+          },
+          "edit": {
+            "at": [
+              52,
+              60
+            ],
+            "name": "B"
+          }
+        },
+        {
+          "pin": {
+            "number": "2",
+            "name": "",
+            "at": "60.00000,66.00000"
+          },
+          "edit": {
+            "at": [
+              60,
+              66
+            ],
+            "name": "E"
+          }
+        },
+        {
+          "pin": {
+            "number": "3",
+            "name": "",
+            "at": "60.00000,54.00000"
+          },
+          "edit": {
+            "at": [
+              60,
+              54
+            ],
+            "name": "C"
+          }
+        }
+      ],
+      "pins": [
+        {
+          "number": "1",
+          "name": "B",
+          "part": 0,
+          "at": "52.00000,60.00000"
+        },
+        {
+          "number": "2",
+          "name": "E",
+          "part": 0,
+          "at": "60.00000,66.00000"
+        },
+        {
+          "number": "3",
+          "name": "C",
+          "part": 0,
+          "at": "60.00000,54.00000"
+        }
+      ],
+      "xmlSha256": "467e05ce34cb2b2a5e93dbc15842c8264d13ad111699c9ccd32ae8001fbc578b"
+    },
+    {
+      "id": "nmos",
+      "name": "N-channel MOSFET",
+      "nameId": 11,
+      "symbolId": 11,
+      "folder": "Semiconductors/Transistors",
+      "source": {
+        "nameId": 9509,
+        "symbolId": 390,
+        "author": "onetransistor",
+        "name": "NMOS",
+        "description": "NMOS Enhancement",
+        "xmlSha256": "6042ee7507f553a54c515c48bf0f3e8c285b4d84e3b534d72ad8c5fa1a8dfb0c"
+      },
+      "spiceFrom": {
+        "nameId": 9959,
+        "symbolId": 804,
+        "author": "aryajur",
+        "name": "NMOS",
+        "description": "N-Channel Insulated Gate FET",
+        "xmlSha256": "f72bdfaa87adec13afb0180a5b3b95994352e391a09ba3972d7b632e46252d9f"
+      },
+      "notes": "Adapted from the existing MOSFET SPICE template. Four electrical nodes are emitted, with bulk tied to source. Onetransistor enhancement MOSFET artwork retained.",
+      "changes": [],
+      "pins": [
+        {
+          "number": "2",
+          "name": "G",
+          "part": 0,
+          "at": "52.00000,52.00000"
+        },
+        {
+          "number": "3",
+          "name": "D",
+          "part": 0,
+          "at": "60.00000,44.00000"
+        },
+        {
+          "number": "4",
+          "name": "S",
+          "part": 0,
+          "at": "60.00000,56.00000"
+        }
+      ],
+      "xmlSha256": "6042ee7507f553a54c515c48bf0f3e8c285b4d84e3b534d72ad8c5fa1a8dfb0c"
+    },
+    {
+      "id": "pmos",
+      "name": "P-channel MOSFET",
+      "nameId": 12,
+      "symbolId": 12,
+      "folder": "Semiconductors/Transistors",
+      "source": {
+        "nameId": 9509,
+        "symbolId": 390,
+        "author": "onetransistor",
+        "name": "NMOS",
+        "description": "NMOS Enhancement",
+        "xmlSha256": "6042ee7507f553a54c515c48bf0f3e8c285b4d84e3b534d72ad8c5fa1a8dfb0c"
+      },
+      "spiceFrom": {
+        "nameId": 9959,
+        "symbolId": 804,
+        "author": "aryajur",
+        "name": "NMOS",
+        "description": "N-Channel Insulated Gate FET",
+        "xmlSha256": "f72bdfaa87adec13afb0180a5b3b95994352e391a09ba3972d7b632e46252d9f"
+      },
+      "notes": "Adapted from the existing MOSFET SPICE template. Four electrical nodes are emitted, with bulk tied to source. Derived from onetransistor NMOS artwork with the channel arrow reversed.",
+      "changes": [
+        {
+          "polygon": {
+            "at": [
+              58,
+              49.4
+            ],
+            "mirror": "x"
+          }
+        }
+      ],
+      "pins": [
+        {
+          "number": "2",
+          "name": "G",
+          "part": 0,
+          "at": "52.00000,52.00000"
+        },
+        {
+          "number": "3",
+          "name": "D",
+          "part": 0,
+          "at": "60.00000,44.00000"
+        },
+        {
+          "number": "4",
+          "name": "S",
+          "part": 0,
+          "at": "60.00000,56.00000"
+        }
+      ],
+      "xmlSha256": "4336cba21ccb4242ed4be3f1e941ec7560bb1ded4a7fcd1f8bcab7954b3ec13d"
+    },
+    {
+      "id": "diode",
+      "name": "Diode",
+      "nameId": 13,
+      "symbolId": 13,
+      "folder": "Semiconductors/Diodes",
+      "source": {
+        "nameId": 9501,
+        "symbolId": 382,
+        "author": "onetransistor",
+        "name": "D",
+        "description": "Diode",
+        "xmlSha256": "9e9fafad7a7b9a44a3ddd35b66c1b9cd729454b060092ab11fce96148d8fe90d"
+      },
+      "spiceFrom": {
+        "nameId": 9957,
+        "symbolId": 802,
+        "author": "aryajur",
+        "name": "Diode",
+        "description": "Diode",
+        "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2.",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,70.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,78.00000"
+        }
+      ],
+      "xmlSha256": "9e9fafad7a7b9a44a3ddd35b66c1b9cd729454b060092ab11fce96148d8fe90d"
+    },
+    {
+      "id": "zener",
+      "name": "Zener diode (5.1 V)",
+      "nameId": 14,
+      "symbolId": 14,
+      "folder": "Semiconductors/Diodes",
+      "source": {
+        "nameId": 9500,
+        "symbolId": 381,
+        "author": "onetransistor",
+        "name": "D",
+        "description": "Diode - Zener",
+        "xmlSha256": "f4800cde7303c1c7552140cc43dfb042f198b1a349b9c5090a8a8ed845f462e4"
+      },
+      "spiceFrom": {
+        "nameId": 9957,
+        "symbolId": 802,
+        "author": "aryajur",
+        "name": "Diode",
+        "description": "Diode",
+        "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2.",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,70.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,78.00000"
+        }
+      ],
+      "xmlSha256": "f4800cde7303c1c7552140cc43dfb042f198b1a349b9c5090a8a8ed845f462e4"
+    },
+    {
+      "id": "led-red",
+      "name": "LED (red)",
+      "nameId": 15,
+      "symbolId": 15,
+      "folder": "Semiconductors/LEDs",
+      "source": {
+        "nameId": 9504,
+        "symbolId": 385,
+        "author": "onetransistor",
+        "name": "LED",
+        "description": "Red LED",
+        "xmlSha256": "2b3ae6e55d444d67f1ddd08c0f6f91449a9f64232ef0b4c0571c1700eede9505"
+      },
+      "spiceFrom": {
+        "nameId": 9957,
+        "symbolId": 802,
+        "author": "aryajur",
+        "name": "Diode",
+        "description": "Diode",
+        "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2.",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,70.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,78.00000"
+        }
+      ],
+      "xmlSha256": "2b3ae6e55d444d67f1ddd08c0f6f91449a9f64232ef0b4c0571c1700eede9505"
+    },
+    {
+      "id": "led-green",
+      "name": "LED (green)",
+      "nameId": 16,
+      "symbolId": 16,
+      "folder": "Semiconductors/LEDs",
+      "source": {
+        "nameId": 9503,
+        "symbolId": 384,
+        "author": "onetransistor",
+        "name": "LED",
+        "description": "Green LED",
+        "xmlSha256": "bf3def810b81eb10b31e0a751562cd713e6943955c755b6a153e09124906f58b"
+      },
+      "spiceFrom": {
+        "nameId": 9957,
+        "symbolId": 802,
+        "author": "aryajur",
+        "name": "Diode",
+        "description": "Diode",
+        "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2.",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,70.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,78.00000"
+        }
+      ],
+      "xmlSha256": "bf3def810b81eb10b31e0a751562cd713e6943955c755b6a153e09124906f58b"
+    },
+    {
+      "id": "led-blue",
+      "name": "LED (blue)",
+      "nameId": 17,
+      "symbolId": 17,
+      "folder": "Semiconductors/LEDs",
+      "source": {
+        "nameId": 9511,
+        "symbolId": 392,
+        "author": "onetransistor",
+        "name": "LED",
+        "description": "LED",
+        "xmlSha256": "4a317783bf67603265df4f608a797d80ddd3eb1e777ff14d4dd8f809618495c0"
+      },
+      "spiceFrom": {
+        "nameId": 9957,
+        "symbolId": 802,
+        "author": "aryajur",
+        "name": "Diode",
+        "description": "Diode",
+        "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Colour variant derived from the onetransistor LED drawing.",
+      "changes": [
+        {
+          "colour": {
+            "id": 1,
+            "rgb": "#0000ff"
+          }
+        }
+      ],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,70.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,78.00000"
+        }
+      ],
+      "xmlSha256": "0abc93e2099749ae7a41543073394d185283ee1888b138056e9d7ce4122dba37"
+    },
+    {
+      "id": "led-yellow",
+      "name": "LED (yellow)",
+      "nameId": 18,
+      "symbolId": 18,
+      "folder": "Semiconductors/LEDs",
+      "source": {
+        "nameId": 9511,
+        "symbolId": 392,
+        "author": "onetransistor",
+        "name": "LED",
+        "description": "LED",
+        "xmlSha256": "4a317783bf67603265df4f608a797d80ddd3eb1e777ff14d4dd8f809618495c0"
+      },
+      "spiceFrom": {
+        "nameId": 9957,
+        "symbolId": 802,
+        "author": "aryajur",
+        "name": "Diode",
+        "description": "Diode",
+        "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
+      },
+      "notes": "Generic teaching model, not a manufacturer part. Colour variant derived from the onetransistor LED drawing.",
+      "changes": [
+        {
+          "colour": {
+            "id": 1,
+            "rgb": "#ffff00"
+          }
+        }
+      ],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,70.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "70.00000,78.00000"
+        }
+      ],
+      "xmlSha256": "017ec28f21cc081259049d3383259c2c7d7015f3c39ea024e640737c2227c89e"
+    },
+    {
+      "id": "ua741",
+      "name": "741 op-amp",
+      "nameId": 19,
+      "symbolId": 19,
+      "folder": "Integrated circuits",
+      "source": {
+        "nameId": 9537,
+        "symbolId": 418,
+        "author": "onetransistor",
+        "name": "741",
+        "description": "Op Amp",
+        "xmlSha256": "b50c4e78db84bd7be2be8b644248c54ea9b9dfdbbf063ee6972a0f0f398ab9b0"
+      },
+      "notes": "Corrected repeated source pin numbers to the 741 signal/supply pinout. Original educational behavioral model: 200k DC gain, 1 MHz approximate GBW, 0.5 V/us nominal slew limit, 2 Mohm differential input, 75 ohm output, and rail headroom. Not the manufacturer transistor-level model; no bias/noise/thermal/current-limit/common-mode effects or offset pins.",
+      "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "+",
+            "at": "44.00000,52.00000"
+          },
+          "edit": {
+            "at": [
+              44,
+              52
+            ],
+            "number": "3",
+            "name": "+"
+          }
+        },
+        {
+          "pin": {
+            "number": "2",
+            "name": "-",
+            "at": "44.00000,56.00000"
+          },
+          "edit": {
+            "at": [
+              44,
+              56
+            ],
+            "number": "2",
+            "name": "-"
+          }
+        },
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "60.00000,54.00000"
+          },
+          "edit": {
+            "at": [
+              60,
+              54
+            ],
+            "number": "6",
+            "name": "OUT",
+            "electrical": 1
+          }
+        },
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "52.00000,60.00000"
+          },
+          "edit": {
+            "at": [
+              52,
+              60
+            ],
+            "number": "4",
+            "name": "V-"
+          }
+        },
+        {
+          "pin": {
+            "number": "2",
+            "name": "",
+            "at": "52.00000,48.00000"
+          },
+          "edit": {
+            "at": [
+              52,
+              48
+            ],
+            "number": "7",
+            "name": "V+"
+          }
+        }
+      ],
+      "pins": [
+        {
+          "number": "3",
+          "name": "+",
+          "part": 0,
+          "at": "44.00000,52.00000"
+        },
+        {
+          "number": "2",
+          "name": "-",
+          "part": 0,
+          "at": "44.00000,56.00000"
+        },
+        {
+          "number": "6",
+          "name": "OUT",
+          "part": 0,
+          "at": "60.00000,54.00000"
+        },
+        {
+          "number": "4",
+          "name": "V-",
+          "part": 0,
+          "at": "52.00000,60.00000"
+        },
+        {
+          "number": "7",
+          "name": "V+",
+          "part": 0,
+          "at": "52.00000,48.00000"
+        }
+      ],
+      "xmlSha256": "9ce14ee75dde09251e619ac6eb8c4e883fb3377a82915b89b0ae1644f0347b7c"
+    },
+    {
+      "id": "transformer",
+      "name": "Transformer",
+      "nameId": 20,
+      "symbolId": 20,
+      "folder": "Passive/Magnetics",
+      "source": {
+        "nameId": 9519,
+        "symbolId": 400,
+        "author": "onetransistor",
+        "name": "Tr",
+        "description": "Transformer 1",
+        "xmlSha256": "2fb7f059b8d14f8d5ea28d2a6f0c03b16bf119baba383593a097f3901da4d2d4"
+      },
+      "notes": "Derived four-terminal two-winding transformer. Removed the source secondary centre-tap pin and assigned distinct secondary terminals 3/4. Linear coupled inductors; turns ratio is sqrt(Lprimary/Lsecondary), top terminals have the same polarity.",
+      "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "86.00000,42.00000"
+          },
+          "edit": {
+            "at": [
+              86,
+              42
+            ],
+            "number": "3"
+          }
+        },
+        {
+          "pin": {
+            "number": "2",
+            "name": "",
+            "at": "86.00000,58.00000"
+          },
+          "edit": {
+            "at": [
+              86,
+              58
+            ],
+            "number": "4"
+          }
+        },
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "88.00000,50.00000"
+          },
+          "edit": {
+            "at": [
+              88,
+              50
+            ],
+            "remove": true
+          }
+        }
+      ],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,46.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "80.00000,54.00000"
+        },
+        {
+          "number": "3",
+          "name": "",
+          "part": 0,
+          "at": "86.00000,42.00000"
+        },
+        {
+          "number": "4",
+          "name": "",
+          "part": 0,
+          "at": "86.00000,58.00000"
+        }
+      ],
+      "xmlSha256": "85c19aed89181f5eb64abcb95e7aab75b4b481c85a7dde68774a34ee05d04dec"
+    },
+    {
+      "id": "xtal",
+      "name": "XTAL (quartz crystal)",
+      "nameId": 21,
+      "symbolId": 21,
+      "folder": "Passive/Resonators",
+      "source": {
+        "nameId": 9518,
+        "symbolId": 399,
+        "author": "onetransistor",
+        "name": "XC",
+        "description": "Ceramic Resonator",
+        "xmlSha256": "9f6fee166d87dc1084f979de4c6a849e886c6663eac3f2f8e35592173fdaa4b7"
+      },
+      "notes": "Quartz variant derived from onetransistor two-terminal ceramic resonator artwork. Generic motional series RLC with a shunt capacitor; nominal series resonance is set by Frequency in Hz. No manufacturer-specific temperature, drive-level, or nonlinear behavior.",
+      "changes": [],
+      "pins": [
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "50.00000,42.00000"
+        },
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "58.00000,42.00000"
+        }
+      ],
+      "xmlSha256": "9f6fee166d87dc1084f979de4c6a849e886c6663eac3f2f8e35592173fdaa4b7"
+    },
+    {
+      "id": "ceramic-resonator",
+      "name": "Ceramic resonator",
+      "nameId": 22,
+      "symbolId": 21,
+      "folder": "Passive/Resonators",
+      "source": {
+        "nameId": 9518,
+        "symbolId": 399,
+        "author": "onetransistor",
+        "name": "XC",
+        "description": "Ceramic Resonator",
+        "xmlSha256": "9f6fee166d87dc1084f979de4c6a849e886c6663eac3f2f8e35592173fdaa4b7"
+      },
+      "notes": "Source two-terminal ceramic resonator artwork retained. Generic motional series RLC with a shunt capacitor; nominal series resonance is set by Frequency in Hz. No manufacturer-specific temperature, drive-level, or nonlinear behavior.",
+      "changes": [],
+      "pins": [
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "50.00000,42.00000"
+        },
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "58.00000,42.00000"
+        }
+      ],
+      "xmlSha256": "9f6fee166d87dc1084f979de4c6a849e886c6663eac3f2f8e35592173fdaa4b7"
+    },
+    {
+      "id": "voltage-source",
+      "name": "DC / AC voltage source",
+      "nameId": 23,
+      "symbolId": 22,
+      "folder": "SPICE sources",
+      "source": {
+        "nameId": 9945,
+        "symbolId": 790,
+        "author": "aryajur",
+        "name": "1V",
+        "description": "Voltage Source",
+        "xmlSha256": "6fb626405f413e0520cfd1f964eab37d722b2bf9cc58fd4521c554b318e758fd"
+      },
+      "notes": "Existing source symbol and parameter names reused; NAME was replaced with an explicit Value field and AC syntax normalized for ngspice.",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "24.00000,20.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "24.00000,36.00000"
+        }
+      ],
+      "xmlSha256": "6fb626405f413e0520cfd1f964eab37d722b2bf9cc58fd4521c554b318e758fd"
+    },
+    {
+      "id": "current-source",
+      "name": "DC / AC current source",
+      "nameId": 24,
+      "symbolId": 23,
+      "folder": "SPICE sources",
+      "source": {
+        "nameId": 9944,
+        "symbolId": 789,
+        "author": "aryajur",
+        "name": "1mA",
+        "description": "Current Source",
+        "xmlSha256": "207251c8c492790d19c78d00f306907da386e80583b0253f3044ddb1efbc5907"
+      },
+      "notes": "Existing source symbol and parameter names reused; NAME was replaced with an explicit Value field and AC syntax normalized for ngspice.",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "",
+          "part": 0,
+          "at": "24.00000,20.00000"
+        },
+        {
+          "number": "2",
+          "name": "",
+          "part": 0,
+          "at": "24.00000,36.00000"
+        }
+      ],
+      "xmlSha256": "207251c8c492790d19c78d00f306907da386e80583b0253f3044ddb1efbc5907"
+    },
+    {
+      "id": "end",
+      "name": "SPICE end",
+      "nameId": 25,
+      "symbolId": 24,
+      "folder": "SPICE definitions",
+      "source": {
+        "nameId": 9946,
+        "symbolId": 791,
+        "author": "aryajur",
+        "name": "End Statement",
+        "description": "END",
+        "xmlSha256": "c62d2b06ca34af3dcde8ef868773fd370ff8c4ba8d81f7fb519598e0200f6fad"
+      },
+      "notes": "",
+      "changes": [],
+      "pins": [],
+      "xmlSha256": "c62d2b06ca34af3dcde8ef868773fd370ff8c4ba8d81f7fb519598e0200f6fad"
+    },
+    {
+      "id": "dc-analysis",
+      "name": "SPICE DC analysis",
+      "nameId": 26,
+      "symbolId": 25,
+      "folder": "SPICE definitions",
+      "source": {
+        "nameId": 9947,
+        "symbolId": 792,
+        "author": "aryajur",
+        "name": "DC Analysis Control",
+        "description": "DC Analysis",
+        "xmlSha256": "0813634f4172c85c3d08f7c2416fcb1918de8ab3a87a6ac359e95daee5f66894"
+      },
+      "notes": "",
+      "changes": [],
+      "pins": [],
+      "xmlSha256": "0813634f4172c85c3d08f7c2416fcb1918de8ab3a87a6ac359e95daee5f66894"
+    },
+    {
+      "id": "operating-point",
+      "name": "SPICE operating point",
+      "nameId": 27,
+      "symbolId": 26,
+      "folder": "SPICE definitions",
+      "source": {
+        "nameId": 9948,
+        "symbolId": 793,
+        "author": "aryajur",
+        "name": "Print Operating Point",
+        "description": "Print Operating Point",
+        "xmlSha256": "7b14c3577891f8b8b267e2a27cf2e969bd6f0e498fb7cdacebd51ad5ddf1b3ed"
+      },
+      "notes": "",
+      "changes": [],
+      "pins": [],
+      "xmlSha256": "7b14c3577891f8b8b267e2a27cf2e969bd6f0e498fb7cdacebd51ad5ddf1b3ed"
+    },
+    {
+      "id": "transient-analysis",
+      "name": "SPICE transient analysis",
+      "nameId": 28,
+      "symbolId": 27,
+      "folder": "SPICE definitions",
+      "source": {
+        "nameId": 9949,
+        "symbolId": 794,
+        "author": "aryajur",
+        "name": "Transient Analysis Control",
+        "description": "Transient Analysis",
+        "xmlSha256": "e1b27f37096f58f91a71b311e35fd8059a7c89b74736e19b3ff4080db2502ac7"
+      },
+      "notes": "",
+      "changes": [],
+      "pins": [],
+      "xmlSha256": "e1b27f37096f58f91a71b311e35fd8059a7c89b74736e19b3ff4080db2502ac7"
+    },
+    {
+      "id": "comment",
+      "name": "SPICE comment",
+      "nameId": 29,
+      "symbolId": 28,
+      "folder": "SPICE definitions",
+      "source": {
+        "nameId": 9950,
+        "symbolId": 795,
+        "author": "aryajur",
+        "name": "Comment",
+        "description": "Comment",
+        "xmlSha256": "410f7ff78d0ae187718b8bebc04e5604ecbba78b9b48af51e2d006c3d3071288"
+      },
+      "notes": "",
+      "changes": [],
+      "pins": [],
+      "xmlSha256": "410f7ff78d0ae187718b8bebc04e5604ecbba78b9b48af51e2d006c3d3071288"
+    },
+    {
+      "id": "parameters",
+      "name": "SPICE parameters",
+      "nameId": 30,
+      "symbolId": 29,
+      "folder": "SPICE definitions",
+      "source": {
+        "nameId": 9951,
+        "symbolId": 796,
+        "author": "aryajur",
+        "name": "Parameter List",
+        "description": "Parameters",
+        "xmlSha256": "d0ed0a74620e9d9e2ee6cda751582d1555da611a6dd41e1e4f72b81df59a30df"
+      },
+      "notes": "Each nonempty parameter is emitted separately; an empty parameter list no longer produces an invalid bare .PARAM.",
+      "changes": [],
+      "pins": [],
+      "xmlSha256": "d0ed0a74620e9d9e2ee6cda751582d1555da611a6dd41e1e4f72b81df59a30df"
+    },
+    {
+      "id": "diode-model",
+      "name": "SPICE diode model",
+      "nameId": 31,
+      "symbolId": 30,
+      "folder": "SPICE definitions",
+      "source": {
+        "nameId": 9952,
+        "symbolId": 797,
+        "author": "aryajur",
+        "name": "Model Diode",
+        "description": "Model a Diode",
+        "xmlSha256": "ee7dacd486841b2f50675809a7c0a5b5bd1d38345b62d989f284a704cddad10e"
+      },
+      "notes": "Existing model-definition symbol; moved model text to the prolog and added optional Zener breakdown parameters. Use USER_D as the diode Model to select this definition.",
+      "changes": [],
+      "pins": [],
+      "xmlSha256": "ee7dacd486841b2f50675809a7c0a5b5bd1d38345b62d989f284a704cddad10e"
+    },
+    {
+      "id": "subcircuit",
+      "name": "SPICE subcircuit definition",
+      "nameId": 32,
+      "symbolId": 31,
+      "folder": "SPICE definitions",
+      "source": {
+        "nameId": 9953,
+        "symbolId": 798,
+        "author": "aryajur",
+        "name": "SUBCKT",
+        "description": "Make this a subcircuit",
+        "xmlSha256": "04a9865d1eead8eac7d7816f3dac48f89f0cbb7cb0c6449c58276f93a094ce50"
+      },
+      "notes": "Rebuilt the truncated 255-character source template to preserve all nine formal pins. .ENDS is emitted before .END.",
+      "changes": [],
+      "pins": [],
+      "xmlSha256": "04a9865d1eead8eac7d7816f3dac48f89f0cbb7cb0c6449c58276f93a094ce50"
+    },
+    {
+      "id": "raw-definition",
+      "name": "SPICE model / directive",
+      "nameId": 33,
+      "symbolId": 28,
+      "folder": "SPICE definitions",
+      "source": {
+        "nameId": 9950,
+        "symbolId": 795,
+        "author": "aryajur",
+        "name": "Comment",
+        "description": "Comment",
+        "xmlSha256": "410f7ff78d0ae187718b8bebc04e5604ecbba78b9b48af51e2d006c3d3071288"
+      },
+      "notes": "Derived from the existing comment/definition artwork. Definition accepts a full model, .include, or other multiline SPICE prolog text.",
+      "changes": [],
+      "pins": [],
+      "xmlSha256": "410f7ff78d0ae187718b8bebc04e5604ecbba78b9b48af51e2d006c3d3071288"
+    }
+  ]
+}

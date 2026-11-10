@@ -1,7 +1,8 @@
 # Bundled libraries
 
 Put the libraries to distribute in `bundled-libraries/` and list them in
-`bundled-libraries/config.json`. The checked-in catalog is intentionally empty.
+`bundled-libraries/config.json`. The catalog includes the SPICE essentials bundle;
+add further entries alongside it. See [Building libraries from SQL](library-from-sql.md).
 The same catalog is used by the desktop installer and both browser versions.
 
 ```json
