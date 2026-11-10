@@ -76,6 +76,7 @@ for (const camel of [false, true]) {
   assert.deepEqual(submission, original, 'Do not mutate the downloaded draft');
 }
 assert.throws(() => withStoreReleaseNotes({}, 'Notes'), /no listings/);
+assert.throws(() => withStoreReleaseNotes({}, 'x'.repeat(1501)), /1500-character/);
 assert.throws(
   () => withStoreReleaseNotes({ Listings: { 'de-de': {} } }, 'Notes'),
   /No English/,
@@ -97,6 +98,7 @@ assert.ok(existsSync(output));
 const version = JSON.parse(readFileSync('package.json', 'utf8')).version;
 const generated = readFileSync(output, 'utf8');
 assert.ok(generated.startsWith(`TinyCAD ${version}\n\n`));
+assert.ok(generated.trim().length <= 1500, 'Store notes fit the listing limit');
 assert.ok(!generated.includes('## '));
 const workflow = load(
   readFileSync('.github/workflows/publish-store.yml', 'utf8'),

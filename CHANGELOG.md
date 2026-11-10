@@ -4,10 +4,10 @@
 
 ### Added
 
-- Native SVG Markdown text boxes supporting headings, emphasis, strikethrough, lists, task lists, quotations, horizontal rules and code blocks. Tables, links, images and HTML remain literal text.
+- SVG Markdown text boxes: headings, emphasis, strikethrough, lists, tasks, quotations, rules and code blocks. Tables, links, images and HTML remain literal text.
 - Live Markdown source formatting while editing: headings, bold, italic and strikethrough retain their editable markers. Formatting follows the chosen base font and size, with matching caret placement, selection and wrapping.
 - One vector renderer for Markdown on the drawing, in SVG exports, browser printing and PDF exports, without rasterizing text boxes.
-- Compact toolbar selector for 90°, 45°, and free wire modes, with original TinyCAD 45° angle constraints. Selecting a mode activates the wire tool and preserves an active wire preview.
+- Toolbar selector for 90°, 45°, and free wire modes. Selecting a mode activates Wire and preserves the active preview and TinyCAD's 45° constraints.
 
 ### Fixed
 
@@ -19,7 +19,7 @@
 ### Maintenance
 
 - Generate Microsoft Store “What's new” automatically from the changelog entry matching the application version, preserving other listing languages and submission metadata.
-- Resolve the outstanding TypeScript errors across UI components and platform integrations, add browser API type declarations, and provide an `npm run typecheck` command.
+- Fix TypeScript errors, add browser API declarations and provide `npm run typecheck`.
 
 ## v4.0.10 — 2026-11-06
 
