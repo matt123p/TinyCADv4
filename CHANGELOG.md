@@ -4,11 +4,20 @@
 
 ### Added
 
+- Markdown formatting in drawing text boxes, including headings, emphasis, lists, tables, links, images, task lists and fenced code blocks, with sanitized embedded HTML.
+- Live Markdown source formatting while editing: headings, bold, italic, strikethrough and links retain their editable markers. Formatting follows the chosen base font and size, with matching caret placement, selection and wrapping.
+- Formatted text boxes in SVG exports, browser printing and PDF exports.
 - Compact toolbar selector for 90°, 45°, and free wire modes, with original TinyCAD 45° angle constraints. Selecting a mode activates the wire tool and preserves an active wire preview.
 
 ### Fixed
 
+- Display file-handle library names correctly when no library title is available.
+- Stop Google sign-in initialization cleanly when the Google API is unavailable.
 - Show the loupe button only after touch input on the drawing canvas, keeping it hidden on touchscreen PCs until touch is used.
+
+### Maintenance
+
+- Resolve the outstanding TypeScript errors across UI components and platform integrations, add browser API type declarations, and provide an `npm run typecheck` command.
 
 ## v4.0.10 — 2026-11-06
 

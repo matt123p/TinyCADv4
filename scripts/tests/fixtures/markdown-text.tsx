@@ -5,6 +5,9 @@ import { renderMarkdown } from '../../../src/util/markdown';
 import { rasterizeMarkdown } from '../../../src/io/markdownExport';
 import { updateText } from '../../../src/manipulators/updateText';
 import { DocItemTypes } from '../../../src/model/dsnItem';
+import { updateTextData } from '../../../src/manipulators/updateTextArea';
+import { measureText } from '../../../src/util/measureText';
+import { markdownSourceRuns } from '../../../src/util/markdownSource';
 
 function check(value, message) {
   if (!value) throw new Error(message);
@@ -135,6 +138,166 @@ window.runMarkdownChecks = async () => {
     root.querySelector('text') && root.textContent.includes('# RC'),
     'Editable Markdown source',
   );
+  const headingSpan = root.querySelector('text tspan');
+  check(
+    headingSpan.textContent === '# RC circuit',
+    'Heading delimiters stay editable',
+  );
+  check(
+    getComputedStyle(headingSpan).fontSize === '36px',
+    'Heading uses twice the base size',
+  );
+  check(
+    getComputedStyle(headingSpan).fontWeight === '700',
+    'Heading source is bold',
+  );
+  const boldSpan = Array.from(root.querySelectorAll('tspan')).find(
+    (span) => span.textContent === '**Bold**',
+  );
+  check(
+    boldSpan && getComputedStyle(boldSpan).fontWeight === '700',
+    'Bold source includes markers',
+  );
+
+  const editSource =
+    '# Heading\rnormal **bold** and *italic* and ~~gone~~\r```\r**code stays literal**\r```\r';
+  const editItem = new updateText({
+    ...item,
+    text: editSource,
+    font_name: 'Georgia',
+    font_size: 24,
+    font_italic: true,
+  }).post_construction();
+  draw({ data: editItem, selected: true, selected_handle: -2 });
+  const spans = Array.from(root.querySelectorAll('tspan'));
+  check(
+    spans.every((span) => getComputedStyle(span).fontFamily === 'Georgia'),
+    'Source inherits the chosen font family',
+  );
+  check(
+    spans.every((span) => getComputedStyle(span).fontStyle === 'italic'),
+    'Base italic survives Markdown formatting',
+  );
+  check(
+    getComputedStyle(spans[0]).fontSize === '48px',
+    'Heading scales with a changed base size',
+  );
+  check(
+    editItem.textData.textBlocks.map((block) => block.value).join('') ===
+      editSource,
+    'Layout preserves every source character',
+  );
+  const codeSpan = spans.find(
+    (span) => span.textContent === '**code stays literal**',
+  );
+  check(
+    codeSpan && getComputedStyle(codeSpan).fontWeight === '400',
+    'Code fences suppress inline emphasis',
+  );
+  const boldBlock = editItem.textData.textBlocks.find((block) =>
+    block.value.includes('**bold**'),
+  );
+  const bold = boldBlock.sourceRuns.find(
+    (run) => boldBlock.value.slice(run.start, run.end) === '**bold**',
+  );
+  check(bold, 'Inline bold span is retained in measured layout');
+  const measured = measureText('italic bold 24px Georgia', '**bold**');
+  check(
+    Math.abs(
+      boldBlock.caretOffsets[bold.end] -
+        boldBlock.caretOffsets[bold.start] -
+        measured,
+    ) < 0.01,
+    'Caret measures the actual styled font',
+  );
+  const afterBold = boldBlock.start + bold.end;
+  const area = editItem.textData.textArea;
+  const updater = new updateTextData(
+    area.drawX,
+    area.drawY,
+    area.drawPoint,
+    area.drawItem,
+    area.dragHandle,
+    area.moveHandle,
+    area.drawMultiline,
+    area.drawRotation,
+    area.drawWidth,
+    area.drawHeight,
+    area.drawCentre,
+    area.allowMove,
+  );
+  const placed = updater.mouse_click(editItem.textData, afterBold, true);
+  check(
+    Math.abs(placed.textEdit.x - (1 + boldBlock.caretOffsets[bold.end])) < 0.01,
+    'Caret aligns after bold source',
+  );
+  const hit = updater.find_positon(placed, [
+    editItem.point[0] + placed.textEdit.x,
+    editItem.point[1] + placed.textEdit.y - 5,
+  ]);
+  check(
+    hit === afterBold,
+    'Click maps styled glyphs back to the right source offset',
+  );
+  const selected = {
+    ...placed,
+    sel_start: boldBlock.start + bold.start,
+    sel_end: afterBold,
+  };
+  const selectionLayout = updater.create_text_blocks(selected, editSource);
+  const selectionBlock = selectionLayout.textBlocks.find(
+    (block) => block.start === boldBlock.start,
+  );
+  check(
+    Math.abs(selectionBlock.sel_width - measured) < 0.01,
+    'Selection aligns with bold source',
+  );
+  const inserted = new updateText({
+    ...editItem,
+    textData: placed,
+  }).handleKeyPress(-2, '!'.charCodeAt(0));
+  check(
+    inserted.text ===
+      editSource.slice(0, afterBold) + '!' + editSource.slice(afterBold),
+    'Typing retains Markdown and inserts at the measured caret',
+  );
+  check(
+    placed.textBlocks[placed.textBlocks.length - 1].value === '',
+    'Trailing newline has an editable blank line',
+  );
+  const narrow = new updateText({
+    ...editItem,
+    point_b: [150, 770],
+  }).post_construction();
+  check(
+    narrow.textData.textBlocks.map((block) => block.value).join('') ===
+      editSource,
+    'Wrapping preserves source',
+  );
+  check(
+    narrow.textData.textBlocks.every((block) => block.width <= 140),
+    'Styled source wraps inside the box',
+  );
+  const setext = new updateText({
+    ...item,
+    text: 'Heading\n=======\nplain **bold**',
+  }).post_construction();
+  check(
+    setext.textData.textBlocks[0].sourceRuns[0].font_size === 36 &&
+      setext.textData.textBlocks[1].sourceRuns[0].font_size === 36,
+    'Setext headings retain and style underline markers',
+  );
+  const multiline = markdownSourceRuns('**two\nlines**', item);
+  check(
+    multiline.every((run) => run.font_bold),
+    'Emphasis continues across source line breaks',
+  );
+  draw({ data: editItem });
+  check(
+    getComputedStyle(root.querySelector('pre code')).fontFamily === 'Georgia',
+    'Preview code uses the selected base font too',
+  );
+  draw();
   draw({ selected: true, selected_handle: 0 });
   check(root.querySelector('.selectedHighlight'), 'Selected box highlight');
   for (const dr of [0, 1, 2, 3, 4]) {
@@ -165,6 +328,9 @@ window.runMarkdownChecks = async () => {
     'SVG XHTML namespace',
   );
   window.markdownScreenshotReady = true;
+  window.showMarkdownEditor = () =>
+    draw({ selected: true, selected_handle: -2 });
+  window.showMarkdownPreview = () => draw();
   window.finishMarkdownChecks = async () => {
     const svg = root.querySelector('svg');
     await rasterizeMarkdown(svg);

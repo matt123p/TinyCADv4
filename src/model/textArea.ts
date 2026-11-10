@@ -1,6 +1,18 @@
 import { Coordinate, Text } from '../model/dsnItem';
 
+export interface TextAreaRun {
+  start: number;
+  end: number;
+  font_size: number;
+  font_bold: boolean;
+  font_italic: boolean;
+  strike?: boolean;
+  underline?: boolean;
+}
+
 export interface TextAreaBlock {
+  sourceRuns?: TextAreaRun[];
+  caretOffsets?: number[];
   x: number;
   y: number;
   width: number;

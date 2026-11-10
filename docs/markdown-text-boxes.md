@@ -1,7 +1,9 @@
 # Markdown text boxes
 
-Drawing text boxes render Markdown. Select the text for editing to see the source;
-click away to see the formatted result. The original source is saved in the drawing,
+Drawing text boxes render Markdown. Select the text for editing to see styled source:
+headings, bold, italic, strikethrough and links show their formatting while all
+Markdown markers remain visible and editable. Click away to see the formatted result.
+The original source is saved in the drawing,
 so editing, undo/redo and reopening a file retain the Markdown.
 
 Headings, bold and italic text, links, images, lists, quotations, horizontal rules,
@@ -27,7 +29,11 @@ tau = 10_000 * 100e-9
 - [ ] Measure the time constant
 ````
 
-Use the text box's existing font, colour, border and fill controls. Markdown lays
+Use the text box's existing font, colour, border and fill controls. Editing and
+preview use the chosen base font, weight and italic setting; heading sizes scale
+relative to that font size. Code also inherits the chosen font (choose a monospaced
+base font if desired). Caret placement, selection and wrapping follow the styled
+source. Fenced and indented code remains literal during editing. Markdown lays
 out within the box and clips at its edges; enlarge the box to fit longer notes.
 Rotation is supported. Net labels, component fields and pin names keep their
 existing text behaviour.

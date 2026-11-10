@@ -33,8 +33,8 @@ export const markdownStyles = `
 .tinycad-markdown h5 { font-size:.875em; } .tinycad-markdown h6 { font-size:.85em; }
 .tinycad-markdown ul,.tinycad-markdown ol { padding-left:1.8em; }
 .tinycad-markdown blockquote { border-left:.2em solid #888; padding-left:.7em; }
-.tinycad-markdown code { font-family:'Courier New',monospace; font-size:.9em; background:#eeeeee; color:#202020; padding:.1em .2em; }
-.tinycad-markdown pre { padding:.5em; background:#eeeeee; color:#202020; white-space:pre; overflow:hidden; }
+.tinycad-markdown code { font-family:inherit; font-size:.9em; background:#eeeeee; color:#202020; padding:.1em .2em; }
+.tinycad-markdown pre { font-family:inherit; font-size:inherit; padding:.5em; background:#eeeeee; color:#202020; white-space:pre; overflow:hidden; }
 .tinycad-markdown pre code { padding:0; background:none; font-size:1em; }
 .tinycad-markdown table { border-collapse:collapse; }
 .tinycad-markdown th,.tinycad-markdown td { border:1px solid #888; padding:.2em .5em; }

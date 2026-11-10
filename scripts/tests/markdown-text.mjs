@@ -1,5 +1,5 @@
 import { build } from 'esbuild';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -43,7 +43,10 @@ await build({
 });
 await writeFile(
   path.join(output, 'index.html'),
-  '<!doctype html><meta charset="utf-8"><script src="test.js"></script>',
+  `<!doctype html><meta charset="utf-8"><style>${await readFile(
+    path.join(root, 'styles/svg.scss'),
+    'utf8',
+  )}</style><script src="test.js"></script>`,
 );
 await writeFile(
   path.join(output, 'main.cjs'),
@@ -62,6 +65,9 @@ app.whenReady().then(async () => {
     console.log(await window.webContents.executeJavaScript('window.runMarkdownChecks()'));
     await window.webContents.executeJavaScript('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
     fs.writeFileSync(path.join(__dirname,'preview.png'), (await window.webContents.capturePage()).toPNG());
+    await window.webContents.executeJavaScript('window.showMarkdownEditor(); new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+    fs.writeFileSync(path.join(__dirname,'editor.png'), (await window.webContents.capturePage()).toPNG());
+    await window.webContents.executeJavaScript('window.showMarkdownPreview()');
     const svg = await window.webContents.executeJavaScript('window.finishMarkdownChecks()');
     const png = svg.split('data:image/png;base64,')[1].split('"')[0];
     fs.writeFileSync(path.join(__dirname,'text-box.png'), Buffer.from(png, 'base64'));
@@ -82,17 +88,13 @@ app.whenReady().then(async () => {
 );
 const env = { ...process.env };
 delete env.ELECTRON_RUN_AS_NODE;
-const result = spawnSync(
-  require('electron'),
-  [path.join(output, 'main.cjs')],
-  {
-    cwd: root,
-    env,
-    encoding: 'utf8',
-    timeout: 60000,
-    windowsHide: true,
-  },
-);
+const result = spawnSync(require('electron'), [path.join(output, 'main.cjs')], {
+  cwd: root,
+  env,
+  encoding: 'utf8',
+  timeout: 60000,
+  windowsHide: true,
+});
 process.stdout.write(result.stdout || '');
 if (result.status !== 0) {
   process.stderr.write(result.stderr || String(result.error));
