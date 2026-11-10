@@ -1,0 +1,1667 @@
+{
+  "$schema": "../symbol-library.schema.json",
+  "schema_version": "1.0.0",
+  "manifest_kind": "library",
+  "library_id": "gcse-physics-aqa",
+  "title": "GCSE Physics — AQA 8463",
+  "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+  "handoff": {
+    "date": "2026-11-10",
+    "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
+    "folder_semantics": "folder is a proposed slash-separated logical path, not a claim of support in the current TinyCAD library browser.",
+    "source_document_base": "All source_document paths are relative to the repository root, including in standalone library files.",
+    "identity": "id is stable within a library; extraction may deduplicate by canonical_symbol_id, but each library is complete and permits independent duplicate assets.",
+    "pin_contract": "Logical terminal numbers and signal names are not physical package pinouts. Resolve real package pins from an authoritative device reference before generating package-specific symbols.",
+    "conventions": "Prefer IEC/UK teaching symbols. Power pins and polarity should remain explicit. Built-in instruments and probes are already provided and are excluded from symbol generation.",
+    "existing_tools": "existing_tools and existing_tool_ids refer to supplied non-library tools, not generation requirements. Never recreate these as library symbols.",
+    "inventory_not_bom": "One record per reusable symbol type, not per component instance. A bridge can be assembled from repeated diode/resistor symbols. Different resistance/capacitance values are properties, not separate symbols.",
+    "model_warning": "Every record is marked not ready to simulate from this manifest. A successful extraction of artwork does not establish a valid model, mapping or instrument implementation.",
+    "optionality": "experiment_symbol_ids are a coverage set of proposed implementations and comparisons, not a minimal mandatory BOM; common support symbols and explicitly optional additions are separately identified."
+  },
+  "syllabus_sources": [
+    {
+      "id": "electricity",
+      "url": "https://www.aqa.org.uk/subjects/physics/gcse/physics-8463/specification/subject-content/electricity"
+    },
+    {
+      "id": "practicals",
+      "url": "https://www.aqa.org.uk/subjects/physics/gcse/physics-8463/specification/practical-assessment"
+    }
+  ],
+  "common_symbol_ids": [
+    "resistor",
+    "rheostat",
+    "cell",
+    "battery",
+    "source_dc",
+    "switch_spst",
+    "ammeter",
+    "voltmeter",
+    "ohmmeter",
+    "test_point",
+    "connector2",
+    "connector3",
+    "wire",
+    "junction",
+    "net_label",
+    "ground",
+    "no_connect",
+    "annotation"
+  ],
+  "existing_tools": [
+    {
+      "id": "bench_supply",
+      "name": "Student current-limited bench supply",
+      "native_tool": "supply",
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [],
+      "common_support_tool": true
+    },
+    {
+      "id": "multimeter",
+      "name": "Student multimeter, three sockets",
+      "native_tool": "meter",
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "G07"
+      ],
+      "common_support_tool": true
+    },
+    {
+      "id": "voltage_probe",
+      "name": "Voltage probe",
+      "native_tool": "probe",
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [],
+      "common_support_tool": true
+    },
+    {
+      "id": "differential_probe",
+      "name": "Differential voltage probe",
+      "native_tool": "differential-probe",
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [],
+      "common_support_tool": true
+    },
+    {
+      "id": "current_probe",
+      "name": "Series current probe",
+      "native_tool": "current-probe",
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "G08"
+      ],
+      "common_support_tool": true
+    },
+    {
+      "id": "oscilloscope",
+      "name": "Student oscilloscope, two differential channels",
+      "native_tool": "scope",
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "G16"
+      ],
+      "common_support_tool": false
+    },
+    {
+      "id": "function_generator",
+      "name": "Student function generator",
+      "native_tool": "generator",
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "G16"
+      ],
+      "common_support_tool": false
+    }
+  ],
+  "folders": [
+    "01 Passives/Capacitors",
+    "01 Passives/Resistors",
+    "02 Semiconductors/Diodes",
+    "03 Sensors/Resistive",
+    "04 Switches/Manual",
+    "05 Sources/Cells",
+    "05 Sources/Voltage",
+    "06 Outputs/Lamps",
+    "10 Instruments/Conventional",
+    "11 Connections/Connectors",
+    "11 Connections/Terminals",
+    "12 Editor Primitives"
+  ],
+  "experiments": [
+    {
+      "id": "G01",
+      "title": "Resistance of a wire as its length changes",
+      "syllabus_reference": "RP3; 4.2.1.3",
+      "catalogue_support": "Both, model needed",
+      "catalogue_description": "Draw the wire, test section, ammeter and voltmeter. Represent each chosen length by a resistance supplied from measurements or a declared wire model. Export V and I, calculate R, and plot R against length externally. Simulation cannot measure wire length or discover its material properties.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "resistance_wire"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G02",
+      "title": "Equivalent resistance of series combinations",
+      "syllabus_reference": "RP3; 4.2.1.3",
+      "catalogue_support": "Both",
+      "catalogue_description": "Compare one, two and three resistors at a fixed supply. Record total current and calculate the equivalent resistance. Use separate saved circuits or a component-value study.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "resistor"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G03",
+      "title": "Equivalent resistance of parallel combinations",
+      "syllabus_reference": "RP3; 4.2.1.3",
+      "catalogue_support": "Both",
+      "catalogue_description": "Add branches and compare supply current with the individual branch currents. Show how adding a branch changes the effective load. Keep the numerical demand appropriate to GCSE; AQA does not require the parallel-resistance calculation itself.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "resistor"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G04",
+      "title": "I–V investigation: fixed resistor",
+      "syllabus_reference": "RP4; 4.2.1.4",
+      "catalogue_support": "Both",
+      "catalogue_description": "Draw the supply, current-limiting control, ammeter in series and voltmeter across the test resistor. Sweep supply voltage through positive and negative values. Export paired V/I readings for a characteristic graph and a resistance estimate.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "resistor"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G05",
+      "title": "I–V investigation: filament lamp",
+      "syllabus_reference": "RP4; 4.2.1.4",
+      "catalogue_support": "Both, model needed",
+      "catalogue_description": "Draw the same measurement circuit with a lamp. Compare measured data with an electrothermal or empirical lamp model. A fixed resistor with a lamp symbol will not reproduce the characteristic; a diagram and real laboratory measurements remain useful without that model.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "lamp"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G06",
+      "title": "I–V investigation: diode",
+      "syllabus_reference": "RP4; 4.2.1.4",
+      "catalogue_support": "Both",
+      "catalogue_description": "Use a diode model and series limiting resistor. Sweep the supply in both directions and measure voltage across the diode separately from supply voltage. Compare forward conduction and reverse current; use a graph scale that makes the intended feature visible.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "diode"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G07",
+      "title": "Choosing and connecting electrical meters",
+      "syllabus_reference": "4.2.1.1, 4.2.1.3",
+      "catalogue_support": "Both",
+      "catalogue_description": "Prepare a resistor test circuit with correctly positioned instruments. Compare a resistance inferred from V/I with a resistance-mode reading on an unpowered circuit. Practise V Ω–COM for voltage/resistance and A–COM for current.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "ammeter",
+        "voltmeter",
+        "ohmmeter"
+      ],
+      "existing_tool_ids": [
+        "multimeter"
+      ]
+    },
+    {
+      "id": "G08",
+      "title": "Current at different positions in one loop",
+      "syllabus_reference": "4.2.1.2; 4.2.2",
+      "catalogue_support": "Both",
+      "catalogue_description": "Put current probes before and after different components. Compare readings while changing supply voltage or resistance. Use a short transient capture to connect a steady current with charge transferred over a chosen time.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "source_pulse"
+      ],
+      "existing_tool_ids": [
+        "current_probe"
+      ]
+    },
+    {
+      "id": "G09",
+      "title": "Voltage sharing in a series circuit",
+      "syllabus_reference": "4.2.2",
+      "catalogue_support": "Both",
+      "catalogue_description": "Choose unequal resistors, measure each voltage and compare their sum with the supply. Swap the resistors and predict the new readings before running.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "resistor"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G10",
+      "title": "Branch current and voltage in parallel circuits",
+      "syllabus_reference": "4.2.2",
+      "catalogue_support": "Both",
+      "catalogue_description": "Use two unequal branch resistors. Measure both branch voltages, both currents and the supply current. Repeat with one branch open.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "resistor",
+        "switch_spst"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G11",
+      "title": "Resistance of an NTC thermistor versus temperature",
+      "syllabus_reference": "4.2.1.4",
+      "catalogue_support": "Both, model needed",
+      "catalogue_description": "Draw the measurement circuit and annotate the external temperature measurement. Enter measured R(T) values as separate runs, or supply a calibrated model. Plot resistance against temperature externally. A resistor-value sweep alone is not a temperature experiment.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "ntc"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G12",
+      "title": "Resistance of an LDR versus illumination",
+      "syllabus_reference": "4.2.1.4",
+      "catalogue_support": "Both, model needed",
+      "catalogue_description": "Draw the LDR test circuit and label the controlled light conditions. Use measured resistance values for electrical predictions. TinyCAD does not model lamp distance, illumination or the LDR's optical response automatically.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "ldr"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G13",
+      "title": "Temperature-responsive sensor circuit",
+      "syllabus_reference": "4.2.1.4, thermistor applications",
+      "catalogue_support": "Both, model needed",
+      "catalogue_description": "Combine a thermistor-equivalent resistance with a fixed resistor and measure the output as the entered resistance changes. Compare the two sensor positions. This is a possible circuit for exploring the application; potential-divider calculations and a transistor/comparator switching stage are extensions, not additional GCSE requirements.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "ntc",
+        "potentiometer"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G14",
+      "title": "Light-responsive sensor circuit",
+      "syllabus_reference": "4.2.1.4, LDR applications",
+      "catalogue_support": "Both, model needed",
+      "catalogue_description": "Repeat the sensor exercise with light/dark resistance values. Define whether the output should rise or fall as illumination decreases. A complete automatic lamp switch needs an additional switching model; changing resistance alone does not implement a switching threshold.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "ldr",
+        "potentiometer"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G15",
+      "title": "Resistor power and electrical energy",
+      "syllabus_reference": "4.2.4.1–4.2.4.2",
+      "catalogue_support": "Both",
+      "catalogue_description": "Measure current and voltage for several resistor/supply combinations. Compare calculated power with a power trace; use a transient capture or a timed steady reading to calculate energy. This predicts electrical dissipation, not temperature rise or visible brightness.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "resistor"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G16",
+      "title": "Direct versus alternating voltage",
+      "syllabus_reference": "4.2.3.1",
+      "catalogue_support": "Both",
+      "catalogue_description": "Compare a DC source with a low-voltage sine source on the scope. Identify polarity changes and repeat at different frequencies. This is an electronic demonstration of the distinction; it does not require a mains-voltage experiment.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "source_sine",
+        "source_pulse",
+        "bnc"
+      ],
+      "existing_tool_ids": [
+        "oscilloscope",
+        "function_generator"
+      ]
+    },
+    {
+      "id": "G17",
+      "title": "LED polarity and a suitable series resistor",
+      "syllabus_reference": "4.2.1.1, component symbols; 4.2.1.4, diode behaviour",
+      "catalogue_support": "Both, model needed",
+      "catalogue_description": "Use an LED-specific model to compare current for different series resistors and supply polarities. This is a syllabus-linked diode application, not a separately required LED practical. Electrical current can be predicted; brightness, colour and damage are not automatically simulated.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "led",
+        "diode"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "G18",
+      "title": "Physical layout versus circuit diagram",
+      "syllabus_reference": "4.2.1.1; AT7",
+      "catalogue_support": "Diagram",
+      "catalogue_description": "Draw a clear schematic from a photograph or bench arrangement, label meter connections and mark intended measurement points. Students can use it to construct or check the real experiment even when the lamp or sensor has no simulation model.",
+      "source_document": "docs/17-gcse-physics-electronics-experiments.md",
+      "experiment_symbol_ids": [
+        "lamp",
+        "led",
+        "capacitor",
+        "switch_spst",
+        "connector2",
+        "annotation"
+      ],
+      "existing_tool_ids": []
+    }
+  ],
+  "symbols": [
+    {
+      "id": "capacitor",
+      "name": "Non-polarised capacitor",
+      "folder": "01 Passives/Capacitors",
+      "reference_prefix": "C",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "capacitor",
+        "nonpolar capacitor"
+      ],
+      "search_terms": [
+        "Non-polarised capacitor",
+        "capacitor",
+        "nonpolar capacitor"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "1",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "2",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Two equal parallel plates; value and reference.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
+        "ngspice_family": "C"
+      },
+      "configurable_properties": {
+        "capacitance": "user supplied"
+      },
+      "canonical_symbol_id": "capacitor",
+      "used_by_experiments": [
+        "G18"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "potentiometer",
+      "name": "Potentiometer",
+      "folder": "01 Passives/Resistors",
+      "reference_prefix": "RV",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "pot",
+        "potential divider",
+        "three terminal variable resistor"
+      ],
+      "search_terms": [
+        "Potentiometer",
+        "pot",
+        "potential divider",
+        "three terminal variable resistor"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "END_A",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "WIPER",
+          "electrical_type": "passive",
+          "side": "bottom"
+        },
+        {
+          "logical_number": "3",
+          "name": "END_B",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Resistive track with separate wiper arrow; simulate using two declared resistor segments.",
+      "simulation": {
+        "requirement": "subcircuit_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {
+        "total_resistance": "user supplied",
+        "wiper_fraction": "0 to 1"
+      },
+      "canonical_symbol_id": "potentiometer",
+      "used_by_experiments": [
+        "G13",
+        "G14"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "resistance_wire",
+      "name": "Resistance-wire test section",
+      "folder": "01 Passives/Resistors",
+      "reference_prefix": "RW",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "resistivity wire",
+        "nichrome test wire"
+      ],
+      "search_terms": [
+        "Resistance-wire test section",
+        "resistivity wire",
+        "nichrome test wire"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "1",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "2",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Straight test wire with two electrical ends and annotations for length, diameter/material and resistance; drawn length must not set resistance automatically.",
+      "simulation": {
+        "requirement": "calibrated_equivalent_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {
+        "length": "measured",
+        "diameter": "measured",
+        "material": "declared",
+        "resistance": "measured or calculated"
+      },
+      "canonical_symbol_id": "resistance_wire",
+      "used_by_experiments": [
+        "G01"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "resistor",
+      "name": "Fixed resistor",
+      "folder": "01 Passives/Resistors",
+      "reference_prefix": "R",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "resistance",
+        "fixed resistor",
+        "IEC resistor"
+      ],
+      "search_terms": [
+        "Fixed resistor",
+        "resistance",
+        "fixed resistor",
+        "IEC resistor"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "1",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "2",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "IEC rectangle; show reference and resistance. Optional ANSI zigzag visual variant, same terminals.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
+        "ngspice_family": "R"
+      },
+      "configurable_properties": {
+        "resistance": "user supplied",
+        "tolerance": "user supplied",
+        "power_rating": "optional"
+      },
+      "canonical_symbol_id": "resistor",
+      "used_by_experiments": [
+        "G02",
+        "G03",
+        "G04",
+        "G09",
+        "G10",
+        "G15"
+      ],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "rheostat",
+      "name": "Variable resistor / rheostat",
+      "folder": "01 Passives/Resistors",
+      "reference_prefix": "RV",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "variable resistor",
+        "rheostat"
+      ],
+      "search_terms": [
+        "Variable resistor / rheostat",
+        "variable resistor",
+        "rheostat"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "1",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "2",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Two-terminal adjustable resistor with diagonal adjustment arrow; distinguish from a three-terminal potentiometer.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
+        "ngspice_family": "R"
+      },
+      "configurable_properties": {
+        "resistance": "user supplied"
+      },
+      "canonical_symbol_id": "rheostat",
+      "used_by_experiments": [],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "common_support"
+    },
+    {
+      "id": "diode",
+      "name": "Signal diode",
+      "folder": "02 Semiconductors/Diodes",
+      "reference_prefix": "D",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "silicon diode",
+        "signal diode",
+        "PN junction diode"
+      ],
+      "search_terms": [
+        "Signal diode",
+        "silicon diode",
+        "signal diode",
+        "PN junction diode"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "A",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "K",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Diode with clearly identifiable cathode bar; show A/K names.",
+      "simulation": {
+        "requirement": "device_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "diode",
+      "used_by_experiments": [
+        "G06",
+        "G17"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "led",
+      "name": "Light-emitting diode",
+      "folder": "02 Semiconductors/Diodes",
+      "reference_prefix": "LED",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "LED",
+        "light emitting diode"
+      ],
+      "search_terms": [
+        "Light-emitting diode",
+        "LED",
+        "light emitting diode"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "A",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "K",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Diode with two outward light arrows; optional body colour. Electrical current does not automatically model brightness.",
+      "simulation": {
+        "requirement": "device_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {
+        "colour": [
+          "red",
+          "green",
+          "blue",
+          "amber",
+          "white"
+        ],
+        "model": "user supplied"
+      },
+      "canonical_symbol_id": "led",
+      "used_by_experiments": [
+        "G17",
+        "G18"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "ldr",
+      "name": "Light-dependent resistor",
+      "folder": "03 Sensors/Resistive",
+      "reference_prefix": "LDR",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "LDR",
+        "photoresistor",
+        "light dependent resistor"
+      ],
+      "search_terms": [
+        "Light-dependent resistor",
+        "LDR",
+        "photoresistor",
+        "light dependent resistor"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "1",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "2",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Resistor in sensor outline with inward light arrows.",
+      "simulation": {
+        "requirement": "calibrated_equivalent_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {
+        "resistance": "calibrated illumination data"
+      },
+      "canonical_symbol_id": "ldr",
+      "used_by_experiments": [
+        "G12",
+        "G14"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "ntc",
+      "name": "NTC thermistor",
+      "folder": "03 Sensors/Resistive",
+      "reference_prefix": "RT",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "thermistor",
+        "NTC",
+        "temperature dependent resistor"
+      ],
+      "search_terms": [
+        "NTC thermistor",
+        "thermistor",
+        "NTC",
+        "temperature dependent resistor"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "1",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "2",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Thermistor resistor symbol with temperature indicator; explicitly NTC.",
+      "simulation": {
+        "requirement": "calibrated_equivalent_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {
+        "temperature": "external measurement/input",
+        "resistance": "calibrated R(T)"
+      },
+      "canonical_symbol_id": "ntc",
+      "used_by_experiments": [
+        "G11",
+        "G13"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "switch_spst",
+      "name": "SPST switch",
+      "folder": "04 Switches/Manual",
+      "reference_prefix": "SW",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "SPST",
+        "toggle switch",
+        "on off switch"
+      ],
+      "search_terms": [
+        "SPST switch",
+        "SPST",
+        "toggle switch",
+        "on off switch"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "1",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "2",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Single pole open/closed contact; default state explicit.",
+      "simulation": {
+        "requirement": "subcircuit_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {
+        "state": [
+          "open",
+          "closed"
+        ]
+      },
+      "canonical_symbol_id": "switch_spst",
+      "used_by_experiments": [
+        "G10",
+        "G18"
+      ],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "battery",
+      "name": "Battery",
+      "folder": "05 Sources/Cells",
+      "reference_prefix": "BT",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "battery",
+        "battery pack"
+      ],
+      "search_terms": [
+        "Battery",
+        "battery",
+        "battery pack"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "+",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "2",
+          "name": "-",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Multiple long/short plate pairs, visible polarity. Cell count/chemistry annotations do not create electrochemistry models.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
+        "ngspice_family": "V"
+      },
+      "configurable_properties": {
+        "voltage": "user supplied",
+        "cell_count": "annotation"
+      },
+      "canonical_symbol_id": "battery",
+      "used_by_experiments": [],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "common_support"
+    },
+    {
+      "id": "cell",
+      "name": "Cell",
+      "folder": "05 Sources/Cells",
+      "reference_prefix": "BT",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "cell",
+        "single cell"
+      ],
+      "search_terms": [
+        "Cell",
+        "cell",
+        "single cell"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "+",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "2",
+          "name": "-",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Single long/short plate pair, positive at long plate. Internal resistance added explicitly.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
+        "ngspice_family": "V"
+      },
+      "configurable_properties": {
+        "voltage": "user supplied"
+      },
+      "canonical_symbol_id": "cell",
+      "used_by_experiments": [],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "common_support"
+    },
+    {
+      "id": "source_dc",
+      "name": "DC voltage source",
+      "folder": "05 Sources/Voltage",
+      "reference_prefix": "V",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "DC source",
+        "ideal voltage source"
+      ],
+      "search_terms": [
+        "DC voltage source",
+        "DC source",
+        "ideal voltage source"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "+",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "2",
+          "name": "-",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Show + and - and DC value.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
+        "ngspice_family": "V"
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "source_dc",
+      "used_by_experiments": [],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "common_support"
+    },
+    {
+      "id": "source_pulse",
+      "name": "Pulse / step voltage source",
+      "folder": "05 Sources/Voltage",
+      "reference_prefix": "V",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "pulse source",
+        "step source",
+        "clock stimulus"
+      ],
+      "search_terms": [
+        "Pulse / step voltage source",
+        "pulse source",
+        "step source",
+        "clock stimulus"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "+",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "2",
+          "name": "-",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Circle with pulse waveform; finite rise/fall time and period/duty fields.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
+        "ngspice_family": "V"
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "source_pulse",
+      "used_by_experiments": [
+        "G08",
+        "G16"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "source_sine",
+      "name": "Sinusoidal voltage source",
+      "folder": "05 Sources/Voltage",
+      "reference_prefix": "V",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "AC source",
+        "sine source"
+      ],
+      "search_terms": [
+        "Sinusoidal voltage source",
+        "AC source",
+        "sine source"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "+",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "2",
+          "name": "-",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Circle with sine wave; amplitude, offset and frequency fields.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
+        "ngspice_family": "V"
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "source_sine",
+      "used_by_experiments": [
+        "G16"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "lamp",
+      "name": "Filament lamp",
+      "folder": "06 Outputs/Lamps",
+      "reference_prefix": "LP",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "filament lamp",
+        "incandescent bulb"
+      ],
+      "search_terms": [
+        "Filament lamp",
+        "filament lamp",
+        "incandescent bulb"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "1",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "2",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Circle with cross/filament; not a constant resistor unless explicitly labelled as an approximation.",
+      "simulation": {
+        "requirement": "electrothermal_or_empirical_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "lamp",
+      "used_by_experiments": [
+        "G05",
+        "G18"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "ammeter",
+      "name": "Ammeter",
+      "folder": "10 Instruments/Conventional",
+      "reference_prefix": "A",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "ammeter",
+        "current meter"
+      ],
+      "search_terms": [
+        "Ammeter",
+        "ammeter",
+        "current meter"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "+",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "2",
+          "name": "-",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Circle with A and two series terminals; model via declared sense element/burden or adapt native meter.",
+      "simulation": {
+        "requirement": "subcircuit_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "ammeter",
+      "used_by_experiments": [
+        "G07"
+      ],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "ohmmeter",
+      "name": "Ohmmeter",
+      "folder": "10 Instruments/Conventional",
+      "reference_prefix": "OHM",
+      "asset_kind": "diagram_block",
+      "aliases": [
+        "ohmmeter",
+        "resistance meter"
+      ],
+      "search_terms": [
+        "Ohmmeter",
+        "ohmmeter",
+        "resistance meter"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "+",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "2",
+          "name": "-",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Circle with Ω; measurement on an unpowered circuit. To execute resistance tests use the native multimeter workflow, not a passive two-pin drawing.",
+      "simulation": {
+        "requirement": "diagram_only",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Documentation block only; terminals are functional connections, not an asserted device pinout or executable model."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "ohmmeter",
+      "used_by_experiments": [
+        "G07"
+      ],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "voltmeter",
+      "name": "Voltmeter",
+      "folder": "10 Instruments/Conventional",
+      "reference_prefix": "VM",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "voltmeter",
+        "voltage meter"
+      ],
+      "search_terms": [
+        "Voltmeter",
+        "voltmeter",
+        "voltage meter"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "+",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "2",
+          "name": "-",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Circle with V and two parallel measurement terminals; finite input resistance explicit.",
+      "simulation": {
+        "requirement": "subcircuit_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "voltmeter",
+      "used_by_experiments": [
+        "G07"
+      ],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "bnc",
+      "name": "BNC-style signal connection",
+      "folder": "11 Connections/Connectors",
+      "reference_prefix": "J",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "BNC connector",
+        "coax connector"
+      ],
+      "search_terms": [
+        "BNC-style signal connection",
+        "BNC connector",
+        "coax connector"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "SIGNAL",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "SHIELD",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Coax connector with separate centre and shield contacts. Symbol does not impose a physical shielding/earthing model.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "bnc",
+      "used_by_experiments": [
+        "G16"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "connector2",
+      "name": "Two-way connector",
+      "folder": "11 Connections/Connectors",
+      "reference_prefix": "J",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "2 pin connector",
+        "two way terminal block"
+      ],
+      "search_terms": [
+        "Two-way connector",
+        "2 pin connector",
+        "two way terminal block"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "1",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "2",
+          "electrical_type": "passive",
+          "side": "left"
+        }
+      ],
+      "drawing_description": "Two independently numbered contacts; no internal short.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "connector2",
+      "used_by_experiments": [
+        "G18"
+      ],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "connector3",
+      "name": "Three-way connector",
+      "folder": "11 Connections/Connectors",
+      "reference_prefix": "J",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "3 pin header",
+        "three way connector"
+      ],
+      "search_terms": [
+        "Three-way connector",
+        "3 pin header",
+        "three way connector"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "1",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "2",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "3",
+          "name": "3",
+          "electrical_type": "passive",
+          "side": "left"
+        }
+      ],
+      "drawing_description": "Three independently numbered contacts; generic connector without a chosen footprint.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "connector3",
+      "used_by_experiments": [],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "common_support"
+    },
+    {
+      "id": "test_point",
+      "name": "Test point",
+      "folder": "11 Connections/Terminals",
+      "reference_prefix": "TP",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "test point",
+        "measurement point"
+      ],
+      "search_terms": [
+        "Test point",
+        "test point",
+        "measurement point"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "TIP",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Single electrical node with open test-point circle and reference. Map as a node/terminal, not an extra load.",
+      "simulation": {
+        "requirement": "primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "test_point",
+      "used_by_experiments": [],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "common_support"
+    },
+    {
+      "id": "annotation",
+      "name": "Text / block annotation",
+      "folder": "12 Editor Primitives",
+      "reference_prefix": "",
+      "asset_kind": "editor_primitive",
+      "aliases": [
+        "Text / block annotation"
+      ],
+      "search_terms": [
+        "Text / block annotation"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [],
+      "drawing_description": "Native text/shape annotation for physical inputs, model assumptions and non-electrical apparatus.",
+      "simulation": {
+        "requirement": "editor_primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Use the editor feature; do not turn connectivity primitives into decorative, electrically disconnected library symbols."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "annotation",
+      "used_by_experiments": [
+        "G18"
+      ],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "ground",
+      "name": "SPICE reference ground",
+      "folder": "12 Editor Primitives",
+      "reference_prefix": "",
+      "asset_kind": "editor_primitive",
+      "aliases": [
+        "SPICE reference ground"
+      ],
+      "search_terms": [
+        "SPICE reference ground"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "0",
+          "electrical_type": "passive",
+          "side": "top"
+        }
+      ],
+      "drawing_description": "Native ground mapped to node 0; distinguish from a decorative protective-earth mark.",
+      "simulation": {
+        "requirement": "editor_primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Use the editor feature; do not turn connectivity primitives into decorative, electrically disconnected library symbols."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "ground",
+      "used_by_experiments": [],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "common_support"
+    },
+    {
+      "id": "junction",
+      "name": "Connected junction",
+      "folder": "12 Editor Primitives",
+      "reference_prefix": "",
+      "asset_kind": "editor_primitive",
+      "aliases": [
+        "Connected junction"
+      ],
+      "search_terms": [
+        "Connected junction"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [],
+      "drawing_description": "Native connection dot on joining wires; crossings without a junction remain distinguishable.",
+      "simulation": {
+        "requirement": "editor_primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Use the editor feature; do not turn connectivity primitives into decorative, electrically disconnected library symbols."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "junction",
+      "used_by_experiments": [],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "common_support"
+    },
+    {
+      "id": "net_label",
+      "name": "Net label",
+      "folder": "12 Editor Primitives",
+      "reference_prefix": "",
+      "asset_kind": "editor_primitive",
+      "aliases": [
+        "Net label"
+      ],
+      "search_terms": [
+        "Net label"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "NODE",
+          "electrical_type": "passive",
+          "side": "left"
+        }
+      ],
+      "drawing_description": "Native label electrically attached to the named node.",
+      "simulation": {
+        "requirement": "editor_primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Use the editor feature; do not turn connectivity primitives into decorative, electrically disconnected library symbols."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "net_label",
+      "used_by_experiments": [],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "common_support"
+    },
+    {
+      "id": "no_connect",
+      "name": "No-connect marker",
+      "folder": "12 Editor Primitives",
+      "reference_prefix": "",
+      "asset_kind": "editor_primitive",
+      "aliases": [
+        "No-connect marker"
+      ],
+      "search_terms": [
+        "No-connect marker"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "PIN",
+          "electrical_type": "passive",
+          "side": "left"
+        }
+      ],
+      "drawing_description": "Native intentional-unconnected pin marker; not an electrical source or short.",
+      "simulation": {
+        "requirement": "editor_primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Use the editor feature; do not turn connectivity primitives into decorative, electrically disconnected library symbols."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "no_connect",
+      "used_by_experiments": [],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "common_support"
+    },
+    {
+      "id": "wire",
+      "name": "Wire",
+      "folder": "12 Editor Primitives",
+      "reference_prefix": "",
+      "asset_kind": "editor_primitive",
+      "aliases": [
+        "Wire"
+      ],
+      "search_terms": [
+        "Wire"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [],
+      "drawing_description": "Electrical wire between snapped nodes; native editor operation, not a decorative line.",
+      "simulation": {
+        "requirement": "editor_primitive",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "Use the editor feature; do not turn connectivity primitives into decorative, electrically disconnected library symbols."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "wire",
+      "used_by_experiments": [],
+      "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "common_support"
+    }
+  ]
+}

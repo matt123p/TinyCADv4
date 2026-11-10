@@ -47,6 +47,10 @@ not a universal university syllabus. Research checked on 10 November 2026.
 | First-year electronics degrees | [Electronics experiments](25-first-year-degree-electronics-experiments.md) |
 | First-year engineering degrees, shared material and discipline applications | [Electronics experiments](26-first-year-degree-engineering-electronics-experiments.md) |
 
+For course-specific symbol lists, see the [symbol-library handoff](symbol-libraries/README.md),
+[complete readable inventory](symbol-libraries/INVENTORY.md), and
+[combined JSON manifest](symbol-libraries/library-manifest.json).
+
 ## Scope and status
 
 These documents describe an integrated ngspice experience with the approachable circuit-and-instruments workflow associated with Multisim. The feature catalogue includes both implemented foundation features and planned workbench features; it is not a claim that the whole catalogue is available. User stories remain research-informed hypotheses pending user testing. Use the implementation status and TODO documents to distinguish working code, local verification and outstanding platform qualification.
