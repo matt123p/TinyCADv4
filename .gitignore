@@ -31,12 +31,14 @@ _ReSharper*/
 #Nuget packages folder
 packages/
 /dist/*
-/node_modules/*
+node_modules/*
 *.autosave
-/.parcel-cache/*
+.parcel-cache/*
 .env.local
 .certs/
-/todo.md
-/assets/
-/server.bundle.js
+todo.md
+assets/
+server.bundle.js
 .DS_Store
+.tmp/
+build/

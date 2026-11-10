@@ -2,12 +2,13 @@ import { Dispatch } from 'react';
 import { docDrawing } from '../state/undo/undo';
 import TPrintSheet from '../components/svg/PrintSheet';
 import React from 'react';
-import { render } from 'react-dom';
+import { render, unmountComponentAtNode } from 'react-dom';
 import PDFDocument from 'pdfkit';
 import SVGtoPDF from 'svg-to-pdfkit';
 import blobStream from 'blob-stream';
 import { actionSelectDialog } from '../state/dispatcher/AppDispatcher';
 import { openExternalUrl } from '../util/navigation';
+import { rasterizeMarkdown } from './markdownExport';
 
 // Helper function to convert a Blob to base64
 function blobToBase64(blob: Blob): Promise<string> {
@@ -28,7 +29,7 @@ function blobToBase64(blob: Blob): Promise<string> {
 function generatePdfBlob(
   state: docDrawing,
 ): Promise<Blob> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const sheet1 = state.docStore.present.drawing.sheets[0];
 
     // TinyCAD units -> PDF Points
@@ -48,6 +49,8 @@ function generatePdfBlob(
 
     // Write the document to a blob
     let stream = doc.pipe(blobStream());
+    stream.on('error', reject);
+    doc.on('error', reject);
     stream.on('finish', function () {
       let blob = stream.toBlob('application/pdf');
       resolve(blob);
@@ -120,7 +123,7 @@ function generatePdfBlob(
           .then((blob) => blob?.arrayBuffer())
           .then((arrayBuffer) => doc.registerFont(font.name, arrayBuffer));
       }),
-    ).then(() => {
+    ).then(async () => {
       for (let si = 0; si < state.docStore.present.drawing.sheets.length; ++si) {
         const sheet = state.docStore.present.drawing.sheets[si];
         const svg = (
@@ -136,19 +139,27 @@ function generatePdfBlob(
         );
 
         const element = document.createElement('div');
-        render(svg, element);
-
-        doc.addPage({
-          size: [
-            sheet.details.page_size[0] * units,
-            sheet.details.page_size[1] * units,
-          ],
-        });
-        SVGtoPDF(doc, element.children[0] as SVGElement, 0, 0, { useCSS: true });
+        element.style.cssText = 'position:fixed;left:-100000px;top:0;pointer-events:none';
+        document.body.appendChild(element);
+        try {
+          render(svg, element);
+          const drawing = element.children[0] as SVGElement;
+          await rasterizeMarkdown(drawing);
+          doc.addPage({
+            size: [
+              sheet.details.page_size[0] * units,
+              sheet.details.page_size[1] * units,
+            ],
+          });
+          SVGtoPDF(doc, drawing, 0, 0, { useCSS: true });
+        } finally {
+          unmountComponentAtNode(element);
+          element.remove();
+        }
       }
 
       doc.end();
-    });
+    }).catch(reject);
   });
 }
 
@@ -179,6 +190,7 @@ function generatePrintHtml(state: docDrawing): string {
     // Add page break between sheets (except for the last one)
     const pageBreak = si < sheets.length - 1 ? 'page-break-after: always;' : '';
     svgContent += `<div style="${pageBreak}">${element.innerHTML}</div>`;
+    unmountComponentAtNode(element);
   }
 
   const sheet1 = sheets[0];
