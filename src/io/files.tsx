@@ -48,6 +48,7 @@ import { actionEditLibrarySymbol, actionSelectLibrarySymbol } from '../state/dis
 import { get_global_id } from '../util/global_id';
 import { openCurrentAppUrl, openExternalUrl } from '../util/navigation';
 import { normalizeUserConfig, sortLibrariesByConfig } from './libraryConfig';
+import { commitExample } from './examples';
 
 export type FileIdType = string | FileSystemFileHandle;
 
@@ -100,6 +101,9 @@ function checkSaveNeeded(getState: { (): docDrawing }): boolean {
 export function performPendingAction(pendingAction: UnsavedAction) {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
     switch (pendingAction.type) {
+      case 'file-open-example':
+        commitExample(dispatch, pendingAction);
+        break;
       case 'file-new':
         // Create a new blank drawing and reset file data
         dispatch(actionSetDocument(blank(), 'tCad1.dsn', null, null));
@@ -250,6 +254,8 @@ function internalLibrarySave(
   if (saveInProgress) {
     return;
   }
+
+  if (library?.readOnly) return;
 
   if (editSymbol) {
     // First write back the edited symbol to the library
@@ -789,6 +795,9 @@ export function handleMenuCommand(command: string) {
         } else {
           dispatch(fileNew() as any);
         }
+        break;
+      case 'file-open-example':
+        dispatch(actionSelectDialog('open_example', null));
         break;
       case 'file-open':
         dispatch(fileOpen() as any);

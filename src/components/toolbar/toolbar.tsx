@@ -501,6 +501,10 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
     return (
       <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
         <FluentToolbar>
+          <ToolbarButton aria-label={t('examples.openExample')} title={t('examples.openExample')}
+            icon={<FolderOpenRegular />} onClick={() => props.dispatch(actionSelectDialog('open_example', null))}>
+            {t('examples.openExample')}
+          </ToolbarButton>
           {process.env.TARGET_SYSTEM === 'filesystem' && (
              <ToolbarButton
                 aria-label={t('toolbar.open')}
@@ -669,6 +673,11 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           icon={<DocumentAddRegular />}
           onClick={() => props.dispatch(fileNew())}
         />} 
+
+        <ToolbarButton aria-label={t('examples.openExample')} title={t('examples.openExample')}
+          icon={<FolderOpenRegular />} onClick={() => props.dispatch(actionSelectDialog('open_example', null))}>
+          {t('examples.openExample')}
+        </ToolbarButton>
 
         {/* Save buttons */}
         <ToolbarButton

@@ -44,3 +44,6 @@ packages/
 /build/
 /public/engines/
 /.tmp/
+# Generated plugin packages and browser test results
+/plugin-release/
+/test-results/

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TinyCAD bundled libraries",
+  "type": "object",
+  "required": ["version", "libraries"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "libraries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "path"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$",
+            "description": "Unique stable identifier used to remember user selections."
+          },
+          "name": { "type": "string", "minLength": 1 },
+          "path": {
+            "type": "string",
+            "pattern": "\\.[tT][cC][lL][iI][bB]$",
+            "description": "Relative file path inside bundled-libraries, using forward slashes. Absolute paths, traversal, and URLs are rejected."
+          },
+          "folder": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional display folder, with / separating nested subfolders."
+          },
+          "description": { "type": "string" },
+          "symbolFolders": {
+            "type": "array",
+            "description": "Optional folders of symbols inside this library. Unlisted symbols retain their embedded folder or stay at the root.",
+            "items": {
+              "type": "object",
+              "required": ["path", "symbols"],
+              "properties": {
+                "path": { "type": "string", "minLength": 1 },
+                "symbols": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "integer", "minimum": 0 }
+                    ]
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

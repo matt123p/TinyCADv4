@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TinyCAD bundled examples",
+  "type": "object",
+  "required": ["version", "groups"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "assets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Additional bundled images used by Markdown descriptions."
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          { "$ref": "#/$defs/content" },
+          {
+            "type": "object",
+            "required": ["examples"],
+            "properties": {
+              "examples": {
+                "type": "array",
+                "items": {
+                  "allOf": [
+                    { "$ref": "#/$defs/content" },
+                    {
+                      "type": "object",
+                      "required": ["path"],
+                      "properties": {
+                        "path": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Relative path to a TinyCAD .dsn drawing."
+                        }
+                      }
+                    }
+                  ],
+                  "unevaluatedProperties": false
+                }
+              }
+            }
+          }
+        ],
+        "unevaluatedProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "content": {
+      "type": "object",
+      "required": ["id", "title", "preview"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$" },
+        "title": { "type": "string", "minLength": 1 },
+        "preview": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative PNG, JPEG, WebP, GIF, AVIF, or SVG image path."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Complete inline Markdown description."
+        },
+        "descriptionPath": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative .md or .markdown description file path."
+        }
+      },
+      "oneOf": [
+        {
+          "required": ["description"],
+          "not": { "required": ["descriptionPath"] }
+        },
+        {
+          "required": ["descriptionPath"],
+          "not": { "required": ["description"] }
+        }
+      ]
+    }
+  }
+}

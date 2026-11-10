@@ -2995,21 +2995,22 @@ export class updateView {
         display: name.ShowRef,
       },
       ...name.Attributes.filter(
-        (attribute) =>
-          attribute.AttName !== 'Reference' &&
-          (attribute.AttName.indexOf('$$') !== 0 || attribute.AttName.startsWith('$$SPICE')),
+        (attribute) => attribute.AttName !== 'Reference',
       ).map((attribute) => ({
         description: attribute.AttName,
         value: attribute.AttValue,
-        display: attribute.AttName.startsWith('$$SPICE') ? TextDisplayMethod.NeverShow : attribute.ShowAtt,
+        display: attribute.AttName.startsWith('$$')
+          ? TextDisplayMethod.NeverShow
+          : attribute.ShowAtt,
       })),
     ];
 
     const text = fieldDefinitions.map((field) => {
       const existingField = existingFields.get(field.description);
-      const value = keepFieldValues && existingField
-        ? existingField.value
-        : field.value;
+      const value =
+        keepFieldValues && existingField && !field.description.startsWith('$$')
+          ? existingField.value
+          : field.value;
 
       return {
         description: field.description,
@@ -3475,8 +3476,12 @@ export class updateView {
     if (!point) {
       point = [100, 100];
     }
-    point[0] = point[0] + selected_symboldef.outlines[0].size[0] / 2.0;
-    point[1] = point[1] + selected_symboldef.outlines[0].size[1] / 2.0;
+    // Centering an odd number of grid cells can leave every pin half a cell
+    // off-grid. Snap the insertion anchor after applying the center offset.
+    point = new Snap(sheet.details.grid, sheet.details.grid_snap).snap([
+      point[0] + selected_symboldef.outlines[0].size[0] / 2.0,
+      point[1] + selected_symboldef.outlines[0].size[1] / 2.0,
+    ]);
 
     const update_symbol = new updateSymbol(null);
 
@@ -3513,16 +3518,23 @@ export class updateView {
           ],
         },
         ...name.Attributes.filter(
-          (a) => a.AttName !== 'Reference' && (a.AttName.indexOf('$$') !== 0 || a.AttName.startsWith('$$SPICE')),
+          (a) => a.AttName !== 'Reference',
         ).map((a) => ({
           position: [
             5.0,
-            posfn(!a.AttName.startsWith('$$SPICE') && update_symbol.show_text(a.ShowAtt, a.AttValue)),
+            posfn(
+              !a.AttName.startsWith('$$') &&
+                update_symbol.show_text(a.ShowAtt, a.AttValue),
+            ),
           ],
           value: a.AttValue,
           description: a.AttName,
-          show: !a.AttName.startsWith('$$SPICE') && update_symbol.show_text(a.ShowAtt, a.AttValue),
-          display: a.AttName.startsWith('$$SPICE') ? TextDisplayMethod.NeverShow : a.ShowAtt,
+          show:
+            !a.AttName.startsWith('$$') &&
+            update_symbol.show_text(a.ShowAtt, a.AttValue),
+          display: a.AttName.startsWith('$$')
+            ? TextDisplayMethod.NeverShow
+            : a.ShowAtt,
         })),
       ],
       hints: [],

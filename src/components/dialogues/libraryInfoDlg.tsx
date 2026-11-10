@@ -81,6 +81,7 @@ interface LibraryInfoDialogProps {
   name: string;
   path: string;
   bad?: boolean;
+  readOnly?: boolean;
   loadError?: tclibLoadError;
 }
 
@@ -91,8 +92,8 @@ export const LibraryInfoDialog: FunctionComponent<LibraryInfoDialogProps> = (
   const { t } = useTranslation();
   const styles = useStyles();
   const canOpenContainingFolder =
-    !!window.electronAPI?.openContainingFolder && !!props.path;
-  const canEdit = !props.bad && !!props.path;
+    !props.readOnly && !!window.electronAPI?.openContainingFolder && !!props.path;
+  const canEdit = !props.readOnly && !props.bad && !!props.path;
 
   const editLibrary = () => {
     if (!canEdit) {
@@ -152,13 +153,13 @@ export const LibraryInfoDialog: FunctionComponent<LibraryInfoDialogProps> = (
               >
                 {t('common.edit')}
               </Button>
-              <Button
+              {!props.readOnly && <Button
                 appearance="secondary"
                 icon={<DeleteRegular />}
                 onClick={removeFromList}
               >
                 {t('common.remove')}
-              </Button>
+              </Button>}
               {canOpenContainingFolder && (
                 <Button
                   appearance="secondary"

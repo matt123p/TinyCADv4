@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "libraries": [
+    {
+      "id": "spice",
+      "name": "SPICE essentials",
+      "path": "spice/spice.tclib",
+      "description": "Standard onetransistor symbols with SPICE models, sources, and model/analysis definitions. Includes generic teaching models and a 741-style behavioral model."
+    }
+  ]
+}

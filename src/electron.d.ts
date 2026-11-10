@@ -31,7 +31,14 @@ declare global {
                 content: string | Uint8Array
             }) => void;
 
+            // Bundled examples
+            exampleCatalog: () => Promise<unknown>;
+            readExampleResource: (path: string) => Promise<Uint8Array>;
+
             // Libraries
+            bundledLibraryCatalog: () => Promise<unknown>;
+            readBundledLibrary: (id: string) => Promise<Uint8Array>;
+            bundledLibrarySelection: (ids?: string[]) => Promise<unknown>;
             loadLibrary: (file?: { name?: string, id?: string, silent?: boolean, folderId?: string | null }) => void;
             saveLibrary: (data: {
                 name: string;

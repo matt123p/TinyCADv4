@@ -28,6 +28,7 @@ import { dsnBomEntry } from '../../model/dsnBomEntry';
 import { LibraryActionTypes } from '../actions/libraryActions';
 import { tclib, tclibLibraryEntry } from '../../model/tclib';
 import { updateLibrary } from '../../manipulators/updateLibrary';
+import { changeSymbolFolders } from '../../model/symbolFolders';
 import { DocItemTypes } from '../../model/dsnItem';
 import { AppUiActionTypes } from '../actions/appActions';
 
@@ -989,6 +990,7 @@ export function DocStoreReducer(
     // Editing a library
     //
     case LibraryActionTypes.EditLibrary:
+      if (action.lib.readOnly) return state;
       update_library = new updateLibrary(action.lib);
       if (action.lib.names.length == 0) {
         update_library.lib = update_library.addNewLibrarySymbol();
@@ -1001,6 +1003,24 @@ export function DocStoreReducer(
       });
       view = null;
       break;
+
+    case LibraryActionTypes.ChangeSymbolFolders: {
+      if (!state.editLibrary || state.editLibrary.readOnly) return state;
+      let library: tclib;
+      try { library = changeSymbolFolders(state.editLibrary, action.change); }
+      catch { return state; }
+      if (library === state.editLibrary) return state;
+      const entry = library.names.find(name => name.NameID === state.editSymbol?.NameID);
+      const editSymbol = entry && state.editSymbol
+        ? { ...state.editSymbol, folder: entry.folder } : state.editSymbol;
+      // Keep the active symbol drawing and unsaved metadata while changing its folder.
+      if (entry) library = { ...library, names: library.names.map(name => name === entry ? editSymbol : name) };
+      return update(state, {
+        editLibrary: { $set: library },
+        editSymbol: { $set: editSymbol },
+        drawingVersion: { $set: state.drawingVersion + 1 },
+      });
+    }
 
     case LibraryActionTypes.UpdateCurrentLibrary:
       state = update(state, {
@@ -1201,7 +1221,7 @@ export function DocStoreReducer(
 
     case LibraryActionTypes.AddLibrarySymbol:
       update_library = new updateLibrary(state.editLibrary);
-      update_library.lib = update_library.addNewLibrarySymbol();
+      update_library.lib = update_library.addNewLibrarySymbol(state.editSymbol?.folder);
       state = update(state, {
         editLibrary: {
           $set: update_library.lib,
