@@ -1,7 +1,10 @@
 # Sources, probes and charts
 
-The toolbar **SPICE** menu offers **Simulate**, **Insert Probe**, **Insert Source**
-and **Insert Ground**, plus differential/current probes and controlled sources.
+The toolbar **SPICE** menu offers **Simulate** and chart visibility controls.
+Its **SPICE** sub-menu contains **Insert Probe**, **Insert Source**,
+**Insert Ground**, differential/current probes and controlled sources.
+Its **Lab Equipment** sub-menu contains the oscilloscope, multimeter,
+function generator and bench supply.
 Choose a tool, move its preview onto the schematic, and click to place it.
 Right-click cancels. Ground and probe tips snap to wires and split them at the
 connection point. Components are embedded in the drawing; no symbol-library
