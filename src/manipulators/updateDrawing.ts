@@ -26,6 +26,7 @@ import { updateView } from './updateView';
 import { dsnView, FindResult } from '../model/dsnView';
 import { updateSymbol } from './updateSymbol';
 import { dsnBomEntry } from '../model/dsnBomEntry';
+import { readControl } from '../simulation/controls';
 
 // Constructor
 export class updateDrawing {
@@ -372,6 +373,10 @@ export class updateDrawing {
       b = a;
     }
 
+    const instrumentSymbols = new Set(netlist.symbols
+      .filter(([, symbol]) => readControl(symbol)?.kind === 'instrument')
+      .map(([sheet, symbol]) => `${sheet}:${symbol._id}`));
+
     // Now check each net for problems
     for (let net in netlist.nets) {
       if (netlist.nets.hasOwnProperty(net)) {
@@ -465,7 +470,9 @@ export class updateDrawing {
         } else if (
           drc_options.UnConnected &&
           total === 1 &&
-          eprop.not_connecteds === 0
+          eprop.not_connecteds === 0 &&
+          !netlist.nets[net].every(node => node.symbol &&
+            instrumentSymbols.has(`${node.sheet}:${node.symbol._id}`))
         ) {
           this._addDrcError(drawing, r, 'Unconnected nets', netlist.nets[net]);
         }

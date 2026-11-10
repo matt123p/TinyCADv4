@@ -619,8 +619,17 @@ export function SimulationSheet({
               sheet={sheet}
               net={net}
               data={data}
+              acquisitionData={
+                originalData
+                  ? {
+                      ...(plots[plotIndex] || originalData),
+                      log: originalData.log,
+                    }
+                  : undefined
+              }
               run={run}
               fresh={!running && !!data && fresh}
+              checking={acquisition.checking}
               onAcquisition={setSelectedRun}
             />
           </div>

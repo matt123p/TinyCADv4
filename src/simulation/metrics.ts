@@ -8,6 +8,11 @@ import {
 } from './explorerTypes';
 import { parseQuantity } from './numbers';
 import { advancedMetric, advancedKinds } from './advancedMetrics';
+import {
+  measurementAxis,
+  measurementLabels,
+  measurementUsesReference,
+} from './measurementPresentation';
 
 export const metricAlgorithm = 'tinycad-metrics-1' as const;
 const vector = (data: ResultData, name: string) =>
@@ -54,7 +59,6 @@ export function measure(
   data?: ResultData,
 ): MeasurementResult {
   const base = { id: def.id, unit: '', explanation: '' };
-  if ((advancedKinds as readonly string[]).includes(def.kind)) return advancedMetric(def,data,measure);
   if (!metricKinds.includes(def.kind))
     return {
       ...base,
@@ -62,13 +66,38 @@ export function measure(
       explanation: 'Unsupported named measurement.',
     };
   try {
-    if (!data) throw new Error('No acquisition available.');
+    if (!data)
+      throw new Error(
+        'No acquisition available. Run a simulation or select a recorded acquisition.',
+      );
+    const required = measurementAxis(def.kind);
+    if (required && data.scale !== required)
+      throw new Error(
+        `${measurementLabels[def.kind]} requires ${
+          required === 'time'
+            ? 'a transient time-domain acquisition (tran)'
+            : 'an AC frequency sweep (ac)'
+        }. The selected acquisition ${
+          data.scale
+            ? `uses a ${data.scale} axis`
+            : 'contains scalar/DC values and has no time or frequency axis'
+        }.`,
+      );
+    if ((advancedKinds as readonly string[]).includes(def.kind))
+      return advancedMetric(def, data, measure);
+    if (!def.source)
+      throw new Error('Select a signal / component for this measurement.');
     const signal = vector(data, def.source),
-      reference = def.reference && vector(data, def.reference);
+      reference =
+        measurementUsesReference(def.kind) &&
+        def.reference &&
+        vector(data, def.reference);
     if (!signal) throw new Error(`Signal ${def.source} is unavailable.`);
-    if (def.reference && !reference)
+    if (measurementUsesReference(def.kind) && def.reference && !reference)
       throw new Error(`Reference ${def.reference} is unavailable.`);
     const axis = vector(data, data.scale);
+    if (required && !axis)
+      throw new Error(`The acquisition is missing its ${required} vector.`);
     const x = axis?.real || signal.real.map((_, i) => i);
     if (
       !x.length ||
@@ -79,10 +108,33 @@ export function measure(
         'Measurement requires finite samples and a strictly increasing axis.',
       );
     const axisUnit = axis?.unit || '';
-    const from = def.from ? parseQuantity(def.from, axisUnit) : x[0],
-      to = def.to ? parseQuantity(def.to, axisUnit) : x.at(-1);
-    if (from > to || from < x[0] || to > x.at(-1))
-      throw new Error('Measurement window is outside the acquisition.');
+    const setting = (value: string, label: string, unit: string) => {
+      try {
+        return parseQuantity(value, unit);
+      } catch (error) {
+        throw new Error(
+          `${label} "${value}" is invalid: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    };
+    const from = def.from ? setting(def.from, 'Window start', axisUnit) : x[0],
+      to = def.to ? setting(def.to, 'Window end', axisUnit) : x.at(-1);
+    if (from > to)
+      throw new Error(
+        `Window start (${from} ${axisUnit}) is after window end (${to} ${axisUnit}).`,
+      );
+    if (from < x[0] || to > x.at(-1))
+      throw new Error(
+        `Requested window ${from}–${to} ${axisUnit} is outside the acquired range ${
+          x[0]
+        }–${x.at(
+          -1,
+        )} ${axisUnit}. Acquire a longer/wider record or change the window.`,
+      );
+    if (signal.real.some((n) => !Number.isFinite(n)))
+      throw new Error(`Signal ${def.source} contains non-finite samples.`);
     const xx = [
       from,
       ...x.filter((n) => n > from && n < to),
@@ -106,7 +158,8 @@ export function measure(
       unit = signal.unit;
     const min = () => yy.reduce((a, b) => Math.min(a, b), Infinity);
     const max = () => yy.reduce((a, b) => Math.max(a, b), -Infinity);
-    const point = () => (def.at ? parseQuantity(def.at, axisUnit) : from);
+    const point = () =>
+      def.at ? setting(def.at, 'Sample position', axisUnit) : from;
     let value: number;
     const timing = [
       'riseTime',
@@ -197,11 +250,25 @@ export function measure(
         unit = 'Hz';
       }
     } else if (timing) {
-      const initial = def.initial ? parseQuantity(def.initial, unit) : min(),
-        final = def.final ? parseQuantity(def.final, unit) : max();
+      const configuredLevels = [
+        'riseTime',
+        'fallTime',
+        'overshoot',
+        'undershoot',
+        'settlingTime',
+        'timeConstant',
+      ].includes(def.kind);
+      const initial =
+          configuredLevels && def.initial
+            ? setting(def.initial, 'Initial level', unit)
+            : min(),
+        final =
+          configuredLevels && def.final
+            ? setting(def.final, 'Final level', unit)
+            : max();
       const span = final - initial;
       const level = def.threshold
-        ? parseQuantity(def.threshold, unit)
+        ? setting(def.threshold, 'Crossing level', unit)
         : (initial + final) / 2;
       const up = crossings(xx, yy, level, 1),
         down = crossings(xx, yy, level, -1);
@@ -228,12 +295,32 @@ export function measure(
           ).find((n) => n > starts[0]);
         value = typeof end === 'number' ? end - starts[0] : NaN;
       } else if (def.kind === 'period' || def.kind === 'frequency') {
+        if (up.length < 2)
+          throw new Error(
+            `${
+              measurementLabels[def.kind]
+            } requires two rising crossings of ${level} ${signal.unit}; found ${
+              up.length
+            } in the selected time window.`,
+          );
         value = up[1] - up[0];
         if (def.kind === 'frequency') {
           value = 1 / value;
           unit = 'Hz';
         }
       } else if (def.kind === 'pulseWidth' || def.kind === 'dutyCycle') {
+        if (!up.length)
+          throw new Error(
+            `No rising crossing of ${level} ${signal.unit} was found in the selected time window.`,
+          );
+        if (!down.some((n) => n > up[0]))
+          throw new Error(
+            `No falling crossing after the first rising crossing of ${level} ${signal.unit} was found in the selected time window.`,
+          );
+        if (def.kind === 'dutyCycle' && up.length < 2)
+          throw new Error(
+            'Duty cycle requires two rising crossings to define a full period; only one was found.',
+          );
         value = (down.find((n) => n > up[0]) ?? NaN) - up[0];
         if (def.kind === 'dutyCycle') {
           value = (100 * value) / (up[1] - up[0]);
@@ -322,7 +409,13 @@ export function measure(
     }
     if (!Number.isFinite(value))
       throw new Error(
-        'Required crossings or samples were not found in this window.',
+        `${measurementLabels[def.kind]} could not be calculated: the required ${
+          def.kind === 'riseTime' || def.kind === 'fallTime'
+            ? '10% and 90% crossings'
+            : def.kind === 'timeConstant'
+            ? '63.2% crossing'
+            : 'crossings or samples'
+        } were not found in the selected window.`,
       );
     return {
       ...base,

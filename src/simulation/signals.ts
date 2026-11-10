@@ -10,6 +10,7 @@ import { measuredDevice } from './deviceReadings';
 import { FindResult } from '../model/dsnView';
 import { MeasurementDefinition } from './explorerTypes';
 import { TraceDefinition } from './traces';
+import { instrumentInputPin } from './instruments';
 
 export function measurementLocation(
   drawing: dsnDrawing,
@@ -142,7 +143,7 @@ export function resolvedSignals(
         );
         if (probe) vectors.push({ ...probe, name: key('probe') });
       }
-      const a = node(spicePinLabel('1', item, net)),
+      const a = node(spicePinLabel(control?.kind === 'instrument' ? instrumentInputPin(control) : '1', item, net)),
         b = node(spicePinLabel('2', item, net));
       if (!a || !b) continue;
       const voltage: ResultVector = {

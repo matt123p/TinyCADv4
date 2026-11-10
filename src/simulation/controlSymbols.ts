@@ -8,6 +8,7 @@ import { updateWire } from '../manipulators/updateWire';
 import {
   defaultInstrument,
   instrumentNames,
+  InstrumentConfig,
   InstrumentType,
 } from './instruments';
 import {
@@ -18,6 +19,15 @@ import {
   readControl,
   SourceConfig,
 } from './controls';
+
+import {
+  instrumentArtwork,
+  instrumentArtworkKey,
+  instrumentPins,
+  instrumentLayouts,
+  legacyInstrumentArtwork,
+  STUDENT_DEVICE_SCALE,
+} from './instrumentSymbols';
 
 export type ControlTool =
   | InstrumentType
@@ -44,7 +54,11 @@ const stroke = {
   rounded_rect: false,
 };
 const COMPACT_SCALE = 0.25;
-function controlPins(config: SpiceControl, scale = COMPACT_SCALE): dsnPin[] {
+function controlPins(
+  config: SpiceControl,
+  scale = COMPACT_SCALE,
+  nextId = get_global_id,
+): dsnPin[] {
   const pin = (
     number: string,
     name: string,
@@ -54,7 +68,7 @@ function controlPins(config: SpiceControl, scale = COMPACT_SCALE): dsnPin[] {
     new updatePin({
       ...font,
       NodeName: DocItemTypes.Pin,
-      _id: get_global_id(),
+      _id: nextId(),
       point: [point[0] * scale, point[1] * scale],
       font_size: scale === 1 ? 10 : 8,
       number,
@@ -175,91 +189,23 @@ function controlBody(
   });
   const controlled = config.kind === 'controlled';
   if (config.kind === 'instrument') {
-    const scope = config.type === 'scope',
-      left = scope ? -140 : -40;
-    const body = [
-      line([
-        [left, 40],
-        [40, 40],
-        [40, 120],
-        [left, 120],
-        [left, 40],
-      ]),
-      line([
-        [left + 8, 50],
-        [30, 50],
-        [30, 100],
-        [left + 8, 100],
-        [left + 8, 50],
-      ]),
+    return [
+      ...legacyInstrumentArtwork(
+        config,
+        scale,
+        nextId,
+        waveformGlyph(config.source, 0, 1),
+        controlPins(config, scale, nextId),
+      ),
+      {
+        ...stroke,
+        stroked: false,
+        NodeName: DocItemTypes.Rectangle,
+        _id: nextId(),
+        point: [(config.type === 'scope' ? -140 : -40) * scale, 0],
+        point_b: [40 * scale, 160 * scale],
+      },
     ];
-    if (config.type === 'scope' || config.type === 'generator')
-      body.push(
-        line(
-          waveformGlyph(
-            config.type === 'generator'
-              ? config.source
-              : { ...defaultSource(), waveform: 'sine' },
-            75,
-            15,
-          ).map(([x, y]) => [scope ? x - 45 : x, y]),
-        ),
-      );
-    else if (config.type === 'supply')
-      body.push(
-        line([
-          [-20, 66],
-          [20, 66],
-        ]),
-        line([
-          [-10, 79],
-          [10, 79],
-        ]),
-        line([
-          [0, 55],
-          [0, 75],
-        ]),
-      );
-    else
-      body.push(
-        line(
-          config.mode.endsWith('A')
-            ? [
-                [-18, 90],
-                [0, 60],
-                [18, 90],
-                [10, 77],
-                [-10, 77],
-              ]
-            : config.mode === 'ohm'
-            ? [
-                [-22, 90],
-                [-12, 90],
-                [-12, 80],
-                [-18, 72],
-                [-12, 60],
-                [12, 60],
-                [18, 72],
-                [12, 80],
-                [12, 90],
-                [22, 90],
-              ]
-            : [
-                [-18, 60],
-                [0, 90],
-                [18, 60],
-              ],
-        ),
-      );
-    body.push({
-      ...stroke,
-      stroked: false,
-      NodeName: DocItemTypes.Rectangle,
-      _id: nextId(),
-      point: [left * scale, 0],
-      point_b: [40 * scale, 160 * scale],
-    });
-    return body;
   }
   const body: DocItem[] = controlled
     ? [
@@ -370,22 +316,233 @@ function controlBody(
   return body;
 }
 
-// Refresh older saved source artwork for display without editing the drawing.
-export function sourceDrawingItems(symbol: dsnSymbol): DocItem[] | undefined {
+// Refresh generated instrument/source artwork without moving saved electrical anchors.
+function nativeInstrumentBody(
+  config: InstrumentConfig,
+  pins: dsnPin[],
+  textScale: number,
+  nextId: () => number,
+): DocItem[] {
+  const layout = instrumentLayouts[config.type];
+  return [
+    ...instrumentArtwork(
+      config,
+      nextId,
+      waveformGlyph(config.source, 0, 1),
+      textScale,
+    ),
+    // Saved circuits retain their electrical anchors. Coloured probe leads join
+    // those anchors to the full-sized device's front-panel sockets.
+    ...pins.flatMap((pin): DocItem[] => {
+      const port = layout.ports.find((p) => p.number === pin.number);
+      if (
+        !port ||
+        pin.point.every((n, i) => Math.abs(n - port.point[i]) < 1e-6)
+      )
+        return [];
+      return [
+        {
+          ...stroke,
+          NodeName: DocItemTypes.Line,
+          _id: nextId(),
+          d_points: [
+            pin.point,
+            [pin.point[0], layout.size[1] + 8],
+            [port.point[0], layout.size[1] + 8],
+            port.point,
+          ],
+          polygon: false,
+          line_colour: port.color,
+          filled: false,
+        },
+      ];
+    }),
+  ];
+}
+
+export function controlDrawingItems(symbol: dsnSymbol): DocItem[] | undefined {
   const config = readControl(symbol);
   if (
-    config?.kind !== 'source' ||
+    (config?.kind !== 'source' && config?.kind !== 'instrument') ||
     !symbol._symbol.uid?.startsWith('tinycad-spice-')
   )
     return;
   const scale = symbol._symbol.uid.endsWith('-v1') ? 1 : COMPACT_SCALE;
   let id = 0;
   return [
-    ...controlBody(config, scale, () => --id),
+    ...(config.kind === 'instrument' && /-v[34]$/.test(symbol._symbol.uid)
+      ? nativeInstrumentBody(
+          config,
+          symbol._symbol.outlines[0].items.filter(
+            (item): item is dsnPin => item.NodeName === DocItemTypes.Pin,
+          ),
+          Math.min(Math.abs(symbol.scale_x), Math.abs(symbol.scale_y)),
+          () => --id,
+        )
+      : controlBody(config, scale, () => --id)),
     ...symbol._symbol.outlines[0].items.filter(
       (item) => item.NodeName === DocItemTypes.Pin,
     ),
   ];
+}
+
+/** Upgrade stored footprints, rather than just changing the placement default.
+ * Probe ends stay on their original nets; resizing never adds electrical wires.
+ */
+export function resizeStudentInstrument(symbol: dsnSymbol): dsnSymbol {
+  const config = readControl(symbol);
+  if (
+    config?.kind !== 'instrument' ||
+    !symbol._symbol.uid?.startsWith('tinycad-spice-')
+  )
+    return symbol;
+  const needsMeterInput =
+    config.type === 'meter' &&
+    !symbol._symbol.outlines[0].active_points.some((p) => p.pin.number === '3');
+  if (
+    /-v[34]$/.test(symbol._symbol.uid) &&
+    symbol.scale_x === STUDENT_DEVICE_SCALE &&
+    symbol.scale_y === STUDENT_DEVICE_SCALE &&
+    !needsMeterInput
+  )
+    return symbol;
+  const original = new updateSymbol(symbol).active_points();
+  const extent = instrumentLayouts[config.type].size;
+  const pins = symbol._symbol.outlines[0].active_points.map((active) =>
+    new updatePin({
+      ...active.pin,
+      ...(needsMeterInput &&
+      config.mode.endsWith('A') &&
+      active.pin.number === '1'
+        ? { number: '3', name: 'A' }
+        : {}),
+      point: [
+        (active.pos[0] * symbol.scale_x) / STUDENT_DEVICE_SCALE + extent[0],
+        (active.pos[1] * symbol.scale_y) / STUDENT_DEVICE_SCALE + extent[1],
+      ],
+      length: 0,
+      show_name: false,
+      show_number: false,
+    }).post_construction(),
+  );
+  if (needsMeterInput) {
+    if (config.mode.endsWith('A')) {
+      const current = pins.find((pin) => pin.number === '3');
+      const socket = instrumentLayouts.meter.ports.find(
+        (port) => port.number === '3',
+      );
+      // Align the old current lead with the A socket before adding V/Ω. This
+      // keeps the new voltage jack separate from the retained current anchor.
+      const delta = socket.point.map(
+        (value, axis) => value - current.point[axis],
+      );
+      for (let i = 0; i < pins.length; i++)
+        pins[i] = new updatePin({
+          ...pins[i],
+          point: [pins[i].point[0] + delta[0], pins[i].point[1] + delta[1]],
+        }).post_construction();
+    }
+    pins.push(
+      ...instrumentPins(config, get_global_id).filter(
+        (pin) => !pins.some((old) => old.number === pin.number),
+      ),
+    );
+  }
+  let result = new updateSymbol({
+    ...symbol,
+    scale_x: STUDENT_DEVICE_SCALE,
+    scale_y: STUDENT_DEVICE_SCALE,
+    _active_points: null,
+    hints:
+      needsMeterInput && config.mode.endsWith('A')
+        ? symbol.hints.map((hint) =>
+            hint.pin === '1' ? { ...hint, pin: '3' } : hint,
+          )
+        : symbol.hints,
+    _symbol: {
+      ...symbol._symbol,
+      uid: `tinycad-spice-instrument-${config.type}-${instrumentArtworkKey(
+        config,
+      )}-${pins.map((p) => p.point.join(',')).join(';')}-v4`,
+      outlines: [
+        {
+          ref_point: extent,
+          size: extent,
+          items: [
+            ...nativeInstrumentBody(
+              config,
+              pins,
+              STUDENT_DEVICE_SCALE,
+              get_global_id,
+            ),
+            ...pins,
+          ],
+          active_points: pins.map((pin) => ({
+            pos: [pin.point[0] - extent[0], pin.point[1] - extent[1]],
+            pin,
+            part: 0,
+            power: false,
+          })),
+        },
+      ],
+    },
+    text: symbol.text.map((field) =>
+      field.description === 'Name' ? { ...field, show: false } : field,
+    ),
+  }).post_construction();
+  if (needsMeterInput) {
+    let template: string;
+    try {
+      template = controlTemplate(config);
+    } catch {
+      template = '* Invalid instrument settings';
+    }
+    result = new updateSymbol(result).setSpiceProperty('$$SPICE', template);
+  }
+  const moved = new updateSymbol(result).active_points();
+  if (original.length && moved.length)
+    result = new updateSymbol({
+      ...result,
+      _active_points: null,
+      point: [
+        result.point[0] + original[0][0] - moved[0][0],
+        result.point[1] + original[0][1] - moved[0][1],
+      ],
+    }).post_construction();
+  const bounds = new updateSymbol(result).getBoundingRect();
+  return new updateSymbol({
+    ...result,
+    text: result.text.map((field) =>
+      field.description === 'Ref'
+        ? {
+            ...field,
+            position: [
+              bounds.x1 - result.point[0] + 5,
+              bounds.y1 - result.point[1] - 12,
+            ],
+          }
+        : field,
+    ),
+  }).post_construction();
+}
+
+export function resizeStudentInstruments(drawing: dsnDrawing): dsnDrawing {
+  return {
+    ...drawing,
+    sheets: drawing.sheets.map((sheet) => {
+      let nextId = Math.max(0, ...Object.keys(sheet.symbols).map(Number)) + 1;
+      const symbols = { ...sheet.symbols };
+      const items = sheet.items.map((item) => {
+        if (item.NodeName !== DocItemTypes.Symbol) return item;
+        const resized = resizeStudentInstrument(item);
+        if (resized === item) return item;
+        const definition = { ...resized._symbol, id: nextId++ };
+        symbols[definition.id] = definition;
+        return { ...resized, _symbol: definition };
+      });
+      return { ...sheet, items, symbols };
+    }),
+  };
 }
 export function controlPrefix(config: SpiceControl) {
   return config.kind === 'instrument'
@@ -430,6 +587,7 @@ export function updateControl(
   drawing: dsnDrawing,
   forceCompact = false,
 ) {
+  symbol = resizeStudentInstrument(symbol);
   let template: string;
   try {
     template = controlTemplate(config);
@@ -482,7 +640,18 @@ export function updateControl(
     const outline = result._symbol.outlines[0];
     const scale =
       !forceCompact && result._symbol.uid.endsWith('-v1') ? 1 : COMPACT_SCALE;
-    const pins = controlPins(config, scale);
+    const migrated =
+      config.kind === 'instrument' && result._symbol.uid.endsWith('-v4');
+    const native =
+      config.kind === 'instrument' && /-v[34]$/.test(result._symbol.uid);
+    const pins = migrated
+      ? outline.items.filter(
+          (item): item is dsnPin => item.NodeName === DocItemTypes.Pin,
+        )
+      : native
+      ? instrumentPins(config, get_global_id)
+      : controlPins(config, scale);
+    const extent = native ? instrumentLayouts[config.type].size : undefined;
     const variant =
       config.kind === 'probe'
         ? config.mode
@@ -503,22 +672,48 @@ export function updateControl(
       _symbol: {
         ...result._symbol,
         uid: `tinycad-spice-${config.kind}-${variant}-${
-          scale === 1 ? 'v1' : 'v2'
+          native
+            ? `${instrumentArtworkKey(config)}-${result.scale_x}x${
+                result.scale_y
+              }-${
+                migrated
+                  ? pins.map((p) => p.point.join(',')).join(';') + '-v4'
+                  : 'v3'
+              }`
+            : scale === 1
+            ? 'v1'
+            : 'v2'
         }`,
         outlines: [
           {
             ...outline,
-            ref_point: [40 * scale, 160 * scale],
-            size: [
+            ref_point: extent || [40 * scale, 160 * scale],
+            size: extent || [
               (config.kind === 'controlled' ||
               (config.kind === 'instrument' && config.type === 'scope')
                 ? 180
                 : 80) * scale,
               160 * scale,
             ],
-            items: [...controlBody(config, scale), ...pins],
+            items: [
+              ...(native
+                ? nativeInstrumentBody(
+                    config,
+                    pins,
+                    Math.min(
+                      Math.abs(result.scale_x),
+                      Math.abs(result.scale_y),
+                    ),
+                    get_global_id,
+                  )
+                : controlBody(config, scale)),
+              ...pins,
+            ],
             active_points: pins.map((pin) => ({
-              pos: [pin.point[0] - 40 * scale, pin.point[1] - 160 * scale],
+              pos: [
+                pin.point[0] - (extent?.[0] ?? 40 * scale),
+                pin.point[1] - (extent?.[1] ?? 160 * scale),
+              ],
               power: false,
               part: 0,
               pin,
@@ -528,7 +723,9 @@ export function updateControl(
       },
     }).post_construction();
   }
-  return result;
+  return config.kind === 'instrument'
+    ? resizeStudentInstrument(result)
+    : result;
 }
 export function createControl(
   tool: ControlTool,
@@ -560,12 +757,27 @@ export function createControl(
     config.kind === 'controlled' ||
     (config.kind === 'instrument' && config.type === 'scope');
   const scale = COMPACT_SCALE;
-  const pins = controlPins(config);
-  const body = controlBody(config);
+  const native = config.kind === 'instrument';
+  const extent: [number, number] = native
+    ? instrumentLayouts[config.type].size
+    : [40 * scale, 160 * scale];
+  const pins = native
+    ? instrumentPins(config, get_global_id)
+    : controlPins(config);
+  const body = native
+    ? instrumentArtwork(
+        config,
+        get_global_id,
+        waveformGlyph(config.source, 0, 1),
+        STUDENT_DEVICE_SCALE,
+      )
+    : controlBody(config);
   const id = Math.max(0, ...Object.keys(sheet.symbols).map(Number)) + 1;
   const definition: libSymbol = {
     id,
-    uid: `tinycad-spice-${controlled ? 'controlled' : config.kind}-v2`,
+    uid: native
+      ? `tinycad-spice-instrument-${config.type}-v3`
+      : `tinycad-spice-${controlled ? 'controlled' : config.kind}-v2`,
     name: { value: 'SPICE control', type: 0 },
     ref: { value: controlPrefix(config) + '?', type: 0 },
     description: 'Embedded SPICE control',
@@ -574,10 +786,10 @@ export function createControl(
     outlines: [
       {
         items: [...body, ...pins],
-        ref_point: [40 * scale, 160 * scale],
-        size: [(controlled ? 180 : 80) * scale, 160 * scale],
+        ref_point: extent,
+        size: native ? extent : [(controlled ? 180 : 80) * scale, 160 * scale],
         active_points: pins.map((pin) => ({
-          pos: [pin.point[0] - 40, pin.point[1] - 160],
+          pos: [pin.point[0] - extent[0], pin.point[1] - extent[1]],
           power: false,
           part: 0,
           pin,
@@ -603,8 +815,8 @@ export function createControl(
     point: [0, 0],
     show_power: false,
     allow_resize: false,
-    scale_x: 1,
-    scale_y: 1,
+    scale_x: native ? STUDENT_DEVICE_SCALE : 1,
+    scale_y: native ? STUDENT_DEVICE_SCALE : 1,
     rotation: 0,
     part: 0,
     _symbol: definition,
@@ -615,9 +827,9 @@ export function createControl(
       field(
         'Ref',
         nextControlReference(drawing, controlPrefix(config)),
-        [4, -24],
+        native ? [-extent[0] + 4, -extent[1] - 12] : [4, -24],
       ),
-      field('Name', '', [4, -12]),
+      { ...field('Name', '', [4, -12]), show: !native },
     ],
   };
   symbol = updateControl(symbol, config, drawing);

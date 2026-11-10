@@ -506,7 +506,8 @@ export const InstrumentPanel = React.memo(function InstrumentPanel({
                     )}
                   </div>
                   <p>
-                    HI / LO: voltage and Ω in parallel; current modes in series.
+                    V Ω / COM: voltage and resistance in parallel. A / COM:
+                    current in series. Move the lead when changing input type.
                     Mode changes alter the electrical loading and require a new
                     run.
                   </p>

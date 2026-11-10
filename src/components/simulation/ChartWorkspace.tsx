@@ -50,6 +50,7 @@ import { hasSimulation } from '../../io/drawingSaveFormat';
 import { buildDeck } from '../../simulation/deck';
 import { digest } from '../../io/dsnContainer';
 import { Waveform, WaveformPreferences } from './Waveform';
+import { MeasurementResults } from './MeasurementResults';
 import { ChartPopup, ChartPopupPortal, openChartPopup } from './ChartPopup';
 import { ResizeHandle } from '../panel/ResizeHandle';
 import { applyBindings } from '../../simulation/bindings';
@@ -490,7 +491,7 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
     : !raw?.vectors.length
     ? running
       ? session.status
-      : 'Run a simulation to see results alongside the drawing.'
+      : 'Run a simulation to see results'
     : verified?.drawing !== drawing || verified.key !== acquisitionKey
     ? 'Checking acquisition…'
     : !fresh
@@ -724,6 +725,19 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
           display: visible ? undefined : 'none',
         }}
       >
+        <MeasurementResults
+          drawing={drawing}
+          net={net}
+          data={data}
+          setup={selected?.simulation}
+          run={run}
+          fresh={fresh}
+          running={running}
+          checking={
+            !!expectedHash &&
+            (verified?.drawing !== drawing || verified.key !== acquisitionKey)
+          }
+        />
         {!charts.length && (
           <p style={{ padding: 12 }}>Add a chart, then choose its signals.</p>
         )}

@@ -243,7 +243,7 @@ export class TDrawing extends React.PureComponent<TDrawingProps> {
               selected={selected}
               selected_handle={selected_handle}
               showConnectionPointMarker={
-                this.props.options.show_label_connection_point
+                !parent && this.props.options.show_label_connection_point
               }
               renderOverride={
                 renderStyle

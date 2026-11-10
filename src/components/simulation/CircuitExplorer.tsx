@@ -21,7 +21,7 @@ import {
   SweepRun,
   metricKinds,
 } from '../../simulation/explorerTypes';
-import { measure, checkRequirement } from '../../simulation/metrics';
+import { checkRequirement } from '../../simulation/metrics';
 import {
   bindingValue,
   applyBindings,
@@ -31,11 +31,7 @@ import {
   symbolReference,
 } from '../../simulation/bindings';
 import { parseQuantity } from '../../simulation/numbers';
-import {
-  resolvedSignals,
-  deviceSignal,
-  measurementLocation,
-} from '../../simulation/signals';
+import { deviceSignal, measurementLocation } from '../../simulation/signals';
 import { deriveTraces } from '../../simulation/traces';
 import { readControl, SourceConfig } from '../../simulation/controls';
 import { getResult } from '../../simulation/resultStore';
@@ -50,6 +46,13 @@ import { getSession } from '../../simulation/session';
 import { download } from '../../simulation/export';
 import { Waveform } from './Waveform';
 import { AdvancedAnalysis } from './AdvancedAnalysis';
+import { MeasurementDiagram } from './MeasurementDiagram';
+import { evaluateMeasurements } from '../../simulation/measurementResults';
+import {
+  measurementLabels,
+  measurementTitle,
+  measurementValue,
+} from '../../simulation/measurementPresentation';
 import { setOverlayMode, overlayMode } from '../../simulation/operatingPoint';
 import {
   actionFindSelection,
@@ -141,21 +144,28 @@ export function CircuitExplorer({
   sheet,
   net,
   data,
+  acquisitionData,
   run,
   fresh,
+  checking = false,
   onAcquisition,
 }: {
   drawing: dsnDrawing;
   sheet: dsnSheet;
   net?: NetlistData;
   data?: ResultData;
+  acquisitionData?: ResultData;
   run?: SimulationRun;
   fresh: boolean;
+  checking?: boolean;
   onAcquisition?: (id: string) => void;
 }) {
   const dispatch = useDispatch(),
     store = useStore<docDrawing>(),
     setup = sheet.simulation;
+  const [expandedMeasurements, setExpandedMeasurements] = useState(
+    new Set<string>(),
+  );
   const [enabledTools, setEnabledTools] = useState(() =>
     configuredTools(setup, drawing.documentId),
   );
@@ -271,41 +281,32 @@ export function CircuitExplorer({
       }
     return options;
   }, [drawing, data, setup.traces]);
-  const resolved = useMemo(() => {
-    if (!data || !fresh || !net) return;
-    try {
-      const capturedDrawing = run?.explorer
-        ? applyBindings(
-            drawing,
-            { ...setup, bindings: run.explorer.bindings },
-            run.explorer.overrides,
-          ).drawing
-        : drawing;
-      return deriveTraces(
-        resolvedSignals(
-          capturedDrawing,
-          net,
-          data,
-          (setup.measurements || []).flatMap((d) =>
-            [d.source, d.reference].filter(Boolean),
-          ),
-        ),
-        JSON.stringify(run?.explorer?.definitions) ===
-          JSON.stringify(definitions)
-          ? run.explorer.traces || setup.traces || []
-          : setup.traces || [],
-      ).data;
-    } catch {
-      return;
-    }
-  }, [drawing, net, data, fresh, setup.traces, setup.measurements, run]);
-  const captured = run?.explorer;
-  const sameDefinitions =
-    JSON.stringify(captured?.definitions) === JSON.stringify(definitions);
-  const results =
-    sameDefinitions && captured
-      ? captured.measurements
-      : definitions.map((def) => measure(def, resolved));
+  const evaluation = useMemo(
+    () =>
+      evaluateMeasurements({
+        drawing,
+        net,
+        data: acquisitionData || data,
+        setup,
+        run,
+        fresh,
+        checking,
+        running: getSession()?.sheetId === sheet.id,
+      }),
+    [
+      drawing,
+      net,
+      data,
+      acquisitionData,
+      setup,
+      run,
+      fresh,
+      checking,
+      sheet.id,
+    ],
+  );
+  const resolved = evaluation.data;
+  const results = evaluation.results;
   const checks = rules.map((rule) => checkRequirement(rule, results));
   const evidenceData =
     resolved ||
@@ -314,7 +315,9 @@ export function CircuitExplorer({
       : undefined);
   const editMetric = (next: MeasurementDefinition) =>
     update({
-      measurements: definitions.map((d) => (d.id === next.id ? next : d)),
+      measurements: definitions.map((d) =>
+        d.id === next.id ? { ...next, name: measurementTitle(next) } : d,
+      ),
     });
   const editRule = (next: RequirementDefinition) =>
     update({ requirements: rules.map((d) => (d.id === next.id ? next : d)) });
@@ -588,7 +591,7 @@ export function CircuitExplorer({
               .map((p) => p.value),
           },
           {
-            name: sweepMetric.name,
+            name: measurementTitle(sweepMetric),
             unit:
               points
                 .find(
@@ -728,20 +731,36 @@ export function CircuitExplorer({
           {tab === 'measure' && (
             <>
               <p style={{ fontSize: 12 }}>
-                {captured && sameDefinitions
+                {evaluation.captured
                   ? `Captured results · ${new Date(
                       run.created,
                     ).toLocaleString()} · ${run.analysis.kind} · ${run.state}${
-                      fresh ? '' : ' · circuit changed'
+                      !acquisitionData && !data
+                        ? ' · numerical data not retained'
+                        : fresh
+                        ? ''
+                        : ' · circuit changed'
                     }`
                   : 'Current definitions; run again to capture reproducible results.'}
               </p>
               {definitions.map((def) => {
                 const result = results.find((r) => r.id === def.id);
                 return (
-                  <details key={def.id} style={{ margin: '10px 0' }}>
+                  <details
+                    key={def.id}
+                    style={{ margin: '10px 0' }}
+                    onToggle={(event) => {
+                      const open = event.currentTarget.open;
+                      setExpandedMeasurements((current) => {
+                        const next = new Set(current);
+                        if (open) next.add(def.id);
+                        else next.delete(def.id);
+                        return next;
+                      });
+                    }}
+                  >
                     <summary>
-                      <b>{def.name}</b> —{' '}
+                      <b>{measurementTitle(def)}</b> —{' '}
                       <Button
                         size="small"
                         appearance="transparent"
@@ -751,16 +770,26 @@ export function CircuitExplorer({
                         }}
                       >
                         {result?.state === 'valid'
-                          ? `${format(result.value)} ${result.unit}`
-                          : result?.state || 'unavailable'}
+                          ? measurementValue(result)
+                          : 'Cannot measure'}
                       </Button>
+                      {result?.state !== 'valid' && (
+                        <span style={{ fontSize: 12 }}>
+                          {' '}
+                          {result?.explanation ||
+                            'No measurement result is available.'}
+                        </span>
+                      )}
                     </summary>
-                    <div style={row}>
-                      <Text
-                        label="Name"
-                        value={def.name}
-                        onChange={(name) => editMetric({ ...def, name })}
+                    {expandedMeasurements.has(def.id) && (
+                      <MeasurementDiagram
+                        definition={def}
+                        data={resolved || acquisitionData || data}
+                        captured={!!run}
+                        result={result}
                       />
+                    )}
+                    <div style={row}>
                       <Field label="Measurement" size="small">
                         <Select
                           size="small"
@@ -773,7 +802,9 @@ export function CircuitExplorer({
                           }
                         >
                           {metricKinds.map((kind) => (
-                            <option key={kind}>{kind}</option>
+                            <option key={kind} value={kind}>
+                              {measurementLabels[kind]}
+                            </option>
                           ))}
                         </Select>
                       </Field>
@@ -891,8 +922,10 @@ export function CircuitExplorer({
                       />
                     )}
                     <p style={{ fontSize: 12 }}>
-                      {result?.explanation} Timing uses the first complete
-                      transition in the window.
+                      {result?.state === 'valid'
+                        ? measurementValue(result)
+                        : result?.explanation ||
+                          'No measurement result is available.'}
                     </p>
                     <Button
                       size="small"
@@ -918,7 +951,12 @@ export function CircuitExplorer({
                       ...definitions,
                       {
                         id: uid(),
-                        name: `Measurement ${definitions.length + 1}`,
+                        name: measurementTitle({
+                          id: '',
+                          name: '',
+                          kind: 'value',
+                          source: sources.keys().next().value || '',
+                        }),
                         kind: 'value',
                         source: sources.keys().next().value || '',
                       },
@@ -981,7 +1019,7 @@ export function CircuitExplorer({
                         )}
                         {definitions.map((d) => (
                           <option key={d.id} value={d.id}>
-                            {d.name}
+                            {measurementTitle(d)}
                           </option>
                         ))}
                       </Select>
@@ -1592,7 +1630,7 @@ export function CircuitExplorer({
                           </th>
                           <th>Run</th>
                           {batchDefinitions.map((d) => (
-                            <th key={d.id}>{d.name}</th>
+                            <th key={d.id}>{measurementTitle(d)}</th>
                           ))}
                         </tr>
                       </thead>
@@ -1685,7 +1723,7 @@ export function CircuitExplorer({
                         >
                           {batchDefinitions.map((d) => (
                             <option key={d.id} value={d.id}>
-                              {d.name}
+                              {measurementTitle(d)}
                             </option>
                           ))}
                         </Select>
@@ -1694,7 +1732,7 @@ export function CircuitExplorer({
                         <Waveform
                           compact
                           data={trend}
-                          signals={[sweepMetric.name]}
+                          signals={[measurementTitle(sweepMetric)]}
                         />
                       )}
                     </>
@@ -1755,7 +1793,7 @@ export function CircuitExplorer({
           )}
           {evidence && (
             <div style={{ marginTop: 12 }}>
-              <b>{evidence.name} — evidence</b>
+              <b>{measurementTitle(evidence)} — evidence</b>
               <p>{results.find((r) => r.id === evidence.id)?.explanation}</p>
               {evidenceData ? (
                 <Waveform
@@ -1769,9 +1807,8 @@ export function CircuitExplorer({
                 />
               ) : (
                 <p>
-                  The captured value is retained; waveform evidence is
-                  unavailable for this circuit or the numerical results were
-                  removed.
+                  No waveform data is available for this measurement. Run a new
+                  acquisition to view its evidence.
                 </p>
               )}
               <Button size="small" onClick={() => setEvidence(undefined)}>

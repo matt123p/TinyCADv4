@@ -23,7 +23,7 @@ await build({
     import { createControl, updateControl } from './src/simulation/controlSymbols';
     import { defaultSource, readControl } from './src/simulation/controls';
     import { blank } from './src/io/ioXml';
-    import { Provider } from 'react-redux';
+    import { Provider, useSelector } from 'react-redux';
     import { createStore } from 'redux';
     import { DocStoreReducer } from './src/state/stores/docStoreReducer';
     import { SimulationSheet } from './src/components/simulation/SimulationSheet';
@@ -42,8 +42,24 @@ await build({
     import { buildDeck } from './src/simulation/deck';
     import { NetlistWorkerState } from './src/web-worker/netlistState';
     import { runSimulation } from './src/simulation/session';
+    import { measurementTitle } from './src/simulation/measurementPresentation';
+    import { CircuitExplorer } from './src/components/simulation/CircuitExplorer';
+    import { MeasurementResults } from './src/components/simulation/MeasurementResults';
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     const assert = (condition, message) => { if (!condition) throw Error(message); };
+    function MeasurementTestFrame({runId}) {
+      const drawing=useSelector(state=>state.docStore.present.drawing);
+      const sheet=drawing.sheets.find(s=>s.kind==='simulation'),run=sheet.simulation.runs.find(r=>r.id===runId),data=getResult(runId);
+      const net=React.useMemo(()=>new NetlistWorkerState().init({...drawing,sheets:drawing.sheets.filter(s=>s.kind!=='simulation')}),[drawing]);
+      return <FluentProvider theme={webLightTheme} style={{padding:12}}>
+        <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 310px',gap:16,alignItems:'start'}}>
+          <CircuitExplorer drawing={drawing} sheet={sheet} net={net} data={data} run={run} fresh={true}/>
+          <aside aria-label="Measurement summary test panel" style={{border:'1px solid #dde3e9'}}>
+            <MeasurementResults drawing={drawing} setup={sheet.simulation} net={net} data={data} run={run} fresh={true} checking={false} running={false}/>
+          </aside>
+        </div>
+      </FluentProvider>;
+    }
     function ResizableInstrument(props) {
       const [height,setHeight]=React.useState(340);
       return <div data-resize-fixture style={{position:'relative',height,marginTop:180}}>
@@ -166,7 +182,7 @@ await build({
         await delay(30);
       };
       await waitFor(()=>!!document.querySelector('[aria-label="Simulation views"]'));
-      await waitFor(()=>document.querySelector('[aria-label="Circuit Explorer"]')?.textContent.includes('Low-pass cutoff'));
+      await waitFor(()=>document.querySelector('[aria-label="Circuit Explorer"]')?.textContent.includes(measurementTitle(fixtureDrawing.sheets[1].simulation.measurements[0])));
       const sheetTabs=()=>Array.from(document.querySelector('[aria-label="Simulation views"]').querySelectorAll('[role="tab"]')).map(t=>t.getAttribute('value'));
       assert(JSON.stringify(sheetTabs())===JSON.stringify(['setup']),'Empty simulation sheets must only show Setup');
       assert(!!document.querySelector('[aria-label="Simulation sheet"] [aria-label="Circuit Explorer"]'),'Circuit Explorer is missing from the simulation sheet');
@@ -277,7 +293,7 @@ await build({
       Array.from(document.querySelectorAll('summary')).find(s=>s.textContent==='One-variable sweep').click();
       button('Run sweep').click();
       await waitFor(()=>Array.from(document.querySelectorAll('canvas')).some(canvas=>Chart.getChart(canvas)?.data.datasets.length===5));
-      const trend=Array.from(document.querySelectorAll('canvas')).map(canvas=>Chart.getChart(canvas)).find(chart=>chart?.data.datasets[0]?.label?.startsWith('Low-pass cutoff'));
+      const trend=Array.from(document.querySelectorAll('canvas')).map(canvas=>Chart.getChart(canvas)).find(chart=>chart?.data.datasets[0]?.label?.startsWith(measurementTitle(setup().measurements[0])));
       assert(trend?.data.datasets[0].data.length===5,'Metric versus parameter chart is missing');
       assert(trend.options.scales.y0.title.text==='Hz','Metric axis has the wrong unit');
       const explorerRows=Array.from(document.querySelector('[aria-label="Circuit Explorer"]').querySelectorAll('tbody tr'));
@@ -295,7 +311,7 @@ await build({
       const dcInitial={...base,drawing:dcDrawing,view:{...base.view,selected_sheet:1}};
       const dcStore=createStore((state={docStore:{present:dcInitial}},action)=>({docStore:{present:DocStoreReducer(state.docStore.present,action)}}));
       root.render(<Provider key="dc-check" store={dcStore}><FluentProvider theme={webLightTheme} style={{height:1000}}><SimulationSheet toolbarTarget={null}/><ChartWorkspace/><svg><OperatingPointOverlay sheetName={dcDrawing.sheets[0].name}/></svg></FluentProvider></Provider>);
-      await waitFor(()=>document.querySelector('[aria-label="Circuit Explorer"]')?.textContent.includes('Output voltage'));button('Run').click();
+      await waitFor(()=>document.querySelector('[aria-label="Circuit Explorer"]')?.textContent.includes(measurementTitle(dcDrawing.sheets[1].simulation.measurements[0])));button('Run').click();
       await waitFor(()=>dcStore.getState().docStore.present.drawing.sheets[1].simulation.runs.length===1);
       await openExplorerTool('DC overlay');
       await waitFor(()=>!!document.querySelector('select[aria-label="Schematic DC annotations"]'));
@@ -436,6 +452,44 @@ await build({
       await delay(30);button('Run study').click();await waitFor(()=>labStore.getState().docStore.present.drawing.sheets[1].simulation.studyRuns?.at(-1)?.state==='complete'&&labStore.getState().docStore.present.drawing.sheets[1].simulation.studyRuns.at(-1).points.length===2);
       assert(labStore.getState().docStore.present.drawing.sheets[1].simulation.studyRuns.at(-1).points.every(p=>p.state==='complete'),'UI tolerance study failed');
       assert(!updateDepthWarning,'Scope acquisition or controls caused a React update loop');
+      const measurementRun=labStore.getState().docStore.present.drawing.sheets[1].simulation.runs.at(-1);
+      root.render(<Provider key="measurement-presentation" store={labStore}><MeasurementTestFrame runId={measurementRun.id}/></Provider>);
+      await waitFor(()=>!!document.querySelector('[aria-label="Measurement summary test panel"]'));
+      const measureSetup=()=>labStore.getState().docStore.present.drawing.sheets[1].simulation;
+      const metricEditor=document.querySelector('[aria-label="Circuit Explorer"]');
+      const firstMetric=metricEditor.querySelector('details');firstMetric.open=true;
+      await waitFor(()=>!!firstMetric.querySelector('figure svg'));
+      assert(firstMetric.querySelector('figcaption').textContent.includes('Selected acquisition'),'RMS diagram must use the selected waveform');
+      assert(Array.from(firstMetric.querySelectorAll('svg text')).some(t=>t.textContent.includes('AC RMS')),'RMS level marker is missing');
+      assert(!Array.from(firstMetric.querySelectorAll('label')).some(l=>l.textContent==='Name'),'Measurement name must be generated, not editable');
+      const summary=document.querySelector('[aria-label="Measurement summary test panel"]');
+      assert(summary.querySelectorAll('dt').length===measureSetup().measurements.length && !summary.querySelector('input,select,button,svg'),'Right-hand measurements should contain titles and values only');
+      const windowEndLabel=Array.from(firstMetric.querySelectorAll('label')).find(l=>l.textContent.startsWith('to ('));
+      const windowEnd=document.getElementById(windowEndLabel.htmlFor);
+      const setWindowEnd=value=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(windowEnd,value);windowEnd.dispatchEvent(new Event('input',{bubbles:true}));};
+      setWindowEnd('4ms');
+      const hasMeasurementValue=()=>Number.isFinite(parseFloat(summary.querySelector('dd').textContent));
+      await waitFor(()=>measureSetup().measurements[0].name===measurementTitle(measureSetup().measurements[0]) && summary.querySelector('dt').textContent.includes('4ms') && hasMeasurementValue());
+      setWindowEnd('8ms');
+      await waitFor(()=>firstMetric.textContent.includes('outside the acquired range') && summary.querySelector('dd').textContent.includes('outside the acquired range'));
+      assert(summary.querySelector('dd').getAttribute('aria-label').includes('outside the acquired range'),'Right-hand failure must retain its exact reason');
+      setWindowEnd('5ms');
+      await waitFor(hasMeasurementValue);
+      const kindSelect=firstMetric.querySelector('select');kindSelect.value='gain';kindSelect.dispatchEvent(new Event('change',{bubbles:true}));
+      await waitFor(()=>firstMetric.textContent.includes('requires an AC frequency sweep') && summary.querySelector('dd').textContent.includes('requires an AC frequency sweep'));
+      assert(firstMetric.querySelector('figcaption').textContent.includes('Selected acquisition'),'Incompatible measurement must still show the real capture');
+      assert(!firstMetric.querySelector('figcaption').textContent.includes('Highlighted') && !firstMetric.querySelector('svg [fill="#e1efff"]') && !firstMetric.querySelector('svg line[stroke-dasharray]'),'Failed measurement must not mark a window, position, or measurement level');
+      kindSelect.value='efficiency';kindSelect.dispatchEvent(new Event('change',{bubbles:true}));
+      await waitFor(()=>summary.querySelector('dd').textContent.includes('Select an explicit input reference'));
+      assert(firstMetric.querySelector('svg path[stroke="#00816f"]') && !firstMetric.querySelector('svg path[stroke="#526bcb"]'),'Missing efficiency reference must show captured voltage without inventing a second waveform');
+      assert(firstMetric.querySelector('figure [role="status"]').textContent.includes('Select an explicit input reference'),'Plot must display the measurement error');
+      document.title='Measurement controls qualification';
+      await window.chartSmoke.capture('Measurement controls qualification','measurement-error.png');
+      kindSelect.value='rippleRms';kindSelect.dispatchEvent(new Event('change',{bubbles:true}));
+      await waitFor(()=>measureSetup().measurements[0].kind==='rippleRms' && hasMeasurementValue());
+      document.title='Measurement controls qualification';
+      await window.chartSmoke.capture('Measurement controls qualification','measurement-editor.png');
+      assert(!updateDepthWarning,'Measurement controls caused a React update loop');
       window.chartSmoke.report({ok:true,windows:2,unitAxes:2,liveValue:7,returnedToPanel:docked,sourceWaveform:readControl(source).waveform,sourceAmplitude:readControl(source).amplitude,explorer:{temporaryTuning:true,cachedReset:true,apply:true,sweepCurves:5,metricPoints:5,restoredSweep:true,typedRequirement:checks[0].state,dcOverlay:true,staleOverlayHidden:true},laboratory:{acquireButton:true,instrumentWindows:2,independentClosure:true,selectionPreserved:true,targetedControls:true,dualScale:true,monteCarloPoints:2,p2Excluded:true}});
     }
     verify().catch(error=>window.chartSmoke.report({ok:false,error:error.stack}));
@@ -496,7 +550,7 @@ app.commandLine.appendSwitch('disable-gpu');
  )});
  await app.whenReady();
  const owner=new BrowserWindow({show:false,webPreferences:{nodeIntegration:false,contextIsolation:true,preload:path.join(__dirname,'preload.cjs')}});
- ipcMain.handle('lab-capture',async(_event,title,name)=>{if(!['instrument-scope.png','instrument-meter.png'].includes(name))throw Error('Unexpected capture name');const instrument=BrowserWindow.getAllWindows().find(w=>w.getTitle()===title);if(!instrument)throw Error('No instrument window to capture');const png=await instrument.webContents.capturePage();require('node:fs').writeFileSync(path.join(__dirname,name),png.toPNG());});
+ ipcMain.handle('lab-capture',async(_event,title,name)=>{if(!['instrument-scope.png','instrument-meter.png','measurement-editor.png','measurement-error.png'].includes(name))throw Error('Unexpected capture name');const instrument=BrowserWindow.getAllWindows().find(w=>w.getTitle()===title);if(!instrument)throw Error('No instrument window to capture');if(name==='measurement-editor.png'||name==='measurement-error.png'){instrument.setContentSize(1200,850);await new Promise(resolve=>setTimeout(resolve,120));}const png=await instrument.webContents.capturePage();require('node:fs').writeFileSync(path.join(__dirname,name),png.toPNG());});
  owner.webContents.setWindowOpenHandler(details=>{
    const allowed=chartWindowOptions(details,owner);
    return allowed?{...allowed,overrideBrowserWindowOptions:{...allowed.overrideBrowserWindowOptions,show:false,webPreferences:{...allowed.overrideBrowserWindowOptions?.webPreferences,backgroundThrottling:false}}}:{action:'deny'};

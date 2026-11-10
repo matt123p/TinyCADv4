@@ -1,5 +1,5 @@
 import { createSimulationSheet, withoutResults } from '../../simulation/document';
-import { createControl, updateControl, compactControl } from '../../simulation/controlSymbols';
+import { createControl, updateControl, compactControl, resizeStudentInstruments } from '../../simulation/controlSymbols';
 import { updatePower } from '../../manipulators/updatePower';
 import { applyBindings } from '../../simulation/bindings';
 import { dsnSymbol } from '../../model/dsnItem';
@@ -258,7 +258,7 @@ export function DocStoreReducer(
 
     // Load a completely new document
     case DocActionTypes.SetDocument:
-      let new_drawing = action.doc;
+      let new_drawing = resizeStudentInstruments(action.doc);
       for (let i = 0; i < new_drawing.sheets.length; ++i) {
         if (new_drawing.sheets[i].kind !== 'simulation') new_drawing.sheets[i] = update_view.tidy_wires(new_drawing.sheets[i]);
       }

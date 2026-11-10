@@ -369,8 +369,11 @@ export class updateSymbol
         p = [p[0] + delta.dx, p[1] + delta.dy];
 
         this.item._active_points.push([
-          p[0] + this.item.point[0],
-          p[1] + this.item.point[1],
+          // Scaling can leave floating-point residue (e.g. 40 becomes
+          // 39.99999999999999). Netlist nodes use exact coordinate keys, so
+          // discard arithmetic noise well below the editor's grid precision.
+          Math.round((p[0] + this.item.point[0]) * 1e9) / 1e9,
+          Math.round((p[1] + this.item.point[1]) * 1e9) / 1e9,
           active_point.pin,
         ]);
       }

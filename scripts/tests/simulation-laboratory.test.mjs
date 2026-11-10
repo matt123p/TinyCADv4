@@ -14,7 +14,7 @@ test('laboratory models produce native loading, current limiting, generator and 
  import {blank} from './src/io/ioXml';import {readControl} from './src/simulation/controls';import {encodeDrawing,decodeDrawing} from './src/io/dsnCodec';
  const runtime=path.resolve('build/engines/native'),manifest=JSON.parse(fs.readFileSync(path.join(runtime,'manifest.json'),'utf8'));
  function run(body){const directory=fs.mkdtempSync(path.join(os.tmpdir(),'tinycad-lab-'));try{const file=path.join(directory,'test.cir');fs.writeFileSync(file,'TinyCAD lab\n'+body+'\n.end\n');const result=spawnSync(path.join(runtime,manifest.helper),[path.join(runtime,manifest.library),file,...manifest.modules.map(m=>path.join(runtime,m))],{cwd:directory,encoding:'utf8',timeout:30000,maxBuffer:16*1024*1024});assert.equal(result.status,0,result.stderr);const events=result.stdout.trim().split('\n').map(l=>JSON.parse(l));assert.equal(events.at(-1).state,'complete',JSON.stringify(events.filter(e=>e.type==='log')));const names=events.find(e=>e.type==='vectors').names,rows=events.filter(e=>e.type==='data').flatMap(e=>e.rows);return{names,rows,get:name=>rows[0][names.indexOf(name)]};}finally{fs.rmSync(directory,{recursive:true,force:true});}}
- const template=(c,ref)=>instrumentTemplate(c).replaceAll('$(ref)',ref).replaceAll('%(1)','p').replaceAll('%(2)','0').replaceAll('%(3)','b').replaceAll('%(4)','0');
+ const template=(c,ref)=>instrumentTemplate(c).replaceAll('$(ref)',ref).replaceAll('%(1)','p').replaceAll('%(2)','0').replaceAll('%(3)',c.type==='meter'?'p':'b').replaceAll('%(4)','0');
  const supply={...defaultInstrument('supply'),voltage:'5V',currentLimit:'10mA',outputResistance:'.1Ohm'};
  const loaded=run(template(supply,'PSU1')+'\nRload p 0 1000\n.op');assert.ok(Math.abs(loaded.get('p')-5)<.001);assert.ok(Math.abs(loaded.get('v_psu1_sense#branch')-.005)<.000001);
  const limited=run(template(supply,'PSU1')+'\nRload p 0 100\n.op');assert.ok(Math.abs(limited.get('p')-1)<.001);assert.ok(Math.abs(limited.get('v_psu1_sense#branch')-.01)<.000001);
@@ -22,6 +22,15 @@ test('laboratory models produce native loading, current limiting, generator and 
  const meter={...defaultInstrument('meter'),inputResistance:'1kOhm'};
  const voltage=run('V1 in 0 10\nR1 in p 1k\n'+template(meter,'DMM1')+'\n.op');assert.ok(Math.abs(voltage.get('p')-5)<1e-9);
  const current=run('V1 in 0 5\nR1 in p 1k\n'+template({...meter,mode:'dcA',burden:'10Ohm'},'DMM1')+'\n.op');assert.ok(Math.abs(current.get('v_dmm1_sense#branch')-5/1010)<1e-9);
+ const jackTemplate=c=>instrumentTemplate(c).replaceAll('$(ref)','DMM1').replaceAll('%(1)','voltage_jack').replaceAll('%(2)','0').replaceAll('%(3)','current_jack');
+ for(const mode of ['dcA','acA']){
+   const configured={...meter,mode,burden:'10Ohm'},statement=jackTemplate(configured);
+   assert.ok(!statement.includes('voltage_jack'),'The voltage input is electrically open in current modes');
+   const measured=run('V1 in 0 5\nR1 in current_jack 1k\nV2 voltage_jack 0 2\n'+statement+'\n.op');
+   assert.ok(Math.abs(measured.get('v_dmm1_sense#branch')-5/1010)<1e-9,'Current must flow through the dedicated A jack');
+ }
+ for(const mode of ['dcV','acV','ohm'])assert.ok(!jackTemplate({...meter,mode}).includes('current_jack'),'Voltage and resistance leave the A jack electrically open');
+ const voltageJacks=run('V1 voltage_jack 0 2\nV2 current_jack 0 5\n'+jackTemplate(meter)+'\n.op');assert.ok(Math.abs(voltageJacks.get('v1#branch')+2/1000)<1e-9);assert.equal(voltageJacks.get('v2#branch'),0,'The unused current input must draw no current in voltage mode');
  const scope=run('V1 p 0 5\nV2 b 0 2\n'+template(defaultInstrument('scope'),'OSC1')+'\n.op');assert.ok(scope.get('p')===5&&scope.get('b')===2);
  const generator=run(template({...defaultInstrument('generator'),source:{...defaultInstrument('generator').source,offset:'2V',amplitude:'1V'}},'GEN1')+'\nRload p 0 50\n.op');assert.ok(Math.abs(generator.get('p')-1)<1e-9);
  const bjt=run('Vcc vcc 0 5\nVb b 0 .65\nR1 vcc c 1k\nQ1 c b 0 QTEST\n.model QTEST NPN (BF=100 IS=1e-14)\n.save all @q1[ic] @q1[ib]\n.op');assert.ok(bjt.get('@q1[ic]')>0);assert.ok(bjt.get('@q1[ib]')>0);
@@ -65,7 +74,7 @@ test('laboratory models produce native loading, current limiting, generator and 
   const customReopened=await decodeDrawing(await encodeDrawing(damaged));
   assert.equal(customReopened.sheets[0].items.find(i=>i.NodeName===DocItemTypes.Symbol&&readControl(i)?.type==='scope').text.find(f=>f.description==='$$SPICE').value,damagedTemplate.value,'Never replace a custom SPICE template');
   let drawing=blank(),sheet=drawing.sheets[0];
-  for(const tool of ['scope','meter','generator','supply']){const added=createControl(tool,sheet,drawing);sheet={...added.sheet,items:[...sheet.items,added.symbol]};drawing={...drawing,sheets:[sheet]};assert.equal(readControl(added.symbol).type,tool);assert.equal(new updateSymbol(added.symbol).active_points().length,tool==='scope'?4:2);assert.match(added.symbol._symbol.uid,/tinycad-spice-instrument/);}
+  for(const tool of ['scope','meter','generator','supply']){const added=createControl(tool,sheet,drawing);sheet={...added.sheet,items:[...sheet.items,added.symbol]};drawing={...drawing,sheets:[sheet]};assert.equal(readControl(added.symbol).type,tool);assert.equal(new updateSymbol(added.symbol).active_points().length,tool==='scope'?4:tool==='meter'?3:2);assert.match(added.symbol._symbol.uid,/tinycad-spice-instrument/);}
   const encoded=await encodeDrawing(drawing);const reopened=await decodeDrawing(encoded);assert.equal(reopened.sheets[0].items.filter(i=>i.NodeName===DocItemTypes.Symbol).length,4);
   const circuit=createTeachingDrawing('voltage-divider'),base=circuit.sheets[0],resistor=base.items.find(i=>i.NodeName===DocItemTypes.Symbol&&symbolReference(i)==='R2');
   const added=createControl('meter',base,circuit);let dmm=updateControl(added.symbol,{...defaultInstrument('meter'),mode:'ohm'},circuit);

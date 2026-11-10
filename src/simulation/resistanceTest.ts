@@ -5,6 +5,7 @@ import { readControl } from './controls';
 import { updateControl } from './controlSymbols';
 import { positiveQuantity } from './numbers';
 import { symbolReference } from './bindings';
+import { instrumentInputPin } from './instruments';
 export interface ResistanceTest {
   sheet: string;
   reference: string;
@@ -47,7 +48,7 @@ export function resistanceCircuit(
                 '$$SPICE',
                 control.type === 'scope'
                   ? 'R_$(ref)_A %(1) %(2) 1e12\nR_$(ref)_B %(3) %(4) 1e12'
-                  : 'R_$(ref)_off %(1) %(2) 1e12',
+                  : `R_$(ref)_off %(${instrumentInputPin(control)}) %(2) 1e12`,
               );
             if (control?.kind === 'probe') return item;
             const template = item.text

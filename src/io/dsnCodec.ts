@@ -1,6 +1,7 @@
 import { dsnDrawing } from '../model/dsnDrawing';
 import { DocItemTypes } from '../model/dsnItem';
 import { drawingSaveFormat } from './drawingSaveFormat';
+import { resizeStudentInstruments } from '../simulation/controlSymbols';
 import { ioXML } from './ioXml';
 import { XMLBuilder } from '../util/xmlbuilder';
 import { packDsn, unpackDsn, Payloads, validPath } from './dsnContainer';
@@ -164,7 +165,7 @@ export async function decodeDrawing(
       payloads[path] = data;
     }
   }
-  const drawing = new ioXML().from_dsn(builder);
+  const drawing = resizeStudentInstruments(new ioXML().from_dsn(builder));
   // Older browser saves may already have flattened a built-in template. Repair
   // only an exact whitespace-flattened match to its embedded configuration;
   // custom SPICE statements must remain untouched.

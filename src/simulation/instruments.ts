@@ -150,11 +150,15 @@ export function instrumentOverride(
     ? { ...c, source: { ...c.source, [property.slice(7)]: value } }
     : { ...c, [property]: value };
 }
+export function instrumentInputPin(c: InstrumentConfig): string {
+  return c.type === 'meter' && c.mode.endsWith('A') ? '3' : '1';
+}
+
 export function instrumentTemplate(c: InstrumentConfig): string {
   if (!Object.keys(instrumentNames).includes(c.type))
     throw new Error('Unknown instrument.');
   const ref = '$(ref)',
-    p = '%(1)',
+    p = `%(${instrumentInputPin(c)})`,
     n = '%(2)';
   if (c.type === 'generator')
     return c.enabled

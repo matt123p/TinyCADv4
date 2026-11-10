@@ -57,7 +57,10 @@ does not invent samples beyond the old record; acquire again for a longer one.
 
 ## Multimeter
 
-DC/AC voltage, DC/AC current and resistance modes use HI/LO terminals. Voltage
+DC/AC voltage and resistance use the **V Ω** and **COM** sockets. DC/AC current
+uses the separate **A** and **COM** sockets; move the lead when changing input
+type. The unused input is electrically open. Unused laboratory instrument
+terminals do not produce unconnected-input DRC warnings. Voltage
 modes model input resistance (10 MΩ default). Current modes insert an ideal
 0 V sense source and the chosen burden resistance (1 Ω default), and must be
 connected in series. AC reports DC-removed, time-weighted true RMS from a

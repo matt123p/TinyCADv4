@@ -18,8 +18,10 @@ export function createLaboratoryDrawing() {
         i.NodeName === DocItemTypes.Symbol && symbolReference(i) === ref,
     );
   const source = find('V1');
-  const generator = updateControl(
-    source,
+  const sourcePins = new updateSymbol(source).active_points();
+  const addedGenerator = createControl('generator', sheet, drawing);
+  let generator = updateControl(
+    addedGenerator.symbol,
     {
       ...defaultInstrument('generator'),
       source: {
@@ -31,6 +33,15 @@ export function createLaboratoryDrawing() {
     },
     drawing,
   );
+  const generatorPin = new updateSymbol(generator).active_points()[0];
+  generator = new updateSymbol({
+    ...generator,
+    point: [
+      generator.point[0] + 330 - generatorPin[0],
+      generator.point[1] + 360 - generatorPin[1],
+    ],
+    _active_points: null,
+  }).post_construction();
   sheet = {
     ...sheet,
     items: sheet.items
@@ -79,9 +90,9 @@ export function createLaboratoryDrawing() {
     drawing.sheets[0] = sheet;
     return symbol;
   };
-  const scope = place('scope', [360, 60]),
-    meter = place('meter', [25, 100]),
-    supply = place('supply', [400, 100]);
+  const scope = place('scope', [540, 520]),
+    meter = place('meter', [260, 1300]),
+    supply = place('supply', [1010, 1160]);
   const resistor = find('R1'),
     pin = new updateSymbol(resistor)
       .active_points()
@@ -89,7 +100,10 @@ export function createLaboratoryDrawing() {
   const load = new updateSymbol({
     ...resistor,
     _id: get_global_id(),
-    point: [resistor.point[0] + 480 - pin[0], resistor.point[1] + 100 - pin[1]],
+    point: [
+      resistor.point[0] + 1400 - pin[0],
+      resistor.point[1] + 100 - pin[1],
+    ],
     _active_points: null,
     textData: [],
     text: resistor.text.map((f) => ({
@@ -108,46 +122,86 @@ export function createLaboratoryDrawing() {
     });
   const path = (points: [number, number][]) =>
     points.slice(1).forEach((p, i) => wire(points[i], p));
+  const terminal = (symbol: dsnSymbol, number: string): [number, number] => {
+    const point = new updateSymbol(symbol)
+      .active_points()
+      .find((p) => p[2].number === number);
+    return [point[0], point[1]];
+  };
+  const originalTerminal = (number: string): [number, number] => {
+    const pin = sourcePins.find((p) => p[2].number === number);
+    return [pin[0], pin[1]];
+  };
+  path([
+    terminal(generator, '1'),
+    [330, 380],
+    [10, 380],
+    [10, originalTerminal('1')[1]],
+    originalTerminal('1'),
+  ]);
+  path([
+    terminal(generator, '2'),
+    [terminal(generator, '2')[0], 410],
+    [40, 410],
+    [40, originalTerminal('2')[1]],
+    originalTerminal('2'),
+  ]);
   // Differential channels A=IN and B=OUT; crossings have no junction dots.
   path([
-    [360, 60],
-    [360, 20],
+    terminal(scope, '1'),
+    [540, 620],
+    [440, 620],
+    [440, 20],
     [100, 20],
     [100, 100],
   ]);
   path([
-    [325, 60],
+    terminal(scope, '3'),
+    [terminal(scope, '3')[0], 650],
+    [430, 650],
+    [430, 60],
     [310, 60],
     [310, 100],
   ]);
   path([
-    [360, 100],
-    [360, 190],
-    [150, 190],
+    terminal(scope, '2'),
+    [terminal(scope, '2')[0], 680],
+    [50, 680],
+    [50, 170],
     [150, 170],
   ]);
   path([
-    [325, 100],
-    [340, 100],
-    [340, 190],
-    [150, 190],
+    terminal(scope, '4'),
+    [terminal(scope, '4')[0], 700],
+    [50, 700],
+    [50, 170],
+    [150, 170],
   ]);
   path([
-    [25, 140],
-    [25, 190],
-    [150, 190],
+    terminal(meter, '1'),
+    [400, 1300],
+    [400, 740],
+    [10, 740],
+    [10, 100],
+    [25, 100],
+  ]);
+  path([
+    terminal(meter, '2'),
+    [terminal(meter, '2')[0], 1430],
+    [430, 1430],
+    [430, 710],
+    [50, 710],
+    [50, 170],
+    [150, 170],
   ]);
   const loadEnd = new updateSymbol(load)
     .active_points()
     .find((p) => p[2].number === '2');
+  path([terminal(supply, '1'), [1460, 1160], [1460, 100], [1400, 100]]);
   path([
-    [400, 100],
-    [480, 100],
-  ]);
-  path([
-    [400, 140],
-    [400, 200],
-    [loadEnd[0], 200],
+    terminal(supply, '2'),
+    [terminal(supply, '2')[0], 1320],
+    [loadEnd[0], 1320],
     [loadEnd[0], loadEnd[1]],
   ]);
   const ground = sheet.items.find((i) => i.NodeName === DocItemTypes.Power);
@@ -155,7 +209,7 @@ export function createLaboratoryDrawing() {
     sheet.items.push({
       ...ground,
       _id: get_global_id(),
-      point: [400, 200],
+      point: [terminal(supply, '2')[0], 1320],
       textData: null,
     });
   const label = sheet.items.find((i) => i.NodeName === DocItemTypes.Label);
@@ -163,10 +217,11 @@ export function createLaboratoryDrawing() {
     sheet.items.push({
       ...label,
       _id: get_global_id(),
-      point: [400, 100],
+      point: [1110, 1160],
       text: 'BENCH',
       textData: null,
     });
+  sheet = { ...sheet, details: { ...sheet.details, page_size: [1600, 1500] } };
   drawing.sheets[0] = sheet;
   const simulation = drawing.sheets[1],
     setup = simulation.simulation;
