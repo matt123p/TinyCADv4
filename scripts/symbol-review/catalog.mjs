@@ -6,6 +6,8 @@ import { readComponentDump, componentInventory } from '../lib/mysql-dump.mjs';
 import { librarySqlite } from '../lib/library-from-sql.mjs';
 import { deriveSymbol } from '../lib/symbol-artwork.mjs';
 import { digitalArtworkSnapshot } from '../lib/digital-artwork.mjs';
+import { functionalArtworkSnapshot } from '../lib/functional-artwork.mjs';
+import { sensorArtworkSnapshot } from '../lib/sensor-artwork.mjs';
 const { DOMParser } = createRequire(import.meta.url)('common-xml-features');
 export const digest = (value) =>
   createHash('sha256').update(value).digest('hex');
@@ -45,10 +47,6 @@ export const REUSE = {
   comparator: ['ua741', ['3', '2', '6', '7', '4']],
   behavioural_voltage: ['voltage-source', ['1', '2']],
   behavioural_current: ['current-source', ['1', '2']],
-  source_fm: ['voltage-source', ['1', '2']],
-  source_pwl: ['voltage-source', ['1', '2']],
-  source_dc: ['voltage-source', ['1', '2']],
-  current_source: ['current-source', ['1', '2']],
 };
 const ARTWORK_ONLY = {
   comparator:
@@ -57,10 +55,6 @@ const ARTWORK_ONLY = {
     'Reuse the current-arrow artwork only. Replace the independent I-source template with the required expression-controlled source adapter.',
   behavioural_voltage:
     'Reuse the voltage-source artwork only. Replace the independent V-source template with the required expression-controlled source adapter.',
-  source_fm:
-    'Reuse the voltage-source artwork; supply a new FM waveform/property adapter instead of the default DC configuration.',
-  source_pwl:
-    'Reuse the voltage-source artwork; supply a new time/voltage-point-list adapter instead of the default DC configuration.',
 };
 const NATIVE = {
   wire: 'wire',
@@ -257,7 +251,11 @@ export function geometry(xml) {
 }
 
 export function referenceId(requirement) {
-  if (requirement.folder.startsWith('08 ')) return 'derived:gate_nand';
+  if (
+    requirement.folder.startsWith('08 ') ||
+    requirement.folder.startsWith('09 ')
+  )
+    return 'derived:gate_nand';
   if (REUSE[requirement.id]) return `spice:${REUSE[requirement.id][0]}`;
   if (/capacitor/.test(requirement.id)) return 'spice:capacitor';
   if (/diode|thyristor|solar/.test(requirement.id)) return 'spice:diode';
@@ -581,7 +579,22 @@ export async function prepareCatalog({ root, sql, cache }) {
     spice,
     requirements: master.symbols,
   });
-  for (const { candidate, xml } of digital.records) {
+  const functional = await functionalArtworkSnapshot({
+    root,
+    digital,
+    requirements: master.symbols,
+  });
+  const sensors = await sensorArtworkSnapshot({
+    root,
+    digital,
+    spice,
+    requirements: master.symbols,
+  });
+  for (const { candidate, xml } of [
+    ...digital.records,
+    ...sensors.records,
+    ...functional.records,
+  ]) {
     candidate.metrics = geometry(xml);
     if (
       !candidate.metrics.valid ||
@@ -616,6 +629,8 @@ export async function prepareCatalog({ root, sql, cache }) {
     spiceSha256: spice.fingerprint,
     derivedSha256: derived.fingerprint,
     digitalSha256: digital.fingerprint,
+    functionalSha256: functional.fingerprint,
+    sensorsSha256: sensors.fingerprint,
     rules,
     requirements: master.symbols.map((requirement) => {
       const choice = rules.symbolChoices?.[requirement.id];
@@ -755,6 +770,8 @@ export function initialState(catalog) {
     spiceSha256: catalog.spiceSha256,
     derivedSha256: catalog.derivedSha256,
     digitalSha256: catalog.digitalSha256,
+    functionalSha256: catalog.functionalSha256,
+    sensorsSha256: catalog.sensorsSha256,
     decisions,
   };
 }

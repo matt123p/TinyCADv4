@@ -1,6 +1,6 @@
 # Choosing artwork for the course bundles
 
-This stage chooses artwork for the 112 canonical types in [all-symbols.json](all-symbols.json). It does not build the ten course bundles. One decision applies to every `library_usage` entry for a canonical ID, even when a symbol appears in several bundles.
+This stage chooses artwork for the 102 canonical types in [all-symbols.json](all-symbols.json). It does not build the ten course bundles. One decision applies to every `library_usage` entry for a canonical ID, even when a symbol appears in several bundles.
 
 ## Run the reviewer
 
@@ -29,19 +29,21 @@ npm run test:symbol-review
 
 Automatic assignments in [symbol-choices.json](symbol-choices.json), before individual manual choices, comprise:
 
-- **23 direct SPICE artwork reuses:** fixed resistor, capacitor, experimental capacitor plates, polarised capacitor, variable capacitor, inductor, potentiometer, signal/rectifier diodes, LED, zener, NPN/PNP, NMOS/PMOS, op-amp/comparator triangles, DC voltage source, current source, behavioural voltage/current sources, FM source and PWL source.
+- **19 direct SPICE artwork reuses:** fixed resistor, capacitor, experimental capacitor plates, polarised capacitor, variable capacitor, inductor, potentiometer, signal/rectifier diodes, LED, zener, NPN/PNP, NMOS/PMOS, op-amp/comparator triangles and behavioural voltage/current sources.
 - **6 native editor features:** wire, junction, reference ground, net label, no-connect and annotation.
 - **12 derived families:** rheostat, NTC thermistor, LDR, strain gauge, Wheatstone bridge, photodiode, solar cell, SCR, N/P JFET and NPN/PNP Darlington. These are built from corrected SPICE artwork rather than selected from SQL.
 - **21 digital types** are generated from the selected NAND reference, including rising/falling-edge variants for seven clocked types. See [Digital logic](../digital-library.md).
-- **50 initially unchosen types**, including the diagram-only blocks, which still need deliberate artwork choices.
+- **14 functional block types** are generated in the digital style, with 17 entries including three pairs of clock-edge variants. Power and reference ports remain visible and preserve their inventory names. See [Functional blocks](../functional-library.md).
+- **10 sensor/interface types** are generated using related component conventions: test point, Hall/piezo/light/pressure/temperature/moisture/pH sensors, analogue switch and AM modulator. See [drawings and research references](../sensor-interface-library.md).
+- **20 initially unchosen types** need deliberate artwork choices (saved choices can already cover these).
 
 SPICE reuse is fixed in the reviewer to keep the corrected drawing geometry. Each reuse records its actual bundle recipe ID and NameID, drawing hash, and logical-to-source pin map. For example, the inventory's BJT collector is logical pin 2 but the reused drawing uses source pin 3. The potentiometer's logical wiper is pin 2, while the source wiper is pin 3. All four existing LED colours are linked to the one canonical LED choice.
 
-A generic op-amp reuses the 741 artwork. This does not approve the 741 model for every experiment. Likewise, a rectifier's intended electrical rating is not established by sharing diode artwork. Simulation requirements remain separate from this artwork review. Comparator, behavioural-source, FM and PWL reuse records set `modelReuseAllowed: false`: their existing drawing is retained, but the original 741/independent-source model configuration must be replaced with a suitable adapter. Sine and pulse sources remain unchosen because their inventory explicitly requests waveform graphics absent from the existing DC source drawing.
+A generic op-amp reuses the 741 artwork. This does not approve the 741 model for every experiment. Likewise, a rectifier's intended electrical rating is not established by sharing diode artwork. Simulation requirements remain separate from this artwork review. Comparator and behavioural-source reuse records set `modelReuseAllowed: false`: their existing drawing is retained, but the original 741/independent-source model configuration must be replaced with a suitable adapter. DC, sine, pulse, PWL and FM sources, current sources, controlled sources and conventional meter functions use built-in controls and are excluded from this queue. Their settings and experiment dependencies are retained in `existing_tools`.
 
 The Digital logic bundle contains 28 entries: 21 logical types plus seven falling-edge alternatives. Hidden VCC/VSS supply pins are retained in each logical pin map and connect using native Power-pin semantics.
 
-The supplied instruments and probes are outside the master generation queue. They are not recreated by this tool.
+The supplied instruments, probes and native sources are outside the master generation queue. See the [built-in coverage audit](README.md) for tools and settings. They are not recreated by this tool.
 
 ## Review workflow
 

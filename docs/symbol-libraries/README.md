@@ -6,7 +6,7 @@ Start with **[library-manifest.json](library-manifest.json)**. This single self-
 
 ## Artwork selection before bundling
 
-Use the **[shared symbol reviewer](SELECTION.md)** to choose artwork once per canonical type. It starts with 56 automatic artwork assignments from the corrected SPICE bundle and selected NAND reference, six native editor features and 50 types initially needing a decision. SQL candidates are compared against SPICE references at a common drawing scale, and choices are recorded in [symbol-choices.json](symbol-choices.json) for all overlapping course bundles. The [selection rules](selection-rules.json) cover pin contracts, grid alignment, lead/body size and drawing style. The [Digital logic bundle](../digital-library.md) is already generated from the chosen NAND. Course bundles will be built after the remaining shared selection is complete.
+Use the **[shared symbol reviewer](SELECTION.md)** to choose artwork once per canonical type. It starts with 76 automatic artwork assignments from the corrected SPICE bundle and selected NAND reference, six native editor features and 20 types initially needing a decision. SQL candidates are compared against SPICE references at a common drawing scale, and choices are recorded in [symbol-choices.json](symbol-choices.json) for all overlapping course bundles. The [selection rules](selection-rules.json) cover pin contracts, grid alignment, lead/body size and drawing style. The [Digital logic bundle](../digital-library.md) is already generated from the chosen NAND. The [Functional blocks bundle](../functional-library.md) supplies all 14 generic interfaces in the same style. The [Sensors and interfaces bundle](../sensor-interface-library.md) supplies ten further drawings, including the test point, sensors, analogue switch and AM modulator. Course bundles will be built after the remaining shared selection is complete.
 
 ```sh
 npm run symbols:review -- --sql '../sql/tinycad1_prod(1).sql'
@@ -27,9 +27,26 @@ npm run symbols:review -- --sql '../sql/tinycad1_prod(1).sql'
 
 All files use UTF-8. CSV fields are quoted with doubled embedded quotes and CRLF records. Parse CSV before interpreting columns ending in `_json`; those cells contain arrays or objects. JSON retains the richest metadata.
 
-**Already supplied equipment is excluded from generation:** the oscilloscope, three-socket multimeter, function generator, bench supply, voltage probe, differential probe and current probe. These appear only in `existing_tools`/`existing_tool_ids` as dependencies, with `already_provided: true` and `generate_symbol: false`. The deduplicated generation list now contains **112 types**.
+**Already supplied equipment is excluded from generation:** the oscilloscope, three-socket multimeter, function generator, bench supply, voltage probe, differential probe and current probe, plus independent DC/sine/pulse/PWL/FM voltage sources, the independent current source and voltage-controlled sources. The ammeter, voltmeter and ohmmeter use multimeter modes. These appear only in `existing_tools`/`existing_tool_ids` as dependencies, with `already_provided: true` and `generate_symbol: false`. The deduplicated generation list now contains **102 types**.
 
-Conventional circle-A, circle-V and circle-Ω symbols remain available for textbook circuit diagrams; they are distinct from the branch's built-in multimeter. Native editor primitives remain separately typed and should use existing editor operations.
+The audit against `src/simulation/controlSymbols.ts`, `controls.ts`, `instruments.ts` and the SPICE insert menu removes ten duplicate artwork requests. Native editor primitives remain separately typed and use existing editor operations.
+
+| Requirement | Built-in tool | Configuration |
+| --- | --- | --- |
+| Oscilloscope | `scope` | Two differential channels. |
+| Multimeter / ammeter / voltmeter / ohmmeter | `meter` | `dcA`, `dcV`, `ohm`; AC current/voltage modes are also available. |
+| Signal/function generator | `generator` | Waveform and output impedance controls. |
+| Bench supply | `supply` | Voltage, current limit and output resistance. |
+| Voltage / differential / current probe | `probe` / `differential-probe` / `current-probe` | Native probe terminals and readings. |
+| DC, sine, pulse/step, PWL, FM voltage source | `source` | `type: voltage` and the required `waveform`. |
+| Independent current source | `source` | `type: current`; all seven native waveforms are available. |
+| VCVS / VCCS | `controlled` | `type: voltage` / `current`. VCCS is supported even though no current course requests it. |
+
+The built-in source also supports triangle and exponential waveforms and small-signal AC magnitude/phase. `existing_tools[].configuration` records the required mode or source settings; merge these into the native tool defaults and supply circuit-specific values. Meter mode aliases do not have the old two-pin circle-symbol contract: current uses socket 3–2 and voltage/resistance uses 1–2.
+
+Cells and batteries retain their distinct physical-source drawings. Arbitrary-expression behavioural voltage/current sources remain generation requirements: the native source and controlled-source controls do not provide that expression interface. A generic data-logger interface also remains distinct from the simulator's measurement/results UI.
+
+The audited mapping is maintained in `scripts/lib/teaching-native-tools.mjs`, so regeneration consistently excludes these entries from every course bundle.
 
 ## Libraries
 

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "id": "functional",
+  "name": "Functional blocks",
+  "output": "bundled-libraries/functional/functional.tclib",
+  "style": {
+    "reference": "derived:full_adder",
+    "leadLengthMm": 4,
+    "pinPitchMm": 2
+  },
+  "blocks": {
+    "adc4": "ADC 4-bit",
+    "channel": "CHANNEL",
+    "dac4": "DAC 4-bit",
+    "data_logger": "LOGGER",
+    "fpga": "FPGA",
+    "microcontroller": "MCU",
+    "output_transducer": "TRANSDUCER",
+    "pcm_encoder": "PCM ENCODER",
+    "plc_interface": "PLC I/O",
+    "receiver": "RECEIVER",
+    "sampler": "SAMPLE / HOLD",
+    "state_machine": "STATE MACHINE",
+    "tdm_switch": "TDM MUX",
+    "transmitter": "TRANSMITTER"
+  },
+  "clockedSymbols": ["adc4", "pcm_encoder", "state_machine"],
+  "notes": "Generic diagram-only logical interfaces, not physical packages or executable simulations. Power and reference terminals remain visible and keep their inventory names. ADC, PCM encoder and state machine have rising/falling-edge alternatives. General clock ports on MCU, FPGA, sample-and-hold and TDM interfaces do not imply edge-triggered behaviour."
+}

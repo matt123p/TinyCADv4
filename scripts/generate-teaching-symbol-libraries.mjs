@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { teachingNativeTools } from './lib/teaching-native-tools.mjs';
 
 // Curated coverage inventory, not a circuit BOM or a symbol geometry generator.
 // No device/package pinout is inferred from these generic logical terminals.
@@ -177,7 +178,7 @@ for (const [id, name, terminals, description] of [
 ]) add(id, name, '12 Editor Primitives', '', terminals, 'editor_primitive', description, [name]);
 
 // Shared supporting inventory is duplicated in every library for standalone use.
-const nativeTools = {multimeter: 'meter', oscilloscope: 'scope', function_generator: 'generator', bench_supply: 'supply', voltage_probe: 'probe', differential_probe: 'differential-probe', current_probe: 'current-probe'};
+const nativeTools = Object.fromEntries(Object.entries(teachingNativeTools).map(([id, tool]) => [id, tool.native_tool]));
 const allCommon = 'resistor rheostat cell battery source_dc switch_spst bench_supply multimeter ammeter voltmeter ohmmeter voltage_probe differential_probe current_probe test_point connector2 connector3 wire junction net_label ground no_connect annotation'.split(' ');
 const common = allCommon.filter(id => !nativeTools[id]);
 const measurement = 'source_sine source_pulse oscilloscope function_generator bnc';
@@ -309,7 +310,7 @@ const handoff = {
   source_document_base: 'All source_document paths are relative to the repository root, including in standalone library files.',
   identity: 'id is stable within a library; extraction may deduplicate by canonical_symbol_id, but each library is complete and permits independent duplicate assets.',
   pin_contract: 'Logical terminal numbers and signal names are not physical package pinouts. Resolve real package pins from an authoritative device reference before generating package-specific symbols.',
-  conventions: 'Prefer IEC/UK teaching symbols. Power pins and polarity should remain explicit. Built-in instruments and probes are already provided and are excluded from symbol generation.',
+  conventions: 'Prefer IEC/UK teaching symbols. Power pins and polarity should remain explicit. Built-in instruments, probes, independent waveform sources and voltage-controlled sources are excluded from symbol generation. Use existing_tools configuration with the native tool defaults.',
   existing_tools: 'existing_tools and existing_tool_ids refer to supplied non-library tools, not generation requirements. Never recreate these as library symbols.',
   inventory_not_bom: 'One record per reusable symbol type, not per component instance. A bridge can be assembled from repeated diode/resistor symbols. Different resistance/capacitance values are properties, not separate symbols.',
   model_warning: 'Every record is marked not ready to simulate from this manifest. A successful extraction of artwork does not establish a valid model, mapping or instrument implementation.',
@@ -357,7 +358,7 @@ for (const [libraryId, docPrefix, title, assignments, optional = {}] of courses)
   for (const a of activities) for (const id of [...a.experiment_symbol_ids, ...a.existing_tool_ids]) selected.add(id);
   for (const list of Object.values(optional)) for (const id of words(list)) selected.add(id);
   const existingTools = [...selected].filter(id => nativeTools[id]).map(id => ({
-    id, name: catalogue.get(id).name, native_tool: nativeTools[id], already_provided: true, generate_symbol: false,
+    id, name: catalogue.get(id).name, ...teachingNativeTools[id], already_provided: true, generate_symbol: false,
     used_by_experiments: activities.filter(a => a.existing_tool_ids.includes(id)).map(a => a.id),
     common_support_tool: allCommon.includes(id),
   }));
@@ -422,8 +423,8 @@ const uniqueManifest = {
   totals: {unique_symbols: deduplicated.length, source_libraries: libraries.length, experiments: manifest.totals.experiments},
   source_libraries: libraries.map(({library_id, title, source_document}) => ({library_id, title, source_document})),
   symbols: deduplicated,
-  existing_tools: Object.entries(nativeTools).map(([id, native_tool]) => ({
-    id, name: catalogue.get(id).name, native_tool, already_provided: true, generate_symbol: false,
+  existing_tools: Object.entries(teachingNativeTools).map(([id, tool]) => ({
+    id, name: catalogue.get(id).name, ...tool, already_provided: true, generate_symbol: false,
     used_by_libraries: libraries.filter(l => l.existing_tools.some(t => t.id === id)).map(l => l.library_id),
     used_by_experiments: [...new Set(libraries.flatMap(l => l.existing_tools.find(t => t.id === id)?.used_by_experiments || []))],
     common_support_tool: allCommon.includes(id),
@@ -444,7 +445,7 @@ await fs.writeFile(path.join(output, 'symbols.csv'), csv(csvRows));
 await fs.writeFile(path.join(output, 'experiment-symbol-map.csv'), csv(usageRows));
 const inventory = ['# Teaching symbol-library inventory', '', 'Generated from the curated assignments and the ten course catalogues. The JSON files are the authoritative handoff; this file is a readable checklist.', '',
   `Libraries: **${libraries.length}**. Experiments: **${manifest.totals.experiments}**. Library symbol records: **${manifest.totals.library_symbol_records}**. Distinct reusable types: **${distinct.size}**.`, '',
-  'Built-in lab equipment and probes are excluded from the generation requirements. Existing-tool notes identify tools already supplied by this branch; do not generate them as library symbols.', '',
+  'Built-in lab equipment, meter modes, probes, independent waveform sources and voltage-controlled sources are excluded from the generation requirements. Existing-tool notes identify tools already supplied by this branch; do not generate them as library symbols.', '',
   'Each folder is proposed metadata, not an implemented library-browser feature. Logical terminals are not package pinouts. An entry is an inventory requirement, not a finished symbol or executable model.', ''];
 for (const l of libraries) {
   inventory.push(`## ${l.title}`, '', `[JSON](libraries/${l.library_id}.json) · [Use cases](${l.source_document.replace(/^docs\//, '../')})`, '',

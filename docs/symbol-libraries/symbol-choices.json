@@ -1,11 +1,13 @@
 {
   "version": 1,
-  "revision": 26,
-  "inventorySha256": "12a28ee3c8b8eb2a5bd1bf5d2f68313d2e744c20d6b12420447269f0ad0a2703",
+  "revision": 33,
+  "inventorySha256": "a84cd2c11709fd827b13d3cce8f7976b992608f8e423fac1917c3416fb8d303e",
   "sourceSha256": "3efbdf682121249aa4c2c8f8fdd1dc807025b26c5e46c369eb41c3f28a34d47e",
-  "spiceSha256": "ef88cb1ad448aee3d6f042ef3d9eb3f694f0dac570d6265ee9d221dc820e0225",
+  "spiceSha256": "48e5f148658671f59689465d669efbd61c0ae7f97eed4c877dbfa624567c64a8",
   "derivedSha256": "ed995ad425f6a6a571752dd99a94d97be31487c928deea3eac426008039faaeb",
   "digitalSha256": "f8a7a6efaab2b051e5319aa0af6a04df33432c12cec00819f05fc38d1e0df9fe",
+  "functionalSha256": "2523013368c541c032ab57611a56e2275e452d8c5a4f0ce998336ad695f7968b",
+  "sensorsSha256": "e4f0fcb573ad02051433071fa429a219b08670eb21db2746e098b4e97e70a219",
   "decisions": {
     "capacitor": {
       "status": "reuse",
@@ -471,10 +473,52 @@
       "note": "Derived from the corrected SPICE base. EU and US resistor bodies share identical terminals; both variants apply to every bundle. Artwork only: supply a suitable model adapter separately."
     },
     "ph_probe": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:ph_probe",
+      "xmlSha256": "8580bb9ef3aa8f908a81388a6bd88952dd8782b89bd9d0be778e3cdd47500cef",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/sensors-interfaces.json",
+        "bundle": "bundled-libraries/sensors-interfaces/sensors-interfaces.tclib",
+        "nameId": 8,
+        "id": "ph_probe",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:ph_probe"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Two-terminal pH electrode interface drawn as a labelled source circle; signal and reference remain distinct. Logical terminals only; sensing laws and simulation adapters remain separate."
     },
     "piezo_sensor": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:piezo_sensor",
+      "xmlSha256": "f7826a206427ba3794e8abf3bc3449199fd6a4a0b94190d28f5d06aca4bc134f",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/sensors-interfaces.json",
+        "bundle": "bundled-libraries/sensors-interfaces/sensors-interfaces.tclib",
+        "nameId": 3,
+        "id": "piezo_sensor",
+        "baseCandidateId": "spice:capacitor",
+        "baseXmlSha256": "9f68ff398514ee1da644fffe919e995db4bc3bd3de146d3295133fa8bc6353c6"
+      },
+      "variants": [
+        "derived:piezo_sensor"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Existing capacitor electrodes and terminals with a central piezo element and force arrow; generic transducer, not an ordinary crystal resonator. Logical terminals only; sensing laws and simulation adapters remain separate."
     },
     "solar_cell": {
       "status": "reuse",
@@ -518,16 +562,104 @@
       "modelReviewRequired": true
     },
     "hall_sensor": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:hall_sensor",
+      "xmlSha256": "7dad8b931ca30ea1ffb26309b0508295fff08f6f9c00bb72259a1a8344bde40a",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/sensors-interfaces.json",
+        "bundle": "bundled-libraries/sensors-interfaces/sensors-interfaces.tclib",
+        "nameId": 2,
+        "id": "hall_sensor",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:hall_sensor"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Generic powered Hall sensor with H and an incoming B arrow; not a bare four-terminal Hall element. Logical terminals only; sensing laws and simulation adapters remain separate."
     },
     "light_sensor": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:light_sensor",
+      "xmlSha256": "2c3cbc19b9374c37a37a5b470ab08ed0927073b7f7de29d6757f3bc41e3ce240",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/sensors-interfaces.json",
+        "bundle": "bundled-libraries/sensors-interfaces/sensors-interfaces.tclib",
+        "nameId": 4,
+        "id": "light_sensor",
+        "baseCandidateId": "spice:diode",
+        "baseXmlSha256": "5d25bef833b99e1b5165115f5abe22c66305483e6a1f787a7c79a628b3fff6b6"
+      },
+      "variants": [
+        "derived:light_sensor"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Powered photodetector interface containing the existing diode body and two incoming light arrows. Logical terminals only; sensing laws and simulation adapters remain separate."
     },
     "pressure_sensor": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:pressure_sensor",
+      "xmlSha256": "35f24a34a882ac42fb623d2e7616f82107e26d8f660c4af5e592da617f11279c",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/sensors-interfaces.json",
+        "bundle": "bundled-libraries/sensors-interfaces/sensors-interfaces.tclib",
+        "nameId": 5,
+        "id": "pressure_sensor",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:pressure_sensor"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Powered sensor block containing a diaphragm and incoming pressure arrow; generic conditioned voltage output. Logical terminals only; sensing laws and simulation adapters remain separate."
     },
     "temperature_sensor": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:temperature_sensor",
+      "xmlSha256": "d8699292e20f92eb7a348a0cdd9d474b4692903b09e10c48adc21ebc9aea43ee",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/sensors-interfaces.json",
+        "bundle": "bundled-libraries/sensors-interfaces/sensors-interfaces.tclib",
+        "nameId": 6,
+        "id": "temperature_sensor",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:temperature_sensor"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Powered temperature-to-voltage interface with a thermometer motif; distinct from a thermistor. Logical terminals only; sensing laws and simulation adapters remain separate."
     },
     "ldr": {
       "status": "reuse",
@@ -553,7 +685,28 @@
       "note": "Derived from the corrected SPICE base. EU and US resistor bodies share identical terminals; both variants apply to every bundle. Artwork only: supply a suitable model adapter separately."
     },
     "moisture_sensor": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:moisture_sensor",
+      "xmlSha256": "9578824a3ac237de22e40f3f8f48e95a8efc0ec1224884636117b6a3a9717098",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/sensors-interfaces.json",
+        "bundle": "bundled-libraries/sensors-interfaces/sensors-interfaces.tclib",
+        "nameId": 7,
+        "id": "moisture_sensor",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:moisture_sensor"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Two interleaved resistive electrodes and water-drop motif; no supply pin or invented digital interface. Logical terminals only; sensing laws and simulation adapters remain separate."
     },
     "ntc": {
       "status": "reuse",
@@ -602,7 +755,30 @@
       "note": "Derived from the corrected SPICE base. EU and US resistor bodies share identical terminals; both variants apply to every bundle. Artwork only: supply a suitable model adapter separately."
     },
     "controlled_switch": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:controlled_switch",
+      "xmlSha256": "9b7758830ba1660197086ff7168b14202448267ab66ed6253328cd6e78b99fc8",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/sensors-interfaces.json",
+        "bundle": "bundled-libraries/sensors-interfaces/sensors-interfaces.tclib",
+        "nameId": 9,
+        "id": "controlled_switch",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:controlled_switch"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Open analogue switch contacts with a dashed actuation link and a separate differential control pair. Logical terminals only; sensing laws and simulation adapters remain separate."
     },
     "push_break": {
       "status": "chosen",
@@ -817,81 +993,6 @@
       "requiresAdaptation": false,
       "modelReviewRequired": true
     },
-    "vcvs": {
-      "status": "pending"
-    },
-    "current_source": {
-      "status": "reuse",
-      "candidateId": "spice:current-source",
-      "xmlSha256": "67e865697cfa5b495a4cef41fa13addccc5f42a3a80122ee6442ee974e0bdd4c",
-      "pinMap": {
-        "1": "0:0:1",
-        "2": "0:0:2"
-      },
-      "source": {
-        "bundle": "bundled-libraries/spice/spice.tclib",
-        "recipeId": "current-source",
-        "nameId": 24
-      },
-      "modelReviewRequired": true,
-      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
-    },
-    "source_dc": {
-      "status": "reuse",
-      "candidateId": "spice:voltage-source",
-      "xmlSha256": "6fb626405f413e0520cfd1f964eab37d722b2bf9cc58fd4521c554b318e758fd",
-      "pinMap": {
-        "1": "0:0:1",
-        "2": "0:0:2"
-      },
-      "source": {
-        "bundle": "bundled-libraries/spice/spice.tclib",
-        "recipeId": "voltage-source",
-        "nameId": 23
-      },
-      "modelReviewRequired": true,
-      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
-    },
-    "source_fm": {
-      "status": "reuse",
-      "candidateId": "spice:voltage-source",
-      "xmlSha256": "6fb626405f413e0520cfd1f964eab37d722b2bf9cc58fd4521c554b318e758fd",
-      "pinMap": {
-        "1": "0:0:1",
-        "2": "0:0:2"
-      },
-      "source": {
-        "bundle": "bundled-libraries/spice/spice.tclib",
-        "recipeId": "voltage-source",
-        "nameId": 23
-      },
-      "modelReviewRequired": true,
-      "modelReuseAllowed": false,
-      "note": "Reuse the voltage-source artwork; supply a new FM waveform/property adapter instead of the default DC configuration."
-    },
-    "source_pulse": {
-      "status": "pending"
-    },
-    "source_pwl": {
-      "status": "reuse",
-      "candidateId": "spice:voltage-source",
-      "xmlSha256": "6fb626405f413e0520cfd1f964eab37d722b2bf9cc58fd4521c554b318e758fd",
-      "pinMap": {
-        "1": "0:0:1",
-        "2": "0:0:2"
-      },
-      "source": {
-        "bundle": "bundled-libraries/spice/spice.tclib",
-        "recipeId": "voltage-source",
-        "nameId": 23
-      },
-      "modelReviewRequired": true,
-      "modelReuseAllowed": false,
-      "note": "Reuse the voltage-source artwork; supply a new time/voltage-point-list adapter instead of the default DC configuration."
-    },
-    "source_sine": {
-      "status": "pending"
-    },
     "buzzer": {
       "status": "chosen",
       "candidateId": "sql:261",
@@ -959,10 +1060,50 @@
       "modelReviewRequired": true
     },
     "seven_segment_cathode": {
-      "status": "pending"
+      "status": "chosen",
+      "candidateId": "sql:1176",
+      "xmlSha256": "13c76d9a8971e7d0024054285afc68144b7a38388f5fcf371c78df5c970cee2a",
+      "sourceNameId": 10344,
+      "source": {
+        "kind": "sql",
+        "nameId": 10344,
+        "symbolId": 1176,
+        "author": "fe9",
+        "sourceSha256": "3efbdf682121249aa4c2c8f8fdd1dc807025b26c5e46c369eb41c3f28a34d47e"
+      },
+      "pinMap": {
+        "1": null,
+        "2": null,
+        "3": null,
+        "4": null,
+        "5": null,
+        "6": null,
+        "7": null,
+        "8": null,
+        "9": null
+      },
+      "requiresAdaptation": true,
+      "adaptationNotes": "Build from this.  Fixup pins as necesary",
+      "modelReviewRequired": true
     },
     "lamp": {
-      "status": "pending"
+      "status": "chosen",
+      "candidateId": "sql:224",
+      "xmlSha256": "43bb204ac1cf0f1ca2dc3093d8cee364aee8d37a17f80c25c49e82845fab5326",
+      "sourceNameId": 9343,
+      "source": {
+        "kind": "sql",
+        "nameId": 9343,
+        "symbolId": 224,
+        "author": "matt",
+        "sourceSha256": "3efbdf682121249aa4c2c8f8fdd1dc807025b26c5e46c369eb41c3f28a34d47e"
+      },
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "requiresAdaptation": false,
+      "modelReviewRequired": true
     },
     "opamp": {
       "status": "reuse",
@@ -1004,7 +1145,32 @@
       "note": "Reuse the triangle and five terminals only. Replace the 741 model with a comparator adapter and declare its output type."
     },
     "am_modulator": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:am_modulator",
+      "xmlSha256": "a7799dae959e9f23965a709d0c5b0bc53ea89f51c7269144254ef92de98f0712",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/sensors-interfaces.json",
+        "bundle": "bundled-libraries/sensors-interfaces/sensors-interfaces.tclib",
+        "nameId": 10,
+        "id": "am_modulator",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:am_modulator"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Labelled AM functional block with multiplier motif and separate carrier/message differential inputs; carrier bias and modulation law require an explicit model. Logical terminals only; sensing laws and simulation adapters remain separate."
     },
     "timer_555": {
       "status": "chosen",
@@ -1644,55 +1810,394 @@
       "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
     },
     "adc4": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:adc4",
+      "xmlSha256": "ecf9c371099c115b5977827fc5f37dbc9a767b1569e032ab6f6f3edb9877242f",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 1,
+        "id": "adc4",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:adc4",
+        "derived:adc4-falling"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "channel": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:channel",
+      "xmlSha256": "baba73516144f080f06de13531a02bc045561bafffea00e99c1fa799fe0dac88",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 2,
+        "id": "channel",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:channel"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "dac4": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:dac4",
+      "xmlSha256": "5503fb75b9cc1a6ed30aab525bf0cf83a06afdbac55e0c19a03f71232117cc4a",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 3,
+        "id": "dac4",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:dac4"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "data_logger": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:data_logger",
+      "xmlSha256": "cbf325865053be9042bcd65424136e8187c29e972ce0903c11bde00553107afe",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 4,
+        "id": "data_logger",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:data_logger"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "fpga": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:fpga",
+      "xmlSha256": "5ea4e57d1b32c9fbf4a3ce661e3f4498ef59f030444fbcef22f80dc83389a19f",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8",
+        "9": "0:0:9",
+        "10": "0:0:10",
+        "11": "0:0:11",
+        "12": "0:0:12"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 5,
+        "id": "fpga",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:fpga"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "microcontroller": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:microcontroller",
+      "xmlSha256": "22964839cdf7e0561a23df0246be97ed447c40a7383945a34b1c97e9f0888377",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8",
+        "9": "0:0:9",
+        "10": "0:0:10",
+        "11": "0:0:11",
+        "12": "0:0:12",
+        "13": "0:0:13",
+        "14": "0:0:14"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 6,
+        "id": "microcontroller",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:microcontroller"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "output_transducer": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:output_transducer",
+      "xmlSha256": "d08c3d72a911b1074cf293016f85fb87f256693c196d7c0f109c1aa5ad30ce10",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 7,
+        "id": "output_transducer",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:output_transducer"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "pcm_encoder": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:pcm_encoder",
+      "xmlSha256": "089f43bdaa1eb8f10257d7f2ad6e5028f6e0be8ff679d19d5073c8bd049f3e5a",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 8,
+        "id": "pcm_encoder",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:pcm_encoder",
+        "derived:pcm_encoder-falling"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "plc_interface": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:plc_interface",
+      "xmlSha256": "7891279119d4dfbee369f289042225eb77a3259c4369913ed2a63380b55b2987",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 9,
+        "id": "plc_interface",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:plc_interface"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "receiver": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:receiver",
+      "xmlSha256": "3f40e04a797284211c7ac9b6ed523d6ff4fbc31b09ff65a85017f072bb9a21c6",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 10,
+        "id": "receiver",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:receiver"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "sampler": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:sampler",
+      "xmlSha256": "cfe38f1fe425e8974e72f9a115607e5c3cf23131f0d2657dcdea83d49090bff2",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 11,
+        "id": "sampler",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:sampler"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "state_machine": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:state_machine",
+      "xmlSha256": "4a36ee277c2701dc8e3394a611c4489d1da9ff15cfa740dade4859f8570d293f",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 12,
+        "id": "state_machine",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:state_machine",
+        "derived:state_machine-falling"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "tdm_switch": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:tdm_switch",
+      "xmlSha256": "ecbc9b9fc77da03020948b2eb1524fcd9d518b5429c28d6e8bc407a811d301ff",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 13,
+        "id": "tdm_switch",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:tdm_switch"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "transmitter": {
-      "status": "pending"
-    },
-    "ammeter": {
-      "status": "pending"
-    },
-    "ohmmeter": {
-      "status": "pending"
-    },
-    "voltmeter": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:transmitter",
+      "xmlSha256": "67240c0be92a8ab070311e5f8d523e2ee2a3778c4df5c3dbc5b4d2a0a45c4a92",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/functional.json",
+        "bundle": "bundled-libraries/functional/functional.tclib",
+        "nameId": 14,
+        "id": "transmitter",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:transmitter"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Built in the selected NAND-derived digital block style. Visible power/reference terminals retain their inventory names. Generic diagram-only interface; simulation and physical implementation are separate."
     },
     "bnc": {
       "status": "chosen",
@@ -1754,7 +2259,27 @@
       "modelReviewRequired": true
     },
     "test_point": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:test_point",
+      "xmlSha256": "1cdbab74a7af3b61c3b1bca0f08742a25b3e8749cb6316dd0b4d1121ab4c3ee9",
+      "pinMap": {
+        "1": "0:0:1"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/sensors-interfaces.json",
+        "bundle": "bundled-libraries/sensors-interfaces/sensors-interfaces.tclib",
+        "nameId": 1,
+        "id": "test_point",
+        "baseCandidateId": "derived:full_adder",
+        "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+      },
+      "variants": [
+        "derived:test_point"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "A single native passive pin ending directly at an open circle. Logical terminals only; sensing laws and simulation adapters remain separate."
     },
     "annotation": {
       "status": "native",

@@ -10,14 +10,14 @@ const nodes = (root, tag) => Array.from(root.getElementsByTagName(tag));
 const xy = (node, attr = 'pos') =>
   node.getAttribute(attr).split(',').map(Number);
 const coord = (values) => values.map((n) => Number(n.toFixed(7))).join(',');
-function element(doc, tag, attributes = {}, text) {
+export function element(doc, tag, attributes = {}, text) {
   const node = doc.createElement(tag);
   for (const [key, value] of Object.entries(attributes))
     node.setAttribute(key, Array.isArray(value) ? coord(value) : String(value));
   if (text !== undefined) node.appendChild(doc.createTextNode(String(text)));
   return node;
 }
-function resource(doc, tag, id, values) {
+export function resource(doc, tag, id, values) {
   const node = element(doc, tag, { id });
   for (const [key, value] of Object.entries(values))
     node.appendChild(element(doc, key, {}, value));
@@ -38,7 +38,7 @@ function poly(doc, points, { fill = 0, extra = false } = {}) {
   doc.documentElement.appendChild(node);
   return node;
 }
-function label(doc, position, text) {
+export function label(doc, position, text) {
   doc.documentElement.appendChild(
     element(
       doc,
@@ -48,7 +48,7 @@ function label(doc, position, text) {
     ),
   );
 }
-function makePin(
+export function makePin(
   doc,
   logical,
   position,
@@ -72,6 +72,10 @@ function makePin(
             ? 10
             : logical.electrical_type === 'output'
             ? 1
+            : logical.electrical_type === 'bidirectional'
+            ? 5
+            : logical.electrical_type === 'passive'
+            ? 4
             : 0,
         part: 0,
         show: which === 4 ? 1 : 0,
@@ -82,7 +86,7 @@ function makePin(
     ),
   );
 }
-function body(doc, shape, width, height, neck) {
+export function body(doc, shape, width, height, neck) {
   if (shape === 'and') {
     poly(
       doc,

@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "id": "sensors-interfaces",
+  "name": "Sensors and interfaces",
+  "styleReference": {
+    "id": "derived:full_adder",
+    "xmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+  },
+  "recipeSha256": "a94d06ca8ee05d18679170ee787b392db4fe318f6c6aa976a4882620ee39140f",
+  "sources": {
+    "hall": "https://www.ti.com/lit/ds/symlink/drv5055.pdf",
+    "piezo": "https://www.analog.com/en/resources/technical-articles/2022/07/16/07/45/amplifier-provides-signal-conditioning-for-piezofilm-sensor.html",
+    "light": "https://www.ti.com/lit/ds/symlink/opt101.pdf",
+    "pressure": "https://www.nxp.com/products/MPX5010D",
+    "temperature": "https://www.ti.com/lit/ds/symlink/lm35.pdf",
+    "ph": "https://www.analog.com/en/resources/reference-designs/circuits-from-the-lab/cn0428.html",
+    "switch": "https://www.analog.com/en/resources/glossary/analog-switch.html",
+    "am": "https://www.analog.com/media/en/technical-documentation/data-sheets/AD633.pdf"
+  },
+  "notes": "Original generic teaching artwork informed by manufacturer circuit conventions, not claimed IEC symbols or manufacturer package pinouts. Existing capacitor/diode graphics are reused where appropriate. All supplies are explicit. Artwork does not implement sensing, switching or modulation models.",
+  "entries": [
+    {
+      "id": "test_point",
+      "name": "Test point",
+      "nameId": 1,
+      "symbolId": 1,
+      "xmlSha256": "1cdbab74a7af3b61c3b1bca0f08742a25b3e8749cb6316dd0b4d1121ab4c3ee9",
+      "baseCandidateId": "derived:full_adder",
+      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "convention": "A single native passive pin ending directly at an open circle."
+    },
+    {
+      "id": "hall_sensor",
+      "name": "Hall-effect sensor",
+      "nameId": 2,
+      "symbolId": 2,
+      "xmlSha256": "7dad8b931ca30ea1ffb26309b0508295fff08f6f9c00bb72259a1a8344bde40a",
+      "baseCandidateId": "derived:full_adder",
+      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "convention": "Generic powered Hall sensor with H and an incoming B arrow; not a bare four-terminal Hall element."
+    },
+    {
+      "id": "piezo_sensor",
+      "name": "Piezoelectric sensor",
+      "nameId": 3,
+      "symbolId": 3,
+      "xmlSha256": "f7826a206427ba3794e8abf3bc3449199fd6a4a0b94190d28f5d06aca4bc134f",
+      "baseCandidateId": "spice:capacitor",
+      "baseXmlSha256": "9f68ff398514ee1da644fffe919e995db4bc3bd3de146d3295133fa8bc6353c6",
+      "convention": "Existing capacitor electrodes and terminals with a central piezo element and force arrow; generic transducer, not an ordinary crystal resonator."
+    },
+    {
+      "id": "light_sensor",
+      "name": "Voltage-output light sensor",
+      "nameId": 4,
+      "symbolId": 4,
+      "xmlSha256": "2c3cbc19b9374c37a37a5b470ab08ed0927073b7f7de29d6757f3bc41e3ce240",
+      "baseCandidateId": "spice:diode",
+      "baseXmlSha256": "5d25bef833b99e1b5165115f5abe22c66305483e6a1f787a7c79a628b3fff6b6",
+      "convention": "Powered photodetector interface containing the existing diode body and two incoming light arrows."
+    },
+    {
+      "id": "pressure_sensor",
+      "name": "Voltage-output pressure sensor",
+      "nameId": 5,
+      "symbolId": 5,
+      "xmlSha256": "35f24a34a882ac42fb623d2e7616f82107e26d8f660c4af5e592da617f11279c",
+      "baseCandidateId": "derived:full_adder",
+      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "convention": "Powered sensor block containing a diaphragm and incoming pressure arrow; generic conditioned voltage output."
+    },
+    {
+      "id": "temperature_sensor",
+      "name": "Voltage-output temperature sensor",
+      "nameId": 6,
+      "symbolId": 6,
+      "xmlSha256": "d8699292e20f92eb7a348a0cdd9d474b4692903b09e10c48adc21ebc9aea43ee",
+      "baseCandidateId": "derived:full_adder",
+      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "convention": "Powered temperature-to-voltage interface with a thermometer motif; distinct from a thermistor."
+    },
+    {
+      "id": "moisture_sensor",
+      "name": "Moisture sensor",
+      "nameId": 7,
+      "symbolId": 7,
+      "xmlSha256": "9578824a3ac237de22e40f3f8f48e95a8efc0ec1224884636117b6a3a9717098",
+      "baseCandidateId": "derived:full_adder",
+      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "convention": "Two interleaved resistive electrodes and water-drop motif; no supply pin or invented digital interface."
+    },
+    {
+      "id": "ph_probe",
+      "name": "High-impedance pH probe interface",
+      "nameId": 8,
+      "symbolId": 8,
+      "xmlSha256": "8580bb9ef3aa8f908a81388a6bd88952dd8782b89bd9d0be778e3cdd47500cef",
+      "baseCandidateId": "derived:full_adder",
+      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "convention": "Two-terminal pH electrode interface drawn as a labelled source circle; signal and reference remain distinct."
+    },
+    {
+      "id": "controlled_switch",
+      "name": "Voltage-controlled analogue switch",
+      "nameId": 9,
+      "symbolId": 9,
+      "xmlSha256": "9b7758830ba1660197086ff7168b14202448267ab66ed6253328cd6e78b99fc8",
+      "baseCandidateId": "derived:full_adder",
+      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "convention": "Open analogue switch contacts with a dashed actuation link and a separate differential control pair."
+    },
+    {
+      "id": "am_modulator",
+      "name": "AM modulator functional circuit",
+      "nameId": 10,
+      "symbolId": 10,
+      "xmlSha256": "a7799dae959e9f23965a709d0c5b0bc53ea89f51c7269144254ef92de98f0712",
+      "baseCandidateId": "derived:full_adder",
+      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "convention": "Labelled AM functional block with multiplier motif and separate carrier/message differential inputs; carrier bias and modulation law require an explicit model."
+    }
+  ]
+}

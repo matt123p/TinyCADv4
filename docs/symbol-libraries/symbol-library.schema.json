@@ -17,6 +17,15 @@
           "id": { "type": "string" },
           "name": { "type": "string" },
           "native_tool": { "type": "string" },
+          "configuration": {
+            "type": "object",
+            "properties": {
+              "type": { "enum": ["voltage", "current"] },
+              "waveform": { "enum": ["dc", "sine", "pulse", "triangle", "pwl", "exponential", "fm"] },
+              "mode": { "enum": ["dcV", "acV", "dcA", "acA", "ohm"] }
+            },
+            "additionalProperties": false
+          },
           "already_provided": { "const": true },
           "generate_symbol": { "const": false },
           "used_by_experiments": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },

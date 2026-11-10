@@ -12,7 +12,7 @@
     "source_document_base": "All source_document paths are relative to the repository root, including in standalone library files.",
     "identity": "id is stable within a library; extraction may deduplicate by canonical_symbol_id, but each library is complete and permits independent duplicate assets.",
     "pin_contract": "Logical terminal numbers and signal names are not physical package pinouts. Resolve real package pins from an authoritative device reference before generating package-specific symbols.",
-    "conventions": "Prefer IEC/UK teaching symbols. Power pins and polarity should remain explicit. Built-in instruments and probes are already provided and are excluded from symbol generation.",
+    "conventions": "Prefer IEC/UK teaching symbols. Power pins and polarity should remain explicit. Built-in instruments, probes, independent waveform sources and voltage-controlled sources are excluded from symbol generation. Use existing_tools configuration with the native tool defaults.",
     "existing_tools": "existing_tools and existing_tool_ids refer to supplied non-library tools, not generation requirements. Never recreate these as library symbols.",
     "inventory_not_bom": "One record per reusable symbol type, not per component instance. A bridge can be assembled from repeated diode/resistor symbols. Different resistance/capacitance values are properties, not separate symbols.",
     "model_warning": "Every record is marked not ready to simulate from this manifest. A successful extraction of artwork does not establish a valid model, mapping or instrument implementation.",
@@ -41,11 +41,7 @@
     "rheostat",
     "cell",
     "battery",
-    "source_dc",
     "switch_spst",
-    "ammeter",
-    "voltmeter",
-    "ohmmeter",
     "test_point",
     "connector2",
     "connector3",
@@ -57,6 +53,21 @@
     "annotation"
   ],
   "existing_tools": [
+    {
+      "id": "source_dc",
+      "name": "DC voltage source",
+      "native_tool": "source",
+      "configuration": {
+        "type": "voltage",
+        "waveform": "dc"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "A20"
+      ],
+      "common_support_tool": true
+    },
     {
       "id": "bench_supply",
       "name": "Student current-limited bench supply",
@@ -75,6 +86,42 @@
       "used_by_experiments": [
         "A19"
       ],
+      "common_support_tool": true
+    },
+    {
+      "id": "ammeter",
+      "name": "Ammeter",
+      "native_tool": "meter",
+      "configuration": {
+        "mode": "dcA"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [],
+      "common_support_tool": true
+    },
+    {
+      "id": "voltmeter",
+      "name": "Voltmeter",
+      "native_tool": "meter",
+      "configuration": {
+        "mode": "dcV"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [],
+      "common_support_tool": true
+    },
+    {
+      "id": "ohmmeter",
+      "name": "Ohmmeter",
+      "native_tool": "meter",
+      "configuration": {
+        "mode": "ohm"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [],
       "common_support_tool": true
     },
     {
@@ -109,6 +156,80 @@
       "common_support_tool": true
     },
     {
+      "id": "source_pulse",
+      "name": "Pulse / step voltage source",
+      "native_tool": "source",
+      "configuration": {
+        "type": "voltage",
+        "waveform": "pulse"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "A03",
+        "A14",
+        "A17",
+        "A18",
+        "A21",
+        "A24",
+        "A27",
+        "A28",
+        "A29",
+        "A30",
+        "A31",
+        "A33",
+        "A36",
+        "A37",
+        "A38",
+        "A40",
+        "A41",
+        "A43"
+      ],
+      "common_support_tool": false
+    },
+    {
+      "id": "current_source",
+      "name": "Independent current source",
+      "native_tool": "source",
+      "configuration": {
+        "type": "current",
+        "waveform": "dc"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "A14"
+      ],
+      "common_support_tool": false
+    },
+    {
+      "id": "source_sine",
+      "name": "Sinusoidal voltage source",
+      "native_tool": "source",
+      "configuration": {
+        "type": "voltage",
+        "waveform": "sine"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "A17",
+        "A18",
+        "A25",
+        "A27",
+        "A28",
+        "A29",
+        "A30",
+        "A31",
+        "A32",
+        "A33",
+        "A41",
+        "A42",
+        "A43"
+      ],
+      "common_support_tool": false
+    },
+    {
       "id": "oscilloscope",
       "name": "Student oscilloscope, two differential channels",
       "native_tool": "scope",
@@ -136,6 +257,50 @@
         "A43"
       ],
       "common_support_tool": false
+    },
+    {
+      "id": "vcvs",
+      "name": "Voltage-controlled voltage source",
+      "native_tool": "controlled",
+      "configuration": {
+        "type": "voltage"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "A29"
+      ],
+      "common_support_tool": false
+    },
+    {
+      "id": "source_pwl",
+      "name": "Piecewise-linear voltage source",
+      "native_tool": "source",
+      "configuration": {
+        "type": "voltage",
+        "waveform": "pwl"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "A32"
+      ],
+      "common_support_tool": false
+    },
+    {
+      "id": "source_fm",
+      "name": "FM voltage source",
+      "native_tool": "source",
+      "configuration": {
+        "type": "voltage",
+        "waveform": "fm"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "A43"
+      ],
+      "common_support_tool": false
     }
   ],
   "folders": [
@@ -150,9 +315,6 @@
     "04 Switches/Manual",
     "05 Sources/Behavioural",
     "05 Sources/Cells",
-    "05 Sources/Controlled",
-    "05 Sources/Current",
-    "05 Sources/Voltage",
     "06 Outputs/Lamps",
     "07 Analogue/Amplifiers",
     "07 Analogue/Comparators",
@@ -161,7 +323,6 @@
     "08 Digital/Counters",
     "08 Digital/Gates",
     "09 Functional Blocks/Interfaces",
-    "10 Instruments/Conventional",
     "11 Connections/Connectors",
     "11 Connections/Terminals",
     "12 Editor Primitives"
@@ -203,10 +364,11 @@
       "experiment_symbol_ids": [
         "capacitor",
         "capacitor_polarised",
-        "source_pulse",
         "switch_spst"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_pulse"
+      ]
     },
     {
       "id": "A04",
@@ -347,11 +509,12 @@
       "catalogue_description": "Integrate capacitor current over a selected interval and compare the resulting charge change with its voltage change. Repeat with different C values. Calculate the quotient externally if needed.",
       "source_document": "docs/18-a-level-physics-electronics-experiments.md",
       "experiment_symbol_ids": [
-        "capacitor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
         "current_source",
         "source_pulse"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "A15",
@@ -388,11 +551,11 @@
       "catalogue_description": "Vary source amplitude, offset and frequency. Read volts/div and time/div, then compare cursor or graticule estimates with reported period and frequency. Use multiple cycles when estimating a period.",
       "source_document": "docs/18-a-level-physics-electronics-experiments.md",
       "experiment_symbol_ids": [
-        "source_sine",
-        "source_pulse",
         "bnc"
       ],
       "existing_tool_ids": [
+        "source_sine",
+        "source_pulse",
         "oscilloscope",
         "function_generator"
       ]
@@ -405,11 +568,11 @@
       "catalogue_description": "Capture complete cycles and compare a scope's voltage readout, AC meter reading and calculated RMS. Use a zero-offset sine initially; distinguish AC-only RMS from total RMS when adding an offset.",
       "source_document": "docs/18-a-level-physics-electronics-experiments.md",
       "experiment_symbol_ids": [
-        "source_sine",
-        "source_pulse",
         "bnc"
       ],
       "existing_tool_ids": [
+        "source_sine",
+        "source_pulse",
         "oscilloscope",
         "function_generator"
       ]
@@ -436,10 +599,11 @@
       "catalogue_description": "Use an N-channel enhancement device. Sweep gate voltage at several fixed drain conditions in separate runs, and measure drain current. Compare threshold estimates while keeping the model's limitations explicit.",
       "source_document": "docs/18-a-level-physics-electronics-experiments.md",
       "experiment_symbol_ids": [
-        "mosfet_n",
-        "source_dc"
+        "mosfet_n"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_dc"
+      ]
     },
     {
       "id": "A21",
@@ -449,10 +613,11 @@
       "catalogue_description": "Apply a pulse to the gate and compare gate, drain and load traces. Check the difference between an ideal switch assumption and a selected real device.",
       "source_document": "docs/18-a-level-physics-electronics-experiments.md",
       "experiment_symbol_ids": [
-        "mosfet_n",
-        "source_pulse"
+        "mosfet_n"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_pulse"
+      ]
     },
     {
       "id": "A22",
@@ -489,10 +654,10 @@
       "catalogue_description": "Draw sensor supply, output and load. Use an equivalent voltage/pulse source to test the receiving electronics. Magnetic field and motion are not generated by the circuit solver.",
       "source_document": "docs/18-a-level-physics-electronics-experiments.md",
       "experiment_symbol_ids": [
-        "hall_sensor",
-        "source_pulse"
+        "hall_sensor"
       ],
       "existing_tool_ids": [
+        "source_pulse",
         "oscilloscope"
       ]
     },
@@ -506,10 +671,10 @@
       "experiment_symbol_ids": [
         "inductor",
         "capacitor",
-        "capacitor_variable",
-        "source_sine"
+        "capacitor_variable"
       ],
       "existing_tool_ids": [
+        "source_sine",
         "oscilloscope"
       ]
     },
@@ -536,11 +701,12 @@
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
-        "capacitor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
         "source_sine",
         "source_pulse"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "A28",
@@ -552,11 +718,12 @@
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
-        "capacitor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
         "source_sine",
         "source_pulse"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "A29",
@@ -568,12 +735,13 @@
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
-        "capacitor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
         "source_sine",
         "source_pulse",
         "vcvs"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "A30",
@@ -585,11 +753,11 @@
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
-        "capacitor",
-        "source_sine",
-        "source_pulse"
+        "capacitor"
       ],
       "existing_tool_ids": [
+        "source_sine",
+        "source_pulse",
         "differential_probe"
       ]
     },
@@ -603,11 +771,12 @@
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
-        "capacitor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
         "source_sine",
         "source_pulse"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "A32",
@@ -619,11 +788,12 @@
       "experiment_symbol_ids": [
         "comparator",
         "gate_buffer",
-        "behavioural_voltage",
+        "behavioural_voltage"
+      ],
+      "existing_tool_ids": [
         "source_sine",
         "source_pwl"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "A33",
@@ -635,11 +805,12 @@
       "experiment_symbol_ids": [
         "sampler",
         "adc4",
-        "pcm_encoder",
+        "pcm_encoder"
+      ],
+      "existing_tool_ids": [
         "source_sine",
         "source_pulse"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "A34",
@@ -685,10 +856,11 @@
       "experiment_symbol_ids": [
         "counter_binary3_sync",
         "counter_bcd",
-        "counter_johnson",
-        "source_pulse"
+        "counter_johnson"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_pulse"
+      ]
     },
     {
       "id": "A37",
@@ -704,10 +876,11 @@
         "gate_nand",
         "gate_nor",
         "gate_xor",
-        "gate_not",
-        "source_pulse"
+        "gate_not"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_pulse"
+      ]
     },
     {
       "id": "A38",
@@ -720,10 +893,11 @@
         "timer_555",
         "capacitor",
         "capacitor_polarised",
-        "potentiometer",
-        "source_pulse"
+        "potentiometer"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_pulse"
+      ]
     },
     {
       "id": "A39",
@@ -756,10 +930,11 @@
       "experiment_symbol_ids": [
         "channel",
         "resistor",
-        "capacitor",
-        "source_pulse"
+        "capacitor"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_pulse"
+      ]
     },
     {
       "id": "A41",
@@ -770,11 +945,12 @@
       "source_document": "docs/18-a-level-physics-electronics-experiments.md",
       "experiment_symbol_ids": [
         "tdm_switch",
-        "controlled_switch",
+        "controlled_switch"
+      ],
+      "existing_tool_ids": [
         "source_pulse",
         "source_sine"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "A42",
@@ -785,10 +961,10 @@
       "source_document": "docs/18-a-level-physics-electronics-experiments.md",
       "experiment_symbol_ids": [
         "am_modulator",
-        "behavioural_voltage",
-        "source_sine"
+        "behavioural_voltage"
       ],
       "existing_tool_ids": [
+        "source_sine",
         "oscilloscope"
       ]
     },
@@ -800,12 +976,12 @@
       "catalogue_description": "Use the configurable source's FM waveform, then compare time-domain traces as modulation settings change. Identify carrier and message timing. A spectral sideband/bandwidth investigation requires external analysis or an added workflow; the current UI does not provide FFT.",
       "source_document": "docs/18-a-level-physics-electronics-experiments.md",
       "experiment_symbol_ids": [
-        "source_fm",
-        "source_sine",
-        "source_pulse",
         "bnc"
       ],
       "existing_tool_ids": [
+        "source_fm",
+        "source_sine",
+        "source_pulse",
         "oscilloscope",
         "function_generator"
       ]
@@ -2136,373 +2312,6 @@
       ],
       "common_support_symbol": true,
       "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "vcvs",
-      "name": "Voltage-controlled voltage source",
-      "folder": "05 Sources/Controlled",
-      "reference_prefix": "E",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "VCVS",
-        "Voltage-controlled voltage source"
-      ],
-      "search_terms": [
-        "Voltage-controlled voltage source",
-        "VCVS"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "OUT+",
-          "electrical_type": "passive",
-          "side": "right"
-        },
-        {
-          "logical_number": "2",
-          "name": "OUT-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        },
-        {
-          "logical_number": "3",
-          "name": "CTRL+",
-          "electrical_type": "input",
-          "side": "left"
-        },
-        {
-          "logical_number": "4",
-          "name": "CTRL-",
-          "electrical_type": "input",
-          "side": "left"
-        }
-      ],
-      "drawing_description": "Diamond dependent source with separate differential control terminals; gain/transconductance must be supplied.",
-      "simulation": {
-        "requirement": "primitive",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
-        "ngspice_family": "E"
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "vcvs",
-      "used_by_experiments": [
-        "A29"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "current_source",
-      "name": "Independent current source",
-      "folder": "05 Sources/Current",
-      "reference_prefix": "I",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "current source",
-        "DC current source"
-      ],
-      "search_terms": [
-        "Independent current source",
-        "current source",
-        "DC current source"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with current-direction arrow. Positive direction must be documented independently of the terminal polarity labels.",
-      "simulation": {
-        "requirement": "primitive",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
-        "ngspice_family": "I"
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "current_source",
-      "used_by_experiments": [
-        "A14"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "source_dc",
-      "name": "DC voltage source",
-      "folder": "05 Sources/Voltage",
-      "reference_prefix": "V",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "DC source",
-        "ideal voltage source"
-      ],
-      "search_terms": [
-        "DC voltage source",
-        "DC source",
-        "ideal voltage source"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Show + and - and DC value.",
-      "simulation": {
-        "requirement": "primitive",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
-        "ngspice_family": "V"
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "source_dc",
-      "used_by_experiments": [
-        "A20"
-      ],
-      "common_support_symbol": true,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "source_fm",
-      "name": "FM voltage source",
-      "folder": "05 Sources/Voltage",
-      "reference_prefix": "V",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "SFFM source",
-        "frequency modulated source"
-      ],
-      "search_terms": [
-        "FM voltage source",
-        "SFFM source",
-        "frequency modulated source"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Source with carrier/modulating frequency, amplitude, offset and modulation index.",
-      "simulation": {
-        "requirement": "primitive",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
-        "ngspice_family": "V"
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "source_fm",
-      "used_by_experiments": [
-        "A43"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "source_pulse",
-      "name": "Pulse / step voltage source",
-      "folder": "05 Sources/Voltage",
-      "reference_prefix": "V",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "pulse source",
-        "step source",
-        "clock stimulus"
-      ],
-      "search_terms": [
-        "Pulse / step voltage source",
-        "pulse source",
-        "step source",
-        "clock stimulus"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with pulse waveform; finite rise/fall time and period/duty fields.",
-      "simulation": {
-        "requirement": "primitive",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
-        "ngspice_family": "V"
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "source_pulse",
-      "used_by_experiments": [
-        "A03",
-        "A14",
-        "A17",
-        "A18",
-        "A21",
-        "A24",
-        "A27",
-        "A28",
-        "A29",
-        "A30",
-        "A31",
-        "A33",
-        "A36",
-        "A37",
-        "A38",
-        "A40",
-        "A41",
-        "A43"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "source_pwl",
-      "name": "Piecewise-linear voltage source",
-      "folder": "05 Sources/Voltage",
-      "reference_prefix": "V",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "PWL source",
-        "test waveform source"
-      ],
-      "search_terms": [
-        "Piecewise-linear voltage source",
-        "PWL source",
-        "test waveform source"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Source with editable time-voltage point list.",
-      "simulation": {
-        "requirement": "primitive",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
-        "ngspice_family": "V"
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "source_pwl",
-      "used_by_experiments": [
-        "A32"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "source_sine",
-      "name": "Sinusoidal voltage source",
-      "folder": "05 Sources/Voltage",
-      "reference_prefix": "V",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "AC source",
-        "sine source"
-      ],
-      "search_terms": [
-        "Sinusoidal voltage source",
-        "AC source",
-        "sine source"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with sine wave; amplitude, offset and frequency fields.",
-      "simulation": {
-        "requirement": "primitive",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
-        "ngspice_family": "V"
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "source_sine",
-      "used_by_experiments": [
-        "A17",
-        "A18",
-        "A25",
-        "A27",
-        "A28",
-        "A29",
-        "A30",
-        "A31",
-        "A32",
-        "A33",
-        "A41",
-        "A42",
-        "A43"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [
-        "Beyond catalogue: rectification/smoothing extension",
-        "Beyond catalogue: RC filter extension"
-      ],
       "library_requirement": "experiment_coverage"
     },
     {
@@ -4140,135 +3949,6 @@
       "common_support_symbol": false,
       "optional_uses": [],
       "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "ammeter",
-      "name": "Ammeter",
-      "folder": "10 Instruments/Conventional",
-      "reference_prefix": "A",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "ammeter",
-        "current meter"
-      ],
-      "search_terms": [
-        "Ammeter",
-        "ammeter",
-        "current meter"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with A and two series terminals; model via declared sense element/burden or adapt native meter.",
-      "simulation": {
-        "requirement": "subcircuit_model_required",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "ammeter",
-      "used_by_experiments": [],
-      "common_support_symbol": true,
-      "optional_uses": [],
-      "library_requirement": "common_support"
-    },
-    {
-      "id": "ohmmeter",
-      "name": "Ohmmeter",
-      "folder": "10 Instruments/Conventional",
-      "reference_prefix": "OHM",
-      "asset_kind": "diagram_block",
-      "aliases": [
-        "ohmmeter",
-        "resistance meter"
-      ],
-      "search_terms": [
-        "Ohmmeter",
-        "ohmmeter",
-        "resistance meter"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with Ω; measurement on an unpowered circuit. To execute resistance tests use the native multimeter workflow, not a passive two-pin drawing.",
-      "simulation": {
-        "requirement": "diagram_only",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Documentation block only; terminals are functional connections, not an asserted device pinout or executable model."
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "ohmmeter",
-      "used_by_experiments": [],
-      "common_support_symbol": true,
-      "optional_uses": [],
-      "library_requirement": "common_support"
-    },
-    {
-      "id": "voltmeter",
-      "name": "Voltmeter",
-      "folder": "10 Instruments/Conventional",
-      "reference_prefix": "VM",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "voltmeter",
-        "voltage meter"
-      ],
-      "search_terms": [
-        "Voltmeter",
-        "voltmeter",
-        "voltage meter"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with V and two parallel measurement terminals; finite input resistance explicit.",
-      "simulation": {
-        "requirement": "subcircuit_model_required",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "voltmeter",
-      "used_by_experiments": [],
-      "common_support_symbol": true,
-      "optional_uses": [],
-      "library_requirement": "common_support"
     },
     {
       "id": "bnc",

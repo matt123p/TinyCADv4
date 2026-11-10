@@ -68,3 +68,7 @@ to stage an updated copy. Desktop development reads `bundled-libraries/` directl
 
 Run `npm run test:libraries` for catalog, packaging, lazy loading, selection,
 error recovery, read-only, and desktop IPC regression checks.
+
+The **Functional blocks** bundle provides 14 generic interfaces (17 entries) in the digital block style. See [generation and usage](functional-library.md). These are diagram-only interfaces with explicit power/reference terminals; simulation implementations are separate.
+
+The **Sensors and interfaces** bundle supplies ten generic teaching symbols, including the single-pin test point and the remaining sensor, analogue-switch and AM-modulator interfaces. See [drawing conventions and build instructions](sensor-interface-library.md).

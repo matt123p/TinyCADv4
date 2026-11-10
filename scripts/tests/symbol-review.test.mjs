@@ -72,11 +72,11 @@ test.after(async () => rm(directory, { recursive: true, force: true }));
 test('master IDs share exactly one decision across every course; reuse has explicit terminal maps', () => {
   const state = initialState(catalog),
     summary = progress(catalog, state);
-  assert.equal(catalog.requirements.length, 112);
-  assert.equal(Object.keys(state.decisions).length, 112);
+  assert.equal(catalog.requirements.length, 102);
+  assert.equal(Object.keys(state.decisions).length, 102);
   assert.deepEqual(
     [summary.reuse, summary.native, summary.pending],
-    [56, 6, 50],
+    [76, 6, 20],
   );
   assert.equal(summary.artworkComplete, false);
   const npn = catalog.candidates.find((c) => c.id === 'spice:npn');
@@ -359,7 +359,7 @@ test('local and Coder HTTP workflows, global choice reuse, exports, imports and 
   const base = 'http://127.0.0.1:' + server.address().port;
   try {
     const meta = await (await requestReview(base + '/api/catalog')).json();
-    assert.equal(meta.requirements.length, 112);
+    assert.equal(meta.requirements.length, 102);
     const results = await (
       await requestReview(base + '/api/candidates?symbol=ldr&pins=1')
     ).json();
@@ -463,7 +463,7 @@ test('local and Coder HTTP workflows, global choice reuse, exports, imports and 
       origin: forwardedOrigin,
     };
     const forwardedSave = await requestReview(
-      base + '/api/decisions/piezo_sensor',
+      base + '/api/decisions/timer_555',
       {
         method: 'PUT',
         headers: forwardedHeaders,

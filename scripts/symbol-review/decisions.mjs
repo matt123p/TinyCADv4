@@ -144,6 +144,8 @@ export function validateState(catalog, state) {
     'spiceSha256',
     'derivedSha256',
     'digitalSha256',
+    'functionalSha256',
+    'sensorsSha256',
   ])
     if (state[field] !== seed[field])
       fail(
@@ -168,6 +170,8 @@ export function validateState(catalog, state) {
     spiceSha256: seed.spiceSha256,
     derivedSha256: seed.derivedSha256,
     digitalSha256: seed.digitalSha256,
+    functionalSha256: seed.functionalSha256,
+    sensorsSha256: seed.sensorsSha256,
     decisions,
   };
 }

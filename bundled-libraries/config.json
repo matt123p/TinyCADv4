@@ -5,13 +5,25 @@
       "id": "spice",
       "name": "SPICE essentials",
       "path": "spice/spice.tclib",
-      "description": "Standard onetransistor symbols with SPICE models, sources, and model/analysis definitions. Includes generic teaching models and a 741-style behavioral model."
+      "description": "Standard onetransistor symbols with SPICE models and sources. Includes generic teaching models and a 741-style behavioral model."
     },
     {
       "id": "digital",
       "name": "Digital logic",
       "path": "digital/digital.tclib",
       "description": "Generic single-unit digital symbols based on the selected NAND: yellow bodies, hidden VCC/VSS power pins and native inversion/clock shapes. Simulation models are configured separately."
+    },
+    {
+      "id": "functional",
+      "name": "Functional blocks",
+      "path": "functional/functional.tclib",
+      "description": "Generic educational interfaces in the digital block style, with labelled on-grid pins and explicit power/reference terminals. Diagram-only; simulation implementations are separate."
+    },
+    {
+      "id": "sensors-interfaces",
+      "name": "Sensors and interfaces",
+      "path": "sensors-interfaces/sensors-interfaces.tclib",
+      "description": "Generic teaching sensors, a real single-pin test point, differential analogue switch and AM modulation interface. Explicit terminals; sensing and simulation models are separate."
     }
   ]
 }

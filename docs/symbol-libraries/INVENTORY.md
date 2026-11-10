@@ -2,9 +2,9 @@
 
 Generated from the curated assignments and the ten course catalogues. The JSON files are the authoritative handoff; this file is a readable checklist.
 
-Libraries: **10**. Experiments: **214**. Library symbol records: **478**. Distinct reusable types: **112**.
+Libraries: **10**. Experiments: **214**. Library symbol records: **412**. Distinct reusable types: **102**.
 
-Built-in lab equipment and probes are excluded from the generation requirements. Existing-tool notes identify tools already supplied by this branch; do not generate them as library symbols.
+Built-in lab equipment, meter modes, probes, independent waveform sources and voltage-controlled sources are excluded from the generation requirements. Existing-tool notes identify tools already supplied by this branch; do not generate them as library symbols.
 
 Each folder is proposed metadata, not an implemented library-browser feature. Logical terminals are not package pinouts. An entry is an inventory requirement, not a finished symbol or executable model.
 
@@ -12,7 +12,7 @@ Each folder is proposed metadata, not an implemented library-browser feature. Lo
 
 [JSON](libraries/gcse-physics-aqa.json) · [Use cases](../17-gcse-physics-electronics-experiments.md)
 
-Already provided; do not generate: Student current-limited bench supply, Student multimeter, three sockets, Voltage probe, Differential voltage probe, Series current probe, Student oscilloscope, two differential channels, Student function generator.
+Already provided; do not generate: DC voltage source, Student current-limited bench supply, Student multimeter, three sockets, Ammeter, Voltmeter, Ohmmeter, Voltage probe, Differential voltage probe, Series current probe, Pulse / step voltage source, Sinusoidal voltage source, Student oscilloscope, two differential channels, Student function generator.
 
 | Symbol ID | Name | Proposed folder | Coverage / role |
 | --- | --- | --- | --- |
@@ -28,13 +28,7 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | switch_spst | SPST switch | 04 Switches/Manual | G10, G18 |
 | battery | Battery | 05 Sources/Cells | Common support |
 | cell | Cell | 05 Sources/Cells | Common support |
-| source_dc | DC voltage source | 05 Sources/Voltage | Common support |
-| source_pulse | Pulse / step voltage source | 05 Sources/Voltage | G08, G16 |
-| source_sine | Sinusoidal voltage source | 05 Sources/Voltage | G16 |
 | lamp | Filament lamp | 06 Outputs/Lamps | G05, G18 |
-| ammeter | Ammeter | 10 Instruments/Conventional | G07 |
-| ohmmeter | Ohmmeter | 10 Instruments/Conventional | G07 |
-| voltmeter | Voltmeter | 10 Instruments/Conventional | G07 |
 | bnc | BNC-style signal connection | 11 Connections/Connectors | G16 |
 | connector2 | Two-way connector | 11 Connections/Connectors | G18 |
 | connector3 | Three-way connector | 11 Connections/Connectors | Common support |
@@ -50,7 +44,7 @@ Already provided; do not generate: Student current-limited bench supply, Student
 
 [JSON](libraries/a-level-physics-aqa.json) · [Use cases](../18-a-level-physics-electronics-experiments.md)
 
-Already provided; do not generate: Student current-limited bench supply, Student multimeter, three sockets, Voltage probe, Differential voltage probe, Series current probe, Student oscilloscope, two differential channels, Student function generator.
+Already provided; do not generate: DC voltage source, Student current-limited bench supply, Student multimeter, three sockets, Ammeter, Voltmeter, Ohmmeter, Voltage probe, Differential voltage probe, Series current probe, Pulse / step voltage source, Independent current source, Sinusoidal voltage source, Student oscilloscope, two differential channels, Student function generator, Voltage-controlled voltage source, Piecewise-linear voltage source, FM voltage source.
 
 | Symbol ID | Name | Proposed folder | Coverage / role |
 | --- | --- | --- | --- |
@@ -80,13 +74,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | behavioural_voltage | Behavioural voltage source | 05 Sources/Behavioural | A32, A42 |
 | battery | Battery | 05 Sources/Cells | A10 |
 | cell | Cell | 05 Sources/Cells | A02, A10, A13 |
-| vcvs | Voltage-controlled voltage source | 05 Sources/Controlled | A29 |
-| current_source | Independent current source | 05 Sources/Current | A14 |
-| source_dc | DC voltage source | 05 Sources/Voltage | A20 |
-| source_fm | FM voltage source | 05 Sources/Voltage | A43 |
-| source_pulse | Pulse / step voltage source | 05 Sources/Voltage | A03, A14, A17, A18, A21, A24, A27, A28, A29, A30, A31, A33, A36, A37, A38, A40, A41, A43 |
-| source_pwl | Piecewise-linear voltage source | 05 Sources/Voltage | A32 |
-| source_sine | Sinusoidal voltage source | 05 Sources/Voltage | A17, A18, A25, A27, A28, A29, A30, A31, A32, A33, A41, A42, A43 |
 | lamp | Filament lamp | 06 Outputs/Lamps | A06 |
 | opamp | Operational amplifier | 07 Analogue/Amplifiers | A23, A27, A28, A29, A30, A31 |
 | comparator | Voltage comparator | 07 Analogue/Comparators | A26, A32 |
@@ -112,9 +99,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | sampler | Sample-and-hold functional block | 09 Functional Blocks/Interfaces | A33 |
 | tdm_switch | Time-division multiplexer block | 09 Functional Blocks/Interfaces | A41 |
 | transmitter | Communication transmitter block | 09 Functional Blocks/Interfaces | A39 |
-| ammeter | Ammeter | 10 Instruments/Conventional | Common support |
-| ohmmeter | Ohmmeter | 10 Instruments/Conventional | Common support |
-| voltmeter | Voltmeter | 10 Instruments/Conventional | Common support |
 | bnc | BNC-style signal connection | 11 Connections/Connectors | A17, A18, A43 |
 | connector2 | Two-way connector | 11 Connections/Connectors | Common support |
 | connector3 | Three-way connector | 11 Connections/Connectors | Common support |
@@ -130,7 +114,7 @@ Already provided; do not generate: Student current-limited bench supply, Student
 
 [JSON](libraries/btec-first-engineering.json) · [Use cases](../19-btec-first-engineering-electronics-experiments.md)
 
-Already provided; do not generate: Student current-limited bench supply, Student multimeter, three sockets, Voltage probe, Differential voltage probe, Series current probe.
+Already provided; do not generate: DC voltage source, Student current-limited bench supply, Student multimeter, three sockets, Ammeter, Voltmeter, Ohmmeter, Voltage probe, Differential voltage probe, Series current probe, Pulse / step voltage source.
 
 | Symbol ID | Name | Proposed folder | Coverage / role |
 | --- | --- | --- | --- |
@@ -161,8 +145,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | relay_spdt | Relay with SPDT contacts | 04 Switches/Relays | F13 |
 | battery | Battery | 05 Sources/Cells | F14 |
 | cell | Cell | 05 Sources/Cells | Common support |
-| source_dc | DC voltage source | 05 Sources/Voltage | Common support |
-| source_pulse | Pulse / step voltage source | 05 Sources/Voltage | F10, F15 |
 | buzzer | Buzzer electrical interface | 06 Outputs/Audio | F09 |
 | speaker | Loudspeaker electrical interface | 06 Outputs/Audio | F12 |
 | seven_segment_anode | Seven-segment display, common anode | 06 Outputs/Displays | F15 |
@@ -171,9 +153,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | comparator | Voltage comparator | 07 Analogue/Comparators | F09 |
 | timer_555 | 555 timer | 07 Analogue/Timers | F11, F12 |
 | microcontroller | Generic microcontroller interface | 09 Functional Blocks/Interfaces | F15 |
-| ammeter | Ammeter | 10 Instruments/Conventional | Common support |
-| ohmmeter | Ohmmeter | 10 Instruments/Conventional | Common support |
-| voltmeter | Voltmeter | 10 Instruments/Conventional | Common support |
 | connector2 | Two-way connector | 11 Connections/Connectors | F17 |
 | connector3 | Three-way connector | 11 Connections/Connectors | F17 |
 | test_point | Test point | 11 Connections/Terminals | F16 |
@@ -188,7 +167,7 @@ Already provided; do not generate: Student current-limited bench supply, Student
 
 [JSON](libraries/btec-applied-science-2016.json) · [Use cases](../20-btec-national-applied-science-2016-electronics-experiments.md)
 
-Already provided; do not generate: Student current-limited bench supply, Student multimeter, three sockets, Voltage probe, Differential voltage probe, Series current probe, Student oscilloscope, two differential channels, Student function generator.
+Already provided; do not generate: DC voltage source, Student current-limited bench supply, Student multimeter, three sockets, Ammeter, Voltmeter, Ohmmeter, Voltage probe, Differential voltage probe, Series current probe, Pulse / step voltage source, Sinusoidal voltage source, Student oscilloscope, two differential channels, Student function generator.
 
 | Symbol ID | Name | Proposed folder | Coverage / role |
 | --- | --- | --- | --- |
@@ -218,15 +197,9 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | behavioural_current | Behavioural current source | 05 Sources/Behavioural | S16 |
 | battery | Battery | 05 Sources/Cells | Common support |
 | cell | Cell | 05 Sources/Cells | S04 |
-| source_dc | DC voltage source | 05 Sources/Voltage | S15 |
-| source_pulse | Pulse / step voltage source | 05 Sources/Voltage | S06, S07, S08, S09 |
-| source_sine | Sinusoidal voltage source | 05 Sources/Voltage | S08, S09, S10 |
 | lamp | Filament lamp | 06 Outputs/Lamps | S05 |
 | opamp | Operational amplifier | 07 Analogue/Amplifiers | S13, S15, S16 |
 | data_logger | Data-logger interface | 09 Functional Blocks/Interfaces | S17 |
-| ammeter | Ammeter | 10 Instruments/Conventional | Common support |
-| ohmmeter | Ohmmeter | 10 Instruments/Conventional | Common support |
-| voltmeter | Voltmeter | 10 Instruments/Conventional | Common support |
 | bnc | BNC-style signal connection | 11 Connections/Connectors | S09 |
 | connector2 | Two-way connector | 11 Connections/Connectors | Common support |
 | connector3 | Three-way connector | 11 Connections/Connectors | S17 |
@@ -242,7 +215,7 @@ Already provided; do not generate: Student current-limited bench supply, Student
 
 [JSON](libraries/btec-applied-science-aaq.json) · [Use cases](../21-btec-aaq-applied-science-electronics-experiments.md)
 
-Already provided; do not generate: Student current-limited bench supply, Student multimeter, three sockets, Voltage probe, Differential voltage probe, Series current probe.
+Already provided; do not generate: DC voltage source, Student current-limited bench supply, Student multimeter, three sockets, Ammeter, Voltmeter, Ohmmeter, Voltage probe, Differential voltage probe, Series current probe.
 
 | Symbol ID | Name | Proposed folder | Coverage / role |
 | --- | --- | --- | --- |
@@ -259,11 +232,7 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | behavioural_current | Behavioural current source | 05 Sources/Behavioural | Q11 |
 | battery | Battery | 05 Sources/Cells | Common support |
 | cell | Cell | 05 Sources/Cells | Common support |
-| source_dc | DC voltage source | 05 Sources/Voltage | Common support |
 | lamp | Filament lamp | 06 Outputs/Lamps | Q03, Q06 |
-| ammeter | Ammeter | 10 Instruments/Conventional | Q01 |
-| ohmmeter | Ohmmeter | 10 Instruments/Conventional | Q01 |
-| voltmeter | Voltmeter | 10 Instruments/Conventional | Q01 |
 | connector2 | Two-way connector | 11 Connections/Connectors | Common support |
 | connector3 | Three-way connector | 11 Connections/Connectors | Common support |
 | test_point | Test point | 11 Connections/Terminals | Common support |
@@ -278,7 +247,7 @@ Already provided; do not generate: Student current-limited bench supply, Student
 
 [JSON](libraries/btec-national-electrical-electronic-engineering.json) · [Use cases](../22-btec-national-electrical-electronic-engineering-experiments.md)
 
-Already provided; do not generate: Student current-limited bench supply, Student multimeter, three sockets, Voltage probe, Differential voltage probe, Series current probe, Student oscilloscope, two differential channels, Student function generator.
+Already provided; do not generate: DC voltage source, Student current-limited bench supply, Student multimeter, three sockets, Ammeter, Voltmeter, Ohmmeter, Voltage probe, Differential voltage probe, Series current probe, Sinusoidal voltage source, Pulse / step voltage source, Student oscilloscope, two differential channels, Student function generator.
 
 | Symbol ID | Name | Proposed folder | Coverage / role |
 | --- | --- | --- | --- |
@@ -300,9 +269,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | switch_spst | SPST switch | 04 Switches/Manual | Common support |
 | battery | Battery | 05 Sources/Cells | Common support |
 | cell | Cell | 05 Sources/Cells | Common support |
-| source_dc | DC voltage source | 05 Sources/Voltage | Common support |
-| source_pulse | Pulse / step voltage source | 05 Sources/Voltage | N07, N08, N10, N12, N13, N14, N16, N18, N19 |
-| source_sine | Sinusoidal voltage source | 05 Sources/Voltage | N02, N03, N04, N10, N12, N13, N14 |
 | opamp | Operational amplifier | 07 Analogue/Amplifiers | N12, N13, N14, N20 |
 | comparator | Voltage comparator | 07 Analogue/Comparators | N11 |
 | counter_binary3_async | 3-bit asynchronous binary counter | 08 Digital/Counters | N19 |
@@ -318,9 +284,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | flipflop_d | D flip-flop | 08 Digital/Storage | N18, N19 |
 | flipflop_jk | J-K flip-flop | 08 Digital/Storage | N18, N19 |
 | latch_rs | R-S latch | 08 Digital/Storage | N18 |
-| ammeter | Ammeter | 10 Instruments/Conventional | Common support |
-| ohmmeter | Ohmmeter | 10 Instruments/Conventional | Common support |
-| voltmeter | Voltmeter | 10 Instruments/Conventional | Common support |
 | bnc | BNC-style signal connection | 11 Connections/Connectors | N10 |
 | connector2 | Two-way connector | 11 Connections/Connectors | N21 |
 | connector3 | Three-way connector | 11 Connections/Connectors | N21 |
@@ -336,7 +299,7 @@ Already provided; do not generate: Student current-limited bench supply, Student
 
 [JSON](libraries/btec-hnc-electrical-electronic-engineering.json) · [Use cases](../23-btec-hnc-electrical-electronic-engineering-experiments.md)
 
-Already provided; do not generate: Student current-limited bench supply, Student multimeter, three sockets, Voltage probe, Differential voltage probe, Series current probe, Student oscilloscope, two differential channels, Student function generator.
+Already provided; do not generate: DC voltage source, Student current-limited bench supply, Student multimeter, three sockets, Ammeter, Voltmeter, Ohmmeter, Voltage probe, Differential voltage probe, Series current probe, Independent current source, Sinusoidal voltage source, Pulse / step voltage source, Student oscilloscope, two differential channels, Student function generator, Voltage-controlled voltage source.
 
 | Symbol ID | Name | Proposed folder | Coverage / role |
 | --- | --- | --- | --- |
@@ -363,11 +326,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | relay_spdt | Relay with SPDT contacts | 04 Switches/Relays | H19 |
 | battery | Battery | 05 Sources/Cells | Common support |
 | cell | Cell | 05 Sources/Cells | Common support |
-| vcvs | Voltage-controlled voltage source | 05 Sources/Controlled | H17 |
-| current_source | Independent current source | 05 Sources/Current | H01, H02, H03 |
-| source_dc | DC voltage source | 05 Sources/Voltage | H02, H03 |
-| source_pulse | Pulse / step voltage source | 05 Sources/Voltage | H06, H08, H09, H10, H15, H17, H18 |
-| source_sine | Sinusoidal voltage source | 05 Sources/Voltage | H06, H07, H09, H10, H11, H12, H15, H17, H18 |
 | opamp | Operational amplifier | 07 Analogue/Amplifiers | H17, H18, H20 |
 | gate_and | AND gate, 2-input | 08 Digital/Gates | H19 |
 | gate_nand | NAND gate, 2-input | 08 Digital/Gates | H19 |
@@ -377,9 +335,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | gate_xor | XOR gate, 2-input | 08 Digital/Gates | H19 |
 | data_logger | Data-logger interface | 09 Functional Blocks/Interfaces | H20 |
 | plc_interface | PLC input/output interface | 09 Functional Blocks/Interfaces | H20 |
-| ammeter | Ammeter | 10 Instruments/Conventional | Common support |
-| ohmmeter | Ohmmeter | 10 Instruments/Conventional | Common support |
-| voltmeter | Voltmeter | 10 Instruments/Conventional | Common support |
 | bnc | BNC-style signal connection | 11 Connections/Connectors | H06 |
 | connector2 | Two-way connector | 11 Connections/Connectors | Common support |
 | connector3 | Three-way connector | 11 Connections/Connectors | Common support |
@@ -395,7 +350,7 @@ Already provided; do not generate: Student current-limited bench supply, Student
 
 [JSON](libraries/degree-year1-physics.json) · [Use cases](../24-first-year-degree-physics-electronics-experiments.md)
 
-Already provided; do not generate: Student current-limited bench supply, Student multimeter, three sockets, Voltage probe, Differential voltage probe, Series current probe, Student oscilloscope, two differential channels, Student function generator.
+Already provided; do not generate: DC voltage source, Student current-limited bench supply, Student multimeter, three sockets, Ammeter, Voltmeter, Ohmmeter, Voltage probe, Differential voltage probe, Series current probe, Independent current source, Pulse / step voltage source, Sinusoidal voltage source, Student oscilloscope, two differential channels, Student function generator.
 
 | Symbol ID | Name | Proposed folder | Coverage / role |
 | --- | --- | --- | --- |
@@ -415,10 +370,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | switch_spst | SPST switch | 04 Switches/Manual | Common support |
 | battery | Battery | 05 Sources/Cells | Common support |
 | cell | Cell | 05 Sources/Cells | Common support |
-| current_source | Independent current source | 05 Sources/Current | P01 |
-| source_dc | DC voltage source | 05 Sources/Voltage | P02 |
-| source_pulse | Pulse / step voltage source | 05 Sources/Voltage | P05, P06, P07, P08, P12, P13, P14 |
-| source_sine | Sinusoidal voltage source | 05 Sources/Voltage | P09, P10, P11, P12, P13, P14 |
 | opamp | Operational amplifier | 07 Analogue/Amplifiers | P14, P17, P19 |
 | comparator | Voltage comparator | 07 Analogue/Comparators | P15 |
 | gate_and | AND gate, 2-input | 08 Digital/Gates | P16 |
@@ -430,9 +381,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | gate_xor | XOR gate, 2-input | 08 Digital/Gates | P16 |
 | data_logger | Data-logger interface | 09 Functional Blocks/Interfaces | P19 |
 | microcontroller | Generic microcontroller interface | 09 Functional Blocks/Interfaces | P19 |
-| ammeter | Ammeter | 10 Instruments/Conventional | Common support |
-| ohmmeter | Ohmmeter | 10 Instruments/Conventional | Common support |
-| voltmeter | Voltmeter | 10 Instruments/Conventional | Common support |
 | bnc | BNC-style signal connection | 11 Connections/Connectors | P12, P13 |
 | connector2 | Two-way connector | 11 Connections/Connectors | Common support |
 | connector3 | Three-way connector | 11 Connections/Connectors | P19 |
@@ -448,7 +396,7 @@ Already provided; do not generate: Student current-limited bench supply, Student
 
 [JSON](libraries/degree-year1-electronics.json) · [Use cases](../25-first-year-degree-electronics-experiments.md)
 
-Already provided; do not generate: Student current-limited bench supply, Student multimeter, three sockets, Voltage probe, Differential voltage probe, Series current probe, Student function generator, Student oscilloscope, two differential channels.
+Already provided; do not generate: DC voltage source, Student current-limited bench supply, Student multimeter, three sockets, Ammeter, Voltmeter, Ohmmeter, Voltage probe, Differential voltage probe, Series current probe, Independent current source, Student function generator, Student oscilloscope, two differential channels, Pulse / step voltage source, Sinusoidal voltage source.
 
 | Symbol ID | Name | Proposed folder | Coverage / role |
 | --- | --- | --- | --- |
@@ -473,10 +421,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | switch_spst | SPST switch | 04 Switches/Manual | Common support |
 | battery | Battery | 05 Sources/Cells | Common support |
 | cell | Cell | 05 Sources/Cells | Common support |
-| current_source | Independent current source | 05 Sources/Current | E01, E02, E03 |
-| source_dc | DC voltage source | 05 Sources/Voltage | E02, E03 |
-| source_pulse | Pulse / step voltage source | 05 Sources/Voltage | E06, E08, E09, E10, E14, E15, E16, E17, E19, E20, E21, E22, E24, E25 |
-| source_sine | Sinusoidal voltage source | 05 Sources/Voltage | E07, E08, E09, E12, E14, E16, E17 |
 | opamp | Operational amplifier | 07 Analogue/Amplifiers | E16, E17, E26 |
 | comparator | Voltage comparator | 07 Analogue/Comparators | E26 |
 | full_adder | 1-bit full adder | 08 Digital/Arithmetic | E23 |
@@ -500,9 +444,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | fpga | Generic FPGA interface | 09 Functional Blocks/Interfaces | E25 |
 | microcontroller | Generic microcontroller interface | 09 Functional Blocks/Interfaces | E25 |
 | state_machine | State-machine functional block | 09 Functional Blocks/Interfaces | E24 |
-| ammeter | Ammeter | 10 Instruments/Conventional | Common support |
-| ohmmeter | Ohmmeter | 10 Instruments/Conventional | Common support |
-| voltmeter | Voltmeter | 10 Instruments/Conventional | Common support |
 | bnc | BNC-style signal connection | 11 Connections/Connectors | E14 |
 | connector2 | Two-way connector | 11 Connections/Connectors | Common support |
 | connector3 | Three-way connector | 11 Connections/Connectors | E24, E25, E26 |
@@ -518,7 +459,7 @@ Already provided; do not generate: Student current-limited bench supply, Student
 
 [JSON](libraries/degree-year1-engineering.json) · [Use cases](../26-first-year-degree-engineering-electronics-experiments.md)
 
-Already provided; do not generate: Student current-limited bench supply, Student multimeter, three sockets, Voltage probe, Differential voltage probe, Series current probe.
+Already provided; do not generate: DC voltage source, Student current-limited bench supply, Student multimeter, three sockets, Ammeter, Voltmeter, Ohmmeter, Voltage probe, Differential voltage probe, Series current probe, Independent current source, Pulse / step voltage source, Sinusoidal voltage source.
 
 | Symbol ID | Name | Proposed folder | Coverage / role |
 | --- | --- | --- | --- |
@@ -549,10 +490,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | behavioural_voltage | Behavioural voltage source | 05 Sources/Behavioural | Optional extension |
 | battery | Battery | 05 Sources/Cells | Common support |
 | cell | Cell | 05 Sources/Cells | Common support |
-| current_source | Independent current source | 05 Sources/Current | GY02, GY03, GY04 |
-| source_dc | DC voltage source | 05 Sources/Voltage | GY03, GY04 |
-| source_pulse | Pulse / step voltage source | 05 Sources/Voltage | GY06, GY07, GY08, GY11, GY13, GY14, GY15 |
-| source_sine | Sinusoidal voltage source | 05 Sources/Voltage | GY08, GY09, GY10, GY11, GY12, GY14, GY15 |
 | opamp | Operational amplifier | 07 Analogue/Amplifiers | GY14, GY15, GY17, GY18 |
 | gate_and | AND gate, 2-input | 08 Digital/Gates | GY16 |
 | gate_nand | NAND gate, 2-input | 08 Digital/Gates | GY16 |
@@ -563,9 +500,6 @@ Already provided; do not generate: Student current-limited bench supply, Student
 | data_logger | Data-logger interface | 09 Functional Blocks/Interfaces | GY18 |
 | microcontroller | Generic microcontroller interface | 09 Functional Blocks/Interfaces | GY18 |
 | plc_interface | PLC input/output interface | 09 Functional Blocks/Interfaces | GY18 |
-| ammeter | Ammeter | 10 Instruments/Conventional | Common support |
-| ohmmeter | Ohmmeter | 10 Instruments/Conventional | Common support |
-| voltmeter | Voltmeter | 10 Instruments/Conventional | Common support |
 | connector2 | Two-way connector | 11 Connections/Connectors | Common support |
 | connector3 | Three-way connector | 11 Connections/Connectors | GY18 |
 | test_point | Test point | 11 Connections/Terminals | Common support |

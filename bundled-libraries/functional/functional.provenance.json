@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "id": "functional",
+  "name": "Functional blocks",
+  "styleReference": {
+    "id": "derived:full_adder",
+    "xmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+  },
+  "recipeSha256": "16cf4f94a67a8fef93fc4064d4341295aca5a2a78eefeec0737f9d283c30b69c",
+  "notes": "Generic diagram-only logical interfaces, not physical packages or executable simulations. Power and reference terminals remain visible and keep their inventory names. ADC, PCM encoder and state machine have rising/falling-edge alternatives. General clock ports on MCU, FPGA, sample-and-hold and TDM interfaces do not imply edge-triggered behaviour.",
+  "entries": [
+    {
+      "id": "adc4",
+      "canonicalId": "adc4",
+      "name": "ADC functional block, 4-bit illustration (rising edge)",
+      "nameId": 1,
+      "symbolId": 1,
+      "xmlSha256": "ecf9c371099c115b5977827fc5f37dbc9a767b1569e032ab6f6f3edb9877242f",
+      "clockEdge": "rising"
+    },
+    {
+      "id": "channel",
+      "canonicalId": "channel",
+      "name": "Communication channel block",
+      "nameId": 2,
+      "symbolId": 2,
+      "xmlSha256": "baba73516144f080f06de13531a02bc045561bafffea00e99c1fa799fe0dac88",
+      "clockEdge": null
+    },
+    {
+      "id": "dac4",
+      "canonicalId": "dac4",
+      "name": "DAC functional block, 4-bit illustration",
+      "nameId": 3,
+      "symbolId": 3,
+      "xmlSha256": "5503fb75b9cc1a6ed30aab525bf0cf83a06afdbac55e0c19a03f71232117cc4a",
+      "clockEdge": null
+    },
+    {
+      "id": "data_logger",
+      "canonicalId": "data_logger",
+      "name": "Data-logger interface",
+      "nameId": 4,
+      "symbolId": 4,
+      "xmlSha256": "cbf325865053be9042bcd65424136e8187c29e972ce0903c11bde00553107afe",
+      "clockEdge": null
+    },
+    {
+      "id": "fpga",
+      "canonicalId": "fpga",
+      "name": "Generic FPGA interface",
+      "nameId": 5,
+      "symbolId": 5,
+      "xmlSha256": "5ea4e57d1b32c9fbf4a3ce661e3f4498ef59f030444fbcef22f80dc83389a19f",
+      "clockEdge": null
+    },
+    {
+      "id": "microcontroller",
+      "canonicalId": "microcontroller",
+      "name": "Generic microcontroller interface",
+      "nameId": 6,
+      "symbolId": 6,
+      "xmlSha256": "22964839cdf7e0561a23df0246be97ed447c40a7383945a34b1c97e9f0888377",
+      "clockEdge": null
+    },
+    {
+      "id": "output_transducer",
+      "canonicalId": "output_transducer",
+      "name": "Output transducer block",
+      "nameId": 7,
+      "symbolId": 7,
+      "xmlSha256": "d08c3d72a911b1074cf293016f85fb87f256693c196d7c0f109c1aa5ad30ce10",
+      "clockEdge": null
+    },
+    {
+      "id": "pcm_encoder",
+      "canonicalId": "pcm_encoder",
+      "name": "PCM encoder functional block (rising edge)",
+      "nameId": 8,
+      "symbolId": 8,
+      "xmlSha256": "089f43bdaa1eb8f10257d7f2ad6e5028f6e0be8ff679d19d5073c8bd049f3e5a",
+      "clockEdge": "rising"
+    },
+    {
+      "id": "plc_interface",
+      "canonicalId": "plc_interface",
+      "name": "PLC input/output interface",
+      "nameId": 9,
+      "symbolId": 9,
+      "xmlSha256": "7891279119d4dfbee369f289042225eb77a3259c4369913ed2a63380b55b2987",
+      "clockEdge": null
+    },
+    {
+      "id": "receiver",
+      "canonicalId": "receiver",
+      "name": "Communication receiver block",
+      "nameId": 10,
+      "symbolId": 10,
+      "xmlSha256": "3f40e04a797284211c7ac9b6ed523d6ff4fbc31b09ff65a85017f072bb9a21c6",
+      "clockEdge": null
+    },
+    {
+      "id": "sampler",
+      "canonicalId": "sampler",
+      "name": "Sample-and-hold functional block",
+      "nameId": 11,
+      "symbolId": 11,
+      "xmlSha256": "cfe38f1fe425e8974e72f9a115607e5c3cf23131f0d2657dcdea83d49090bff2",
+      "clockEdge": null
+    },
+    {
+      "id": "state_machine",
+      "canonicalId": "state_machine",
+      "name": "State-machine functional block (rising edge)",
+      "nameId": 12,
+      "symbolId": 12,
+      "xmlSha256": "4a36ee277c2701dc8e3394a611c4489d1da9ff15cfa740dade4859f8570d293f",
+      "clockEdge": "rising"
+    },
+    {
+      "id": "tdm_switch",
+      "canonicalId": "tdm_switch",
+      "name": "Time-division multiplexer block",
+      "nameId": 13,
+      "symbolId": 13,
+      "xmlSha256": "ecbc9b9fc77da03020948b2eb1524fcd9d518b5429c28d6e8bc407a811d301ff",
+      "clockEdge": null
+    },
+    {
+      "id": "transmitter",
+      "canonicalId": "transmitter",
+      "name": "Communication transmitter block",
+      "nameId": 14,
+      "symbolId": 14,
+      "xmlSha256": "67240c0be92a8ab070311e5f8d523e2ee2a3778c4df5c3dbc5b4d2a0a45c4a92",
+      "clockEdge": null
+    },
+    {
+      "id": "adc4-falling",
+      "canonicalId": "adc4",
+      "name": "ADC functional block, 4-bit illustration (falling edge)",
+      "nameId": 15,
+      "symbolId": 15,
+      "xmlSha256": "357be4a431e2cfceb982d6e3f4952c691a70e9da2e27ec7baba2246fd0632d5d",
+      "clockEdge": "falling"
+    },
+    {
+      "id": "pcm_encoder-falling",
+      "canonicalId": "pcm_encoder",
+      "name": "PCM encoder functional block (falling edge)",
+      "nameId": 16,
+      "symbolId": 16,
+      "xmlSha256": "a11baf547d7f9f07832b309d384143262cb74c897a0097595d6e42f8449b6baa",
+      "clockEdge": "falling"
+    },
+    {
+      "id": "state_machine-falling",
+      "canonicalId": "state_machine",
+      "name": "State-machine functional block (falling edge)",
+      "nameId": 17,
+      "symbolId": 17,
+      "xmlSha256": "d65bfc2d2e18fe417dd4381f4788ccc2e71c5de9fc4037f48ab54182fea981fd",
+      "clockEdge": "falling"
+    }
+  ]
+}

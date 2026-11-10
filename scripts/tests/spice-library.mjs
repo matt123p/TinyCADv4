@@ -184,7 +184,7 @@ await checkSpiceComponents(lib);
 const selection = JSON.parse(
   await readFile(path.join(root, 'library-recipes/spice.json'), 'utf8'),
 );
-assert.equal(lib.names.length, 36);
+assert.equal(lib.names.length, 27);
 assert.deepEqual(
   lib.names.map((n) => n.Name),
   selection.components.map((c) => c.name),
@@ -268,7 +268,7 @@ checkSpicePlacement(${JSON.stringify(lib)}, ${JSON.stringify(exportFile)});
       }
     }
     console.log(
-      'ngspice simulation passed for all 36 entries, including 741 follower transient behavior.',
+      'ngspice simulation passed for all 27 entries, including 741 follower transient behavior.',
     );
   }
   console.log(

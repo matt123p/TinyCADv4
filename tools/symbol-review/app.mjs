@@ -204,9 +204,10 @@ async function activate(id) {
   $('#all-sources').checked = false;
   renderQueue();
   $('#reference-select').value = catalog.referenceIds[id];
-  $('.reference-panel h2').textContent = current().folder.startsWith('08 ')
-    ? 'NAND reference'
-    : 'SPICE reference';
+  $('.reference-panel h2').textContent =
+    current().folder.startsWith('08 ') || current().folder.startsWith('09 ')
+      ? 'NAND reference'
+      : 'SPICE reference';
   await renderRequirement();
   renderReference();
   await loadCandidates();
@@ -518,6 +519,10 @@ function card(candidate) {
           : candidate.kind === 'derived'
           ? candidate.family === 'digital'
             ? 'NAND-derived digital artwork'
+            : candidate.family === 'functional'
+            ? 'Generated functional block'
+            : candidate.family === 'sensor-interface'
+            ? 'Generated sensor / interface'
             : 'SPICE-derived artwork'
           : candidate.author || 'SQL collection',
       ),

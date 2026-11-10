@@ -12,7 +12,7 @@
     "source_document_base": "All source_document paths are relative to the repository root, including in standalone library files.",
     "identity": "id is stable within a library; extraction may deduplicate by canonical_symbol_id, but each library is complete and permits independent duplicate assets.",
     "pin_contract": "Logical terminal numbers and signal names are not physical package pinouts. Resolve real package pins from an authoritative device reference before generating package-specific symbols.",
-    "conventions": "Prefer IEC/UK teaching symbols. Power pins and polarity should remain explicit. Built-in instruments and probes are already provided and are excluded from symbol generation.",
+    "conventions": "Prefer IEC/UK teaching symbols. Power pins and polarity should remain explicit. Built-in instruments, probes, independent waveform sources and voltage-controlled sources are excluded from symbol generation. Use existing_tools configuration with the native tool defaults.",
     "existing_tools": "existing_tools and existing_tool_ids refer to supplied non-library tools, not generation requirements. Never recreate these as library symbols.",
     "inventory_not_bom": "One record per reusable symbol type, not per component instance. A bridge can be assembled from repeated diode/resistor symbols. Different resistance/capacitance values are properties, not separate symbols.",
     "model_warning": "Every record is marked not ready to simulate from this manifest. A successful extraction of artwork does not establish a valid model, mapping or instrument implementation.",
@@ -37,11 +37,7 @@
     "rheostat",
     "cell",
     "battery",
-    "source_dc",
     "switch_spst",
-    "ammeter",
-    "voltmeter",
-    "ohmmeter",
     "test_point",
     "connector2",
     "connector3",
@@ -53,6 +49,22 @@
     "annotation"
   ],
   "existing_tools": [
+    {
+      "id": "source_dc",
+      "name": "DC voltage source",
+      "native_tool": "source",
+      "configuration": {
+        "type": "voltage",
+        "waveform": "dc"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "GY03",
+        "GY04"
+      ],
+      "common_support_tool": true
+    },
     {
       "id": "bench_supply",
       "name": "Student current-limited bench supply",
@@ -71,6 +83,42 @@
       "used_by_experiments": [
         "GY01"
       ],
+      "common_support_tool": true
+    },
+    {
+      "id": "ammeter",
+      "name": "Ammeter",
+      "native_tool": "meter",
+      "configuration": {
+        "mode": "dcA"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [],
+      "common_support_tool": true
+    },
+    {
+      "id": "voltmeter",
+      "name": "Voltmeter",
+      "native_tool": "meter",
+      "configuration": {
+        "mode": "dcV"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [],
+      "common_support_tool": true
+    },
+    {
+      "id": "ohmmeter",
+      "name": "Ohmmeter",
+      "native_tool": "meter",
+      "configuration": {
+        "mode": "ohm"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [],
       "common_support_tool": true
     },
     {
@@ -99,6 +147,65 @@
       "generate_symbol": false,
       "used_by_experiments": [],
       "common_support_tool": true
+    },
+    {
+      "id": "current_source",
+      "name": "Independent current source",
+      "native_tool": "source",
+      "configuration": {
+        "type": "current",
+        "waveform": "dc"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "GY02",
+        "GY03",
+        "GY04"
+      ],
+      "common_support_tool": false
+    },
+    {
+      "id": "source_pulse",
+      "name": "Pulse / step voltage source",
+      "native_tool": "source",
+      "configuration": {
+        "type": "voltage",
+        "waveform": "pulse"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "GY06",
+        "GY07",
+        "GY08",
+        "GY11",
+        "GY13",
+        "GY14",
+        "GY15"
+      ],
+      "common_support_tool": false
+    },
+    {
+      "id": "source_sine",
+      "name": "Sinusoidal voltage source",
+      "native_tool": "source",
+      "configuration": {
+        "type": "voltage",
+        "waveform": "sine"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "GY08",
+        "GY09",
+        "GY10",
+        "GY11",
+        "GY12",
+        "GY14",
+        "GY15"
+      ],
+      "common_support_tool": false
     }
   ],
   "folders": [
@@ -115,12 +222,9 @@
     "04 Switches/Relays",
     "05 Sources/Behavioural",
     "05 Sources/Cells",
-    "05 Sources/Current",
-    "05 Sources/Voltage",
     "07 Analogue/Amplifiers",
     "08 Digital/Gates",
     "09 Functional Blocks/Interfaces",
-    "10 Instruments/Conventional",
     "11 Connections/Connectors",
     "11 Connections/Terminals",
     "12 Editor Primitives"
@@ -148,10 +252,11 @@
       "catalogue_description": "Use a multi-branch resistor circuit and compare measured node/current values with nodal and mesh calculations.",
       "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
       "experiment_symbol_ids": [
-        "resistor",
-        "current_source"
+        "resistor"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "current_source"
+      ]
     },
     {
       "id": "GY03",
@@ -160,11 +265,11 @@
       "catalogue_support": "Both",
       "catalogue_description": "Compare an original network with its port equivalent for several loads. State source resistance and avoid treating an ideal source as a complete battery model.",
       "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
-      "experiment_symbol_ids": [
+      "experiment_symbol_ids": [],
+      "existing_tool_ids": [
         "source_dc",
         "current_source"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "GY04",
@@ -173,11 +278,11 @@
       "catalogue_support": "Both",
       "catalogue_description": "Investigate each independent source separately, then compare the total voltage/current. Show explicitly why power is not a linear sum of these separate results.",
       "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
-      "experiment_symbol_ids": [
+      "experiment_symbol_ids": [],
+      "existing_tool_ids": [
         "source_dc",
         "current_source"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "GY05",
@@ -199,10 +304,11 @@
       "catalogue_description": "Capture voltage/current, measure time constant and compare loading assumptions. Repeat with measured component values.",
       "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
       "experiment_symbol_ids": [
-        "capacitor",
-        "source_pulse"
+        "capacitor"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_pulse"
+      ]
     },
     {
       "id": "GY07",
@@ -212,10 +318,11 @@
       "catalogue_description": "Compare current rise for an idealised and resistive coil model. The experiment concerns its electrical terminals, not magnetic geometry or motion.",
       "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
       "experiment_symbol_ids": [
-        "inductor",
-        "source_pulse"
+        "inductor"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_pulse"
+      ]
     },
     {
       "id": "GY08",
@@ -226,11 +333,12 @@
       "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
       "experiment_symbol_ids": [
         "inductor",
-        "capacitor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
         "source_pulse",
         "source_sine"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "GY09",
@@ -241,10 +349,11 @@
       "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
       "experiment_symbol_ids": [
         "inductor",
-        "capacitor",
-        "source_sine"
+        "capacitor"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_sine"
+      ]
     },
     {
       "id": "GY10",
@@ -255,10 +364,11 @@
       "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
       "experiment_symbol_ids": [
         "inductor",
-        "capacitor",
-        "source_sine"
+        "capacitor"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_sine"
+      ]
     },
     {
       "id": "GY11",
@@ -268,11 +378,12 @@
       "catalogue_description": "Compare frequency response and transient response of the same RC filter under defined source/load conditions.",
       "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
       "experiment_symbol_ids": [
-        "capacitor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
         "source_sine",
         "source_pulse"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "GY12",
@@ -284,10 +395,11 @@
       "experiment_symbol_ids": [
         "diode",
         "diode_rectifier",
-        "capacitor_polarised",
-        "source_sine"
+        "capacitor_polarised"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_sine"
+      ]
     },
     {
       "id": "GY13",
@@ -300,10 +412,11 @@
         "bjt_npn",
         "mosfet_n",
         "relay_coil",
-        "diode_rectifier",
-        "source_pulse"
+        "diode_rectifier"
       ],
-      "existing_tool_ids": []
+      "existing_tool_ids": [
+        "source_pulse"
+      ]
     },
     {
       "id": "GY14",
@@ -315,11 +428,12 @@
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
-        "capacitor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
         "source_sine",
         "source_pulse"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "GY15",
@@ -331,11 +445,12 @@
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
-        "capacitor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
         "source_sine",
         "source_pulse"
-      ],
-      "existing_tool_ids": []
+      ]
     },
     {
       "id": "GY16",
@@ -1749,207 +1864,6 @@
       "library_requirement": "common_support"
     },
     {
-      "id": "current_source",
-      "name": "Independent current source",
-      "folder": "05 Sources/Current",
-      "reference_prefix": "I",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "current source",
-        "DC current source"
-      ],
-      "search_terms": [
-        "Independent current source",
-        "current source",
-        "DC current source"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with current-direction arrow. Positive direction must be documented independently of the terminal polarity labels.",
-      "simulation": {
-        "requirement": "primitive",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
-        "ngspice_family": "I"
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "current_source",
-      "used_by_experiments": [
-        "GY02",
-        "GY03",
-        "GY04"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "source_dc",
-      "name": "DC voltage source",
-      "folder": "05 Sources/Voltage",
-      "reference_prefix": "V",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "DC source",
-        "ideal voltage source"
-      ],
-      "search_terms": [
-        "DC voltage source",
-        "DC source",
-        "ideal voltage source"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Show + and - and DC value.",
-      "simulation": {
-        "requirement": "primitive",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
-        "ngspice_family": "V"
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "source_dc",
-      "used_by_experiments": [
-        "GY03",
-        "GY04"
-      ],
-      "common_support_symbol": true,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "source_pulse",
-      "name": "Pulse / step voltage source",
-      "folder": "05 Sources/Voltage",
-      "reference_prefix": "V",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "pulse source",
-        "step source",
-        "clock stimulus"
-      ],
-      "search_terms": [
-        "Pulse / step voltage source",
-        "pulse source",
-        "step source",
-        "clock stimulus"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with pulse waveform; finite rise/fall time and period/duty fields.",
-      "simulation": {
-        "requirement": "primitive",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
-        "ngspice_family": "V"
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "source_pulse",
-      "used_by_experiments": [
-        "GY06",
-        "GY07",
-        "GY08",
-        "GY11",
-        "GY13",
-        "GY14",
-        "GY15"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "source_sine",
-      "name": "Sinusoidal voltage source",
-      "folder": "05 Sources/Voltage",
-      "reference_prefix": "V",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "AC source",
-        "sine source"
-      ],
-      "search_terms": [
-        "Sinusoidal voltage source",
-        "AC source",
-        "sine source"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with sine wave; amplitude, offset and frequency fields.",
-      "simulation": {
-        "requirement": "primitive",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Requires a value and a valid TinyCAD/SPICE mapping; no electrical model is generated by this inventory.",
-        "ngspice_family": "V"
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "source_sine",
-      "used_by_experiments": [
-        "GY08",
-        "GY09",
-        "GY10",
-        "GY11",
-        "GY12",
-        "GY14",
-        "GY15"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
       "id": "opamp",
       "name": "Operational amplifier",
       "folder": "07 Analogue/Amplifiers",
@@ -2643,135 +2557,6 @@
       "common_support_symbol": false,
       "optional_uses": [],
       "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "ammeter",
-      "name": "Ammeter",
-      "folder": "10 Instruments/Conventional",
-      "reference_prefix": "A",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "ammeter",
-        "current meter"
-      ],
-      "search_terms": [
-        "Ammeter",
-        "ammeter",
-        "current meter"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with A and two series terminals; model via declared sense element/burden or adapt native meter.",
-      "simulation": {
-        "requirement": "subcircuit_model_required",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "ammeter",
-      "used_by_experiments": [],
-      "common_support_symbol": true,
-      "optional_uses": [],
-      "library_requirement": "common_support"
-    },
-    {
-      "id": "ohmmeter",
-      "name": "Ohmmeter",
-      "folder": "10 Instruments/Conventional",
-      "reference_prefix": "OHM",
-      "asset_kind": "diagram_block",
-      "aliases": [
-        "ohmmeter",
-        "resistance meter"
-      ],
-      "search_terms": [
-        "Ohmmeter",
-        "ohmmeter",
-        "resistance meter"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with Ω; measurement on an unpowered circuit. To execute resistance tests use the native multimeter workflow, not a passive two-pin drawing.",
-      "simulation": {
-        "requirement": "diagram_only",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "Documentation block only; terminals are functional connections, not an asserted device pinout or executable model."
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "ohmmeter",
-      "used_by_experiments": [],
-      "common_support_symbol": true,
-      "optional_uses": [],
-      "library_requirement": "common_support"
-    },
-    {
-      "id": "voltmeter",
-      "name": "Voltmeter",
-      "folder": "10 Instruments/Conventional",
-      "reference_prefix": "VM",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "voltmeter",
-        "voltage meter"
-      ],
-      "search_terms": [
-        "Voltmeter",
-        "voltmeter",
-        "voltage meter"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "+",
-          "electrical_type": "passive",
-          "side": "top"
-        },
-        {
-          "logical_number": "2",
-          "name": "-",
-          "electrical_type": "passive",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Circle with V and two parallel measurement terminals; finite input resistance explicit.",
-      "simulation": {
-        "requirement": "subcircuit_model_required",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "voltmeter",
-      "used_by_experiments": [],
-      "common_support_symbol": true,
-      "optional_uses": [],
-      "library_requirement": "common_support"
     },
     {
       "id": "connector2",
