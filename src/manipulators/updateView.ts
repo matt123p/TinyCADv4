@@ -3443,8 +3443,12 @@ export class updateView {
     if (!point) {
       point = [100, 100];
     }
-    point[0] = point[0] + selected_symboldef.outlines[0].size[0] / 2.0;
-    point[1] = point[1] + selected_symboldef.outlines[0].size[1] / 2.0;
+    // Centering an odd number of grid cells can leave every pin half a cell
+    // off-grid. Snap the insertion anchor after applying the center offset.
+    point = new Snap(sheet.details.grid, sheet.details.grid_snap).snap([
+      point[0] + selected_symboldef.outlines[0].size[0] / 2.0,
+      point[1] + selected_symboldef.outlines[0].size[1] / 2.0,
+    ]);
 
     const update_symbol = new updateSymbol(null);
 

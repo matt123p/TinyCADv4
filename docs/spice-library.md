@@ -21,7 +21,9 @@ The physical component drawings come from **onetransistor** in the legacy SQL co
 | SPICE definitions | End, operating point, DC sweep, and transient analysis. |
 | SPICE definitions | Comment, parameter list, diode model, subcircuit definition, and arbitrary model/directive text. |
 
-There are 33 entries. The blue/yellow LEDs, PMOS, and quartz crystal are explicit adaptations of the source drawings because separate suitable originals were absent. Potentiometer wipers, transformer secondary terminals, and 741 pins had duplicated source numbering; the recipe repairs them without moving their connection points. The transformer center tap is removed to make a four-terminal component.
+There are 33 entries. The blue/yellow LEDs, PMOS, and quartz crystal are explicit adaptations of the source drawings because separate suitable originals were absent. Potentiometer wipers, transformer secondary terminals, and 741 pins had duplicated source numbering; the recipe repairs them without moving their connection points. The transformer center tap is removed to make a four-terminal component. Its two windings and polarity dots are mirrored to match the default 1:1 model. Electrolytic plates and diode bodies are centered between their terminals with matching lead contacts.
+
+All connection points use the standard 1 mm grid. The resistor body is centered on its terminal axis, with equal top/bottom leads; directional features such as transistor arrows, LED emission arrows, and polarity marks retain their intended asymmetry. Placement snaps the insertion anchor after centering so odd-sized outlines cannot shift terminals half a grid step. Regression checks cover the original drawing coordinates and actual placement in all rotated and mirrored orientations.
 
 ## Using the models
 

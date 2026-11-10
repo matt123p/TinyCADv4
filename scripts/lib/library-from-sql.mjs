@@ -100,6 +100,13 @@ export function transformSymbol(xml, component) {
         while (pin.firstChild) pin.removeChild(pin.firstChild);
         pin.appendChild(document.createTextNode(edit.name));
       }
+      if (edit.position !== undefined)
+        pin.setAttribute('pos', coordinates(edit.position).join(','));
+      if (edit.length !== undefined) {
+        if (!Number.isInteger(edit.length) || edit.length < 0)
+          throw new Error(`Invalid pin length for ${component.id}`);
+        pin.setAttribute('length', String(edit.length));
+      }
       if (edit.electrical !== undefined)
         pin.setAttribute('elec', String(edit.electrical));
     }
@@ -150,6 +157,60 @@ export function transformSymbol(xml, component) {
       );
     }
     changes.push({ polygon: edit });
+  }
+  // Match original geometry exactly, so a changed source cannot silently patch
+  // the wrong primitive. Coordinates use the XML's millimetres, not screen units.
+  for (const edit of component.geometry || []) {
+    if (!['RECTANGLE', 'ELLIPSE', 'POLYGON'].includes(edit.tag))
+      throw new Error(`Unsupported geometry tag in ${component.id}`);
+    const matches = nodes(document, edit.tag).filter((node) =>
+      Object.entries(edit.match || {}).every(([key, expected]) => {
+        if (!Array.isArray(expected))
+          return node.getAttribute(key) === String(expected);
+        const actual = coordinates(node.getAttribute(key));
+        return coordinates(expected).every(
+          (value, index) => Math.abs(value - actual[index]) < 1e-6,
+        );
+      }),
+    );
+    if (matches.length !== 1)
+      throw new Error(
+        `Geometry edit for ${component.id} must match one primitive, matched ${matches.length}.`,
+      );
+    const node = matches[0];
+    if (edit.remove) node.parentNode.removeChild(node);
+    else {
+      for (const [key, value] of Object.entries(edit.set || {}))
+        node.setAttribute(
+          key,
+          Array.isArray(value) ? coordinates(value).join(',') : String(value),
+        );
+      if (edit.points) {
+        const points = nodes(node, 'POINT');
+        if (points.length !== edit.points.length)
+          throw new Error(`Geometry point count mismatch in ${component.id}`);
+        points.forEach((point, index) =>
+          point.setAttribute('pos', coordinates(edit.points[index]).join(',')),
+        );
+      }
+    }
+    changes.push({ geometry: edit });
+  }
+  if (component.pinGrid !== undefined) {
+    if (!Number.isFinite(component.pinGrid) || component.pinGrid <= 0)
+      throw new Error(`Invalid pin grid for ${component.id}`);
+    for (const pin of nodes(document, 'PIN'))
+      if (
+        coordinates(pin.getAttribute('pos')).some(
+          (value) =>
+            Math.abs(
+              value / component.pinGrid - Math.round(value / component.pinGrid),
+            ) > 1e-6,
+        )
+      )
+        throw new Error(
+          `Off-grid pin ${pin.getAttribute('number')} in ${component.id}`,
+        );
   }
   const pins = nodes(document, 'PIN').map((pin) => ({
     number: pin.getAttribute('number'),
@@ -251,7 +312,10 @@ export function buildLibraryModel(data, recipe, sourceHash) {
     const donor = component.spiceFrom
       ? sourceComponent(data, component.spiceFrom)
       : null;
-    const transformed = transformSymbol(xmlText(source.symbol.Data), component);
+    const transformed = transformSymbol(xmlText(source.symbol.Data), {
+      ...component,
+      pinGrid: component.pinGrid ?? recipe.pinGrid,
+    });
     const attributes = attributeMap(data, source.entry.nameId);
     const referenceAttribute = attributes.get('Reference');
     attributes.delete('Reference');

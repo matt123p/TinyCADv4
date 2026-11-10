@@ -16,6 +16,7 @@ import {
   transformSymbol,
 } from '../lib/library-from-sql.mjs';
 import { runRegression } from './run-regression.mjs';
+import { checkSpiceGeometry } from './spice-geometry.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const literals = [
@@ -81,6 +82,10 @@ const recipe = {
   ],
 };
 const built = buildLibraryModel(fixture, recipe, 'fixture-hash');
+assert.throws(
+  () => buildLibraryModel(fixture, { ...recipe, pinGrid: 3 }, 'fixture-hash'),
+  /Off-grid/,
+);
 assert.deepEqual(built.library.symbolFolders, ['Passive', 'Passive/Resistors']);
 assert.ok(!JSON.stringify(built).includes('private@example.invalid'));
 assert.ok(!JSON.stringify(built).includes('SECRET'));
@@ -111,6 +116,40 @@ assert.throws(
   /must match one/,
 );
 
+assert.throws(
+  () =>
+    transformSymbol(xml, {
+      id: 'off-grid',
+      pinGrid: 1,
+      pins: [{ matchNumber: '1', position: [0.5, 0] }],
+    }),
+  /Off-grid/,
+);
+assert.throws(
+  () => transformSymbol(xml, { id: 'bad-grid', pinGrid: 0 }),
+  /Invalid pin grid/,
+);
+const rectangle = '<TinyCAD><RECTANGLE a="0,0" b="2,4"/></TinyCAD>';
+assert.throws(
+  () =>
+    transformSymbol(rectangle, {
+      id: 'ambiguous',
+      geometry: [{ tag: 'ELLIPSE', remove: true }],
+    }),
+  /must match one primitive/,
+);
+const revised = transformSymbol(rectangle, {
+  id: 'center',
+  geometry: [
+    {
+      tag: 'RECTANGLE',
+      match: { a: [0, 0], b: [2, 4] },
+      set: { a: [-1, 0], b: [1, 4] },
+    },
+  ],
+});
+assert.ok(revised.xml.includes('a="-1,0"'));
+assert.equal(revised.changes.length, 1);
 const SQL = await librarySqlite();
 const db = new SQL.Database(
   new Uint8Array(
@@ -138,6 +177,7 @@ const lib = {
     Data: new TextDecoder().decode(s.Data),
   })),
 };
+checkSpiceGeometry(lib);
 const selection = JSON.parse(
   await readFile(path.join(root, 'library-recipes/spice.json'), 'utf8'),
 );

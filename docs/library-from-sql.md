@@ -54,6 +54,7 @@ Top-level fields:
 | `id`, `name` | Stable bundle identifier and display name. |
 | `author` | Optional default source author username. |
 | `output` | Optional `.tclib` destination, relative to the working directory. |
+| `pinGrid` | Optional required terminal spacing in XML coordinate units (millimetres). `1` enforces the standard 1 mm grid; invalid or off-grid positions fail the build. A component may override it. |
 | `requireSpice` | Require templates, validate pin/attribute macros, and add a comment template to directive-only components. Omit or set false for other libraries. |
 | `showName` | Default name display mode, unless overridden per component. |
 | `notes`, `references` | Optional provenance notes and reference links. |
@@ -73,11 +74,24 @@ Optional component fields:
 | `attributeRenames` | Rewrites `$(old)` attribute references in inherited templates. It does not rename attribute records; add/remove the corresponding records explicitly. |
 | `attributes` | Attribute overrides: a string value, or `{ "value": "...", "show": 0 }`. SPICE metadata defaults to hidden. |
 | `pins` | Exact pin corrections, described below. |
+| `geometry` | Guarded drawing corrections: each edit selects one `RECTANGLE`, `ELLIPSE`, or `POLYGON` using `tag` and `match` attributes, then applies `set`, replaces local polygon `points`, or sets `remove: true`. Coordinate attributes accept arrays and compare numerically. |
 | `colours` | Resource recolouring: `{ "tag": "FILL", "id": 1, "rgb": "#0000ff" }`. Converts RGB to TinyCAD's stored BGR format. |
 | `polygons` | Mirror a polygon's local points: `{ "at": [58, 49.4], "mirror": "x" }` or `"y"`. Arc polygons are rejected. |
 | `notes` | Reason for adaptations, retained in provenance. |
 
-Pin corrections select a single pin by `at: [x,y]`, `matchNumber`, and/or `matchName`. They can set `number`, `name`, and `electrical`, or set `remove: true`. Selection must match exactly one pin. Duplicate or missing terminal numbers within a part are rejected, so repairs are explicit and reviewable in the recipe.
+Pin corrections select a single pin by `at: [x,y]`, `matchNumber`, and/or `matchName`. They can set `number`, `name`, `electrical`, `position: [x,y]`, and `length`, or set `remove: true`. Positions use XML millimetres; pin lengths are nonnegative integer drawing units (five per millimetre). Selection must match exactly one pin. Duplicate or missing terminal numbers within a part are rejected, so repairs are explicit and reviewable in the recipe.
+
+Geometry edits also require exactly one matching primitive. For example, this recenters a rectangle without moving any pins:
+
+```json
+{
+  "tag": "RECTANGLE",
+  "match": { "a": [0, 0], "b": [2, 4] },
+  "set": { "a": [-1, 0], "b": [1, 4] }
+}
+```
+
+`points` replaces polygon point coordinates while retaining their arc flags; the point count must match. Geometry and pin changes are recorded in provenance. The SPICE recipe requires a 1 mm terminal grid, and its regression checks verify body alignment, lead contact, and terminal alignment through all four rotations and their mirrored variants.
 
 `requireSpice` checks `%()` / `@()` pin references and `$()` attribute references in `$$SPICE`, `$$SPICE_PROLOG`, and `$$SPICE_EPILOG`. It does not validate electrical behavior; simulate new models separately.
 

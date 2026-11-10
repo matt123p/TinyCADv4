@@ -57,6 +57,24 @@ export function checkSpicePlacement(library, exportFile) {
     const ref = name.Reference.replace('?', String(name.NameID));
     symbol.text.find((t) => t.description === 'Ref').value = ref;
     const pins = new updateSymbol(symbol).active_points();
+    for (let rotation = 0; rotation < 8; rotation++) {
+      const variant = { ...symbol, rotation, _active_points: null };
+      for (const [x, y, pin] of new updateSymbol(variant).active_points()) {
+        assert.ok(
+          [x, y].every(
+            (value) => Math.abs(value / 5 - Math.round(value / 5)) < 1e-6,
+          ),
+          name.Name +
+            ' pin ' +
+            pin.number +
+            ' off grid at rotation ' +
+            rotation +
+            ': ' +
+            [x, y],
+        );
+      }
+    }
+
     const nets = {};
     const labels = {};
     for (const [, , pin] of pins) {

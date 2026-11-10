@@ -3,7 +3,7 @@
   "id": "spice",
   "name": "SPICE essentials",
   "sourceSha256": "3efbdf682121249aa4c2c8f8fdd1dc807025b26c5e46c369eb41c3f28a34d47e",
-  "recipeSha256": "48f8ad1f029dd367da3dbbf3cb3a30b0eaa0e772a45dc929b8b3250c7e81339d",
+  "recipeSha256": "54120db94ffe218eaa9bd070d457c72f7ef40fbb5f0eaa6c09aa34b9643d36dc",
   "contributors": [
     "onetransistor",
     "aryajur"
@@ -246,8 +246,59 @@
         "description": "Capacitor",
         "xmlSha256": "1fbe0e9101ce5e97eb12067335dabd92f1d5fca7f7a61c62f5413c8c8b1554c4"
       },
-      "notes": "Polarized drawing; linear capacitor model does not simulate reverse-voltage damage.",
-      "changes": [],
+      "notes": "Polarized drawing; linear capacitor model does not simulate reverse-voltage damage. Both plates have equal dimensions and are centered about the midpoint of the fixed, on-grid pins. Pin leads meet the outer plate edges.",
+      "changes": [
+        {
+          "geometry": {
+            "tag": "RECTANGLE",
+            "match": {
+              "a": [
+                88.2,
+                27.1
+              ],
+              "b": [
+                91.8,
+                27.9
+              ]
+            },
+            "set": {
+              "a": [
+                88.2,
+                27.2
+              ],
+              "b": [
+                91.8,
+                27.8
+              ]
+            }
+          }
+        },
+        {
+          "geometry": {
+            "tag": "RECTANGLE",
+            "match": {
+              "a": [
+                88.2,
+                28.5
+              ],
+              "b": [
+                91.8,
+                29.1
+              ]
+            },
+            "set": {
+              "a": [
+                88.2,
+                28.2
+              ],
+              "b": [
+                91.8,
+                28.8
+              ]
+            }
+          }
+        }
+      ],
       "pins": [
         {
           "number": "2",
@@ -262,7 +313,7 @@
           "at": "90.00000,24.00000"
         }
       ],
-      "xmlSha256": "a723e4101a42d9ac2e36e2a121514732d1bd4e30a5718b9bdec2a7e869365e30"
+      "xmlSha256": "326f836a39bb8e25ef70f121a282a42e93e8d220dd3942ddb9fbe3ef12d8f944"
     },
     {
       "id": "trimmer-capacitor",
@@ -670,8 +721,77 @@
         "description": "Diode",
         "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
       },
-      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2.",
-      "changes": [],
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2. Diode body centered between the original on-grid terminals; equal-length leads meet the anode edge and cathode bar.",
+      "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "70.00000,70.00000"
+          },
+          "edit": {
+            "matchNumber": "1",
+            "length": 12
+          }
+        },
+        {
+          "pin": {
+            "number": "2",
+            "name": "",
+            "at": "70.00000,78.00000"
+          },
+          "edit": {
+            "matchNumber": "2",
+            "length": 12
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68,
+                72.4
+              ]
+            },
+            "points": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                3.2
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68.2,
+                75.2
+              ]
+            },
+            "set": {
+              "pos": [
+                68.2,
+                75.5
+              ]
+            }
+          }
+        }
+      ],
       "pins": [
         {
           "number": "1",
@@ -686,7 +806,7 @@
           "at": "70.00000,78.00000"
         }
       ],
-      "xmlSha256": "9e9fafad7a7b9a44a3ddd35b66c1b9cd729454b060092ab11fce96148d8fe90d"
+      "xmlSha256": "5d25bef833b99e1b5165115f5abe22c66305483e6a1f787a7c79a628b3fff6b6"
     },
     {
       "id": "zener",
@@ -710,8 +830,111 @@
         "description": "Diode",
         "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
       },
-      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2.",
-      "changes": [],
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2. Diode body centered between the original on-grid terminals; equal-length leads meet the anode edge and cathode bar.",
+      "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "70.00000,70.00000"
+          },
+          "edit": {
+            "matchNumber": "1",
+            "length": 12
+          }
+        },
+        {
+          "pin": {
+            "number": "2",
+            "name": "",
+            "at": "70.00000,78.00000"
+          },
+          "edit": {
+            "matchNumber": "2",
+            "length": 12
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68,
+                72.4
+              ]
+            },
+            "points": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                3.2
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68.4,
+                75.2
+              ]
+            },
+            "set": {
+              "pos": [
+                68.4,
+                75.5
+              ]
+            }
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                71.4,
+                74.6
+              ]
+            },
+            "set": {
+              "pos": [
+                71.4,
+                74.9
+              ]
+            }
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                67.8,
+                75.2
+              ]
+            },
+            "set": {
+              "pos": [
+                67.8,
+                75.5
+              ]
+            }
+          }
+        }
+      ],
       "pins": [
         {
           "number": "1",
@@ -726,7 +949,7 @@
           "at": "70.00000,78.00000"
         }
       ],
-      "xmlSha256": "f4800cde7303c1c7552140cc43dfb042f198b1a349b9c5090a8a8ed845f462e4"
+      "xmlSha256": "816308e8ae0f365c5d761d519e326684632eeebf955a7fe6299a2efc3efdd8b2"
     },
     {
       "id": "led-red",
@@ -750,8 +973,77 @@
         "description": "Diode",
         "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
       },
-      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2.",
-      "changes": [],
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2. Diode body centered between the original on-grid terminals; equal-length leads meet the anode edge and cathode bar.",
+      "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "70.00000,70.00000"
+          },
+          "edit": {
+            "matchNumber": "1",
+            "length": 12
+          }
+        },
+        {
+          "pin": {
+            "number": "2",
+            "name": "",
+            "at": "70.00000,78.00000"
+          },
+          "edit": {
+            "matchNumber": "2",
+            "length": 12
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68,
+                72.4
+              ]
+            },
+            "points": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                3.2
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68.2,
+                75.2
+              ]
+            },
+            "set": {
+              "pos": [
+                68.2,
+                75.5
+              ]
+            }
+          }
+        }
+      ],
       "pins": [
         {
           "number": "1",
@@ -766,7 +1058,7 @@
           "at": "70.00000,78.00000"
         }
       ],
-      "xmlSha256": "2b3ae6e55d444d67f1ddd08c0f6f91449a9f64232ef0b4c0571c1700eede9505"
+      "xmlSha256": "ee003c71dae4f600276d2b504562b275e52d0ca7ef124b076001c8acaceb0637"
     },
     {
       "id": "led-green",
@@ -790,8 +1082,77 @@
         "description": "Diode",
         "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
       },
-      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2.",
-      "changes": [],
+      "notes": "Generic teaching model, not a manufacturer part. Anode=1, cathode=2. Diode body centered between the original on-grid terminals; equal-length leads meet the anode edge and cathode bar.",
+      "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "70.00000,70.00000"
+          },
+          "edit": {
+            "matchNumber": "1",
+            "length": 12
+          }
+        },
+        {
+          "pin": {
+            "number": "2",
+            "name": "",
+            "at": "70.00000,78.00000"
+          },
+          "edit": {
+            "matchNumber": "2",
+            "length": 12
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68,
+                72.4
+              ]
+            },
+            "points": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                3.2
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68.2,
+                75.2
+              ]
+            },
+            "set": {
+              "pos": [
+                68.2,
+                75.5
+              ]
+            }
+          }
+        }
+      ],
       "pins": [
         {
           "number": "1",
@@ -806,7 +1167,7 @@
           "at": "70.00000,78.00000"
         }
       ],
-      "xmlSha256": "bf3def810b81eb10b31e0a751562cd713e6943955c755b6a153e09124906f58b"
+      "xmlSha256": "c32e1c1a431180509aea23fb4e61bd0b41865e2aa8a5187713d1d76f8d2cc9db"
     },
     {
       "id": "led-blue",
@@ -830,12 +1191,80 @@
         "description": "Diode",
         "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
       },
-      "notes": "Generic teaching model, not a manufacturer part. Colour variant derived from the onetransistor LED drawing.",
+      "notes": "Generic teaching model, not a manufacturer part. Colour variant derived from the onetransistor LED drawing. Diode body centered between the original on-grid terminals; equal-length leads meet the anode edge and cathode bar.",
       "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "70.00000,70.00000"
+          },
+          "edit": {
+            "matchNumber": "1",
+            "length": 12
+          }
+        },
+        {
+          "pin": {
+            "number": "2",
+            "name": "",
+            "at": "70.00000,78.00000"
+          },
+          "edit": {
+            "matchNumber": "2",
+            "length": 12
+          }
+        },
         {
           "colour": {
             "id": 1,
             "rgb": "#0000ff"
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68,
+                72.4
+              ]
+            },
+            "points": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                3.2
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68.2,
+                75.2
+              ]
+            },
+            "set": {
+              "pos": [
+                68.2,
+                75.5
+              ]
+            }
           }
         }
       ],
@@ -853,7 +1282,7 @@
           "at": "70.00000,78.00000"
         }
       ],
-      "xmlSha256": "0abc93e2099749ae7a41543073394d185283ee1888b138056e9d7ce4122dba37"
+      "xmlSha256": "4f88bcfa03f8d907276af6f1b339171b19301980b70f8defe2d202e49f15a13b"
     },
     {
       "id": "led-yellow",
@@ -877,12 +1306,80 @@
         "description": "Diode",
         "xmlSha256": "5353d5d35c4f03ac6742c2e255bf3db4539462d108fd636cb87b6cd41a2b40dc"
       },
-      "notes": "Generic teaching model, not a manufacturer part. Colour variant derived from the onetransistor LED drawing.",
+      "notes": "Generic teaching model, not a manufacturer part. Colour variant derived from the onetransistor LED drawing. Diode body centered between the original on-grid terminals; equal-length leads meet the anode edge and cathode bar.",
       "changes": [
+        {
+          "pin": {
+            "number": "1",
+            "name": "",
+            "at": "70.00000,70.00000"
+          },
+          "edit": {
+            "matchNumber": "1",
+            "length": 12
+          }
+        },
+        {
+          "pin": {
+            "number": "2",
+            "name": "",
+            "at": "70.00000,78.00000"
+          },
+          "edit": {
+            "matchNumber": "2",
+            "length": 12
+          }
+        },
         {
           "colour": {
             "id": 1,
             "rgb": "#ffff00"
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68,
+                72.4
+              ]
+            },
+            "points": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                3.2
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                68.2,
+                75.2
+              ]
+            },
+            "set": {
+              "pos": [
+                68.2,
+                75.5
+              ]
+            }
           }
         }
       ],
@@ -900,7 +1397,7 @@
           "at": "70.00000,78.00000"
         }
       ],
-      "xmlSha256": "017ec28f21cc081259049d3383259c2c7d7015f3c39ea024e640737c2227c89e"
+      "xmlSha256": "799ac8adcbba02a45b3e8c6d5178998fefacccc7336794740df213832c4e9822"
     },
     {
       "id": "ua741",
@@ -1043,7 +1540,7 @@
         "description": "Transformer 1",
         "xmlSha256": "2fb7f059b8d14f8d5ea28d2a6f0c03b16bf119baba383593a097f3901da4d2d4"
       },
-      "notes": "Derived four-terminal two-winding transformer. Removed the source secondary centre-tap pin and assigned distinct secondary terminals 3/4. Linear coupled inductors; turns ratio is sqrt(Lprimary/Lsecondary), top terminals have the same polarity.",
+      "notes": "Derived four-terminal two-winding transformer. Removed the source secondary centre-tap pin and assigned distinct secondary terminals 3/4. Linear coupled inductors; turns ratio is sqrt(Lprimary/Lsecondary), top terminals have the same polarity. Four-terminal 1:1 drawing uses mirrored windings of equal height, paired on-grid terminals and polarity dots, and a centered core. Removed the obsolete second-secondary polarity dot and zero-size ellipse.",
       "changes": [
         {
           "pin": {
@@ -1086,6 +1583,340 @@
             ],
             "remove": true
           }
+        },
+        {
+          "pin": {
+            "number": "3",
+            "name": "",
+            "at": "86.00000,42.00000"
+          },
+          "edit": {
+            "matchNumber": "3",
+            "position": [
+              86,
+              46
+            ]
+          }
+        },
+        {
+          "pin": {
+            "number": "4",
+            "name": "",
+            "at": "86.00000,58.00000"
+          },
+          "edit": {
+            "matchNumber": "4",
+            "position": [
+              86,
+              54
+            ]
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                48.4
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                49.2
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                50
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                50.8
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                51.6
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                52.4
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                53.2
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                54
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                54.8
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                55.6
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                47.6
+              ]
+            },
+            "set": {
+              "pos": [
+                84.4,
+                51.6
+              ]
+            }
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                46.8
+              ]
+            },
+            "set": {
+              "pos": [
+                84.4,
+                50.8
+              ]
+            }
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                46
+              ]
+            },
+            "set": {
+              "pos": [
+                84.4,
+                50
+              ]
+            }
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                45.2
+              ]
+            },
+            "set": {
+              "pos": [
+                84.4,
+                49.2
+              ]
+            }
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                44.4
+              ]
+            },
+            "set": {
+              "pos": [
+                84.4,
+                48.4
+              ]
+            }
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                84.4,
+                43.6
+              ]
+            },
+            "set": {
+              "pos": [
+                84.4,
+                47.6
+              ]
+            }
+          }
+        },
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                83,
+                43.4
+              ]
+            },
+            "set": {
+              "pos": [
+                83,
+                47.4
+              ]
+            },
+            "points": [
+              [
+                0,
+                0.1
+              ],
+              [
+                0,
+                5.1
+              ]
+            ]
+          }
+        },
+        {
+          "geometry": {
+            "tag": "ELLIPSE",
+            "match": {
+              "a": [
+                78,
+                48
+              ],
+              "b": [
+                78,
+                48
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "ELLIPSE",
+            "match": {
+              "a": [
+                87,
+                51
+              ],
+              "b": [
+                86.5,
+                50.5
+              ]
+            },
+            "remove": true
+          }
+        },
+        {
+          "geometry": {
+            "tag": "ELLIPSE",
+            "match": {
+              "a": [
+                87,
+                44
+              ],
+              "b": [
+                86.5,
+                43.5
+              ]
+            },
+            "set": {
+              "a": [
+                87,
+                48
+              ],
+              "b": [
+                86.5,
+                47.5
+              ]
+            }
+          }
         }
       ],
       "pins": [
@@ -1105,16 +1936,16 @@
           "number": "3",
           "name": "",
           "part": 0,
-          "at": "86.00000,42.00000"
+          "at": "86,46"
         },
         {
           "number": "4",
           "name": "",
           "part": 0,
-          "at": "86.00000,58.00000"
+          "at": "86,54"
         }
       ],
-      "xmlSha256": "85c19aed89181f5eb64abcb95e7aab75b4b481c85a7dde68774a34ee05d04dec"
+      "xmlSha256": "a7701dca69e1b64de28c889762fc83c6ba61891ae5e6c532be1393ef095e06dd"
     },
     {
       "id": "xtal",
@@ -1226,8 +2057,38 @@
         "description": "Current Source",
         "xmlSha256": "207251c8c492790d19c78d00f306907da386e80583b0253f3044ddb1efbc5907"
       },
-      "notes": "Existing source symbol and parameter names reused; NAME was replaced with an explicit Value field and AC syntax normalized for ngspice.",
-      "changes": [],
+      "notes": "Existing source symbol and parameter names reused; NAME was replaced with an explicit Value field and AC syntax normalized for ngspice. Arrow shaft centered vertically within the source circle.",
+      "changes": [
+        {
+          "geometry": {
+            "tag": "POLYGON",
+            "match": {
+              "pos": [
+                24,
+                25
+              ]
+            },
+            "points": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                5
+              ],
+              [
+                1,
+                4
+              ],
+              [
+                1,
+                4
+              ]
+            ]
+          }
+        }
+      ],
       "pins": [
         {
           "number": "1",
@@ -1242,7 +2103,7 @@
           "at": "24.00000,36.00000"
         }
       ],
-      "xmlSha256": "207251c8c492790d19c78d00f306907da386e80583b0253f3044ddb1efbc5907"
+      "xmlSha256": "67e865697cfa5b495a4cef41fa13addccc5f42a3a80122ee6442ee974e0bdd4c"
     },
     {
       "id": "end",
