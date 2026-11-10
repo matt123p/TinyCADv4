@@ -44,7 +44,7 @@ import { findImporter, ImportedSymbol } from './kicad/importer';
 import { actionEditLibrarySymbol, actionSelectLibrarySymbol } from '../state/dispatcher/AppDispatcher';
 import { get_global_id } from '../util/global_id';
 import { openCurrentAppUrl, openExternalUrl } from '../util/navigation';
-import { normalizeUserConfig, sortLibrariesByConfig } from './libraryConfig';
+import { normalizeUserConfig, sortLibrariesByConfig, ConfiguredLibraryFile } from './libraryConfig';
 
 export type FileIdType = string | FileSystemFileHandle;
 
@@ -296,7 +296,7 @@ export function removeLibrary(fileId: string) {
     const currentConfig = normalizeUserConfig(state.altStore.config);
     const updatedConfig = update(currentConfig, {
       libraries: {
-        $apply: (items) => items.filter((library) => `${library.id}` !== fileId),
+        $apply: (items: ConfiguredLibraryFile[]) => items.filter((library) => library.id !== fileId),
       },
     });
 

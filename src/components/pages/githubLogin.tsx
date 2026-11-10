@@ -1,4 +1,4 @@
-import { PrimaryButton } from 'office-ui-fabric-react';
+import { Button } from '@fluentui/react-components';
 import React, { FunctionComponent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dispatch } from 'redux';
@@ -23,13 +23,14 @@ export const GithubLogin: FunctionComponent<GithubLoginProps> = (
         <p>{t('pages.githubAuthPrompt')}</p>
         <div>
           <div>
-            <PrimaryButton
+            <Button
+              appearance="primary"
               onClick={() => {
                 props.dispatch(login);
               }}
             >
               {t('pages.githubLoginButton')}
-            </PrimaryButton>
+            </Button>
           </div>
         </div>
       </div>

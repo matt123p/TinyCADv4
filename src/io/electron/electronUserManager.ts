@@ -20,12 +20,12 @@ import { CurrentFile, UserConfig } from '../../state/stores/altStoreReducer';
 import { XMLBuilder } from '../../util/xmlbuilder';
 import { UserManager } from '../files';
 import { ioXML } from '../ioXml';
-import { normalizeUserConfig, sortLibrariesByConfig } from '../libraryConfig';
+import { normalizeUserConfig, sortLibrariesByConfig, NormalizedUserConfig } from '../libraryConfig';
 
 
 export class ElectronUserManager implements UserManager {
   private unsubs: (() => void)[] = [];
-  private currentConfig: UserConfig = normalizeUserConfig(null);
+  private currentConfig: NormalizedUserConfig = normalizeUserConfig(null);
 
   private createFailedLibrary(
     fileId: string,

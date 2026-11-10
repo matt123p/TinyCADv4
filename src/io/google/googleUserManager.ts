@@ -70,6 +70,7 @@ export class GoogleUserManager implements UserManager {
       if (!window.gapi?.load) {
         // Failed to load Google API
         reject();
+        return;
       }
 
       window.gapi.load('auth2', () => {
@@ -443,7 +444,7 @@ export class GoogleUserManager implements UserManager {
       },
     )
       .then((response) => (response.status === 200 ? response.json() : null))
-      .then((json) => {
+      .then((json): Promise<UserConfig> | UserConfig => {
         if (json?.files.length > 0) {
           return this.loadFileText(json?.files[0].id).then((config) => {
             return { ...JSON.parse(config), fileId: json?.files[0].id };
