@@ -79,7 +79,8 @@ export function checkSpicePlacement(library, exportFile) {
     const symbol = placed.sheet.items.at(-1);
     const ref = name.Reference.replace('?', String(name.NameID));
     symbol.text.find((t) => t.description === 'Ref').value = ref;
-    const pins = new updateSymbol(symbol).active_points();
+    const pinUpdater = new updateSymbol(symbol);
+    const pins = [...pinUpdater.active_points(), ...pinUpdater.power_pins()];
     for (let rotation = 0; rotation < 8; rotation++) {
       const variant = { ...symbol, rotation, _active_points: null };
       for (const [x, y, pin] of new updateSymbol(variant).active_points()) {

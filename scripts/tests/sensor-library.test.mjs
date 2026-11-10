@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { geometry, spiceArtworkSnapshot } from '../symbol-review/catalog.mjs';
+import { geometry, spiceArtworkSnapshot } from '../lib/library-artwork.mjs';
 import { digitalArtworkSnapshot } from '../lib/digital-artwork.mjs';
 import { sensorArtworkSnapshot } from '../lib/sensor-artwork.mjs';
 import { serializeLibrary, librarySqlite } from '../lib/library-from-sql.mjs';
@@ -77,7 +77,7 @@ test('all ten new symbols retain their exact pin contracts and explicit electric
   );
   assert.equal(circle.getAttribute('fill'), '0');
 });
-test('sensor/interface bundle is reproducible and contains no inferred simulation templates', async () => {
+test('sensor/interface bundle is reproducible and contains embedded teaching simulation models', async () => {
   const bytes = await serializeLibrary(result.library, result.provenance);
   assert.deepEqual(
     bytes,
@@ -92,8 +92,10 @@ test('sensor/interface bundle is reproducible and contains no inferred simulatio
     assert.equal(db.exec('SELECT count(*) FROM Name')[0].values[0][0], 10);
     assert.equal(db.exec('SELECT max(ppp) FROM Name')[0].values[0][0], 1);
     assert.equal(
-      db.exec("SELECT * FROM Attribute WHERE AttName LIKE '$$SPICE%'").length,
-      0,
+      db.exec(
+        "SELECT count(*) FROM Attribute WHERE AttName='$$SPICE' AND length(AttValue)>0",
+      )[0].values[0][0],
+      10,
     );
   } finally {
     db.close();

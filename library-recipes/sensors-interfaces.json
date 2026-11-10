@@ -16,29 +16,39 @@
     "hall_sensor": {
       "drawing": "hall",
       "convention": "Generic powered Hall sensor with H and an incoming B arrow; not a bare four-terminal Hall element.",
-      "sources": ["hall"]
+      "sources": [
+        "hall"
+      ]
     },
     "piezo_sensor": {
       "drawing": "piezo",
       "base": "spice:capacitor",
       "convention": "Existing capacitor electrodes and terminals with a central piezo element and force arrow; generic transducer, not an ordinary crystal resonator.",
-      "sources": ["piezo"]
+      "sources": [
+        "piezo"
+      ]
     },
     "light_sensor": {
       "drawing": "light",
       "base": "spice:diode",
       "convention": "Powered photodetector interface containing the existing diode body and two incoming light arrows.",
-      "sources": ["light"]
+      "sources": [
+        "light"
+      ]
     },
     "pressure_sensor": {
       "drawing": "pressure",
       "convention": "Powered sensor block containing a diaphragm and incoming pressure arrow; generic conditioned voltage output.",
-      "sources": ["pressure"]
+      "sources": [
+        "pressure"
+      ]
     },
     "temperature_sensor": {
       "drawing": "temperature",
       "convention": "Powered temperature-to-voltage interface with a thermometer motif; distinct from a thermistor.",
-      "sources": ["temperature"]
+      "sources": [
+        "temperature"
+      ]
     },
     "moisture_sensor": {
       "drawing": "moisture",
@@ -47,17 +57,23 @@
     "ph_probe": {
       "drawing": "ph",
       "convention": "Two-terminal pH electrode interface drawn as a labelled source circle; signal and reference remain distinct.",
-      "sources": ["ph"]
+      "sources": [
+        "ph"
+      ]
     },
     "controlled_switch": {
       "drawing": "switch",
       "convention": "Open analogue switch contacts with a dashed actuation link and a separate differential control pair.",
-      "sources": ["switch"]
+      "sources": [
+        "switch"
+      ]
     },
     "am_modulator": {
       "drawing": "am",
       "convention": "Labelled AM functional block with multiplier motif and separate carrier/message differential inputs; carrier bias and modulation law require an explicit model.",
-      "sources": ["am"]
+      "sources": [
+        "am"
+      ]
     }
   },
   "sources": {
@@ -70,5 +86,5 @@
     "switch": "https://www.analog.com/en/resources/glossary/analog-switch.html",
     "am": "https://www.analog.com/media/en/technical-documentation/data-sheets/AD633.pdf"
   },
-  "notes": "Original generic teaching artwork informed by manufacturer circuit conventions, not claimed IEC symbols or manufacturer package pinouts. Existing capacitor/diode graphics are reused where appropriate. All supplies are explicit. Artwork does not implement sensing, switching or modulation models."
+  "notes": "Original generic teaching artwork informed by manufacturer circuit conventions. Embedded configurable educational SPICE equivalents model sensing stimuli, switch controls and AM bias/index. Pin numbers are logical, not manufacturer package assignments."
 }

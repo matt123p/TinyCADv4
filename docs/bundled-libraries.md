@@ -69,6 +69,8 @@ to stage an updated copy. Desktop development reads `bundled-libraries/` directl
 Run `npm run test:libraries` for catalog, packaging, lazy loading, selection,
 error recovery, read-only, and desktop IPC regression checks.
 
-The **Functional blocks** bundle provides 14 generic interfaces (17 entries) in the digital block style. See [generation and usage](functional-library.md). These are diagram-only interfaces with explicit power/reference terminals; simulation implementations are separate.
+The **Functional blocks** bundle provides 14 generic interfaces (17 entries) in the digital block style. See [generation and usage](functional-library.md). These have explicit power/reference terminals and embedded configurable educational SPICE models.
 
 The **Sensors and interfaces** bundle supplies ten generic teaching symbols, including the single-pin test point and the remaining sensor, analogue-switch and AM-modulator interfaces. See [drawing conventions and build instructions](sensor-interface-library.md).
+
+**Teaching components** and the ten course libraries are generated from the completed selections and include portable SPICE models for every component. Build with `npm run libraries:all`; see [model configuration and qualification](teaching-simulation-models.md). Library Workshop has been retired.

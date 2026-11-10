@@ -7,7 +7,7 @@ import {
   spiceArtworkSnapshot,
   derivedArtworkSnapshot,
   geometry,
-} from '../symbol-review/catalog.mjs';
+} from '../lib/library-artwork.mjs';
 const { DOMParser, XMLSerializer } = createRequire(import.meta.url)(
   'common-xml-features',
 );

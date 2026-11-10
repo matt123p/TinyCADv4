@@ -1,7 +1,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spiceArtworkSnapshot } from './symbol-review/catalog.mjs';
+import { spiceArtworkSnapshot } from './lib/library-artwork.mjs';
 import { digitalArtworkSnapshot } from './lib/digital-artwork.mjs';
 import { serializeLibrary } from './lib/library-from-sql.mjs';
 import { sensorArtworkSnapshot } from './lib/sensor-artwork.mjs';

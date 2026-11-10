@@ -4,13 +4,18 @@ Prepared **10 November 2026**, from the ten GCSE, A-level, BTEC and degree catal
 
 Start with **[library-manifest.json](library-manifest.json)**. This single self-contained JSON collection contains ten independent libraries, all experiment descriptions/references, and the full symbol records. Another application does not need to scrape the Markdown documents.
 
-## Artwork selection before bundling
+## Generated libraries
 
-Use the **[shared symbol reviewer](SELECTION.md)** to choose artwork once per canonical type. It starts with 76 automatic artwork assignments from the corrected SPICE bundle and selected NAND reference, six native editor features and 20 types initially needing a decision. SQL candidates are compared against SPICE references at a common drawing scale, and choices are recorded in [symbol-choices.json](symbol-choices.json) for all overlapping course bundles. The [selection rules](selection-rules.json) cover pin contracts, grid alignment, lead/body size and drawing style. The [Digital logic bundle](../digital-library.md) is already generated from the chosen NAND. The [Functional blocks bundle](../functional-library.md) supplies all 14 generic interfaces in the same style. The [Sensors and interfaces bundle](../sensor-interface-library.md) supplies ten further drawings, including the test point, sensors, analogue switch and AM modulator. Course bundles will be built after the remaining shared selection is complete.
+The artwork-selection stage is complete. Library Workshop and its local server have been removed. The saved [choices](symbol-choices.json) and [style rules](selection-rules.json) remain historical build inputs. Selected SQL drawings are checked in under `library-sources/teaching/`; rebuilding the teaching and course bundles requires neither the SQL dump nor a picker cache.
+
+**Teaching components** contains 116 entries for all 96 non-editor component types, including the selected EU/US, LED and clock-edge variants. All ten course bundles use the same drawings and embedded models. The six connectivity/editor types continue to use native operations. The eight recorded SQL adaptations are applied by the build, with their changes recorded in provenance.
 
 ```sh
-npm run symbols:review -- --sql '../sql/tinycad1_prod(1).sql'
+npm run libraries:all
+npm run test:teaching
 ```
+
+See [configuring and qualifying the simulation models](../teaching-simulation-models.md). The inventory JSON below records original requirements; executable models live in the generated `.tclib` files.
 
 ## Files
 

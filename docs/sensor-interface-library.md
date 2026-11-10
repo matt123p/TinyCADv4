@@ -17,7 +17,7 @@ Enable **Sensors and interfaces** in the bundled-library chooser. This library s
 
 Logical numbers, terminal names, electrical types and terminal sides follow `all-symbols.json`. Supply and reference pins remain visible and explicitly wired. The Hall interface represents a conditioned, three-pin sensor, not a bare four-terminal Hall element. None of these generic terminal numbers claims a real IC package pinout.
 
-These are original generic drawings informed by related circuit conventions. They are **not claimed to be standardised IEC sensor symbols**. The powered light sensor is distinct from the existing photodiode and LDR; the moisture sensor is distinct from an ambient-humidity IC. Sensing/calibration laws, switch thresholds and AM modulation laws require separate simulation adapters. Multiplication alone can produce suppressed-carrier modulation; conventional AM needs the intended carrier bias and modulation index to be defined by its model.
+These are original generic drawings informed by related circuit conventions. They are **not claimed to be standardised IEC sensor symbols**. The powered light sensor is distinct from the existing photodiode and LDR; the moisture sensor is distinct from an ambient-humidity IC. Sensing/calibration laws, switch thresholds and AM modulation laws are supplied by configurable educational SPICE equivalents; see [parameters and qualification](teaching-simulation-models.md). Multiplication alone can produce suppressed-carrier modulation; conventional AM needs the intended carrier bias and modulation index to be defined by its model.
 
 ## Research references
 
@@ -44,4 +44,4 @@ The [recipe](../library-recipes/sensors-interfaces.json) records drawing convent
 
 Tests check logical terminal contracts, electrical types, explicit supplies, reproducible packaging, pin/circle contact, editor placement in all eight rotations/mirrors and drawing save/load. The real netlist test also connects the test point's sole pin to a named net through a wire.
 
-The picker assigns these ten drawings globally across all course bundles. Decisions outside this group are preserved. Saved SQL choices which still require adaptations remain a separate review step.
+All course bundles share these drawings and their embedded models. The recorded SQL adaptations are applied by the teaching-library build; Library Workshop has been removed.

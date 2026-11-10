@@ -45,6 +45,8 @@ test('legacy SPICE templates resolve attribute names regardless of capitalizatio
       assert.equal(expand('?(defined(missing),bad,ok) ?(not_defined(NAME),bad,ok)'), 'ok ok');
       assert.equal(expand('?(empty(NAME),bad,ok) ?(not_empty(tc1),bad,ok)'), 'ok ok');
       assert.equal(expand('$(NAME) $(Name)', [{ description: 'NAME', value: '2K' }]), '2K 1K');
+      assert.equal(expand('B1 out 0 V={v(in)>1 ? max(0,2) : 0}'), 'B1 out 0 V={v(in)>1 ? max(0,2) : 0}');
+      assert.equal(expand('B1 out 0 V={v(in)>1?(2):(0)}'), 'B1 out 0 V={v(in)>1?(2):(0)}');
       assert.equal(expand('$(Missing)'), "<attr 'Missing' not found>");
     } finally {
       globalThis.document = previousDocument;

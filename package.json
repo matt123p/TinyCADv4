@@ -48,16 +48,17 @@
     "test:examples": "node scripts/tests/bundled-examples.mjs",
     "libraries:sql": "node scripts/build-library-from-sql.mjs",
     "test:spice": "node scripts/tests/spice-library.mjs",
-    "symbols:review": "node scripts/symbol-review/server.mjs",
-    "symbols:prepare": "node scripts/symbol-review/server.mjs --prepare",
-    "test:symbol-review": "node --test scripts/tests/symbol-review.test.mjs scripts/tests/teaching-native-tools.test.mjs",
     "test:symbol-artwork": "node --test scripts/tests/symbol-artwork.test.mjs",
     "libraries:sensors": "node scripts/build-sensor-library.mjs",
     "test:sensors": "node --test scripts/tests/sensor-library.test.mjs",
     "libraries:functional": "node scripts/build-functional-library.mjs",
     "test:functional": "node --test scripts/tests/functional-library.test.mjs",
     "libraries:digital": "node scripts/build-digital-library.mjs",
-    "test:digital": "node --test scripts/tests/digital-library.test.mjs"
+    "test:digital": "node --test scripts/tests/digital-library.test.mjs",
+    "test:teaching-tools": "node --test scripts/tests/teaching-native-tools.test.mjs",
+    "libraries:teaching": "node scripts/build-teaching-libraries.mjs",
+    "libraries:all": "npm run libraries:digital && npm run libraries:functional && npm run libraries:sensors && npm run libraries:teaching && npm run libraries:package",
+    "test:teaching": "node --test scripts/tests/teaching-library.test.mjs scripts/tests/teaching-models.test.mjs scripts/tests/teaching-native-tools.test.mjs"
   },
   "build": {
     "appId": "com.tinycad.app",

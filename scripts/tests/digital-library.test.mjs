@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { spiceArtworkSnapshot, geometry } from '../symbol-review/catalog.mjs';
+import { spiceArtworkSnapshot, geometry } from '../lib/library-artwork.mjs';
 import { digitalArtworkSnapshot } from '../lib/digital-artwork.mjs';
 import { librarySqlite, serializeLibrary } from '../lib/library-from-sql.mjs';
 import { runRegression } from './run-regression.mjs';
@@ -159,9 +159,11 @@ test('packaged digital library matches generated artwork and is reproducible wit
     assert.equal(db.exec('PRAGMA integrity_check')[0].values[0][0], 'ok');
     assert.equal(db.exec('SELECT count(*) FROM Name')[0].values[0][0], 28);
     assert.equal(db.exec('SELECT max(ppp) FROM Name')[0].values[0][0], 1);
-    assert.ok(
-      !db.exec("SELECT * FROM Attribute WHERE AttName LIKE '$$SPICE%'").length,
-      'Do not copy an unrelated model into the symbols.',
+    assert.equal(
+      db.exec(
+        "SELECT count(*) FROM Attribute WHERE AttName='$$SPICE' AND length(AttValue)>0",
+      )[0].values[0][0],
+      28,
     );
   } finally {
     db.close();

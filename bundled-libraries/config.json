@@ -11,19 +11,85 @@
       "id": "digital",
       "name": "Digital logic",
       "path": "digital/digital.tclib",
-      "description": "Generic single-unit digital symbols based on the selected NAND: yellow bodies, hidden VCC/VSS power pins and native inversion/clock shapes. Simulation models are configured separately."
+      "description": "Single-unit digital gates, counters and storage with configurable portable SPICE models, native inversion/clock markers and hidden VCC/VSS power pins."
     },
     {
       "id": "functional",
       "name": "Functional blocks",
       "path": "functional/functional.tclib",
-      "description": "Generic educational interfaces in the digital block style, with labelled on-grid pins and explicit power/reference terminals. Diagram-only; simulation implementations are separate."
+      "description": "Functional interfaces with configurable educational SPICE behaviour, including ADC/DAC, communication, state machines and programmable I/O."
     },
     {
       "id": "sensors-interfaces",
       "name": "Sensors and interfaces",
       "path": "sensors-interfaces/sensors-interfaces.tclib",
-      "description": "Generic teaching sensors, a real single-pin test point, differential analogue switch and AM modulation interface. Explicit terminals; sensing and simulation models are separate."
+      "description": "Sensors, a test point, analogue switch and AM modulator with configurable educational SPICE models and explicit electrical terminals."
+    },
+    {
+      "id": "teaching",
+      "name": "Teaching components",
+      "path": "teaching/teaching.tclib",
+      "description": "Complete shared teaching set: 96 component types with portable SPICE models, including all selected drawing variants."
+    },
+    {
+      "id": "gcse-physics-aqa",
+      "name": "GCSE Physics \u2014 AQA 8463",
+      "path": "gcse-physics-aqa/gcse-physics-aqa.tclib",
+      "description": "Course-specific selection from the shared modelled teaching components. Native instruments and editor tools are supplied by TinyCAD."
+    },
+    {
+      "id": "a-level-physics-aqa",
+      "name": "A-level Physics \u2014 AQA 7408, including optional Electronics",
+      "path": "a-level-physics-aqa/a-level-physics-aqa.tclib",
+      "description": "Course-specific selection from the shared modelled teaching components. Native instruments and editor tools are supplied by TinyCAD."
+    },
+    {
+      "id": "btec-first-engineering",
+      "name": "BTEC First Certificate in Engineering \u2014 selected Unit 8",
+      "path": "btec-first-engineering/btec-first-engineering.tclib",
+      "description": "Course-specific selection from the shared modelled teaching components. Native instruments and editor tools are supplied by TinyCAD."
+    },
+    {
+      "id": "btec-applied-science-2016",
+      "name": "BTEC National Extended Diploma Applied Science (2016) \u2014 selected Unit 15",
+      "path": "btec-applied-science-2016/btec-applied-science-2016.tclib",
+      "description": "Course-specific selection from the shared modelled teaching components. Native instruments and editor tools are supplied by TinyCAD."
+    },
+    {
+      "id": "btec-applied-science-aaq",
+      "name": "BTEC National Applied Science AAQ Extended Certificate \u2014 Units 3 and 4",
+      "path": "btec-applied-science-aaq/btec-applied-science-aaq.tclib",
+      "description": "Course-specific selection from the shared modelled teaching components. Native instruments and editor tools are supplied by TinyCAD."
+    },
+    {
+      "id": "btec-national-electrical-electronic-engineering",
+      "name": "BTEC National Extended Diploma Electrical and Electronic Engineering \u2014 selected Unit 19",
+      "path": "btec-national-electrical-electronic-engineering/btec-national-electrical-electronic-engineering.tclib",
+      "description": "Course-specific selection from the shared modelled teaching components. Native instruments and editor tools are supplied by TinyCAD."
+    },
+    {
+      "id": "btec-hnc-electrical-electronic-engineering",
+      "name": "BTEC HNC Electrical and Electronic Engineering for England (2024) \u2014 Unit 4019",
+      "path": "btec-hnc-electrical-electronic-engineering/btec-hnc-electrical-electronic-engineering.tclib",
+      "description": "Course-specific selection from the shared modelled teaching components. Native instruments and editor tools are supplied by TinyCAD."
+    },
+    {
+      "id": "degree-year1-physics",
+      "name": "First-year physics degree \u2014 representative electronic-circuit strand",
+      "path": "degree-year1-physics/degree-year1-physics.tclib",
+      "description": "Course-specific selection from the shared modelled teaching components. Native instruments and editor tools are supplied by TinyCAD."
+    },
+    {
+      "id": "degree-year1-electronics",
+      "name": "First-year electronics degree \u2014 representative circuit/device/digital strand",
+      "path": "degree-year1-electronics/degree-year1-electronics.tclib",
+      "description": "Course-specific selection from the shared modelled teaching components. Native instruments and editor tools are supplied by TinyCAD."
+    },
+    {
+      "id": "degree-year1-engineering",
+      "name": "First-year engineering degrees \u2014 shared electronics and discipline applications",
+      "path": "degree-year1-engineering/degree-year1-engineering.tclib",
+      "description": "Course-specific selection from the shared modelled teaching components. Native instruments and editor tools are supplied by TinyCAD."
     }
   ]
 }

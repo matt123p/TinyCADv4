@@ -24,6 +24,10 @@
     "tdm_switch": "TDM MUX",
     "transmitter": "TRANSMITTER"
   },
-  "clockedSymbols": ["adc4", "pcm_encoder", "state_machine"],
-  "notes": "Generic diagram-only logical interfaces, not physical packages or executable simulations. Power and reference terminals remain visible and keep their inventory names. ADC, PCM encoder and state machine have rising/falling-edge alternatives. General clock ports on MCU, FPGA, sample-and-hold and TDM interfaces do not imply edge-triggered behaviour."
+  "clockedSymbols": [
+    "adc4",
+    "pcm_encoder",
+    "state_machine"
+  ],
+  "notes": "Configurable educational SPICE behaviour is embedded. Explicit power/reference terminals retain inventory names. ADC, PCM and state-machine entries provide both edge variants. MCU/FPGA I/O uses configurable truth tables and optional clocked outputs, not vendor firmware or HDL."
 }

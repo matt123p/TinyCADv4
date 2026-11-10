@@ -6,7 +6,7 @@
     "id": "derived:full_adder",
     "xmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
   },
-  "recipeSha256": "a94d06ca8ee05d18679170ee787b392db4fe318f6c6aa976a4882620ee39140f",
+  "recipeSha256": "3de913d37a88de69bd41e2c1cc453f2ca188f5fa4583c406da6aff754859161b",
   "sources": {
     "hall": "https://www.ti.com/lit/ds/symlink/drv5055.pdf",
     "piezo": "https://www.analog.com/en/resources/technical-articles/2022/07/16/07/45/amplifier-provides-signal-conditioning-for-piezofilm-sensor.html",
@@ -17,7 +17,7 @@
     "switch": "https://www.analog.com/en/resources/glossary/analog-switch.html",
     "am": "https://www.analog.com/media/en/technical-documentation/data-sheets/AD633.pdf"
   },
-  "notes": "Original generic teaching artwork informed by manufacturer circuit conventions, not claimed IEC symbols or manufacturer package pinouts. Existing capacitor/diode graphics are reused where appropriate. All supplies are explicit. Artwork does not implement sensing, switching or modulation models.",
+  "notes": "Original generic teaching artwork informed by manufacturer circuit conventions. Embedded configurable educational SPICE equivalents model sensing stimuli, switch controls and AM bias/index. Pin numbers are logical, not manufacturer package assignments.",
   "entries": [
     {
       "id": "test_point",
@@ -119,5 +119,9 @@
       "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
       "convention": "Labelled AM functional block with multiplier motif and separate carrier/message differential inputs; carrier bias and modulation law require an explicit model."
     }
-  ]
+  ],
+  "simulation": {
+    "backend": "spice",
+    "modelSha256": "6dbfe3ce7fa19738e91ea2e89b18224dcdf3ffc88b6002473eef19aa7a5d05f3"
+  }
 }

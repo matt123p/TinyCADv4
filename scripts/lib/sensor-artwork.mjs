@@ -1,3 +1,4 @@
+import { applyTeachingModels } from './teaching-models.mjs';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
@@ -360,6 +361,11 @@ export async function sensorArtworkSnapshot({
       SymbolId: c.bundleNameId,
       Data: xml,
     })),
+  };
+  applyTeachingModels(library, records);
+  provenance.simulation = {
+    backend: 'spice',
+    modelSha256: hash(JSON.stringify(library.names.map((n) => n.Attributes))),
   };
   return {
     records,

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { geometry, spiceArtworkSnapshot } from '../symbol-review/catalog.mjs';
+import { geometry, spiceArtworkSnapshot } from '../lib/library-artwork.mjs';
 import { digitalArtworkSnapshot } from '../lib/digital-artwork.mjs';
 import { functionalArtworkSnapshot } from '../lib/functional-artwork.mjs';
 import { serializeLibrary, librarySqlite } from '../lib/library-from-sql.mjs';
@@ -96,7 +96,7 @@ test('all 14 functional interfaces retain their logical ports, sides, electrical
     assert.ok(m.bodyHeightMm >= 8);
   }
 });
-test('functional bundle is reproducible and contains no inferred simulation templates', async () => {
+test('functional bundle is reproducible and contains embedded teaching simulation models', async () => {
   const bytes = await serializeLibrary(result.library, result.provenance);
   assert.deepEqual(
     bytes,
@@ -111,8 +111,10 @@ test('functional bundle is reproducible and contains no inferred simulation temp
     assert.equal(db.exec('SELECT count(*) FROM Name')[0].values[0][0], 17);
     assert.equal(db.exec('SELECT max(ppp) FROM Name')[0].values[0][0], 1);
     assert.equal(
-      db.exec("SELECT * FROM Attribute WHERE AttName LIKE '$$SPICE%'").length,
-      0,
+      db.exec(
+        "SELECT count(*) FROM Attribute WHERE AttName='$$SPICE' AND length(AttValue)>0",
+      )[0].values[0][0],
+      17,
     );
   } finally {
     db.close();

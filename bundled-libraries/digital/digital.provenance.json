@@ -24,8 +24,8 @@
     "id": "spice:ua741",
     "xmlSha256": "9ce14ee75dde09251e619ac6eb8c4e883fb3377a82915b89b0ae1644f0347b7c"
   },
-  "recipeSha256": "bc7dbed9f4275eba1a9fb16b237a43e90797e54aa469569b3eee5cd4e1889864",
-  "notes": "Schematic artwork and logical terminal contracts only. No physical package or simulation model is inferred. Both clock-edge variants are provided for clocked symbols.",
+  "recipeSha256": "d115b8d07a253ad328dab5dfe858647af957676604dfc146d38aedeeb6d29905",
+  "notes": "Original configurable educational SPICE models are embedded. Clocked symbols include both edge variants; physical footprints and manufacturer timing remain separate.",
   "entries": [
     {
       "id": "gate_nand",
@@ -279,5 +279,9 @@
       "xmlSha256": "2132eb61ccde4ee4583e48160def7e07dcff206edfbc106f8d86422f78effda6",
       "clockEdge": "falling"
     }
-  ]
+  ],
+  "simulation": {
+    "backend": "spice",
+    "modelSha256": "a5bfe0043fd08a0a082dc331ec29c84bc62fefd8229b6754974b94fb71de70f0"
+  }
 }

@@ -8,9 +8,9 @@ Each symbol keeps the teaching inventory's logical pin numbers, names, sides and
 
 Power and reference terminals remain **visible and explicitly wired**. Names such as VDD, VSS, GND, VCC, COMMON, VREF and REF are preserved. They do not silently connect to the digital family's hidden VCC/VSS rails or to other blocks' reference terminals.
 
-These are **diagram-only generic interfaces**, not physical package pinouts or executable simulation models. ADC conversion, firmware, HDL, data logging, communication and physical transduction require a separate implementation. No unrelated SPICE template is copied into the bundle.
+These generic interfaces now embed **configurable educational SPICE behaviour** for conversion, sampling, signal transfer, state and programmable I/O. The MCU/FPGA models use configurable truth tables and optional clocked outputs; they do not execute vendor firmware or HDL. See [model parameters and qualification](teaching-simulation-models.md).
 
-The shared picker assigns all 14 types to these drawings, retaining both edge variants for the three clocked types. One assignment applies across all course bundles. Other saved choices are preserved.
+The teaching/course builders use these shared drawings and models, retaining both edge variants for the three clocked types. Library Workshop is no longer needed.
 
 ## Build and verification
 

@@ -6,8 +6,8 @@
     "id": "derived:full_adder",
     "xmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
   },
-  "recipeSha256": "16cf4f94a67a8fef93fc4064d4341295aca5a2a78eefeec0737f9d283c30b69c",
-  "notes": "Generic diagram-only logical interfaces, not physical packages or executable simulations. Power and reference terminals remain visible and keep their inventory names. ADC, PCM encoder and state machine have rising/falling-edge alternatives. General clock ports on MCU, FPGA, sample-and-hold and TDM interfaces do not imply edge-triggered behaviour.",
+  "recipeSha256": "6df5bf3d2de70eca39c211bcc8dd759d3faf3235800beae51ff6f5e8bd29b0f4",
+  "notes": "Configurable educational SPICE behaviour is embedded. Explicit power/reference terminals retain inventory names. ADC, PCM and state-machine entries provide both edge variants. MCU/FPGA I/O uses configurable truth tables and optional clocked outputs, not vendor firmware or HDL.",
   "entries": [
     {
       "id": "adc4",
@@ -162,5 +162,9 @@
       "xmlSha256": "d65bfc2d2e18fe417dd4381f4788ccc2e71c5de9fc4037f48ab54182fea981fd",
       "clockEdge": "falling"
     }
-  ]
+  ],
+  "simulation": {
+    "backend": "spice",
+    "modelSha256": "5ed7cb17ee5adc8ad9f19aab78bde1b9e142ab79eefa6a3a7495027f3b5fdc17"
+  }
 }

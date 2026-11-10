@@ -1,6 +1,6 @@
 # Digital logic library
 
-**Digital logic** is a standard bundled library built from the NAND reference selected in the symbol picker. Enable it in the library chooser. It loads on selection in browser and desktop versions.
+**Digital logic** is a standard bundled library built from the NAND reference selected during artwork review. Enable it in the library chooser. It loads on selection in browser and desktop versions.
 
 There are **21 canonical symbol types and 28 library entries**. Each logical symbol is one part, with generic terminal numbers rather than a commercial IC package pinout. The seven clocked types each have separate rising-edge and falling-edge entries.
 
@@ -54,6 +54,6 @@ Generation requires the checked-in NAND XML, teaching inventory and SPICE librar
 
 The source selection, style reference and every generated drawing hash are retained in provenance. Repeated generation produces identical library bytes.
 
-Tests cover inventory coverage, logical pin numbering, one-part extraction, grid alignment, body dimensions, fill, native inversion/clock markers, both clock edges, actual editor placement through rotations/mirrors, drawing save/load, and hidden supply connections to named power rails in the real netlist generator. The picker assigns these types to the generated family, retaining both clock-edge variants where applicable. Other saved choices are preserved.
+Tests cover inventory coverage, logical pin numbering, one-part extraction, grid alignment, body dimensions, fill, native inversion/clock markers, both clock edges, actual editor placement through rotations/mirrors, drawing save/load, and hidden supply connections to named power rails in the real netlist generator. The teaching/course builders retain both clock-edge variants and the shared artwork selections.
 
-These are schematic symbols and logical interfaces. Device simulation adapters and physical footprints remain separate; no unrelated source model is copied or marked ready to simulate.
+Every entry embeds a configurable educational SPICE model. See [model behaviour, parameters and tests](teaching-simulation-models.md). Physical footprints and manufacturer-specific timing remain separate.

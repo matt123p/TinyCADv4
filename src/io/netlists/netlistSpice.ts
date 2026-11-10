@@ -11,7 +11,7 @@ function findSpiceAttribute(symbol: dsnSymbol, name: string) {
 
 function getPinInfo(val: string, symbol: dsnSymbol, netlist: NetlistData) {
     const updater = new updateSymbol(symbol);
-    const pins = updater.active_points();
+    const pins = [...updater.active_points(), ...updater.power_pins()];
 
     // Look up the pin number first, then if not found, see if it can be found as a pin name instead.
     // This maintains strict compatibility with a PSpice extended feature that allows macros to reference
@@ -140,7 +140,7 @@ function expandSpice(
             if (c === '%') mode = 'awaiting_pin';
             else if (c === '@') mode = 'awaiting_net';
             else if (c === '$') mode = 'awaiting_attr';
-            else if (c === '?') mode = 'awaiting_macro';
+            else if (c === '?' && /^\?\(\s*(?:defined|not_defined|empty|not_empty|connected|not_connected|include)\s*\(/.test(spice.slice(i))) mode = 'awaiting_macro';
             else if (c === '\\') mode = 'awaiting_escape';
             else if (c === '\r') {
                 // Filter out \r to prevent \r\r\n sequences in output

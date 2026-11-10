@@ -12,7 +12,13 @@
       "symbolId": 160,
       "author": "matt"
     },
-    "sourcePinMap": { "A": "1", "B": "2", "Y": "3", "VCC": "14", "VSS": "7" },
+    "sourcePinMap": {
+      "A": "1",
+      "B": "2",
+      "Y": "3",
+      "VCC": "14",
+      "VSS": "7"
+    },
     "adaptation": "Extract one NAND gate from the four-part source; use generic logical pin numbers, the 741 body size and yellow fill, and native hidden power pins named VCC and VSS."
   },
   "style": {
@@ -23,14 +29,34 @@
     "negativeRail": "VSS"
   },
   "gateFunctions": {
-    "gate_nand": { "shape": "and", "inverted": true },
-    "gate_and": { "shape": "and" },
-    "gate_or": { "shape": "or" },
-    "gate_nor": { "shape": "or", "inverted": true },
-    "gate_xor": { "shape": "xor" },
-    "gate_xnor": { "shape": "xor", "inverted": true },
-    "gate_buffer": { "shape": "buffer" },
-    "gate_not": { "shape": "buffer", "inverted": true }
+    "gate_nand": {
+      "shape": "and",
+      "inverted": true
+    },
+    "gate_and": {
+      "shape": "and"
+    },
+    "gate_or": {
+      "shape": "or"
+    },
+    "gate_nor": {
+      "shape": "or",
+      "inverted": true
+    },
+    "gate_xor": {
+      "shape": "xor"
+    },
+    "gate_xnor": {
+      "shape": "xor",
+      "inverted": true
+    },
+    "gate_buffer": {
+      "shape": "buffer"
+    },
+    "gate_not": {
+      "shape": "buffer",
+      "inverted": true
+    }
   },
   "blocks": {
     "full_adder": "FA",
@@ -56,5 +82,5 @@
     "flipflop_d",
     "flipflop_jk"
   ],
-  "notes": "Schematic artwork and logical terminal contracts only. No physical package or simulation model is inferred. Both clock-edge variants are provided for clocked symbols."
+  "notes": "Original configurable educational SPICE models are embedded. Clocked symbols include both edge variants; physical footprints and manufacturer timing remain separate."
 }
