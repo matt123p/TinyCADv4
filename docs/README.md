@@ -24,6 +24,29 @@ Then work through:
 For the implemented source/probe tools and plot controls, see
 [Sources, probes and charts](14-spice-controls-and-charts.md).
 
+For syllabus-linked teaching ideas, see the [GCSE electronics experiments](17-gcse-physics-electronics-experiments.md)
+and [A-level electronics experiments](18-a-level-physics-electronics-experiments.md) catalogues.
+Both use official AQA specifications and distinguish diagram work, simulation,
+model-dependent activities and required practicals.
+
+## BTEC and first-year degree experiment catalogues
+
+The following research catalogues link electronic-circuit teaching ideas to published
+qualification units or university modules. They distinguish drawing, simulation and
+activities needing additional models. The degree catalogues are representative proposals,
+not a universal university syllabus. Research checked on 10 November 2026.
+
+| Course | Catalogue |
+| --- | --- |
+| BTEC First Certificate in Engineering, 2012 suite | [Electronics experiments](19-btec-first-engineering-electronics-experiments.md) |
+| BTEC National Extended Diploma in Applied Science, 2016 suite | [Electronics experiments](20-btec-national-applied-science-2016-electronics-experiments.md) |
+| BTEC National Applied Science AAQ Extended Certificate, first teaching 2025 | [Electronics experiments](21-btec-aaq-applied-science-electronics-experiments.md) |
+| BTEC National Extended Diploma in Electrical and Electronic Engineering, 2016 suite | [Electronics experiments](22-btec-national-electrical-electronic-engineering-experiments.md) |
+| BTEC HNC Electrical and Electronic Engineering for England, 2024 suite | [Electronics experiments](23-btec-hnc-electrical-electronic-engineering-experiments.md) |
+| First-year physics degrees | [Electronics experiments](24-first-year-degree-physics-electronics-experiments.md) |
+| First-year electronics degrees | [Electronics experiments](25-first-year-degree-electronics-experiments.md) |
+| First-year engineering degrees, shared material and discipline applications | [Electronics experiments](26-first-year-degree-engineering-electronics-experiments.md) |
+
 ## Scope and status
 
 These documents describe an integrated ngspice experience with the approachable circuit-and-instruments workflow associated with Multisim. The feature catalogue includes both implemented foundation features and planned workbench features; it is not a claim that the whole catalogue is available. User stories remain research-informed hypotheses pending user testing. Use the implementation status and TODO documents to distinguish working code, local verification and outstanding platform qualification.
