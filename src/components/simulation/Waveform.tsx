@@ -96,6 +96,8 @@ export function Waveform({
   viewportRef,
   signalLabels,
   fillHeight = false,
+  scopeView = false,
+  scopeTrigger,
 }: {
   data: ResultData;
   signals: string[];
@@ -117,6 +119,8 @@ export function Waveform({
   viewportRef?: React.MutableRefObject<{ min: number; max: number }>;
   signalLabels?: Record<string, string>;
   fillHeight?: boolean;
+  scopeView?: boolean;
+  scopeTrigger?: { source: string; level: number };
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const chart = useRef<Chart<'line'>>();
@@ -277,7 +281,7 @@ export function Waveform({
       x: {
         type: logX ? 'logarithmic' : 'linear',
         title: {
-          display: true,
+          display: !scopeView,
           text:
             axisLabels.x || (channelScales ? 'Time from trigger (ms)' : xLabel),
           ...(channelScales ? { color: '#dbeaf4' } : {}),
@@ -298,6 +302,7 @@ export function Waveform({
                 }));
               },
               ticks: {
+                display: !scopeView,
                 autoSkip: false,
                 maxRotation: 0,
                 minRotation: 0,
@@ -328,7 +333,7 @@ export function Waveform({
         axis: 'y',
         position: index % 2 ? 'right' : 'left',
         title: {
-          display: true,
+          display: !scopeView,
           ...(channel ? { color: channel.color } : {}),
           text: channel
             ? `${unit} (V)`
@@ -348,6 +353,7 @@ export function Waveform({
           ...(channel ? { color: 'rgba(210,230,245,.15)' } : {}),
         },
         ticks: {
+          display: !scopeView,
           maxTicksLimit: channel ? 9 : compact ? 5 : 8,
           ...(channel ? { stepSize: channel.scale, color: channel.color } : {}),
           ...(channel ? { autoSkip: false } : {}),
@@ -357,51 +363,103 @@ export function Waveform({
     const instance = new Chart(canvas.current, {
       type: 'line',
       data: { datasets },
-      plugins: showCursors
-        ? [
-            {
-              id: 'instrument-cursors',
-              afterDraw(instance) {
-                const { ctx, chartArea } = instance;
-                if (!chartArea || !scale) return;
-                [cursorMarkers.current.a, cursorMarkers.current.b].forEach(
-                  (sample, i) => {
-                    const time = scale.real[sample];
-                    if (time === undefined) return;
-                    const x = instance.scales.x.getPixelForValue(time);
-                    if (x < chartArea.left || x > chartArea.right) return;
-                    ctx.save();
-                    ctx.strokeStyle = i ? '#7fe3bf' : '#efefef';
-                    ctx.fillStyle = ctx.strokeStyle;
-                    ctx.setLineDash([4, 3]);
-                    ctx.beginPath();
-                    ctx.moveTo(x, chartArea.top);
-                    ctx.lineTo(x, chartArea.bottom);
-                    ctx.stroke();
-                    ctx.font = '10px Segoe UI';
-                    ctx.fillText(
-                      `Cursor ${i ? 'B' : 'A'}`,
-                      Math.min(x + 3, chartArea.right - 48),
-                      chartArea.top + 11 + i * 12,
+      plugins: [
+        ...(scopeView
+          ? [
+              {
+                id: 'scope-position-markers',
+                afterDraw(instance: Chart<'line'>) {
+                  const { ctx, chartArea } = instance;
+                  if (!chartArea) return;
+                  ctx.save();
+                  ctx.font = 'bold 11px Consolas,monospace';
+                  units.forEach((unit, index) => {
+                    const channel = channelScales?.[unit];
+                    const axis = instance.scales[`y${index}`];
+                    if (!channel || !axis) return;
+                    const zero = axis.getPixelForValue(0);
+                    const y = Math.max(
+                      chartArea.top + 5,
+                      Math.min(chartArea.bottom - 5, zero),
                     );
-                    ctx.restore();
-                  },
-                );
+                    ctx.fillStyle = channel.color;
+                    ctx.fillText(unit, chartArea.left - 25, y + 4);
+                    ctx.beginPath();
+                    ctx.moveTo(chartArea.left - 10, y - 4);
+                    ctx.lineTo(chartArea.left - 2, y);
+                    ctx.lineTo(chartArea.left - 10, y + 4);
+                    ctx.fill();
+                    if (scopeTrigger?.source === unit) {
+                      const level = axis.getPixelForValue(scopeTrigger.level);
+                      if (level >= chartArea.top && level <= chartArea.bottom) {
+                        ctx.strokeStyle = '#b8dacd';
+                        ctx.setLineDash([3, 5]);
+                        ctx.beginPath();
+                        ctx.moveTo(chartArea.left, level);
+                        ctx.lineTo(chartArea.right, level);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                        ctx.fillStyle = '#b8dacd';
+                        ctx.fillText('T', chartArea.right + 4, level + 4);
+                      }
+                    }
+                  });
+                  ctx.restore();
+                },
               },
-            },
-          ]
-        : [],
+            ]
+          : []),
+        ...(showCursors
+          ? [
+              {
+                id: 'instrument-cursors',
+                afterDraw(instance: Chart<'line'>) {
+                  const { ctx, chartArea } = instance;
+                  if (!chartArea || !scale) return;
+                  [cursorMarkers.current.a, cursorMarkers.current.b].forEach(
+                    (sample, i) => {
+                      const time = scale.real[sample];
+                      if (time === undefined) return;
+                      const x = instance.scales.x.getPixelForValue(time);
+                      if (x < chartArea.left || x > chartArea.right) return;
+                      ctx.save();
+                      ctx.strokeStyle = i ? '#7fe3bf' : '#efefef';
+                      ctx.fillStyle = ctx.strokeStyle;
+                      ctx.setLineDash([4, 3]);
+                      ctx.beginPath();
+                      ctx.moveTo(x, chartArea.top);
+                      ctx.lineTo(x, chartArea.bottom);
+                      ctx.stroke();
+                      ctx.font = '10px Segoe UI';
+                      ctx.fillText(
+                        `Cursor ${i ? 'B' : 'A'}`,
+                        Math.min(x + 3, chartArea.right - 48),
+                        chartArea.top + 11 + i * 12,
+                      );
+                      ctx.restore();
+                    },
+                  );
+                },
+              },
+            ]
+          : []),
+      ],
       options: {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
         parsing: false,
+        ...(scopeView
+          ? {
+              layout: { padding: { left: 28, right: 16, top: 10, bottom: 10 } },
+            }
+          : {}),
         font: { family: 'Segoe UI, sans-serif' },
         interaction: { mode: 'nearest', intersect: false },
         scales,
         plugins: {
           legend: {
-            display: true,
+            display: !scopeView,
             position: 'top',
             labels: {
               boxWidth: 16,
@@ -469,6 +527,8 @@ export function Waveform({
     showCursors,
     signalLabels,
     fillHeight,
+    scopeView,
+    scopeTrigger,
   ]);
   useEffect(() => {
     chart.current?.draw?.();
@@ -503,236 +563,243 @@ export function Waveform({
           : {}),
       }}
     >
-      <div style={{ ...row, justifyContent: 'flex-end', flexShrink: 0 }}>
-        {!channelScales && (
+      {!scopeView && (
+        <div style={{ ...row, justifyContent: 'flex-end', flexShrink: 0 }}>
+          {!channelScales && (
+            <Menu>
+              <MenuTrigger disableButtonEnhancement>
+                <Button
+                  size="small"
+                  appearance="subtle"
+                  icon={<SearchRegular />}
+                  aria-label="Zoom"
+                  title="Zoom"
+                />
+              </MenuTrigger>
+              <MenuPopover>
+                <MenuList>
+                  <MenuItem
+                    icon={<ZoomFitRegular />}
+                    onClick={() => chart.current?.resetZoom()}
+                  >
+                    Fit
+                  </MenuItem>
+                  <MenuItem
+                    icon={<ZoomInRegular />}
+                    onClick={() => chart.current?.zoom(1.5)}
+                  >
+                    Zoom in
+                  </MenuItem>
+                  <MenuItem
+                    icon={<ZoomOutRegular />}
+                    onClick={() => chart.current?.zoom(1 / 1.5)}
+                  >
+                    Zoom out
+                  </MenuItem>
+                  <MenuItem
+                    icon={<ArrowLeftRegular />}
+                    onClick={() => chart.current?.pan({ x: 100 })}
+                  >
+                    Scroll left
+                  </MenuItem>
+                  <MenuItem
+                    icon={<ArrowRightRegular />}
+                    onClick={() => chart.current?.pan({ x: -100 })}
+                  >
+                    Scroll right
+                  </MenuItem>
+                </MenuList>
+              </MenuPopover>
+            </Menu>
+          )}
           <Menu>
             <MenuTrigger disableButtonEnhancement>
               <Button
                 size="small"
                 appearance="subtle"
-                icon={<SearchRegular />}
-                aria-label="Zoom"
-                title="Zoom"
+                icon={<MoreHorizontalRegular />}
+                aria-label="Chart menu"
+                title="Chart menu"
               />
             </MenuTrigger>
             <MenuPopover>
               <MenuList>
+                <Menu>
+                  <MenuTrigger disableButtonEnhancement>
+                    <MenuItem icon={<OptionsRegular />}>
+                      Chart options and cursors
+                    </MenuItem>
+                  </MenuTrigger>
+                  <MenuPopover>
+                    <div
+                      role="group"
+                      aria-label="Chart options and cursors"
+                      style={{
+                        padding: 12,
+                        width: 320,
+                        maxHeight: '70vh',
+                        overflowY: 'auto',
+                      }}
+                    >
+                      <Field label="Display" size="small">
+                        <Select
+                          size="small"
+                          value={mode}
+                          onChange={(_, d) => setMode(d.value as DisplayMode)}
+                        >
+                          <option value="real">Real</option>
+                          <option value="magnitude">Magnitude</option>
+                          <option value="db">Magnitude (dB)</option>
+                          <option value="phase">Phase (°)</option>
+                        </Select>
+                      </Field>
+
+                      {!channelScales && (
+                        <div style={row}>
+                          <Checkbox
+                            label="Logarithmic horizontal axis"
+                            checked={logX}
+                            onChange={(_, d) => setLogX(!!d.checked)}
+                          />
+                          <Checkbox
+                            label="Grid"
+                            checked={grid}
+                            onChange={(_, d) => setGrid(!!d.checked)}
+                          />
+                          <Field label="Horizontal axis" size="small">
+                            <Input
+                              size="small"
+                              value={axisLabels.x ?? xLabel}
+                              onChange={(_, d) =>
+                                setAxisLabels({ ...axisLabels, x: d.value })
+                              }
+                            />
+                          </Field>
+                          {units.map((unit) => (
+                            <Field
+                              key={unit}
+                              label={`${unit} axis label`}
+                              size="small"
+                            >
+                              <Input
+                                size="small"
+                                value={axisLabels[unit] ?? ''}
+                                placeholder={`Automatic (${unit})`}
+                                onChange={(_, d) =>
+                                  setAxisLabels({
+                                    ...axisLabels,
+                                    [unit]: d.value,
+                                  })
+                                }
+                              />
+                            </Field>
+                          ))}
+                        </div>
+                      )}
+                      {count > 0 && (
+                        <>
+                          <label>
+                            Cursor A{' '}
+                            <input
+                              type="range"
+                              min={0}
+                              max={count - 1}
+                              value={cursor}
+                              onChange={(e) =>
+                                setCursor(Number(e.target.value))
+                              }
+                            />
+                          </label>
+                          <label>
+                            Cursor B{' '}
+                            <input
+                              type="range"
+                              min={0}
+                              max={count - 1}
+                              value={second}
+                              onChange={(e) =>
+                                setSecond(Number(e.target.value))
+                              }
+                            />
+                          </label>
+                          <div>
+                            {xLabel}: A ={' '}
+                            {number(scale?.real[cursor] ?? cursor)}, B ={' '}
+                            {number(scale?.real[second] ?? second)}, Δ ={' '}
+                            {number(
+                              (scale?.real[second] ?? second) -
+                                (scale?.real[cursor] ?? cursor),
+                            )}
+                          </div>
+                          {selected.map((v) => (
+                            <div key={v.name}>
+                              {v.name}: A ={' '}
+                              {number(
+                                displayValue(
+                                  v.real[cursor],
+                                  v.imaginary?.[cursor],
+                                  mode,
+                                ),
+                              )}
+                              , B ={' '}
+                              {number(
+                                displayValue(
+                                  v.real[second],
+                                  v.imaginary?.[second],
+                                  mode,
+                                ),
+                              )}{' '}
+                              {displayUnit(v, mode)}
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </MenuPopover>
+                </Menu>
                 <MenuItem
-                  icon={<ZoomFitRegular />}
-                  onClick={() => chart.current?.resetZoom()}
+                  icon={<ArrowDownloadRegular />}
+                  onClick={() =>
+                    download(
+                      'simulation.csv',
+                      csv({
+                        ...data,
+                        vectors: [...(scale ? [scale] : []), ...selected],
+                      }),
+                      'text/csv;charset=utf-8',
+                    )
+                  }
                 >
-                  Fit
+                  Download CSV
                 </MenuItem>
                 <MenuItem
-                  icon={<ZoomInRegular />}
-                  onClick={() => chart.current?.zoom(1.5)}
+                  icon={<ImageRegular />}
+                  onClick={() =>
+                    canvas.current?.toBlob((blob) => {
+                      if (!blob) return;
+                      const link = document.createElement('a'),
+                        url = URL.createObjectURL(blob);
+                      link.href = url;
+                      link.download = 'simulation.png';
+                      link.click();
+                      setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    })
+                  }
                 >
-                  Zoom in
-                </MenuItem>
-                <MenuItem
-                  icon={<ZoomOutRegular />}
-                  onClick={() => chart.current?.zoom(1 / 1.5)}
-                >
-                  Zoom out
-                </MenuItem>
-                <MenuItem
-                  icon={<ArrowLeftRegular />}
-                  onClick={() => chart.current?.pan({ x: 100 })}
-                >
-                  Scroll left
-                </MenuItem>
-                <MenuItem
-                  icon={<ArrowRightRegular />}
-                  onClick={() => chart.current?.pan({ x: -100 })}
-                >
-                  Scroll right
+                  Download image
                 </MenuItem>
               </MenuList>
             </MenuPopover>
           </Menu>
-        )}
-        <Menu>
-          <MenuTrigger disableButtonEnhancement>
-            <Button
-              size="small"
-              appearance="subtle"
-              icon={<MoreHorizontalRegular />}
-              aria-label="Chart menu"
-              title="Chart menu"
-            />
-          </MenuTrigger>
-          <MenuPopover>
-            <MenuList>
-              <Menu>
-                <MenuTrigger disableButtonEnhancement>
-                  <MenuItem icon={<OptionsRegular />}>
-                    Chart options and cursors
-                  </MenuItem>
-                </MenuTrigger>
-                <MenuPopover>
-                  <div
-                    role="group"
-                    aria-label="Chart options and cursors"
-                    style={{
-                      padding: 12,
-                      width: 320,
-                      maxHeight: '70vh',
-                      overflowY: 'auto',
-                    }}
-                  >
-                    <Field label="Display" size="small">
-                      <Select
-                        size="small"
-                        value={mode}
-                        onChange={(_, d) => setMode(d.value as DisplayMode)}
-                      >
-                        <option value="real">Real</option>
-                        <option value="magnitude">Magnitude</option>
-                        <option value="db">Magnitude (dB)</option>
-                        <option value="phase">Phase (°)</option>
-                      </Select>
-                    </Field>
-
-                    {!channelScales && (
-                      <div style={row}>
-                        <Checkbox
-                          label="Logarithmic horizontal axis"
-                          checked={logX}
-                          onChange={(_, d) => setLogX(!!d.checked)}
-                        />
-                        <Checkbox
-                          label="Grid"
-                          checked={grid}
-                          onChange={(_, d) => setGrid(!!d.checked)}
-                        />
-                        <Field label="Horizontal axis" size="small">
-                          <Input
-                            size="small"
-                            value={axisLabels.x ?? xLabel}
-                            onChange={(_, d) =>
-                              setAxisLabels({ ...axisLabels, x: d.value })
-                            }
-                          />
-                        </Field>
-                        {units.map((unit) => (
-                          <Field
-                            key={unit}
-                            label={`${unit} axis label`}
-                            size="small"
-                          >
-                            <Input
-                              size="small"
-                              value={axisLabels[unit] ?? ''}
-                              placeholder={`Automatic (${unit})`}
-                              onChange={(_, d) =>
-                                setAxisLabels({
-                                  ...axisLabels,
-                                  [unit]: d.value,
-                                })
-                              }
-                            />
-                          </Field>
-                        ))}
-                      </div>
-                    )}
-                    {count > 0 && (
-                      <>
-                        <label>
-                          Cursor A{' '}
-                          <input
-                            type="range"
-                            min={0}
-                            max={count - 1}
-                            value={cursor}
-                            onChange={(e) => setCursor(Number(e.target.value))}
-                          />
-                        </label>
-                        <label>
-                          Cursor B{' '}
-                          <input
-                            type="range"
-                            min={0}
-                            max={count - 1}
-                            value={second}
-                            onChange={(e) => setSecond(Number(e.target.value))}
-                          />
-                        </label>
-                        <div>
-                          {xLabel}: A = {number(scale?.real[cursor] ?? cursor)},
-                          B = {number(scale?.real[second] ?? second)}, Δ ={' '}
-                          {number(
-                            (scale?.real[second] ?? second) -
-                              (scale?.real[cursor] ?? cursor),
-                          )}
-                        </div>
-                        {selected.map((v) => (
-                          <div key={v.name}>
-                            {v.name}: A ={' '}
-                            {number(
-                              displayValue(
-                                v.real[cursor],
-                                v.imaginary?.[cursor],
-                                mode,
-                              ),
-                            )}
-                            , B ={' '}
-                            {number(
-                              displayValue(
-                                v.real[second],
-                                v.imaginary?.[second],
-                                mode,
-                              ),
-                            )}{' '}
-                            {displayUnit(v, mode)}
-                          </div>
-                        ))}
-                      </>
-                    )}
-                  </div>
-                </MenuPopover>
-              </Menu>
-              <MenuItem
-                icon={<ArrowDownloadRegular />}
-                onClick={() =>
-                  download(
-                    'simulation.csv',
-                    csv({
-                      ...data,
-                      vectors: [...(scale ? [scale] : []), ...selected],
-                    }),
-                    'text/csv;charset=utf-8',
-                  )
-                }
-              >
-                Download CSV
-              </MenuItem>
-              <MenuItem
-                icon={<ImageRegular />}
-                onClick={() =>
-                  canvas.current?.toBlob((blob) => {
-                    if (!blob) return;
-                    const link = document.createElement('a'),
-                      url = URL.createObjectURL(blob);
-                    link.href = url;
-                    link.download = 'simulation.png';
-                    link.click();
-                    setTimeout(() => URL.revokeObjectURL(url), 1000);
-                  })
-                }
-              >
-                Download image
-              </MenuItem>
-            </MenuList>
-          </MenuPopover>
-        </Menu>
-      </div>
+        </div>
+      )}
       <div
         style={{
           position: 'relative',
           ...(fillHeight
             ? { flex: '1 1 0', minHeight: 120 }
-            : { height: compact ? 180 : 360 }),
-          marginTop: 8,
+            : { height: scopeView ? 170 : compact ? 180 : 360 }),
+          marginTop: scopeView ? 0 : 8,
         }}
       >
         <canvas

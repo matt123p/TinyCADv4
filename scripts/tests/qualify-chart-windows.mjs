@@ -34,6 +34,8 @@ await build({
     import { XMLBuilder } from './src/util/xmlbuilder';
     import { decodeDrawing } from './src/io/dsnCodec';
     import { InstrumentPanel } from './src/components/panel/InstrumentPanel';
+    import { scopeTimeSteps, scopeVoltageSteps } from './src/simulation/scopeControls';
+    import { ResizeHandle } from './src/components/panel/ResizeHandle';
     import { InstrumentWindowHost } from './src/components/simulation/InstrumentWindows';
     import { getResult,putResult,activateResultDocument } from './src/simulation/resultStore';
     import { digest } from './src/io/dsnContainer';
@@ -42,6 +44,14 @@ await build({
     import { runSimulation } from './src/simulation/session';
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     const assert = (condition, message) => { if (!condition) throw Error(message); };
+    function ResizableInstrument(props) {
+      const [height,setHeight]=React.useState(340);
+      return <div data-resize-fixture style={{position:'relative',height,marginTop:180}}>
+        <ResizeHandle direction="vertical" onResize={delta=>setHeight(h=>Math.max(100,Math.min(500,h-delta)))}/>
+        <button data-enlarge-panel onClick={()=>setHeight(h=>h+2)}>Enlarge panel</button>
+        <InstrumentPanel {...props}/>
+      </div>;
+    }
     async function waitFor(test) { for(let i=0;i<100;i++){if(test())return;await delay(50);}throw Error('Chart window timed out'); }
     async function verify() {
       const xmlWhitespace=new XMLBuilder();
@@ -312,9 +322,21 @@ await build({
       const labStore=createStore((state={docStore:{present:labInitial}},action)=>({docStore:{present:DocStoreReducer(state.docStore.present,action)}}));
       const labSymbols=lab.sheets[0].items.filter(i=>i.NodeName==='symbol'&&readControl(i)?.kind==='instrument');
       const scopeSymbol=labSymbols.find(i=>readControl(i).type==='scope'),meterSymbol=labSymbols.find(i=>readControl(i).type==='meter');
-      const renderLab=symbol=>root.render(<Provider key="laboratory" store={labStore}><FluentProvider theme={webLightTheme} style={{height:1200}}><InstrumentPanel symbol={symbol} drawing={labStore.getState().docStore.present.drawing} dispatch={labStore.dispatch}/><InstrumentWindowHost/><SimulationSheet toolbarTarget={null}/><ChartWorkspace/></FluentProvider></Provider>);
+      const renderLab=symbol=>root.render(<Provider key="laboratory" store={labStore}><FluentProvider theme={webLightTheme} style={{height:1200}}><ResizableInstrument symbol={symbol} drawing={labStore.getState().docStore.present.drawing} dispatch={labStore.dispatch}/><InstrumentWindowHost/><SimulationSheet toolbarTarget={null}/><ChartWorkspace/></FluentProvider></Provider>);
       const children=[],nativeOpen=window.open;window.open=(...args)=>{const child=nativeOpen.apply(window,args);if(child)children.push(child);return child;};
       renderLab(scopeSymbol);await waitFor(()=>!!document.querySelector('[aria-label="scope instrument"] canvas'));
+      window.scrollTo(0,0);
+      const resizeFixture=document.querySelector('[data-resize-fixture]');
+      const scopeCanvas=resizeFixture.querySelector('canvas'),beforeResizeChart=Chart.getChart(scopeCanvas);
+      const beforeResizeConfig=JSON.stringify(readControl(scopeSymbol));
+      for(let step=0;step<60;step++){
+        resizeFixture.querySelector('[data-enlarge-panel]').click();
+        await delay(1);
+      }
+      await waitFor(()=>resizeFixture.style.height==='460px');
+      assert(Chart.getChart(scopeCanvas)===beforeResizeChart,'Resizing must not rebuild the instrument chart');
+      assert(JSON.stringify(readControl(labStore.getState().docStore.present.drawing.sheets[0].items.find(i=>i._id===scopeSymbol._id)))===beforeResizeConfig,'Panel resizing must not adjust an instrument dial');
+      assert(!updateDepthWarning,'Panel resizing caused a React update loop');
       const previousRuns=labStore.getState().docStore.present.drawing.sheets[1].simulation.runs.length;
       button('Acquire').click();
       await waitFor(()=>labStore.getState().docStore.present.drawing.sheets[1].simulation.runs.length===previousRuns+1);
@@ -323,14 +345,74 @@ await build({
       const scopeChart=()=>Chart.getChart(children[0].document.querySelector('canvas'));
       await waitFor(()=>!!scopeChart());
       assert(scopeChart().options.scales.y0.min===-4 && scopeChart().options.scales.y1.max===.4,'Independent scope volts/div settings were not applied');
+      await waitFor(()=>scopeChart().width>100 && scopeChart().height>100);
+      const scopeConfig=()=>readControl(labStore.getState().docStore.present.drawing.sheets[0].items.find(i=>i._id===scopeSymbol._id));
+      const scopeDocument=children[0].document;
+      const scopeButton=label=>scopeDocument.querySelector('button[aria-label="'+label+'"]');
+      const scopeInput=(label,value)=>{
+        const input=scopeDocument.querySelector('input[aria-label="'+label+'"]');
+        Object.getOwnPropertyDescriptor(children[0].HTMLInputElement.prototype,'value').set.call(input,String(value));
+        input.dispatchEvent(new children[0].Event('input',{bubbles:true}));
+      };
+      assert(scopeDocument.querySelector('[aria-label="Oscilloscope screen"]').textContent.includes('Vpp'),'Scope measurements are not on the display');
+      for(const [label,next] of [['Auto','normal'],['Normal','single'],['Single','auto']]){
+        scopeButton('Trigger mode: '+label).click();
+        await waitFor(()=>scopeConfig().acquisition===next && !!scopeChart());
+      }
+      scopeInput('A Position (div)',1.5);
+      await waitFor(()=>scopeChart()?.options.scales.y0.min===-5.5);
+      assert(scopeConfig().offsetB==='0V','A position moved the other channel');
+      const measuredTrace=scopeChart().data.datasets[0].data.map(p=>p.y);
+      scopeInput('A volts / division dial',scopeVoltageSteps.indexOf('2V'));
+      await waitFor(()=>scopeConfig().scaleA==='2V' && scopeChart()?.options.scales.y0.min===-11);
+      assert(scopeConfig().offsetA==='-3','Scale change moved the channel zero marker');
+      assert(JSON.stringify(scopeChart().data.datasets[0].data.map(p=>p.y))===JSON.stringify(measuredTrace),'Display position changed measured voltage samples');
+      scopeInput('A volts / division dial',scopeVoltageSteps.indexOf('1V'));
+      await waitFor(()=>scopeConfig().scaleA==='1V' && scopeChart()?.options.scales.y0.min===-5.5);
+      scopeInput('A Position (div)',1);
+      await waitFor(()=>scopeConfig().offsetA==='-1' && scopeChart()?.options.scales.y0.min===-5);
+      scopeInput('B Position (div)',-1);
+      await waitFor(()=>scopeConfig().offsetB==='0.1' && Math.abs((scopeChart()?.options.scales.y1.min ?? 0)+.3)<1e-8);
+      Array.from(scopeDocument.querySelectorAll('button')).find(b=>b.textContent==='Channel B').click();
+      for(const [label,next] of [['DC','AC'],['AC','GND'],['GND','DC']]){
+        await waitFor(()=>!!scopeButton('Coupling: '+label));
+        scopeButton('Coupling: '+label).click();
+        await waitFor(()=>scopeConfig().couplingB===next && !!scopeChart());
+        if(next==='GND') assert(scopeChart().data.datasets[1].data.every(p=>p.y===0),'Ground coupling did not display the zero reference');
+      }
+      Array.from(scopeDocument.querySelectorAll('button')).find(b=>b.textContent==='Trigger').click();
+      scopeButton('Trigger mode: Auto').click();
+      await waitFor(()=>scopeConfig().acquisition==='normal' && !!scopeChart());
+      scopeInput('Trigger level (V)',20);
+      await waitFor(()=>scopeConfig().level==='20' && scopeDocument.querySelector('[aria-label="Oscilloscope screen"]').textContent.includes('HOLDING LAST TRACE') && !!scopeChart());
+      scopeInput('Trigger level (V)',.5);
+      await waitFor(()=>scopeConfig().level==='0.5' && !!scopeChart());
+      scopeButton('Trigger mode: Normal').click();
+      await waitFor(()=>scopeConfig().acquisition==='single' && !!scopeChart());
+      scopeButton('Trigger mode: Single').click();
+      await waitFor(()=>scopeConfig().acquisition==='auto' && !!scopeChart() && !!scopeButton('Trigger mode: Auto') && scopeDocument.querySelector('[aria-label="Oscilloscope screen"] [role="status"]').textContent.includes('TRIGGERED'));
+      scopeChart().resize();scopeChart().update('none');
+      const scopeHost=scopeDocument.querySelector('[aria-label="scope instrument"]');
+      scopeHost.style.height='400px';
+      for(const panelWidth of ['760px','100%']){
+      scopeHost.style.width=panelWidth;
+      for(const menuName of ['Channel A','Channel B','Horizontal','Trigger','Measure']){
+        Array.from(scopeDocument.querySelectorAll('button')).find(b=>b.textContent===menuName).click();
+        await delay(30);
+        assert(scopeHost.scrollHeight<=scopeHost.clientHeight+1,'Scope '+menuName+' menu overflows a 400px panel: '+scopeHost.scrollHeight+'px');
+        const horizontal=scopeDocument.querySelector('[aria-label="Horizontal controls"]').getBoundingClientRect();
+        assert(horizontal.bottom<=scopeHost.getBoundingClientRect().bottom,'Timebase controls are below the visible panel');
+      }
+      }
+      Array.from(scopeDocument.querySelectorAll('button')).find(b=>b.textContent==='Trigger').click();
+      await delay(50);
       await window.chartSmoke.capture('OSC1','instrument-scope.png');
       renderLab(meterSymbol);await waitFor(()=>!!document.querySelector('[aria-label="meter instrument"]'));
       assert(!children[0].closed,'Changing selection closed the scope instrument');
       button('Pop out instrument').click();await waitFor(()=>children.length===2 && !!children[1].document.querySelector('[aria-label="Multimeter display"]'));
       await window.chartSmoke.capture('DMM1','instrument-meter.png');
-      const timebaseLabel=Array.from(children[0].document.querySelectorAll('label')).find(l=>l.textContent==='Time / division (s)');
-      const timebase=children[0].document.getElementById(timebaseLabel.htmlFor);
-      Object.getOwnPropertyDescriptor(children[0].HTMLInputElement.prototype,'value').set.call(timebase,'2ms');timebase.dispatchEvent(new children[0].Event('input',{bubbles:true}));
+      const timebase=children[0].document.querySelector('input[aria-label="Time / division (s) dial"]');
+      Object.getOwnPropertyDescriptor(children[0].HTMLInputElement.prototype,'value').set.call(timebase,String(scopeTimeSteps.indexOf('2ms')));timebase.dispatchEvent(new children[0].Event('input',{bubbles:true}));
       await waitFor(()=>readControl(labStore.getState().docStore.present.drawing.sheets[0].items.find(i=>i._id===scopeSymbol._id)).timebase==='2ms');
       assert(readControl(labStore.getState().docStore.present.drawing.sheets[0].items.find(i=>i._id===meterSymbol._id)).type==='meter','Scope popup edited the wrong symbol');
       const scopeAcquisition=()=>Array.from(children[0].document.querySelectorAll('select')).find(s=>Array.from(s.options).some(o=>o.value===labRun.id));
@@ -417,7 +499,7 @@ app.commandLine.appendSwitch('disable-gpu');
  ipcMain.handle('lab-capture',async(_event,title,name)=>{if(!['instrument-scope.png','instrument-meter.png'].includes(name))throw Error('Unexpected capture name');const instrument=BrowserWindow.getAllWindows().find(w=>w.getTitle()===title);if(!instrument)throw Error('No instrument window to capture');const png=await instrument.webContents.capturePage();require('node:fs').writeFileSync(path.join(__dirname,name),png.toPNG());});
  owner.webContents.setWindowOpenHandler(details=>{
    const allowed=chartWindowOptions(details,owner);
-   return allowed?{...allowed,overrideBrowserWindowOptions:{...allowed.overrideBrowserWindowOptions,show:false}}:{action:'deny'};
+   return allowed?{...allowed,overrideBrowserWindowOptions:{...allowed.overrideBrowserWindowOptions,show:false,webPreferences:{...allowed.overrideBrowserWindowOptions?.webPreferences,backgroundThrottling:false}}}:{action:'deny'};
  });
  owner.webContents.on('did-create-window',(child,details)=>configureChartWindow(child,details,owner));
  const timer=setTimeout(()=>{console.error('Chart smoke timed out');app.exit(1);},20000);

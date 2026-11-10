@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { makeStyles } from '@fluentui/react-components';
 
 const useStyles = makeStyles({
@@ -9,6 +9,7 @@ const useStyles = makeStyles({
     width: '4px',
     height: '100%',
     cursor: 'ew-resize',
+    touchAction: 'none',
     backgroundColor: 'transparent',
     zIndex: 10,
     '&:hover': {
@@ -25,6 +26,7 @@ const useStyles = makeStyles({
     right: 0,
     height: '4px',
     cursor: 'ns-resize',
+    touchAction: 'none',
     backgroundColor: 'transparent',
     zIndex: 10,
     '&:hover': {
@@ -46,44 +48,58 @@ export const ResizeHandle: React.FunctionComponent<ResizeHandleProps> = (
   props: ResizeHandleProps,
 ) => {
   const styles = useStyles();
-  const [isDragging, setIsDragging] = useState(false);
-  const [startPos, setStartPos] = useState(0);
+  const drag = useRef<{ pointerId: number; position: number }>();
+  const dragStateChange = useRef(props.onDragStateChange);
+  dragStateChange.current = props.onDragStateChange;
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+  useEffect(() => () => {
+    if (drag.current) {
+      drag.current = undefined;
+      dragStateChange.current?.(false);
+    }
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || drag.current) return;
     e.preventDefault();
-    setIsDragging(true);
-    setStartPos(props.direction === 'horizontal' ? e.clientX : e.clientY);
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drag.current = {
+      pointerId: e.pointerId,
+      position: props.direction === 'horizontal' ? e.clientX : e.clientY,
+    };
     props.onDragStateChange?.(true);
-  }, [props.direction, props.onDragStateChange]);
+  };
 
-  useEffect(() => {
-    if (!isDragging) return;
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const current = drag.current;
+    if (!current || current.pointerId !== e.pointerId) return;
+    const position = props.direction === 'horizontal' ? e.clientX : e.clientY;
+    const delta = position - current.position;
+    // Advance synchronously: several pointer events can arrive before a render.
+    current.position = position;
+    if (delta) props.onResize(delta);
+  };
 
-    const handlePointerMove = (e: PointerEvent) => {
-      const currentPos = props.direction === 'horizontal' ? e.clientX : e.clientY;
-      const delta = currentPos - startPos;
-      props.onResize(delta);
-      setStartPos(currentPos);
-    };
-
-    const handlePointerUp = () => {
-      setIsDragging(false);
-      props.onDragStateChange?.(false);
-    };
-
-    document.addEventListener('pointermove', handlePointerMove);
-    document.addEventListener('pointerup', handlePointerUp);
-
-    return () => {
-      document.removeEventListener('pointermove', handlePointerMove);
-      document.removeEventListener('pointerup', handlePointerUp);
-    };
-  }, [isDragging, startPos, props.direction, props.onResize, props.onDragStateChange]);
+  const finishDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (drag.current?.pointerId !== e.pointerId) return;
+    drag.current = undefined;
+    if (e.currentTarget.hasPointerCapture(e.pointerId))
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    props.onDragStateChange?.(false);
+  };
 
   return (
     <div
       className={props.direction === 'horizontal' ? styles.horizontalHandle : styles.verticalHandle}
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={(e) => {
+        handlePointerMove(e);
+        finishDrag(e);
+      }}
+      onPointerCancel={finishDrag}
+      onLostPointerCapture={finishDrag}
     />
   );
 };
