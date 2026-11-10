@@ -40,3 +40,7 @@ packages/
 /assets/
 /server.bundle.js
 .DS_Store
+
+# Generated plugin packages and browser test results
+/plugin-release/
+/test-results/
