@@ -27,16 +27,19 @@ npm run test:symbol-review
 
 ## What is already assigned
 
-The checked-in [symbol-choices.json](symbol-choices.json) starts with:
+Automatic assignments in [symbol-choices.json](symbol-choices.json), before individual manual choices, comprise:
 
 - **23 direct SPICE artwork reuses:** fixed resistor, capacitor, experimental capacitor plates, polarised capacitor, variable capacitor, inductor, potentiometer, signal/rectifier diodes, LED, zener, NPN/PNP, NMOS/PMOS, op-amp/comparator triangles, DC voltage source, current source, behavioural voltage/current sources, FM source and PWL source.
 - **6 native editor features:** wire, junction, reference ground, net label, no-connect and annotation.
 - **12 derived families:** rheostat, NTC thermistor, LDR, strain gauge, Wheatstone bridge, photodiode, solar cell, SCR, N/P JFET and NPN/PNP Darlington. These are built from corrected SPICE artwork rather than selected from SQL.
-- **71 unchosen types**, including the diagram-only blocks, which still need deliberate artwork choices.
+- **21 digital types** are generated from the selected NAND reference, including rising/falling-edge variants for seven clocked types. See [Digital logic](../digital-library.md).
+- **50 initially unchosen types**, including the diagram-only blocks, which still need deliberate artwork choices.
 
 SPICE reuse is fixed in the reviewer to keep the corrected drawing geometry. Each reuse records its actual bundle recipe ID and NameID, drawing hash, and logical-to-source pin map. For example, the inventory's BJT collector is logical pin 2 but the reused drawing uses source pin 3. The potentiometer's logical wiper is pin 2, while the source wiper is pin 3. All four existing LED colours are linked to the one canonical LED choice.
 
 A generic op-amp reuses the 741 artwork. This does not approve the 741 model for every experiment. Likewise, a rectifier's intended electrical rating is not established by sharing diode artwork. Simulation requirements remain separate from this artwork review. Comparator, behavioural-source, FM and PWL reuse records set `modelReuseAllowed: false`: their existing drawing is retained, but the original 741/independent-source model configuration must be replaced with a suitable adapter. Sine and pulse sources remain unchosen because their inventory explicitly requests waveform graphics absent from the existing DC source drawing.
+
+The Digital logic bundle contains 28 entries: 21 logical types plus seven falling-edge alternatives. Hidden VCC/VSS supply pins are retained in each logical pin map and connect using native Power-pin semantics.
 
 The supplied instruments and probes are outside the master generation queue. They are not recreated by this tool.
 
@@ -101,4 +104,4 @@ Changed inventories or SPICE artwork/entry identities require a new prepared sna
 
 `decisions[canonical_symbol_id]` is the source of truth. Resolve it once, then use that same artwork in every referencing course bundle. A chosen SQL entry records SymbolID, NameID, author and XML hash; a SPICE reuse records the existing bundle and recipe entry. `pinMap` values use `sheet:part:source_number` keys to distinguish multi-part terminals.
 
-Artwork selection is complete only when every type is `reuse`, `native` or `chosen`. `pending` and `needs-drawing` remain blockers. Choices with `requiresAdaptation` record a further terminal/geometry work queue; unresolved model requirements and physical package pinouts must also be handled before claiming simulation coverage. No course `.tclib` files are created at this stage.
+Artwork selection is complete only when every type is `reuse`, `native` or `chosen`. `pending` and `needs-drawing` remain blockers. Choices with `requiresAdaptation` record a further terminal/geometry work queue; unresolved model requirements and physical package pinouts must also be handled before claiming simulation coverage. No course `.tclib` files are created at this stage. The standalone Digital logic bundle is generated separately from its selected NAND reference.

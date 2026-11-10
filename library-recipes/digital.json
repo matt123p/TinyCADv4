@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "id": "digital",
+  "name": "Digital logic",
+  "output": "bundled-libraries/digital/digital.tclib",
+  "reference": {
+    "path": "library-sources/digital/nand-reference.xml",
+    "sha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca",
+    "source": {
+      "kind": "sql",
+      "nameId": 9279,
+      "symbolId": 160,
+      "author": "matt"
+    },
+    "sourcePinMap": { "A": "1", "B": "2", "Y": "3", "VCC": "14", "VSS": "7" },
+    "adaptation": "Extract one NAND gate from the four-part source; use generic logical pin numbers, the 741 body size and yellow fill, and native hidden power pins named VCC and VSS."
+  },
+  "style": {
+    "reference": "spice:ua741",
+    "leadLengthMm": 4,
+    "blockPinPitchMm": 2,
+    "positiveRail": "VCC",
+    "negativeRail": "VSS"
+  },
+  "gateFunctions": {
+    "gate_nand": { "shape": "and", "inverted": true },
+    "gate_and": { "shape": "and" },
+    "gate_or": { "shape": "or" },
+    "gate_nor": { "shape": "or", "inverted": true },
+    "gate_xor": { "shape": "xor" },
+    "gate_xnor": { "shape": "xor", "inverted": true },
+    "gate_buffer": { "shape": "buffer" },
+    "gate_not": { "shape": "buffer", "inverted": true }
+  },
+  "blocks": {
+    "full_adder": "FA",
+    "decoder2to4": "DEC 2:4",
+    "encoder4to2": "ENC 4:2",
+    "mux2": "MUX 2:1",
+    "counter_bcd": "CT BCD",
+    "counter_binary3_async": "CT3 A",
+    "counter_binary3_sync": "CT3 S",
+    "counter_johnson": "CT J4",
+    "shift_register3": "SR3",
+    "flipflop_d": "D FF",
+    "flipflop_jk": "JK FF",
+    "latch_d": "D LATCH",
+    "latch_rs": "RS LATCH"
+  },
+  "clockedSymbols": [
+    "counter_bcd",
+    "counter_binary3_async",
+    "counter_binary3_sync",
+    "counter_johnson",
+    "shift_register3",
+    "flipflop_d",
+    "flipflop_jk"
+  ],
+  "notes": "Schematic artwork and logical terminal contracts only. No physical package or simulation model is inferred. Both clock-edge variants are provided for clocked symbols."
+}

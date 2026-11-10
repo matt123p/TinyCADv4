@@ -1,0 +1,283 @@
+{
+  "version": 1,
+  "id": "digital",
+  "name": "Digital logic",
+  "source": {
+    "path": "library-sources/digital/nand-reference.xml",
+    "sha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca",
+    "source": {
+      "kind": "sql",
+      "nameId": 9279,
+      "symbolId": 160,
+      "author": "matt"
+    },
+    "sourcePinMap": {
+      "A": "1",
+      "B": "2",
+      "Y": "3",
+      "VCC": "14",
+      "VSS": "7"
+    },
+    "adaptation": "Extract one NAND gate from the four-part source; use generic logical pin numbers, the 741 body size and yellow fill, and native hidden power pins named VCC and VSS."
+  },
+  "styleReference": {
+    "id": "spice:ua741",
+    "xmlSha256": "9ce14ee75dde09251e619ac6eb8c4e883fb3377a82915b89b0ae1644f0347b7c"
+  },
+  "recipeSha256": "bc7dbed9f4275eba1a9fb16b237a43e90797e54aa469569b3eee5cd4e1889864",
+  "notes": "Schematic artwork and logical terminal contracts only. No physical package or simulation model is inferred. Both clock-edge variants are provided for clocked symbols.",
+  "entries": [
+    {
+      "id": "gate_nand",
+      "canonicalId": "gate_nand",
+      "name": "NAND gate, 2-input",
+      "nameId": 1,
+      "symbolId": 1,
+      "xmlSha256": "ae5de8a00ceec532072c85d98fa9ebf0ee510bd7936c6f10bf14c081c5857fe9",
+      "clockEdge": null
+    },
+    {
+      "id": "full_adder",
+      "canonicalId": "full_adder",
+      "name": "1-bit full adder",
+      "nameId": 2,
+      "symbolId": 2,
+      "xmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "clockEdge": null
+    },
+    {
+      "id": "decoder2to4",
+      "canonicalId": "decoder2to4",
+      "name": "2-to-4 decoder",
+      "nameId": 3,
+      "symbolId": 3,
+      "xmlSha256": "e8e726be0a12a38d9af54a38b38ce8786ab728fa11d1cab34018db3790e80486",
+      "clockEdge": null
+    },
+    {
+      "id": "encoder4to2",
+      "canonicalId": "encoder4to2",
+      "name": "4-to-2 encoder",
+      "nameId": 4,
+      "symbolId": 4,
+      "xmlSha256": "1f91cdad5fae157e0dfb0042d616ebb6095cfdf1495803197e3d15d3546c1494",
+      "clockEdge": null
+    },
+    {
+      "id": "mux2",
+      "canonicalId": "mux2",
+      "name": "2-to-1 multiplexer",
+      "nameId": 5,
+      "symbolId": 5,
+      "xmlSha256": "669e59e8a09fb10fdf42a12bb7ace7e6264420de35177ac836d94cd2b42a3143",
+      "clockEdge": null
+    },
+    {
+      "id": "counter_bcd",
+      "canonicalId": "counter_bcd",
+      "name": "BCD counter (rising edge)",
+      "nameId": 6,
+      "symbolId": 6,
+      "xmlSha256": "370a33e1aaa56893bd4968974d9c2961cca373a29849cafde6cecaac4586a5c7",
+      "clockEdge": "rising"
+    },
+    {
+      "id": "counter_binary3_async",
+      "canonicalId": "counter_binary3_async",
+      "name": "3-bit asynchronous binary counter (rising edge)",
+      "nameId": 7,
+      "symbolId": 7,
+      "xmlSha256": "355b1d494531bfe95acff131177f849ca0f15fec7129f051b96381f3ce393299",
+      "clockEdge": "rising"
+    },
+    {
+      "id": "counter_binary3_sync",
+      "canonicalId": "counter_binary3_sync",
+      "name": "3-bit synchronous binary counter (rising edge)",
+      "nameId": 8,
+      "symbolId": 8,
+      "xmlSha256": "0c59d62bdf2ed7722efdf973d8b0765ee8073170cb938b13615a1da28767b263",
+      "clockEdge": "rising"
+    },
+    {
+      "id": "counter_johnson",
+      "canonicalId": "counter_johnson",
+      "name": "Johnson counter, 4-stage (rising edge)",
+      "nameId": 9,
+      "symbolId": 9,
+      "xmlSha256": "a15ea6425ac2752c890a48cc6f25b1df40faa798d4b7bf2acff3148e78321c2a",
+      "clockEdge": "rising"
+    },
+    {
+      "id": "gate_and",
+      "canonicalId": "gate_and",
+      "name": "AND gate, 2-input",
+      "nameId": 10,
+      "symbolId": 10,
+      "xmlSha256": "4acc8935d8c7d9f0fa4598b20f468895269450ad46428c23e7837a27141839d2",
+      "clockEdge": null
+    },
+    {
+      "id": "gate_buffer",
+      "canonicalId": "gate_buffer",
+      "name": "Logic buffer",
+      "nameId": 11,
+      "symbolId": 11,
+      "xmlSha256": "718b1ef78bdf10a6450b2945bed9994846443f1dec05edef9c86988cb468276e",
+      "clockEdge": null
+    },
+    {
+      "id": "gate_nor",
+      "canonicalId": "gate_nor",
+      "name": "NOR gate, 2-input",
+      "nameId": 12,
+      "symbolId": 12,
+      "xmlSha256": "31666c4250c27af30e554dc67b0b93b6b8047c57597aafb19b4b7c9c773d8fac",
+      "clockEdge": null
+    },
+    {
+      "id": "gate_not",
+      "canonicalId": "gate_not",
+      "name": "NOT gate / inverter",
+      "nameId": 13,
+      "symbolId": 13,
+      "xmlSha256": "faf0b53ecd763a8ffd58877553db630b9c2766fa9e500ddb28e844526c9bc7d2",
+      "clockEdge": null
+    },
+    {
+      "id": "gate_or",
+      "canonicalId": "gate_or",
+      "name": "OR gate, 2-input",
+      "nameId": 14,
+      "symbolId": 14,
+      "xmlSha256": "396cbef2f0e9f054c97d3f19f71d8122e3ab9c3729bd3986592a7408000e63b4",
+      "clockEdge": null
+    },
+    {
+      "id": "gate_xnor",
+      "canonicalId": "gate_xnor",
+      "name": "XNOR gate, 2-input",
+      "nameId": 15,
+      "symbolId": 15,
+      "xmlSha256": "3f7fdcb0b6b6a1ae7f1a6dbd8cf438d5d47d946a514aee0a75eccba0b5c4a816",
+      "clockEdge": null
+    },
+    {
+      "id": "gate_xor",
+      "canonicalId": "gate_xor",
+      "name": "XOR gate, 2-input",
+      "nameId": 16,
+      "symbolId": 16,
+      "xmlSha256": "27a4e75caec8aef9deb0f366da790a8cd3d8db4a197950d348325488a583eb16",
+      "clockEdge": null
+    },
+    {
+      "id": "shift_register3",
+      "canonicalId": "shift_register3",
+      "name": "3-stage shift register (rising edge)",
+      "nameId": 17,
+      "symbolId": 17,
+      "xmlSha256": "727b7f4a4ccd9d4977dbbd22a381769bbadc0d37923ade3361d7d3155f06883f",
+      "clockEdge": "rising"
+    },
+    {
+      "id": "flipflop_d",
+      "canonicalId": "flipflop_d",
+      "name": "D flip-flop (rising edge)",
+      "nameId": 18,
+      "symbolId": 18,
+      "xmlSha256": "149097cb34d5cfcb922b5736244bf94ce938454db548485fc84770209f425482",
+      "clockEdge": "rising"
+    },
+    {
+      "id": "flipflop_jk",
+      "canonicalId": "flipflop_jk",
+      "name": "J-K flip-flop (rising edge)",
+      "nameId": 19,
+      "symbolId": 19,
+      "xmlSha256": "04a5c2650ec23fa00f2d1084b576555bc124ee751f0ff009dc09181ec0f3999b",
+      "clockEdge": "rising"
+    },
+    {
+      "id": "latch_d",
+      "canonicalId": "latch_d",
+      "name": "D latch",
+      "nameId": 20,
+      "symbolId": 20,
+      "xmlSha256": "dec4a18ed622fd8457d75c501bebd19a70b04868cdf9be69e3a0627cc69341bd",
+      "clockEdge": null
+    },
+    {
+      "id": "latch_rs",
+      "canonicalId": "latch_rs",
+      "name": "R-S latch",
+      "nameId": 21,
+      "symbolId": 21,
+      "xmlSha256": "05930aef555d778d28692c8c95778683129617651020e438dd189cf928cbe1a5",
+      "clockEdge": null
+    },
+    {
+      "id": "counter_bcd-falling",
+      "canonicalId": "counter_bcd",
+      "name": "BCD counter (falling edge)",
+      "nameId": 22,
+      "symbolId": 22,
+      "xmlSha256": "374614feda5e860b732b394d1454c3849f56e2532ecd038976a6eaa21f6fd062",
+      "clockEdge": "falling"
+    },
+    {
+      "id": "counter_binary3_async-falling",
+      "canonicalId": "counter_binary3_async",
+      "name": "3-bit asynchronous binary counter (falling edge)",
+      "nameId": 23,
+      "symbolId": 23,
+      "xmlSha256": "0617f473dc05a5a892945a892e67f32b06d8e34ad55c230be2c1b6b3e4fc953a",
+      "clockEdge": "falling"
+    },
+    {
+      "id": "counter_binary3_sync-falling",
+      "canonicalId": "counter_binary3_sync",
+      "name": "3-bit synchronous binary counter (falling edge)",
+      "nameId": 24,
+      "symbolId": 24,
+      "xmlSha256": "10d0c236240e0788a48396468a315ce6b82211d5c4ad307451e70f47380d355d",
+      "clockEdge": "falling"
+    },
+    {
+      "id": "counter_johnson-falling",
+      "canonicalId": "counter_johnson",
+      "name": "Johnson counter, 4-stage (falling edge)",
+      "nameId": 25,
+      "symbolId": 25,
+      "xmlSha256": "e65206bba632597b4ef10ac0ae2fb0090c8b894c9e59a37f7a482028e6283d1f",
+      "clockEdge": "falling"
+    },
+    {
+      "id": "shift_register3-falling",
+      "canonicalId": "shift_register3",
+      "name": "3-stage shift register (falling edge)",
+      "nameId": 26,
+      "symbolId": 26,
+      "xmlSha256": "c75090a736b063b1e5a40fe9be482661e3337fa83dae50822b1b6a6c94963fdd",
+      "clockEdge": "falling"
+    },
+    {
+      "id": "flipflop_d-falling",
+      "canonicalId": "flipflop_d",
+      "name": "D flip-flop (falling edge)",
+      "nameId": 27,
+      "symbolId": 27,
+      "xmlSha256": "83a687931869098b2382891ee05981083005a35aab7da0beab058ed827e4b04c",
+      "clockEdge": "falling"
+    },
+    {
+      "id": "flipflop_jk-falling",
+      "canonicalId": "flipflop_jk",
+      "name": "J-K flip-flop (falling edge)",
+      "nameId": 28,
+      "symbolId": 28,
+      "xmlSha256": "2132eb61ccde4ee4583e48160def7e07dcff206edfbc106f8d86422f78effda6",
+      "clockEdge": "falling"
+    }
+  ]
+}

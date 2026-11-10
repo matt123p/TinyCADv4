@@ -1,10 +1,11 @@
 {
   "version": 1,
-  "revision": 24,
+  "revision": 26,
   "inventorySha256": "12a28ee3c8b8eb2a5bd1bf5d2f68313d2e744c20d6b12420447269f0ad0a2703",
   "sourceSha256": "3efbdf682121249aa4c2c8f8fdd1dc807025b26c5e46c369eb41c3f28a34d47e",
   "spiceSha256": "ef88cb1ad448aee3d6f042ef3d9eb3f694f0dac570d6265ee9d221dc820e0225",
   "derivedSha256": "ed995ad425f6a6a571752dd99a94d97be31487c928deea3eac426008039faaeb",
+  "digitalSha256": "f8a7a6efaab2b051e5319aa0af6a04df33432c12cec00819f05fc38d1e0df9fe",
   "decisions": {
     "capacitor": {
       "status": "reuse",
@@ -1031,87 +1032,616 @@
       "modelReviewRequired": true
     },
     "full_adder": {
-      "status": "pending"
-    },
-    "decoder2to4": {
-      "status": "pending"
-    },
-    "encoder4to2": {
-      "status": "pending"
-    },
-    "mux2": {
-      "status": "pending"
-    },
-    "counter_bcd": {
-      "status": "pending"
-    },
-    "counter_binary3_async": {
-      "status": "pending"
-    },
-    "counter_binary3_sync": {
-      "status": "pending"
-    },
-    "counter_johnson": {
-      "status": "pending"
-    },
-    "gate_and": {
-      "status": "pending"
-    },
-    "gate_buffer": {
-      "status": "pending"
-    },
-    "gate_nand": {
-      "status": "chosen",
-      "candidateId": "sql:160",
-      "xmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca",
-      "sourceNameId": 9279,
-      "source": {
-        "kind": "sql",
-        "nameId": 9279,
-        "symbolId": 160,
-        "author": "matt",
-        "sourceSha256": "3efbdf682121249aa4c2c8f8fdd1dc807025b26c5e46c369eb41c3f28a34d47e"
-      },
+      "status": "reuse",
+      "candidateId": "derived:full_adder",
+      "xmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
       "pinMap": {
         "1": "0:0:1",
         "2": "0:0:2",
         "3": "0:0:3",
-        "4": "0:0:14",
-        "5": "0:0:7"
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7"
       },
-      "requiresAdaptation": true,
-      "adaptationNotes": "Take a single reference.  Use the \"Power Pins\" system of TinyCAD to hide the VCC & VSS to auto connect them to the power supply.  Finally Resize this to be the same size as the 741 and colour the body yellow the same way a 741 is.",
-      "modelReviewRequired": true
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 2,
+        "id": "full_adder",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:full_adder"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
+    },
+    "decoder2to4": {
+      "status": "reuse",
+      "candidateId": "derived:decoder2to4",
+      "xmlSha256": "e8e726be0a12a38d9af54a38b38ce8786ab728fa11d1cab34018db3790e80486",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8",
+        "9": "0:0:9"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 3,
+        "id": "decoder2to4",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:decoder2to4"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
+    },
+    "encoder4to2": {
+      "status": "reuse",
+      "candidateId": "derived:encoder4to2",
+      "xmlSha256": "1f91cdad5fae157e0dfb0042d616ebb6095cfdf1495803197e3d15d3546c1494",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8",
+        "9": "0:0:9"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 4,
+        "id": "encoder4to2",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:encoder4to2"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
+    },
+    "mux2": {
+      "status": "reuse",
+      "candidateId": "derived:mux2",
+      "xmlSha256": "669e59e8a09fb10fdf42a12bb7ace7e6264420de35177ac836d94cd2b42a3143",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 5,
+        "id": "mux2",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:mux2"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
+    },
+    "counter_bcd": {
+      "status": "reuse",
+      "candidateId": "derived:counter_bcd",
+      "xmlSha256": "370a33e1aaa56893bd4968974d9c2961cca373a29849cafde6cecaac4586a5c7",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8",
+        "9": "0:0:9",
+        "10": "0:0:10"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 6,
+        "id": "counter_bcd",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:counter_bcd",
+        "derived:counter_bcd-falling"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Rising and falling edges use native Clock and DotClock pin shapes. Simulation adapters remain separate."
+    },
+    "counter_binary3_async": {
+      "status": "reuse",
+      "candidateId": "derived:counter_binary3_async",
+      "xmlSha256": "355b1d494531bfe95acff131177f849ca0f15fec7129f051b96381f3ce393299",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8",
+        "9": "0:0:9"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 7,
+        "id": "counter_binary3_async",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:counter_binary3_async",
+        "derived:counter_binary3_async-falling"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Rising and falling edges use native Clock and DotClock pin shapes. Simulation adapters remain separate."
+    },
+    "counter_binary3_sync": {
+      "status": "reuse",
+      "candidateId": "derived:counter_binary3_sync",
+      "xmlSha256": "0c59d62bdf2ed7722efdf973d8b0765ee8073170cb938b13615a1da28767b263",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8",
+        "9": "0:0:9"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 8,
+        "id": "counter_binary3_sync",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:counter_binary3_sync",
+        "derived:counter_binary3_sync-falling"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Rising and falling edges use native Clock and DotClock pin shapes. Simulation adapters remain separate."
+    },
+    "counter_johnson": {
+      "status": "reuse",
+      "candidateId": "derived:counter_johnson",
+      "xmlSha256": "a15ea6425ac2752c890a48cc6f25b1df40faa798d4b7bf2acff3148e78321c2a",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8",
+        "9": "0:0:9"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 9,
+        "id": "counter_johnson",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:counter_johnson",
+        "derived:counter_johnson-falling"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Rising and falling edges use native Clock and DotClock pin shapes. Simulation adapters remain separate."
+    },
+    "gate_and": {
+      "status": "reuse",
+      "candidateId": "derived:gate_and",
+      "xmlSha256": "4acc8935d8c7d9f0fa4598b20f468895269450ad46428c23e7837a27141839d2",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 10,
+        "id": "gate_and",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:gate_and"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
+    },
+    "gate_buffer": {
+      "status": "reuse",
+      "candidateId": "derived:gate_buffer",
+      "xmlSha256": "718b1ef78bdf10a6450b2945bed9994846443f1dec05edef9c86988cb468276e",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 11,
+        "id": "gate_buffer",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:gate_buffer"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
+    },
+    "gate_nand": {
+      "status": "reuse",
+      "candidateId": "derived:gate_nand",
+      "xmlSha256": "ae5de8a00ceec532072c85d98fa9ebf0ee510bd7936c6f10bf14c081c5857fe9",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 1,
+        "id": "gate_nand",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:gate_nand"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
     },
     "gate_nor": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:gate_nor",
+      "xmlSha256": "31666c4250c27af30e554dc67b0b93b6b8047c57597aafb19b4b7c9c773d8fac",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 12,
+        "id": "gate_nor",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:gate_nor"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
     },
     "gate_not": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:gate_not",
+      "xmlSha256": "faf0b53ecd763a8ffd58877553db630b9c2766fa9e500ddb28e844526c9bc7d2",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 13,
+        "id": "gate_not",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:gate_not"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
     },
     "gate_or": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:gate_or",
+      "xmlSha256": "396cbef2f0e9f054c97d3f19f71d8122e3ab9c3729bd3986592a7408000e63b4",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 14,
+        "id": "gate_or",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:gate_or"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
     },
     "gate_xnor": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:gate_xnor",
+      "xmlSha256": "3f7fdcb0b6b6a1ae7f1a6dbd8cf438d5d47d946a514aee0a75eccba0b5c4a816",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 15,
+        "id": "gate_xnor",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:gate_xnor"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
     },
     "gate_xor": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:gate_xor",
+      "xmlSha256": "27a4e75caec8aef9deb0f366da790a8cd3d8db4a197950d348325488a583eb16",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 16,
+        "id": "gate_xor",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:gate_xor"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
     },
     "shift_register3": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:shift_register3",
+      "xmlSha256": "727b7f4a4ccd9d4977dbbd22a381769bbadc0d37923ade3361d7d3155f06883f",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 17,
+        "id": "shift_register3",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:shift_register3",
+        "derived:shift_register3-falling"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Rising and falling edges use native Clock and DotClock pin shapes. Simulation adapters remain separate."
     },
     "flipflop_d": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:flipflop_d",
+      "xmlSha256": "149097cb34d5cfcb922b5736244bf94ce938454db548485fc84770209f425482",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 18,
+        "id": "flipflop_d",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:flipflop_d",
+        "derived:flipflop_d-falling"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Rising and falling edges use native Clock and DotClock pin shapes. Simulation adapters remain separate."
     },
     "flipflop_jk": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:flipflop_jk",
+      "xmlSha256": "04a5c2650ec23fa00f2d1084b576555bc124ee751f0ff009dc09181ec0f3999b",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6",
+        "7": "0:0:7",
+        "8": "0:0:8",
+        "9": "0:0:9"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 19,
+        "id": "flipflop_jk",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:flipflop_jk",
+        "derived:flipflop_jk-falling"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Rising and falling edges use native Clock and DotClock pin shapes. Simulation adapters remain separate."
     },
     "latch_d": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:latch_d",
+      "xmlSha256": "dec4a18ed622fd8457d75c501bebd19a70b04868cdf9be69e3a0627cc69341bd",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 20,
+        "id": "latch_d",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:latch_d"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
     },
     "latch_rs": {
-      "status": "pending"
+      "status": "reuse",
+      "candidateId": "derived:latch_rs",
+      "xmlSha256": "05930aef555d778d28692c8c95778683129617651020e438dd189cf928cbe1a5",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4",
+        "5": "0:0:5",
+        "6": "0:0:6"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/digital.json",
+        "bundle": "bundled-libraries/digital/digital.tclib",
+        "nameId": 21,
+        "id": "latch_rs",
+        "baseCandidateId": "sql:160",
+        "baseXmlSha256": "46ec4f1341f505541de2fc68f3e4f66c8f24527387c2dfff13ab22613a1c33ca"
+      },
+      "variants": [
+        "derived:latch_rs"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Adapted from your selected NAND reference: one logical unit, 741-sized yellow gate bodies, native VCC/VSS power pins. Simulation adapters remain separate."
     },
     "adc4": {
       "status": "pending"

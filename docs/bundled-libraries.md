@@ -1,7 +1,7 @@
 # Standard Libraries
 
 Put the libraries to distribute in `bundled-libraries/` and list them in
-`bundled-libraries/config.json`. The catalog includes the SPICE essentials bundle;
+`bundled-libraries/config.json`. The catalog includes the SPICE essentials and [Digital logic](digital-library.md) bundles;
 add further entries alongside it. See [Building libraries from SQL](library-from-sql.md).
 The same catalog is used by the desktop installer and both browser versions.
 

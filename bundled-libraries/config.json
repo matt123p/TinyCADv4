@@ -6,6 +6,12 @@
       "name": "SPICE essentials",
       "path": "spice/spice.tclib",
       "description": "Standard onetransistor symbols with SPICE models, sources, and model/analysis definitions. Includes generic teaching models and a 741-style behavioral model."
+    },
+    {
+      "id": "digital",
+      "name": "Digital logic",
+      "path": "digital/digital.tclib",
+      "description": "Generic single-unit digital symbols based on the selected NAND: yellow bodies, hidden VCC/VSS power pins and native inversion/clock shapes. Simulation models are configured separately."
     }
   ]
 }

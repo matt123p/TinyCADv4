@@ -5,6 +5,7 @@ import path from 'node:path';
 import { readComponentDump, componentInventory } from '../lib/mysql-dump.mjs';
 import { librarySqlite } from '../lib/library-from-sql.mjs';
 import { deriveSymbol } from '../lib/symbol-artwork.mjs';
+import { digitalArtworkSnapshot } from '../lib/digital-artwork.mjs';
 const { DOMParser } = createRequire(import.meta.url)('common-xml-features');
 export const digest = (value) =>
   createHash('sha256').update(value).digest('hex');
@@ -256,6 +257,7 @@ export function geometry(xml) {
 }
 
 export function referenceId(requirement) {
+  if (requirement.folder.startsWith('08 ')) return 'derived:gate_nand';
   if (REUSE[requirement.id]) return `spice:${REUSE[requirement.id][0]}`;
   if (/capacitor/.test(requirement.id)) return 'spice:capacitor';
   if (/diode|thyristor|solar/.test(requirement.id)) return 'spice:diode';
@@ -574,6 +576,25 @@ export async function prepareCatalog({ root, sql, cache }) {
       xml,
     );
   }
+  const digital = await digitalArtworkSnapshot({
+    root,
+    spice,
+    requirements: master.symbols,
+  });
+  for (const { candidate, xml } of digital.records) {
+    candidate.metrics = geometry(xml);
+    if (
+      !candidate.metrics.valid ||
+      !candidate.metrics.absoluteGrid ||
+      candidate.metrics.duplicatePins
+    )
+      throw new Error('Invalid digital artwork: ' + candidate.id);
+    candidates.push(candidate);
+    await writeFile(
+      path.join(artwork, candidate.id.replace(':', '-') + '.xml'),
+      xml,
+    );
+  }
   const ids = new Set();
   for (const requirement of master.symbols) {
     if (
@@ -594,6 +615,7 @@ export async function prepareCatalog({ root, sql, cache }) {
     sourceSha256: digest(raw),
     spiceSha256: spice.fingerprint,
     derivedSha256: derived.fingerprint,
+    digitalSha256: digital.fingerprint,
     rules,
     requirements: master.symbols.map((requirement) => {
       const choice = rules.symbolChoices?.[requirement.id];
@@ -655,7 +677,11 @@ export function initialState(catalog) {
         pinMap,
         source: {
           kind: 'derived',
-          recipe: 'library-recipes/derived-symbols.json',
+          recipe:
+            candidate.recipePath || 'library-recipes/derived-symbols.json',
+          ...(candidate.bundlePath
+            ? { bundle: candidate.bundlePath, nameId: candidate.bundleNameId }
+            : {}),
           id: requirement.id,
           baseCandidateId: candidate.baseCandidateId,
           baseXmlSha256: candidate.baseXmlSha256,
@@ -664,11 +690,12 @@ export function initialState(catalog) {
         modelReviewRequired: true,
         modelReuseAllowed: false,
         note:
+          candidate.derivationNote ||
           'Derived from the corrected SPICE base. ' +
-          (variants.length === 2
-            ? 'EU and US resistor bodies share identical terminals; both variants apply to every bundle. '
-            : '') +
-          'Artwork only: supply a suitable model adapter separately.',
+            (variants.length === 2 && candidate.resistorStyle
+              ? 'EU and US resistor bodies share identical terminals; both variants apply to every bundle. '
+              : '') +
+            'Artwork only: supply a suitable model adapter separately.',
       };
     } else if (REUSE[requirement.id]) {
       const [recipeId, numbers] = REUSE[requirement.id],
@@ -727,6 +754,7 @@ export function initialState(catalog) {
     sourceSha256: catalog.sourceSha256,
     spiceSha256: catalog.spiceSha256,
     derivedSha256: catalog.derivedSha256,
+    digitalSha256: catalog.digitalSha256,
     decisions,
   };
 }

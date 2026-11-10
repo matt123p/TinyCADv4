@@ -76,7 +76,7 @@ test('master IDs share exactly one decision across every course; reuse has expli
   assert.equal(Object.keys(state.decisions).length, 112);
   assert.deepEqual(
     [summary.reuse, summary.native, summary.pending],
-    [35, 6, 71],
+    [56, 6, 50],
   );
   assert.equal(summary.artworkComplete, false);
   const npn = catalog.candidates.find((c) => c.id === 'spice:npn');

@@ -96,7 +96,11 @@ export function validateDecision(catalog, id, input) {
       candidate.kind === 'derived'
         ? {
             kind: 'derived',
-            recipe: 'library-recipes/derived-symbols.json',
+            recipe:
+              candidate.recipePath || 'library-recipes/derived-symbols.json',
+            ...(candidate.bundlePath
+              ? { bundle: candidate.bundlePath, nameId: candidate.bundleNameId }
+              : {}),
             id: candidate.canonicalId,
             baseCandidateId: candidate.baseCandidateId,
             baseXmlSha256: candidate.baseXmlSha256,
@@ -139,6 +143,7 @@ export function validateState(catalog, state) {
     'sourceSha256',
     'spiceSha256',
     'derivedSha256',
+    'digitalSha256',
   ])
     if (state[field] !== seed[field])
       fail(
@@ -162,6 +167,7 @@ export function validateState(catalog, state) {
     sourceSha256: seed.sourceSha256,
     spiceSha256: seed.spiceSha256,
     derivedSha256: seed.derivedSha256,
+    digitalSha256: seed.digitalSha256,
     decisions,
   };
 }

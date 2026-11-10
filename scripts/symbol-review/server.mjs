@@ -12,6 +12,7 @@ import {
   derivedArtworkSnapshot,
 } from './catalog.mjs';
 import { DecisionStore, progress, ReviewError } from './decisions.mjs';
+import { digitalArtworkSnapshot } from '../lib/digital-artwork.mjs';
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 async function jsonBody(request) {
   if (!String(request.headers['content-type']).startsWith('application/json'))
@@ -320,11 +321,17 @@ async function main(args) {
       ),
     ),
   );
+  const digitalSnapshot = await digitalArtworkSnapshot({
+    root: ROOT,
+    spice: spiceSnapshot,
+    requirements: JSON.parse(inventoryBytes.toString('utf8')).symbols,
+  });
   if (
     catalog.version !== 1 ||
     digest(inventoryBytes) !== catalog.inventorySha256 ||
     spiceSnapshot.fingerprint !== catalog.spiceSha256 ||
     derivedSnapshot.fingerprint !== catalog.derivedSha256 ||
+    digitalSnapshot.fingerprint !== catalog.digitalSha256 ||
     JSON.stringify(JSON.parse(rulesBytes)) !== JSON.stringify(catalog.rules)
   )
     throw new Error(

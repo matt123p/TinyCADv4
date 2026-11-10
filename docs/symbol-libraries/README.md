@@ -6,7 +6,7 @@ Start with **[library-manifest.json](library-manifest.json)**. This single self-
 
 ## Artwork selection before bundling
 
-Use the **[shared symbol reviewer](SELECTION.md)** to choose artwork once per canonical type. It starts with 35 SPICE-based artwork assignments from the corrected SPICE bundle, six native editor features and 71 types needing a decision. SQL candidates are compared against SPICE references at a common drawing scale, and choices are recorded in [symbol-choices.json](symbol-choices.json) for all overlapping course bundles. The [selection rules](selection-rules.json) cover pin contracts, grid alignment, lead/body size and drawing style. Course bundles will be built after this shared selection is complete.
+Use the **[shared symbol reviewer](SELECTION.md)** to choose artwork once per canonical type. It starts with 56 automatic artwork assignments from the corrected SPICE bundle and selected NAND reference, six native editor features and 50 types initially needing a decision. SQL candidates are compared against SPICE references at a common drawing scale, and choices are recorded in [symbol-choices.json](symbol-choices.json) for all overlapping course bundles. The [selection rules](selection-rules.json) cover pin contracts, grid alignment, lead/body size and drawing style. The [Digital logic bundle](../digital-library.md) is already generated from the chosen NAND. Course bundles will be built after the remaining shared selection is complete.
 
 ```sh
 npm run symbols:review -- --sql '../sql/tinycad1_prod(1).sql'

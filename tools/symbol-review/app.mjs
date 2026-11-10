@@ -33,7 +33,7 @@ const statusText = {
   pending: 'Needs a choice',
   'needs-drawing': 'Needs a new drawing',
   chosen: 'Chosen',
-  reuse: 'Reused from SPICE',
+  reuse: 'Assigned artwork',
   native: 'Native editor feature',
 };
 const titleFor = (id) =>
@@ -86,6 +86,7 @@ function metrics(candidate) {
     'div',
     { class: 'metrics' },
     el('span', {}, `${m.pinCount} pins`),
+    candidate.family === 'digital' ? el('span', {}, 'VCC / VSS hidden') : null,
     el('span', {}, `Leads ${Number(m.leadMm || 0).toFixed(1)} mm`),
     el(
       'span',
@@ -203,6 +204,9 @@ async function activate(id) {
   $('#all-sources').checked = false;
   renderQueue();
   $('#reference-select').value = catalog.referenceIds[id];
+  $('.reference-panel h2').textContent = current().folder.startsWith('08 ')
+    ? 'NAND reference'
+    : 'SPICE reference';
   await renderRequirement();
   renderReference();
   await loadCandidates();
@@ -451,7 +455,7 @@ async function paint(container, candidate, view) {
     }
     if ($('#pin-labels').checked)
       for (const pin of m.pins.filter(
-        (p) => p.sheet === view.sheet && p.part === view.part,
+        (p) => p.sheet === view.sheet && p.part === view.part && !p.hidden,
       )) {
         const circle = document.createElementNS(ns, 'circle');
         circle.setAttribute('cx', pin.x * 5 + 0.5);
@@ -512,7 +516,9 @@ function card(candidate) {
                 ? ' · ' + candidate.resistorStyle.toUpperCase()
                 : '')
           : candidate.kind === 'derived'
-          ? 'SPICE-derived artwork'
+          ? candidate.family === 'digital'
+            ? 'NAND-derived digital artwork'
+            : 'SPICE-derived artwork'
           : candidate.author || 'SQL collection',
       ),
       el(
@@ -804,7 +810,7 @@ async function openChoice(candidate, locked) {
       el(
         'div',
         {},
-        el('h3', {}, 'SPICE reference · ' + reference().name),
+        el('h3', {}, 'Style reference · ' + reference().name),
         refPreview,
       ),
     ),
