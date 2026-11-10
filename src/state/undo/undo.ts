@@ -38,10 +38,6 @@ export const DocStoreWithHistory = undoable(DocStoreReducer, {
     ) {
       undoCheckpoint = true;
     }
-    if (action.type === LibraryActionTypes.ChangeSymbolFolders) {
-      needHistory = needHistory || currentState.editLibrary !== previousHistory._latestUnfiltered?.editLibrary;
-      undoCheckpoint = true;
-    }
     if (action.type === LibraryActionTypes.SetPPP) {
       if (
         currentState.editSymbol !==

@@ -50,6 +50,8 @@ export function registerBundledLibraries({
     if (ids === undefined) return store.get('bundledLibrarySelection', []);
     if (!Array.isArray(ids) || ids.some((id) => typeof id !== 'string'))
       throw new Error('Invalid bundled library selection.');
+    if (ids.length > 1)
+      throw new Error('Choose only one standard library at a time.');
     store.set('bundledLibrarySelection', [...new Set(ids)]);
   });
 }

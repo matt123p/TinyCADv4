@@ -5,6 +5,7 @@ import { XMLBuilder } from '../../src/util/xmlbuilder';
 import { updateView } from '../../src/manipulators/updateView';
 import { updateSymbol } from '../../src/manipulators/updateSymbol';
 import { writeSpice } from '../../src/io/netlists/netlistSpice';
+import { librarySymbolSelection } from '../../src/io/librarySymbols';
 export function checkSpicePlacement(library, exportFile) {
   globalThis.document = {
     createElement: () => ({
@@ -40,17 +41,39 @@ export function checkSpicePlacement(library, exportFile) {
   const io = new ioXML();
   const updater = new updateView();
   for (const name of library.names) {
-    const builder = new XMLBuilder();
-    builder.fromText(
-      library.symbols.find((s) => s.SymbolID === name.SymbolID).Data,
+    const selection = librarySymbolSelection(
+      {
+        ...library,
+        symbols: library.symbols.map((symbol) => ({
+          ...symbol,
+          SymbolId: symbol.SymbolID,
+        })),
+      },
+      name,
     );
     const drawing = blank();
-    const doc = io.from_dsn(builder);
+    const preview = updater.beginLibrarySymbolPlacement(
+      { tracker: {}, _selected_array: [] },
+      drawing.sheets[0],
+      selection.name,
+      selection.symbolData,
+    );
+    assert.equal(preview.sheet.items.length, 0, 'preview does not place a symbol');
+    assert.equal(preview.view.add.text[0].value, name.Name);
+    const moved = updater.mousemove_add(preview.view, preview.sheet, [203, 207]);
+    assert.equal(moved.view.display_add, true);
+    const clicked = updater.click_add(moved.view, moved.sheet, [203, 207]);
+    assert.equal(clicked.sheet.items.length, 1, 'click commits one symbol');
+    assert.equal(clicked.view.add, null);
+    const cancelled = updater.cancel_add(preview.view, preview.sheet);
+    assert.equal(cancelled.sheet.items.length, 0, 'cancel leaves no placed symbol');
+    assert.equal(cancelled.view.add, null);
+    assert.ok(clicked.sheet.items[0].text.some((text) => text.description === '$$SPICE'));
     const placed = updater.handleSelectLibrarySymbol(
       {},
       drawing.sheets[0],
-      name,
-      doc.sheets.map((s) => s.items),
+      selection.name,
+      selection.symbolData,
       [100, 100],
     );
     const symbol = placed.sheet.items.at(-1);

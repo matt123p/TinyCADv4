@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "gridMm": 1,
+  "preferredAuthor": "onetransistor",
+  "rules": [
+    {
+      "id": "reuse",
+      "title": "Reuse existing artwork",
+      "description": "Use corrected SPICE artwork as the base for resistor-, diode-, FET- and BJT-derived devices; add the necessary marks or repeated bodies rather than selecting unrelated SQL drawings. Keep one canonical decision shared by every course bundle."
+    },
+    {
+      "id": "resistor-styles",
+      "title": "Provide both resistor conventions",
+      "description": "Every resistor-body component has EU rectangular and US zigzag variants. The US body uses the exact 2 × 5.2 mm EU envelope, 1.4 mm end leads and identical grid-aligned connection points. Apply the same decorations to each style and use one consistent style throughout a bridge."
+    },
+    {
+      "id": "terminals",
+      "title": "Check terminal meaning first",
+      "description": "Match terminal count, polarity, signal names and explicit supply pins. Inventory numbers are logical identifiers, not package numbers. Record a logical-to-source pin map; extra, hidden, missing or duplicated terminals need an explicit adaptation note."
+    },
+    {
+      "id": "grid",
+      "title": "Keep connections on the grid",
+      "description": "Use the standard 1 mm connection grid. A whole-symbol translation may correct an offset origin; non-integer relative pin spacing needs geometry repair. Preserve symmetry and balanced leads where the symbol convention permits it."
+    },
+    {
+      "id": "leads",
+      "title": "Match lead lengths",
+      "description": "Compare at the same physical scale against a SPICE reference. Prefer leads between about 1 and 4 mm; flag a median lead outside 0.5 to 1.75 times the reference. These are ranking hints, not permission to change electrical terminals."
+    },
+    {
+      "id": "body",
+      "title": "Match body proportions",
+      "description": "Prefer similar body dimensions for the same component family. Flag a two-terminal body's longest dimension outside 0.5 to 2 times the reference. Larger multi-terminal ICs can legitimately need larger bodies; do not shrink each preview to disguise the difference."
+    },
+    {
+      "id": "drawing",
+      "title": "Keep the drawing style consistent",
+      "description": "Prefer onetransistor artwork, thin black strokes, IEC rectangular resistors and the existing semiconductor conventions. Keep functional arrows and polarity marks. Treat thick strokes, raster images and decorative colour as review flags."
+    },
+    {
+      "id": "review",
+      "title": "Human choice for new symbols",
+      "description": "Search names, descriptions and aliases in the SQL collection, rank the likely matches, then review the drawing. Ranking never selects a new SQL symbol automatically. If no suitable source exists, record Needs drawing rather than choosing an unrelated symbol."
+    },
+    {
+      "id": "models",
+      "title": "Artwork is separate from simulation",
+      "description": "Selecting artwork does not approve a device model, package pinout or simulation adapter. Reusing the 741 drawing for a generic op-amp does not qualify every course experiment for the bundled 741 model."
+    },
+    {
+      "id": "native",
+      "title": "Use native editor features",
+      "description": "Wire, junction, ground, net label, no-connect and annotation entries use native editor operations. Supplied instruments and probes remain excluded from this selection queue."
+    }
+  ],
+  "symbolChoices": {
+    "resistance_wire": {
+      "mode": "select-one-style",
+      "candidateIds": [
+        "spice:resistor",
+        "spice:resistor-us"
+      ],
+      "description": "Represent the resistance-wire test section using your choice of European rectangular or US zigzag resistor artwork. Keep two electrical ends and annotations for length, diameter/material and resistance. Choose one style for this entry; the choice applies across all referencing bundles."
+    }
+  }
+}

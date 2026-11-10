@@ -11,7 +11,7 @@ import { DocActionTypes } from '../actions/docActions';
 import { MenuActionTypes } from '../actions/menuActions';
 import { DialogActionTypes } from '../actions/dialogActions';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../../model/tclib';
-import { LibraryActionTypes } from '../actions/libraryActions';
+import { LibraryActionTypes, StandardLibraryNavigation } from '../actions/libraryActions';
 import { TSheet } from '../../components/svg/Sheet';
 import { FindActionTypes } from '../actions/findActions';
 import { store } from '../../startup';
@@ -81,6 +81,7 @@ export interface altStore {
   // User libraries that haven been loaded
   libraries: tclib[];
   viewLibrary: tclib;
+  standardLibraryNavigation: StandardLibraryNavigation;
 
   // The panel currently being shown
   panel: Panels;
@@ -137,6 +138,7 @@ const intialState: altStore = {
 
   libraries: [],
   viewLibrary: null,
+  standardLibraryNavigation: null,
 
   panel: Panels.LibrariesPanel,
   bottomPanel: BottomPanels.StylePanel,
@@ -349,6 +351,11 @@ export function AltStoreReducer(
     //
     // Editing a library
     //
+
+    case LibraryActionTypes.ShowStandardLibrary:
+      return { ...state, panel: Panels.LibrariesPanel, viewLibrary: null,
+        standardLibraryNavigation: { libraryId: action.libraryId,
+          request: (state.standardLibraryNavigation?.request || 0) + 1 } };
 
     case LibraryActionTypes.ViewLibrary:
       state = update(state, {

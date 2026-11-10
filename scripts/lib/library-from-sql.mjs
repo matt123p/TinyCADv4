@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
-import { validateSymbolFolderPath } from '../../shared/bundledLibraries.js';
 import { componentInventory } from './mysql-dump.mjs';
+import { applyUSResistor } from './symbol-artwork.mjs';
 
 const require = createRequire(import.meta.url);
 const { DOMParser, XMLSerializer } = require('common-xml-features');
@@ -107,6 +107,11 @@ export function transformSymbol(xml, component) {
           throw new Error(`Invalid pin length for ${component.id}`);
         pin.setAttribute('length', String(edit.length));
       }
+      if (edit.show !== undefined) {
+        if (!Number.isInteger(edit.show) || edit.show < 0 || edit.show > 3)
+          throw new Error(`Invalid pin visibility for ${component.id}`);
+        pin.setAttribute('show', String(edit.show));
+      }
       if (edit.electrical !== undefined)
         pin.setAttribute('elec', String(edit.electrical));
     }
@@ -195,6 +200,18 @@ export function transformSymbol(xml, component) {
       }
     }
     changes.push({ geometry: edit });
+  }
+  if (
+    component.resistorStyle !== undefined &&
+    !['eu', 'us'].includes(component.resistorStyle)
+  )
+    throw new Error('Unknown resistor style.');
+  if (component.resistorStyle === 'us') {
+    applyUSResistor(document);
+    changes.push({
+      resistorStyle: 'us',
+      base: component.baseSymbol || 'European resistor body',
+    });
   }
   if (component.pinGrid !== undefined) {
     if (!Number.isFinite(component.pinGrid) || component.pinGrid <= 0)
@@ -293,7 +310,6 @@ export function buildLibraryModel(data, recipe, sourceHash) {
   const names = [];
   const symbols = [];
   const entries = [];
-  const folders = new Set();
   const ids = new Set();
   const definitions = new Map();
   for (const component of recipe.components) {
@@ -360,15 +376,6 @@ export function buildLibraryModel(data, recipe, sourceHash) {
       });
     if (recipe.requireSpice)
       checkSpice(component, attributes, transformed.pins);
-    const folder = component.folder
-      ? validateSymbolFolderPath(component.folder)
-      : null;
-    if (folder)
-      folder
-        .split('/')
-        .forEach((_, index, parts) =>
-          folders.add(parts.slice(0, index + 1).join('/')),
-        );
     const definitionHash = sha256(transformed.xml);
     if (!definitions.has(definitionHash)) {
       const id = symbols.length + 1;
@@ -386,7 +393,6 @@ export function buildLibraryModel(data, recipe, sourceHash) {
       ShowName: component.showName ?? recipe.showName ?? 0,
       ShowRef: component.showRef ?? referenceAttribute?.ShowAtt ?? 0,
       DefRotate: Number(source.symbol.DefRotate),
-      folder,
       Attributes: [...attributes.values()],
     };
     names.push(name);
@@ -403,7 +409,6 @@ export function buildLibraryModel(data, recipe, sourceHash) {
       name: name.Name,
       nameId: name.NameID,
       symbolId: name.SymbolID,
-      folder,
       source: provenance(source),
       ...(donor ? { spiceFrom: provenance(donor) } : {}),
       notes: component.notes || '',
@@ -413,7 +418,7 @@ export function buildLibraryModel(data, recipe, sourceHash) {
     });
   }
   return {
-    library: { name: recipe.name, names, symbols, symbolFolders: [...folders] },
+    library: { name: recipe.name, names, symbols },
     provenance: {
       version: 1,
       id: recipe.id,
@@ -446,12 +451,6 @@ export async function serializeLibrary(library, provenance) {
       'CREATE TABLE Attribute (NameID INTEGER, AttName TEXT, AttValue TEXT, ShowAtt INTEGER)',
     );
     db.run(
-      'CREATE TABLE TinyCADSymbolFolder (Path TEXT PRIMARY KEY, Position INTEGER NOT NULL)',
-    );
-    db.run(
-      'CREATE TABLE TinyCADSymbolFolderEntry (NameID INTEGER PRIMARY KEY, Folder TEXT NOT NULL)',
-    );
-    db.run(
       'CREATE TABLE TinyCADBundleInfo (Key TEXT PRIMARY KEY, Value TEXT NOT NULL)',
     );
     db.run('INSERT INTO TinyCADBundleInfo VALUES (?, ?)', [
@@ -465,12 +464,6 @@ export async function serializeLibrary(library, provenance) {
       'INSERT INTO Attribute VALUES (?, ?, ?, ?)',
     );
     const symbolStatement = db.prepare('INSERT INTO Symbol VALUES (?, ?)');
-    const folderStatement = db.prepare(
-      'INSERT INTO TinyCADSymbolFolder VALUES (?, ?)',
-    );
-    const entryStatement = db.prepare(
-      'INSERT INTO TinyCADSymbolFolderEntry VALUES (?, ?)',
-    );
     for (const name of library.names) {
       nameStatement.run([
         name.NameID,
@@ -491,23 +484,15 @@ export async function serializeLibrary(library, provenance) {
           attribute.AttValue,
           attribute.ShowAtt,
         ]);
-      if (name.folder) entryStatement.run([name.NameID, name.folder]);
     }
     for (const symbol of library.symbols)
       symbolStatement.run([
         symbol.SymbolId,
         new TextEncoder().encode(symbol.Data),
       ]);
-    library.symbolFolders.forEach((folder, index) =>
-      folderStatement.run([folder, index]),
+    [nameStatement, attributeStatement, symbolStatement].forEach((statement) =>
+      statement.free(),
     );
-    [
-      nameStatement,
-      attributeStatement,
-      symbolStatement,
-      folderStatement,
-      entryStatement,
-    ].forEach((statement) => statement.free());
     return db.export();
   } finally {
     db.close();

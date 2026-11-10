@@ -6,7 +6,7 @@ analysis are deferred to P2. No P2 controls are included.
 
 ## Place and operate an instrument
 
-Use **SPICE → Lab Equipment** to insert an Oscilloscope, Multimeter, Function
+Use **Simulation → Lab Equipment** to insert an Oscilloscope, Multimeter, Function
 Generator or Bench Supply. Wire the symbol's labelled terminals, then select it
 to operate its instrument face in the bottom panel. Controls, stimulus and
 electrical loading are stored with the component. These drawings always save

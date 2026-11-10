@@ -23,7 +23,6 @@
         "nameId": 9496
       },
       "name": "Resistor",
-      "folder": "Passive/Resistors",
       "removeAttributes": [
         "None"
       ],
@@ -51,7 +50,6 @@
         "nameId": 9497
       },
       "name": "Potentiometer",
-      "folder": "Passive/Resistors",
       "removeAttributes": [
         "None"
       ],
@@ -69,7 +67,8 @@
             42
           ],
           "number": "3",
-          "name": "Wiper"
+          "name": "Wiper",
+          "show": 0
         }
       ],
       "notes": "The source wiper repeated terminal 1; renumbered to 3. Two resistors model the wiper, with a 1 micro-ohm lower bound.",
@@ -98,7 +97,6 @@
         "nameId": 9498
       },
       "name": "Trimmer resistor",
-      "folder": "Passive/Resistors",
       "removeAttributes": [
         "None"
       ],
@@ -116,7 +114,8 @@
             42
           ],
           "number": "3",
-          "name": "Wiper"
+          "name": "Wiper",
+          "show": 0
         }
       ],
       "notes": "The source wiper repeated terminal 1; renumbered to 3. Two resistors model the wiper, with a 1 micro-ohm lower bound.",
@@ -145,7 +144,6 @@
         "nameId": 9524
       },
       "name": "Capacitor",
-      "folder": "Passive/Capacitors",
       "removeAttributes": [
         "None"
       ],
@@ -173,7 +171,6 @@
         "nameId": 9523
       },
       "name": "Electrolytic capacitor",
-      "folder": "Passive/Capacitors",
       "removeAttributes": [
         "None"
       ],
@@ -250,7 +247,6 @@
         "nameId": 9525
       },
       "name": "Trimmer capacitor",
-      "folder": "Passive/Capacitors",
       "removeAttributes": [
         "None"
       ],
@@ -278,7 +274,6 @@
         "nameId": 9513
       },
       "name": "Inductor",
-      "folder": "Passive/Inductors",
       "removeAttributes": [
         "None"
       ],
@@ -306,7 +301,6 @@
         "nameId": 9514
       },
       "name": "Inductor with core",
-      "folder": "Passive/Inductors",
       "removeAttributes": [
         "None"
       ],
@@ -335,7 +329,6 @@
         "nameId": 9506
       },
       "name": "NPN transistor",
-      "folder": "Semiconductors/Transistors",
       "removeAttributes": [
         "None"
       ],
@@ -393,7 +386,6 @@
         "nameId": 9507
       },
       "name": "PNP transistor",
-      "folder": "Semiconductors/Transistors",
       "removeAttributes": [
         "None"
       ],
@@ -451,7 +443,6 @@
         "nameId": 9509
       },
       "name": "N-channel MOSFET",
-      "folder": "Semiconductors/Transistors",
       "removeAttributes": [
         "None"
       ],
@@ -498,7 +489,6 @@
         "nameId": 9509
       },
       "name": "P-channel MOSFET",
-      "folder": "Semiconductors/Transistors",
       "removeAttributes": [
         "None"
       ],
@@ -554,7 +544,6 @@
         "nameId": 9501
       },
       "name": "Diode",
-      "folder": "Semiconductors/Diodes",
       "removeAttributes": [
         "None"
       ],
@@ -643,7 +632,6 @@
         "nameId": 9500
       },
       "name": "Zener diode (5.1 V)",
-      "folder": "Semiconductors/Diodes",
       "removeAttributes": [
         "None"
       ],
@@ -762,7 +750,6 @@
         "nameId": 9504
       },
       "name": "LED (red)",
-      "folder": "Semiconductors/LEDs",
       "removeAttributes": [
         "None"
       ],
@@ -851,7 +838,6 @@
         "nameId": 9503
       },
       "name": "LED (green)",
-      "folder": "Semiconductors/LEDs",
       "removeAttributes": [
         "None"
       ],
@@ -940,7 +926,6 @@
         "nameId": 9511
       },
       "name": "LED (blue)",
-      "folder": "Semiconductors/LEDs",
       "removeAttributes": [
         "None"
       ],
@@ -1035,7 +1020,6 @@
         "nameId": 9511
       },
       "name": "LED (yellow)",
-      "folder": "Semiconductors/LEDs",
       "removeAttributes": [
         "None"
       ],
@@ -1130,7 +1114,6 @@
         "nameId": 9537
       },
       "name": "741 op-amp",
-      "folder": "Integrated circuits",
       "removeAttributes": [
         "None"
       ],
@@ -1208,7 +1191,6 @@
         "nameId": 9519
       },
       "name": "Transformer",
-      "folder": "Passive/Magnetics",
       "removeAttributes": [
         "None"
       ],
@@ -1548,7 +1530,6 @@
         "nameId": 9518
       },
       "name": "XTAL (quartz crystal)",
-      "folder": "Passive/Resonators",
       "removeAttributes": [
         "None"
       ],
@@ -1595,7 +1576,6 @@
         "nameId": 9518
       },
       "name": "Ceramic resonator",
-      "folder": "Passive/Resonators",
       "removeAttributes": [
         "None"
       ],
@@ -1643,7 +1623,6 @@
         "author": "aryajur"
       },
       "name": "DC / AC voltage source",
-      "folder": "SPICE sources",
       "removeAttributes": [
         "None"
       ],
@@ -1678,7 +1657,6 @@
         "author": "aryajur"
       },
       "name": "DC / AC current source",
-      "folder": "SPICE sources",
       "removeAttributes": [
         "None"
       ],
@@ -1742,7 +1720,6 @@
         "author": "aryajur"
       },
       "name": "SPICE end",
-      "folder": "SPICE definitions",
       "removeAttributes": [
         "None"
       ],
@@ -1760,7 +1737,6 @@
         "author": "aryajur"
       },
       "name": "SPICE DC analysis",
-      "folder": "SPICE definitions",
       "removeAttributes": [
         "None"
       ],
@@ -1794,7 +1770,6 @@
         "author": "aryajur"
       },
       "name": "SPICE operating point",
-      "folder": "SPICE definitions",
       "removeAttributes": [
         "None"
       ],
@@ -1812,7 +1787,6 @@
         "author": "aryajur"
       },
       "name": "SPICE transient analysis",
-      "folder": "SPICE definitions",
       "removeAttributes": [
         "None"
       ],
@@ -1830,7 +1804,6 @@
         "author": "aryajur"
       },
       "name": "SPICE comment",
-      "folder": "SPICE definitions",
       "removeAttributes": [
         "None"
       ],
@@ -1848,7 +1821,6 @@
         "author": "aryajur"
       },
       "name": "SPICE parameters",
-      "folder": "SPICE definitions",
       "removeAttributes": [
         "None"
       ],
@@ -1879,7 +1851,6 @@
         "author": "aryajur"
       },
       "name": "SPICE diode model",
-      "folder": "SPICE definitions",
       "removeAttributes": [
         "$$SPICE_EPILOG"
       ],
@@ -1918,7 +1889,6 @@
         "author": "aryajur"
       },
       "name": "SPICE subcircuit definition",
-      "folder": "SPICE definitions",
       "removeAttributes": [
         "None"
       ],
@@ -1960,7 +1930,6 @@
         "author": "aryajur"
       },
       "name": "SPICE model / directive",
-      "folder": "SPICE definitions",
       "removeAttributes": [
         "Comment"
       ],
@@ -1984,6 +1953,134 @@
         }
       },
       "notes": "Derived from the existing comment/definition artwork. Definition accepts a full model, .include, or other multiline SPICE prolog text."
+    },
+    {
+      "id": "resistor-us",
+      "source": {
+        "nameId": 9496
+      },
+      "name": "Resistor (US)",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9964,
+        "author": "aryajur"
+      },
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "1k",
+          "show": 0
+        }
+      },
+      "baseSymbol": "resistor",
+      "resistorStyle": "us",
+      "notes": " Derived from the corrected European resistor with only its resistor body replaced by a same-envelope US zigzag. Pins, leads, other markings and all SPICE attributes are identical."
+    },
+    {
+      "id": "potentiometer-us",
+      "source": {
+        "nameId": 9497
+      },
+      "name": "Potentiometer (US)",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9964,
+        "author": "aryajur"
+      },
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "pins": [
+        {
+          "at": [
+            84,
+            42
+          ],
+          "number": "3",
+          "name": "Wiper",
+          "show": 0
+        }
+      ],
+      "notes": "The source wiper repeated terminal 1; renumbered to 3. Two resistors model the wiper, with a 1 micro-ohm lower bound. Derived from the corrected European potentiometer with only its resistor body replaced by a same-envelope US zigzag. Pins, leads, other markings and all SPICE attributes are identical.",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "10k",
+          "show": 0
+        },
+        "Wiper": {
+          "value": "0.5",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "R$(refnum)A %(1) %(3) {max(1u,$(Value)*$(Wiper))}\nR$(refnum)B %(3) %(2) {max(1u,$(Value)*(1-$(Wiper)))}",
+          "show": 2
+        }
+      },
+      "baseSymbol": "potentiometer",
+      "resistorStyle": "us"
+    },
+    {
+      "id": "trimmer-resistor-us",
+      "source": {
+        "nameId": 9498
+      },
+      "name": "Trimmer resistor (US)",
+      "removeAttributes": [
+        "None"
+      ],
+      "spiceFrom": {
+        "nameId": 9964,
+        "author": "aryajur"
+      },
+      "attributeRenames": {
+        "NAME": "Value"
+      },
+      "pins": [
+        {
+          "at": [
+            84,
+            42
+          ],
+          "number": "3",
+          "name": "Wiper",
+          "show": 0
+        }
+      ],
+      "notes": "The source wiper repeated terminal 1; renumbered to 3. Two resistors model the wiper, with a 1 micro-ohm lower bound. Derived from the corrected European trimmer-resistor with only its resistor body replaced by a same-envelope US zigzag. Pins, leads, other markings and all SPICE attributes are identical.",
+      "attributes": {
+        "Package": {
+          "value": "",
+          "show": 1
+        },
+        "Value": {
+          "value": "10k",
+          "show": 0
+        },
+        "Wiper": {
+          "value": "0.5",
+          "show": 1
+        },
+        "$$SPICE": {
+          "value": "R$(refnum)A %(1) %(3) {max(1u,$(Value)*$(Wiper))}\nR$(refnum)B %(3) %(2) {max(1u,$(Value)*(1-$(Wiper)))}",
+          "show": 2
+        }
+      },
+      "baseSymbol": "trimmer-resistor",
+      "resistorStyle": "us"
     }
   ],
   "showName": 1,

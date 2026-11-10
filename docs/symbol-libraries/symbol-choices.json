@@ -1,0 +1,936 @@
+{
+  "version": 1,
+  "revision": 5,
+  "inventorySha256": "12a28ee3c8b8eb2a5bd1bf5d2f68313d2e744c20d6b12420447269f0ad0a2703",
+  "sourceSha256": "3efbdf682121249aa4c2c8f8fdd1dc807025b26c5e46c369eb41c3f28a34d47e",
+  "spiceSha256": "ef88cb1ad448aee3d6f042ef3d9eb3f694f0dac570d6265ee9d221dc820e0225",
+  "derivedSha256": "ed995ad425f6a6a571752dd99a94d97be31487c928deea3eac426008039faaeb",
+  "decisions": {
+    "capacitor": {
+      "status": "reuse",
+      "candidateId": "spice:capacitor",
+      "xmlSha256": "9f68ff398514ee1da644fffe919e995db4bc3bd3de146d3295133fa8bc6353c6",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "capacitor",
+        "nameId": 4
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "capacitor_plates": {
+      "status": "reuse",
+      "candidateId": "spice:capacitor",
+      "xmlSha256": "9f68ff398514ee1da644fffe919e995db4bc3bd3de146d3295133fa8bc6353c6",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "capacitor",
+        "nameId": 4
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "capacitor_polarised": {
+      "status": "reuse",
+      "candidateId": "spice:electrolytic-capacitor",
+      "xmlSha256": "326f836a39bb8e25ef70f121a282a42e93e8d220dd3942ddb9fbe3ef12d8f944",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "electrolytic-capacitor",
+        "nameId": 5
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "capacitor_variable": {
+      "status": "reuse",
+      "candidateId": "spice:trimmer-capacitor",
+      "xmlSha256": "8ea063d8a3707dcdf7fee6eb7b8502d8bf7295681c939644875f6884b07c9324",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "trimmer-capacitor",
+        "nameId": 6
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "inductor": {
+      "status": "reuse",
+      "candidateId": "spice:inductor",
+      "xmlSha256": "0b67d487a972f1e8abbd059699fa9ae1013314c74ca67b85db5f68d3111f999e",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "inductor",
+        "nameId": 7
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "potentiometer": {
+      "status": "reuse",
+      "candidateId": "spice:potentiometer",
+      "xmlSha256": "3fa924807e3c431788e2df9ca7978459553e85797596503d19372519a37795b0",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:3",
+        "3": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "potentiometer",
+        "nameId": 2
+      },
+      "modelReviewRequired": true,
+      "variants": [
+        "spice:potentiometer",
+        "spice:potentiometer-us"
+      ],
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "resistance_wire": {
+      "status": "chosen",
+      "candidateId": "spice:resistor",
+      "xmlSha256": "38877268df1717af81bc7922afaae99a07f2581fc8b2279168dba778d4e4c162",
+      "sourceNameId": 1,
+      "source": {
+        "kind": "spice",
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "resistor",
+        "nameId": 1
+      },
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "requiresAdaptation": false,
+      "modelReviewRequired": true
+    },
+    "resistor": {
+      "status": "reuse",
+      "candidateId": "spice:resistor",
+      "xmlSha256": "38877268df1717af81bc7922afaae99a07f2581fc8b2279168dba778d4e4c162",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "resistor",
+        "nameId": 1
+      },
+      "modelReviewRequired": true,
+      "variants": [
+        "spice:resistor",
+        "spice:resistor-us"
+      ],
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "rheostat": {
+      "status": "reuse",
+      "candidateId": "derived:rheostat-eu",
+      "xmlSha256": "aaa37214a6396feb8cd7903d114a1b7a94090c02e213ab9faecf6d009dea9c7a",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "rheostat",
+        "baseCandidateId": "spice:resistor",
+        "baseXmlSha256": "38877268df1717af81bc7922afaae99a07f2581fc8b2279168dba778d4e4c162"
+      },
+      "variants": [
+        "derived:rheostat-eu",
+        "derived:rheostat-us"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. EU and US resistor bodies share identical terminals; both variants apply to every bundle. Artwork only: supply a suitable model adapter separately."
+    },
+    "diode": {
+      "status": "reuse",
+      "candidateId": "spice:diode",
+      "xmlSha256": "5d25bef833b99e1b5165115f5abe22c66305483e6a1f787a7c79a628b3fff6b6",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "diode",
+        "nameId": 13
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "diode_rectifier": {
+      "status": "reuse",
+      "candidateId": "spice:diode",
+      "xmlSha256": "5d25bef833b99e1b5165115f5abe22c66305483e6a1f787a7c79a628b3fff6b6",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "diode",
+        "nameId": 13
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "led": {
+      "status": "reuse",
+      "candidateId": "spice:led-red",
+      "xmlSha256": "ee003c71dae4f600276d2b504562b275e52d0ca7ef124b076001c8acaceb0637",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "led-red",
+        "nameId": 15
+      },
+      "modelReviewRequired": true,
+      "variants": [
+        "spice:led-red",
+        "spice:led-green",
+        "spice:led-blue",
+        "spice:led-yellow"
+      ],
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "photodiode": {
+      "status": "reuse",
+      "candidateId": "derived:photodiode",
+      "xmlSha256": "b503984d29b966859bd70e994d11d28ba789387fd9969b68eb60b674ee2fca31",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "photodiode",
+        "baseCandidateId": "spice:diode",
+        "baseXmlSha256": "5d25bef833b99e1b5165115f5abe22c66305483e6a1f787a7c79a628b3fff6b6"
+      },
+      "variants": [
+        "derived:photodiode"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. Artwork only: supply a suitable model adapter separately."
+    },
+    "zener": {
+      "status": "reuse",
+      "candidateId": "spice:zener",
+      "xmlSha256": "816308e8ae0f365c5d761d519e326684632eeebf955a7fe6299a2efc3efdd8b2",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "zener",
+        "nameId": 14
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "thyristor": {
+      "status": "reuse",
+      "candidateId": "derived:thyristor",
+      "xmlSha256": "f89881e0eafda739b5cf331fe0c75ee69d0e56116b117414117ba8ba51f41d6c",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "thyristor",
+        "baseCandidateId": "spice:diode",
+        "baseXmlSha256": "5d25bef833b99e1b5165115f5abe22c66305483e6a1f787a7c79a628b3fff6b6"
+      },
+      "variants": [
+        "derived:thyristor"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. Artwork only: supply a suitable model adapter separately."
+    },
+    "bjt_npn": {
+      "status": "reuse",
+      "candidateId": "spice:npn",
+      "xmlSha256": "9a4800d4f826d0e62d40473f7a2ed476fa44dfe8b00f6c563167cf699589e613",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:3",
+        "3": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "npn",
+        "nameId": 9
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "bjt_pnp": {
+      "status": "reuse",
+      "candidateId": "spice:pnp",
+      "xmlSha256": "467e05ce34cb2b2a5e93dbc15842c8264d13ad111699c9ccd32ae8001fbc578b",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:3",
+        "3": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "pnp",
+        "nameId": 10
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "darlington_npn": {
+      "status": "reuse",
+      "candidateId": "derived:darlington_npn",
+      "xmlSha256": "613079b4d7cca1f479b357a71f558ee0a988c69c323b018ed4c4ce472c6e8259",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:3",
+        "3": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "darlington_npn",
+        "baseCandidateId": "spice:npn",
+        "baseXmlSha256": "9a4800d4f826d0e62d40473f7a2ed476fa44dfe8b00f6c563167cf699589e613"
+      },
+      "variants": [
+        "derived:darlington_npn"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. Artwork only: supply a suitable model adapter separately."
+    },
+    "darlington_pnp": {
+      "status": "reuse",
+      "candidateId": "derived:darlington_pnp",
+      "xmlSha256": "450eacd01923ba5bdaa0b58f1eea79f6b88e053de040a60260c5392186e5dd13",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:3",
+        "3": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "darlington_pnp",
+        "baseCandidateId": "spice:pnp",
+        "baseXmlSha256": "467e05ce34cb2b2a5e93dbc15842c8264d13ad111699c9ccd32ae8001fbc578b"
+      },
+      "variants": [
+        "derived:darlington_pnp"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. Artwork only: supply a suitable model adapter separately."
+    },
+    "jfet_n": {
+      "status": "reuse",
+      "candidateId": "derived:jfet_n",
+      "xmlSha256": "9efa14e5b39f01795a07e8dfef51448db5b250e8985a97610108bc5268e893c7",
+      "pinMap": {
+        "1": "0:0:2",
+        "2": "0:0:3",
+        "3": "0:0:4"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "jfet_n",
+        "baseCandidateId": "spice:nmos",
+        "baseXmlSha256": "6042ee7507f553a54c515c48bf0f3e8c285b4d84e3b534d72ad8c5fa1a8dfb0c"
+      },
+      "variants": [
+        "derived:jfet_n"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. Artwork only: supply a suitable model adapter separately."
+    },
+    "jfet_p": {
+      "status": "reuse",
+      "candidateId": "derived:jfet_p",
+      "xmlSha256": "d4a40d2c0b0f1ac9cf5935bf00ae0d2d8b0b5b98e9342144a2888da09433a8e9",
+      "pinMap": {
+        "1": "0:0:2",
+        "2": "0:0:3",
+        "3": "0:0:4"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "jfet_p",
+        "baseCandidateId": "spice:pmos",
+        "baseXmlSha256": "4336cba21ccb4242ed4be3f1e941ec7560bb1ded4a7fcd1f8bcab7954b3ec13d"
+      },
+      "variants": [
+        "derived:jfet_p"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. Artwork only: supply a suitable model adapter separately."
+    },
+    "mosfet_n": {
+      "status": "reuse",
+      "candidateId": "spice:nmos",
+      "xmlSha256": "6042ee7507f553a54c515c48bf0f3e8c285b4d84e3b534d72ad8c5fa1a8dfb0c",
+      "pinMap": {
+        "1": "0:0:2",
+        "2": "0:0:3",
+        "3": "0:0:4"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "nmos",
+        "nameId": 11
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "mosfet_p": {
+      "status": "reuse",
+      "candidateId": "spice:pmos",
+      "xmlSha256": "4336cba21ccb4242ed4be3f1e941ec7560bb1ded4a7fcd1f8bcab7954b3ec13d",
+      "pinMap": {
+        "1": "0:0:2",
+        "2": "0:0:3",
+        "3": "0:0:4"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "pmos",
+        "nameId": 12
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "wheatstone_bridge": {
+      "status": "reuse",
+      "candidateId": "derived:wheatstone_bridge-eu",
+      "xmlSha256": "7a057a2d4a6ee4f606d530504b80d8a31a3a7d79951be3e1b238eba66611cee9",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2",
+        "3": "0:0:3",
+        "4": "0:0:4"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "wheatstone_bridge",
+        "baseCandidateId": "spice:resistor",
+        "baseXmlSha256": "38877268df1717af81bc7922afaae99a07f2581fc8b2279168dba778d4e4c162"
+      },
+      "variants": [
+        "derived:wheatstone_bridge-eu",
+        "derived:wheatstone_bridge-us"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. EU and US resistor bodies share identical terminals; both variants apply to every bundle. Artwork only: supply a suitable model adapter separately."
+    },
+    "ph_probe": {
+      "status": "pending"
+    },
+    "piezo_sensor": {
+      "status": "pending"
+    },
+    "solar_cell": {
+      "status": "reuse",
+      "candidateId": "derived:solar_cell",
+      "xmlSha256": "e62de19aa1380fe1961952fc861096ef99be80f2ffa264f3aafa661b520e9410",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "solar_cell",
+        "baseCandidateId": "spice:diode",
+        "baseXmlSha256": "5d25bef833b99e1b5165115f5abe22c66305483e6a1f787a7c79a628b3fff6b6"
+      },
+      "variants": [
+        "derived:solar_cell"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. Artwork only: supply a suitable model adapter separately."
+    },
+    "thermocouple": {
+      "status": "pending"
+    },
+    "hall_sensor": {
+      "status": "pending"
+    },
+    "light_sensor": {
+      "status": "pending"
+    },
+    "pressure_sensor": {
+      "status": "pending"
+    },
+    "temperature_sensor": {
+      "status": "pending"
+    },
+    "ldr": {
+      "status": "reuse",
+      "candidateId": "derived:ldr-eu",
+      "xmlSha256": "ccc8373278d1cb5041204243293a67fd96a8e8f0c6e5d242ba1274d4d2358700",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "ldr",
+        "baseCandidateId": "spice:resistor",
+        "baseXmlSha256": "38877268df1717af81bc7922afaae99a07f2581fc8b2279168dba778d4e4c162"
+      },
+      "variants": [
+        "derived:ldr-eu",
+        "derived:ldr-us"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. EU and US resistor bodies share identical terminals; both variants apply to every bundle. Artwork only: supply a suitable model adapter separately."
+    },
+    "moisture_sensor": {
+      "status": "pending"
+    },
+    "ntc": {
+      "status": "reuse",
+      "candidateId": "derived:ntc-eu",
+      "xmlSha256": "7a3c8a8e5204c7aeb8877c13208e0fd23c151030511f816f2fe28ec874773494",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "ntc",
+        "baseCandidateId": "spice:resistor",
+        "baseXmlSha256": "38877268df1717af81bc7922afaae99a07f2581fc8b2279168dba778d4e4c162"
+      },
+      "variants": [
+        "derived:ntc-eu",
+        "derived:ntc-us"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. EU and US resistor bodies share identical terminals; both variants apply to every bundle. Artwork only: supply a suitable model adapter separately."
+    },
+    "strain_gauge": {
+      "status": "reuse",
+      "candidateId": "derived:strain_gauge-eu",
+      "xmlSha256": "871afcd83c2f16736ae289fce7692c310294f4eb609e0936d3df3c6dc4e1e8ad",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "kind": "derived",
+        "recipe": "library-recipes/derived-symbols.json",
+        "id": "strain_gauge",
+        "baseCandidateId": "spice:resistor",
+        "baseXmlSha256": "38877268df1717af81bc7922afaae99a07f2581fc8b2279168dba778d4e4c162"
+      },
+      "variants": [
+        "derived:strain_gauge-eu",
+        "derived:strain_gauge-us"
+      ],
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Derived from the corrected SPICE base. EU and US resistor bodies share identical terminals; both variants apply to every bundle. Artwork only: supply a suitable model adapter separately."
+    },
+    "controlled_switch": {
+      "status": "pending"
+    },
+    "push_break": {
+      "status": "pending"
+    },
+    "push_make": {
+      "status": "pending"
+    },
+    "switch_spdt": {
+      "status": "pending"
+    },
+    "switch_spst": {
+      "status": "pending"
+    },
+    "relay_coil": {
+      "status": "pending"
+    },
+    "relay_spdt": {
+      "status": "pending"
+    },
+    "reed_switch": {
+      "status": "pending"
+    },
+    "behavioural_current": {
+      "status": "reuse",
+      "candidateId": "spice:current-source",
+      "xmlSha256": "67e865697cfa5b495a4cef41fa13addccc5f42a3a80122ee6442ee974e0bdd4c",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "current-source",
+        "nameId": 24
+      },
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Reuse the current-arrow artwork only. Replace the independent I-source template with the required expression-controlled source adapter."
+    },
+    "behavioural_voltage": {
+      "status": "reuse",
+      "candidateId": "spice:voltage-source",
+      "xmlSha256": "6fb626405f413e0520cfd1f964eab37d722b2bf9cc58fd4521c554b318e758fd",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "voltage-source",
+        "nameId": 23
+      },
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Reuse the voltage-source artwork only. Replace the independent V-source template with the required expression-controlled source adapter."
+    },
+    "battery": {
+      "status": "pending"
+    },
+    "cell": {
+      "status": "pending"
+    },
+    "vcvs": {
+      "status": "pending"
+    },
+    "current_source": {
+      "status": "reuse",
+      "candidateId": "spice:current-source",
+      "xmlSha256": "67e865697cfa5b495a4cef41fa13addccc5f42a3a80122ee6442ee974e0bdd4c",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "current-source",
+        "nameId": 24
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "source_dc": {
+      "status": "reuse",
+      "candidateId": "spice:voltage-source",
+      "xmlSha256": "6fb626405f413e0520cfd1f964eab37d722b2bf9cc58fd4521c554b318e758fd",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "voltage-source",
+        "nameId": 23
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse corrected SPICE artwork; retain this logical-to-source terminal mapping."
+    },
+    "source_fm": {
+      "status": "reuse",
+      "candidateId": "spice:voltage-source",
+      "xmlSha256": "6fb626405f413e0520cfd1f964eab37d722b2bf9cc58fd4521c554b318e758fd",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "voltage-source",
+        "nameId": 23
+      },
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Reuse the voltage-source artwork; supply a new FM waveform/property adapter instead of the default DC configuration."
+    },
+    "source_pulse": {
+      "status": "pending"
+    },
+    "source_pwl": {
+      "status": "reuse",
+      "candidateId": "spice:voltage-source",
+      "xmlSha256": "6fb626405f413e0520cfd1f964eab37d722b2bf9cc58fd4521c554b318e758fd",
+      "pinMap": {
+        "1": "0:0:1",
+        "2": "0:0:2"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "voltage-source",
+        "nameId": 23
+      },
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Reuse the voltage-source artwork; supply a new time/voltage-point-list adapter instead of the default DC configuration."
+    },
+    "source_sine": {
+      "status": "pending"
+    },
+    "buzzer": {
+      "status": "pending"
+    },
+    "speaker": {
+      "status": "pending"
+    },
+    "seven_segment_anode": {
+      "status": "pending"
+    },
+    "seven_segment_cathode": {
+      "status": "pending"
+    },
+    "lamp": {
+      "status": "pending"
+    },
+    "opamp": {
+      "status": "reuse",
+      "candidateId": "spice:ua741",
+      "xmlSha256": "9ce14ee75dde09251e619ac6eb8c4e883fb3377a82915b89b0ae1644f0347b7c",
+      "pinMap": {
+        "1": "0:0:3",
+        "2": "0:0:2",
+        "3": "0:0:6",
+        "4": "0:0:7",
+        "5": "0:0:4"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "ua741",
+        "nameId": 19
+      },
+      "modelReviewRequired": true,
+      "note": "Reuse the 741 artwork. The model must be checked against each experiment separately."
+    },
+    "comparator": {
+      "status": "reuse",
+      "candidateId": "spice:ua741",
+      "xmlSha256": "9ce14ee75dde09251e619ac6eb8c4e883fb3377a82915b89b0ae1644f0347b7c",
+      "pinMap": {
+        "1": "0:0:3",
+        "2": "0:0:2",
+        "3": "0:0:6",
+        "4": "0:0:7",
+        "5": "0:0:4"
+      },
+      "source": {
+        "bundle": "bundled-libraries/spice/spice.tclib",
+        "recipeId": "ua741",
+        "nameId": 19
+      },
+      "modelReviewRequired": true,
+      "modelReuseAllowed": false,
+      "note": "Reuse the triangle and five terminals only. Replace the 741 model with a comparator adapter and declare its output type."
+    },
+    "am_modulator": {
+      "status": "pending"
+    },
+    "timer_555": {
+      "status": "pending"
+    },
+    "full_adder": {
+      "status": "pending"
+    },
+    "decoder2to4": {
+      "status": "pending"
+    },
+    "encoder4to2": {
+      "status": "pending"
+    },
+    "mux2": {
+      "status": "pending"
+    },
+    "counter_bcd": {
+      "status": "pending"
+    },
+    "counter_binary3_async": {
+      "status": "pending"
+    },
+    "counter_binary3_sync": {
+      "status": "pending"
+    },
+    "counter_johnson": {
+      "status": "pending"
+    },
+    "gate_and": {
+      "status": "pending"
+    },
+    "gate_buffer": {
+      "status": "pending"
+    },
+    "gate_nand": {
+      "status": "pending"
+    },
+    "gate_nor": {
+      "status": "pending"
+    },
+    "gate_not": {
+      "status": "pending"
+    },
+    "gate_or": {
+      "status": "pending"
+    },
+    "gate_xnor": {
+      "status": "pending"
+    },
+    "gate_xor": {
+      "status": "pending"
+    },
+    "shift_register3": {
+      "status": "pending"
+    },
+    "flipflop_d": {
+      "status": "pending"
+    },
+    "flipflop_jk": {
+      "status": "pending"
+    },
+    "latch_d": {
+      "status": "pending"
+    },
+    "latch_rs": {
+      "status": "pending"
+    },
+    "adc4": {
+      "status": "pending"
+    },
+    "channel": {
+      "status": "pending"
+    },
+    "dac4": {
+      "status": "pending"
+    },
+    "data_logger": {
+      "status": "pending"
+    },
+    "fpga": {
+      "status": "pending"
+    },
+    "microcontroller": {
+      "status": "pending"
+    },
+    "output_transducer": {
+      "status": "pending"
+    },
+    "pcm_encoder": {
+      "status": "pending"
+    },
+    "plc_interface": {
+      "status": "pending"
+    },
+    "receiver": {
+      "status": "pending"
+    },
+    "sampler": {
+      "status": "pending"
+    },
+    "state_machine": {
+      "status": "pending"
+    },
+    "tdm_switch": {
+      "status": "pending"
+    },
+    "transmitter": {
+      "status": "pending"
+    },
+    "ammeter": {
+      "status": "pending"
+    },
+    "ohmmeter": {
+      "status": "pending"
+    },
+    "voltmeter": {
+      "status": "pending"
+    },
+    "bnc": {
+      "status": "pending"
+    },
+    "connector2": {
+      "status": "pending"
+    },
+    "connector3": {
+      "status": "pending"
+    },
+    "test_point": {
+      "status": "pending"
+    },
+    "annotation": {
+      "status": "native",
+      "operation": "text-and-shapes"
+    },
+    "ground": {
+      "status": "native",
+      "operation": "ground"
+    },
+    "junction": {
+      "status": "native",
+      "operation": "junction"
+    },
+    "net_label": {
+      "status": "native",
+      "operation": "net-label"
+    },
+    "no_connect": {
+      "status": "native",
+      "operation": "no-connect"
+    },
+    "wire": {
+      "status": "native",
+      "operation": "wire"
+    }
+  }
+}

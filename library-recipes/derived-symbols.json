@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "description": "Teaching artwork derived from corrected SPICE bases. All resistor-body types have EU and US variants. These drawings do not qualify a simulation model.",
+  "symbols": [
+    {
+      "id": "rheostat",
+      "name": "Variable resistor / rheostat",
+      "base": "resistor",
+      "styles": ["eu", "us"],
+      "pins": ["1", "2"]
+    },
+    {
+      "id": "ntc",
+      "name": "NTC thermistor",
+      "base": "resistor",
+      "styles": ["eu", "us"],
+      "pins": ["1", "2"]
+    },
+    {
+      "id": "ldr",
+      "name": "Light-dependent resistor",
+      "base": "resistor",
+      "styles": ["eu", "us"],
+      "pins": ["1", "2"]
+    },
+    {
+      "id": "strain_gauge",
+      "name": "Strain gauge",
+      "base": "resistor",
+      "styles": ["eu", "us"],
+      "pins": ["1", "2"]
+    },
+    {
+      "id": "wheatstone_bridge",
+      "name": "Wheatstone bridge",
+      "base": "resistor",
+      "styles": ["eu", "us"],
+      "pins": ["1", "2", "3", "4"]
+    },
+    {
+      "id": "photodiode",
+      "name": "Photodiode",
+      "base": "diode",
+      "pins": ["1", "2"]
+    },
+    {
+      "id": "solar_cell",
+      "name": "Solar cell",
+      "base": "diode",
+      "pins": ["1", "2"]
+    },
+    {
+      "id": "thyristor",
+      "name": "Thyristor / SCR",
+      "base": "diode",
+      "pins": ["1", "2", "3"]
+    },
+    {
+      "id": "jfet_n",
+      "name": "N-channel JFET",
+      "base": "nmos",
+      "pins": ["2", "3", "4"]
+    },
+    {
+      "id": "jfet_p",
+      "name": "P-channel JFET",
+      "base": "pmos",
+      "pins": ["2", "3", "4"]
+    },
+    {
+      "id": "darlington_npn",
+      "name": "NPN Darlington pair",
+      "base": "npn",
+      "pins": ["1", "3", "2"]
+    },
+    {
+      "id": "darlington_pnp",
+      "name": "PNP Darlington pair",
+      "base": "pnp",
+      "pins": ["1", "3", "2"]
+    }
+  ]
+}

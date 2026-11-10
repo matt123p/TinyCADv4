@@ -64,6 +64,7 @@ import {
   BatteryChargeRegular,
 } from '@fluentui/react-icons';
 import { ActionCreators } from 'redux-undo';
+import { SPICE_COMPONENTS, insertSpiceComponent, showSpiceLibrary } from '../../io/spiceComponents';
 import {
   downloadBom,
   fileSave,
@@ -702,12 +703,27 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         <ToolbarDivider className={styles.divider} />
         <Menu>
           <MenuTrigger disableButtonEnhancement>
-            <ToolbarButton aria-label="SPICE" icon={<PulseRegular />}>SPICE <ChevronDownRegular /></ToolbarButton>
+            <ToolbarButton aria-label={t('toolbar.simulation')} icon={<PulseRegular />}>{t('toolbar.simulation')} <ChevronDownRegular /></ToolbarButton>
           </MenuTrigger>
           <MenuPopover><MenuList>
             <MenuItem icon={<PulseRegular />} onClick={() => props.dispatch({ type: 'simulation/add', name: 'Simulation' })}>Simulate</MenuItem>
             <MenuItem icon={<DataLineRegular />} onClick={() => props.dispatch({ type: 'simulation/panel', visible: !props.simulationPanelVisible })}>{props.simulationPanelVisible ? 'Hide charts' : 'Show charts'}</MenuItem>
             <MenuDivider />
+            <Menu>
+              <MenuTrigger disableButtonEnhancement>
+                <MenuItem icon={<LibraryRegular />}>{t('toolbar.spiceComponents.title')}</MenuItem>
+              </MenuTrigger>
+              <MenuPopover><MenuList>
+                {SPICE_COMPONENTS.map(component => <MenuItem key={component.id}
+                  onClick={() => props.dispatch(insertSpiceComponent(component.id) as any)}>
+                  {t(component.labelKey)}
+                </MenuItem>)}
+                <MenuDivider />
+                <MenuItem icon={<LibraryRegular />} onClick={() => props.dispatch(showSpiceLibrary() as any)}>
+                  {t('toolbar.spiceComponents.more')}
+                </MenuItem>
+              </MenuList></MenuPopover>
+            </Menu>
             <Menu>
               <MenuTrigger disableButtonEnhancement>
                 <MenuItem icon={<PulseRegular />}>SPICE</MenuItem>

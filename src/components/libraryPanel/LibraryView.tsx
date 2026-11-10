@@ -2,12 +2,7 @@ import React, { Dispatch, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { tclib, tclibLibraryEntry } from '../../model/tclib';
 import { connect } from 'react-redux';
-import {
-  Button,
-  makeStyles,
-  mergeClasses,
-  tokens,
-} from '@fluentui/react-components';
+import { Button, makeStyles, mergeClasses, tokens } from '@fluentui/react-components';
 import {
   ChevronRightRegular,
   ChevronDownRegular,
@@ -16,9 +11,10 @@ import {
   DocumentRegular,
   WarningRegular,
 } from '@fluentui/react-icons';
-import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
+import {
+  actionSelectDialog,
+} from '../../state/dispatcher/AppDispatcher';
 import { SymbolSortMode, sortEntriesByName } from './sorting';
-import { SymbolFolderTree } from './SymbolFolderTree';
 
 const useStyles = makeStyles({
   treeItemGroup: {
@@ -73,6 +69,9 @@ const useStyles = makeStyles({
     '&:hover': {
       backgroundColor: tokens.colorNeutralBackground1Hover,
     },
+  },
+  symbolItemFlat: {
+    paddingLeft: '12px',
   },
   symbolItemActive: {
     backgroundColor: tokens.colorBrandBackground,
@@ -138,14 +137,14 @@ const useStyles = makeStyles({
     height: '24px',
     color: tokens.colorNeutralForeground1, // Default color for grey bg
     '&:hover': {
-      color: tokens.colorNeutralForeground1Hover,
-    },
+        color: tokens.colorNeutralForeground1Hover,
+    }
   },
   actionButtonActive: {
-    color: 'white',
-    '&:hover': {
       color: 'white',
-    },
+      '&:hover': {
+          color: 'white',
+      }
   },
   actionButtonDisabled: {
     color: tokens.colorNeutralForegroundDisabled,
@@ -196,6 +195,7 @@ interface LibraryViewProps {
   findFilter: string;
   sortMode?: SymbolSortMode;
   open: boolean;
+  showHeader?: boolean;
   selectedId: string | null;
   draggable?: boolean;
   onLibraryClick?(lib: tclib): void;
@@ -214,8 +214,7 @@ function getMatchingNames(lib: tclib, filter: string) {
     (entry) =>
       filter.length === 0 ||
       entry.Name.toLocaleLowerCase().includes(filter) ||
-      (entry.Description || '').toLocaleLowerCase().includes(filter) ||
-      (entry.folder || '').toLocaleLowerCase().includes(filter),
+      (entry.Description || '').toLocaleLowerCase().includes(filter),
   );
 }
 
@@ -227,6 +226,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
   const [hover, setHover] = useState(false);
 
   const isBad = !!props.lib.bad;
+  const showHeader = props.showHeader !== false;
 
   const openLibraryInfo = (e?: React.MouseEvent) => {
     e?.preventDefault();
@@ -254,7 +254,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
 
   return (
     <ul className={styles.treeItemGroup}>
-      <li
+      {showHeader && <li
         className={mergeClasses(
           styles.libraryItem,
           isBad && styles.libraryItemBad,
@@ -293,12 +293,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
         </span>
         <span className={styles.libraryName}>
           {props.lib.name.replace(/\.tclib$/gi, '')}
-          {props.lib.readOnly && (
-            <span title={t('library.bundledReadOnly')}>
-              {' '}
-              · {t('library.readOnly')}
-            </span>
-          )}
+          {props.lib.readOnly && <span title={t('library.bundledReadOnly')}> · {t('library.readOnly')}</span>}
         </span>
         {isBad && (
           <button
@@ -312,14 +307,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
           </button>
         )}
         {!isBad && names?.length > 0 && (
-          <span
-            className={mergeClasses(
-              styles.matchCount,
-              props.open && styles.matchCountActive,
-            )}
-          >
-            {names.length}
-          </span>
+          <span className={mergeClasses(styles.matchCount, props.open && styles.matchCountActive)}>{names.length}</span>
         )}
         {!isBad && (hover || props.open) && (
           <div className={styles.actionButtons}>
@@ -336,47 +324,34 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
             />
           </div>
         )}
-      </li>
-      {(props.open || !!props.findFilter) && (
-        <SymbolFolderTree
-          library={props.lib}
-          entries={names}
-          filter={props.findFilter}
-          renderEntries={(entries) =>
-            entries.map((n, index) => {
-              const isActive =
-                props.selectedId === `${props.lib.fileId}:${n.NameID}`;
-              return (
-                <li
-                  key={n.NameID}
-                  className={mergeClasses(
-                    styles.symbolItem,
-                    isActive && styles.symbolItemActive,
-                    index === names.length - 1 && styles.symbolItemLast,
-                  )}
-                  role="button"
-                  aria-pressed="false"
-                  onClick={() => props.onSelect(props.lib, n)}
-                  onDoubleClick={() => props.onSelected(props.lib, n)}
-                >
-                  <DocumentRegular className={styles.symbolIcon} />
-                  <span className={styles.symbolName}>{n.Name}</span>
-                  {n.Description?.length > 0 && (
-                    <span
-                      className={mergeClasses(
-                        styles.symbolDescription,
-                        isActive && styles.symbolDescriptionActive,
-                      )}
-                    >
-                      {n.Description}
-                    </span>
-                  )}
-                </li>
-              );
-            })
-          }
-        />
-      )}
+      </li>}
+      {(!showHeader || props.open) &&
+        names.map((n, index) => {
+          const isActive = props.selectedId === `${props.lib.fileId}:${n.NameID}`;
+          return (
+            <li
+              key={n.NameID}
+              className={mergeClasses(
+                styles.symbolItem,
+                !showHeader && styles.symbolItemFlat,
+                isActive && styles.symbolItemActive,
+                index === names.length - 1 && styles.symbolItemLast,
+              )}
+              role="button"
+              aria-pressed="false"
+              onClick={() => props.onSelect(props.lib, n)}
+              onDoubleClick={() => props.onSelected(props.lib, n)}
+            >
+              <DocumentRegular className={styles.symbolIcon} />
+              <span className={styles.symbolName}>{n.Name}</span>
+              {n.Description?.length > 0 && (
+                <span className={mergeClasses(styles.symbolDescription, isActive && styles.symbolDescriptionActive)}>
+                  {n.Description}
+                </span>
+              )}
+            </li>
+          );
+        })}
     </ul>
   );
 };

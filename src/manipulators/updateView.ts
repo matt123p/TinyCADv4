@@ -749,7 +749,7 @@ export class updateView {
   }
 
   click_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
-    if ((view.menu_command === 'add_spice_control' && view.add?.NodeName === DocItemTypes.Symbol)
+    if (((view.menu_command === 'add_spice_control' || view.menu_command === 'add_library_symbol') && view.add?.NodeName === DocItemTypes.Symbol)
       || (view.menu_command === 'add_spice_ground' && view.add?.NodeName === DocItemTypes.Power)) {
       const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
       const magnetic = snap.snap_magnetic(p, false, sheet.items);
@@ -851,7 +851,7 @@ export class updateView {
       const add = new updatePower({ ...view.add, point, _no_show: false, _magnetic: null }).post_construction();
       return { sheet, view: { ...view, add, display_add: true, cursor: 'copy' } };
     }
-    if (view.menu_command === 'add_spice_control' && view.add?.NodeName === DocItemTypes.Symbol) {
+    if ((view.menu_command === 'add_spice_control' || view.menu_command === 'add_library_symbol') && view.add?.NodeName === DocItemTypes.Symbol) {
       const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
       const target = snap.snap_magnetic(p, false, sheet.items)?.point ?? snap.snap(p);
       const pin = new updateSymbol(view.add).active_points().find(p => p[2].number === '1');
@@ -3450,6 +3450,17 @@ export class updateView {
       });
 
     return { view: view, sheet: sheet };
+  }
+
+  beginLibrarySymbolPlacement(view: dsnView, sheet: dsnSheet, name: tclibLibraryEntry, items: DocItem[][]): viewResult {
+    const idle = this.cancel_add(view, sheet).view;
+    const prepared = this.handleSelectLibrarySymbol(idle, sheet, name, items, null);
+    const symbol = prepared.sheet.items[prepared.sheet.items.length - 1];
+    return {
+      sheet: { ...prepared.sheet, items: prepared.sheet.items.slice(0, -1) },
+      view: { ...idle, add: symbol, display_add: false, cursor: 'copy',
+        menu_command: 'add_library_symbol', _selected_array: [] },
+    };
   }
 
   handleSelectLibrarySymbol(

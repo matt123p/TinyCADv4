@@ -1,5 +1,4 @@
 import type { tclib } from '../model/tclib';
-import { applyBundledSymbolFolders } from '../model/symbolFolders';
 import { normalizeTclibLoadError } from '../model/tclib';
 import {
   parseBundledLibraryCatalog,
@@ -35,7 +34,7 @@ async function fetchResource(file: string) {
   );
   const response = await fetch(url.href, { credentials: 'same-origin' });
   if (!response.ok)
-    throw new Error(`Unable to load bundled libraries (${response.status}).`);
+    throw new Error(`Unable to load standard libraries (${response.status}).`);
   return response;
 }
 
@@ -121,7 +120,15 @@ export class BundledLibraryManager {
     }
     const selected = catalog.libraries
       .filter((entry) => Array.isArray(saved) && saved.includes(entry.id))
+      .slice(0, 1)
       .map((entry) => entry.id);
+    if (Array.isArray(saved) && saved.length > 1) {
+      try {
+        await this.source.saveSelection(selected);
+      } catch (reason) {
+        error = normalizeTclibLoadError(reason).summary;
+      }
+    }
     this.publish({ catalog, selected, error });
     await Promise.all(selected.map((id) => this.load(id)));
   }
@@ -129,6 +136,7 @@ export class BundledLibraryManager {
     if (!this.snapshot.catalog || this.snapshot.saving) return;
     const selected = this.snapshot.catalog.libraries
       .filter((entry) => ids.includes(entry.id))
+      .slice(0, 1)
       .map((entry) => entry.id);
     this.publish({ saving: true, error: '' });
     try {
@@ -178,7 +186,7 @@ export class BundledLibraryManager {
     delete errors[id];
     this.publish({ loading: [...this.snapshot.loading, id], errors });
     try {
-      const library = applyBundledSymbolFolders(await this.source.load(entry), entry.symbolFolders);
+      const library = await this.source.load(entry);
       if (this.requests.get(id) !== request) return;
       this.publish({
         libraries: [

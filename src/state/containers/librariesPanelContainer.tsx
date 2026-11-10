@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 const mapStateToProps = (state: docDrawing) => {
   return {
     libraries: state.altStore.libraries,
+    standardLibraryNavigation: state.altStore.standardLibraryNavigation,
     config: state.altStore.config,
   };
 };

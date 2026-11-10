@@ -1,12 +1,14 @@
 # SPICE essentials
 
-Select **My Libraries → Bundled libraries → Choose → SPICE essentials**. The bundle is read-only and loads when selected, in both browser and desktop builds. Its symbol folders are embedded inside `spice.tclib`.
+Select **SPICE essentials** from the library selector on the **Standard Libraries** tab. The bundle is read-only and loads when selected, in both browser and desktop builds. Its symbols are shown as a flat list.
+
+Use **Simulation → Components** for quick access to a resistor, capacitor, inductor, diode, red LED, NPN/PNP transistors, and a 741 op-amp. These shortcuts select and load the standard SPICE library and attach its symbol to the cursor. Click on the schematic to place it; right-click cancels. **More…** selects SPICE essentials, opens the left-hand Standard Libraries panel, and clears its search so you can browse the full library.
 
 The physical component drawings come from **onetransistor** in the legacy SQL collection. Existing SPICE templates, sources, and definition symbols come from **aryajur**. [The recipe](../library-recipes/spice.json) describes every selection and adaptation. [The provenance report](../bundled-libraries/spice/spice.provenance.json) records original component IDs, attribution, and drawing hashes. [The extraction guide](library-from-sql.md) explains how to build other bundles.
 
 ## Contents
 
-| Folder | Symbols and defaults |
+| Category | Symbols and defaults |
 | --- | --- |
 | Passive / Resistors | Resistor 1k; potentiometer and trimmer resistor 10k, wiper 0.5 (adjustable from 0 to 1). |
 | Passive / Capacitors | Capacitor 100n; electrolytic 10u; trimmer capacitor 20p. |
@@ -21,7 +23,7 @@ The physical component drawings come from **onetransistor** in the legacy SQL co
 | SPICE definitions | End, operating point, DC sweep, and transient analysis. |
 | SPICE definitions | Comment, parameter list, diode model, subcircuit definition, and arbitrary model/directive text. |
 
-There are 33 entries. The blue/yellow LEDs, PMOS, and quartz crystal are explicit adaptations of the source drawings because separate suitable originals were absent. Potentiometer wipers, transformer secondary terminals, and 741 pins had duplicated source numbering; the recipe repairs them without moving their connection points. The transformer center tap is removed to make a four-terminal component. Its two windings and polarity dots are mirrored to match the default 1:1 model. Electrolytic plates and diode bodies are centered between their terminals with matching lead contacts.
+There are 36 entries, including US zigzag versions of the fixed resistor, potentiometer and trimmer resistor. The original unqualified names retain the European rectangular body. Both styles use the same 2 × 5.2 mm body envelope, 1.4 mm end leads, terminal positions and SPICE attributes. The blue/yellow LEDs, PMOS, and quartz crystal are explicit adaptations of the source drawings because separate suitable originals were absent. Potentiometer wipers, transformer secondary terminals, and 741 pins had duplicated source numbering; the recipe repairs them without moving their connection points. The transformer center tap is removed to make a four-terminal component. Its two windings and polarity dots are mirrored to match the default 1:1 model. Electrolytic plates and diode bodies are centered between their terminals with matching lead contacts.
 
 All connection points use the standard 1 mm grid. The resistor body is centered on its terminal axis, with equal top/bottom leads; directional features such as transistor arrows, LED emission arrows, and polarity marks retain their intended asymmetry. Placement snaps the insertion anchor after centering so odd-sized outlines cannot shift terminals half a grid step. Regression checks cover the original drawing coordinates and actual placement in all rotated and mirrored orientations.
 

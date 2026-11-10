@@ -82,8 +82,6 @@ export enum TextDisplayMethod {
 }
 
 export interface tclibLibraryEntry {
-  /** Optional path of a symbol folder within this library. */
-  folder?: string;
   id?: string;
   NameID: number;
   Name: string;
@@ -97,8 +95,6 @@ export interface tclibLibraryEntry {
 }
 
 export interface tclib {
-  /** Optional symbol folder paths, including empty folders. */
-  symbolFolders?: string[];
   /** Catalog libraries are available for placement only. */
   readOnly?: boolean;
   fileId: FileIdType;

@@ -47,7 +47,11 @@
     "examples:package": "node scripts/package-examples.mjs",
     "test:examples": "node scripts/tests/bundled-examples.mjs",
     "libraries:sql": "node scripts/build-library-from-sql.mjs",
-    "test:spice": "node scripts/tests/spice-library.mjs"
+    "test:spice": "node scripts/tests/spice-library.mjs",
+    "symbols:review": "node scripts/symbol-review/server.mjs",
+    "symbols:prepare": "node scripts/symbol-review/server.mjs --prepare",
+    "test:symbol-review": "node --test scripts/tests/symbol-review.test.mjs",
+    "test:symbol-artwork": "node --test scripts/tests/symbol-artwork.test.mjs"
   },
   "build": {
     "appId": "com.tinycad.app",

@@ -5,7 +5,6 @@ import { Dispatch } from 'redux';
 import {
   Button,
   Input,
-  Select,
   makeStyles,
   mergeClasses,
   tokens,
@@ -15,7 +14,6 @@ import {
   DeleteRegular,
   CopyRegular,
   SearchRegular,
-  FolderRegular,
 } from '@fluentui/react-icons';
 import {
   actionAddLibrarySymbol,
@@ -24,10 +22,6 @@ import {
   actionDuplicateLibrarySymbol,
 } from '../../state/dispatcher/AppDispatcher';
 import SymbolView from './SymbolView';
-import { SymbolFolderTree } from './SymbolFolderTree';
-import { SymbolFoldersDialog } from './SymbolFoldersDialog';
-import { getSymbolFolders } from '../../model/symbolFolders';
-import { LibraryActionTypes } from '../../state/actions/libraryActions';
 
 const useStyles = makeStyles({
   container: {
@@ -264,7 +258,6 @@ export const EditLibraryView: React.FunctionComponent<EditLibraryViewProps> = (
   const { t } = useTranslation();
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [filterText, setFilterText] = useState('');
-  const [showFolders, setShowFolders] = useState(false);
 
   if (!props.editLibrary) {
     return null;
@@ -272,30 +265,27 @@ export const EditLibraryView: React.FunctionComponent<EditLibraryViewProps> = (
 
   const library = props.editLibrary;
   const names = library?.names ?? [];
-  const folders = getSymbolFolders(library);
   const normalizedFilter = filterText.trim().toLocaleLowerCase();
-  const filteredNames =
-    normalizedFilter.length === 0
-      ? names
-      : names.filter((entry) => {
-          const attributeText = (entry.Attributes ?? [])
-            .flatMap((attribute) => [attribute.AttName, attribute.AttValue])
-            .join(' ')
-            .toLocaleLowerCase();
+  const filteredNames = normalizedFilter.length === 0
+    ? names
+    : names.filter((entry) => {
+      const attributeText = (entry.Attributes ?? [])
+        .flatMap((attribute) => [attribute.AttName, attribute.AttValue])
+        .join(' ')
+        .toLocaleLowerCase();
 
-          const searchable = [
-            entry.Name,
-            entry.Description,
-            entry.Reference,
-            entry.folder,
-            attributeText,
-          ]
-            .filter(Boolean)
-            .join(' ')
-            .toLocaleLowerCase();
+      const searchable = [
+        entry.Name,
+        entry.Description,
+        entry.Reference,
+        attributeText,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLocaleLowerCase();
 
-          return searchable.includes(normalizedFilter);
-        });
+      return searchable.includes(normalizedFilter);
+    });
 
   const handleDelete = (symbol: tclibLibraryEntry) => {
     props.dispatch(
@@ -307,7 +297,9 @@ export const EditLibraryView: React.FunctionComponent<EditLibraryViewProps> = (
   };
 
   const handleDuplicate = (symbol: tclibLibraryEntry) => {
-    props.dispatch(actionDuplicateLibrarySymbol(symbol.NameID));
+    props.dispatch(
+      actionDuplicateLibrarySymbol(symbol.NameID),
+    );
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -324,16 +316,13 @@ export const EditLibraryView: React.FunctionComponent<EditLibraryViewProps> = (
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const nextIndex =
-        currentIndex < filteredNames.length - 1 ? currentIndex + 1 : 0;
+      const nextIndex = currentIndex < filteredNames.length - 1 ? currentIndex + 1 : 0;
       const targetIndex = currentIndex === -1 ? 0 : nextIndex;
       props.dispatch(actionEditLibrarySymbol(filteredNames[targetIndex]));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      const prevIndex =
-        currentIndex > 0 ? currentIndex - 1 : filteredNames.length - 1;
-      const targetIndex =
-        currentIndex === -1 ? filteredNames.length - 1 : prevIndex;
+      const prevIndex = currentIndex > 0 ? currentIndex - 1 : filteredNames.length - 1;
+      const targetIndex = currentIndex === -1 ? filteredNames.length - 1 : prevIndex;
       props.dispatch(actionEditLibrarySymbol(filteredNames[targetIndex]));
     } else if (e.key === 'Delete') {
       if (props.editSymbol) {
@@ -344,19 +333,14 @@ export const EditLibraryView: React.FunctionComponent<EditLibraryViewProps> = (
   };
 
   return (
-    <div className={styles.container} tabIndex={0} onKeyDown={handleKeyDown}>
+    <div
+      className={styles.container}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       <div className={styles.libraryHeader}>
         <span className={styles.libraryTitle}>{library?.name || (typeof library?.fileId === 'string' ? library.fileId : library?.fileId?.name)}</span>
         <div className={styles.headerActions}>
-          <Button
-            className={styles.addButton}
-            appearance="subtle"
-            size="small"
-            icon={<FolderRegular />}
-            title={t('library.symbolFolders')}
-            onClick={() => setShowFolders(true)}
-            disabled={library.readOnly}
-          />
           <Button
             className={styles.addButton}
             appearance="subtle"
@@ -365,7 +349,10 @@ export const EditLibraryView: React.FunctionComponent<EditLibraryViewProps> = (
             onClick={() => props.dispatch(actionAddLibrarySymbol())}
             title={t('library.newSymbol')}
           >
-            <span className={styles.buttonText} data-expanding-text="true">
+            <span
+              className={styles.buttonText}
+              data-expanding-text="true"
+            >
               {t('library.new')}
             </span>
           </Button>
@@ -386,129 +373,74 @@ export const EditLibraryView: React.FunctionComponent<EditLibraryViewProps> = (
 
       <div className={styles.treeContainer}>
         <ul className={styles.treeList}>
-          <SymbolFolderTree
-            library={library}
-            entries={filteredNames}
-            filter={normalizedFilter}
-            activeFolder={props.editSymbol?.folder}
-            renderEntries={(entries) =>
-              entries.map((n) => (
-                <li
-                  key={n.NameID}
-                  className={mergeClasses(
-                    styles.entryContainer,
-                    props.editSymbol?.NameID === n.NameID && styles.entryActive,
-                  )}
-                  role="button"
-                  aria-pressed={props.editSymbol?.NameID === n.NameID}
-                  onClick={() => props.dispatch(actionEditLibrarySymbol(n))}
-                  onMouseEnter={() => setHoveredId(n.NameID)}
-                  onMouseLeave={() => setHoveredId(null)}
-                >
-                  <div className={styles.symbolHeader}>
-                    <div className={styles.symbolName}>{n.Name}</div>
-                    {n.Description?.length > 0 && (
-                      <div className={styles.symbolDescription}>
-                        {n.Description}
-                      </div>
-                    )}
-                  </div>
-                  {folders.length > 0 && (
-                    <div
-                      onClick={(event) => event.stopPropagation()}
-                      onKeyDown={(event) => event.stopPropagation()}
-                      style={{ marginBottom: '10px' }}
-                    >
-                      <Select
-                        aria-label={t('library.moveSymbolToFolder', {
-                          name: n.Name,
-                        })}
-                        value={n.folder || ''}
-                        disabled={library.readOnly}
-                        onChange={(_, data) =>
-                          props.dispatch({
-                            type: LibraryActionTypes.ChangeSymbolFolders,
-                            change: {
-                              operation: 'move',
-                              nameId: n.NameID,
-                              folder: data.value,
-                            },
-                          })
-                        }
-                      >
-                        <option value="">{t('library.unfiled')}</option>
-                        {folders.map((folder) => (
-                          <option key={folder} value={folder}>
-                            {folder}
-                          </option>
-                        ))}
-                      </Select>
-                    </div>
-                  )}
-                  <div
-                    className={mergeClasses(
-                      styles.previewFrame,
-                      props.editSymbol?.NameID === n.NameID &&
-                        styles.previewFrameActive,
-                    )}
-                  >
-                    <SymbolView
-                      width={400}
-                      height={150}
-                      symbol={library.symbols.find(
-                        (s) => s.SymbolId == n.SymbolID,
-                      )}
-                      name={n}
-                      searchSymbol={null}
-                    />
-                  </div>
-                  {(hoveredId === n.NameID ||
-                    props.editSymbol?.NameID === n.NameID) && (
-                    <div className={styles.actionButtons}>
-                      <Button
-                        className={mergeClasses(
-                          styles.actionButton,
-                          styles.deleteActionButton,
-                        )}
-                        appearance="subtle"
-                        size="small"
-                        icon={<DeleteRegular />}
-                        title={t('library.deleteSymbol')}
-                        onClick={(e: React.MouseEvent) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDelete(n);
-                        }}
-                      />
-                      <Button
-                        className={styles.actionButton}
-                        appearance="subtle"
-                        size="small"
-                        icon={<CopyRegular />}
-                        title={t('library.duplicateSymbol')}
-                        onClick={(e: React.MouseEvent) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDuplicate(n);
-                        }}
-                      />
-                    </div>
-                  )}
-                </li>
-              ))
-            }
-          />
+          {filteredNames.map((n) => (
+            <li
+              key={n.NameID}
+              className={mergeClasses(
+                styles.entryContainer,
+                props.editSymbol?.NameID === n.NameID && styles.entryActive
+              )}
+              role="button"
+              aria-pressed={props.editSymbol?.NameID === n.NameID}
+              onClick={() => props.dispatch(actionEditLibrarySymbol(n))}
+              onMouseEnter={() => setHoveredId(n.NameID)}
+              onMouseLeave={() => setHoveredId(null)}
+            >
+              <div className={styles.symbolHeader}>
+                <div className={styles.symbolName}>{n.Name}</div>
+                {n.Description?.length > 0 && (
+                  <div className={styles.symbolDescription}>{n.Description}</div>
+                )}
+              </div>
+              <div
+                className={mergeClasses(
+                  styles.previewFrame,
+                  props.editSymbol?.NameID === n.NameID && styles.previewFrameActive,
+                )}
+              >
+                <SymbolView
+                  width={400}
+                  height={150}
+                  symbol={library.symbols.find((s) => s.SymbolId == n.SymbolID)}
+                  name={n}
+                  searchSymbol={null}
+                />
+              </div>
+              {(hoveredId === n.NameID || props.editSymbol?.NameID === n.NameID) && (
+                <div className={styles.actionButtons}>
+                  <Button
+                    className={mergeClasses(styles.actionButton, styles.deleteActionButton)}
+                    appearance="subtle"
+                    size="small"
+                    icon={<DeleteRegular />}
+                    title={t('library.deleteSymbol')}
+                    onClick={(e: React.MouseEvent) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDelete(n);
+                    }}
+                  />
+                  <Button
+                    className={styles.actionButton}
+                    appearance="subtle"
+                    size="small"
+                    icon={<CopyRegular />}
+                    title={t('library.duplicateSymbol')}
+                    onClick={(e: React.MouseEvent) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDuplicate(n);
+                    }}
+                  />
+                </div>
+              )}
+            </li>
+          ))}
           {filteredNames.length === 0 && (
             <li className={styles.emptyState}>{t('library.noSymbolsFound')}</li>
           )}
         </ul>
       </div>
-      {showFolders && (
-        <SymbolFoldersDialog
-          library={library}
-          onClose={() => setShowFolders(false)}
-        />
-      )}
     </div>
   );
 };

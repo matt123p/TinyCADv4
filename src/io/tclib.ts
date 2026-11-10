@@ -7,7 +7,6 @@ import {
   tclibLibraryAttributes,
 } from '../model/tclib';
 import { FileIdType } from './files';
-import { getSymbolFolders, symbolFolderPath } from '../model/symbolFolders';
 
 let loadedSQL: SqlJsStatic = null;
 let loadingSQL: Promise<SqlJsStatic> = null;
@@ -124,30 +123,6 @@ function loadTcLibImplementation(
           });
         }
       }
-      const tables = new Set(
-        db
-          .exec("SELECT name FROM sqlite_master WHERE type='table'")[0]
-          ?.values.map((row) => String(row[0])) || [],
-      );
-      if (tables.has('TinyCADSymbolFolder')) {
-        r.symbolFolders = (
-          db.exec('SELECT Path FROM TinyCADSymbolFolder ORDER BY Position')[0]
-            ?.values || []
-        ).map((row) => symbolFolderPath(String(row[0])));
-      }
-      if (tables.has('TinyCADSymbolFolderEntry')) {
-        const assignments = new Map(
-          (
-            db.exec('SELECT NameID, Folder FROM TinyCADSymbolFolderEntry')[0]
-              ?.values || []
-          ).map((row) => [Number(row[0]), symbolFolderPath(String(row[1]))]),
-        );
-        r.names = r.names.map((name) =>
-          assignments.has(name.NameID)
-            ? { ...name, folder: assignments.get(name.NameID) }
-            : name,
-        );
-      }
     } catch (e) {
       reject(normalizeTclibLoadError(e));
       return;
@@ -169,13 +144,12 @@ function loadTcLibImplementation(
 
 export function saveTcLibrary(library: tclib): Promise<ArrayBuffer> {
   if (library.readOnly)
-    return Promise.reject(new Error('Bundled libraries are read-only.'));
+    return Promise.reject(new Error('Standard libraries are read-only.'));
   return getSql().then(() => saveTcLibImplementation(library));
 }
 
 function saveTcLibImplementation(library: tclib): Promise<ArrayBuffer> {
   return new Promise((resolve) => {
-    const folders = getSymbolFolders(library);
     let db: Database;
     db = new loadedSQL.Database();
 
@@ -202,28 +176,6 @@ function saveTcLibImplementation(library: tclib): Promise<ArrayBuffer> {
         [SymbolID] INTEGER PRIMARY KEY,
         [Data] BLOB
       )`);
-
-    if (folders.length > 0) {
-      db.exec(
-        'CREATE TABLE TinyCADSymbolFolder (Path TEXT PRIMARY KEY, Position INTEGER NOT NULL)',
-      );
-      db.exec(
-        'CREATE TABLE TinyCADSymbolFolderEntry (NameID INTEGER PRIMARY KEY, Folder TEXT NOT NULL)',
-      );
-      const folderStatement = db.prepare(
-        'INSERT INTO TinyCADSymbolFolder VALUES (?, ?)',
-      );
-      folders.forEach((folder, index) => folderStatement.run([folder, index]));
-      folderStatement.free();
-      const assignmentStatement = db.prepare(
-        'INSERT INTO TinyCADSymbolFolderEntry VALUES (?, ?)',
-      );
-      library.names.forEach((name) => {
-        if (name.folder)
-          assignmentStatement.run([name.NameID, symbolFolderPath(name.folder)]);
-      });
-      assignmentStatement.free();
-    }
 
     // Write the data from library in to the database tables
     const stmtNames = db.prepare(

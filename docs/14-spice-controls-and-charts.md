@@ -1,6 +1,6 @@
 # Sources, probes and charts
 
-The toolbar **SPICE** menu offers **Simulate** and chart visibility controls.
+The toolbar **Simulation** menu offers **Simulate** and chart visibility controls.
 Its **SPICE** sub-menu contains **Insert Probe**, **Insert Source**,
 **Insert Ground**, differential/current probes and controlled sources.
 Its **Lab Equipment** sub-menu contains the oscilloscope, multimeter,
@@ -80,7 +80,7 @@ also offer a PNG image download. Probe and source-preview charts provide CSV too
 
 The right-hand **Simulation charts** panel is available in browser and Electron.
 It opens for simulation drawings and automatically adds a chart for each probe.
-Without probes, a simulation setup gets an output chart. **SPICE → Show charts**
+Without probes, a simulation setup gets an output chart. **Simulation → Show charts**
 opens the panel again after it is hidden. Drag its left edge to resize it.
 
 Choose a simulation setup and acquisition, then use **Run** or **Stop** without

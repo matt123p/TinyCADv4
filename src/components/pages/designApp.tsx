@@ -20,6 +20,7 @@ import { ResizeHandle } from '../panel/ResizeHandle';
 import { Browser } from '../sheets/browser';
 import { tclibLibraryEntry } from '../../model/tclib';
 import { BrowserSheetData } from '../../model/dsnView';
+import type { StandardLibraryNavigation } from '../../state/actions/libraryActions';
 
 const SimulationSheet = lazy(() =>
   import('../simulation/SimulationSheet').then((m) => ({
@@ -51,6 +52,7 @@ const useStyles = makeStyles({
 });
 
 export interface DesignAppProps {
+  standardLibraryNavigation?: StandardLibraryNavigation;
   simulationPanelActivated?: boolean;
   selectedSpiceControl?: boolean;
   simulationSheet: boolean;
@@ -113,6 +115,10 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200);
   const [simulationToolbarTarget, setSimulationToolbarTarget] =
     useState<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (props.standardLibraryNavigation) setSidePanelVisible(true);
+  }, [props.standardLibraryNavigation]);
 
   const toggleSidePanel = useCallback(() => {
     setSidePanelVisible((prev) => !prev);

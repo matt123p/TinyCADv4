@@ -4,6 +4,14 @@ Prepared **10 November 2026**, from the ten GCSE, A-level, BTEC and degree catal
 
 Start with **[library-manifest.json](library-manifest.json)**. This single self-contained JSON collection contains ten independent libraries, all experiment descriptions/references, and the full symbol records. Another application does not need to scrape the Markdown documents.
 
+## Artwork selection before bundling
+
+Use the **[shared symbol reviewer](SELECTION.md)** to choose artwork once per canonical type. It starts with 35 SPICE-based artwork assignments from the corrected SPICE bundle, six native editor features and 71 types needing a decision. SQL candidates are compared against SPICE references at a common drawing scale, and choices are recorded in [symbol-choices.json](symbol-choices.json) for all overlapping course bundles. The [selection rules](selection-rules.json) cover pin contracts, grid alignment, lead/body size and drawing style. Course bundles will be built after this shared selection is complete.
+
+```sh
+npm run symbols:review -- --sql '../sql/tinycad1_prod(1).sql'
+```
+
 ## Files
 
 | File | Purpose |

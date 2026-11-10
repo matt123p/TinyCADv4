@@ -18,7 +18,7 @@ npm run libraries:sql -- build --sql '../sql/tinycad1_prod(1).sql' --recipe libr
 npm run libraries:sql -- build --sql /path/components.sql --recipe library-recipes/my-library.json --output bundled-libraries/my-library.tclib
 ```
 
-The builder reads literal `INSERT ... (columns) VALUES ...` records for `symbol`, `symbolname`, `symbolattribute`, and the author ID/username lookup. It handles MySQL string escapes, multiline XML, comments, multiple rows, and binary hex literals. SQL expressions and unsupported insert forms in those tables fail explicitly. Other statements are ignored. Output contains only selected drawings, attributes, folders, and component provenance; account email addresses, login keys, and unrelated records are not included.
+The builder reads literal `INSERT ... (columns) VALUES ...` records for `symbol`, `symbolname`, `symbolattribute`, and the author ID/username lookup. It handles MySQL string escapes, multiline XML, comments, multiple rows, and binary hex literals. SQL expressions and unsupported insert forms in those tables fail explicitly. Other statements are ignored. Output contains only selected drawings, attributes, and component provenance; account email addresses, login keys, and unrelated records are not included.
 
 ## Recipe format
 
@@ -38,7 +38,6 @@ The complete working example is [spice.json](../library-recipes/spice.json). A s
       "source": { "nameId": 9496 },
       "spiceFrom": { "author": "aryajur", "nameId": 9964 },
       "name": "Resistor",
-      "folder": "Passive/Resistors",
       "attributeRenames": { "NAME": "Value" },
       "attributes": { "Value": { "value": "1k", "show": 0 } }
     }
@@ -67,7 +66,6 @@ Optional component fields:
 | Field | Meaning |
 | --- | --- |
 | `name`, `description`, `reference` | Override the source display name, description, or reference prefix, e.g. `R?`. |
-| `folder` | Slash-separated symbol folder path inside the library. Parents are created automatically. |
 | `showName`, `showRef` | Display modes: `0` always, `1` default hidden, `2` never, `3` value plus extra text, `4` name/value when nonempty, `5` name/value, `6` value when nonempty. |
 | `spiceFrom` | A second source selector. Merges its attributes over the original attributes, excluding `Reference` and `Package`. Specify its author explicitly when different from the recipe author. |
 | `removeAttributes` | Attribute names to remove after merging. |
@@ -79,7 +77,7 @@ Optional component fields:
 | `polygons` | Mirror a polygon's local points: `{ "at": [58, 49.4], "mirror": "x" }` or `"y"`. Arc polygons are rejected. |
 | `notes` | Reason for adaptations, retained in provenance. |
 
-Pin corrections select a single pin by `at: [x,y]`, `matchNumber`, and/or `matchName`. They can set `number`, `name`, `electrical`, `position: [x,y]`, and `length`, or set `remove: true`. Positions use XML millimetres; pin lengths are nonnegative integer drawing units (five per millimetre). Selection must match exactly one pin. Duplicate or missing terminal numbers within a part are rejected, so repairs are explicit and reviewable in the recipe.
+Pin corrections select a single pin by `at: [x,y]`, `matchNumber`, and/or `matchName`. They can set `number`, `name`, `electrical`, `position: [x,y]`, `length`, and `show` (`0` hidden, `1` name, `2` number, `3` both), or set `remove: true`. Positions use XML millimetres; pin lengths are nonnegative integer drawing units (five per millimetre). Selection must match exactly one pin. Duplicate or missing terminal numbers within a part are rejected, so repairs are explicit and reviewable in the recipe.
 
 Geometry edits also require exactly one matching primitive. For example, this recenters a rectangle without moving any pins:
 
@@ -95,9 +93,11 @@ Geometry edits also require exactly one matching primitive. For example, this re
 
 `requireSpice` checks `%()` / `@()` pin references and `$()` attribute references in `$$SPICE`, `$$SPICE_PROLOG`, and `$$SPICE_EPILOG`. It does not validate electrical behavior; simulate new models separately.
 
+`resistorStyle: "us"` replaces the standard European 2 × 5.2 mm resistor rectangle with a centrally symmetric zigzag of the same envelope. It preserves pins, leads, decorations and attributes, and fails if the expected base body is absent or ambiguous. The SPICE recipe applies it to copies of its resistor, potentiometer and trimmer recipes. `baseSymbol` records the European recipe ID in the transformation provenance.
+
 ## Output and registration
 
-The builder writes a SQLite `.tclib` and adjacent `.provenance.json`. Identical drawings are deduplicated; symbol folders are embedded using the library's folder tables. The report records selected source IDs and usernames, source/drawing/recipe hashes, pin changes, notes, and references. The same provenance is embedded in `TinyCADBundleInfo`. Rebuilding with identical source, recipe, and dependencies produces identical bytes.
+The builder writes a SQLite `.tclib` and adjacent `.provenance.json`. Identical drawings are deduplicated, and the symbol list is flat. The report records selected source IDs and usernames, source/drawing/recipe hashes, pin changes, notes, and references. The same provenance is embedded in `TinyCADBundleInfo`. Rebuilding with identical source, recipe, and dependencies produces identical bytes.
 
 Add the output to [bundled-libraries/config.json](../bundled-libraries/config.json), then run `npm run libraries:package`. Normal browser and Electron builds also package the catalog automatically. See [bundled-libraries.md](bundled-libraries.md) for catalog details. Keep the generated library and report in source control; end users do not need the SQL dump or extraction tool.
 
@@ -107,4 +107,4 @@ npm run test:spice
 NGSPICE_BIN=ngspice npm run test:spice
 ```
 
-Tests use synthetic SQL and the checked-in bundle, so they do not need the private dump. They cover parser escapes, recipe guards, reproducibility, provenance, folders, actual placement and replacement, hidden SPICE fields, drawing save/load, and netlist expansion. Optional ngspice tests simulate every entry and check the 741 follower's transient response.
+Tests use synthetic SQL and the checked-in bundle, so they do not need the private dump. They cover parser escapes, recipe guards, reproducibility, provenance, flat library output, actual placement and replacement, hidden SPICE fields, drawing save/load, and netlist expansion. Optional ngspice tests simulate every entry and check the 741 follower's transient response.

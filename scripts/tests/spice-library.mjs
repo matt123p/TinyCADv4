@@ -17,6 +17,7 @@ import {
 } from '../lib/library-from-sql.mjs';
 import { runRegression } from './run-regression.mjs';
 import { checkSpiceGeometry } from './spice-geometry.mjs';
+import { checkSpiceComponents } from './spice-components.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const literals = [
@@ -76,7 +77,6 @@ const recipe = {
     {
       id: 'r',
       source: { nameId: 1 },
-      folder: 'Passive/Resistors',
       attributes: { Value: { value: '1k', show: 0 } },
     },
   ],
@@ -86,7 +86,9 @@ assert.throws(
   () => buildLibraryModel(fixture, { ...recipe, pinGrid: 3 }, 'fixture-hash'),
   /Off-grid/,
 );
-assert.deepEqual(built.library.symbolFolders, ['Passive', 'Passive/Resistors']);
+assert.equal(Object.hasOwn(built.library, 'symbolFolders'), false);
+assert.equal(Object.hasOwn(built.library.names[0], 'folder'), false);
+assert.equal(Object.hasOwn(built.provenance.entries[0], 'folder'), false);
 assert.ok(!JSON.stringify(built).includes('private@example.invalid'));
 assert.ok(!JSON.stringify(built).includes('SECRET'));
 assert.deepEqual(
@@ -178,15 +180,21 @@ const lib = {
   })),
 };
 checkSpiceGeometry(lib);
+await checkSpiceComponents(lib);
 const selection = JSON.parse(
   await readFile(path.join(root, 'library-recipes/spice.json'), 'utf8'),
 );
-assert.equal(lib.names.length, 33);
+assert.equal(lib.names.length, 36);
 assert.deepEqual(
   lib.names.map((n) => n.Name),
   selection.components.map((c) => c.name),
 );
-assert.equal(rows('select * from TinyCADSymbolFolderEntry').length, 33);
+assert.equal(
+  rows(
+    "select name from sqlite_master where name IN ('TinyCADSymbolFolder', 'TinyCADSymbolFolderEntry')",
+  ).length,
+  0,
+);
 const provenance = JSON.parse(
   await readFile(
     path.join(root, 'bundled-libraries/spice/spice.provenance.json'),
@@ -260,11 +268,11 @@ checkSpicePlacement(${JSON.stringify(lib)}, ${JSON.stringify(exportFile)});
       }
     }
     console.log(
-      'ngspice simulation passed for all 33 entries, including 741 follower transient behavior.',
+      'ngspice simulation passed for all 36 entries, including 741 follower transient behavior.',
     );
   }
   console.log(
-    'SQL parsing, recipe guards, deterministic generation, provenance, folder coverage, and SPICE regressions passed.',
+    'SQL parsing, recipe guards, deterministic generation, provenance, flat library output, and SPICE regressions passed.',
   );
 } finally {
   await rm(directory, { recursive: true, force: true });

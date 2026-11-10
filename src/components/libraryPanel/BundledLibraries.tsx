@@ -1,85 +1,79 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import { Button, Select, makeStyles, tokens } from '@fluentui/react-components';
 import {
-  Button,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogBody,
-  DialogContent,
-  DialogSurface,
-  DialogTitle,
-  makeStyles,
-  tokens,
-} from '@fluentui/react-components';
-import { bundledLibraries } from '../../io/bundledLibraries';
+  BUNDLED_LIBRARY_PREFIX,
+  bundledLibraries,
+} from '../../io/bundledLibraries';
 import { LibraryActionTypes } from '../../state/actions/libraryActions';
-import type { BundledLibraryEntry } from '../../../shared/bundledLibraries';
 import type { tclib } from '../../model/tclib';
 
 const useStyles = makeStyles({
   section: {
-    padding: '8px 4px',
-    borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
-    flexShrink: 0,
-    maxHeight: '60%',
-    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+    overflow: 'hidden',
   },
   header: {
+    display: 'flex',
+    flexDirection: 'column',
+    flexShrink: 0,
+    gap: '8px',
+    padding: '8px 12px',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+    backgroundColor: tokens.colorNeutralBackground1,
+  },
+  headerRow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '8px',
-    padding: '0 8px',
   },
+  title: {
+    fontSize: '11px',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    color: tokens.colorNeutralForeground3,
+  },
+  picker: { width: '100%', minWidth: 0 },
+  description: {
+    margin: 0,
+    fontSize: tokens.fontSizeBase200,
+    lineHeight: tokens.lineHeightBase200,
+    color: tokens.colorNeutralForeground2,
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: 2,
+    overflow: 'hidden',
+    overflowWrap: 'anywhere',
+  },
+  libraries: { flex: 1, minHeight: 0, overflowY: 'auto', padding: '8px 4px' },
   hint: {
     margin: '6px 8px',
     fontSize: tokens.fontSizeBase200,
     color: tokens.colorNeutralForeground2,
   },
-  folder: { marginLeft: '12px' },
-  folderTitle: { padding: '6px 4px', cursor: 'pointer', fontWeight: 600 },
-  entry: { margin: '8px 0' },
-  description: { marginLeft: '32px', color: tokens.colorNeutralForeground2 },
   error: {
     margin: '6px 8px',
     color: tokens.colorStatusDangerForeground1,
     overflowWrap: 'anywhere',
   },
-  content: { maxHeight: '60vh', overflowY: 'auto' },
 });
-
-interface Folder {
-  name: string;
-  folders: Map<string, Folder>;
-  entries: BundledLibraryEntry[];
-}
-
-function libraryTree(entries: BundledLibraryEntry[]): Folder {
-  const root: Folder = { name: '', folders: new Map(), entries: [] };
-  for (const entry of entries) {
-    let folder = root;
-    for (const name of entry.folder?.split('/') || []) {
-      if (!folder.folders.has(name))
-        folder.folders.set(name, { name, folders: new Map(), entries: [] });
-      folder = folder.folders.get(name)!;
-    }
-    folder.entries.push(entry);
-  }
-  return root;
-}
 
 export function BundledLibraries(props: {
   visible: boolean;
-  findFilter: string;
+  toolbarActions?: React.ReactNode;
   renderLibraries(libraries: tclib[]): React.ReactNode;
 }) {
   const styles = useStyles();
   const { t } = useTranslation();
   const dispatch = useDispatch();
+  const descriptionId = useId();
   const [snapshot, setSnapshot] = useState(bundledLibraries.getSnapshot);
-  const [open, setOpen] = useState(false);
   useEffect(() => {
     const update = () => {
       const next = bundledLibraries.getSnapshot();
@@ -97,91 +91,55 @@ export function BundledLibraries(props: {
 
   if (!props.visible) return null;
 
-  const renderTree = (folder: Folder, chooser: boolean): React.ReactNode => (
-    <>
-      {[...folder.folders.values()].map((child) => (
-        <details
-          key={child.name}
-          className={styles.folder}
-          open={chooser || !!props.findFilter || undefined}
-        >
-          <summary className={styles.folderTitle}>{child.name}</summary>
-          {renderTree(child, chooser)}
-        </details>
-      ))}
-      {folder.entries.map((entry) => {
-        const selected = snapshot.selected.includes(entry.id);
-        const loadError = Object.prototype.hasOwnProperty.call(
-          snapshot.errors,
-          entry.id,
-        )
-          ? snapshot.errors[entry.id]
-          : undefined;
-        const library = snapshot.libraries.find(
-          (lib) => lib.fileId === 'bundled:' + entry.id,
-        );
-        return (
-          <div key={entry.id} className={chooser ? styles.entry : undefined}>
-            {chooser ? (
-              <>
-                <Checkbox
-                  label={entry.name}
-                  checked={selected}
-                  disabled={snapshot.saving}
-                  onChange={(_, data) =>
-                    void bundledLibraries.select(
-                      data.checked
-                        ? [...snapshot.selected, entry.id]
-                        : snapshot.selected.filter((id) => id !== entry.id),
-                    )
-                  }
-                />
-                {entry.description && (
-                  <div className={styles.description}>{entry.description}</div>
-                )}
-              </>
-            ) : library ? (
-              props.renderLibraries([library])
-            ) : (
-              <div className={styles.hint}>{entry.name}</div>
-            )}
-            {snapshot.loading.includes(entry.id) && (
-              <div role="status" className={styles.hint}>
-                {t('library.bundledLoading')}
-              </div>
-            )}
-            {loadError && (
-              <div role="alert" className={styles.error}>
-                {loadError}{' '}
-                <Button
-                  size="small"
-                  onClick={() => {
-                    void bundledLibraries.load(entry.id);
-                  }}
-                >
-                  {t('library.bundledRetry')}
-                </Button>
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </>
-  );
-
   const entries = snapshot.catalog?.libraries || [];
-  const selected = entries.filter((entry) =>
-    snapshot.selected.includes(entry.id),
-  );
+  const selected = entries.find((entry) => entry.id === snapshot.selected[0]);
+  const library =
+    selected &&
+    snapshot.libraries.find(
+      (lib) => lib.fileId === BUNDLED_LIBRARY_PREFIX + selected.id,
+    );
+  const loadError =
+    selected &&
+    Object.prototype.hasOwnProperty.call(snapshot.errors, selected.id)
+      ? snapshot.errors[selected.id]
+      : undefined;
+
   return (
     <section className={styles.section} aria-label={t('library.bundledTitle')}>
       <div className={styles.header}>
-        <strong>{t('library.bundledTitle')}</strong>
-        <Button size="small" onClick={() => setOpen(true)}>
-          {t('library.bundledChoose')}
-        </Button>
+        <div className={styles.headerRow}>
+          <span className={styles.title}>{t('library.libraries')}</span>
+          {props.toolbarActions}
+        </div>
+        <Select
+          className={styles.picker}
+          aria-label={t('library.bundledChooseTitle')}
+          aria-describedby={selected?.description ? descriptionId : undefined}
+          value={selected?.id || ''}
+          disabled={
+            !snapshot.catalog || entries.length === 0 || snapshot.saving
+          }
+          onChange={(_, data) => {
+            void bundledLibraries.select(data.value ? [data.value] : []);
+          }}
+        >
+          <option value="">{t('library.bundledNoneSelected')}</option>
+          {entries.map((entry) => (
+            <option key={entry.id} value={entry.id}>
+              {entry.name}
+            </option>
+          ))}
+        </Select>
+        {selected?.description && (
+          <p
+            id={descriptionId}
+            className={styles.description}
+            title={selected.description}
+          >
+            {selected.description}
+          </p>
+        )}
       </div>
-      <p className={styles.hint}>{t('library.bundledReadOnly')}</p>
       {snapshot.error && (
         <div role="alert" className={styles.error}>
           {snapshot.error}{' '}
@@ -197,40 +155,39 @@ export function BundledLibraries(props: {
           )}
         </div>
       )}
-      {selected.length > 0 ? (
-        renderTree(libraryTree(selected), false)
-      ) : (
-        <p className={styles.hint}>{t('library.bundledNoneSelected')}</p>
-      )}
-      <Dialog open={open} onOpenChange={(_, data) => setOpen(data.open)}>
-        <DialogSurface>
-          <DialogBody>
-            <DialogTitle>{t('library.bundledChooseTitle')}</DialogTitle>
-            <DialogContent className={styles.content}>
-              <p>{t('library.bundledExplanation')}</p>
-              {!snapshot.catalog ? (
-                <p role="status">
-                  {snapshot.error || t('library.bundledLoading')}
-                </p>
-              ) : entries.length === 0 ? (
-                <p>{t('library.bundledEmpty')}</p>
-              ) : (
-                renderTree(libraryTree(entries), true)
-              )}
-              {snapshot.error && snapshot.catalog && (
-                <p role="alert" className={styles.error}>
-                  {snapshot.error}
-                </p>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button appearance="primary" onClick={() => setOpen(false)}>
-                {t('common.close')}
-              </Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
+      <div className={styles.libraries}>
+        {selected ? (
+          <>
+            {library && props.renderLibraries([library])}
+            {snapshot.loading.includes(selected.id) && (
+              <p role="status" className={styles.hint}>
+                {t('library.bundledLoading')}
+              </p>
+            )}
+            {loadError && (
+              <div role="alert" className={styles.error}>
+                {loadError}{' '}
+                <Button
+                  size="small"
+                  onClick={() => {
+                    void bundledLibraries.load(selected.id);
+                  }}
+                >
+                  {t('library.bundledRetry')}
+                </Button>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className={styles.hint}>
+            {t(
+              entries.length === 0 && snapshot.catalog
+                ? 'library.bundledEmpty'
+                : 'library.bundledNoneSelected',
+            )}
+          </p>
+        )}
+      </div>
     </section>
   );
 }

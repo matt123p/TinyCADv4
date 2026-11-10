@@ -1,7 +1,7 @@
 # Circuit Explorer
 
 Circuit Explorer is in the right-hand chart panel in both browser and Electron.
-Use **SPICE → Show charts** if the panel is hidden. Choose a Simulation setup at
+Use **Simulation → Show charts** if the panel is hidden. Choose a Simulation setup at
 the top; its analysis settings still live on the Simulation sheet. You can keep
 the schematic visible throughout tuning, measurement and comparison.
 

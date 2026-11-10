@@ -17,12 +17,8 @@ import { registerBundledLibraries } from '../../electron/bundledLibraries.js';
 
 const require = createRequire(import.meta.url);
 const model = loadComponent('src/model/tclib.ts', {});
-const symbolFolders = loadComponent('src/model/symbolFolders.ts', {
-  '../../shared/bundledLibraries': validation,
-});
 const managerModule = loadComponent('src/io/bundledLibraries.ts', {
   '../model/tclib': model,
-  '../model/symbolFolders': symbolFolders,
   '../../shared/bundledLibraries': validation,
 });
 const { BundledLibraryManager } = managerModule;
@@ -33,13 +29,11 @@ const catalog = {
       id: 'passives',
       name: 'Passives',
       path: 'standard/passives.tclib',
-      folder: 'Standard/Discrete',
     },
     {
       id: 'connectors',
       name: 'Connectors',
       path: 'connectors.tclib',
-      folder: 'Standard',
     },
   ],
 };
@@ -83,13 +77,6 @@ assert.throws(() =>
     libraries: [catalog.libraries[0], catalog.libraries[0]],
   }),
 );
-assert.throws(() =>
-  validation.parseBundledLibraryCatalog({
-    version: 1,
-    libraries: [{ ...catalog.libraries[0], folder: 'a//b' }],
-  }),
-);
-
 const loads = [];
 let saved = [];
 let failWrite = false;
@@ -121,6 +108,21 @@ assert.equal(manager.getSnapshot().libraries[0].readOnly, true);
 assert.equal(manager.getSnapshot().libraries[0].fileId, 'bundled:passives');
 await manager.load('passives');
 assert.equal(loads.length, 1, 'an already loaded library is not loaded again');
+await manager.select(['connectors']);
+assert.deepEqual(manager.getSnapshot().selected, ['connectors']);
+assert.deepEqual(
+  manager.getSnapshot().libraries.map((lib) => lib.fileId),
+  ['bundled:connectors'],
+  'switching standard libraries must release the previous library',
+);
+await manager.select(['passives', 'connectors']);
+assert.equal(
+  manager.getSnapshot().selected.length,
+  1,
+  'a selection can contain at most one standard library',
+);
+assert.equal(manager.getSnapshot().libraries.length, 1);
+assert.equal(saved.length, 1, 'only one standard library is persisted');
 await manager.select([]);
 assert.equal(
   manager.getSnapshot().libraries.length,
@@ -152,6 +154,20 @@ assert.deepEqual(
   ['passives'],
   'restart restores only valid selected libraries',
 );
+saved = ['passives', 'connectors'];
+loads.length = 0;
+const restoredMultiple = new BundledLibraryManager(source);
+await restoredMultiple.initialize();
+assert.deepEqual(
+  loads,
+  ['passives'],
+  'restoring multiple old choices must load only one standard library',
+);
+assert.deepEqual(
+  saved,
+  ['passives'],
+  'restoring a selection persists only the active library',
+);
 
 const pending = [];
 const racing = new BundledLibraryManager({
@@ -176,6 +192,32 @@ pending[1](library);
 await second;
 assert.equal(racing.getSnapshot().libraries.length, 1);
 
+const switchedLoads = new Map();
+const switching = new BundledLibraryManager({
+  ...source,
+  selection: async () => [],
+  load: (entry) =>
+    new Promise((resolve) => switchedLoads.set(entry.id, resolve)),
+});
+await switching.initialize();
+const oldLoad = switching.select(['passives']);
+await new Promise((resolve) => setImmediate(resolve));
+const newLoad = switching.select(['connectors']);
+await new Promise((resolve) => setImmediate(resolve));
+switchedLoads.get('passives')(library);
+await oldLoad;
+assert.equal(
+  switching.getSnapshot().libraries.length,
+  0,
+  'the previous library cannot reappear after switching',
+);
+switchedLoads.get('connectors')(library);
+await newLoad;
+assert.deepEqual(
+  switching.getSnapshot().libraries.map((lib) => lib.fileId),
+  ['bundled:connectors'],
+);
+
 let catalogAttempts = 0;
 const recovery = new BundledLibraryManager({
   ...source,
@@ -199,7 +241,6 @@ const sqlite = loadComponent('src/io/tclib.ts', {
   'sql.js/dist/sql-wasm.js': (options) => initSqlJs({ ...options, wasmBinary }),
   'url:sql.js/dist/sql-wasm.wasm': '',
   '../model/tclib': model,
-  '../model/symbolFolders': symbolFolders,
 });
 const bytes = await sqlite.saveTcLibrary({
   ...library,
@@ -230,169 +271,6 @@ const decoded = await sqlite.loadTcLibrary(
   bytes,
 );
 assert.equal(decoded.names[0].Name, 'Test resistor');
-assert.equal(
-  decoded.symbolFolders,
-  undefined,
-  'legacy flat libraries need no folder tables',
-);
-
-const organized = {
-  ...decoded,
-  symbolFolders: ['Passive/Resistors', 'Semiconductor', 'Empty'],
-  names: [
-    { ...decoded.names[0], folder: 'Passive/Resistors' },
-    { ...decoded.names[0], NameID: 2, Name: 'Diode', folder: 'Semiconductor' },
-    { ...decoded.names[0], NameID: 3, Name: 'Unfiled symbol' },
-  ],
-};
-const organizedBytes = await sqlite.saveTcLibrary(organized);
-const organizedLoaded = await sqlite.loadTcLibrary(
-  'organized',
-  'Organized',
-  null,
-  organizedBytes,
-);
-assert.deepEqual(
-  organizedLoaded.names.map((name) => name.folder),
-  ['Passive/Resistors', 'Semiconductor', undefined],
-);
-assert.ok(
-  organizedLoaded.symbolFolders.includes('Empty'),
-  'empty folders survive SQLite round trips',
-);
-assert.equal(
-  organizedLoaded.symbols[0].Data,
-  decoded.symbols[0].Data,
-  'folder metadata must not alter symbol data',
-);
-const {
-  changeSymbolFolders,
-  getSymbolFolders,
-  symbolFolderTree,
-  applyBundledSymbolFolders,
-} = symbolFolders;
-const renamed = changeSymbolFolders(organized, {
-  operation: 'rename',
-  previous: 'Passive',
-  folder: 'Discrete',
-});
-assert.equal(renamed.names[0].folder, 'Discrete/Resistors');
-assert.ok(getSymbolFolders(renamed).includes('Discrete'));
-const removed = changeSymbolFolders(renamed, {
-  operation: 'remove',
-  folder: 'Discrete/Resistors',
-});
-assert.equal(
-  removed.names[0].folder,
-  'Discrete',
-  'removing a subfolder keeps symbols in its parent',
-);
-assert.equal(removed.names.length, organized.names.length);
-const moved = changeSymbolFolders(removed, {
-  operation: 'move',
-  nameId: 1,
-  folder: '',
-});
-assert.equal(moved.names[0].folder, undefined);
-assert.equal(
-  changeSymbolFolders(
-    { ...organized, readOnly: true },
-    { operation: 'remove', folder: 'Passive' },
-  ).names,
-  organized.names,
-);
-assert.throws(() =>
-  changeSymbolFolders(organized, {
-    operation: 'rename',
-    previous: 'Passive',
-    folder: 'Passive/Recursive',
-  }),
-);
-assert.throws(() =>
-  changeSymbolFolders(organized, { operation: 'create', folder: 'Passive' }),
-);
-assert.throws(() =>
-  changeSymbolFolders(organized, { operation: 'create', folder: '../invalid' }),
-);
-const filteredTree = symbolFolderTree(organized, [organized.names[0]], false);
-assert.equal(filteredTree.folders.has('Semiconductor'), false);
-assert.equal(
-  filteredTree.folders.get('Passive').folders.get('Resistors').entries[0]
-    .NameID,
-  1,
-);
-const overlay = [
-  { path: 'Passive', symbols: ['Test resistor'] },
-  { path: 'Semiconductor', symbols: [2] },
-];
-assert.equal(
-  applyBundledSymbolFolders(organized, overlay).names[0].folder,
-  'Passive',
-);
-assert.equal(
-  organized.names[0].folder,
-  'Passive/Resistors',
-  'catalog assignments must not mutate library data',
-);
-assert.throws(
-  () =>
-    applyBundledSymbolFolders(organized, [
-      { path: 'Missing', symbols: ['No such symbol'] },
-    ]),
-  /Unknown symbol/,
-);
-assert.throws(
-  () =>
-    applyBundledSymbolFolders(organized, [
-      { path: 'A', symbols: [1] },
-      { path: 'B', symbols: ['Test resistor'] },
-    ]),
-  /more than one/,
-);
-const configuredCatalog = {
-  version: 1,
-  libraries: [{ ...catalog.libraries[0], symbolFolders: overlay }],
-};
-assert.deepEqual(
-  validation.parseBundledLibraryCatalog(configuredCatalog).libraries[0]
-    .symbolFolders,
-  overlay,
-);
-assert.throws(() =>
-  validation.parseBundledLibraryCatalog({
-    version: 1,
-    libraries: [
-      {
-        ...catalog.libraries[0],
-        symbolFolders: [{ path: '../bad', symbols: [] }],
-      },
-    ],
-  }),
-);
-const groupedManager = new BundledLibraryManager({
-  ...source,
-  catalog: async () => configuredCatalog,
-  selection: async () => ['passives'],
-  load: async () => organized,
-});
-await groupedManager.initialize();
-assert.equal(
-  groupedManager.getSnapshot().libraries[0].names[0].folder,
-  'Passive',
-);
-assert.equal(groupedManager.getSnapshot().libraries[0].readOnly, true);
-const { updateLibrary } = loadComponent('src/manipulators/updateLibrary.ts', {
-  'immutability-helper': require('immutability-helper'),
-});
-assert.equal(
-  new updateLibrary(organized).duplicateLibrarySymbol(1).name.folder,
-  'Passive/Resistors',
-);
-assert.equal(
-  new updateLibrary(organized).addNewLibrarySymbol('Semiconductor').names.at(-1)
-    .folder,
-  'Semiconductor',
-);
 await assert.rejects(
   () => sqlite.saveTcLibrary({ ...decoded, readOnly: true }),
   /read-only/,
@@ -428,6 +306,24 @@ const { AltStoreReducer } = loadComponent(
   },
 );
 let state = AltStoreReducer(undefined, { type: 'init' });
+const navigation = AltStoreReducer(
+  { ...state, viewLibrary: library },
+  {
+    type: LibraryActionTypes.ShowStandardLibrary,
+    libraryId: 'spice',
+  },
+);
+assert.equal(navigation.viewLibrary, null);
+assert.equal(navigation.panel, 'libraries');
+assert.equal(navigation.standardLibraryNavigation.libraryId, 'spice');
+assert.equal(
+  AltStoreReducer(navigation, {
+    type: LibraryActionTypes.ShowStandardLibrary,
+    libraryId: 'spice',
+  }).standardLibraryNavigation.request,
+  navigation.standardLibraryNavigation.request + 1,
+  'More can reopen the panel repeatedly',
+);
 const bundled = { ...decoded, readOnly: true };
 state = AltStoreReducer(state, {
   type: LibraryActionTypes.SetBundledLibraries,
@@ -466,7 +362,6 @@ const { DocStoreReducer } = loadComponent(
     '../../io/ioXml': { blank: () => ({ sheets: [] }) },
     '../../manipulators/updateView': { updateView: class {} },
     '../../manipulators/updateDrawing': { updateDrawing: class {} },
-    '../../model/symbolFolders': symbolFolders,
   },
 );
 const documentState = {
@@ -480,48 +375,6 @@ assert.equal(
   }),
   documentState,
   'read-only library must not replace the active document',
-);
-const editing = {
-  ...documentState,
-  editLibrary: organized,
-  editSymbol: { ...organized.names[0], Description: 'Unsaved metadata' },
-  drawingVersion: 7,
-};
-const folderAction = {
-  type: LibraryActionTypes.ChangeSymbolFolders,
-  change: { operation: 'move', nameId: 1, folder: 'Semiconductor' },
-};
-const afterMove = DocStoreReducer(editing, folderAction);
-assert.equal(
-  afterMove.drawing,
-  editing.drawing,
-  'moving a symbol must preserve its unsaved drawing',
-);
-assert.equal(afterMove.editSymbol.Description, 'Unsaved metadata');
-assert.equal(afterMove.editLibrary.names[0].Description, 'Unsaved metadata');
-assert.equal(afterMove.editSymbol.folder, 'Semiconductor');
-assert.equal(
-  afterMove.drawingVersion,
-  8,
-  'folder operations mark the library as needing a save',
-);
-const readonlyState = {
-  ...editing,
-  editLibrary: { ...organized, readOnly: true },
-};
-assert.equal(DocStoreReducer(readonlyState, folderAction), readonlyState);
-const { DocStoreWithHistory } = loadComponent('src/state/undo/undo.ts', {
-  'redux-undo': (reducer, options) => options,
-  '../actions/libraryActions': actionModules['../actions/libraryActions'],
-  '../actions/menuActions': actionModules['../actions/menuActions'],
-  '../actions/symbolActions': actionModules['../actions/symbolActions'],
-});
-assert.equal(
-  DocStoreWithHistory.filter(folderAction, afterMove, {
-    _latestUnfiltered: editing,
-  }),
-  true,
-  'folder edits create undo checkpoints',
 );
 const Dialogue = loadComponent('src/components/dialogues/Dialogue.tsx', {})
   .default.type;
@@ -603,6 +456,14 @@ try {
     /host main frame/,
   );
   await handlers.get('bundled-library-selection')(event, ['passives']);
+  await assert.rejects(
+    () =>
+      handlers.get('bundled-library-selection')(event, [
+        'passives',
+        'connectors',
+      ]),
+    /one standard library/,
+  );
   assert.deepEqual(await handlers.get('bundled-library-selection')(event), [
     'passives',
   ]);
@@ -631,5 +492,5 @@ try {
 }
 
 console.log(
-  'Library checks passed: catalog, packaging, SQLite symbol folders, folder editing and undo, lazy loading, selection persistence, unloading, retries, read-only guards, and desktop IPC.',
+  'Library checks passed: catalog, packaging, flat SQLite libraries, lazy loading, selection persistence, unloading, retries, read-only guards, and desktop IPC.',
 );
