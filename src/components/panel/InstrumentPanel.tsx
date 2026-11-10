@@ -6,6 +6,7 @@ import {
   FluentProvider,
   Input,
   Select,
+  Switch,
   webDarkTheme,
 } from '@fluentui/react-components';
 import { useStore } from 'react-redux';
@@ -356,12 +357,16 @@ export const InstrumentPanel = React.memo(function InstrumentPanel({
           TinyCAD LAB · {ref} · {instrumentNames[c.type]}
         </strong>
         <div style={row}>
-          {c.type !== 'scope' && (
-            <Checkbox
-              label="Student controls"
-              checked={c.student}
-              onChange={(_, d) => change({ student: !!d.checked })}
-            />
+          {(c.type === 'generator' || c.type === 'supply') && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontWeight: c.student ? 600 : 400 }}>Basic</span>
+              <Switch
+                aria-label="Basic - Advanced"
+                checked={!c.student}
+                onChange={(_, d) => change({ student: !d.checked })}
+              />
+              <span style={{ fontWeight: c.student ? 400 : 600 }}>Advanced</span>
+            </div>
           )}
           <Button
             size="small"
