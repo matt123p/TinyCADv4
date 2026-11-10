@@ -116,9 +116,20 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Generate Microsoft Store What's New
+        run: node scripts/msstore-notes.mjs generate .tmp/msstore/whats-new.txt
+
+      - name: Save Microsoft Store Release Notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: microsoft-store-whats-new
+          path: .tmp/msstore/whats-new.txt
+          include-hidden-files: true
+          if-no-files-found: error
+
       - name: Build AppX/MSIX
         # Force build of AppX/MSIX package
-        run: npm run dist -- --win appx
+        run: npm run dist -- --win appx --x64 --arm64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPX_PUBLISHER: ${{ secrets.APPX_PUBLISHER }}
@@ -147,8 +158,33 @@ jobs:
           if ($packages.Count -eq 0) {
             throw "No AppX or MSIX packages found in release folder."
           }
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          foreach ($arch in @('x64', 'arm64')) {
+            $expectedName = "TinyCAD Windows Setup $version-$arch.appx"
+            if (@($packages | Where-Object { $_.Name -eq $expectedName }).Count -ne 1) {
+              throw "Missing required Store package: $expectedName"
+            }
+          }
+          if ($packages.Count -ne 2) {
+            throw "Expected exactly two current-version Store packages; found $($packages.Count)."
+          }
           Write-Host "Publishing $($packages.Count) package(s) from release/..."
-          msstore publish . --inputDirectory release --appId "$env:MICROSOFT_STORE_APP_ID" --verbose
+          # Upload first: publish recreates the draft, so notes must be applied afterwards.
+          msstore publish . --inputDirectory release --appId "$env:MICROSOFT_STORE_APP_ID" --noCommit --verbose
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $draft = msstore submission get "$env:MICROSOFT_STORE_APP_ID"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $draft | Set-Content -Path .tmp/msstore/submission.json -Encoding utf8
+          node scripts/msstore-notes.mjs patch .tmp/msstore/submission.json .tmp/msstore/whats-new.txt .tmp/msstore/submission.updated.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          # Pass the full JSON as a file, avoiding command-line size/quoting limits.
+          msstore submission update "$env:MICROSOFT_STORE_APP_ID" .tmp/msstore/submission.updated.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          msstore submission publish "$env:MICROSOFT_STORE_APP_ID"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          msstore submission poll "$env:MICROSOFT_STORE_APP_ID"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         env:
           MICROSOFT_STORE_APP_ID: ${{ vars.MICROSOFT_STORE_APP_ID }}

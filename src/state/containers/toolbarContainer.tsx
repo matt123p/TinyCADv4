@@ -10,6 +10,7 @@ const mapStateToProps = (state: docDrawing) => {
   const update_view = new updateView();
   return {
     menu_command: view.menu_command,
+    wireMode: view.wireMode ?? '90',
     can_paste: update_view.can_paste(view, sheet),
     can_copy: update_view.can_copy(view, sheet),
     can_cut: update_view.can_copy(view, sheet),

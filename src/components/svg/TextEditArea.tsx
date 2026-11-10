@@ -78,7 +78,22 @@ class TTextEditArea extends React.PureComponent<TextEditAreaProps, {}> {
             whiteSpace: 'pre',
           }}
         >
-          {parsed.segments.map((segment, segIndex) => (
+          {block.sourceRuns ? block.sourceRuns.map((run, runIndex) => (
+            <tspan
+              key={runIndex}
+              style={{
+                fontSize: run.font_size,
+                fontWeight: run.font_bold ? 'bold' : 'normal',
+                fontStyle: run.font_italic ? 'italic' : 'normal',
+                textDecoration: [
+                  run.strike ? 'line-through' : '',
+                  run.underline ? 'underline' : '',
+                ].filter(Boolean).join(' ') || undefined,
+              }}
+            >
+              {block.value.slice(run.start, run.end)}
+            </tspan>
+          )) : parsed.segments.map((segment, segIndex) => (
             <tspan
               key={segIndex}
               style={segment.overline ? { textDecoration: 'overline' } : undefined}
@@ -260,7 +275,8 @@ class TTextEditArea extends React.PureComponent<TextEditAreaProps, {}> {
         ) : null;
     }
 
-    let offsetY = measureTextOffset(getFont(this.props['draw-item']));
+    let offsetY = this.props['draw-data'].textBlocks.some(block => block.sourceRuns)
+      ? 0 : measureTextOffset(getFont(this.props['draw-item']));
 
     const update_textArea = new updateTextData(
       textArea.drawX,

@@ -2,6 +2,8 @@ import { DocItem, Coordinate } from './dsnItem';
 import { dragObject } from '../manipulators/dragObject';
 import { ContextMenuList, MergedStyle } from '../manipulators/updateInterfaces';
 
+export type WireMode = '90' | '45' | 'free';
+
 interface PointToPointPreviewCache {
   start: Coordinate;
   end: Coordinate;
@@ -38,6 +40,9 @@ export interface BrowserSheetData {
 
 
 export interface dsnView {
+  // Editor preference; never written to the design.
+  wireMode?: WireMode;
+
   // Which sheet is visible?
   selected_sheet: number;
 

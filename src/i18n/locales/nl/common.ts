@@ -37,6 +37,11 @@ const common = {
     showSidePanel: 'Zijpaneel tonen',
   },
   toolbar: {
+    wireMode: 'Draadmodus',
+    wireMode90: '90°',
+    wireModeFree: 'Vrij',
+    wireMode45: '45°',
+    wireModeFreeShort: 'Vrij',
     closeBomAria: 'Stuklijst sluiten',
     closeBom: 'Stuklijst sluiten',
     downloadBomAria: 'Stuklijst downloaden',
@@ -285,7 +290,7 @@ const common = {
     about: {
       title: 'Over TinyCAD',
       version: 'Versie',
-      description: 'Een open-sourceprogramma voor schema-opname voor Windows en het web',
+      description: 'Een opensourceprogramma voor het tekenen van schema’s voor Windows, Linux, macOS en het web',
       licenseTitle: 'Licentie (GNU GPL v3)',
     },
     printPreview: {

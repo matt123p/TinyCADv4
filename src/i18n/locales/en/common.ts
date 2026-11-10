@@ -37,6 +37,11 @@ const common = {
     showSidePanel: 'Show side panel',
   },
   toolbar: {
+    wireMode: 'Wire mode',
+    wireMode90: '90°',
+    wireModeFree: 'Free',
+    wireMode45: '45°',
+    wireModeFreeShort: 'Free',
     closeBomAria: 'Close Bill Of Materials',
     closeBom: 'Close BOM',
     downloadBomAria: 'Download Bill Of Materials',
@@ -285,7 +290,7 @@ const common = {
     about: {
       title: 'About TinyCAD',
       version: 'Version',
-      description: 'An open source schematic capture program for Windows and the Web',
+      description: 'An open source schematic capture program for Windows, Linux, macOS and the Web',
       licenseTitle: 'License (GNU GPL v3)',
     },
     printPreview: {

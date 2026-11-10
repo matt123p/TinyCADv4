@@ -178,7 +178,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       touchSvgX: null,
       touchSvgY: null,
       touchDragActive: false,
-      precisionPadButtonVisible: typeof window !== 'undefined' && Boolean(window.matchMedia?.('(any-pointer: coarse)').matches),
+      precisionPadButtonVisible: false,
       isFingerDown: false,
     };
 

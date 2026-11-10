@@ -16,6 +16,5 @@
     "noEmit": true,
     "jsx": "react"
   },
-  "include": ["src"],
-  "typeRoots": ["./node_modules/@types", "./types"]
+  "include": ["src"]
 }

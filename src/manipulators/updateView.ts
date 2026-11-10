@@ -1,4 +1,4 @@
-import { dsnView, FindResult } from '../model/dsnView';
+import { dsnView, FindResult, WireMode } from '../model/dsnView';
 import {
   dsnRectangle,
   DocItemTypes,
@@ -409,6 +409,9 @@ export class updateView {
 
     // The user can cancel with a rbuttondown
     if (event_name === 'rbuttondown') {
+      if (view.add?.NodeName === DocItemTypes.Wire && view.wireMode && view.wireMode !== '90') {
+        return this.cancel_add(view, this.tidy_wires(sheet));
+      }
       if (view.in_add_rect) {
         return this.complete_add(view, sheet);
       } else {
@@ -724,8 +727,30 @@ export class updateView {
     return !!a && !!b && a[0] === b[0] && a[1] === b[1];
   }
 
+  setWireMode(view: dsnView, sheet: dsnSheet, mode: WireMode): dsnView {
+    view = { ...view, wireMode: mode };
+    if (view.menu_command !== 'add_wire') {
+      const idle = this.cancel_add(view, sheet).view;
+      return this.command_add_wire(idle, sheet).view;
+    }
+    // Keep the current anchor when changing modes during a wire preview.
+    if (view.menu_command === 'add_wire' && view.add?.NodeName === DocItemTypes.Wire && view.add.d_points.length) {
+      const points = view.add.d_points;
+      const endpoint = points[points.length - 1];
+      view = {
+        ...view,
+        add: { ...view.add, d_points: mode === '90'
+          ? [points[0], endpoint, endpoint] : [points[0], endpoint] },
+        tracker: { ...view.tracker, _primary_horz: null },
+      };
+      return this.move_add(view, sheet, endpoint).view;
+    }
+    return view;
+  }
+
   click_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
     const updater_add = updateSimpleAddFactory(view.add);
+    if (updater_add instanceof updateWire) updater_add.wireMode = view.wireMode ?? '90';
     const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
     if (updater_add) {
       let dr = updater_add.begin_add(p, view.tracker, snap, sheet.items);
@@ -752,6 +777,7 @@ export class updateView {
   complete_add(view: dsnView, sheet: dsnSheet): viewResult {
     view.tracker.pointToPointPreview = null;
     const update_add = updateSimpleAddFactory(view.add);
+    if (update_add instanceof updateWire) update_add.wireMode = view.wireMode ?? '90';
     if (update_add) {
       let obj = update_add.complete_add();
       sheet = this.tidy_wires(
@@ -793,6 +819,7 @@ export class updateView {
 
   move_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
     const update_add = updateMoveAddFactory(view.add);
+    if (update_add instanceof updateWire) update_add.wireMode = view.wireMode ?? '90';
     const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
     if (update_add) {
       let item = update_add.move_add(p, snap, view.tracker, sheet.items);
@@ -808,6 +835,7 @@ export class updateView {
 
   mousemove_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
     const update_add = updateMoveAddFactory(view.add);
+    if (update_add instanceof updateWire) update_add.wireMode = view.wireMode ?? '90';
     const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
     if (update_add) {
       let dr = update_add.mousemove_add(p, snap, view.tracker, sheet.items);
@@ -825,6 +853,7 @@ export class updateView {
 
   drag_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
     const update_add = updateMoveAddFactory(view.add);
+    if (update_add instanceof updateWire) update_add.wireMode = view.wireMode ?? '90';
     const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
     if (update_add) {
       let item = update_add.drag_add(p, snap, view.tracker, sheet.items);
@@ -840,6 +869,7 @@ export class updateView {
 
   end_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
     const update_add = updateSimpleAddFactory(view.add);
+    if (update_add instanceof updateWire) update_add.wireMode = view.wireMode ?? '90';
     if (update_add) {
       let dr = update_add.end_add(view.tracker, sheet.items);
       view = update(view, {

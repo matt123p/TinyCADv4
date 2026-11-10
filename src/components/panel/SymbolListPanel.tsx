@@ -367,8 +367,8 @@ export const SymbolListPanel: React.FC<SymbolListPanelProps> = ({
                     icon={<ChevronDownRegular />}
                     iconPosition="after"
                     className={styles.filtersMenuButton}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
                   >
                     {t('panel.symbolList.filters')}
                   </Button>
