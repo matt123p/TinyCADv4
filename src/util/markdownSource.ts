@@ -8,7 +8,7 @@ import {
 } from '../model/textArea';
 import { measureText } from './measureText';
 
-const headingScales = [2, 1.5, 1.25, 1, 0.875, 0.85];
+export const markdownHeadingScales = [2, 1.5, 1.25, 1, 0.875, 0.85];
 
 /** Style the original source, including delimiters. No HTML or source rewriting. */
 export function markdownSourceRuns(source: string, base: Text): TextAreaRun[] {
@@ -39,11 +39,13 @@ export function markdownSourceRuns(source: string, base: Text): TextAreaRun[] {
           ? { font_italic: true }
           : token.type === 'del'
           ? { strike: true }
-          : token.type === 'link'
-          ? { underline: true }
           : null;
       if (change) paint(offset, end, change);
-      if ('tokens' in token && Array.isArray(token.tokens)) {
+      if (
+        !['link', 'image'].includes(token.type) &&
+        'tokens' in token &&
+        Array.isArray(token.tokens)
+      ) {
         // Child raw text excludes the outer delimiters; find it without decoding
         // escapes or entities, keeping every editable source offset intact.
         let cursor = 0;
@@ -105,7 +107,7 @@ export function markdownSourceRuns(source: string, base: Text): TextAreaRun[] {
         ? lines[index + 1].index! + lines[index + 1][0].length
         : start + match[0].length;
       paint(start, end, {
-        font_size: base.font_size * headingScales[depth - 1],
+        font_size: base.font_size * markdownHeadingScales[depth - 1],
         font_bold: true,
       });
     }

@@ -8,7 +8,6 @@ import SVGtoPDF from 'svg-to-pdfkit';
 import blobStream from 'blob-stream';
 import { actionSelectDialog } from '../state/dispatcher/AppDispatcher';
 import { openExternalUrl } from '../util/navigation';
-import { rasterizeMarkdown } from './markdownExport';
 
 // Helper function to convert a Blob to base64
 function blobToBase64(blob: Blob): Promise<string> {
@@ -123,7 +122,7 @@ function generatePdfBlob(
           .then((blob) => blob?.arrayBuffer())
           .then((arrayBuffer) => doc.registerFont(font.name, arrayBuffer));
       }),
-    ).then(async () => {
+    ).then(() => {
       for (let si = 0; si < state.docStore.present.drawing.sheets.length; ++si) {
         const sheet = state.docStore.present.drawing.sheets[si];
         const svg = (
@@ -139,12 +138,9 @@ function generatePdfBlob(
         );
 
         const element = document.createElement('div');
-        element.style.cssText = 'position:fixed;left:-100000px;top:0;pointer-events:none';
-        document.body.appendChild(element);
         try {
           render(svg, element);
           const drawing = element.children[0] as SVGElement;
-          await rasterizeMarkdown(drawing);
           doc.addPage({
             size: [
               sheet.details.page_size[0] * units,

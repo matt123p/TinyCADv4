@@ -1,7 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { dsnText } from '../../model/dsnItem';
-import { markdownStyles, renderMarkdown } from '../../util/markdown';
-
+import { layoutMarkdown } from '../../util/markdown';
 interface MarkdownTextProps {
   item: dsnText;
   x: number;
@@ -10,8 +9,7 @@ interface MarkdownTextProps {
   height: number;
   rotated: boolean;
 }
-
-/** HTML layout inside SVG preserves Markdown lists, tables and code indentation. */
+/** Canvas, SVG export and PDF all use these same SVG text and shape elements. */
 function MarkdownText({
   item,
   x,
@@ -20,9 +18,13 @@ function MarkdownText({
   height,
   rotated,
 }: MarkdownTextProps) {
-  const html = useMemo(() => renderMarkdown(item.text), [item.text]);
   const contentWidth = Math.max(0, rotated ? height : width);
   const contentHeight = Math.max(0, rotated ? width : height);
+  const shapes = useMemo(
+    () => layoutMarkdown(item.text, item, contentWidth),
+    [item, contentWidth],
+  );
+  const colour = item.font_colour || 'black';
   return (
     <g
       transform={
@@ -32,31 +34,71 @@ function MarkdownText({
       }
       style={{ pointerEvents: 'none' }}
     >
-      <foreignObject
+      <svg
         width={contentWidth}
         height={contentHeight}
+        overflow="hidden"
         data-markdown="true"
       >
-        <div {...{ xmlns: 'http://www.w3.org/1999/xhtml' }}>
-          <style>{markdownStyles}</style>
-          <div
-            className="tinycad-markdown"
-            style={{
-              width: contentWidth,
-              height: contentHeight,
-              padding: 3,
-              fontFamily: item.font_name,
-              fontSize: item.font_size,
-              fontWeight: item.font_bold ? 'bold' : 'normal',
-              fontStyle: item.font_italic ? 'italic' : 'normal',
-              color: item.font_colour,
-            }}
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
-        </div>
-      </foreignObject>
+        {shapes.map((shape, index) => {
+          switch (shape.kind) {
+            case 'text':
+              return (
+                <text
+                  key={index}
+                  x={shape.x}
+                  y={shape.y}
+                  fill={colour}
+                  fontFamily={item.font_name}
+                  fontSize={shape.size}
+                  fontWeight={shape.bold ? 'bold' : 'normal'}
+                  fontStyle={shape.italic ? 'italic' : 'normal'}
+                  xmlSpace="preserve"
+                  style={{ whiteSpace: 'pre' }}
+                >
+                  {shape.value}
+                </text>
+              );
+            case 'line':
+              return (
+                <line
+                  key={index}
+                  x1={shape.x1}
+                  y1={shape.y1}
+                  x2={shape.x2}
+                  y2={shape.y2}
+                  stroke={colour}
+                  strokeWidth={shape.weight}
+                />
+              );
+            case 'bullet':
+              return (
+                <circle
+                  key={index}
+                  cx={shape.x}
+                  cy={shape.y}
+                  r={shape.radius}
+                  fill={colour}
+                />
+              );
+            case 'rect':
+              return (
+                <rect
+                  key={index}
+                  x={shape.x}
+                  y={shape.y}
+                  width={shape.width}
+                  height={shape.height}
+                  fill={shape.shaded ? colour : 'none'}
+                  fillOpacity={shape.shaded ? 0.08 : 1}
+                  stroke={shape.shaded ? 'none' : colour}
+                  strokeWidth={1}
+                />
+              );
+          }
+        })}
+      </svg>
     </g>
   );
 }
-
 export default memo(MarkdownText);

@@ -69,18 +69,18 @@ app.whenReady().then(async () => {
     fs.writeFileSync(path.join(__dirname,'editor.png'), (await window.webContents.capturePage()).toPNG());
     await window.webContents.executeJavaScript('window.showMarkdownPreview()');
     const svg = await window.webContents.executeJavaScript('window.finishMarkdownChecks()');
-    const png = svg.split('data:image/png;base64,')[1].split('"')[0];
-    fs.writeFileSync(path.join(__dirname,'text-box.png'), Buffer.from(png, 'base64'));
     const pdf = new PDFDocument({compress:false});
+    for (const [name, face] of [['Arial', 'Regular'], ['Arial-Bold', 'Bold'], ['Arial-Italic', 'Italic'], ['Arial-BoldItalic', 'BoldItalic']]) pdf.registerFont(name, path.join(process.cwd(), 'styles/fonts/LiberationSans-' + face + '.ttf'));
     const buffers = [];
     pdf.on('data', chunk => buffers.push(chunk));
     const finished = new Promise(resolve => pdf.on('end', resolve));
     SVGtoPDF(pdf, svg, 0, 0);
     pdf.end(); await finished;
     const data = Buffer.concat(buffers);
-    if (!data.toString('latin1').includes('/Subtype /Image')) throw new Error('PDF is missing the text image');
+    if (data.toString('latin1').includes('/Subtype /Image')) throw new Error('Markdown must not become a PDF image');
+    if (!data.toString('latin1').includes('BT')) throw new Error('PDF must contain native text');
     fs.writeFileSync(path.join(__dirname,'preview.pdf'), data);
-    console.log('Markdown PDF rasterization and PDFKit export checks passed');
+    console.log('Native vector Markdown and PDFKit export checks passed');
     app.exit(0);
   } catch (error) { console.error(error); app.exit(1); }
 });

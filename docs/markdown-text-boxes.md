@@ -1,49 +1,46 @@
-# Markdown text boxes
+# Markdown text boxes — v4.0.11
 
-Drawing text boxes render Markdown. Select the text for editing to see styled source:
-headings, bold, italic, strikethrough and links show their formatting while all
-Markdown markers remain visible and editable. Click away to see the formatted result.
-The original source is saved in the drawing,
-so editing, undo/redo and reopening a file retain the Markdown.
+Drawing text boxes use a small Markdown subset rendered entirely as SVG text and
+shapes. The drawing canvas, SVG export, browser printing and PDF export use the
+same component. PDF text stays vector-based; there is no HTML layout or screenshot
+conversion in the export path.
 
-Headings, bold and italic text, links, images, lists, quotations, horizontal rules,
-inline code and fenced code blocks are supported, together with GitHub-style tables,
-strikethrough and read-only task lists. Existing single line breaks are retained.
-Code blocks preserve spaces and indentation; language names can follow the opening
-fence, but syntax colouring is not applied.
+Supported formatting:
+
+- Headings, bold, italic and strikethrough.
+- Paragraphs and ordinary line breaks.
+- Numbered lists, bullet lists and read-only task lists.
+- Quotations and horizontal rules.
+- Inline code, fenced code blocks and indented code blocks.
+
+Tables, links, images and raw HTML display as literal text. They do not create
+tables, clickable links, embedded HTML or image requests. Code preserves whitespace
+without syntax colouring. All text uses the selected base font family, weight and
+italic settings, with heading sizes scaled relative to the base font size.
+
+Select the text for editing to see styled source, including the Markdown markers.
+Caret placement, selection and wrapping follow that styling. Click away to see
+the formatted note. The original source is saved, so undo, copy/paste and reopening
+a drawing preserve it. Resize a text box to fit the note; the formatted view clips
+to its rectangle. Rotation is supported.
 
 ````markdown
-## RC circuit
+# RC filter
 **Time constant:** τ = R × C
 
-| Component | Value |
-| --- | --- |
-| R1 | 10 kΩ |
-| C1 | 100 nF |
+- R1: 10 kΩ
+- C1: 100 nF
 
-```python
+- [x] Circuit wired
+- [ ] Measurements recorded
+
+~~~python
 tau = 10_000 * 100e-9
-```
-
-- [x] Draw the circuit
-- [ ] Measure the time constant
+~~~
 ````
 
-Use the text box's existing font, colour, border and fill controls. Editing and
-preview use the chosen base font, weight and italic setting; heading sizes scale
-relative to that font size. Code also inherits the chosen font (choose a monospaced
-base font if desired). Caret placement, selection and wrapping follow the styled
-source. Fenced and indented code remains literal during editing. Markdown lays
-out within the box and clips at its edges; enlarge the box to fit longer notes.
-Rotation is supported. Net labels, component fields and pin names keep their
-existing text behaviour.
-
-SVG export and browser printing retain formatted text. PDF export embeds each
-formatted text box as a high-resolution image while keeping the circuit vector-based.
-Remote images need to be accessible to the browser (including CORS for PDF export).
-Embedded HTML is sanitized; scripts, event handlers, forms and custom styles are
-not allowed. Links are displayed as annotations rather than interactive canvas controls.
-
-The renderer reuses the bundle branch's [Marked](https://marked.js.org/) (MIT) and
-[DOMPurify](https://github.com/cure53/DOMPurify) (Apache-2.0 or MPL-2.0).
-PDF rendering uses [html-to-image](https://github.com/bubkoo/html-to-image) (MIT).
+Net labels, component fields and pin names keep their existing text behaviour.
+Task lists use `- [x]` for checked and `- [ ]` for unchecked boxes, with an
+optional label. Edit the marker to change its state; boxes are drawn as vectors
+on screen and in exports.
+Parsing uses [Marked](https://marked.js.org/) (MIT); rendering uses native SVG.
