@@ -340,6 +340,7 @@ export function AltStoreReducer(
       break;
 
     case LibraryActionTypes.EditLibrary:
+      if (action.lib.readOnly) return state;
       state = update(state, {
         loginState: { $set: 3 },
         loginError: { $set: null },
@@ -405,7 +406,19 @@ export function AltStoreReducer(
 
     case LibraryActionTypes.SetLibraryList:
       state = update(state, {
-        libraries: { $set: action.libraries },
+        libraries: { $set: [
+          ...action.libraries.filter(lib => !lib.readOnly),
+          ...state.libraries.filter(lib => lib.readOnly),
+        ] },
+      });
+      break;
+
+    case LibraryActionTypes.SetBundledLibraries:
+      state = update(state, {
+        libraries: { $set: [
+          ...state.libraries.filter(lib => !lib.readOnly),
+          ...action.libraries,
+        ] },
       });
       break;
 

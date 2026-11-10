@@ -1,6 +1,8 @@
 import { fileURLToPath } from 'url';
 import path from 'path';
 import Store from 'electron-store';
+import { registerBundledLibraries } from './bundledLibraries.js';
+import { registerBundledExamples } from './bundledExamples.js';
 import fs from 'fs';
 import { spawn } from 'child_process';
 import { loadFile, saveFile, sendRecentFiles } from './io.js';
@@ -118,6 +120,7 @@ function createWindow() {
             ]
           },
           { label: getMenuLabel('open', 'Open'), accelerator: 'CmdOrCtrl+O', click: () => mainWindow.webContents.send('menu-command', 'file-open') },
+          { label: getMenuLabel('openExample', 'Open Example'), click: () => mainWindow.webContents.send('menu-command', 'file-open-example') },
           {
             label: getMenuLabel('openRecent', 'Open Recent'),
             submenu: recentMenu.length > 0 ? recentMenu : [{ label: getMenuLabel('noRecentFiles', 'No Recent Files'), enabled: false }]
@@ -355,6 +358,10 @@ function createWindow() {
 
   if (!ipcHandlersRegistered) {
     ipcHandlersRegistered = true;
+    registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
+      directory: path.join(__dirname, isDev ? '../bundled-examples' : '../dist/bundled-examples') });
+    registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
+      directory: path.join(__dirname, isDev ? '../bundled-libraries' : '../dist/bundled-libraries') });
 
     ipcMain.on('window-minimize', () => {
       mainWindow?.minimize();

@@ -21,10 +21,10 @@
   },
   "type": "module",
   "scripts": {
-    "start:ga": "cross-env TARGET_SYSTEM=google parcel index-ga.html",
-    "start:fs": "cross-env TARGET_SYSTEM=filesystem parcel index-fs.html",
-    "build:ga": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=google parcel build index-ga.html --no-cache --public-url ./ && node scripts/finalize-pages-build.mjs index-ga",
-    "build:fs": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=filesystem parcel build index-fs.html --no-cache --public-url ./ && node scripts/finalize-pages-build.mjs index-fs",
+    "start:ga": "npm run libraries:package && npm run examples:package && cross-env TARGET_SYSTEM=google parcel index-ga.html",
+    "start:fs": "npm run libraries:package && npm run examples:package && cross-env TARGET_SYSTEM=filesystem parcel index-fs.html",
+    "build:ga": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=google parcel build index-ga.html --no-cache --public-url ./ && node scripts/finalize-pages-build.mjs index-ga && npm run libraries:package && npm run examples:package",
+    "build:fs": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=filesystem parcel build index-fs.html --no-cache --public-url ./ && node scripts/finalize-pages-build.mjs index-fs && npm run libraries:package && npm run examples:package",
     "server-bundle": "node scripts/build-server-bundle.mjs",
     "check:i18n": "node scripts/check-translations.mjs",
     "dev": "concurrently -k \"npm run start:electron\" \"npm:electron\"",
@@ -32,9 +32,13 @@
     "generate:icons": "node scripts/generate-icons.mjs",
     "setup:test-appx": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-test-appx-cert.ps1",
     "dist:test-appx": "npm run setup:test-appx && npm run dist -- --win appx --test-appx",
-    "start:electron": "cross-env TARGET_SYSTEM=electron parcel index-electron.html",
-    "build:electron": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=electron parcel build index-electron.html --no-cache --no-source-maps --public-url ./ && node scripts/check-electron-build.mjs",
-    "electron": "wait-on tcp:1234 && electron ."
+    "start:electron": "npm run libraries:package && npm run examples:package && cross-env TARGET_SYSTEM=electron parcel index-electron.html",
+    "build:electron": "rimraf dist .parcel-cache && cross-env TARGET_SYSTEM=electron parcel build index-electron.html --no-cache --no-source-maps --public-url ./ && node scripts/check-electron-build.mjs && npm run libraries:package && npm run examples:package",
+    "electron": "wait-on tcp:1234 && electron .",
+    "libraries:package": "node scripts/package-libraries.mjs",
+    "test:libraries": "node scripts/tests/bundled-libraries.mjs",
+    "examples:package": "node scripts/package-examples.mjs",
+    "test:examples": "node scripts/tests/bundled-examples.mjs"
   },
   "build": {
     "appId": "com.tinycad.app",
@@ -50,7 +54,8 @@
       "dist/**/*",
       "electron/**/*",
       "assets/**/*",
-      "package.json"
+      "package.json",
+      "shared/**/*"
     ],
     "directories": {
       "buildResources": "assets",
@@ -147,6 +152,7 @@
     "@fluentui/react-icons": "^2.0.317",
     "blob-stream": "^0.1.3",
     "common-xml-features": "^2.1.9",
+    "dompurify": "^3.4.17",
     "electron-is-dev": "^3.0.1",
     "electron-store": "^10.0.1",
     "file-saver": "^2.0.5",
@@ -155,6 +161,7 @@
     "i18next-resources-to-backend": "^1.2.1",
     "iconv-lite": "^0.7.2",
     "immutability-helper": "3.0.2",
+    "marked": "^18.1.3",
     "md5": "2.2.1",
     "pdfkit": "^0.13.0",
     "react": "^18.3.1",

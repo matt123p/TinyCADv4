@@ -1,3 +1,4 @@
+import { BundledLibraries } from './BundledLibraries';
 import React, { Dispatch, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { loadLibraries, saveLibraryConfig } from '../../io/files';
@@ -330,7 +331,8 @@ function getLibraryMatches(lib: tclib, filter: string) {
   return lib.names.filter(
     (entry) =>
       entry.Name.toLocaleLowerCase().includes(filter) ||
-      (entry.Description || '').toLocaleLowerCase().includes(filter),
+      (entry.Description || '').toLocaleLowerCase().includes(filter) ||
+      (entry.folder || '').toLocaleLowerCase().includes(filter),
   );
 }
 
@@ -368,7 +370,6 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const searchExpansionSnapshotRef = useRef<SearchExpansionSnapshot | null>(null);
   const isElectron = process.env.TARGET_SYSTEM === 'electron';
-  const isFileSystem = process.env.TARGET_SYSTEM === 'filesystem';
   const canUseLibraryFolders = isElectron;
   const [state, setState] = useState<LibrariesPanelState>({
     findFilter: '',
@@ -387,7 +388,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     sortMode: loadSymbolSortMode(),
   });
   const config = normalizeUserConfig(props.config);
-  const orderedLibraries = sortLibrariesByConfig(props.libraries, config);
+  const orderedLibraries = sortLibrariesByConfig(props.libraries.filter(lib => !lib.readOnly), config);
   const libraryEntriesById = new Map(
     config.libraries.map((library) => [`${library.id}`, library]),
   );
@@ -506,6 +507,9 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
         const nameId = parseInt(state.selectedId.substring(lastColonIndex + 1));
 
         const lib = props.libraries.find((l) => l.fileId + '' === fileId);
+        if (!lib) {
+          setState(prev => ({ ...prev, selectedId: null, displaySymbol: null, displayName: null, displaySearchSymbol: null }));
+        }
         if (lib) {
           const nameEntry = lib.names.find((n) => n.NameID === nameId);
           if (nameEntry) {
@@ -846,7 +850,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
         findFilter={state.findFilter}
         sortMode={state.sortMode}
         open={isLibraryOpen(state.expandedLibraries, `${lib.fileId}`)}
-        draggable={canUseLibraryFolders}
+        draggable={canUseLibraryFolders && !lib.readOnly}
         onLibraryClick={(selectedLibrary: tclib) => {
           const selectedFolderId = getLibraryFolderId(`${selectedLibrary.fileId}`);
           setState((prev) => ({
@@ -921,8 +925,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
             />
           )}
         </div>
-        {!isFileSystem && (
-          <div className={styles.sourceToggle}>
+        <div className={styles.sourceToggle}>
             <ToggleButton
               className={styles.toggleButton}
               checked={state.online}
@@ -944,11 +947,11 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
               {t('library.myLibraries')}
             </ToggleButton>
           </div>
-        )}
       </div>
 
       <div className={styles.content}>
-        {!state.online && !isFileSystem && (
+        <BundledLibraries visible={!state.online} findFilter={state.findFilter} renderLibraries={renderLibraryList} />
+        {!state.online && (
           <>
             <div className={styles.libraryHeader}>
               <span className={styles.libraryTitle}>{t('library.libraries')}</span>
@@ -1060,7 +1063,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
               </div>
             </div>
             <div className={styles.treeContainer} ref={treeContainerRef}>
-              {props.libraries.length === 0 && config.libraryFolders.length === 0 ? (
+              {orderedLibraries.length === 0 && config.libraryFolders.length === 0 ? (
                 <div className={styles.emptyState}>
                   {isElectron ? (
                     <>
@@ -1283,7 +1286,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
             </div>
           </>
         )}
-        {!!((state.online || isFileSystem) && state.searchResult) && (
+        {!!(state.online && state.searchResult) && (
           <div className={styles.treeContainer}>
             <OnlineView
               searchResult={state.searchResult}
@@ -1302,7 +1305,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
             />
           </div>
         )}
-        {(state.online || isFileSystem) && !state.searchResult && (
+        {state.online && !state.searchResult && (
           <div className={styles.emptyState}>
             <GlobeRegular style={{ fontSize: '32px' }} />
             <span className={styles.emptyStateText}>

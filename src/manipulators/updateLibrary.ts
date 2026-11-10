@@ -101,12 +101,13 @@ export class updateLibrary {
     };
   }
 
-  public addNewLibrarySymbol() {
+  public addNewLibrarySymbol(folder?: string) {
     const nameId =
       this.lib.names.reduce((id, n) => Math.max(n.NameID, id), 0) + 1;
     const symbolId =
       this.lib.symbols.reduce((id, s) => Math.max(s.SymbolId, id), 0) + 1;
     const name: tclibLibraryEntry = {
+      ...(folder ? { folder } : {}),
       NameID: nameId,
       Name: 'New Symbol',
       SymbolID: symbolId,

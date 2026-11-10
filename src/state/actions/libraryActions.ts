@@ -5,6 +5,8 @@ import { tclib, tclibLibraryEntry } from '../../model/tclib';
 
 export enum LibraryActionTypes {
   SetLibraryList = '[Library] SetLibraryList',
+  SetBundledLibraries = '[Library] SetBundledLibraries',
+  ChangeSymbolFolders = '[Library] ChangeSymbolFolders',
   SetLibraryData = '[Library] SetLibraryData',
   SelectLibrarySymbol = '[Library] SelectLibrarySymbol',
   ViewLibrary = '[Library] ViewLibrary',
@@ -17,8 +19,18 @@ export enum LibraryActionTypes {
   UpdateCurrentLibrary = '[Library] UpdateCurrentLibrary',
 }
 
+export interface ChangeSymbolFolders {
+  type: LibraryActionTypes.ChangeSymbolFolders;
+  change: import('../../model/symbolFolders').SymbolFolderChange;
+}
+
 export interface SetLibraryList {
   type: LibraryActionTypes.SetLibraryList;
+  libraries: tclib[];
+}
+
+export interface SetBundledLibraries {
+  type: LibraryActionTypes.SetBundledLibraries;
   libraries: tclib[];
 }
 
@@ -77,6 +89,8 @@ export interface UpdateCurrentLibrary {
 }
 
 export type LibraryActions =
+  | ChangeSymbolFolders
+  | SetBundledLibraries
   | SetLibraryData
   | SelectLibrarySymbol
   | SetLibraryList

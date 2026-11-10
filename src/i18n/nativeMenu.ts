@@ -15,6 +15,7 @@ export const buildNativeMenuTranslations = (t: TFunction<'common'>): NativeMenuT
   newDesign: menuLabel(t, 'toolbar.newDesign', 'New Design'),
   newLibrary: menuLabel(t, 'toolbar.newCustomLibrary', 'New Library'),
   open: menuLabel(t, 'toolbar.open', 'Open'),
+  openExample: menuLabel(t, 'examples.openExample', 'Open Example'),
   openRecent: menuLabel(t, 'toolbar.openRecent', 'Open Recent'),
   noRecentFiles: menuLabel(t, 'toolbar.noRecentFiles', 'No Recent Files'),
   save: menuLabel(t, 'toolbar.save', 'Save'),
