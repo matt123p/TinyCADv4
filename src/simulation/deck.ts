@@ -3,6 +3,7 @@ import { writeSpice } from '../io/netlists/netlistSpice';
 import { AnalysisDefinition, SimulationSetup } from './contracts';
 import { parseQuantity, positiveQuantity } from './numbers';
 import { deviceSaveLine } from './deviceReadings';
+import { circuitSaveLine } from '../../shared/spiceSaveVectors';
 
 const token = (value: string) => {
   if (!/^[A-Za-z0-9_.$:#-]+$/.test(value))
@@ -169,10 +170,25 @@ export function buildDeck(
   const parameters = Object.entries(setup.parameters)
     .map(([name, value]) => `.param ${token(name)}=${parseQuantity(value)}`)
     .join('\n');
-  const savedDevices = deviceSaveLine(netlist, setup);
+  const deviceVectors = deviceSaveLine(netlist, setup)
+    .replace(/^\.save all\s*/, '')
+    .split(/\s+/)
+    .filter(Boolean);
+  const nodes = Object.keys(netlist.nets).map((id) =>
+    netlist.labels['0'] === id
+      ? '0'
+      : Object.keys(netlist.labels).find(
+          (label) => netlist.labels[label] === id,
+        ) || `_N_${id}`,
+  );
+  const savedDevices = ['op', 'tran', 'ac', 'dc'].includes(setup.analysis.kind)
+    ? circuitSaveLine(body, nodes, setup.signals, deviceVectors)
+    : '';
   const deck = `TinyCAD simulation\n${parameters}\n.temp ${parseQuantity(
     setup.analysis.temperature,
-  )}\n${body}\n${savedDevices ? savedDevices + '\n' : ''}${analysisCommand(setup.analysis)}\n.end\n`;
+  )}\n${body}\n${savedDevices ? savedDevices + '\n' : ''}${analysisCommand(
+    setup.analysis,
+  )}\n.end\n`;
   for (const [name, content] of Object.entries(setup.models)) {
     if (!/^[A-Za-z0-9_-]+\.(?:lib|cir|mod)$/i.test(name))
       throw new Error(`Invalid attached model filename: ${name}`);

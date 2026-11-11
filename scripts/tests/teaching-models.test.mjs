@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { teachingModel } from '../lib/teaching-models.mjs';
 import { simulate } from './teaching-model-runner.mjs';
-const native = { skip: !process.env.NGSPICE_BIN };
+import { ngspiceAvailable } from './ngspice-runner.mjs';
+const native = { skip: !ngspiceAvailable };
 const digital = (x) => Number(x > 2.5);
 const near = (value, expected, tolerance = 0.002) =>
   assert.ok(

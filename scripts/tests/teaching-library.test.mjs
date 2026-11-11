@@ -1,12 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
-import { spawnSync } from 'node:child_process';
+import {
+  runNgspice,
+  ngspiceAvailable,
+  ngspiceBackend,
+} from './ngspice-runner.mjs';
 import os from 'node:os';
 import path from 'node:path';
 import { buildTeachingLibraries } from '../build-teaching-libraries.mjs';
 import { runRegression } from './run-regression.mjs';
 import { librarySqlite } from '../lib/library-from-sql.mjs';
+import { circuitSaveLine } from '../../shared/spiceSaveVectors.js';
 let result;
 test.before(async () => {
   result = await buildTeachingLibraries();
@@ -84,7 +89,7 @@ test('all 116 modelled drawings place, rotate, export hidden power pins and reta
           !/<pin |<attr |NO_MODEL/.test(e.deck || e.spice || JSON.stringify(e)),
       ),
     );
-    if (process.env.NGSPICE_BIN) {
+    if (ngspiceAvailable) {
       const master = JSON.parse(
         await readFile(
           new URL(
@@ -125,22 +130,26 @@ test('all 116 modelled drawings place, rotate, export hidden power pins and reta
           } else h.push(`R_${number} ${node} 0 1meg`);
         }
         const file = path.join(directory, 'qualify.cir');
+        const body = e.netlist + '\n' + h.join('\n');
+        const saved = circuitSaveLine(
+          body,
+          e.pins.map((p) => 'n' + p.number),
+        );
         await writeFile(
           file,
-          e.name + '\n' + e.netlist + '\n' + h.join('\n') + '\n.op\n.end\n',
+          e.name + '\n' + body + '\n' + saved + '\n.op\n.end\n',
         );
-        const run = spawnSync(process.env.NGSPICE_BIN, ['-b', file], {
-          encoding: 'utf8',
-          timeout: 10000,
-        });
-        const log = run.stdout + run.stderr;
+        const run = runNgspice(file);
+        const log = run.log;
         assert.equal(run.status, 0, e.name + ': ' + log.slice(-1800));
         assert.ok(
           !/error:|fatal:|singular/i.test(log),
           e.name + ': ' + log.slice(-1800),
         );
       }
-      console.log('ngspice accepted all 116 decks exported by the editor.');
+      console.log(
+        `${ngspiceBackend} accepted all 116 decks exported by the editor.`,
+      );
     }
   } finally {
     await rm(directory, { recursive: true, force: true });

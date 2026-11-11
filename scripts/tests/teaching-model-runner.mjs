@@ -1,7 +1,8 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runNgspice } from './ngspice-runner.mjs';
+import { circuitSaveLine } from '../../shared/spiceSaveVectors.js';
 import { teachingModel } from '../lib/teaching-models.mjs';
 const master = JSON.parse(
   await fs.readFile(
@@ -65,20 +66,22 @@ export async function simulate(id, values = {}, options = {}) {
         }) AT=${t}`,
     ),
   );
-  const deck = `${id}\n${h.join('\n')}\n${expand(model.prolog)}\n${expand(
+  const body = `${h.join('\n')}\n${expand(model.prolog)}\n${expand(
     model.template,
-  )}\n.tran ${options.step || '1n'} ${
+  )}`;
+  const saved = circuitSaveLine(body, Object.values(nodes));
+  const deck = `${id}\n${body}\n${saved}\n.tran ${options.step || '1n'} ${
     Math.max(...times) + 1e-8
   }\n${measurements.join('\n')}\n.end\n`;
   const file = directory + '/circuit.cir';
   await fs.writeFile(file, deck);
-  const result = spawnSync(process.env.NGSPICE_BIN, ['-b', file], {
-    encoding: 'utf8',
-    env: process.env,
-    timeout: 10000,
-  });
-  const log = result.stdout + result.stderr;
-  await fs.rm(directory, { recursive: true, force: true });
+  let result;
+  try {
+    result = runNgspice(file);
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+  const log = result.log;
   if (result.status !== 0 || /error:|fatal:|singular|not converg/i.test(log))
     throw Error(id + ' ' + log.slice(-2000));
   const found = Object.fromEntries(
