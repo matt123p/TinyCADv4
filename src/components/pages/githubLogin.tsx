@@ -23,7 +23,8 @@ export const GithubLogin: FunctionComponent<GithubLoginProps> = (
         <p>{t('pages.githubAuthPrompt')}</p>
         <div>
           <div>
-            <Button appearance="primary"
+            <Button
+              appearance="primary"
               onClick={() => {
                 props.dispatch(login);
               }}

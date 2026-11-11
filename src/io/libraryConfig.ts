@@ -1,6 +1,15 @@
 import { tclib } from '../model/tclib';
 import { LibraryFile, LibraryFolder, UserConfig } from '../state/stores/altStoreReducer';
 
+// Persisted configurations contain path/Drive IDs, never live browser file handles.
+export interface ConfiguredLibraryFile extends LibraryFile {
+  id: string;
+}
+
+export interface NormalizedUserConfig extends UserConfig {
+  libraries: ConfiguredLibraryFile[];
+}
+
 function getFallbackLibraryName(id: unknown): string {
   if (typeof id !== 'string') {
     return '';
@@ -32,7 +41,7 @@ function normalizeLibraryFolder(folder: unknown): LibraryFolder | null {
   };
 }
 
-function normalizeLibraryFile(file: unknown): LibraryFile | null {
+function normalizeLibraryFile(file: unknown): ConfiguredLibraryFile | null {
   if (typeof file === 'string') {
     return {
       id: file,
@@ -67,7 +76,7 @@ function normalizeLibraryFile(file: unknown): LibraryFile | null {
   };
 }
 
-export function normalizeUserConfig(config: Partial<UserConfig> | unknown): UserConfig {
+export function normalizeUserConfig(config: Partial<UserConfig> | unknown): NormalizedUserConfig {
   const value = config && typeof config === 'object' ? (config as Partial<UserConfig>) : {};
   const folderList = Array.isArray(value.libraryFolders) ? value.libraryFolders : [];
   const libraryList = Array.isArray(value.libraries) ? value.libraries : [];
@@ -85,7 +94,7 @@ export function normalizeUserConfig(config: Partial<UserConfig> | unknown): User
   }, []);
 
   const seenLibraries = new Set<string>();
-  const libraries = libraryList.reduce<LibraryFile[]>((items, file) => {
+  const libraries = libraryList.reduce<ConfiguredLibraryFile[]>((items, file) => {
     const normalized = normalizeLibraryFile(file);
     if (!normalized) {
       return items;

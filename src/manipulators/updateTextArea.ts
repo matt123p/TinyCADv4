@@ -1,9 +1,10 @@
 import { measureText, getFont } from '../util/measureText';
 import { UtilityService } from '../util/utilityService';
 import update from 'immutability-helper';
-import { Coordinate, Text } from '../model/dsnItem';
-import { TextArea, TextAreaData, IsInsideTextResult } from '../model/textArea';
+import { Coordinate, Text, DocItem, DocItemTypes } from '../model/dsnItem';
+import { TextArea, TextAreaData, TextAreaBlock, IsInsideTextResult } from '../model/textArea';
 import { DrawingDelta } from './updateInterfaces';
+import { layoutMarkdownSource } from '../util/markdownSource';
 
 export class updateTextData {
   private readonly textArea: TextArea;
@@ -595,6 +596,9 @@ export class updateTextData {
 
     // Ok, where is the editing position based on the block?
     if (best_block != null) {
+      if (best_block.caretOffsets) {
+        return this.get_position_in_block(best_block, target_pos);
+      }
       let bt = this.find_best_text(best_block.value, target_pos - best_block.x);
       if (
         bt.exact >= best_block.value.length &&
@@ -982,14 +986,12 @@ export class updateTextData {
   }
 
   private get_block_end_position(block: { start: number; value: string }) {
-    const visibleLength = block.value.endsWith('\r')
-      ? block.value.length - 1
-      : block.value.length;
+    const visibleLength = block.value.replace(/(?:\r\n|\r|\n)$/, '').length;
     return block.start + visibleLength;
   }
 
   private get_position_in_block(
-    block: { start: number; value: string; x: number; width: number },
+    block: Pick<TextAreaBlock, 'start' | 'value' | 'x' | 'width' | 'caretOffsets'>,
     x: number,
   ) {
     if (x <= block.x) {
@@ -1000,6 +1002,19 @@ export class updateTextData {
       return this.get_block_end_position(block);
     }
 
+    if (block.caretOffsets) {
+      const end = this.get_block_end_position(block) - block.start;
+      let closest = 0;
+      let distance = Number.POSITIVE_INFINITY;
+      for (let index = 0; index <= end; ++index) {
+        const candidate = Math.abs(block.caretOffsets[index] - (x - block.x));
+        if (candidate < distance) {
+          closest = index;
+          distance = candidate;
+        }
+      }
+      return block.start + closest;
+    }
     let bt = this.find_best_text(block.value, x - block.x);
     return block.start + bt.exact;
   }
@@ -1050,6 +1065,15 @@ export class updateTextData {
         width: 0,
         height: 0,
         centre_x: 0,
+      };
+    }
+
+    if (this.textArea.drawMultiline && (this.textArea.drawItem as DocItem).NodeName === DocItemTypes.Text) {
+      return {
+        ...textAreaData,
+        ...layoutMarkdownSource(this.textArea, textAreaData, drawText),
+        textArea: this.textArea,
+        drawText,
       };
     }
 

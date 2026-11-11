@@ -47,7 +47,7 @@ import { findImporter, ImportedSymbol } from './kicad/importer';
 import { actionEditLibrarySymbol, actionSelectLibrarySymbol } from '../state/dispatcher/AppDispatcher';
 import { get_global_id } from '../util/global_id';
 import { openCurrentAppUrl, openExternalUrl } from '../util/navigation';
-import { normalizeUserConfig, sortLibrariesByConfig } from './libraryConfig';
+import { normalizeUserConfig, sortLibrariesByConfig, ConfiguredLibraryFile } from './libraryConfig';
 import { commitExample } from './examples';
 
 export type FileIdType = string | FileSystemFileHandle;
@@ -325,7 +325,7 @@ export function removeLibrary(fileId: string) {
     const currentConfig = normalizeUserConfig(state.altStore.config);
     const updatedConfig = update(currentConfig, {
       libraries: {
-        $apply: (items: LibraryFile[]) => items.filter((library) => `${library.id}` !== fileId),
+        $apply: (items: ConfiguredLibraryFile[]) => items.filter((library) => `${library.id}` !== fileId),
       },
     });
 
@@ -715,7 +715,7 @@ export function exportSvg(
     [
       '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' +
       '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
-      element.innerHTML,
+      new XMLSerializer().serializeToString(element.children[0]),
     ],
     { type: 'image/svg+xml' },
   );

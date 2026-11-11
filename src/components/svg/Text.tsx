@@ -4,6 +4,7 @@ import TTextEditArea from './TextEditArea';
 import { UtilityService } from '../../util/utilityService';
 import { DocItem, dsnText } from '../../model/dsnItem';
 import { updateText } from '../../manipulators/updateText';
+import MarkdownText from './MarkdownText';
 
 interface TTextProps {
   dx: number;
@@ -21,18 +22,6 @@ interface TTextProps {
 const TText: FunctionComponent<TTextProps> = (props: TTextProps) => {
   const item = props.data;
   const scope = UtilityService.simpleRefreshPoints(props);
-
-  let txt_width = scope.width - 6;
-  let txt_height = scope.height - 6;
-  let txt_point = [scope.x + 3, scope.y + 3];
-  switch (scope.txt_rotation) {
-    case 1:
-    case 3:
-      txt_point[1] -= scope.width - scope.height;
-      txt_width = scope.width;
-      txt_height = scope.height;
-      break;
-  }
 
   let r = 0;
   if (item.rounded_rect) {
@@ -53,21 +42,45 @@ const TText: FunctionComponent<TTextProps> = (props: TTextProps) => {
         filter={props.selected ? 'url(#dropshadow)' : null}
       />
 
-      <TTextEditArea
-        dx={props.dx}
-        dy={props.dy}
-        dr={props.dr}
-        scale_x={props.scale_x}
-        scale_y={props.scale_y}
-        draw-item={item}
-        draw-data={item.textData}
-        drag-handle={-2}
-        draw-colour={item.font_colour}
-        parent={props.parent}
-        hover={props.hover}
-        selected={props.selected}
-        selected_handle={props.selected_handle}
-      />
+      {props.selected && props.selected_handle === -2 ? (
+        <TTextEditArea
+          dx={props.dx}
+          dy={props.dy}
+          dr={props.dr}
+          scale_x={props.scale_x}
+          scale_y={props.scale_y}
+          draw-item={item}
+          draw-data={item.textData}
+          drag-handle={-2}
+          draw-colour={item.font_colour}
+          parent={props.parent}
+          hover={props.hover}
+          selected={props.selected}
+          selected_handle={props.selected_handle}
+        />
+      ) : (
+        <>
+          {(props.selected || props.hover) && (
+            <rect
+              x={scope.x}
+              y={scope.y}
+              width={scope.width}
+              height={scope.height}
+              className={
+                props.selected ? 'selectedHighlight' : 'selectableHighlight'
+              }
+            />
+          )}
+          <MarkdownText
+            item={item}
+            x={scope.x}
+            y={scope.y}
+            width={scope.width}
+            height={scope.height}
+            rotated={!!scope.txt_rotation}
+          />
+        </>
+      )}
     </>
   );
   // draw-highlight="selected" draw-selectable="selectable" draw-selected="doc.singleSelectedItem() == item"
