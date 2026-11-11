@@ -1,5 +1,7 @@
 # First-year engineering degrees: a shared electronics experiment catalogue
 
+Student drawings: [First-year engineering degrees — shared electronics and discipline applications](../bundled-examples/teaching/degree-year1-engineering/README.md). They are also available in **File → Open Example**. Each activity has a drawing, a preview and student-facing Markdown instructions; simulation examples use `.dzn` and connection plans use `.dsn`.
+
 Research checked: **10 November 2026**.
 
 ## Meaning of “all engineering courses”

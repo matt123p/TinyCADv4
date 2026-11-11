@@ -33,7 +33,7 @@
                         "path": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Relative path to a TinyCAD .dsn drawing."
+                          "description": "Relative path to a TinyCAD .dsn drawing or .dzn simulation."
                         }
                       }
                     }

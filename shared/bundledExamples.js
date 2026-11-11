@@ -83,7 +83,7 @@ export function parseExampleCatalog(input) {
       ...group,
       examples: value.examples.map((example) => ({
         ...content(example, ids),
-        path: examplePath(example.path, ['dsn']),
+        path: examplePath(example.path, ['dsn', 'dzn']),
       })),
     };
   });

@@ -184,6 +184,7 @@ const examples = loadComponent('src/io/examples.ts', {
   'redux-undo': {
     ActionCreators: { clearHistory: () => ({ type: 'clear-history' }) },
   },
+  './dsnCodec': {decodeDrawing: async bytes => { assert.equal(bytes[0], 80); return document; }},
   './ioXml': {
     ioXML: class {
       from_dsn() {
@@ -428,3 +429,9 @@ try {
 console.log(
   'Example checks passed: catalog, Markdown resources, packaging, lazy drawing reads, editable copies, unsaved cancellation, load cancellation, retries, and desktop IPC.',
 );
+
+// Compressed simulation examples use the binary drawing codec, without UTF-8
+// decoding ZIP bytes. The existing XML path above remains covered separately.
+const simulationCatalog={version:1,groups:[{...catalog.groups[0],examples:[{...catalog.groups[0].examples[0],path:'drawings/simulation.dzn'}]}]};
+const simulationResources=new ExampleResources({catalog:async()=>simulationCatalog,read:async()=>new Uint8Array([80,75,3,4])});
+assert.equal((await simulationResources.drawing('getting-started','first')).document,document);

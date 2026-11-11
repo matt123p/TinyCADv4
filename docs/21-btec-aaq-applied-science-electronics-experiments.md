@@ -1,5 +1,7 @@
 # BTEC National Applied Science AAQ: electronics experiments
 
+Student drawings: [BTEC National Applied Science AAQ Extended Certificate — Units 3 and 4](../bundled-examples/teaching/btec-applied-science-aaq/README.md). They are also available in **File → Open Example**. Each activity has a drawing, a preview and student-facing Markdown instructions; simulation examples use `.dzn` and connection plans use `.dsn`.
+
 Research checked: **10 November 2026**.
 
 ## Course and source mapping

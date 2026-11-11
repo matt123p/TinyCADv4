@@ -1,5 +1,7 @@
 # First-year physics degrees: electronics experiments supported by TinyCAD
 
+Student drawings: [First-year physics degree — representative electronic-circuit strand](../bundled-examples/teaching/degree-year1-physics/README.md). They are also available in **File → Open Example**. Each activity has a drawing, a preview and student-facing Markdown instructions; simulation examples use `.dzn` and connection plans use `.dsn`.
+
 Research checked: **10 November 2026**.
 
 ## Representative syllabuses

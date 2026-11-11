@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <cctype>
 #include <cstdlib>
 #include <fstream>
 #include <filesystem>
@@ -70,7 +71,14 @@ void flush() {
 int log(char* message, int, void*) {
   const std::string s = message ? message : "";
   if(log_bytes + s.size() <= 2*1024*1024) { log_bytes += s.size(); emit("{\"type\":\"log\",\"message\":"+escape(s)+"}"); }
-  if(s.find("Error:") != std::string::npos || s.find("Fatal error") != std::string::npos) failed=true;
+  std::string lower = s;
+  std::transform(lower.begin(), lower.end(), lower.begin(),
+    [](unsigned char c) { return std::tolower(c); });
+  // ngSpice_Command("run") may return success after TRAN aborts. Its log
+  // callback is the only failure signal for several convergence errors.
+  for(const auto* message : {"error:", "fatal error", "timestep too small",
+      "doanalyses:", "run simulation(s) aborted", "simulation interrupted"})
+    if(lower.find(message) != std::string::npos) failed=true;
   return 0;
 }
 int status(char*, int, void*) { return 0; }

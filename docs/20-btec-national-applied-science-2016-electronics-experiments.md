@@ -1,5 +1,7 @@
 # BTEC National Extended Diploma in Applied Science (2016): electronics experiments
 
+Student drawings: [BTEC National Extended Diploma Applied Science (2016) — selected Unit 15](../bundled-examples/teaching/btec-applied-science-2016/README.md). They are also available in **File → Open Example**. Each activity has a drawing, a preview and student-facing Markdown instructions; simulation examples use `.dzn` and connection plans use `.dsn`.
+
 Research checked: **10 November 2026**.
 
 ## Course and source mapping

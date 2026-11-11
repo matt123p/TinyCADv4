@@ -20,6 +20,7 @@ import {
   actionSetFileData,
 } from '../state/dispatcher/AppDispatcher';
 import { ioXML } from './ioXml';
+import { decodeDrawing } from './dsnCodec';
 import { XMLBuilder } from '../util/xmlbuilder';
 
 interface ExampleSource {
@@ -116,10 +117,13 @@ export class ExampleResources {
       .find((group) => group.id === groupId)
       ?.examples.find((example) => example.id === exampleId);
     if (!example) throw new Error('Unknown example drawing.');
-    const text = new TextDecoder().decode(
-      await this.read(example.path, signal),
-    );
-    return { example, document: parseExampleDrawing(text) };
+    const bytes = await this.read(example.path, signal);
+    const drawing = example.path.toLowerCase().endsWith('.dzn')
+      ? await decodeDrawing(bytes)
+      : parseExampleDrawing(new TextDecoder().decode(bytes));
+    if (!drawing.sheets.length)
+      throw new Error('The example drawing has no sheets.');
+    return { example, document: drawing };
   }
 }
 

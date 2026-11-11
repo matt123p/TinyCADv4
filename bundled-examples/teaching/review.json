@@ -1,0 +1,2994 @@
+{
+  "version": 1,
+  "date": "2026-11-11",
+  "method": "Individual PNGs rendered through the TinyCAD SVG renderer and Chromium. All 214 examined in 36 contact sheets; complex and corrected circuits also inspected at full size. Markdown clipping and circuit text bounds checked in Chromium.",
+  "engine": "ngspice-47-f4a18fb35744bf48",
+  "completeSimulations": 201,
+  "connectionPlans": 13,
+  "layoutIssues": 0,
+  "scenarios": [
+    {
+      "id": "G01",
+      "path": "teaching/gcse-physics-aqa/G01.dzn",
+      "drawingSha256": "2f98ef090cba87348a4c9fa982c1bff991c3c1bce4894d057fa4cdf8aa03c965",
+      "preview": "teaching/gcse-physics-aqa/G01.png",
+      "previewSha256": "6aecb6c64ae94cc58c89be9b7a67a90f1c92cdda97ee8437cee8a9de9bdb3cf7",
+      "visualReview": "inspected",
+      "contactSheet": 1,
+      "simulation": {
+        "id": "G01",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G02",
+      "path": "teaching/gcse-physics-aqa/G02.dzn",
+      "drawingSha256": "118b34586857d3db7b89ac85fd191204bb15639b4900f45842eb508efb797095",
+      "preview": "teaching/gcse-physics-aqa/G02.png",
+      "previewSha256": "c463d9bdaf307440b59c409f762f04eb80c2808be5269500264dcae82533a912",
+      "visualReview": "inspected",
+      "contactSheet": 1,
+      "simulation": {
+        "id": "G02",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G03",
+      "path": "teaching/gcse-physics-aqa/G03.dzn",
+      "drawingSha256": "d2d7576a3b1e51445f15ca3e166e1fcf19ae2cbc9da9336d44985c399ae2cb59",
+      "preview": "teaching/gcse-physics-aqa/G03.png",
+      "previewSha256": "3c9fad3c662c0fc3f06050a260004888402a755add78ab12d88b923ceb580bff",
+      "visualReview": "inspected",
+      "contactSheet": 1,
+      "simulation": {
+        "id": "G03",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G04",
+      "path": "teaching/gcse-physics-aqa/G04.dzn",
+      "drawingSha256": "b6690454ca709ec0758732875066929e3c454ca3bf2066987f20ffc405d40863",
+      "preview": "teaching/gcse-physics-aqa/G04.png",
+      "previewSha256": "a09cf91b25b7c6a57419129c6b5129828a9d5f06d7c85666178582903cb64a11",
+      "visualReview": "inspected",
+      "contactSheet": 1,
+      "simulation": {
+        "id": "G04",
+        "status": "passed",
+        "samples": 101
+      }
+    },
+    {
+      "id": "G05",
+      "path": "teaching/gcse-physics-aqa/G05.dzn",
+      "drawingSha256": "c51da9d8df59e1f97c70532501ad7e85af2b0293d4081a8b792893af54660e98",
+      "preview": "teaching/gcse-physics-aqa/G05.png",
+      "previewSha256": "c4ab95633084e083adc09a134b115323c65dc1b7382cba482ecf98fc0f270e69",
+      "visualReview": "inspected",
+      "contactSheet": 1,
+      "simulation": {
+        "id": "G05",
+        "status": "passed",
+        "samples": 101
+      }
+    },
+    {
+      "id": "G06",
+      "path": "teaching/gcse-physics-aqa/G06.dzn",
+      "drawingSha256": "8744da329d32320af095101cc1f293f9d9b3ee201913ed95950e3819bc233c03",
+      "preview": "teaching/gcse-physics-aqa/G06.png",
+      "previewSha256": "78fa980604ab2d11094053238b4269ed0e0060718de7b69ce588e34a8537b175",
+      "visualReview": "inspected",
+      "contactSheet": 1,
+      "simulation": {
+        "id": "G06",
+        "status": "passed",
+        "samples": 101
+      }
+    },
+    {
+      "id": "G07",
+      "path": "teaching/gcse-physics-aqa/G07.dzn",
+      "drawingSha256": "c32789e25092e2c23e46a7c1ed0250618de424e0f5c2e40cd6144dad30bf279d",
+      "preview": "teaching/gcse-physics-aqa/G07.png",
+      "previewSha256": "3c4abd14f92174fcfc79c72bc32021632d23fd11f763b0ba5dec4beed7b0af4e",
+      "visualReview": "inspected",
+      "contactSheet": 2,
+      "simulation": {
+        "id": "G07",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G08",
+      "path": "teaching/gcse-physics-aqa/G08.dzn",
+      "drawingSha256": "b636ef2ee0bc878fc8469ce4b5dce2a640bd1e462ebfe9d7b69f4e79ec3a023f",
+      "preview": "teaching/gcse-physics-aqa/G08.png",
+      "previewSha256": "5a26ff79bb1ac2754d26b02dbc7373b37a282a9d2b589c5cdad7b2fa1493e18b",
+      "visualReview": "inspected",
+      "contactSheet": 2,
+      "simulation": {
+        "id": "G08",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G09",
+      "path": "teaching/gcse-physics-aqa/G09.dzn",
+      "drawingSha256": "d1856b62a8d33e210ff913ede247d5d2f68d45ecab9b6a3af6935366f7c15f76",
+      "preview": "teaching/gcse-physics-aqa/G09.png",
+      "previewSha256": "c9ef4ba7ccc112f1484b377921e52bbc76f93f50ebf08df63eec023fe1a7cc80",
+      "visualReview": "inspected",
+      "contactSheet": 2,
+      "simulation": {
+        "id": "G09",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G10",
+      "path": "teaching/gcse-physics-aqa/G10.dzn",
+      "drawingSha256": "b149db2379877bd2ed7cf9665d911dc12fe47877832c47f8a70334253dae8881",
+      "preview": "teaching/gcse-physics-aqa/G10.png",
+      "previewSha256": "7c732747c964474a94e48ca5e86bd4b45e001d17cdd8e750dafac4842e4b7128",
+      "visualReview": "inspected",
+      "contactSheet": 2,
+      "simulation": {
+        "id": "G10",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G11",
+      "path": "teaching/gcse-physics-aqa/G11.dzn",
+      "drawingSha256": "9e3f79edd3a910f1243aea4f675d65424fc17207ffc21f5f502151db768c8953",
+      "preview": "teaching/gcse-physics-aqa/G11.png",
+      "previewSha256": "5305255166fe06e8078d80036215b060e53bed07844dcb5c72d1b05bb072259d",
+      "visualReview": "inspected",
+      "contactSheet": 2,
+      "simulation": {
+        "id": "G11",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G12",
+      "path": "teaching/gcse-physics-aqa/G12.dzn",
+      "drawingSha256": "6482653684eea16156b979d98744f69d419716eb86b7a8a8401a7b3fdf0f8725",
+      "preview": "teaching/gcse-physics-aqa/G12.png",
+      "previewSha256": "7cbe24d14c64a37f639eb884ce50b3d8a414a79e37e6c9bf606a84fb1a2989b7",
+      "visualReview": "inspected",
+      "contactSheet": 2,
+      "simulation": {
+        "id": "G12",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G13",
+      "path": "teaching/gcse-physics-aqa/G13.dzn",
+      "drawingSha256": "c50a9a6973e1ed7ff906814515c10cf8508cf03ccc17ef41b739c604ded7acec",
+      "preview": "teaching/gcse-physics-aqa/G13.png",
+      "previewSha256": "0c3cb3d65dc42561de9fcffa5ed766380b89e68d8a2e98a873c49536a4cf3247",
+      "visualReview": "inspected",
+      "contactSheet": 3,
+      "simulation": {
+        "id": "G13",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G14",
+      "path": "teaching/gcse-physics-aqa/G14.dzn",
+      "drawingSha256": "9dc2b0472b87377115b38bee52b3996799addf228d0bb27a7869683998c89530",
+      "preview": "teaching/gcse-physics-aqa/G14.png",
+      "previewSha256": "249dfd5cfc980c4ab1bd42e1796c6de8845899451ac1e28e84d9ecf31bc38d35",
+      "visualReview": "inspected",
+      "contactSheet": 3,
+      "simulation": {
+        "id": "G14",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G15",
+      "path": "teaching/gcse-physics-aqa/G15.dzn",
+      "drawingSha256": "e06f4f25e5ac8ee0f27d1ffdb4e8284777923695f30a62544c04f120c2ea362b",
+      "preview": "teaching/gcse-physics-aqa/G15.png",
+      "previewSha256": "f7bf314441ff0a9ee7957f8491a852aad9906e09403f3cdb99d423af41440cda",
+      "visualReview": "inspected",
+      "contactSheet": 3,
+      "simulation": {
+        "id": "G15",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G16",
+      "path": "teaching/gcse-physics-aqa/G16.dzn",
+      "drawingSha256": "09a946570017578a635efdbf96aa217e44a4e770207bc76e02984d79f80c0746",
+      "preview": "teaching/gcse-physics-aqa/G16.png",
+      "previewSha256": "327066ab5daaf923af2353df593bf1ea366ac339aee64435e24a96cf503b3740",
+      "visualReview": "inspected",
+      "contactSheet": 3,
+      "simulation": {
+        "id": "G16",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "G17",
+      "path": "teaching/gcse-physics-aqa/G17.dzn",
+      "drawingSha256": "f4aca3ab43b7f564d5254fc1defb1072cf797e54325f91cbd9ea021f1f59f48e",
+      "preview": "teaching/gcse-physics-aqa/G17.png",
+      "previewSha256": "490d1504a781de226eb6e40c91b0e2f7288da6a4748307cef33c06746b335cbb",
+      "visualReview": "inspected",
+      "contactSheet": 3,
+      "simulation": {
+        "id": "G17",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "G18",
+      "path": "teaching/gcse-physics-aqa/G18.dsn",
+      "drawingSha256": "89f4ce4547847e29d02cc2e621036349a0a3f44caf398cfa3c1356194318b417",
+      "preview": "teaching/gcse-physics-aqa/G18.png",
+      "previewSha256": "4e57002caed8d5d7b0a96e746d3cc41cdff4c4bb33e0d30327149b6c21f4a43d",
+      "visualReview": "inspected",
+      "contactSheet": 3,
+      "simulation": {
+        "id": "G18",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "A01",
+      "path": "teaching/a-level-physics-aqa/A01.dzn",
+      "drawingSha256": "89eb0fa93b97ee3905bf331385a83d51000b6d989bfc35a12603f421e1666855",
+      "preview": "teaching/a-level-physics-aqa/A01.png",
+      "previewSha256": "37e7624bc3df59671691cdec34f4145eb364934e2fdebe56acf5ff2280e99d14",
+      "visualReview": "inspected",
+      "contactSheet": 4,
+      "simulation": {
+        "id": "A01",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "A02",
+      "path": "teaching/a-level-physics-aqa/A02.dzn",
+      "drawingSha256": "d1c24aafcdc217b8ca5495b1fefc8c35e412cc141a05f29a538070bba45dff94",
+      "preview": "teaching/a-level-physics-aqa/A02.png",
+      "previewSha256": "96cb15e4c2f4d564ccb88587ab0953004aadf69c70afa2f1530ba4e235cacfb6",
+      "visualReview": "inspected",
+      "contactSheet": 4,
+      "simulation": {
+        "id": "A02",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "A03",
+      "path": "teaching/a-level-physics-aqa/A03.dzn",
+      "drawingSha256": "9e17ea6dd79d43841dd300e64c746caacf943b8c3a6ccf4932f66c052675cf23",
+      "preview": "teaching/a-level-physics-aqa/A03.png",
+      "previewSha256": "425a5a23c8a666d2849c1d23f1cbfe8d6a4b2d10852c3a33b9891c9d42841d91",
+      "visualReview": "inspected",
+      "contactSheet": 4,
+      "simulation": {
+        "id": "A03",
+        "status": "passed",
+        "samples": 1027
+      }
+    },
+    {
+      "id": "A04",
+      "path": "teaching/a-level-physics-aqa/A04.dzn",
+      "drawingSha256": "02019a3bb0202561d1c03e61c5ccacb5bf50482df0d1ad6f65e5b3568691e604",
+      "preview": "teaching/a-level-physics-aqa/A04.png",
+      "previewSha256": "092dacd1eb17fc08e44839eefd29ec2c343903d08e9b94c7f66f6125871f0161",
+      "visualReview": "inspected",
+      "contactSheet": 4,
+      "simulation": {
+        "id": "A04",
+        "status": "passed",
+        "samples": 1227
+      }
+    },
+    {
+      "id": "A05",
+      "path": "teaching/a-level-physics-aqa/A05.dzn",
+      "drawingSha256": "ee08dafda7d1b9ab9738dc2a30219cb2461ad3df411507918f00748907b715cc",
+      "preview": "teaching/a-level-physics-aqa/A05.png",
+      "previewSha256": "8b541690ae28b1bcf27aa2c1f56ee0e941a6078f61c21e5f1b33ce41aa1e7b2c",
+      "visualReview": "inspected",
+      "contactSheet": 4,
+      "simulation": {
+        "id": "A05",
+        "status": "passed",
+        "samples": 101
+      }
+    },
+    {
+      "id": "A06",
+      "path": "teaching/a-level-physics-aqa/A06.dzn",
+      "drawingSha256": "02e6588fd6565252b861283c3e066f8166fd3eff42ab46ad0c88554a5ec67419",
+      "preview": "teaching/a-level-physics-aqa/A06.png",
+      "previewSha256": "58696ec0dd92eab1d2218129d9c053e4b5abc0438be8d2468bd5ebeb0c2ff9ea",
+      "visualReview": "inspected",
+      "contactSheet": 4,
+      "simulation": {
+        "id": "A06",
+        "status": "passed",
+        "samples": 101
+      }
+    },
+    {
+      "id": "A07",
+      "path": "teaching/a-level-physics-aqa/A07.dzn",
+      "drawingSha256": "34b2262c5ef079ba021951212cf93fe6e7d27de034078b02761cf426c2ffda94",
+      "preview": "teaching/a-level-physics-aqa/A07.png",
+      "previewSha256": "3f7d74cd8a6fc88da2e4af1115451f43b0c25767f92de961e154e0f3e8f94cde",
+      "visualReview": "inspected",
+      "contactSheet": 5,
+      "simulation": {
+        "id": "A07",
+        "status": "passed",
+        "samples": 101
+      }
+    },
+    {
+      "id": "A08",
+      "path": "teaching/a-level-physics-aqa/A08.dzn",
+      "drawingSha256": "29fb1e0bf2f509d533d971a4c625322e058e5d9f866a1553eca7ddc98753b577",
+      "preview": "teaching/a-level-physics-aqa/A08.png",
+      "previewSha256": "617b42fcf56e53ac9666febe3663e72f7d62e2f66f3bb12841df03e40311dd23",
+      "visualReview": "inspected",
+      "contactSheet": 5,
+      "simulation": {
+        "id": "A08",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "A09",
+      "path": "teaching/a-level-physics-aqa/A09.dzn",
+      "drawingSha256": "e38e1e02a154b65537a526f08f7940457a415381409158cee281ca01998163a7",
+      "preview": "teaching/a-level-physics-aqa/A09.png",
+      "previewSha256": "65106aeb59bdf9229e256637aa6e6d52d47fce6d46549d8bff79184046649545",
+      "visualReview": "inspected",
+      "contactSheet": 5,
+      "simulation": {
+        "id": "A09",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "A10",
+      "path": "teaching/a-level-physics-aqa/A10.dzn",
+      "drawingSha256": "7cdc366534e7d828790003f23a4e527eca25fccf8eab9b1f4f16bc5bac6fdf24",
+      "preview": "teaching/a-level-physics-aqa/A10.png",
+      "previewSha256": "d9c0fe672daf87d94f07456232b31aa8b85d5b28a29dec7cc0032112c54b6f4d",
+      "visualReview": "inspected",
+      "contactSheet": 5,
+      "simulation": {
+        "id": "A10",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "A11",
+      "path": "teaching/a-level-physics-aqa/A11.dzn",
+      "drawingSha256": "b4706fe13d6cbf55208e33761ed71d9edace1845c1d51e759ccc47cbda2cfa76",
+      "preview": "teaching/a-level-physics-aqa/A11.png",
+      "previewSha256": "dae1f11be967d8c5cc734df8d592a08a3b57cce96c2ece39edad68aabdc539ae",
+      "visualReview": "inspected",
+      "contactSheet": 5,
+      "simulation": {
+        "id": "A11",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "A12",
+      "path": "teaching/a-level-physics-aqa/A12.dzn",
+      "drawingSha256": "b505e546a9fff485773d7337ef22e5a16cb1a92bcf3b1a7cda107fbbd900bfc2",
+      "preview": "teaching/a-level-physics-aqa/A12.png",
+      "previewSha256": "2420b49471970dd598b616b276703a3d40468e38a111d95727e75fd797c39e08",
+      "visualReview": "inspected",
+      "contactSheet": 5,
+      "simulation": {
+        "id": "A12",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "A13",
+      "path": "teaching/a-level-physics-aqa/A13.dzn",
+      "drawingSha256": "1a7260471da377fc494d43174c3b87fa8301107c9e70ed0e4d946d2424b2b4ed",
+      "preview": "teaching/a-level-physics-aqa/A13.png",
+      "previewSha256": "584b474ef27b0e2ef3903ea24fa7eba7978304597552177757c46bd49ac8ded9",
+      "visualReview": "inspected",
+      "contactSheet": 6,
+      "simulation": {
+        "id": "A13",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "A14",
+      "path": "teaching/a-level-physics-aqa/A14.dzn",
+      "drawingSha256": "47c157a8ba43e69f800f5d60c4f4d2a21ae343d907e9410d3a5b82a08c25cf1c",
+      "preview": "teaching/a-level-physics-aqa/A14.png",
+      "previewSha256": "0ae916c3dfcf8a8fdd77f30510070d7f4e8eee74a8f6e6ecb7a8d584aa265ab4",
+      "visualReview": "inspected",
+      "contactSheet": 6,
+      "simulation": {
+        "id": "A14",
+        "status": "passed",
+        "samples": 1027
+      }
+    },
+    {
+      "id": "A15",
+      "path": "teaching/a-level-physics-aqa/A15.dsn",
+      "drawingSha256": "1f0b9ce26f39dfe66ebb592e007fbd0c62c91a18dc4e3793fdcb261fdbdef5b8",
+      "preview": "teaching/a-level-physics-aqa/A15.png",
+      "previewSha256": "2e33fcc959b5af5b430c7e0e7bc7fb8f9c5c890481a0ec951b4c23bdd20b9a89",
+      "visualReview": "inspected",
+      "contactSheet": 6,
+      "simulation": {
+        "id": "A15",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "A16",
+      "path": "teaching/a-level-physics-aqa/A16.dzn",
+      "drawingSha256": "ca6243c81316afad114090223287fad341c719043f46c232c34649608372aaf5",
+      "preview": "teaching/a-level-physics-aqa/A16.png",
+      "previewSha256": "54b865b7cea3e5eac44ee81d8a74af8a450fff19e9d720ea02473328889d2234",
+      "visualReview": "inspected",
+      "contactSheet": 6,
+      "simulation": {
+        "id": "A16",
+        "status": "passed",
+        "samples": 1227
+      }
+    },
+    {
+      "id": "A17",
+      "path": "teaching/a-level-physics-aqa/A17.dzn",
+      "drawingSha256": "a64c58c82675084f62c7eee4bd9fadb023443363e66b4a2c1f90ce604c798ebe",
+      "preview": "teaching/a-level-physics-aqa/A17.png",
+      "previewSha256": "b8d69239d6ec0f525e52086597cee42c1ce118b476ea77bf47a2cdd054cbdeeb",
+      "visualReview": "inspected",
+      "contactSheet": 6,
+      "simulation": {
+        "id": "A17",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "A18",
+      "path": "teaching/a-level-physics-aqa/A18.dzn",
+      "drawingSha256": "e0c1910766bc75cbca1872d34e99e0c615794b643296376ed4150024ff18b39c",
+      "preview": "teaching/a-level-physics-aqa/A18.png",
+      "previewSha256": "556b21235057a448c10cad1732089b9443f4f4927cb2529f3d7c28f4f9d353c2",
+      "visualReview": "inspected",
+      "contactSheet": 6,
+      "simulation": {
+        "id": "A18",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "A19",
+      "path": "teaching/a-level-physics-aqa/A19.dzn",
+      "drawingSha256": "b1aaabfd1e2209daf0cc3063dd8056dc7bcff3e59b596e1190cb4eb18a4bc4b4",
+      "preview": "teaching/a-level-physics-aqa/A19.png",
+      "previewSha256": "ce715e9db1b859b50a27996c12d84f3eebd7f7ef0ecbe8261fceb2dcd630f9ae",
+      "visualReview": "inspected",
+      "contactSheet": 7,
+      "simulation": {
+        "id": "A19",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "A20",
+      "path": "teaching/a-level-physics-aqa/A20.dzn",
+      "drawingSha256": "2075050c7bb7bd3868ed20644f13ec8f12b9646f62dab75763582841b845e133",
+      "preview": "teaching/a-level-physics-aqa/A20.png",
+      "previewSha256": "fce7531831ffed49d986df0de01f1e03cdf27f048a956c473df419b40f15b36b",
+      "visualReview": "inspected",
+      "contactSheet": 7,
+      "simulation": {
+        "id": "A20",
+        "status": "passed",
+        "samples": 51
+      }
+    },
+    {
+      "id": "A21",
+      "path": "teaching/a-level-physics-aqa/A21.dzn",
+      "drawingSha256": "2bba048cbe89be1869c7bb3f14288060461723d534fb8ec83b8abea9e005fa36",
+      "preview": "teaching/a-level-physics-aqa/A21.png",
+      "previewSha256": "4df6315033ffb55505a7bc9cf689a7cb7a6b734346080cfef081022fd16a0594",
+      "visualReview": "inspected",
+      "contactSheet": 7,
+      "simulation": {
+        "id": "A21",
+        "status": "passed",
+        "samples": 3044
+      }
+    },
+    {
+      "id": "A22",
+      "path": "teaching/a-level-physics-aqa/A22.dzn",
+      "drawingSha256": "9c067fc2aa19a5336ecd1d38a335577437340be4655f7bea889ce4499c454969",
+      "preview": "teaching/a-level-physics-aqa/A22.png",
+      "previewSha256": "6d22f778b5b1df04befffe42312d82c759a4a05378e52bd449c8d8a06a4e876b",
+      "visualReview": "inspected",
+      "contactSheet": 7,
+      "simulation": {
+        "id": "A22",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "A23",
+      "path": "teaching/a-level-physics-aqa/A23.dzn",
+      "drawingSha256": "14adf5c1a30a7479ba3dfe5533e5111f84129586220e53b4000f7c0c4fa3e02f",
+      "preview": "teaching/a-level-physics-aqa/A23.png",
+      "previewSha256": "3dd507a1b019f1b0f93739cbfdcf9d07a87658f0eb8d0be924c3e65d09a1e971",
+      "visualReview": "inspected",
+      "contactSheet": 7,
+      "simulation": {
+        "id": "A23",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "A24",
+      "path": "teaching/a-level-physics-aqa/A24.dzn",
+      "drawingSha256": "36768fcb300e77ca105b9af7b7cb2fec381d1df3983452e0805ae28f5d0e4462",
+      "preview": "teaching/a-level-physics-aqa/A24.png",
+      "previewSha256": "c1d274ddfbf0be15c833b8e724cd35aec262c26fdc15f9029171924e4129fe61",
+      "visualReview": "inspected",
+      "contactSheet": 7,
+      "simulation": {
+        "id": "A24",
+        "status": "passed",
+        "samples": 5008
+      }
+    },
+    {
+      "id": "A25",
+      "path": "teaching/a-level-physics-aqa/A25.dzn",
+      "drawingSha256": "66b66a940545f056ea74e05bfd202617b91d2eba9e4e40975b29c85f71d4cb14",
+      "preview": "teaching/a-level-physics-aqa/A25.png",
+      "previewSha256": "d9a9600e662645b0a5595510d4c08dd3e652841d0e73d53a22e3925aea700433",
+      "visualReview": "inspected",
+      "contactSheet": 8,
+      "simulation": {
+        "id": "A25",
+        "status": "passed",
+        "samples": 201
+      }
+    },
+    {
+      "id": "A26",
+      "path": "teaching/a-level-physics-aqa/A26.dzn",
+      "drawingSha256": "3ef7cfade9ba96fb34fea3ea19014d81346785afe7c88bf2a93d76cfc248e465",
+      "preview": "teaching/a-level-physics-aqa/A26.png",
+      "previewSha256": "cbb85c16c9049a26c9b76fd842436209e541fb6ec59727d72d82859742a31912",
+      "visualReview": "inspected",
+      "contactSheet": 8,
+      "simulation": {
+        "id": "A26",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "A27",
+      "path": "teaching/a-level-physics-aqa/A27.dzn",
+      "drawingSha256": "75fa424bdb591a45c6f6021bd4b0526b5e619b2357cdff775dc5d06a1efebd7f",
+      "preview": "teaching/a-level-physics-aqa/A27.png",
+      "previewSha256": "f553bd5c514ca58c1ccb35b49721d8f92d38cc1678df464039865d497d86814a",
+      "visualReview": "inspected",
+      "contactSheet": 8,
+      "simulation": {
+        "id": "A27",
+        "status": "passed",
+        "samples": 2512
+      }
+    },
+    {
+      "id": "A28",
+      "path": "teaching/a-level-physics-aqa/A28.dzn",
+      "drawingSha256": "10e5721b90e5012bafad88407b9cbc9cb5e1fe70e11538bf3b6a4a349e278178",
+      "preview": "teaching/a-level-physics-aqa/A28.png",
+      "previewSha256": "f659a4bac66e68ae5ecddea8dd06b74a696e6c9aa58073302aca4354619dad03",
+      "visualReview": "inspected",
+      "contactSheet": 8,
+      "simulation": {
+        "id": "A28",
+        "status": "passed",
+        "samples": 2512
+      }
+    },
+    {
+      "id": "A29",
+      "path": "teaching/a-level-physics-aqa/A29.dzn",
+      "drawingSha256": "0ec29cc70e6e241c9fbc4160c48cfa3d4678cd893dc7e5325828fba99be9b2da",
+      "preview": "teaching/a-level-physics-aqa/A29.png",
+      "previewSha256": "a9cdff25217d13fe3fbb0a758578348be5e5a6703edc26d8650422dcb344ed01",
+      "visualReview": "inspected",
+      "contactSheet": 8,
+      "simulation": {
+        "id": "A29",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "A30",
+      "path": "teaching/a-level-physics-aqa/A30.dzn",
+      "drawingSha256": "b9ddeb2e06bc83b1c380fa4e0c940b7d048976aae7e494a6038014674e899904",
+      "preview": "teaching/a-level-physics-aqa/A30.png",
+      "previewSha256": "d9c55a568bc376931b3d6da7ea70e9cbfa2d310d5f19620e011480ede3a5c507",
+      "visualReview": "inspected",
+      "contactSheet": 8,
+      "simulation": {
+        "id": "A30",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "A31",
+      "path": "teaching/a-level-physics-aqa/A31.dzn",
+      "drawingSha256": "90a6227994aa24fdf6a1cc79ebe4379b795da6ed8f37c3e5deca6427f7de166e",
+      "preview": "teaching/a-level-physics-aqa/A31.png",
+      "previewSha256": "110c551c717d20fd15c044b8752665013a0623d0cd41e34cacb5b68661844898",
+      "visualReview": "inspected",
+      "contactSheet": 9,
+      "simulation": {
+        "id": "A31",
+        "status": "passed",
+        "samples": 161
+      }
+    },
+    {
+      "id": "A32",
+      "path": "teaching/a-level-physics-aqa/A32.dzn",
+      "drawingSha256": "499776a08a45700bdb00c960a354541e6d844fd609a8b5d1e4d7e201087e1797",
+      "preview": "teaching/a-level-physics-aqa/A32.png",
+      "previewSha256": "aa0235c2d2ed785490d1d6ff187705b4a8cce9c794ea93872cd85f8f43b29c56",
+      "visualReview": "inspected",
+      "contactSheet": 9,
+      "simulation": {
+        "id": "A32",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "A33",
+      "path": "teaching/a-level-physics-aqa/A33.dzn",
+      "drawingSha256": "cacceb7de74a9f3a7ec541febdfddafcd2ab5a4494c2a6b0c2ff0ff2364b735e",
+      "preview": "teaching/a-level-physics-aqa/A33.png",
+      "previewSha256": "cdea4c8d41e72c96debf8094eb108d88afa71246b3066151976d844e1fcf833c",
+      "visualReview": "inspected",
+      "contactSheet": 9,
+      "simulation": {
+        "id": "A33",
+        "status": "passed",
+        "samples": 20940
+      }
+    },
+    {
+      "id": "A34",
+      "path": "teaching/a-level-physics-aqa/A34.dzn",
+      "drawingSha256": "8b03e9cacab9e73eb9c3075acc1a2d17305264edb0cfbf5e7eecd9fa2f90418d",
+      "preview": "teaching/a-level-physics-aqa/A34.png",
+      "previewSha256": "69dbe1e3f0392ba9a36bb71c883fd999a5ad8b12230beed7c264e3f3f19a30f4",
+      "visualReview": "inspected",
+      "contactSheet": 9,
+      "simulation": {
+        "id": "A34",
+        "status": "passed",
+        "samples": 4312
+      }
+    },
+    {
+      "id": "A35",
+      "path": "teaching/a-level-physics-aqa/A35.dzn",
+      "drawingSha256": "04e31d7f93bc89a02d1df15d16531501eb9a3656a04e1115d46f2d0097e3b3f0",
+      "preview": "teaching/a-level-physics-aqa/A35.png",
+      "previewSha256": "9ae539403dc5d740e821af16f647ca9e6df01a47cf42fd30dd5f93eb3b9e6dc9",
+      "visualReview": "inspected",
+      "contactSheet": 9,
+      "simulation": {
+        "id": "A35",
+        "status": "passed",
+        "samples": 4312
+      }
+    },
+    {
+      "id": "A36",
+      "path": "teaching/a-level-physics-aqa/A36.dzn",
+      "drawingSha256": "d27ae2f2fea28849992331a487fc284326f3c7745890dbe57410f40ec793d3f1",
+      "preview": "teaching/a-level-physics-aqa/A36.png",
+      "previewSha256": "6580b5f6d6e68e47a33c20569f852175d5a7797c739b56244b1ae1873ad312e4",
+      "visualReview": "inspected",
+      "contactSheet": 9,
+      "simulation": {
+        "id": "A36",
+        "status": "passed",
+        "samples": 4707
+      }
+    },
+    {
+      "id": "A37",
+      "path": "teaching/a-level-physics-aqa/A37.dzn",
+      "drawingSha256": "2b3cab8412f516cacb57409f3546f7a715aa02c9ec64e1e016bec766d7e2cfb1",
+      "preview": "teaching/a-level-physics-aqa/A37.png",
+      "previewSha256": "f1f8f10c215fc547f990a246a20cced13d2403a96f3e2c00e2b8b0c17758ca69",
+      "visualReview": "inspected",
+      "contactSheet": 10,
+      "simulation": {
+        "id": "A37",
+        "status": "passed",
+        "samples": 4609
+      }
+    },
+    {
+      "id": "A38",
+      "path": "teaching/a-level-physics-aqa/A38.dzn",
+      "drawingSha256": "aefb4251e38fccb6607764ed5c586d6bdd2c18654d274c89e8fd97c9bb2d2f20",
+      "preview": "teaching/a-level-physics-aqa/A38.png",
+      "previewSha256": "be0bf18bb71d01509bb5a035b35a1c5fdc1fe843529697916eb18de3b84a0c3b",
+      "visualReview": "inspected",
+      "contactSheet": 10,
+      "simulation": {
+        "id": "A38",
+        "status": "passed",
+        "samples": 4261
+      }
+    },
+    {
+      "id": "A39",
+      "path": "teaching/a-level-physics-aqa/A39.dsn",
+      "drawingSha256": "377442564b573d741f58952044c40c1cb08348f7300843fde6a0abdfced0150e",
+      "preview": "teaching/a-level-physics-aqa/A39.png",
+      "previewSha256": "8b78323c2df295ee95a7ad792eb1f039223f9d2506ca75de2493168728aa2183",
+      "visualReview": "inspected",
+      "contactSheet": 10,
+      "simulation": {
+        "id": "A39",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "A40",
+      "path": "teaching/a-level-physics-aqa/A40.dzn",
+      "drawingSha256": "1f84cbde47f900959fbaf4dc7b705df555a1bca13df882f64b919c3d37321ee0",
+      "preview": "teaching/a-level-physics-aqa/A40.png",
+      "previewSha256": "e422680d6f89d449b37702af9ec0ecf9205090abfb67dbab03450fb002b445d9",
+      "visualReview": "inspected",
+      "contactSheet": 10,
+      "simulation": {
+        "id": "A40",
+        "status": "passed",
+        "samples": 5010
+      }
+    },
+    {
+      "id": "A41",
+      "path": "teaching/a-level-physics-aqa/A41.dzn",
+      "drawingSha256": "ed6cbac49767da6a19489e0500c46ae6f59569ee8e8c365c9cf41ba80d4bd9e4",
+      "preview": "teaching/a-level-physics-aqa/A41.png",
+      "previewSha256": "6ca79729fe7ffeb353aedf91f50613dc63d509307d41fbe01002917d53a5df62",
+      "visualReview": "inspected",
+      "contactSheet": 10,
+      "simulation": {
+        "id": "A41",
+        "status": "passed",
+        "samples": 5306
+      }
+    },
+    {
+      "id": "A42",
+      "path": "teaching/a-level-physics-aqa/A42.dzn",
+      "drawingSha256": "ce8bb3219a42aeb86074fe5df99e4ccfe302e968f682d10c18ee2c05245922a6",
+      "preview": "teaching/a-level-physics-aqa/A42.png",
+      "previewSha256": "56c94f13d439b21397e27c51a1e4ca2d0f495f2dda0df849ae04a054a16dc305",
+      "visualReview": "inspected",
+      "contactSheet": 10,
+      "simulation": {
+        "id": "A42",
+        "status": "passed",
+        "samples": 5008
+      }
+    },
+    {
+      "id": "A43",
+      "path": "teaching/a-level-physics-aqa/A43.dzn",
+      "drawingSha256": "a4bb4579c68f465cfcaf5906efba4b1357c74508a58f10a3b6b407fef201cafd",
+      "preview": "teaching/a-level-physics-aqa/A43.png",
+      "previewSha256": "17ef8cec7ca3b3b44f6421f7f871eabf3e5f46773c14b35ffdb65acaa37b03f3",
+      "visualReview": "inspected",
+      "contactSheet": 11,
+      "simulation": {
+        "id": "A43",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "F01",
+      "path": "teaching/btec-first-engineering/F01.dzn",
+      "drawingSha256": "6f1b67cc70122c4a66d0e262570f96a7255065130b10a5c2910c822cb008a0d2",
+      "preview": "teaching/btec-first-engineering/F01.png",
+      "previewSha256": "86f2cc7a41677a7cf911f432a657e85a94c6bdde6f166f0b5d6d82e85fae14e6",
+      "visualReview": "inspected",
+      "contactSheet": 11,
+      "simulation": {
+        "id": "F01",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "F02",
+      "path": "teaching/btec-first-engineering/F02.dzn",
+      "drawingSha256": "a6a00ad667372f004a7f1a2351c8123c165e3ab143e6ec2df8622f694de65241",
+      "preview": "teaching/btec-first-engineering/F02.png",
+      "previewSha256": "6d9fe5269a7404bcf8222cba6401d85c70fbc098f4ab7aa8c4ec7585db62ed5d",
+      "visualReview": "inspected",
+      "contactSheet": 11,
+      "simulation": {
+        "id": "F02",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "F03",
+      "path": "teaching/btec-first-engineering/F03.dzn",
+      "drawingSha256": "78942ae8d69292756a3adda6e4c7f9d0ad8c3f4987153c85ebede83399954a0a",
+      "preview": "teaching/btec-first-engineering/F03.png",
+      "previewSha256": "ffa3e4267a5e86c58b845abea11162eef5e342cd7b2e467f0d5c1ecfcb3e0340",
+      "visualReview": "inspected",
+      "contactSheet": 11,
+      "simulation": {
+        "id": "F03",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "F04",
+      "path": "teaching/btec-first-engineering/F04.dzn",
+      "drawingSha256": "550d9854e554bb650c31ccb78395b49f8a29d18b2488d63dec14e89aa3526a45",
+      "preview": "teaching/btec-first-engineering/F04.png",
+      "previewSha256": "08d0bf275216e6baa42016e3e11d347b652ac8ac5a16d876b8d5e1410d8c8648",
+      "visualReview": "inspected",
+      "contactSheet": 11,
+      "simulation": {
+        "id": "F04",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "F05",
+      "path": "teaching/btec-first-engineering/F05.dzn",
+      "drawingSha256": "f81dfdfe3c280ef366b1fb0386ad7fb302cef115e06a978262c352eaa96a2c44",
+      "preview": "teaching/btec-first-engineering/F05.png",
+      "previewSha256": "e929097a97073a3f58f822c4c5febc3d06344e9e84a0f0999e69cab27d47fde3",
+      "visualReview": "inspected",
+      "contactSheet": 11,
+      "simulation": {
+        "id": "F05",
+        "status": "passed",
+        "samples": 3100
+      }
+    },
+    {
+      "id": "F06",
+      "path": "teaching/btec-first-engineering/F06.dzn",
+      "drawingSha256": "efb3b6084708fc94e01798f650f89e459a7da148b7b5795dddeb1bfe1b19736f",
+      "preview": "teaching/btec-first-engineering/F06.png",
+      "previewSha256": "33afec36fdb16b168c3c2829e3accf69f5cc1f12b751e06e0feb4c3ea2d3482d",
+      "visualReview": "inspected",
+      "contactSheet": 12,
+      "simulation": {
+        "id": "F06",
+        "status": "passed",
+        "samples": 3044
+      }
+    },
+    {
+      "id": "F07",
+      "path": "teaching/btec-first-engineering/F07.dzn",
+      "drawingSha256": "91678e5b0b2c25c4013015e02d2fc829ce11f3fa747de2fa6c329cc7edccb910",
+      "preview": "teaching/btec-first-engineering/F07.png",
+      "previewSha256": "7536f5e75da8fb30341ea0b4aec8cc68ac141dfab6c65ac50e0b80b715b9f6d7",
+      "visualReview": "inspected",
+      "contactSheet": 12,
+      "simulation": {
+        "id": "F07",
+        "status": "passed",
+        "samples": 3044
+      }
+    },
+    {
+      "id": "F08",
+      "path": "teaching/btec-first-engineering/F08.dzn",
+      "drawingSha256": "c37a256bd4da142cdb4413d9d1257c618953998f63b67519c57943cc59d69f8d",
+      "preview": "teaching/btec-first-engineering/F08.png",
+      "previewSha256": "c69a850e968b4fcea3d36af16b2efdb746f5a50682de1ccef318f373f6fe5d87",
+      "visualReview": "inspected",
+      "contactSheet": 12,
+      "simulation": {
+        "id": "F08",
+        "status": "passed",
+        "samples": 3044
+      }
+    },
+    {
+      "id": "F09",
+      "path": "teaching/btec-first-engineering/F09.dzn",
+      "drawingSha256": "c72b0b8e41eb2dba59a07bca531f75769e1591e035a1732dbea0ce85e3ca0997",
+      "preview": "teaching/btec-first-engineering/F09.png",
+      "previewSha256": "fa1baa97eed9140b68d8b7f3c376560da95d406b1f553cf560d948051348b844",
+      "visualReview": "inspected",
+      "contactSheet": 12,
+      "simulation": {
+        "id": "F09",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "F10",
+      "path": "teaching/btec-first-engineering/F10.dzn",
+      "drawingSha256": "157ef8567c233047a50e71137c1c82eba05cda210767b2a60b5da9c93622d552",
+      "preview": "teaching/btec-first-engineering/F10.png",
+      "previewSha256": "358d4e45ea3c9f7fae9cb102406ed7d04c3cd112dd79d0e0950d4be4104ded7d",
+      "visualReview": "inspected",
+      "contactSheet": 12,
+      "simulation": {
+        "id": "F10",
+        "status": "passed",
+        "samples": 1027
+      }
+    },
+    {
+      "id": "F11",
+      "path": "teaching/btec-first-engineering/F11.dzn",
+      "drawingSha256": "f05d4aec6be21beb6fa8dabcbd06b63c40876e6d44f842855eb63ad0454089fe",
+      "preview": "teaching/btec-first-engineering/F11.png",
+      "previewSha256": "4f216106957081206a9e90374cec5aa96bf22e525bba089e80a32cc885054b52",
+      "visualReview": "inspected",
+      "contactSheet": 12,
+      "simulation": {
+        "id": "F11",
+        "status": "passed",
+        "samples": 5192
+      }
+    },
+    {
+      "id": "F12",
+      "path": "teaching/btec-first-engineering/F12.dzn",
+      "drawingSha256": "b74bf7bc046d417006cab03fc0b0e30076764db65d12a029caace40b901c047b",
+      "preview": "teaching/btec-first-engineering/F12.png",
+      "previewSha256": "ab46c38f4ad873a93a89eb616749781b24332a984884fbce85350a363e0b56f4",
+      "visualReview": "inspected",
+      "contactSheet": 13,
+      "simulation": {
+        "id": "F12",
+        "status": "passed",
+        "samples": 4261
+      }
+    },
+    {
+      "id": "F13",
+      "path": "teaching/btec-first-engineering/F13.dzn",
+      "drawingSha256": "fe8461988ac2c594bb3fd09ac6ab3d4612b6112bef0becd711b6e9a80bd03b0b",
+      "preview": "teaching/btec-first-engineering/F13.png",
+      "previewSha256": "e28edffbb96a3f7ae2e9b021e4007f45320289d05de9f9cd5def0aa78041b958",
+      "visualReview": "inspected",
+      "contactSheet": 13,
+      "simulation": {
+        "id": "F13",
+        "status": "passed",
+        "samples": 3112
+      }
+    },
+    {
+      "id": "F14",
+      "path": "teaching/btec-first-engineering/F14.dzn",
+      "drawingSha256": "b22bf4b6aa8fc66163eeb7de90b6338256041e8a0415ca5a538a647ca7dbcf01",
+      "preview": "teaching/btec-first-engineering/F14.png",
+      "previewSha256": "d1ed56d6a4fc51e0569c7f9070ed82cc89e6e22e88e2a2815a09df505614d23f",
+      "visualReview": "inspected",
+      "contactSheet": 13,
+      "simulation": {
+        "id": "F14",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "F15",
+      "path": "teaching/btec-first-engineering/F15.dsn",
+      "drawingSha256": "b5134d3e81345a876a4938b7a41703507f7089bbb74c36e4c407fc67e4271ae9",
+      "preview": "teaching/btec-first-engineering/F15.png",
+      "previewSha256": "a39579f0323c6a83d48aa54bb5814f199b12a236e33b08ce1237e9a33cca88b5",
+      "visualReview": "inspected",
+      "contactSheet": 13,
+      "simulation": {
+        "id": "F15",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "F16",
+      "path": "teaching/btec-first-engineering/F16.dzn",
+      "drawingSha256": "ccf95cebcff925c5609e92e6d3ebe4d611552629df18d8b601007a33bf5dcdd7",
+      "preview": "teaching/btec-first-engineering/F16.png",
+      "previewSha256": "e4747bb0d79a03e09be0c0cedef38d4d6852aab7d05deae208fa1f97556cdbea",
+      "visualReview": "inspected",
+      "contactSheet": 13,
+      "simulation": {
+        "id": "F16",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "F17",
+      "path": "teaching/btec-first-engineering/F17.dsn",
+      "drawingSha256": "a2fcf13b570ead9a61d0d77077f133e59e0657714da20ae86682e14c9cc2ec62",
+      "preview": "teaching/btec-first-engineering/F17.png",
+      "previewSha256": "127eb317487214428cbd784360bb8d68f447f80d9d5e5dfd78a4947901aa5fe7",
+      "visualReview": "inspected",
+      "contactSheet": 13,
+      "simulation": {
+        "id": "F17",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "S01",
+      "path": "teaching/btec-applied-science-2016/S01.dzn",
+      "drawingSha256": "602f73e18cf3c8c00559a3df170ee7adef47d3ed5d231174d18a89c94729bf0a",
+      "preview": "teaching/btec-applied-science-2016/S01.png",
+      "previewSha256": "710c7b34558fd254ff5c9e726fa4a2da72aacb30d2134d3c8cc26d67e9e6185a",
+      "visualReview": "inspected",
+      "contactSheet": 14,
+      "simulation": {
+        "id": "S01",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "S02",
+      "path": "teaching/btec-applied-science-2016/S02.dzn",
+      "drawingSha256": "65e8f24b90fe90647e2f60fb4ef5d529b6262ca6228b6fc536733af4ab9eea67",
+      "preview": "teaching/btec-applied-science-2016/S02.png",
+      "previewSha256": "6f06288b90cf165e3d9379cc3aeb1fcd57dc80bbba3397dfec13c73029a973bd",
+      "visualReview": "inspected",
+      "contactSheet": 14,
+      "simulation": {
+        "id": "S02",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "S03",
+      "path": "teaching/btec-applied-science-2016/S03.dzn",
+      "drawingSha256": "a01028427de1e38cc38b5a98ef32baf6146b3f365d141ede6843d1b32597517e",
+      "preview": "teaching/btec-applied-science-2016/S03.png",
+      "previewSha256": "56fca702e578497384d4cf9d6a37ebd4dd17eaf004867447437a7095f2c80835",
+      "visualReview": "inspected",
+      "contactSheet": 14,
+      "simulation": {
+        "id": "S03",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "S04",
+      "path": "teaching/btec-applied-science-2016/S04.dzn",
+      "drawingSha256": "4f443064091e37acb4efe89cbe2707597e0aa12201dca5de26f1589875d9d12a",
+      "preview": "teaching/btec-applied-science-2016/S04.png",
+      "previewSha256": "b4654d6d044b8c9b0915f1b25e3102d961f8e8463454badf1502bea34d19f0ba",
+      "visualReview": "inspected",
+      "contactSheet": 14,
+      "simulation": {
+        "id": "S04",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "S05",
+      "path": "teaching/btec-applied-science-2016/S05.dzn",
+      "drawingSha256": "dbe9040517458436ada94d7fae8a6f2af55f196130c88f92f368c16c655fbd6b",
+      "preview": "teaching/btec-applied-science-2016/S05.png",
+      "previewSha256": "633cf507cff559e5c70ff601b0015a4076d58cdd506d50e46a24d1a9169b2e3a",
+      "visualReview": "inspected",
+      "contactSheet": 14,
+      "simulation": {
+        "id": "S05",
+        "status": "passed",
+        "samples": 51
+      }
+    },
+    {
+      "id": "S06",
+      "path": "teaching/btec-applied-science-2016/S06.dzn",
+      "drawingSha256": "3d20aab9f933165d78c359602e52f963dee581f518f7cfd96ee51d69d5022cef",
+      "preview": "teaching/btec-applied-science-2016/S06.png",
+      "previewSha256": "c9980f531b4c660065b072d3a53c4dd91326d6bebfc49b9bb80fe7d301f2ad24",
+      "visualReview": "inspected",
+      "contactSheet": 14,
+      "simulation": {
+        "id": "S06",
+        "status": "passed",
+        "samples": 1028
+      }
+    },
+    {
+      "id": "S07",
+      "path": "teaching/btec-applied-science-2016/S07.dzn",
+      "drawingSha256": "7c1598fc5d38a0b65f2e835fcc44804d38946b4aea3b6a69b2b2b4cbfe252ab0",
+      "preview": "teaching/btec-applied-science-2016/S07.png",
+      "previewSha256": "697acb5880fc83124d414fffae5b21bb304686a141b8324fdc9487445afb977c",
+      "visualReview": "inspected",
+      "contactSheet": 15,
+      "simulation": {
+        "id": "S07",
+        "status": "passed",
+        "samples": 1028
+      }
+    },
+    {
+      "id": "S08",
+      "path": "teaching/btec-applied-science-2016/S08.dzn",
+      "drawingSha256": "9ab6deb90da0fffa428037e7bafa9b4cdb00856c3ee338b651eb93821d71379b",
+      "preview": "teaching/btec-applied-science-2016/S08.png",
+      "previewSha256": "c1d51a502992a7c7d6304d7fcaca180131f89eb13ba8f6e1e7c4cfe59eb8a91c",
+      "visualReview": "inspected",
+      "contactSheet": 15,
+      "simulation": {
+        "id": "S08",
+        "status": "passed",
+        "samples": 241
+      }
+    },
+    {
+      "id": "S09",
+      "path": "teaching/btec-applied-science-2016/S09.dzn",
+      "drawingSha256": "783ebdecb75422d1e9d76388dd32faf40dbb9d490d2945169fff310d4705048e",
+      "preview": "teaching/btec-applied-science-2016/S09.png",
+      "previewSha256": "743bbfcd19d9e6afb07134a739c71c68805ad89fd322122ee68ece76e4850d40",
+      "visualReview": "inspected",
+      "contactSheet": 15,
+      "simulation": {
+        "id": "S09",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "S10",
+      "path": "teaching/btec-applied-science-2016/S10.dzn",
+      "drawingSha256": "e880e7aa9eabeeec2a306eebd5e0a8612ff79706fda793e38b486a9c5b44cf80",
+      "preview": "teaching/btec-applied-science-2016/S10.png",
+      "previewSha256": "50583a2abe07c166659b21f3b67d1cdc9c1ab4f7af89b15482a7b911e6fbf821",
+      "visualReview": "inspected",
+      "contactSheet": 15,
+      "simulation": {
+        "id": "S10",
+        "status": "passed",
+        "samples": 1609
+      }
+    },
+    {
+      "id": "S11",
+      "path": "teaching/btec-applied-science-2016/S11.dzn",
+      "drawingSha256": "f33bf6af3bf765618ec4209659f7b18a80f8fa3676dc1e2e4ea720810305185d",
+      "preview": "teaching/btec-applied-science-2016/S11.png",
+      "previewSha256": "5ba728c360835d880d4cd50bfaee368ea73209b259bad71b72a95a9d86735fa7",
+      "visualReview": "inspected",
+      "contactSheet": 15,
+      "simulation": {
+        "id": "S11",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "S12",
+      "path": "teaching/btec-applied-science-2016/S12.dzn",
+      "drawingSha256": "6224ca17d5b53e503f3be7cf6b828940e70163ccc5f83a9d5d133a4bf78c6568",
+      "preview": "teaching/btec-applied-science-2016/S12.png",
+      "previewSha256": "b290b0dfe289f2b55536e17fcd10b8cb6238d4ef6c34a21b139ae1982a32141b",
+      "visualReview": "inspected",
+      "contactSheet": 15,
+      "simulation": {
+        "id": "S12",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "S13",
+      "path": "teaching/btec-applied-science-2016/S13.dzn",
+      "drawingSha256": "a53464d23f3f8aa97c64801becb56eba9cbbeb715875ddfddf4f1ac0acb330ad",
+      "preview": "teaching/btec-applied-science-2016/S13.png",
+      "previewSha256": "90bcfdb69852b5b1799deb95e01c5ffe41f1a47f0368b07f3677767fbc44e4b1",
+      "visualReview": "inspected",
+      "contactSheet": 16,
+      "simulation": {
+        "id": "S13",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "S14",
+      "path": "teaching/btec-applied-science-2016/S14.dzn",
+      "drawingSha256": "541f3443645315ed990a1916238c4c87e94c36fbaca5a33e0ba7b9520cc3dc5f",
+      "preview": "teaching/btec-applied-science-2016/S14.png",
+      "previewSha256": "6251c0fc6dd84686baece92cdd8aee3c03e55647a28cdb076490668aaa135e95",
+      "visualReview": "inspected",
+      "contactSheet": 16,
+      "simulation": {
+        "id": "S14",
+        "status": "passed",
+        "samples": 3044
+      }
+    },
+    {
+      "id": "S15",
+      "path": "teaching/btec-applied-science-2016/S15.dzn",
+      "drawingSha256": "3626d307623801d7d29ae2849db0cf3ddef8756f5d436afced10de368eba29be",
+      "preview": "teaching/btec-applied-science-2016/S15.png",
+      "previewSha256": "91cb2fc3a55d02eb2c70e5a60deddf88d74d1fce68396050bd26c8281ff2a697",
+      "visualReview": "inspected",
+      "contactSheet": 16,
+      "simulation": {
+        "id": "S15",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "S16",
+      "path": "teaching/btec-applied-science-2016/S16.dzn",
+      "drawingSha256": "d81c0761fb16c05ea3c3ef95ff3cdea48a14b66dadb35a4fc5b598ffd49b345c",
+      "preview": "teaching/btec-applied-science-2016/S16.png",
+      "previewSha256": "865f1759b03d8e181fccc119c664515329d1a7f8bc36eeae0aa7bafaf9a88e1b",
+      "visualReview": "inspected",
+      "contactSheet": 16,
+      "simulation": {
+        "id": "S16",
+        "status": "passed",
+        "samples": 2511
+      }
+    },
+    {
+      "id": "S17",
+      "path": "teaching/btec-applied-science-2016/S17.dsn",
+      "drawingSha256": "d2acd49404493fbae34fd7c39d8b233c71f97ae38f70ba5d0f7b4d2845f80688",
+      "preview": "teaching/btec-applied-science-2016/S17.png",
+      "previewSha256": "eb3055ab75a5c7235f5faca69328f8267aeb17abe12418af61f203bb59488123",
+      "visualReview": "inspected",
+      "contactSheet": 16,
+      "simulation": {
+        "id": "S17",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "S18",
+      "path": "teaching/btec-applied-science-2016/S18.dzn",
+      "drawingSha256": "443a75150253e3ee1e89c019a7e958fb75b869eeb98f5053c7a024a4d3e732fa",
+      "preview": "teaching/btec-applied-science-2016/S18.png",
+      "previewSha256": "174cce30d6bd127726c695ce946e1459de7acb94c721c8c54196dee025798f50",
+      "visualReview": "inspected",
+      "contactSheet": 16,
+      "simulation": {
+        "id": "S18",
+        "status": "passed",
+        "samples": 1027
+      }
+    },
+    {
+      "id": "Q01",
+      "path": "teaching/btec-applied-science-aaq/Q01.dzn",
+      "drawingSha256": "c5f2f8be69b8bcdfb89b7c689deb1b6b34f509e9f0734bafc7b38ad4591fb515",
+      "preview": "teaching/btec-applied-science-aaq/Q01.png",
+      "previewSha256": "f2df46f1ee6503844cf7a25f8a1151fa56a7c2e019a95cf7f5227d2861b36547",
+      "visualReview": "inspected",
+      "contactSheet": 17,
+      "simulation": {
+        "id": "Q01",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "Q02",
+      "path": "teaching/btec-applied-science-aaq/Q02.dzn",
+      "drawingSha256": "854e0804d1d7c8369cf12d79874bbf5b1d5c963e0ce49d26dd3c178b73a63b23",
+      "preview": "teaching/btec-applied-science-aaq/Q02.png",
+      "previewSha256": "9e637a7b3b38d504b91cd06ba2e5960a5cbca5bd1de60d378a235e42a0256d56",
+      "visualReview": "inspected",
+      "contactSheet": 17,
+      "simulation": {
+        "id": "Q02",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "Q03",
+      "path": "teaching/btec-applied-science-aaq/Q03.dzn",
+      "drawingSha256": "35c4ac2707682cc754a51f92ccb2793b7819c31c243f9e59aa42b55261cb9d5a",
+      "preview": "teaching/btec-applied-science-aaq/Q03.png",
+      "previewSha256": "19eace0e4bd9917741e659d0e0146114c7c2e2601b1620977e6ab132ca76eaa2",
+      "visualReview": "inspected",
+      "contactSheet": 17,
+      "simulation": {
+        "id": "Q03",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "Q04",
+      "path": "teaching/btec-applied-science-aaq/Q04.dzn",
+      "drawingSha256": "8c11b0c28c478b2fad6c98d9d87e699a8ea46a2958b2e33773b8f5397841c7dd",
+      "preview": "teaching/btec-applied-science-aaq/Q04.png",
+      "previewSha256": "f0ecc07beb93fd26a4b9d065ce4afab1f4e368fb1a399ada4c767e8abd91b4ea",
+      "visualReview": "inspected",
+      "contactSheet": 17,
+      "simulation": {
+        "id": "Q04",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "Q05",
+      "path": "teaching/btec-applied-science-aaq/Q05.dzn",
+      "drawingSha256": "c24d519700788885c12bf165aa83182a217bc7b5190246d319964f79613d662e",
+      "preview": "teaching/btec-applied-science-aaq/Q05.png",
+      "previewSha256": "e99581396dbc7ef64110c5aef9bcf60f7cd5d85a3070c3f68fde941c63ae102f",
+      "visualReview": "inspected",
+      "contactSheet": 17,
+      "simulation": {
+        "id": "Q05",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "Q06",
+      "path": "teaching/btec-applied-science-aaq/Q06.dzn",
+      "drawingSha256": "8adf701bb90d28903932546dba6471b717a932ed4f1a1da3b8fc43f759c1716a",
+      "preview": "teaching/btec-applied-science-aaq/Q06.png",
+      "previewSha256": "ec16d7279b2e30d40892de158bdd551b226c17d3dc29d05620931ff22ffb5029",
+      "visualReview": "inspected",
+      "contactSheet": 17,
+      "simulation": {
+        "id": "Q06",
+        "status": "passed",
+        "samples": 101
+      }
+    },
+    {
+      "id": "Q07",
+      "path": "teaching/btec-applied-science-aaq/Q07.dzn",
+      "drawingSha256": "580ade75f23b7b513195eb6c86e59f78f180274bc2d94741be31ad38ddf6278b",
+      "preview": "teaching/btec-applied-science-aaq/Q07.png",
+      "previewSha256": "c45c64d7d81c63692de8bd842a696c94efbf50d50ce04d811e4764bc6e52b033",
+      "visualReview": "inspected",
+      "contactSheet": 18,
+      "simulation": {
+        "id": "Q07",
+        "status": "passed",
+        "samples": 101
+      }
+    },
+    {
+      "id": "Q08",
+      "path": "teaching/btec-applied-science-aaq/Q08.dzn",
+      "drawingSha256": "1d31e6a771789634ce37d1f4b5ce326db254b3b5a0e9b674e41ee8f08e6c04ff",
+      "preview": "teaching/btec-applied-science-aaq/Q08.png",
+      "previewSha256": "61c461419a04dbe98cabc2f2758f0ae7a215ac355cf03f15b3fd2219e0506048",
+      "visualReview": "inspected",
+      "contactSheet": 18,
+      "simulation": {
+        "id": "Q08",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "Q09",
+      "path": "teaching/btec-applied-science-aaq/Q09.dzn",
+      "drawingSha256": "7c39840256c7b9313d7cf10d6567c5fb6ef976d1d01b9c96c1c6d5db61429bdd",
+      "preview": "teaching/btec-applied-science-aaq/Q09.png",
+      "previewSha256": "7a6dc5024081b7bcdeb1e423526e8d7eaf9818de848d51a07f8da5340f40de25",
+      "visualReview": "inspected",
+      "contactSheet": 18,
+      "simulation": {
+        "id": "Q09",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "Q10",
+      "path": "teaching/btec-applied-science-aaq/Q10.dzn",
+      "drawingSha256": "360b28a007539d705bbc1f4036d0463e472ed7805884a0cd716e3ea5ae2aff50",
+      "preview": "teaching/btec-applied-science-aaq/Q10.png",
+      "previewSha256": "a99d094c2f9199de2fb84c7117ce037bec8e673dc95158804f1d5d9c71f4ee66",
+      "visualReview": "inspected",
+      "contactSheet": 18,
+      "simulation": {
+        "id": "Q10",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "Q11",
+      "path": "teaching/btec-applied-science-aaq/Q11.dzn",
+      "drawingSha256": "1a38ee013c322ace5b300544b7ae0268b9dc8bd8eefad27733299e9e26b9e603",
+      "preview": "teaching/btec-applied-science-aaq/Q11.png",
+      "previewSha256": "449da019c12b9c0a39c1c232e17d9a1fb535664b72340e0f8709f8297f789654",
+      "visualReview": "inspected",
+      "contactSheet": 18,
+      "simulation": {
+        "id": "Q11",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "Q12",
+      "path": "teaching/btec-applied-science-aaq/Q12.dzn",
+      "drawingSha256": "a6e26c127185ca3f4333514ad623526e0b7dfc501a425d4b134d0c32e289c7f7",
+      "preview": "teaching/btec-applied-science-aaq/Q12.png",
+      "previewSha256": "d3fdc4344ce780c3249b5eaa95986696ac59e0d7223e2dbd748d237cbf8ea251",
+      "visualReview": "inspected",
+      "contactSheet": 18,
+      "simulation": {
+        "id": "Q12",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "Q13",
+      "path": "teaching/btec-applied-science-aaq/Q13.dzn",
+      "drawingSha256": "c2c8d476ce7a909441e0e8670083e4c67a886135a395cbffa70d90c52d459222",
+      "preview": "teaching/btec-applied-science-aaq/Q13.png",
+      "previewSha256": "1c27681a1a70f7a9ec1cdeac6992aedc23d2090b504f66c81badb527e4a480d3",
+      "visualReview": "inspected",
+      "contactSheet": 19,
+      "simulation": {
+        "id": "Q13",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "Q14",
+      "path": "teaching/btec-applied-science-aaq/Q14.dsn",
+      "drawingSha256": "67afa387049ca01c230188d59987de88a9562a80fc5f751ec52a02c0c48b5ff3",
+      "preview": "teaching/btec-applied-science-aaq/Q14.png",
+      "previewSha256": "6e7589e9889b6397b6e77f2f56d63e7230c53d0dc9f325b9d86beeda0bd5dfaf",
+      "visualReview": "inspected",
+      "contactSheet": 19,
+      "simulation": {
+        "id": "Q14",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "N01",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N01.dzn",
+      "drawingSha256": "e5c60b4b9621b7d6a7ccf3af00f6742b46ef034912ecc1799d8520a488720077",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N01.png",
+      "previewSha256": "c625eba1547c329a28ec786e1b587e6526f120302d8ae1833737ddfccd41e8c2",
+      "visualReview": "inspected",
+      "contactSheet": 19,
+      "simulation": {
+        "id": "N01",
+        "status": "passed",
+        "samples": 101
+      }
+    },
+    {
+      "id": "N02",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N02.dzn",
+      "drawingSha256": "8fa2d8b93b2df8300a0376244c374ff149640979c34dfa5fb8fdecb1d07da01d",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N02.png",
+      "previewSha256": "e73cc2c7b8752f8c25b3c12db3d9fd6b164762d1a587202d1d8ee51db8229842",
+      "visualReview": "inspected",
+      "contactSheet": 19,
+      "simulation": {
+        "id": "N02",
+        "status": "passed",
+        "samples": 1608
+      }
+    },
+    {
+      "id": "N03",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N03.dzn",
+      "drawingSha256": "51d763d3e06982a1bd7b0d4a6dd8fffaa4f4bc83b39771d5427aa062f842e81e",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N03.png",
+      "previewSha256": "f813dd3071278b99acf23012710fdd16e91f7f18fa37bd48b982d6ac965e3d57",
+      "visualReview": "inspected",
+      "contactSheet": 19,
+      "simulation": {
+        "id": "N03",
+        "status": "passed",
+        "samples": 1609
+      }
+    },
+    {
+      "id": "N04",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N04.dzn",
+      "drawingSha256": "dd117793c35f79c1aff3bcd0b043aaa80500c1e6978de9fe30e2bc4f21294b0a",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N04.png",
+      "previewSha256": "08623383ad3808274e8939c558c8140a8a27c95845124496113c1775f40d4835",
+      "visualReview": "inspected",
+      "contactSheet": 19,
+      "simulation": {
+        "id": "N04",
+        "status": "passed",
+        "samples": 1609
+      }
+    },
+    {
+      "id": "N05",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N05.dzn",
+      "drawingSha256": "8c3709e85e5134aa990b9ed36821973c0872f34131e4d54dac4ddd6369bc0c8d",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N05.png",
+      "previewSha256": "dee8785d7463997cec526e635a7b4c34833903fcaafd83c2c7f02071aaeaab00",
+      "visualReview": "inspected",
+      "contactSheet": 20,
+      "simulation": {
+        "id": "N05",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "N06",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N06.dzn",
+      "drawingSha256": "703ae4666c3b039ef5d466bf07dce8ba37a1c9885f3a4789b7535f5057ef0bd1",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N06.png",
+      "previewSha256": "4b54d7f85dd10bee98bd69f50e34e2d3ac9a5a086d86ad69121cbc34171a5c78",
+      "visualReview": "inspected",
+      "contactSheet": 20,
+      "simulation": {
+        "id": "N06",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "N07",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N07.dzn",
+      "drawingSha256": "39dfa6138f48af97c1056864abe173afbdef2c3a953aa911462e379bfeb15008",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N07.png",
+      "previewSha256": "de2d0b55998a6656936b7bedeb7133a93f4dd62db39bf0904428b375057cf1be",
+      "visualReview": "inspected",
+      "contactSheet": 20,
+      "simulation": {
+        "id": "N07",
+        "status": "passed",
+        "samples": 3100
+      }
+    },
+    {
+      "id": "N08",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N08.dzn",
+      "drawingSha256": "8576996a6a224d0d7991c146720ae2b7c1461e08c99076931fd0200c5fb4c5ac",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N08.png",
+      "previewSha256": "b4551765f188fccee08872d9ba8acca7804a5b88f81eba90191c845d59c8d6bd",
+      "visualReview": "inspected",
+      "contactSheet": 20,
+      "simulation": {
+        "id": "N08",
+        "status": "passed",
+        "samples": 3044
+      }
+    },
+    {
+      "id": "N09",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N09.dzn",
+      "drawingSha256": "03ef7ead60838b37b4e44bdadc444e08edd72cf603fe186d5e6eec7b6fd0c834",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N09.png",
+      "previewSha256": "39c77f7cc2d823fb99dce2a8c21de8c001d0b83d97358dfcf35a0b01d8c5ab09",
+      "visualReview": "inspected",
+      "contactSheet": 20,
+      "simulation": {
+        "id": "N09",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "N10",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N10.dzn",
+      "drawingSha256": "9adad3f125a65bd842a1eba4cd5f2e721ab6a302f9f54c6062163fb18b5eba56",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N10.png",
+      "previewSha256": "66cce66a7a5dffe19f58fe915834811bf6a09843bc82c47c73c29deaa62a4251",
+      "visualReview": "inspected",
+      "contactSheet": 20,
+      "simulation": {
+        "id": "N10",
+        "status": "passed",
+        "samples": 3008
+      }
+    },
+    {
+      "id": "N11",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N11.dzn",
+      "drawingSha256": "499705003f2098ffdcf664164c5df4baefc6605f932f82e83805a063eee113e6",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N11.png",
+      "previewSha256": "dba3546915e267d6e18478cfd4077059167ce7c31a0717b1f3a365322191c400",
+      "visualReview": "inspected",
+      "contactSheet": 21,
+      "simulation": {
+        "id": "N11",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "N12",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N12.dzn",
+      "drawingSha256": "a185d6da26b6c8dc801eb7f69bfdbed70746f54699faab7bf49d31b38e8057b7",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N12.png",
+      "previewSha256": "4df1828a8653635eecb1ace71533f1607245559a1b0934270edaed6261e39b9d",
+      "visualReview": "inspected",
+      "contactSheet": 21,
+      "simulation": {
+        "id": "N12",
+        "status": "passed",
+        "samples": 2512
+      }
+    },
+    {
+      "id": "N13",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N13.dzn",
+      "drawingSha256": "491fe04c35e6ed8fc6d2f08f0c8a56edf223347e9cebaf3321e9247c4d47b13a",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N13.png",
+      "previewSha256": "fde8eca2a6cef80618bb85da87770591234f36fec00a773fd3d2f993da0c9ea1",
+      "visualReview": "inspected",
+      "contactSheet": 21,
+      "simulation": {
+        "id": "N13",
+        "status": "passed",
+        "samples": 2512
+      }
+    },
+    {
+      "id": "N14",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N14.dzn",
+      "drawingSha256": "fee53c8aaaa8d79e33cc8e50e4fb049f712e30d9bcf07643edf2eb189738cfcc",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N14.png",
+      "previewSha256": "05e1faf2f2fc4834115b4baebaf38ac038eb8405f86204da2f3fad0e2bbc10d6",
+      "visualReview": "inspected",
+      "contactSheet": 21,
+      "simulation": {
+        "id": "N14",
+        "status": "passed",
+        "samples": 161
+      }
+    },
+    {
+      "id": "N15",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N15.dzn",
+      "drawingSha256": "3bbb21fc188e94275ebc0fbfb10db7892dec94023a35d89767dd002502a45b75",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N15.png",
+      "previewSha256": "94b6eb841f7ce98774046de5b60a77500d08a013ffadb7bea4c81b568c49df52",
+      "visualReview": "inspected",
+      "contactSheet": 21,
+      "simulation": {
+        "id": "N15",
+        "status": "passed",
+        "samples": 4312
+      }
+    },
+    {
+      "id": "N16",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N16.dzn",
+      "drawingSha256": "93f84ac728723dc7b31c91c8fc68c589c08f445bba73348d7e6f6d490da1d50c",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N16.png",
+      "previewSha256": "ad2d1b9b9861de78cb7d3e2a07abb329837046c864c3371d4ee71455cff87ed6",
+      "visualReview": "inspected",
+      "contactSheet": 21,
+      "simulation": {
+        "id": "N16",
+        "status": "passed",
+        "samples": 4342
+      }
+    },
+    {
+      "id": "N17",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N17.dzn",
+      "drawingSha256": "534ceb9563f7579eb82a3b8a53f4c4c498fed008a95528a49a37b42ba97d1f8c",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N17.png",
+      "previewSha256": "d235f5b12be0c49c61bad5f3258286a9c8aef39a0219fbb39512dcbf10757c2d",
+      "visualReview": "inspected",
+      "contactSheet": 22,
+      "simulation": {
+        "id": "N17",
+        "status": "passed",
+        "samples": 4312
+      }
+    },
+    {
+      "id": "N18",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N18.dzn",
+      "drawingSha256": "ec577c3ecabac81bca74a523b025bdeb5fc945c2407cbcdcfe016a3c065576fe",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N18.png",
+      "previewSha256": "533be9f637315c2f903805c06f582a6d1ff054b2b6c21d6415b74e4e645ca4e5",
+      "visualReview": "inspected",
+      "contactSheet": 22,
+      "simulation": {
+        "id": "N18",
+        "status": "passed",
+        "samples": 4629
+      }
+    },
+    {
+      "id": "N19",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N19.dzn",
+      "drawingSha256": "815442f36f1ccdc40d1475d959c9042a9614ad6e97eb89a2146e3454f9770e85",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N19.png",
+      "previewSha256": "cb28c4648650da1f40e1914b244d1f78e7a9b4cd98e5457533579c4c02f38b98",
+      "visualReview": "inspected",
+      "contactSheet": 22,
+      "simulation": {
+        "id": "N19",
+        "status": "passed",
+        "samples": 4707
+      }
+    },
+    {
+      "id": "N20",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N20.dzn",
+      "drawingSha256": "afa1bc7130eaad8cc8d02539e0784f0ebd1ed805d14ea117c8e32626449596b8",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N20.png",
+      "previewSha256": "52c4682989b733825c5d664006d311edc0f9a567d8fb72ec18fb0c81e87f48d4",
+      "visualReview": "inspected",
+      "contactSheet": 22,
+      "simulation": {
+        "id": "N20",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "N21",
+      "path": "teaching/btec-national-electrical-electronic-engineering/N21.dsn",
+      "drawingSha256": "0c2d092b65ddbe604fe7a00a7977626e00bf270c580fe6807978beb04ab47469",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N21.png",
+      "previewSha256": "b5f17b5ab94ee058824156a95bd94bee10f952cf5d9f0020b46e20d42e6c8bb9",
+      "visualReview": "inspected",
+      "contactSheet": 22,
+      "simulation": {
+        "id": "N21",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "H01",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H01.dzn",
+      "drawingSha256": "56fbbd61d599fbb1bcef982f09f2f7166d94d55fe2bcf1204f5b6dc66d32206d",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H01.png",
+      "previewSha256": "5b669c8af0f02fd17569e6f619df152c2987ba9a8b7f98ad0b0541a70f655d5b",
+      "visualReview": "inspected",
+      "contactSheet": 22,
+      "simulation": {
+        "id": "H01",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "H02",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H02.dzn",
+      "drawingSha256": "6cd9605f4ab56ad51fd97c3a5f7c17919a1b396249326d8566854e6ca9ad3874",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H02.png",
+      "previewSha256": "24aeb240aadd13a9e5813f0c326c802b80a27c664a0526d697c74bc7e97df2fe",
+      "visualReview": "inspected",
+      "contactSheet": 23,
+      "simulation": {
+        "id": "H02",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "H03",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H03.dzn",
+      "drawingSha256": "055c4028e8998eb41aa863ca81cc77d6f4f145358f015952fd866910fd448357",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H03.png",
+      "previewSha256": "ec49f6c445cbccd5a0a72ed7d7b855351a0a26ac6698b130f2a24c9dbc0e09f7",
+      "visualReview": "inspected",
+      "contactSheet": 23,
+      "simulation": {
+        "id": "H03",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "H04",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H04.dzn",
+      "drawingSha256": "5d6abdaae21cc5a6807dd2afa0bfe1b6efd0c0f79f61f4f16c3ee0e9d5bdc4d5",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H04.png",
+      "previewSha256": "4ff947e07d9a7920fd2c0ea2b031eb9cd060bb6c33c86040d6e2459995c0b8d8",
+      "visualReview": "inspected",
+      "contactSheet": 23,
+      "simulation": {
+        "id": "H04",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "H05",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H05.dzn",
+      "drawingSha256": "e4bb87f59f79dd2e3d698a3e87e582af710ff61944726b4435f41251bcbeb057",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H05.png",
+      "previewSha256": "6cb6e82d73842b264987703912d72e6c15eea0a67b71afa15f963222a0add559",
+      "visualReview": "inspected",
+      "contactSheet": 23,
+      "simulation": {
+        "id": "H05",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "H06",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H06.dzn",
+      "drawingSha256": "1acb745266280a4c8f923b1007f7cb28c686857f3d4286e73d2d75f8a22dec98",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H06.png",
+      "previewSha256": "c086c7f8804d767facefa9c9fb89757b80ab5d4529e252605ddafc595fc91600",
+      "visualReview": "inspected",
+      "contactSheet": 23,
+      "simulation": {
+        "id": "H06",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "H07",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H07.dzn",
+      "drawingSha256": "4205d8b2ea7bd7ff2c7731cf74656b6e4df8273e64f1545719e4be50fb017175",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H07.png",
+      "previewSha256": "20347516183c5c5efe9485049cbed51c467990c2a55e3005e3f71ba907218a1c",
+      "visualReview": "inspected",
+      "contactSheet": 23,
+      "simulation": {
+        "id": "H07",
+        "status": "passed",
+        "samples": 201
+      }
+    },
+    {
+      "id": "H08",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H08.dzn",
+      "drawingSha256": "48c18f78c53bd521440f31a36530786769df821fa4076a9a7d75adbe5e5ec9b9",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H08.png",
+      "previewSha256": "d2e5a6738595dfe35880dbaef646daf5924303cafdb2fec3dc02a391f842085d",
+      "visualReview": "inspected",
+      "contactSheet": 24,
+      "simulation": {
+        "id": "H08",
+        "status": "passed",
+        "samples": 1027
+      }
+    },
+    {
+      "id": "H09",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H09.dzn",
+      "drawingSha256": "6ad43bf1e7c19a40818cebbe4db58345cb65c4adb02027fc4acbf5ed357fe0d8",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H09.png",
+      "previewSha256": "487d093e015c1b52e086155a177933f24b8cce6a2b1510f809c3d33c1720c8bc",
+      "visualReview": "inspected",
+      "contactSheet": 24,
+      "simulation": {
+        "id": "H09",
+        "status": "passed",
+        "samples": 5027
+      }
+    },
+    {
+      "id": "H10",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H10.dzn",
+      "drawingSha256": "009b556df9547e7d38caf94577b7ddd511a94cc05a2884ed39896d6130eaa612",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H10.png",
+      "previewSha256": "e625a128a84d32b87be622a8a02d87c2cb0acb38589f1724b5279dd0b2dff779",
+      "visualReview": "inspected",
+      "contactSheet": 24,
+      "simulation": {
+        "id": "H10",
+        "status": "passed",
+        "samples": 241
+      }
+    },
+    {
+      "id": "H11",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H11.dzn",
+      "drawingSha256": "def85d246d3be874112eedd71aaf69b2743b89c706d366d03dd6c27588165fb4",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H11.png",
+      "previewSha256": "a18eb76d0dc3bd1beffcb1df3b4cf586a66e5f14972c32233e270f495d8a9a3d",
+      "visualReview": "inspected",
+      "contactSheet": 24,
+      "simulation": {
+        "id": "H11",
+        "status": "passed",
+        "samples": 201
+      }
+    },
+    {
+      "id": "H12",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H12.dzn",
+      "drawingSha256": "e6bc4b7778552cc6cef42d10f7351418f70c4c2fde404261fd9d94ca715a5c59",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H12.png",
+      "previewSha256": "69e5879148f70f978e5f5b1277b4a02fcc0b4d623a647131e4da638924e05f9f",
+      "visualReview": "inspected",
+      "contactSheet": 24,
+      "simulation": {
+        "id": "H12",
+        "status": "passed",
+        "samples": 1609
+      }
+    },
+    {
+      "id": "H13",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H13.dzn",
+      "drawingSha256": "aa3b66edc33186f3efaab3101f1cca30c73f0c42e4a61ca1118f109d78de629a",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H13.png",
+      "previewSha256": "5c319ed59612757e3af4cdbf71562ed1660020b7ba46ce6597198125ab9f5ab6",
+      "visualReview": "inspected",
+      "contactSheet": 24,
+      "simulation": {
+        "id": "H13",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "H14",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H14.dzn",
+      "drawingSha256": "e81100f8744175f721fa18d2330a075718a22bd0c44995756455d4924b42f679",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H14.png",
+      "previewSha256": "ac8043efa8d2e96f5395b7d10b4e8137be19c8d156e920b7fc8e5032520ce86f",
+      "visualReview": "inspected",
+      "contactSheet": 25,
+      "simulation": {
+        "id": "H14",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "H15",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H15.dzn",
+      "drawingSha256": "a096f9a6b1389e4b0b5a9c2ecf76d0fe76de63c71f5258f52d0a031a40391e39",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H15.png",
+      "previewSha256": "36b8e0c1d70c4e0e21f3d0855fccd5aa83ca39ce7eb1ceca6e1a0f02d420ff2e",
+      "visualReview": "inspected",
+      "contactSheet": 25,
+      "simulation": {
+        "id": "H15",
+        "status": "passed",
+        "samples": 3008
+      }
+    },
+    {
+      "id": "H16",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H16.dzn",
+      "drawingSha256": "029783485d13ec0d4048f598632d7df82eeaf88206bae050de5042733285b63d",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H16.png",
+      "previewSha256": "fc79af97f78ce87668249991303d4b180da71f1406046e21586d44a32f093df0",
+      "visualReview": "inspected",
+      "contactSheet": 25,
+      "simulation": {
+        "id": "H16",
+        "status": "passed",
+        "samples": 51
+      }
+    },
+    {
+      "id": "H17",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H17.dzn",
+      "drawingSha256": "e048da8b7a938bfdf4b05603267580e76f84e7a67b496f46bed71effe712c1cc",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H17.png",
+      "previewSha256": "9f5078637c0f56bfc1f27c0e5f0da3863b1f80f564ca89eed0308770d1e3c09b",
+      "visualReview": "inspected",
+      "contactSheet": 25,
+      "simulation": {
+        "id": "H17",
+        "status": "passed",
+        "samples": 2512
+      }
+    },
+    {
+      "id": "H18",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H18.dzn",
+      "drawingSha256": "1a10e7941ed65b7ec59dc47b6dd773153b3da176597cd62ba66198c4b2034e56",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H18.png",
+      "previewSha256": "128de939aeb9576c02ca17066182d979998a2a9f402f26074062b1f174225375",
+      "visualReview": "inspected",
+      "contactSheet": 25,
+      "simulation": {
+        "id": "H18",
+        "status": "passed",
+        "samples": 2512
+      }
+    },
+    {
+      "id": "H19",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H19.dzn",
+      "drawingSha256": "76c71b747b5abd698089a1649298c3c2714f1aa6f58403f75d4e01f64b768152",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H19.png",
+      "previewSha256": "fa8d31a802f1f1f6e63a4f8f365b72796ea44cfafc7ae199fc3916dc5e6c1077",
+      "visualReview": "inspected",
+      "contactSheet": 25,
+      "simulation": {
+        "id": "H19",
+        "status": "passed",
+        "samples": 4312
+      }
+    },
+    {
+      "id": "H20",
+      "path": "teaching/btec-hnc-electrical-electronic-engineering/H20.dsn",
+      "drawingSha256": "e2c9bc4c0386e8655025e59d97c24608bb7ae04ef51d2a727d6b92e85ee1996d",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H20.png",
+      "previewSha256": "3fb672ec58a0ec972babcdbc2de2c0f3bb8f8fa50720cc51135fdebef3d0d8ed",
+      "visualReview": "inspected",
+      "contactSheet": 26,
+      "simulation": {
+        "id": "H20",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "P01",
+      "path": "teaching/degree-year1-physics/P01.dzn",
+      "drawingSha256": "465f21fea6b0a05c68ebbcbce233475a5571927a3097bce76b451d76e43d9bc2",
+      "preview": "teaching/degree-year1-physics/P01.png",
+      "previewSha256": "bebbc08ed5df244d719d001f5c876ae0bbc98c17d01bfc810f54e5a566d5a15c",
+      "visualReview": "inspected",
+      "contactSheet": 26,
+      "simulation": {
+        "id": "P01",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "P02",
+      "path": "teaching/degree-year1-physics/P02.dzn",
+      "drawingSha256": "4e57cf311170ec7607be6325854209c6491b43cad0a610b4f8045f3c7e598332",
+      "preview": "teaching/degree-year1-physics/P02.png",
+      "previewSha256": "f2d7df952461d586b76faa53d318dcb7e10d0b147f263dcbedfcf56d0bf5c2c4",
+      "visualReview": "inspected",
+      "contactSheet": 26,
+      "simulation": {
+        "id": "P02",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "P03",
+      "path": "teaching/degree-year1-physics/P03.dzn",
+      "drawingSha256": "fa3112e5a0dc41445cc373213229930a438ce10e85f9511447200bbf0dcc8af1",
+      "preview": "teaching/degree-year1-physics/P03.png",
+      "previewSha256": "15b81d13ba80a683c5dd5ad3743223e96d1643d6c6cbc97a14c30ddc206adad5",
+      "visualReview": "inspected",
+      "contactSheet": 26,
+      "simulation": {
+        "id": "P03",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "P04",
+      "path": "teaching/degree-year1-physics/P04.dzn",
+      "drawingSha256": "df85f7260839df164730613e5d1e9df5cbeaa10b13165f3afbab4ade092ae543",
+      "preview": "teaching/degree-year1-physics/P04.png",
+      "previewSha256": "02a36b71ba140f3bfb2c1ebbb31e45159d326706a10de897d87e91a82cac4c0d",
+      "visualReview": "inspected",
+      "contactSheet": 26,
+      "simulation": {
+        "id": "P04",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "P05",
+      "path": "teaching/degree-year1-physics/P05.dzn",
+      "drawingSha256": "6102b06db5c4f33b5d5f3746a29e1948167939d79616f15f76e8a805d65e7c74",
+      "preview": "teaching/degree-year1-physics/P05.png",
+      "previewSha256": "ef4d1fbccbcbe7b2a04e1c81710d69bec93f0d5bf03a18b673a66f95ec408d77",
+      "visualReview": "inspected",
+      "contactSheet": 26,
+      "simulation": {
+        "id": "P05",
+        "status": "passed",
+        "samples": 1028
+      }
+    },
+    {
+      "id": "P06",
+      "path": "teaching/degree-year1-physics/P06.dzn",
+      "drawingSha256": "0e2dc7afb448cfb7c5364cc4fea7106cef08687f6c1225af39bb18e2bd1f7824",
+      "preview": "teaching/degree-year1-physics/P06.png",
+      "previewSha256": "13766da8849095370c5a029c42eccf71fe1e1f7162d3e2b35a33ef2fe8c54956",
+      "visualReview": "inspected",
+      "contactSheet": 27,
+      "simulation": {
+        "id": "P06",
+        "status": "passed",
+        "samples": 1227
+      }
+    },
+    {
+      "id": "P07",
+      "path": "teaching/degree-year1-physics/P07.dzn",
+      "drawingSha256": "2253cf9fef74ac655d1bfea49109f14c89f616877eacc1126d28bc04d9ef179f",
+      "preview": "teaching/degree-year1-physics/P07.png",
+      "previewSha256": "3e4d73d07de389eb762c5d21e4ca8688beb605bf27bc6238828112d46f38a3e7",
+      "visualReview": "inspected",
+      "contactSheet": 27,
+      "simulation": {
+        "id": "P07",
+        "status": "passed",
+        "samples": 1027
+      }
+    },
+    {
+      "id": "P08",
+      "path": "teaching/degree-year1-physics/P08.dzn",
+      "drawingSha256": "56b0dbf14530f9a5e397ee9e680f256a415e283d18dbfbd8ce64d7762e6c7811",
+      "preview": "teaching/degree-year1-physics/P08.png",
+      "previewSha256": "149e9ddea202743cf35d6ea2189a93d19d0f2b5718c135bec13c8bb623774bff",
+      "visualReview": "inspected",
+      "contactSheet": 27,
+      "simulation": {
+        "id": "P08",
+        "status": "passed",
+        "samples": 5027
+      }
+    },
+    {
+      "id": "P09",
+      "path": "teaching/degree-year1-physics/P09.dzn",
+      "drawingSha256": "99d596dee1fdc4a5d3a55fc604818c7db63ed997edb994a6f754344ad75a6e01",
+      "preview": "teaching/degree-year1-physics/P09.png",
+      "previewSha256": "ce8a0676545ccc5c383f975d168dc99a7b554c4e322d5f97365cd1a613281a27",
+      "visualReview": "inspected",
+      "contactSheet": 27,
+      "simulation": {
+        "id": "P09",
+        "status": "passed",
+        "samples": 201
+      }
+    },
+    {
+      "id": "P10",
+      "path": "teaching/degree-year1-physics/P10.dzn",
+      "drawingSha256": "7e937b5f25b3ef704d994eb802e86e0db097e776e4032022c4a32d253392971e",
+      "preview": "teaching/degree-year1-physics/P10.png",
+      "previewSha256": "7e41fdfb0248fdf8b423d73986d5e89dd659a7f4d2a402249da37c9e66c0b1c7",
+      "visualReview": "inspected",
+      "contactSheet": 27,
+      "simulation": {
+        "id": "P10",
+        "status": "passed",
+        "samples": 241
+      }
+    },
+    {
+      "id": "P11",
+      "path": "teaching/degree-year1-physics/P11.dzn",
+      "drawingSha256": "97b8515ae71869fe15750e150fa7a9928540fca94f5d6bc4ca3a349cdbde1308",
+      "preview": "teaching/degree-year1-physics/P11.png",
+      "previewSha256": "3a2a112290f5708429c384a9bbfd3bc31c3a36129d0aef04b45297e4e18319ad",
+      "visualReview": "inspected",
+      "contactSheet": 27,
+      "simulation": {
+        "id": "P11",
+        "status": "passed",
+        "samples": 201
+      }
+    },
+    {
+      "id": "P12",
+      "path": "teaching/degree-year1-physics/P12.dzn",
+      "drawingSha256": "fe0195a887dd27096051701251570ff36313bc248249a18bf3a478278703c0d6",
+      "preview": "teaching/degree-year1-physics/P12.png",
+      "previewSha256": "6bc1d45f8d36c1151f359ca7e6e4ad4bae8d97c0e492ba1773b819c35b10ccd4",
+      "visualReview": "inspected",
+      "contactSheet": 28,
+      "simulation": {
+        "id": "P12",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "P13",
+      "path": "teaching/degree-year1-physics/P13.dzn",
+      "drawingSha256": "352f9e20f7bc28e501281f4431479858d37ed684c7afa5e7132625070ace1947",
+      "preview": "teaching/degree-year1-physics/P13.png",
+      "previewSha256": "1a558ae1013b59fc0fd69d86dfa4058e92f456eb6a9959b6e0480449fb55b57f",
+      "visualReview": "inspected",
+      "contactSheet": 28,
+      "simulation": {
+        "id": "P13",
+        "status": "passed",
+        "samples": 3008
+      }
+    },
+    {
+      "id": "P14",
+      "path": "teaching/degree-year1-physics/P14.dzn",
+      "drawingSha256": "5dd901c55347b97808ab0c5a8ae1c0820447172c59c44933e97df65a806fce43",
+      "preview": "teaching/degree-year1-physics/P14.png",
+      "previewSha256": "8b06544f440f2a6826229092350ab0950222d06a626b90ef2ff0e1c8bae41eb7",
+      "visualReview": "inspected",
+      "contactSheet": 28,
+      "simulation": {
+        "id": "P14",
+        "status": "passed",
+        "samples": 2512
+      }
+    },
+    {
+      "id": "P15",
+      "path": "teaching/degree-year1-physics/P15.dzn",
+      "drawingSha256": "62f83701a1cd6b8e0a9abb98bcd7dbce6543f0aec866bb1a8c2a92d83749492a",
+      "preview": "teaching/degree-year1-physics/P15.png",
+      "previewSha256": "f1bc9e71b5da02f7a6ea9191722b466d93c35844ac318e9872350d17887c7366",
+      "visualReview": "inspected",
+      "contactSheet": 28,
+      "simulation": {
+        "id": "P15",
+        "status": "passed",
+        "samples": 2508
+      }
+    },
+    {
+      "id": "P16",
+      "path": "teaching/degree-year1-physics/P16.dzn",
+      "drawingSha256": "c59881cabb3c9f19f3c239fa668d43d24b9f39d90a6d8e0eec73991d0953751f",
+      "preview": "teaching/degree-year1-physics/P16.png",
+      "previewSha256": "cbb4c33dabd734afa55251ac6de433bcf44f9f0c1cdb0ad035ef850c97a0f31a",
+      "visualReview": "inspected",
+      "contactSheet": 28,
+      "simulation": {
+        "id": "P16",
+        "status": "passed",
+        "samples": 4312
+      }
+    },
+    {
+      "id": "P17",
+      "path": "teaching/degree-year1-physics/P17.dzn",
+      "drawingSha256": "0a2f01897b8670622f47e644479d904afba9e469cd1e431635a62285f627d5a7",
+      "preview": "teaching/degree-year1-physics/P17.png",
+      "previewSha256": "03c4d40daf8576ec1eccd98e00f1b7c8e8084597993b11c207ab3860fe66c149",
+      "visualReview": "inspected",
+      "contactSheet": 28,
+      "simulation": {
+        "id": "P17",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "P18",
+      "path": "teaching/degree-year1-physics/P18.dzn",
+      "drawingSha256": "a669a47a0bc3e4a5fed5632ca46662cb826c398e74bd4497387133c57cf6c659",
+      "preview": "teaching/degree-year1-physics/P18.png",
+      "previewSha256": "3acbbb331d5d6553cfc441772ed9f095987960330bb1f6845e145fc760cba41d",
+      "visualReview": "inspected",
+      "contactSheet": 29,
+      "simulation": {
+        "id": "P18",
+        "status": "passed",
+        "samples": 1027
+      }
+    },
+    {
+      "id": "P19",
+      "path": "teaching/degree-year1-physics/P19.dsn",
+      "drawingSha256": "d1432641a201beb2eef8ffd78beb6deba83606bdb74d68f6687f1b42ad518f2f",
+      "preview": "teaching/degree-year1-physics/P19.png",
+      "previewSha256": "18892d5a3c75f3dc9b4c0ba5733c688ef83ecd7fce97225fabafc0d10073774c",
+      "visualReview": "inspected",
+      "contactSheet": 29,
+      "simulation": {
+        "id": "P19",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "E01",
+      "path": "teaching/degree-year1-electronics/E01.dzn",
+      "drawingSha256": "4a1d4700a585041e3f32dd6764fec0b96ffa9c38abc20c33c2f115701d5ee157",
+      "preview": "teaching/degree-year1-electronics/E01.png",
+      "previewSha256": "161c38cbaf0d6dc21b1835891ebe74ab70fa11f162c1680fc8bcc1cf142ed6d2",
+      "visualReview": "inspected",
+      "contactSheet": 29,
+      "simulation": {
+        "id": "E01",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "E02",
+      "path": "teaching/degree-year1-electronics/E02.dzn",
+      "drawingSha256": "2f375898a597e2cc5d026eda7495c54aacfeb48c0868d50241660335c9efe2a8",
+      "preview": "teaching/degree-year1-electronics/E02.png",
+      "previewSha256": "3092c1225638219233c08a31045dc4429dba65f79d88f9123272aefb54b358de",
+      "visualReview": "inspected",
+      "contactSheet": 29,
+      "simulation": {
+        "id": "E02",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "E03",
+      "path": "teaching/degree-year1-electronics/E03.dzn",
+      "drawingSha256": "6269cd139152e14cb267d95012e51f019afa324541d50fc76603742aacc305b4",
+      "preview": "teaching/degree-year1-electronics/E03.png",
+      "previewSha256": "806b7e3195ea44b96d7ea8e197f092e15de4515971af409ac18314296875012f",
+      "visualReview": "inspected",
+      "contactSheet": 29,
+      "simulation": {
+        "id": "E03",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "E04",
+      "path": "teaching/degree-year1-electronics/E04.dzn",
+      "drawingSha256": "8aa3404dd9f751a0575c2c25dda8f3ad263bb2437523799fe92421ef2bfa88f3",
+      "preview": "teaching/degree-year1-electronics/E04.png",
+      "previewSha256": "d2530ff7314d90f5c2719cf3361433c4c4262e1869cf4c25fa48ded59f712370",
+      "visualReview": "inspected",
+      "contactSheet": 29,
+      "simulation": {
+        "id": "E04",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "E05",
+      "path": "teaching/degree-year1-electronics/E05.dzn",
+      "drawingSha256": "195bfdc8c8c8f356bebb0b6df3c833a700a2af17cc1c196e79d0fe75baafd354",
+      "preview": "teaching/degree-year1-electronics/E05.png",
+      "previewSha256": "13c35578d19847bb75d2686ff4c8d0310a70e8201ae16dfb5f6dc027aeb62d3d",
+      "visualReview": "inspected",
+      "contactSheet": 30,
+      "simulation": {
+        "id": "E05",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "E06",
+      "path": "teaching/degree-year1-electronics/E06.dzn",
+      "drawingSha256": "52833a887090e0c04d4acd8ab9207e0863bb68117e5d3550d51c6e1d825b6a71",
+      "preview": "teaching/degree-year1-electronics/E06.png",
+      "previewSha256": "626f44357593dad5b1b2ef646b646f1db2403e4de7c8f609eec42e55b352e8d4",
+      "visualReview": "inspected",
+      "contactSheet": 30,
+      "simulation": {
+        "id": "E06",
+        "status": "passed",
+        "samples": 1027
+      }
+    },
+    {
+      "id": "E07",
+      "path": "teaching/degree-year1-electronics/E07.dzn",
+      "drawingSha256": "f878f50ec8825d19e66e2a65e0da75304e66b7c3541170b1a472034ceb8f4c8e",
+      "preview": "teaching/degree-year1-electronics/E07.png",
+      "previewSha256": "80d38c3468605e947a06ac55c49d93d29ca6d365d4718f7b14c051cd4f645cf4",
+      "visualReview": "inspected",
+      "contactSheet": 30,
+      "simulation": {
+        "id": "E07",
+        "status": "passed",
+        "samples": 201
+      }
+    },
+    {
+      "id": "E08",
+      "path": "teaching/degree-year1-electronics/E08.dzn",
+      "drawingSha256": "be3d7b274ce935a98dbcef1501a2b960dadc5865e7fa607d30a5e3a23988cb2d",
+      "preview": "teaching/degree-year1-electronics/E08.png",
+      "previewSha256": "d50bb10eb9534061008ca32091d11f2ab450d524daad009c9c9cc8fb916df7d4",
+      "visualReview": "inspected",
+      "contactSheet": 30,
+      "simulation": {
+        "id": "E08",
+        "status": "passed",
+        "samples": 241
+      }
+    },
+    {
+      "id": "E09",
+      "path": "teaching/degree-year1-electronics/E09.dzn",
+      "drawingSha256": "ada2fc7223fe3e58e22db491ce9d73cc714b42d893acec1781245f3e718ebe8e",
+      "preview": "teaching/degree-year1-electronics/E09.png",
+      "previewSha256": "2f495ccaa8ec4299c972453b61ab2daf0461ab32de11c19b48d6e7d9580f242e",
+      "visualReview": "inspected",
+      "contactSheet": 30,
+      "simulation": {
+        "id": "E09",
+        "status": "passed",
+        "samples": 241
+      }
+    },
+    {
+      "id": "E10",
+      "path": "teaching/degree-year1-electronics/E10.dzn",
+      "drawingSha256": "5d806d678257baf7231cb81cec5298c6cb45c77d978de555c4c95b30a8b0a754",
+      "preview": "teaching/degree-year1-electronics/E10.png",
+      "previewSha256": "af3294f65536ff0036a4c24db2f28bc837efb2c42e39b11d382649840fd22f73",
+      "visualReview": "inspected",
+      "contactSheet": 30,
+      "simulation": {
+        "id": "E10",
+        "status": "passed",
+        "samples": 5027
+      }
+    },
+    {
+      "id": "E11",
+      "path": "teaching/degree-year1-electronics/E11.dzn",
+      "drawingSha256": "21a3bb0048117663d65f0dd8ded713ea3c197205d33d08517a0b61d2aa0901d6",
+      "preview": "teaching/degree-year1-electronics/E11.png",
+      "previewSha256": "8d4e84a3a860c5d204839fbaa19b49cca6834de4b2ba3f52772cc8d93e45db3d",
+      "visualReview": "inspected",
+      "contactSheet": 31,
+      "simulation": {
+        "id": "E11",
+        "status": "passed",
+        "samples": 101
+      }
+    },
+    {
+      "id": "E12",
+      "path": "teaching/degree-year1-electronics/E12.dzn",
+      "drawingSha256": "9d9fccb88bce37c35acb8803713cb76c629a75f2938c3c300708f82f45d45406",
+      "preview": "teaching/degree-year1-electronics/E12.png",
+      "previewSha256": "9a5fd019d63c03b1536efa95d22a4cfc8642f642136d2398eed3f7d1ab174905",
+      "visualReview": "inspected",
+      "contactSheet": 31,
+      "simulation": {
+        "id": "E12",
+        "status": "passed",
+        "samples": 1609
+      }
+    },
+    {
+      "id": "E13",
+      "path": "teaching/degree-year1-electronics/E13.dzn",
+      "drawingSha256": "d82327c27f21f6117f437b57c9d5435d99790f04983565068fc3f9c0f7a4dcf2",
+      "preview": "teaching/degree-year1-electronics/E13.png",
+      "previewSha256": "95389943cba3f2a5fd7ab856cc11815f2ff8e2226520dd1855243e5f51dd04a0",
+      "visualReview": "inspected",
+      "contactSheet": 31,
+      "simulation": {
+        "id": "E13",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "E14",
+      "path": "teaching/degree-year1-electronics/E14.dzn",
+      "drawingSha256": "b58e81b7335c8f7d67b4379ff23045dbad15707bda73dc969787b2b221cda688",
+      "preview": "teaching/degree-year1-electronics/E14.png",
+      "previewSha256": "23bb6d57fffbe9b7f45cf53edf7d4f963b12296b5962ee78b1a89764cc8733db",
+      "visualReview": "inspected",
+      "contactSheet": 31,
+      "simulation": {
+        "id": "E14",
+        "status": "passed",
+        "samples": 3008
+      }
+    },
+    {
+      "id": "E15",
+      "path": "teaching/degree-year1-electronics/E15.dzn",
+      "drawingSha256": "9a56ddc9f66d94b73db145711724fc24a2c01446b764cf76728aff9924cd0311",
+      "preview": "teaching/degree-year1-electronics/E15.png",
+      "previewSha256": "1c14d0bd26dcc11467a5679ad414b8b094aabaa9cf701b3d61d31c1c174ec2fa",
+      "visualReview": "inspected",
+      "contactSheet": 31,
+      "simulation": {
+        "id": "E15",
+        "status": "passed",
+        "samples": 51
+      }
+    },
+    {
+      "id": "E16",
+      "path": "teaching/degree-year1-electronics/E16.dzn",
+      "drawingSha256": "bb354b35a6c6b4d4e2aa60321531e47192fddba75594116a65d2d09245dd9a7d",
+      "preview": "teaching/degree-year1-electronics/E16.png",
+      "previewSha256": "15ac5cb0fa81232a1443f1abe8bdcebe4702fd49d249b66d568be58a2bcb9da6",
+      "visualReview": "inspected",
+      "contactSheet": 31,
+      "simulation": {
+        "id": "E16",
+        "status": "passed",
+        "samples": 2512
+      }
+    },
+    {
+      "id": "E17",
+      "path": "teaching/degree-year1-electronics/E17.dzn",
+      "drawingSha256": "3c2bffb1be3789ffc4955f17f9e3ebb18becf43394121e947f8d109ce0abf1c8",
+      "preview": "teaching/degree-year1-electronics/E17.png",
+      "previewSha256": "dfe8d5d72e4ecc58dddfa1a68c6046bd0492ae144ab6ffe2838a2f50a6c653db",
+      "visualReview": "inspected",
+      "contactSheet": 32,
+      "simulation": {
+        "id": "E17",
+        "status": "passed",
+        "samples": 161
+      }
+    },
+    {
+      "id": "E18",
+      "path": "teaching/degree-year1-electronics/E18.dzn",
+      "drawingSha256": "23d73f9b4ae59414389a234eadea8c25ee10b429d06539b3773438362075678a",
+      "preview": "teaching/degree-year1-electronics/E18.png",
+      "previewSha256": "9b4d8d5b1b1cc87da7c4a20c76de08e20cb1501798241715a195d97753576bec",
+      "visualReview": "inspected",
+      "contactSheet": 32,
+      "simulation": {
+        "id": "E18",
+        "status": "passed",
+        "samples": 4312
+      }
+    },
+    {
+      "id": "E19",
+      "path": "teaching/degree-year1-electronics/E19.dzn",
+      "drawingSha256": "9cf6b1f773e23e929f96773871f0bdd12f288bc0dc268c787d23141e31212aeb",
+      "preview": "teaching/degree-year1-electronics/E19.png",
+      "previewSha256": "abb64fff3ac486a4865d182bd09d1d0287256d24ee2c6cb260cb97cc89836ea5",
+      "visualReview": "inspected",
+      "contactSheet": 32,
+      "simulation": {
+        "id": "E19",
+        "status": "passed",
+        "samples": 16725
+      }
+    },
+    {
+      "id": "E20",
+      "path": "teaching/degree-year1-electronics/E20.dzn",
+      "drawingSha256": "447017d0b5e1391481043a61d1f9576851f84fffeb1d27703ec24debe05069f8",
+      "preview": "teaching/degree-year1-electronics/E20.png",
+      "previewSha256": "d2b24a68629be75eadd1e99acf32b49c594bb10feaf170bbc80c3919996d962b",
+      "visualReview": "inspected",
+      "contactSheet": 32,
+      "simulation": {
+        "id": "E20",
+        "status": "passed",
+        "samples": 4629
+      }
+    },
+    {
+      "id": "E21",
+      "path": "teaching/degree-year1-electronics/E21.dzn",
+      "drawingSha256": "8bc15f2c9d8ac14fa40174814c7d7be515435baf3cb668e7e759c7aa2ef939c9",
+      "preview": "teaching/degree-year1-electronics/E21.png",
+      "previewSha256": "da999267cceaff248bbea0d50b3d905cf767a2ad11e90cf998c4735983cd4630",
+      "visualReview": "inspected",
+      "contactSheet": 32,
+      "simulation": {
+        "id": "E21",
+        "status": "passed",
+        "samples": 4707
+      }
+    },
+    {
+      "id": "E22",
+      "path": "teaching/degree-year1-electronics/E22.dzn",
+      "drawingSha256": "d4ce204234de4456c62850e8baf2c71624050ccb7c01a2dae6cbae1838742018",
+      "preview": "teaching/degree-year1-electronics/E22.png",
+      "previewSha256": "8cf48e76555a1696b9cf56813f3693cdd33ec2e0c8e8b93b76194cab19f6df08",
+      "visualReview": "inspected",
+      "contactSheet": 32,
+      "simulation": {
+        "id": "E22",
+        "status": "passed",
+        "samples": 4342
+      }
+    },
+    {
+      "id": "E23",
+      "path": "teaching/degree-year1-electronics/E23.dzn",
+      "drawingSha256": "306735ed2c81cac9c8184a1ff487cb334d73f6c666fcfc35ddf76caec9a54c60",
+      "preview": "teaching/degree-year1-electronics/E23.png",
+      "previewSha256": "9668b8382b9b0996dcdc3fa5249caa0a6f15e53f7839f2af9a10308c11d28938",
+      "visualReview": "inspected",
+      "contactSheet": 33,
+      "simulation": {
+        "id": "E23",
+        "status": "passed",
+        "samples": 16710
+      }
+    },
+    {
+      "id": "E24",
+      "path": "teaching/degree-year1-electronics/E24.dsn",
+      "drawingSha256": "80549978f245407c5a0e40213947e55027c2ef77290b37965ac54f12aee336f1",
+      "preview": "teaching/degree-year1-electronics/E24.png",
+      "previewSha256": "1bf5936013093219a05e22785c5653ddc870cb7d44ffdefdcba974e60262c505",
+      "visualReview": "inspected",
+      "contactSheet": 33,
+      "simulation": {
+        "id": "E24",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "E25",
+      "path": "teaching/degree-year1-electronics/E25.dsn",
+      "drawingSha256": "1776fefb10d828b8103933f05d3be522144268a0ba6569c43c81e0be6e3323c6",
+      "preview": "teaching/degree-year1-electronics/E25.png",
+      "previewSha256": "3b296a4909b28f0f08810439759bbb0f7d88f4e8efac3a3c3054c87cb927ab6e",
+      "visualReview": "inspected",
+      "contactSheet": 33,
+      "simulation": {
+        "id": "E25",
+        "status": "diagram"
+      }
+    },
+    {
+      "id": "E26",
+      "path": "teaching/degree-year1-electronics/E26.dzn",
+      "drawingSha256": "e47583f299c69416e8a2dfd5541a8021941b17f22e48afd5f79a300a148bb38c",
+      "preview": "teaching/degree-year1-electronics/E26.png",
+      "previewSha256": "2357009195a87dc5ead800cd6c1fc4025ed21015814d8b2d587d9c46cff26700",
+      "visualReview": "inspected",
+      "contactSheet": 33,
+      "simulation": {
+        "id": "E26",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "GY01",
+      "path": "teaching/degree-year1-engineering/GY01.dzn",
+      "drawingSha256": "d3b1f50718002be77de498e175156a6fcae2e7d2c40e8fc25cf722efaa88fbe0",
+      "preview": "teaching/degree-year1-engineering/GY01.png",
+      "previewSha256": "e502713710dabacadc8d0e6100a587d02f6ba5148937126ae1bf4636d291c728",
+      "visualReview": "inspected",
+      "contactSheet": 33,
+      "simulation": {
+        "id": "GY01",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "GY02",
+      "path": "teaching/degree-year1-engineering/GY02.dzn",
+      "drawingSha256": "318885b0a5e7b5f6d62680cc83e1553f34b3f09c01529d85d784efdcf2d75444",
+      "preview": "teaching/degree-year1-engineering/GY02.png",
+      "previewSha256": "73f81fa5339e95042b37098785508f5d7a10a157e1c9a2b5913b2cc50e49c84f",
+      "visualReview": "inspected",
+      "contactSheet": 33,
+      "simulation": {
+        "id": "GY02",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "GY03",
+      "path": "teaching/degree-year1-engineering/GY03.dzn",
+      "drawingSha256": "feca945e0d2609cfd45a26e7931e73435b65e2329433a811f86723029b92ae1e",
+      "preview": "teaching/degree-year1-engineering/GY03.png",
+      "previewSha256": "25c7df82cbe39f946f358bb16e466d04ee9c9df71e640af5ed29525a7e526c60",
+      "visualReview": "inspected",
+      "contactSheet": 34,
+      "simulation": {
+        "id": "GY03",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "GY04",
+      "path": "teaching/degree-year1-engineering/GY04.dzn",
+      "drawingSha256": "c1f1af4b0a425ae28b701fc8bfb7ef65894bffe3c685f3f09b6015828631d96d",
+      "preview": "teaching/degree-year1-engineering/GY04.png",
+      "previewSha256": "c8398aecdeb8c203181f3baf00bca035e58f2e5f5eb7ea946ef48232ce303c85",
+      "visualReview": "inspected",
+      "contactSheet": 34,
+      "simulation": {
+        "id": "GY04",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "GY05",
+      "path": "teaching/degree-year1-engineering/GY05.dzn",
+      "drawingSha256": "e1ca6a30d8f068af4aebfb4953978a6d14301bc897ef7061cde403e5be28da8d",
+      "preview": "teaching/degree-year1-engineering/GY05.png",
+      "previewSha256": "0d58deb923c460505e8d3351aaebc15c7100a2c02150a21759af8b59fc89f062",
+      "visualReview": "inspected",
+      "contactSheet": 34,
+      "simulation": {
+        "id": "GY05",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "GY06",
+      "path": "teaching/degree-year1-engineering/GY06.dzn",
+      "drawingSha256": "735b46a942700073ef6d54ae27f33c6f71c37bc9c02620e56e5a87957d8b1f6b",
+      "preview": "teaching/degree-year1-engineering/GY06.png",
+      "previewSha256": "8db4ba2b31f94edfb49ba1a078fc924cfebe862635b2bda0c38ebfede1907d2d",
+      "visualReview": "inspected",
+      "contactSheet": 34,
+      "simulation": {
+        "id": "GY06",
+        "status": "passed",
+        "samples": 1027
+      }
+    },
+    {
+      "id": "GY07",
+      "path": "teaching/degree-year1-engineering/GY07.dzn",
+      "drawingSha256": "e45d16d0cee9cd0e728ab1ee63064d55bad8dbb4f8d554064a1c9b2b74e9ebf4",
+      "preview": "teaching/degree-year1-engineering/GY07.png",
+      "previewSha256": "ce1736988d2e8e500bfb1f785170aece366269ba9bdd011a0945b0ae4be99562",
+      "visualReview": "inspected",
+      "contactSheet": 34,
+      "simulation": {
+        "id": "GY07",
+        "status": "passed",
+        "samples": 1027
+      }
+    },
+    {
+      "id": "GY08",
+      "path": "teaching/degree-year1-engineering/GY08.dzn",
+      "drawingSha256": "45009c9b2db9d31563f8b50a8b5f1f67132a64fd43307ca407e2b70606c31f8e",
+      "preview": "teaching/degree-year1-engineering/GY08.png",
+      "previewSha256": "ff58cf9e91dbdd261d828fbe9dfd7ac6cb90655cb5ab5edfe87a9d4d70d49a72",
+      "visualReview": "inspected",
+      "contactSheet": 34,
+      "simulation": {
+        "id": "GY08",
+        "status": "passed",
+        "samples": 5027
+      }
+    },
+    {
+      "id": "GY09",
+      "path": "teaching/degree-year1-engineering/GY09.dzn",
+      "drawingSha256": "e9b131e59f4f17227da8109f00b895ff70973b2c0f85bc5ab6a7c6538ef93819",
+      "preview": "teaching/degree-year1-engineering/GY09.png",
+      "previewSha256": "fd527af4f440b0d34f40ee2335fb5cef7b9ef532f8d9566ab8881bb17cb851c4",
+      "visualReview": "inspected",
+      "contactSheet": 35,
+      "simulation": {
+        "id": "GY09",
+        "status": "passed",
+        "samples": 201
+      }
+    },
+    {
+      "id": "GY10",
+      "path": "teaching/degree-year1-engineering/GY10.dzn",
+      "drawingSha256": "33efd850ab0ac73f742258d06f0a32ef153894a68d670c147b5b918bab7bafb1",
+      "preview": "teaching/degree-year1-engineering/GY10.png",
+      "previewSha256": "ed7ce10f0913824810082faf3ec49ab659a6ffc3844f0151b4690c828240195a",
+      "visualReview": "inspected",
+      "contactSheet": 35,
+      "simulation": {
+        "id": "GY10",
+        "status": "passed",
+        "samples": 201
+      }
+    },
+    {
+      "id": "GY11",
+      "path": "teaching/degree-year1-engineering/GY11.dzn",
+      "drawingSha256": "32609d46c63eb91e389385ef112f3a65c8134a50778c680db0bf6573959b0716",
+      "preview": "teaching/degree-year1-engineering/GY11.png",
+      "previewSha256": "1fba9615cfa2ec5451d9b34d11ee981aaa3502de0a0043b7b9c4d7eaf6e33ebc",
+      "visualReview": "inspected",
+      "contactSheet": 35,
+      "simulation": {
+        "id": "GY11",
+        "status": "passed",
+        "samples": 241
+      }
+    },
+    {
+      "id": "GY12",
+      "path": "teaching/degree-year1-engineering/GY12.dzn",
+      "drawingSha256": "ac86b4ca5ebd21ed005b106f85be5ad656bd7d7d4c40f7fdf4167d897d118c33",
+      "preview": "teaching/degree-year1-engineering/GY12.png",
+      "previewSha256": "2f04c6acae74a9252e1b203eb4fc75c7b2c698e4407c182ea39caae85543ff97",
+      "visualReview": "inspected",
+      "contactSheet": 35,
+      "simulation": {
+        "id": "GY12",
+        "status": "passed",
+        "samples": 1609
+      }
+    },
+    {
+      "id": "GY13",
+      "path": "teaching/degree-year1-engineering/GY13.dzn",
+      "drawingSha256": "9511742af15d97c6ec1288303ea675823f6c029cd5d9198566eb32f96a9886f1",
+      "preview": "teaching/degree-year1-engineering/GY13.png",
+      "previewSha256": "23ecb892b8b9a8f4d252f353dbec91c281da8241e3325a3b5b3e97499c784625",
+      "visualReview": "inspected",
+      "contactSheet": 35,
+      "simulation": {
+        "id": "GY13",
+        "status": "passed",
+        "samples": 3112
+      }
+    },
+    {
+      "id": "GY14",
+      "path": "teaching/degree-year1-engineering/GY14.dzn",
+      "drawingSha256": "db1e10a0e7a165f537b3b17779deca7c8471df9d4df76f95beadf83a0312440c",
+      "preview": "teaching/degree-year1-engineering/GY14.png",
+      "previewSha256": "c09ee66c41e758accb5e8161e16518430e7ff282d4b52f7033cef08b515c03a8",
+      "visualReview": "inspected",
+      "contactSheet": 35,
+      "simulation": {
+        "id": "GY14",
+        "status": "passed",
+        "samples": 2512
+      }
+    },
+    {
+      "id": "GY15",
+      "path": "teaching/degree-year1-engineering/GY15.dzn",
+      "drawingSha256": "985b66f6a86231eaea70e0361e2fd30a5027d3c5c26dcc4b7193c6f97d953db9",
+      "preview": "teaching/degree-year1-engineering/GY15.png",
+      "previewSha256": "f55a3ac25b0f373c9730d32a37f16b810e7b5070a8993d7008c12601126f8ee8",
+      "visualReview": "inspected",
+      "contactSheet": 36,
+      "simulation": {
+        "id": "GY15",
+        "status": "passed",
+        "samples": 161
+      }
+    },
+    {
+      "id": "GY16",
+      "path": "teaching/degree-year1-engineering/GY16.dzn",
+      "drawingSha256": "3c0955d0f905cd520ce885833b2412b0aa454bd0e741d83f1f7301e6c054295c",
+      "preview": "teaching/degree-year1-engineering/GY16.png",
+      "previewSha256": "5101298bc2b109b65fbe4151da8609c3624974469a1b035c6e8ca2d1cef03330",
+      "visualReview": "inspected",
+      "contactSheet": 36,
+      "simulation": {
+        "id": "GY16",
+        "status": "passed",
+        "samples": 4312
+      }
+    },
+    {
+      "id": "GY17",
+      "path": "teaching/degree-year1-engineering/GY17.dzn",
+      "drawingSha256": "d94d2b97ba5500a9631ccf4b8c9ff18050068feeadadc25deb49fa2d47810e5d",
+      "preview": "teaching/degree-year1-engineering/GY17.png",
+      "previewSha256": "37641e467465b07261546726439c138e464d02736c40e069bc705369e002ed82",
+      "visualReview": "inspected",
+      "contactSheet": 36,
+      "simulation": {
+        "id": "GY17",
+        "status": "passed",
+        "samples": 1
+      }
+    },
+    {
+      "id": "GY18",
+      "path": "teaching/degree-year1-engineering/GY18.dsn",
+      "drawingSha256": "fe761e55a3dd1ea08432c715cfc48bb140040e8427b4100b0561f6ae8c4e26f4",
+      "preview": "teaching/degree-year1-engineering/GY18.png",
+      "previewSha256": "25eba449b1d4ab38867b7da3e2e7f0be0ccdca80db820bab9134ed4f32c0bb24",
+      "visualReview": "inspected",
+      "contactSheet": 36,
+      "simulation": {
+        "id": "GY18",
+        "status": "diagram"
+      }
+    }
+  ]
+}

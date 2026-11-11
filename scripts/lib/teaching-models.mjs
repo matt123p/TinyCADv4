@@ -649,12 +649,21 @@ Bqb qb 0 V={1-v(q)}
         '.model TP_$(ref) PNP(BF=20 IS=1e-14)\n.model TN_$(ref) NPN(BF=20 IS=1e-14)',
       );
     } else {
-      const reset = norm(
-          'reset',
+      const resetRaw = norm(
+          'reset_raw',
           `${v('RESET_N', lo)}<0.7 || ${v('THRESH', lo)}>${v('CTRL', lo)}`,
         ),
-        set = norm('set', `${v('TRIG', lo)}<0.5*${v('CTRL', lo)}`);
-      state('0', '0', '0', reset, set, 0, true);
+        setRaw = norm('set_raw', `${v('TRIG', lo)}<0.5*${v('CTRL', lo)}`);
+      // Finite comparator response keeps reset asserted long enough to clear
+      // the storage capacitor when the discharge path changes THRESH. An
+      // instantaneous comparator can chatter at the threshold and abort TRAN.
+      emit(
+        `R$(ref)_reset_delay ${resetRaw} _$(ref)_reset 100`,
+        'C$(ref)_reset_delay _$(ref)_reset 0 100p',
+        `R$(ref)_set_delay ${setRaw} _$(ref)_set 100`,
+        'C$(ref)_set_delay _$(ref)_set 0 100p',
+      );
+      state('0', '0', '0', '_$(ref)_reset', '_$(ref)_set', 0, true);
       drive('OUT', q(0));
       emit(
         `R$(ref)_div1 ${p('VCC')} ${p('CTRL')} 5k`,

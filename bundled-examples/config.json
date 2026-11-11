@@ -1,4 +1,1583 @@
 {
   "version": 1,
-  "groups": []
+  "groups": [
+    {
+      "id": "gcse-physics-aqa",
+      "title": "GCSE Physics — AQA 8463",
+      "preview": "teaching/gcse-physics-aqa/G01.png",
+      "descriptionPath": "teaching/gcse-physics-aqa/overview.md",
+      "examples": [
+        {
+          "id": "G01",
+          "title": "G01 · Resistance of a wire as its length changes",
+          "path": "teaching/gcse-physics-aqa/G01.dzn",
+          "preview": "teaching/gcse-physics-aqa/G01.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G01.md"
+        },
+        {
+          "id": "G02",
+          "title": "G02 · Equivalent resistance of series combinations",
+          "path": "teaching/gcse-physics-aqa/G02.dzn",
+          "preview": "teaching/gcse-physics-aqa/G02.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G02.md"
+        },
+        {
+          "id": "G03",
+          "title": "G03 · Equivalent resistance of parallel combinations",
+          "path": "teaching/gcse-physics-aqa/G03.dzn",
+          "preview": "teaching/gcse-physics-aqa/G03.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G03.md"
+        },
+        {
+          "id": "G04",
+          "title": "G04 · I–V investigation: fixed resistor",
+          "path": "teaching/gcse-physics-aqa/G04.dzn",
+          "preview": "teaching/gcse-physics-aqa/G04.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G04.md"
+        },
+        {
+          "id": "G05",
+          "title": "G05 · I–V investigation: filament lamp",
+          "path": "teaching/gcse-physics-aqa/G05.dzn",
+          "preview": "teaching/gcse-physics-aqa/G05.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G05.md"
+        },
+        {
+          "id": "G06",
+          "title": "G06 · I–V investigation: diode",
+          "path": "teaching/gcse-physics-aqa/G06.dzn",
+          "preview": "teaching/gcse-physics-aqa/G06.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G06.md"
+        },
+        {
+          "id": "G07",
+          "title": "G07 · Choosing and connecting electrical meters",
+          "path": "teaching/gcse-physics-aqa/G07.dzn",
+          "preview": "teaching/gcse-physics-aqa/G07.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G07.md"
+        },
+        {
+          "id": "G08",
+          "title": "G08 · Current at different positions in one loop",
+          "path": "teaching/gcse-physics-aqa/G08.dzn",
+          "preview": "teaching/gcse-physics-aqa/G08.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G08.md"
+        },
+        {
+          "id": "G09",
+          "title": "G09 · Voltage sharing in a series circuit",
+          "path": "teaching/gcse-physics-aqa/G09.dzn",
+          "preview": "teaching/gcse-physics-aqa/G09.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G09.md"
+        },
+        {
+          "id": "G10",
+          "title": "G10 · Branch current and voltage in parallel circuits",
+          "path": "teaching/gcse-physics-aqa/G10.dzn",
+          "preview": "teaching/gcse-physics-aqa/G10.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G10.md"
+        },
+        {
+          "id": "G11",
+          "title": "G11 · Resistance of an NTC thermistor versus temperature",
+          "path": "teaching/gcse-physics-aqa/G11.dzn",
+          "preview": "teaching/gcse-physics-aqa/G11.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G11.md"
+        },
+        {
+          "id": "G12",
+          "title": "G12 · Resistance of an LDR versus illumination",
+          "path": "teaching/gcse-physics-aqa/G12.dzn",
+          "preview": "teaching/gcse-physics-aqa/G12.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G12.md"
+        },
+        {
+          "id": "G13",
+          "title": "G13 · Temperature-responsive sensor circuit",
+          "path": "teaching/gcse-physics-aqa/G13.dzn",
+          "preview": "teaching/gcse-physics-aqa/G13.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G13.md"
+        },
+        {
+          "id": "G14",
+          "title": "G14 · Light-responsive sensor circuit",
+          "path": "teaching/gcse-physics-aqa/G14.dzn",
+          "preview": "teaching/gcse-physics-aqa/G14.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G14.md"
+        },
+        {
+          "id": "G15",
+          "title": "G15 · Resistor power and electrical energy",
+          "path": "teaching/gcse-physics-aqa/G15.dzn",
+          "preview": "teaching/gcse-physics-aqa/G15.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G15.md"
+        },
+        {
+          "id": "G16",
+          "title": "G16 · Direct versus alternating voltage",
+          "path": "teaching/gcse-physics-aqa/G16.dzn",
+          "preview": "teaching/gcse-physics-aqa/G16.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G16.md"
+        },
+        {
+          "id": "G17",
+          "title": "G17 · LED polarity and a suitable series resistor",
+          "path": "teaching/gcse-physics-aqa/G17.dzn",
+          "preview": "teaching/gcse-physics-aqa/G17.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G17.md"
+        },
+        {
+          "id": "G18",
+          "title": "G18 · Physical layout versus circuit diagram",
+          "path": "teaching/gcse-physics-aqa/G18.dsn",
+          "preview": "teaching/gcse-physics-aqa/G18.png",
+          "descriptionPath": "teaching/gcse-physics-aqa/G18.md"
+        }
+      ]
+    },
+    {
+      "id": "a-level-physics-aqa",
+      "title": "A-level Physics — AQA 7408, including optional Electronics",
+      "preview": "teaching/a-level-physics-aqa/A01.png",
+      "descriptionPath": "teaching/a-level-physics-aqa/overview.md",
+      "examples": [
+        {
+          "id": "A01",
+          "title": "A01 · Wire resistivity",
+          "path": "teaching/a-level-physics-aqa/A01.dzn",
+          "preview": "teaching/a-level-physics-aqa/A01.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A01.md"
+        },
+        {
+          "id": "A02",
+          "title": "A02 · Cell emf and internal resistance",
+          "path": "teaching/a-level-physics-aqa/A02.dzn",
+          "preview": "teaching/a-level-physics-aqa/A02.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A02.md"
+        },
+        {
+          "id": "A03",
+          "title": "A03 · Capacitor charging",
+          "path": "teaching/a-level-physics-aqa/A03.dzn",
+          "preview": "teaching/a-level-physics-aqa/A03.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A03.md"
+        },
+        {
+          "id": "A04",
+          "title": "A04 · Capacitor discharging",
+          "path": "teaching/a-level-physics-aqa/A04.dzn",
+          "preview": "teaching/a-level-physics-aqa/A04.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A04.md"
+        },
+        {
+          "id": "A05",
+          "title": "A05 · I–V characteristic of an ohmic resistor",
+          "path": "teaching/a-level-physics-aqa/A05.dzn",
+          "preview": "teaching/a-level-physics-aqa/A05.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A05.md"
+        },
+        {
+          "id": "A06",
+          "title": "A06 · I–V characteristic of a filament lamp",
+          "path": "teaching/a-level-physics-aqa/A06.dzn",
+          "preview": "teaching/a-level-physics-aqa/A06.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A06.md"
+        },
+        {
+          "id": "A07",
+          "title": "A07 · I–V characteristic of a semiconductor diode",
+          "path": "teaching/a-level-physics-aqa/A07.dzn",
+          "preview": "teaching/a-level-physics-aqa/A07.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A07.md"
+        },
+        {
+          "id": "A08",
+          "title": "A08 · Thermistor resistance and a temperature-sensitive divider",
+          "path": "teaching/a-level-physics-aqa/A08.dzn",
+          "preview": "teaching/a-level-physics-aqa/A08.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A08.md"
+        },
+        {
+          "id": "A09",
+          "title": "A09 · Series/parallel networks and conservation checks",
+          "path": "teaching/a-level-physics-aqa/A09.dzn",
+          "preview": "teaching/a-level-physics-aqa/A09.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A09.md"
+        },
+        {
+          "id": "A10",
+          "title": "A10 · Cells in series and identical cells in parallel",
+          "path": "teaching/a-level-physics-aqa/A10.dzn",
+          "preview": "teaching/a-level-physics-aqa/A10.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A10.md"
+        },
+        {
+          "id": "A11",
+          "title": "A11 · Adjustable potential divider",
+          "path": "teaching/a-level-physics-aqa/A11.dzn",
+          "preview": "teaching/a-level-physics-aqa/A11.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A11.md"
+        },
+        {
+          "id": "A12",
+          "title": "A12 · Light-dependent potential divider",
+          "path": "teaching/a-level-physics-aqa/A12.dzn",
+          "preview": "teaching/a-level-physics-aqa/A12.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A12.md"
+        },
+        {
+          "id": "A13",
+          "title": "A13 · Electrical power and supply losses",
+          "path": "teaching/a-level-physics-aqa/A13.dzn",
+          "preview": "teaching/a-level-physics-aqa/A13.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A13.md"
+        },
+        {
+          "id": "A14",
+          "title": "A14 · Capacitance from transferred charge",
+          "path": "teaching/a-level-physics-aqa/A14.dzn",
+          "preview": "teaching/a-level-physics-aqa/A14.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A14.md"
+        },
+        {
+          "id": "A15",
+          "title": "A15 · Plate spacing, area and dielectric: electrical measurement circuit",
+          "path": "teaching/a-level-physics-aqa/A15.dsn",
+          "preview": "teaching/a-level-physics-aqa/A15.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A15.md"
+        },
+        {
+          "id": "A16",
+          "title": "A16 · Energy stored and dissipated in a capacitor circuit",
+          "path": "teaching/a-level-physics-aqa/A16.dzn",
+          "preview": "teaching/a-level-physics-aqa/A16.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A16.md"
+        },
+        {
+          "id": "A17",
+          "title": "A17 · Scope measurements of DC and sinusoidal signals",
+          "path": "teaching/a-level-physics-aqa/A17.dzn",
+          "preview": "teaching/a-level-physics-aqa/A17.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A17.md"
+        },
+        {
+          "id": "A18",
+          "title": "A18 · Sinusoidal peak, peak-to-peak and RMS measurements",
+          "path": "teaching/a-level-physics-aqa/A18.dzn",
+          "preview": "teaching/a-level-physics-aqa/A18.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A18.md"
+        },
+        {
+          "id": "A19",
+          "title": "A19 · Meter loading and measurement error",
+          "path": "teaching/a-level-physics-aqa/A19.dzn",
+          "preview": "teaching/a-level-physics-aqa/A19.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A19.md"
+        },
+        {
+          "id": "A20",
+          "title": "A20 · MOSFET transfer and output behaviour",
+          "path": "teaching/a-level-physics-aqa/A20.dzn",
+          "preview": "teaching/a-level-physics-aqa/A20.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A20.md"
+        },
+        {
+          "id": "A21",
+          "title": "A21 · MOSFET-controlled load",
+          "path": "teaching/a-level-physics-aqa/A21.dzn",
+          "preview": "teaching/a-level-physics-aqa/A21.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A21.md"
+        },
+        {
+          "id": "A22",
+          "title": "A22 · Zener characteristic and reference supply",
+          "path": "teaching/a-level-physics-aqa/A22.dzn",
+          "preview": "teaching/a-level-physics-aqa/A22.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A22.md"
+        },
+        {
+          "id": "A23",
+          "title": "A23 · Photodiode detector circuit",
+          "path": "teaching/a-level-physics-aqa/A23.dzn",
+          "preview": "teaching/a-level-physics-aqa/A23.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A23.md"
+        },
+        {
+          "id": "A24",
+          "title": "A24 · Hall-sensor interface and pulse readout",
+          "path": "teaching/a-level-physics-aqa/A24.dzn",
+          "preview": "teaching/a-level-physics-aqa/A24.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A24.md"
+        },
+        {
+          "id": "A25",
+          "title": "A25 · Parallel LC response and damping",
+          "path": "teaching/a-level-physics-aqa/A25.dzn",
+          "preview": "teaching/a-level-physics-aqa/A25.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A25.md"
+        },
+        {
+          "id": "A26",
+          "title": "A26 · Op-amp comparator",
+          "path": "teaching/a-level-physics-aqa/A26.dzn",
+          "preview": "teaching/a-level-physics-aqa/A26.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A26.md"
+        },
+        {
+          "id": "A27",
+          "title": "A27 · Inverting amplifier",
+          "path": "teaching/a-level-physics-aqa/A27.dzn",
+          "preview": "teaching/a-level-physics-aqa/A27.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A27.md"
+        },
+        {
+          "id": "A28",
+          "title": "A28 · Non-inverting amplifier",
+          "path": "teaching/a-level-physics-aqa/A28.dzn",
+          "preview": "teaching/a-level-physics-aqa/A28.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A28.md"
+        },
+        {
+          "id": "A29",
+          "title": "A29 · Summing amplifier",
+          "path": "teaching/a-level-physics-aqa/A29.dzn",
+          "preview": "teaching/a-level-physics-aqa/A29.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A29.md"
+        },
+        {
+          "id": "A30",
+          "title": "A30 · Difference amplifier",
+          "path": "teaching/a-level-physics-aqa/A30.dzn",
+          "preview": "teaching/a-level-physics-aqa/A30.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A30.md"
+        },
+        {
+          "id": "A31",
+          "title": "A31 · Amplifier frequency response",
+          "path": "teaching/a-level-physics-aqa/A31.dzn",
+          "preview": "teaching/a-level-physics-aqa/A31.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A31.md"
+        },
+        {
+          "id": "A32",
+          "title": "A32 · Analogue signals and two-level regeneration",
+          "path": "teaching/a-level-physics-aqa/A32.dzn",
+          "preview": "teaching/a-level-physics-aqa/A32.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A32.md"
+        },
+        {
+          "id": "A33",
+          "title": "A33 · Sampling, quantisation and PCM",
+          "path": "teaching/a-level-physics-aqa/A33.dzn",
+          "preview": "teaching/a-level-physics-aqa/A33.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A33.md"
+        },
+        {
+          "id": "A34",
+          "title": "A34 · Gate truth tables",
+          "path": "teaching/a-level-physics-aqa/A34.dzn",
+          "preview": "teaching/a-level-physics-aqa/A34.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A34.md"
+        },
+        {
+          "id": "A35",
+          "title": "A35 · A logic network from a truth table",
+          "path": "teaching/a-level-physics-aqa/A35.dzn",
+          "preview": "teaching/a-level-physics-aqa/A35.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A35.md"
+        },
+        {
+          "id": "A36",
+          "title": "A36 · Binary, BCD and Johnson counting",
+          "path": "teaching/a-level-physics-aqa/A36.dzn",
+          "preview": "teaching/a-level-physics-aqa/A36.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A36.md"
+        },
+        {
+          "id": "A37",
+          "title": "A37 · Modulo-n counter",
+          "path": "teaching/a-level-physics-aqa/A37.dzn",
+          "preview": "teaching/a-level-physics-aqa/A37.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A37.md"
+        },
+        {
+          "id": "A38",
+          "title": "A38 · Astable clock and duty cycle",
+          "path": "teaching/a-level-physics-aqa/A38.dzn",
+          "preview": "teaching/a-level-physics-aqa/A38.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A38.md"
+        },
+        {
+          "id": "A39",
+          "title": "A39 · Electronic communication-chain connections",
+          "path": "teaching/a-level-physics-aqa/A39.dsn",
+          "preview": "teaching/a-level-physics-aqa/A39.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A39.md"
+        },
+        {
+          "id": "A40",
+          "title": "A40 · Electrical model of a wired channel",
+          "path": "teaching/a-level-physics-aqa/A40.dzn",
+          "preview": "teaching/a-level-physics-aqa/A40.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A40.md"
+        },
+        {
+          "id": "A41",
+          "title": "A41 · Time-division multiplexing",
+          "path": "teaching/a-level-physics-aqa/A41.dzn",
+          "preview": "teaching/a-level-physics-aqa/A41.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A41.md"
+        },
+        {
+          "id": "A42",
+          "title": "A42 · AM waveform demonstration",
+          "path": "teaching/a-level-physics-aqa/A42.dzn",
+          "preview": "teaching/a-level-physics-aqa/A42.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A42.md"
+        },
+        {
+          "id": "A43",
+          "title": "A43 · FM waveform demonstration",
+          "path": "teaching/a-level-physics-aqa/A43.dzn",
+          "preview": "teaching/a-level-physics-aqa/A43.png",
+          "descriptionPath": "teaching/a-level-physics-aqa/A43.md"
+        }
+      ]
+    },
+    {
+      "id": "btec-first-engineering",
+      "title": "BTEC First Certificate in Engineering — selected Unit 8",
+      "preview": "teaching/btec-first-engineering/F01.png",
+      "descriptionPath": "teaching/btec-first-engineering/overview.md",
+      "examples": [
+        {
+          "id": "F01",
+          "title": "F01 · Resistor combinations",
+          "path": "teaching/btec-first-engineering/F01.dzn",
+          "preview": "teaching/btec-first-engineering/F01.png",
+          "descriptionPath": "teaching/btec-first-engineering/F01.md"
+        },
+        {
+          "id": "F02",
+          "title": "F02 · Adjustable sensor input",
+          "path": "teaching/btec-first-engineering/F02.dzn",
+          "preview": "teaching/btec-first-engineering/F02.png",
+          "descriptionPath": "teaching/btec-first-engineering/F02.md"
+        },
+        {
+          "id": "F03",
+          "title": "F03 · Push-button input and pull resistor",
+          "path": "teaching/btec-first-engineering/F03.dzn",
+          "preview": "teaching/btec-first-engineering/F03.png",
+          "descriptionPath": "teaching/btec-first-engineering/F03.md"
+        },
+        {
+          "id": "F04",
+          "title": "F04 · LED output and current limiting",
+          "path": "teaching/btec-first-engineering/F04.dzn",
+          "preview": "teaching/btec-first-engineering/F04.png",
+          "descriptionPath": "teaching/btec-first-engineering/F04.md"
+        },
+        {
+          "id": "F05",
+          "title": "F05 · BJT switching stage",
+          "path": "teaching/btec-first-engineering/F05.dzn",
+          "preview": "teaching/btec-first-engineering/F05.png",
+          "descriptionPath": "teaching/btec-first-engineering/F05.md"
+        },
+        {
+          "id": "F06",
+          "title": "F06 · Darlington input stage",
+          "path": "teaching/btec-first-engineering/F06.dzn",
+          "preview": "teaching/btec-first-engineering/F06.png",
+          "descriptionPath": "teaching/btec-first-engineering/F06.md"
+        },
+        {
+          "id": "F07",
+          "title": "F07 · FET switching stage",
+          "path": "teaching/btec-first-engineering/F07.dzn",
+          "preview": "teaching/btec-first-engineering/F07.png",
+          "descriptionPath": "teaching/btec-first-engineering/F07.md"
+        },
+        {
+          "id": "F08",
+          "title": "F08 · Thyristor latch",
+          "path": "teaching/btec-first-engineering/F08.dzn",
+          "preview": "teaching/btec-first-engineering/F08.png",
+          "descriptionPath": "teaching/btec-first-engineering/F08.md"
+        },
+        {
+          "id": "F09",
+          "title": "F09 · Threshold alarm",
+          "path": "teaching/btec-first-engineering/F09.dzn",
+          "preview": "teaching/btec-first-engineering/F09.png",
+          "descriptionPath": "teaching/btec-first-engineering/F09.md"
+        },
+        {
+          "id": "F10",
+          "title": "F10 · RC timing stage",
+          "path": "teaching/btec-first-engineering/F10.dzn",
+          "preview": "teaching/btec-first-engineering/F10.png",
+          "descriptionPath": "teaching/btec-first-engineering/F10.md"
+        },
+        {
+          "id": "F11",
+          "title": "F11 · Timer in monostable mode",
+          "path": "teaching/btec-first-engineering/F11.dzn",
+          "preview": "teaching/btec-first-engineering/F11.png",
+          "descriptionPath": "teaching/btec-first-engineering/F11.md"
+        },
+        {
+          "id": "F12",
+          "title": "F12 · Timer in astable mode",
+          "path": "teaching/btec-first-engineering/F12.dzn",
+          "preview": "teaching/btec-first-engineering/F12.png",
+          "descriptionPath": "teaching/btec-first-engineering/F12.md"
+        },
+        {
+          "id": "F13",
+          "title": "F13 · Inductive-output protection",
+          "path": "teaching/btec-first-engineering/F13.dzn",
+          "preview": "teaching/btec-first-engineering/F13.png",
+          "descriptionPath": "teaching/btec-first-engineering/F13.md"
+        },
+        {
+          "id": "F14",
+          "title": "F14 · Power-source suitability",
+          "path": "teaching/btec-first-engineering/F14.dzn",
+          "preview": "teaching/btec-first-engineering/F14.png",
+          "descriptionPath": "teaching/btec-first-engineering/F14.md"
+        },
+        {
+          "id": "F15",
+          "title": "F15 · PIC-based counter and display connections",
+          "path": "teaching/btec-first-engineering/F15.dsn",
+          "preview": "teaching/btec-first-engineering/F15.png",
+          "descriptionPath": "teaching/btec-first-engineering/F15.md"
+        },
+        {
+          "id": "F16",
+          "title": "F16 · Test-point and fault-diagnosis exercise",
+          "path": "teaching/btec-first-engineering/F16.dzn",
+          "preview": "teaching/btec-first-engineering/F16.png",
+          "descriptionPath": "teaching/btec-first-engineering/F16.md"
+        },
+        {
+          "id": "F17",
+          "title": "F17 · Construction and soldering preparation",
+          "path": "teaching/btec-first-engineering/F17.dsn",
+          "preview": "teaching/btec-first-engineering/F17.png",
+          "descriptionPath": "teaching/btec-first-engineering/F17.md"
+        }
+      ]
+    },
+    {
+      "id": "btec-applied-science-2016",
+      "title": "BTEC National Extended Diploma Applied Science (2016) — selected Unit 15",
+      "preview": "teaching/btec-applied-science-2016/S01.png",
+      "descriptionPath": "teaching/btec-applied-science-2016/overview.md",
+      "examples": [
+        {
+          "id": "S01",
+          "title": "S01 · Resistor networks",
+          "path": "teaching/btec-applied-science-2016/S01.dzn",
+          "preview": "teaching/btec-applied-science-2016/S01.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S01.md"
+        },
+        {
+          "id": "S02",
+          "title": "S02 · Meter positions and loading",
+          "path": "teaching/btec-applied-science-2016/S02.dzn",
+          "preview": "teaching/btec-applied-science-2016/S02.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S02.md"
+        },
+        {
+          "id": "S03",
+          "title": "S03 · Potential-divider design",
+          "path": "teaching/btec-applied-science-2016/S03.dzn",
+          "preview": "teaching/btec-applied-science-2016/S03.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S03.md"
+        },
+        {
+          "id": "S04",
+          "title": "S04 · Emf and internal resistance",
+          "path": "teaching/btec-applied-science-2016/S04.dzn",
+          "preview": "teaching/btec-applied-science-2016/S04.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S04.md"
+        },
+        {
+          "id": "S05",
+          "title": "S05 · Ohmic/non-ohmic behaviour",
+          "path": "teaching/btec-applied-science-2016/S05.dzn",
+          "preview": "teaching/btec-applied-science-2016/S05.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S05.md"
+        },
+        {
+          "id": "S06",
+          "title": "S06 · Capacitor reservoir and transferred charge",
+          "path": "teaching/btec-applied-science-2016/S06.dzn",
+          "preview": "teaching/btec-applied-science-2016/S06.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S06.md"
+        },
+        {
+          "id": "S07",
+          "title": "S07 · Capacitors in series and parallel",
+          "path": "teaching/btec-applied-science-2016/S07.dzn",
+          "preview": "teaching/btec-applied-science-2016/S07.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S07.md"
+        },
+        {
+          "id": "S08",
+          "title": "S08 · Capacitor filtering",
+          "path": "teaching/btec-applied-science-2016/S08.dzn",
+          "preview": "teaching/btec-applied-science-2016/S08.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S08.md"
+        },
+        {
+          "id": "S09",
+          "title": "S09 · Peak and RMS readings",
+          "path": "teaching/btec-applied-science-2016/S09.dzn",
+          "preview": "teaching/btec-applied-science-2016/S09.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S09.md"
+        },
+        {
+          "id": "S10",
+          "title": "S10 · AC-to-DC supply stage",
+          "path": "teaching/btec-applied-science-2016/S10.dzn",
+          "preview": "teaching/btec-applied-science-2016/S10.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S10.md"
+        },
+        {
+          "id": "S11",
+          "title": "S11 · LDR interface",
+          "path": "teaching/btec-applied-science-2016/S11.dzn",
+          "preview": "teaching/btec-applied-science-2016/S11.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S11.md"
+        },
+        {
+          "id": "S12",
+          "title": "S12 · Thermistor interface",
+          "path": "teaching/btec-applied-science-2016/S12.dzn",
+          "preview": "teaching/btec-applied-science-2016/S12.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S12.md"
+        },
+        {
+          "id": "S13",
+          "title": "S13 · Strain-gauge bridge",
+          "path": "teaching/btec-applied-science-2016/S13.dzn",
+          "preview": "teaching/btec-applied-science-2016/S13.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S13.md"
+        },
+        {
+          "id": "S14",
+          "title": "S14 · Reed-switch alarm interface",
+          "path": "teaching/btec-applied-science-2016/S14.dzn",
+          "preview": "teaching/btec-applied-science-2016/S14.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S14.md"
+        },
+        {
+          "id": "S15",
+          "title": "S15 · Thermocouple readout and amplification",
+          "path": "teaching/btec-applied-science-2016/S15.dzn",
+          "preview": "teaching/btec-applied-science-2016/S15.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S15.md"
+        },
+        {
+          "id": "S16",
+          "title": "S16 · Piezoelectric sensor interface",
+          "path": "teaching/btec-applied-science-2016/S16.dzn",
+          "preview": "teaching/btec-applied-science-2016/S16.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S16.md"
+        },
+        {
+          "id": "S17",
+          "title": "S17 · Sensor/data-logger connection plan",
+          "path": "teaching/btec-applied-science-2016/S17.dsn",
+          "preview": "teaching/btec-applied-science-2016/S17.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S17.md"
+        },
+        {
+          "id": "S18",
+          "title": "S18 · Model-versus-measurement evaluation",
+          "path": "teaching/btec-applied-science-2016/S18.dzn",
+          "preview": "teaching/btec-applied-science-2016/S18.png",
+          "descriptionPath": "teaching/btec-applied-science-2016/S18.md"
+        }
+      ]
+    },
+    {
+      "id": "btec-applied-science-aaq",
+      "title": "BTEC National Applied Science AAQ Extended Certificate — Units 3 and 4",
+      "preview": "teaching/btec-applied-science-aaq/Q01.png",
+      "descriptionPath": "teaching/btec-applied-science-aaq/overview.md",
+      "examples": [
+        {
+          "id": "Q01",
+          "title": "Q01 · Correct meter connections",
+          "path": "teaching/btec-applied-science-aaq/Q01.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q01.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q01.md"
+        },
+        {
+          "id": "Q02",
+          "title": "Q02 · Meter calibration/comparison plan",
+          "path": "teaching/btec-applied-science-aaq/Q02.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q02.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q02.md"
+        },
+        {
+          "id": "Q03",
+          "title": "Q03 · Series and parallel loads",
+          "path": "teaching/btec-applied-science-aaq/Q03.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q03.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q03.md"
+        },
+        {
+          "id": "Q04",
+          "title": "Q04 · Wire resistance versus length",
+          "path": "teaching/btec-applied-science-aaq/Q04.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q04.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q04.md"
+        },
+        {
+          "id": "Q05",
+          "title": "Q05 · Resistivity and cross-sectional area",
+          "path": "teaching/btec-applied-science-aaq/Q05.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q05.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q05.md"
+        },
+        {
+          "id": "Q06",
+          "title": "Q06 · Filament-lamp characteristic",
+          "path": "teaching/btec-applied-science-aaq/Q06.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q06.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q06.md"
+        },
+        {
+          "id": "Q07",
+          "title": "Q07 · Diode polarity and characteristic",
+          "path": "teaching/btec-applied-science-aaq/Q07.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q07.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q07.md"
+        },
+        {
+          "id": "Q08",
+          "title": "Q08 · LED current limiting",
+          "path": "teaching/btec-applied-science-aaq/Q08.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q08.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q08.md"
+        },
+        {
+          "id": "Q09",
+          "title": "Q09 · Thermistor electrical response",
+          "path": "teaching/btec-applied-science-aaq/Q09.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q09.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q09.md"
+        },
+        {
+          "id": "Q10",
+          "title": "Q10 · LDR electrical response",
+          "path": "teaching/btec-applied-science-aaq/Q10.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q10.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q10.md"
+        },
+        {
+          "id": "Q11",
+          "title": "Q11 · Photodiode readout",
+          "path": "teaching/btec-applied-science-aaq/Q11.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q11.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q11.md"
+        },
+        {
+          "id": "Q12",
+          "title": "Q12 · Electrical power and energy",
+          "path": "teaching/btec-applied-science-aaq/Q12.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q12.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q12.md"
+        },
+        {
+          "id": "Q13",
+          "title": "Q13 · Solar-cell load and output measurements",
+          "path": "teaching/btec-applied-science-aaq/Q13.dzn",
+          "preview": "teaching/btec-applied-science-aaq/Q13.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q13.md"
+        },
+        {
+          "id": "Q14",
+          "title": "Q14 · Solar-cell optical investigation plan",
+          "path": "teaching/btec-applied-science-aaq/Q14.dsn",
+          "preview": "teaching/btec-applied-science-aaq/Q14.png",
+          "descriptionPath": "teaching/btec-applied-science-aaq/Q14.md"
+        }
+      ]
+    },
+    {
+      "id": "btec-national-electrical-electronic-engineering",
+      "title": "BTEC National Extended Diploma Electrical and Electronic Engineering — selected Unit 19",
+      "preview": "teaching/btec-national-electrical-electronic-engineering/N01.png",
+      "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/overview.md",
+      "examples": [
+        {
+          "id": "N01",
+          "title": "N01 · Diode characteristic",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N01.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N01.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N01.md"
+        },
+        {
+          "id": "N02",
+          "title": "N02 · Half-wave rectification",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N02.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N02.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N02.md"
+        },
+        {
+          "id": "N03",
+          "title": "N03 · Full-wave rectification",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N03.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N03.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N03.md"
+        },
+        {
+          "id": "N04",
+          "title": "N04 · Smoothing and load regulation",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N04.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N04.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N04.md"
+        },
+        {
+          "id": "N05",
+          "title": "N05 · Zener reference/regulation",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N05.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N05.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N05.md"
+        },
+        {
+          "id": "N06",
+          "title": "N06 · LED indicator design",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N06.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N06.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N06.md"
+        },
+        {
+          "id": "N07",
+          "title": "N07 · BJT switching",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N07.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N07.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N07.md"
+        },
+        {
+          "id": "N08",
+          "title": "N08 · FET switching",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N08.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N08.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N08.md"
+        },
+        {
+          "id": "N09",
+          "title": "N09 · Transistor bias and operating point",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N09.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N09.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N09.md"
+        },
+        {
+          "id": "N10",
+          "title": "N10 · Single-stage transistor amplifier",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N10.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N10.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N10.md"
+        },
+        {
+          "id": "N11",
+          "title": "N11 · Comparator threshold",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N11.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N11.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N11.md"
+        },
+        {
+          "id": "N12",
+          "title": "N12 · Inverting amplifier",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N12.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N12.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N12.md"
+        },
+        {
+          "id": "N13",
+          "title": "N13 · Non-inverting amplifier",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N13.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N13.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N13.md"
+        },
+        {
+          "id": "N14",
+          "title": "N14 · Amplifier/filter frequency response",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N14.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N14.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N14.md"
+        },
+        {
+          "id": "N15",
+          "title": "N15 · Gate truth tables",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N15.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N15.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N15.md"
+        },
+        {
+          "id": "N16",
+          "title": "N16 · TTL/CMOS interface and timing",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N16.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N16.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N16.md"
+        },
+        {
+          "id": "N17",
+          "title": "N17 · Minimise and verify combinational logic",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N17.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N17.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N17.md"
+        },
+        {
+          "id": "N18",
+          "title": "N18 · Latches and flip-flops",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N18.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N18.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N18.md"
+        },
+        {
+          "id": "N19",
+          "title": "N19 · Counters and shift register",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N19.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N19.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N19.md"
+        },
+        {
+          "id": "N20",
+          "title": "N20 · Simulation-to-bench comparison",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N20.dzn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N20.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N20.md"
+        },
+        {
+          "id": "N21",
+          "title": "N21 · Physical build/test preparation",
+          "path": "teaching/btec-national-electrical-electronic-engineering/N21.dsn",
+          "preview": "teaching/btec-national-electrical-electronic-engineering/N21.png",
+          "descriptionPath": "teaching/btec-national-electrical-electronic-engineering/N21.md"
+        }
+      ]
+    },
+    {
+      "id": "btec-hnc-electrical-electronic-engineering",
+      "title": "BTEC HNC Electrical and Electronic Engineering for England (2024) — Unit 4019",
+      "preview": "teaching/btec-hnc-electrical-electronic-engineering/H01.png",
+      "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/overview.md",
+      "examples": [
+        {
+          "id": "H01",
+          "title": "H01 · Nodal and loop checks",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H01.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H01.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H01.md"
+        },
+        {
+          "id": "H02",
+          "title": "H02 · Source superposition",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H02.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H02.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H02.md"
+        },
+        {
+          "id": "H03",
+          "title": "H03 · Thevenin and Norton equivalents",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H03.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H03.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H03.md"
+        },
+        {
+          "id": "H04",
+          "title": "H04 · Maximum power transfer",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H04.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H04.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H04.md"
+        },
+        {
+          "id": "H05",
+          "title": "H05 · Dividers and measurement loading",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H05.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H05.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H05.md"
+        },
+        {
+          "id": "H06",
+          "title": "H06 · Sinusoidal measurements",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H06.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H06.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H06.md"
+        },
+        {
+          "id": "H07",
+          "title": "H07 · RC and RL impedance",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H07.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H07.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H07.md"
+        },
+        {
+          "id": "H08",
+          "title": "H08 · First-order transient response",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H08.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H08.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H08.md"
+        },
+        {
+          "id": "H09",
+          "title": "H09 · RLC resonance and damping",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H09.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H09.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H09.md"
+        },
+        {
+          "id": "H10",
+          "title": "H10 · Passive filter response",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H10.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H10.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H10.md"
+        },
+        {
+          "id": "H11",
+          "title": "H11 · Power factor in a small RLC load",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H11.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H11.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H11.md"
+        },
+        {
+          "id": "H12",
+          "title": "H12 · Half/full-wave rectification and smoothing",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H12.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H12.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H12.md"
+        },
+        {
+          "id": "H13",
+          "title": "H13 · Diode and Zener behaviour",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H13.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H13.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H13.md"
+        },
+        {
+          "id": "H14",
+          "title": "H14 · LED operating conditions",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H14.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H14.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H14.md"
+        },
+        {
+          "id": "H15",
+          "title": "H15 · BJT switch and amplifier",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H15.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H15.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H15.md"
+        },
+        {
+          "id": "H16",
+          "title": "H16 · JFET/MOSFET comparison",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H16.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H16.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H16.md"
+        },
+        {
+          "id": "H17",
+          "title": "H17 · Amplifier source/load interaction",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H17.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H17.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H17.md"
+        },
+        {
+          "id": "H18",
+          "title": "H18 · Introductory op-amp feedback circuit",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H18.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H18.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H18.md"
+        },
+        {
+          "id": "H19",
+          "title": "H19 · Voltage logic and simple gate networks",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H19.dzn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H19.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H19.md"
+        },
+        {
+          "id": "H20",
+          "title": "H20 · Signal-chain and test-plan drawing",
+          "path": "teaching/btec-hnc-electrical-electronic-engineering/H20.dsn",
+          "preview": "teaching/btec-hnc-electrical-electronic-engineering/H20.png",
+          "descriptionPath": "teaching/btec-hnc-electrical-electronic-engineering/H20.md"
+        }
+      ]
+    },
+    {
+      "id": "degree-year1-physics",
+      "title": "First-year physics degree — representative electronic-circuit strand",
+      "preview": "teaching/degree-year1-physics/P01.png",
+      "descriptionPath": "teaching/degree-year1-physics/overview.md",
+      "examples": [
+        {
+          "id": "P01",
+          "title": "P01 · DC network verification",
+          "path": "teaching/degree-year1-physics/P01.dzn",
+          "preview": "teaching/degree-year1-physics/P01.png",
+          "descriptionPath": "teaching/degree-year1-physics/P01.md"
+        },
+        {
+          "id": "P02",
+          "title": "P02 · Source resistance and loading",
+          "path": "teaching/degree-year1-physics/P02.dzn",
+          "preview": "teaching/degree-year1-physics/P02.png",
+          "descriptionPath": "teaching/degree-year1-physics/P02.md"
+        },
+        {
+          "id": "P03",
+          "title": "P03 · Voltmeter loading",
+          "path": "teaching/degree-year1-physics/P03.dzn",
+          "preview": "teaching/degree-year1-physics/P03.png",
+          "descriptionPath": "teaching/degree-year1-physics/P03.md"
+        },
+        {
+          "id": "P04",
+          "title": "P04 · Ammeter burden",
+          "path": "teaching/degree-year1-physics/P04.dzn",
+          "preview": "teaching/degree-year1-physics/P04.png",
+          "descriptionPath": "teaching/degree-year1-physics/P04.md"
+        },
+        {
+          "id": "P05",
+          "title": "P05 · Capacitor combinations and energy",
+          "path": "teaching/degree-year1-physics/P05.dzn",
+          "preview": "teaching/degree-year1-physics/P05.png",
+          "descriptionPath": "teaching/degree-year1-physics/P05.md"
+        },
+        {
+          "id": "P06",
+          "title": "P06 · RC charging/discharging",
+          "path": "teaching/degree-year1-physics/P06.dzn",
+          "preview": "teaching/degree-year1-physics/P06.png",
+          "descriptionPath": "teaching/degree-year1-physics/P06.md"
+        },
+        {
+          "id": "P07",
+          "title": "P07 · RL transient",
+          "path": "teaching/degree-year1-physics/P07.dzn",
+          "preview": "teaching/degree-year1-physics/P07.png",
+          "descriptionPath": "teaching/degree-year1-physics/P07.md"
+        },
+        {
+          "id": "P08",
+          "title": "P08 · Damped RLC response",
+          "path": "teaching/degree-year1-physics/P08.dzn",
+          "preview": "teaching/degree-year1-physics/P08.png",
+          "descriptionPath": "teaching/degree-year1-physics/P08.md"
+        },
+        {
+          "id": "P09",
+          "title": "P09 · Complex impedance and phase",
+          "path": "teaching/degree-year1-physics/P09.dzn",
+          "preview": "teaching/degree-year1-physics/P09.png",
+          "descriptionPath": "teaching/degree-year1-physics/P09.md"
+        },
+        {
+          "id": "P10",
+          "title": "P10 · Series resonance",
+          "path": "teaching/degree-year1-physics/P10.dzn",
+          "preview": "teaching/degree-year1-physics/P10.png",
+          "descriptionPath": "teaching/degree-year1-physics/P10.md"
+        },
+        {
+          "id": "P11",
+          "title": "P11 · AC power and power factor",
+          "path": "teaching/degree-year1-physics/P11.dzn",
+          "preview": "teaching/degree-year1-physics/P11.png",
+          "descriptionPath": "teaching/degree-year1-physics/P11.md"
+        },
+        {
+          "id": "P12",
+          "title": "P12 · Scope timing and amplitude measurements",
+          "path": "teaching/degree-year1-physics/P12.dzn",
+          "preview": "teaching/degree-year1-physics/P12.png",
+          "descriptionPath": "teaching/degree-year1-physics/P12.md"
+        },
+        {
+          "id": "P13",
+          "title": "P13 · Transistor operating point and gain",
+          "path": "teaching/degree-year1-physics/P13.dzn",
+          "preview": "teaching/degree-year1-physics/P13.png",
+          "descriptionPath": "teaching/degree-year1-physics/P13.md"
+        },
+        {
+          "id": "P14",
+          "title": "P14 · Op-amp feedback and limits",
+          "path": "teaching/degree-year1-physics/P14.dzn",
+          "preview": "teaching/degree-year1-physics/P14.png",
+          "descriptionPath": "teaching/degree-year1-physics/P14.md"
+        },
+        {
+          "id": "P15",
+          "title": "P15 · Threshold detector and logic output",
+          "path": "teaching/degree-year1-physics/P15.dzn",
+          "preview": "teaching/degree-year1-physics/P15.png",
+          "descriptionPath": "teaching/degree-year1-physics/P15.md"
+        },
+        {
+          "id": "P16",
+          "title": "P16 · Simple logic-network verification",
+          "path": "teaching/degree-year1-physics/P16.dzn",
+          "preview": "teaching/degree-year1-physics/P16.png",
+          "descriptionPath": "teaching/degree-year1-physics/P16.md"
+        },
+        {
+          "id": "P17",
+          "title": "P17 · Sensor calibration and interface loading",
+          "path": "teaching/degree-year1-physics/P17.dzn",
+          "preview": "teaching/degree-year1-physics/P17.png",
+          "descriptionPath": "teaching/degree-year1-physics/P17.md"
+        },
+        {
+          "id": "P18",
+          "title": "P18 · Component uncertainty and model sensitivity",
+          "path": "teaching/degree-year1-physics/P18.dzn",
+          "preview": "teaching/degree-year1-physics/P18.png",
+          "descriptionPath": "teaching/degree-year1-physics/P18.md"
+        },
+        {
+          "id": "P19",
+          "title": "P19 · Electronic measurement-chain documentation",
+          "path": "teaching/degree-year1-physics/P19.dsn",
+          "preview": "teaching/degree-year1-physics/P19.png",
+          "descriptionPath": "teaching/degree-year1-physics/P19.md"
+        }
+      ]
+    },
+    {
+      "id": "degree-year1-electronics",
+      "title": "First-year electronics degree — representative circuit/device/digital strand",
+      "preview": "teaching/degree-year1-electronics/E01.png",
+      "descriptionPath": "teaching/degree-year1-electronics/overview.md",
+      "examples": [
+        {
+          "id": "E01",
+          "title": "E01 · Nodal and mesh analysis",
+          "path": "teaching/degree-year1-electronics/E01.dzn",
+          "preview": "teaching/degree-year1-electronics/E01.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E01.md"
+        },
+        {
+          "id": "E02",
+          "title": "E02 · Source superposition",
+          "path": "teaching/degree-year1-electronics/E02.dzn",
+          "preview": "teaching/degree-year1-electronics/E02.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E02.md"
+        },
+        {
+          "id": "E03",
+          "title": "E03 · Thevenin/Norton models",
+          "path": "teaching/degree-year1-electronics/E03.dzn",
+          "preview": "teaching/degree-year1-electronics/E03.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E03.md"
+        },
+        {
+          "id": "E04",
+          "title": "E04 · Sources, loads and power",
+          "path": "teaching/degree-year1-electronics/E04.dzn",
+          "preview": "teaching/degree-year1-electronics/E04.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E04.md"
+        },
+        {
+          "id": "E05",
+          "title": "E05 · Meter loading and generator impedance",
+          "path": "teaching/degree-year1-electronics/E05.dzn",
+          "preview": "teaching/degree-year1-electronics/E05.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E05.md"
+        },
+        {
+          "id": "E06",
+          "title": "E06 · RC/RL complete step response",
+          "path": "teaching/degree-year1-electronics/E06.dzn",
+          "preview": "teaching/degree-year1-electronics/E06.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E06.md"
+        },
+        {
+          "id": "E07",
+          "title": "E07 · Impedance and phase",
+          "path": "teaching/degree-year1-electronics/E07.dzn",
+          "preview": "teaching/degree-year1-electronics/E07.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E07.md"
+        },
+        {
+          "id": "E08",
+          "title": "E08 · Resonant network",
+          "path": "teaching/degree-year1-electronics/E08.dzn",
+          "preview": "teaching/degree-year1-electronics/E08.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E08.md"
+        },
+        {
+          "id": "E09",
+          "title": "E09 · Passive filters",
+          "path": "teaching/degree-year1-electronics/E09.dzn",
+          "preview": "teaching/degree-year1-electronics/E09.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E09.md"
+        },
+        {
+          "id": "E10",
+          "title": "E10 · Energy storage and loss",
+          "path": "teaching/degree-year1-electronics/E10.dzn",
+          "preview": "teaching/degree-year1-electronics/E10.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E10.md"
+        },
+        {
+          "id": "E11",
+          "title": "E11 · Diode characteristic and operating point",
+          "path": "teaching/degree-year1-electronics/E11.dzn",
+          "preview": "teaching/degree-year1-electronics/E11.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E11.md"
+        },
+        {
+          "id": "E12",
+          "title": "E12 · Rectification and smoothing",
+          "path": "teaching/degree-year1-electronics/E12.dzn",
+          "preview": "teaching/degree-year1-electronics/E12.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E12.md"
+        },
+        {
+          "id": "E13",
+          "title": "E13 · Transistor bias and load line",
+          "path": "teaching/degree-year1-electronics/E13.dzn",
+          "preview": "teaching/degree-year1-electronics/E13.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E13.md"
+        },
+        {
+          "id": "E14",
+          "title": "E14 · BJT amplifier gain and resistance",
+          "path": "teaching/degree-year1-electronics/E14.dzn",
+          "preview": "teaching/degree-year1-electronics/E14.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E14.md"
+        },
+        {
+          "id": "E15",
+          "title": "E15 · FET characteristics and switching",
+          "path": "teaching/degree-year1-electronics/E15.dzn",
+          "preview": "teaching/degree-year1-electronics/E15.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E15.md"
+        },
+        {
+          "id": "E16",
+          "title": "E16 · Op-amp feedback stages",
+          "path": "teaching/degree-year1-electronics/E16.dzn",
+          "preview": "teaching/degree-year1-electronics/E16.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E16.md"
+        },
+        {
+          "id": "E17",
+          "title": "E17 · Active filter",
+          "path": "teaching/degree-year1-electronics/E17.dzn",
+          "preview": "teaching/degree-year1-electronics/E17.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E17.md"
+        },
+        {
+          "id": "E18",
+          "title": "E18 · Logic functions and minimisation",
+          "path": "teaching/degree-year1-electronics/E18.dzn",
+          "preview": "teaching/degree-year1-electronics/E18.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E18.md"
+        },
+        {
+          "id": "E19",
+          "title": "E19 · Multiplexer, decoder and encoder",
+          "path": "teaching/degree-year1-electronics/E19.dzn",
+          "preview": "teaching/degree-year1-electronics/E19.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E19.md"
+        },
+        {
+          "id": "E20",
+          "title": "E20 · Latch versus edge-triggered flip-flop",
+          "path": "teaching/degree-year1-electronics/E20.dzn",
+          "preview": "teaching/degree-year1-electronics/E20.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E20.md"
+        },
+        {
+          "id": "E21",
+          "title": "E21 · Counter and shift register",
+          "path": "teaching/degree-year1-electronics/E21.dzn",
+          "preview": "teaching/degree-year1-electronics/E21.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E21.md"
+        },
+        {
+          "id": "E22",
+          "title": "E22 · Logic-family loading and propagation",
+          "path": "teaching/degree-year1-electronics/E22.dzn",
+          "preview": "teaching/degree-year1-electronics/E22.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E22.md"
+        },
+        {
+          "id": "E23",
+          "title": "E23 · Adder and overflow indication",
+          "path": "teaching/degree-year1-electronics/E23.dzn",
+          "preview": "teaching/degree-year1-electronics/E23.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E23.md"
+        },
+        {
+          "id": "E24",
+          "title": "E24 · State-machine I/O plan",
+          "path": "teaching/degree-year1-electronics/E24.dsn",
+          "preview": "teaching/degree-year1-electronics/E24.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E24.md"
+        },
+        {
+          "id": "E25",
+          "title": "E25 · FPGA/microcontroller interface schematic",
+          "path": "teaching/degree-year1-electronics/E25.dsn",
+          "preview": "teaching/degree-year1-electronics/E25.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E25.md"
+        },
+        {
+          "id": "E26",
+          "title": "E26 · Integrated design/test exercise",
+          "path": "teaching/degree-year1-electronics/E26.dzn",
+          "preview": "teaching/degree-year1-electronics/E26.png",
+          "descriptionPath": "teaching/degree-year1-electronics/E26.md"
+        }
+      ]
+    },
+    {
+      "id": "degree-year1-engineering",
+      "title": "First-year engineering degrees — shared electronics and discipline applications",
+      "preview": "teaching/degree-year1-engineering/GY01.png",
+      "descriptionPath": "teaching/degree-year1-engineering/overview.md",
+      "examples": [
+        {
+          "id": "GY01",
+          "title": "GY01 · Instrument connections and measurement loading",
+          "path": "teaching/degree-year1-engineering/GY01.dzn",
+          "preview": "teaching/degree-year1-engineering/GY01.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY01.md"
+        },
+        {
+          "id": "GY02",
+          "title": "GY02 · DC network analysis",
+          "path": "teaching/degree-year1-engineering/GY02.dzn",
+          "preview": "teaching/degree-year1-engineering/GY02.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY02.md"
+        },
+        {
+          "id": "GY03",
+          "title": "GY03 · Equivalent source and load",
+          "path": "teaching/degree-year1-engineering/GY03.dzn",
+          "preview": "teaching/degree-year1-engineering/GY03.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY03.md"
+        },
+        {
+          "id": "GY04",
+          "title": "GY04 · Superposition",
+          "path": "teaching/degree-year1-engineering/GY04.dzn",
+          "preview": "teaching/degree-year1-engineering/GY04.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY04.md"
+        },
+        {
+          "id": "GY05",
+          "title": "GY05 · Electrical power budget",
+          "path": "teaching/degree-year1-engineering/GY05.dzn",
+          "preview": "teaching/degree-year1-engineering/GY05.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY05.md"
+        },
+        {
+          "id": "GY06",
+          "title": "GY06 · RC step response",
+          "path": "teaching/degree-year1-engineering/GY06.dzn",
+          "preview": "teaching/degree-year1-engineering/GY06.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY06.md"
+        },
+        {
+          "id": "GY07",
+          "title": "GY07 · RL response and coil resistance",
+          "path": "teaching/degree-year1-engineering/GY07.dzn",
+          "preview": "teaching/degree-year1-engineering/GY07.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY07.md"
+        },
+        {
+          "id": "GY08",
+          "title": "GY08 · Damped RLC response",
+          "path": "teaching/degree-year1-engineering/GY08.dzn",
+          "preview": "teaching/degree-year1-engineering/GY08.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY08.md"
+        },
+        {
+          "id": "GY09",
+          "title": "GY09 · Impedance and phase",
+          "path": "teaching/degree-year1-engineering/GY09.dzn",
+          "preview": "teaching/degree-year1-engineering/GY09.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY09.md"
+        },
+        {
+          "id": "GY10",
+          "title": "GY10 · AC power and power factor",
+          "path": "teaching/degree-year1-engineering/GY10.dzn",
+          "preview": "teaching/degree-year1-engineering/GY10.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY10.md"
+        },
+        {
+          "id": "GY11",
+          "title": "GY11 · Passive filter and pulse distortion",
+          "path": "teaching/degree-year1-engineering/GY11.dzn",
+          "preview": "teaching/degree-year1-engineering/GY11.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY11.md"
+        },
+        {
+          "id": "GY12",
+          "title": "GY12 · Diode and rectifier interface",
+          "path": "teaching/degree-year1-engineering/GY12.dzn",
+          "preview": "teaching/degree-year1-engineering/GY12.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY12.md"
+        },
+        {
+          "id": "GY13",
+          "title": "GY13 · Transistor load driver",
+          "path": "teaching/degree-year1-engineering/GY13.dzn",
+          "preview": "teaching/degree-year1-engineering/GY13.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY13.md"
+        },
+        {
+          "id": "GY14",
+          "title": "GY14 · Op-amp conditioner",
+          "path": "teaching/degree-year1-engineering/GY14.dzn",
+          "preview": "teaching/degree-year1-engineering/GY14.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY14.md"
+        },
+        {
+          "id": "GY15",
+          "title": "GY15 · Active filter",
+          "path": "teaching/degree-year1-engineering/GY15.dzn",
+          "preview": "teaching/degree-year1-engineering/GY15.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY15.md"
+        },
+        {
+          "id": "GY16",
+          "title": "GY16 · Logic decision circuit",
+          "path": "teaching/degree-year1-engineering/GY16.dzn",
+          "preview": "teaching/degree-year1-engineering/GY16.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY16.md"
+        },
+        {
+          "id": "GY17",
+          "title": "GY17 · Sensor-to-controller interface",
+          "path": "teaching/degree-year1-engineering/GY17.dzn",
+          "preview": "teaching/degree-year1-engineering/GY17.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY17.md"
+        },
+        {
+          "id": "GY18",
+          "title": "GY18 · System connections and test plan",
+          "path": "teaching/degree-year1-engineering/GY18.dsn",
+          "preview": "teaching/degree-year1-engineering/GY18.png",
+          "descriptionPath": "teaching/degree-year1-engineering/GY18.md"
+        }
+      ]
+    }
+  ]
 }

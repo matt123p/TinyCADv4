@@ -1,5 +1,7 @@
 # BTEC HNC Electrical and Electronic Engineering for England: electronics experiments
 
+Student drawings: [BTEC HNC Electrical and Electronic Engineering for England (2024) — Unit 4019](../bundled-examples/teaching/btec-hnc-electrical-electronic-engineering/README.md). They are also available in **File → Open Example**. Each activity has a drawing, a preview and student-facing Markdown instructions; simulation examples use `.dzn` and connection plans use `.dsn`.
+
 Research checked: **10 November 2026**.
 
 ## Course and source mapping
