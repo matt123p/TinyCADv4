@@ -1,5 +1,6 @@
 ﻿import React, { FunctionComponent, memo } from 'react';
 import { dsnJunction } from '../../model/dsnItem';
+import { UtilityService } from '../../util/utilityService';
 
 interface TEllipseProps {
   dx: number;
@@ -14,11 +15,12 @@ interface TEllipseProps {
 const TJunction: FunctionComponent<TEllipseProps> = (props: TEllipseProps) => {
   const dx = props.dx ? props.dx : 0;
   const dy = props.dy ? props.dy : 0;
+  const point = UtilityService.rotateSymCordinate(props.dr, props.data.point);
 
   return (
     <circle
-      cx={props.data.point[0] * props.scale_x + dx}
-      cy={props.data.point[1] * props.scale_y + dy}
+      cx={point[0] * props.scale_x + dx}
+      cy={point[1] * props.scale_y + dy}
       r="5"
       style={{ fill: props.color, stroke: 'none' }}
     />

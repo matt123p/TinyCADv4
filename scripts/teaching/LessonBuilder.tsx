@@ -18,6 +18,10 @@ import {encodeDrawing,decodeDrawing} from '../../src/io/dsnCodec';
 import {layoutMarkdown} from '../../src/util/markdown';
 import ServerDrawing from '../../renderer/ServerDrawing';
 import SvgDefs from '../../src/components/svg/SvgDefs';
+import {layoutTeachingSheet} from './layout';
+import {orientTeachingSymbol} from './orientation';
+export {orientTeachingSymbol} from './orientation';
+export {prepareTeachingWiring, validateTeachingRoundTrip, wireCoverage} from './layout';
 const font={font_name:'Arial',font_size:9,font_colour:'#142d43',font_bold:false,font_italic:false};
 const style={stroked:true,line_colour:'#32495f',line_width:.7,line_pattern:0,filled:false,fill_colour:'#ffffff',hatch:0,rounded_rect:false};
 const groundNames=new Set(['GND','VSS','V-','COMMON','REF','K']);
@@ -26,7 +30,7 @@ export class LessonBuilder {
  constructor(public data:any,public library:any){this.drawing=blank();this.drawing.documentId=data.uuid;this.sheet=this.drawing.sheets[0];this.sheet.id=data.uuid.replace(/^./,'b');this.sheet.name=data.id+' · Circuit';this.sheet.details={...this.sheet.details,title:data.title,author:'TinyCAD teaching examples',date:'',page_size:[1200,800],grid:5,grid_snap:true};}
  ref(prefix:string){this.refs[prefix]=(this.refs[prefix]||0)+1;return prefix+this.refs[prefix];}
  sync(){this.drawing.sheets[0]=this.sheet;}
- wire(...points:any[]){const clean=points.filter((p,i)=>!i||p[0]!==points[i-1][0]||p[1]!==points[i-1][1]);for(let i=1;i<clean.length;i++)if(clean[i][0]!==clean[i-1][0]&&clean[i][1]!==clean[i-1][1])throw Error('Non-orthogonal wire '+this.data.id);if(clean.length<2)return;const w={NodeName:'wire',_id:get_global_id(),d_points:clean.map(p=>[...p]),_magnetic:null};this.sheet.items.push(w);this.wires.push(w);}
+ wire(...points:any[]){const clean=points.filter((p,i)=>!i||p[0]!==points[i-1][0]||p[1]!==points[i-1][1]);for(let i=1;i<clean.length;i++){if(clean[i][0]!==clean[i-1][0]&&clean[i][1]!==clean[i-1][1])throw Error('Non-orthogonal wire '+this.data.id);const w={NodeName:'wire',_id:get_global_id(),d_points:[clean[i-1].slice(0,2),clean[i].slice(0,2)],_magnetic:null};this.sheet.items.push(w);this.wires.push(w);}}
  label(point:any,text:string){const l=new updateLabel({...font,NodeName:'label',_id:get_global_id(),point:[...point],rotation:0,which:0,text,textData:null}).post_construction();this.sheet.items.push(l);}
  ground(point:any){this.sheet.items.push({...font,NodeName:'power',_id:get_global_id(),point:[...point],which:4,rotation:0,text:'0',hints:[]});}
  ports(symbol:any,entry:any){return Object.fromEntries(entry.pins.map(p=>{const number=entry.mapping[p.logical_number];const ap=[...new updateSymbol(symbol).active_points(),...new updateSymbol(symbol).power_pins()].find(p=>p[2].number===number);if(!ap)throw Error('Missing '+entry.id+':'+p.name);return[p.name,[ap[0],ap[1]]];}));}
@@ -37,6 +41,7 @@ export class LessonBuilder {
   let symbol=this.sheet.items.at(-1);symbol.text.find(t=>t.description==='Ref').value=this.ref(options.prefix||entry.name.Reference.replace(/[?0-9]/g,''));
   for(const [key,value]of Object.entries(options.fields||{})){const f=symbol.text.find(t=>t.description===key);if(!f)throw Error(id+' unknown field '+key);f.value=String(value);}
   const anchorName=options.anchor||entry.pins[0].name;
+  if(!options.orientation)symbol=orientTeachingSymbol(symbol,entry,s=>this.ports(s,entry));
   if(options.orientation){for(let rotation=0;rotation<4;rotation++){const candidate={...symbol,rotation,_active_points:null},p=this.ports(candidate,entry),names=Object.keys(p);const a=p[names[0]],b=p[names[1]],dx=b[0]-a[0],dy=b[1]-a[1];if(options.orientation==='h'&&Math.abs(dy)<.01&&dx>0||options.orientation==='v'&&Math.abs(dx)<.01&&dy>0){symbol=candidate;break;}}}
   if(options.reverse)symbol={...symbol,rotation:(symbol.rotation+2)%4,_active_points:null};
   let p=this.ports(symbol,entry),a=p[anchorName];symbol={...symbol,point:[symbol.point[0]+anchor[0]-a[0],symbol.point[1]+anchor[1]-a[1]],_active_points:null};
@@ -95,15 +100,18 @@ export class LessonBuilder {
   const title={...font,...style,NodeName:'text',_id:get_global_id(),point:[35,20],point_b:[1165,83],font_size:16,font_bold:true,text:this.data.id+' · '+this.data.title,rotation:0,textData:null};this.sheet.items.push(new updateText(title as any).post_construction());
   const note={...font,...style,NodeName:'text',_id:get_global_id(),point:[735,105],point_b:[1165,740],font_size:10,filled:true,fill_colour:'#f4f8fc',line_colour:'#b7c9dc',text:instructions,rotation:0,textData:null};this.sheet.items.push(new updateText(note as any).post_construction());
   const shapes=layoutMarkdown(instructions,note,430);const max=Math.max(0,...shapes.map(s=>s.kind==='text'?s.y+s.size:s.kind==='line'?Math.max(s.y1,s.y2):s.y+(s.kind==='rect'?s.height:s.radius)));if(max>625)throw Error('Student text overflows '+this.data.id+': '+max);
-  this.sync();let deck='';
+  const layout=layoutTeachingSheet(this.sheet);this.sheet=layout.sheet;this.sync();let deck='';
   if(diagram){for(const item of this.sheet.items)if(item.NodeName==='symbol'){item.text=item.text.filter(f=>!f.description.startsWith('$$SPICE'));item._symbol.uid='tinycad-teaching-diagram-'+item._symbol.uid;}for(const item of this.sheet.items)if(item.NodeName==='power'&&item.text==='0')item.text='GND';}
   else{const sim=createSimulationSheet(this.sheet,this.data.id+' · Simulation');sim.id=this.data.uuid.replace(/^./,'c');Object.assign(sim.simulation.analysis,this.analysis);sim.simulation.instructions=instructions;sim.simulation.parameters=this.parameters;sim.simulation.signals=[...new Set(this.outputs.length?this.outputs:['OUT','IN'])].slice(0,30).map(s=>s.toLowerCase());this.drawing.sheets.push(sim);
    const net=new NetlistWorkerState().init(this.drawing);const errors=checkSpiceComponents(net,sim.simulation);if(errors.length)throw Error(this.data.id+' SPICE preflight '+JSON.stringify(errors));deck=buildDeck(net,sim.simulation);
   }
   for(const item of this.sheet.items){const u=updateFactory(item);if(item.NodeName==='symbol')for(const[x,y]of [...new updateSymbol(item).active_points(),...new updateSymbol(item).power_pins()])if(Math.abs(x/5-Math.round(x/5))>1e-5||Math.abs(y/5-Math.round(y/5))>1e-5)throw Error('Off-grid '+this.data.id);}
-  const svg=renderToStaticMarkup(<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1200" viewBox="0 0 1200 800"><rect width="1200" height="800" fill="white"/><SvgDefs images={this.sheet.images} hatches={this.sheet.hatches}/><ServerDrawing dx={0} dy={0} dr={0} scale_x={1} scale_y={1} part={0} show_power={false} heterogeneous={false} parent={null} items={this.sheet.items} options={this.sheet.options}/></svg>);
-  return{drawing:this.drawing,deck,svg,diagram};
+  const svg=renderTeachingSheet(this.sheet);
+  return{drawing:this.drawing,deck,svg,diagram,layout:layout.report};
  }
+}
+export function renderTeachingSheet(sheet:any){
+  return renderToStaticMarkup(<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1200" viewBox="0 0 1200 800"><rect width="1200" height="800" fill="white"/><SvgDefs images={sheet.images} hatches={sheet.hatches}/><ServerDrawing dx={0} dy={0} dr={0} scale_x={1} scale_y={1} part={0} show_power={false} heterogeneous={false} parent={null} items={sheet.items} options={sheet.options}/></svg>);
 }
 export {encodeDrawing,decodeDrawing};
 export function initialiseGenerator(){

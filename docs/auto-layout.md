@@ -110,6 +110,13 @@ Related rows use the ordinary geometry clearance instead of the larger spacing
 between unrelated annotations. Successfully aligned columns are protected from
 subsequent independent centring of individual labels.
 
+Unlabelled connections on the same component face reserve rows too. A grounded
+reset between labelled inputs must not be lost from the spacing calculation.
+An additional fan-out candidate spreads each labelled block between these fixed
+rows, preserving pin order and the common text column. It leaves the unlabelled
+wire and its terminal untouched, and declines the candidate when a bounded gap
+cannot fit the required pitch. Collision and connectivity checks still apply.
+
 Extra bends require a concrete improvement in collision counts, pin exits or
 label support. Attraction, compaction and soft annotation spacing alone cannot
 justify them. The score favours fewer bends before soft layout preferences.
@@ -267,7 +274,7 @@ new MCP-generated circuits. These can reuse the validator and quality contract.
 
 ## Validation snapshot (12 November 2026)
 
-`npm run test:layout`: 27 passing behavioural tests, covering eight parallel
+`npm run test:layout`: 29 passing behavioural tests, covering eight parallel
 signal paths stored as native segments, all eight symbol rotation/mirror states,
 four-sided pin layouts, rotated ground artwork, label-stub extension, inline
 centring, named-net attraction, ambiguous junctions, selection/locks, disturbance
@@ -294,7 +301,7 @@ and A36/A38 must have zero label-column error. R1/R2 text groups must lie within
 five drawing units of their visible resistor bodies. A36's U3 supply and both
 V1 leads must stay straight after grouping, with no label overhangs.
 
-The review runner processed all 214 bundled teaching drawings in medium mode,
+Before the unlabelled-row spacing revision, the review runner processed all 214 bundled teaching drawings in medium mode,
 with four passes and 2,500 acceptance evaluations per drawing. Every proposal
 preserved electrical and physical connectivity, including after save/reopen.
 All 1,503 saved labels retain their original text and shape; 604 rotate to
@@ -352,3 +359,19 @@ grouping, a movable ground and its unbranched lead can straighten together if
 the earlier obstruction has gone; fixed terminals, branches and remaining
 clearance conflicts prevent that move. This also removes the leftover V1
 ground detour without removing the necessary ground offsets below U1/U2.
+
+The subsequent unlabelled-row regression checks both component faces with a
+locked intervening ground connection. A36's U1/U2/U3 input columns must be clear
+of wires, bodies and other text. The four representative previews were regenerated
+and save/reopen connectivity rechecked: A36 text collisions drop from 9 to 6,
+with zero input-column collisions, zero label-column error and zero overhangs.
+A38 still has zero bends and text collisions. The aggregate table above records
+the earlier full run, rather than claiming a new 214-drawing sweep for this change.
+
+### Teaching drawing regeneration
+
+The historical proposal measurements above precede repair of the teaching-file generator. The bundled drawings have now been explicitly regenerated: every routed leg is a native two-point wire, and the editor's split/merge routine places branch dots before and after medium-disturbance layout. The generator selects upright supply-pin orientation before wiring; auto-layout still preserves component orientation.
+
+The generator enables `nativeWireJunctions`, which also checks the connections that the editor would make at wire endpoints and terminals. A proposal cannot introduce an accidental T connection that would short separate nets on cleanup. Saving/reopening verifies wire coverage as well as electrical and physical membership. SVGs and PNGs are rendered from the reopened drawings, including correctly transformed junction artwork inside rotated symbols.
+
+The regenerated 214 drawings contain 2,773 native wires and 138 schematic junction dots, with zero diagonal or misplaced-junction diagnostics. All 201 simulations pass verification; 13 drawings are connection plans. See the current teaching review record for preview hashes and remaining layout diagnostics. The separate proposal CLI continues to leave its source drawings unchanged.

@@ -448,7 +448,7 @@ test('power keep-outs include the full rotated ground artwork', () => {
   }
 });
 
-test('real teaching examples improve and serialized proposals retain connectivity and simulation metadata', async () => {
+test('regenerated teaching examples retain layout quality, connectivity and simulation metadata', async () => {
   const manifest = JSON.parse(
     await fs.readFile('bundled-examples/teaching/manifest.json', 'utf8'),
   );
@@ -458,13 +458,12 @@ test('real teaching examples improve and serialized proposals retain connectivit
         await fs.readFile('bundled-examples/' + entry.path),
       );
     const input = drawing.sheets[0],
-      r = solve(input);
-    assert.ok(r.changes.length, id);
+      r = solve(input, { nativeWireJunctions: true });
     if (id === 'G01') {
       assert.equal(r.after.metrics.pinExitViolations, 0);
       assert.equal(r.after.metrics.textCollisions, 0);
       assert.equal(r.after.metrics.labelOverhangs, 0);
-      assert.ok(r.after.metrics.wireLength < r.before.metrics.wireLength * 0.6);
+      assert.ok(r.after.metrics.wireLength <= r.before.metrics.wireLength);
     }
     const byRef = (ref) =>
       r.sheet.items.find(
@@ -503,8 +502,8 @@ test('real teaching examples improve and serialized proposals retain connectivit
           p.points.some((q) => q[0] === pin.p[0] && q[1] === pin.p[1]),
         );
       assert.ok(
-        path.points.every((p) => p[0] === pin.p[0]),
-        'unconnected LDR tail stays straight',
+        path.points.some((p) => p[0] !== pin.p[0]),
+        'LDR return reaches the ground side of the restored loop',
       );
     }
     if (id === 'A36' || id === 'A38') {
@@ -577,6 +576,21 @@ test('real teaching examples improve and serialized proposals retain connectivit
       assert.equal(r.after.metrics.labelAlignment, 0);
     }
     if (id === 'A36') {
+      const inputPorts = ['U1', 'U2', 'U3'].map((ref) => byRef(ref)._id);
+      for (const group of api
+        .labelGroups(r.sheet)
+        .filter(
+          (g) => inputPorts.includes(g[0].pin.id) && g[0].pin.direction[0] < 0,
+        ))
+        for (const { label: l } of group)
+          assert.ok(
+            !r.after.diagnostics.some(
+              (d) =>
+                d.itemIds.includes(l._id) &&
+                ['text-wire', 'text-body', 'text-overlap'].includes(d.code),
+            ),
+            'input label columns leave space for intervening ground connections',
+          );
       assert.equal(
         r.after.metrics.labelOverhangs,
         0,
@@ -599,7 +613,8 @@ test('real teaching examples improve and serialized proposals retain connectivit
         .find((p) => p.direction[1] === -1).p;
       const supply = api
         .wirePaths(r.sheet)
-        .find((p) => p.points.some((q) => q[0] === u3[0] && q[1] === u3[1]));
+        .find((p) => p.points.some((q) => q[0] === u3[0] &&
+          q[1] >= u3[1] && q[1] <= api.symbolArtwork(byRef('U3')).body.y1));
       assert.ok(
         supply && supply.points.every((q) => q[0] === supply.points[0][0]),
         'U3 supply does not retain an arbitrary dogleg',
@@ -771,6 +786,22 @@ test('visible body bounds and compact text placement follow rotation, mirroring 
         fields[1].x2,
         'left-side fields align towards body',
       );
+  }
+});
+
+test('junction artwork follows its wire under every symbol rotation, mirror and scale', () => {
+  for(let rotation=0;rotation<8;rotation++) {
+    const base=symbol(1,200,200,{rotation,showText:false});
+    const s=api.refresh({...base,scale_x:2,scale_y:3,_symbol:{...base._symbol,
+      outlines:[{...base._symbol.outlines[0],items:[
+        wire(900,[-30,-10],[-10,-10]),
+        {NodeName:'junction',_id:901,point:[-10,-10]},
+      ]}]}});
+    const svg=api.renderCircuit(sheet(s));
+    const end=/<path d="M[^L]+L\s*([-\d.]+) ([-\d.]+)/.exec(svg);
+    const dot=/<circle cx="([-\d.]+)" cy="([-\d.]+)" r="5"/.exec(svg);
+    assert.ok(end&&dot,'rendered wire and dot for rotation '+rotation);
+    assert.deepEqual(dot.slice(1).map(Number),end.slice(1).map(Number));
   }
 });
 
@@ -1077,5 +1108,57 @@ test('related pin labels form a common column and fan out only when their text n
         r.before.metrics.textCollisions > 0 && r.after.metrics.bends > 0,
         'tight pin pitch needs real clearance',
       );
+  }
+});
+
+test('aligned label fan-out reserves intervening unlabelled ground rows on either face', () => {
+  for (const right of [false, true]) {
+    const s = symbol(1, 180, 180, {
+      height: 60,
+      showText: false,
+      ports: [0, 10, 20, 30].map((y) => [
+        right ? 0 : -40,
+        y - 40,
+        right ? 2 : 0,
+      ]),
+    });
+    const ps = api.pins(s);
+    const endX = right ? 260 : 60;
+    const ground = api.refresh({
+      ...font,
+      NodeName: 'power',
+      _id: 9,
+      point: [endX, ps[1].p[1]],
+      which: 4,
+      rotation: 0,
+      text: '0',
+      textData: null,
+      _magnetic: null,
+      _no_show: false,
+    });
+    const input = sheet(
+      s,
+      ...ps.map((p, i) => wire(2 + i, p.p, [endX, p.p[1]])),
+      ...[0, 2, 3].map((index, i) =>
+        label(6 + i, [right ? 210 : 90, ps[index].p[1]], i ? 'VCC' : 'CLK'),
+      ),
+      ground,
+    );
+    const r = solve(input, { phases: ['net-labels'], lockedIds: [1, 3, 9] });
+    assert.ok(r.before.metrics.textCollisions > 0);
+    assert.equal(r.after.metrics.textCollisions, 0);
+    assert.equal(r.after.metrics.labelAlignment, 0);
+    assert.equal(r.after.metrics.labelOverhangs, 0);
+    assert.equal(r.after.metrics.crossings, 0);
+    assert.equal(r.after.metrics.pinExitViolations, 0);
+    for (const id of [1, 3, 9])
+      assert.strictEqual(
+        r.sheet.items.find((i) => i._id === id),
+        input.items.find((i) => i._id === id),
+      );
+    const group = r.sheet.items.filter((i) => i.NodeName === 'label');
+    assert.ok(group[0].point[1] < ps[1].p[1]);
+    assert.ok(group[1].point[1] > ps[1].p[1]);
+    assert.ok(group[2].point[1] > group[1].point[1]);
   }
 });

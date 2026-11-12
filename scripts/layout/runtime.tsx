@@ -27,6 +27,7 @@ export {
   decodeDrawing,
   encodeDrawing,
   initialiseGenerator,
+  renderTeachingSheet,
 } from '../teaching/LessonBuilder';
 export { updateSymbol } from '../../src/manipulators/updateSymbol';
 

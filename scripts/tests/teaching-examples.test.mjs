@@ -15,6 +15,38 @@ const manifest=await json('bundled-examples/teaching/manifest.json');
 // Generation also bundles the real codec/netlist/renderer for use under Node.
 execFileSync(process.execPath,['scripts/generate-teaching-examples.mjs','--compile-only'],{cwd:root,stdio:'pipe'});
 const api=createRequire(import.meta.url)(path.join(root,'build/teaching-examples/generator.cjs'));api.initialiseGenerator();
+
+test('generated polylines save every leg and native cleanup places branch dots without joining crossings',async()=>{
+ const b=new api.LessonBuilder({id:'TEST',title:'Wire persistence',uuid:'test-wiring'},[]);
+ b.wire([20,20],[80,20],[80,80],[20,80]);
+ b.wire([50,20],[50,50]);
+ b.wire([30,5],[30,35]); // An interior/interior crossing is not a junction.
+ b.ground([20,80]);
+ assert.equal(b.sheet.items.filter(i=>i.NodeName==='wire').length,5);
+ assert.ok(b.sheet.items.filter(i=>i.NodeName==='wire').every(w=>w.d_points.length===2));
+ b.sheet=api.prepareTeachingWiring(b.sheet);b.sync();
+ const dots=b.sheet.items.filter(i=>i.NodeName==='junction');
+ assert.ok(dots.some(j=>j.point[0]===50&&j.point[1]===20));
+ assert.ok(!dots.some(j=>j.point[0]===30&&j.point[1]===20));
+ for(const format of ['xml','zip-v1']){
+  const loaded=await api.decodeDrawing(await api.encodeDrawing(b.drawing,format));
+  api.validateTeachingRoundTrip(b.sheet,loaded.sheets[0]);
+  assert.equal(api.wireCoverage(b.sheet),api.wireCoverage(loaded.sheets[0]));
+ }
+});
+
+test('generator orients a reversed potentiometer and supply pins before wiring',()=>{
+ // Synthetic pin geometry exercises all rotations/mirrors without altering a net.
+ const turn=(r,p)=>{let [x,y]=p;if(r&4)x=-x;for(let i=0;i<(r&3);i++)[x,y]=[-y,x];return[x,y];};
+ for(const id of ['potentiometer','supply-block']){
+  const names=id==='potentiometer'?['END_A','END_B','WIPER']:['VCC','GND','OUT'];
+  const entry={id,pins:names.map((name,i)=>({name,electrical_type:i<2?'power_input':'output',side:i===0?'top':i===1?'bottom':'right'}))};
+  const ports=s=>Object.fromEntries(names.map((n,i)=>[n,turn(s.rotation,[[0,20],[0,-20],[20,0]][i])]));
+  const result=api.orientTeachingSymbol({rotation:0},entry,ports),p=ports(result);
+  assert.ok(p[names[0]][1]<p[names[1]][1]);
+  assert.ok(p[names[2]][0]>p[names[0]][0]);
+ }
+});
 test('every curriculum activity has one browsable teaching drawing and readable resources',async()=>{
  const expected=curriculum.libraries.flatMap(c=>c.experiments.map(e=>c.library_id+'/'+e.id));
  assert.equal(expected.length,214);
@@ -31,8 +63,10 @@ test('every curriculum activity has one browsable teaching drawing and readable 
   const audited=review.scenarios.find(s=>s.id===scenario.id);
   assert.equal(audited.visualReview,'inspected');
   assert.equal(audited.previewSha256,digest(image),scenario.id+': preview changed since review');
+  assert.equal(audited.svgSha256,digest(await read('bundled-examples/'+entry.preview.replace(/\.png$/,'.svg'))),scenario.id+': SVG changed since review');
   assert.equal(audited.drawingSha256,digest(await read('bundled-examples/'+entry.path)),scenario.id+': drawing changed since review');
   assert.deepEqual([...image.subarray(0,8)],[137,80,78,71,13,10,26,10]);
+  assert.deepEqual([image.readUInt32BE(16),image.readUInt32BE(20)],[1800,1200],scenario.id+': complete preview canvas');
   assert.match((await read('bundled-examples/'+entry.descriptionPath)).toString(),/Your investigation/);
  }
  for(const resource of exampleResourcePaths(catalog))assert.ok((await fs.stat(path.join(root,'bundled-examples',resource))).isFile(),resource);
@@ -43,6 +77,11 @@ test('saved files reopen with student Markdown and simulation setups, or plain c
   const bytes=await read('bundled-examples/'+scenario.path);
   const drawing=await api.decodeDrawing(bytes);
   const circuit=drawing.sheets.find(s=>s.kind!=='simulation');
+  assert.ok(circuit.items.filter(i=>i.NodeName==='wire').every(w=>w.d_points.length===2),scenario.id);
+  const tidy=api.prepareTeachingWiring(circuit);
+  const dots=s=>s.items.filter(i=>i.NodeName==='junction').map(i=>i.point.join(',')).sort();
+  assert.deepEqual(dots(tidy),dots(circuit),scenario.id+': junctions already match editor cleanup');
+  api.validateTeachingRoundTrip(circuit,(await api.decodeDrawing(await api.encodeDrawing(drawing,scenario.format==='dzn'?'zip-v1':'xml'))).sheets[0]);
   const text=circuit.items.filter(i=>i.NodeName==='text');
   assert.equal(text.length,2,scenario.id);
   assert.ok(text.some(t=>t.text.includes('### Your investigation')&&t.text.includes('### Getting started')),scenario.id);
@@ -67,7 +106,7 @@ test('feedback lessons reach the end and produce the intended observable behavio
  const {runNgspice,ngspiceAvailable,ngspiceBackend}=await import('./ngspice-runner.mjs');
  if(!ngspiceAvailable||ngspiceBackend==='CLI override'){t.skip('Build the native engine for numerical lesson checks');return;}
  await fs.mkdir(path.join(root,'build/teaching-examples/decks'),{recursive:true});
- for(const id of ['A38','F11','A37','A33','S13']){const lesson=manifest.scenarios.find(s=>s.id===id);const checked=await api.inspectLesson(await read('bundled-examples/'+lesson.path));await fs.writeFile(path.join(root,'build/teaching-examples/decks',id+'.cir'),checked.deck);}
+ for(const id of ['G01','G02','A38','F11','A37','A33','S13']){const lesson=manifest.scenarios.find(s=>s.id===id);const checked=await api.inspectLesson(await read('bundled-examples/'+lesson.path));await fs.writeFile(path.join(root,'build/teaching-examples/decks',id+'.cir'),checked.deck);}
  function solve(id){
   const result=runNgspice(path.join(root,'build/teaching-examples/decks',id+'.cir'));
   assert.equal(result.status,0,id);
@@ -78,6 +117,10 @@ test('feedback lessons reach the end and produce the intended observable behavio
   const time=names.includes('time')?values('time'):[];
   return{values,time};
  }
+ const resistance=1.1e-6*.5/(Math.PI*.0003*.0003/4);
+ assert.ok(Math.abs(solve('G01').values('out')[0]-5*2000/(2000+resistance))<1e-6,'wire-resistance loop includes its return');
+ const series=solve('G02');
+ assert.ok(Math.abs(series.values('n0')[0]-3.75)<1e-6&&Math.abs(series.values('n1')[0]-2.5)<1e-6,'complete series loop has the expected divider voltages');
  const astable=solve('A38'),astableOut=astable.values('out');
  assert.ok(astable.time.at(-1)>=.008*(1-1e-8));
  assert.ok(astableOut.filter((v,i)=>i&&v>2.5&&astableOut[i-1]<=2.5).length>=3,'555 must keep oscillating');

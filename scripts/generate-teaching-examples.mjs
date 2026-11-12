@@ -9,14 +9,14 @@ import {drawFunctionalBlock} from './lib/functional-artwork.mjs';
 import {plans,diagramPlans,guidance} from './teaching/scenarios.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const output=path.join(root,'build/teaching-examples/generator.cjs');
-await build({stdin:{contents:`export {LessonBuilder,initialiseGenerator,encodeDrawing,decodeDrawing,inspectLesson} from './scripts/teaching/LessonBuilder';export {circuit} from './scripts/teaching/circuits';`,resolveDir:root,loader:'tsx'},bundle:true,platform:'node',format:'cjs',packages:'external',outfile:output,logLevel:'error',plugins:[{name:'editor-services',setup(b){
+await build({stdin:{contents:`export {LessonBuilder,initialiseGenerator,encodeDrawing,decodeDrawing,inspectLesson,orientTeachingSymbol,prepareTeachingWiring,validateTeachingRoundTrip,wireCoverage} from './scripts/teaching/LessonBuilder';export {circuit} from './scripts/teaching/circuits';`,resolveDir:root,loader:'tsx'},bundle:true,platform:'node',format:'cjs',packages:'external',outfile:output,logLevel:'error',plugins:[{name:'editor-services',setup(b){
  b.onResolve({filter:/\/(?:startup|i18n)$/},({path:p})=>({path:p.endsWith('/startup')?'startup':'i18n',namespace:'fixture'}));
  b.onLoad({filter:/.*/,namespace:'fixture'},({path:p})=>({contents:p==='startup'?'export const store={dispatch(){}};export function getStore(){return store;}':'export default {t:key=>key};'}));
  b.onResolve({filter:/(^|\/)measureText$/},()=>({path:path.join(root,'scripts/teaching/renderMeasureText.ts')}));
  b.onLoad({filter:/src[\\/]util[\\/]font_metrics[\\/].+\.js$/},async({path:p})=>({contents:(await fs.readFile(p,'utf8')).replace(/^module\.exports\s*=\s*/m,'export default '),loader:'js'}));
 }}]});
 if(process.argv.includes('--compile-only'))process.exit(0);
-const{LessonBuilder,initialiseGenerator,encodeDrawing,decodeDrawing,circuit}=createRequire(import.meta.url)(output);initialiseGenerator();
+const{LessonBuilder,initialiseGenerator,encodeDrawing,decodeDrawing,validateTeachingRoundTrip,circuit}=createRequire(import.meta.url)(output);initialiseGenerator();
 const manifest=JSON.parse(await fs.readFile(path.join(root,'docs/symbol-libraries/library-manifest.json')));
 const master=JSON.parse(await fs.readFile(path.join(root,'docs/symbol-libraries/all-symbols.json')));
 const provenance=JSON.parse(await fs.readFile(path.join(root,'bundled-libraries/teaching/teaching.provenance.json')));
@@ -29,7 +29,7 @@ const timer=library.find(e=>e.id==='timer_555');
 timer.xml=drawFunctionalBlock(library.find(e=>e.id==='gate_and'),master.symbols.find(s=>s.id==='timer_555'),{style:{leadLengthMm:4,pinPitchMm:4}},'555',null).xml;
 const destination=path.join(root,'bundled-examples/teaching');await fs.mkdir(destination,{recursive:true});
 const uuid=key=>{const s=createHash('sha256').update('tinycad-teaching-'+key).digest('hex');return s.slice(0,8)+'-'+s.slice(8,12)+'-'+s.slice(12,16)+'-'+s.slice(16,20)+'-'+s.slice(20,32);};
-const all=[],failures=[];const only=process.argv.includes('--only')?process.argv[process.argv.indexOf('--only')+1]:null;
+const all=[],failures=[],layoutReports=[];const only=process.argv.includes('--only')?process.argv[process.argv.indexOf('--only')+1]:null;
 for(const course of manifest.libraries){
  const selected=plans[course.library_id]?.split(/\s+/);if(!selected||selected.length!==course.experiments.length)throw Error('Incomplete scenario plan '+course.library_id);
  const dir=path.join(destination,course.library_id);await fs.mkdir(dir,{recursive:true});
@@ -42,12 +42,15 @@ for(const course of manifest.libraries){
    const markdown=`## ${info[0]}\n\n**${level}**\n\n${info[1]}\n\n### Your investigation\n\n${info[2]}\n\n### This activity\n\n${activity.catalogue_description}\n\n### Getting started\n\n${diagram?'This is a connection-planning drawing. Follow each labelled net, identify the real terminals and add your bench measurements. No simulation is attached.':'Open the Simulation tab and press Run. Select a source or component to see its values. Read the labelled signals, then change one quantity at a time. Equal net labels identify connected points.'}\n\n${b.notes.join(' ')}\n\n**Explain:** ${level.includes('14–16')?'What changed, and why? Use your readings as evidence.':'Use an equation, a truth table or a state sequence to justify your prediction. Include units and discuss the model assumptions.'}\n\n${diagram?'Check the physical layout with your teacher before construction.':'The model predicts electrical behaviour; it does not replace real practical measurements.'}`;
    const result=b.finish(markdown,diagram),ext=diagram?'dsn':'dzn',file=activity.id+'.'+ext;
    const bytes=await encodeDrawing(result.drawing,diagram?'xml':'zip-v1');
+   const reopened=await decodeDrawing(bytes);validateTeachingRoundTrip(result.drawing.sheets[0],reopened.sheets[0]);
+   layoutReports.push({id:activity.id,...result.layout,roundTripPreserved:true});
    await fs.writeFile(path.join(dir,file),bytes);await fs.writeFile(path.join(dir,activity.id+'.svg'),result.svg);await fs.writeFile(path.join(dir,activity.id+'.md'),markdown+'\n');
    if(result.deck){await fs.mkdir(path.join(root,'build/teaching-examples/decks'),{recursive:true});await fs.writeFile(path.join(root,'build/teaching-examples/decks',activity.id+'.cir'),result.deck);}
    all.push({course:course.library_id,id:activity.id,title:activity.title,sourceDocument:course.source_document,plan,format:ext,path:'teaching/'+course.library_id+'/'+file,preview:'teaching/'+course.library_id+'/'+activity.id+'.png',descriptionPath:'teaching/'+course.library_id+'/'+activity.id+'.md',simulation:diagram?null:result.drawing.sheets.at(-1).simulation.analysis,markdown:true});console.log(activity.id+' '+plan+' '+ext);
   }catch(error){failures.push({id:activity.id,plan,error:String(error.stack||error)});console.error(activity.id+': '+error.message);}
  }
 }
+await fs.writeFile(path.join(root,'build/teaching-examples/layout-report'+(only?'-'+only:'')+'.json'),JSON.stringify(layoutReports,null,2)+'\n');
 await fs.writeFile(path.join(root,'build/teaching-examples/generation-errors.json'),JSON.stringify(failures,null,2)+'\n');
 if(!only){await fs.writeFile(path.join(destination,'manifest.json'),JSON.stringify({version:1,source:'docs/symbol-libraries/library-manifest.json',scenarios:all},null,2)+'\n');}
 console.log(JSON.stringify({generated:all.length,failures:failures.length}));if(failures.length)process.exitCode=1;

@@ -2,6 +2,32 @@ import { NetlistGenerator } from '../io/netlists/netlistGenerator';
 import { makeNetForSheet } from '../web-worker/netlist';
 import { dsnSheet } from '../model/dsnDrawing';
 import { Coordinate, DocItemTypes as T } from '../model/dsnItem';
+import { pins, symbols, wires } from './geometry';
+
+/** Endpoint and terminal contacts become junctions when the editor tidies
+ * wires. Include them in candidate validation for generated native drawings. */
+export function withNativeJunctions(sheet: dsnSheet): dsnSheet {
+  const points = [
+    ...wires(sheet).flatMap((w) => w.d_points),
+    ...symbols(sheet)
+      .flatMap(pins)
+      .map((p) => p.p),
+    ...sheet.items.filter((i) => i.NodeName === T.Power).map((i) => i.point),
+  ];
+  const unique = new Map(points.map((p) => [p.join(','), p]));
+  let id = Math.max(0, ...sheet.items.map((i) => i._id));
+  return {
+    ...sheet,
+    items: [
+      ...sheet.items,
+      ...[...unique.values()].map((p) => ({
+        NodeName: T.Junction as const,
+        _id: ++id,
+        point: p,
+      })),
+    ],
+  };
+}
 
 /** Stable electrical partition, independent of coordinates and generated net IDs.
  * Physical mode prevents a named net from hiding a newly broken connection.
