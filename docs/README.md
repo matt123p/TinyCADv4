@@ -51,6 +51,9 @@ For course-specific symbol lists, see the [symbol-library handoff](symbol-librar
 [complete readable inventory](symbol-libraries/INVENTORY.md), and
 [combined JSON manifest](symbol-libraries/library-manifest.json).
 
+For reusable schematic layout tools, disturbance levels, routing rules and
+before/after validation, see [Schematic layout tools](auto-layout.md).
+
 ## Scope and status
 
 These documents describe an integrated ngspice experience with the approachable circuit-and-instruments workflow associated with Multisim. The feature catalogue includes both implemented foundation features and planned workbench features; it is not a claim that the whole catalogue is available. User stories remain research-informed hypotheses pending user testing. Use the implementation status and TODO documents to distinguish working code, local verification and outstanding platform qualification.

@@ -5,7 +5,7 @@ import { UtilityService } from '../../util/utilityService';
 import TTextEditArea from './TextEditArea';
 import { dsnLabel } from '../../model/dsnItem';
 
-const LABEL_TEXT_CLEARANCE = 3;
+import { plainLabelTextOffset } from '../../util/labelGeometry';
 
 interface TLabelProps {
   dx: number;
@@ -121,19 +121,9 @@ const TLabel: FunctionComponent<TLabelProps> = (props: TLabelProps) => {
   let textAreaDx = props.dx;
   let textAreaDy = props.dy;
   if (effectiveItem.which === 0) {
-    switch (rotation) {
-      case 0:
-      case 2:
-        textAreaDy -= LABEL_TEXT_CLEARANCE;
-        break;
-      case 1:
-        textAreaDx -= LABEL_TEXT_CLEARANCE;
-        textAreaDy += LABEL_TEXT_CLEARANCE;
-        break;
-      case 3:
-        textAreaDx -= LABEL_TEXT_CLEARANCE;
-        break;
-    }
+    const [ox,oy]=plainLabelTextOffset(rotation);
+    textAreaDx += ox;
+    textAreaDy += oy;
   }
 
   let transform = '';

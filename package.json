@@ -40,6 +40,8 @@
     "test:simulation": "node --test scripts/tests/simulation*.test.mjs",
     "test:engines": "node scripts/tests/qualify-engines.mjs",
     "typecheck": "tsc --noEmit",
+    "test:layout": "node --test scripts/tests/layout.test.mjs",
+    "layout:review": "node scripts/layout-drawing.mjs",
     "benchmark:simulation": "node scripts/benchmark-simulation.mjs",
     "generate:teaching-examples": "node scripts/generate-teaching-examples.mjs",
     "render:teaching-examples": "node scripts/render-teaching-examples.mjs",
