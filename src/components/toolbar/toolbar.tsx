@@ -703,7 +703,11 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         <ToolbarDivider className={styles.divider} />
         <Menu>
           <MenuTrigger disableButtonEnhancement>
-            <ToolbarButton aria-label={t('toolbar.simulation')} icon={<PulseRegular />}>{t('toolbar.simulation')} <ChevronDownRegular /></ToolbarButton>
+            <ToolbarButton
+              aria-label={t('toolbar.simulation')}
+              title={t('toolbar.simulation')}
+              icon={<PulseRegular />}
+            />
           </MenuTrigger>
           <MenuPopover><MenuList>
             <MenuItem icon={<PulseRegular />} onClick={() => props.dispatch({ type: 'simulation/add', name: 'Simulation' })}>Simulate</MenuItem>

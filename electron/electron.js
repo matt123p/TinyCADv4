@@ -371,7 +371,7 @@ function createWindow() {
     ipcHandlersRegistered = true;
     registerSimulation();
     registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
-      directory: path.join(__dirname, isDev ? '../bundled-examples' : '../dist/bundled-examples') });
+      directory: path.join(__dirname, '../dist/bundled-examples') });
     registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
       directory: path.join(__dirname, isDev ? '../bundled-libraries' : '../dist/bundled-libraries') });
 

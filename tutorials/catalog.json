@@ -1,0 +1,302 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "spice-tutorial",
+      "title": "SPICE tutorial",
+      "preview": "spice/images/divider-circuit.svg",
+      "descriptionPath": "spice/11-tinycad-spice.md",
+      "examples": [
+        {
+          "id": "start-here",
+          "title": "Start here — using the tutorials",
+          "path": "spice/circuits/divider.dzn",
+          "preview": "spice/images/divider-circuit.svg",
+          "descriptionPath": "00-how-to-use.md"
+        },
+        {
+          "id": "divider",
+          "title": "divider",
+          "path": "spice/circuits/divider.dzn",
+          "preview": "spice/images/divider-circuit.svg",
+          "descriptionPath": "spice/01-overview.md"
+        },
+        {
+          "id": "dc-sweep",
+          "title": "dc-sweep",
+          "path": "spice/circuits/dc-sweep.dzn",
+          "preview": "spice/images/dc-sweep-circuit.svg",
+          "descriptionPath": "spice/02-dc-measurements.md"
+        },
+        {
+          "id": "source-dc",
+          "title": "source-dc",
+          "path": "spice/circuits/source-dc.dzn",
+          "preview": "spice/images/source-dc-circuit.svg",
+          "descriptionPath": "spice/03-signal-generators.md"
+        },
+        {
+          "id": "source-sine",
+          "title": "source-sine",
+          "path": "spice/circuits/source-sine.dzn",
+          "preview": "spice/images/source-sine-circuit.svg",
+          "descriptionPath": "spice/03-signal-generators.md"
+        },
+        {
+          "id": "source-pulse",
+          "title": "source-pulse",
+          "path": "spice/circuits/source-pulse.dzn",
+          "preview": "spice/images/source-pulse-circuit.svg",
+          "descriptionPath": "spice/03-signal-generators.md"
+        },
+        {
+          "id": "source-triangle",
+          "title": "source-triangle",
+          "path": "spice/circuits/source-triangle.dzn",
+          "preview": "spice/images/source-triangle-circuit.svg",
+          "descriptionPath": "spice/03-signal-generators.md"
+        },
+        {
+          "id": "source-pwl",
+          "title": "source-pwl",
+          "path": "spice/circuits/source-pwl.dzn",
+          "preview": "spice/images/source-pwl-circuit.svg",
+          "descriptionPath": "spice/03-signal-generators.md"
+        },
+        {
+          "id": "source-exponential",
+          "title": "source-exponential",
+          "path": "spice/circuits/source-exponential.dzn",
+          "preview": "spice/images/source-exponential-circuit.svg",
+          "descriptionPath": "spice/03-signal-generators.md"
+        },
+        {
+          "id": "source-fm",
+          "title": "source-fm",
+          "path": "spice/circuits/source-fm.dzn",
+          "preview": "spice/images/source-fm-circuit.svg",
+          "descriptionPath": "spice/03-signal-generators.md"
+        },
+        {
+          "id": "source-current",
+          "title": "source-current",
+          "path": "spice/circuits/source-current.dzn",
+          "preview": "spice/images/source-current-circuit.svg",
+          "descriptionPath": "spice/03-signal-generators.md"
+        },
+        {
+          "id": "controlled-source",
+          "title": "controlled-source",
+          "path": "spice/circuits/controlled-source.dzn",
+          "preview": "spice/images/controlled-source-circuit.svg",
+          "descriptionPath": "spice/03-signal-generators.md"
+        },
+        {
+          "id": "rc-step",
+          "title": "rc-step",
+          "path": "spice/circuits/rc-step.dzn",
+          "preview": "spice/images/rc-step-circuit.svg",
+          "descriptionPath": "spice/04-transients.md"
+        },
+        {
+          "id": "rc-ac",
+          "title": "rc-ac",
+          "path": "spice/circuits/rc-ac.dzn",
+          "preview": "spice/images/rc-ac-circuit.svg",
+          "descriptionPath": "spice/05-frequency-response.md"
+        },
+        {
+          "id": "rectifier",
+          "title": "rectifier",
+          "path": "spice/circuits/rectifier.dzn",
+          "preview": "spice/images/rectifier-circuit.svg",
+          "descriptionPath": "spice/06-nonlinear-circuits.md"
+        },
+        {
+          "id": "amp-bias",
+          "title": "amp-bias",
+          "path": "spice/circuits/amp-bias.dzn",
+          "preview": "spice/images/amp-bias-circuit.svg",
+          "descriptionPath": "spice/07-amplifier-bias.md"
+        },
+        {
+          "id": "amp-ac",
+          "title": "amp-ac",
+          "path": "spice/circuits/amp-ac.dzn",
+          "preview": "spice/images/amp-ac-circuit.svg",
+          "descriptionPath": "spice/08-amplifier-frequency-response.md"
+        },
+        {
+          "id": "amp-small-signal",
+          "title": "amp-small-signal",
+          "path": "spice/circuits/amp-small-signal.dzn",
+          "preview": "spice/images/amp-small-signal-circuit.svg",
+          "descriptionPath": "spice/09-amplifier-power.md"
+        },
+        {
+          "id": "amp-clipping",
+          "title": "amp-clipping",
+          "path": "spice/circuits/amp-clipping.dzn",
+          "preview": "spice/images/amp-clipping-circuit.svg",
+          "descriptionPath": "spice/09-amplifier-power.md"
+        },
+        {
+          "id": "rc-noise",
+          "title": "rc-noise",
+          "path": "spice/circuits/rc-noise.dzn",
+          "preview": "spice/images/rc-noise-circuit.svg",
+          "descriptionPath": "spice/10-design-investigations.md"
+        },
+        {
+          "id": "rc-tf",
+          "title": "rc-tf",
+          "path": "spice/circuits/rc-tf.dzn",
+          "preview": "spice/images/rc-tf-circuit.svg",
+          "descriptionPath": "spice/10-design-investigations.md"
+        },
+        {
+          "id": "rc-pz",
+          "title": "rc-pz",
+          "path": "spice/circuits/rc-pz.dzn",
+          "preview": "spice/images/rc-pz-circuit.svg",
+          "descriptionPath": "spice/10-design-investigations.md"
+        }
+      ]
+    },
+    {
+      "id": "xspice-tutorial",
+      "title": "XSPICE and digital tutorial",
+      "preview": "xspice/images/logic-buffer-circuit.svg",
+      "descriptionPath": "xspice/01-overview.md",
+      "examples": [
+        {
+          "id": "logic-buffer",
+          "title": "logic-buffer",
+          "path": "xspice/circuits/logic-buffer.dzn",
+          "preview": "xspice/images/logic-buffer-circuit.svg",
+          "descriptionPath": "xspice/01-overview.md"
+        },
+        {
+          "id": "logic-nand",
+          "title": "logic-nand",
+          "path": "xspice/circuits/logic-nand.dzn",
+          "preview": "xspice/images/logic-nand-circuit.svg",
+          "descriptionPath": "xspice/02-gates.md"
+        },
+        {
+          "id": "logic-hazard",
+          "title": "logic-hazard",
+          "path": "xspice/circuits/logic-hazard.dzn",
+          "preview": "xspice/images/logic-hazard-circuit.svg",
+          "descriptionPath": "xspice/03-timing.md"
+        },
+        {
+          "id": "logic-dff",
+          "title": "logic-dff",
+          "path": "xspice/circuits/logic-dff.dzn",
+          "preview": "xspice/images/logic-dff-circuit.svg",
+          "descriptionPath": "xspice/04-flip-flops.md"
+        },
+        {
+          "id": "logic-counter",
+          "title": "logic-counter",
+          "path": "xspice/circuits/logic-counter.dzn",
+          "preview": "xspice/images/logic-counter-circuit.svg",
+          "descriptionPath": "xspice/05-counters.md"
+        },
+        {
+          "id": "logic-filter",
+          "title": "logic-filter",
+          "path": "xspice/circuits/logic-filter.dzn",
+          "preview": "xspice/images/logic-filter-circuit.svg",
+          "descriptionPath": "xspice/06-mixed-signal.md"
+        },
+        {
+          "id": "logic-unknown",
+          "title": "logic-unknown",
+          "path": "xspice/circuits/logic-unknown.dzn",
+          "preview": "xspice/images/logic-unknown-circuit.svg",
+          "descriptionPath": "xspice/06-mixed-signal.md"
+        }
+      ]
+    }
+  ],
+  "assets": [
+    "spice/images/amp-ac-circuit.png",
+    "spice/images/amp-ac-circuit.svg",
+    "spice/images/amp-ac-results.png",
+    "spice/images/amp-bias-circuit.png",
+    "spice/images/amp-bias-circuit.svg",
+    "spice/images/amp-clipping-circuit.png",
+    "spice/images/amp-clipping-circuit.svg",
+    "spice/images/amp-clipping-results.png",
+    "spice/images/amp-small-signal-circuit.png",
+    "spice/images/amp-small-signal-circuit.svg",
+    "spice/images/amp-small-signal-results.png",
+    "spice/images/controlled-source-circuit.png",
+    "spice/images/controlled-source-circuit.svg",
+    "spice/images/dc-sweep-circuit.png",
+    "spice/images/dc-sweep-circuit.svg",
+    "spice/images/dc-sweep-results.png",
+    "spice/images/divider-circuit.png",
+    "spice/images/divider-circuit.svg",
+    "spice/images/divider-results.png",
+    "spice/images/rc-ac-circuit.png",
+    "spice/images/rc-ac-circuit.svg",
+    "spice/images/rc-ac-results.png",
+    "spice/images/rc-noise-circuit.png",
+    "spice/images/rc-noise-circuit.svg",
+    "spice/images/rc-noise-results.png",
+    "spice/images/rc-pz-circuit.png",
+    "spice/images/rc-pz-circuit.svg",
+    "spice/images/rc-step-circuit.png",
+    "spice/images/rc-step-circuit.svg",
+    "spice/images/rc-step-results.png",
+    "spice/images/rc-tf-circuit.png",
+    "spice/images/rc-tf-circuit.svg",
+    "spice/images/rectifier-circuit.png",
+    "spice/images/rectifier-circuit.svg",
+    "spice/images/rectifier-results.png",
+    "spice/images/source-current-circuit.png",
+    "spice/images/source-current-circuit.svg",
+    "spice/images/source-dc-circuit.png",
+    "spice/images/source-dc-circuit.svg",
+    "spice/images/source-exponential-circuit.png",
+    "spice/images/source-exponential-circuit.svg",
+    "spice/images/source-fm-circuit.png",
+    "spice/images/source-fm-circuit.svg",
+    "spice/images/source-pulse-circuit.png",
+    "spice/images/source-pulse-circuit.svg",
+    "spice/images/source-pwl-circuit.png",
+    "spice/images/source-pwl-circuit.svg",
+    "spice/images/source-sine-circuit.png",
+    "spice/images/source-sine-circuit.svg",
+    "spice/images/source-triangle-circuit.png",
+    "spice/images/source-triangle-circuit.svg",
+    "spice/images/source-waveforms.png",
+    "spice/images/tinycad-ac-setup.png",
+    "spice/images/tinycad-first-run.png",
+    "xspice/images/logic-buffer-circuit.png",
+    "xspice/images/logic-buffer-circuit.svg",
+    "xspice/images/logic-buffer-results.png",
+    "xspice/images/logic-counter-circuit.png",
+    "xspice/images/logic-counter-circuit.svg",
+    "xspice/images/logic-counter-results.png",
+    "xspice/images/logic-dff-circuit.png",
+    "xspice/images/logic-dff-circuit.svg",
+    "xspice/images/logic-dff-results.png",
+    "xspice/images/logic-filter-circuit.png",
+    "xspice/images/logic-filter-circuit.svg",
+    "xspice/images/logic-filter-results.png",
+    "xspice/images/logic-hazard-circuit.png",
+    "xspice/images/logic-hazard-circuit.svg",
+    "xspice/images/logic-hazard-results.png",
+    "xspice/images/logic-nand-circuit.png",
+    "xspice/images/logic-nand-circuit.svg",
+    "xspice/images/logic-nand-results.png",
+    "xspice/images/logic-unknown-circuit.png",
+    "xspice/images/logic-unknown-circuit.svg",
+    "xspice/images/logic-unknown-results.png",
+    "xspice/images/tinycad-digital.png"
+  ]
+}

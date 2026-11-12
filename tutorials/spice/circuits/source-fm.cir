@@ -1,0 +1,9 @@
+TinyCAD simulation
+
+.temp 27
+R1 OUT 0 1k    
+V1 OUT 0 DC 0 AC 0 0 SFFM(0 1 5000 2 500)
+
+.save i(V1) v(OUT) v(out)
+.tran 0.000002 0.005 0 0.000002
+.end

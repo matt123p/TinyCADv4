@@ -1,0 +1,9 @@
+TinyCAD simulation
+
+.temp 27
+C1 OUT 0 1u IC=0V
+R1 IN OUT 1k    
+V1 IN 0 DC 0 AC 1 0
+
+.noise v(out,0) V1 dec 100 1 100000
+.end

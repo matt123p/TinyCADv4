@@ -422,6 +422,37 @@ try {
       /Invalid/,
     );
   }
+
+  // The normal build includes the tutorial drawings and their full lesson
+  // descriptions, using the same resource paths on desktop and in the browser.
+  const tutorialsOutput = path.join(temporary, 'tutorials-dist');
+  await packageExamples(undefined, tutorialsOutput);
+  const bundled = validation.parseExampleCatalog(JSON.parse(
+    await readFile(path.join(tutorialsOutput, 'config.json'), 'utf8'),
+  ));
+  const resources = validation.exampleResourcePaths(bundled);
+  const tutorialGroups = bundled.groups.filter(group =>
+    ['spice-tutorial', 'xspice-tutorial'].includes(group.id));
+  // The introductory guide reuses the divider drawing as a separate entry.
+  assert.deepEqual(tutorialGroups.map(group => group.examples.length), [22, 7]);
+  const repositoryRoot = new URL('../../', import.meta.url);
+  for (const resource of resources) {
+    if (!resource.startsWith('tutorials/')) continue;
+    assert.deepEqual(
+      await readFile(path.join(tutorialsOutput, resource)),
+      await readFile(new URL(resource, repositoryRoot)),
+      `Packaged tutorial resource differs: ${resource}`,
+    );
+    if (resource.endsWith('.md')) {
+      const markdown = await readFile(path.join(tutorialsOutput, resource), 'utf8');
+      assert.ok(markdown.includes('Open Example'));
+      assert.doesNotMatch(markdown, /\]\(circuits\/[^)]+\.dzn\)/);
+      for (const match of markdown.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)) {
+        assert.ok(validation.resolveExampleResource(match[1], resource, resources),
+          `Lesson image is not available in the example browser: ${match[1]}`);
+      }
+    }
+  }
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }

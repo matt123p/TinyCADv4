@@ -1,0 +1,22 @@
+TinyCAD simulation
+
+.temp 27
+.model TC_NPN NPN(Is=1e-14 Bf=200 Vaf=100 Cje=10p Cjc=5p Tf=500p)
+C1 _N_8 BASE 100u IC=0V
+C2 EMITTER OUT 470u IC=0V
+Q1 COLLECTOR BASE _N_12 TC_NPN
+Q2 VCC COLLECTOR EMITTER TC_NPN
+R1 EMITTER 0 470    
+R2 VCC COLLECTOR 1k    
+R3 VCC BASE 100k    
+R4 BASE 0 10k    
+R5 _N_12 0 220    
+R6A IN _N_8 {max(1u,10k*0.5)}
+R6B _N_8 0 {max(1u,10k*(1-0.5))}
+RRL OUT 0 8    
+VCC VCC 0 DC 12 AC 0 0
+VIN IN 0 DC 0 AC 1 0 SIN(0 0.01 1000 0 0 0)
+
+.save i(VCC) i(VIN) v(_N_8) v(_N_12) v(VCC) v(IN) v(BASE) v(COLLECTOR) v(EMITTER) v(OUT) v(in) v(base) v(collector) v(emitter) v(out) i(vcc)
+.tran 0.000002 0.012 0 0.000002
+.end
