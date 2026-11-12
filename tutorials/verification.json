@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-12T20:15:27.514Z",
+  "date": "2026-11-12T21:01:54.348Z",
   "checks": 284,
   "links": 115,
   "drawings": 28,
@@ -55,7 +55,7 @@
       "analysis": "ac",
       "samples": 481,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "13af35149b50787137bbf11d287ae64272dc4745b2df77a3c547b3bdcd5b1052"
+      "drawingSha256": "f24abb40dec85b8caa661a6ee996ac5e636795e3f892ef06815ad207174026c1"
     },
     {
       "id": "amp-bias",
@@ -63,7 +63,7 @@
       "analysis": "op",
       "samples": 1,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "5230d2857c4d6711156ef4a697cfe78c7b7400cb4d672bbe50f9647b57d59677"
+      "drawingSha256": "2bd9c454cf5440313c05b01370236820d5651878d6c3f5ccd4a7534291488ee6"
     },
     {
       "id": "amp-clipping",
@@ -71,7 +71,7 @@
       "analysis": "tran",
       "samples": 6008,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "5a09b8af50c96b57fd859d86ae9d3b78c32b5a52d773791b7bf7fb4edcfd195b"
+      "drawingSha256": "8c0a2d35ad848d55d89547e7021fb12c0253db7adf011295070990cd41941d99"
     },
     {
       "id": "amp-small-signal",
@@ -79,7 +79,7 @@
       "analysis": "tran",
       "samples": 6008,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "ff4eabc83e3c0c4712a0bb0273bf61b01f9e79e1e55558a16c9832acf0c346e0"
+      "drawingSha256": "4358f46fd4b36743dc0d9f303938b30632bce335e0699df8fe42530335ca865c"
     },
     {
       "id": "controlled-source",
@@ -87,7 +87,7 @@
       "analysis": "tran",
       "samples": 2508,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "2bd97a636c70d37f40fe7e337ec232567519c7e7beb1b4cbf75ec63fe336e899"
+      "drawingSha256": "4100b26f2f3eaa23ba12b3d3b09e048c8d39a6f86f93b01cfc0965426dc9856b"
     },
     {
       "id": "dc-sweep",
@@ -95,7 +95,7 @@
       "analysis": "dc",
       "samples": 21,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "d7b03e6a56066b102d73c03f73973897b0dbae408ce247abd5e5c7fe15616e37"
+      "drawingSha256": "287ff43b03df30f5e62668ef8648bdf0dc31a9e58d61e192d11ef5f8df85db5a"
     },
     {
       "id": "divider",
@@ -103,7 +103,7 @@
       "analysis": "op",
       "samples": 1,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "99a1b0b6af49b9cd01ba79780d59cbc3107915174b85e7ba07a1ee75a7880d47"
+      "drawingSha256": "9742431f8d7e9a041db1a1ebf70917f99de41bc55851838b9334905920136cc5"
     },
     {
       "id": "rc-ac",
@@ -111,7 +111,7 @@
       "analysis": "ac",
       "samples": 501,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "bf43a9d8bb673ea991213c39a54e4a2d2255f5728fa07b7ce96dd744acc76c92"
+      "drawingSha256": "fcec28066a3b2f255a4a455ba36e82fdbc42fdbd954a7e31e700f6d152535219"
     },
     {
       "id": "rc-noise",
@@ -119,7 +119,7 @@
       "analysis": "noise",
       "samples": 501,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "75794edd19dbbef39b92dcdd80679ac846bbc6f69a4e3693b4c5a880ac12b6e5"
+      "drawingSha256": "2e060005b8747bf7f405ab414dced4f3d25a5e0fba7ead617262dbb0b115afd3"
     },
     {
       "id": "rc-pz",
@@ -127,7 +127,7 @@
       "analysis": "pz",
       "samples": 1,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "419e24b4a6f557771ec3c790f24f76e18046d395bbff5bc094d6d00b07a7010f"
+      "drawingSha256": "f25386e4670f2568161861999d46f756d2d710113927a642234e666e606f6c23"
     },
     {
       "id": "rc-step",
@@ -135,7 +135,7 @@
       "analysis": "tran",
       "samples": 1019,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "8c38acf849bff046ac242e9640679b068ca9681352cdd407d9c09dae7c9b9075"
+      "drawingSha256": "557e24473c167d227d2de53f159db6f7275f6701f6b7c7286827fbecd8b405ad"
     },
     {
       "id": "rc-tf",
@@ -143,7 +143,7 @@
       "analysis": "tf",
       "samples": 1,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "4901d946020a4e41b9105377204aa0104c75c227d97851a2923c0f2a35ac4fe8"
+      "drawingSha256": "d7030709c180f5fb6c50f0817c3c7d4835178c8f9008647c9641b53bf9f3dfe4"
     },
     {
       "id": "rectifier",
@@ -151,7 +151,7 @@
       "analysis": "tran",
       "samples": 4009,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "8d1afb9a6ea6f688d03c58c4440ec852c94084dda2746b8287821bbc063df259"
+      "drawingSha256": "22cf625c932b2c0e8df74d62a69bb20cc2f1b3480f0f22a538fe81e6d8c9aaa3"
     },
     {
       "id": "source-current",
@@ -159,7 +159,7 @@
       "analysis": "tran",
       "samples": 2581,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "9bab4113eedbb3c4f4827b3aef3ae585194fac3c46bff56942d1d2f3401b97b9"
+      "drawingSha256": "fd09c78e12c303e0cc2cd5a63867d25c66e601441496e7588100d3bd9411fc33"
     },
     {
       "id": "source-dc",
@@ -167,7 +167,7 @@
       "analysis": "tran",
       "samples": 2508,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "0b1c50ecb3f45c3a699c986670d369ce41c0561dfc2e197e77585c4b1f824631"
+      "drawingSha256": "774496383af4bdaaf9488412ef852869a020111d495e6b4a3c0195f03d34c2b2"
     },
     {
       "id": "source-exponential",
@@ -175,7 +175,7 @@
       "analysis": "tran",
       "samples": 2508,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "712f74d3edb810f5871c91128d5523a757ecff9c3bce31c77314a0c3db1304ee"
+      "drawingSha256": "fd78ad559c08eeb4190ef6d4b488ac62f2a5e8627169b58bf1cb824076033da3"
     },
     {
       "id": "source-fm",
@@ -183,7 +183,7 @@
       "analysis": "tran",
       "samples": 2508,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "3a1aa2b9c8d979d3b4cc5143baaf632f36ea7b88b32c5af1f9f16f48094f178d"
+      "drawingSha256": "68303d07c4ba193527e140cca75ab86e104d9522be4404b24a37f7d76e09e877"
     },
     {
       "id": "source-pulse",
@@ -191,7 +191,7 @@
       "analysis": "tran",
       "samples": 2565,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "05bc8111139b9b1f6b9b1203c10eff5c0860d07b4aa95c39dc8b3cd95ec81a6e"
+      "drawingSha256": "4ef23e3fc755fd9a2e2ab4d5cf0debc353bae22f5775ce6d3b048d481da9cebf"
     },
     {
       "id": "source-pwl",
@@ -199,7 +199,7 @@
       "analysis": "tran",
       "samples": 2520,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "c0ec1f347cb6b268d06589db7c16220e5979954e482195182615e6847a13a1b4"
+      "drawingSha256": "797c55084691b625f6d01e642a290e4056e8a770ac1494f946f18312f6bf042f"
     },
     {
       "id": "source-sine",
@@ -207,7 +207,7 @@
       "analysis": "tran",
       "samples": 2508,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "19d281850092d8e611a6c003b2c1b38f85a52ec47f7770656314f7da467c10e7"
+      "drawingSha256": "f4118c804e607749acaee630a4008a2a8ad55f55acbf3b113ee40f2b77279dd0"
     },
     {
       "id": "source-triangle",
@@ -215,7 +215,7 @@
       "analysis": "tran",
       "samples": 2535,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "c385760383c6c75b6b11c3679ace1ffe59bd0c97e20f5890cfcc545a810ed550"
+      "drawingSha256": "a53d546e1acc125589bedf3f7ca6042c78e3a99bc61f367990668fa8d6779795"
     },
     {
       "id": "logic-buffer",
@@ -223,7 +223,7 @@
       "analysis": "tran",
       "samples": 4249,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "4b1946c8016a864d4e99ca0345b681c4ecfa8b4a5bf224199b18215cae9dcb5f"
+      "drawingSha256": "1ca8aae0c3299f8200365f7dfedc5d2db3ae299ce8bbca4c7bc9f4872819bc0a"
     },
     {
       "id": "logic-counter",
@@ -231,7 +231,7 @@
       "analysis": "tran",
       "samples": 9489,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "8a20c298ec6d9dc859cbee31b5bf1f33d89836411c37963b12ecff5c2c1f80bd"
+      "drawingSha256": "58708a15f827fabe1014f6f43512375e9ff81f45a2598febf924454fb091a66f"
     },
     {
       "id": "logic-dff",
@@ -239,7 +239,7 @@
       "analysis": "tran",
       "samples": 4151,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "1dfd2289f3b8e42d71f1f5f5754220b7d476918801056a7181a3fb8e00ac56e9"
+      "drawingSha256": "fa83a7e257fece222008833f77a19eef8f786e9c22c197a062aa2d8ac5aba479"
     },
     {
       "id": "logic-filter",
@@ -247,7 +247,7 @@
       "analysis": "tran",
       "samples": 7078,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "8c54264f23618e1f84bc9e3cf162e39c6df2dea7c6caccb20f3ceac7d193ef22"
+      "drawingSha256": "33148375bc5c92c41c57c591e3b8a0f43307a40614b6682336a22071ec223b78"
     },
     {
       "id": "logic-hazard",
@@ -255,7 +255,7 @@
       "analysis": "tran",
       "samples": 1606,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "1ad25a7e2c2321cb5adc960e40c16e3cc1f1f7ea2690088184d26e640260540d"
+      "drawingSha256": "6514bd059b09ca2d9a4419ac008f76db5501c872589208dc37d7c83e70d27cc5"
     },
     {
       "id": "logic-nand",
@@ -263,7 +263,7 @@
       "analysis": "tran",
       "samples": 4263,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "1168e28077a7d7c324b6620f97802591398d118b523f2a0255a3fca88a55a8b1"
+      "drawingSha256": "597bc750e6af7680ed20d5dc37c3b12b4617ba15274852cb6fd3c2aad8522bf7"
     },
     {
       "id": "logic-unknown",
@@ -271,7 +271,7 @@
       "analysis": "tran",
       "samples": 1526,
       "buildId": "ngspice-47-746f3a2460bc266d",
-      "drawingSha256": "771df7b85515fd5124c582085180f290088f17b7235883e3665d4da1afc50d07"
+      "drawingSha256": "388e7e57d90472d8c33a8fbb1352ac2d2bbfa2f23cce99bf32eb3b6468d1af7d"
     }
   ]
 }

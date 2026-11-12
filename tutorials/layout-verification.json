@@ -1,0 +1,1931 @@
+{
+  "tool": "src/layout/optimise.ts",
+  "connectivityChecked": true,
+  "roundTripChecked": true,
+  "drawings": [
+    {
+      "id": "controlled-source",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 19,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 1,
+          "netLabelPosition": 3.75,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 540,
+          "logicalProximity": 1230,
+          "inlineImbalance": 40,
+          "wireLength": 540,
+          "bends": 0,
+          "area": 124960,
+          "labelDistance": 10
+        },
+        "diagnostics": [
+          {
+            "code": "label-overhang",
+            "itemIds": [
+              28
+            ],
+            "message": "Plain net label does not fit wholly along a supporting wire."
+          }
+        ]
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 1.25,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 540,
+          "logicalProximity": 400,
+          "inlineImbalance": 30,
+          "wireLength": 540,
+          "bends": 0,
+          "area": 44690,
+          "labelDistance": 10
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 992
+    },
+    {
+      "id": "divider",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 14,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 17.2109375,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 920,
+          "logicalProximity": 840,
+          "inlineImbalance": 80,
+          "wireLength": 920,
+          "bends": 3,
+          "area": 71355,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 520,
+          "logicalProximity": 540,
+          "inlineImbalance": 25,
+          "wireLength": 520,
+          "bends": 3,
+          "area": 27140,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 1018
+    },
+    {
+      "id": "dc-sweep",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 14,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 17.2109375,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 920,
+          "logicalProximity": 840,
+          "inlineImbalance": 80,
+          "wireLength": 920,
+          "bends": 3,
+          "area": 71355,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 520,
+          "logicalProximity": 540,
+          "inlineImbalance": 25,
+          "wireLength": 520,
+          "bends": 3,
+          "area": 27140,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 1018
+    },
+    {
+      "id": "source-dc",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 9,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 16.2890625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 760,
+          "logicalProximity": 480,
+          "inlineImbalance": 40,
+          "wireLength": 760,
+          "bends": 3,
+          "area": 49215,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 350,
+          "logicalProximity": 170,
+          "inlineImbalance": 60,
+          "wireLength": 350,
+          "bends": 3,
+          "area": 13000,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 380
+    },
+    {
+      "id": "source-sine",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 9,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 16.2890625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 760,
+          "logicalProximity": 480,
+          "inlineImbalance": 40,
+          "wireLength": 760,
+          "bends": 3,
+          "area": 49215,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 350,
+          "logicalProximity": 170,
+          "inlineImbalance": 60,
+          "wireLength": 350,
+          "bends": 3,
+          "area": 13000,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 380
+    },
+    {
+      "id": "source-pulse",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 9,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 16.2890625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 760,
+          "logicalProximity": 480,
+          "inlineImbalance": 40,
+          "wireLength": 760,
+          "bends": 3,
+          "area": 49215,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 350,
+          "logicalProximity": 170,
+          "inlineImbalance": 60,
+          "wireLength": 350,
+          "bends": 3,
+          "area": 13000,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 380
+    },
+    {
+      "id": "source-triangle",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 9,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 16.2890625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 760,
+          "logicalProximity": 480,
+          "inlineImbalance": 40,
+          "wireLength": 760,
+          "bends": 3,
+          "area": 49215,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 350,
+          "logicalProximity": 170,
+          "inlineImbalance": 60,
+          "wireLength": 350,
+          "bends": 3,
+          "area": 13000,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 380
+    },
+    {
+      "id": "source-pwl",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 9,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 16.2890625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 760,
+          "logicalProximity": 480,
+          "inlineImbalance": 40,
+          "wireLength": 760,
+          "bends": 3,
+          "area": 49215,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 350,
+          "logicalProximity": 170,
+          "inlineImbalance": 60,
+          "wireLength": 350,
+          "bends": 3,
+          "area": 13000,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 380
+    },
+    {
+      "id": "source-exponential",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 9,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 16.2890625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 760,
+          "logicalProximity": 480,
+          "inlineImbalance": 40,
+          "wireLength": 760,
+          "bends": 3,
+          "area": 49215,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 350,
+          "logicalProximity": 170,
+          "inlineImbalance": 60,
+          "wireLength": 350,
+          "bends": 3,
+          "area": 13000,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 380
+    },
+    {
+      "id": "source-fm",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 9,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 16.2890625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 760,
+          "logicalProximity": 480,
+          "inlineImbalance": 40,
+          "wireLength": 760,
+          "bends": 3,
+          "area": 49215,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 350,
+          "logicalProximity": 170,
+          "inlineImbalance": 60,
+          "wireLength": 350,
+          "bends": 3,
+          "area": 13000,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 380
+    },
+    {
+      "id": "source-current",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 9,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 16.2890625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 760,
+          "logicalProximity": 480,
+          "inlineImbalance": 40,
+          "wireLength": 760,
+          "bends": 3,
+          "area": 49215,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 340,
+          "logicalProximity": 160,
+          "inlineImbalance": 60,
+          "wireLength": 340,
+          "bends": 3,
+          "area": 12350,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 380
+    },
+    {
+      "id": "rc-step",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 14,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 17.2109375,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 920,
+          "logicalProximity": 840,
+          "inlineImbalance": 80,
+          "wireLength": 920,
+          "bends": 3,
+          "area": 72420,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 520,
+          "logicalProximity": 540,
+          "inlineImbalance": 25,
+          "wireLength": 520,
+          "bends": 3,
+          "area": 27730,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 1018
+    },
+    {
+      "id": "rc-ac",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 14,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 17.2109375,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 920,
+          "logicalProximity": 840,
+          "inlineImbalance": 80,
+          "wireLength": 920,
+          "bends": 3,
+          "area": 72420,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 520,
+          "logicalProximity": 540,
+          "inlineImbalance": 25,
+          "wireLength": 520,
+          "bends": 3,
+          "area": 27730,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 1018
+    },
+    {
+      "id": "rectifier",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 21,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 14.7890625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 1280,
+          "logicalProximity": 1080,
+          "inlineImbalance": 130,
+          "wireLength": 1280,
+          "bends": 3,
+          "area": 92655,
+          "labelDistance": 15
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 745,
+          "logicalProximity": 700,
+          "inlineImbalance": 45,
+          "wireLength": 745,
+          "bends": 3,
+          "area": 36580,
+          "labelDistance": 15
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 1309
+    },
+    {
+      "id": "amp-bias",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 56,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 1,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 2,
+          "netLabelPosition": 24.556640625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 1970,
+          "logicalProximity": 3519.1666666666674,
+          "inlineImbalance": 240,
+          "wireLength": 1970,
+          "bends": 6,
+          "area": 258480,
+          "labelDistance": 80
+        },
+        "diagnostics": [
+          {
+            "code": "pin-exit",
+            "itemIds": [
+              13,
+              28
+            ],
+            "message": "Pin 1 needs a straight outward lead before a bend or branch."
+          },
+          {
+            "code": "label-overhang",
+            "itemIds": [
+              63
+            ],
+            "message": "Plain net label does not fit wholly along a supporting wire."
+          },
+          {
+            "code": "label-overhang",
+            "itemIds": [
+              68
+            ],
+            "message": "Plain net label does not fit wholly along a supporting wire."
+          }
+        ]
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 1.25,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 1935,
+          "logicalProximity": 3277.4999999999995,
+          "inlineImbalance": 75,
+          "wireLength": 1935,
+          "bends": 7,
+          "area": 231200,
+          "labelDistance": 80
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 4041
+    },
+    {
+      "id": "amp-ac",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 56,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 1,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 2,
+          "netLabelPosition": 24.556640625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 1970,
+          "logicalProximity": 3519.166666666667,
+          "inlineImbalance": 240,
+          "wireLength": 1970,
+          "bends": 6,
+          "area": 258480,
+          "labelDistance": 80
+        },
+        "diagnostics": [
+          {
+            "code": "pin-exit",
+            "itemIds": [
+              270,
+              285
+            ],
+            "message": "Pin 1 needs a straight outward lead before a bend or branch."
+          },
+          {
+            "code": "label-overhang",
+            "itemIds": [
+              320
+            ],
+            "message": "Plain net label does not fit wholly along a supporting wire."
+          },
+          {
+            "code": "label-overhang",
+            "itemIds": [
+              325
+            ],
+            "message": "Plain net label does not fit wholly along a supporting wire."
+          }
+        ]
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 1.25,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 1935,
+          "logicalProximity": 3277.5,
+          "inlineImbalance": 75,
+          "wireLength": 1935,
+          "bends": 7,
+          "area": 231200,
+          "labelDistance": 80
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 4041
+    },
+    {
+      "id": "amp-small-signal",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 56,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 1,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 2,
+          "netLabelPosition": 24.556640625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 1970,
+          "logicalProximity": 3519.166666666667,
+          "inlineImbalance": 240,
+          "wireLength": 1970,
+          "bends": 6,
+          "area": 258480,
+          "labelDistance": 80
+        },
+        "diagnostics": [
+          {
+            "code": "pin-exit",
+            "itemIds": [
+              527,
+              542
+            ],
+            "message": "Pin 1 needs a straight outward lead before a bend or branch."
+          },
+          {
+            "code": "label-overhang",
+            "itemIds": [
+              577
+            ],
+            "message": "Plain net label does not fit wholly along a supporting wire."
+          },
+          {
+            "code": "label-overhang",
+            "itemIds": [
+              582
+            ],
+            "message": "Plain net label does not fit wholly along a supporting wire."
+          }
+        ]
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 1.25,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 1935,
+          "logicalProximity": 3277.5,
+          "inlineImbalance": 75,
+          "wireLength": 1935,
+          "bends": 7,
+          "area": 231200,
+          "labelDistance": 80
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 4041
+    },
+    {
+      "id": "amp-clipping",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 56,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 1,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 2,
+          "netLabelPosition": 24.556640625,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 1970,
+          "logicalProximity": 3519.166666666667,
+          "inlineImbalance": 240,
+          "wireLength": 1970,
+          "bends": 6,
+          "area": 258480,
+          "labelDistance": 80
+        },
+        "diagnostics": [
+          {
+            "code": "pin-exit",
+            "itemIds": [
+              784,
+              799
+            ],
+            "message": "Pin 1 needs a straight outward lead before a bend or branch."
+          },
+          {
+            "code": "label-overhang",
+            "itemIds": [
+              834
+            ],
+            "message": "Plain net label does not fit wholly along a supporting wire."
+          },
+          {
+            "code": "label-overhang",
+            "itemIds": [
+              839
+            ],
+            "message": "Plain net label does not fit wholly along a supporting wire."
+          }
+        ]
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 1.25,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 1935,
+          "logicalProximity": 3277.5,
+          "inlineImbalance": 75,
+          "wireLength": 1935,
+          "bends": 7,
+          "area": 231200,
+          "labelDistance": 80
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 4041
+    },
+    {
+      "id": "rc-noise",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 14,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 17.2109375,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 920,
+          "logicalProximity": 840,
+          "inlineImbalance": 80,
+          "wireLength": 920,
+          "bends": 3,
+          "area": 72420,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 520,
+          "logicalProximity": 540,
+          "inlineImbalance": 25,
+          "wireLength": 520,
+          "bends": 3,
+          "area": 27730,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 1018
+    },
+    {
+      "id": "rc-tf",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 14,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 17.2109375,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 920,
+          "logicalProximity": 840,
+          "inlineImbalance": 80,
+          "wireLength": 920,
+          "bends": 3,
+          "area": 72420,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 520,
+          "logicalProximity": 540,
+          "inlineImbalance": 25,
+          "wireLength": 520,
+          "bends": 3,
+          "area": 27730,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 1018
+    },
+    {
+      "id": "rc-pz",
+      "course": "spice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 14,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 17.2109375,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 920,
+          "logicalProximity": 840,
+          "inlineImbalance": 80,
+          "wireLength": 920,
+          "bends": 3,
+          "area": 72420,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 520,
+          "logicalProximity": 540,
+          "inlineImbalance": 25,
+          "wireLength": 520,
+          "bends": 3,
+          "area": 27730,
+          "labelDistance": 25
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 1018
+    },
+    {
+      "id": "logic-buffer",
+      "course": "xspice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 10,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 24.841796875,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 300,
+          "logicalProximity": 540,
+          "inlineImbalance": 0,
+          "wireLength": 300,
+          "bends": 0,
+          "area": 199320,
+          "labelDistance": 5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 205,
+          "logicalProximity": 120,
+          "inlineImbalance": 5,
+          "wireLength": 205,
+          "bends": 0,
+          "area": 80000,
+          "labelDistance": 5
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 653
+    },
+    {
+      "id": "logic-nand",
+      "course": "xspice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 17,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 8.75,
+          "labelOverhangs": 0,
+          "netLabelPosition": 30.93359375,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 510,
+          "logicalProximity": 1040,
+          "inlineImbalance": 0,
+          "wireLength": 510,
+          "bends": 0,
+          "area": 206093.59375,
+          "labelDistance": 17
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 337.3671875,
+          "logicalProximity": 450,
+          "inlineImbalance": 0,
+          "wireLength": 337.3671875,
+          "bends": 0,
+          "area": 72543.125,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 916
+    },
+    {
+      "id": "logic-hazard",
+      "course": "xspice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 10,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 24.841796875,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 300,
+          "logicalProximity": 540,
+          "inlineImbalance": 0,
+          "wireLength": 300,
+          "bends": 0,
+          "area": 199320,
+          "labelDistance": 5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 205,
+          "logicalProximity": 120,
+          "inlineImbalance": 5,
+          "wireLength": 205,
+          "bends": 0,
+          "area": 80000,
+          "labelDistance": 5
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 653
+    },
+    {
+      "id": "logic-dff",
+      "course": "xspice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 25,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 1,
+          "annotationCrowding": 0,
+          "componentDisorder": 8.75,
+          "labelOverhangs": 1,
+          "netLabelPosition": 53.408203125,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 810,
+          "logicalProximity": 1510,
+          "inlineImbalance": 0,
+          "wireLength": 810,
+          "bends": 0,
+          "area": 206093.59375,
+          "labelDistance": 19.5
+        },
+        "diagnostics": [
+          {
+            "code": "text-body",
+            "itemIds": [
+              2053,
+              2046
+            ],
+            "message": "Text is too close to a body or pin envelope."
+          },
+          {
+            "code": "label-overhang",
+            "itemIds": [
+              2053
+            ],
+            "message": "Plain net label does not fit wholly along a supporting wire."
+          }
+        ]
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 3.75,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 464.1015625,
+          "logicalProximity": 875,
+          "inlineImbalance": 90,
+          "wireLength": 464.1015625,
+          "bends": 0,
+          "area": 106517.5,
+          "labelDistance": 10
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 779
+    },
+    {
+      "id": "logic-counter",
+      "course": "xspice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 23,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 1,
+          "annotationCrowding": 0,
+          "componentDisorder": 8.75,
+          "labelOverhangs": 1,
+          "netLabelPosition": 78.328125,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 780,
+          "logicalProximity": 960,
+          "inlineImbalance": 0,
+          "wireLength": 780,
+          "bends": 0,
+          "area": 206093.59375,
+          "labelDistance": 17
+        },
+        "diagnostics": [
+          {
+            "code": "text-body",
+            "itemIds": [
+              2140,
+              2133
+            ],
+            "message": "Text is too close to a body or pin envelope."
+          },
+          {
+            "code": "label-overhang",
+            "itemIds": [
+              2140
+            ],
+            "message": "Plain net label does not fit wholly along a supporting wire."
+          }
+        ]
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 1.25,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 366,
+          "logicalProximity": 640,
+          "inlineImbalance": 60,
+          "wireLength": 366,
+          "bends": 0,
+          "area": 114085.83984375,
+          "labelDistance": 7.5
+        },
+        "diagnostics": []
+      },
+      "stopped": "converged",
+      "evaluations": 642
+    },
+    {
+      "id": "logic-filter",
+      "course": "xspice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 17,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 31.740234375,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 610,
+          "logicalProximity": 1920,
+          "inlineImbalance": 120,
+          "wireLength": 610,
+          "bends": 1,
+          "area": 291720,
+          "labelDistance": 27.5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 395,
+          "logicalProximity": 1090,
+          "inlineImbalance": 25,
+          "wireLength": 395,
+          "bends": 1,
+          "area": 116100,
+          "labelDistance": 27.5
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 1206
+    },
+    {
+      "id": "logic-unknown",
+      "course": "xspice",
+      "options": {
+        "disturbance": "high",
+        "maxEvaluations": 8000,
+        "nativeWireJunctions": true
+      },
+      "changes": 10,
+      "before": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 24.841796875,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 300,
+          "logicalProximity": 540,
+          "inlineImbalance": 0,
+          "wireLength": 300,
+          "bends": 0,
+          "area": 199320,
+          "labelDistance": 5
+        },
+        "diagnostics": []
+      },
+      "after": {
+        "metrics": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 0,
+          "crossings": 0,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 205,
+          "logicalProximity": 120,
+          "inlineImbalance": 5,
+          "wireLength": 205,
+          "bends": 0,
+          "area": 80000,
+          "labelDistance": 5
+        },
+        "diagnostics": []
+      },
+      "stopped": "pass-limit",
+      "evaluations": 653
+    }
+  ]
+}

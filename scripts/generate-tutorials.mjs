@@ -2,6 +2,7 @@
 import path from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 import sharp from 'sharp';
+import assert from 'node:assert/strict';
 import { tutorialRuntime, spiceLibrary } from './tutorials/runtime.mjs';
 import { circuit } from './tutorials/circuits.mjs';
 import { digitalCircuit } from './tutorials/digital.mjs';
@@ -45,6 +46,12 @@ const chosen = process.argv.includes('--only')
   ? process.argv[process.argv.indexOf('--only') + 1].split(',')
   : ids;
 const report = [];
+const existing = process.argv.includes('--existing');
+const layoutOptions = {
+  disturbance: 'high',
+  maxEvaluations: 8000,
+  nativeWireJunctions: true,
+};
 for (const id of chosen) {
   const course = id.startsWith('logic-') ? 'xspice' : 'spice',
     dir = 'tutorials/' + course;
@@ -52,10 +59,43 @@ for (const id of chosen) {
   await fs.mkdir(dir + '/images', { recursive: true });
   await fs.mkdir('build/tutorials/results', { recursive: true });
   try {
-    const result = (course === 'xspice' ? digitalCircuit : circuit)(
-      api,
-      library,
-      id,
+    const result = existing
+      ? {
+          drawing: await api.decodeDrawing(
+            await fs.readFile(dir + '/circuits/' + id + '.dzn'),
+          ),
+        }
+      : (course === 'xspice' ? digitalCircuit : circuit)(api, library, id);
+    const originalSheet = result.drawing.sheets[0];
+    const simulationBefore = JSON.stringify(result.drawing.sheets.slice(1));
+    const layout = api.optimiseLayout(originalSheet, layoutOptions);
+    assert.ok(
+      layout.connectivityPreserved &&
+        api.sameConnectivity(originalSheet, layout.sheet, layout.wireOrigins),
+      id + ': auto-layout must preserve electrical and physical connectivity',
+    );
+    result.drawing.sheets[0] = layout.sheet;
+    assert.equal(
+      JSON.stringify(result.drawing.sheets.slice(1)),
+      simulationBefore,
+      id + ': auto-layout must preserve simulation setup and results',
+    );
+    await fs.mkdir('build/tutorials/layout', { recursive: true });
+    const beforeBounds = api.circuitBounds(originalSheet),
+      afterBounds = api.circuitBounds(layout.sheet);
+    const reviewBounds = {
+      x1: Math.min(beforeBounds.x1, afterBounds.x1),
+      y1: Math.min(beforeBounds.y1, afterBounds.y1),
+      x2: Math.max(beforeBounds.x2, afterBounds.x2),
+      y2: Math.max(beforeBounds.y2, afterBounds.y2),
+    };
+    await fs.writeFile(
+      'build/tutorials/layout/' + id + '-before.svg',
+      api.renderCircuit(originalSheet, reviewBounds),
+    );
+    await fs.writeFile(
+      'build/tutorials/layout/' + id + '-after.svg',
+      api.renderCircuit(layout.sheet, reviewBounds),
     );
     const bytes = await api.encodeDrawing(result.drawing, 'zip-v1');
     const drawing = await api.decodeDrawing(bytes);
@@ -166,6 +206,14 @@ for (const id of chosen) {
       signals: setup.signals,
       samples: setup.runs[0].samples,
       roundTrip: true,
+      layout: {
+        options: layoutOptions,
+        changes: layout.changes.length,
+        before: layout.before,
+        after: layout.after,
+        stopped: layout.stopped,
+        evaluations: layout.evaluations,
+      },
       plots: plots.map((p) => ({
         scale: p.scale,
         vectors: p.vectors.map((v) => ({
@@ -178,7 +226,17 @@ for (const id of chosen) {
       })),
     };
     report.push(summary);
-    console.log(id + ' OK ' + summary.samples + ' samples');
+    console.log(
+      id +
+        ' OK ' +
+        summary.samples +
+        ' samples; ' +
+        layout.changes.length +
+        ' layout changes; wire length ' +
+        layout.before.metrics.wireLength +
+        ' -> ' +
+        layout.after.metrics.wireLength,
+    );
   } catch (e) {
     console.error(id + ' FAILED ' + e.message);
     process.exitCode = 1;
@@ -189,3 +247,34 @@ await fs.writeFile(
   'build/tutorials/report' + (chosen !== ids ? '-partial' : '') + '.json',
   JSON.stringify(report, null, 2) + '\n',
 );
+if (report.every((entry) => !entry.error)) {
+  const reportPath = 'tutorials/layout-verification.json';
+  const previous =
+    chosen !== ids
+      ? JSON.parse(
+          await fs.readFile(reportPath, 'utf8').catch(() => '{"drawings":[]}'),
+        ).drawings
+      : [];
+  const current = report.map(({ id, course, layout }) => ({
+    id,
+    course,
+    ...layout,
+  }));
+  const drawings = [
+    ...previous.filter((entry) => !chosen.includes(entry.id)),
+    ...current,
+  ].sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+  await fs.writeFile(
+    reportPath,
+    JSON.stringify(
+      {
+        tool: 'src/layout/optimise.ts',
+        connectivityChecked: true,
+        roundTripChecked: true,
+        drawings,
+      },
+      null,
+      2,
+    ) + '\n',
+  );
+}

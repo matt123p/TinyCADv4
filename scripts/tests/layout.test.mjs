@@ -32,6 +32,30 @@ function assertTransistorExits(sheet) {
   }
 }
 
+test('a label at an explicit junction can fit an incident wire without moving the branch', () => {
+  const input = sheet(
+    wire(1, [100, 100], [200, 100]),
+    wire(2, [100, 100], [100, 200]),
+    { NodeName: 'junction', _id: 3, point: [100, 100] },
+    label(4, [100, 100], 'BASE'),
+  );
+  const r = solve(input, { phases: ['net-labels'], lockedIds: [1, 2, 3] });
+  assert.ok(r.before.metrics.labelOverhangs > 0);
+  assert.equal(r.after.metrics.labelOverhangs, 0);
+  assert.ok(r.changes.every(c => c.id === 4));
+});
+
+test('a label on an unjoined crossing retains its exact electrical anchor', () => {
+  const input = sheet(
+    wire(1, [0, 100], [200, 100]),
+    wire(2, [100, 0], [100, 200]),
+    label(3, [100, 100], 'BASE'),
+  );
+  const r = solve(input, { phases: ['net-labels'] });
+  assert.deepEqual(r.sheet.items.find(i => i._id === 3).point, [100, 100]);
+  assert.equal(r.changes.length, 0);
+});
+
 for (const disturbance of ['low', 'medium', 'high']) {
   test(`the actual amplifier does not acquire transistor pin loops at ${disturbance} strength`, async () => {
     const input = await amplifierFixture();

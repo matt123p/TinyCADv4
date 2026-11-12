@@ -339,21 +339,24 @@
             52,
             50
           ],
-          "name": "B"
+          "name": "B",
+          "show": 0
         },
         {
           "at": [
             60,
             56
           ],
-          "name": "E"
+          "name": "E",
+          "show": 0
         },
         {
           "at": [
             60,
             44
           ],
-          "name": "C"
+          "name": "C",
+          "show": 0
         }
       ],
       "attributes": {
@@ -378,7 +381,7 @@
           "show": 2
         }
       },
-      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names added without moving geometry."
+      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names retained for connectivity but hidden to keep transistor artwork clear."
     },
     {
       "id": "pnp",
@@ -396,21 +399,24 @@
             52,
             60
           ],
-          "name": "B"
+          "name": "B",
+          "show": 0
         },
         {
           "at": [
             60,
             66
           ],
-          "name": "E"
+          "name": "E",
+          "show": 0
         },
         {
           "at": [
             60,
             54
           ],
-          "name": "C"
+          "name": "C",
+          "show": 0
         }
       ],
       "attributes": {
@@ -435,7 +441,7 @@
           "show": 2
         }
       },
-      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names added without moving geometry."
+      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names retained for connectivity but hidden to keep transistor artwork clear."
     },
     {
       "id": "nmos",

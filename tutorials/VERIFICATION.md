@@ -7,6 +7,14 @@ The XSPICE course requires TinyCAD Desktop and the native code-model libraries.
 
 ## Checks
 
+All 28 tutorial drawings have been processed with the merged auto-layout tool
+at high disturbance, with native-junction connectivity checks enabled. Total
+wire length fell from 25,830 to 17,632 drawing units (about 32%). The final
+layouts have no reported collisions, pin-exit violations, label overhangs or
+junction issues. `layout-verification.json` records the before/after metrics.
+Circuit PNGs and SVGs were regenerated from the saved drawings, and every
+simulation was rerun to refresh its retained reference acquisition.
+
 All 28 drawings passed 284 checks, including 115 local Markdown links.
 The repository TypeScript typecheck also passed. All 48 PNG figures were
 visually reviewed, including three screenshots from TinyCAD Desktop.
@@ -33,6 +41,8 @@ certifications.
 
 ```powershell
 node scripts/generate-tutorials.mjs
+# To lay out the existing drawings instead of rebuilding their circuit definitions:
+# node scripts/generate-tutorials.mjs --existing
 # Electron must run as an application, not in its Node compatibility mode:
 $env:ELECTRON_RUN_AS_NODE = $null
 node node_modules/electron/cli.js scripts/tutorials/render-figures.cjs
@@ -47,6 +57,12 @@ drawing; rerun the figure and verification steps afterwards. The generator
 exports `.cir` netlists alongside `.dzn` files and stores full numerical JSON
 under the ignored `build/tutorials/results` directory. Retained acquisitions
 also travel inside the drawings.
+
+Generation applies the shared auto-layout engine before saving and simulating.
+It checks physical and electrical connectivity before and after layout and
+again after save/reopen. The layout step preserves the Simulation sheet; the
+following solver run refreshes the acquisition for the newly exported netlist.
+Matched-scale before/after SVGs are written to `build/tutorials/layout` for review.
 
 `catalog.json` registers the two tutorial groups in TinyCAD's **Open Example**
 browser. The normal `examples:package` build step includes the drawings,

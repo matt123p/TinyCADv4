@@ -3,7 +3,7 @@
   "id": "spice",
   "name": "SPICE essentials",
   "sourceSha256": "3efbdf682121249aa4c2c8f8fdd1dc807025b26c5e46c369eb41c3f28a34d47e",
-  "recipeSha256": "b6bc6e6b659932b0d6c6fb2e2c9edda352e5a258b3ccd007e77ca9bc68db89ea",
+  "recipeSha256": "ca85f91783e28be0246236338e8083bb97806f9aa16e3029f378cadec840f984",
   "contributors": [
     "onetransistor",
     "aryajur"
@@ -442,7 +442,7 @@
         "description": "Bipolar, small, circle",
         "xmlSha256": "d02d2b7946eb74c61dd6fa9ca13a211e850a5833ebad4e8b5c900e6d970e0745"
       },
-      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names added without moving geometry.",
+      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names retained for connectivity but hidden to keep transistor artwork clear.",
       "changes": [
         {
           "pin": {
@@ -455,7 +455,8 @@
               52,
               50
             ],
-            "name": "B"
+            "name": "B",
+            "show": 0
           }
         },
         {
@@ -469,7 +470,8 @@
               60,
               56
             ],
-            "name": "E"
+            "name": "E",
+            "show": 0
           }
         },
         {
@@ -483,7 +485,8 @@
               60,
               44
             ],
-            "name": "C"
+            "name": "C",
+            "show": 0
           }
         }
       ],
@@ -507,7 +510,7 @@
           "at": "60.00000,44.00000"
         }
       ],
-      "xmlSha256": "9a4800d4f826d0e62d40473f7a2ed476fa44dfe8b00f6c563167cf699589e613"
+      "xmlSha256": "9e69df228fdf1049c705f5c0b35a70133cac986a64b7fede33c070ae9dd215dc"
     },
     {
       "id": "pnp",
@@ -522,7 +525,7 @@
         "description": "Bipolar, small, circle",
         "xmlSha256": "5d36784957ab1ddcde0f9dd989c4ada0f522c650caf24a7d7ad3757c44b41a14"
       },
-      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names added without moving geometry.",
+      "notes": "Generic teaching model; terminals are 3=collector, 1=base, 2=emitter. Pin names retained for connectivity but hidden to keep transistor artwork clear.",
       "changes": [
         {
           "pin": {
@@ -535,7 +538,8 @@
               52,
               60
             ],
-            "name": "B"
+            "name": "B",
+            "show": 0
           }
         },
         {
@@ -549,7 +553,8 @@
               60,
               66
             ],
-            "name": "E"
+            "name": "E",
+            "show": 0
           }
         },
         {
@@ -563,7 +568,8 @@
               60,
               54
             ],
-            "name": "C"
+            "name": "C",
+            "show": 0
           }
         }
       ],
@@ -587,7 +593,7 @@
           "at": "60.00000,54.00000"
         }
       ],
-      "xmlSha256": "467e05ce34cb2b2a5e93dbc15842c8264d13ad111699c9ccd32ae8001fbc578b"
+      "xmlSha256": "21cfdb85e12be5c0c2940023383ff3bc263368b22c5100264e116f98ec5c743c"
     },
     {
       "id": "nmos",

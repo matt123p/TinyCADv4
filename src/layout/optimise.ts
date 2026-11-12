@@ -1303,7 +1303,22 @@ function placeNetLabels(search: Search) {
     const attached = wires(search.sheet).filter((w) =>
       wireContains(w, label.point),
     );
-    if (attached.length !== 1) continue; // Ambiguous crossing: keep its exact anchor.
+    if (attached.length !== 1) {
+      // An explicit junction makes these incident wires one physical net.
+      // Try each supporting span without moving wires or the junction itself.
+      // Unjoined crossings remain ambiguous and retain their exact anchor.
+      if (attached.length > 1 && search.sheet.items.some(
+        (i) => i.NodeName === T.Junction && same(i.point, label.point),
+      )) {
+        for (const span of spans.filter((s) =>
+          attached.some((w) => s.members.includes(w._id)),
+        )) {
+          for (const placed of labelPositions(label, span.a, span.b, o))
+            search.replace(new Map<number, DocItem>([[id, placed]]));
+        }
+      }
+      continue;
+    }
     const wire = attached[0];
     const crowded = search.analysis.diagnostics.some(
       (d) =>
