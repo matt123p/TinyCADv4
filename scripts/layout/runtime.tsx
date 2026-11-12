@@ -23,12 +23,8 @@ export {
 export { wireBundles, wirePaths, wireSpans } from '../../src/layout/bundles';
 export { labelGroups } from '../../src/layout/labelGroups';
 export { blank } from '../../src/io/ioXml';
-export {
-  decodeDrawing,
-  encodeDrawing,
-  initialiseGenerator,
-  renderTeachingSheet,
-} from '../teaching/LessonBuilder';
+export { decodeDrawing, encodeDrawing } from '../../src/io/dsnCodec';
+export { initialiseLayoutRuntime } from './headless';
 export { updateSymbol } from '../../src/manipulators/updateSymbol';
 
 export function circuitBounds(sheet: dsnSheet) {

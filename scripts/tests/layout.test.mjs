@@ -448,229 +448,12 @@ test('power keep-outs include the full rotated ground artwork', () => {
   }
 });
 
-test('regenerated teaching examples retain layout quality, connectivity and simulation metadata', async () => {
-  const manifest = JSON.parse(
-    await fs.readFile('bundled-examples/teaching/manifest.json', 'utf8'),
-  );
-  for (const id of ['G01', 'G14', 'A38', 'A36']) {
-    const entry = manifest.scenarios.find((s) => s.id === id),
-      drawing = await api.decodeDrawing(
-        await fs.readFile('bundled-examples/' + entry.path),
-      );
-    const input = drawing.sheets[0],
-      r = solve(input, { nativeWireJunctions: true });
-    if (id === 'G01') {
-      assert.equal(r.after.metrics.pinExitViolations, 0);
-      assert.equal(r.after.metrics.textCollisions, 0);
-      assert.equal(r.after.metrics.labelOverhangs, 0);
-      assert.ok(r.after.metrics.wireLength <= r.before.metrics.wireLength);
-    }
-    const byRef = (ref) =>
-      r.sheet.items.find(
-        (i) =>
-          i.NodeName === 'symbol' &&
-          i.text.some((t) => t.description === 'Ref' && t.value === ref),
-      );
-    const centre = (ref) => {
-      const symbol = byRef(ref);
-      const b = api.bodyRect(symbol);
-      return [(b.x1 + b.x2) / 2, (b.y1 + b.y2) / 2];
-    };
-    for (const ref of ['R1', 'R2']) {
-      const s = byRef(ref);
-      if (!s) continue;
-      const b = api.symbolArtwork(s).body;
-      assert.ok(
-        Math.min(
-          ...api
-            .texts(s)
-            .map((t) =>
-              Math.hypot(
-                Math.max(0, b.x1 - t.x2, t.x1 - b.x2),
-                Math.max(0, b.y1 - t.y2, t.y1 - b.y2),
-              ),
-            ),
-        ) <= 5,
-        ref + ' text group is close to the resistor body',
-      );
-    }
-    if (id === 'G14') {
-      const pin = api.pins(byRef('LDR1')).find((p) => p.direction[1] > 0);
-      const path = api
-        .wirePaths(r.sheet)
-        .find((p) =>
-          p.points.some((q) => q[0] === pin.p[0] && q[1] === pin.p[1]),
-        );
-      assert.ok(
-        path.points.some((p) => p[0] !== pin.p[0]),
-        'LDR return reaches the ground side of the restored loop',
-      );
-    }
-    if (id === 'A36' || id === 'A38') {
-      const chip = byRef('U1');
-      const body = api.symbolArtwork(chip).body;
-      const reference = api.texts(chip)[0];
-      assert.ok(
-        Math.hypot(
-          Math.max(0, body.x1 - reference.x2, reference.x1 - body.x2),
-          Math.max(0, body.y1 - reference.y2, reference.y1 - body.y2),
-        ) <= 5,
-        id + ' reference sits next to visible chip body',
-      );
-    }
-    if (id === 'A38') {
-      for (const ref of ['C1', 'C2']) {
-        const capacitor = byRef(ref),
-          body = api.symbolArtwork(capacitor).body;
-        const fields = api.texts(capacitor);
-        for (const t of fields)
-          assert.ok(
-            Math.max(0, body.x1 - t.x2, t.x1 - body.x2) <= 5,
-            ref + ' reference and value are both close to the plates',
-          );
-        const edge = fields[0].x2 <= body.x1 ? 'x2' : 'x1';
-        assert.equal(
-          fields[0][edge],
-          fields[1][edge],
-          'reference and value share their body-facing edge',
-        );
-      }
-      assert.equal(
-        centre('R1')[0],
-        centre('R2')[0],
-        'parallel resistor stack shares a centreline',
-      );
-      assert.ok(
-        centre('R1')[1] < centre('R2')[1],
-        'reference order is retained',
-      );
-      assert.equal(
-        centre('C1')[1],
-        centre('C2')[1],
-        'capacitors share a horizontal baseline',
-      );
-      assert.ok(centre('C1')[0] < centre('C2')[0]);
-      const controls = r.sheet.items
-        .filter((i) => i.NodeName === 'label' && i.text === 'CTRL')
-        .flatMap(api.texts);
-      const grounds = r.sheet.items
-        .filter((i) => i.NodeName === 'power' && i.text === '0')
-        .flatMap(api.texts);
-      for (const a of controls)
-        for (const b of grounds) {
-          const gap = Math.hypot(
-            Math.max(0, a.x1 - b.x2, b.x1 - a.x2),
-            Math.max(0, a.y1 - b.y2, b.y1 - a.y2),
-          );
-          assert.ok(
-            gap >= 15 - 1e-6,
-            'CTRL must have a readable separation from ground 0',
-          );
-        }
-      assert.equal(r.after.metrics.componentDisorder, 0);
-      assert.equal(
-        r.after.metrics.bends,
-        0,
-        'isolated A38 stubs stay straight',
-      );
-      assert.equal(r.after.metrics.labelAlignment, 0);
-    }
-    if (id === 'A36') {
-      const inputPorts = ['U1', 'U2', 'U3'].map((ref) => byRef(ref)._id);
-      for (const group of api
-        .labelGroups(r.sheet)
-        .filter(
-          (g) => inputPorts.includes(g[0].pin.id) && g[0].pin.direction[0] < 0,
-        ))
-        for (const { label: l } of group)
-          assert.ok(
-            !r.after.diagnostics.some(
-              (d) =>
-                d.itemIds.includes(l._id) &&
-                ['text-wire', 'text-body', 'text-overlap'].includes(d.code),
-            ),
-            'input label columns leave space for intervening ground connections',
-          );
-      assert.equal(
-        r.after.metrics.labelOverhangs,
-        0,
-        'every plain label follows and fits its supporting wire',
-      );
-      const v1 = byRef('V1');
-      for (const pin of api.pins(v1)) {
-        const path = api
-          .wirePaths(r.sheet)
-          .find((p) =>
-            p.points.some((q) => q[0] === pin.p[0] && q[1] === pin.p[1]),
-          );
-        assert.ok(
-          path.points.every((q) => q[0] === pin.p[0]),
-          'V1 supply and ground leads stay straight after grouping',
-        );
-      }
-      const u3 = api
-        .pins({ ...byRef('U3'), show_power: true, _active_points: null })
-        .find((p) => p.direction[1] === -1).p;
-      const supply = api
-        .wirePaths(r.sheet)
-        .find((p) => p.points.some((q) => q[0] === u3[0] &&
-          q[1] >= u3[1] && q[1] <= api.symbolArtwork(byRef('U3')).body.y1));
-      assert.ok(
-        supply && supply.points.every((q) => q[0] === supply.points[0][0]),
-        'U3 supply does not retain an arbitrary dogleg',
-      );
-      assert.equal(
-        r.after.metrics.labelAlignment,
-        0,
-        'pin labels share their face column',
-      );
-      assert.equal(
-        r.after.metrics.wireBodyCollisions,
-        0,
-        'ground artwork no longer intersects VCC wires',
-      );
-      const aLabels = r.sheet.items.filter(
-        (i) => i.NodeName === 'label' && i.text === 'A',
-      );
-      for (const l of aLabels)
-        assert.ok(
-          !r.after.diagnostics.some(
-            (d) =>
-              d.itemIds.includes(l._id) &&
-              [
-                'text-overlap',
-                'text-wire',
-                'text-body',
-                'annotation-crowding',
-              ].includes(d.code),
-          ),
-          'A labels are clear of CLK and neighbouring wires',
-        );
-      const clockLabels = r.sheet.items.filter(
-        (i) => i.NodeName === 'label' && i.text === 'CLK',
-      );
-      for (const l of clockLabels)
-        assert.ok(
-          !r.after.diagnostics.some(
-            (d) =>
-              d.itemIds.includes(l._id) &&
-              ['text-overlap', 'text-wire', 'text-body'].includes(d.code),
-          ),
-          'clock labels avoid adjacent wires',
-        );
-      const cs = ['V1', 'V2', 'V3'].map(centre);
-      assert.ok(
-        cs.every((c) => c[1] === cs[0][1]),
-        'source bodies share a baseline',
-      );
-      assert.ok(cs[1][0] > cs[0][0]);
-      assert.equal(
-        cs[1][0] - cs[0][0],
-        cs[2][0] - cs[1][0],
-        'source row has equal pitch',
-      );
-      assert.equal(r.after.metrics.componentDisorder, 0);
-    }
+test('simulation drawings preserve connectivity and simulation metadata after layout and save/reopen', async () => {
+  for (const id of ['voltage-divider', 'rc-charging', 'rc-low-pass']) {
+    const drawing = await api.decodeDrawing(
+      await fs.readFile('examples/simulation/' + id + '.dzn'),
+    );
+    const r = solve(drawing.sheets[0]);
     const updated = {
       ...drawing,
       sheets: [r.sheet, ...drawing.sheets.slice(1)],
@@ -790,18 +573,30 @@ test('visible body bounds and compact text placement follow rotation, mirroring 
 });
 
 test('junction artwork follows its wire under every symbol rotation, mirror and scale', () => {
-  for(let rotation=0;rotation<8;rotation++) {
-    const base=symbol(1,200,200,{rotation,showText:false});
-    const s=api.refresh({...base,scale_x:2,scale_y:3,_symbol:{...base._symbol,
-      outlines:[{...base._symbol.outlines[0],items:[
-        wire(900,[-30,-10],[-10,-10]),
-        {NodeName:'junction',_id:901,point:[-10,-10]},
-      ]}]}});
-    const svg=api.renderCircuit(sheet(s));
-    const end=/<path d="M[^L]+L\s*([-\d.]+) ([-\d.]+)/.exec(svg);
-    const dot=/<circle cx="([-\d.]+)" cy="([-\d.]+)" r="5"/.exec(svg);
-    assert.ok(end&&dot,'rendered wire and dot for rotation '+rotation);
-    assert.deepEqual(dot.slice(1).map(Number),end.slice(1).map(Number));
+  for (let rotation = 0; rotation < 8; rotation++) {
+    const base = symbol(1, 200, 200, { rotation, showText: false });
+    const s = api.refresh({
+      ...base,
+      scale_x: 2,
+      scale_y: 3,
+      _symbol: {
+        ...base._symbol,
+        outlines: [
+          {
+            ...base._symbol.outlines[0],
+            items: [
+              wire(900, [-30, -10], [-10, -10]),
+              { NodeName: 'junction', _id: 901, point: [-10, -10] },
+            ],
+          },
+        ],
+      },
+    });
+    const svg = api.renderCircuit(sheet(s));
+    const end = /<path d="M[^L]+L\s*([-\d.]+) ([-\d.]+)/.exec(svg);
+    const dot = /<circle cx="([-\d.]+)" cy="([-\d.]+)" r="5"/.exec(svg);
+    assert.ok(end && dot, 'rendered wire and dot for rotation ' + rotation);
+    assert.deepEqual(dot.slice(1).map(Number), end.slice(1).map(Number));
   }
 });
 

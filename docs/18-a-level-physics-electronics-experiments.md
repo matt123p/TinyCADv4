@@ -1,7 +1,5 @@
 # A-level physics: electronics experiments supported by TinyCAD
 
-Student drawings: [A-level Physics — AQA 7408, including optional Electronics](../bundled-examples/teaching/a-level-physics-aqa/README.md). They are also available in **File → Open Example**. Each activity has a drawing, a preview and student-facing Markdown instructions; simulation examples use `.dzn` and connection plans use `.dsn`.
-
 Research checked: **10 November 2026**.
 
 ## Syllabus and scope

@@ -9,7 +9,7 @@ const value = (flag, fallback) =>
   args.includes(flag) ? args[args.indexOf(flag) + 1] : fallback;
 if (args.includes('--help')) {
   console.log(
-    'node scripts/layout-drawing.mjs [--input drawing.dsn|drawing.dzn | --examples G01,A38 | --all-examples] [--output-dir build/layout-review] [--disturbance low|medium|high] [--max-evaluations 2500] [--annealing-steps 0] [--analyse-only]',
+    'node scripts/layout-drawing.mjs --input drawing.dsn|drawing.dzn [--output-dir build/layout-review] [--disturbance low|medium|high] [--max-evaluations 2500] [--annealing-steps 0] [--analyse-only]',
   );
   process.exit(0);
 }
@@ -18,22 +18,9 @@ const options = {
   maxEvaluations: Number(value('--max-evaluations', '2500')),
   annealingSteps: Number(value('--annealing-steps', '0')),
 };
-const manifest = JSON.parse(
-  await fs.readFile(
-    path.join(root, 'bundled-examples/teaching/manifest.json'),
-    'utf8',
-  ),
-);
-const selected = value('--examples', 'G01,G14,A38').split(',');
-let inputs = args.includes('--input')
-  ? [path.resolve(value('--input'))]
-  : manifest.scenarios
-      .filter((s) => args.includes('--all-examples') || selected.includes(s.id))
-      .map((s) => path.join(root, 'bundled-examples', s.path));
-if (!args.includes('--input') && !args.includes('--all-examples'))
-  for (const id of selected)
-    if (!manifest.scenarios.some((s) => s.id === id))
-      throw Error('Unknown example ' + id);
+if (!value('--input') || value('--input').startsWith('--'))
+  throw Error('Specify a drawing with --input path/to/design.dsn (or .dzn)');
+const inputs = [path.resolve(value('--input'))];
 const output = path.resolve(
   value('--output-dir', path.join(root, 'build/layout-review')),
 );

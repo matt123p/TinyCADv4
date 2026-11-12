@@ -1,7 +1,5 @@
 # BTEC National Extended Diploma in Electrical and Electronic Engineering: experiments
 
-Student drawings: [BTEC National Extended Diploma Electrical and Electronic Engineering — selected Unit 19](../bundled-examples/teaching/btec-national-electrical-electronic-engineering/README.md). They are also available in **File → Open Example**. Each activity has a drawing, a preview and student-facing Markdown instructions; simulation examples use `.dzn` and connection plans use `.dsn`.
-
 Research checked: **10 November 2026**.
 
 ## Course and source mapping

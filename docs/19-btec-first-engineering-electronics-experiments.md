@@ -1,7 +1,5 @@
 # BTEC First Certificate in Engineering: electronics experiments
 
-Student drawings: [BTEC First Certificate in Engineering — selected Unit 8](../bundled-examples/teaching/btec-first-engineering/README.md). They are also available in **File → Open Example**. Each activity has a drawing, a preview and student-facing Markdown instructions; simulation examples use `.dzn` and connection plans use `.dsn`.
-
 Research checked: **10 November 2026**.
 
 ## Course and source mapping

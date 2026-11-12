@@ -67,7 +67,7 @@ invalid connectivity and destroy a user's existing organisation.
 
 Compaction removes empty horizontal/vertical strips. Objects translate rigidly;
 only wires spanning a strip shorten. This preserves orthogonal topology and the
-user's mental map, and is especially effective on the oversized teaching loops.
+user's mental map, and is especially effective on the oversized circuit loops.
 Wire shortening and component movement remain separate, validated proposals.
 
 ### Labels and obstruction repair
@@ -234,9 +234,7 @@ The server and editor menu are intentionally future integration work.
 
 ```sh
 npm run test:layout
-npm run layout:review -- --examples G01,G14,A38 --disturbance medium
 npm run layout:review -- --input path/to/design.dsn --disturbance low
-npm run layout:review -- --all-examples --output-dir build/layout-review-all
 ```
 
 The CLI writes a standalone HTML before/after review, SVGs at matched scales,
@@ -272,106 +270,19 @@ groups and alignment constraints, obstacle-aware A* or libavoid routing,
 incremental spatial indexing for large sheets, and whole-netlist placement for
 new MCP-generated circuits. These can reuse the validator and quality contract.
 
-## Validation snapshot (12 November 2026)
+## Validation
 
-`npm run test:layout`: 29 passing behavioural tests, covering eight parallel
-signal paths stored as native segments, all eight symbol rotation/mirror states,
-four-sided pin layouts, rotated ground artwork, label-stub extension, inline
-centring, named-net attraction, ambiguous junctions, selection/locks, disturbance
-limits, deterministic annealing, input immutability and saved simulation data.
-The real-example checks also require A38's resistor/capacitor pairs to be
-parallel and aligned, every CTRL label to remain at least 15 drawing units from
-ground text, and A36's V1–V3 to form an ordered, equally spaced row. Grouping
-locks and narrow-but-nonoverlapping annotation gaps have dedicated tests.
-Artwork bounds and compact text placement are checked under all eight rotation/
-mirror states with unequal axis scales. A36/A38 references and A38 capacitor
-references/values must stay within five drawing units of their visible bodies.
-`npm run typecheck` also passes.
-Additional regressions cover horizontal/vertical and reversed-wire label centres,
-clear end placement when the middle is blocked, labelled detours around fixed
-components, component escape moves, and ground relocation with its lead. A36 must
-have no wire/body collisions, and its A/CLK labels must avoid neighbouring wires.
-Tests cover alignment from all four label orientations on both wire axes,
-short rotated labels with electrical anchors inside their span, fixed-label
-orientation, straight ground-lead extension and fixed terminal protection.
-Additional cases cover straightening a labelled free tail across native
-records, locked off-axis anchors, and common label columns with and without tight
-pin pitch. G14's dangling LDR lead must stay straight; A38 must have no bends,
-and A36/A38 must have zero label-column error. R1/R2 text groups must lie within
-five drawing units of their visible resistor bodies. A36's U3 supply and both
-V1 leads must stay straight after grouping, with no label overhangs.
+Run `npm run test:layout` and `npm run typecheck`. Behavioural checks cover
+parallel routes, symbol rotation and mirroring, text placement, label alignment,
+obstruction repair, regular grouping, selection and locks, disturbance limits,
+deterministic annealing, input immutability and save/reopen connectivity.
+Simulation metadata is checked using the standalone examples under
+`examples/simulation`.
 
-Before the unlabelled-row spacing revision, the review runner processed all 214 bundled teaching drawings in medium mode,
-with four passes and 2,500 acceptance evaluations per drawing. Every proposal
-preserved electrical and physical connectivity, including after save/reopen.
-All 1,503 saved labels retain their original text and shape; 604 rotate to
-follow the supporting wire.
-No sheet increased its measured body collisions, wire/body collisions,
-crossings, overlaps, diagonals, pin-exit violations, text collisions or label
-overhangs. The original example files were unchanged.
+The curriculum teaching packs and their generation pipeline have been removed.
+The layout library and drawing review CLI remain independent of those packs.
+Historical teaching previews and measurements are available in Git history.
 
-| Aggregate metric | Before | After |
-| --- | ---: | ---: |
-| Wire/body collisions | 70 | 54 |
-| Pin-exit violations | 249 | 8 |
-| Text collisions | 1,256 | 50 |
-| Net-label overhangs or incorrect wire alignment | 1,503 | 23 |
-| Wire length (drawing units, rounded) | 131,525 | 106,939 |
-| Circuit bounding area (square drawing units, rounded) | 35,221,680 | 13,773,586 |
-| Annotation clearance shortfall (drawing units, rounded) | 3,119 | 173 |
-| Component pattern disorder (drawing units, rounded) | 39,170 | 0 |
-| Label-column error (drawing units, rounded) | 1,180 | 0 |
-
-G01 improved from 755 to 300 units of wire and from 122,578 to 26,325 square
-units of circuit area, with zero detected text collisions, label overhangs or
-pin-exit violations. Its existing dangling wire remains flagged; its intended
-connection is not inferred from the corrected reference image.
-
-These are measured improvements, not a claim that all drawings are finished:
-46 runs converged, 132 reached the pass limit and 36 reached the evaluation
-budget. Only 59 have no remaining diagnostics, which now also include annotation
-crowding in addition to dangling endpoints and source-artwork conflicts. Many teaching drawings share
-circuit templates. All proposals were rendered; representative G01, A38 and
-A36 previews were visually inspected. The generated HTML/JSON reports under
-`build/layout-review` and `build/layout-review-validation` contain the latest results.
-
-In the revised medium-disturbance previews, A38 has R1/R2 on a shared vertical
-centreline and C1/C2 on a shared horizontal baseline. Its closest CTRL/ground-0
-text gap exceeds 15 drawing units. A36 has V1/V2/V3 on the same baseline with equal
-pitch in reference order. Both examples finish with zero component-pattern
-disorder. Connectivity is also checked on saved/reopened proposals; the
-originals are not edited to obtain the result. U1 now sits next to the visible
-chip body in both previews. C1/C2 references and values sit close to the capacitor
-plates and align on their body-facing edge. These are general placement rules,
-not adjustments to individual example files.
-
-The obstruction-repair revision removes both A36 wire/ground-artwork collisions
-(2 to 0). A and CLK now share a text column, with a small fan-out to provide
-clearance at tight pin pitch. A38's left-side labels share a column and its stubs
-are straight. G14's dangling lead has no elbow. IN/OUT follow their supporting spans and
-R1/R2 fields are close to their bodies. A36 still has other dense-pin text diagnostics;
-the review does not claim that every annotation in the sheet is resolved.
-
-The wire-alignment revision rotates the vertical VCC/CLK/A supply labels in A36.
-Its U3 supply lead is straight. Short labelled ground leads are extended along
-their existing axis before obstacle routing is attempted. After component
-grouping, a movable ground and its unbranched lead can straighten together if
-the earlier obstruction has gone; fixed terminals, branches and remaining
-clearance conflicts prevent that move. This also removes the leftover V1
-ground detour without removing the necessary ground offsets below U1/U2.
-
-The subsequent unlabelled-row regression checks both component faces with a
-locked intervening ground connection. A36's U1/U2/U3 input columns must be clear
-of wires, bodies and other text. The four representative previews were regenerated
-and save/reopen connectivity rechecked: A36 text collisions drop from 9 to 6,
-with zero input-column collisions, zero label-column error and zero overhangs.
-A38 still has zero bends and text collisions. The aggregate table above records
-the earlier full run, rather than claiming a new 214-drawing sweep for this change.
-
-### Teaching drawing regeneration
-
-The historical proposal measurements above precede repair of the teaching-file generator. The bundled drawings have now been explicitly regenerated: every routed leg is a native two-point wire, and the editor's split/merge routine places branch dots before and after medium-disturbance layout. The generator selects upright supply-pin orientation before wiring; auto-layout still preserves component orientation.
-
-The generator enables `nativeWireJunctions`, which also checks the connections that the editor would make at wire endpoints and terminals. A proposal cannot introduce an accidental T connection that would short separate nets on cleanup. Saving/reopening verifies wire coverage as well as electrical and physical membership. SVGs and PNGs are rendered from the reopened drawings, including correctly transformed junction artwork inside rotated symbols.
-
-The regenerated 214 drawings contain 2,773 native wires and 138 schematic junction dots, with zero diagonal or misplaced-junction diagnostics. All 201 simulations pass verification; 13 drawings are connection plans. See the current teaching review record for preview hashes and remaining layout diagnostics. The separate proposal CLI continues to leave its source drawings unchanged.
+For generated native drawings, `nativeWireJunctions: true` additionally checks
+the connections the editor would make at wire endpoints and terminals, rejecting
+new accidental T connections during layout.
