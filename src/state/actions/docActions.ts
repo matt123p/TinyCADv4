@@ -1,10 +1,12 @@
 import { TSheet } from '../../components/svg/Sheet';
 import { FileIdType } from '../../io/files';
 import { NetlistData } from '../../io/netlists/netlistGenerator';
-import { dsnDrawing, NetlistTypes, Size } from '../../model/dsnDrawing';
+import { dsnDrawing, dsnSheet, NetlistTypes, Size } from '../../model/dsnDrawing';
+import { LayoutChange } from '../../layout/types';
 import { Coordinate } from '../../model/dsnItem';
 
 export enum DocActionTypes {
+  ApplyAutoLayout = '[Document] ApplyAutoLayout',
   SetDocument = '[Document] SetDocument',
   RenameDocument = '[Document] RenameDocument',
   SetFileData = '[Document] SetFileData',
@@ -90,7 +92,14 @@ export interface StampWireNetTypes {
   netlist: NetlistData;
 }
 
+export interface ApplyAutoLayout {
+  type: DocActionTypes.ApplyAutoLayout;
+  source: dsnSheet;
+  changes: LayoutChange[];
+}
+
 export type DocActions =
+  | ApplyAutoLayout
   | SetDocument
   | RenameDocument
   | SetFileData

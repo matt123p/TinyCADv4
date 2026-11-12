@@ -28,6 +28,9 @@
     "server-bundle": "node scripts/build-server-bundle.mjs",
     "check:i18n": "node scripts/check-translations.mjs",
     "typecheck": "tsc --noEmit",
+    "test:layout": "node --test scripts/tests/layout.test.mjs scripts/tests/auto-layout-dialog.test.mjs scripts/tests/auto-layout-worker.test.mjs scripts/tests/auto-layout-ui.mjs",
+    "test:layout:browser": "playwright test --config scripts/tests/layout-browser/playwright.config.mjs",
+    "test:layout:all": "npm run test:layout && npm run test:layout:browser",
     "dev": "concurrently -k \"npm run start:electron\" \"npm:electron\"",
     "dist": "rimraf dist .parcel-cache release && node scripts/dist.mjs",
     "generate:icons": "node scripts/generate-icons.mjs",
@@ -173,6 +176,7 @@
   "devDependencies": {
     "@parcel/transformer-image": "^2.16.4",
     "@parcel/transformer-sass": "^2.16.4",
+    "@playwright/test": "^1.65.0",
     "@types/blob-stream": "^0.1.30",
     "@types/file-saver": "^2.0.3",
     "@types/fixed-data-table-2": "^0.8.6",

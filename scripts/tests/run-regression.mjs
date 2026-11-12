@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // Bundle actual app code while replacing browser startup services.
-export async function runRegression(contents) {
+export async function runRegression(contents, { bundlePackages = [] } = {}) {
   const root = fileURLToPath(new URL('../../', import.meta.url));
   const directory = await mkdtemp(path.join(root, '.issue-tests-'));
   try {
@@ -25,6 +25,10 @@ export async function runRegression(contents) {
       plugins: [{
         name: 'browser-services',
         setup(builder) {
+          // Use the same ESM entry point as the browser build when testing undo.
+          for (const name of bundlePackages) {
+            builder.onResolve({ filter: new RegExp('^' + name + '$') }, () => ({ path: fileURLToPath(import.meta.resolve(name)) }));
+          }
           builder.onResolve({ filter: /\/startup$/ }, () => ({ path: 'startup', namespace: 'test' }));
           builder.onResolve({ filter: /\/i18n$/ }, () => ({ path: 'i18n', namespace: 'test' }));
           builder.onLoad({ filter: /.*/, namespace: 'test' }, ({ path: service }) => ({

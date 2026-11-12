@@ -1,0 +1,34 @@
+name: Auto-layout Tests
+
+on:
+  push:
+    branches: [main, production]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+      - run: npm ci
+      - run: npm run test:layout
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:layout:browser
+      - name: Upload browser failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: auto-layout-browser-failures
+          path: .tmp/layout-browser-results
+          include-hidden-files: true
+          if-no-files-found: ignore

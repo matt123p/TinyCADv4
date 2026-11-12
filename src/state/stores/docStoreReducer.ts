@@ -8,6 +8,7 @@ import {
 import update from 'immutability-helper';
 
 import { DocActionTypes } from '../actions/docActions';
+import { get_global_id } from '../../util/global_id';
 import { MenuActionTypes } from '../actions/menuActions';
 import { FindActionTypes } from '../actions/findActions';
 import { DialogActionTypes } from '../actions/dialogActions';
@@ -153,6 +154,47 @@ export function DocStoreReducer(
   let update_library;
 
   switch (action.type) {
+    case DocActionTypes.ApplyAutoLayout: {
+      // A worker result belongs only to the sheet snapshot it was computed from.
+      if (!sheet || sheet !== action.source || state.editSymbol || state.editLibrary || !action.changes.length) {
+        return state;
+      }
+      const changes = new Map(action.changes.map((change) => [change.id, change]));
+      const existingIds = new Set(sheet.items.map((item) => item._id));
+      const usedIds = new Set(state.drawing.sheets.flatMap((s) => s.items.map((item) => item._id)));
+      const items = sheet.items.flatMap((item) => {
+        const change = changes.get(item._id);
+        return change ? (change.after ? [change.after] : []) : [item];
+      });
+      for (const change of action.changes) {
+        if (!existingIds.has(change.id) && change.after) {
+          // Layout IDs are local to a sheet. Allocate editor IDs for new segments/dots.
+          let id = get_global_id();
+          while (usedIds.has(id)) id = get_global_id();
+          usedIds.add(id);
+          items.push({ ...change.after, _id: id });
+        }
+      }
+      sheet = { ...sheet, items };
+      view = {
+        ...view,
+        add: null,
+        drag: null,
+        tracker: { a: null, b: null, _drag: null, _dragArray: null, _primary_horz: false },
+        in_add_rect: false,
+        display_add: false,
+        cursor: 'auto',
+        selection_candidates: null,
+        _in_select_rect: false,
+        menu_command: '',
+        selectable: null,
+        hover_obj: null,
+        hover_ids: [],
+        hover_pins: [],
+        _selected_array: view._selected_array.filter((id) => items.some((item) => item._id === id)),
+      };
+      break;
+    }
     case AppUiActionTypes.SetWireMode:
       view = update_view.setWireMode(view, sheet, action.mode);
       break;

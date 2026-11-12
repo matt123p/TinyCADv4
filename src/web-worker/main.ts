@@ -1,4 +1,5 @@
 import { NetlistWorkerState } from './netlistState';
+import { optimiseLayout } from '../layout';
 
 interface WorkerRequest {
   id: number;
@@ -15,7 +16,20 @@ interface WorkerResponse {
 
 const state = new NetlistWorkerState();
 
-onmessage = function (event: MessageEvent<WorkerRequest>) {
+let layoutFonts: Promise<unknown>;
+function loadLayoutFonts() {
+  // Worker canvases have their own font set; match the editor's bundled faces.
+  return layoutFonts ??= Promise.all([
+    ['Arial', new URL('../../styles/fonts/LiberationSans-Regular.ttf', import.meta.url)],
+    ['Courier New', new URL('../../styles/fonts/LiberationMono-Regular.ttf', import.meta.url)],
+    ['Times New Roman', new URL('../../styles/fonts/LiberationSerif-Regular.ttf', import.meta.url)],
+  ].map(async ([family, url]) => {
+    const face = await new FontFace(String(family), `url("${url}")`).load();
+    (globalThis as unknown as { fonts: FontFaceSet }).fonts.add(face);
+  }));
+}
+
+onmessage = async function (event: MessageEvent<WorkerRequest>) {
   const request = event.data;
 
   const response: WorkerResponse = {
@@ -25,6 +39,12 @@ onmessage = function (event: MessageEvent<WorkerRequest>) {
 
   try {
     switch (request.command) {
+      case 'auto-layout': {
+        await loadLayoutFonts();
+        const result = optimiseLayout(request.payload.sheet, request.payload.options);
+        response.data = { changes: result.changes, connectivityPreserved: result.connectivityPreserved };
+        break;
+      }
       case 'netlist-init':
         response.data = state.init(request.payload.drawing);
         break;

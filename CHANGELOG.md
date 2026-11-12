@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Schematic auto-layout for the whole sheet or selected items, with High, Medium and Low strength settings and explanations beside each option.
+- Run auto-layout in a background worker with cancellation, connection checks and a single Undo step to revert the result.
+
+### Fixed
+
+- Remove unnecessary local down-and-up wire detours when shorter routes clear nearby objects, annotations and other wires, while preserving connections and fixed anchors.
+- Treat hidden transistor pins as connection points rather than visible stems, preventing artificial return bends and repairing existing loops in the amplifier example.
+
+### Maintenance
+
+- Add layout algorithm, dialog, worker, editor and browser regression suites, including the original amplifier and a captured layout with pin loops, with automated CI coverage.
+- Document auto-layout behavior and commands for running the test suites.
+
 ## v4.0.11
 
 ### Added
