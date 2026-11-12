@@ -1,12 +1,13 @@
 import undoable from 'redux-undo';
 
 import { StateWithHistory } from 'redux-undo';
-import { docStore, DocStoreReducer } from '../stores/docStoreReducer';
+import { activeSheet, docStore, DocStoreReducer } from '../stores/docStoreReducer';
 import { AppActionTypes } from '../dispatcher/AppDispatcher';
 import { MenuActionTypes } from '../actions/menuActions';
 import { altStore } from '../stores/altStoreReducer';
 import { SymbolActionTypes } from '../actions/symbolActions';
 import { LibraryActionTypes } from '../actions/libraryActions';
+import { DocActionTypes } from '../actions/docActions';
 
 let lastEvent = new Date();
 let needHistory = false;
@@ -16,7 +17,7 @@ export interface docDrawing {
   altStore: altStore;
 }
 
-export const DocStoreWithHistory = undoable(DocStoreReducer, {
+const reduceWithHistory = undoable(DocStoreReducer, {
   filter: (
     action: AppActionTypes,
     currentState: docStore,
@@ -28,7 +29,7 @@ export const DocStoreWithHistory = undoable(DocStoreReducer, {
       needHistory ||
       currentState.drawing != previousHistory._latestUnfiltered?.drawing;
     let undoCheckpoint = now.getTime() - lastEvent.getTime() > 500;
-    if (action.type.startsWith('simulation/') || action.type === MenuActionTypes.MenuCommand) {
+    if (action.type.startsWith('simulation/') || action.type === MenuActionTypes.MenuCommand || action.type === DocActionTypes.ApplyAutoLayout) {
       undoCheckpoint = true;
     }
     if (
@@ -65,3 +66,19 @@ export const DocStoreWithHistory = undoable(DocStoreReducer, {
   },
   ignoreInitialState: true,
 });
+
+export function DocStoreWithHistory(
+  state: StateWithHistory<docStore> | undefined,
+  action: AppActionTypes,
+): StateWithHistory<docStore> {
+  if (
+    state && action.type === DocActionTypes.ApplyAutoLayout && action.changes.length &&
+    activeSheet(state.present) === action.source &&
+    !state.present.editSymbol && !state.present.editLibrary
+  ) {
+    // clearHistory omits the initial checkpoint. Layout always needs the exact
+    // current sheet as its undo baseline, including immediately after opening.
+    state = { ...state, _latestUnfiltered: state.present };
+  }
+  return reduceWithHistory(state, action);
+}

@@ -1,9 +1,75 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
+import fs, { readFile } from 'node:fs/promises';
 import { layoutRuntime } from '../lib/layout-runtime.mjs';
 
 const api = await layoutRuntime();
+
+async function amplifierFixture(name = 'amplifier.dsn') {
+  const xml = new api.XMLBuilder();
+  xml.fromText(await readFile(new URL('./fixtures/' + name, import.meta.url), 'utf8'));
+  return new api.ioXML().from_dsn(xml).sheets[0];
+}
+
+function assertTransistorExits(sheet) {
+  const transistors = sheet.items.filter(i => i.NodeName === 'symbol' &&
+    i.text.some(t => t.description === 'Ref' && ['Q1', 'Q2'].includes(t.value)));
+  assert.equal(transistors.length, 2, 'fixture includes both transistors from the reported circuit');
+  for (const symbol of transistors) {
+    const bounds = api.bodyRect(symbol);
+    const centre = [(bounds.x1 + bounds.x2) / 2, (bounds.y1 + bounds.y2) / 2];
+    for (const pin of api.pins(symbol)) {
+      const incident = sheet.items.filter(i => i.NodeName === 'wire' &&
+        i.d_points.some(p => p[0] === pin.p[0] && p[1] === pin.p[1]));
+      assert.ok(incident.length, 'transistor pin must remain wired');
+      for (const wire of incident) {
+        const other = wire.d_points.find(p => p[0] !== pin.p[0] || p[1] !== pin.p[1]);
+        assert.ok((other[0] - pin.p[0]) * (pin.p[0] - centre[0]) +
+          (other[1] - pin.p[1]) * (pin.p[1] - centre[1]) > 0,
+        'wire must leave transistor artwork instead of doubling back into it');
+      }
+    }
+  }
+}
+
+for (const disturbance of ['low', 'medium', 'high']) {
+  test(`the actual amplifier does not acquire transistor pin loops at ${disturbance} strength`, async () => {
+    const input = await amplifierFixture();
+    assertTransistorExits(input);
+    const r = solve(input, { disturbance });
+    assertTransistorExits(r.sheet);
+  });
+
+  test(`the actual amplifier's existing pin loops are removed at ${disturbance} strength`, async () => {
+    const input = await amplifierFixture('amplifier-with-pin-loops.dsn');
+    assert.throws(() => assertTransistorExits(input), /doubling back/);
+    const r = solve(input, { disturbance });
+    assertTransistorExits(r.sheet);
+    assert.ok(r.after.metrics.bends < r.before.metrics.bends);
+    assert.ok(r.after.metrics.wireLength < r.before.metrics.wireLength);
+  });
+}
+
+test('hidden transistor connection points have no rendered stem or inward lead constraint', async () => {
+  const sheet = await amplifierFixture();
+  const original = sheet.items.find(i => i.NodeName === 'symbol' && i.text.some(t => t.value === 'Q2'));
+  for (let rotation = 0; rotation < 8; rotation++) {
+    for (const [scale_x, scale_y] of [[1, 1], [-1, 1], [2, 0.5]]) {
+      const symbol = api.refresh({ ...original, rotation, scale_x, scale_y });
+      const body = api.bodyRect(symbol);
+      for (const pin of api.pins(symbol)) {
+        assert.equal(pin.length, 0, 'the hidden pin length in the file is not visible artwork');
+        const dx = pin.p[0] - (body.x1 + body.x2) / 2;
+        const dy = pin.p[1] - (body.y1 + body.y2) / 2;
+        assert.ok(dx * pin.direction[0] + dy * pin.direction[1] >= 0);
+      }
+      const artwork = api.symbolArtwork(symbol);
+      assert.deepEqual(artwork.obstacles, [artwork.body], 'undrawn pin stems and pin names reserve no space');
+    }
+  }
+  assert.ok(original._symbol.outlines[0].active_points.every(p => p.pin.which === 5 && p.pin.length === 30),
+    'the native symbol metadata must stay intact');
+});
 const font = {
   font_name: 'Arial',
   font_size: 9,
@@ -957,3 +1023,161 @@ test('aligned label fan-out reserves intervening unlabelled ground rows on eithe
     assert.ok(group[2].point[1] > group[1].point[1]);
   }
 });
+function backtrackFixture(transform = p => p) {
+  // The outer route is constrained by obstacles; only its local down/right/up
+  // excursion is redundant. TinyCAD stores each leg as an individual item.
+  const points = [[100, 100], [130, 100], [130, 150], [160, 150],
+    [160, 120], [180, 120], [180, 160], [200, 160]].map(transform);
+  const boxes = [
+    [[145, 85], [155, 115]],
+    [[80, 135], [120, 145]],
+    [[145, 125], [155, 135]],
+  ].map(([a, b], index) => ({ NodeName: 'rectangle', _id: 100 + index,
+    point: transform(a), point_b: transform(b), line_width: 1 }));
+  return sheet(...points.slice(1).map((p, i) => wire(10 + i, points[i], p)), ...boxes);
+}
+
+test('removes a local down-then-up excursion across native segments when whole-route shortcuts are blocked', () => {
+  const input = backtrackFixture();
+  const r = solve(input, { phases: ['routing'] });
+  assert.equal(r.before.metrics.bends, 6);
+  assert.equal(r.after.metrics.bends, 4);
+  assert.equal(r.after.metrics.wireLength, r.before.metrics.wireLength - 60);
+  for (const item of input.items)
+    assert.ok(r.sheet.items.some(i => i._id === item._id), 'retain every native wire identity');
+});
+
+for (const [name, transform] of [
+  ['horizontal', ([x, y]) => [y, x]],
+  ['mirrored', ([x, y]) => [400 - x, y]],
+  ['rotated', ([x, y]) => [400 - y, x]],
+]) {
+  test(`local reversal removal works on ${name} routes`, () => {
+    const r = solve(backtrackFixture(transform), { phases: ['routing'] });
+    assert.equal(r.after.metrics.bends, 4);
+    assert.equal(r.after.metrics.wireLength, r.before.metrics.wireLength - 60);
+  });
+}
+
+test('local reversal removal is independent of stored segment order and direction', () => {
+  const input = backtrackFixture();
+  input.items = input.items.reverse().map((item, index) => item.NodeName === 'wire' && index % 2
+    ? { ...item, d_points: [...item.d_points].reverse() } : item);
+  const r = solve(input, { phases: ['routing'] });
+  assert.equal(r.after.metrics.bends, 4);
+  assert.equal(r.after.metrics.wireLength, r.before.metrics.wireLength - 60);
+});
+
+test('local reversal removal also handles a proposed polyline before native segment serialization', () => {
+  const input = backtrackFixture();
+  const members = input.items.filter(i => i.NodeName === 'wire');
+  input.items = [wire(10, members[0].d_points[0], ...members.map(w => w.d_points[1])),
+    ...input.items.filter(i => i.NodeName !== 'wire')];
+  const r = solve(input, { phases: ['routing'] });
+  assert.equal(r.after.metrics.bends, 4);
+  assert.equal(r.after.metrics.wireLength, r.before.metrics.wireLength - 60);
+  assert.ok(Object.keys(r.wireOrigins).length, 'new native segments map to their original polyline');
+});
+
+test('keeps a local reversal when every shorter corner would collide with fixed artwork', () => {
+  const input = backtrackFixture();
+  input.items.push(...[
+    [[140, 118], [150, 122]],
+    [[168, 148], [172, 152]],
+    [[168, 158], [172, 162]],
+  ].map(([point, point_b], index) => ({ NodeName: 'rectangle', _id: 110 + index, point, point_b, line_width: 1 })));
+  const r = solve(input, { phases: ['routing'] });
+  assert.equal(r.before.metrics.wireBodyCollisions, 0);
+  assert.equal(r.after.metrics.wireBodyCollisions, 0);
+  assert.equal(r.after.metrics.bends, 6);
+  assert.equal(r.changes.length, 0);
+});
+
+test('keeps a local reversal when shortcuts would overlap or cross other wires', () => {
+  const input = backtrackFixture();
+  input.items.push(wire(110, [140, 120], [150, 120]), wire(111, [170, 145], [170, 165]));
+  const r = solve(input, { phases: ['routing'] });
+  assert.equal(r.before.metrics.crossings, 0);
+  assert.equal(r.after.metrics.crossings, 0);
+  assert.equal(r.after.metrics.overlaps, 0);
+  assert.equal(r.after.metrics.bends, 6);
+  assert.equal(r.changes.length, 0);
+});
+
+test('a fixed branch along a reversal remains connected while a neighbouring detour can simplify', () => {
+  const input = backtrackFixture();
+  const branch = wire(110, [145, 150], [145, 200]);
+  input.items.push(branch);
+  const r = solve(input, { phases: ['routing'], lockedIds: [110] });
+  assert.strictEqual(r.sheet.items.find(i => i._id === 110), branch);
+  assert.ok(r.after.metrics.bends < r.before.metrics.bends);
+  assert.ok(api.sameConnectivity(input, r.sheet, r.wireOrigins));
+});
+
+test('local reversal removal respects locks, selections, cancellation and evaluation budgets', () => {
+  const input = backtrackFixture();
+  for (const options of [
+    { lockedIds: [13] },
+    { selectedIds: [10, 11, 12, 14, 15, 16] },
+    { maxEvaluations: 0 },
+    { maxPasses: 0 },
+    { cancelled: () => true },
+  ]) {
+    const r = solve(input, { phases: ['routing'], ...options });
+    assert.equal(r.changes.length, 0, JSON.stringify(options));
+  }
+});
+
+test('local reversal removal preserves the straight outward leads at both component pins', () => {
+  const input = backtrackFixture();
+  input.items.push(
+    symbol(1, 100, 100, { showText: false, ports: [[0, 0, 2]] }),
+    symbol(2, 240, 160, { showText: false, ports: [[-40, 0, 0]] }),
+  );
+  const r = solve(input, { phases: ['routing'], lockedIds: [1, 2] });
+  assert.equal(r.before.metrics.pinExitViolations, 0);
+  assert.equal(r.after.metrics.pinExitViolations, 0);
+  assert.equal(r.after.metrics.bends, 4);
+  assert.equal(r.after.metrics.wireLength, r.before.metrics.wireLength - 60);
+});
+
+test('a necessary reversal remains when a shortcut would turn back into a component pin', () => {
+  const source = symbol(1, 100, 120, { showText: false, ports: [[0, -20, 1]] });
+  assert.deepEqual(api.pins(source)[0].p, [100, 100]);
+  const input = sheet(source,
+    wire(10, [100, 100], [100, 80]),
+    wire(11, [100, 80], [140, 80]),
+    wire(12, [140, 80], [140, 130]),
+    { NodeName: 'noconnect', _id: 20, point: [140, 130] },
+  );
+  const r = solve(input, { phases: ['routing'], lockedIds: [1, 20] });
+  assert.equal(r.before.metrics.pinExitViolations, 0);
+  assert.equal(r.after.metrics.pinExitViolations, 0);
+  assert.equal(r.after.metrics.bends, 2, 'the pin must lead upward before turning downward');
+  const incident = r.sheet.items.filter(i => i.NodeName === 'wire' &&
+    i.d_points.some(p => p[0] === 100 && p[1] === 100));
+  assert.equal(incident.length, 1);
+  assert.ok(incident[0].d_points.every(p => p[0] === 100 && p[1] <= 100));
+});
+
+test('a movable label follows a local shortcut and a locked label keeps its supporting wire', () => {
+  const input = backtrackFixture();
+  const annotation = label(110, [140, 150], 'X');
+  input.items.push(annotation);
+  for (const lockedIds of [[], [110]]) {
+    const r = solve(input, { phases: ['routing'], lockedIds });
+    assert.equal(r.after.metrics.bends, 4);
+    assert.equal(r.after.metrics.labelOverhangs, 0);
+    assert.equal(r.after.metrics.textCollisions, 0);
+    if (lockedIds.length)
+      assert.strictEqual(r.sheet.items.find(i => i._id === 110), annotation);
+  }
+});
+
+for (const disturbance of ['low', 'medium', 'high']) {
+  test(`the full ${disturbance} auto-layout run removes local reversals within one pass`, () => {
+    const r = solve(backtrackFixture(), { disturbance, maxPasses: 1 });
+    assert.ok(r.after.metrics.bends <= 4);
+    assert.ok(r.after.metrics.wireLength <= r.before.metrics.wireLength - 60);
+  });
+}

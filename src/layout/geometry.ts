@@ -120,12 +120,29 @@ export function pins(symbol: dsnSymbol) {
       -inward[0] * Math.sign(symbol.scale_x),
       -inward[1] * Math.sign(symbol.scale_y),
     ]);
+    const hasLead = pin.which !== 5 && pin.length > 0;
+    if (!hasLead) {
+      // Hidden pins are electrical anchors, not the stored (undrawn) stems.
+      // Legacy discrete symbols can point that metadata into their own artwork.
+      // Keep its axis when possible, but face away from the visible symbol.
+      const bounds = bodyRect(symbol);
+      const dx = p[0] - (bounds.x1 + bounds.x2) / 2;
+      const dy = p[1] - (bounds.y1 + bounds.y2) / 2;
+      const projection = dx * v[0] + dy * v[1];
+      if (projection < 0) {
+        v[0] = -v[0] || 0;
+        v[1] = -v[1] || 0;
+      } else if (projection === 0 && (dx || dy)) {
+        v[0] = Math.abs(dx) >= Math.abs(dy) ? Math.sign(dx) : 0;
+        v[1] = Math.abs(dx) >= Math.abs(dy) ? 0 : Math.sign(dy);
+      }
+    }
     return {
       p: point(p),
       direction: point(v),
       number: pin.number,
       id: symbol._id,
-      length: pin.length,
+      length: hasLead ? pin.length : 0,
     };
   });
 }

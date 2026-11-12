@@ -40,7 +40,7 @@
     "test:simulation": "node --test scripts/tests/simulation*.test.mjs",
     "test:engines": "node scripts/tests/qualify-engines.mjs",
     "typecheck": "tsc --noEmit",
-    "test:layout": "node --test scripts/tests/layout.test.mjs",
+    "test:layout": "node --test scripts/tests/layout.test.mjs scripts/tests/auto-layout-dialog.test.mjs scripts/tests/auto-layout-worker.test.mjs scripts/tests/auto-layout-ui.mjs",
     "layout:review": "node scripts/layout-drawing.mjs",
     "benchmark:simulation": "node scripts/benchmark-simulation.mjs",
     "generate:simulation-examples": "node scripts/generate-simulation-examples.mjs",
@@ -60,7 +60,9 @@
     "test:teaching-tools": "node --test scripts/tests/teaching-native-tools.test.mjs",
     "libraries:teaching": "node scripts/build-teaching-libraries.mjs",
     "libraries:all": "npm run libraries:digital && npm run libraries:functional && npm run libraries:sensors && npm run libraries:teaching && npm run libraries:package",
-    "test:teaching": "node --test scripts/tests/teaching-library.test.mjs scripts/tests/teaching-models.test.mjs scripts/tests/teaching-native-tools.test.mjs"
+    "test:teaching": "node --test scripts/tests/teaching-library.test.mjs scripts/tests/teaching-models.test.mjs scripts/tests/teaching-native-tools.test.mjs",
+    "test:layout:browser": "playwright test --config scripts/tests/layout-browser/playwright.config.mjs",
+    "test:layout:all": "npm run test:layout && npm run test:layout:browser"
   },
   "build": {
     "appId": "com.tinycad.app",
@@ -241,6 +243,7 @@
   "devDependencies": {
     "@parcel/transformer-image": "^2.16.4",
     "@parcel/transformer-sass": "^2.16.4",
+    "@playwright/test": "^1.65.0",
     "@types/blob-stream": "^0.1.30",
     "@types/file-saver": "^2.0.3",
     "@types/fixed-data-table-2": "^0.8.6",

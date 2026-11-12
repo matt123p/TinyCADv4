@@ -6,6 +6,7 @@ import SettingsDialog from './settingsDlg';
 import ColoursDialog from './coloursDlg';
 import DrcDialog from './drcDlg';
 import AnnotateDialog from './annotateDlg';
+import AutoLayoutDialog from './autoLayoutDlg';
 import NetlistDialog from './netlistDlg';
 import { DeleteSheetDialog } from './deleteSheetDlg';
 import { ClipboardFailureDialog } from './clipboardFailureDlg';
@@ -37,6 +38,8 @@ const TDialogue: FunctionComponent<TDialogueProps> = (
   switch (props.show_dialogue) {
     case 'open_example':
       return <OpenExampleDialog groupId={props.dialogue_props?.groupId} exampleId={props.dialogue_props?.exampleId} />;
+    case 'auto_layout':
+      return <AutoLayoutDialog />;
     case 'sheet_rename':
       return <EditSheetDialog name={props.dialogue_props.name} type="rename" />;
     case 'sheet_add':

@@ -1,43 +1,35 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadComponent } from './load-component.mjs';
+import { loadLayoutModule } from './layout-module.mjs';
 
-test('netlist worker ignores unrelated messages and still answers valid requests', () => {
-  const previous = {
-    onmessage: Object.getOwnPropertyDescriptor(globalThis, 'onmessage'),
-    postMessage: Object.getOwnPropertyDescriptor(globalThis, 'postMessage'),
-  };
+test('netlist worker ignores unrelated messages and still answers valid requests', async () => {
   const responses = [];
-  globalThis.onmessage = undefined;
-  globalThis.postMessage = response => responses.push(response);
-  try {
-    loadComponent('src/web-worker/main.ts', {
-      './netlistState': {
-        NetlistWorkerState: class {
-          get() { return 'current netlist'; }
-          init() { throw new Error('Invalid drawing'); }
-        },
+  const { sandbox } = loadLayoutModule('src/web-worker/main.ts', {
+    '../layout': { optimiseLayout() { throw new Error('Unexpected layout request'); } },
+    './netlistState': {
+      NetlistWorkerState: class {
+        get() { return 'current netlist'; }
+        init() { throw new Error('Invalid drawing'); }
       },
-    });
-    for (const data of [null, undefined, '', 42, {}, { id: 1 },
-      { id: '1', command: 'netlist-get' }, { id: 1.5, command: 'netlist-get' }]) {
-      assert.doesNotThrow(() => globalThis.onmessage({ data }));
-    }
-    assert.deepEqual(responses, []);
-    globalThis.onmessage({ data: { id: 2, command: 'netlist-get' } });
-    globalThis.onmessage({ data: { id: 3, command: 'unknown' } });
-    globalThis.onmessage({ data: { id: 4, command: 'netlist-init', payload: { drawing: {} } } });
-    assert.deepEqual(responses, [
-      { id: 2, ok: true, data: 'current netlist' },
-      { id: 3, ok: false, error: 'Unknown worker command: unknown' },
-      { id: 4, ok: false, error: 'Invalid drawing' },
-    ]);
-  } finally {
-    for (const [key, descriptor] of Object.entries(previous)) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
-      else delete globalThis[key];
-    }
+    },
+  }, {
+    onmessage: null,
+    postMessage: response => responses.push(structuredClone(response)),
+  });
+  for (const data of [null, undefined, '', 42, {}, { id: 1 },
+    { id: '1', command: 'netlist-get' }, { id: 1.5, command: 'netlist-get' }]) {
+    await assert.doesNotReject(() => sandbox.onmessage({ data }));
   }
+  assert.deepEqual(responses, []);
+  await sandbox.onmessage({ data: { id: 2, command: 'netlist-get' } });
+  await sandbox.onmessage({ data: { id: 3, command: 'unknown' } });
+  await sandbox.onmessage({ data: { id: 4, command: 'netlist-init', payload: { drawing: {} } } });
+  assert.deepEqual(responses, [
+    { id: 2, ok: true, data: 'current netlist' },
+    { id: 3, ok: false, error: 'Unknown worker command: unknown' },
+    { id: 4, ok: false, error: 'Invalid drawing' },
+  ]);
 });
 
 test('initial netlist publication does not repeatedly initialize a version-zero drawing', async () => {

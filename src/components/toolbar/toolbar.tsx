@@ -62,6 +62,7 @@ import {
   DesktopPulseRegular,
   GaugeRegular,
   BatteryChargeRegular,
+  ArrowAutofitContentRegular,
 } from '@fluentui/react-icons';
 import { ActionCreators } from 'redux-undo';
 import { SPICE_COMPONENTS, insertSpiceComponent, showSpiceLibrary } from '../../io/spiceComponents';
@@ -915,6 +916,15 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         <ToolbarDivider className={styles.divider} />
 
         {/* Rotate/Flip buttons */}
+        {!props.editSymbol && !props.editLibrary && (
+          <ToolbarButton
+            aria-label={t('autoLayout.title')}
+            title={t('autoLayout.title')}
+            icon={<ArrowAutofitContentRegular />}
+            onClick={() => props.dispatch(actionSelectDialog('auto_layout', null))}
+          />
+        )}
+
         <ToolbarButton
           aria-label={t('toolbar.rotateCounterClockwise')}
           title={t('toolbar.rotateLeft')}

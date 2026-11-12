@@ -268,10 +268,10 @@ function routeCandidates(
   const ports = symbols(sheet).flatMap(pins);
   const pa = ports.find((p) => same(p.p, a)),
     pb = ports.find((p) => same(p.p, b));
-  const start = pa
+  const start = pa?.length
     ? [a[0] + pa.direction[0] * o.pinLead, a[1] + pa.direction[1] * o.pinLead]
     : a;
-  const end = pb
+  const end = pb?.length
     ? [b[0] + pb.direction[0] * o.pinLead, b[1] + pb.direction[1] * o.pinLead]
     : b;
   const routes: Coordinate[][] = [];
@@ -401,6 +401,48 @@ function replaceRoute(search: Search, replacements: Map<number, DocItem>) {
         next.set(l._id, candidates[i][choice % candidates[i].length]);
     });
     if (search.replace(next)) return;
+  }
+}
+
+/** Remove a local excursion without rerouting the rest of a constrained path.
+ * Native segment boundaries are not bends; inspect the recovered, cleaned route.
+ * Down/across/up (or its rotations) can use either of the two monotone corners.
+ * The normal proposal gate still checks obstacles, text, pins and both net maps.
+ */
+function simplifyBacktracks(search: Search) {
+  let improved = true;
+  while (improved && search.available()) {
+    improved = false;
+    for (const path of wirePaths(search.sheet)) {
+      if (!path.members.every((w) => movable(w, search.o))) continue;
+      const ps = clean(path.points);
+      for (let i = 0; i + 3 < ps.length; i++) {
+        const [a, b, c, d] = ps.slice(i, i + 4);
+        const vertical =
+          a[0] === b[0] && b[1] === c[1] && c[0] === d[0] &&
+          (b[1] - a[1]) * (d[1] - c[1]) < 0;
+        const horizontal =
+          a[1] === b[1] && b[0] === c[0] && c[1] === d[1] &&
+          (b[0] - a[0]) * (d[0] - c[0]) < 0;
+        if (!vertical && !horizontal) continue;
+        for (const corner of [[a[0], d[1]], [d[0], a[1]]]) {
+          if (!search.available()) return;
+          const route = clean([...ps.slice(0, i + 1), corner, ...ps.slice(i + 3)]);
+          if (route.length >= ps.length || pathLength(route) >= pathLength(ps)) continue;
+          const replacement = pathReplacements(path, route);
+          if (!replacement) continue;
+          const before = search.sheet;
+          replaceRoute(search, replacement);
+          if (search.sheet !== before) {
+            improved = true;
+            break;
+          }
+        }
+        if (improved) break;
+      }
+      // Rebuild paths after a successful shortcut or a jointly moved label.
+      if (improved) break;
+    }
   }
 }
 
@@ -1553,6 +1595,7 @@ export function optimiseLayout(
   let converged = false;
   for (let pass = 0; pass < o.maxPasses && search.available(); pass++) {
     const start = search.sheet;
+    if (enabled('routing')) simplifyBacktracks(search);
     // Give text room first so compaction can reserve its actual footprint.
     if (enabled('symbol-text')) placeSymbolText(search);
     if (enabled('net-labels')) placeNetLabels(search);
@@ -1568,6 +1611,8 @@ export function optimiseLayout(
     if (enabled('symbol-text')) placeSymbolText(search);
     if (enabled('net-labels')) placeNetLabels(search);
     if (enabled('placement')) arrangeComponentPatterns(search);
+    // Placement and label clearance can add elbows late in the last pass.
+    if (enabled('routing')) simplifyBacktracks(search);
     if (search.sheet === start) {
       converged = true;
       break;
