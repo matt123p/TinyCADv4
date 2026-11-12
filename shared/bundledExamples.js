@@ -26,6 +26,12 @@ export const exampleImageExtensions = [
   'svg',
 ];
 
+export const exampleVideoExtensions = ['mp4', 'webm'];
+export const exampleMediaExtensions = [
+  ...exampleImageExtensions,
+  ...exampleVideoExtensions,
+];
+
 /** @param {unknown} input @returns {ExampleCatalog} */
 export function parseExampleCatalog(input) {
   if (
@@ -88,11 +94,11 @@ export function parseExampleCatalog(input) {
     };
   });
   if (input.assets !== undefined && !Array.isArray(input.assets))
-    throw new Error('Example assets must be an array of image paths.');
+    throw new Error('Example assets must be an array of image or video paths.');
   const assets = [
     ...new Set(
       (input.assets || []).map((asset) =>
-        examplePath(asset, exampleImageExtensions),
+        examplePath(asset, exampleMediaExtensions),
       ),
     ),
   ];

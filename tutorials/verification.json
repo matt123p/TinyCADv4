@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-12T21:01:54.348Z",
-  "checks": 284,
-  "links": 115,
+  "date": "2026-11-12T21:37:28.097Z",
+  "checks": 296,
+  "links": 127,
   "drawings": 28,
   "engine": "bundled ngspice 47 (native)",
   "measurements": {

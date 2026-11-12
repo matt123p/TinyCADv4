@@ -15,7 +15,7 @@ junction issues. `layout-verification.json` records the before/after metrics.
 Circuit PNGs and SVGs were regenerated from the saved drawings, and every
 simulation was rerun to refresh its retained reference acquisition.
 
-All 28 drawings passed 284 checks, including 115 local Markdown links.
+All 28 drawings passed 296 checks, including 127 local Markdown links.
 The repository TypeScript typecheck also passed. All 48 PNG figures were
 visually reviewed, including three screenshots from TinyCAD Desktop.
 
@@ -68,7 +68,7 @@ Matched-scale before/after SVGs are written to `build/tutorials/layout` for revi
 browser. The normal `examples:package` build step includes the drawings,
 chapter descriptions and images directly from this directory. Both development
 and installed desktop builds read the packaged catalogue in `dist/bundled-examples`.
-The SPICE group's introduction displays the TinyCAD implementation chapter;
+The SPICE group's introduction is a two-paragraph overview with no manual links;
 the divider entry retains the first practical lesson.
 The first **Start here — using the tutorials** entry displays the shared
 introductory guide and opens the existing divider drawing.
@@ -90,6 +90,55 @@ node node_modules/electron/cli.js scripts/tutorials/capture-app.cjs `
 
 The screenshot helper needs a current desktop frontend build in `dist`.
 Rendered figure styles and application chrome may differ between releases.
+
+## Desktop videos
+
+Five captioned videos accompany the first-run, source, RC transient, AC response
+and rectifier lessons. They are recordings of the actual Electron desktop app,
+including its native menu bar. Playwright drives the visible controls; the bundled
+native ngspice engine calculates the acquisitions. A pointer highlight and a
+caption strip are added for readability. There is no audio or simulated UI.
+
+The MP4 files use H.264, 1600 × 1000 pixels and fast-start metadata. Their captions
+are burned into the picture, so playback does not depend on an external subtitle
+file. Each clip has a poster image and a JSON record of its timed captions and
+checked result text. These records provide a transcript and reproduction evidence.
+The bundled catalogue includes the MP4s and posters for offline playback in the
+example browser. The ZIP includes the recordings too.
+
+On Ubuntu 24.04, the capture prerequisites are `xvfb`, `xauth`, `ffmpeg`,
+`libnss3`, `libnspr4` and `libasound2t64`, plus the repository's npm dependencies
+and an existing native engine under `build/engines/native`.
+
+```bash
+npm run build:electron
+xvfb-run -a -s '-screen 0 1600x900x24' npm run tutorials:videos
+npm run examples:package
+npm run test:examples
+npm run test:example-markdown
+xvfb-run -a -s '-screen 0 1600x900x24' npm run verify:tutorial-videos -- --desktop
+node scripts/verify-tutorials.mjs
+node scripts/package-tutorials.mjs
+```
+
+Pass a clip ID to record just one: `npm run tutorials:videos -- rc-transient`
+(with the same `xvfb-run` prefix). The IDs are `first-run`, `source-settings`,
+`rc-transient`, `ac-response` and `rectifier-ripple`.
+Raw captures, intermediate captions and step screenshots go to the ignored
+`build/tutorials/videos` directory. Final videos, posters and capture records go
+to `tutorials/spice/videos`.
+
+The capture harness serves the built frontend on an ephemeral loopback port and
+uses a temporary desktop profile. It exits without saving the recording's edits;
+the source drawings remain unchanged. Its isolated Electron process uses
+`--no-sandbox` for environments that disable Linux user namespaces. The regular
+application startup is unchanged.
+
+Verification decodes each entire video, checks its format, caption timeline,
+poster and catalogue registration, and checks retained UI evidence. The optional
+`--desktop` check opens every lesson's actual embedded player, plays and seeks the
+MP4, and confirms its dimensions. Markdown regression tests cover local video and
+poster resolution, shared download URLs, resource disposal and sanitization.
 
 ## Amplifier provenance
 

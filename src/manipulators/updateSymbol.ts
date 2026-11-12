@@ -1286,6 +1286,7 @@ export class updateSymbol
     for (let index = 0; index < this.item.textData.length; ++index) {
       if (
         this.item.text[index].show &&
+        this.item.textData[index] &&
         UpdateTextAreas[index].is_inside_rect(
           this.item.textData[index],
           delta,
@@ -1371,7 +1372,8 @@ export class updateSymbol
       this.item.point,
     );
     for (let index = 0; index < this.item.textData.length; ++index) {
-      if (this.item.text[index].show) {
+      // Hidden/empty attributes deliberately have no measured text area.
+      if (this.item.text[index].show && this.item.textData[index]) {
         const text = UpdateTextAreas[index].on_isinside(
           this.item.textData[index],
           delta,

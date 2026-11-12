@@ -1,0 +1,53 @@
+{
+  "title": "05 · AC response, decibels and cutoff",
+  "recorded": "2026-11-12T21:37:57.648Z",
+  "application": "TinyCAD Desktop (Electron)",
+  "solver": "bundled native ngspice",
+  "durationSeconds": 54.06,
+  "width": 1600,
+  "height": 1000,
+  "captions": [
+    {
+      "start": 0.000501709000000119,
+      "text": "rc-ac is the same RC network, measured in the frequency domain."
+    },
+    {
+      "start": 4.594116559,
+      "text": "The AC sweep uses 1 Hz to 100 kHz and 100 points per decade."
+    },
+    {
+      "start": 10.19379656,
+      "text": "Run the sweep. AC analysis calculates small-signal response rather than stepping through time."
+    },
+    {
+      "start": 16.32816057,
+      "text": "The prepared Cutoff measurement compares OUT with IN using reference gain 1."
+    },
+    {
+      "start": 22.928105711,
+      "text": "The cutoff is about 159.15 Hz, where the gain is 0.707 or −3.01 dB."
+    },
+    {
+      "start": 29.583782662999997,
+      "text": "Select the derived OUT / IN trace and hide the separate node voltages to plot gain directly."
+    },
+    {
+      "start": 36.204690724,
+      "text": "Use the chart menu to show Magnitude (dB). The frequency axis remains logarithmic."
+    },
+    {
+      "start": 42.292493338,
+      "text": "Switch to Phase: the output lags, passing approximately −45° at the corner frequency."
+    },
+    {
+      "start": 48.911494218,
+      "text": "OUT / IN expresses gain even if the input AC amplitude changes."
+    }
+  ],
+  "checks": [
+    {
+      "name": "cutoff",
+      "text": "Setup\nMeasurements\nData\nHistory\nDiagnostics\nNamed measurements\nEdit measurements and requirements\nMeasurement\tResult\tEvidence\nCutoff\t159.1519 Hz\tcutoff; 1–99999.99999999837 Hz. tinycad-metrics-1\nExport named measurements\nSignals / probes\n\nSelect outputs to display. Current direction follows the device’s SPICE pin order. Empty selection shows all signals.\n\nout [V]\nin [V]\nv1#branch [A]\nOUT / IN [V/V]\nDifferential voltage, gain and power traces\n\nStatistics over the real component of all accepted samples (sample-weighted mean/RMS, not an AC RMS voltage measurement). Transient samples may be nonuniform.\n\nSignal\tMinimum\tMaximum\tMean\tRMS\tPeak–peak\tUnit\nout\t0.000002533023\t0.9999605\t0.4404846\t0.6301933\t0.9999580\tV\nin\t1.000000\t1.000000\t1.000000\t1.000000\t0.000000\tV\nExport measurements\nExport CSV\nExport JSON\nExport SPICE raw"
+    }
+  ]
+}

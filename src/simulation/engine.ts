@@ -10,32 +10,43 @@ export function startEngine(
 ): EngineJob {
   if (process.env.TARGET_SYSTEM === 'electron') {
     let terminal: Extract<EngineEvent, { type: 'finished' }>;
+    let cleanedUp = false,
+      delivered = false,
+      disposed = false;
+    const complete = () => {
+      // Invoke replies and streamed events use separate IPC messages. A fast
+      // helper can finish cleanup before its final data reaches the renderer.
+      if (!disposed && !delivered && cleanedUp && terminal) {
+        delivered = true;
+        receive(terminal);
+      }
+    };
     const unsubscribe = window.electronAPI.onSimulation((id, event) => {
-      if (id !== request.runId) return;
+      if (id !== request.runId || disposed || delivered) return;
       if (event.type === 'finished') {
         terminal ||= event;
         // Wait for helper cleanup before enabling another native acquisition.
         // Also stop a solver that reports a callback limit before returning.
         window.electronAPI.stopSimulation(request.runId);
+        complete();
       } else receive(event);
     });
     window.electronAPI
       .startSimulation(request)
-      .then(() =>
-        receive(
-          terminal || {
-            type: 'finished',
-            state: 'failed',
-            error: 'The bundled engine exited without a terminal result.',
-          },
-        ),
-      )
-      .catch((error) =>
-        receive({ type: 'finished', state: 'failed', error: String(error) }),
-      );
+      .then(() => {
+        cleanedUp = true;
+        complete();
+      })
+      .catch((error) => {
+        if (!disposed && !delivered) {
+          delivered = true;
+          receive({ type: 'finished', state: 'failed', error: String(error) });
+        }
+      });
     return {
       stop: () => window.electronAPI.stopSimulation(request.runId),
       dispose: () => {
+        disposed = true;
         unsubscribe();
         window.electronAPI.stopSimulation(request.runId);
       },

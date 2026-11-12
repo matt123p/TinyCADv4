@@ -26,12 +26,8 @@ import type {
   ExampleGroup,
 } from '../../../shared/bundledExamples';
 import { exampleResources, ExampleImage, openExample } from '../../io/examples';
-import {
-  renderExampleMarkdown,
-  ExampleMarkdown,
-} from '../../io/exampleMarkdown';
+import { ExampleDescription } from '../examples/ExampleDescription';
 import { actionCancelDialog } from '../../state/dispatcher/AppDispatcher';
-import { openExternalUrl } from '../../util/navigation';
 
 const useStyles = makeStyles({
   surface: {
@@ -179,42 +175,62 @@ const useStyles = makeStyles({
     alignItems: 'start',
     '@media (max-width: 1000px)': { gridTemplateColumns: '1fr' },
   },
+  detailMain: {
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: 0,
+    overflowY: 'hidden',
+  },
+  detail: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(160px, 38%) minmax(0, 1fr)',
+    gridTemplateRows: 'minmax(0, 1fr)',
+    gap: '24px',
+    flex: 1,
+    minHeight: 0,
+    '@media (max-width: 800px)': {
+      gridTemplateColumns: 'minmax(0, 1fr)',
+      gridTemplateRows: 'minmax(0, 35%) minmax(0, 1fr)',
+      gap: '12px',
+    },
+  },
+  detailPreview: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    minHeight: 0,
+    minWidth: 0,
+    overflow: 'hidden',
+    '@media (max-width: 800px)': {
+      display: 'grid',
+      gridTemplateColumns: 'minmax(0, 1fr) minmax(100px, 40%)',
+      gridTemplateRows: 'auto minmax(0, 1fr)',
+      columnGap: '12px',
+    },
+  },
+  detailImage: {
+    minHeight: 0,
+    flexShrink: 1,
+    boxSizing: 'border-box',
+    '@media (max-width: 800px)': {
+      gridColumn: '2',
+      gridRow: '1 / span 2',
+      height: '100%',
+    },
+  },
+  detailDescription: {
+    minWidth: 0,
+    minHeight: 0,
+    overflowY: 'auto',
+    overscrollBehavior: 'contain',
+    paddingRight: '12px',
+  },
   heroPreview: {
     width: '100%',
     height: '300px',
     borderRadius: '8px',
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     '@media (max-width: 800px)': { height: '180px' },
-  },
-  markdown: {
-    minWidth: 0,
-    overflowWrap: 'anywhere',
-    lineHeight: '1.6',
-    '& > :first-child': { marginTop: 0 },
-    '& img': { maxWidth: '100%', height: 'auto' },
-    '& pre': {
-      overflowX: 'auto',
-      padding: '12px',
-      backgroundColor: tokens.colorNeutralBackground3,
-      borderRadius: '6px',
-    },
-    '& code': { fontFamily: 'monospace' },
-    '& table': {
-      borderCollapse: 'collapse',
-      display: 'block',
-      overflowX: 'auto',
-      maxWidth: '100%',
-    },
-    '& th, & td': {
-      border: `1px solid ${tokens.colorNeutralStroke2}`,
-      padding: '6px 10px',
-    },
-    '& blockquote': {
-      marginLeft: 0,
-      paddingLeft: '16px',
-      borderLeft: `3px solid ${tokens.colorBrandStroke1}`,
-    },
-    '& a': { color: tokens.colorBrandForegroundLink },
   },
   state: {
     display: 'flex',
@@ -294,75 +310,6 @@ function Preview(props: {
         <ImageRegular aria-label={t('examples.loading')} />
       )}
     </div>
-  );
-}
-
-function Description(props: { item: ExampleContent }) {
-  const styles = useStyles();
-  const { t } = useTranslation();
-  const container = useRef<HTMLDivElement>(null);
-  const [revision, setRevision] = useState(0);
-  const [html, setHTML] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  useEffect(() => {
-    const controller = new AbortController();
-    let description: ExampleMarkdown | undefined;
-    setHTML(null);
-    setError('');
-    renderExampleMarkdown(props.item, controller.signal)
-      .then((result) => {
-        if (controller.signal.aborted) result.dispose();
-        else {
-          description = result;
-          setHTML(result.html);
-        }
-      })
-      .catch((reason) => {
-        if (!controller.signal.aborted)
-          setError(String(reason.message || reason));
-      });
-    return () => {
-      controller.abort();
-      description?.dispose();
-    };
-  }, [props.item, revision]);
-  if (error)
-    return (
-      <div role="alert" className={styles.error}>
-        {error}{' '}
-        <Button onClick={() => setRevision((value) => value + 1)}>
-          {t('examples.retry')}
-        </Button>
-      </div>
-    );
-  if (html === null)
-    return <Spinner size="small" label={t('examples.loading')} />;
-  return (
-    <div
-      ref={container}
-      className={styles.markdown}
-      onClick={(event) => {
-        const anchor = (event.target as Element).closest('a');
-        const href = anchor?.getAttribute('href');
-        if (!href) return;
-        if (href.startsWith('#')) {
-          event.preventDefault();
-          let id: string;
-          try {
-            id = decodeURIComponent(href.slice(1));
-          } catch {
-            return;
-          }
-          [...(container.current?.querySelectorAll('[id]') || [])]
-            .find((node) => node.id === id)
-            ?.scrollIntoView({ block: 'start' });
-        } else if (/^(https?:|mailto:)/i.test(href)) {
-          event.preventDefault();
-          openExternalUrl(href);
-        }
-      }}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
   );
 }
 
@@ -525,31 +472,50 @@ export default function OpenExampleDialog(props: OpenExampleDialogProps) {
                     </Button>
                   ))}
                 </nav>
-                <main className={styles.main} aria-label={t('examples.browse')}>
+                <main
+                  className={mergeClasses(
+                    styles.main,
+                    example && styles.detailMain,
+                  )}
+                  aria-label={t('examples.browse')}
+                >
                   {error && (
                     <p className={styles.error} role="alert">
                       {error}
                     </p>
                   )}
                   {example && group ? (
-                    <>
-                      <Button
-                        className={styles.back}
-                        icon={<ArrowLeftRegular />}
-                        onClick={() => selectGroup(group)}
-                        disabled={opening}
-                      >
-                        {group.title}
-                      </Button>
-                      <h2 className={styles.heading}>{example.title}</h2>
-                      <div className={styles.overview}>
+                    <div
+                      className={styles.detail}
+                      key={`${group.id}/${example.id}`}
+                    >
+                      <div className={styles.detailPreview}>
+                        <Button
+                          className={styles.back}
+                          icon={<ArrowLeftRegular />}
+                          onClick={() => selectGroup(group)}
+                          disabled={opening}
+                        >
+                          {group.title}
+                        </Button>
+                        <h2 className={styles.heading}>{example.title}</h2>
                         <Preview
                           item={example}
-                          className={styles.heroPreview}
+                          className={mergeClasses(
+                            styles.heroPreview,
+                            styles.detailImage,
+                          )}
                         />
-                        <Description item={example} />
                       </div>
-                    </>
+                      <div
+                        className={styles.detailDescription}
+                        role="region"
+                        aria-label={example.title}
+                        tabIndex={0}
+                      >
+                        <ExampleDescription item={example} />
+                      </div>
+                    </div>
                   ) : group ? (
                     <>
                       <h2 className={styles.heading}>{group.title}</h2>
@@ -559,7 +525,7 @@ export default function OpenExampleDialog(props: OpenExampleDialogProps) {
                           className={styles.heroPreview}
                           cover
                         />
-                        <Description item={group} />
+                        <ExampleDescription item={group} />
                       </div>
                       <h3>{t('examples.drawings')}</h3>
                       <div className={styles.grid}>

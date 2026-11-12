@@ -126,6 +126,10 @@ not evidence that the requested duration completed. These builds do not expose
 pause/resume or an indefinitely live solver. Use **History** to inspect previous
 runs and **Diagnostics** to read the solver log.
 
+For a demonstration, watch [open, run and change a divider](videos/first-run.mp4)
+and [AC response and cutoff](videos/ac-response.mp4). Both show the real desktop
+controls, completed native acquisitions and numerical results, with captions.
+
 ## Build your own first simulation
 
 Place two resistors from **Simulation → Components**, a source using **Insert Source**

@@ -6,6 +6,7 @@ import {
 } from '../dispatcher/AppDispatcher';
 import update from 'immutability-helper';
 import { hasSimulation } from '../../io/drawingSaveFormat';
+import type { ExampleContent } from '../../../shared/bundledExamples';
 
 import { DocActionTypes } from '../actions/docActions';
 import { MenuActionTypes } from '../actions/menuActions';
@@ -72,6 +73,9 @@ export interface ToolbarDefaults {
 }
 
 export interface altStore {
+  // Explanation source for the currently loaded example.
+  exampleExplanation: ExampleContent | null;
+  exampleExplanationVisible: boolean;
   simulationPanelVisible: boolean;
   simulationPanelActivated: boolean;
   // Which dialogue is currently being shown?
@@ -131,6 +135,8 @@ export interface altStore {
 }
 
 const intialState: altStore = {
+  exampleExplanation: null,
+  exampleExplanationVisible: false,
   simulationPanelVisible: false,
   simulationPanelActivated: false,
   dialogue_props: null,
@@ -209,6 +215,16 @@ export function AltStoreReducer(
   action: AppActionTypes | ViewActions,
 ): altStore {
   switch (action.type) {
+    case 'example/loaded':
+      return {
+        ...state,
+        exampleExplanation: action.item,
+        exampleExplanationVisible: false,
+      };
+    case 'example/explanation':
+      return state.exampleExplanation
+        ? { ...state, exampleExplanationVisible: action.visible }
+        : state;
     case 'simulation/panel':
       return {
         ...state,
@@ -255,6 +271,8 @@ export function AltStoreReducer(
       const showSimulation = hasSimulation(action.doc) ||
         action.doc.representation === 'zip-v1' || /\.dzn$/i.test(action.filename);
       return update(state, {
+        exampleExplanation: { $set: null },
+        exampleExplanationVisible: { $set: false },
         simulationPanelVisible: { $set: showSimulation },
         simulationPanelActivated: { $set: showSimulation },
         loginState: { $set: 3 },

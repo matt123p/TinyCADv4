@@ -46,6 +46,15 @@ This application screenshot shows the Circuit and Simulation tabs below the
 drawing and the Run/acquisition controls in the right-hand panel. Operating-point
 charts contain a single point; use the numeric data for precise readings.
 
+## Video: open, run and change a divider
+
+Opening the embedded example, checking the DC numbers, changing R2 and running a new acquisition. This short recording uses TinyCAD Desktop and the native solver.
+Instructions are captioned on screen; there is no audio.
+
+<video controls preload="none" src="videos/first-run.mp4" poster="videos/first-run.jpg" aria-label="Open, run and change a divider"></video>
+
+[Watch or download the video](videos/first-run.mp4).
+
 ## Predict the answer
 
 The current is `I = 5 / (1000 + 1000) = 2.5 mA`. The lower resistor therefore

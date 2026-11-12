@@ -18,7 +18,7 @@ import { registerBundledExamples } from '../../electron/bundledExamples.js';
 const require = createRequire(import.meta.url);
 const catalog = {
   version: 1,
-  assets: ['images/detail.svg'],
+  assets: ['images/detail.svg', 'videos/first.mp4'],
   groups: [
     {
       id: 'getting-started',
@@ -45,6 +45,7 @@ const files = new Map([
   ['images/group.svg', svg],
   ['images/drawing.svg', svg],
   ['images/detail.svg', svg],
+  ['videos/first.mp4', 'video fixture'],
   [
     'notes/group.md',
     '# Group overview\n\n' +
@@ -55,7 +56,7 @@ const files = new Map([
 ]);
 const parsed = validation.parseExampleCatalog(catalog);
 assert.equal(parsed.groups[0].examples.length, 1);
-assert.equal(validation.exampleResourcePaths(parsed).size, 5);
+assert.equal(validation.exampleResourcePaths(parsed).size, 6);
 for (const invalid of [
   '../escape.dsn',
   '/etc/secret.dsn',
@@ -221,6 +222,13 @@ assert.deepEqual(read, ['notes/group.md']);
 const preview = await exampleResources.image('images/group.svg');
 assert.ok(preview.url.startsWith('blob:'));
 preview.dispose();
+const video = await exampleResources.media('videos/first.mp4');
+assert.equal((await fetch(video.url)).headers.get('content-type'), 'video/mp4');
+assert.equal(await (await fetch(video.url)).text(), 'video fixture');
+video.dispose();
+await assert.rejects(() => fetch(video.url), 'disposed video URL must be revoked');
+await assert.rejects(() => exampleResources.image('videos/first.mp4'), /Invalid/);
+await assert.rejects(() => exampleResources.media('videos/unlisted.mp4'), /Unknown/);
 assert.ok(
   !read.includes('drawings/first.dsn'),
   'previews must never open the drawing',
@@ -240,7 +248,7 @@ await openExample('getting-started', 'first')(
 );
 assert.deepEqual(
   actions.map((action) => action.type),
-  ['cancel', 'document', 'file', 'clear-history'],
+  ['cancel', 'document', 'file', 'example/loaded', 'clear-history'],
 );
 assert.equal(actions[1].drawing, document);
 assert.equal(
@@ -250,6 +258,7 @@ assert.equal(
 );
 assert.equal(actions[2].drawingVersion, 0, 'opening a copy keeps Save enabled');
 assert.equal(actions[2].name, 'first.dsn');
+assert.deepEqual(actions[3].item, parsed.groups[0].examples[0], 'The loaded example retains its exact description source');
 actions.length = 0;
 state.docStore.present.drawingVersion = 9;
 await openExample('getting-started', 'first')(
@@ -450,6 +459,10 @@ try {
       for (const match of markdown.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)) {
         assert.ok(validation.resolveExampleResource(match[1], resource, resources),
           `Lesson image is not available in the example browser: ${match[1]}`);
+      }
+      for (const match of markdown.matchAll(/<video\b[^>]*\bsrc="([^"]+)"/g)) {
+        assert.ok(validation.resolveExampleResource(match[1], resource, resources),
+          `Lesson video is not available in the example browser: ${match[1]}`);
       }
     }
   }

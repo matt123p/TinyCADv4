@@ -5,7 +5,7 @@
       "id": "spice-tutorial",
       "title": "SPICE tutorial",
       "preview": "spice/images/divider-circuit.svg",
-      "descriptionPath": "spice/11-tinycad-spice.md",
+      "description": "TinyCAD uses ngspice to calculate DC operating points, transient waveforms and AC frequency responses from your schematic. These examples cover voltage dividers, signal sources, filters, rectifiers and transistor amplifiers, with component models and simulation settings already included.\n\nSelect a drawing below and choose **Open drawing** to open an editable copy. Start with **divider**, select its **Simulation** sheet and choose **Run**. Change a component value and run again to compare results, then use **Save As** to keep your changes. Refer to the TinyCAD online manual for the full tutorials.",
       "examples": [
         {
           "id": "start-here",
@@ -297,6 +297,16 @@
     "xspice/images/logic-unknown-circuit.png",
     "xspice/images/logic-unknown-circuit.svg",
     "xspice/images/logic-unknown-results.png",
-    "xspice/images/tinycad-digital.png"
+    "xspice/images/tinycad-digital.png",
+    "spice/videos/first-run.mp4",
+    "spice/videos/first-run.jpg",
+    "spice/videos/source-settings.mp4",
+    "spice/videos/source-settings.jpg",
+    "spice/videos/rc-transient.mp4",
+    "spice/videos/rc-transient.jpg",
+    "spice/videos/ac-response.mp4",
+    "spice/videos/ac-response.jpg",
+    "spice/videos/rectifier-ripple.mp4",
+    "spice/videos/rectifier-ripple.jpg"
   ]
 }

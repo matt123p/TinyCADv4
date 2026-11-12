@@ -5,6 +5,8 @@ import {
   exampleResourcePaths,
   resolveExampleResource,
   exampleImageExtensions,
+  exampleMediaExtensions,
+  exampleVideoExtensions,
 } from '../../shared/bundledExamples';
 import { exampleResources, ExampleImage } from './examples';
 
@@ -19,6 +21,18 @@ export async function renderExampleMarkdown(
   signal: AbortSignal,
 ): Promise<ExampleMarkdown> {
   const resources: ExampleImage[] = [];
+  const pending = new Map<string, Promise<ExampleImage>>();
+  const resourceFor = (path: string) => {
+    if (!pending.has(path))
+      pending.set(
+        path,
+        exampleResources.media(path, signal).then((resource) => {
+          resources.push(resource);
+          return resource;
+        }),
+      );
+    return pending.get(path)!;
+  };
   try {
     const markdown = await exampleResources.description(item, signal);
     const html = DOMPurify.sanitize(
@@ -40,14 +54,42 @@ export async function renderExampleMarkdown(
           .replace(/\s+/g, '-');
     });
     await Promise.all(
-      [...document.querySelectorAll('img, a')].map(async (node) => {
-        const attribute = node.tagName === 'IMG' ? 'src' : 'href';
+      [...document.querySelectorAll('img, a, video')].map(async (node) => {
+        const attribute = node.tagName === 'A' ? 'href' : 'src';
         const value = node.getAttribute(attribute) || '';
         node.removeAttribute(attribute);
+        // Tutorial videos are catalogue-approved local assets. Never autoplay
+        // or fetch author-provided external video URLs in the example browser.
+        if (node.tagName === 'VIDEO') {
+          const poster = resolveExampleResource(
+            node.getAttribute('poster'),
+            item.descriptionPath,
+            allowed,
+          );
+          for (const attribute of ['autoplay', 'loop', 'poster'])
+            node.removeAttribute(attribute);
+          node.setAttribute('controls', '');
+          node.setAttribute('preload', 'none');
+          node
+            .querySelectorAll('source, track')
+            .forEach((child) => child.remove());
+          if (
+            poster &&
+            exampleImageExtensions.includes(
+              poster.split('.').pop()!.toLowerCase(),
+            )
+          ) {
+            try {
+              node.setAttribute('poster', (await resourceFor(poster)).url);
+            } catch (error) {
+              if (signal.aborted) throw error;
+            }
+          }
+        }
         if (attribute === 'href' && value.startsWith('#'))
           node.setAttribute(attribute, value);
         else if (
-          /^https?:\/\//i.test(value) ||
+          (node.tagName !== 'VIDEO' && /^https?:\/\//i.test(value)) ||
           (attribute === 'href' && /^mailto:/i.test(value))
         ) {
           node.setAttribute(attribute, value);
@@ -59,13 +101,15 @@ export async function renderExampleMarkdown(
           );
           if (
             path &&
-            exampleImageExtensions.includes(
-              path.split('.').pop()!.toLowerCase(),
-            )
+            (node.tagName === 'IMG'
+              ? exampleImageExtensions
+              : node.tagName === 'VIDEO'
+              ? exampleVideoExtensions
+              : exampleMediaExtensions
+            ).includes(path.split('.').pop()!.toLowerCase())
           ) {
             try {
-              const resource = await exampleResources.image(path, signal);
-              resources.push(resource);
+              const resource = await resourceFor(path);
               node.setAttribute(attribute, resource.url);
             } catch (error) {
               if (signal.aborted) throw error;
@@ -86,6 +130,7 @@ export async function renderExampleMarkdown(
       dispose: () => resources.forEach((resource) => resource.dispose()),
     };
   } catch (error) {
+    await Promise.allSettled(pending.values());
     resources.forEach((resource) => resource.dispose());
     throw error;
   }

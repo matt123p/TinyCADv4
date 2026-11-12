@@ -11,6 +11,15 @@ of 5 µs. Plot IN and OUT together.
 ![RC charging circuit](images/rc-step-circuit.png)
 ![Computed capacitor charging curve](images/rc-step-results.png)
 
+## Video: rc charging and time constant
+
+Refining the maximum timestep and measuring OUT at 1 ms and the RC time constant. This short recording uses TinyCAD Desktop and the native solver.
+Instructions are captioned on screen; there is no audio.
+
+<video controls preload="none" src="videos/rc-transient.mp4" poster="videos/rc-transient.jpg" aria-label="RC charging and time constant"></video>
+
+[Watch or download the video](videos/rc-transient.mp4).
+
 ## Why the output curves rather than jumps
 
 Capacitor current is `i = C × dv/dt`. Immediately after the input changes, the

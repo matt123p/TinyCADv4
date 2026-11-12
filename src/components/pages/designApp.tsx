@@ -32,6 +32,11 @@ const ChartWorkspace = lazy(() =>
     default: m.ChartWorkspace,
   })),
 );
+const ExampleExplanationPanel = lazy(() =>
+  import('../examples/ExampleExplanationPanel').then((m) => ({
+    default: m.ExampleExplanationPanel,
+  })),
+);
 const InstrumentWindowHost = lazy(() =>
   import('../simulation/InstrumentWindows').then((m) => ({
     default: m.InstrumentWindowHost,
@@ -41,6 +46,13 @@ const InstrumentWindowHost = lazy(() =>
 // TODO: These styles seem common, maybe they should be in a common CSS or utility?
 // For now, mirroring what was seen in mainAppElectron.tsx
 const useStyles = makeStyles({
+  rightPanels: {
+    display: 'flex',
+    minWidth: 0,
+    minHeight: 0,
+    maxWidth: '60vw',
+    flexShrink: 0,
+  },
   toggleButton: {
     position: 'absolute',
     top: '8px',
@@ -52,6 +64,7 @@ const useStyles = makeStyles({
 });
 
 export interface DesignAppProps {
+  hasExampleExplanation?: boolean;
   standardLibraryNavigation?: StandardLibraryNavigation;
   simulationPanelActivated?: boolean;
   selectedSpiceControl?: boolean;
@@ -235,11 +248,20 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
             <BottomPanelContainer />
           </div>
         </div>
-        {!props.editSymbol && props.simulationPanelActivated && (
-          <Suspense fallback={null}>
-            <ChartWorkspace />
-            <InstrumentWindowHost />
-          </Suspense>
+        {!props.editSymbol && (props.simulationPanelActivated || props.hasExampleExplanation) && (
+          <div className={styles.rightPanels}>
+            {props.simulationPanelActivated && (
+              <Suspense fallback={null}>
+                <ChartWorkspace />
+                <InstrumentWindowHost />
+              </Suspense>
+            )}
+            {props.hasExampleExplanation && (
+              <Suspense fallback={null}>
+                <ExampleExplanationPanel />
+              </Suspense>
+            )}
+          </div>
         )}
       </div>
     </div>

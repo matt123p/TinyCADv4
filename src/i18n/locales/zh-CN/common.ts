@@ -115,6 +115,10 @@ const common = {
     listMode: { symbols: '符号', netlist: '网表' },
   },
   examples: {
+    explanation: "说明",
+    explanationTitle: "示例说明",
+    showExplanation: "显示示例说明",
+    hideExplanation: "隐藏示例说明",
     openExample: "打开示例",
     groups: "示例分组",
     allGroups: "所有分组",

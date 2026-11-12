@@ -38,6 +38,9 @@ list. **Open drawing** becomes available after you select an example.
 The **Start here — using the tutorials** entry also displays this guide and
 opens the same first divider circuit.
 
+Watch [open, run and change a divider](spice/videos/first-run.mp4) for a captioned
+walkthrough of these steps and your first two acquisitions.
+
 ## Follow a lesson alongside its circuit
 
 Keep the chapter available in your manual or Markdown viewer while working in
@@ -61,6 +64,11 @@ Use this routine for each experiment:
    and plots. Inspect the numbers as well as the shape of the trace.
 6. **Change one thing** as suggested by the lesson, predict its effect and run
    again. Record the setting you changed and what happened.
+
+After opening an example, choose **Explanation** on the toolbar to keep its
+instructions beside the drawing. The explanation panel sits alongside the
+simulation charts and can be resized or closed independently. Choose
+**Explanation** again, or use the collapsed strip on the right, to reopen it.
 
 The toolbar's pulse-shaped icon has the hover text **Simulation**. Whenever a
 lesson says **Simulation → Show charts** or **Simulation → Components**, open

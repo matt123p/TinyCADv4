@@ -46,6 +46,15 @@ The rough estimate `ΔV ≈ Iload / (f × C)` gives about 0.78 V using 3.9 mA,
 it assumes nearly constant load current and instantaneous recharging, whereas
 the resistor current changes and the diode conducts for a finite interval.
 
+## Video: measuring settled rectifier ripple
+
+Setting a 160–200 ms measurement window and comparing mean voltage with peak-to-peak ripple. This short recording uses TinyCAD Desktop and the native solver.
+Instructions are captioned on screen; there is no audio.
+
+<video controls preload="none" src="videos/rectifier-ripple.mp4" poster="videos/rectifier-ripple.jpg" aria-label="Measuring settled rectifier ripple"></video>
+
+[Watch or download the video](videos/rectifier-ripple.mp4).
+
 ## Experiments that reveal the trade-offs
 
 Double C1 to 200 µF. Ripple should decrease, but charging occurs in shorter,

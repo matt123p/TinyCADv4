@@ -56,6 +56,41 @@ test('native renderer waits for process cleanup and preserves the first terminal
     assert.deepEqual(events.at(-1), { type: 'finished', state: 'complete' });
     job.dispose();
     assert.equal(unsubscribed, true);
+
+    // Electron can deliver an invoke reply before the queued stream events.
+    // Keep listening until the final samples and terminal event have arrived.
+    events.length = 0;
+    const next = module.exports.startEngine(
+      { ...request, runId: 'next' },
+      (event) => events.push(event),
+    );
+    resolveStart();
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.deepEqual(events, []);
+    listener('next', { type: 'vectors', names: ['out'] });
+    listener('next', { type: 'data', rows: [[3.333333333]] });
+    listener('next', { type: 'finished', state: 'complete' });
+    listener('next', { type: 'finished', state: 'stopped' });
+    assert.deepEqual(events, [
+      { type: 'vectors', names: ['out'] },
+      { type: 'data', rows: [[3.333333333]] },
+      { type: 'finished', state: 'complete' },
+    ]);
+    next.dispose();
+
+    events.length = 0;
+    const cancelled = module.exports.startEngine(request, (event) =>
+      events.push(event),
+    );
+    cancelled.dispose();
+    resolveStart();
+    listener('run', { type: 'finished', state: 'complete' });
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.deepEqual(
+      events,
+      [],
+      'disposed acquisitions must ignore late callbacks',
+    );
   } finally {
     delete globalThis.window;
   }

@@ -45,6 +45,7 @@ import {
   ShareRegular,
   LibraryRegular,
   FolderOpenRegular,
+  BookOpenRegular,
   SaveCopyRegular,
   QuestionCircleRegular,
   ColorRegular,
@@ -187,6 +188,8 @@ const useStyles = makeStyles({
 });
 
 interface ToolbarProps {
+  hasExampleExplanation?: boolean;
+  exampleExplanationVisible?: boolean;
   simulationPanelVisible?: boolean;
   simulationToolbarRef?: React.Ref<HTMLSpanElement>;
   simulationSheet?: boolean;
@@ -680,6 +683,18 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           icon={<FolderOpenRegular />} onClick={() => props.dispatch(actionSelectDialog('open_example', null))}>
           {t('examples.openExample')}
         </ToolbarButton>
+
+        {!props.editSymbol && props.hasExampleExplanation && (
+          <ToolbarButton
+            aria-label={t(props.exampleExplanationVisible ? 'examples.hideExplanation' : 'examples.showExplanation')}
+            title={t(props.exampleExplanationVisible ? 'examples.hideExplanation' : 'examples.showExplanation')}
+            aria-pressed={!!props.exampleExplanationVisible}
+            icon={<BookOpenRegular />}
+            onClick={() => props.dispatch({ type: 'example/explanation', visible: !props.exampleExplanationVisible })}
+          >
+            {t('examples.explanation')}
+          </ToolbarButton>
+        )}
 
         {/* Save buttons */}
         <ToolbarButton

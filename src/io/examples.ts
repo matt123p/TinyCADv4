@@ -9,6 +9,7 @@ import type {
 } from '../../shared/bundledExamples';
 import {
   exampleImageExtensions,
+  exampleMediaExtensions,
   examplePath,
   exampleResourcePaths,
   parseExampleCatalog,
@@ -98,14 +99,19 @@ export class ExampleResources {
   }
   async image(path: string, signal?: AbortSignal): Promise<ExampleImage> {
     examplePath(path, exampleImageExtensions);
+    return this.media(path, signal);
+  }
+  async media(path: string, signal?: AbortSignal): Promise<ExampleImage> {
+    examplePath(path, exampleMediaExtensions);
     const bytes = await this.read(path, signal);
     const extension = path.split('.').pop()!.toLowerCase();
-    const mime =
-      extension === 'svg'
-        ? 'image/svg+xml'
-        : ['jpg', 'jpeg'].includes(extension)
-        ? 'image/jpeg'
-        : 'image/' + extension;
+    const mime = ['mp4', 'webm'].includes(extension)
+      ? 'video/' + extension
+      : extension === 'svg'
+      ? 'image/svg+xml'
+      : ['jpg', 'jpeg'].includes(extension)
+      ? 'image/jpeg'
+      : 'image/' + extension;
     const url = URL.createObjectURL(
       new Blob([new Uint8Array(bytes)], { type: mime }),
     );
@@ -151,6 +157,7 @@ export interface PreparedExample {
   filename: string;
   groupId: string;
   exampleId: string;
+  content: ExampleContent;
 }
 
 export function commitExample(dispatch: Dispatch, example: PreparedExample) {
@@ -158,6 +165,7 @@ export function commitExample(dispatch: Dispatch, example: PreparedExample) {
   // No source path/handle is attached: Save always creates the user's own copy.
   dispatch(actionSetDocument(example.document, example.filename, null, null));
   dispatch(actionSetFileData(example.filename, null, null, 0));
+  dispatch({ type: 'example/loaded', item: example.content });
   dispatch(ActionCreators.clearHistory());
 }
 
@@ -181,6 +189,7 @@ export function openExample(
       filename: example.path.split('/').pop()!,
       groupId,
       exampleId,
+      content: example,
     };
     const state = getState();
     if (state.docStore.present.drawingVersion !== state.altStore.savedVersion) {

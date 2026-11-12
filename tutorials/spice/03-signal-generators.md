@@ -32,6 +32,15 @@ resistor supplies its return path. Reverse the source if positive load voltage
 is required. An ideal current source imposes current; the network determines
 its terminal voltage. It has no automatic compliance-voltage limit.
 
+## Video: source settings and waveform preview
+
+Changing sine offset, peak amplitude and frequency, then rerunning the transient. This short recording uses TinyCAD Desktop and the native solver.
+Instructions are captioned on screen; there is no audio.
+
+<video controls preload="none" src="videos/source-settings.mp4" poster="videos/source-settings.jpg" aria-label="Source settings and waveform preview"></video>
+
+[Watch or download the video](videos/source-settings.mp4).
+
 ## Amplitude, offset and timing
 
 For a sine, `v(t) = offset + amplitude × sin(2πft + phase)` before optional delay

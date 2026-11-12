@@ -124,6 +124,10 @@ const common = {
     listMode: { symbols: 'Symbole', netlist: 'Netzliste' },
   },
   examples: {
+    explanation: "Erklärung",
+    explanationTitle: "Erklärung zum Beispiel",
+    showExplanation: "Erklärung zum Beispiel anzeigen",
+    hideExplanation: "Erklärung zum Beispiel ausblenden",
     openExample: "Beispiel öffnen",
     groups: "Beispielgruppen",
     allGroups: "Alle Gruppen",

@@ -19,6 +19,15 @@ expanded figures below present gain and phase separately for easier reading.
 
 ![Computed magnitude and phase response](images/rc-ac-results.png)
 
+## Video: ac response and cutoff
+
+Checking the AC setup, reading the cutoff, and switching between magnitude, decibels and phase. This short recording uses TinyCAD Desktop and the native solver.
+Instructions are captioned on screen; there is no audio.
+
+<video controls preload="none" src="videos/ac-response.mp4" poster="videos/ac-response.jpg" aria-label="AC response and cutoff"></video>
+
+[Watch or download the video](videos/ac-response.mp4).
+
 ## Interpret the complex result
 
 AC analysis linearises the circuit at its DC operating point and solves for

@@ -551,6 +551,10 @@ const common = {
     },
   },
   examples: {
+    explanation: "Uitleg",
+    explanationTitle: "Uitleg bij voorbeeld",
+    showExplanation: "Uitleg bij voorbeeld tonen",
+    hideExplanation: "Uitleg bij voorbeeld verbergen",
     openExample: "Voorbeeld openen",
     groups: "Voorbeeldgroepen",
     allGroups: "Alle groepen",

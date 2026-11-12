@@ -29,6 +29,25 @@ analysis settings and a retained reference acquisition.
 10. [Sweeps, noise and design investigations](spice/10-design-investigations.md)
 11. [How TinyCAD implements SPICE: engines, symbols and workflow](spice/11-tinycad-spice.md)
 
+## Desktop video walkthroughs
+
+Five short videos demonstrate the steps where seeing the controls helps most.
+Each uses the real Electron desktop app and native solver, with on-screen
+captions and click highlights. There is no audio. Play them in the lesson's
+embedded player, or use these links in a Markdown viewer:
+
+| Lesson | Demonstration |
+| --- | --- |
+| 1 | [Open, run and change a divider](spice/videos/first-run.mp4) |
+| 3 | [Source settings and waveform preview](spice/videos/source-settings.mp4) |
+| 4 | [RC charging, timestep and time constant](spice/videos/rc-transient.mp4) |
+| 5 | [AC magnitude, dB, phase and cutoff](spice/videos/ac-response.mp4) |
+| 6 | [Measure settled rectifier ripple](spice/videos/rectifier-ripple.mp4) |
+
+The videos supplement the written instructions and figures. Use the chapter
+text for equations, assumptions and expected values. Native menus and window
+appearance may differ on Windows or macOS.
+
 ## XSPICE and digital simulation
 
 1. [Models, bridges and first run](xspice/01-overview.md)
@@ -49,5 +68,4 @@ identify application screenshots separately. Small numerical differences from
 the printed values are normal when model, temperature, timestep or engine
 version changes.
 
-See [the work plan](TODO.md) for research and acceptance status, and
-[verification and reproduction](VERIFICATION.md) for the checks and tooling.
+See [verification and reproduction](VERIFICATION.md) for the checks and tooling.

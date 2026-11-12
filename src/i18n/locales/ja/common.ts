@@ -116,6 +116,10 @@ const common = {
     listMode: { symbols: 'シンボル', netlist: 'ネットリスト' },
   },
   examples: {
+    explanation: "解説",
+    explanationTitle: "サンプルの解説",
+    showExplanation: "サンプルの解説を表示",
+    hideExplanation: "サンプルの解説を非表示",
     openExample: "サンプルを開く",
     groups: "サンプルのグループ",
     allGroups: "すべてのグループ",

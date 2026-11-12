@@ -551,6 +551,10 @@ const common = {
     },
   },
   examples: {
+    explanation: "Objaśnienie",
+    explanationTitle: "Objaśnienie przykładu",
+    showExplanation: "Pokaż objaśnienie przykładu",
+    hideExplanation: "Ukryj objaśnienie przykładu",
     openExample: "Otwórz przykład",
     groups: "Grupy przykładów",
     allGroups: "Wszystkie grupy",

@@ -4,10 +4,18 @@
 
 ### Added
 
+- Reopen a loaded example's explanation in a resizable right-hand panel beside the simulation charts, with independent show/hide controls.
+- Five captioned desktop video walkthroughs in the SPICE tutorials, with offline playback in the bundled example browser.
+
 - Schematic auto-layout for the whole sheet or selected items, with High, Medium and Low strength settings and explanations beside each option.
 - Run auto-layout in a background worker with cancellation, connection checks and a single Undo step to revert the result.
 
 ### Fixed
+
+- Keep the example drawing preview visible while its description scrolls independently.
+- Prevent hover and rectangle selection from crashing on example symbols with hidden or empty conditional attributes.
+
+- Keep native simulation results subscribed until both streamed completion and solver cleanup arrive, including when their IPC messages arrive out of order.
 
 - Remove unnecessary local down-and-up wire detours when shorter routes clear nearby objects, annotations and other wires, while preserving connections and fixed anchors.
 - Treat hidden transistor pins as connection points rather than visible stems, preventing artificial return bends and repairing existing loops in the amplifier example.

@@ -1,0 +1,57 @@
+{
+  "title": "01 · Open, run and change a divider",
+  "recorded": "2026-11-12T21:35:26.265Z",
+  "application": "TinyCAD Desktop (Electron)",
+  "solver": "bundled native ngspice",
+  "durationSeconds": 51.06,
+  "width": 1600,
+  "height": 1000,
+  "captions": [
+    {
+      "start": 0.0009647899999999936,
+      "text": "Open Example contains the complete tutorial circuits and their instructions."
+    },
+    {
+      "start": 4.608220114,
+      "text": "Choose SPICE tutorial, then divider. Open drawing creates an editable copy."
+    },
+    {
+      "start": 11.193462761,
+      "text": "Select the Simulation sheet. Operating Point finds the DC voltages and currents."
+    },
+    {
+      "start": 15.844453345999998,
+      "text": "Run a new acquisition. History confirms that the native solver completed it."
+    },
+    {
+      "start": 21.470535408,
+      "text": "Data gives OUT = 2.5 V, IN = 5 V and source current = −2.5 mA."
+    },
+    {
+      "start": 27.588079439999998,
+      "text": "Return to Circuit and double-click R2 to open its properties."
+    },
+    {
+      "start": 32.240358278,
+      "text": "Change R2 Value from 1k to 2k. The previous acquisition still describes the old circuit."
+    },
+    {
+      "start": 38.377011027,
+      "text": "Run again to calculate the changed circuit. Both acquisitions remain in History."
+    },
+    {
+      "start": 44.473385918,
+      "text": "OUT is now about 3.333 V. Save As keeps your edited copy of the example."
+    }
+  ],
+  "checks": [
+    {
+      "name": "nominal",
+      "text": "Setup\nMeasurements\nData\nHistory\nDiagnostics\nSignals / probes\n\nSelect outputs to display. Current direction follows the device’s SPICE pin order. Empty selection shows all signals.\n\nout [V]\nin [V]\nv1#branch [A]\nDifferential voltage, gain and power traces\n\n1 samples\n\nPrevious 100\nRows 1–1\nNext 100\nSample\tout [V]\tin [V]\tv1#branch [A]\n0\t2.5000000\t5.0000000\t-0.0025000000\nExport CSV\nExport JSON\nExport SPICE raw"
+    },
+    {
+      "name": "changed",
+      "text": "Setup\nMeasurements\nData\nHistory\nDiagnostics\nSignals / probes\n\nSelect outputs to display. Current direction follows the device’s SPICE pin order. Empty selection shows all signals.\n\nout [V]\nin [V]\nv1#branch [A]\nDifferential voltage, gain and power traces\n\n1 samples\n\nPrevious 100\nRows 1–1\nNext 100\nSample\tout [V]\tin [V]\tv1#branch [A]\n0\t3.3333333\t5.0000000\t-0.0016666667\nExport CSV\nExport JSON\nExport SPICE raw"
+    }
+  ]
+}
