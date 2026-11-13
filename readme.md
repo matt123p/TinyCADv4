@@ -54,8 +54,10 @@ engine architecture, simulation workflows, file formats, libraries and editor to
 
 Standard libraries include 47 original vector network devices with matching 19-inch
 rack panels and cable connections inside their sockets. Use **Open Example → Examples**
-for the transistor amplifier or **Small office network**, which embeds its devices
-for standalone editing. See [Libraries and examples](docs/libraries.md) for the ten
+for seven editable drawings: the amplifier, office network, ESP32 climate station,
+solar/battery home, podcast studio, laboratory bench and motor-control bench. Each
+layout embeds its devices and includes an explanation with connections and extension
+ideas. See [Libraries and examples](docs/libraries.md) for the ten
 bundled libraries, artwork provenance, rack conventions and build/test commands.
 
 The **Embedded processors and smart home** standard library adds 44 physical PCB

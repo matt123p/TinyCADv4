@@ -185,3 +185,7 @@ The [recipe](../library-recipes/test-measurement.json) records every resource, e
 - `npm run test:test-measurement`: verify source/port contracts, separate conductor/cable/hose semantics, socket centres and grid alignment, complete native captions, reproducible SQLite, A4 fit, real editor placement/rotation/mirroring, save/load and instrument, four-wire RTD, temperature-control and hose connection paths.
 
 TinyCAD MCP validates and renders the exact final XML definitions; hash-keyed reports and PNG/SVG previews are cached under `build/test-measurement/mcp/`. The bundle is included in `npm run libraries:all` and standard asset packaging for all application targets.
+
+## Bundled example
+
+Open **Open Example → Examples → DC load and waveform bench** for a connected, editable setup using this library. The [explanation](../bundled-examples/descriptions/lab-measurement-bench.md) covers the connection table, assumptions and ways to extend the drawing. All component artwork is embedded. [Drawing](../bundled-examples/drawings/lab-measurement-bench.dsn) · [Preview](../bundled-examples/images/lab-measurement-bench.png).

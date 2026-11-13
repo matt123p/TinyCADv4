@@ -197,3 +197,7 @@ The [recipe](../library-recipes/audio-music.json) records all resources, socket 
 - `npm run test:audio`: check the inventory, signal distinctions, socket-centred connections, normal-grid positions, common rack sizes, reproducible SQLite packaging, actual A4 fit, real editor placement/rotation/mirroring, native save/load and connected microphone, mixer, speaker, recording, headphone and MIDI cable paths.
 
 The public TinyCAD service validates and renders the exact final definitions. Review reports are cached by XML hash under `build/audio-music/mcp/`. The library contains no SPICE models and is included in `npm run libraries:all` and normal asset packaging.
+
+## Bundled example
+
+Open **Open Example → Examples → Two-person podcast studio** for a connected, editable setup using this library. The [explanation](../bundled-examples/descriptions/podcast-studio.md) covers the connection table, assumptions and ways to extend the drawing. All component artwork is embedded. [Drawing](../bundled-examples/drawings/podcast-studio.dsn) · [Preview](../bundled-examples/images/podcast-studio.png).

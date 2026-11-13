@@ -117,3 +117,7 @@ Exact main-header and socket maps, source URLs, board notes and manufacturer-sou
 - `npm run libraries:all` includes this bundle; `npm run libraries:package` copies the configured library into desktop and browser build assets.
 
 Local validation also checks all generated definitions against TinyCAD's published component XSD. Native editor previews and connectivity tests do not constitute hardware testing or simulation.
+
+## Bundled example
+
+Open **Open Example → Examples → ESP32 climate and display station** for a connected, editable setup using this library. The [explanation](../bundled-examples/descriptions/embedded-climate-station.md) covers the connection table, assumptions and ways to extend the drawing. All component artwork is embedded. [Drawing](../bundled-examples/drawings/embedded-climate-station.dsn) · [Preview](../bundled-examples/images/embedded-climate-station.png).

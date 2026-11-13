@@ -22,9 +22,11 @@ export async function recordDrawing(api, record) {
         record.device.name,
       )}</NAME><GUID>${
         record.device.id
-      }</GUID><REF type="1">A?</REF><DESCRIPTION>Native layout review</DESCRIPTION><PPP>1</PPP><REF_POINT pos="${
-        record.width
-      },${record.height}" power="0" part="1"/><TinyCAD>${nodes
+      }</GUID><REF type="1">A?</REF><DESCRIPTION>Native layout review</DESCRIPTION><PPP>1</PPP>${
+        record.autoReference
+          ? ''
+          : `<REF_POINT pos="${record.width},${record.height}" power="0" part="1"/>`
+      }<TinyCAD>${nodes
         .filter((n) => !resource(n))
         .map(serial)
         .join('')}</TinyCAD></SYMBOLDEF><SYMBOL id="1" pos="${record.width},${

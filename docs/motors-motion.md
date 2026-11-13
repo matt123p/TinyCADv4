@@ -200,3 +200,7 @@ The [recipe](../library-recipes/motors-motion.json) stores the inventory, endpoi
 - `npm run test:motion`: check winding/servo/encoder contracts, named header order, electrical types, socket-centred on-grid connections, caption fit, reproducible SQLite, actual A4 placement, real editor rotation/mirroring and save/load, plus motor/driver/servo/feedback/pneumatic connection paths.
 
 The public TinyCAD service validates and renders the exact generated definitions. Hash-keyed validation reports and PNG/SVG previews are cached under `build/motors-motion/mcp/`. The standard asset packager and `npm run libraries:all` include this bundle for all application targets.
+
+## Bundled example
+
+Open **Open Example → Examples → DC motor and limit-control bench** for a connected, editable setup using this library. The [explanation](../bundled-examples/descriptions/motor-control-bench.md) covers the connection table, assumptions and ways to extend the drawing. All component artwork is embedded. [Drawing](../bundled-examples/drawings/motor-control-bench.dsn) · [Preview](../bundled-examples/images/motor-control-bench.png).
