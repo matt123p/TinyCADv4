@@ -35,6 +35,7 @@ export interface SimulationRun {
   pinned: boolean;
   dataState: 'available' | 'removed' | 'not-retained';
   error?: string;
+  diagnosticLog?: string;
   stopMethod?: string;
 }
 

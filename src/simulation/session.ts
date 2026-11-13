@@ -35,13 +35,39 @@ export interface RunningSession {
   stop(): void;
 }
 let active: RunningSession;
+let failure = '';
+interface DiagnosticsTarget {
+  documentId: string;
+  sheetId: string;
+  runId?: string;
+}
+let failureTarget: DiagnosticsTarget;
+let diagnosticsTarget: DiagnosticsTarget;
 let documentEpoch = 0;
 export function invalidateSimulationDocument(): void {
   documentEpoch++;
   stopSimulation();
+  diagnosticsTarget = undefined;
+  dismissSimulationFailure();
 }
 const listeners = new Set<() => void>();
 export const getSession = () => active;
+export const getSimulationFailure = () => failure;
+export const getSimulationFailureTarget = () => failureTarget;
+export const getSimulationDiagnosticsTarget = () => diagnosticsTarget;
+export function requestSimulationDiagnostics(): void {
+  diagnosticsTarget = failureTarget;
+  dismissSimulationFailure();
+}
+export function clearSimulationDiagnosticsTarget(): void {
+  diagnosticsTarget = undefined;
+  publish();
+}
+export function dismissSimulationFailure(): void {
+  failure = '';
+  failureTarget = undefined;
+  publish();
+}
 export const subscribeSession = (listener: () => void) => {
   listeners.add(listener);
   return () => {
@@ -89,6 +115,8 @@ export async function runSimulation(
     reportDiagnostics?.(errors);
   };
   reportDiagnostics?.([]);
+  failure = '';
+  failureTarget = undefined;
   active = {
     sheetId,
     data,
@@ -235,6 +263,14 @@ export async function runSimulation(
           explanation: run.error,
         }));
       }
+      // Keep failure details even when the solver produced no numerical data.
+      // Bound text stored in run history independently of numerical buffers.
+      if (run.state === 'failed' && data.log)
+        run.diagnosticLog =
+          data.log.length > 64 * 1024
+            ? '[Earlier solver output omitted]\n' +
+              data.log.slice(-(64 * 1024 - 32))
+            : data.log;
       job?.dispose();
       active = undefined;
       rememberAnalysis(
@@ -248,6 +284,14 @@ export async function runSimulation(
         run,
       );
       commit(run);
+      if (run.state === 'failed' && !cancelled) {
+        failure = run.error;
+        failureTarget = {
+          documentId: drawing.documentId,
+          sheetId,
+          runId: run.id,
+        };
+      }
       publish();
       exploration?.settled?.(run);
     };
@@ -352,6 +396,10 @@ export async function runSimulation(
         ),
       );
     active = undefined;
+    if (epoch === documentEpoch && !cancelled) {
+      failure = error instanceof Error ? error.message : String(error);
+      failureTarget = { documentId: drawing.documentId, sheetId };
+    }
     publish();
     throw error;
   }

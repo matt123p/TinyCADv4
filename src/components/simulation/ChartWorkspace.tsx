@@ -192,37 +192,35 @@ function WorkspaceChartView({
           </MenuPopover>
         </Menu>
         <div style={row}>
-          {popup ? (
-            <Button size="small" onClick={returnToPanel}>
-              Return to panel
-            </Button>
-          ) : (
-            process.env.TARGET_SYSTEM === 'electron' && (
-              <Button
-                size="small"
-                appearance="subtle"
-                icon={<OpenRegular />}
-                aria-label="Open chart in a new window"
-                title="Open chart in a new window"
-                onClick={() => {
-                  const opened = openChartPopup('Simulation chart');
-                  if (!opened)
-                    setError('The chart window could not be opened.');
-                  else {
-                    setError('');
-                    setPopup(opened);
-                  }
-                }}
-              />
-            )
+          {!popup && (
+            <Button
+              size="small"
+              appearance="subtle"
+              icon={<OpenRegular />}
+              aria-label="Pop out chart"
+              title="Pop out chart"
+              onClick={() => {
+                const opened = openChartPopup('Simulation chart');
+                if (!opened)
+                  setError(
+                    process.env.TARGET_SYSTEM === 'electron'
+                      ? 'The chart window could not be opened.'
+                      : 'The chart window could not be opened. Allow pop-ups for TinyCAD and try again.',
+                  );
+                else {
+                  setError('');
+                  setPopup(opened);
+                }
+              }}
+            />
           )}
           <Button
             size="small"
             appearance="subtle"
             icon={<DismissRegular />}
-            aria-label="Remove chart"
-            title="Remove chart"
-            onClick={remove}
+            aria-label={popup ? 'Close chart window' : 'Remove chart'}
+            title={popup ? 'Close chart window' : 'Remove chart'}
+            onClick={popup ? returnToPanel : remove}
           />
         </div>
       </div>
@@ -553,19 +551,19 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
       aria-label="Simulation charts"
       style={{
         position: 'relative',
-        display: 'flex',
+        display: visible ? 'flex' : 'none',
         flexDirection: 'column',
-        width: visible ? width : 40,
+        width,
         maxWidth: '60vw',
-        minWidth: visible ? 0 : 40,
-        flexShrink: visible ? 1 : 0,
+        minWidth: 0,
+        flexShrink: 1,
         minHeight: 0,
         overflow: 'hidden',
         background: tokens.colorNeutralBackground1,
         borderLeft: `1px solid ${tokens.colorNeutralStroke1}`,
       }}
     >
-      {visible ? (
+      {visible && (
         <>
           <div
             style={{
@@ -707,16 +705,6 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
             {error && <p role="alert">{error}</p>}
           </header>
         </>
-      ) : (
-        <Button
-          appearance="subtle"
-          aria-label="Show chart panel"
-          title="Show chart panel"
-          style={{ writingMode: 'vertical-rl', height: 100 }}
-          onClick={() => setVisible(true)}
-        >
-          Charts
-        </Button>
       )}
       <div
         style={{

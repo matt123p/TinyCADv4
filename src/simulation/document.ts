@@ -101,7 +101,10 @@ export function validateSetup(value: unknown): SimulationSetup {
       !Number.isFinite(Date.parse(run.created)) ||
       typeof run.buildId !== 'string' ||
       typeof run.circuitHash !== 'string' ||
-      typeof run.setupHash !== 'string'
+      typeof run.setupHash !== 'string' ||
+      (run.diagnosticLog !== undefined &&
+        (typeof run.diagnosticLog !== 'string' ||
+          run.diagnosticLog.length > 64 * 1024))
     )
       throw new Error('Invalid saved simulation run.');
   }

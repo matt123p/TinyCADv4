@@ -143,6 +143,7 @@ test('preflight failures publish component rows before starting the solver', asy
   assert.equal(f.starts, 0);
   assert.deepEqual(f.reports, [[], [error]]);
   assert.equal(f.module.getSession(), undefined);
+  assert.match(f.module.getSimulationFailure(), /Correct the SPICE errors/);
 });
 
 test('solver syntax errors publish mapped rows even when no numerical results exist', async () => {
@@ -163,5 +164,7 @@ test('solver syntax errors publish mapped rows even when no numerical results ex
   assert.deepEqual(f.reports.at(-1), f.located);
   assert.equal(f.commits[0].state, 'failed');
   assert.equal(f.commits[0].dataState, 'not-retained');
+  assert.match(f.commits[0].diagnosticLog, /stderr Error on line: R1 1 0 bad/);
   assert.equal(f.module.getSession(), undefined);
+  assert.equal(f.module.getSimulationFailure(), 'Error: circuit rejected');
 });

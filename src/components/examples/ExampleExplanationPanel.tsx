@@ -37,19 +37,19 @@ export function ExampleExplanationPanel() {
       aria-label={t('examples.explanationTitle')}
       style={{
         position: 'relative',
-        display: 'flex',
+        display: visible ? 'flex' : 'none',
         flexDirection: 'column',
-        width: visible ? width : 40,
+        width,
         maxWidth: '60vw',
-        minWidth: visible ? 0 : 40,
-        flexShrink: visible ? 1 : 0,
+        minWidth: 0,
+        flexShrink: 1,
         minHeight: 0,
         overflow: 'hidden',
         background: tokens.colorNeutralBackground1,
         borderLeft: `1px solid ${tokens.colorNeutralStroke1}`,
       }}
     >
-      {visible ? (
+      {visible && (
         <>
           <div
             style={{
@@ -94,16 +94,6 @@ export function ExampleExplanationPanel() {
             </div>
           </header>
         </>
-      ) : (
-        <Button
-          appearance="subtle"
-          aria-label={t('examples.showExplanation')}
-          title={t('examples.showExplanation')}
-          style={{ writingMode: 'vertical-rl', minHeight: 140 }}
-          onClick={() => setVisible(true)}
-        >
-          {t('examples.explanation')}
-        </Button>
       )}
       <div
         ref={body}

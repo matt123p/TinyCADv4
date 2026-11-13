@@ -12,7 +12,12 @@
 
 ### Fixed
 
+- Give the browser SPICE engine sufficient stack space for amplifier examples and detect stack overflows instead of reporting misleading component or out-of-memory errors.
+- Show simulation error messages in red and immediately display a failure popup for runs started from sheets, charts or instruments.
+- Open the failed run's diagnostics directly from its error message or popup, and retain solver errors even when a run produces no samples.
 - Keep the example drawing preview visible while its description scrolls independently.
+- Fully hide the simulation and explanation panels when closed, reclaiming their space for the drawing.
+- Show the standard pop-out icon on each chart in both browser and Electron, with independent windows that return to the panel when closed with ×.
 - Prevent hover and rectangle selection from crashing on example symbols with hidden or empty conditional attributes.
 
 - Keep native simulation results subscribed until both streamed completion and solver cleanup arrive, including when their IPC messages arrive out of order.

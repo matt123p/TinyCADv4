@@ -88,7 +88,9 @@ def main():
         run(['emmake','make','-j4','STATIC=','libngspice_la_CFLAGS=-O2','libngspice_la_LDFLAGS=','CFLAGS=-O2','CXXFLAGS=-O2'],build)
         output=ROOT/'public/engines/ngspice'
         output.mkdir(parents=True,exist_ok=True)
-        run(['em++','-std=c++17','-O2','-I',source/'src/include',ROOT/'native/ngspice-host/host.cpp',build/'src/.libs/libngspice.a','--no-entry','-sMODULARIZE=1','-sEXPORT_ES6=1','-sENVIRONMENT=worker,node','-sALLOW_MEMORY_GROWTH=1',f'-sMAXIMUM_MEMORY={LOCK["wasm"]["maximumMemory"]}',"-sEXPORTED_FUNCTIONS=['_tc_run']","-sEXPORTED_RUNTIME_METHODS=['ccall','FS']",'-o',output/'ngspice.js'])
+        # ngspice's netlist preprocessing exceeds Emscripten's 64 KiB default
+        # stack. Heap growth does not grow the stack; pin its budget and checks.
+        run(['em++','-std=c++17','-O2','-I',source/'src/include',ROOT/'native/ngspice-host/host.cpp',build/'src/.libs/libngspice.a','--no-entry','-sMODULARIZE=1','-sEXPORT_ES6=1','-sENVIRONMENT=worker,node','-sALLOW_MEMORY_GROWTH=1',f'-sSTACK_SIZE={LOCK["wasm"]["stackSize"]}',f'-sSTACK_OVERFLOW_CHECK={LOCK["wasm"]["stackOverflowCheck"]}',f'-sMAXIMUM_MEMORY={LOCK["wasm"]["maximumMemory"]}',"-sEXPORTED_FUNCTIONS=['_tc_run']","-sEXPORTED_RUNTIME_METHODS=['ccall','FS']",'-o',output/'ngspice.js'])
         system,arch='wasm','wasm32'
         helper=library=None;modules=[]
     else:

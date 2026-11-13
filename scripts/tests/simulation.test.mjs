@@ -137,6 +137,28 @@ test('ZIP header auto detection and exact complex vector round trip', async () =
   assert.equal(restored.representation, 'zip-v1');
   assert.deepEqual(m.getResult(run.id).vectors[1].imaginary, [0, 0.1, 0]);
 });
+test('failed-run diagnostics survive saving without numerical results', async () => {
+  const doc = drawing(), run = addResult(doc);
+  Object.assign(run, {
+    state: 'failed',
+    samples: 0,
+    dataState: 'not-retained',
+    error: 'ngspice could not complete this analysis.',
+    diagnosticLog: 'stderr Error on line 4\nstderr Error: circuit not parsed.\n',
+  });
+  m.releaseResult(run.id);
+  for (const representation of ['zip-v1', 'xml']) {
+    const restored = await m.decodeDrawing(await m.encodeDrawing(doc, representation));
+    const saved = restored.sheets[1].simulation.runs[0];
+    assert.equal(saved.diagnosticLog, run.diagnosticLog);
+    assert.equal(saved.samples, 0);
+    assert.equal(m.getResult(run.id), undefined);
+  }
+  assert.throws(() => m.validateSetup({
+    ...doc.sheets[1].simulation,
+    runs: [{ ...run, diagnosticLog: 'x'.repeat(64 * 1024 + 1) }],
+  }), /Invalid saved simulation run/);
+});
 test('simulation content always selects DZN without a result-size threshold', async () => {
   const ordinary = m.blank();
   assert.equal(m.drawingSaveFormat(ordinary), 'xml');

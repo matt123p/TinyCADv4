@@ -92,6 +92,75 @@ test('failed validation never imports the engine', async () => {
   });
   await assert.rejects(f.run(), /invalid circuit/);
   assert.equal(f.loads, 0);
+  assert.equal(f.module.getSimulationFailure(), 'invalid circuit');
+});
+
+test('failed runs notify once, can be dismissed, and reset before a new run', async () => {
+  const f = fixture();
+  const notifications = [];
+  const unsubscribe = f.module.subscribeSession(() =>
+    notifications.push(f.module.getSimulationFailure()),
+  );
+  assert.equal(f.module.getSimulationFailure(), '');
+  await f.run();
+  f.events({ type: 'finished', state: 'failed' });
+  const message = f.commits[0].error;
+  assert.match(message, /ngspice could not complete/);
+  assert.equal(notifications.at(-1), message);
+  f.module.dismissSimulationFailure();
+  assert.equal(notifications.at(-1), '');
+  f.events({ type: 'finished', state: 'failed', error: 'Duplicate event' });
+  assert.equal(f.module.getSimulationFailure(), '');
+  await f.run();
+  f.events({ type: 'finished', state: 'failed', error: 'Another failure' });
+  assert.equal(f.module.getSimulationFailure(), 'Another failure');
+  await f.run();
+  assert.equal(f.module.getSimulationFailure(), '');
+  f.events({ type: 'vectors', names: ['out'] });
+  f.events({ type: 'data', rows: [[2.5]] });
+  f.events({ type: 'finished', state: 'complete' });
+  assert.equal(f.module.getSimulationFailure(), '');
+  unsubscribe();
+});
+
+test('switching documents clears failure popups and ignores late solver failures', async () => {
+  const f = fixture();
+  await f.run();
+  f.events({ type: 'finished', state: 'failed', error: 'Old failure' });
+  f.module.invalidateSimulationDocument();
+  assert.equal(f.module.getSimulationFailure(), '');
+  await f.run();
+  f.module.invalidateSimulationDocument();
+  f.events({ type: 'finished', state: 'failed', error: 'Late failure' });
+  assert.equal(f.module.getSimulationFailure(), '');
+});
+
+test('diagnostics navigation targets the failed run and is consumed once', async () => {
+  const f = fixture();
+  await f.run('circuit');
+  f.events({ type: 'log', message: 'stderr Error: invalid model' });
+  f.events({ type: 'finished', state: 'failed' });
+  const target = { documentId: 'circuit', sheetId: 'sim', runId: f.commits[0].id };
+  assert.deepEqual(f.module.getSimulationFailureTarget(), target);
+  assert.match(f.commits[0].diagnosticLog, /invalid model/);
+  f.module.requestSimulationDiagnostics();
+  assert.equal(f.module.getSimulationFailure(), '');
+  assert.equal(f.module.getSimulationFailureTarget(), undefined);
+  assert.deepEqual(f.module.getSimulationDiagnosticsTarget(), target);
+  f.module.clearSimulationDiagnosticsTarget();
+  assert.equal(f.module.getSimulationDiagnosticsTarget(), undefined);
+});
+
+test('retained failure logs are bounded and preserve the final solver error', async () => {
+  const f = fixture();
+  await f.run();
+  f.events({ type: 'log', message: 'x'.repeat(70 * 1024) });
+  f.events({ type: 'log', message: 'stderr Error: invalid model' });
+  f.events({ type: 'finished', state: 'failed' });
+  const log = f.commits[0].diagnosticLog;
+  assert.ok(log.length <= 64 * 1024);
+  assert.match(log, /^\[Earlier solver output omitted\]/);
+  assert.match(log, /stderr Error: invalid model\n$/);
 });
 
 test('Stop during checking cancels startup and permits a new acquisition', async () => {
@@ -143,6 +212,7 @@ test('repeated stopped runs preserve accepted samples and clear the active job',
     f.module.stopSimulation();
     f.events({ type: 'finished', state: 'stopped' });
     assert.equal(f.module.getSession(), undefined);
+    assert.equal(f.module.getSimulationFailure(), '');
   }
   assert.equal(new Set(f.commits.map((run) => run.id)).size, 3);
   assert.ok(

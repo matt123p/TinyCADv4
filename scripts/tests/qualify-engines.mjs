@@ -94,6 +94,31 @@ const fixtures = [
       assert.ok(out > 0.5 && out < 0.8);
     },
   },
+  {
+    name: 'amplifier AC tutorial',
+    // Exercise the complete exported example, including its BJT model,
+    // initial conditions, potentiometer expressions and saved signals.
+    deck: await fs.readFile(
+      new URL('../../tutorials/spice/circuits/amp-ac.cir', import.meta.url),
+      'utf8',
+    ),
+    completeDeck: true,
+    check(names, rows, imaginary) {
+      const frequency = names.indexOf('frequency');
+      const output = names.indexOf('out');
+      assert.ok(frequency >= 0 && output >= 0);
+      assert.equal(rows.length, 481);
+      const index = rows.findIndex(
+        (row) => Math.abs(row[frequency] - 1000) < 1e-6,
+      );
+      assert.ok(index >= 0, 'AC sweep must include the 1 kHz sample');
+      const gain = Math.hypot(rows[index][output], imaginary[index][output]);
+      assert.ok(
+        Math.abs(gain - 0.891736) < 0.001,
+        `Amplifier gain at 1 kHz: ${gain}`,
+      );
+    },
+  },
 ];
 function inspect(events, fixture) {
   const finished = events.filter((e) => e.type === 'finished').at(-1);
@@ -121,7 +146,9 @@ if (backend !== 'wasm')
     await fs.readFile(path.join(nativeDir, 'manifest.json'), 'utf8'),
   );
 for (const fixture of fixtures) {
-  const deck = `TinyCAD qualification ${fixture.name}\n${fixture.deck}\n.end\n`;
+  const deck = fixture.completeDeck
+    ? fixture.deck
+    : `TinyCAD qualification ${fixture.name}\n${fixture.deck}\n.end\n`;
   let nativeResult, wasmResult;
   if (backend !== 'wasm') {
     const temp = await fs.mkdtemp(

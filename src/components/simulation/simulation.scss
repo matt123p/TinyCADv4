@@ -6,6 +6,10 @@
   font-size: var(--fontSizeBase300, 14px);
   line-height: var(--lineHeightBase300, 20px);
 
+  > [role='alert'] {
+    color: var(--colorPaletteRedForeground1, #c50f1f);
+    flex-shrink: 0;
+  }
   > [role='status']:empty {
     display: none;
   }

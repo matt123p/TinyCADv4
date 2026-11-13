@@ -36,6 +36,8 @@ import {
   subscribeSession,
   runSimulation,
   stopSimulation,
+  getSimulationDiagnosticsTarget,
+  clearSimulationDiagnosticsTarget,
 } from '../../simulation/session';
 import { exportResult, download, measurements } from '../../simulation/export';
 import { buildDeck } from '../../simulation/deck';
@@ -106,6 +108,17 @@ export function SimulationSheet({
     setSelectedRun('');
     setPlotIndex(0);
   }, [setup.runs.at(-1)?.id]);
+  const diagnosticsTarget = getSimulationDiagnosticsTarget();
+  useEffect(() => {
+    if (
+      diagnosticsTarget?.documentId === drawing.documentId &&
+      diagnosticsTarget.sheetId === sheet.id
+    ) {
+      setSelectedRun(diagnosticsTarget.runId || '');
+      setTab('diagnostics');
+      clearSimulationDiagnosticsTarget();
+    }
+  }, [diagnosticsTarget, drawing.documentId, sheet.id]);
   const originalData = running
     ? session.data
     : run?.dataState === 'available'
@@ -281,7 +294,14 @@ export function SimulationSheet({
           </Button>
         </div>
       )}
-      {run?.error && !running && <p role="alert">{run.error}</p>}
+      {run?.error && !running && (
+        <p role="alert">
+          {run.error}{' '}
+          <Button size="small" onClick={() => setTab('diagnostics')}>
+            View diagnostics
+          </Button>
+        </p>
+      )}
       <TabList
         aria-label="Simulation views"
         size="small"
@@ -973,7 +993,10 @@ export function SimulationSheet({
             )}
             <h3>Solver log</h3>
             <pre style={{ whiteSpace: 'pre-wrap' }}>
-              {data?.log || 'No solver log for this acquisition.'}
+              {originalData?.log ||
+                run?.diagnosticLog ||
+                run?.error ||
+                'No solver log for this acquisition.'}
             </pre>
           </div>
         )}

@@ -23,6 +23,8 @@
   ],
   "wasm": {
     "xspice": false,
+    "stackSize": 4194304,
+    "stackOverflowCheck": 2,
     "maximumMemory": 536870912
   },
   "native": {

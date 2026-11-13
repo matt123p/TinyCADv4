@@ -93,10 +93,12 @@ configure a custom chart, and its × button to remove it. Titles are editable.
 Removing an automatic probe chart keeps it removed until explicitly added again.
 Chart layout and panel width are kept for the current drawing session.
 
-In Electron, each chart has an **Open chart in a new window** button. Multiple
+Each chart has a **Pop out chart** button (a box with an arrow pointing out) at
+its top right, beside the remove button, in both browser and Electron. Multiple
 charts can be detached independently and continue receiving the same results.
-**Return to panel**, or closing the chart window, docks it again. Removing its
-chart, replacing its drawing or closing the owning app closes the detached view.
+Closing the chart window with × returns it to the panel. The × inside a pop-out
+also returns it to the panel; the × on a docked chart removes that chart.
+Replacing its drawing or closing the owning app closes the detached view.
 Pop-outs share the existing numerical buffers rather than copying results into
 another drawing or starting another simulation.
 

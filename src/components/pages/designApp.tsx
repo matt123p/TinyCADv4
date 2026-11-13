@@ -17,6 +17,7 @@ import BomContainer from '../../state/containers/bomContainer';
 import SheetbarContainer from '../../state/containers/sheetbarContainer';
 import BottomPanelContainer from '../../state/containers/bottomPanelContainer';
 import { ResizeHandle } from '../panel/ResizeHandle';
+import { SimulationFailureDialog } from '../simulation/SimulationFailureDialog';
 import { Browser } from '../sheets/browser';
 import { tclibLibraryEntry } from '../../model/tclib';
 import { BrowserSheetData } from '../../model/dsnView';
@@ -188,6 +189,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       className="page-container"
       style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
     >
+      <SimulationFailureDialog />
       <ToolbarContainer simulationToolbarRef={setSimulationToolbarTarget} />
       <div className="mid-container">
         <div

@@ -12,7 +12,6 @@ export interface ChartPopup {
   root: HTMLElement;
 }
 export function openChartPopup(title: string): ChartPopup | undefined {
-  if (process.env.TARGET_SYSTEM !== 'electron') return;
   const child = window.open(
     'about:blank',
     `tinycad-chart-${crypto.randomUUID()}`,
@@ -46,12 +45,15 @@ export function ChartPopupPortal({
   closeCallback.current = onClose;
   useEffect(() => {
     const closed = () => closeCallback.current();
+    const closeWithOwner = () => popup.child.close();
+    window.addEventListener('pagehide', closeWithOwner);
     popup.child.addEventListener('pagehide', closed);
     const interval = window.setInterval(() => {
       if (popup.child.closed) closed();
     }, 500);
     return () => {
       clearInterval(interval);
+      window.removeEventListener('pagehide', closeWithOwner);
       popup.child.removeEventListener('pagehide', closed);
     };
   }, [popup]);
