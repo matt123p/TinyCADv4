@@ -4,7 +4,7 @@
   "manifest_kind": "library",
   "library_id": "degree-year1-electronics",
   "title": "First-year electronics degree — representative circuit/device/digital strand",
-  "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+  "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
   "handoff": {
     "date": "2026-11-10",
     "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -272,7 +272,7 @@
       "syllabus_reference": "E-CAD, E-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Solve the same network by two analytical methods and compare each node/current with the numerical solution. Use signed reference arrows.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -286,7 +286,7 @@
       "syllabus_reference": "E-CAD, E-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Run separate single-source conditions and the full circuit. Compare voltages/currents, and explain why powers cannot simply be superposed.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [],
       "existing_tool_ids": [
         "source_dc",
@@ -299,7 +299,7 @@
       "syllabus_reference": "E-CAD",
       "catalogue_support": "Both",
       "catalogue_description": "Derive a port equivalent and compare original/equivalent circuits across a load sweep. Record port definitions and reference direction.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [],
       "existing_tool_ids": [
         "source_dc",
@@ -312,7 +312,7 @@
       "syllabus_reference": "E-CAD",
       "catalogue_support": "Both",
       "catalogue_description": "Vary a finite load against explicit source resistance. Compare delivered power and internal dissipation without assuming that maximum power means maximum efficiency.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "rheostat"
       ],
@@ -324,7 +324,7 @@
       "syllabus_reference": "E-CAD",
       "catalogue_support": "Both",
       "catalogue_description": "Compare theoretical unloaded values with the actual virtual instruments attached. Include function-generator output resistance and meter burden/input resistance.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [],
       "existing_tool_ids": [
         "multimeter",
@@ -338,7 +338,7 @@
       "syllabus_reference": "E-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Compare initial condition, forced response and final state. Choose capture duration and step from the fastest/slowest relevant time constants.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor",
@@ -354,7 +354,7 @@
       "syllabus_reference": "E-CAD, E-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Sweep frequency and calculate complex impedance from voltage/current results. Compare magnitude and phase with the analytical prediction.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -369,7 +369,7 @@
       "syllabus_reference": "E-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Use a declared RLC topology and vary damping. Compare frequency response with its transient ringing and measure the relevant bandwidth.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -385,7 +385,7 @@
       "syllabus_reference": "E-CAD, E-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Compare low/high-pass response using AC analysis, then apply pulses in transient analysis. Explain the effect of loading on the nominal cutoff.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "capacitor"
       ],
@@ -400,7 +400,7 @@
       "syllabus_reference": "E-CAD",
       "catalogue_support": "Both",
       "catalogue_description": "Integrate current or component power over a stated interval. Check the energy balance for a capacitor or inductor network against analytical calculations.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -415,7 +415,7 @@
       "syllabus_reference": "E-CAD",
       "catalogue_support": "Both",
       "catalogue_description": "Compare a chosen SPICE diode with an ideal/piecewise analytical approximation. Examine where the approximation produces an unacceptable error.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "diode"
       ],
@@ -427,7 +427,7 @@
       "syllabus_reference": "E-CAD",
       "catalogue_support": "Both",
       "catalogue_description": "Compare half/full-wave circuits and load-dependent ripple with a low-voltage sine source. Include real diode models and use transient analysis.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "diode_rectifier",
         "capacitor_polarised"
@@ -442,7 +442,7 @@
       "syllabus_reference": "E-CAD",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Predict DC operating point, run the model and repeat for component tolerances. Export device readings for a load-line comparison.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "bjt_npn",
         "bjt_pnp",
@@ -456,7 +456,7 @@
       "syllabus_reference": "E-CAD",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Measure small-signal gain and infer input/output resistance using controlled source/load changes. Compare with a small-signal equivalent.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "bjt_npn",
         "capacitor",
@@ -475,7 +475,7 @@
       "syllabus_reference": "E-CAD",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare selected gate/drain conditions with a device model. Investigate gate-drive and load effects rather than assuming every FET is an ideal switch.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "mosfet_n",
         "mosfet_p",
@@ -492,7 +492,7 @@
       "syllabus_reference": "E-CAD",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare inverting and non-inverting gain, input loading and output range. Distinguish an ideal analytical block from a model with rails and frequency limits.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -509,7 +509,7 @@
       "syllabus_reference": "E-CAD",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Measure a prepared op-amp filter's gain/phase and pulse response. Compare component changes with the predicted poles/cutoff using an appropriate amplifier model.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -526,7 +526,7 @@
       "syllabus_reference": "E-DIG",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Test a truth table against two alternative gate implementations. Do the Boolean/Karnaugh-map reasoning separately and compare all input combinations.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "gate_and",
         "gate_or",
@@ -544,7 +544,7 @@
       "syllabus_reference": "E-DIG",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Use compatible component models or a gate-level circuit. Capture outputs while enumerating data/select inputs.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "mux2",
         "decoder2to4",
@@ -563,7 +563,7 @@
       "syllabus_reference": "E-DIG",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Apply a defined clock/data sequence and compare stored state. State timing assumptions; ideal models do not establish real setup/hold limits.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "latch_d",
         "flipflop_d"
@@ -578,7 +578,7 @@
       "syllabus_reference": "E-DIG",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Verify reset and output sequences and compare synchronous/asynchronous operation where delay models permit.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "counter_binary3_async",
         "counter_binary3_sync",
@@ -594,7 +594,7 @@
       "syllabus_reference": "E-DIG",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Vary capacitance/fan-out within a valid device model. Measure edge and propagation timing. A zero-delay Boolean model is insufficient.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "gate_and",
         "gate_or",
@@ -616,7 +616,7 @@
       "syllabus_reference": "E-DIG",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Implement a small gate-level arithmetic example and enumerate operand combinations. Explain signed/unsigned interpretation outside the circuit.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "full_adder",
         "gate_xor",
@@ -631,7 +631,7 @@
       "syllabus_reference": "E-DIG",
       "catalogue_support": "Diagram",
       "catalogue_description": "Draw the input/output, clock/reset and state-register interfaces for a small controller. A separate HDL tool is needed to implement, synthesise and verify SystemVerilog.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "state_machine",
         "flipflop_d",
@@ -647,7 +647,7 @@
       "syllabus_reference": "E-DIG",
       "catalogue_support": "Diagram",
       "catalogue_description": "Record supplies, connectors, pull resistors and external driver stages. TinyCAD does not program an FPGA, execute firmware or replace the course's digital development environment.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "fpga",
         "microcontroller",
@@ -666,7 +666,7 @@
       "syllabus_reference": "E-CAD, E-YEAR",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Combine a defined input, conditioner and output stage. Save analytical targets, model identities, captures, loading assumptions and a plan for bench comparison. The project brief is our proposal, not an institution-prescribed assignment.",
-      "source_document": "docs/25-first-year-degree-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
       "experiment_symbol_ids": [
         "ntc",
         "ldr",

@@ -4,7 +4,7 @@
   "manifest_kind": "library",
   "library_id": "btec-hnc-electrical-electronic-engineering",
   "title": "BTEC HNC Electrical and Electronic Engineering for England (2024) — Unit 4019",
-  "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+  "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
   "handoff": {
     "date": "2026-11-10",
     "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -270,7 +270,7 @@
       "syllabus_reference": "LO1",
       "catalogue_support": "Both",
       "catalogue_description": "Choose a multi-branch DC network, predict node potentials and signed currents, then compare simulation residuals with hand calculations.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -284,7 +284,7 @@
       "syllabus_reference": "LO1",
       "catalogue_support": "Both",
       "catalogue_description": "Solve a two-source circuit with each independent source deactivated in turn. Compare the sum of voltage/current contributions with the complete circuit. Do not sum power contributions as though power were linear.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [],
       "existing_tool_ids": [
         "source_dc",
@@ -297,7 +297,7 @@
       "syllabus_reference": "LO1",
       "catalogue_support": "Both",
       "catalogue_description": "Obtain an equivalent at a selected port, then compare original and equivalent circuits under several finite loads. Avoid using a physical short as a measurement method.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [],
       "existing_tool_ids": [
         "source_dc",
@@ -310,7 +310,7 @@
       "syllabus_reference": "LO1",
       "catalogue_support": "Both",
       "catalogue_description": "Vary a resistor load against a source with explicit resistance. Compare load power and efficiency; maximum delivered power is not maximum efficiency.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "rheostat"
       ],
@@ -322,7 +322,7 @@
       "syllabus_reference": "LO1",
       "catalogue_support": "Both",
       "catalogue_description": "Compare loaded/unloaded divider outputs and introduce finite meter input resistance. Quantify the measurement's influence.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "potentiometer"
       ],
@@ -336,7 +336,7 @@
       "syllabus_reference": "LO2",
       "catalogue_support": "Both",
       "catalogue_description": "Compare peak, RMS, frequency and phase using complete captured cycles. State whether an offset is included in the chosen RMS quantity.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "bnc"
       ],
@@ -353,7 +353,7 @@
       "syllabus_reference": "LO2",
       "catalogue_support": "Both",
       "catalogue_description": "Sweep frequency and compare the magnitude/phase of voltage and current with calculated impedances. Include source resistance and coil resistance where appropriate.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -368,7 +368,7 @@
       "syllabus_reference": "LO2",
       "catalogue_support": "Both",
       "catalogue_description": "Capture RC and RL responses to a step. Change one component at a time and compare fitted time constants with the declared circuit.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -383,7 +383,7 @@
       "syllabus_reference": "LO2",
       "catalogue_support": "Both",
       "catalogue_description": "Compare time-domain decay with frequency response for different resistances. Measure resonance, bandwidth and Q using a stated criterion.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -399,7 +399,7 @@
       "syllabus_reference": "LO2",
       "catalogue_support": "Both",
       "catalogue_description": "Compare RC low-pass/high-pass networks with the same source and load. Relate AC response to pulse-shape changes from transient runs.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "capacitor"
       ],
@@ -414,7 +414,7 @@
       "syllabus_reference": "LO2",
       "catalogue_support": "Both",
       "catalogue_description": "Compare average instantaneous power with apparent power calculated from RMS readings. Export values for complex-power calculations if required.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -429,7 +429,7 @@
       "syllabus_reference": "LO2–LO3",
       "catalogue_support": "Both",
       "catalogue_description": "Use low-voltage sources and explicit diode mappings. Vary load/capacitance and compare ripple and mean output. Treat transformer input as a declared source unless a suitable coupled model is supplied.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "diode_rectifier",
         "capacitor_polarised"
@@ -444,7 +444,7 @@
       "syllabus_reference": "LO3",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Sweep current-limited circuits and compare operating voltage and dissipation. A Zener model must include the intended breakdown characteristic.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "diode",
         "zener"
@@ -457,7 +457,7 @@
       "syllabus_reference": "LO3",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Evaluate limiting resistors for several supplies using an identified LED model. Predict electrical current, not luminous intensity.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "led"
       ],
@@ -469,7 +469,7 @@
       "syllabus_reference": "LO3",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare switching and small-signal operation of a chosen transistor. Record DC bias before measuring gain and output range.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "bjt_npn",
         "bjt_pnp",
@@ -486,7 +486,7 @@
       "syllabus_reference": "LO3",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare gate-controlled current using appropriate models and separately stated operating conditions. Do not infer an interchangeable pinout or threshold.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "jfet_n",
         "jfet_p",
@@ -501,7 +501,7 @@
       "syllabus_reference": "LO4",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Vary source and load resistances around a prepared amplifier model. Measure gain and bandwidth under each condition.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -519,7 +519,7 @@
       "syllabus_reference": "LO4",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Choose a simple inverting/non-inverting stage and compare predicted gain with captures. Supply rail limits and a model adequate to the measurement.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -536,7 +536,7 @@
       "syllabus_reference": "LO4",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Verify small combinational functions and state the logic-level conventions. Use appropriate gate models; neither firmware nor HDL execution is implied.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "gate_and",
         "gate_or",
@@ -555,7 +555,7 @@
       "syllabus_reference": "LO4; project application",
       "catalogue_support": "Diagram",
       "catalogue_description": "Draw a sensor-equivalent source, conditioner and receiving stage, with test points and loading assumptions. The physical sensor and any PLC program remain outside the simulation.",
-      "source_document": "docs/23-btec-hnc-electrical-electronic-engineering-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "temperature_sensor",
         "light_sensor",

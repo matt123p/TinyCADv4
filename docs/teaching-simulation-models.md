@@ -71,20 +71,13 @@ The MCU uses GPIO0/1 as inputs by default; the FPGA uses IO0/1, and the PLC uses
 | 555 | Divider, threshold/trigger latch, reset and discharge switch. Simplified output rails and drive. |
 | AM | `Gain*(CarrierBias + ModulationIndex*message)*carrier`. Default bias 1 retains the carrier; bias 0 gives suppressed-carrier multiplication. Differential carrier/message/output terminals remain separate. |
 
-Values are intentionally editable; default sensor coefficients are illustrative rather than a claim of calibration to the manufacturer sources used for artwork research. Discrete devices and the original 741 retain the [SPICE essentials models and limitations](spice-library.md) where reused. Comparator, Darlington, JFET and SCR interfaces use separate generic equivalents.
+Values are intentionally editable; default sensor coefficients are illustrative rather than a claim of calibration to the manufacturer sources used for artwork research. Discrete devices and the original 741 retain the [SPICE essentials models and limitations](libraries.md#spice-essentials) where reused. Comparator, Darlington, JFET and SCR interfaces use separate generic equivalents.
 
-## Rebuild and qualify
 
-```sh
-npm run libraries:all
-npm run engine:native
-npm run test:teaching
-# Optional: compare against a separate installed ngspice executable:
-NGSPICE_BIN=/path/to/ngspice npm run test:teaching
-```
+## Implementation and verification
 
-`scripts/lib/teaching-models.mjs` is the shared model source. Library provenance records both artwork and model hashes. Builds are reproducible without Library Workshop, private SQL data or network access. The checked-in selected artwork retains attribution and source hashes.
+[scripts/lib/teaching-models.mjs](../scripts/lib/teaching-models.mjs) is the shared model source. Library provenance records artwork and model hashes. Selected artwork and attribution are checked in under `library-sources/teaching/`; the generated `.tclib` entries carry the executable templates.
 
-Numerical qualification automatically uses the bundled native engine when its manifest is present; `NGSPICE_BIN` explicitly overrides it. Without either engine, numerical tests are skipped. The simulation deck saves schematic signals, source/instrument currents, requested device readings and explicit extra signals, keeping private model nodes from exhausting the native output-vector limit. The logger’s recorded signal remains exposed automatically.
+`npm run test:teaching` checks editor-exported decks, terminal/model coverage, course-subset consistency, hidden rails, rotations and persistence. Numerical checks use the bundled native manifest when available; `NGSPICE_BIN` can override the executable. Without either engine, numerical tests are skipped, so a passing run alone does not establish numerical coverage.
 
-Qualification covers all 116 editor-exported decks, complete terminal/model coverage, course-subset consistency, hidden rails, rotations and save/load. Numerical tests cover truth tables, carry/priority logic, wraparound/down counting, Johnson/shift sequences, selected clock edges and asynchronous reset, sensor transfer values, ADC/DAC conversion, analogue switching and AM carrier bias. These checks establish the tested educational behaviours; they do not qualify every possible user parameter or vendor device.
+Numerical cases cover truth tables, carry/priority logic, counter/shift sequences, clock edges/reset, sensor transfer values, ADC/DAC conversion, switching and AM carrier bias. They establish the tested educational behaviour, rather than qualification of every parameter combination or vendor device. See [libraries and provenance](libraries.md) and the [engine reference](spice-engine.md).

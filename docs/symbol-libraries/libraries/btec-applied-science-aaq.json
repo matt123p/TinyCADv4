@@ -4,7 +4,7 @@
   "manifest_kind": "library",
   "library_id": "btec-applied-science-aaq",
   "title": "BTEC National Applied Science AAQ Extended Certificate — Units 3 and 4",
-  "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+  "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
   "handoff": {
     "date": "2026-11-10",
     "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -169,7 +169,7 @@
       "syllabus_reference": "U3 C1.1–C1.3, U4 C2",
       "catalogue_support": "Both",
       "catalogue_description": "Prepare an ammeter/voltmeter test circuit, then compare readings for a known load. Use V Ω–COM for voltage/resistance and A–COM for current.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [],
       "existing_tool_ids": [
         "multimeter",
@@ -184,7 +184,7 @@
       "syllabus_reference": "U4 C2",
       "catalogue_support": "Both",
       "catalogue_description": "Predict readings for several declared reference resistors and source values. Draw the real calibration arrangement and compare bench readings against an independently established reference. A virtual meter is not a calibration certificate for physical equipment.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -198,7 +198,7 @@
       "syllabus_reference": "U3 C1.3, U4 C2",
       "catalogue_support": "Both",
       "catalogue_description": "Build resistor combinations, record individual and supply readings, and compare calculations with modelled and physical measurements.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "resistor",
         "lamp"
@@ -211,7 +211,7 @@
       "syllabus_reference": "U4 C2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw the test section and meter positions. Enter measured resistances or a stated wire law for each length; plot exported R against length externally.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "resistance_wire"
       ],
@@ -223,7 +223,7 @@
       "syllabus_reference": "U4 C2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Annotate measured diameters and lengths for the specified wire comparison. Use measured V/I results to calculate resistivity externally. The solver cannot measure wire diameter or establish a material constant independently.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "resistance_wire",
         "annotation"
@@ -236,7 +236,7 @@
       "syllabus_reference": "U3 C1.4, U4 C2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw the current-limited measurement circuit and compare a real lamp characteristic with an electrothermal or empirical model. Keep a fixed-resistance illustration clearly labelled as an approximation.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "lamp"
       ],
@@ -248,7 +248,7 @@
       "syllabus_reference": "U3 C1.4",
       "catalogue_support": "Both",
       "catalogue_description": "Sweep a current-limited source and measure the diode's voltage and current. Compare forward and reverse behaviour using an identified diode model.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "diode"
       ],
@@ -260,7 +260,7 @@
       "syllabus_reference": "U3 C1.4, U4 C2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare current and resistor dissipation for different supply/resistor choices. Use an LED-specific model; light output and damage are not automatic simulation results.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "led"
       ],
@@ -272,7 +272,7 @@
       "syllabus_reference": "U3 C1.4, U4 C2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Substitute measured R(T) values into the test circuit. Compare current or divider output, recording temperature data independently.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "ntc"
       ],
@@ -284,7 +284,7 @@
       "syllabus_reference": "U3 C1.4",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Use measured resistance under controlled illumination to predict readings. Changing an arbitrary resistor is a circuit exercise, not a simulated light experiment.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "ldr"
       ],
@@ -296,7 +296,7 @@
       "syllabus_reference": "U3 C1.4",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Model a reverse-biased detector with calibrated photocurrent and compare output for different loads. Supply the optical response externally.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "photodiode",
         "behavioural_current"
@@ -309,7 +309,7 @@
       "syllabus_reference": "U3 C2–C3",
       "catalogue_support": "Both",
       "catalogue_description": "Compare resistor loads at known voltages. Calculate power and energy for a stated duration from simulated readings, then compare with real measurements where appropriate. Temperature change is not modelled by the resistor alone.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -321,7 +321,7 @@
       "syllabus_reference": "U4 C3",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw the panel, voltmeter and selectable electrical load. Use a declared solar-cell equivalent or measured I–V data to compare output conditions. Irradiance, colour and angle must be measured or explicitly supplied.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "solar_cell",
         "rheostat"
@@ -334,7 +334,7 @@
       "syllabus_reference": "U4 C3",
       "catalogue_support": "Diagram",
       "catalogue_description": "Annotate the circuit, test conditions and data-recording points for changes in distance, angle and illumination. The spatial/optical arrangement remains a separate apparatus sketch; TinyCAD does not calculate it from a schematic.",
-      "source_document": "docs/21-btec-aaq-applied-science-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
       "experiment_symbol_ids": [
         "solar_cell",
         "annotation"

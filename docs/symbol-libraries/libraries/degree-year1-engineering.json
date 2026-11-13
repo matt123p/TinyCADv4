@@ -4,7 +4,7 @@
   "manifest_kind": "library",
   "library_id": "degree-year1-engineering",
   "title": "First-year engineering degrees — shared electronics and discipline applications",
-  "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+  "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
   "handoff": {
     "date": "2026-11-10",
     "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -236,7 +236,7 @@
       "syllabus_reference": "G-CORE",
       "catalogue_support": "Both",
       "catalogue_description": "Compare a divider's predicted output with finite-resistance voltage measurement and compare current readings with stated burden. Explain how an instrument changes the circuit.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "potentiometer"
       ],
@@ -250,7 +250,7 @@
       "syllabus_reference": "G-CORE, G-ANALYSIS",
       "catalogue_support": "Both",
       "catalogue_description": "Use a multi-branch resistor circuit and compare measured node/current values with nodal and mesh calculations.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -264,7 +264,7 @@
       "syllabus_reference": "G-CORE",
       "catalogue_support": "Both",
       "catalogue_description": "Compare an original network with its port equivalent for several loads. State source resistance and avoid treating an ideal source as a complete battery model.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [],
       "existing_tool_ids": [
         "source_dc",
@@ -277,7 +277,7 @@
       "syllabus_reference": "G-CORE, G-ANALYSIS",
       "catalogue_support": "Both",
       "catalogue_description": "Investigate each independent source separately, then compare the total voltage/current. Show explicitly why power is not a linear sum of these separate results.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [],
       "existing_tool_ids": [
         "source_dc",
@@ -290,7 +290,7 @@
       "syllabus_reference": "G-CORE",
       "catalogue_support": "Both",
       "catalogue_description": "Account for resistor, source and load power for different operating conditions. Distinguish predicted electrical dissipation from temperature rise or mechanical output.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -302,7 +302,7 @@
       "syllabus_reference": "G-CORE, G-ANALYSIS",
       "catalogue_support": "Both",
       "catalogue_description": "Capture voltage/current, measure time constant and compare loading assumptions. Repeat with measured component values.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "capacitor"
       ],
@@ -316,7 +316,7 @@
       "syllabus_reference": "G-CORE, G-ANALYSIS",
       "catalogue_support": "Both",
       "catalogue_description": "Compare current rise for an idealised and resistive coil model. The experiment concerns its electrical terminals, not magnetic geometry or motion.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "inductor"
       ],
@@ -330,7 +330,7 @@
       "syllabus_reference": "G-CORE",
       "catalogue_support": "Both",
       "catalogue_description": "Change resistance and compare transient oscillation/decay and frequency response. Choose sampling and run length from the expected response.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -346,7 +346,7 @@
       "syllabus_reference": "G-CORE, G-ANALYSIS",
       "catalogue_support": "Both",
       "catalogue_description": "Compare an RC/RL load's frequency-dependent current with phasor calculations. Keep phase reference and current direction explicit.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -361,7 +361,7 @@
       "syllabus_reference": "G-CORE",
       "catalogue_support": "Both",
       "catalogue_description": "Compare average instantaneous power with RMS-derived apparent power for a small circuit model. Complete complex-power calculations externally if necessary.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -376,7 +376,7 @@
       "syllabus_reference": "G-CORE",
       "catalogue_support": "Both",
       "catalogue_description": "Compare frequency response and transient response of the same RC filter under defined source/load conditions.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "capacitor"
       ],
@@ -391,7 +391,7 @@
       "syllabus_reference": "G-CORE",
       "catalogue_support": "Both",
       "catalogue_description": "Use current limiting, an identified diode model and low-voltage sine input. Compare polarity, conduction and output ripple. The rectifier topology is a proposed application of the device topic.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "diode",
         "diode_rectifier",
@@ -407,7 +407,7 @@
       "syllabus_reference": "G-CORE",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Investigate drive voltage/current and output loading using a prepared transistor model. For an inductive equivalent load, compare switch-node voltage with protection included.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "bjt_npn",
         "mosfet_n",
@@ -424,7 +424,7 @@
       "syllabus_reference": "G-CORE",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Scale a declared low-level input to a desired output range. Compare loading, gain and saturation with a suitable amplifier model.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -441,7 +441,7 @@
       "syllabus_reference": "G-CORE",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare the passive and buffered/active versions of a selected filter under changed loading. Use a model with adequate bandwidth.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -458,7 +458,7 @@
       "syllabus_reference": "G-CORE, G-BROAD",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw a small combinational controller and verify all combinations against a stated truth table. Compatible gate models are required; programming an industrial controller is separate.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "gate_and",
         "gate_or",
@@ -475,7 +475,7 @@
       "syllabus_reference": "G-CORE, applied proposal",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Supply measured sensor voltages/resistances and investigate offset, loading and conditioning. Do not claim the circuit independently reproduces the physical sensing mechanism.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "ntc",
         "ldr",
@@ -495,7 +495,7 @@
       "syllabus_reference": "G-BROAD, applied proposal",
       "catalogue_support": "Diagram",
       "catalogue_description": "Draw supplies, references, sensor connections, driver and receiving equipment, with test points. The full mechanical/process/software system remains outside TinyCAD.",
-      "source_document": "docs/26-first-year-degree-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
       "experiment_symbol_ids": [
         "temperature_sensor",
         "pressure_sensor",

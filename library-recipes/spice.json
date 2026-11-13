@@ -5,7 +5,7 @@
   "author": "onetransistor",
   "output": "bundled-libraries/spice/spice.tclib",
   "requireSpice": true,
-  "notes": "Curated onetransistor drawings with existing aryajur SPICE templates. Generic device models and the 741-style behavioral model are original teaching approximations, not manufacturer-validated models. See docs/spice-library.md for defaults, terminal mapping, and limitations.",
+  "notes": "Curated onetransistor drawings with existing aryajur SPICE templates. Generic device models and the 741-style behavioral model are original teaching approximations, not manufacturer-validated models. See docs/libraries.md#spice-essentials for defaults, terminal mapping, and limitations.",
   "references": [
     {
       "title": "ngspice manual",

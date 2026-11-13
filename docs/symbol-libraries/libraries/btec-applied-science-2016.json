@@ -4,7 +4,7 @@
   "manifest_kind": "library",
   "library_id": "btec-applied-science-2016",
   "title": "BTEC National Extended Diploma Applied Science (2016) — selected Unit 15",
-  "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+  "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
   "handoff": {
     "date": "2026-11-10",
     "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -231,7 +231,7 @@
       "syllabus_reference": "A2, B1",
       "catalogue_support": "Both",
       "catalogue_description": "Compare up to three resistors in series, parallel and mixed arrangements. Record equivalent resistance and conductance, with calculations beside the schematic.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -243,7 +243,7 @@
       "syllabus_reference": "B2",
       "catalogue_support": "Both",
       "catalogue_description": "Compare a divider with different voltmeter input resistances and current-meter burdens. Document which quantity each connection measures.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -257,7 +257,7 @@
       "syllabus_reference": "B2",
       "catalogue_support": "Both",
       "catalogue_description": "Choose a target output and vary resistor ratio. Add a finite load and quantify the change rather than assuming an unloaded formula remains exact.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "potentiometer"
       ],
@@ -269,7 +269,7 @@
       "syllabus_reference": "B2",
       "catalogue_support": "Both",
       "catalogue_description": "Use an ideal source plus a series resistor. Change the load and fit terminal voltage against current using exported values. Identify the declared model's emf and resistance.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "cell",
         "rheostat"
@@ -282,7 +282,7 @@
       "syllabus_reference": "A3",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare resistor and LED characteristics using DC sweeps. Use a suitable electrothermal lamp model if including a filament lamp; a constant resistor cannot reproduce heating.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "led",
         "lamp",
@@ -296,7 +296,7 @@
       "syllabus_reference": "A2",
       "catalogue_support": "Both",
       "catalogue_description": "Capture charge and discharge currents and capacitor voltage. Integrate current over a selected interval and compare with the voltage change.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "capacitor",
         "capacitor_polarised",
@@ -312,7 +312,7 @@
       "syllabus_reference": "A2",
       "catalogue_support": "Both",
       "catalogue_description": "Compare networks using the same charging resistance. Infer equivalent capacitance from a transient response; the student multimeter has no capacitance range.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "capacitor",
         "capacitor_polarised"
@@ -327,7 +327,7 @@
       "syllabus_reference": "A3",
       "catalogue_support": "Both",
       "catalogue_description": "Apply a sine or pulse to an RC network. Compare input/output amplitude and timing across frequencies and relate the result to the chosen component values.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "capacitor"
       ],
@@ -342,7 +342,7 @@
       "syllabus_reference": "C3, D3",
       "catalogue_support": "Both",
       "catalogue_description": "Use a low-voltage sine source, scope and AC meter. Compare readings over complete cycles and distinguish a source's offset from its alternating component.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "bnc"
       ],
@@ -359,7 +359,7 @@
       "syllabus_reference": "C3",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Prepare a rectifier with compatible diodes and a smoothing capacitor. Vary load and capacitance; compare mean output and ripple from transient captures. This is an electronic implementation of the topic, not a complete mains-supply model.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "diode_rectifier",
         "capacitor_polarised"
@@ -374,7 +374,7 @@
       "syllabus_reference": "D1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Enter measured sensor resistances for several illumination conditions and predict divider output. Optical distance/intensity must come from measurements or a declared model.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "ldr",
         "potentiometer"
@@ -387,7 +387,7 @@
       "syllabus_reference": "D1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Use measured R(T) values to compare output sensitivity and sensor placement. Keep the temperature calibration separate from the electrical prediction.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "ntc",
         "potentiometer"
@@ -400,7 +400,7 @@
       "syllabus_reference": "D1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Model the bridge resistors and sweep a small declared resistance change. Measure differential output and the effect of an initially unbalanced bridge. Mechanical strain is not generated by the solver.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "strain_gauge",
         "wheatstone_bridge",
@@ -416,7 +416,7 @@
       "syllabus_reference": "D1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw the switched input, bias resistor and indicator. Compare separate switch states or a compatible controlled switch. Magnetic actuation is external to the circuit.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "reed_switch",
         "led",
@@ -430,7 +430,7 @@
       "syllabus_reference": "C1, D2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Supply measured thermocouple voltages through a stated source resistance. Test loading and an amplifier interface. The model does not independently reproduce thermoelectric conversion.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "thermocouple",
         "opamp"
@@ -445,7 +445,7 @@
       "syllabus_reference": "D2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Use a justified charge/current-source and capacitance equivalent. Compare output pulses and loading. The mechanical excitation is a declared input.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "piezo_sensor",
         "behavioural_current",
@@ -460,7 +460,7 @@
       "syllabus_reference": "D3",
       "catalogue_support": "Diagram",
       "catalogue_description": "Draw the sensor, conditioner, supply, common reference and recorder interface for a selected physical measurement. TinyCAD does not stream data into a real logger or model every pH/moisture/pressure sensor.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "ph_probe",
         "temperature_sensor",
@@ -478,7 +478,7 @@
       "syllabus_reference": "A–B, D",
       "catalogue_support": "Both",
       "catalogue_description": "Repeat a selected circuit with nominal and measured component values. Keep predicted and bench data separate, then identify discrepancies attributable to loading, tolerance or an inadequate model.",
-      "source_document": "docs/20-btec-national-applied-science-2016-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
       "experiment_symbol_ids": [
         "resistor",
         "capacitor"

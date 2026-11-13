@@ -185,14 +185,14 @@ const measurement = 'source_sine source_pulse oscilloscope function_generator bn
 const allGates = 'gate_and gate_or gate_nand gate_nor gate_xor gate_not';
 const amplifiers = 'opamp resistor capacitor source_sine source_pulse';
 const courses = [
-  ['gcse-physics-aqa', '17', 'GCSE Physics — AQA 8463', {
+  ['gcse-physics-aqa', 'GCSE Physics — AQA 8463', {
     G01: 'resistance_wire', G02: 'resistor', G03: 'resistor', G04: 'resistor',
     G05: 'lamp', G06: 'diode', G07: 'multimeter ammeter voltmeter ohmmeter',
     G08: 'current_probe source_pulse', G09: 'resistor', G10: 'resistor switch_spst',
     G11: 'ntc', G12: 'ldr', G13: 'ntc potentiometer', G14: 'ldr potentiometer',
     G15: 'resistor', G16: measurement, G17: 'led diode', G18: 'lamp led capacitor switch_spst connector2 annotation',
   }],
-  ['a-level-physics-aqa', '18', 'A-level Physics — AQA 7408, including optional Electronics', {
+  ['a-level-physics-aqa', 'A-level Physics — AQA 7408, including optional Electronics', {
     A01: 'resistance_wire', A02: 'cell resistor rheostat', A03: 'capacitor capacitor_polarised source_pulse switch_spst',
     A04: 'capacitor capacitor_polarised switch_spdt', A05: 'resistor', A06: 'lamp', A07: 'diode',
     A08: 'ntc potentiometer', A09: 'resistor current_probe', A10: 'cell battery resistor switch_spst',
@@ -214,7 +214,7 @@ const courses = [
     'Beyond catalogue: RC filter extension': 'capacitor source_sine',
     'Alternative astable implementation': 'comparator capacitor resistor',
   }],
-  ['btec-first-engineering', '19', 'BTEC First Certificate in Engineering — selected Unit 8', {
+  ['btec-first-engineering', 'BTEC First Certificate in Engineering — selected Unit 8', {
     F01: 'resistor', F02: 'ntc ldr potentiometer', F03: 'push_make push_break switch_spdt',
     F04: 'led', F05: 'bjt_npn bjt_pnp lamp', F06: 'bjt_npn darlington_npn darlington_pnp',
     F07: 'mosfet_n mosfet_p', F08: 'thyristor push_make push_break',
@@ -226,7 +226,7 @@ const courses = [
   }, {
     'Additional sensor types in Unit 8 A1, beyond the resistive F02 activity': 'moisture_sensor piezo_sensor',
   }],
-  ['btec-applied-science-2016', '20', 'BTEC National Extended Diploma Applied Science (2016) — selected Unit 15', {
+  ['btec-applied-science-2016', 'BTEC National Extended Diploma Applied Science (2016) — selected Unit 15', {
     S01: 'resistor', S02: 'multimeter resistor', S03: 'potentiometer', S04: 'cell rheostat',
     S05: 'led lamp diode', S06: 'capacitor capacitor_polarised switch_spdt source_pulse',
     S07: 'capacitor capacitor_polarised source_pulse', S08: 'capacitor source_sine source_pulse', S09: measurement,
@@ -236,13 +236,13 @@ const courses = [
     S17: 'ph_probe temperature_sensor moisture_sensor pressure_sensor light_sensor data_logger connector3',
     S18: 'resistor capacitor multimeter',
   }],
-  ['btec-applied-science-aaq', '21', 'BTEC National Applied Science AAQ Extended Certificate — Units 3 and 4', {
+  ['btec-applied-science-aaq', 'BTEC National Applied Science AAQ Extended Certificate — Units 3 and 4', {
     Q01: 'multimeter ammeter voltmeter ohmmeter', Q02: 'resistor multimeter', Q03: 'resistor lamp',
     Q04: 'resistance_wire', Q05: 'resistance_wire annotation', Q06: 'lamp', Q07: 'diode', Q08: 'led',
     Q09: 'ntc', Q10: 'ldr', Q11: 'photodiode behavioural_current', Q12: 'resistor',
     Q13: 'solar_cell rheostat', Q14: 'solar_cell annotation',
   }],
-  ['btec-national-electrical-electronic-engineering', '22', 'BTEC National Extended Diploma Electrical and Electronic Engineering — selected Unit 19', {
+  ['btec-national-electrical-electronic-engineering', 'BTEC National Extended Diploma Electrical and Electronic Engineering — selected Unit 19', {
     N01: 'diode diode_rectifier', N02: 'diode_rectifier source_sine', N03: 'diode_rectifier source_sine',
     N04: 'diode_rectifier capacitor_polarised source_sine', N05: 'zener', N06: 'led',
     N07: 'bjt_npn bjt_pnp source_pulse', N08: 'mosfet_n mosfet_p jfet_n jfet_p source_pulse',
@@ -253,7 +253,7 @@ const courses = [
     N19: 'counter_binary3_async counter_binary3_sync shift_register3 flipflop_d flipflop_jk source_pulse',
     N20: 'resistor capacitor diode bjt_npn opamp gate_and oscilloscope function_generator', N21: 'connector2 connector3 annotation',
   }],
-  ['btec-hnc-electrical-electronic-engineering', '23', 'BTEC HNC Electrical and Electronic Engineering for England (2024) — Unit 4019', {
+  ['btec-hnc-electrical-electronic-engineering', 'BTEC HNC Electrical and Electronic Engineering for England (2024) — Unit 4019', {
     H01: 'resistor current_source', H02: 'source_dc current_source', H03: 'source_dc current_source', H04: 'rheostat',
     H05: 'potentiometer multimeter', H06: measurement, H07: 'inductor capacitor source_sine',
     H08: 'inductor capacitor source_pulse', H09: 'inductor capacitor source_sine source_pulse',
@@ -263,7 +263,7 @@ const courses = [
     H17: `${amplifiers} vcvs`, H18: amplifiers, H19: `${allGates} switch_spst relay_spdt`,
     H20: 'temperature_sensor light_sensor pressure_sensor opamp data_logger plc_interface',
   }],
-  ['degree-year1-physics', '24', 'First-year physics degree — representative electronic-circuit strand', {
+  ['degree-year1-physics', 'First-year physics degree — representative electronic-circuit strand', {
     P01: 'resistor current_source', P02: 'source_dc rheostat', P03: 'multimeter potentiometer', P04: 'multimeter',
     P05: 'capacitor capacitor_polarised source_pulse', P06: 'capacitor capacitor_polarised switch_spdt source_pulse',
     P07: 'inductor source_pulse', P08: 'inductor capacitor source_pulse', P09: 'inductor capacitor source_sine',
@@ -272,7 +272,7 @@ const courses = [
     P16: allGates, P17: 'ntc ldr temperature_sensor pressure_sensor light_sensor opamp',
     P18: 'resistor capacitor', P19: 'temperature_sensor light_sensor opamp data_logger microcontroller connector3',
   }],
-  ['degree-year1-electronics', '25', 'First-year electronics degree — representative circuit/device/digital strand', {
+  ['degree-year1-electronics', 'First-year electronics degree — representative circuit/device/digital strand', {
     E01: 'resistor current_source', E02: 'source_dc current_source', E03: 'source_dc current_source', E04: 'rheostat',
     E05: 'multimeter function_generator oscilloscope', E06: 'inductor capacitor source_pulse switch_spdt',
     E07: 'inductor capacitor source_sine', E08: 'inductor capacitor source_sine source_pulse',
@@ -285,7 +285,7 @@ const courses = [
     E24: 'state_machine flipflop_d source_pulse connector3', E25: 'fpga microcontroller connector3 source_pulse bjt_npn mosfet_n led',
     E26: 'ntc ldr opamp comparator bjt_npn led data_logger connector3',
   }],
-  ['degree-year1-engineering', '26', 'First-year engineering degrees — shared electronics and discipline applications', {
+  ['degree-year1-engineering', 'First-year engineering degrees — shared electronics and discipline applications', {
     GY01: 'multimeter potentiometer', GY02: 'resistor current_source', GY03: 'source_dc current_source',
     GY04: 'source_dc current_source', GY05: 'resistor', GY06: 'capacitor source_pulse',
     GY07: 'inductor source_pulse', GY08: 'inductor capacitor source_pulse source_sine',
@@ -317,7 +317,7 @@ const handoff = {
   optionality: 'experiment_symbol_ids are a coverage set of proposed implementations and comparisons, not a minimal mandatory BOM; common support symbols and explicitly optional additions are separately identified.',
 };
 
-function parseActivities(text, filename) {
+function parseActivities(text, sourceDocument) {
   const result = [];
   for (const line of text.split(/\r?\n/)) {
     if (!/^\| [A-Z]+\d{2} \|/.test(line)) continue;
@@ -330,23 +330,32 @@ function parseActivities(text, filename) {
       syllabus_reference: school ? cells[2] : semicolon < 0 ? '' : title.slice(semicolon + 1).trim(),
       catalogue_support: cells[school ? 3 : 2],
       catalogue_description: cells[school ? 4 : 3],
-      source_document: `docs/${filename}`,
+      source_document: sourceDocument,
     });
   }
   return result;
 }
 
+const catalogueFile = 'teaching-catalogue.md';
+const catalogueText = await fs.readFile(path.join(root, 'docs', catalogueFile), 'utf8');
+const courseSections = new Map(
+  [...catalogueText.matchAll(/^## ([a-z0-9-]+)\s*\n([\s\S]*?)(?=^## |(?![\s\S]))/gm)]
+    .map(([, id, text]) => [id, text]),
+);
 await fs.mkdir(path.join(output, 'libraries'), {recursive: true});
 const libraries = [];
-for (const [libraryId, docPrefix, title, assignments, optional = {}] of courses) {
-  const filenames = (await fs.readdir(path.join(root, 'docs'))).filter(name => name.startsWith(`${docPrefix}-`) && name.endsWith('-experiments.md'));
-  if (filenames.length !== 1) throw new Error(`Expected one source document for ${libraryId}`);
-  const filename = filenames[0];
-  const sourceText = await fs.readFile(path.join(root, 'docs', filename), 'utf8');
-  const activities = parseActivities(sourceText, filename);
-  if (!activities.length) throw new Error(`No experiments in ${filename}`);
+for (const [libraryId, title, assignments, optional = {}] of courses) {
+  const sourceText = courseSections.get(libraryId);
+  if (!sourceText) throw new Error(`Missing catalogue section for ${libraryId}`);
+  const sourceDocument = `docs/${catalogueFile}#${libraryId}`;
+  // Markdown reference IDs are course-prefixed to avoid collisions in the
+  // combined document; standalone inventory references keep their local IDs.
+  const activities = parseActivities(
+    sourceText.replaceAll(`][${libraryId}-`, ']['), sourceDocument,
+  );
+  if (!activities.length) throw new Error(`No experiments in ${sourceDocument}`);
   const ids = new Set(activities.map(a => a.id));
-  if (ids.size !== activities.length) throw new Error(`Duplicate experiment IDs in ${filename}`);
+  if (ids.size !== activities.length) throw new Error(`Duplicate experiment IDs in ${sourceDocument}`);
   for (const id of Object.keys(assignments)) if (!ids.has(id)) throw new Error(`Unknown experiment ${id}`);
   for (const activity of activities) {
     if (!assignments[activity.id]) throw new Error(`Unmapped experiment ${activity.id}`);
@@ -378,10 +387,10 @@ for (const [libraryId, docPrefix, title, assignments, optional = {}] of courses)
       library_requirement: usedBy.length ? 'experiment_coverage' : common.includes(id) ? 'common_support' : 'optional_extension',
     };
   }).sort((a,b) => a.folder.localeCompare(b.folder, 'en') || a.id.localeCompare(b.id, 'en'));
-  const sources = [...sourceText.matchAll(/^\[([^\]]+)\]:\s+(https?:\S+)/gm)].map(([, id, url]) => ({id, url}));
+  const sources = [...sourceText.matchAll(/^\[([^\]]+)\]:\s+(https?:\S+)/gm)].map(([, id, url]) => ({id: id.replace(`${libraryId}-`, ''), url}));
   const library = {
     $schema: '../symbol-library.schema.json', schema_version: '1.0.0', manifest_kind: 'library',
-    library_id: libraryId, title, source_document: `docs/${filename}`, handoff,
+    library_id: libraryId, title, source_document: sourceDocument, handoff,
     syllabus_sources: sources,
     common_symbol_ids: common,
     existing_tools: existingTools,
@@ -443,16 +452,4 @@ for (const library of libraries) {
 }
 await fs.writeFile(path.join(output, 'symbols.csv'), csv(csvRows));
 await fs.writeFile(path.join(output, 'experiment-symbol-map.csv'), csv(usageRows));
-const inventory = ['# Teaching symbol-library inventory', '', 'Generated from the curated assignments and the ten course catalogues. The JSON files are the authoritative handoff; this file is a readable checklist.', '',
-  `Libraries: **${libraries.length}**. Experiments: **${manifest.totals.experiments}**. Library symbol records: **${manifest.totals.library_symbol_records}**. Distinct reusable types: **${distinct.size}**.`, '',
-  'Built-in lab equipment, meter modes, probes, independent waveform sources and voltage-controlled sources are excluded from the generation requirements. Existing-tool notes identify tools already supplied by this branch; do not generate them as library symbols.', '',
-  'Each folder is proposed metadata, not an implemented library-browser feature. Logical terminals are not package pinouts. An entry is an inventory requirement, not a finished symbol or executable model.', ''];
-for (const l of libraries) {
-  inventory.push(`## ${l.title}`, '', `[JSON](libraries/${l.library_id}.json) · [Use cases](${l.source_document.replace(/^docs\//, '../')})`, '',
-    `Already provided; do not generate: ${l.existing_tools.map(t => t.name).join(', ')}.`, '',
-    '| Symbol ID | Name | Proposed folder | Coverage / role |', '| --- | --- | --- | --- |');
-  for (const s of l.symbols) inventory.push(`| ${s.id} | ${s.name} | ${s.folder} | ${s.used_by_experiments.join(', ') || (s.common_support_symbol ? 'Common support' : 'Optional extension')} |`);
-  inventory.push('');
-}
-await fs.writeFile(path.join(output, 'INVENTORY.md'), `${inventory.join('\n').trimEnd()}\n`);
 console.log(JSON.stringify(manifest.totals, null, 2));

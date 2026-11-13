@@ -4,7 +4,7 @@
   "manifest_kind": "library",
   "library_id": "btec-first-engineering",
   "title": "BTEC First Certificate in Engineering — selected Unit 8",
-  "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+  "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
   "handoff": {
     "date": "2026-11-10",
     "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -184,7 +184,7 @@
       "syllabus_reference": "A4–A5",
       "catalogue_support": "Both",
       "catalogue_description": "Compare series and parallel loads, predict supply current, and verify voltage sharing. Save a calculation alongside the circuit and numerical readings.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -196,7 +196,7 @@
       "syllabus_reference": "A1, A4",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Use a fixed resistor and variable sensor-equivalent resistance. Compare divider output over measured light or temperature conditions. The entered resistance is an assumption, not an optical or thermal simulation.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "ntc",
         "ldr",
@@ -210,7 +210,7 @@
       "syllabus_reference": "A1, B1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw push-to-make and push-to-break arrangements. Use an explicit switch model or separate open/closed circuits to test the resulting input voltage.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "push_make",
         "push_break",
@@ -224,7 +224,7 @@
       "syllabus_reference": "A3–A5",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare several limiting resistors and supplies using an LED model. Record current and resistor power; do not equate simulated current with measured brightness.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "led"
       ],
@@ -236,7 +236,7 @@
       "syllabus_reference": "A2, B1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Sweep the input to an NPN or PNP stage driving an electrical load. Compare input, output and device currents. Supply the correct model and pin mapping.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "bjt_npn",
         "bjt_pnp",
@@ -250,7 +250,7 @@
       "syllabus_reference": "A2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare a single transistor with a pair for the same load. Investigate the input drive needed to reach a stated output condition.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "bjt_npn",
         "darlington_npn",
@@ -264,7 +264,7 @@
       "syllabus_reference": "A2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Apply a gate-voltage sweep or pulse. Compare off/on output and load current using a chosen FET model.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "mosfet_n",
         "mosfet_p"
@@ -277,7 +277,7 @@
       "syllabus_reference": "A2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Apply a gate pulse and observe whether conduction persists after it ends. Model interruption of load current to reset the device. A transistor model is not an SCR substitute.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "thyristor",
         "push_make",
@@ -291,7 +291,7 @@
       "syllabus_reference": "A1–A3, B1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Combine a sensor-equivalent input, comparator/transistor and LED load. Set a target threshold and compare predicted switching with measured sensor values. This is one possible implementation of the unit's design work.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "ntc",
         "ldr",
@@ -310,7 +310,7 @@
       "syllabus_reference": "A4–A5",
       "catalogue_support": "Both",
       "catalogue_description": "Capture capacitor voltage after a source step. Change R and C separately and compare the measured delay to a chosen threshold.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "capacitor",
         "capacitor_polarised"
@@ -325,7 +325,7 @@
       "syllabus_reference": "A2, B1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Use a compatible timer model, trigger once and measure pulse duration. Change the timing components. A predefined pulse source cannot demonstrate the timer's timing law.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "timer_555",
         "capacitor",
@@ -341,7 +341,7 @@
       "syllabus_reference": "A2, B1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Capture a timer's output and compare frequency/duty cycle for different component values. A flashing LED's electrical drive can be tested without modelling visual flashing.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "timer_555",
         "capacitor",
@@ -357,7 +357,7 @@
       "syllabus_reference": "A4",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Represent a relay coil by an explicit electrical model and compare switch-node voltage with and without a protection diode. Mechanical operation is outside the model.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "relay_coil",
         "relay_spdt",
@@ -372,7 +372,7 @@
       "syllabus_reference": "A5",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare the same circuit with an ideal source and a source having stated internal resistance. Battery chemistry and solar illumination need separate models or measurements.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "battery",
         "solar_cell"
@@ -385,7 +385,7 @@
       "syllabus_reference": "A2–A3, B1",
       "catalogue_support": "Diagram",
       "catalogue_description": "Document input switch, controller pins, supplies and display connections. Firmware execution, flowchart programming and seven-segment decoding are not ready-made TinyCAD workflows. Electrical interface stages can be tested separately.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "microcontroller",
         "push_make",
@@ -402,7 +402,7 @@
       "syllabus_reference": "D1",
       "catalogue_support": "Both",
       "catalogue_description": "Prepare a correct circuit and separate manually edited open/short/wrong-value versions. Predict diagnostic voltage/current readings. Record a test sequence for checking the physical build; this does not rely on an automatic fault-injection feature.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "resistor",
         "switch_spst",
@@ -416,7 +416,7 @@
       "syllabus_reference": "B2, C1–C2",
       "catalogue_support": "Diagram",
       "catalogue_description": "Produce a labelled schematic, polarity notes and a connectivity checklist for the physical assembly. TinyCAD does not turn the schematic into a breadboard photograph, demonstrate soldering competence or inspect joints.",
-      "source_document": "docs/19-btec-first-engineering-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
       "experiment_symbol_ids": [
         "connector2",
         "connector3",

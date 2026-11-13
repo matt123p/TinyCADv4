@@ -45,16 +45,12 @@ for the full browser and local editing workflows, writing checklist, and pull
 request template. Submit manual changes to TinyCAD-docs; application code changes
 belong in this repository.
 
-## Simulation UI design
+## Simulation and technical reference
 
-The proposed integrated ngspice experience is described in the
-[simulation UI specification](docs/README.md), starting with user stories and
-covering UI design, feature sets, requirements, research, validation, and implementation architecture.
-The implementation plan uses browser WASM and bundled native ngspice in Electron,
-with pinned engine builds and packaging verification in GitHub Actions.
-The design also specifies header-detected compressed DSN files, result exports,
-and removing stored results while preserving circuit and simulation setup.
-This is a design proposal; TinyCAD currently exports SPICE files for use in an external simulator.
+TinyCAD runs integrated ngspice simulations locally: WebAssembly in the browser
+and a bundled native engine in Electron. Simulation sheets, instruments and
+results live in the drawing. See the [technical reference](docs/README.md) for
+engine architecture, simulation workflows, file formats, libraries and editor tools.
 
 ## Installation
 

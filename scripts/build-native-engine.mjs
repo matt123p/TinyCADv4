@@ -18,7 +18,7 @@ if (process.platform === 'win32') {
   );
   if (!toolchain)
     throw new Error(
-      'Install MSYS2 UCRT64 (x64) or CLANGARM64 (ARM64), or set MSYS2_ROOT. See docs/12-todo-and-platform-handoff.md.',
+      'Install MSYS2 UCRT64 (x64) or CLANGARM64 (ARM64), or set MSYS2_ROOT.',
     );
   if (!['x64', 'arm64'].includes(process.arch))
     throw new Error(`Unsupported Windows architecture: ${process.arch}`);
@@ -29,7 +29,7 @@ if (process.platform === 'win32') {
   );
   if (!fs.existsSync(compiler))
     throw new Error(
-      `Missing native compiler: ${compiler}. Install the packages listed in docs/12-todo-and-platform-handoff.md.`,
+      `Missing native compiler: ${compiler}. Install the matching MSYS2 UCRT64 or CLANGARM64 compiler toolchain.`,
     );
   command = path.join(toolchain, 'usr/bin/bash.exe');
   env.MSYSTEM = arm ? 'CLANGARM64' : 'UCRT64';

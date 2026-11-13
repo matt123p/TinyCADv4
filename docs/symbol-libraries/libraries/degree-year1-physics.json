@@ -4,7 +4,7 @@
   "manifest_kind": "library",
   "library_id": "degree-year1-physics",
   "title": "First-year physics degree — representative electronic-circuit strand",
-  "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+  "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
   "handoff": {
     "date": "2026-11-10",
     "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -257,7 +257,7 @@
       "syllabus_reference": "P-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Solve a multi-loop network analytically, then compare signed currents and node voltages with the solver. Identify which discrepancies are numerical and which indicate a modelling or sign error.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -271,7 +271,7 @@
       "syllabus_reference": "P-CIR, P-LAB",
       "catalogue_support": "Both",
       "catalogue_description": "Compare a measured source model with an ideal source while varying the load. Fit an equivalent source resistance from exported terminal readings.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "rheostat"
       ],
@@ -285,7 +285,7 @@
       "syllabus_reference": "P-LAB",
       "catalogue_support": "Both",
       "catalogue_description": "Connect a finite-resistance meter to a high-resistance divider. Estimate the expected loading error before running, then compare with a physical meter.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "potentiometer"
       ],
@@ -299,7 +299,7 @@
       "syllabus_reference": "P-LAB",
       "catalogue_support": "Both",
       "catalogue_description": "Repeat a low-resistance current measurement with several declared meter burdens. Quantify how inserting the instrument changes the circuit.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [],
       "existing_tool_ids": [
         "multimeter"
@@ -311,7 +311,7 @@
       "syllabus_reference": "P-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Compare charging responses of series/parallel capacitor networks and calculate stored energy. Infer effective C using a stated method rather than a nonexistent virtual capacitance-meter range.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "capacitor",
         "capacitor_polarised"
@@ -326,7 +326,7 @@
       "syllabus_reference": "P-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Capture both capacitor voltage and resistor current. Fit a decay externally, compare the time constant with component measurements and discuss instrument loading.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "capacitor",
         "capacitor_polarised",
@@ -342,7 +342,7 @@
       "syllabus_reference": "P-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Apply a step to a resistive-inductive circuit, include coil resistance and compare fitted time constant with the model prediction. A lumped inductor does not model the magnetic geometry.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "inductor"
       ],
@@ -356,7 +356,7 @@
       "syllabus_reference": "P-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Change R and compare oscillatory and non-oscillatory responses. Extract a decay rate and oscillation period from an adequately sampled transient.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -371,7 +371,7 @@
       "syllabus_reference": "P-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Sweep RC and RL circuits, measure voltage/current phase and compare with phasor calculations. State the reference direction and phase convention.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -386,7 +386,7 @@
       "syllabus_reference": "P-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Sweep an RLC circuit, measure response and bandwidth, then compare the inferred resonance with the transient experiment. Include generator output impedance.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -401,7 +401,7 @@
       "syllabus_reference": "P-CIR",
       "catalogue_support": "Both",
       "catalogue_description": "Average instantaneous load power and compare it with RMS-based apparent power. Calculate power factor and distinguish energy storage from dissipation.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor"
@@ -416,7 +416,7 @@
       "syllabus_reference": "P-LAB",
       "catalogue_support": "Both",
       "catalogue_description": "Compare graticule/cursor estimates with numerical readings as timebase and capture step change. Record the acquisition settings and avoid treating display interpolation as additional samples.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "bnc"
       ],
@@ -433,7 +433,7 @@
       "syllabus_reference": "P-LAB",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Bias a prepared BJT circuit, verify its DC state and compare small/large signal behaviour. Compare with a real circuit using an identified device.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "bjt_npn",
         "capacitor",
@@ -452,7 +452,7 @@
       "syllabus_reference": "P-LAB",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Test a simple amplifier at several gains and input amplitudes. Compare an idealised prediction with a rail-limited, frequency-dependent model and physical results.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -469,7 +469,7 @@
       "syllabus_reference": "P-LAB",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Apply a slow input and a reference to a comparator, then check the resulting logic levels. The model must represent the required output limits.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "comparator",
         "gate_buffer",
@@ -483,7 +483,7 @@
       "syllabus_reference": "P-LAB",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Prepare a small network, predict its truth table and exercise every combination. This is a proposed workshop exercise, not a claim that a particular gate exercise is allocated by Warwick.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "gate_and",
         "gate_or",
@@ -500,7 +500,7 @@
       "syllabus_reference": "P-PROJ",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Enter measured sensor voltage/resistance data and compare interface output for different loading. The physical calibration is obtained independently, not generated by fitting the same simulation.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "ntc",
         "ldr",
@@ -517,7 +517,7 @@
       "syllabus_reference": "P-LAB",
       "catalogue_support": "Both",
       "catalogue_description": "Compare nominal and measured component values, then use bounded sweeps or tolerance studies. Keep manufacturing tolerances, instrument uncertainty and repeated-measurement scatter separate in the analysis.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "resistor",
         "capacitor"
@@ -530,7 +530,7 @@
       "syllabus_reference": "P-LAB, P-PROJ",
       "catalogue_support": "Diagram",
       "catalogue_description": "Draw sensor, conditioning stage, recorder/controller and references. Annotate supply and test connections. Firmware, physical data acquisition and weather-station operation need other tools.",
-      "source_document": "docs/24-first-year-degree-physics-electronics-experiments.md",
+      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
       "experiment_symbol_ids": [
         "temperature_sensor",
         "light_sensor",

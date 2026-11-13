@@ -4,13 +4,13 @@
 two-channel oscilloscope, multimeter and current-limited bench supply, plus
 seeded tolerances and saved bench-voltage conditions. Select an instrument for
 its bottom-panel controls; Electron scopes/meters can pop out independently.
-See [the laboratory guide](../../docs/16-virtual-laboratory-and-p1-analysis.md).
+See [the laboratory guide](../../docs/simulation.md#virtual-laboratory).
 
 Each example includes saved Circuit Explorer measurements, a nominal pass/fail requirement,
 an R1 tuning control and a five-value resistance sweep definition. Use the right-hand
 chart panel's **Measurements**, **Tune / sweep**, **Requirements** and **DC overlay** tabs.
 The RC low-pass sweep produces gain overlays, cutoff tables and cutoff-versus-resistance
-plots while preserving the saved component value. See [Circuit Explorer](../../docs/15-circuit-explorer.md).
+plots while preserving the saved component value. See [Circuit Explorer](../../docs/simulation.md#circuit-explorer).
 
 Open a drawing using TinyCAD's normal **File → Open** command, select its
 Simulation sheet and choose **Run**. These files contain the circuit, embedded
@@ -46,7 +46,7 @@ part. Use **SPICE → Insert Probe** to place a voltage probe, then select it to
 see its result in the bottom panel after running. Differential and series-current
 probes are also available. **SPICE → Insert Source** creates an editable source
 with a waveform preview; **Insert Ground** places node `0`. See the
-[controls guide](../../docs/14-spice-controls-and-charts.md).
+[controls guide](../../docs/simulation.md#sources-probes-and-charts).
 
 Changing a value makes previous results out of date. Run again to obtain a new
 acquisition; the previous one remains in history. Save preserves the drawing and
