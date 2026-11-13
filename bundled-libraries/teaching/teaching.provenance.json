@@ -369,7 +369,7 @@
       "candidateId": "spice:npn",
       "nameId": 22,
       "symbolId": 22,
-      "xmlSha256": "9a4800d4f826d0e62d40473f7a2ed476fa44dfe8b00f6c563167cf699589e613",
+      "xmlSha256": "9e69df228fdf1049c705f5c0b35a70133cac986a64b7fede33c070ae9dd215dc",
       "source": {
         "candidateId": "spice:npn"
       },
@@ -387,7 +387,7 @@
       "candidateId": "spice:pnp",
       "nameId": 23,
       "symbolId": 23,
-      "xmlSha256": "467e05ce34cb2b2a5e93dbc15842c8264d13ad111699c9ccd32ae8001fbc578b",
+      "xmlSha256": "21cfdb85e12be5c0c2940023383ff3bc263368b22c5100264e116f98ec5c743c",
       "source": {
         "candidateId": "spice:pnp"
       },
@@ -405,7 +405,7 @@
       "candidateId": "derived:darlington_npn",
       "nameId": 24,
       "symbolId": 24,
-      "xmlSha256": "613079b4d7cca1f479b357a71f558ee0a988c69c323b018ed4c4ce472c6e8259",
+      "xmlSha256": "b7de45e9547b0ffcccf39728c567cb723da8ac00edda3c38592fd3b76916114f",
       "source": {
         "candidateId": "derived:darlington_npn"
       },
@@ -423,7 +423,7 @@
       "candidateId": "derived:darlington_pnp",
       "nameId": 25,
       "symbolId": 25,
-      "xmlSha256": "450eacd01923ba5bdaa0b58f1eea79f6b88e053de040a60260c5392186e5dd13",
+      "xmlSha256": "257f54db0d9ea46500c539233977fd7fa6b837496175ea7cdf4b12d7375d8881",
       "source": {
         "candidateId": "derived:darlington_pnp"
       },

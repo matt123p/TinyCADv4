@@ -6,7 +6,9 @@
 
 Each entry has a stable unique `id`, display `name`, relative `path` and optional `description`. Paths use forward slashes and stay inside `bundled-libraries/`. Keep IDs stable so saved selections survive updates. Directory paths locate files; the chooser displays a flat symbol list.
 
-The **Standard Libraries** selector loads one library at a time. Only the catalogue loads initially; unselected libraries are not downloaded or parsed. Choosing another library releases the previous one. The selection persists separately from personal library configuration. Failed loads offer Retry and allow a different selection. Standard libraries support preview, search, placement and replacement; personal libraries retain their editing controls.
+Library source tabs appear as **Standard**, **Online**, then **My Libraries**. New users start on Standard; the last selected source is remembered locally for subsequent sessions.
+
+The **Standard Libraries** selector loads one library at a time. Only the catalogue loads initially; unselected libraries are not downloaded or parsed. Choosing another library releases the previous one. The selection persists separately from personal library configuration. Failed loads offer Retry and allow a different selection. Standard libraries support preview, search, placement and replacement; personal libraries retain their editing controls. The list gives symbol names the full row; selecting a symbol shows its description above the preview, with wrapping and scrolling for longer text. The library summary wraps without a line clamp.
 
 Packaged assets live under `dist/bundled-libraries/`. Browser deployment preserves that directory; desktop reads packaged resources through restricted IPC. [package-libraries.mjs](../scripts/package-libraries.mjs) validates the catalogue and referenced files. Tests: `npm run test:libraries`.
 
@@ -58,9 +60,11 @@ Regression commands are `test:spice`, `test:digital`, `test:functional`, `test:s
 
 ## Bundled examples
 
-[bundled-examples/config.json](../bundled-examples/config.json) uses [bundled-examples.schema.json](../schemas/bundled-examples.schema.json). The checked-in catalogue is empty; standalone simulation fixtures are separately retained in [examples/simulation](../examples/simulation/README.md).
+[bundled-examples/config.json](../bundled-examples/config.json) is the base catalogue and currently has no groups. The bundled SPICE and XSPICE examples are defined in [tutorials/catalog.json](../tutorials/catalog.json), with drawings, descriptions and previews under [tutorials](../tutorials/README.md). The packaging script merges both catalogues into `dist/bundled-examples/config.json` and copies tutorial resources under `dist/bundled-examples/tutorials/`. Both catalogues use [bundled-examples.schema.json](../schemas/bundled-examples.schema.json).
 
-Groups require unique `id`, `title`, `preview`, `examples` and exactly one of inline `description` or UTF-8 `descriptionPath`. Drawing entries add `path` and an ID unique within the group. Paths stay under `bundled-examples/`; previews are supplied images. Catalogue `assets` lists additional description images. Relative images resolve beside the Markdown file, or from the catalogue root for inline text.
+Separate simulation development fixtures remain in [examples/simulation](../examples/simulation/README.md); Electron also carries those under `resources/examples/simulation/`. They are distinct from the tutorial catalogue shown by **Open Example**.
+
+Groups require unique `id`, `title`, `preview`, `examples` and exactly one of inline `description` or UTF-8 `descriptionPath`. Drawing entries add `path` and an ID unique within the group. Paths stay under their source catalogue directory (`bundled-examples/` or `tutorials/`); previews are supplied images. Catalogue `assets` lists additional description images. Relative images resolve beside the Markdown file, or from the source catalogue root for inline text.
 
 **Open Example** loads descriptions/previews on demand and opens a drawing only when requested. Markdown descriptions support links/images/tables and sanitized HTML. An example opens as a new editable drawing with no association to its bundled source. Save creates a user copy. Unsaved-change cancellation preserves the original document; a successful open clears its undo history.
 

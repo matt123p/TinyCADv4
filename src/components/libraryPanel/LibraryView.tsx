@@ -114,19 +114,6 @@ const useStyles = makeStyles({
     whiteSpace: 'nowrap',
     fontWeight: 500,
   },
-  symbolDescription: {
-    marginLeft: '8px',
-    color: tokens.colorNeutralForeground4,
-    fontSize: '11px',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    flex: 1,
-  },
-  symbolDescriptionActive: {
-    color: tokens.colorNeutralForegroundOnBrand,
-    opacity: 0.8,
-  },
   actionButtons: {
     display: 'flex',
     gap: '2px',
@@ -343,12 +330,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
               onDoubleClick={() => props.onSelected(props.lib, n)}
             >
               <DocumentRegular className={styles.symbolIcon} />
-              <span className={styles.symbolName}>{n.Name}</span>
-              {n.Description?.length > 0 && (
-                <span className={mergeClasses(styles.symbolDescription, isActive && styles.symbolDescriptionActive)}>
-                  {n.Description}
-                </span>
-              )}
+              <span className={styles.symbolName} title={n.Name}>{n.Name}</span>
             </li>
           );
         })}

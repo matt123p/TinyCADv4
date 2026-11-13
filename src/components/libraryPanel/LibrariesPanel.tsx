@@ -50,6 +50,11 @@ import {
   loadSymbolSortMode,
   saveSymbolSortMode,
 } from './sorting';
+import {
+  LibrarySource,
+  loadLibrarySource,
+  saveLibrarySource,
+} from './sourcePreference';
 
 const ROOT_LIBRARY_FOLDER_ID = '__root__';
 
@@ -256,6 +261,24 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground1,
     padding: '8px',
   },
+  symbolDetails: {
+    maxHeight: '112px',
+    overflowY: 'auto',
+    overflowWrap: 'anywhere',
+    marginBottom: '8px',
+  },
+  symbolPreviewName: {
+    fontSize: tokens.fontSizeBase300,
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground1,
+  },
+  symbolDescription: {
+    margin: '4px 0 0',
+    fontSize: tokens.fontSizeBase200,
+    lineHeight: tokens.lineHeightBase200,
+    color: tokens.colorNeutralForeground2,
+    whiteSpace: 'pre-wrap',
+  },
   symbolPreviewInner: {
     border: `1px solid ${tokens.colorNeutralStroke1}`,
     borderRadius: '6px',
@@ -289,8 +312,6 @@ interface LibrariesPanelProps {
   inputRef: any;
   toggleSidePanel?: () => void;
 }
-
-type LibrarySource = 'online' | 'standard' | 'personal';
 
 interface LibrariesPanelState {
   findFilter: string;
@@ -368,7 +389,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
   const searchExpansionSnapshotRef = useRef<SearchExpansionSnapshot | null>(null);
   const isElectron = process.env.TARGET_SYSTEM === 'electron';
   const canUseLibraryFolders = isElectron;
-  const [state, setState] = useState<LibrariesPanelState>({
+  const [state, setState] = useState<LibrariesPanelState>(() => ({
     findFilter: '',
     displaySymbol: null,
     displayName: null,
@@ -376,14 +397,17 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     selectedId: null,
     selectedFolderId: ROOT_LIBRARY_FOLDER_ID,
     hoveredFolderId: null,
-    source: 'online',
+    source: loadLibrarySource(),
     searchResult: null,
     expandedFolders: {},
     expandedLibraries: {},
     dragOverFolderId: null,
     draggedFolderId: null,
     sortMode: loadSymbolSortMode(),
-  });
+  }));
+  React.useEffect(() => {
+    saveLibrarySource(state.source);
+  }, [state.source]);
   React.useEffect(() => {
     const navigation = props.standardLibraryNavigation;
     if (!navigation) return;
@@ -930,13 +954,13 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
           selectTabOnFocus
           aria-label={t('library.libraries')} selectedValue={state.source}
           onTabSelect={(_, data) => handleSourceChange(data.value as LibrarySource)}>
-          <Tab className={styles.sourceTab} icon={<GlobeRegular />} value="online" id={`${sourceTabsId}-online`}
-            aria-controls={`${sourceTabsId}-panel`}>
-            {t('library.online')}
-          </Tab>
           <Tab className={styles.sourceTab} icon={<LibraryRegular />} value="standard" id={`${sourceTabsId}-standard`}
             aria-controls={`${sourceTabsId}-panel`}>
             {t('library.bundledTab')}
+          </Tab>
+          <Tab className={styles.sourceTab} icon={<GlobeRegular />} value="online" id={`${sourceTabsId}-online`}
+            aria-controls={`${sourceTabsId}-panel`}>
+            {t('library.online')}
           </Tab>
           <Tab className={styles.sourceTab} icon={<FolderRegular />} value="personal" id={`${sourceTabsId}-personal`}
             aria-controls={`${sourceTabsId}-panel`}>
@@ -1316,6 +1340,14 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
       </div>
 
       <div className={styles.symbolPreview}>
+        {state.displayName && (
+          <div className={styles.symbolDetails} tabIndex={0}>
+            <div className={styles.symbolPreviewName}>{state.displayName.Name}</div>
+            {state.displayName.Description && (
+              <p className={styles.symbolDescription}>{state.displayName.Description}</p>
+            )}
+          </div>
+        )}
         <div className={styles.symbolPreviewInner}>
           <SymbolView
             width={160}

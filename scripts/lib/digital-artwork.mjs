@@ -330,6 +330,8 @@ export async function digitalArtworkSnapshot({ root, spice, requirements }) {
   for (const { r, edge } of descriptors) {
     const id = 'derived:' + r.id + (edge === 'falling' ? '-falling' : ''),
       name = r.name + (edge ? ' (' + edge + ' edge)' : '');
+    const description = recipe.descriptions[r.id];
+    if (!description) throw new Error(`Missing digital description for ${r.id}`);
     const built = buildSymbol(template, r, recipe, standard, edge);
     const candidate = {
       id,
@@ -350,9 +352,7 @@ export async function digitalArtworkSnapshot({ root, spice, requirements }) {
         {
           nameId: records.length + 1,
           name,
-          description:
-            'Single logical unit; hidden VCC/VSS power pins. ' +
-            r.drawing_description,
+          description: description.replaceAll('{edge}', edge || ''),
           author: recipe.reference.source.author,
         },
       ],

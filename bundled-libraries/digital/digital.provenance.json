@@ -24,7 +24,7 @@
     "id": "spice:ua741",
     "xmlSha256": "9ce14ee75dde09251e619ac6eb8c4e883fb3377a82915b89b0ae1644f0347b7c"
   },
-  "recipeSha256": "d115b8d07a253ad328dab5dfe858647af957676604dfc146d38aedeeb6d29905",
+  "recipeSha256": "ce77b9881a56d8af9026b1614d4023ce6004a1a6c2d8d4ef17d0b78cd57a479a",
   "notes": "Original configurable educational SPICE models are embedded. Clocked symbols include both edge variants; physical footprints and manufacturer timing remain separate.",
   "entries": [
     {

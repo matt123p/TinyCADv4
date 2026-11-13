@@ -11,7 +11,7 @@
       "id": "digital",
       "name": "Digital logic",
       "path": "digital/digital.tclib",
-      "description": "Single-unit digital gates, counters and storage with configurable portable SPICE models, native inversion/clock markers and hidden VCC/VSS power pins."
+      "description": "Gates, counters and storage with educational SPICE models. Wire supplies to VCC and VSS; connect VSS to ground when required."
     },
     {
       "id": "functional",
