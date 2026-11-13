@@ -42,3 +42,5 @@ server.bundle.js
 .DS_Store
 .tmp/
 build/
+
+drawing-server.bundle.js

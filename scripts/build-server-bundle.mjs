@@ -30,13 +30,19 @@ function fontMetricsPlugin() {
   return {
     name: 'font-metrics-cjs',
     setup(build) {
-      build.onLoad({ filter: /src[\\/]util[\\/]font_metrics[\\/].+\.js$/ }, async (args) => {
-        const source = await fs.readFile(args.path, 'utf8');
-        return {
-          contents: source.replace(/^module\.exports\s*=\s*/m, 'export default '),
-          loader: 'js',
-        };
-      });
+      build.onLoad(
+        { filter: /src[\\/]util[\\/]font_metrics[\\/].+\.js$/ },
+        async (args) => {
+          const source = await fs.readFile(args.path, 'utf8');
+          return {
+            contents: source.replace(
+              /^module\.exports\s*=\s*/m,
+              'export default ',
+            ),
+            loader: 'js',
+          };
+        },
+      );
     },
   };
 }
@@ -69,54 +75,86 @@ const aliases = {
   '../../model/tclib': path.join(rendererRoot, 'tclib-shim.ts'),
 };
 
-const result = await esbuild.build({
-  absWorkingDir: workspaceRoot,
-  entryPoints: [path.join(rendererRoot, 'index.ts')],
-  bundle: true,
-  outfile: path.join(workspaceRoot, 'server.bundle.js'),
-  format: 'iife',
-  platform: 'browser',
-  mainFields: ['browser', 'module', 'main'],
-  target: ['es2017'],
-  jsx: 'transform',
-  treeShaking: true,
-  minify: true,
-  sourcemap: false,
-  metafile: true,
-  define: {
-    'process.env.NODE_ENV': '"production"',
-  },
-  plugins: [exactAliasPlugin(aliases), fontMetricsPlugin()],
-});
+export async function buildServerBundle({
+  entry = 'index.ts',
+  output = 'server.bundle.js',
+  drawing = false,
+} = {}) {
+  const result = await esbuild.build({
+    absWorkingDir: workspaceRoot,
+    entryPoints: [path.join(rendererRoot, entry)],
+    bundle: true,
+    outfile: path.join(workspaceRoot, output),
+    format: 'iife',
+    platform: 'browser',
+    mainFields: ['browser', 'module', 'main'],
+    target: ['es2017'],
+    jsx: 'transform',
+    treeShaking: true,
+    minify: true,
+    sourcemap: false,
+    metafile: true,
+    define: {
+      'process.env.NODE_ENV': '"production"',
+    },
+    plugins: [
+      exactAliasPlugin({
+        ...aliases,
+        ...(drawing
+          ? {
+              './updateView': path.join(rendererRoot, 'updateViewShim.ts'),
+              '../state/dispatcher/AppDispatcher': path.join(
+                rendererRoot,
+                'dispatcher-shim.ts',
+              ),
+              '../util/global_id': path.join(rendererRoot, 'serverGlobalId.ts'),
+              '../../util/global_id': path.join(
+                rendererRoot,
+                'serverGlobalId.ts',
+              ),
+            }
+          : {}),
+      }),
+      fontMetricsPlugin(),
+    ],
+  });
 
-const inputPaths = Object.keys(result.metafile.inputs);
-const forbiddenInputs = [
-  'sql.js',
-  'src/io/tclib.ts',
-  'src/io/files.tsx',
-  'src/i18n/index.ts',
-  'src/i18n/languages.ts',
-  'src/manipulators/updateView.ts',
-  'src/components/svg/Drawing.tsx',
-  'src/components/svg/Sheet.tsx',
-  'common-xml-features-browser.js',
-  'renderer/react-global-shim.ts',
-  'node_modules/react-dom/index.js',
-  'node_modules/react-dom/client.js',
-  'node_modules/react-dom/server.browser.js',
-  'react-dom-server.browser.production.min.js',
-  'react-dom-server.node',
-  'server.node.js',
-];
+  const inputPaths = Object.keys(result.metafile.inputs);
+  const forbiddenInputs = [
+    'src/state/dispatcher/AppDispatcher.ts',
+    'src/startup.ts',
+    'sql.js',
+    'src/io/tclib.ts',
+    'src/io/files.tsx',
+    'src/i18n/index.ts',
+    'src/i18n/languages.ts',
+    'src/manipulators/updateView.ts',
+    'src/components/svg/Drawing.tsx',
+    'src/components/svg/Sheet.tsx',
+    'common-xml-features-browser.js',
+    'renderer/react-global-shim.ts',
+    'node_modules/react-dom/index.js',
+    'node_modules/react-dom/client.js',
+    'node_modules/react-dom/server.browser.js',
+    'react-dom-server.browser.production.min.js',
+    'react-dom-server.node',
+    'server.node.js',
+  ];
 
-const foundForbidden = forbiddenInputs.filter((needle) =>
-  inputPaths.some((inputPath) => inputPath.includes(needle)),
-);
-
-if (foundForbidden.length > 0) {
-  throw new Error(
-    `server-bundle pulled forbidden inputs: ${foundForbidden.join(', ')}`,
+  const foundForbidden = forbiddenInputs.filter((needle) =>
+    inputPaths.some((inputPath) => inputPath.includes(needle)),
   );
+
+  if (foundForbidden.length > 0) {
+    throw new Error(
+      `server-bundle pulled forbidden inputs: ${foundForbidden.join(', ')}`,
+    );
+  }
+
+  console.log(`${output} built with ${inputPaths.length} bundled inputs.`);
+  return result;
 }
 
-console.log(`server.bundle.js built with ${inputPaths.length} bundled inputs.`);
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+  await buildServerBundle();
+}

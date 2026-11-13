@@ -26,7 +26,8 @@ export class XMLBuilder {
         '>',
       'text/xml',
     );
-    this.insert = this.xmlDoc.childNodes[0];
+    // A headless DOM may retain the XML declaration as a processing instruction.
+    this.insert = this.xmlDoc.documentElement;
   }
 
   fromXML(xml: Document) {
@@ -60,14 +61,14 @@ export class XMLBuilder {
       for (let a in attributes) {
         if (attributes.hasOwnProperty(a)) {
           const typ = this.xmlDoc.createAttribute(a);
-          typ.value = attributes[a];
+          typ.value = String(attributes[a]);
           node.attributes.setNamedItem(typ);
         }
       }
     }
 
-    if (s) {
-      node.appendChild(this.xmlDoc.createTextNode(s));
+    if (s !== undefined && s !== null) {
+      node.appendChild(this.xmlDoc.createTextNode(String(s)));
     }
 
     this.insert.appendChild(node);
