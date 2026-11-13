@@ -8,13 +8,13 @@ import {
   ChevronDownRegular,
   EditRegular,
   InfoRegular,
-  DocumentRegular,
   WarningRegular,
 } from '@fluentui/react-icons';
 import {
   actionSelectDialog,
 } from '../../state/dispatcher/AppDispatcher';
 import { SymbolSortMode, sortEntriesByName } from './sorting';
+import SymbolView from './SymbolView';
 
 const useStyles = makeStyles({
   treeItemGroup: {
@@ -58,7 +58,8 @@ const useStyles = makeStyles({
   },
   symbolItem: {
     display: 'flex',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'stretch',
     padding: '6px 12px 6px 36px',
     cursor: 'pointer',
     fontSize: '12px',
@@ -101,11 +102,17 @@ const useStyles = makeStyles({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
-  symbolIcon: {
-    width: '14px',
-    height: '14px',
-    marginRight: '8px',
-    flexShrink: 0,
+  symbolPreview: {
+    height: '100px',
+    width: '100%',
+    marginTop: '6px',
+    overflow: 'hidden',
+    backgroundColor: tokens.colorNeutralBackground1,
+    '& .symbol-svg': {
+      display: 'block',
+      width: '100%',
+      height: '100%',
+    },
   },
   symbolName: {
     flex: 1,
@@ -325,12 +332,20 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
                 index === names.length - 1 && styles.symbolItemLast,
               )}
               role="button"
-              aria-pressed="false"
+              aria-pressed={isActive}
               onClick={() => props.onSelect(props.lib, n)}
               onDoubleClick={() => props.onSelected(props.lib, n)}
             >
-              <DocumentRegular className={styles.symbolIcon} />
               <span className={styles.symbolName} title={n.Name}>{n.Name}</span>
+              <div className={styles.symbolPreview}>
+                <SymbolView
+                  width={300}
+                  height={100}
+                  symbol={props.lib.symbols.find((symbol) => symbol.SymbolId == n.SymbolID)}
+                  name={n}
+                  searchSymbol={null}
+                />
+              </div>
             </li>
           );
         })}

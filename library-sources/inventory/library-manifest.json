@@ -27,7 +27,7 @@
       "manifest_kind": "library",
       "library_id": "gcse-physics-aqa",
       "title": "GCSE Physics — AQA 8463",
-      "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
       "handoff": {
         "date": "2026-11-10",
         "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -245,7 +245,7 @@
           "syllabus_reference": "RP3; 4.2.1.3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw the wire, test section, ammeter and voltmeter. Represent each chosen length by a resistance supplied from measurements or a declared wire model. Export V and I, calculate R, and plot R against length externally. Simulation cannot measure wire length or discover its material properties.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "resistance_wire"
           ],
@@ -257,7 +257,7 @@
           "syllabus_reference": "RP3; 4.2.1.3",
           "catalogue_support": "Both",
           "catalogue_description": "Compare one, two and three resistors at a fixed supply. Record total current and calculate the equivalent resistance. Use separate saved circuits or a component-value study.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -269,7 +269,7 @@
           "syllabus_reference": "RP3; 4.2.1.3",
           "catalogue_support": "Both",
           "catalogue_description": "Add branches and compare supply current with the individual branch currents. Show how adding a branch changes the effective load. Keep the numerical demand appropriate to GCSE; AQA does not require the parallel-resistance calculation itself.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -281,7 +281,7 @@
           "syllabus_reference": "RP4; 4.2.1.4",
           "catalogue_support": "Both",
           "catalogue_description": "Draw the supply, current-limiting control, ammeter in series and voltmeter across the test resistor. Sweep supply voltage through positive and negative values. Export paired V/I readings for a characteristic graph and a resistance estimate.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -293,7 +293,7 @@
           "syllabus_reference": "RP4; 4.2.1.4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw the same measurement circuit with a lamp. Compare measured data with an electrothermal or empirical lamp model. A fixed resistor with a lamp symbol will not reproduce the characteristic; a diagram and real laboratory measurements remain useful without that model.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "lamp"
           ],
@@ -305,7 +305,7 @@
           "syllabus_reference": "RP4; 4.2.1.4",
           "catalogue_support": "Both",
           "catalogue_description": "Use a diode model and series limiting resistor. Sweep the supply in both directions and measure voltage across the diode separately from supply voltage. Compare forward conduction and reverse current; use a graph scale that makes the intended feature visible.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "diode"
           ],
@@ -317,7 +317,7 @@
           "syllabus_reference": "4.2.1.1, 4.2.1.3",
           "catalogue_support": "Both",
           "catalogue_description": "Prepare a resistor test circuit with correctly positioned instruments. Compare a resistance inferred from V/I with a resistance-mode reading on an unpowered circuit. Practise V Ω–COM for voltage/resistance and A–COM for current.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [],
           "existing_tool_ids": [
             "multimeter",
@@ -332,7 +332,7 @@
           "syllabus_reference": "4.2.1.2; 4.2.2",
           "catalogue_support": "Both",
           "catalogue_description": "Put current probes before and after different components. Compare readings while changing supply voltage or resistance. Use a short transient capture to connect a steady current with charge transferred over a chosen time.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [],
           "existing_tool_ids": [
             "current_probe",
@@ -345,7 +345,7 @@
           "syllabus_reference": "4.2.2",
           "catalogue_support": "Both",
           "catalogue_description": "Choose unequal resistors, measure each voltage and compare their sum with the supply. Swap the resistors and predict the new readings before running.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -357,7 +357,7 @@
           "syllabus_reference": "4.2.2",
           "catalogue_support": "Both",
           "catalogue_description": "Use two unequal branch resistors. Measure both branch voltages, both currents and the supply current. Repeat with one branch open.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "resistor",
             "switch_spst"
@@ -370,7 +370,7 @@
           "syllabus_reference": "4.2.1.4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw the measurement circuit and annotate the external temperature measurement. Enter measured R(T) values as separate runs, or supply a calibrated model. Plot resistance against temperature externally. A resistor-value sweep alone is not a temperature experiment.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "ntc"
           ],
@@ -382,7 +382,7 @@
           "syllabus_reference": "4.2.1.4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw the LDR test circuit and label the controlled light conditions. Use measured resistance values for electrical predictions. TinyCAD does not model lamp distance, illumination or the LDR's optical response automatically.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "ldr"
           ],
@@ -394,7 +394,7 @@
           "syllabus_reference": "4.2.1.4, thermistor applications",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Combine a thermistor-equivalent resistance with a fixed resistor and measure the output as the entered resistance changes. Compare the two sensor positions. This is a possible circuit for exploring the application; potential-divider calculations and a transistor/comparator switching stage are extensions, not additional GCSE requirements.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "ntc",
             "potentiometer"
@@ -407,7 +407,7 @@
           "syllabus_reference": "4.2.1.4, LDR applications",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Repeat the sensor exercise with light/dark resistance values. Define whether the output should rise or fall as illumination decreases. A complete automatic lamp switch needs an additional switching model; changing resistance alone does not implement a switching threshold.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "ldr",
             "potentiometer"
@@ -420,7 +420,7 @@
           "syllabus_reference": "4.2.4.1–4.2.4.2",
           "catalogue_support": "Both",
           "catalogue_description": "Measure current and voltage for several resistor/supply combinations. Compare calculated power with a power trace; use a transient capture or a timed steady reading to calculate energy. This predicts electrical dissipation, not temperature rise or visible brightness.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -432,7 +432,7 @@
           "syllabus_reference": "4.2.3.1",
           "catalogue_support": "Both",
           "catalogue_description": "Compare a DC source with a low-voltage sine source on the scope. Identify polarity changes and repeat at different frequencies. This is an electronic demonstration of the distinction; it does not require a mains-voltage experiment.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "bnc"
           ],
@@ -449,7 +449,7 @@
           "syllabus_reference": "4.2.1.1, component symbols; 4.2.1.4, diode behaviour",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Use an LED-specific model to compare current for different series resistors and supply polarities. This is a syllabus-linked diode application, not a separately required LED practical. Electrical current can be predicted; brightness, colour and damage are not automatically simulated.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "led",
             "diode"
@@ -462,7 +462,7 @@
           "syllabus_reference": "4.2.1.1; AT7",
           "catalogue_support": "Diagram",
           "catalogue_description": "Draw a clear schematic from a photograph or bench arrangement, label meter connections and mark intended measurement points. Students can use it to construct or check the real experiment even when the lamp or sensor has no simulation model.",
-          "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa",
           "experiment_symbol_ids": [
             "lamp",
             "led",
@@ -1497,7 +1497,7 @@
       "manifest_kind": "library",
       "library_id": "a-level-physics-aqa",
       "title": "A-level Physics — AQA 7408, including optional Electronics",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "handoff": {
         "date": "2026-11-10",
         "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -1827,7 +1827,7 @@
           "syllabus_reference": "RP5; [3.5.1.3][electricity]",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw the wire test section and meters; annotate length and diameter measurements. Enter measured resistance values or a declared wire model. Use R versus length and the measured cross-sectional area to estimate resistivity externally. Simulation cannot supply independent evidence for the geometry or material law entered into it.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "resistance_wire"
           ],
@@ -1839,7 +1839,7 @@
           "syllabus_reference": "RP6; [3.5.1.6][electricity]",
           "catalogue_support": "Both",
           "catalogue_description": "Model a cell as an ideal voltage source with an explicit series resistor. Vary the load, collect terminal voltage and current, and fit V against I externally. Start with, for example, 1.5 V and 1 Ω; identify intercept and gradient. Do not confuse the bench supply's current limiting with a cell's internal resistance.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "cell",
             "resistor",
@@ -1853,7 +1853,7 @@
           "syllabus_reference": "RP9; [3.7.4.4][fields]",
           "catalogue_support": "Both",
           "catalogue_description": "Drive an RC circuit with a step and capture capacitor voltage and charging current. Vary R and C independently. Compare fitted or measured time constants and the time to reach a chosen fraction of the final voltage.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "capacitor",
             "capacitor_polarised",
@@ -1869,7 +1869,7 @@
           "syllabus_reference": "RP9; [3.7.4.4][fields]",
           "catalogue_support": "Both",
           "catalogue_description": "Capture decay after a known charging interval, using a suitable switch model or an explicitly stated source arrangement. Export the decay for a plot of ln(V) against time and obtain RC from its gradient. Include every discharge path, including meter resistance.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "capacitor",
             "capacitor_polarised",
@@ -1883,7 +1883,7 @@
           "syllabus_reference": "3.5.1.2",
           "catalogue_support": "Both",
           "catalogue_description": "Sweep the source, collect component V and I and examine the gradient. Repeat with different resistance values; distinguish a V-against-I graph from an I-against-V graph.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -1895,7 +1895,7 @@
           "syllabus_reference": "3.5.1.2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare a measured characteristic with a validated lamp model. A constant resistance does not represent filament heating; without an electrothermal or empirical model, use TinyCAD for the experimental diagram.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "lamp"
           ],
@@ -1907,7 +1907,7 @@
           "syllabus_reference": "3.5.1.2",
           "catalogue_support": "Both",
           "catalogue_description": "Include current limiting, sweep both polarities and examine the diode's own voltage. Compare different valid diode models without assuming a universal fixed forward drop.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "diode"
           ],
@@ -1919,7 +1919,7 @@
           "syllabus_reference": "3.5.1.3; 3.5.1.5",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Enter measured temperature/resistance pairs or a calibrated sensor model. Compare output sensitivity over a chosen range. A generic resistor sweep explores circuit response but does not establish the temperature calibration.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "ntc",
             "potentiometer"
@@ -1932,7 +1932,7 @@
           "syllabus_reference": "3.5.1.4",
           "catalogue_support": "Both",
           "catalogue_description": "Measure signed currents at a junction and voltage changes around a loop. Predict the effect of an extra branch or changed resistor, then compare numerical residuals.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -1946,7 +1946,7 @@
           "syllabus_reference": "3.5.1.4",
           "catalogue_support": "Both",
           "catalogue_description": "Include an internal resistance for each source. Compare terminal voltage and load current for the same load; avoid modelling parallel cells as contradictory ideal voltage sources.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "cell",
             "battery",
@@ -1961,7 +1961,7 @@
           "syllabus_reference": "3.5.1.5",
           "catalogue_support": "Both",
           "catalogue_description": "Use two resistors, or two resistor segments representing a potentiometer. Vary the ratio and compare unloaded output with output connected to a finite load.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "potentiometer",
             "rheostat"
@@ -1974,7 +1974,7 @@
           "syllabus_reference": "3.5.1.5",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Substitute measured light/dark resistance values or a calibrated LDR model. Compare sensor positions and the resulting direction of output change. Illumination itself is external input data.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "ldr",
             "potentiometer"
@@ -1987,7 +1987,7 @@
           "syllabus_reference": "3.5.1.4; 3.5.1.6",
           "catalogue_support": "Both",
           "catalogue_description": "Measure delivered load power and power in an explicit source resistor. Vary the load and account for the electrical energy supplied. Physical cell heating and chemical behaviour need additional models.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "cell",
             "resistor"
@@ -2000,7 +2000,7 @@
           "syllabus_reference": "3.7.4.1",
           "catalogue_support": "Both",
           "catalogue_description": "Integrate capacitor current over a selected interval and compare the resulting charge change with its voltage change. Repeat with different C values. Calculate the quotient externally if needed.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "capacitor"
           ],
@@ -2015,7 +2015,7 @@
           "syllabus_reference": "3.7.4.2",
           "catalogue_support": "Diagram",
           "catalogue_description": "Draw the capacitor and its measurement connections; annotate independently measured geometry and dielectric. The current multimeter has no capacitance range, and the circuit solver does not determine capacitance from drawn plate dimensions. Entering an assumed C only tests subsequent circuit behaviour.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "capacitor_plates",
             "annotation"
@@ -2028,7 +2028,7 @@
           "syllabus_reference": "3.7.4.3",
           "catalogue_support": "Both",
           "catalogue_description": "Compare calculated stored energy with the integral of discharge-resistor power. State the integration interval and initial voltage. A simulated discharge into a resistor is an electrical energy balance, not a temperature measurement.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "capacitor",
             "capacitor_polarised",
@@ -2042,7 +2042,7 @@
           "syllabus_reference": "3.7.5.5; AT h",
           "catalogue_support": "Both",
           "catalogue_description": "Vary source amplitude, offset and frequency. Read volts/div and time/div, then compare cursor or graticule estimates with reported period and frequency. Use multiple cycles when estimating a period.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "bnc"
           ],
@@ -2059,7 +2059,7 @@
           "syllabus_reference": "3.7.5.5",
           "catalogue_support": "Both",
           "catalogue_description": "Capture complete cycles and compare a scope's voltage readout, AC meter reading and calculated RMS. Use a zero-offset sine initially; distinguish AC-only RMS from total RMS when adding an offset.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "bnc"
           ],
@@ -2076,7 +2076,7 @@
           "syllabus_reference": "3.5.1.2; 3.5.1.5; practical skills",
           "catalogue_support": "Both",
           "catalogue_description": "Compare a high-resistance divider with and without finite voltmeter input resistance. Compare current readings for different meter burdens. This is an evaluation exercise linked to the circuit topics, rather than another numbered required practical.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -2090,7 +2090,7 @@
           "syllabus_reference": "3.13.1.1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Use an N-channel enhancement device. Sweep gate voltage at several fixed drain conditions in separate runs, and measure drain current. Compare threshold estimates while keeping the model's limitations explicit.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "mosfet_n"
           ],
@@ -2104,7 +2104,7 @@
           "syllabus_reference": "3.13.1.1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Apply a pulse to the gate and compare gate, drain and load traces. Check the difference between an ideal switch assumption and a selected real device.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "mosfet_n"
           ],
@@ -2118,7 +2118,7 @@
           "syllabus_reference": "3.13.1.2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Sweep a limited supply through a series resistor, then test the reference with changed input and loading. Record diode voltage and current. Use a model containing the intended breakdown behaviour.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "zener"
           ],
@@ -2130,7 +2130,7 @@
           "syllabus_reference": "3.13.1.3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw the reverse-biased detector and readout. Use a calibrated photocurrent input to compare electrical response to steady and pulsed illumination. Wavelength response and optical intensity must come from external data/model parameters.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "photodiode",
             "behavioural_current",
@@ -2145,7 +2145,7 @@
           "syllabus_reference": "3.13.1.4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw sensor supply, output and load. Use an equivalent voltage/pulse source to test the receiving electronics. Magnetic field and motion are not generated by the circuit solver.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "hall_sensor"
           ],
@@ -2160,7 +2160,7 @@
           "syllabus_reference": "3.13.3.1",
           "catalogue_support": "Both",
           "catalogue_description": "Drive a parallel LC network through a stated source impedance. Sweep frequency, measure voltage gain and compare resonance with a calculated prediction. Change damping resistance and obtain bandwidth/Q. Use an energy-response or correctly squared voltage response for the syllabus's half-energy criterion.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor",
@@ -2177,7 +2177,7 @@
           "syllabus_reference": "3.13.3.2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare a varying sensor voltage with a reference. Observe the switching point and output limits. An unbounded ideal controlled source is not a realistic comparator; include suitable rail limiting or an amplifier model.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "comparator",
             "potentiometer"
@@ -2190,7 +2190,7 @@
           "syllabus_reference": "3.13.4.1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Choose two resistor ratios, apply a small sine and compare signed gain, phase and summing-node voltage. Repeat at larger input amplitude to expose saturation if the model supports it.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -2207,7 +2207,7 @@
           "syllabus_reference": "3.13.4.2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Repeat the gain measurement with a non-inverting configuration, then change the feedback ratio. Make supply rails and signal reference explicit in the diagram.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -2224,7 +2224,7 @@
           "syllabus_reference": "3.13.4.3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Apply two independently adjustable inputs through different resistors. Compare the measured output with a weighted sum, then investigate clipping with a suitable model.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -2242,7 +2242,7 @@
           "syllabus_reference": "3.13.4.3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare differential excitation with equal voltages on both inputs. Deliberately change one resistor to investigate imperfect common-mode rejection.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -2260,7 +2260,7 @@
           "syllabus_reference": "3.13.4.4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Run small-signal AC analysis at several closed-loop gains. Measure cutoff/bandwidth and compare gain–bandwidth products. A frequency-independent ideal amplifier cannot demonstrate this behaviour.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -2277,7 +2277,7 @@
           "syllabus_reference": "3.13.2.1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Inject a known perturbation into a signal, then compare a threshold stage's input and output. Use explicit sources and a bounded comparator/gate model; investigate where the noise becomes too large to recover the intended levels.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "comparator",
             "gate_buffer",
@@ -2294,7 +2294,7 @@
           "syllabus_reference": "3.13.2.1",
           "catalogue_support": "Diagram",
           "catalogue_description": "Draw an annotated sampler/ADC/encoding chain and identify where timing and voltage resolution enter. A working converter demonstration needs compatible mixed-signal models or external processing. Scope display sampling must not be described as an experiment on a modelled ADC.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "sampler",
             "adc4",
@@ -2311,7 +2311,7 @@
           "syllabus_reference": "3.13.5.1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw gates, set all input combinations and compare output voltages with a truth table. Include AND, NAND, OR, NOR, NOT and EOR. Supply valid gate models and logic-level assumptions.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "gate_and",
             "gate_or",
@@ -2328,7 +2328,7 @@
           "syllabus_reference": "3.13.5.1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw a proposed multi-gate network and test every input combination. Compare an alternative implementation of the same function. This can also be diagram-only work when models are unavailable.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "gate_and",
             "gate_or",
@@ -2345,7 +2345,7 @@
           "syllabus_reference": "3.13.5.2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw clock/reset connections and capture output sequences for each counter type. Test reset and, where applicable, counting direction. A prepared compatible counter model is required.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "counter_binary3_sync",
             "counter_bcd",
@@ -2361,7 +2361,7 @@
           "syllabus_reference": "3.13.5.2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Add reset-decoding logic to a counter and verify the sequence length. Use a sufficiently small time step to capture reset pulses and avoid assuming ideal zero-delay behaviour.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "counter_binary3_sync",
             "gate_and",
@@ -2381,7 +2381,7 @@
           "syllabus_reference": "3.13.5.3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Use a suitable oscillator model, such as a modelled timer circuit. Vary its timing R/C and measure period, pulse width and duty cycle. Feeding in a predefined pulse source only supplies a clock; it does not test an astable. A specific timer IC is not required by this syllabus.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "timer_555",
             "capacitor",
@@ -2398,7 +2398,7 @@
           "syllabus_reference": "3.13.6.1",
           "catalogue_support": "Diagram",
           "catalogue_description": "Draw and annotate source, processing, transmitter, channel and receiver blocks. Identify which interfaces carry electrical signals. This is a block-diagram teaching exercise, not an end-to-end communication simulation.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "temperature_sensor",
             "light_sensor",
@@ -2419,7 +2419,7 @@
           "syllabus_reference": "3.13.6.2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Represent a short wired connection by an explicitly justified R/C equivalent. Compare received pulses for different parameter sets. The model does not establish the behaviour of optical fibre or radio propagation.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "channel",
             "resistor",
@@ -2435,7 +2435,7 @@
           "syllabus_reference": "3.13.6.3",
           "catalogue_support": "Diagram",
           "catalogue_description": "Draw two source channels, timed switches and a receiver arrangement. Annotate time slots. Simulation needs switch/control models and a prepared timing sequence; it is not a built-in multiplexing instrument.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "tdm_switch",
             "controlled_switch"
@@ -2451,7 +2451,7 @@
           "syllabus_reference": "3.13.6.4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Supply a behavioural or compatible modulator model and compare carrier, message and modulated traces. Vary message amplitude/frequency. The proposed circuit implementation is optional; the syllabus does not require its details.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "am_modulator",
             "behavioural_voltage"
@@ -2467,7 +2467,7 @@
           "syllabus_reference": "3.13.6.4",
           "catalogue_support": "Both",
           "catalogue_description": "Use the configurable source's FM waveform, then compare time-domain traces as modulation settings change. Identify carrier and message timing. A spectral sideband/bandwidth investigation requires external analysis or an added workflow; the current UI does not provide FFT.",
-          "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+          "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
           "experiment_symbol_ids": [
             "bnc"
           ],
@@ -5811,7 +5811,7 @@
       "manifest_kind": "library",
       "library_id": "btec-first-engineering",
       "title": "BTEC First Certificate in Engineering — selected Unit 8",
-      "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+      "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
       "handoff": {
         "date": "2026-11-10",
         "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -5991,7 +5991,7 @@
           "syllabus_reference": "A4–A5",
           "catalogue_support": "Both",
           "catalogue_description": "Compare series and parallel loads, predict supply current, and verify voltage sharing. Save a calculation alongside the circuit and numerical readings.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -6003,7 +6003,7 @@
           "syllabus_reference": "A1, A4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Use a fixed resistor and variable sensor-equivalent resistance. Compare divider output over measured light or temperature conditions. The entered resistance is an assumption, not an optical or thermal simulation.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "ntc",
             "ldr",
@@ -6017,7 +6017,7 @@
           "syllabus_reference": "A1, B1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw push-to-make and push-to-break arrangements. Use an explicit switch model or separate open/closed circuits to test the resulting input voltage.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "push_make",
             "push_break",
@@ -6031,7 +6031,7 @@
           "syllabus_reference": "A3–A5",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare several limiting resistors and supplies using an LED model. Record current and resistor power; do not equate simulated current with measured brightness.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "led"
           ],
@@ -6043,7 +6043,7 @@
           "syllabus_reference": "A2, B1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Sweep the input to an NPN or PNP stage driving an electrical load. Compare input, output and device currents. Supply the correct model and pin mapping.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "bjt_npn",
             "bjt_pnp",
@@ -6057,7 +6057,7 @@
           "syllabus_reference": "A2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare a single transistor with a pair for the same load. Investigate the input drive needed to reach a stated output condition.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "bjt_npn",
             "darlington_npn",
@@ -6071,7 +6071,7 @@
           "syllabus_reference": "A2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Apply a gate-voltage sweep or pulse. Compare off/on output and load current using a chosen FET model.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "mosfet_n",
             "mosfet_p"
@@ -6084,7 +6084,7 @@
           "syllabus_reference": "A2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Apply a gate pulse and observe whether conduction persists after it ends. Model interruption of load current to reset the device. A transistor model is not an SCR substitute.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "thyristor",
             "push_make",
@@ -6098,7 +6098,7 @@
           "syllabus_reference": "A1–A3, B1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Combine a sensor-equivalent input, comparator/transistor and LED load. Set a target threshold and compare predicted switching with measured sensor values. This is one possible implementation of the unit's design work.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "ntc",
             "ldr",
@@ -6117,7 +6117,7 @@
           "syllabus_reference": "A4–A5",
           "catalogue_support": "Both",
           "catalogue_description": "Capture capacitor voltage after a source step. Change R and C separately and compare the measured delay to a chosen threshold.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "capacitor",
             "capacitor_polarised"
@@ -6132,7 +6132,7 @@
           "syllabus_reference": "A2, B1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Use a compatible timer model, trigger once and measure pulse duration. Change the timing components. A predefined pulse source cannot demonstrate the timer's timing law.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "timer_555",
             "capacitor",
@@ -6148,7 +6148,7 @@
           "syllabus_reference": "A2, B1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Capture a timer's output and compare frequency/duty cycle for different component values. A flashing LED's electrical drive can be tested without modelling visual flashing.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "timer_555",
             "capacitor",
@@ -6164,7 +6164,7 @@
           "syllabus_reference": "A4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Represent a relay coil by an explicit electrical model and compare switch-node voltage with and without a protection diode. Mechanical operation is outside the model.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "relay_coil",
             "relay_spdt",
@@ -6179,7 +6179,7 @@
           "syllabus_reference": "A5",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare the same circuit with an ideal source and a source having stated internal resistance. Battery chemistry and solar illumination need separate models or measurements.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "battery",
             "solar_cell"
@@ -6192,7 +6192,7 @@
           "syllabus_reference": "A2–A3, B1",
           "catalogue_support": "Diagram",
           "catalogue_description": "Document input switch, controller pins, supplies and display connections. Firmware execution, flowchart programming and seven-segment decoding are not ready-made TinyCAD workflows. Electrical interface stages can be tested separately.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "microcontroller",
             "push_make",
@@ -6209,7 +6209,7 @@
           "syllabus_reference": "D1",
           "catalogue_support": "Both",
           "catalogue_description": "Prepare a correct circuit and separate manually edited open/short/wrong-value versions. Predict diagnostic voltage/current readings. Record a test sequence for checking the physical build; this does not rely on an automatic fault-injection feature.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "resistor",
             "switch_spst",
@@ -6223,7 +6223,7 @@
           "syllabus_reference": "B2, C1–C2",
           "catalogue_support": "Diagram",
           "catalogue_description": "Produce a labelled schematic, polarity notes and a connectivity checklist for the physical assembly. TinyCAD does not turn the schematic into a breadboard photograph, demonstrate soldering competence or inspect joints.",
-          "source_document": "docs/teaching-catalogue.md#btec-first-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering",
           "experiment_symbol_ids": [
             "connector2",
             "connector3",
@@ -8505,7 +8505,7 @@
       "manifest_kind": "library",
       "library_id": "btec-applied-science-2016",
       "title": "BTEC National Extended Diploma Applied Science (2016) — selected Unit 15",
-      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+      "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
       "handoff": {
         "date": "2026-11-10",
         "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -8732,7 +8732,7 @@
           "syllabus_reference": "A2, B1",
           "catalogue_support": "Both",
           "catalogue_description": "Compare up to three resistors in series, parallel and mixed arrangements. Record equivalent resistance and conductance, with calculations beside the schematic.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -8744,7 +8744,7 @@
           "syllabus_reference": "B2",
           "catalogue_support": "Both",
           "catalogue_description": "Compare a divider with different voltmeter input resistances and current-meter burdens. Document which quantity each connection measures.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -8758,7 +8758,7 @@
           "syllabus_reference": "B2",
           "catalogue_support": "Both",
           "catalogue_description": "Choose a target output and vary resistor ratio. Add a finite load and quantify the change rather than assuming an unloaded formula remains exact.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "potentiometer"
           ],
@@ -8770,7 +8770,7 @@
           "syllabus_reference": "B2",
           "catalogue_support": "Both",
           "catalogue_description": "Use an ideal source plus a series resistor. Change the load and fit terminal voltage against current using exported values. Identify the declared model's emf and resistance.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "cell",
             "rheostat"
@@ -8783,7 +8783,7 @@
           "syllabus_reference": "A3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare resistor and LED characteristics using DC sweeps. Use a suitable electrothermal lamp model if including a filament lamp; a constant resistor cannot reproduce heating.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "led",
             "lamp",
@@ -8797,7 +8797,7 @@
           "syllabus_reference": "A2",
           "catalogue_support": "Both",
           "catalogue_description": "Capture charge and discharge currents and capacitor voltage. Integrate current over a selected interval and compare with the voltage change.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "capacitor",
             "capacitor_polarised",
@@ -8813,7 +8813,7 @@
           "syllabus_reference": "A2",
           "catalogue_support": "Both",
           "catalogue_description": "Compare networks using the same charging resistance. Infer equivalent capacitance from a transient response; the student multimeter has no capacitance range.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "capacitor",
             "capacitor_polarised"
@@ -8828,7 +8828,7 @@
           "syllabus_reference": "A3",
           "catalogue_support": "Both",
           "catalogue_description": "Apply a sine or pulse to an RC network. Compare input/output amplitude and timing across frequencies and relate the result to the chosen component values.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "capacitor"
           ],
@@ -8843,7 +8843,7 @@
           "syllabus_reference": "C3, D3",
           "catalogue_support": "Both",
           "catalogue_description": "Use a low-voltage sine source, scope and AC meter. Compare readings over complete cycles and distinguish a source's offset from its alternating component.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "bnc"
           ],
@@ -8860,7 +8860,7 @@
           "syllabus_reference": "C3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Prepare a rectifier with compatible diodes and a smoothing capacitor. Vary load and capacitance; compare mean output and ripple from transient captures. This is an electronic implementation of the topic, not a complete mains-supply model.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "diode_rectifier",
             "capacitor_polarised"
@@ -8875,7 +8875,7 @@
           "syllabus_reference": "D1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Enter measured sensor resistances for several illumination conditions and predict divider output. Optical distance/intensity must come from measurements or a declared model.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "ldr",
             "potentiometer"
@@ -8888,7 +8888,7 @@
           "syllabus_reference": "D1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Use measured R(T) values to compare output sensitivity and sensor placement. Keep the temperature calibration separate from the electrical prediction.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "ntc",
             "potentiometer"
@@ -8901,7 +8901,7 @@
           "syllabus_reference": "D1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Model the bridge resistors and sweep a small declared resistance change. Measure differential output and the effect of an initially unbalanced bridge. Mechanical strain is not generated by the solver.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "strain_gauge",
             "wheatstone_bridge",
@@ -8917,7 +8917,7 @@
           "syllabus_reference": "D1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw the switched input, bias resistor and indicator. Compare separate switch states or a compatible controlled switch. Magnetic actuation is external to the circuit.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "reed_switch",
             "led",
@@ -8931,7 +8931,7 @@
           "syllabus_reference": "C1, D2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Supply measured thermocouple voltages through a stated source resistance. Test loading and an amplifier interface. The model does not independently reproduce thermoelectric conversion.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "thermocouple",
             "opamp"
@@ -8946,7 +8946,7 @@
           "syllabus_reference": "D2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Use a justified charge/current-source and capacitance equivalent. Compare output pulses and loading. The mechanical excitation is a declared input.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "piezo_sensor",
             "behavioural_current",
@@ -8961,7 +8961,7 @@
           "syllabus_reference": "D3",
           "catalogue_support": "Diagram",
           "catalogue_description": "Draw the sensor, conditioner, supply, common reference and recorder interface for a selected physical measurement. TinyCAD does not stream data into a real logger or model every pH/moisture/pressure sensor.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "ph_probe",
             "temperature_sensor",
@@ -8979,7 +8979,7 @@
           "syllabus_reference": "A–B, D",
           "catalogue_support": "Both",
           "catalogue_description": "Repeat a selected circuit with nominal and measured component values. Keep predicted and bench data separate, then identify discrepancies attributable to loading, tolerance or an inadequate model.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016",
           "experiment_symbol_ids": [
             "resistor",
             "capacitor"
@@ -10801,7 +10801,7 @@
       "manifest_kind": "library",
       "library_id": "btec-applied-science-aaq",
       "title": "BTEC National Applied Science AAQ Extended Certificate — Units 3 and 4",
-      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+      "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
       "handoff": {
         "date": "2026-11-10",
         "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -10966,7 +10966,7 @@
           "syllabus_reference": "U3 C1.1–C1.3, U4 C2",
           "catalogue_support": "Both",
           "catalogue_description": "Prepare an ammeter/voltmeter test circuit, then compare readings for a known load. Use V Ω–COM for voltage/resistance and A–COM for current.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [],
           "existing_tool_ids": [
             "multimeter",
@@ -10981,7 +10981,7 @@
           "syllabus_reference": "U4 C2",
           "catalogue_support": "Both",
           "catalogue_description": "Predict readings for several declared reference resistors and source values. Draw the real calibration arrangement and compare bench readings against an independently established reference. A virtual meter is not a calibration certificate for physical equipment.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -10995,7 +10995,7 @@
           "syllabus_reference": "U3 C1.3, U4 C2",
           "catalogue_support": "Both",
           "catalogue_description": "Build resistor combinations, record individual and supply readings, and compare calculations with modelled and physical measurements.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "resistor",
             "lamp"
@@ -11008,7 +11008,7 @@
           "syllabus_reference": "U4 C2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw the test section and meter positions. Enter measured resistances or a stated wire law for each length; plot exported R against length externally.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "resistance_wire"
           ],
@@ -11020,7 +11020,7 @@
           "syllabus_reference": "U4 C2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Annotate measured diameters and lengths for the specified wire comparison. Use measured V/I results to calculate resistivity externally. The solver cannot measure wire diameter or establish a material constant independently.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "resistance_wire",
             "annotation"
@@ -11033,7 +11033,7 @@
           "syllabus_reference": "U3 C1.4, U4 C2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw the current-limited measurement circuit and compare a real lamp characteristic with an electrothermal or empirical model. Keep a fixed-resistance illustration clearly labelled as an approximation.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "lamp"
           ],
@@ -11045,7 +11045,7 @@
           "syllabus_reference": "U3 C1.4",
           "catalogue_support": "Both",
           "catalogue_description": "Sweep a current-limited source and measure the diode's voltage and current. Compare forward and reverse behaviour using an identified diode model.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "diode"
           ],
@@ -11057,7 +11057,7 @@
           "syllabus_reference": "U3 C1.4, U4 C2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare current and resistor dissipation for different supply/resistor choices. Use an LED-specific model; light output and damage are not automatic simulation results.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "led"
           ],
@@ -11069,7 +11069,7 @@
           "syllabus_reference": "U3 C1.4, U4 C2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Substitute measured R(T) values into the test circuit. Compare current or divider output, recording temperature data independently.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "ntc"
           ],
@@ -11081,7 +11081,7 @@
           "syllabus_reference": "U3 C1.4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Use measured resistance under controlled illumination to predict readings. Changing an arbitrary resistor is a circuit exercise, not a simulated light experiment.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "ldr"
           ],
@@ -11093,7 +11093,7 @@
           "syllabus_reference": "U3 C1.4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Model a reverse-biased detector with calibrated photocurrent and compare output for different loads. Supply the optical response externally.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "photodiode",
             "behavioural_current"
@@ -11106,7 +11106,7 @@
           "syllabus_reference": "U3 C2–C3",
           "catalogue_support": "Both",
           "catalogue_description": "Compare resistor loads at known voltages. Calculate power and energy for a stated duration from simulated readings, then compare with real measurements where appropriate. Temperature change is not modelled by the resistor alone.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -11118,7 +11118,7 @@
           "syllabus_reference": "U4 C3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw the panel, voltmeter and selectable electrical load. Use a declared solar-cell equivalent or measured I–V data to compare output conditions. Irradiance, colour and angle must be measured or explicitly supplied.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "solar_cell",
             "rheostat"
@@ -11131,7 +11131,7 @@
           "syllabus_reference": "U4 C3",
           "catalogue_support": "Diagram",
           "catalogue_description": "Annotate the circuit, test conditions and data-recording points for changes in distance, angle and illumination. The spatial/optical arrangement remains a separate apparatus sketch; TinyCAD does not calculate it from a schematic.",
-          "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq",
+          "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq",
           "experiment_symbol_ids": [
             "solar_cell",
             "annotation"
@@ -12143,7 +12143,7 @@
       "manifest_kind": "library",
       "library_id": "btec-national-electrical-electronic-engineering",
       "title": "BTEC National Extended Diploma Electrical and Electronic Engineering — selected Unit 19",
-      "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+      "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
       "handoff": {
         "date": "2026-11-10",
         "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -12371,7 +12371,7 @@
           "syllabus_reference": "A2",
           "catalogue_support": "Both",
           "catalogue_description": "Use a limited DC sweep and collect component V/I. Compare selected signal and rectifier diode models, including the effect of the external resistor.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "diode",
             "diode_rectifier"
@@ -12384,7 +12384,7 @@
           "syllabus_reference": "A2",
           "catalogue_support": "Both",
           "catalogue_description": "Capture a low-voltage sine input and resistive-load output. Compare polarity, conduction intervals and mean output.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "diode_rectifier"
           ],
@@ -12398,7 +12398,7 @@
           "syllabus_reference": "A2",
           "catalogue_support": "Both",
           "catalogue_description": "Draw a bridge and identify which diodes conduct in each half-cycle. Compare output ripple frequency with the half-wave version.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "diode_rectifier"
           ],
@@ -12412,7 +12412,7 @@
           "syllabus_reference": "A2",
           "catalogue_support": "Both",
           "catalogue_description": "Add a reservoir capacitor, change the load and capture ripple and mean voltage. Use transient analysis rather than a small-signal AC sweep to model rectifier conduction.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "diode_rectifier",
             "capacitor_polarised"
@@ -12427,7 +12427,7 @@
           "syllabus_reference": "A2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Use a breakdown-capable model and a limiting resistor. Vary input and load, then compare output voltage, device current and power.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "zener"
           ],
@@ -12439,7 +12439,7 @@
           "syllabus_reference": "A2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Select resistor values against a stated current target. Compare nominal and tolerance cases using the selected LED model. Brightness and damage require further modelling or measurement.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "led"
           ],
@@ -12451,7 +12451,7 @@
           "syllabus_reference": "A3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare input drive, base current, collector current and output voltage through the switching range. Check a real model rather than imposing an unlimited current-gain assumption.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "bjt_npn",
             "bjt_pnp"
@@ -12466,7 +12466,7 @@
           "syllabus_reference": "A3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare electrical load response to gate pulses and input-voltage changes. Use the appropriate N/P-channel model and connections.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "mosfet_n",
             "mosfet_p",
@@ -12483,7 +12483,7 @@
           "syllabus_reference": "A3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Adjust a bias network and inspect DC voltages/currents. Compare predicted and measured quiescent conditions before applying a signal.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "bjt_npn",
             "bjt_pnp",
@@ -12497,7 +12497,7 @@
           "syllabus_reference": "A3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare input/output amplitude and phase, then sweep frequency at a fixed bias. Obtain gain and bandwidth and repeat for a changed load.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "bjt_npn",
             "bjt_pnp",
@@ -12517,7 +12517,7 @@
           "syllabus_reference": "A4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Sweep one input across a reference and capture output switching. Include supply limits and a suitable comparator/op-amp model.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "comparator",
             "potentiometer"
@@ -12530,7 +12530,7 @@
           "syllabus_reference": "A4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Change feedback ratio, compare signed gain and inspect clipping with an adequately realistic model.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -12547,7 +12547,7 @@
           "syllabus_reference": "A4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Repeat at several gains and compare input loading, output amplitude and operating range.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -12564,7 +12564,7 @@
           "syllabus_reference": "A4–A6",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Supply a model with frequency dependence. Compare cutoff and gain–bandwidth behaviour; use a declared active filter topology if investigating its component sensitivity.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -12581,7 +12581,7 @@
           "syllabus_reference": "B1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Test all input combinations of the specified basic gates. State logic levels, supply and the selected device family.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "gate_and",
             "gate_or",
@@ -12598,7 +12598,7 @@
           "syllabus_reference": "B1",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare loaded output and input thresholds using compatible models. Capture propagation delay only if the models represent it. Ideal Boolean behaviour cannot establish real-family specifications.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "gate_and",
             "gate_or",
@@ -12619,7 +12619,7 @@
           "syllabus_reference": "B2",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Prepare alternative implementations of a function and compare their complete truth tables. Karnaugh-map reasoning remains in the student's analysis, not an automatic TinyCAD tool.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "gate_and",
             "gate_or",
@@ -12636,7 +12636,7 @@
           "syllabus_reference": "B3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Apply defined clock/data/reset sequences to prepared R-S, D or JK models. Capture state changes and distinguish asynchronous inputs from clocked inputs.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "latch_rs",
             "flipflop_d",
@@ -12652,7 +12652,7 @@
           "syllabus_reference": "B3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare three-stage counter or register sequences. Test reset and observe ripple delays where the model supports them.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "counter_binary3_async",
             "counter_binary3_sync",
@@ -12670,7 +12670,7 @@
           "syllabus_reference": "A5–A6, B4–B5, C",
           "catalogue_support": "Both",
           "catalogue_description": "Produce diagrams, saved settings, labelled results and a comparison table. Diagnose differences using measured components and instrument loading, then record the resulting design changes and personal reflection.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "resistor",
             "capacitor",
@@ -12690,7 +12690,7 @@
           "syllabus_reference": "A1, A6, B5",
           "catalogue_support": "Diagram",
           "catalogue_description": "Annotate supplies, polarity, pin names and test points. The schematic supports construction and measurement; it does not prove safe soldering, assembly quality or the learner's practical performance.",
-          "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "connector2",
             "connector3",
@@ -15067,7 +15067,7 @@
       "manifest_kind": "library",
       "library_id": "btec-hnc-electrical-electronic-engineering",
       "title": "BTEC HNC Electrical and Electronic Engineering for England (2024) — Unit 4019",
-      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
       "handoff": {
         "date": "2026-11-10",
         "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -15333,7 +15333,7 @@
           "syllabus_reference": "LO1",
           "catalogue_support": "Both",
           "catalogue_description": "Choose a multi-branch DC network, predict node potentials and signed currents, then compare simulation residuals with hand calculations.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -15347,7 +15347,7 @@
           "syllabus_reference": "LO1",
           "catalogue_support": "Both",
           "catalogue_description": "Solve a two-source circuit with each independent source deactivated in turn. Compare the sum of voltage/current contributions with the complete circuit. Do not sum power contributions as though power were linear.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [],
           "existing_tool_ids": [
             "source_dc",
@@ -15360,7 +15360,7 @@
           "syllabus_reference": "LO1",
           "catalogue_support": "Both",
           "catalogue_description": "Obtain an equivalent at a selected port, then compare original and equivalent circuits under several finite loads. Avoid using a physical short as a measurement method.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [],
           "existing_tool_ids": [
             "source_dc",
@@ -15373,7 +15373,7 @@
           "syllabus_reference": "LO1",
           "catalogue_support": "Both",
           "catalogue_description": "Vary a resistor load against a source with explicit resistance. Compare load power and efficiency; maximum delivered power is not maximum efficiency.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "rheostat"
           ],
@@ -15385,7 +15385,7 @@
           "syllabus_reference": "LO1",
           "catalogue_support": "Both",
           "catalogue_description": "Compare loaded/unloaded divider outputs and introduce finite meter input resistance. Quantify the measurement's influence.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "potentiometer"
           ],
@@ -15399,7 +15399,7 @@
           "syllabus_reference": "LO2",
           "catalogue_support": "Both",
           "catalogue_description": "Compare peak, RMS, frequency and phase using complete captured cycles. State whether an offset is included in the chosen RMS quantity.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "bnc"
           ],
@@ -15416,7 +15416,7 @@
           "syllabus_reference": "LO2",
           "catalogue_support": "Both",
           "catalogue_description": "Sweep frequency and compare the magnitude/phase of voltage and current with calculated impedances. Include source resistance and coil resistance where appropriate.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -15431,7 +15431,7 @@
           "syllabus_reference": "LO2",
           "catalogue_support": "Both",
           "catalogue_description": "Capture RC and RL responses to a step. Change one component at a time and compare fitted time constants with the declared circuit.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -15446,7 +15446,7 @@
           "syllabus_reference": "LO2",
           "catalogue_support": "Both",
           "catalogue_description": "Compare time-domain decay with frequency response for different resistances. Measure resonance, bandwidth and Q using a stated criterion.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -15462,7 +15462,7 @@
           "syllabus_reference": "LO2",
           "catalogue_support": "Both",
           "catalogue_description": "Compare RC low-pass/high-pass networks with the same source and load. Relate AC response to pulse-shape changes from transient runs.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "capacitor"
           ],
@@ -15477,7 +15477,7 @@
           "syllabus_reference": "LO2",
           "catalogue_support": "Both",
           "catalogue_description": "Compare average instantaneous power with apparent power calculated from RMS readings. Export values for complex-power calculations if required.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -15492,7 +15492,7 @@
           "syllabus_reference": "LO2–LO3",
           "catalogue_support": "Both",
           "catalogue_description": "Use low-voltage sources and explicit diode mappings. Vary load/capacitance and compare ripple and mean output. Treat transformer input as a declared source unless a suitable coupled model is supplied.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "diode_rectifier",
             "capacitor_polarised"
@@ -15507,7 +15507,7 @@
           "syllabus_reference": "LO3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Sweep current-limited circuits and compare operating voltage and dissipation. A Zener model must include the intended breakdown characteristic.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "diode",
             "zener"
@@ -15520,7 +15520,7 @@
           "syllabus_reference": "LO3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Evaluate limiting resistors for several supplies using an identified LED model. Predict electrical current, not luminous intensity.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "led"
           ],
@@ -15532,7 +15532,7 @@
           "syllabus_reference": "LO3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare switching and small-signal operation of a chosen transistor. Record DC bias before measuring gain and output range.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "bjt_npn",
             "bjt_pnp",
@@ -15549,7 +15549,7 @@
           "syllabus_reference": "LO3",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare gate-controlled current using appropriate models and separately stated operating conditions. Do not infer an interchangeable pinout or threshold.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "jfet_n",
             "jfet_p",
@@ -15564,7 +15564,7 @@
           "syllabus_reference": "LO4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Vary source and load resistances around a prepared amplifier model. Measure gain and bandwidth under each condition.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -15582,7 +15582,7 @@
           "syllabus_reference": "LO4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Choose a simple inverting/non-inverting stage and compare predicted gain with captures. Supply rail limits and a model adequate to the measurement.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -15599,7 +15599,7 @@
           "syllabus_reference": "LO4",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Verify small combinational functions and state the logic-level conventions. Use appropriate gate models; neither firmware nor HDL execution is implied.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "gate_and",
             "gate_or",
@@ -15618,7 +15618,7 @@
           "syllabus_reference": "LO4; project application",
           "catalogue_support": "Diagram",
           "catalogue_description": "Draw a sensor-equivalent source, conditioner and receiving stage, with test points and loading assumptions. The physical sensor and any PLC program remain outside the simulation.",
-          "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
           "experiment_symbol_ids": [
             "temperature_sensor",
             "light_sensor",
@@ -17744,7 +17744,7 @@
       "manifest_kind": "library",
       "library_id": "degree-year1-physics",
       "title": "First-year physics degree — representative electronic-circuit strand",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+      "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
       "handoff": {
         "date": "2026-11-10",
         "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -17997,7 +17997,7 @@
           "syllabus_reference": "P-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Solve a multi-loop network analytically, then compare signed currents and node voltages with the solver. Identify which discrepancies are numerical and which indicate a modelling or sign error.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -18011,7 +18011,7 @@
           "syllabus_reference": "P-CIR, P-LAB",
           "catalogue_support": "Both",
           "catalogue_description": "Compare a measured source model with an ideal source while varying the load. Fit an equivalent source resistance from exported terminal readings.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "rheostat"
           ],
@@ -18025,7 +18025,7 @@
           "syllabus_reference": "P-LAB",
           "catalogue_support": "Both",
           "catalogue_description": "Connect a finite-resistance meter to a high-resistance divider. Estimate the expected loading error before running, then compare with a physical meter.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "potentiometer"
           ],
@@ -18039,7 +18039,7 @@
           "syllabus_reference": "P-LAB",
           "catalogue_support": "Both",
           "catalogue_description": "Repeat a low-resistance current measurement with several declared meter burdens. Quantify how inserting the instrument changes the circuit.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [],
           "existing_tool_ids": [
             "multimeter"
@@ -18051,7 +18051,7 @@
           "syllabus_reference": "P-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Compare charging responses of series/parallel capacitor networks and calculate stored energy. Infer effective C using a stated method rather than a nonexistent virtual capacitance-meter range.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "capacitor",
             "capacitor_polarised"
@@ -18066,7 +18066,7 @@
           "syllabus_reference": "P-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Capture both capacitor voltage and resistor current. Fit a decay externally, compare the time constant with component measurements and discuss instrument loading.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "capacitor",
             "capacitor_polarised",
@@ -18082,7 +18082,7 @@
           "syllabus_reference": "P-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Apply a step to a resistive-inductive circuit, include coil resistance and compare fitted time constant with the model prediction. A lumped inductor does not model the magnetic geometry.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "inductor"
           ],
@@ -18096,7 +18096,7 @@
           "syllabus_reference": "P-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Change R and compare oscillatory and non-oscillatory responses. Extract a decay rate and oscillation period from an adequately sampled transient.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -18111,7 +18111,7 @@
           "syllabus_reference": "P-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Sweep RC and RL circuits, measure voltage/current phase and compare with phasor calculations. State the reference direction and phase convention.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -18126,7 +18126,7 @@
           "syllabus_reference": "P-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Sweep an RLC circuit, measure response and bandwidth, then compare the inferred resonance with the transient experiment. Include generator output impedance.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -18141,7 +18141,7 @@
           "syllabus_reference": "P-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Average instantaneous load power and compare it with RMS-based apparent power. Calculate power factor and distinguish energy storage from dissipation.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -18156,7 +18156,7 @@
           "syllabus_reference": "P-LAB",
           "catalogue_support": "Both",
           "catalogue_description": "Compare graticule/cursor estimates with numerical readings as timebase and capture step change. Record the acquisition settings and avoid treating display interpolation as additional samples.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "bnc"
           ],
@@ -18173,7 +18173,7 @@
           "syllabus_reference": "P-LAB",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Bias a prepared BJT circuit, verify its DC state and compare small/large signal behaviour. Compare with a real circuit using an identified device.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "bjt_npn",
             "capacitor",
@@ -18192,7 +18192,7 @@
           "syllabus_reference": "P-LAB",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Test a simple amplifier at several gains and input amplitudes. Compare an idealised prediction with a rail-limited, frequency-dependent model and physical results.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -18209,7 +18209,7 @@
           "syllabus_reference": "P-LAB",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Apply a slow input and a reference to a comparator, then check the resulting logic levels. The model must represent the required output limits.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "comparator",
             "gate_buffer",
@@ -18223,7 +18223,7 @@
           "syllabus_reference": "P-LAB",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Prepare a small network, predict its truth table and exercise every combination. This is a proposed workshop exercise, not a claim that a particular gate exercise is allocated by Warwick.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "gate_and",
             "gate_or",
@@ -18240,7 +18240,7 @@
           "syllabus_reference": "P-PROJ",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Enter measured sensor voltage/resistance data and compare interface output for different loading. The physical calibration is obtained independently, not generated by fitting the same simulation.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "ntc",
             "ldr",
@@ -18257,7 +18257,7 @@
           "syllabus_reference": "P-LAB",
           "catalogue_support": "Both",
           "catalogue_description": "Compare nominal and measured component values, then use bounded sweeps or tolerance studies. Keep manufacturing tolerances, instrument uncertainty and repeated-measurement scatter separate in the analysis.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "resistor",
             "capacitor"
@@ -18270,7 +18270,7 @@
           "syllabus_reference": "P-LAB, P-PROJ",
           "catalogue_support": "Diagram",
           "catalogue_description": "Draw sensor, conditioning stage, recorder/controller and references. Annotate supply and test connections. Firmware, physical data acquisition and weather-station operation need other tools.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics",
           "experiment_symbol_ids": [
             "temperature_sensor",
             "light_sensor",
@@ -20207,7 +20207,7 @@
       "manifest_kind": "library",
       "library_id": "degree-year1-electronics",
       "title": "First-year electronics degree — representative circuit/device/digital strand",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+      "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
       "handoff": {
         "date": "2026-11-10",
         "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -20475,7 +20475,7 @@
           "syllabus_reference": "E-CAD, E-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Solve the same network by two analytical methods and compare each node/current with the numerical solution. Use signed reference arrows.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -20489,7 +20489,7 @@
           "syllabus_reference": "E-CAD, E-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Run separate single-source conditions and the full circuit. Compare voltages/currents, and explain why powers cannot simply be superposed.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [],
           "existing_tool_ids": [
             "source_dc",
@@ -20502,7 +20502,7 @@
           "syllabus_reference": "E-CAD",
           "catalogue_support": "Both",
           "catalogue_description": "Derive a port equivalent and compare original/equivalent circuits across a load sweep. Record port definitions and reference direction.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [],
           "existing_tool_ids": [
             "source_dc",
@@ -20515,7 +20515,7 @@
           "syllabus_reference": "E-CAD",
           "catalogue_support": "Both",
           "catalogue_description": "Vary a finite load against explicit source resistance. Compare delivered power and internal dissipation without assuming that maximum power means maximum efficiency.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "rheostat"
           ],
@@ -20527,7 +20527,7 @@
           "syllabus_reference": "E-CAD",
           "catalogue_support": "Both",
           "catalogue_description": "Compare theoretical unloaded values with the actual virtual instruments attached. Include function-generator output resistance and meter burden/input resistance.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [],
           "existing_tool_ids": [
             "multimeter",
@@ -20541,7 +20541,7 @@
           "syllabus_reference": "E-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Compare initial condition, forced response and final state. Choose capture duration and step from the fastest/slowest relevant time constants.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor",
@@ -20557,7 +20557,7 @@
           "syllabus_reference": "E-CAD, E-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Sweep frequency and calculate complex impedance from voltage/current results. Compare magnitude and phase with the analytical prediction.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -20572,7 +20572,7 @@
           "syllabus_reference": "E-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Use a declared RLC topology and vary damping. Compare frequency response with its transient ringing and measure the relevant bandwidth.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -20588,7 +20588,7 @@
           "syllabus_reference": "E-CAD, E-CIR",
           "catalogue_support": "Both",
           "catalogue_description": "Compare low/high-pass response using AC analysis, then apply pulses in transient analysis. Explain the effect of loading on the nominal cutoff.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "capacitor"
           ],
@@ -20603,7 +20603,7 @@
           "syllabus_reference": "E-CAD",
           "catalogue_support": "Both",
           "catalogue_description": "Integrate current or component power over a stated interval. Check the energy balance for a capacitor or inductor network against analytical calculations.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -20618,7 +20618,7 @@
           "syllabus_reference": "E-CAD",
           "catalogue_support": "Both",
           "catalogue_description": "Compare a chosen SPICE diode with an ideal/piecewise analytical approximation. Examine where the approximation produces an unacceptable error.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "diode"
           ],
@@ -20630,7 +20630,7 @@
           "syllabus_reference": "E-CAD",
           "catalogue_support": "Both",
           "catalogue_description": "Compare half/full-wave circuits and load-dependent ripple with a low-voltage sine source. Include real diode models and use transient analysis.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "diode_rectifier",
             "capacitor_polarised"
@@ -20645,7 +20645,7 @@
           "syllabus_reference": "E-CAD",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Predict DC operating point, run the model and repeat for component tolerances. Export device readings for a load-line comparison.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "bjt_npn",
             "bjt_pnp",
@@ -20659,7 +20659,7 @@
           "syllabus_reference": "E-CAD",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Measure small-signal gain and infer input/output resistance using controlled source/load changes. Compare with a small-signal equivalent.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "bjt_npn",
             "capacitor",
@@ -20678,7 +20678,7 @@
           "syllabus_reference": "E-CAD",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare selected gate/drain conditions with a device model. Investigate gate-drive and load effects rather than assuming every FET is an ideal switch.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "mosfet_n",
             "mosfet_p",
@@ -20695,7 +20695,7 @@
           "syllabus_reference": "E-CAD",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare inverting and non-inverting gain, input loading and output range. Distinguish an ideal analytical block from a model with rails and frequency limits.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -20712,7 +20712,7 @@
           "syllabus_reference": "E-CAD",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Measure a prepared op-amp filter's gain/phase and pulse response. Compare component changes with the predicted poles/cutoff using an appropriate amplifier model.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -20729,7 +20729,7 @@
           "syllabus_reference": "E-DIG",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Test a truth table against two alternative gate implementations. Do the Boolean/Karnaugh-map reasoning separately and compare all input combinations.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "gate_and",
             "gate_or",
@@ -20747,7 +20747,7 @@
           "syllabus_reference": "E-DIG",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Use compatible component models or a gate-level circuit. Capture outputs while enumerating data/select inputs.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "mux2",
             "decoder2to4",
@@ -20766,7 +20766,7 @@
           "syllabus_reference": "E-DIG",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Apply a defined clock/data sequence and compare stored state. State timing assumptions; ideal models do not establish real setup/hold limits.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "latch_d",
             "flipflop_d"
@@ -20781,7 +20781,7 @@
           "syllabus_reference": "E-DIG",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Verify reset and output sequences and compare synchronous/asynchronous operation where delay models permit.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "counter_binary3_async",
             "counter_binary3_sync",
@@ -20797,7 +20797,7 @@
           "syllabus_reference": "E-DIG",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Vary capacitance/fan-out within a valid device model. Measure edge and propagation timing. A zero-delay Boolean model is insufficient.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "gate_and",
             "gate_or",
@@ -20819,7 +20819,7 @@
           "syllabus_reference": "E-DIG",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Implement a small gate-level arithmetic example and enumerate operand combinations. Explain signed/unsigned interpretation outside the circuit.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "full_adder",
             "gate_xor",
@@ -20834,7 +20834,7 @@
           "syllabus_reference": "E-DIG",
           "catalogue_support": "Diagram",
           "catalogue_description": "Draw the input/output, clock/reset and state-register interfaces for a small controller. A separate HDL tool is needed to implement, synthesise and verify SystemVerilog.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "state_machine",
             "flipflop_d",
@@ -20850,7 +20850,7 @@
           "syllabus_reference": "E-DIG",
           "catalogue_support": "Diagram",
           "catalogue_description": "Record supplies, connectors, pull resistors and external driver stages. TinyCAD does not program an FPGA, execute firmware or replace the course's digital development environment.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "fpga",
             "microcontroller",
@@ -20869,7 +20869,7 @@
           "syllabus_reference": "E-CAD, E-YEAR",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Combine a defined input, conditioner and output stage. Save analytical targets, model identities, captures, loading assumptions and a plan for bench comparison. The project brief is our proposal, not an institution-prescribed assignment.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-electronics",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics",
           "experiment_symbol_ids": [
             "ntc",
             "ldr",
@@ -24050,7 +24050,7 @@
       "manifest_kind": "library",
       "library_id": "degree-year1-engineering",
       "title": "First-year engineering degrees — shared electronics and discipline applications",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+      "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
       "handoff": {
         "date": "2026-11-10",
         "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -24282,7 +24282,7 @@
           "syllabus_reference": "G-CORE",
           "catalogue_support": "Both",
           "catalogue_description": "Compare a divider's predicted output with finite-resistance voltage measurement and compare current readings with stated burden. Explain how an instrument changes the circuit.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "potentiometer"
           ],
@@ -24296,7 +24296,7 @@
           "syllabus_reference": "G-CORE, G-ANALYSIS",
           "catalogue_support": "Both",
           "catalogue_description": "Use a multi-branch resistor circuit and compare measured node/current values with nodal and mesh calculations.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -24310,7 +24310,7 @@
           "syllabus_reference": "G-CORE",
           "catalogue_support": "Both",
           "catalogue_description": "Compare an original network with its port equivalent for several loads. State source resistance and avoid treating an ideal source as a complete battery model.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [],
           "existing_tool_ids": [
             "source_dc",
@@ -24323,7 +24323,7 @@
           "syllabus_reference": "G-CORE, G-ANALYSIS",
           "catalogue_support": "Both",
           "catalogue_description": "Investigate each independent source separately, then compare the total voltage/current. Show explicitly why power is not a linear sum of these separate results.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [],
           "existing_tool_ids": [
             "source_dc",
@@ -24336,7 +24336,7 @@
           "syllabus_reference": "G-CORE",
           "catalogue_support": "Both",
           "catalogue_description": "Account for resistor, source and load power for different operating conditions. Distinguish predicted electrical dissipation from temperature rise or mechanical output.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "resistor"
           ],
@@ -24348,7 +24348,7 @@
           "syllabus_reference": "G-CORE, G-ANALYSIS",
           "catalogue_support": "Both",
           "catalogue_description": "Capture voltage/current, measure time constant and compare loading assumptions. Repeat with measured component values.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "capacitor"
           ],
@@ -24362,7 +24362,7 @@
           "syllabus_reference": "G-CORE, G-ANALYSIS",
           "catalogue_support": "Both",
           "catalogue_description": "Compare current rise for an idealised and resistive coil model. The experiment concerns its electrical terminals, not magnetic geometry or motion.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "inductor"
           ],
@@ -24376,7 +24376,7 @@
           "syllabus_reference": "G-CORE",
           "catalogue_support": "Both",
           "catalogue_description": "Change resistance and compare transient oscillation/decay and frequency response. Choose sampling and run length from the expected response.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -24392,7 +24392,7 @@
           "syllabus_reference": "G-CORE, G-ANALYSIS",
           "catalogue_support": "Both",
           "catalogue_description": "Compare an RC/RL load's frequency-dependent current with phasor calculations. Keep phase reference and current direction explicit.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -24407,7 +24407,7 @@
           "syllabus_reference": "G-CORE",
           "catalogue_support": "Both",
           "catalogue_description": "Compare average instantaneous power with RMS-derived apparent power for a small circuit model. Complete complex-power calculations externally if necessary.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "inductor",
             "capacitor"
@@ -24422,7 +24422,7 @@
           "syllabus_reference": "G-CORE",
           "catalogue_support": "Both",
           "catalogue_description": "Compare frequency response and transient response of the same RC filter under defined source/load conditions.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "capacitor"
           ],
@@ -24437,7 +24437,7 @@
           "syllabus_reference": "G-CORE",
           "catalogue_support": "Both",
           "catalogue_description": "Use current limiting, an identified diode model and low-voltage sine input. Compare polarity, conduction and output ripple. The rectifier topology is a proposed application of the device topic.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "diode",
             "diode_rectifier",
@@ -24453,7 +24453,7 @@
           "syllabus_reference": "G-CORE",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Investigate drive voltage/current and output loading using a prepared transistor model. For an inductive equivalent load, compare switch-node voltage with protection included.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "bjt_npn",
             "mosfet_n",
@@ -24470,7 +24470,7 @@
           "syllabus_reference": "G-CORE",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Scale a declared low-level input to a desired output range. Compare loading, gain and saturation with a suitable amplifier model.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -24487,7 +24487,7 @@
           "syllabus_reference": "G-CORE",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Compare the passive and buffered/active versions of a selected filter under changed loading. Use a model with adequate bandwidth.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "opamp",
             "resistor",
@@ -24504,7 +24504,7 @@
           "syllabus_reference": "G-CORE, G-BROAD",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Draw a small combinational controller and verify all combinations against a stated truth table. Compatible gate models are required; programming an industrial controller is separate.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "gate_and",
             "gate_or",
@@ -24521,7 +24521,7 @@
           "syllabus_reference": "G-CORE, applied proposal",
           "catalogue_support": "Both, model needed",
           "catalogue_description": "Supply measured sensor voltages/resistances and investigate offset, loading and conditioning. Do not claim the circuit independently reproduces the physical sensing mechanism.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "ntc",
             "ldr",
@@ -24541,7 +24541,7 @@
           "syllabus_reference": "G-BROAD, applied proposal",
           "catalogue_support": "Diagram",
           "catalogue_description": "Draw supplies, references, sensor connections, driver and receiving equipment, with test points. The full mechanical/process/software system remains outside TinyCAD.",
-          "source_document": "docs/teaching-catalogue.md#degree-year1-engineering",
+          "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering",
           "experiment_symbol_ids": [
             "temperature_sensor",
             "pressure_sensor",

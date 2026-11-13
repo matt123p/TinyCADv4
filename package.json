@@ -64,8 +64,7 @@
     "libraries:digital": "node scripts/build-digital-library.mjs",
     "test:digital": "node --test scripts/tests/digital-library.test.mjs",
     "test:teaching-tools": "node --test scripts/tests/teaching-native-tools.test.mjs",
-    "libraries:teaching": "node scripts/build-teaching-libraries.mjs",
-    "libraries:all": "npm run libraries:digital && npm run libraries:functional && npm run libraries:sensors && npm run libraries:teaching && npm run libraries:network && npm run libraries:package",
+    "libraries:all": "npm run libraries:digital && npm run libraries:functional && npm run libraries:sensors && npm run libraries:network && npm run libraries:package",
     "test:teaching": "node --test scripts/tests/teaching-library.test.mjs scripts/tests/teaching-models.test.mjs scripts/tests/teaching-native-tools.test.mjs",
     "test:layout:browser": "playwright test --config scripts/tests/layout-browser/playwright.config.mjs",
     "test:layout:all": "npm run test:layout && npm run test:layout:browser"

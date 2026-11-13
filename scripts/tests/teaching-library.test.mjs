@@ -27,7 +27,7 @@ test('every selected canonical component and style variant has embedded simulati
   const manifest = JSON.parse(
     await readFile(
       new URL(
-        '../../docs/symbol-libraries/library-manifest.json',
+        '../../library-sources/inventory/library-manifest.json',
         import.meta.url,
       ),
     ),
@@ -39,6 +39,14 @@ test('every selected canonical component and style variant has embedded simulati
     ),
   );
   const bundledIds = new Set(catalog.libraries.map((library) => library.id));
+  for (const id of ['teaching', ...manifest.libraries.map((course) => course.library_id)]) {
+    if (bundledIds.has(id)) continue;
+    await assert.rejects(
+      readFile(new URL(`../../bundled-libraries/${id}/${id}.tclib`, import.meta.url)),
+      { code: 'ENOENT' },
+      'Building test models must not recreate uncatalogued libraries: ' + id,
+    );
+  }
   for (const course of manifest.libraries.filter((course) =>
     bundledIds.has(course.library_id),
   )) {
@@ -101,7 +109,7 @@ test('all 116 modelled drawings place, rotate, export hidden power pins and reta
       const master = JSON.parse(
         await readFile(
           new URL(
-            '../../docs/symbol-libraries/all-symbols.json',
+            '../../library-sources/inventory/all-symbols.json',
             import.meta.url,
           ),
         ),

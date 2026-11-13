@@ -1,10 +1,13 @@
 import { store } from '../../../src/startup';
 import { activeSheet } from '../../../src/state/stores/docStoreReducer';
-import { actionEditorEvent, actionSetDocument } from '../../../src/state/dispatcher/AppDispatcher';
+import { actionEditorEvent, actionSetDocument, actionSetLibraryList } from '../../../src/state/dispatcher/AppDispatcher';
 
 // This bridge is bundled only into the test entry point. UI interactions still
 // use the real toolbar, dialog, Redux reducers, fonts, and compiled worker.
 (window as any).layoutTest = {
+  installLibrary(library: any) {
+    store.dispatch(actionSetLibraryList([library]));
+  },
   snapshot() {
     const current = store.getState().docStore.present;
     return {

@@ -12,7 +12,7 @@ export async function buildDigitalLibrary() {
       path.join(root, 'bundled-libraries/spice/spice.provenance.json'),
       'utf8',
     ),
-    readFile(path.join(root, 'docs/symbol-libraries/all-symbols.json'), 'utf8'),
+    readFile(path.join(root, 'library-sources/inventory/all-symbols.json'), 'utf8'),
   ]);
   const spice = await spiceArtworkSnapshot(bytes, JSON.parse(provenance));
   const result = await digitalArtworkSnapshot({

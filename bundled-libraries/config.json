@@ -30,18 +30,6 @@
       "name": "Sensors and interfaces",
       "path": "sensors-interfaces/sensors-interfaces.tclib",
       "description": "Sensors, a test point, analogue switch and AM modulator with configurable educational SPICE models and explicit electrical terminals."
-    },
-    {
-      "id": "teaching",
-      "name": "Teaching components",
-      "path": "teaching/teaching.tclib",
-      "description": "Complete shared teaching set: 96 component types with portable SPICE models, including all selected drawing variants."
-    },
-    {
-      "id": "gcse-physics-aqa",
-      "name": "GCSE Physics \u2014 AQA 8463",
-      "path": "gcse-physics-aqa/gcse-physics-aqa.tclib",
-      "description": "Course-specific selection from the shared modelled teaching components. Native instruments and editor tools are supplied by TinyCAD."
     }
   ]
 }

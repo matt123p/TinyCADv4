@@ -4,7 +4,7 @@
   "manifest_kind": "library",
   "library_id": "a-level-physics-aqa",
   "title": "A-level Physics — AQA 7408, including optional Electronics",
-  "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+  "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
   "handoff": {
     "date": "2026-11-10",
     "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -334,7 +334,7 @@
       "syllabus_reference": "RP5; [3.5.1.3][electricity]",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw the wire test section and meters; annotate length and diameter measurements. Enter measured resistance values or a declared wire model. Use R versus length and the measured cross-sectional area to estimate resistivity externally. Simulation cannot supply independent evidence for the geometry or material law entered into it.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "resistance_wire"
       ],
@@ -346,7 +346,7 @@
       "syllabus_reference": "RP6; [3.5.1.6][electricity]",
       "catalogue_support": "Both",
       "catalogue_description": "Model a cell as an ideal voltage source with an explicit series resistor. Vary the load, collect terminal voltage and current, and fit V against I externally. Start with, for example, 1.5 V and 1 Ω; identify intercept and gradient. Do not confuse the bench supply's current limiting with a cell's internal resistance.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "cell",
         "resistor",
@@ -360,7 +360,7 @@
       "syllabus_reference": "RP9; [3.7.4.4][fields]",
       "catalogue_support": "Both",
       "catalogue_description": "Drive an RC circuit with a step and capture capacitor voltage and charging current. Vary R and C independently. Compare fitted or measured time constants and the time to reach a chosen fraction of the final voltage.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "capacitor",
         "capacitor_polarised",
@@ -376,7 +376,7 @@
       "syllabus_reference": "RP9; [3.7.4.4][fields]",
       "catalogue_support": "Both",
       "catalogue_description": "Capture decay after a known charging interval, using a suitable switch model or an explicitly stated source arrangement. Export the decay for a plot of ln(V) against time and obtain RC from its gradient. Include every discharge path, including meter resistance.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "capacitor",
         "capacitor_polarised",
@@ -390,7 +390,7 @@
       "syllabus_reference": "3.5.1.2",
       "catalogue_support": "Both",
       "catalogue_description": "Sweep the source, collect component V and I and examine the gradient. Repeat with different resistance values; distinguish a V-against-I graph from an I-against-V graph.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -402,7 +402,7 @@
       "syllabus_reference": "3.5.1.2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare a measured characteristic with a validated lamp model. A constant resistance does not represent filament heating; without an electrothermal or empirical model, use TinyCAD for the experimental diagram.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "lamp"
       ],
@@ -414,7 +414,7 @@
       "syllabus_reference": "3.5.1.2",
       "catalogue_support": "Both",
       "catalogue_description": "Include current limiting, sweep both polarities and examine the diode's own voltage. Compare different valid diode models without assuming a universal fixed forward drop.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "diode"
       ],
@@ -426,7 +426,7 @@
       "syllabus_reference": "3.5.1.3; 3.5.1.5",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Enter measured temperature/resistance pairs or a calibrated sensor model. Compare output sensitivity over a chosen range. A generic resistor sweep explores circuit response but does not establish the temperature calibration.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "ntc",
         "potentiometer"
@@ -439,7 +439,7 @@
       "syllabus_reference": "3.5.1.4",
       "catalogue_support": "Both",
       "catalogue_description": "Measure signed currents at a junction and voltage changes around a loop. Predict the effect of an extra branch or changed resistor, then compare numerical residuals.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -453,7 +453,7 @@
       "syllabus_reference": "3.5.1.4",
       "catalogue_support": "Both",
       "catalogue_description": "Include an internal resistance for each source. Compare terminal voltage and load current for the same load; avoid modelling parallel cells as contradictory ideal voltage sources.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "cell",
         "battery",
@@ -468,7 +468,7 @@
       "syllabus_reference": "3.5.1.5",
       "catalogue_support": "Both",
       "catalogue_description": "Use two resistors, or two resistor segments representing a potentiometer. Vary the ratio and compare unloaded output with output connected to a finite load.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "potentiometer",
         "rheostat"
@@ -481,7 +481,7 @@
       "syllabus_reference": "3.5.1.5",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Substitute measured light/dark resistance values or a calibrated LDR model. Compare sensor positions and the resulting direction of output change. Illumination itself is external input data.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "ldr",
         "potentiometer"
@@ -494,7 +494,7 @@
       "syllabus_reference": "3.5.1.4; 3.5.1.6",
       "catalogue_support": "Both",
       "catalogue_description": "Measure delivered load power and power in an explicit source resistor. Vary the load and account for the electrical energy supplied. Physical cell heating and chemical behaviour need additional models.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "cell",
         "resistor"
@@ -507,7 +507,7 @@
       "syllabus_reference": "3.7.4.1",
       "catalogue_support": "Both",
       "catalogue_description": "Integrate capacitor current over a selected interval and compare the resulting charge change with its voltage change. Repeat with different C values. Calculate the quotient externally if needed.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "capacitor"
       ],
@@ -522,7 +522,7 @@
       "syllabus_reference": "3.7.4.2",
       "catalogue_support": "Diagram",
       "catalogue_description": "Draw the capacitor and its measurement connections; annotate independently measured geometry and dielectric. The current multimeter has no capacitance range, and the circuit solver does not determine capacitance from drawn plate dimensions. Entering an assumed C only tests subsequent circuit behaviour.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "capacitor_plates",
         "annotation"
@@ -535,7 +535,7 @@
       "syllabus_reference": "3.7.4.3",
       "catalogue_support": "Both",
       "catalogue_description": "Compare calculated stored energy with the integral of discharge-resistor power. State the integration interval and initial voltage. A simulated discharge into a resistor is an electrical energy balance, not a temperature measurement.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "capacitor",
         "capacitor_polarised",
@@ -549,7 +549,7 @@
       "syllabus_reference": "3.7.5.5; AT h",
       "catalogue_support": "Both",
       "catalogue_description": "Vary source amplitude, offset and frequency. Read volts/div and time/div, then compare cursor or graticule estimates with reported period and frequency. Use multiple cycles when estimating a period.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "bnc"
       ],
@@ -566,7 +566,7 @@
       "syllabus_reference": "3.7.5.5",
       "catalogue_support": "Both",
       "catalogue_description": "Capture complete cycles and compare a scope's voltage readout, AC meter reading and calculated RMS. Use a zero-offset sine initially; distinguish AC-only RMS from total RMS when adding an offset.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "bnc"
       ],
@@ -583,7 +583,7 @@
       "syllabus_reference": "3.5.1.2; 3.5.1.5; practical skills",
       "catalogue_support": "Both",
       "catalogue_description": "Compare a high-resistance divider with and without finite voltmeter input resistance. Compare current readings for different meter burdens. This is an evaluation exercise linked to the circuit topics, rather than another numbered required practical.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -597,7 +597,7 @@
       "syllabus_reference": "3.13.1.1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Use an N-channel enhancement device. Sweep gate voltage at several fixed drain conditions in separate runs, and measure drain current. Compare threshold estimates while keeping the model's limitations explicit.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "mosfet_n"
       ],
@@ -611,7 +611,7 @@
       "syllabus_reference": "3.13.1.1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Apply a pulse to the gate and compare gate, drain and load traces. Check the difference between an ideal switch assumption and a selected real device.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "mosfet_n"
       ],
@@ -625,7 +625,7 @@
       "syllabus_reference": "3.13.1.2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Sweep a limited supply through a series resistor, then test the reference with changed input and loading. Record diode voltage and current. Use a model containing the intended breakdown behaviour.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "zener"
       ],
@@ -637,7 +637,7 @@
       "syllabus_reference": "3.13.1.3",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw the reverse-biased detector and readout. Use a calibrated photocurrent input to compare electrical response to steady and pulsed illumination. Wavelength response and optical intensity must come from external data/model parameters.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "photodiode",
         "behavioural_current",
@@ -652,7 +652,7 @@
       "syllabus_reference": "3.13.1.4",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw sensor supply, output and load. Use an equivalent voltage/pulse source to test the receiving electronics. Magnetic field and motion are not generated by the circuit solver.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "hall_sensor"
       ],
@@ -667,7 +667,7 @@
       "syllabus_reference": "3.13.3.1",
       "catalogue_support": "Both",
       "catalogue_description": "Drive a parallel LC network through a stated source impedance. Sweep frequency, measure voltage gain and compare resonance with a calculated prediction. Change damping resistance and obtain bandwidth/Q. Use an energy-response or correctly squared voltage response for the syllabus's half-energy criterion.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "inductor",
         "capacitor",
@@ -684,7 +684,7 @@
       "syllabus_reference": "3.13.3.2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare a varying sensor voltage with a reference. Observe the switching point and output limits. An unbounded ideal controlled source is not a realistic comparator; include suitable rail limiting or an amplifier model.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "comparator",
         "potentiometer"
@@ -697,7 +697,7 @@
       "syllabus_reference": "3.13.4.1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Choose two resistor ratios, apply a small sine and compare signed gain, phase and summing-node voltage. Repeat at larger input amplitude to expose saturation if the model supports it.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -714,7 +714,7 @@
       "syllabus_reference": "3.13.4.2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Repeat the gain measurement with a non-inverting configuration, then change the feedback ratio. Make supply rails and signal reference explicit in the diagram.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -731,7 +731,7 @@
       "syllabus_reference": "3.13.4.3",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Apply two independently adjustable inputs through different resistors. Compare the measured output with a weighted sum, then investigate clipping with a suitable model.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -749,7 +749,7 @@
       "syllabus_reference": "3.13.4.3",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Compare differential excitation with equal voltages on both inputs. Deliberately change one resistor to investigate imperfect common-mode rejection.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -767,7 +767,7 @@
       "syllabus_reference": "3.13.4.4",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Run small-signal AC analysis at several closed-loop gains. Measure cutoff/bandwidth and compare gain–bandwidth products. A frequency-independent ideal amplifier cannot demonstrate this behaviour.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -784,7 +784,7 @@
       "syllabus_reference": "3.13.2.1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Inject a known perturbation into a signal, then compare a threshold stage's input and output. Use explicit sources and a bounded comparator/gate model; investigate where the noise becomes too large to recover the intended levels.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "comparator",
         "gate_buffer",
@@ -801,7 +801,7 @@
       "syllabus_reference": "3.13.2.1",
       "catalogue_support": "Diagram",
       "catalogue_description": "Draw an annotated sampler/ADC/encoding chain and identify where timing and voltage resolution enter. A working converter demonstration needs compatible mixed-signal models or external processing. Scope display sampling must not be described as an experiment on a modelled ADC.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "sampler",
         "adc4",
@@ -818,7 +818,7 @@
       "syllabus_reference": "3.13.5.1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw gates, set all input combinations and compare output voltages with a truth table. Include AND, NAND, OR, NOR, NOT and EOR. Supply valid gate models and logic-level assumptions.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "gate_and",
         "gate_or",
@@ -835,7 +835,7 @@
       "syllabus_reference": "3.13.5.1",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw a proposed multi-gate network and test every input combination. Compare an alternative implementation of the same function. This can also be diagram-only work when models are unavailable.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "gate_and",
         "gate_or",
@@ -852,7 +852,7 @@
       "syllabus_reference": "3.13.5.2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Draw clock/reset connections and capture output sequences for each counter type. Test reset and, where applicable, counting direction. A prepared compatible counter model is required.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "counter_binary3_sync",
         "counter_bcd",
@@ -868,7 +868,7 @@
       "syllabus_reference": "3.13.5.2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Add reset-decoding logic to a counter and verify the sequence length. Use a sufficiently small time step to capture reset pulses and avoid assuming ideal zero-delay behaviour.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "counter_binary3_sync",
         "gate_and",
@@ -888,7 +888,7 @@
       "syllabus_reference": "3.13.5.3",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Use a suitable oscillator model, such as a modelled timer circuit. Vary its timing R/C and measure period, pulse width and duty cycle. Feeding in a predefined pulse source only supplies a clock; it does not test an astable. A specific timer IC is not required by this syllabus.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "timer_555",
         "capacitor",
@@ -905,7 +905,7 @@
       "syllabus_reference": "3.13.6.1",
       "catalogue_support": "Diagram",
       "catalogue_description": "Draw and annotate source, processing, transmitter, channel and receiver blocks. Identify which interfaces carry electrical signals. This is a block-diagram teaching exercise, not an end-to-end communication simulation.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "temperature_sensor",
         "light_sensor",
@@ -926,7 +926,7 @@
       "syllabus_reference": "3.13.6.2",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Represent a short wired connection by an explicitly justified R/C equivalent. Compare received pulses for different parameter sets. The model does not establish the behaviour of optical fibre or radio propagation.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "channel",
         "resistor",
@@ -942,7 +942,7 @@
       "syllabus_reference": "3.13.6.3",
       "catalogue_support": "Diagram",
       "catalogue_description": "Draw two source channels, timed switches and a receiver arrangement. Annotate time slots. Simulation needs switch/control models and a prepared timing sequence; it is not a built-in multiplexing instrument.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "tdm_switch",
         "controlled_switch"
@@ -958,7 +958,7 @@
       "syllabus_reference": "3.13.6.4",
       "catalogue_support": "Both, model needed",
       "catalogue_description": "Supply a behavioural or compatible modulator model and compare carrier, message and modulated traces. Vary message amplitude/frequency. The proposed circuit implementation is optional; the syllabus does not require its details.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "am_modulator",
         "behavioural_voltage"
@@ -974,7 +974,7 @@
       "syllabus_reference": "3.13.6.4",
       "catalogue_support": "Both",
       "catalogue_description": "Use the configurable source's FM waveform, then compare time-domain traces as modulation settings change. Identify carrier and message timing. A spectral sideband/bandwidth investigation requires external analysis or an added workflow; the current UI does not provide FFT.",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa",
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa",
       "experiment_symbol_ids": [
         "bnc"
       ],

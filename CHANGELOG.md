@@ -12,12 +12,9 @@
 - Schematic auto-layout for the whole sheet or selected items, with High, Medium and Low strength settings and explanations beside each option.
 - Run auto-layout in a background worker with cancellation, connection checks and a single Undo step to revert the result.
 
-### Changed
-
-- Remove the nine A-level, BTEC and degree course bundles. Keep GCSE Physics, Teaching components and all other standard libraries, including Network layout.
-
 ### Fixed
 
+- Show draggable component artwork directly in the library picker lists for Standard, My Libraries and Online results; fit and centre wide and tall symbols within their previews.
 - Give the browser SPICE engine sufficient stack space for amplifier examples and detect stack overflows instead of reporting misleading component or out-of-memory errors.
 - Show simulation error messages in red and immediately display a failure popup for runs started from sheets, charts or instruments.
 - Open the failed run's diagnostics directly from its error message or popup, and retain solver errors even when a run produces no samples.
@@ -33,7 +30,6 @@
 
 ### Maintenance
 
-- Generate course bundles only when they are listed in the bundled library catalogue; retain the full teaching source inventory.
 - Add reproducible network library generation, artwork previews and checks for socket wiring, rack alignment, rotation, save/load and the bundled office network.
 - Add layout algorithm, dialog, worker, editor and browser regression suites, including the original amplifier and a captured layout with pin loops, with automated CI coverage.
 - Document auto-layout behavior and commands for running the test suites.

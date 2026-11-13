@@ -14,7 +14,7 @@ const near = (value, expected, tolerance = 0.002) =>
 test('all 96 non-editor contracts have complete portable teaching models', async () => {
   const m = JSON.parse(
     await readFile(
-      new URL('../../docs/symbol-libraries/all-symbols.json', import.meta.url),
+      new URL('../../library-sources/inventory/all-symbols.json', import.meta.url),
     ),
   );
   for (const r of m.symbols.filter(

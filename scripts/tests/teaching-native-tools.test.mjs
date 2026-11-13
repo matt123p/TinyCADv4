@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { teachingNativeTools } from '../lib/teaching-native-tools.mjs';
 import { runRegression } from './run-regression.mjs';
 
-const json = async (name) => JSON.parse(await readFile(new URL('../../docs/symbol-libraries/' + name, import.meta.url), 'utf8'));
+const json = async (name) => JSON.parse(await readFile(new URL('../../library-sources/inventory/' + name, import.meta.url), 'utf8'));
 
 test('all course and experiment requirements exclude built-in equipment and source duplicates', async () => {
   const master = await json('all-symbols.json');

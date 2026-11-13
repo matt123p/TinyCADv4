@@ -6,7 +6,7 @@ import { circuitSaveLine } from '../../shared/spiceSaveVectors.js';
 import { teachingModel } from '../lib/teaching-models.mjs';
 const master = JSON.parse(
   await fs.readFile(
-    new URL('../../docs/symbol-libraries/all-symbols.json', import.meta.url),
+    new URL('../../library-sources/inventory/all-symbols.json', import.meta.url),
   ),
 );
 export async function simulate(id, values = {}, options = {}) {

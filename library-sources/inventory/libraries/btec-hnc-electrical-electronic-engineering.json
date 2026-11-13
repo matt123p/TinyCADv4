@@ -2,9 +2,9 @@
   "$schema": "../symbol-library.schema.json",
   "schema_version": "1.0.0",
   "manifest_kind": "library",
-  "library_id": "degree-year1-physics",
-  "title": "First-year physics degree — representative electronic-circuit strand",
-  "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+  "library_id": "btec-hnc-electrical-electronic-engineering",
+  "title": "BTEC HNC Electrical and Electronic Engineering for England (2024) — Unit 4019",
+  "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
   "handoff": {
     "date": "2026-11-10",
     "scope": "Inventory and generation/extraction requirements only. No symbol geometry, device models, footprints or application subfolder feature is implemented.",
@@ -20,20 +20,16 @@
   },
   "syllabus_sources": [
     {
-      "id": "lab",
-      "url": "https://courses.warwick.ac.uk/modules/2025/PX152-30"
+      "id": "course",
+      "url": "https://qualifications.pearson.com/en/qualifications/btec-higher-nationals/electrical-electronic-engineering-for-england-2024.html"
     },
     {
-      "id": "circuits",
-      "url": "https://courses.warwick.ac.uk/modules/2025/PX157-10"
+      "id": "programme",
+      "url": "https://qualifications.pearson.com/content/dam/pdf/BTEC-Higher-Nationals/electrical-electronic-engineering-for-england/2024/specification/9781292448480-btec-hn-l4-l5-electric-electron-engin-engl.pdf#page=35"
     },
     {
-      "id": "year",
-      "url": "https://warwick.ac.uk/fac/sci/physics/prospective/undergraduate_study/physics_courses/firstyrmodules/"
-    },
-    {
-      "id": "project",
-      "url": "https://www.gla.ac.uk/myglasgow/learningandteaching/activelearning/casestudies/project-based-learning/"
+      "id": "units",
+      "url": "https://qualifications.pearson.com/content/dam/pdf/BTEC-Higher-Nationals/engineering-for-england/2024/unitdescriptors/btec-hncd-unit-descriptor-engineering-suite-2024.pdf#page=160"
     }
   ],
   "common_symbol_ids": [
@@ -64,7 +60,8 @@
       "already_provided": true,
       "generate_symbol": false,
       "used_by_experiments": [
-        "P02"
+        "H02",
+        "H03"
       ],
       "common_support_tool": true
     },
@@ -84,8 +81,7 @@
       "already_provided": true,
       "generate_symbol": false,
       "used_by_experiments": [
-        "P03",
-        "P04"
+        "H05"
       ],
       "common_support_tool": true
     },
@@ -163,28 +159,9 @@
       "already_provided": true,
       "generate_symbol": false,
       "used_by_experiments": [
-        "P01"
-      ],
-      "common_support_tool": false
-    },
-    {
-      "id": "source_pulse",
-      "name": "Pulse / step voltage source",
-      "native_tool": "source",
-      "configuration": {
-        "type": "voltage",
-        "waveform": "pulse"
-      },
-      "already_provided": true,
-      "generate_symbol": false,
-      "used_by_experiments": [
-        "P05",
-        "P06",
-        "P07",
-        "P08",
-        "P12",
-        "P13",
-        "P14"
+        "H01",
+        "H02",
+        "H03"
       ],
       "common_support_tool": false
     },
@@ -199,12 +176,36 @@
       "already_provided": true,
       "generate_symbol": false,
       "used_by_experiments": [
-        "P09",
-        "P10",
-        "P11",
-        "P12",
-        "P13",
-        "P14"
+        "H06",
+        "H07",
+        "H09",
+        "H10",
+        "H11",
+        "H12",
+        "H15",
+        "H17",
+        "H18"
+      ],
+      "common_support_tool": false
+    },
+    {
+      "id": "source_pulse",
+      "name": "Pulse / step voltage source",
+      "native_tool": "source",
+      "configuration": {
+        "type": "voltage",
+        "waveform": "pulse"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "H06",
+        "H08",
+        "H09",
+        "H10",
+        "H15",
+        "H17",
+        "H18"
       ],
       "common_support_tool": false
     },
@@ -215,8 +216,7 @@
       "already_provided": true,
       "generate_symbol": false,
       "used_by_experiments": [
-        "P12",
-        "P13"
+        "H06"
       ],
       "common_support_tool": false
     },
@@ -227,8 +227,21 @@
       "already_provided": true,
       "generate_symbol": false,
       "used_by_experiments": [
-        "P12",
-        "P13"
+        "H06"
+      ],
+      "common_support_tool": false
+    },
+    {
+      "id": "vcvs",
+      "name": "Voltage-controlled voltage source",
+      "native_tool": "controlled",
+      "configuration": {
+        "type": "voltage"
+      },
+      "already_provided": true,
+      "generate_symbol": false,
+      "used_by_experiments": [
+        "H17"
       ],
       "common_support_tool": false
     }
@@ -237,13 +250,13 @@
     "01 Passives/Capacitors",
     "01 Passives/Inductors",
     "01 Passives/Resistors",
+    "02 Semiconductors/Diodes",
     "02 Semiconductors/Transistors",
     "03 Sensors/Powered",
-    "03 Sensors/Resistive",
     "04 Switches/Manual",
+    "04 Switches/Relays",
     "05 Sources/Cells",
     "07 Analogue/Amplifiers",
-    "07 Analogue/Comparators",
     "08 Digital/Gates",
     "09 Functional Blocks/Interfaces",
     "11 Connections/Connectors",
@@ -252,12 +265,12 @@
   ],
   "experiments": [
     {
-      "id": "P01",
-      "title": "DC network verification",
-      "syllabus_reference": "P-CIR",
+      "id": "H01",
+      "title": "Nodal and loop checks",
+      "syllabus_reference": "LO1",
       "catalogue_support": "Both",
-      "catalogue_description": "Solve a multi-loop network analytically, then compare signed currents and node voltages with the solver. Identify which discrepancies are numerical and which indicate a modelling or sign error.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+      "catalogue_description": "Choose a multi-branch DC network, predict node potentials and signed currents, then compare simulation residuals with hand calculations.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "resistor"
       ],
@@ -266,26 +279,50 @@
       ]
     },
     {
-      "id": "P02",
-      "title": "Source resistance and loading",
-      "syllabus_reference": "P-CIR, P-LAB",
+      "id": "H02",
+      "title": "Source superposition",
+      "syllabus_reference": "LO1",
       "catalogue_support": "Both",
-      "catalogue_description": "Compare a measured source model with an ideal source while varying the load. Fit an equivalent source resistance from exported terminal readings.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [
-        "rheostat"
-      ],
+      "catalogue_description": "Solve a two-source circuit with each independent source deactivated in turn. Compare the sum of voltage/current contributions with the complete circuit. Do not sum power contributions as though power were linear.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [],
       "existing_tool_ids": [
-        "source_dc"
+        "source_dc",
+        "current_source"
       ]
     },
     {
-      "id": "P03",
-      "title": "Voltmeter loading",
-      "syllabus_reference": "P-LAB",
+      "id": "H03",
+      "title": "Thevenin and Norton equivalents",
+      "syllabus_reference": "LO1",
       "catalogue_support": "Both",
-      "catalogue_description": "Connect a finite-resistance meter to a high-resistance divider. Estimate the expected loading error before running, then compare with a physical meter.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+      "catalogue_description": "Obtain an equivalent at a selected port, then compare original and equivalent circuits under several finite loads. Avoid using a physical short as a measurement method.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [],
+      "existing_tool_ids": [
+        "source_dc",
+        "current_source"
+      ]
+    },
+    {
+      "id": "H04",
+      "title": "Maximum power transfer",
+      "syllabus_reference": "LO1",
+      "catalogue_support": "Both",
+      "catalogue_description": "Vary a resistor load against a source with explicit resistance. Compare load power and efficiency; maximum delivered power is not maximum efficiency.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [
+        "rheostat"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "H05",
+      "title": "Dividers and measurement loading",
+      "syllabus_reference": "LO1",
+      "catalogue_support": "Both",
+      "catalogue_description": "Compare loaded/unloaded divider outputs and introduce finite meter input resistance. Quantify the measurement's influence.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "potentiometer"
       ],
@@ -294,165 +331,195 @@
       ]
     },
     {
-      "id": "P04",
-      "title": "Ammeter burden",
-      "syllabus_reference": "P-LAB",
+      "id": "H06",
+      "title": "Sinusoidal measurements",
+      "syllabus_reference": "LO2",
       "catalogue_support": "Both",
-      "catalogue_description": "Repeat a low-resistance current measurement with several declared meter burdens. Quantify how inserting the instrument changes the circuit.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [],
+      "catalogue_description": "Compare peak, RMS, frequency and phase using complete captured cycles. State whether an offset is included in the chosen RMS quantity.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [
+        "bnc"
+      ],
       "existing_tool_ids": [
-        "multimeter"
+        "source_sine",
+        "source_pulse",
+        "oscilloscope",
+        "function_generator"
       ]
     },
     {
-      "id": "P05",
-      "title": "Capacitor combinations and energy",
-      "syllabus_reference": "P-CIR",
+      "id": "H07",
+      "title": "RC and RL impedance",
+      "syllabus_reference": "LO2",
       "catalogue_support": "Both",
-      "catalogue_description": "Compare charging responses of series/parallel capacitor networks and calculate stored energy. Infer effective C using a stated method rather than a nonexistent virtual capacitance-meter range.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+      "catalogue_description": "Sweep frequency and compare the magnitude/phase of voltage and current with calculated impedances. Include source resistance and coil resistance where appropriate.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
-        "capacitor",
+        "inductor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
+        "source_sine"
+      ]
+    },
+    {
+      "id": "H08",
+      "title": "First-order transient response",
+      "syllabus_reference": "LO2",
+      "catalogue_support": "Both",
+      "catalogue_description": "Capture RC and RL responses to a step. Change one component at a time and compare fitted time constants with the declared circuit.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [
+        "inductor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
+        "source_pulse"
+      ]
+    },
+    {
+      "id": "H09",
+      "title": "RLC resonance and damping",
+      "syllabus_reference": "LO2",
+      "catalogue_support": "Both",
+      "catalogue_description": "Compare time-domain decay with frequency response for different resistances. Measure resonance, bandwidth and Q using a stated criterion.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [
+        "inductor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
+        "source_sine",
+        "source_pulse"
+      ]
+    },
+    {
+      "id": "H10",
+      "title": "Passive filter response",
+      "syllabus_reference": "LO2",
+      "catalogue_support": "Both",
+      "catalogue_description": "Compare RC low-pass/high-pass networks with the same source and load. Relate AC response to pulse-shape changes from transient runs.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [
+        "capacitor"
+      ],
+      "existing_tool_ids": [
+        "source_sine",
+        "source_pulse"
+      ]
+    },
+    {
+      "id": "H11",
+      "title": "Power factor in a small RLC load",
+      "syllabus_reference": "LO2",
+      "catalogue_support": "Both",
+      "catalogue_description": "Compare average instantaneous power with apparent power calculated from RMS readings. Export values for complex-power calculations if required.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [
+        "inductor",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
+        "source_sine"
+      ]
+    },
+    {
+      "id": "H12",
+      "title": "Half/full-wave rectification and smoothing",
+      "syllabus_reference": "LO2–LO3",
+      "catalogue_support": "Both",
+      "catalogue_description": "Use low-voltage sources and explicit diode mappings. Vary load/capacitance and compare ripple and mean output. Treat transformer input as a declared source unless a suitable coupled model is supplied.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [
+        "diode_rectifier",
         "capacitor_polarised"
       ],
       "existing_tool_ids": [
-        "source_pulse"
-      ]
-    },
-    {
-      "id": "P06",
-      "title": "RC charging/discharging",
-      "syllabus_reference": "P-CIR",
-      "catalogue_support": "Both",
-      "catalogue_description": "Capture both capacitor voltage and resistor current. Fit a decay externally, compare the time constant with component measurements and discuss instrument loading.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [
-        "capacitor",
-        "capacitor_polarised",
-        "switch_spdt"
-      ],
-      "existing_tool_ids": [
-        "source_pulse"
-      ]
-    },
-    {
-      "id": "P07",
-      "title": "RL transient",
-      "syllabus_reference": "P-CIR",
-      "catalogue_support": "Both",
-      "catalogue_description": "Apply a step to a resistive-inductive circuit, include coil resistance and compare fitted time constant with the model prediction. A lumped inductor does not model the magnetic geometry.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [
-        "inductor"
-      ],
-      "existing_tool_ids": [
-        "source_pulse"
-      ]
-    },
-    {
-      "id": "P08",
-      "title": "Damped RLC response",
-      "syllabus_reference": "P-CIR",
-      "catalogue_support": "Both",
-      "catalogue_description": "Change R and compare oscillatory and non-oscillatory responses. Extract a decay rate and oscillation period from an adequately sampled transient.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [
-        "inductor",
-        "capacitor"
-      ],
-      "existing_tool_ids": [
-        "source_pulse"
-      ]
-    },
-    {
-      "id": "P09",
-      "title": "Complex impedance and phase",
-      "syllabus_reference": "P-CIR",
-      "catalogue_support": "Both",
-      "catalogue_description": "Sweep RC and RL circuits, measure voltage/current phase and compare with phasor calculations. State the reference direction and phase convention.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [
-        "inductor",
-        "capacitor"
-      ],
-      "existing_tool_ids": [
         "source_sine"
       ]
     },
     {
-      "id": "P10",
-      "title": "Series resonance",
-      "syllabus_reference": "P-CIR",
-      "catalogue_support": "Both",
-      "catalogue_description": "Sweep an RLC circuit, measure response and bandwidth, then compare the inferred resonance with the transient experiment. Include generator output impedance.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [
-        "inductor",
-        "capacitor"
-      ],
-      "existing_tool_ids": [
-        "source_sine"
-      ]
-    },
-    {
-      "id": "P11",
-      "title": "AC power and power factor",
-      "syllabus_reference": "P-CIR",
-      "catalogue_support": "Both",
-      "catalogue_description": "Average instantaneous load power and compare it with RMS-based apparent power. Calculate power factor and distinguish energy storage from dissipation.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [
-        "inductor",
-        "capacitor"
-      ],
-      "existing_tool_ids": [
-        "source_sine"
-      ]
-    },
-    {
-      "id": "P12",
-      "title": "Scope timing and amplitude measurements",
-      "syllabus_reference": "P-LAB",
-      "catalogue_support": "Both",
-      "catalogue_description": "Compare graticule/cursor estimates with numerical readings as timebase and capture step change. Record the acquisition settings and avoid treating display interpolation as additional samples.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [
-        "bnc"
-      ],
-      "existing_tool_ids": [
-        "source_sine",
-        "source_pulse",
-        "oscilloscope",
-        "function_generator"
-      ]
-    },
-    {
-      "id": "P13",
-      "title": "Transistor operating point and gain",
-      "syllabus_reference": "P-LAB",
+      "id": "H13",
+      "title": "Diode and Zener behaviour",
+      "syllabus_reference": "LO3",
       "catalogue_support": "Both, model needed",
-      "catalogue_description": "Bias a prepared BJT circuit, verify its DC state and compare small/large signal behaviour. Compare with a real circuit using an identified device.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+      "catalogue_description": "Sweep current-limited circuits and compare operating voltage and dissipation. A Zener model must include the intended breakdown characteristic.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [
+        "diode",
+        "zener"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "H14",
+      "title": "LED operating conditions",
+      "syllabus_reference": "LO3",
+      "catalogue_support": "Both, model needed",
+      "catalogue_description": "Evaluate limiting resistors for several supplies using an identified LED model. Predict electrical current, not luminous intensity.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [
+        "led"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "H15",
+      "title": "BJT switch and amplifier",
+      "syllabus_reference": "LO3",
+      "catalogue_support": "Both, model needed",
+      "catalogue_description": "Compare switching and small-signal operation of a chosen transistor. Record DC bias before measuring gain and output range.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "bjt_npn",
-        "capacitor",
-        "bnc"
+        "bjt_pnp",
+        "capacitor"
+      ],
+      "existing_tool_ids": [
+        "source_sine",
+        "source_pulse"
+      ]
+    },
+    {
+      "id": "H16",
+      "title": "JFET/MOSFET comparison",
+      "syllabus_reference": "LO3",
+      "catalogue_support": "Both, model needed",
+      "catalogue_description": "Compare gate-controlled current using appropriate models and separately stated operating conditions. Do not infer an interchangeable pinout or threshold.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [
+        "jfet_n",
+        "jfet_p",
+        "mosfet_n",
+        "mosfet_p"
+      ],
+      "existing_tool_ids": []
+    },
+    {
+      "id": "H17",
+      "title": "Amplifier source/load interaction",
+      "syllabus_reference": "LO4",
+      "catalogue_support": "Both, model needed",
+      "catalogue_description": "Vary source and load resistances around a prepared amplifier model. Measure gain and bandwidth under each condition.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
+      "experiment_symbol_ids": [
+        "opamp",
+        "resistor",
+        "capacitor"
       ],
       "existing_tool_ids": [
         "source_sine",
         "source_pulse",
-        "oscilloscope",
-        "function_generator"
+        "vcvs"
       ]
     },
     {
-      "id": "P14",
-      "title": "Op-amp feedback and limits",
-      "syllabus_reference": "P-LAB",
+      "id": "H18",
+      "title": "Introductory op-amp feedback circuit",
+      "syllabus_reference": "LO4",
       "catalogue_support": "Both, model needed",
-      "catalogue_description": "Test a simple amplifier at several gains and input amplitudes. Compare an idealised prediction with a rail-limited, frequency-dependent model and physical results.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+      "catalogue_description": "Choose a simple inverting/non-inverting stage and compare predicted gain with captures. Supply rail limits and a model adequate to the measurement.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "opamp",
         "resistor",
@@ -464,80 +531,38 @@
       ]
     },
     {
-      "id": "P15",
-      "title": "Threshold detector and logic output",
-      "syllabus_reference": "P-LAB",
+      "id": "H19",
+      "title": "Voltage logic and simple gate networks",
+      "syllabus_reference": "LO4",
       "catalogue_support": "Both, model needed",
-      "catalogue_description": "Apply a slow input and a reference to a comparator, then check the resulting logic levels. The model must represent the required output limits.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [
-        "comparator",
-        "gate_buffer",
-        "potentiometer"
-      ],
-      "existing_tool_ids": []
-    },
-    {
-      "id": "P16",
-      "title": "Simple logic-network verification",
-      "syllabus_reference": "P-LAB",
-      "catalogue_support": "Both, model needed",
-      "catalogue_description": "Prepare a small network, predict its truth table and exercise every combination. This is a proposed workshop exercise, not a claim that a particular gate exercise is allocated by Warwick.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+      "catalogue_description": "Verify small combinational functions and state the logic-level conventions. Use appropriate gate models; neither firmware nor HDL execution is implied.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "gate_and",
         "gate_or",
         "gate_nand",
         "gate_nor",
         "gate_xor",
-        "gate_not"
+        "gate_not",
+        "switch_spst",
+        "relay_spdt"
       ],
       "existing_tool_ids": []
     },
     {
-      "id": "P17",
-      "title": "Sensor calibration and interface loading",
-      "syllabus_reference": "P-PROJ",
-      "catalogue_support": "Both, model needed",
-      "catalogue_description": "Enter measured sensor voltage/resistance data and compare interface output for different loading. The physical calibration is obtained independently, not generated by fitting the same simulation.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [
-        "ntc",
-        "ldr",
-        "temperature_sensor",
-        "pressure_sensor",
-        "light_sensor",
-        "opamp"
-      ],
-      "existing_tool_ids": []
-    },
-    {
-      "id": "P18",
-      "title": "Component uncertainty and model sensitivity",
-      "syllabus_reference": "P-LAB",
-      "catalogue_support": "Both",
-      "catalogue_description": "Compare nominal and measured component values, then use bounded sweeps or tolerance studies. Keep manufacturing tolerances, instrument uncertainty and repeated-measurement scatter separate in the analysis.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
-      "experiment_symbol_ids": [
-        "resistor",
-        "capacitor"
-      ],
-      "existing_tool_ids": []
-    },
-    {
-      "id": "P19",
-      "title": "Electronic measurement-chain documentation",
-      "syllabus_reference": "P-LAB, P-PROJ",
+      "id": "H20",
+      "title": "Signal-chain and test-plan drawing",
+      "syllabus_reference": "LO4; project application",
       "catalogue_support": "Diagram",
-      "catalogue_description": "Draw sensor, conditioning stage, recorder/controller and references. Annotate supply and test connections. Firmware, physical data acquisition and weather-station operation need other tools.",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics",
+      "catalogue_description": "Draw a sensor-equivalent source, conditioner and receiving stage, with test points and loading assumptions. The physical sensor and any PLC program remain outside the simulation.",
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering",
       "experiment_symbol_ids": [
         "temperature_sensor",
         "light_sensor",
+        "pressure_sensor",
         "opamp",
         "data_logger",
-        "microcontroller",
-        "connector3"
+        "plc_interface"
       ],
       "existing_tool_ids": []
     }
@@ -585,15 +610,14 @@
       },
       "canonical_symbol_id": "capacitor",
       "used_by_experiments": [
-        "P05",
-        "P06",
-        "P08",
-        "P09",
-        "P10",
-        "P11",
-        "P13",
-        "P14",
-        "P18"
+        "H07",
+        "H08",
+        "H09",
+        "H10",
+        "H11",
+        "H15",
+        "H17",
+        "H18"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -642,8 +666,7 @@
       },
       "canonical_symbol_id": "capacitor_polarised",
       "used_by_experiments": [
-        "P05",
-        "P06"
+        "H12"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -691,11 +714,10 @@
       },
       "canonical_symbol_id": "inductor",
       "used_by_experiments": [
-        "P07",
-        "P08",
-        "P09",
-        "P10",
-        "P11"
+        "H07",
+        "H08",
+        "H09",
+        "H11"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -751,8 +773,7 @@
       },
       "canonical_symbol_id": "potentiometer",
       "used_by_experiments": [
-        "P03",
-        "P15"
+        "H05"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -804,9 +825,9 @@
       },
       "canonical_symbol_id": "resistor",
       "used_by_experiments": [
-        "P01",
-        "P14",
-        "P18"
+        "H01",
+        "H17",
+        "H18"
       ],
       "common_support_symbol": true,
       "optional_uses": [],
@@ -854,9 +875,201 @@
       },
       "canonical_symbol_id": "rheostat",
       "used_by_experiments": [
-        "P02"
+        "H04"
       ],
       "common_support_symbol": true,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "diode",
+      "name": "Signal diode",
+      "folder": "02 Semiconductors/Diodes",
+      "reference_prefix": "D",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "silicon diode",
+        "signal diode",
+        "PN junction diode"
+      ],
+      "search_terms": [
+        "Signal diode",
+        "silicon diode",
+        "signal diode",
+        "PN junction diode"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "A",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "K",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Diode with clearly identifiable cathode bar; show A/K names.",
+      "simulation": {
+        "requirement": "device_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "diode",
+      "used_by_experiments": [
+        "H13"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "diode_rectifier",
+      "name": "Rectifier diode",
+      "folder": "02 Semiconductors/Diodes",
+      "reference_prefix": "D",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "power diode",
+        "rectifier diode"
+      ],
+      "search_terms": [
+        "Rectifier diode",
+        "power diode",
+        "rectifier diode"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "A",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "K",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Rectifier diode; distinguish intended role in name/metadata while retaining standard polarity.",
+      "simulation": {
+        "requirement": "device_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "diode_rectifier",
+      "used_by_experiments": [
+        "H12"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "led",
+      "name": "Light-emitting diode",
+      "folder": "02 Semiconductors/Diodes",
+      "reference_prefix": "LED",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "LED",
+        "light emitting diode"
+      ],
+      "search_terms": [
+        "Light-emitting diode",
+        "LED",
+        "light emitting diode"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "A",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "K",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Diode with two outward light arrows; optional body colour. Electrical current does not automatically model brightness.",
+      "simulation": {
+        "requirement": "device_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {
+        "colour": [
+          "red",
+          "green",
+          "blue",
+          "amber",
+          "white"
+        ],
+        "model": "user supplied"
+      },
+      "canonical_symbol_id": "led",
+      "used_by_experiments": [
+        "H14"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "zener",
+      "name": "Zener diode",
+      "folder": "02 Semiconductors/Diodes",
+      "reference_prefix": "DZ",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "Zener diode",
+        "reference diode"
+      ],
+      "search_terms": [
+        "Zener diode",
+        "reference diode"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "A",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "K",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Zener cathode-bar shape, A/K polarity and breakdown-voltage property.",
+      "simulation": {
+        "requirement": "device_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {
+        "breakdown_voltage": "model dependent"
+      },
+      "canonical_symbol_id": "zener",
+      "used_by_experiments": [
+        "H13"
+      ],
+      "common_support_symbol": false,
       "optional_uses": [],
       "library_requirement": "experiment_coverage"
     },
@@ -907,7 +1120,268 @@
       "configurable_properties": {},
       "canonical_symbol_id": "bjt_npn",
       "used_by_experiments": [
-        "P13"
+        "H15"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "bjt_pnp",
+      "name": "PNP bipolar transistor",
+      "folder": "02 Semiconductors/Transistors",
+      "reference_prefix": "Q",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "pnp",
+        "pnp BJT",
+        "bipolar junction transistor"
+      ],
+      "search_terms": [
+        "PNP bipolar transistor",
+        "pnp",
+        "pnp BJT",
+        "bipolar junction transistor"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "B",
+          "electrical_type": "input",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "C",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "3",
+          "name": "E",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "PNP BJT, correct emitter-arrow direction, explicit B/C/E names. Generic logical terminal order is not a package pinout.",
+      "simulation": {
+        "requirement": "device_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "bjt_pnp",
+      "used_by_experiments": [
+        "H15"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "jfet_n",
+      "name": "N-channel JFET",
+      "folder": "02 Semiconductors/Transistors",
+      "reference_prefix": "Q",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "n-channel JFET",
+        "junction FET"
+      ],
+      "search_terms": [
+        "N-channel JFET",
+        "n-channel JFET",
+        "junction FET"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "G",
+          "electrical_type": "input",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "D",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "3",
+          "name": "S",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "N-channel junction FET, correct gate-arrow convention, G/D/S visible.",
+      "simulation": {
+        "requirement": "device_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "jfet_n",
+      "used_by_experiments": [
+        "H16"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "jfet_p",
+      "name": "P-channel JFET",
+      "folder": "02 Semiconductors/Transistors",
+      "reference_prefix": "Q",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "p-channel JFET",
+        "junction FET"
+      ],
+      "search_terms": [
+        "P-channel JFET",
+        "p-channel JFET",
+        "junction FET"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "G",
+          "electrical_type": "input",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "D",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "3",
+          "name": "S",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "P-channel junction FET, correct gate-arrow convention, G/D/S visible.",
+      "simulation": {
+        "requirement": "device_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "jfet_p",
+      "used_by_experiments": [
+        "H16"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "mosfet_n",
+      "name": "N-channel enhancement MOSFET",
+      "folder": "02 Semiconductors/Transistors",
+      "reference_prefix": "Q",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "nMOS",
+        "n-channel MOSFET",
+        "enhancement MOSFET"
+      ],
+      "search_terms": [
+        "N-channel enhancement MOSFET",
+        "nMOS",
+        "n-channel MOSFET",
+        "enhancement MOSFET"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "G",
+          "electrical_type": "input",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "D",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "3",
+          "name": "S",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Three-terminal N-channel enhancement MOSFET. Declare body tied to source in its adapter/model; do not silently map three pins to an arbitrary four-pin primitive.",
+      "simulation": {
+        "requirement": "device_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "mosfet_n",
+      "used_by_experiments": [
+        "H16"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "mosfet_p",
+      "name": "P-channel enhancement MOSFET",
+      "folder": "02 Semiconductors/Transistors",
+      "reference_prefix": "Q",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "pMOS",
+        "p-channel MOSFET",
+        "enhancement MOSFET"
+      ],
+      "search_terms": [
+        "P-channel enhancement MOSFET",
+        "pMOS",
+        "p-channel MOSFET",
+        "enhancement MOSFET"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "G",
+          "electrical_type": "input",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "D",
+          "electrical_type": "passive",
+          "side": "top"
+        },
+        {
+          "logical_number": "3",
+          "name": "S",
+          "electrical_type": "passive",
+          "side": "bottom"
+        }
+      ],
+      "drawing_description": "Three-terminal P-channel enhancement MOSFET. Declare body tied to source in its adapter/model; do not silently map three pins to an arbitrary four-pin primitive.",
+      "simulation": {
+        "requirement": "device_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "mosfet_p",
+      "used_by_experiments": [
+        "H16"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -956,8 +1430,7 @@
       "configurable_properties": {},
       "canonical_symbol_id": "light_sensor",
       "used_by_experiments": [
-        "P17",
-        "P19"
+        "H20"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -1006,7 +1479,7 @@
       "configurable_properties": {},
       "canonical_symbol_id": "pressure_sensor",
       "used_by_experiments": [
-        "P17"
+        "H20"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -1055,158 +1528,7 @@
       "configurable_properties": {},
       "canonical_symbol_id": "temperature_sensor",
       "used_by_experiments": [
-        "P17",
-        "P19"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "ldr",
-      "name": "Light-dependent resistor",
-      "folder": "03 Sensors/Resistive",
-      "reference_prefix": "LDR",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "LDR",
-        "photoresistor",
-        "light dependent resistor"
-      ],
-      "search_terms": [
-        "Light-dependent resistor",
-        "LDR",
-        "photoresistor",
-        "light dependent resistor"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "1",
-          "electrical_type": "passive",
-          "side": "left"
-        },
-        {
-          "logical_number": "2",
-          "name": "2",
-          "electrical_type": "passive",
-          "side": "right"
-        }
-      ],
-      "drawing_description": "Resistor in sensor outline with inward light arrows.",
-      "simulation": {
-        "requirement": "calibrated_equivalent_required",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
-      },
-      "configurable_properties": {
-        "resistance": "calibrated illumination data"
-      },
-      "canonical_symbol_id": "ldr",
-      "used_by_experiments": [
-        "P17"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "ntc",
-      "name": "NTC thermistor",
-      "folder": "03 Sensors/Resistive",
-      "reference_prefix": "RT",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "thermistor",
-        "NTC",
-        "temperature dependent resistor"
-      ],
-      "search_terms": [
-        "NTC thermistor",
-        "thermistor",
-        "NTC",
-        "temperature dependent resistor"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "1",
-          "electrical_type": "passive",
-          "side": "left"
-        },
-        {
-          "logical_number": "2",
-          "name": "2",
-          "electrical_type": "passive",
-          "side": "right"
-        }
-      ],
-      "drawing_description": "Thermistor resistor symbol with temperature indicator; explicitly NTC.",
-      "simulation": {
-        "requirement": "calibrated_equivalent_required",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
-      },
-      "configurable_properties": {
-        "temperature": "external measurement/input",
-        "resistance": "calibrated R(T)"
-      },
-      "canonical_symbol_id": "ntc",
-      "used_by_experiments": [
-        "P17"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "switch_spdt",
-      "name": "SPDT changeover switch",
-      "folder": "04 Switches/Manual",
-      "reference_prefix": "SW",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "SPDT",
-        "changeover switch"
-      ],
-      "search_terms": [
-        "SPDT changeover switch",
-        "SPDT",
-        "changeover switch"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "COM",
-          "electrical_type": "passive",
-          "side": "left"
-        },
-        {
-          "logical_number": "2",
-          "name": "NC",
-          "electrical_type": "passive",
-          "side": "right"
-        },
-        {
-          "logical_number": "3",
-          "name": "NO",
-          "electrical_type": "passive",
-          "side": "right"
-        }
-      ],
-      "drawing_description": "Changeover contact with a single moving common; suitable for charge/discharge circuits.",
-      "simulation": {
-        "requirement": "subcircuit_model_required",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "switch_spdt",
-      "used_by_experiments": [
-        "P06"
+        "H20"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -1257,10 +1579,75 @@
         ]
       },
       "canonical_symbol_id": "switch_spst",
-      "used_by_experiments": [],
+      "used_by_experiments": [
+        "H19"
+      ],
       "common_support_symbol": true,
       "optional_uses": [],
-      "library_requirement": "common_support"
+      "library_requirement": "experiment_coverage"
+    },
+    {
+      "id": "relay_spdt",
+      "name": "Relay with SPDT contacts",
+      "folder": "04 Switches/Relays",
+      "reference_prefix": "K",
+      "asset_kind": "schematic_symbol",
+      "aliases": [
+        "relay",
+        "SPDT relay"
+      ],
+      "search_terms": [
+        "Relay with SPDT contacts",
+        "relay",
+        "SPDT relay"
+      ],
+      "pin_numbering": "logical_not_package",
+      "pins": [
+        {
+          "logical_number": "1",
+          "name": "COIL_A",
+          "electrical_type": "passive",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "COIL_B",
+          "electrical_type": "passive",
+          "side": "bottom"
+        },
+        {
+          "logical_number": "3",
+          "name": "COM",
+          "electrical_type": "passive",
+          "side": "right"
+        },
+        {
+          "logical_number": "4",
+          "name": "NC",
+          "electrical_type": "passive",
+          "side": "right"
+        },
+        {
+          "logical_number": "5",
+          "name": "NO",
+          "electrical_type": "passive",
+          "side": "right"
+        }
+      ],
+      "drawing_description": "Coil and linked changeover contacts, clearly separated; electrical relay model required.",
+      "simulation": {
+        "requirement": "subcircuit_model_required",
+        "ready_to_simulate_from_this_manifest": false,
+        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
+      },
+      "configurable_properties": {},
+      "canonical_symbol_id": "relay_spdt",
+      "used_by_experiments": [
+        "H19"
+      ],
+      "common_support_symbol": false,
+      "optional_uses": [],
+      "library_requirement": "experiment_coverage"
     },
     {
       "id": "battery",
@@ -1412,72 +1799,9 @@
       "configurable_properties": {},
       "canonical_symbol_id": "opamp",
       "used_by_experiments": [
-        "P14",
-        "P17",
-        "P19"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "comparator",
-      "name": "Voltage comparator",
-      "folder": "07 Analogue/Comparators",
-      "reference_prefix": "U",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "voltage comparator",
-        "threshold detector"
-      ],
-      "search_terms": [
-        "Voltage comparator",
-        "voltage comparator",
-        "threshold detector"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "IN+",
-          "electrical_type": "input",
-          "side": "left"
-        },
-        {
-          "logical_number": "2",
-          "name": "IN-",
-          "electrical_type": "input",
-          "side": "left"
-        },
-        {
-          "logical_number": "3",
-          "name": "OUT",
-          "electrical_type": "output",
-          "side": "right"
-        },
-        {
-          "logical_number": "4",
-          "name": "VCC",
-          "electrical_type": "power_input",
-          "side": "top"
-        },
-        {
-          "logical_number": "5",
-          "name": "VEE",
-          "electrical_type": "power_input",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Comparator triangle with visible rails; declare push-pull versus open-collector output in the model and include an external pull resistor where required.",
-      "simulation": {
-        "requirement": "subcircuit_model_required",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "comparator",
-      "used_by_experiments": [
-        "P15"
+        "H17",
+        "H18",
+        "H20"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -1542,64 +1866,7 @@
       },
       "canonical_symbol_id": "gate_and",
       "used_by_experiments": [
-        "P16"
-      ],
-      "common_support_symbol": false,
-      "optional_uses": [],
-      "library_requirement": "experiment_coverage"
-    },
-    {
-      "id": "gate_buffer",
-      "name": "Logic buffer",
-      "folder": "08 Digital/Gates",
-      "reference_prefix": "U",
-      "asset_kind": "schematic_symbol",
-      "aliases": [
-        "buffer",
-        "digital regenerator"
-      ],
-      "search_terms": [
-        "Logic buffer",
-        "buffer",
-        "digital regenerator"
-      ],
-      "pin_numbering": "logical_not_package",
-      "pins": [
-        {
-          "logical_number": "1",
-          "name": "A",
-          "electrical_type": "input",
-          "side": "left"
-        },
-        {
-          "logical_number": "2",
-          "name": "Y",
-          "electrical_type": "output",
-          "side": "right"
-        },
-        {
-          "logical_number": "3",
-          "name": "VDD",
-          "electrical_type": "power_input",
-          "side": "top"
-        },
-        {
-          "logical_number": "4",
-          "name": "VSS",
-          "electrical_type": "power_input",
-          "side": "bottom"
-        }
-      ],
-      "drawing_description": "Non-inverting buffer with explicit power; real thresholds/delay require an adequate model.",
-      "simulation": {
-        "requirement": "subcircuit_model_required",
-        "ready_to_simulate_from_this_manifest": false,
-        "note": "A compatible model, parameters and pin mapping must be supplied and validated separately."
-      },
-      "configurable_properties": {},
-      "canonical_symbol_id": "gate_buffer",
-      "used_by_experiments": [
-        "P15"
+        "H19"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -1664,7 +1931,7 @@
       },
       "canonical_symbol_id": "gate_nand",
       "used_by_experiments": [
-        "P16"
+        "H19"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -1729,7 +1996,7 @@
       },
       "canonical_symbol_id": "gate_nor",
       "used_by_experiments": [
-        "P16"
+        "H19"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -1786,7 +2053,7 @@
       "configurable_properties": {},
       "canonical_symbol_id": "gate_not",
       "used_by_experiments": [
-        "P16"
+        "H19"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -1851,7 +2118,7 @@
       },
       "canonical_symbol_id": "gate_or",
       "used_by_experiments": [
-        "P16"
+        "H19"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -1916,7 +2183,7 @@
       },
       "canonical_symbol_id": "gate_xor",
       "used_by_experiments": [
-        "P16"
+        "H19"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -1975,114 +2242,64 @@
       "configurable_properties": {},
       "canonical_symbol_id": "data_logger",
       "used_by_experiments": [
-        "P19"
+        "H20"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
       "library_requirement": "experiment_coverage"
     },
     {
-      "id": "microcontroller",
-      "name": "Generic microcontroller interface",
+      "id": "plc_interface",
+      "name": "PLC input/output interface",
       "folder": "09 Functional Blocks/Interfaces",
       "reference_prefix": "BLK",
       "asset_kind": "diagram_block",
       "aliases": [
-        "PIC interface",
-        "microcontroller",
-        "MCU interface"
+        "PLC interface",
+        "industrial controller interface"
       ],
       "search_terms": [
-        "Generic microcontroller interface",
-        "PIC interface",
-        "microcontroller",
-        "MCU interface"
+        "PLC input/output interface",
+        "PLC interface",
+        "industrial controller interface"
       ],
       "pin_numbering": "logical_not_package",
       "pins": [
         {
           "logical_number": "1",
-          "name": "VDD",
+          "name": "IN0",
+          "electrical_type": "input",
+          "side": "left"
+        },
+        {
+          "logical_number": "2",
+          "name": "IN1",
+          "electrical_type": "input",
+          "side": "left"
+        },
+        {
+          "logical_number": "3",
+          "name": "OUT0",
+          "electrical_type": "output",
+          "side": "right"
+        },
+        {
+          "logical_number": "4",
+          "name": "OUT1",
+          "electrical_type": "output",
+          "side": "right"
+        },
+        {
+          "logical_number": "5",
+          "name": "VCC",
           "electrical_type": "power_input",
           "side": "top"
         },
         {
-          "logical_number": "2",
-          "name": "VSS",
+          "logical_number": "6",
+          "name": "COMMON",
           "electrical_type": "power_input",
           "side": "bottom"
-        },
-        {
-          "logical_number": "3",
-          "name": "RESET_N",
-          "electrical_type": "input",
-          "side": "left"
-        },
-        {
-          "logical_number": "4",
-          "name": "CLOCK",
-          "electrical_type": "input",
-          "side": "left"
-        },
-        {
-          "logical_number": "5",
-          "name": "GPIO0",
-          "electrical_type": "bidirectional",
-          "side": "right"
-        },
-        {
-          "logical_number": "6",
-          "name": "GPIO1",
-          "electrical_type": "bidirectional",
-          "side": "right"
-        },
-        {
-          "logical_number": "7",
-          "name": "GPIO2",
-          "electrical_type": "bidirectional",
-          "side": "right"
-        },
-        {
-          "logical_number": "8",
-          "name": "GPIO3",
-          "electrical_type": "bidirectional",
-          "side": "right"
-        },
-        {
-          "logical_number": "9",
-          "name": "GPIO4",
-          "electrical_type": "bidirectional",
-          "side": "right"
-        },
-        {
-          "logical_number": "10",
-          "name": "GPIO5",
-          "electrical_type": "bidirectional",
-          "side": "right"
-        },
-        {
-          "logical_number": "11",
-          "name": "GPIO6",
-          "electrical_type": "bidirectional",
-          "side": "right"
-        },
-        {
-          "logical_number": "12",
-          "name": "GPIO7",
-          "electrical_type": "bidirectional",
-          "side": "right"
-        },
-        {
-          "logical_number": "13",
-          "name": "AIN0",
-          "electrical_type": "input",
-          "side": "left"
-        },
-        {
-          "logical_number": "14",
-          "name": "AIN1",
-          "electrical_type": "input",
-          "side": "left"
         }
       ],
       "drawing_description": "Clearly labelled functional block. These generic logical ports are not a device/package pinout; firmware, HDL, physical conversion or communications operation is not implemented by this symbol.",
@@ -2092,9 +2309,9 @@
         "note": "Documentation block only; terminals are functional connections, not an asserted device pinout or executable model."
       },
       "configurable_properties": {},
-      "canonical_symbol_id": "microcontroller",
+      "canonical_symbol_id": "plc_interface",
       "used_by_experiments": [
-        "P19"
+        "H20"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -2139,8 +2356,7 @@
       "configurable_properties": {},
       "canonical_symbol_id": "bnc",
       "used_by_experiments": [
-        "P12",
-        "P13"
+        "H06"
       ],
       "common_support_symbol": false,
       "optional_uses": [],
@@ -2233,12 +2449,10 @@
       },
       "configurable_properties": {},
       "canonical_symbol_id": "connector3",
-      "used_by_experiments": [
-        "P19"
-      ],
+      "used_by_experiments": [],
       "common_support_symbol": true,
       "optional_uses": [],
-      "library_requirement": "experiment_coverage"
+      "library_requirement": "common_support"
     },
     {
       "id": "test_point",

@@ -24,52 +24,52 @@
     {
       "library_id": "gcse-physics-aqa",
       "title": "GCSE Physics — AQA 8463",
-      "source_document": "docs/teaching-catalogue.md#gcse-physics-aqa"
+      "source_document": "library-sources/inventory/course-research.txt#gcse-physics-aqa"
     },
     {
       "library_id": "a-level-physics-aqa",
       "title": "A-level Physics — AQA 7408, including optional Electronics",
-      "source_document": "docs/teaching-catalogue.md#a-level-physics-aqa"
+      "source_document": "library-sources/inventory/course-research.txt#a-level-physics-aqa"
     },
     {
       "library_id": "btec-first-engineering",
       "title": "BTEC First Certificate in Engineering — selected Unit 8",
-      "source_document": "docs/teaching-catalogue.md#btec-first-engineering"
+      "source_document": "library-sources/inventory/course-research.txt#btec-first-engineering"
     },
     {
       "library_id": "btec-applied-science-2016",
       "title": "BTEC National Extended Diploma Applied Science (2016) — selected Unit 15",
-      "source_document": "docs/teaching-catalogue.md#btec-applied-science-2016"
+      "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-2016"
     },
     {
       "library_id": "btec-applied-science-aaq",
       "title": "BTEC National Applied Science AAQ Extended Certificate — Units 3 and 4",
-      "source_document": "docs/teaching-catalogue.md#btec-applied-science-aaq"
+      "source_document": "library-sources/inventory/course-research.txt#btec-applied-science-aaq"
     },
     {
       "library_id": "btec-national-electrical-electronic-engineering",
       "title": "BTEC National Extended Diploma Electrical and Electronic Engineering — selected Unit 19",
-      "source_document": "docs/teaching-catalogue.md#btec-national-electrical-electronic-engineering"
+      "source_document": "library-sources/inventory/course-research.txt#btec-national-electrical-electronic-engineering"
     },
     {
       "library_id": "btec-hnc-electrical-electronic-engineering",
       "title": "BTEC HNC Electrical and Electronic Engineering for England (2024) — Unit 4019",
-      "source_document": "docs/teaching-catalogue.md#btec-hnc-electrical-electronic-engineering"
+      "source_document": "library-sources/inventory/course-research.txt#btec-hnc-electrical-electronic-engineering"
     },
     {
       "library_id": "degree-year1-physics",
       "title": "First-year physics degree — representative electronic-circuit strand",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-physics"
+      "source_document": "library-sources/inventory/course-research.txt#degree-year1-physics"
     },
     {
       "library_id": "degree-year1-electronics",
       "title": "First-year electronics degree — representative circuit/device/digital strand",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-electronics"
+      "source_document": "library-sources/inventory/course-research.txt#degree-year1-electronics"
     },
     {
       "library_id": "degree-year1-engineering",
       "title": "First-year engineering degrees — shared electronics and discipline applications",
-      "source_document": "docs/teaching-catalogue.md#degree-year1-engineering"
+      "source_document": "library-sources/inventory/course-research.txt#degree-year1-engineering"
     }
   ],
   "symbols": [

@@ -13,7 +13,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 let result, digital, master;
 test.before(async () => {
   const read = (name) => readFile(new URL('../../' + name, import.meta.url));
-  master = JSON.parse(await read('docs/symbol-libraries/all-symbols.json'));
+  master = JSON.parse(await read('library-sources/inventory/all-symbols.json'));
   const spice = await spiceArtworkSnapshot(
     await read('bundled-libraries/spice/spice.tclib'),
     JSON.parse(await read('bundled-libraries/spice/spice.provenance.json')),

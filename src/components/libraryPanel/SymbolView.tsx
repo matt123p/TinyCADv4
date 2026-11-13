@@ -182,15 +182,15 @@ const SymbolView: React.FunctionComponent<SymbolViewProps> = (
       }
     }
 
-    // Scaling and position
-    const target_size = Math.min(props.width, props.height);
-    const scale_x = Math.min(target_size / (x2 - x1), 1.0);
-    const scale_y = Math.min(target_size / (y2 - y1), 1.0);
-    const scale = Math.min(scale_x, scale_y);
-    const width = (x2 - x1) * scale;
-    const height = (y2 - y1) * scale;
-    let dx = x1 + width - (width / 2 + props.width / 2);
-    let dy = y1 + height - (height / 2 + props.height / 2);
+    // Fit the complete symbol to the preview's aspect ratio and centre it in
+    // drawing coordinates. Wide rack panels can use the full preview width.
+    const scale = Math.min(
+      props.width / Math.max(x2 - x1, 1),
+      props.height / Math.max(y2 - y1, 1),
+      1.0,
+    );
+    const dx = x1 + (x2 - x1 - props.width / scale) / 2;
+    const dy = y1 + (y2 - y1 - props.height / scale) / 2;
 
     return (
       <div
@@ -214,7 +214,6 @@ const SymbolView: React.FunctionComponent<SymbolViewProps> = (
         onTouchCancel={handleTouchCancel}
       >
         <svg
-          id="svg-drawing"
           className="symbol-svg"
           viewBox={`0 0 ${props.width / scale} ${props.height / scale}`}
         >
@@ -283,4 +282,4 @@ const SymbolView: React.FunctionComponent<SymbolViewProps> = (
   );
 };
 
-export default connect()(SymbolView);
+export default connect()(React.memo(SymbolView));

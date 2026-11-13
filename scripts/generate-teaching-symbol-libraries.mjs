@@ -6,7 +6,7 @@ import { teachingNativeTools } from './lib/teaching-native-tools.mjs';
 // Curated coverage inventory, not a circuit BOM or a symbol geometry generator.
 // No device/package pinout is inferred from these generic logical terminals.
 const root = fileURLToPath(new URL('../', import.meta.url));
-const output = path.join(root, 'docs/symbol-libraries');
+const output = path.join(root, 'library-sources/inventory');
 const catalogue = new Map();
 function add(id, name, folder, prefix, terminals, model, description, aliases = [], properties = {}) {
   const pins = terminals.map(([name, electrical_type = 'passive', side = 'left'], index) => ({
@@ -336,8 +336,8 @@ function parseActivities(text, sourceDocument) {
   return result;
 }
 
-const catalogueFile = 'teaching-catalogue.md';
-const catalogueText = await fs.readFile(path.join(root, 'docs', catalogueFile), 'utf8');
+const catalogueFile = 'library-sources/inventory/course-research.txt';
+const catalogueText = await fs.readFile(path.join(root, catalogueFile), 'utf8');
 const courseSections = new Map(
   [...catalogueText.matchAll(/^## ([a-z0-9-]+)\s*\n([\s\S]*?)(?=^## |(?![\s\S]))/gm)]
     .map(([, id, text]) => [id, text]),
@@ -347,7 +347,7 @@ const libraries = [];
 for (const [libraryId, title, assignments, optional = {}] of courses) {
   const sourceText = courseSections.get(libraryId);
   if (!sourceText) throw new Error(`Missing catalogue section for ${libraryId}`);
-  const sourceDocument = `docs/${catalogueFile}#${libraryId}`;
+  const sourceDocument = `${catalogueFile}#${libraryId}`;
   // Markdown reference IDs are course-prefixed to avoid collisions in the
   // combined document; standalone inventory references keep their local IDs.
   const activities = parseActivities(

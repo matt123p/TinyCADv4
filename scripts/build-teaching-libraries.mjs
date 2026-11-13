@@ -16,8 +16,8 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const json = async (file) =>
   JSON.parse(await readFile(path.join(root, file), 'utf8'));
 export async function buildTeachingLibraries() {
-  const master = await json('docs/symbol-libraries/all-symbols.json'),
-    manifest = await json('docs/symbol-libraries/library-manifest.json');
+  const master = await json('library-sources/inventory/all-symbols.json'),
+    manifest = await json('library-sources/inventory/library-manifest.json');
   const catalog = await json('bundled-libraries/config.json');
   const bundledIds = new Set(catalog.libraries.map((library) => library.id));
   const courses = manifest.libraries.filter((course) =>
@@ -193,6 +193,8 @@ export async function buildTeachingLibraries() {
         ...e.provenance,
       })),
     };
+    const result = { library, provenance, entries: selected };
+    if (!bundledIds.has(id)) return result;
     const dir = path.join(root, 'bundled-libraries', id);
     await mkdir(dir, { recursive: true });
     await writeFile(
@@ -203,7 +205,7 @@ export async function buildTeachingLibraries() {
       path.join(dir, id + '.provenance.json'),
       JSON.stringify(provenance, null, 2) + '\n',
     );
-    return { library, provenance, entries: selected };
+    return result;
   };
   const shared = await write('teaching', 'Teaching components', entries);
   for (const course of courses) {
