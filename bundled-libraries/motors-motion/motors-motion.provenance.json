@@ -1,0 +1,5441 @@
+{
+  "version": 1,
+  "id": "motors-motion",
+  "name": "Motors & Motion",
+  "artwork": "Original editable TinyCAD vector motors, shafts, housings, boards, connectors, sensors and mechanical parts; no product photos, logos, traces or imported icon sets.",
+  "scope": "Compact wiring/layout resources for robotics and automation. Generic devices expose functional conductor terminals rather than commercial package/cable pinouts; the three named Pololu carriers retain source-checked component-side header order. Hose ports represent complete pneumatic connections; cable ports represent complete interfaces. Mechanical shafts/mounts are artwork, not electrical points. No SPICE, firmware, motion simulation, internal netlist connections or implied ratings.",
+  "reviewed": "2026-11-13",
+  "references": [
+    {
+      "id": "dc",
+      "title": "Pololu metal gearmotors with encoder",
+      "url": "https://www.pololu.com/product/4802",
+      "facts": "Brushed DC geared motors can provide motor terminals plus separately powered quadrature feedback."
+    },
+    {
+      "id": "stepper",
+      "title": "NI four-, six- and eight-wire steppers",
+      "url": "https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z000000PAkPSAW",
+      "facts": "Four leads expose two complete windings; six leads add centre taps; eight leads expose individual half-windings."
+    },
+    {
+      "id": "bldc",
+      "title": "Oriental Motor brushless motor overview",
+      "url": "https://www.orientalmotor.com.sg/sg/products/brushless-motors/bl-motor",
+      "facts": "Brushless motors require a matching driver/commutation system; optional Hall feedback is distinct from phase power."
+    },
+    {
+      "id": "rcservo",
+      "title": "Adafruit servo connections and modes",
+      "url": "https://learn.adafruit.com/using-servos-with-circuitpython?view=all",
+      "facts": "RC servos use supply, ground and pulse-control conductors. Positional and continuous-rotation modes differ."
+    },
+    {
+      "id": "smartservo",
+      "title": "ROBOTIS smart actuator communication",
+      "url": "https://emanual.robotis.com/docs/en/faq/faq_dynamixel/",
+      "facts": "Half-duplex TTL and RS-485 smart-servo buses are different interfaces."
+    },
+    {
+      "id": "a4988",
+      "title": "Pololu A4988 carrier #1182",
+      "url": "https://www.pololu.com/product/1182",
+      "facts": "Verified component-side header order, separate VDD and VMOT inputs and active-low enable/reset/sleep."
+    },
+    {
+      "id": "drv8825",
+      "title": "Pololu DRV8825 carrier #2133",
+      "url": "https://www.pololu.com/product/2133/",
+      "facts": "Verified header order; FAULT replaces A4988 VDD; no separate logic supply; bottom solderable ground pad."
+    },
+    {
+      "id": "tb6612",
+      "title": "Pololu TB6612FNG carrier #713",
+      "url": "https://www.pololu.com/product/713/",
+      "facts": "Verified labelled top view: left power/motor bank and right PWM/direction/standby bank. STBY must be high to run."
+    },
+    {
+      "id": "pwmservo",
+      "title": "Adafruit PCA9685 servo distribution guide",
+      "url": "https://learn.adafruit.com/16-channel-pwm-servo-driver/pinouts",
+      "facts": "Sixteen PWM outputs share a frequency; logic VCC and distributed servo V+ are separate. Generic board artwork is not a specific Adafruit revision."
+    },
+    {
+      "id": "encoder",
+      "title": "Broadcom encoder questions and answers",
+      "url": "https://docs.broadcom.com/doc/5988-5062EN",
+      "facts": "Quadrature A/B outputs encode relative movement; an optional index gives a reference pulse."
+    },
+    {
+      "id": "magnetic",
+      "title": "ams OSRAM AS5600 magnetic angle evaluation guide",
+      "url": "https://look.ams-osram.com/m/4f8342513a447495/original/AS5600_UG000254_2-00.pdf",
+      "facts": "Contactless magnetic angle measurement and I2C control; the generic breakout is not a package pinout."
+    },
+    {
+      "id": "proximity",
+      "title": "Omron NPN and PNP proximity output guide",
+      "url": "https://www.ia.omron.com/support/faq/answer/41/faq00379/",
+      "facts": "NPN sensors sink output current; PNP sensors source output current. These are separate resources."
+    },
+    {
+      "id": "linear",
+      "title": "Firgelli potentiometer feedback actuators",
+      "url": "https://www.firgelliauto.com/blogs/tutorials/potentiometer-feedback-from-a-linear-actuator",
+      "facts": "A feedback rod actuator combines two motor leads and three potentiometer feedback leads."
+    },
+    {
+      "id": "pneumatic",
+      "title": "SMC five-port solenoid valve guide",
+      "url": "https://www.smcworld.com/upfiles/etc/international/imm/VFS1000-TFU15.pdf",
+      "facts": "Pneumatic valve ports and coil terminals serve different roles; working ports feed a double-acting cylinder."
+    },
+    {
+      "id": "mechanical",
+      "title": "Pololu mechanical components",
+      "url": "https://www.pololu.com/category/21/mechanical-components",
+      "facts": "Wheels, casters, mounting parts and shaft couplings support robot motion assemblies."
+    },
+    {
+      "id": "spi-angle",
+      "title": "ams AS5048A/AS5048B angle-sensor data sheet",
+      "url": "https://look.ams-osram.com/m/287d7ad97d1ca22e/original/AS5048-DS000298.pdf",
+      "facts": "AS5048A provides SPI absolute-angle readout; SPI and I2C angle-sensor breakouts are distinct interfaces."
+    },
+    {
+      "id": "microswitch",
+      "title": "Omron D2F switch contact forms",
+      "url": "https://components.omron.com/us-en/system/files/2023-01/datasheet_pdf/B036-E1.pdf",
+      "facts": "A basic SPDT limit switch exposes common, normally-open and normally-closed contacts; actuator shapes vary."
+    },
+    {
+      "id": "solenoids",
+      "title": "Johnson Electric Ledex solenoid families",
+      "url": "https://www.johnsonelectric.com/en/products/solenoids/open-frame-electric-actuator",
+      "facts": "Linear/open-frame solenoids and latching variants are available; coil and latch configurations depend on the selected assembly."
+    },
+    {
+      "id": "rotary-solenoid",
+      "title": "Johnson Electric rotary solenoids",
+      "url": "https://www.johnsonelectric.com/en/products/solenoids/rotary-solenoid",
+      "facts": "Rotary solenoids move a shaft through a limited angular stroke and differ from continuously rotating motors."
+    }
+  ],
+  "sourceReview": {
+    "searches": [
+      {
+        "query": "motor",
+        "symbolId": 430,
+        "nameId": 9549,
+        "fetched": true
+      },
+      {
+        "query": "limit switch",
+        "symbolId": 424,
+        "nameId": 9543,
+        "fetched": true
+      },
+      {
+        "query": "stepper",
+        "suitableResults": 0
+      },
+      {
+        "query": "servo",
+        "suitableResults": 0
+      },
+      {
+        "query": "encoder",
+        "suitableResults": 0
+      },
+      {
+        "query": "A4988",
+        "suitableResults": 0
+      },
+      {
+        "query": "TB6612",
+        "suitableResults": 0
+      }
+    ],
+    "decision": "Fetched motor and limit-switch candidates are conventional circuit glyphs with incompatible physical artwork/endpoints. This bundle extends the original physical layout library style."
+  },
+  "entries": [
+    {
+      "id": "motor-can130",
+      "name": "Small 130-style brushed DC motor",
+      "short": "SMALL 130 BRUSHED DC MOTOR",
+      "kind": "dc-motor",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "dc"
+      ],
+      "notes": "M1/M2 are reversible winding terminals; size names describe a generic motor family, not ratings or a manufacturer pinout.",
+      "shape": "can130",
+      "width": 44,
+      "height": 38,
+      "bodyWidth": 44,
+      "bodyHeight": 30,
+      "xmlSha256": "cf6af707360739bdce736abc3526c112158b5c991bb2ee46874e06ec0b3e195f"
+    },
+    {
+      "id": "motor-can370",
+      "name": "Medium 370-style brushed DC motor",
+      "short": "MEDIUM 370 BRUSHED DC MOTOR",
+      "kind": "dc-motor",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "dc"
+      ],
+      "notes": "M1/M2 are reversible winding terminals; size names describe a generic motor family, not ratings or a manufacturer pinout.",
+      "shape": "can370",
+      "width": 44,
+      "height": 38,
+      "bodyWidth": 44,
+      "bodyHeight": 30,
+      "xmlSha256": "83af7a455b114d134e1334f6d5a41c1dcee55771339cf8a8e668284891dc2511"
+    },
+    {
+      "id": "motor-can775",
+      "name": "Large 775-style brushed DC motor",
+      "short": "LARGE 775 BRUSHED DC MOTOR",
+      "kind": "dc-motor",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "dc"
+      ],
+      "notes": "M1/M2 are reversible winding terminals; size names describe a generic motor family, not ratings or a manufacturer pinout.",
+      "shape": "can775",
+      "width": 44,
+      "height": 38,
+      "bodyWidth": 44,
+      "bodyHeight": 30,
+      "xmlSha256": "d216124a49b4a4720f60b1a28fead1efd6d59735899b03b0125bdfd590364464"
+    },
+    {
+      "id": "motor-coreless",
+      "name": "Coreless brushed DC motor",
+      "short": "CORELESS BRUSHED DC MOTOR",
+      "kind": "dc-motor",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "dc"
+      ],
+      "notes": "M1/M2 are reversible winding terminals; size names describe a generic motor family, not ratings or a manufacturer pinout.",
+      "shape": "coreless",
+      "width": 44,
+      "height": 38,
+      "bodyWidth": 44,
+      "bodyHeight": 30,
+      "xmlSha256": "2dd0b11bf23a49f9b7751888d8e6a14c7120cad9e1766fb5d6960cb2c00e601f"
+    },
+    {
+      "id": "motor-microgear",
+      "name": "Micro metal gearmotor",
+      "short": "MICRO METAL GEARMOTOR",
+      "kind": "dc-motor",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "dc"
+      ],
+      "notes": "M1/M2 are reversible winding terminals; size names describe a generic motor family, not ratings or a manufacturer pinout.",
+      "shape": "microgear",
+      "width": 44,
+      "height": 38,
+      "bodyWidth": 44,
+      "bodyHeight": 30,
+      "xmlSha256": "bfffa533a1a87b1686e4a13c4063ddcd4c770843fd1c22c71226b49c44345c23"
+    },
+    {
+      "id": "motor-ttgear",
+      "name": "TT-style right-angle gearmotor",
+      "short": "TT RIGHT-ANGLE GEARMOTOR",
+      "kind": "dc-motor",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "dc"
+      ],
+      "notes": "M1/M2 are reversible winding terminals; size names describe a generic motor family, not ratings or a manufacturer pinout.",
+      "shape": "ttgear",
+      "width": 44,
+      "height": 38,
+      "bodyWidth": 44,
+      "bodyHeight": 30,
+      "xmlSha256": "d648026b001d9079817dd652b5e1239949d0ac6e39b97b39d3923e7b25933693"
+    },
+    {
+      "id": "motor-planetary",
+      "name": "Planetary DC gearmotor",
+      "short": "PLANETARY DC GEARMOTOR",
+      "kind": "dc-motor",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "dc"
+      ],
+      "notes": "M1/M2 are reversible winding terminals; size names describe a generic motor family, not ratings or a manufacturer pinout.",
+      "shape": "planetary",
+      "width": 44,
+      "height": 38,
+      "bodyWidth": 44,
+      "bodyHeight": 30,
+      "xmlSha256": "2e10d9097b89f048cdc74a3fffbe16064f536ae3926f0054bdca9e3adff3639d"
+    },
+    {
+      "id": "motor-worm",
+      "name": "Worm-drive DC gearmotor",
+      "short": "WORM-DRIVE DC GEARMOTOR",
+      "kind": "dc-motor",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "dc"
+      ],
+      "notes": "M1/M2 are reversible winding terminals; size names describe a generic motor family, not ratings or a manufacturer pinout.",
+      "shape": "worm",
+      "width": 44,
+      "height": 38,
+      "bodyWidth": 44,
+      "bodyHeight": 30,
+      "xmlSha256": "e9ccc6134c5955ac19fdd394ded6735001cd8c7577467d4d9f159edc2bd78d33"
+    },
+    {
+      "id": "motor-encoder",
+      "name": "DC gearmotor with quadrature encoder",
+      "short": "GEARMOTOR / A-B ENCODER",
+      "kind": "dc-motor",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 34
+        },
+        {
+          "name": "ENC V+",
+          "label": "EV+",
+          "kind": "lead",
+          "signal": "encoder-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 34
+        },
+        {
+          "name": "ENC GND",
+          "label": "EG",
+          "kind": "lead",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 34
+        },
+        {
+          "name": "ENC A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "quadrature",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 34
+        },
+        {
+          "name": "ENC B",
+          "label": "B",
+          "kind": "lead",
+          "signal": "quadrature",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "6",
+          "x": 34,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "dc",
+        "encoder"
+      ],
+      "notes": "Motor and encoder supplies/outputs are separate; no assumed encoder voltage, resolution or lead colours.",
+      "shape": "encoder",
+      "width": 44,
+      "height": 46,
+      "bodyWidth": 44,
+      "bodyHeight": 38,
+      "xmlSha256": "5790a5f3b2d96b268914836fd23b67a5f9b7a530cfb55b8f9c37119b47b95957"
+    },
+    {
+      "id": "motor-bldc-outrunner",
+      "name": "Outrunner brushless DC motor",
+      "short": "BLDC / OUTRUNNER",
+      "kind": "bldc",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "U",
+          "label": "U",
+          "kind": "lead",
+          "signal": "phase",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "V",
+          "label": "V",
+          "kind": "lead",
+          "signal": "phase",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 28
+        },
+        {
+          "name": "W",
+          "label": "W",
+          "kind": "lead",
+          "signal": "phase",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "bldc"
+      ],
+      "notes": "Three phase conductors require a matching driver; phase/Hall order and electrical levels are hardware-specific.",
+      "shape": "outrunner",
+      "width": 42,
+      "height": 40,
+      "bodyWidth": 42,
+      "bodyHeight": 32,
+      "xmlSha256": "994b78f03b70a5c04dbf00ce3f7e581d0dcdb2a19718c2ea75223398d8ce0de5"
+    },
+    {
+      "id": "motor-bldc-inrunner",
+      "name": "Inrunner brushless DC motor",
+      "short": "BLDC / INRUNNER",
+      "kind": "bldc",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "U",
+          "label": "U",
+          "kind": "lead",
+          "signal": "phase",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "V",
+          "label": "V",
+          "kind": "lead",
+          "signal": "phase",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 28
+        },
+        {
+          "name": "W",
+          "label": "W",
+          "kind": "lead",
+          "signal": "phase",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "bldc"
+      ],
+      "notes": "Three phase conductors require a matching driver; phase/Hall order and electrical levels are hardware-specific.",
+      "shape": "inrunner",
+      "width": 42,
+      "height": 40,
+      "bodyWidth": 42,
+      "bodyHeight": 32,
+      "xmlSha256": "f856677c40a8a4edadc9837ec863c4639682db6ea39f37ff400a81a069998fdd"
+    },
+    {
+      "id": "motor-bldc-hall",
+      "name": "Brushless motor with Hall commutation sensors",
+      "short": "BLDC / HALL",
+      "kind": "bldc",
+      "category": "DC and brushless motors",
+      "ports": [
+        {
+          "name": "U",
+          "label": "U",
+          "kind": "lead",
+          "signal": "phase",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "V",
+          "label": "V",
+          "kind": "lead",
+          "signal": "phase",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 28
+        },
+        {
+          "name": "W",
+          "label": "W",
+          "kind": "lead",
+          "signal": "phase",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 28
+        },
+        {
+          "name": "HALL V+",
+          "label": "HV+",
+          "kind": "lead",
+          "signal": "sensor-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 28
+        },
+        {
+          "name": "HALL GND",
+          "label": "HG",
+          "kind": "lead",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "5",
+          "x": 4,
+          "y": 36
+        },
+        {
+          "name": "HALL 1",
+          "label": "H1",
+          "kind": "lead",
+          "signal": "hall",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "6",
+          "x": 12,
+          "y": 36
+        },
+        {
+          "name": "HALL 2",
+          "label": "H2",
+          "kind": "lead",
+          "signal": "hall",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "7",
+          "x": 20,
+          "y": 36
+        },
+        {
+          "name": "HALL 3",
+          "label": "H3",
+          "kind": "lead",
+          "signal": "hall",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "8",
+          "x": 28,
+          "y": 36
+        }
+      ],
+      "sources": [
+        "bldc"
+      ],
+      "notes": "Three phase conductors require a matching driver; phase/Hall order and electrical levels are hardware-specific.",
+      "shape": "hall",
+      "width": 42,
+      "height": 50,
+      "bodyWidth": 42,
+      "bodyHeight": 42,
+      "xmlSha256": "31a0ca1b6d6a803c652e8269d12b0f665678e4969c39f1f4839161870af45cf4"
+    },
+    {
+      "id": "stepper-nema14",
+      "name": "NEMA 14-style bipolar stepper — four leads",
+      "short": "NEMA 14 / 4 LEADS",
+      "kind": "stepper",
+      "category": "Stepper motors",
+      "ports": [
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 38
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 38
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "stepper"
+      ],
+      "notes": "Frame family does not specify current, torque or step angle. A1/A2 and B1/B2 identify two windings.",
+      "frame": 14,
+      "width": 38,
+      "height": 48,
+      "bodyWidth": 38,
+      "bodyHeight": 40,
+      "xmlSha256": "b21fdde298cac1af058f267084331c104644c5e5de55ec9840be5275df8ee234"
+    },
+    {
+      "id": "stepper-nema17",
+      "name": "NEMA 17-style bipolar stepper — four leads",
+      "short": "NEMA 17 / 4 LEADS",
+      "kind": "stepper",
+      "category": "Stepper motors",
+      "ports": [
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 38
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 38
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "stepper"
+      ],
+      "notes": "Frame family does not specify current, torque or step angle. A1/A2 and B1/B2 identify two windings.",
+      "frame": 17,
+      "width": 38,
+      "height": 48,
+      "bodyWidth": 38,
+      "bodyHeight": 40,
+      "xmlSha256": "4bdbd06ef1af81de5d6b45a3f8997859aa069fb4c2e91f96cc0dacef46288d8c"
+    },
+    {
+      "id": "stepper-nema23",
+      "name": "NEMA 23-style bipolar stepper — four leads",
+      "short": "NEMA 23 / 4 LEADS",
+      "kind": "stepper",
+      "category": "Stepper motors",
+      "ports": [
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 38
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 38
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "stepper"
+      ],
+      "notes": "Frame family does not specify current, torque or step angle. A1/A2 and B1/B2 identify two windings.",
+      "frame": 23,
+      "width": 38,
+      "height": 48,
+      "bodyWidth": 38,
+      "bodyHeight": 40,
+      "xmlSha256": "d31f4d43e8f48458a788aaf201bb71e4df7c75a9d9279d80580198d0ae9506d3"
+    },
+    {
+      "id": "stepper-nema34",
+      "name": "NEMA 34-style bipolar stepper — four leads",
+      "short": "NEMA 34 / 4 LEADS",
+      "kind": "stepper",
+      "category": "Stepper motors",
+      "ports": [
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 38
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 38
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "stepper"
+      ],
+      "notes": "Frame family does not specify current, torque or step angle. A1/A2 and B1/B2 identify two windings.",
+      "frame": 34,
+      "width": 38,
+      "height": 48,
+      "bodyWidth": 38,
+      "bodyHeight": 40,
+      "xmlSha256": "32ce853a2c66154eedebf3dbf77f6330d9bebd3b19073d4e8eed5dd67cdd44c7"
+    },
+    {
+      "id": "stepper-six",
+      "name": "Centre-tapped stepper — six leads",
+      "short": "STEPPER / 6 LEADS",
+      "kind": "stepper",
+      "category": "Stepper motors",
+      "ports": [
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 36
+        },
+        {
+          "name": "ACT",
+          "label": "ACT",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 36
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 36
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 36
+        },
+        {
+          "name": "BCT",
+          "label": "BCT",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "5",
+          "x": 4,
+          "y": 44
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "6",
+          "x": 12,
+          "y": 44
+        }
+      ],
+      "sources": [
+        "stepper"
+      ],
+      "notes": "ACT/BCT are separate winding centre taps; no hidden netlist links or implied bipolar/unipolar configuration.",
+      "frame": 23,
+      "width": 38,
+      "height": 56,
+      "bodyWidth": 38,
+      "bodyHeight": 48,
+      "xmlSha256": "5894702a51fca970c742a9cb77072a86bdef52306d7b4fee9b3a5312584c84c6"
+    },
+    {
+      "id": "stepper-eight",
+      "name": "Split-winding stepper — eight leads",
+      "short": "STEPPER / 8 LEADS",
+      "kind": "stepper",
+      "category": "Stepper motors",
+      "ports": [
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 36
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 36
+        },
+        {
+          "name": "A3",
+          "label": "A3",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 36
+        },
+        {
+          "name": "A4",
+          "label": "A4",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 36
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "5",
+          "x": 4,
+          "y": 44
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "6",
+          "x": 12,
+          "y": 44
+        },
+        {
+          "name": "B3",
+          "label": "B3",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "7",
+          "x": 20,
+          "y": 44
+        },
+        {
+          "name": "B4",
+          "label": "B4",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "8",
+          "x": 28,
+          "y": 44
+        }
+      ],
+      "sources": [
+        "stepper"
+      ],
+      "notes": "A1-A2/A3-A4 and B1-B2/B3-B4 are four accessible half-windings. Series/parallel connections must be drawn explicitly.",
+      "frame": 23,
+      "width": 38,
+      "height": 56,
+      "bodyWidth": 38,
+      "bodyHeight": 48,
+      "xmlSha256": "99014edaf031deca99c22455739a96baa228b48a59895422aef9dfe703215d61"
+    },
+    {
+      "id": "servo-micro",
+      "name": "Micro positional RC servo",
+      "short": "RC SERVO / MICRO",
+      "kind": "servo",
+      "category": "Servos",
+      "ports": [
+        {
+          "name": "GND",
+          "label": "G",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 8,
+          "y": 32
+        },
+        {
+          "name": "V+",
+          "label": "V",
+          "kind": "header",
+          "signal": "servo-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 14,
+          "y": 32
+        },
+        {
+          "name": "PWM",
+          "label": "S",
+          "kind": "header",
+          "signal": "servo-pulse",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "rcservo"
+      ],
+      "notes": "Three explicit connector contacts, viewed GND/V+/signal left to right. Check actual connector orientation and supply. Pulse command represents a position within the selected servo range.",
+      "shape": "micro",
+      "width": 28,
+      "height": 42,
+      "bodyWidth": 28,
+      "bodyHeight": 34,
+      "xmlSha256": "b70f8c4690e3362213b30cec4f39ad88fd2593f51a8fb2122dcc57be3659117f"
+    },
+    {
+      "id": "servo-standard",
+      "name": "Standard positional RC servo",
+      "short": "RC SERVO / STANDARD",
+      "kind": "servo",
+      "category": "Servos",
+      "ports": [
+        {
+          "name": "GND",
+          "label": "G",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 8,
+          "y": 32
+        },
+        {
+          "name": "V+",
+          "label": "V",
+          "kind": "header",
+          "signal": "servo-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 14,
+          "y": 32
+        },
+        {
+          "name": "PWM",
+          "label": "S",
+          "kind": "header",
+          "signal": "servo-pulse",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "rcservo"
+      ],
+      "notes": "Three explicit connector contacts, viewed GND/V+/signal left to right. Check actual connector orientation and supply. Pulse command represents a position within the selected servo range.",
+      "shape": "standard",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "3892fb35b3d252067ddf549db62d86b72b72e4ec3b27ee3e1cdd3f0ce56a9761"
+    },
+    {
+      "id": "servo-torque",
+      "name": "High-torque positional RC servo",
+      "short": "RC SERVO / TORQUE",
+      "kind": "servo",
+      "category": "Servos",
+      "ports": [
+        {
+          "name": "GND",
+          "label": "G",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 8,
+          "y": 32
+        },
+        {
+          "name": "V+",
+          "label": "V",
+          "kind": "header",
+          "signal": "servo-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 14,
+          "y": 32
+        },
+        {
+          "name": "PWM",
+          "label": "S",
+          "kind": "header",
+          "signal": "servo-pulse",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "rcservo"
+      ],
+      "notes": "Three explicit connector contacts, viewed GND/V+/signal left to right. Check actual connector orientation and supply. Pulse command represents a position within the selected servo range.",
+      "shape": "torque",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "23a7d9253bd98c3caa64559e3b53a0cffdc8aafc0c2a0bae02fe372b8d71c94c"
+    },
+    {
+      "id": "servo-continuous",
+      "name": "Continuous-rotation RC servo",
+      "short": "RC SERVO / CONTINUOUS",
+      "kind": "servo",
+      "category": "Servos",
+      "ports": [
+        {
+          "name": "GND",
+          "label": "G",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 8,
+          "y": 32
+        },
+        {
+          "name": "V+",
+          "label": "V",
+          "kind": "header",
+          "signal": "servo-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 14,
+          "y": 32
+        },
+        {
+          "name": "PWM",
+          "label": "S",
+          "kind": "header",
+          "signal": "servo-pulse",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "rcservo"
+      ],
+      "notes": "Three explicit connector contacts, viewed GND/V+/signal left to right. Check actual connector orientation and supply. Pulse controls speed/direction, not absolute position.",
+      "shape": "continuous",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "0db00df305234897127078e03d3cf58ab59b1012dc83be4b40d6af95b6ca5e82"
+    },
+    {
+      "id": "servo-smart-ttl",
+      "name": "Smart serial servo — half-duplex TTL",
+      "short": "SMART SERVO / TTL",
+      "kind": "servo",
+      "category": "Servos",
+      "ports": [
+        {
+          "name": "J1 GND",
+          "label": "GND",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "J1-GND",
+          "x": 8,
+          "y": 30
+        },
+        {
+          "name": "J1 V+",
+          "label": "V+",
+          "kind": "header",
+          "signal": "servo-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "J1-V+",
+          "x": 14,
+          "y": 30
+        },
+        {
+          "name": "J1 DATA",
+          "label": "DATA",
+          "kind": "header",
+          "signal": "serial-ttl",
+          "electricalType": 5,
+          "unit": "conductor",
+          "number": "J1-DATA",
+          "x": 20,
+          "y": 30
+        },
+        {
+          "name": "J2 GND",
+          "label": "GND",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "J2-GND",
+          "x": 8,
+          "y": 38
+        },
+        {
+          "name": "J2 V+",
+          "label": "V+",
+          "kind": "header",
+          "signal": "servo-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "J2-V+",
+          "x": 14,
+          "y": 38
+        },
+        {
+          "name": "J2 DATA",
+          "label": "DATA",
+          "kind": "header",
+          "signal": "serial-ttl",
+          "electricalType": 5,
+          "unit": "conductor",
+          "number": "J2-DATA",
+          "x": 20,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "smartservo"
+      ],
+      "notes": "Two explicit bus connectors; functional signal order rather than a commercial cable pinout. Duplicate bus contacts do not join automatically.",
+      "shape": "smart",
+      "bus": "ttl",
+      "width": 36,
+      "height": 50,
+      "bodyWidth": 36,
+      "bodyHeight": 42,
+      "xmlSha256": "ad614461e73c15f7cd421df052ba8aadba7d36a9ab582fcee6b853bb8846d4ff"
+    },
+    {
+      "id": "servo-smart-rs485",
+      "name": "Smart serial servo — RS-485",
+      "short": "SMART SERVO / RS485",
+      "kind": "servo",
+      "category": "Servos",
+      "ports": [
+        {
+          "name": "J1 GND",
+          "label": "GND",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "J1-GND",
+          "x": 8,
+          "y": 30
+        },
+        {
+          "name": "J1 V+",
+          "label": "V+",
+          "kind": "header",
+          "signal": "servo-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "J1-V+",
+          "x": 14,
+          "y": 30
+        },
+        {
+          "name": "J1 D+",
+          "label": "D+",
+          "kind": "header",
+          "signal": "serial-rs485",
+          "electricalType": 5,
+          "unit": "conductor",
+          "number": "J1-D+",
+          "x": 20,
+          "y": 30
+        },
+        {
+          "name": "J1 D-",
+          "label": "D-",
+          "kind": "header",
+          "signal": "serial-rs485",
+          "electricalType": 5,
+          "unit": "conductor",
+          "number": "J1-D-",
+          "x": 26,
+          "y": 30
+        },
+        {
+          "name": "J2 GND",
+          "label": "GND",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "J2-GND",
+          "x": 8,
+          "y": 38
+        },
+        {
+          "name": "J2 V+",
+          "label": "V+",
+          "kind": "header",
+          "signal": "servo-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "J2-V+",
+          "x": 14,
+          "y": 38
+        },
+        {
+          "name": "J2 D+",
+          "label": "D+",
+          "kind": "header",
+          "signal": "serial-rs485",
+          "electricalType": 5,
+          "unit": "conductor",
+          "number": "J2-D+",
+          "x": 20,
+          "y": 38
+        },
+        {
+          "name": "J2 D-",
+          "label": "D-",
+          "kind": "header",
+          "signal": "serial-rs485",
+          "electricalType": 5,
+          "unit": "conductor",
+          "number": "J2-D-",
+          "x": 26,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "smartservo"
+      ],
+      "notes": "Two explicit bus connectors; functional signal order rather than a commercial cable pinout. Duplicate bus contacts do not join automatically.",
+      "shape": "smart",
+      "bus": "rs485",
+      "width": 36,
+      "height": 50,
+      "bodyWidth": 36,
+      "bodyHeight": 42,
+      "xmlSha256": "853185650af65a9b38c59fd3cde2e5ff5f4fed2a6280a6de1ed97637fa44dcb7"
+    },
+    {
+      "id": "driver-a4988",
+      "name": "Pololu A4988 carrier — #1182",
+      "short": "A4988 / CARRIER",
+      "kind": "carrier",
+      "category": "Drivers and controllers",
+      "ports": [
+        {
+          "name": "EN",
+          "label": "nEN",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 1,
+          "activeLow": true,
+          "number": "L-1",
+          "x": 2,
+          "y": 4
+        },
+        {
+          "name": "MS1",
+          "label": "MS1",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 2,
+          "activeLow": false,
+          "number": "L-2",
+          "x": 2,
+          "y": 8
+        },
+        {
+          "name": "MS2",
+          "label": "MS2",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 3,
+          "activeLow": false,
+          "number": "L-3",
+          "x": 2,
+          "y": 12
+        },
+        {
+          "name": "MS3",
+          "label": "MS3",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 4,
+          "activeLow": false,
+          "number": "L-4",
+          "x": 2,
+          "y": 16
+        },
+        {
+          "name": "RST",
+          "label": "nRST",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 5,
+          "activeLow": true,
+          "number": "L-5",
+          "x": 2,
+          "y": 20
+        },
+        {
+          "name": "SLP",
+          "label": "nSLP",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 6,
+          "activeLow": true,
+          "number": "L-6",
+          "x": 2,
+          "y": 24
+        },
+        {
+          "name": "STEP",
+          "label": "STEP",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 7,
+          "activeLow": false,
+          "number": "L-7",
+          "x": 2,
+          "y": 28
+        },
+        {
+          "name": "DIR",
+          "label": "DIR",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 8,
+          "activeLow": false,
+          "number": "L-8",
+          "x": 2,
+          "y": 32
+        },
+        {
+          "name": "VMOT",
+          "label": "VMOT",
+          "kind": "pad",
+          "signal": "motor-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "R",
+          "order": 1,
+          "activeLow": false,
+          "number": "R-1",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "R",
+          "order": 2,
+          "activeLow": false,
+          "number": "R-2",
+          "x": 32,
+          "y": 8
+        },
+        {
+          "name": "2B",
+          "label": "2B",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "R",
+          "order": 3,
+          "activeLow": false,
+          "number": "R-3",
+          "x": 32,
+          "y": 12
+        },
+        {
+          "name": "2A",
+          "label": "2A",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "R",
+          "order": 4,
+          "activeLow": false,
+          "number": "R-4",
+          "x": 32,
+          "y": 16
+        },
+        {
+          "name": "1A",
+          "label": "1A",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "R",
+          "order": 5,
+          "activeLow": false,
+          "number": "R-5",
+          "x": 32,
+          "y": 20
+        },
+        {
+          "name": "1B",
+          "label": "1B",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "R",
+          "order": 6,
+          "activeLow": false,
+          "number": "R-6",
+          "x": 32,
+          "y": 24
+        },
+        {
+          "name": "VDD",
+          "label": "VDD",
+          "kind": "pad",
+          "signal": "logic-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "R",
+          "order": 7,
+          "activeLow": false,
+          "number": "R-7",
+          "x": 32,
+          "y": 28
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "R",
+          "order": 8,
+          "activeLow": false,
+          "number": "R-8",
+          "x": 32,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "a4988"
+      ],
+      "notes": "Component-side view; L/R IDs identify carrier header positions, not IC package pins. Main headers only; trimmer/test vias are outside this wiring view. Logic VDD is a supply input. EN/RST/SLP are active-low.",
+      "colour": "green",
+      "named": true,
+      "sourceFile": {
+        "filename": "a4988.jpg",
+        "sha256": "ff4b998a1da7d8f4854e1180c37d17d96180169a73f73ae53c476cf9475a1930",
+        "url": "https://a.pololu-files.com/picture/0J10073.600.jpg"
+      },
+      "width": 34,
+      "height": 46,
+      "bodyWidth": 34,
+      "bodyHeight": 38,
+      "xmlSha256": "90021615424e967700f1d62302dfd681457c0cebe79aa2061c21fa557156e0e3"
+    },
+    {
+      "id": "driver-drv8825",
+      "name": "Pololu DRV8825 carrier — #2133",
+      "short": "DRV8825 / CARRIER",
+      "kind": "carrier",
+      "category": "Drivers and controllers",
+      "ports": [
+        {
+          "name": "EN",
+          "label": "nEN",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 1,
+          "activeLow": true,
+          "number": "L-1",
+          "x": 2,
+          "y": 4
+        },
+        {
+          "name": "M0",
+          "label": "M0",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 2,
+          "activeLow": false,
+          "number": "L-2",
+          "x": 2,
+          "y": 8
+        },
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 3,
+          "activeLow": false,
+          "number": "L-3",
+          "x": 2,
+          "y": 12
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 4,
+          "activeLow": false,
+          "number": "L-4",
+          "x": 2,
+          "y": 16
+        },
+        {
+          "name": "RST",
+          "label": "nRST",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 5,
+          "activeLow": true,
+          "number": "L-5",
+          "x": 2,
+          "y": 20
+        },
+        {
+          "name": "SLP",
+          "label": "nSLP",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 6,
+          "activeLow": true,
+          "number": "L-6",
+          "x": 2,
+          "y": 24
+        },
+        {
+          "name": "STEP",
+          "label": "STEP",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 7,
+          "activeLow": false,
+          "number": "L-7",
+          "x": 2,
+          "y": 28
+        },
+        {
+          "name": "DIR",
+          "label": "DIR",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "L",
+          "order": 8,
+          "activeLow": false,
+          "number": "L-8",
+          "x": 2,
+          "y": 32
+        },
+        {
+          "name": "VMOT",
+          "label": "VMOT",
+          "kind": "pad",
+          "signal": "motor-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "R",
+          "order": 1,
+          "activeLow": false,
+          "number": "R-1",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "R",
+          "order": 2,
+          "activeLow": false,
+          "number": "R-2",
+          "x": 32,
+          "y": 8
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "R",
+          "order": 3,
+          "activeLow": false,
+          "number": "R-3",
+          "x": 32,
+          "y": 12
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "R",
+          "order": 4,
+          "activeLow": false,
+          "number": "R-4",
+          "x": 32,
+          "y": 16
+        },
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "R",
+          "order": 5,
+          "activeLow": false,
+          "number": "R-5",
+          "x": 32,
+          "y": 20
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "R",
+          "order": 6,
+          "activeLow": false,
+          "number": "R-6",
+          "x": 32,
+          "y": 24
+        },
+        {
+          "name": "FAULT",
+          "label": "nFAULT",
+          "kind": "pad",
+          "signal": "fault",
+          "electricalType": 3,
+          "unit": "conductor",
+          "side": "R",
+          "order": 7,
+          "activeLow": true,
+          "number": "R-7",
+          "x": 32,
+          "y": 28
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "R",
+          "order": 8,
+          "activeLow": false,
+          "number": "R-8",
+          "x": 32,
+          "y": 32
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "rear",
+          "order": 1,
+          "number": "EP",
+          "x": 48,
+          "y": 20
+        }
+      ],
+      "sources": [
+        "drv8825"
+      ],
+      "notes": "Component-side view; L/R IDs identify carrier header positions, not IC package pins. Main headers only; trimmer/test vias are outside this wiring view. FAULT is open-drain, not a logic supply input. EN/RST/SLP are active-low; separate rear inset exposes solderable ground pad.",
+      "colour": "blue",
+      "named": true,
+      "sourceFile": {
+        "filename": "drv8825.png",
+        "sha256": "a4f94714646164d5668fd7b46683cd7dd5cef89083a826412f456061a3d387f9",
+        "url": "https://a.pololu-files.com/picture/0J4232.600.png"
+      },
+      "width": 56,
+      "height": 46,
+      "bodyWidth": 56,
+      "bodyHeight": 38,
+      "xmlSha256": "ad65af41dd18e320ac4e51aeacf0560a3c95c09ba49167c32c0e921dd6c91bb1"
+    },
+    {
+      "id": "driver-tb6612",
+      "name": "Pololu TB6612FNG carrier — #713",
+      "short": "TB6612 / CARRIER",
+      "kind": "carrier",
+      "category": "Drivers and controllers",
+      "ports": [
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "L",
+          "order": 1,
+          "activeLow": false,
+          "number": "L-1",
+          "x": 2,
+          "y": 4
+        },
+        {
+          "name": "VCC",
+          "label": "VCC",
+          "kind": "pad",
+          "signal": "logic-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "L",
+          "order": 2,
+          "activeLow": false,
+          "number": "L-2",
+          "x": 2,
+          "y": 8
+        },
+        {
+          "name": "AO1",
+          "label": "AO1",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "L",
+          "order": 3,
+          "activeLow": false,
+          "number": "L-3",
+          "x": 2,
+          "y": 12
+        },
+        {
+          "name": "AO2",
+          "label": "AO2",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "L",
+          "order": 4,
+          "activeLow": false,
+          "number": "L-4",
+          "x": 2,
+          "y": 16
+        },
+        {
+          "name": "BO2",
+          "label": "BO2",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "L",
+          "order": 5,
+          "activeLow": false,
+          "number": "L-5",
+          "x": 2,
+          "y": 20
+        },
+        {
+          "name": "BO1",
+          "label": "BO1",
+          "kind": "pad",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "side": "L",
+          "order": 6,
+          "activeLow": false,
+          "number": "L-6",
+          "x": 2,
+          "y": 24
+        },
+        {
+          "name": "VMOT",
+          "label": "VMOT",
+          "kind": "pad",
+          "signal": "motor-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "L",
+          "order": 7,
+          "activeLow": false,
+          "number": "L-7",
+          "x": 2,
+          "y": 28
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "L",
+          "order": 8,
+          "activeLow": false,
+          "number": "L-8",
+          "x": 2,
+          "y": 32
+        },
+        {
+          "name": "PWMA",
+          "label": "PWMA",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "R",
+          "order": 1,
+          "activeLow": false,
+          "number": "R-1",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "name": "AIN2",
+          "label": "AIN2",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "R",
+          "order": 2,
+          "activeLow": false,
+          "number": "R-2",
+          "x": 32,
+          "y": 8
+        },
+        {
+          "name": "AIN1",
+          "label": "AIN1",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "R",
+          "order": 3,
+          "activeLow": false,
+          "number": "R-3",
+          "x": 32,
+          "y": 12
+        },
+        {
+          "name": "STBY",
+          "label": "nSTBY",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "R",
+          "order": 4,
+          "activeLow": true,
+          "number": "R-4",
+          "x": 32,
+          "y": 16
+        },
+        {
+          "name": "BIN1",
+          "label": "BIN1",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "R",
+          "order": 5,
+          "activeLow": false,
+          "number": "R-5",
+          "x": 32,
+          "y": 20
+        },
+        {
+          "name": "BIN2",
+          "label": "BIN2",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "R",
+          "order": 6,
+          "activeLow": false,
+          "number": "R-6",
+          "x": 32,
+          "y": 24
+        },
+        {
+          "name": "PWMB",
+          "label": "PWMB",
+          "kind": "pad",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "side": "R",
+          "order": 7,
+          "activeLow": false,
+          "number": "R-7",
+          "x": 32,
+          "y": 28
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "side": "R",
+          "order": 8,
+          "activeLow": false,
+          "number": "R-8",
+          "x": 32,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "tb6612"
+      ],
+      "notes": "Component-side view; L/R IDs identify carrier header positions, not IC package pins. Main headers only; trimmer/test vias are outside this wiring view. STBY must be high to run. Left/right motor order includes BO2 before BO1; all three GND contacts are explicit.",
+      "colour": "green",
+      "named": true,
+      "sourceFile": {
+        "filename": "tb6612-labelled.jpg",
+        "sha256": "e1e47385f014015e1d2b8a2ed097f160b3c371afd8a69e20a6d41553dcc95ece",
+        "url": "https://a.pololu-files.com/picture/0J4621.1200.jpg"
+      },
+      "width": 34,
+      "height": 46,
+      "bodyWidth": 34,
+      "bodyHeight": 38,
+      "xmlSha256": "fa6016267e417991a53bd9b5d190f7b0f0b2e03c7e221819d7a5725b76c80d48"
+    },
+    {
+      "id": "driver-dual-hbridge",
+      "name": "Dual H-bridge DC motor driver board",
+      "short": "DUAL H-BRIDGE DRIVER",
+      "kind": "driver-board",
+      "category": "Drivers and controllers",
+      "ports": [
+        {
+          "name": "VM",
+          "label": "V+",
+          "kind": "terminal",
+          "signal": "motor-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 6
+        },
+        {
+          "name": "PG",
+          "label": "PG",
+          "kind": "terminal",
+          "signal": "motor-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "name": "VCC",
+          "label": "VCC",
+          "kind": "terminal",
+          "signal": "logic-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "3",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "terminal",
+          "signal": "logic-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "4",
+          "x": 40,
+          "y": 6
+        },
+        {
+          "name": "AIN1",
+          "label": "AIN1",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "5",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "AIN2",
+          "label": "AIN2",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "6",
+          "x": 10,
+          "y": 38
+        },
+        {
+          "name": "PWMA",
+          "label": "PWMA",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "7",
+          "x": 16,
+          "y": 38
+        },
+        {
+          "name": "BIN1",
+          "label": "BIN1",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "8",
+          "x": 22,
+          "y": 38
+        },
+        {
+          "name": "BIN2",
+          "label": "BIN2",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "9",
+          "x": 28,
+          "y": 38
+        },
+        {
+          "name": "PWMB",
+          "label": "PWMB",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "10",
+          "x": 34,
+          "y": 38
+        },
+        {
+          "name": "EN",
+          "label": "EN",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "11",
+          "x": 40,
+          "y": 38
+        },
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "terminal",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "12",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "terminal",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "13",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "terminal",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "14",
+          "x": 28,
+          "y": 28
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "terminal",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "15",
+          "x": 40,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "tb6612"
+      ],
+      "notes": "Generic physical module with explicit motor/logic rails, two motor channels and PWM/direction controls.",
+      "width": 46,
+      "height": 52,
+      "bodyWidth": 46,
+      "bodyHeight": 44,
+      "xmlSha256": "44e0d3675c18407a447be150e6cbcf91e1b92f5041d76ce317814c403188f63d"
+    },
+    {
+      "id": "driver-brushed",
+      "name": "High-power brushed DC driver — PWM/direction",
+      "short": "BRUSHED DC DRIVER",
+      "kind": "enclosed-driver",
+      "category": "Drivers and controllers",
+      "ports": [
+        {
+          "name": "VIN",
+          "label": "VIN",
+          "kind": "terminal",
+          "signal": "motor-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "terminal",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 26
+        },
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "terminal",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 26
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "terminal",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 26
+        },
+        {
+          "name": "PWM",
+          "label": "PWM",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 26
+        },
+        {
+          "name": "DIR",
+          "label": "DIR",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "6",
+          "x": 34,
+          "y": 26
+        },
+        {
+          "name": "EN",
+          "label": "EN",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "7",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "SIG GND",
+          "label": "SG",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "8",
+          "x": 10,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "dc",
+        "tb6612"
+      ],
+      "notes": "Generic driver; electrical supply, current and logic ratings are not implied.",
+      "width": 46,
+      "height": 46,
+      "bodyWidth": 46,
+      "bodyHeight": 38,
+      "xmlSha256": "93cdaeec4bff7fa62c79fded32724255150cba64cd20bd6ed89fdb8a351abee5"
+    },
+    {
+      "id": "driver-step-dir",
+      "name": "Enclosed bipolar stepper drive — opto step/dir",
+      "short": "STEP / DIR DRIVE",
+      "kind": "enclosed-driver",
+      "category": "Drivers and controllers",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "terminal",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "terminal",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 26
+        },
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "terminal",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 26
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "terminal",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 26
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "terminal",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 26
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "terminal",
+          "signal": "motor-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "6",
+          "x": 34,
+          "y": 26
+        },
+        {
+          "name": "PUL+",
+          "label": "PUL+",
+          "kind": "terminal",
+          "signal": "opto-control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "7",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "PUL-",
+          "label": "PUL-",
+          "kind": "terminal",
+          "signal": "opto-control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "8",
+          "x": 10,
+          "y": 34
+        },
+        {
+          "name": "DIR+",
+          "label": "DIR+",
+          "kind": "terminal",
+          "signal": "opto-control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "9",
+          "x": 16,
+          "y": 34
+        },
+        {
+          "name": "DIR-",
+          "label": "DIR-",
+          "kind": "terminal",
+          "signal": "opto-control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "10",
+          "x": 22,
+          "y": 34
+        },
+        {
+          "name": "ENA+",
+          "label": "ENA+",
+          "kind": "terminal",
+          "signal": "opto-control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "11",
+          "x": 28,
+          "y": 34
+        },
+        {
+          "name": "ENA-",
+          "label": "ENA-",
+          "kind": "terminal",
+          "signal": "opto-control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "12",
+          "x": 34,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "stepper",
+        "drv8825"
+      ],
+      "notes": "Separate differential/opto input pairs; common-anode/cathode wiring, microstep switches and current settings depend on hardware.",
+      "width": 46,
+      "height": 46,
+      "bodyWidth": 46,
+      "bodyHeight": 38,
+      "xmlSha256": "15ed724fde834b7177147de5bab026631e284cae5b9afc9c10dbf23fca1db656"
+    },
+    {
+      "id": "driver-esc",
+      "name": "Brushless electronic speed controller — RC input",
+      "short": "BRUSHLESS ESC",
+      "kind": "esc",
+      "category": "Drivers and controllers",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "lead",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "lead",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 26
+        },
+        {
+          "name": "U",
+          "label": "U",
+          "kind": "lead",
+          "signal": "phase-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "3",
+          "x": 22,
+          "y": 26
+        },
+        {
+          "name": "V",
+          "label": "V",
+          "kind": "lead",
+          "signal": "phase-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 26
+        },
+        {
+          "name": "W",
+          "label": "W",
+          "kind": "lead",
+          "signal": "phase-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "5",
+          "x": 34,
+          "y": 26
+        },
+        {
+          "name": "CONTROL GND",
+          "label": "CG",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "6",
+          "x": 10,
+          "y": 36
+        },
+        {
+          "name": "PULSE",
+          "label": "S",
+          "kind": "header",
+          "signal": "servo-pulse",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "7",
+          "x": 18,
+          "y": 36
+        }
+      ],
+      "sources": [
+        "bldc",
+        "rcservo"
+      ],
+      "notes": "Opto-style control pair with no assumed BEC supply output. Generic three-phase ESC, not an integrated DC motor.",
+      "width": 38,
+      "height": 48,
+      "bodyWidth": 38,
+      "bodyHeight": 40,
+      "xmlSha256": "b61bfc03c5179b76124b44990e95d8cfe9342affbdca66f7acb7edeec2e5b7d0"
+    },
+    {
+      "id": "driver-servo",
+      "name": "Industrial servo drive — three-phase motor and feedback",
+      "short": "SERVO DRIVE",
+      "kind": "enclosed-driver",
+      "category": "Drivers and controllers",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "terminal",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "terminal",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 26
+        },
+        {
+          "name": "U",
+          "label": "U",
+          "kind": "terminal",
+          "signal": "phase-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 26
+        },
+        {
+          "name": "V",
+          "label": "V",
+          "kind": "terminal",
+          "signal": "phase-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 26
+        },
+        {
+          "name": "W",
+          "label": "W",
+          "kind": "terminal",
+          "signal": "phase-output",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 26
+        },
+        {
+          "name": "PE",
+          "label": "PE",
+          "kind": "terminal",
+          "signal": "earth",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "6",
+          "x": 34,
+          "y": 26
+        },
+        {
+          "name": "MOTOR FEEDBACK",
+          "label": "FB",
+          "kind": "feedback-cable",
+          "signal": "servo-feedback",
+          "electricalType": 4,
+          "unit": "cable",
+          "number": "7",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "CONTROL BUS",
+          "label": "BUS",
+          "kind": "serial-cable",
+          "signal": "servo-control",
+          "electricalType": 4,
+          "unit": "cable",
+          "number": "8",
+          "x": 10,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "bldc",
+        "encoder"
+      ],
+      "notes": "Feedback/control sockets represent complete hardware-specific cables; no guessed connector pinout.",
+      "width": 46,
+      "height": 46,
+      "bodyWidth": 46,
+      "bodyHeight": 38,
+      "xmlSha256": "080fab58d4638e167455c44604bf096597e305c21f472d1e7526b78717c034d1"
+    },
+    {
+      "id": "driver-servo16",
+      "name": "I2C servo distribution controller — 16 channels",
+      "short": "SERVO PWM / 16 CHANNELS",
+      "kind": "servo-controller",
+      "category": "Drivers and controllers",
+      "ports": [
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "CTRL-GND",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "name": "OE",
+          "label": "OE",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "CTRL-OE",
+          "x": 12,
+          "y": 6
+        },
+        {
+          "name": "SCL",
+          "label": "SCL",
+          "kind": "header",
+          "signal": "i2c",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "CTRL-SCL",
+          "x": 18,
+          "y": 6
+        },
+        {
+          "name": "SDA",
+          "label": "SDA",
+          "kind": "header",
+          "signal": "i2c",
+          "electricalType": 5,
+          "unit": "conductor",
+          "number": "CTRL-SDA",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "name": "VCC",
+          "label": "VCC",
+          "kind": "header",
+          "signal": "logic-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "CTRL-VCC",
+          "x": 30,
+          "y": 6
+        },
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "header",
+          "signal": "servo-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "CTRL-V+",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "name": "SERVO V+",
+          "label": "V+",
+          "kind": "terminal",
+          "signal": "servo-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "PWR-V",
+          "x": 62,
+          "y": 6
+        },
+        {
+          "name": "SERVO GND",
+          "label": "GND",
+          "kind": "terminal",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "PWR-G",
+          "x": 70,
+          "y": 6
+        },
+        {
+          "name": "CH0 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 0,
+          "number": "CH0-PWM",
+          "x": 6,
+          "y": 22
+        },
+        {
+          "name": "CH0 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 0,
+          "number": "CH0-V+",
+          "x": 6,
+          "y": 28
+        },
+        {
+          "name": "CH0 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 0,
+          "number": "CH0-GND",
+          "x": 6,
+          "y": 34
+        },
+        {
+          "name": "CH1 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 1,
+          "number": "CH1-PWM",
+          "x": 10,
+          "y": 22
+        },
+        {
+          "name": "CH1 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 1,
+          "number": "CH1-V+",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "CH1 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 1,
+          "number": "CH1-GND",
+          "x": 10,
+          "y": 34
+        },
+        {
+          "name": "CH2 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 2,
+          "number": "CH2-PWM",
+          "x": 14,
+          "y": 22
+        },
+        {
+          "name": "CH2 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 2,
+          "number": "CH2-V+",
+          "x": 14,
+          "y": 28
+        },
+        {
+          "name": "CH2 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 2,
+          "number": "CH2-GND",
+          "x": 14,
+          "y": 34
+        },
+        {
+          "name": "CH3 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 3,
+          "number": "CH3-PWM",
+          "x": 18,
+          "y": 22
+        },
+        {
+          "name": "CH3 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 3,
+          "number": "CH3-V+",
+          "x": 18,
+          "y": 28
+        },
+        {
+          "name": "CH3 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 3,
+          "number": "CH3-GND",
+          "x": 18,
+          "y": 34
+        },
+        {
+          "name": "CH4 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 4,
+          "number": "CH4-PWM",
+          "x": 22,
+          "y": 22
+        },
+        {
+          "name": "CH4 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 4,
+          "number": "CH4-V+",
+          "x": 22,
+          "y": 28
+        },
+        {
+          "name": "CH4 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 4,
+          "number": "CH4-GND",
+          "x": 22,
+          "y": 34
+        },
+        {
+          "name": "CH5 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 5,
+          "number": "CH5-PWM",
+          "x": 26,
+          "y": 22
+        },
+        {
+          "name": "CH5 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 5,
+          "number": "CH5-V+",
+          "x": 26,
+          "y": 28
+        },
+        {
+          "name": "CH5 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 5,
+          "number": "CH5-GND",
+          "x": 26,
+          "y": 34
+        },
+        {
+          "name": "CH6 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 6,
+          "number": "CH6-PWM",
+          "x": 30,
+          "y": 22
+        },
+        {
+          "name": "CH6 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 6,
+          "number": "CH6-V+",
+          "x": 30,
+          "y": 28
+        },
+        {
+          "name": "CH6 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 6,
+          "number": "CH6-GND",
+          "x": 30,
+          "y": 34
+        },
+        {
+          "name": "CH7 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 7,
+          "number": "CH7-PWM",
+          "x": 34,
+          "y": 22
+        },
+        {
+          "name": "CH7 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 7,
+          "number": "CH7-V+",
+          "x": 34,
+          "y": 28
+        },
+        {
+          "name": "CH7 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 7,
+          "number": "CH7-GND",
+          "x": 34,
+          "y": 34
+        },
+        {
+          "name": "CH8 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 8,
+          "number": "CH8-PWM",
+          "x": 38,
+          "y": 22
+        },
+        {
+          "name": "CH8 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 8,
+          "number": "CH8-V+",
+          "x": 38,
+          "y": 28
+        },
+        {
+          "name": "CH8 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 8,
+          "number": "CH8-GND",
+          "x": 38,
+          "y": 34
+        },
+        {
+          "name": "CH9 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 9,
+          "number": "CH9-PWM",
+          "x": 42,
+          "y": 22
+        },
+        {
+          "name": "CH9 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 9,
+          "number": "CH9-V+",
+          "x": 42,
+          "y": 28
+        },
+        {
+          "name": "CH9 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 9,
+          "number": "CH9-GND",
+          "x": 42,
+          "y": 34
+        },
+        {
+          "name": "CH10 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 10,
+          "number": "CH10-PWM",
+          "x": 46,
+          "y": 22
+        },
+        {
+          "name": "CH10 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 10,
+          "number": "CH10-V+",
+          "x": 46,
+          "y": 28
+        },
+        {
+          "name": "CH10 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 10,
+          "number": "CH10-GND",
+          "x": 46,
+          "y": 34
+        },
+        {
+          "name": "CH11 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 11,
+          "number": "CH11-PWM",
+          "x": 50,
+          "y": 22
+        },
+        {
+          "name": "CH11 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 11,
+          "number": "CH11-V+",
+          "x": 50,
+          "y": 28
+        },
+        {
+          "name": "CH11 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 11,
+          "number": "CH11-GND",
+          "x": 50,
+          "y": 34
+        },
+        {
+          "name": "CH12 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 12,
+          "number": "CH12-PWM",
+          "x": 54,
+          "y": 22
+        },
+        {
+          "name": "CH12 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 12,
+          "number": "CH12-V+",
+          "x": 54,
+          "y": 28
+        },
+        {
+          "name": "CH12 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 12,
+          "number": "CH12-GND",
+          "x": 54,
+          "y": 34
+        },
+        {
+          "name": "CH13 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 13,
+          "number": "CH13-PWM",
+          "x": 58,
+          "y": 22
+        },
+        {
+          "name": "CH13 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 13,
+          "number": "CH13-V+",
+          "x": 58,
+          "y": 28
+        },
+        {
+          "name": "CH13 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 13,
+          "number": "CH13-GND",
+          "x": 58,
+          "y": 34
+        },
+        {
+          "name": "CH14 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 14,
+          "number": "CH14-PWM",
+          "x": 62,
+          "y": 22
+        },
+        {
+          "name": "CH14 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 14,
+          "number": "CH14-V+",
+          "x": 62,
+          "y": 28
+        },
+        {
+          "name": "CH14 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 14,
+          "number": "CH14-GND",
+          "x": 62,
+          "y": 34
+        },
+        {
+          "name": "CH15 PWM",
+          "label": "S",
+          "kind": "pad",
+          "signal": "servo-pulse",
+          "electricalType": 1,
+          "unit": "conductor",
+          "channel": 15,
+          "number": "CH15-PWM",
+          "x": 66,
+          "y": 22
+        },
+        {
+          "name": "CH15 V+",
+          "label": "V",
+          "kind": "pad",
+          "signal": "servo-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "channel": 15,
+          "number": "CH15-V+",
+          "x": 66,
+          "y": 28
+        },
+        {
+          "name": "CH15 GND",
+          "label": "G",
+          "kind": "pad",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "channel": 15,
+          "number": "CH15-GND",
+          "x": 66,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "pwmservo"
+      ],
+      "notes": "Generic 16-channel board, not an Adafruit board revision. Separate logic VCC, servo V+, OE, I2C and all 48 output contacts. No implicit joins between repeated supply/ground contacts.",
+      "width": 76,
+      "height": 44,
+      "bodyWidth": 76,
+      "bodyHeight": 36,
+      "xmlSha256": "5ee9614a2fa439c0b470c07fa3848e190f71681cdea45de049f1b1e4f2ce71dd"
+    },
+    {
+      "id": "driver-solenoid",
+      "name": "Single-channel solenoid / valve MOSFET board",
+      "short": "SOLENOID DRIVER",
+      "kind": "driver-board",
+      "category": "Drivers and controllers",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "terminal",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "terminal",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "LOAD +",
+          "label": "L+",
+          "kind": "terminal",
+          "signal": "load-power",
+          "electricalType": 10,
+          "unit": "conductor",
+          "number": "3",
+          "x": 28,
+          "y": 28
+        },
+        {
+          "name": "LOAD -",
+          "label": "L-",
+          "kind": "terminal",
+          "signal": "switched-load",
+          "electricalType": 3,
+          "unit": "conductor",
+          "number": "4",
+          "x": 40,
+          "y": 28
+        },
+        {
+          "name": "CTRL",
+          "label": "IN",
+          "kind": "header",
+          "signal": "control",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "5",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "CTRL GND",
+          "label": "SG",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "6",
+          "x": 12,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "pneumatic"
+      ],
+      "notes": "Generic low-side switched load module. Protection, input levels and current ratings require the actual board documentation.",
+      "width": 46,
+      "height": 52,
+      "bodyWidth": 46,
+      "bodyHeight": 44,
+      "xmlSha256": "a5a91c6540a8daf975bb62dab49f89a02471d62c5134a948605967f6299f2c18"
+    },
+    {
+      "id": "encoder-ab",
+      "name": "Rotary encoder — A/B",
+      "short": "ROTARY ENCODER / AB",
+      "kind": "encoder",
+      "category": "Encoders and position feedback",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "lead",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 30
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "lead",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 30
+        },
+        {
+          "name": "A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "quadrature",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 30
+        },
+        {
+          "name": "B",
+          "label": "B",
+          "kind": "lead",
+          "signal": "quadrature",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 30
+        }
+      ],
+      "sources": [
+        "encoder"
+      ],
+      "notes": "Functional signal names; resolution, output levels, connector order and wire colours are hardware-specific.",
+      "shape": "rotary",
+      "width": 40,
+      "height": 40,
+      "bodyWidth": 40,
+      "bodyHeight": 32,
+      "xmlSha256": "093f2b3c5fd32ffbc321904deefef70d0d124c255b3954298b1b3b9ab1ff7539"
+    },
+    {
+      "id": "encoder-abz",
+      "name": "Rotary encoder — A/B/Z",
+      "short": "ROTARY ENCODER / ABZ",
+      "kind": "encoder",
+      "category": "Encoders and position feedback",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "lead",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 30
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "lead",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 30
+        },
+        {
+          "name": "A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "quadrature",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 30
+        },
+        {
+          "name": "B",
+          "label": "B",
+          "kind": "lead",
+          "signal": "quadrature",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 30
+        },
+        {
+          "name": "Z",
+          "label": "Z",
+          "kind": "lead",
+          "signal": "quadrature",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "5",
+          "x": 4,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "encoder"
+      ],
+      "notes": "Functional signal names; resolution, output levels, connector order and wire colours are hardware-specific.",
+      "shape": "rotary",
+      "width": 40,
+      "height": 40,
+      "bodyWidth": 40,
+      "bodyHeight": 32,
+      "xmlSha256": "28dcc7816cee4534898a23f035f5090f46f0199c018b5447f841ba1f28ce2fca"
+    },
+    {
+      "id": "encoder-differential",
+      "name": "Rotary encoder — differential A/B/Z",
+      "short": "ROTARY ENCODER / DIFFERENTIAL",
+      "kind": "encoder",
+      "category": "Encoders and position feedback",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "lead",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 30
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "lead",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 30
+        },
+        {
+          "name": "A+",
+          "label": "A+",
+          "kind": "lead",
+          "signal": "differential-encoder",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 30
+        },
+        {
+          "name": "A-",
+          "label": "A-",
+          "kind": "lead",
+          "signal": "differential-encoder",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 30
+        },
+        {
+          "name": "B+",
+          "label": "B+",
+          "kind": "lead",
+          "signal": "differential-encoder",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "5",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "B-",
+          "label": "B-",
+          "kind": "lead",
+          "signal": "differential-encoder",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "6",
+          "x": 12,
+          "y": 38
+        },
+        {
+          "name": "Z+",
+          "label": "Z+",
+          "kind": "lead",
+          "signal": "differential-encoder",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "7",
+          "x": 20,
+          "y": 38
+        },
+        {
+          "name": "Z-",
+          "label": "Z-",
+          "kind": "lead",
+          "signal": "differential-encoder",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "8",
+          "x": 28,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "encoder"
+      ],
+      "notes": "Functional signal names; resolution, output levels, connector order and wire colours are hardware-specific.",
+      "shape": "rotary",
+      "width": 40,
+      "height": 48,
+      "bodyWidth": 40,
+      "bodyHeight": 40,
+      "xmlSha256": "a253e32495aeeb8d716fff58a0999abe35452d44487bad760000b79de454325d"
+    },
+    {
+      "id": "encoder-magnetic-i2c",
+      "name": "Magnetic angle sensor breakout — I2C",
+      "short": "MAGNETIC ANGLE / I2C",
+      "kind": "encoder-board",
+      "category": "Encoders and position feedback",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "header",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 8,
+          "y": 26
+        },
+        {
+          "name": "SDA",
+          "label": "SDA",
+          "kind": "header",
+          "signal": "i2c",
+          "electricalType": 5,
+          "unit": "conductor",
+          "number": "3",
+          "x": 12,
+          "y": 26
+        },
+        {
+          "name": "SCL",
+          "label": "SCL",
+          "kind": "header",
+          "signal": "i2c",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "4",
+          "x": 16,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "magnetic",
+        "encoder"
+      ],
+      "notes": "Generic breakout and functional header order, not an AS5600/SPI chip package pinout.",
+      "bus": "i2c",
+      "width": 32,
+      "height": 38,
+      "bodyWidth": 32,
+      "bodyHeight": 30,
+      "xmlSha256": "8546c1a8cfeb8c7fddb5f4f94b314246f6151de1a0fbbd309547ebc0aa48bdb9"
+    },
+    {
+      "id": "encoder-magnetic-spi",
+      "name": "Magnetic angle sensor breakout — SPI",
+      "short": "MAGNETIC ANGLE / SPI",
+      "kind": "encoder-board",
+      "category": "Encoders and position feedback",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "header",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 8,
+          "y": 26
+        },
+        {
+          "name": "CS",
+          "label": "CS",
+          "kind": "header",
+          "signal": "spi",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "3",
+          "x": 12,
+          "y": 26
+        },
+        {
+          "name": "SCK",
+          "label": "SCK",
+          "kind": "header",
+          "signal": "spi",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "4",
+          "x": 16,
+          "y": 26
+        },
+        {
+          "name": "MOSI",
+          "label": "MOSI",
+          "kind": "header",
+          "signal": "spi",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "5",
+          "x": 20,
+          "y": 26
+        },
+        {
+          "name": "MISO",
+          "label": "MISO",
+          "kind": "header",
+          "signal": "spi",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "6",
+          "x": 24,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "spi-angle",
+        "encoder"
+      ],
+      "notes": "Generic breakout and functional header order, not an AS5600/SPI chip package pinout.",
+      "bus": "spi",
+      "width": 32,
+      "height": 38,
+      "bodyWidth": 32,
+      "bodyHeight": 30,
+      "xmlSha256": "d518acc05a558f8b9c8ffbd03fe3000d3f3b8bebd20c30a852871978aebc3e6c"
+    },
+    {
+      "id": "feedback-pot",
+      "name": "Linear position potentiometer",
+      "short": "LINEAR POSITION POT",
+      "kind": "encoder",
+      "category": "Encoders and position feedback",
+      "ports": [
+        {
+          "name": "END A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "potentiometer",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 30
+        },
+        {
+          "name": "WIPER",
+          "label": "W",
+          "kind": "lead",
+          "signal": "analog-position",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 30
+        },
+        {
+          "name": "END B",
+          "label": "B",
+          "kind": "lead",
+          "signal": "potentiometer",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 30
+        }
+      ],
+      "sources": [
+        "linear"
+      ],
+      "notes": "Potentiometer ends and wiper are separate conductors.",
+      "shape": "linear",
+      "width": 40,
+      "height": 40,
+      "bodyWidth": 40,
+      "bodyHeight": 32,
+      "xmlSha256": "ea7ae8c06a5518db7ec7d8f44f7c94700ef259d3eb7d33afbc0efacc2423e980"
+    },
+    {
+      "id": "limit-lever",
+      "name": "SPDT lever limit microswitch",
+      "short": "LIMIT / LEVER",
+      "kind": "limit",
+      "category": "Limit switches and sensors",
+      "ports": [
+        {
+          "name": "COM",
+          "label": "COM",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "NC",
+          "label": "NC",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 28
+        },
+        {
+          "name": "NO",
+          "label": "NO",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "microswitch"
+      ],
+      "notes": "Contacts are labelled by unactuated state. Functional terminal names do not imply a particular switch package.",
+      "shape": "lever",
+      "width": 30,
+      "height": 38,
+      "bodyWidth": 30,
+      "bodyHeight": 30,
+      "xmlSha256": "3ecd6bd04efe2ca8d4ef290b32358b0422045a0cd5b86744a96345aa5d24d3ee"
+    },
+    {
+      "id": "limit-roller",
+      "name": "SPDT roller limit microswitch",
+      "short": "LIMIT / ROLLER",
+      "kind": "limit",
+      "category": "Limit switches and sensors",
+      "ports": [
+        {
+          "name": "COM",
+          "label": "COM",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "NC",
+          "label": "NC",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 28
+        },
+        {
+          "name": "NO",
+          "label": "NO",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "microswitch"
+      ],
+      "notes": "Contacts are labelled by unactuated state. Functional terminal names do not imply a particular switch package.",
+      "shape": "roller",
+      "width": 30,
+      "height": 38,
+      "bodyWidth": 30,
+      "bodyHeight": 30,
+      "xmlSha256": "d44e777f4d898bcc0ae3caa8a42b9d2960a6e51c04a672cd4cf7343933645142"
+    },
+    {
+      "id": "limit-plunger",
+      "name": "SPDT plunger limit microswitch",
+      "short": "LIMIT / PLUNGER",
+      "kind": "limit",
+      "category": "Limit switches and sensors",
+      "ports": [
+        {
+          "name": "COM",
+          "label": "COM",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "NC",
+          "label": "NC",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 28
+        },
+        {
+          "name": "NO",
+          "label": "NO",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "microswitch"
+      ],
+      "notes": "Contacts are labelled by unactuated state. Functional terminal names do not imply a particular switch package.",
+      "shape": "plunger",
+      "width": 30,
+      "height": 38,
+      "bodyWidth": 30,
+      "bodyHeight": 30,
+      "xmlSha256": "5643ef804946bb4264d83f0325edc986855d4249e04655d18d9fcbbd4f7f5ceb"
+    },
+    {
+      "id": "limit-board",
+      "name": "Lever limit switch on interface PCB",
+      "short": "LIMIT SWITCH MODULE",
+      "kind": "limit-board",
+      "category": "Limit switches and sensors",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "header",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 6,
+          "y": 26
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 14,
+          "y": 26
+        },
+        {
+          "name": "SIGNAL",
+          "label": "SIG",
+          "kind": "header",
+          "signal": "limit-signal",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "3",
+          "x": 22,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "proximity"
+      ],
+      "notes": "Generic powered endstop module; active level and input supply are not assumed.",
+      "width": 32,
+      "height": 38,
+      "bodyWidth": 32,
+      "bodyHeight": 30,
+      "xmlSha256": "09d2e6be03dd451c3ccf1f31d3a15bb0c6a418078ea67bb556254916ef56d6f8"
+    },
+    {
+      "id": "limit-optical",
+      "name": "Slotted optical endstop module",
+      "short": "OPTICAL ENDSTOP",
+      "kind": "limit-board",
+      "category": "Limit switches and sensors",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "header",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 6,
+          "y": 26
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 14,
+          "y": 26
+        },
+        {
+          "name": "SIGNAL",
+          "label": "SIG",
+          "kind": "header",
+          "signal": "limit-signal",
+          "electricalType": 1,
+          "unit": "conductor",
+          "number": "3",
+          "x": 22,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "proximity"
+      ],
+      "notes": "Generic powered optical endstop; slotted vane region is mechanical.",
+      "optical": true,
+      "width": 32,
+      "height": 38,
+      "bodyWidth": 32,
+      "bodyHeight": 30,
+      "xmlSha256": "12eb97e0219b0a8fa44140ce033ea298bbb05dab4ab4f1e97d356907dc60fb48"
+    },
+    {
+      "id": "limit-inductive-npn",
+      "name": "Three-wire inductive proximity sensor — NPN NO",
+      "short": "INDUCTIVE / NPN",
+      "kind": "proximity",
+      "category": "Limit switches and sensors",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "lead",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 6,
+          "y": 26
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "lead",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 14,
+          "y": 26
+        },
+        {
+          "name": "OUT",
+          "label": "OUT",
+          "kind": "lead",
+          "signal": "proximity-npn",
+          "electricalType": 3,
+          "unit": "conductor",
+          "number": "3",
+          "x": 22,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "proximity"
+      ],
+      "notes": "NPN sinks current; PNP sources current. NO describes the inactive target state; no assumed supply or MCU compatibility.",
+      "shape": "inductive",
+      "width": 38,
+      "height": 38,
+      "bodyWidth": 38,
+      "bodyHeight": 30,
+      "xmlSha256": "3a7b2f6104a238678e3b77d5d43e0c69056e580668699182b58a2be4ce224b4a"
+    },
+    {
+      "id": "limit-inductive-pnp",
+      "name": "Three-wire inductive proximity sensor — PNP NO",
+      "short": "INDUCTIVE / PNP",
+      "kind": "proximity",
+      "category": "Limit switches and sensors",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "lead",
+          "signal": "dc",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 6,
+          "y": 26
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "lead",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 14,
+          "y": 26
+        },
+        {
+          "name": "OUT",
+          "label": "OUT",
+          "kind": "lead",
+          "signal": "proximity-pnp",
+          "electricalType": 11,
+          "unit": "conductor",
+          "number": "3",
+          "x": 22,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "proximity"
+      ],
+      "notes": "NPN sinks current; PNP sources current. NO describes the inactive target state; no assumed supply or MCU compatibility.",
+      "shape": "inductive",
+      "width": 38,
+      "height": 38,
+      "bodyWidth": 38,
+      "bodyHeight": 30,
+      "xmlSha256": "f2010145b44f66c8091f32576461fc47c22d3596e59d4a0d68fbb903909b8a33"
+    },
+    {
+      "id": "limit-reed",
+      "name": "Magnetic reed position switch",
+      "short": "MAGNETIC REED SWITCH",
+      "kind": "proximity",
+      "category": "Limit switches and sensors",
+      "ports": [
+        {
+          "name": "CONTACT A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 6,
+          "y": 26
+        },
+        {
+          "name": "CONTACT B",
+          "label": "B",
+          "kind": "lead",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 14,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "proximity"
+      ],
+      "notes": "Passive two-contact switch; no automatic contact closure or magnet electrical terminal.",
+      "shape": "reed",
+      "width": 38,
+      "height": 38,
+      "bodyWidth": 38,
+      "bodyHeight": 30,
+      "xmlSha256": "0fd351fb83c9407f372c496cd82954ebee6d96ad730dfe14b4d3d9c6b777e08c"
+    },
+    {
+      "id": "limit-estop",
+      "name": "Mushroom emergency-stop switch — two NC contacts",
+      "short": "EMERGENCY STOP / 2 NC",
+      "kind": "limit",
+      "category": "Limit switches and sensors",
+      "ports": [
+        {
+          "name": "11",
+          "label": "11",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "11",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "12",
+          "label": "12",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "12",
+          "x": 12,
+          "y": 28
+        },
+        {
+          "name": "21",
+          "label": "21",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "21",
+          "x": 20,
+          "y": 28
+        },
+        {
+          "name": "22",
+          "label": "22",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "22",
+          "x": 28,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "proximity"
+      ],
+      "notes": "Two explicit normally-closed contact pairs. This layout resource does not implement a safety controller.",
+      "shape": "estop",
+      "width": 34,
+      "height": 38,
+      "bodyWidth": 34,
+      "bodyHeight": 30,
+      "xmlSha256": "35f2f714dec8816d5525cb09644f7c35d6c0c32d277a72807c767b7c3c3de59b"
+    },
+    {
+      "id": "solenoid-frame",
+      "name": "Open-frame pull solenoid",
+      "short": "SOLENOID / FRAME",
+      "kind": "solenoid",
+      "category": "Solenoids and actuators",
+      "ports": [
+        {
+          "name": "COIL1",
+          "label": "COIL1",
+          "kind": "lead",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 30
+        },
+        {
+          "name": "COIL2",
+          "label": "COIL2",
+          "kind": "lead",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 30
+        }
+      ],
+      "sources": [
+        "solenoids"
+      ],
+      "notes": "Generic coil leads; polarity, flyback protection, duty and rated voltage are hardware-specific.",
+      "shape": "frame",
+      "width": 42,
+      "height": 42,
+      "bodyWidth": 42,
+      "bodyHeight": 34,
+      "xmlSha256": "5b5e6f9870f3041f2582550e6504ce1a5b826fdd9bb91d608e16aa7e6e489236"
+    },
+    {
+      "id": "solenoid-pushpull",
+      "name": "Push/pull tubular solenoid",
+      "short": "SOLENOID / PUSHPULL",
+      "kind": "solenoid",
+      "category": "Solenoids and actuators",
+      "ports": [
+        {
+          "name": "COIL1",
+          "label": "COIL1",
+          "kind": "lead",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 30
+        },
+        {
+          "name": "COIL2",
+          "label": "COIL2",
+          "kind": "lead",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 30
+        }
+      ],
+      "sources": [
+        "solenoids"
+      ],
+      "notes": "Generic coil leads; polarity, flyback protection, duty and rated voltage are hardware-specific.",
+      "shape": "pushpull",
+      "width": 42,
+      "height": 42,
+      "bodyWidth": 42,
+      "bodyHeight": 34,
+      "xmlSha256": "2a505a7b6987af92af34f88a913e8a2c4a58108609b08c077e3cc02671462519"
+    },
+    {
+      "id": "solenoid-latching",
+      "name": "Dual-coil latching solenoid",
+      "short": "SOLENOID / LATCHING",
+      "kind": "solenoid",
+      "category": "Solenoids and actuators",
+      "ports": [
+        {
+          "name": "SET1",
+          "label": "SET1",
+          "kind": "lead",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 30
+        },
+        {
+          "name": "SET2",
+          "label": "SET2",
+          "kind": "lead",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 30
+        },
+        {
+          "name": "RST1",
+          "label": "RST1",
+          "kind": "lead",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 30
+        },
+        {
+          "name": "RST2",
+          "label": "RST2",
+          "kind": "lead",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 30
+        }
+      ],
+      "sources": [
+        "solenoids"
+      ],
+      "notes": "Generic coil leads; polarity, flyback protection, duty and rated voltage are hardware-specific. This is an illustrative two-coil/four-lead configuration, not a universal latching-solenoid pinout.",
+      "shape": "latching",
+      "width": 42,
+      "height": 42,
+      "bodyWidth": 42,
+      "bodyHeight": 34,
+      "xmlSha256": "c59e9ea4c03d6e382721c037356c4c1c0dd0ee82fb671766ad8e0d215e65806e"
+    },
+    {
+      "id": "solenoid-rotary",
+      "name": "Rotary solenoid",
+      "short": "SOLENOID / ROTARY",
+      "kind": "solenoid",
+      "category": "Solenoids and actuators",
+      "ports": [
+        {
+          "name": "COIL1",
+          "label": "COIL1",
+          "kind": "lead",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 30
+        },
+        {
+          "name": "COIL2",
+          "label": "COIL2",
+          "kind": "lead",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 30
+        }
+      ],
+      "sources": [
+        "rotary-solenoid"
+      ],
+      "notes": "Generic coil leads; polarity, flyback protection, duty and rated voltage are hardware-specific.",
+      "shape": "rotary",
+      "width": 42,
+      "height": 42,
+      "bodyWidth": 42,
+      "bodyHeight": 34,
+      "xmlSha256": "23ff6c1b8df3b76eb4423d5cf8415e5e4d69dd60ac8114ef91acfa2811787cff"
+    },
+    {
+      "id": "actuator-linear",
+      "name": "Rod linear actuator — two motor leads",
+      "short": "LINEAR ACTUATOR / 2 WIRE",
+      "kind": "actuator",
+      "category": "Solenoids and actuators",
+      "ports": [
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 32
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "linear"
+      ],
+      "notes": "Two reversible motor leads; internal limit behaviour is hardware-specific.",
+      "shape": "rod",
+      "width": 52,
+      "height": 46,
+      "bodyWidth": 52,
+      "bodyHeight": 38,
+      "xmlSha256": "415d7ecfc1b14676cc52f043adeb7bd10fa50d2c5844626b56c6a9af14fed502"
+    },
+    {
+      "id": "actuator-feedback",
+      "name": "Rod linear actuator — potentiometer feedback",
+      "short": "LINEAR ACTUATOR / FEEDBACK",
+      "kind": "actuator",
+      "category": "Solenoids and actuators",
+      "ports": [
+        {
+          "name": "M1",
+          "label": "M1",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 32
+        },
+        {
+          "name": "M2",
+          "label": "M2",
+          "kind": "lead",
+          "signal": "motor",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 32
+        },
+        {
+          "name": "POT A",
+          "label": "PA",
+          "kind": "lead",
+          "signal": "potentiometer",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 32
+        },
+        {
+          "name": "POT WIPER",
+          "label": "PW",
+          "kind": "lead",
+          "signal": "analog-position",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 32
+        },
+        {
+          "name": "POT B",
+          "label": "PB",
+          "kind": "lead",
+          "signal": "potentiometer",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "5",
+          "x": 36,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "linear"
+      ],
+      "notes": "Two motor leads and three potentiometer feedback leads; no assumed lead colours or hidden links.",
+      "shape": "rod",
+      "width": 52,
+      "height": 46,
+      "bodyWidth": 52,
+      "bodyHeight": 38,
+      "xmlSha256": "f49a23b2ea7a04761bcae187c3c440aa9fdbae9e5d4c52f053f28201d734f046"
+    },
+    {
+      "id": "actuator-screw-stage",
+      "name": "Stepper lead-screw slide with two limit contacts",
+      "short": "STEPPER / LEAD-SCREW SLIDE",
+      "kind": "actuator",
+      "category": "Solenoids and actuators",
+      "ports": [
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 32
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 32
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 32
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "lead",
+          "signal": "winding",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 32
+        },
+        {
+          "name": "LC1",
+          "label": "LC1",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "5",
+          "x": 36,
+          "y": 32
+        },
+        {
+          "name": "LC2",
+          "label": "LC2",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "6",
+          "x": 44,
+          "y": 32
+        },
+        {
+          "name": "RC1",
+          "label": "RC1",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "7",
+          "x": 4,
+          "y": 40
+        },
+        {
+          "name": "RC2",
+          "label": "RC2",
+          "kind": "terminal",
+          "signal": "contact",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "8",
+          "x": 12,
+          "y": 40
+        }
+      ],
+      "sources": [
+        "stepper",
+        "linear"
+      ],
+      "notes": "Four motor leads and two separate dry-contact limit pairs. No automatic travel or limit-switch behaviour.",
+      "shape": "stage",
+      "width": 52,
+      "height": 54,
+      "bodyWidth": 52,
+      "bodyHeight": 46,
+      "xmlSha256": "0cbd2300dd8dfe59d1dd041b9b2792ca69c16804ef7f4bc97c16ef0e9e548d76"
+    },
+    {
+      "id": "actuator-pneumatic",
+      "name": "Double-acting pneumatic cylinder",
+      "short": "PNEUMATIC CYLINDER",
+      "kind": "actuator",
+      "category": "Solenoids and actuators",
+      "ports": [
+        {
+          "name": "PORT A",
+          "label": "A",
+          "kind": "hose",
+          "signal": "air",
+          "electricalType": 4,
+          "unit": "hose",
+          "number": "1",
+          "x": 4,
+          "y": 32
+        },
+        {
+          "name": "PORT B",
+          "label": "B",
+          "kind": "hose",
+          "signal": "air",
+          "electricalType": 4,
+          "unit": "hose",
+          "number": "2",
+          "x": 12,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "pneumatic"
+      ],
+      "notes": "Two complete air-hose endpoints. Rod and mounting points are mechanical artwork.",
+      "shape": "cylinder",
+      "width": 52,
+      "height": 46,
+      "bodyWidth": 52,
+      "bodyHeight": 38,
+      "xmlSha256": "acbbc3075e35268bcbe5bae746cb1cdfcc511b366836ff727614d23a3809b335"
+    },
+    {
+      "id": "valve-pneumatic",
+      "name": "Five-port single-solenoid pneumatic valve",
+      "short": "PNEUMATIC VALVE / 5 PORTS",
+      "kind": "actuator",
+      "category": "Solenoids and actuators",
+      "ports": [
+        {
+          "name": "P",
+          "label": "P",
+          "kind": "hose",
+          "signal": "air",
+          "electricalType": 4,
+          "unit": "hose",
+          "number": "1",
+          "x": 4,
+          "y": 32
+        },
+        {
+          "name": "A",
+          "label": "A",
+          "kind": "hose",
+          "signal": "air",
+          "electricalType": 4,
+          "unit": "hose",
+          "number": "2",
+          "x": 12,
+          "y": 32
+        },
+        {
+          "name": "B",
+          "label": "B",
+          "kind": "hose",
+          "signal": "air",
+          "electricalType": 4,
+          "unit": "hose",
+          "number": "3",
+          "x": 20,
+          "y": 32
+        },
+        {
+          "name": "EA",
+          "label": "EA",
+          "kind": "hose",
+          "signal": "air",
+          "electricalType": 4,
+          "unit": "hose",
+          "number": "4",
+          "x": 28,
+          "y": 32
+        },
+        {
+          "name": "EB",
+          "label": "EB",
+          "kind": "hose",
+          "signal": "air",
+          "electricalType": 4,
+          "unit": "hose",
+          "number": "5",
+          "x": 36,
+          "y": 32
+        },
+        {
+          "name": "COIL1",
+          "label": "C1",
+          "kind": "terminal",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "6",
+          "x": 44,
+          "y": 32
+        },
+        {
+          "name": "COIL2",
+          "label": "C2",
+          "kind": "terminal",
+          "signal": "coil",
+          "electricalType": 4,
+          "unit": "conductor",
+          "number": "7",
+          "x": 4,
+          "y": 40
+        }
+      ],
+      "sources": [
+        "pneumatic"
+      ],
+      "notes": "P is pressure supply, A/B working ports, EA/EB exhaust. Coil leads remain distinct from fluid connections.",
+      "shape": "valve",
+      "width": 52,
+      "height": 54,
+      "bodyWidth": 52,
+      "bodyHeight": 46,
+      "xmlSha256": "7d7374c93c554c8922085ee63647b4e632b584143a98dfd13bb5640832176082"
+    },
+    {
+      "id": "actuator-gripper",
+      "name": "Pulse-controlled electric robot gripper",
+      "short": "ELECTRIC ROBOT GRIPPER",
+      "kind": "actuator",
+      "category": "Solenoids and actuators",
+      "ports": [
+        {
+          "name": "GND",
+          "label": "G",
+          "kind": "header",
+          "signal": "reference",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 32
+        },
+        {
+          "name": "V+",
+          "label": "V",
+          "kind": "header",
+          "signal": "servo-power",
+          "electricalType": 9,
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 32
+        },
+        {
+          "name": "PWM",
+          "label": "S",
+          "kind": "header",
+          "signal": "servo-pulse",
+          "electricalType": 0,
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "rcservo"
+      ],
+      "notes": "Generic servo-actuated gripper with GND/V+/pulse contacts; no assumed travel or force.",
+      "shape": "gripper",
+      "width": 52,
+      "height": 46,
+      "bodyWidth": 52,
+      "bodyHeight": 38,
+      "xmlSha256": "e1b3f7d0ff95d1771f1a1213819dca46a75a4ccdb8481513fa06339edcee651d"
+    },
+    {
+      "id": "mechanical-wheel",
+      "name": "Robot drive wheel",
+      "short": "ROBOT DRIVE WHEEL",
+      "kind": "mechanical",
+      "category": "Mechanical layout parts",
+      "ports": [],
+      "sources": [
+        "mechanical"
+      ],
+      "notes": "Mechanical placement artwork only; no electrical connection points, shaft nets or motion simulation.",
+      "shape": "wheel",
+      "width": 42,
+      "height": 40,
+      "bodyWidth": 42,
+      "bodyHeight": 32,
+      "xmlSha256": "e3307375f0e7213dfb87edb968185c04e79af0b8a6972a9f11d71f06245a51a4"
+    },
+    {
+      "id": "mechanical-caster",
+      "name": "Swivel caster",
+      "short": "SWIVEL CASTER",
+      "kind": "mechanical",
+      "category": "Mechanical layout parts",
+      "ports": [],
+      "sources": [
+        "mechanical"
+      ],
+      "notes": "Mechanical placement artwork only; no electrical connection points, shaft nets or motion simulation.",
+      "shape": "caster",
+      "width": 42,
+      "height": 40,
+      "bodyWidth": 42,
+      "bodyHeight": 32,
+      "xmlSha256": "057a62e389c475977befd46b94491068e264ca6c124f985b70bc52b520eba4f6"
+    },
+    {
+      "id": "mechanical-coupling",
+      "name": "Flexible shaft coupling",
+      "short": "FLEXIBLE SHAFT COUPLING",
+      "kind": "mechanical",
+      "category": "Mechanical layout parts",
+      "ports": [],
+      "sources": [
+        "mechanical"
+      ],
+      "notes": "Mechanical placement artwork only; no electrical connection points, shaft nets or motion simulation.",
+      "shape": "coupling",
+      "width": 42,
+      "height": 40,
+      "bodyWidth": 42,
+      "bodyHeight": 32,
+      "xmlSha256": "3d58a1fe02b5967d99e4674be5c5e3439ba419792cb19eb9aa659d93bb3128e0"
+    },
+    {
+      "id": "mechanical-lead-axis",
+      "name": "Lead-screw axis",
+      "short": "LEAD-SCREW AXIS",
+      "kind": "mechanical",
+      "category": "Mechanical layout parts",
+      "ports": [],
+      "sources": [
+        "mechanical"
+      ],
+      "notes": "Mechanical placement artwork only; no electrical connection points, shaft nets or motion simulation.",
+      "shape": "lead-axis",
+      "width": 42,
+      "height": 40,
+      "bodyWidth": 42,
+      "bodyHeight": 32,
+      "xmlSha256": "f45f97f18935f2bc2ac9f1d1a8965d89b16df8a535f63e242868d6918bdab0e3"
+    },
+    {
+      "id": "mechanical-belt-axis",
+      "name": "Timing-belt axis",
+      "short": "TIMING-BELT AXIS",
+      "kind": "mechanical",
+      "category": "Mechanical layout parts",
+      "ports": [],
+      "sources": [
+        "mechanical"
+      ],
+      "notes": "Mechanical placement artwork only; no electrical connection points, shaft nets or motion simulation.",
+      "shape": "belt-axis",
+      "width": 42,
+      "height": 40,
+      "bodyWidth": 42,
+      "bodyHeight": 32,
+      "xmlSha256": "361526d43d4a13fbdf8090d30d53eebe5f5cf52ec3f0078d2850741b2844db41"
+    },
+    {
+      "id": "mechanical-pantilt",
+      "name": "Pan/tilt mounting assembly",
+      "short": "PAN/TILT MOUNTING ASSEMBLY",
+      "kind": "mechanical",
+      "category": "Mechanical layout parts",
+      "ports": [],
+      "sources": [
+        "mechanical"
+      ],
+      "notes": "Mechanical placement artwork only; no electrical connection points, shaft nets or motion simulation.",
+      "shape": "pantilt",
+      "width": 42,
+      "height": 40,
+      "bodyWidth": 42,
+      "bodyHeight": 32,
+      "xmlSha256": "bc632aee30705287318d21391c7ac9b4b82efa1e458b0e6c89a3daef622d6677"
+    },
+    {
+      "id": "mechanical-horn",
+      "name": "Servo horn and mounting bracket",
+      "short": "SERVO HORN AND MOUNTING BRACKET",
+      "kind": "mechanical",
+      "category": "Mechanical layout parts",
+      "ports": [],
+      "sources": [
+        "mechanical"
+      ],
+      "notes": "Mechanical placement artwork only; no electrical connection points, shaft nets or motion simulation.",
+      "shape": "horn",
+      "width": 46,
+      "height": 40,
+      "bodyWidth": 42,
+      "bodyHeight": 32,
+      "xmlSha256": "6914a77b0948d419e3d9dc447d9d9ab33bcfbb323d22751ecae41168f13dd4fc"
+    }
+  ]
+}

@@ -26,6 +26,7 @@ The picker browser regression runs with `npm run test:layout:browser -- library-
 | Embedded processors and smart home | 44 physical PCB views: ESP32/ESP8266 devkits, Raspberry Pi 3/4/5, Arduino Uno/Nano/Mega, 26 sensor/actuator modules and eight LCD/OLED/touch/e-paper displays. Labelled header pads, original function icons and revision-specific pin maps; no simulation models. |
 | Audio & Music | 99 compact equipment-layout resources for PA, recording, podcasts, instruments/MIDI, monitoring, routing and connectors. Original vectors with whole-cable connection points inside sockets; no simulation models. |
 | Test & Measurement | 78 compact original vector laboratory setup resources: supplies/loads, instruments, probes, acquisition, heaters, thermal equipment, relays, controls, pumps and apparatus. Individual conductor, whole-cable and hose endpoints; no simulation models. |
+| Motors & Motion | 66 compact original vector resources for DC/brushless motors, steppers, servos, drivers, encoders, limit sensors, solenoids, electric/pneumatic actuators and mechanical layouts. Three source-checked Pololu carriers; explicit conductor/cable/hose connections and no simulation models. |
 | Solar power and batteries | 52 supplied symbols for conceptual home-energy planning: panels, inverters, storage, EV charging, supply/backup, protection, monitoring and loads. Whole-cable or logical-link connections; no simulation models. |
 
 Digital supplies are native hidden **Power** pins named **VCC** and **VSS**. Connect those named nets to actual supplies; VSS is not implicitly node `0`. **Show power pins** exposes them. Native Dot, Clock and DotClock pin shapes convey inversion and edge polarity. Functional and sensor power/reference pins are visible and require explicit wiring.
@@ -81,6 +82,12 @@ The [A4 preview](audio-music-a4.png) shows 18 equipment resources at native plac
 Select **Standard → Test & Measurement** for 78 original vector laboratory setup resources. The [guide](test-measurement.md) includes the inventory, manufacturer survey, galleries and connection conventions. Individual binding posts, screw terminals and probe/heater leads are separate conductor endpoints; BNC/USB/TC plug ports represent complete cables, and fluid ports represent hoses. Force/sense, RTD lead counts and relay contact roles remain explicit.
 
 The [A4 preview](test-measurement-a4.png) fits 18 mixed lab resources at native placement size. Rebuild with `npm run libraries:test-measurement`, preview with `npm run preview:test-measurement`, generate review sheets with `npm run preview:layout-pages` and check with `npm run test:test-measurement`. The standard packager and `npm run libraries:all` include this bundle.
+
+## Motors & Motion
+
+Select **Standard → Motors & Motion** for 66 original vector resources for robotics and automation. The [guide](motors-motion.md) lists the inventory, surveyed sources, named carrier header maps and wiring conventions. Electrical contacts distinguish winding, motor/servo power, PWM/direction, encoder and limit signals; complete feedback/control cables and pneumatic hoses are labelled separately. Shafts and mounting points are mechanical artwork.
+
+The [A4 preview](motors-motion-a4.png) fits 16 mixed resources at native placement size. Rebuild with `npm run libraries:motion`, preview with `npm run preview:motion` and check with `npm run test:motion`. Standard packaging, `npm run libraries:all` and A4 review generation include the bundle.
 
 ## Solar power and batteries
 

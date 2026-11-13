@@ -55,7 +55,7 @@ engine architecture, simulation workflows, file formats, libraries and editor to
 Standard libraries include 47 original vector network devices with matching 19-inch
 rack panels and cable connections inside their sockets. Use **Open Example → Examples**
 for the transistor amplifier or **Small office network**, which embeds its devices
-for standalone editing. See [Libraries and examples](docs/libraries.md) for the nine
+for standalone editing. See [Libraries and examples](docs/libraries.md) for the ten
 bundled libraries, artwork provenance, rack conventions and build/test commands.
 
 The **Embedded processors and smart home** standard library adds 44 physical PCB
@@ -72,6 +72,11 @@ The **Test & Measurement** standard library adds 78 compact lab resources for po
 instruments, probes, acquisition, thermal equipment, relays, controls and apparatus.
 Connections distinguish individual conductors, complete cables and fluid hoses. See
 the [guide](docs/test-measurement.md) and [A4 preview](docs/test-measurement-a4.png).
+
+The **Motors & Motion** standard library adds 66 compact robotics and automation
+resources: motors, steppers, servos, drivers, encoders, limits, solenoids, actuators
+and mechanical parts. See the [guide](docs/motors-motion.md) and
+[A4 placement preview](docs/motors-motion-a4.png).
 
 The **Solar power and batteries** standard library includes 52 supplied symbols
 for conceptual home-energy planning, with whole-cable and logical-link connections.

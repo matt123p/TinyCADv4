@@ -3,17 +3,20 @@ import sharp from 'sharp';
 import { embeddedArtwork } from './lib/embedded-artwork.mjs';
 import { audioArtwork } from './lib/audio-artwork.mjs';
 import { testMeasurementArtwork } from './lib/test-measurement-artwork.mjs';
+import { motorsMotionArtwork } from './lib/motors-motion-artwork.mjs';
 import {
   layoutProofPage,
   embeddedProofIds,
   audioProofIds,
   testMeasurementProofIds,
+  motorsMotionProofIds,
 } from './lib/layout-proof-page.mjs';
 await mkdir('build/layout-pages', { recursive: true });
 for (const [id, artwork, ids] of [
   ['embedded-smart-home', embeddedArtwork, embeddedProofIds],
   ['audio-music', audioArtwork, audioProofIds],
   ['test-measurement', testMeasurementArtwork, testMeasurementProofIds],
+  ['motors-motion', motorsMotionArtwork, motorsMotionProofIds],
 ]) {
   const { records } = artwork(
     JSON.parse(await readFile(`library-recipes/${id}.json`, 'utf8')),

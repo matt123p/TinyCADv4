@@ -21,6 +21,8 @@ Use **Standard → Audio & Music** for 99 compact resources for PA systems, stud
 
 Use **Standard → Test & Measurement** for 78 compact lab setup resources: power supplies, instruments, probes, acquisition, heaters, relays, controls and laboratory apparatus. The [guide](test-measurement.md) covers the inventory and conductor/cable/hose connections, with an [A4 placement preview](test-measurement-a4.png).
 
+Use **Standard → Motors & Motion** for 66 robotics and automation resources: motors, steppers, servos, drivers, feedback, limit sensors, solenoids, actuators and mechanical parts. The [guide](motors-motion.md) includes carrier pin maps, sources and galleries, with an [A4 placement preview](motors-motion-a4.png).
+
 Use **Standard → Solar power and batteries** for the 52 supplied home-energy planning symbols, covering generation, storage, EV charging, supply equipment, monitoring and loads.
 
 For everyday use, see the separately maintained [TinyCAD v4 manual](https://docs.tinycad.net/v4/). Editable simulation drawings are in [examples/simulation](../examples/simulation/README.md), and recorded walkthroughs are in [tutorials](../tutorials/README.md).

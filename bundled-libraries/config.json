@@ -26,6 +26,12 @@
       "description": "78 compact original vector laboratory setup resources: supplies, loads, oscilloscopes, meters, RF instruments, acquisition, probes, heaters, thermal equipment, relays, controls, pumps and bench apparatus. Separate conductor, complete-cable and fluid-hose connection points; no simulation models."
     },
     {
+      "id": "motors-motion",
+      "name": "Motors & Motion",
+      "path": "motors-motion/motors-motion.tclib",
+      "description": "66 compact original vector resources for robotics and automation: DC/brushless motors, steppers, RC/smart servos, driver boards, encoders, limits, solenoids, electric/pneumatic actuators and mechanical layout parts. Source-checked Pololu carrier headers and explicit conductor/cable/hose endpoints; no motion or SPICE models."
+    },
+    {
       "id": "solar",
       "name": "Solar power and batteries",
       "path": "solar/Solar-Power-and-Batteries.TCLib",

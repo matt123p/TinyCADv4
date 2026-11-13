@@ -4,6 +4,8 @@
 
 ### Added
 
+- Motors & Motion standard library with 66 original compact vector resources for robotics and automation: motors, steppers, servos, source-checked carrier boards, generic drivers, feedback, limits, solenoids, actuators and mechanical parts.
+
 - Test & Measurement standard library with 78 original compact vector resources for laboratory power supplies/loads, instruments, acquisition, probes, thermal equipment, relays, controls, pumps and apparatus. Connection points distinguish individual conductors, complete cables and fluid hoses.
 
 - Audio & Music standard library with 99 original compact vector resources for live sound, recording, podcasts, instruments/MIDI, speakers, amplification, stage routing, connectors and room/stage positions. Whole-cable connection points sit inside sockets; protocol and signal types are retained in component attributes.
@@ -39,6 +41,8 @@
 - Treat hidden transistor pins as connection points rather than visible stems, preventing artificial return bends and repairing existing loops in the amplifier example.
 
 ### Maintenance
+
+- Add reproducible motion-library generation, manufacturer pin-map provenance, native galleries, A4 placement reviews and real-editor wiring/save-load checks.
 
 - Add reproducible laboratory library generation, native artwork galleries, A4 placement reviews and real-editor connectivity/save-load checks.
 

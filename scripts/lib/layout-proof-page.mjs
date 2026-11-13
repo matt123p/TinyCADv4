@@ -170,3 +170,22 @@ export const testMeasurementProofIds = [
   'bnc-terminator',
   'terminal-block-8',
 ];
+
+export const motorsMotionProofIds = [
+  'motor-microgear',
+  'motor-encoder',
+  'motor-bldc-outrunner',
+  'stepper-nema17',
+  'servo-micro',
+  'servo-standard',
+  'servo-smart-ttl',
+  'driver-a4988',
+  'driver-tb6612',
+  'encoder-ab',
+  'encoder-magnetic-i2c',
+  'limit-roller',
+  'limit-inductive-npn',
+  'solenoid-frame',
+  'actuator-linear',
+  'mechanical-wheel',
+];
