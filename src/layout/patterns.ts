@@ -22,8 +22,8 @@ export interface ComponentIsland {
 
 /** A component plus physically attached stubs, flags and power symbols. Named
  * nets do not prevent translation, but a physical connection to another part does. */
-export function componentIslands(sheet: dsnSheet): ComponentIsland[] {
-  const nets = (JSON.parse(connectivitySignature(sheet, true)) as string[]).map(
+export function componentIslands(sheet: dsnSheet, physicalPartition?: string): ComponentIsland[] {
+  const nets = (JSON.parse(physicalPartition ?? connectivitySignature(sheet, true)) as string[]).map(
     (g) => g.split('|'),
   );
   const result: ComponentIsland[] = [];
@@ -69,9 +69,9 @@ export function componentIslands(sheet: dsnSheet): ComponentIsland[] {
 /** Repeat families by reference designator and actual pin geometry, not library
  * UID: two capacitor values or source waveforms often have different definitions.
  * Keep orientation, scale and pin polarity intact. */
-export function componentPatterns(sheet: dsnSheet) {
+export function componentPatterns(sheet: dsnSheet, physicalPartition?: string) {
   const groups = new Map<string, ComponentIsland[]>();
-  for (const island of componentIslands(sheet)) {
+  for (const island of componentIslands(sheet, physicalPartition)) {
     const s = island.symbol,
       ps = pins(s);
     if (
@@ -141,7 +141,7 @@ export function patternPitch(
  * Penalise excessive pitch as well: a tidy but widely scattered row is not a group. */
 export function componentDisorder(sheet: dsnSheet, o: LayoutSettings) {
   let score = 0;
-  for (const group of componentPatterns(sheet)) {
+  for (const group of componentPatterns(sheet, o.physicalPartition)) {
     const axis = patternAxis(group),
       cross = 1 - axis,
       preferred = patternPitch(group, axis, o);

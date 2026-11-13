@@ -5,9 +5,8 @@ import { pins, same, symbols, texts, wireContains, wires } from './geometry';
 
 /** Free labelled pin stubs on the same component face form a readable column.
  * Group by topology, not current bend shape, so rerouting cannot evade alignment. */
-export function labelGroups(sheet: dsnSheet) {
-  const ports = symbols(sheet).flatMap(pins),
-    ws = wires(sheet);
+export function labelGroups(sheet: dsnSheet, paths = wirePaths(sheet), ports = symbols(sheet).flatMap(pins)) {
+  const ws = wires(sheet);
   const groups = new Map<
     string,
     Array<{
@@ -16,7 +15,7 @@ export function labelGroups(sheet: dsnSheet) {
       pin: (typeof ports)[number];
     }>
   >();
-  for (const path of wirePaths(sheet)) {
+  for (const path of paths) {
     let ps = path.points;
     let pin = ports.find((p) => same(p.p, ps[0]));
     if (!pin) {
@@ -57,8 +56,8 @@ export function labelGroups(sheet: dsnSheet) {
     .map((g) => g.sort((a, b) => a.pin.p[1] - b.pin.p[1]));
 }
 
-export function labelAlignment(sheet: dsnSheet) {
-  return labelGroups(sheet).reduce((cost, g) => {
+export function labelAlignment(sheet: dsnSheet, groups = labelGroups(sheet)) {
+  return groups.reduce((cost, g) => {
     const xs = g.map((c) => texts(c.label)[0].x1);
     return cost + (Math.max(...xs) - Math.min(...xs)) * g.length;
   }, 0);

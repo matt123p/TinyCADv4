@@ -7,7 +7,10 @@ import { updateFactory } from '../src/manipulators/updateFactory';
 import { updateDrawing } from '../src/manipulators/updateDrawing';
 import { NetlistGenerator } from '../src/io/netlists/netlistGenerator';
 import { makeNetForDrawing } from '../src/web-worker/netlist';
-import { analyseLayout, optimiseLayout, sameConnectivity } from '../src/layout';
+import { optimiseLayout, sameConnectivity } from '../src/layout';
+import { analysePrepared } from '../src/layout/analyse';
+import { settings, bodyRect, texts, pins, symbolArtwork } from '../src/layout/geometry';
+import { LayoutAnalysis } from '../src/layout/types';
 import { LayoutOptions } from '../src/layout/types';
 import SvgDefs from '../src/components/svg/SvgDefs';
 import DesignDetails from '../src/components/svg/DesignDetails';
@@ -67,34 +70,43 @@ function netlist(drawing: dsnDrawing) {
   return result;
 }
 
-// Serialization regenerates editor item IDs. Compare electrical terminals by
-// reference, part and pin, and named ports, rather than those temporary IDs.
-function terminalSignature(drawing: dsnDrawing) {
-  return JSON.stringify(
-    Object.values(netlist(drawing).nets)
-      .map((nodes) =>
-        [
-          ...new Set(
-            nodes.flatMap((node) =>
-              node.symbol
-                ? [
-                    `pin:${node.sheet}:${node.reference}:${node.symbol.part}:${node.pin}`,
-                  ]
-                : node.parent &&
-                  ['label', 'power', 'noconnect'].includes(node.parent.NodeName)
-                ? [`${node.parent.NodeName}:${node.sheet}:${node.label || ''}`]
-                : [],
-            ),
-          ),
-        ].sort(),
-      )
-      .filter((nodes) => nodes.length)
-      .map((nodes) => JSON.stringify(nodes))
-      .sort(),
-  );
+// Both electrical and physical partitions are checked by the optimizer and again
+// after serialization with restored IDs. Preserve names, pin mappings and hints
+// separately so an isolated renamed net/terminal cannot escape that partition check.
+// This avoids building two additional full native netlists just for identity checks.
+function electricalIdentity(sheet: dsnSheet) {
+  return JSON.stringify(sheet.items.flatMap<unknown[]>(item => {
+    if (item.NodeName === 'symbol') return [[
+      item._id, item.NodeName, item.part,
+      item.text.map(field => [field.description, field.value]),
+      item.hints,
+      item._symbol.outlines.map(outline => outline.active_points.map(point => [
+        point.pin.number, point.pin.name, point.pin.elec, point.pin.which,
+      ])),
+    ]];
+    if (item.NodeName === 'label' || item.NodeName === 'power')
+      return [[item._id, item.NodeName, item.text]];
+    return [];
+  }));
 }
 
-function compactAnalysis(analysis: ReturnType<typeof analyseLayout>) {
+// Reuse layout analysis only when every geometric input survives the native saver.
+// Identity and both connectivity partitions are checked separately below.
+function layoutGeometry(sheet: dsnSheet) {
+  return JSON.stringify(sheet.items.map(item => ({
+    id: item._id, type: item.NodeName,
+    point: 'point' in item ? item.point : null,
+    end: 'point_b' in item ? item.point_b : null,
+    points: 'd_points' in item ? item.d_points : null,
+    rotation: 'rotation' in item ? item.rotation : null,
+    which: 'which' in item ? item.which : null,
+    body: bodyRect(item), text: texts(item),
+    pins: item.NodeName === 'symbol' ? pins(item) : null,
+    artwork: item.NodeName === 'symbol' ? symbolArtwork(item) : null,
+  })));
+}
+
+function compactAnalysis(analysis: ReturnType<typeof analysePrepared>) {
   return {
     ...analysis,
     diagnostics: analysis.diagnostics.slice(0, 100),
@@ -102,7 +114,7 @@ function compactAnalysis(analysis: ReturnType<typeof analyseLayout>) {
   };
 }
 
-function check(drawing: dsnDrawing) {
+function check(drawing: dsnDrawing, knownLayouts = new Map<dsnSheet, LayoutAnalysis>()) {
   const drc = new updateDrawing().designRulesCheck(
     drawing,
     drawing.drc,
@@ -133,7 +145,7 @@ function check(drawing: dsnDrawing) {
           ? { reference: item.text.find((t) => t.description === 'Ref')?.value }
           : {}),
       })),
-      layout: compactAnalysis(analyseLayout(sheet)),
+      layout: compactAnalysis(knownLayouts.get(sheet) ?? analysePrepared(sheet, settings(sheet, {}))),
     })),
   };
 }
@@ -234,12 +246,12 @@ export function tidyTinyCadDrawing(
       'Auto-tidy supports up to 256 items on the selected sheet.',
     );
   if (
-    (options.maxEvaluations ?? 250) > 500 ||
-    (options.maxPasses ?? 2) > 4 ||
+    (options.maxEvaluations ?? 2500) > 10000 ||
+    (options.maxPasses ?? 4) > 8 ||
     (options.annealingSteps ?? 0) !== 0
   )
     throw new Error(
-      'Auto-tidy is limited to 500 evaluations, 4 passes and no annealing.',
+      'Auto-tidy is limited to 10000 evaluations, 8 passes and no annealing.',
     );
   const known = new Set(source.items.map((item) => item._id));
   for (const id of [
@@ -250,28 +262,33 @@ export function tidyTinyCadDrawing(
       throw new Error(
         `Unknown item ID ${id}; use validate_drawing to list item IDs.`,
       );
-  const signature = terminalSignature(drawing);
+  const identity = electricalIdentity(source);
   const result = optimiseLayout(source, {
     ...options,
-    maxPasses: options.maxPasses ?? 2,
-    maxEvaluations: options.maxEvaluations ?? 250,
+    balancePhases: false,
+    prepared: true,
+    remainingBudget: typeof (globalThis as any).__tinycadLayoutBudget === 'function'
+      ? () => (globalThis as any).__tinycadLayoutBudget()
+      : undefined,
+    maxPasses: options.maxPasses ?? 4,
+    maxEvaluations: options.maxEvaluations ?? 2500,
     annealingSteps: 0,
   });
-  if (
-    !result.connectivityPreserved ||
-    !sameConnectivity(source, result.sheet, result.wireOrigins)
-  )
+  // The optimizer compares both final partitions with the original signatures.
+  // Serialization is checked independently below; do not recompute this same pair here.
+  if (!result.connectivityPreserved)
     throw new Error(
       'Auto-tidy rejected a change to physical or electrical connectivity.',
     );
+  if (identity !== electricalIdentity(result.sheet))
+    throw new Error('Auto-tidy changed pin mappings, fields or named nets.');
   const output = {
     ...drawing,
     sheets: drawing.sheets.map((s, i) => (i === sheet - 1 ? result.sheet : s)),
   };
   const definition = new ioXML().to_dsn(output, true, true).tostring();
   const roundtrip = parseDrawing(definition);
-  if (signature !== terminalSignature(roundtrip))
-    throw new Error('Auto-tidy serialization changed electrical connectivity.');
+  const knownLayouts = new Map<dsnSheet, LayoutAnalysis>();
   for (let i = 0; i < output.sheets.length; i++) {
     const before = output.sheets[i],
       after = roundtrip.sheets[i];
@@ -292,11 +309,39 @@ export function tidyTinyCadDrawing(
         _id: before.items[index]._id,
       })),
     };
+    if (electricalIdentity(before) !== electricalIdentity(mapped))
+      throw new Error('Auto-tidy serialization changed pin mappings, fields or named nets.');
     if (!sameConnectivity(before, mapped))
       throw new Error(
         'Auto-tidy serialization changed physical or electrical connectivity.',
       );
+    if (i === sheet - 1 && (!options.disturbance || options.disturbance === 'medium') &&
+        layoutGeometry(before) === layoutGeometry(mapped)) {
+      const ids = new Map(before.items.map((item, index) => [item._id, after.items[index]._id]));
+      knownLayouts.set(after, {
+        metrics: result.after.metrics,
+        diagnostics: result.after.diagnostics.map(diagnostic => ({ ...diagnostic,
+          itemIds: diagnostic.itemIds.map(id => ids.get(id) ?? id),
+        })),
+      });
+    }
   }
+  const remainingByCode: Record<string, number> = {};
+  for (const diagnostic of result.after.diagnostics)
+    remainingByCode[diagnostic.code] = (remainingByCode[diagnostic.code] || 0) + 1;
+  const recommended = new Set<string>();
+  for (const code of Object.keys(remainingByCode)) {
+    if (code.startsWith('text-')) recommended.add('symbol-text');
+    if (code.startsWith('label-') || code === 'net-label-position') recommended.add('net-labels');
+    if (['wire-body', 'crossing', 'wire-overlap', 'diagonal', 'pin-exit', 'bundle-disorder'].includes(code)) recommended.add('routing');
+    if (['body-overlap', 'annotation-crowding', 'component-disorder'].includes(code)) recommended.add('placement');
+    if (code.startsWith('junction-')) recommended.add('junctions');
+  }
+  const converged = result.stopped === 'converged';
+  const complete = converged && result.after.diagnostics.length === 0;
+  const readabilityKeys = ['bodyCollisions', 'wireBodyCollisions', 'crossings', 'overlaps',
+    'diagonalSegments', 'pinExitViolations', 'textCollisions', 'annotationCrowding',
+    'componentDisorder', 'labelOverhangs', 'junctionIssues', 'bundleDisorder'] as const;
   return {
     definition,
     sheet,
@@ -311,8 +356,23 @@ export function tidyTinyCadDrawing(
     before: compactAnalysis(result.before),
     after: compactAnalysis(result.after),
     evaluations: result.evaluations,
+    phaseProgress: result.phaseProgress,
+    layoutQuality: {
+      status: complete ? 'complete' : 'incomplete',
+      converged,
+      readabilityImproved: readabilityKeys.some(key => result.after.metrics[key] < result.before.metrics[key]),
+      remainingDiagnosticCount: result.after.diagnostics.length,
+      remainingByCode,
+      recommendedPhases: [...recommended],
+      message: complete
+        ? 'Search converged with no detected layout issues. Inspect the final preview.'
+        : 'Layout cleanup is incomplete. Electrical validation and preserved connectivity do not establish drawing readability. Continue with the recommended phases on the returned definition, repair persistent overlaps manually, and inspect the final preview before presenting it as cleaned up.',
+    },
     stopped: result.stopped,
-    validation: check(roundtrip),
+    budgetReason: result.stopped === 'budget'
+      ? (result.evaluations >= (options.maxEvaluations ?? 2500) ? 'evaluations' : 'runtime')
+      : result.stopped === 'pass-limit' ? 'passes' : null,
+    validation: check(roundtrip, knownLayouts),
   };
 }
 

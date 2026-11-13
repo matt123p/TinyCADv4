@@ -1073,3 +1073,66 @@ for (const disturbance of ['low', 'medium', 'high']) {
     assert.ok(r.after.metrics.wireLength <= r.before.metrics.wireLength - 60);
   });
 }
+
+
+test('route-ranking metrics match full scoring across rotations, branches and legacy drawings', async () => {
+  const inputs = [await amplifierFixture(), await amplifierFixture('amplifier-with-pin-loops.dsn')];
+  for (let rotation = 0; rotation < 8; rotation++) {
+    inputs.push(sheet(
+      symbol(1, 30, 30, { width: 20, height: 30, rotation }),
+      wire(2, [0, 30], [60, 30]), wire(3, [30, 0], [30, 60]),
+      wire(4, [10, 30], [50, 30]), wire(5, [70, 20], [80, 40]),
+      { NodeName: 'junction', _id: 6, point: [30, 30] },
+      label(7, [20, 30], 'TEST'),
+    ));
+  }
+  for (const input of inputs) {
+    const original = JSON.stringify(input);
+    const options = api.settings(input, { pinLead: 15 });
+    const fast = api.analyseRouteMetrics(input, options.pinLead);
+    const full = api.analyseLayout(input, options).metrics;
+    for (const key of Object.keys(fast)) assert.equal(fast[key], full[key], key);
+    assert.equal(JSON.stringify(input), original, 'route scoring must not mutate input caches');
+  }
+});
+
+
+test('symbol artwork bounds include scaled stroke width for rotated and mirrored shapes', () => {
+  for (const rotation of [0, 1, 2, 3, 4, 5, 6, 7]) {
+    for (const kind of ['rectangle', 'line']) {
+      const s = symbol(1, 100, 100, { rotation, ports: [] });
+      s.scale_x = 2;
+      s.scale_y = 3;
+      const shape = { NodeName: kind, _id: 9000, point: [-30, -15], point_b: [-10, -5],
+        d_points: [[-30, -15], [-10, -5]], stroked: true, line_width: 6,
+        line_colour: '#000000', line_pattern: 0, filled: false, polygon: false };
+      if (kind === 'line') { delete shape.point; delete shape.point_b; }
+      s._symbol.outlines[0].items = [shape];
+      const thick = api.symbolArtwork(s).body;
+      shape.stroked = false;
+      const plain = api.symbolArtwork(s).body;
+      const swap = rotation === 1 || rotation === 3;
+      const px = 3 * (swap ? s.scale_y : s.scale_x);
+      const py = 3 * (swap ? s.scale_x : s.scale_y);
+      assert.deepEqual(thick, { x1: plain.x1 - px, y1: plain.y1 - py,
+        x2: plain.x2 + px, y2: plain.y2 + py });
+    }
+  }
+});
+
+test('component labels leave a small visual gap outside the painted body', () => {
+  const s = symbol(1, 100, 100, { ports: [] });
+  s._symbol.outlines[0].items = [{ NodeName: 'rectangle', _id: 9000,
+    point: [-30, -15], point_b: [-10, -5], stroked: true, line_width: 6,
+    line_colour: '#000000', line_pattern: 0, filled: false }];
+  s.text[0].position = [-100, -100];
+  s.text[1].position = [-100, -80];
+  const result = solve(sheet(api.refresh(s)), { phases: ['symbol-text'] });
+  assert.ok(result.changes.length > 0);
+  const placed = result.sheet.items[0];
+  const body = api.symbolArtwork(placed).body;
+  for (const t of api.texts(placed)) {
+    const gap = Math.max(body.x1 - t.x2, t.x1 - body.x2, body.y1 - t.y2, t.y1 - body.y2);
+    assert.ok(gap >= 4.5 - 1e-6, `Text must clear the painted body plus the extra margin, got ${gap}`);
+  }
+});

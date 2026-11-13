@@ -16,8 +16,8 @@ function symbol(ref, pos = '20,20', part = 0) {
   return `<SYMBOL pos="${pos}" id="1" show_power="0" can_scale="0" scale_x="1" scale_y="1" part="${part}" rotate="0"><FIELD pos="0,0" value="${ref}" description="Ref" type="0" show="1"/></SYMBOL>`;
 }
 const circuit = `<TinyCAD><NAME>Main</NAME>${font}<WIRE a="20,20" b="60,20"/><LABEL pos="20.2,20" direction="0" font="1" color="000000" style="0">SIGNAL</LABEL><WIRE a="20,60" b="60,60"/><LABEL pos="20.2,60" direction="0" font="1" color="000000" style="0">OTHER</LABEL></TinyCAD>`;
-function api() {
-  const context = vm.createContext({ console });
+function api(remainingBudget) {
+  const context = vm.createContext({ console, __tinycadLayoutBudget: remainingBudget });
   vm.runInContext(bundle, context, { timeout: 10000 });
   return context.TinyCADDrawingServerBundle;
 }
@@ -138,8 +138,9 @@ test('selected sheet operations keep other sheets and enforce limits', () => {
   assert.equal(result.validation.sheets.length, 2);
   assert.match(result.definition, /<NAME>Other sheet<\/NAME>/);
   assert.match(result.definition, /a="100,100" b="200,100"/);
+  assert.equal(runtime.tidyTinyCadDrawing(xml, 1, { selectedIds: [], maxEvaluations: 10000, maxPasses: 8 }).connectivityPreserved, true);
   assert.throws(
-    () => runtime.tidyTinyCadDrawing(xml, 1, { maxEvaluations: 501 }),
+    () => runtime.tidyTinyCadDrawing(xml, 1, { maxEvaluations: 10001 }),
     /limited/,
   );
   assert.throws(
@@ -156,4 +157,53 @@ test('wire net-type appearance and metadata survive rendering and saving', () =>
   const output = runtime.tidyTinyCadDrawing(xml, 1, { selectedIds: [] });
   assert.match(output.definition, /net_type="Signal"/);
   assert.match(output.definition, /wireColor="#123456"/);
+});
+
+
+test('tidy uses the editor phase sequence without per-phase quotas and reports incomplete layout', () => {
+  const runtime = api();
+  const components = Array.from({ length: 15 }, (_, i) => symbol(`U${i + 1}`, `${20 + i * 20},100`)).join('');
+  const input = `<TinyCAD>${font}${symboldef}${components}<WIRE a="20,20" b="60,20"/><LABEL pos="20.2,20" direction="0" font="1" color="000000" style="0">SIGNAL</LABEL></TinyCAD>`;
+  const result = runtime.tidyTinyCadDrawing(input, 1, {
+    phases: ['symbol-text', 'net-labels'], maxPasses: 1, maxEvaluations: 60,
+  });
+  assert.ok(result.evaluations <= 60);
+  const text = result.phaseProgress.find(p => p.phase === 'symbol-text');
+  const labels = result.phaseProgress.find(p => p.phase === 'net-labels');
+  assert.ok(text.evaluations > 0);
+  assert.equal(labels, undefined, 'text search may use the total budget, as in the editor');
+  assert.ok(text.evaluations > 30, 'text search must not be restricted to half the total budget');
+  assert.equal(text.budgetExhausted, true);
+  assert.equal(result.layoutQuality.status, 'incomplete');
+  assert.match(result.layoutQuality.message, /Electrical validation.*do not establish drawing readability/);
+  assert.equal(result.connectivityPreserved, true);
+  assert.equal(result.serializationPhysicalConnectivityPreserved, true);
+  const fresh = runtime.validateTinyCadDrawing(result.definition);
+  assert.equal(JSON.stringify(result.validation.sheets[0].layout), JSON.stringify(fresh.sheets[0].layout),
+    'Reused analysis must match independent analysis of the serialized drawing, including current item IDs.');
+});
+
+
+test('host resource exhaustion returns a connectivity-checked incomplete proposal', () => {
+  let polls = 0;
+  const runtime = api(() => Math.max(0, 1 - ++polls / 12));
+  const result = runtime.tidyTinyCadDrawing(circuit, 1, { maxEvaluations: 100 });
+  assert.equal(result.layoutQuality.status, 'incomplete');
+  assert.equal(result.budgetReason, 'runtime');
+  assert.ok(result.evaluations < 100);
+  assert.equal(result.connectivityPreserved, true);
+  assert.equal(result.serializationConnectivityPreserved, true);
+  assert.equal(result.serializationPhysicalConnectivityPreserved, true);
+  assert.equal(result.validation.valid, true);
+});
+
+
+test('default text cleanup can search beyond the old server evaluation ceiling', () => {
+  const runtime = api();
+  const components = Array.from({ length: 30 }, (_, i) => symbol(`U${i + 1}`, `${20 + i * 20},100`)).join('');
+  const input = `<TinyCAD>${font}${symboldef}${components.replaceAll('FIELD pos="0,0"', 'FIELD pos="200,200"')}</TinyCAD>`;
+  const result = runtime.tidyTinyCadDrawing(input, 1, { phases: ['symbol-text'] });
+  assert.ok(result.evaluations > 500, `Expected more than the old 500-evaluation ceiling, got ${result.evaluations}`);
+  assert.ok(result.evaluations <= 2500);
+  assert.equal(result.serializationPhysicalConnectivityPreserved, true);
 });

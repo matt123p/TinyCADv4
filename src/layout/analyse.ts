@@ -45,101 +45,45 @@ export function labelFits(
         r.y2 <= Math.max(a[1], b[1]) - clearance;
 }
 
-export function analysePrepared(
-  sheet: dsnSheet,
-  o: LayoutSettings,
-): LayoutAnalysis {
-  const m = {
-    bodyCollisions: 0,
-    wireBodyCollisions: 0,
-    crossings: 0,
-    overlaps: 0,
-    diagonalSegments: 0,
-    pinExitViolations: 0,
-    textCollisions: 0,
-    annotationCrowding: 0,
-    componentDisorder: 0,
-    labelOverhangs: 0,
-    netLabelPosition: 0,
-    labelAlignment: labelAlignment(sheet),
-    junctionIssues: 0,
-    bundleDisorder: 0,
-    connectedDistance: 0,
-    logicalProximity: 0,
-    inlineImbalance: 0,
-    wireLength: 0,
-    bends: 0,
-    area: 0,
-    labelDistance: 0,
+/** Route ranking needs only wire clearance, crossings and pin exits. Full candidate
+ * acceptance still computes every layout metric and checks both net partitions. */
+function routeGeometry(sheet: dsnSheet) {
+  const segs = wires(sheet).flatMap(segments);
+  return {
+    segs,
+    wireRects: segs.map(s => expand(rect(s.a, s.b), 0.01)),
+    bodies: sheet.items.flatMap(item => {
+      const r = bodyRect(item);
+      return r ? [{ id: item._id, r, inner: expand(r, -0.05), type: item.NodeName }] : [];
+    }),
+    ports: symbols(sheet).flatMap(pins),
+    junctions: sheet.items.filter(item => item.NodeName === T.Junction),
   };
+}
+
+function routingAnalysis(
+  { segs, wireRects, bodies, ports, junctions }: ReturnType<typeof routeGeometry>,
+  pinLead: number,
+  collectDiagnostics: boolean,
+) {
+  const m = { wireLength: 0, diagonalSegments: 0, wireBodyCollisions: 0,
+    overlaps: 0, crossings: 0, pinExitViolations: 0 };
   const diagnostics: LayoutAnalysis['diagnostics'] = [];
-  const issue = (code: string, itemIds: number[], message: string) =>
-    diagnostics.push({ code, itemIds, message });
-  const ws = wires(sheet),
-    ss = symbols(sheet),
-    ports = ss.flatMap(pins);
-  const segs = ws.flatMap(segments);
-  const bodies = sheet.items.flatMap((i) => {
-    const r = bodyRect(i);
-    return r ? [{ id: i._id, r, type: i.NodeName }] : [];
-  });
-  const ts = sheet.items.flatMap((i) =>
-    texts(i).map((r) => ({
-      id: i._id,
-      r,
-      type: i.NodeName,
-      fontSize: 'font_size' in i ? i.font_size : o.grid * 2,
-    })),
-  );
-  const labelGroupIds = new Map<number, number>();
-  labelGroups(sheet).forEach((g, index) =>
-    g.forEach((c) => labelGroupIds.set(c.label._id, index)),
-  );
-  for (let i = 0; i < ts.length; i++)
-    for (let j = 0; j < i; j++) {
-      const a = ts[i],
-        b = ts[j];
-      if (a.id === b.id || a.type === T.Text || b.type === T.Text) continue;
-      const dx = Math.max(0, a.r.x1 - b.r.x2, b.r.x1 - a.r.x2),
-        dy = Math.max(0, a.r.y1 - b.r.y2, b.r.y1 - a.r.y2);
-      const related =
-        labelGroupIds.has(a.id) &&
-        labelGroupIds.get(a.id) === labelGroupIds.get(b.id);
-      const margin = related
-        ? o.clearance
-        : Math.max(o.annotationClearance, a.fontSize, b.fontSize);
-      const missing = Math.max(0, margin - Math.hypot(dx, dy));
-      m.annotationCrowding += missing;
-      if (missing > 0)
-        issue(
-          'annotation-crowding',
-          [a.id, b.id],
-          'Unrelated annotations need more visual separation.',
-        );
-    }
-  m.componentDisorder = componentDisorder(sheet, o);
-  const junctions = sheet.items.filter((i) => i.NodeName === T.Junction);
-  const artwork = new Map(ss.map((s) => [s._id, symbolArtwork(s)]));
-  for (let i = 0; i < bodies.length; i++)
-    for (let j = 0; j < i; j++) {
-      const a = bodies[i],
-        b = bodies[j];
-      if (intersects(a.r, b.r)) {
-        m.bodyCollisions++;
-        issue('body-overlap', [a.id, b.id], 'Objects overlap.');
-      }
-    }
-  for (const s of segs) {
+  const issue = (code: string, itemIds: number[], message: string) => {
+    if (collectDiagnostics) diagnostics.push({ code, itemIds, message });
+  };
+  for (let index = 0; index < segs.length; index++) {
+    const s = segs[index];
     m.wireLength += distance(s.a, s.b);
     if (s.a[0] !== s.b[0] && s.a[1] !== s.b[1]) {
       m.diagonalSegments++;
       issue('diagonal', [s.id], 'Wire is not orthogonal.');
     }
-    const r = rect(s.a, s.b);
+    const r = wireRects[index];
     for (const b of bodies) {
       if (b.type === T.NoConnect) continue;
       // Shrink pin envelopes slightly: outward leads may touch their perimeter.
-      if (intersects(expand(r, 0.01), expand(b.r, -0.05))) {
+      if (intersects(r, b.inner)) {
         m.wireBodyCollisions++;
         issue(
           'wire-body',
@@ -148,35 +92,6 @@ export function analysePrepared(
         );
       }
     }
-  }
-  for (const path of wirePaths(sheet)) {
-    for (let i = 1; i < path.points.length - 1; i++) {
-      const [a, b, c] = path.points.slice(i - 1, i + 2);
-      if ((a[0] === b[0]) !== (b[0] === c[0])) m.bends++;
-    }
-    const labelled = sheet.items.some(
-      (i) =>
-        i.NodeName === T.Label &&
-        path.members.some((w) => wireContains(w, i.point)),
-    );
-    if (!labelled)
-      for (const p of [path.points[0], path.points[path.points.length - 1]]) {
-        const attached =
-          ports.some((port) => same(port.p, p)) ||
-          sheet.items.some(
-            (i) =>
-              [T.Power, T.NoConnect, T.Junction].includes(i.NodeName) &&
-              'point' in i &&
-              same(i.point, p),
-          );
-        const incident = ws.filter((w) => wireContains(w, p));
-        if (!attached && incident.length === 1)
-          issue(
-            'dangling-wire',
-            [incident[0]._id],
-            'Wire endpoint is unconnected; layout will not infer a missing connection.',
-          );
-      }
   }
   for (let i = 0; i < segs.length; i++)
     for (let j = 0; j < i; j++) {
@@ -229,7 +144,7 @@ export function analysePrepared(
         dy = q[1] - p.p[1];
       return (
         dx * p.direction[1] === dy * p.direction[0] &&
-        dx * p.direction[0] + dy * p.direction[1] >= o.pinLead
+        dx * p.direction[0] + dy * p.direction[1] >= pinLead
       );
     });
     if (!good) {
@@ -241,10 +156,140 @@ export function analysePrepared(
       );
     }
   }
+  return { metrics: m, diagnostics };
+}
+
+export function analyseRouteMetrics(sheet: dsnSheet, pinLead: number) {
+  return routingAnalysis(routeGeometry(sheet), pinLead, false).metrics;
+}
+
+export function analysePrepared(
+  sheet: dsnSheet,
+  o: LayoutSettings,
+): LayoutAnalysis {
+  const m = {
+    bodyCollisions: 0,
+    wireBodyCollisions: 0,
+    crossings: 0,
+    overlaps: 0,
+    diagonalSegments: 0,
+    pinExitViolations: 0,
+    textCollisions: 0,
+    annotationCrowding: 0,
+    componentDisorder: 0,
+    labelOverhangs: 0,
+    netLabelPosition: 0,
+    labelAlignment: 0,
+    junctionIssues: 0,
+    bundleDisorder: 0,
+    connectedDistance: 0,
+    logicalProximity: 0,
+    inlineImbalance: 0,
+    wireLength: 0,
+    bends: 0,
+    area: 0,
+    labelDistance: 0,
+  };
+  const diagnostics: LayoutAnalysis['diagnostics'] = [];
+  const issue = (code: string, itemIds: number[], message: string) =>
+    diagnostics.push({ code, itemIds, message });
+  const ws = wires(sheet),
+    ss = symbols(sheet),
+    ports = ss.flatMap(pins);
+  const paths = wirePaths(sheet, ports);
+  const bundles = wireBundles(sheet, paths, ports);
+  const groups = labelGroups(sheet, paths, ports);
+  m.labelAlignment = labelAlignment(sheet, groups);
+  const segs = ws.flatMap(segments);
+  const wireRects = segs.map(s => expand(rect(s.a, s.b), 0.01));
+  const bodies = sheet.items.flatMap((i) => {
+    const r = bodyRect(i);
+    return r ? [{ id: i._id, r, inner: expand(r, -0.05), type: i.NodeName }] : [];
+  });
+  const ts = sheet.items.flatMap((i) =>
+    texts(i).map((r) => ({
+      id: i._id,
+      r,
+      type: i.NodeName,
+      fontSize: 'font_size' in i ? i.font_size : o.grid * 2,
+    })),
+  );
+  const textRects = ts.map(t => expand(t.r, o.clearance / 2));
+  const itemsById = new Map(sheet.items.map(item => [item._id, item]));
+  const labelGroupIds = new Map<number, number>();
+  groups.forEach((g, index) =>
+    g.forEach((c) => labelGroupIds.set(c.label._id, index)),
+  );
+  for (let i = 0; i < ts.length; i++)
+    for (let j = 0; j < i; j++) {
+      const a = ts[i],
+        b = ts[j];
+      if (a.id === b.id || a.type === T.Text || b.type === T.Text) continue;
+      const dx = Math.max(0, a.r.x1 - b.r.x2, b.r.x1 - a.r.x2),
+        dy = Math.max(0, a.r.y1 - b.r.y2, b.r.y1 - a.r.y2);
+      const related =
+        labelGroupIds.has(a.id) &&
+        labelGroupIds.get(a.id) === labelGroupIds.get(b.id);
+      const margin = related
+        ? o.clearance
+        : Math.max(o.annotationClearance, a.fontSize, b.fontSize);
+      const missing = Math.max(0, margin - Math.hypot(dx, dy));
+      m.annotationCrowding += missing;
+      if (missing > 0)
+        issue(
+          'annotation-crowding',
+          [a.id, b.id],
+          'Unrelated annotations need more visual separation.',
+        );
+    }
+  m.componentDisorder = componentDisorder(sheet, o);
+  const junctions = sheet.items.filter((i) => i.NodeName === T.Junction);
+  const artwork = new Map(ss.map((s) => [s._id, symbolArtwork(s)]));
+  for (let i = 0; i < bodies.length; i++)
+    for (let j = 0; j < i; j++) {
+      const a = bodies[i],
+        b = bodies[j];
+      if (intersects(a.r, b.r)) {
+        m.bodyCollisions++;
+        issue('body-overlap', [a.id, b.id], 'Objects overlap.');
+      }
+    }
+  const routeAnalysis = routingAnalysis({ segs, wireRects, bodies, ports, junctions }, o.pinLead, true);
+  Object.assign(m, routeAnalysis.metrics);
+  diagnostics.push(...routeAnalysis.diagnostics);
+  for (const path of paths) {
+    for (let i = 1; i < path.points.length - 1; i++) {
+      const [a, b, c] = path.points.slice(i - 1, i + 2);
+      if ((a[0] === b[0]) !== (b[0] === c[0])) m.bends++;
+    }
+    const labelled = sheet.items.some(
+      (i) =>
+        i.NodeName === T.Label &&
+        path.members.some((w) => wireContains(w, i.point)),
+    );
+    if (!labelled)
+      for (const p of [path.points[0], path.points[path.points.length - 1]]) {
+        const attached =
+          ports.some((port) => same(port.p, p)) ||
+          sheet.items.some(
+            (i) =>
+              [T.Power, T.NoConnect, T.Junction].includes(i.NodeName) &&
+              'point' in i &&
+              same(i.point, p),
+          );
+        const incident = ws.filter((w) => wireContains(w, p));
+        if (!attached && incident.length === 1)
+          issue(
+            'dangling-wire',
+            [incident[0]._id],
+            'Wire endpoint is unconnected; layout will not infer a missing connection.',
+          );
+      }
+  }
   for (let i = 0; i < ts.length; i++) {
     const t = ts[i];
     for (let j = 0; j < i; j++)
-      if (intersects(expand(t.r, o.clearance / 2), ts[j].r)) {
+      if (intersects(textRects[i], ts[j].r)) {
         m.textCollisions++;
         issue('text-overlap', [t.id, ts[j].id], 'Visible text overlaps.');
       }
@@ -258,7 +303,7 @@ export function analysePrepared(
         t.type === T.Symbol && t.id === b.id
           ? artwork.get(b.id).obstacles
           : [b.r];
-      if (obstacles.some((r) => intersects(expand(t.r, o.clearance / 2), r))) {
+      if (obstacles.some((r) => intersects(textRects[i], r))) {
         m.textCollisions++;
         issue(
           'text-body',
@@ -267,13 +312,14 @@ export function analysePrepared(
         );
       }
     }
-    for (const s of segs) {
+    const item = itemsById.get(t.id);
+    for (let index = 0; index < segs.length; index++) {
+      const s = segs[index];
       // Plain net label baselines intentionally sit on their supporting wire.
-      const item = sheet.items.find((i) => i._id === t.id);
       if (item.NodeName === T.Label && onSegment(item.point, s.a, s.b))
         continue;
       if (
-        intersects(expand(t.r, o.clearance / 2), expand(rect(s.a, s.b), 0.01))
+        intersects(textRects[i], wireRects[index])
       ) {
         m.textCollisions++;
         issue('text-wire', [t.id, s.id], 'Text is too close to a wire.');
@@ -303,7 +349,7 @@ export function analysePrepared(
       }
     }
   }
-  const spans = wireSpans(sheet);
+  const spans = wireSpans(sheet, paths);
   for (const l of sheet.items.filter(
     (i): i is dsnLabel => i.NodeName === T.Label && i.which === 0,
   )) {
@@ -352,8 +398,8 @@ export function analysePrepared(
       .map((t) => t.r),
   ]);
   m.area = (bounds.x2 - bounds.x1) * (bounds.y2 - bounds.y1);
-  m.bundleDisorder = bundleDisorder(sheet, o.grid * 2);
-  for (const g of wireBundles(sheet))
+  m.bundleDisorder = bundleDisorder(sheet, o.grid * 2, bundles);
+  for (const g of bundles)
     for (const w of g)
       m.connectedDistance += distance(
         w.points[0],
@@ -361,7 +407,7 @@ export function analysePrepared(
       );
   // Single connections contribute too; bundles receive no artificial attraction multiplier.
   const grouped = new Set(
-    wireBundles(sheet).flatMap((g) =>
+    bundles.flatMap((g) =>
       g.flatMap((w) => w.members.map((m) => m._id)),
     ),
   );
@@ -376,7 +422,7 @@ export function analysePrepared(
       return [s._id, [(r.x1 + r.x2) / 2, (r.y1 + r.y2) / 2]];
     }),
   );
-  for (const pair of symbolConnections(sheet))
+  for (const pair of o.symbolConnections ?? symbolConnections(sheet))
     if (centres.has(pair.a) && centres.has(pair.b))
       m.logicalProximity +=
         pair.weight * distance(centres.get(pair.a), centres.get(pair.b));
