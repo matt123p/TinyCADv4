@@ -23,6 +23,10 @@ The picker browser regression runs with `npm run test:layout:browser -- library-
 | Functional blocks | 14 interfaces / 17 entries: ADC/DAC, communications, logger, MCU/FPGA/PLC, sample-and-hold, state machine, PCM/TDM and transducer. ADC, PCM and state machine have both clock-edge variants. |
 | Sensors and interfaces | Ten generic types: test point, Hall, piezo, light/pressure/temperature voltage sensors, moisture, pH, analogue switch and AM modulator. |
 | Network layout | 47 physical device symbols: consumer and rack switches/routers, firewalls, access points, patch panels, fibre aggregation, ONT, PoE injector and blank rack panel. |
+| Embedded processors and smart home | 44 physical PCB views: ESP32/ESP8266 devkits, Raspberry Pi 3/4/5, Arduino Uno/Nano/Mega, 26 sensor/actuator modules and eight LCD/OLED/touch/e-paper displays. Labelled header pads, original function icons and revision-specific pin maps; no simulation models. |
+| Audio & Music | 99 compact equipment-layout resources for PA, recording, podcasts, instruments/MIDI, monitoring, routing and connectors. Original vectors with whole-cable connection points inside sockets; no simulation models. |
+| Test & Measurement | 78 compact original vector laboratory setup resources: supplies/loads, instruments, probes, acquisition, heaters, thermal equipment, relays, controls, pumps and apparatus. Individual conductor, whole-cable and hose endpoints; no simulation models. |
+| Solar power and batteries | 52 supplied symbols for conceptual home-energy planning: panels, inverters, storage, EV charging, supply/backup, protection, monitoring and loads. Whole-cable or logical-link connections; no simulation models. |
 
 Digital supplies are native hidden **Power** pins named **VCC** and **VSS**. Connect those named nets to actual supplies; VSS is not implicitly node `0`. **Show power pins** exposes them. Native Dot, Clock and DotClock pin shapes convey inversion and edge polarity. Functional and sensor power/reference pins are visible and require explicit wiring.
 
@@ -58,6 +62,34 @@ Names always specify the actual socket mix. A marketed “10-port” switch can 
 
 Rebuild with `npm run libraries:network`; regenerate the documentation preview and per-device XML/SVG/PNG files under `build/network-layout/` with `npm run preview:network`. Run `npm run test:network` for socket separation, grid alignment, common rack dimensions, real editor placement, cable connectivity, rotation/mirroring, save/load and reproducible SQLite packaging. `npm run libraries:all` includes the network bundle. The standard packaging commands copy its configured `.tclib` into desktop and browser builds.
 
+## Embedded processors and smart home
+
+Select **Standard → Embedded processors and smart home** for the controller boards and sensor modules. The [library guide](embedded-smart-home.md) lists all 44 entries, physical wiring conventions, the project survey and manufacturer references, with galleries of the [controllers](embedded-controllers.png), [modules](smart-home-modules.png) and [displays](smart-home-displays.png).
+
+The original vector artwork shows component-side PCB views. Individual connection points sit on the labelled header pads. Raspberry Pi headers include physical pin numbers and BCM names; Arduino ICSP headers have pin legends. Sensor chips are represented by small function pictograms. Named revisions distinguish incompatible module layouts. These are compact wiring resources with explicit electrical pin types and no firmware or SPICE models. The [A4 preview](embedded-smart-home-a4.png) fits 18 mixed components at native placement size.
+
+The [recipe](../library-recipes/embedded-smart-home.json), [generator](../scripts/lib/embedded-artwork.mjs) and [provenance](../bundled-libraries/embedded-smart-home/embedded-smart-home.provenance.json) retain all pin maps and source references. Rebuild with `npm run libraries:embedded`, preview with `npm run preview:embedded`, and check with `npm run test:embedded`. The bundle is included in `npm run libraries:all` and standard asset packaging.
+
+## Audio & Music
+
+Select **Standard → Audio & Music** for 99 compact original vector resources for gigs, recording studios, podcasts, home recording, churches and schools. The [library guide](audio-music.md) lists the equipment, connector conventions, online survey and artwork galleries. Each socket has one complete-cable connection point; RF marks are logical wireless links. Balanced mono, stereo, instrument, speaker, MIDI and digital/network audio connections are identified separately.
+
+The [A4 preview](audio-music-a4.png) shows 18 equipment resources at native placement size. Rebuild with `npm run libraries:audio`, preview with `npm run preview:audio`, generate A4 review sheets with `npm run preview:layout-pages`, and check with `npm run test:audio`. Standard asset packaging and `npm run libraries:all` include the bundle.
+
+## Test & Measurement
+
+Select **Standard → Test & Measurement** for 78 original vector laboratory setup resources. The [guide](test-measurement.md) includes the inventory, manufacturer survey, galleries and connection conventions. Individual binding posts, screw terminals and probe/heater leads are separate conductor endpoints; BNC/USB/TC plug ports represent complete cables, and fluid ports represent hoses. Force/sense, RTD lead counts and relay contact roles remain explicit.
+
+The [A4 preview](test-measurement-a4.png) fits 18 mixed lab resources at native placement size. Rebuild with `npm run libraries:test-measurement`, preview with `npm run preview:test-measurement`, generate review sheets with `npm run preview:layout-pages` and check with `npm run test:test-measurement`. The standard packager and `npm run libraries:all` include this bundle.
+
+## Solar power and batteries
+
+Select **Standard → Solar power and batteries** for the 52 supplied home-energy planning components: solar panels and arrays, inverters and charge controllers, battery storage, EV charging, grid/supply and backup equipment, switches and protection, monitoring/control and household loads.
+
+The [supplied library](../bundled-libraries/solar/Solar-Power-and-Batteries.TCLib) is bundled unchanged. Its connection points represent whole cables or logical links rather than individual electrical terminals; component attributes retain the supplied usage notes and reference sources. It has no embedded SPICE models. The [import provenance](../bundled-libraries/solar/solar.provenance.json) records its original filename, entry count and file hash.
+
+The catalogue entry makes it available in Electron and both browser modes. `npm run libraries:package` and `npm run libraries:all` copy the supplied file into the build; no generator rewrites it.
+
 ## SPICE essentials
 
 Use **Simulation → Components** for common parts; **More…** opens the full standard library. Placed symbols retain hidden `$$SPICE` attributes. Numeric SPICE suffixes include `1k`, `10u`, `100n` and `1Meg`; `m` means milli. `Model`/`Model Name` selects a device model; an empty `Model File` emits the embedded generic definition. Custom model text must also satisfy the [engine input policy](spice-engine.md#deck-and-model-contract).
@@ -76,7 +108,7 @@ The 741 behavioural model approximates 200,000 open-loop DC gain, 2 Megohm diffe
 
 ## Sources, recipes and provenance
 
-[library-recipes](../library-recipes) records selections and guarded adaptations. Adjacent `*.provenance.json` files in [bundled-libraries](../bundled-libraries) retain attribution, source IDs, hashes and drawing/model changes; bundle metadata is also embedded in SQLite `TinyCADBundleInfo`.
+[library-recipes](../library-recipes) records selections and guarded adaptations. Adjacent `*.provenance.json` files in [bundled-libraries](../bundled-libraries) retain attribution, source IDs, hashes and drawing/model changes; generated bundle metadata is also embedded in SQLite `TinyCADBundleInfo`. The supplied solar library is preserved unchanged, with its import metadata recorded alongside it.
 
 SPICE artwork comes from **onetransistor** and templates from **aryajur** in the legacy SQL collection. The digital style derives from **matt**'s NAND (SymbolID 160 / NameID 9279), retained as [nand-reference.xml](../library-sources/digital/nand-reference.xml). The digital, functional and sensor generators use checked-in sources without a private SQL dump or selection UI.
 
@@ -86,7 +118,7 @@ Connection points use the 1 mm grid. SPICE resistor variants share their 2 × 5.
 
 See [spice.json](../library-recipes/spice.json), [digital.json](../library-recipes/digital.json), [functional.json](../library-recipes/functional.json) and [sensors-interfaces.json](../library-recipes/sensors-interfaces.json) for full recipe contracts. Model implementations live in [teaching-models.mjs](../scripts/lib/teaching-models.mjs); [selected-artwork.mjs](../scripts/lib/selected-artwork.mjs) owns the frozen selection adaptations. The [symbol inventory guide](symbol-libraries/README.md) describes the shared component contracts.
 
-Regression commands are `test:spice`, `test:digital`, `test:functional`, `test:sensors`, `test:teaching`, `test:network` and `test:symbol-artwork` through npm. Coverage includes terminal contracts, actual editor placement, rotated/mirrored geometry, hidden rails, reproducibility, persistence and numerical model cases where an engine is available.
+Regression commands are `test:spice`, `test:digital`, `test:functional`, `test:sensors`, `test:teaching`, `test:network`, `test:embedded` and `test:symbol-artwork` through npm. Coverage includes terminal contracts, actual editor placement, rotated/mirrored geometry, hidden rails, reproducibility, persistence and numerical model cases where an engine is available.
 
 ## Bundled examples
 

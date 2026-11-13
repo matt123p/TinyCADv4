@@ -64,10 +64,20 @@
     "libraries:digital": "node scripts/build-digital-library.mjs",
     "test:digital": "node --test scripts/tests/digital-library.test.mjs",
     "test:teaching-tools": "node --test scripts/tests/teaching-native-tools.test.mjs",
-    "libraries:all": "npm run libraries:digital && npm run libraries:functional && npm run libraries:sensors && npm run libraries:network && npm run libraries:package",
+    "libraries:all": "npm run libraries:digital && npm run libraries:functional && npm run libraries:sensors && npm run libraries:network && npm run libraries:embedded && npm run libraries:audio && npm run libraries:test-measurement && npm run libraries:package",
     "test:teaching": "node --test scripts/tests/teaching-library.test.mjs scripts/tests/teaching-models.test.mjs scripts/tests/teaching-native-tools.test.mjs",
     "test:layout:browser": "playwright test --config scripts/tests/layout-browser/playwright.config.mjs",
-    "test:layout:all": "npm run test:layout && npm run test:layout:browser"
+    "test:layout:all": "npm run test:layout && npm run test:layout:browser",
+    "libraries:embedded": "node scripts/build-embedded-library.mjs",
+    "preview:embedded": "node scripts/preview-embedded-library.mjs",
+    "test:embedded": "node --test scripts/tests/embedded-library.test.mjs",
+    "libraries:audio": "node scripts/build-audio-library.mjs",
+    "preview:audio": "node scripts/preview-audio-library.mjs",
+    "test:audio": "node --test scripts/tests/audio-library.test.mjs",
+    "preview:layout-pages": "node scripts/preview-layout-pages.mjs",
+    "libraries:test-measurement": "node scripts/build-test-measurement-library.mjs",
+    "preview:test-measurement": "node scripts/preview-test-measurement-library.mjs",
+    "test:test-measurement": "node --test scripts/tests/test-measurement-library.test.mjs"
   },
   "build": {
     "appId": "com.tinycad.app",

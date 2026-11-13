@@ -1,0 +1,7235 @@
+{
+  "version": 1,
+  "id": "embedded-smart-home",
+  "name": "Embedded processors and smart home",
+  "artwork": "Original TinyCAD vector PCB views and function pictograms; no copied photographs, logos, PCB traces or manufacturer artwork.",
+  "scope": "Top/component-side wiring views. All contacts of the named wiring headers are explicit. USB, HDMI, Ethernet, ribbon sockets, test pads, solder jumpers and optional debug/auxiliary connectors are outside the wiring interface. Drawings are enlarged and snapped to the normal grid for legible wiring, not dimensioned PCB footprints. No firmware or SPICE simulation.",
+  "powerConvention": "Controller 3V3/5V header rails are typed as power outputs for normal USB/barrel-powered use; VIN is a power input. Alternative power injection through header rails must follow the manufacturer instructions.",
+  "survey": {
+    "reviewed": "2026-11-13",
+    "basis": "Coverage of common wired projects, not a sales ranking. Named board versions avoid incompatible clone and revision pinouts.",
+    "projects": [
+      {
+        "name": "ESPHome DIY projects: room multisensors, plant monitoring, garage distance, sprinkler controls and air quality",
+        "url": "https://esphome.io/guides/diy/",
+        "coverage": [
+          "climate",
+          "light",
+          "PIR",
+          "distance",
+          "soil",
+          "water",
+          "relay",
+          "CO2"
+        ]
+      },
+      {
+        "name": "ESPHome component catalogue",
+        "url": "https://esphome.io/components/",
+        "coverage": [
+          "I2C sensor breakouts",
+          "GPIO switches",
+          "touch",
+          "sound",
+          "buzzer"
+        ]
+      },
+      {
+        "name": "DFRobot DHT22 ESP32 / ESP8266 tutorials",
+        "url": "https://wiki.dfrobot.com/sen0137/",
+        "coverage": [
+          "temperature",
+          "humidity"
+        ]
+      },
+      {
+        "name": "Seeed Grove ecosystem and Arduino/Raspberry Pi projects",
+        "url": "https://wiki.seeedstudio.com/Grove_System/",
+        "coverage": [
+          "plug-in PCB sensors",
+          "buttons",
+          "buzzer",
+          "reed switch"
+        ]
+      },
+      {
+        "name": "Display modules with documented Raspberry Pi, ESP32/Pico or Arduino host wiring",
+        "url": "https://www.waveshare.com/wiki/2.8inch_Capacitive_Touch_LCD",
+        "coverage": [
+          "I2C character LCD",
+          "SSD1306 OLED",
+          "SPI TFT",
+          "SPI/I2C touch",
+          "UART HMI",
+          "SPI e-paper"
+        ]
+      }
+    ]
+  },
+  "sourceReview": {
+    "searches": [
+      {
+        "query": "ESP32",
+        "symbolId": 1839,
+        "nameId": 11037,
+        "fetched": true
+      },
+      {
+        "query": "Raspberry Pi",
+        "symbolId": 1992,
+        "nameId": 11192
+      },
+      {
+        "query": "BME280",
+        "results": 0
+      },
+      {
+        "query": "LCD",
+        "symbolId": 1808,
+        "nameId": 11006,
+        "fetched": true
+      },
+      {
+        "query": "e-paper",
+        "results": 0
+      }
+    ],
+    "decision": "The user requests physical PCB arrangements and custom function icons. Original native artwork is used; the fetched ESP32 library symbol is a conventional schematic, not the required verified board/revision view. Display extensions use original front/rear PCB views with exact named host-connector pin tables; the fetched LCM1602C symbol is a parallel LCD, not the selected integrated I2C module."
+  },
+  "entries": [
+    {
+      "id": "esp32-devkitc-v4",
+      "name": "ESP32 DevKitC V4 — WROOM-32E, 38 pins",
+      "short": "ESP32 DevKitC",
+      "kind": "esp32",
+      "width": 30,
+      "height": 52,
+      "pins": [
+        {
+          "name": "3V3",
+          "number": "J1-1",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "EN",
+          "number": "J1-2",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "GPIO36/VP",
+          "number": "J1-3",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "GPIO39/VN",
+          "number": "J1-4",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "GPIO34",
+          "number": "J1-5",
+          "x": 2,
+          "y": 14,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "GPIO35",
+          "number": "J1-6",
+          "x": 2,
+          "y": 16,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "GPIO32",
+          "number": "J1-7",
+          "x": 2,
+          "y": 18,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO33",
+          "number": "J1-8",
+          "x": 2,
+          "y": 20,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO25",
+          "number": "J1-9",
+          "x": 2,
+          "y": 22,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO26",
+          "number": "J1-10",
+          "x": 2,
+          "y": 24,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO27",
+          "number": "J1-11",
+          "x": 2,
+          "y": 26,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO14",
+          "number": "J1-12",
+          "x": 2,
+          "y": 28,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO12",
+          "number": "J1-13",
+          "x": 2,
+          "y": 30,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "J1-14",
+          "x": 2,
+          "y": 32,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO13",
+          "number": "J1-15",
+          "x": 2,
+          "y": 34,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "SD2/GPIO9",
+          "number": "J1-16",
+          "x": 2,
+          "y": 36,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "SD3/GPIO10",
+          "number": "J1-17",
+          "x": 2,
+          "y": 38,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "CMD/GPIO11",
+          "number": "J1-18",
+          "x": 2,
+          "y": 40,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "5V",
+          "number": "J1-19",
+          "x": 2,
+          "y": 42,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "J3-1",
+          "x": 28,
+          "y": 6,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO23",
+          "number": "J3-2",
+          "x": 28,
+          "y": 8,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO22",
+          "number": "J3-3",
+          "x": 28,
+          "y": 10,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "TX0/GPIO1",
+          "number": "J3-4",
+          "x": 28,
+          "y": 12,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "RX0/GPIO3",
+          "number": "J3-5",
+          "x": 28,
+          "y": 14,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO21",
+          "number": "J3-6",
+          "x": 28,
+          "y": 16,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "J3-7",
+          "x": 28,
+          "y": 18,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO19",
+          "number": "J3-8",
+          "x": 28,
+          "y": 20,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO18",
+          "number": "J3-9",
+          "x": 28,
+          "y": 22,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO5",
+          "number": "J3-10",
+          "x": 28,
+          "y": 24,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO17",
+          "number": "J3-11",
+          "x": 28,
+          "y": 26,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO16",
+          "number": "J3-12",
+          "x": 28,
+          "y": 28,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO4",
+          "number": "J3-13",
+          "x": 28,
+          "y": 30,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO0",
+          "number": "J3-14",
+          "x": 28,
+          "y": 32,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO2",
+          "number": "J3-15",
+          "x": 28,
+          "y": 34,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO15",
+          "number": "J3-16",
+          "x": 28,
+          "y": 36,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "SD1/GPIO8",
+          "number": "J3-17",
+          "x": 28,
+          "y": 38,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "SD0/GPIO7",
+          "number": "J3-18",
+          "x": 28,
+          "y": 40,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "CLK/GPIO6",
+          "number": "J3-19",
+          "x": 28,
+          "y": 42,
+          "side": "right",
+          "electricalType": 5
+        }
+      ],
+      "sources": [
+        "https://docs.espressif.com/projects/esp-idf/en/v4.4.1/esp32/hw-reference/esp32/get-started-devkitc.html"
+      ],
+      "notes": "3.3 V logic. GPIO34/35/36/39 are input-only. SD0/SD1/SD2/SD3/CMD/CLK are reserved for onboard flash; shown for physical identification, not spare GPIO. WROOM version, not WROVER. Use one supply method. Controller 3V3/5V header rails are typed as power outputs for normal USB/barrel-powered use; VIN is a power input. Alternative power injection through header rails must follow the manufacturer instructions.",
+      "category": "controller",
+      "layout": {
+        "scale": 0.3333333333333333,
+        "bodyWidth": 30,
+        "bodyHeight": 46,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "9d316a887bd9f7eedd83b614e9e5254dacacc79acfb6c5580f56ddf825ff1a78"
+    },
+    {
+      "id": "esp32s3-devkitc1",
+      "name": "ESP32-S3 DevKitC-1 v1.1 — N8, 44 pins",
+      "short": "ESP32-S3",
+      "kind": "esp32s3",
+      "width": 30,
+      "height": 58,
+      "pins": [
+        {
+          "name": "3V3",
+          "number": "J1-1",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "3V3",
+          "number": "J1-2",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "RST",
+          "number": "J1-3",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "GPIO4",
+          "number": "J1-4",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO5",
+          "number": "J1-5",
+          "x": 2,
+          "y": 14,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO6",
+          "number": "J1-6",
+          "x": 2,
+          "y": 16,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO7",
+          "number": "J1-7",
+          "x": 2,
+          "y": 18,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO15",
+          "number": "J1-8",
+          "x": 2,
+          "y": 20,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO16",
+          "number": "J1-9",
+          "x": 2,
+          "y": 22,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO17",
+          "number": "J1-10",
+          "x": 2,
+          "y": 24,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO18",
+          "number": "J1-11",
+          "x": 2,
+          "y": 26,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO8",
+          "number": "J1-12",
+          "x": 2,
+          "y": 28,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO3",
+          "number": "J1-13",
+          "x": 2,
+          "y": 30,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO46",
+          "number": "J1-14",
+          "x": 2,
+          "y": 32,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "GPIO9",
+          "number": "J1-15",
+          "x": 2,
+          "y": 34,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO10",
+          "number": "J1-16",
+          "x": 2,
+          "y": 36,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO11",
+          "number": "J1-17",
+          "x": 2,
+          "y": 38,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO12",
+          "number": "J1-18",
+          "x": 2,
+          "y": 40,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO13",
+          "number": "J1-19",
+          "x": 2,
+          "y": 42,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO14",
+          "number": "J1-20",
+          "x": 2,
+          "y": 44,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "5V",
+          "number": "J1-21",
+          "x": 2,
+          "y": 46,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "J1-22",
+          "x": 2,
+          "y": 48,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "J3-1",
+          "x": 28,
+          "y": 6,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "TX/GPIO43",
+          "number": "J3-2",
+          "x": 28,
+          "y": 8,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "RX/GPIO44",
+          "number": "J3-3",
+          "x": 28,
+          "y": 10,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO1",
+          "number": "J3-4",
+          "x": 28,
+          "y": 12,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO2",
+          "number": "J3-5",
+          "x": 28,
+          "y": 14,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO42",
+          "number": "J3-6",
+          "x": 28,
+          "y": 16,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO41",
+          "number": "J3-7",
+          "x": 28,
+          "y": 18,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO40",
+          "number": "J3-8",
+          "x": 28,
+          "y": 20,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO39",
+          "number": "J3-9",
+          "x": 28,
+          "y": 22,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO38/LED",
+          "number": "J3-10",
+          "x": 28,
+          "y": 24,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO37",
+          "number": "J3-11",
+          "x": 28,
+          "y": 26,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO36",
+          "number": "J3-12",
+          "x": 28,
+          "y": 28,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO35",
+          "number": "J3-13",
+          "x": 28,
+          "y": 30,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO0",
+          "number": "J3-14",
+          "x": 28,
+          "y": 32,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO45",
+          "number": "J3-15",
+          "x": 28,
+          "y": 34,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO48",
+          "number": "J3-16",
+          "x": 28,
+          "y": 36,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO47",
+          "number": "J3-17",
+          "x": 28,
+          "y": 38,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO21",
+          "number": "J3-18",
+          "x": 28,
+          "y": 40,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO20/D+",
+          "number": "J3-19",
+          "x": 28,
+          "y": 42,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO19/D-",
+          "number": "J3-20",
+          "x": 28,
+          "y": 44,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "J3-21",
+          "x": 28,
+          "y": 46,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "J3-22",
+          "x": 28,
+          "y": 48,
+          "side": "right",
+          "electricalType": 9
+        }
+      ],
+      "sources": [
+        "https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/user_guide_v1.1.html"
+      ],
+      "notes": "3.3 V logic. WROOM-1-N8 without PSRAM. GPIO46 input-only. GPIO35–37 availability differs on octal-memory variants; this is not those variants. v1.1 RGB LED uses GPIO38. USB data is also GPIO19/20. Use one supply method. Controller 3V3/5V header rails are typed as power outputs for normal USB/barrel-powered use; VIN is a power input. Alternative power injection through header rails must follow the manufacturer instructions.",
+      "category": "controller",
+      "layout": {
+        "scale": 0.3333333333333333,
+        "bodyWidth": 30,
+        "bodyHeight": 52,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "b561b92342da5c04e526adb0f045ab5b07b60ce675c087d3a386a86df783efd0"
+    },
+    {
+      "id": "nodemcu-esp8266",
+      "name": "NodeMCU DevKit v1.0 — ESP-12E, 30 pins",
+      "short": "NodeMCU 1.0",
+      "kind": "esp8266",
+      "width": 30,
+      "height": 44,
+      "pins": [
+        {
+          "name": "A0",
+          "number": "J1-1",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "RSV",
+          "number": "J1-2",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 6
+        },
+        {
+          "name": "RSV",
+          "number": "J1-3",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 6
+        },
+        {
+          "name": "SD3/GPIO10",
+          "number": "J1-4",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "SD2/GPIO9",
+          "number": "J1-5",
+          "x": 2,
+          "y": 14,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "SD1/GPIO8",
+          "number": "J1-6",
+          "x": 2,
+          "y": 16,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "CMD/GPIO11",
+          "number": "J1-7",
+          "x": 2,
+          "y": 18,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "SD0/GPIO7",
+          "number": "J1-8",
+          "x": 2,
+          "y": 20,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "CLK/GPIO6",
+          "number": "J1-9",
+          "x": 2,
+          "y": 22,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "J1-10",
+          "x": 2,
+          "y": 24,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "3V3",
+          "number": "J1-11",
+          "x": 2,
+          "y": 26,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "EN",
+          "number": "J1-12",
+          "x": 2,
+          "y": 28,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "RST",
+          "number": "J1-13",
+          "x": 2,
+          "y": 30,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "GND",
+          "number": "J1-14",
+          "x": 2,
+          "y": 32,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VIN",
+          "number": "J1-15",
+          "x": 2,
+          "y": 34,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "D0/GPIO16",
+          "number": "J3-1",
+          "x": 28,
+          "y": 6,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D1/GPIO5",
+          "number": "J3-2",
+          "x": 28,
+          "y": 8,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D2/GPIO4",
+          "number": "J3-3",
+          "x": 28,
+          "y": 10,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D3/GPIO0",
+          "number": "J3-4",
+          "x": 28,
+          "y": 12,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D4/GPIO2",
+          "number": "J3-5",
+          "x": 28,
+          "y": 14,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "3V3",
+          "number": "J3-6",
+          "x": 28,
+          "y": 16,
+          "side": "right",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "J3-7",
+          "x": 28,
+          "y": 18,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "D5/GPIO14",
+          "number": "J3-8",
+          "x": 28,
+          "y": 20,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D6/GPIO12",
+          "number": "J3-9",
+          "x": 28,
+          "y": 22,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D7/GPIO13",
+          "number": "J3-10",
+          "x": 28,
+          "y": 24,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D8/GPIO15",
+          "number": "J3-11",
+          "x": 28,
+          "y": 26,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "RX/GPIO3",
+          "number": "J3-12",
+          "x": 28,
+          "y": 28,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "TX/GPIO1",
+          "number": "J3-13",
+          "x": 28,
+          "y": 30,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "J3-14",
+          "x": 28,
+          "y": 32,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "3V3",
+          "number": "J3-15",
+          "x": 28,
+          "y": 34,
+          "side": "right",
+          "electricalType": 10
+        }
+      ],
+      "sources": [
+        "https://github.com/nodemcu/nodemcu-devkit-v1.0/blob/master/Documents/NODEMCU_DEVKIT_V1.0_PINMAP.png"
+      ],
+      "notes": "3.3 V logic. A0 is analogue input; board divider differs from bare ESP8266 TOUT. RSV pins have no user function. SD/CMD/CLK pins are connected to flash. Boot straps D3/D4/D8 require appropriate levels. Controller 3V3/5V header rails are typed as power outputs for normal USB/barrel-powered use; VIN is a power input. Alternative power injection through header rails must follow the manufacturer instructions.",
+      "category": "controller",
+      "layout": {
+        "scale": 0.3333333333333333,
+        "bodyWidth": 30,
+        "bodyHeight": 38,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "e73e8b62d9b767ee2bda5e90b6d6f087f4ca3517ccd8be4cb9f61aecab801fa5"
+    },
+    {
+      "id": "lolin-d1-mini",
+      "name": "LOLIN D1 mini v3.1.0 — ESP8266, 16 pins",
+      "short": "D1 mini",
+      "kind": "d1mini",
+      "width": 28,
+      "height": 42,
+      "pins": [
+        {
+          "name": "RST",
+          "number": "J1-1",
+          "x": 2,
+          "y": 14,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "A0",
+          "number": "J1-2",
+          "x": 2,
+          "y": 16,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "D0/GPIO16",
+          "number": "J1-3",
+          "x": 2,
+          "y": 18,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "D5/GPIO14",
+          "number": "J1-4",
+          "x": 2,
+          "y": 20,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "D6/GPIO12",
+          "number": "J1-5",
+          "x": 2,
+          "y": 22,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "D7/GPIO13",
+          "number": "J1-6",
+          "x": 2,
+          "y": 24,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "D8/GPIO15",
+          "number": "J1-7",
+          "x": 2,
+          "y": 26,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "3V3",
+          "number": "J1-8",
+          "x": 2,
+          "y": 28,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "TX/GPIO1",
+          "number": "J3-1",
+          "x": 26,
+          "y": 14,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "RX/GPIO3",
+          "number": "J3-2",
+          "x": 26,
+          "y": 16,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D1/GPIO5",
+          "number": "J3-3",
+          "x": 26,
+          "y": 18,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D2/GPIO4",
+          "number": "J3-4",
+          "x": 26,
+          "y": 20,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D3/GPIO0",
+          "number": "J3-5",
+          "x": 26,
+          "y": 22,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D4/GPIO2",
+          "number": "J3-6",
+          "x": 26,
+          "y": 24,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "J3-7",
+          "x": 26,
+          "y": 26,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "5V",
+          "number": "J3-8",
+          "x": 26,
+          "y": 28,
+          "side": "right",
+          "electricalType": 10
+        }
+      ],
+      "sources": [
+        "https://docs.wemos.cc/en/latest/d1/d1_mini_3.1.0.html"
+      ],
+      "notes": "3.3 V logic. v3.1.0 micro-USB board, not v4 USB-C/I2C-port variant. A0 divider permits up to 3.2 V. D3/D4/D8 are boot straps. Controller 3V3/5V header rails are typed as power outputs for normal USB/barrel-powered use; VIN is a power input. Alternative power injection through header rails must follow the manufacturer instructions.",
+      "category": "controller",
+      "layout": {
+        "scale": 0.3333333333333333,
+        "bodyWidth": 28,
+        "bodyHeight": 36,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "39cb1e3859c853693f7947c6c674dd82497066a56f365597ff74621f13ad2975"
+    },
+    {
+      "id": "raspberry-pi-3",
+      "name": "Raspberry Pi 3 Model B+ — 40-pin GPIO",
+      "short": "Raspberry Pi 3 Model B+",
+      "kind": "pi",
+      "model": 3,
+      "width": 78,
+      "height": 58,
+      "pins": [
+        {
+          "name": "3V3",
+          "number": "1",
+          "x": 6,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "5V",
+          "number": "2",
+          "x": 6,
+          "y": 10,
+          "side": "top",
+          "electricalType": 10
+        },
+        {
+          "name": "GPIO2/SDA1",
+          "number": "3",
+          "x": 8,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "5V",
+          "number": "4",
+          "x": 8,
+          "y": 10,
+          "side": "top",
+          "electricalType": 10
+        },
+        {
+          "name": "GPIO3/SCL1",
+          "number": "5",
+          "x": 10,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "6",
+          "x": 10,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO4",
+          "number": "7",
+          "x": 14,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO14/TX",
+          "number": "8",
+          "x": 14,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "9",
+          "x": 16,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO15/RX",
+          "number": "10",
+          "x": 16,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO17",
+          "number": "11",
+          "x": 18,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO18",
+          "number": "12",
+          "x": 18,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO27",
+          "number": "13",
+          "x": 22,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "14",
+          "x": 22,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO22",
+          "number": "15",
+          "x": 24,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO23",
+          "number": "16",
+          "x": 24,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "3V3",
+          "number": "17",
+          "x": 26,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "GPIO24",
+          "number": "18",
+          "x": 26,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO10/MOSI",
+          "number": "19",
+          "x": 30,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "20",
+          "x": 30,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO9/MISO",
+          "number": "21",
+          "x": 32,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO25",
+          "number": "22",
+          "x": 32,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO11/SCLK",
+          "number": "23",
+          "x": 34,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO8/CE0",
+          "number": "24",
+          "x": 34,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "25",
+          "x": 38,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO7/CE1",
+          "number": "26",
+          "x": 38,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO0/ID_SD",
+          "number": "27",
+          "x": 40,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO1/ID_SC",
+          "number": "28",
+          "x": 40,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO5",
+          "number": "29",
+          "x": 42,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "30",
+          "x": 42,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO6",
+          "number": "31",
+          "x": 46,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO12",
+          "number": "32",
+          "x": 46,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO13",
+          "number": "33",
+          "x": 48,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "34",
+          "x": 48,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO19",
+          "number": "35",
+          "x": 50,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO16",
+          "number": "36",
+          "x": 50,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO26",
+          "number": "37",
+          "x": 54,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO20",
+          "number": "38",
+          "x": 54,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "39",
+          "x": 56,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO21",
+          "number": "40",
+          "x": 56,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        }
+      ],
+      "sources": [
+        "https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#gpio",
+        "https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/"
+      ],
+      "notes": "GPIO header only; physical pin numbers 1–40, BCM GPIO names, 3.3 V logic. 5 V GPIO is not tolerated. ID_SD/ID_SC are reserved for HAT EEPROM. Other sockets and auxiliary headers are illustrative housings, outside this wiring interface. Controller 3V3/5V header rails are typed as power outputs for normal USB/barrel-powered use; VIN is a power input. Alternative power injection through header rails must follow the manufacturer instructions.",
+      "category": "controller",
+      "layout": {
+        "scale": 0.3333333333333333,
+        "bodyWidth": 78,
+        "bodyHeight": 52,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "c606bb654fdfda9fbda58d2f90aba6d06b8a82ea9e77654add96b9997774a525"
+    },
+    {
+      "id": "raspberry-pi-4",
+      "name": "Raspberry Pi 4 Model B — 40-pin GPIO",
+      "short": "Raspberry Pi 4 Model B",
+      "kind": "pi",
+      "model": 4,
+      "width": 78,
+      "height": 58,
+      "pins": [
+        {
+          "name": "3V3",
+          "number": "1",
+          "x": 6,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "5V",
+          "number": "2",
+          "x": 6,
+          "y": 10,
+          "side": "top",
+          "electricalType": 10
+        },
+        {
+          "name": "GPIO2/SDA1",
+          "number": "3",
+          "x": 8,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "5V",
+          "number": "4",
+          "x": 8,
+          "y": 10,
+          "side": "top",
+          "electricalType": 10
+        },
+        {
+          "name": "GPIO3/SCL1",
+          "number": "5",
+          "x": 10,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "6",
+          "x": 10,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO4",
+          "number": "7",
+          "x": 14,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO14/TX",
+          "number": "8",
+          "x": 14,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "9",
+          "x": 16,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO15/RX",
+          "number": "10",
+          "x": 16,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO17",
+          "number": "11",
+          "x": 18,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO18",
+          "number": "12",
+          "x": 18,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO27",
+          "number": "13",
+          "x": 22,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "14",
+          "x": 22,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO22",
+          "number": "15",
+          "x": 24,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO23",
+          "number": "16",
+          "x": 24,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "3V3",
+          "number": "17",
+          "x": 26,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "GPIO24",
+          "number": "18",
+          "x": 26,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO10/MOSI",
+          "number": "19",
+          "x": 30,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "20",
+          "x": 30,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO9/MISO",
+          "number": "21",
+          "x": 32,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO25",
+          "number": "22",
+          "x": 32,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO11/SCLK",
+          "number": "23",
+          "x": 34,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO8/CE0",
+          "number": "24",
+          "x": 34,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "25",
+          "x": 38,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO7/CE1",
+          "number": "26",
+          "x": 38,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO0/ID_SD",
+          "number": "27",
+          "x": 40,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO1/ID_SC",
+          "number": "28",
+          "x": 40,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO5",
+          "number": "29",
+          "x": 42,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "30",
+          "x": 42,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO6",
+          "number": "31",
+          "x": 46,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO12",
+          "number": "32",
+          "x": 46,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO13",
+          "number": "33",
+          "x": 48,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "34",
+          "x": 48,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO19",
+          "number": "35",
+          "x": 50,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO16",
+          "number": "36",
+          "x": 50,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO26",
+          "number": "37",
+          "x": 54,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO20",
+          "number": "38",
+          "x": 54,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "39",
+          "x": 56,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO21",
+          "number": "40",
+          "x": 56,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        }
+      ],
+      "sources": [
+        "https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#gpio",
+        "https://www.raspberrypi.com/products/raspberry-pi-4-model-b/"
+      ],
+      "notes": "GPIO header only; physical pin numbers 1–40, BCM GPIO names, 3.3 V logic. 5 V GPIO is not tolerated. ID_SD/ID_SC are reserved for HAT EEPROM. Other sockets and auxiliary headers are illustrative housings, outside this wiring interface. Controller 3V3/5V header rails are typed as power outputs for normal USB/barrel-powered use; VIN is a power input. Alternative power injection through header rails must follow the manufacturer instructions.",
+      "category": "controller",
+      "layout": {
+        "scale": 0.3333333333333333,
+        "bodyWidth": 78,
+        "bodyHeight": 52,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "04463b0fd2dffecaa6f75702ada6a361ef771767cf904451f17a27c5774a7f67"
+    },
+    {
+      "id": "raspberry-pi-5",
+      "name": "Raspberry Pi 5 — 40-pin GPIO",
+      "short": "Raspberry Pi 5",
+      "kind": "pi",
+      "model": 5,
+      "width": 78,
+      "height": 58,
+      "pins": [
+        {
+          "name": "3V3",
+          "number": "1",
+          "x": 6,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "5V",
+          "number": "2",
+          "x": 6,
+          "y": 10,
+          "side": "top",
+          "electricalType": 10
+        },
+        {
+          "name": "GPIO2/SDA1",
+          "number": "3",
+          "x": 8,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "5V",
+          "number": "4",
+          "x": 8,
+          "y": 10,
+          "side": "top",
+          "electricalType": 10
+        },
+        {
+          "name": "GPIO3/SCL1",
+          "number": "5",
+          "x": 10,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "6",
+          "x": 10,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO4",
+          "number": "7",
+          "x": 14,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO14/TX",
+          "number": "8",
+          "x": 14,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "9",
+          "x": 16,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO15/RX",
+          "number": "10",
+          "x": 16,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO17",
+          "number": "11",
+          "x": 18,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO18",
+          "number": "12",
+          "x": 18,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO27",
+          "number": "13",
+          "x": 22,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "14",
+          "x": 22,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO22",
+          "number": "15",
+          "x": 24,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO23",
+          "number": "16",
+          "x": 24,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "3V3",
+          "number": "17",
+          "x": 26,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "GPIO24",
+          "number": "18",
+          "x": 26,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO10/MOSI",
+          "number": "19",
+          "x": 30,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "20",
+          "x": 30,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO9/MISO",
+          "number": "21",
+          "x": 32,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO25",
+          "number": "22",
+          "x": 32,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO11/SCLK",
+          "number": "23",
+          "x": 34,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO8/CE0",
+          "number": "24",
+          "x": 34,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "25",
+          "x": 38,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO7/CE1",
+          "number": "26",
+          "x": 38,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO0/ID_SD",
+          "number": "27",
+          "x": 40,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO1/ID_SC",
+          "number": "28",
+          "x": 40,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO5",
+          "number": "29",
+          "x": 42,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "30",
+          "x": 42,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO6",
+          "number": "31",
+          "x": 46,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO12",
+          "number": "32",
+          "x": 46,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO13",
+          "number": "33",
+          "x": 48,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "34",
+          "x": 48,
+          "y": 10,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO19",
+          "number": "35",
+          "x": 50,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO16",
+          "number": "36",
+          "x": 50,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO26",
+          "number": "37",
+          "x": 54,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GPIO20",
+          "number": "38",
+          "x": 54,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "39",
+          "x": 56,
+          "y": 12,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO21",
+          "number": "40",
+          "x": 56,
+          "y": 10,
+          "side": "top",
+          "electricalType": 5
+        }
+      ],
+      "sources": [
+        "https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#gpio",
+        "https://www.raspberrypi.com/products/raspberry-pi-5/"
+      ],
+      "notes": "GPIO header only; physical pin numbers 1–40, BCM GPIO names, 3.3 V logic. 5 V GPIO is not tolerated. ID_SD/ID_SC are reserved for HAT EEPROM. Other sockets and auxiliary headers are illustrative housings, outside this wiring interface. Controller 3V3/5V header rails are typed as power outputs for normal USB/barrel-powered use; VIN is a power input. Alternative power injection through header rails must follow the manufacturer instructions.",
+      "category": "controller",
+      "layout": {
+        "scale": 0.3333333333333333,
+        "bodyWidth": 78,
+        "bodyHeight": 52,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "e48e4018dd6a899627cee7c0f0d52d540b4e05dd08ea4e9d773cc962a308a956"
+    },
+    {
+      "id": "arduino-uno",
+      "name": "Arduino Uno R3",
+      "short": "Uno R3",
+      "kind": "uno",
+      "width": 44,
+      "height": 72,
+      "pins": [
+        {
+          "name": "NC",
+          "number": "POWER-1",
+          "x": 2,
+          "y": 22,
+          "side": "left",
+          "electricalType": 6
+        },
+        {
+          "name": "IOREF",
+          "number": "POWER-2",
+          "x": 2,
+          "y": 24,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "RESET",
+          "number": "POWER-3",
+          "x": 2,
+          "y": 26,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "3V3",
+          "number": "POWER-4",
+          "x": 2,
+          "y": 28,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "5V",
+          "number": "POWER-5",
+          "x": 2,
+          "y": 30,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "POWER-6",
+          "x": 2,
+          "y": 32,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "POWER-7",
+          "x": 2,
+          "y": 34,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VIN",
+          "number": "POWER-8",
+          "x": 2,
+          "y": 36,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "A0",
+          "number": "ANALOG-1",
+          "x": 2,
+          "y": 42,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A1",
+          "number": "ANALOG-2",
+          "x": 2,
+          "y": 44,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A2",
+          "number": "ANALOG-3",
+          "x": 2,
+          "y": 46,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A3",
+          "number": "ANALOG-4",
+          "x": 2,
+          "y": 48,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A4/SDA",
+          "number": "ANALOG-5",
+          "x": 2,
+          "y": 50,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A5/SCL",
+          "number": "ANALOG-6",
+          "x": 2,
+          "y": 52,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "SCL",
+          "number": "DIGITAL1-1",
+          "x": 42,
+          "y": 14,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "SDA",
+          "number": "DIGITAL1-2",
+          "x": 42,
+          "y": 16,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "AREF",
+          "number": "DIGITAL1-3",
+          "x": 42,
+          "y": 18,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "GND",
+          "number": "DIGITAL1-4",
+          "x": 42,
+          "y": 20,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "D13",
+          "number": "DIGITAL1-5",
+          "x": 42,
+          "y": 22,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D12",
+          "number": "DIGITAL1-6",
+          "x": 42,
+          "y": 24,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D11",
+          "number": "DIGITAL1-7",
+          "x": 42,
+          "y": 26,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D10",
+          "number": "DIGITAL1-8",
+          "x": 42,
+          "y": 28,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D9",
+          "number": "DIGITAL1-9",
+          "x": 42,
+          "y": 30,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D8",
+          "number": "DIGITAL1-10",
+          "x": 42,
+          "y": 32,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D7",
+          "number": "DIGITAL2-1",
+          "x": 42,
+          "y": 36,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D6",
+          "number": "DIGITAL2-2",
+          "x": 42,
+          "y": 38,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D5",
+          "number": "DIGITAL2-3",
+          "x": 42,
+          "y": 40,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D4",
+          "number": "DIGITAL2-4",
+          "x": 42,
+          "y": 42,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D3",
+          "number": "DIGITAL2-5",
+          "x": 42,
+          "y": 44,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D2",
+          "number": "DIGITAL2-6",
+          "x": 42,
+          "y": 46,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D1/TX",
+          "number": "DIGITAL2-7",
+          "x": 42,
+          "y": 48,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D0/RX",
+          "number": "DIGITAL2-8",
+          "x": 42,
+          "y": 50,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "MISO",
+          "number": "ICSP-1",
+          "x": 24,
+          "y": 54,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "MISO",
+          "number": "ICSP1-1",
+          "x": 38,
+          "y": 14,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "5V",
+          "number": "ICSP-2",
+          "x": 24,
+          "y": 56,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "5V",
+          "number": "ICSP1-2",
+          "x": 34,
+          "y": 14,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "SCK",
+          "number": "ICSP-3",
+          "x": 22,
+          "y": 54,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "SCK",
+          "number": "ICSP1-3",
+          "x": 38,
+          "y": 12,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "MOSI",
+          "number": "ICSP-4",
+          "x": 22,
+          "y": 56,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "MOSI",
+          "number": "ICSP1-4",
+          "x": 34,
+          "y": 12,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "RESET",
+          "number": "ICSP-5",
+          "x": 20,
+          "y": 54,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "USB_RESET",
+          "number": "ICSP1-5",
+          "x": 38,
+          "y": 8,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "GND",
+          "number": "ICSP-6",
+          "x": 20,
+          "y": 56,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "ICSP1-6",
+          "x": 34,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        }
+      ],
+      "sources": [
+        "https://content.arduino.cc/assets/A000066-full-pinout.pdf"
+      ],
+      "notes": "5 V logic. All main wiring headers and fitted ICSP headers shown, with distinct physical terminal IDs. USB, barrel jack, test pads and unpopulated debug pads are outside the wiring interface. Supply pins can feed the board when used as documented; electrical power pins do not enforce supply selection. SDA duplicates A4; SCL duplicates A5. ICSP MISO/MOSI/SCK duplicate D12/D11/D13. Controller 3V3/5V header rails are typed as power outputs for normal USB/barrel-powered use; VIN is a power input. Alternative power injection through header rails must follow the manufacturer instructions.",
+      "category": "controller",
+      "layout": {
+        "scale": 0.3333333333333333,
+        "bodyWidth": 44,
+        "bodyHeight": 60,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "0a5e7b9ab3cfe1058cec49efb3550c731c2dc4905d88067f4d52246cc4c8da7e"
+    },
+    {
+      "id": "arduino-nano",
+      "name": "Arduino Nano — classic",
+      "short": "Nano",
+      "kind": "nano",
+      "width": 26,
+      "height": 54,
+      "pins": [
+        {
+          "name": "D13",
+          "number": "L-1",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "3V3",
+          "number": "L-2",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "AREF",
+          "number": "L-3",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "A0",
+          "number": "L-4",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A1",
+          "number": "L-5",
+          "x": 2,
+          "y": 14,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A2",
+          "number": "L-6",
+          "x": 2,
+          "y": 16,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A3",
+          "number": "L-7",
+          "x": 2,
+          "y": 18,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A4/SDA",
+          "number": "L-8",
+          "x": 2,
+          "y": 20,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A5/SCL",
+          "number": "L-9",
+          "x": 2,
+          "y": 22,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A6",
+          "number": "L-10",
+          "x": 2,
+          "y": 24,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "A7",
+          "number": "L-11",
+          "x": 2,
+          "y": 26,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "5V",
+          "number": "L-12",
+          "x": 2,
+          "y": 28,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "RESET",
+          "number": "L-13",
+          "x": 2,
+          "y": 30,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "GND",
+          "number": "L-14",
+          "x": 2,
+          "y": 32,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VIN",
+          "number": "L-15",
+          "x": 2,
+          "y": 34,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "D12/MISO",
+          "number": "R-1",
+          "x": 24,
+          "y": 6,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D11/MOSI",
+          "number": "R-2",
+          "x": 24,
+          "y": 8,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D10/SS",
+          "number": "R-3",
+          "x": 24,
+          "y": 10,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D9",
+          "number": "R-4",
+          "x": 24,
+          "y": 12,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D8",
+          "number": "R-5",
+          "x": 24,
+          "y": 14,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D7",
+          "number": "R-6",
+          "x": 24,
+          "y": 16,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D6",
+          "number": "R-7",
+          "x": 24,
+          "y": 18,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D5",
+          "number": "R-8",
+          "x": 24,
+          "y": 20,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D4",
+          "number": "R-9",
+          "x": 24,
+          "y": 22,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D3",
+          "number": "R-10",
+          "x": 24,
+          "y": 24,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D2",
+          "number": "R-11",
+          "x": 24,
+          "y": 26,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "R-12",
+          "x": 24,
+          "y": 28,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "RESET",
+          "number": "R-13",
+          "x": 24,
+          "y": 30,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "D0/RX",
+          "number": "R-14",
+          "x": 24,
+          "y": 32,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D1/TX",
+          "number": "R-15",
+          "x": 24,
+          "y": 34,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "MISO",
+          "number": "ICSP-1",
+          "x": 10,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "5V",
+          "number": "ICSP-2",
+          "x": 10,
+          "y": 36,
+          "side": "top",
+          "electricalType": 10
+        },
+        {
+          "name": "SCK",
+          "number": "ICSP-3",
+          "x": 12,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "MOSI",
+          "number": "ICSP-4",
+          "x": 12,
+          "y": 36,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "RESET",
+          "number": "ICSP-5",
+          "x": 16,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "GND",
+          "number": "ICSP-6",
+          "x": 16,
+          "y": 36,
+          "side": "top",
+          "electricalType": 9
+        }
+      ],
+      "sources": [
+        "https://docs.arduino.cc/resources/pinouts/A000005-full-pinout.pdf"
+      ],
+      "notes": "5 V logic. All main wiring headers and fitted ICSP headers shown, with distinct physical terminal IDs. USB, barrel jack, test pads and unpopulated debug pads are outside the wiring interface. Supply pins can feed the board when used as documented; electrical power pins do not enforce supply selection. A6 and A7 are analogue input-only. ICSP MISO/MOSI/SCK duplicate D12/D11/D13. Controller 3V3/5V header rails are typed as power outputs for normal USB/barrel-powered use; VIN is a power input. Alternative power injection through header rails must follow the manufacturer instructions.",
+      "category": "controller",
+      "layout": {
+        "scale": 0.3333333333333333,
+        "bodyWidth": 26,
+        "bodyHeight": 42,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "7debb6448074ee104e9a467481a307c8b8b31e9cadd1d96415134671177e1638"
+    },
+    {
+      "id": "arduino-mega",
+      "name": "Arduino Mega 2560 R3",
+      "short": "Mega 2560 R3",
+      "kind": "mega",
+      "width": 50,
+      "height": 102,
+      "pins": [
+        {
+          "name": "NC",
+          "number": "POWER-1",
+          "x": 2,
+          "y": 22,
+          "side": "left",
+          "electricalType": 6
+        },
+        {
+          "name": "IOREF",
+          "number": "POWER-2",
+          "x": 2,
+          "y": 24,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "RESET",
+          "number": "POWER-3",
+          "x": 2,
+          "y": 26,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "3V3",
+          "number": "POWER-4",
+          "x": 2,
+          "y": 28,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "5V",
+          "number": "POWER-5",
+          "x": 2,
+          "y": 30,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "POWER-6",
+          "x": 2,
+          "y": 32,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "POWER-7",
+          "x": 2,
+          "y": 34,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VIN",
+          "number": "POWER-8",
+          "x": 2,
+          "y": 36,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "A0",
+          "number": "ANALOG-1",
+          "x": 2,
+          "y": 42,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A1",
+          "number": "ANALOG-2",
+          "x": 2,
+          "y": 44,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A2",
+          "number": "ANALOG-3",
+          "x": 2,
+          "y": 46,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A3",
+          "number": "ANALOG-4",
+          "x": 2,
+          "y": 48,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A4",
+          "number": "ANALOG-5",
+          "x": 2,
+          "y": 50,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A5",
+          "number": "ANALOG-6",
+          "x": 2,
+          "y": 52,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A6",
+          "number": "ANALOG-7",
+          "x": 2,
+          "y": 54,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A7",
+          "number": "ANALOG-8",
+          "x": 2,
+          "y": 56,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A8",
+          "number": "ANALOG-9",
+          "x": 2,
+          "y": 60,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A9",
+          "number": "ANALOG-10",
+          "x": 2,
+          "y": 62,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A10",
+          "number": "ANALOG-11",
+          "x": 2,
+          "y": 64,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A11",
+          "number": "ANALOG-12",
+          "x": 2,
+          "y": 66,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A12",
+          "number": "ANALOG-13",
+          "x": 2,
+          "y": 68,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A13",
+          "number": "ANALOG-14",
+          "x": 2,
+          "y": 70,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A14",
+          "number": "ANALOG-15",
+          "x": 2,
+          "y": 72,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "A15",
+          "number": "ANALOG-16",
+          "x": 2,
+          "y": 74,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "SCL",
+          "number": "DIGITAL1-1",
+          "x": 48,
+          "y": 14,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "SDA",
+          "number": "DIGITAL1-2",
+          "x": 48,
+          "y": 16,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "AREF",
+          "number": "DIGITAL1-3",
+          "x": 48,
+          "y": 18,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "GND",
+          "number": "DIGITAL1-4",
+          "x": 48,
+          "y": 20,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "D13",
+          "number": "DIGITAL1-5",
+          "x": 48,
+          "y": 22,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D12",
+          "number": "DIGITAL1-6",
+          "x": 48,
+          "y": 24,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D11",
+          "number": "DIGITAL1-7",
+          "x": 48,
+          "y": 26,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D10",
+          "number": "DIGITAL1-8",
+          "x": 48,
+          "y": 28,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D9",
+          "number": "DIGITAL1-9",
+          "x": 48,
+          "y": 30,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D8",
+          "number": "DIGITAL1-10",
+          "x": 48,
+          "y": 32,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D7",
+          "number": "DIGITAL2-1",
+          "x": 48,
+          "y": 36,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D6",
+          "number": "DIGITAL2-2",
+          "x": 48,
+          "y": 38,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D5",
+          "number": "DIGITAL2-3",
+          "x": 48,
+          "y": 40,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D4",
+          "number": "DIGITAL2-4",
+          "x": 48,
+          "y": 42,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D3",
+          "number": "DIGITAL2-5",
+          "x": 48,
+          "y": 44,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D2",
+          "number": "DIGITAL2-6",
+          "x": 48,
+          "y": 46,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D1/TX",
+          "number": "DIGITAL2-7",
+          "x": 48,
+          "y": 48,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D0/RX",
+          "number": "DIGITAL2-8",
+          "x": 48,
+          "y": 50,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D14/TX3",
+          "number": "COMM-1",
+          "x": 48,
+          "y": 56,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D15/RX3",
+          "number": "COMM-2",
+          "x": 48,
+          "y": 58,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D16/TX2",
+          "number": "COMM-3",
+          "x": 48,
+          "y": 60,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D17/RX2",
+          "number": "COMM-4",
+          "x": 48,
+          "y": 62,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D18/TX1",
+          "number": "COMM-5",
+          "x": 48,
+          "y": 64,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D19/RX1",
+          "number": "COMM-6",
+          "x": 48,
+          "y": 66,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D20/SDA",
+          "number": "COMM-7",
+          "x": 48,
+          "y": 68,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "D21/SCL",
+          "number": "COMM-8",
+          "x": 48,
+          "y": 70,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "5V",
+          "number": "EXT-1",
+          "x": 2,
+          "y": 82,
+          "side": "top",
+          "electricalType": 10
+        },
+        {
+          "name": "5V",
+          "number": "EXT-2",
+          "x": 2,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "D22",
+          "number": "EXT-3",
+          "x": 4,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D23",
+          "number": "EXT-4",
+          "x": 4,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D24",
+          "number": "EXT-5",
+          "x": 8,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D25",
+          "number": "EXT-6",
+          "x": 8,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D26",
+          "number": "EXT-7",
+          "x": 10,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D27",
+          "number": "EXT-8",
+          "x": 10,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D28",
+          "number": "EXT-9",
+          "x": 12,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D29",
+          "number": "EXT-10",
+          "x": 12,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D30",
+          "number": "EXT-11",
+          "x": 16,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D31",
+          "number": "EXT-12",
+          "x": 16,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D32",
+          "number": "EXT-13",
+          "x": 18,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D33",
+          "number": "EXT-14",
+          "x": 18,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D34",
+          "number": "EXT-15",
+          "x": 20,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D35",
+          "number": "EXT-16",
+          "x": 20,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D36",
+          "number": "EXT-17",
+          "x": 24,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D37",
+          "number": "EXT-18",
+          "x": 24,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D38",
+          "number": "EXT-19",
+          "x": 26,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D39",
+          "number": "EXT-20",
+          "x": 26,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D40",
+          "number": "EXT-21",
+          "x": 28,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D41",
+          "number": "EXT-22",
+          "x": 28,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D42",
+          "number": "EXT-23",
+          "x": 32,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D43",
+          "number": "EXT-24",
+          "x": 32,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D44",
+          "number": "EXT-25",
+          "x": 34,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D45",
+          "number": "EXT-26",
+          "x": 34,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D46",
+          "number": "EXT-27",
+          "x": 36,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D47",
+          "number": "EXT-28",
+          "x": 36,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D48",
+          "number": "EXT-29",
+          "x": 40,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D49",
+          "number": "EXT-30",
+          "x": 40,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D50",
+          "number": "EXT-31",
+          "x": 42,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D51",
+          "number": "EXT-32",
+          "x": 42,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "D52",
+          "number": "EXT-33",
+          "x": 44,
+          "y": 82,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "D53",
+          "number": "EXT-34",
+          "x": 44,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "EXT-35",
+          "x": 48,
+          "y": 82,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "EXT-36",
+          "x": 48,
+          "y": 84,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "MISO",
+          "number": "ICSP-1",
+          "x": 28,
+          "y": 50,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "MISO",
+          "number": "ICSP1-1",
+          "x": 42,
+          "y": 14,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "5V",
+          "number": "ICSP-2",
+          "x": 28,
+          "y": 52,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "5V",
+          "number": "ICSP1-2",
+          "x": 40,
+          "y": 14,
+          "side": "left",
+          "electricalType": 10
+        },
+        {
+          "name": "SCK",
+          "number": "ICSP-3",
+          "x": 24,
+          "y": 50,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "SCK",
+          "number": "ICSP1-3",
+          "x": 42,
+          "y": 12,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "MOSI",
+          "number": "ICSP-4",
+          "x": 24,
+          "y": 52,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "MOSI",
+          "number": "ICSP1-4",
+          "x": 40,
+          "y": 12,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "RESET",
+          "number": "ICSP-5",
+          "x": 22,
+          "y": 50,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "USB_RESET",
+          "number": "ICSP1-5",
+          "x": 42,
+          "y": 8,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "GND",
+          "number": "ICSP-6",
+          "x": 22,
+          "y": 52,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "ICSP1-6",
+          "x": 40,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        }
+      ],
+      "sources": [
+        "https://docs.arduino.cc/resources/pinouts/A000067-full-pinout.pdf"
+      ],
+      "notes": "5 V logic. All main wiring headers and fitted ICSP headers shown, with distinct physical terminal IDs. USB, barrel jack, test pads and unpopulated debug pads are outside the wiring interface. Supply pins can feed the board when used as documented; electrical power pins do not enforce supply selection. SDA/SCL duplicate D20/D21. ICSP MISO/MOSI/SCK duplicate D50/D51/D52. Controller 3V3/5V header rails are typed as power outputs for normal USB/barrel-powered use; VIN is a power input. Alternative power injection through header rails must follow the manufacturer instructions.",
+      "category": "controller",
+      "layout": {
+        "scale": 0.3333333333333333,
+        "bodyWidth": 50,
+        "bodyHeight": 90,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "57d0198cb755e73ccdd9ff7eb7d599a265b871bcc8eacd037ac7da8777c9ede6"
+    },
+    {
+      "id": "adafruit-aht20",
+      "name": "Adafruit AHT20 temperature + humidity",
+      "short": "AHT20",
+      "kind": "sensor",
+      "icon": "climate",
+      "width": 24,
+      "height": 30,
+      "pins": [
+        {
+          "name": "VIN",
+          "number": "JP2-1",
+          "x": 6,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "JP2-2",
+          "x": 8,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "JP2-3",
+          "x": 10,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SDA",
+          "number": "JP2-4",
+          "x": 14,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "VIN",
+          "number": "CONN3-2",
+          "x": 22,
+          "y": 12,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "SDA",
+          "number": "CONN3-3",
+          "x": 22,
+          "y": 10,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "CONN3-1",
+          "x": 22,
+          "y": 14,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "CONN3-4",
+          "x": 22,
+          "y": 8,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "VIN",
+          "number": "CONN4-2",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "SDA",
+          "number": "CONN4-3",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "CONN4-1",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "CONN4-4",
+          "x": 2,
+          "y": 14,
+          "side": "left",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-aht20/downloads",
+        "https://github.com/adafruit/Adafruit-AHT20-PCB/blob/master/Adafruit%20AHT20%20Temperature%20&%20Humidity.brd"
+      ],
+      "sourceSha256": "e62842f51add3bb27446ef5ceb85fb929e1063e842dc5c9f1e9974b1be3482d2",
+      "notes": "I2C; 2.7–5.5 V VIN.",
+      "connectorAliases": [
+        {
+          "terminal": "JP2-1",
+          "net": "VCC"
+        },
+        {
+          "terminal": "JP2-2",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP2-3",
+          "net": "SCL"
+        },
+        {
+          "terminal": "JP2-4",
+          "net": "SDA"
+        },
+        {
+          "terminal": "CONN3-2",
+          "net": "VCC"
+        },
+        {
+          "terminal": "CONN3-3",
+          "net": "SDA"
+        },
+        {
+          "terminal": "CONN3-1",
+          "net": "GND"
+        },
+        {
+          "terminal": "CONN3-4",
+          "net": "SCL"
+        },
+        {
+          "terminal": "CONN4-2",
+          "net": "VCC"
+        },
+        {
+          "terminal": "CONN4-3",
+          "net": "SDA"
+        },
+        {
+          "terminal": "CONN4-1",
+          "net": "GND"
+        },
+        {
+          "terminal": "CONN4-4",
+          "net": "SCL"
+        }
+      ],
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "d08b5e9ef2382731bb9aafaf57cdd7d8d41f73210c1a8825c6bc28d0b7a2c91a"
+    },
+    {
+      "id": "adafruit-sht31",
+      "name": "Adafruit SHT31-D temperature + humidity (original)",
+      "short": "SHT31-D",
+      "kind": "sensor",
+      "icon": "climate",
+      "width": 24,
+      "height": 30,
+      "pins": [
+        {
+          "name": "VDD",
+          "number": "JP2-1",
+          "x": 4,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "JP2-2",
+          "x": 6,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "JP2-3",
+          "x": 8,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SDA",
+          "number": "JP2-4",
+          "x": 10,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "ADDR",
+          "number": "JP2-5",
+          "x": 14,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "RST",
+          "number": "JP2-6",
+          "x": 16,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "ALERT",
+          "number": "JP2-7",
+          "x": 18,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 1
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-sht31-d-temperature-and-humidity-sensor-breakout/downloads",
+        "https://github.com/adafruit/Adafruit-SHT31-Sensor-Breakout-PCB/blob/master/Adafruit%20SHT31%20Breakout.brd"
+      ],
+      "sourceSha256": "3c7f62e74df3b687737d6e2e86026980d81d1e067e91f49a1f3d822fa5cd40df",
+      "notes": "Original seven-pin board, not a generic six-pin module. I2C; VIN 3–5 V; RST active low, ALERT output.",
+      "connectorAliases": [
+        {
+          "terminal": "JP2-1",
+          "net": "VDD"
+        },
+        {
+          "terminal": "JP2-2",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP2-3",
+          "net": "SCL"
+        },
+        {
+          "terminal": "JP2-4",
+          "net": "SDA"
+        },
+        {
+          "terminal": "JP2-5",
+          "net": "ADDR"
+        },
+        {
+          "terminal": "JP2-6",
+          "net": "RST"
+        },
+        {
+          "terminal": "JP2-7",
+          "net": "ALERT"
+        }
+      ],
+      "mountingHoles": "top-pair",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "dfbeccc4eb152923d670fccc81d3c3af7b9981e8d311d7d7c56fdcbf3b9b9ae6"
+    },
+    {
+      "id": "adafruit-bme280",
+      "name": "Adafruit BME280 temperature / humidity / pressure (original)",
+      "short": "BME280",
+      "kind": "sensor",
+      "icon": "pressure",
+      "width": 24,
+      "height": 30,
+      "pins": [
+        {
+          "name": "VIN",
+          "number": "JP2-1",
+          "x": 4,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "3Vo",
+          "number": "JP2-2",
+          "x": 6,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "JP2-3",
+          "x": 8,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "SCK/SCL",
+          "number": "JP2-4",
+          "x": 10,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SDO/ADR",
+          "number": "JP2-5",
+          "x": 14,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "SDI/SDA",
+          "number": "JP2-6",
+          "x": 16,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "CS",
+          "number": "JP2-7",
+          "x": 18,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-bme280-humidity-barometric-pressure-temperature-sensor-breakout/downloads",
+        "https://github.com/adafruit/Adafruit-BME280-Breakout-PCB/blob/master/Adafruit%20BME280.brd"
+      ],
+      "sourceSha256": "63b1e8a9b0b54b5bc9d352977e5ebe291e6f45c6409181c8db318636447edf64",
+      "notes": "Original seven-pin breakout. VIN 3–5 V; 3Vo regulator output. I2C or SPI; SDO selects I2C address or provides SPI data.",
+      "connectorAliases": [
+        {
+          "terminal": "JP2-1",
+          "net": "5.0V"
+        },
+        {
+          "terminal": "JP2-2",
+          "net": "3.3V"
+        },
+        {
+          "terminal": "JP2-3",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP2-4",
+          "net": "SCK/SCL_5V"
+        },
+        {
+          "terminal": "JP2-5",
+          "net": "SDO/ADR_3V"
+        },
+        {
+          "terminal": "JP2-6",
+          "net": "SDI/SDA_5V"
+        },
+        {
+          "terminal": "JP2-7",
+          "net": "CS_5V"
+        }
+      ],
+      "mountingHoles": "top-pair",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "b507493c58772b6e0942226d9ff8ab71f7d8707079abaed83fc26e4f726a76ab"
+    },
+    {
+      "id": "adafruit-bmp280",
+      "name": "Adafruit BMP280 pressure + temperature (original)",
+      "short": "BMP280",
+      "kind": "sensor",
+      "icon": "pressure",
+      "width": 24,
+      "height": 30,
+      "pins": [
+        {
+          "name": "VIN",
+          "number": "JP2-1",
+          "x": 4,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "3Vo",
+          "number": "JP2-2",
+          "x": 6,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "JP2-3",
+          "x": 8,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "SCK/SCL",
+          "number": "JP2-4",
+          "x": 10,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SDO/ADR",
+          "number": "JP2-5",
+          "x": 14,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "SDI/SDA",
+          "number": "JP2-6",
+          "x": 16,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "CS",
+          "number": "JP2-7",
+          "x": 18,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-bmp280-barometric-pressure-plus-temperature-sensor-breakout/downloads",
+        "https://github.com/adafruit/Adafruit-BMP280-Breakout-PCB/blob/master/Adafruit%20BMP280.brd"
+      ],
+      "sourceSha256": "f650a378fb72d7fd2b663ca2927d57374bdb3327df3be2a07c0bd2f1d1284bc1",
+      "notes": "Original seven-pin breakout; no humidity measurement. VIN 3–5 V; I2C or SPI.",
+      "connectorAliases": [
+        {
+          "terminal": "JP2-1",
+          "net": "5.0V"
+        },
+        {
+          "terminal": "JP2-2",
+          "net": "3.3V"
+        },
+        {
+          "terminal": "JP2-3",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP2-4",
+          "net": "SCK/SCL_5V"
+        },
+        {
+          "terminal": "JP2-5",
+          "net": "SDO/ADR_3V"
+        },
+        {
+          "terminal": "JP2-6",
+          "net": "SDI/SDA_5V"
+        },
+        {
+          "terminal": "JP2-7",
+          "net": "CS_5V"
+        }
+      ],
+      "mountingHoles": "top-pair",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "6dacfaf4efa88fbab6754a945febbfe1b3541bfaf9bd77f79ee300e8fbd252c2"
+    },
+    {
+      "id": "adafruit-bh1750",
+      "name": "Adafruit BH1750 ambient light — STEMMA QT",
+      "short": "BH1750",
+      "kind": "sensor",
+      "icon": "light",
+      "width": 24,
+      "height": 30,
+      "pins": [
+        {
+          "name": "VIN",
+          "number": "JP1-1",
+          "x": 6,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "3Vo",
+          "number": "JP1-2",
+          "x": 8,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "JP1-3",
+          "x": 10,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "JP1-4",
+          "x": 14,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SDA",
+          "number": "JP1-5",
+          "x": 16,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "ADDR",
+          "number": "JP1-6",
+          "x": 18,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "VIN",
+          "number": "CONN3-2",
+          "x": 22,
+          "y": 12,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "SDA",
+          "number": "CONN3-3",
+          "x": 22,
+          "y": 10,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "CONN3-1",
+          "x": 22,
+          "y": 14,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "CONN3-4",
+          "x": 22,
+          "y": 8,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "VIN",
+          "number": "CONN4-2",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "SDA",
+          "number": "CONN4-3",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "CONN4-1",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "CONN4-4",
+          "x": 2,
+          "y": 14,
+          "side": "left",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-bh1750-ambient-light-sensor/downloads",
+        "https://github.com/adafruit/Adafruit-BH1750-PCB/blob/main/Adafruit%20BH1750.brd"
+      ],
+      "sourceSha256": "4ed4f97d8e8572e3b46ce72d8d393906e768a7ba627fce5886ae792d581cd4e9",
+      "notes": "I2C; VIN 3–5 V, 3Vo output, ADDR input.",
+      "connectorAliases": [
+        {
+          "terminal": "JP1-1",
+          "net": "VCC"
+        },
+        {
+          "terminal": "JP1-2",
+          "net": "3.3V"
+        },
+        {
+          "terminal": "JP1-3",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP1-4",
+          "net": "SCL"
+        },
+        {
+          "terminal": "JP1-5",
+          "net": "SDA"
+        },
+        {
+          "terminal": "JP1-6",
+          "net": "ADDR"
+        },
+        {
+          "terminal": "CONN3-2",
+          "net": "VCC"
+        },
+        {
+          "terminal": "CONN3-3",
+          "net": "SDA"
+        },
+        {
+          "terminal": "CONN3-1",
+          "net": "GND"
+        },
+        {
+          "terminal": "CONN3-4",
+          "net": "SCL"
+        },
+        {
+          "terminal": "CONN4-2",
+          "net": "VCC"
+        },
+        {
+          "terminal": "CONN4-3",
+          "net": "SDA"
+        },
+        {
+          "terminal": "CONN4-1",
+          "net": "GND"
+        },
+        {
+          "terminal": "CONN4-4",
+          "net": "SCL"
+        }
+      ],
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "342e0337b482868e71cac9e82f9085fcbd9282b89090249694c1744768d00d1c"
+    },
+    {
+      "id": "adafruit-veml7700",
+      "name": "Adafruit VEML7700 ambient light (original)",
+      "short": "VEML7700",
+      "kind": "sensor",
+      "icon": "light",
+      "width": 24,
+      "height": 30,
+      "pins": [
+        {
+          "name": "VIN",
+          "number": "JP2-1",
+          "x": 4,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "3Vo",
+          "number": "JP2-2",
+          "x": 6,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "JP2-3",
+          "x": 8,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "JP2-4",
+          "x": 10,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SDA",
+          "number": "JP2-5",
+          "x": 14,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-veml7700/downloads",
+        "https://github.com/adafruit/Adafruit-VEML7700-PCB/blob/master/Adafruit%20VEML7700.brd"
+      ],
+      "sourceSha256": "ba5f858ead5c0d394956063819d2460341d4e2d0982467b8c5b74ef36d2e6ace",
+      "notes": "Original five-pin breakout; I2C, VIN 3–5 V, 3Vo output.",
+      "connectorAliases": [
+        {
+          "terminal": "JP2-1",
+          "net": "VIN"
+        },
+        {
+          "terminal": "JP2-2",
+          "net": "3.3V"
+        },
+        {
+          "terminal": "JP2-3",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP2-4",
+          "net": "SCL"
+        },
+        {
+          "terminal": "JP2-5",
+          "net": "SDA"
+        }
+      ],
+      "mountingHoles": "top-pair",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "50072542ac7912abfc5c98be6064052357a809cd45a4c2e1d2047e59e06aa5b9"
+    },
+    {
+      "id": "adafruit-tsl2591",
+      "name": "Adafruit TSL2591 high dynamic range light (original)",
+      "short": "TSL2591",
+      "kind": "sensor",
+      "icon": "light",
+      "width": 24,
+      "height": 30,
+      "pins": [
+        {
+          "name": "VIN",
+          "number": "JP1-1",
+          "x": 4,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "JP1-2",
+          "x": 6,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "3Vo",
+          "number": "JP1-3",
+          "x": 8,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "INT",
+          "number": "JP1-4",
+          "x": 10,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 1
+        },
+        {
+          "name": "SDA",
+          "number": "JP1-5",
+          "x": 14,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "SCL",
+          "number": "JP1-6",
+          "x": 16,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-tsl2591/downloads",
+        "https://github.com/adafruit/Adafruit-TSL2591-Breakout-PCB/blob/master/Adafruit%20TSL2591%20Original.brd"
+      ],
+      "sourceSha256": "49de90870a0debf7759aaedafe0dbdc518e3b70868be71c623e9fd0f623b8e54",
+      "notes": "Original header order VIN,GND,3Vo,INT,SDA,SCL; differs from the QT revision. I2C; VIN 3–5 V.",
+      "connectorAliases": [
+        {
+          "terminal": "JP1-1",
+          "net": "VIN"
+        },
+        {
+          "terminal": "JP1-2",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP1-3",
+          "net": "3.3V"
+        },
+        {
+          "terminal": "JP1-4",
+          "net": "INT"
+        },
+        {
+          "terminal": "JP1-5",
+          "net": "SDA"
+        },
+        {
+          "terminal": "JP1-6",
+          "net": "SCL"
+        }
+      ],
+      "mountingHoles": "top-pair",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "8b4b91a2f6412c2bf9ebcefb93328aa84d46bdfab50164499537451acb021940"
+    },
+    {
+      "id": "adafruit-vl53l0x",
+      "name": "Adafruit VL53L0X time-of-flight distance (original)",
+      "short": "VL53L0X",
+      "kind": "sensor",
+      "icon": "distance",
+      "width": 24,
+      "height": 30,
+      "pins": [
+        {
+          "name": "VIN",
+          "number": "JP1-1",
+          "x": 4,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "2v8",
+          "number": "JP1-2",
+          "x": 6,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "JP1-3",
+          "x": 8,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GPIO",
+          "number": "JP1-4",
+          "x": 10,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 1
+        },
+        {
+          "name": "XSHUT",
+          "number": "JP1-5",
+          "x": 14,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SCL",
+          "number": "JP1-6",
+          "x": 16,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SDA",
+          "number": "JP1-7",
+          "x": 18,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-vl53l0x-micro-lidar-distance-sensor-breakout/downloads",
+        "https://github.com/adafruit/Adafruit-VL53L0X-ToF-Distance-Sensor-PCB/blob/master/Adafruit%20VL53L0X.brd"
+      ],
+      "sourceSha256": "1e1f41d7ce8e7c7cf1ce9f71684186378fff93980b69399ed1486062f2738f14",
+      "notes": "Original seven-pin board; VIN 3–5 V; 2v8 is regulator output. I2C; XSHUT active low, GPIO interrupt output.",
+      "connectorAliases": [
+        {
+          "terminal": "JP1-1",
+          "net": "VIN"
+        },
+        {
+          "terminal": "JP1-2",
+          "net": "2.8V"
+        },
+        {
+          "terminal": "JP1-3",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP1-4",
+          "net": "GPIO"
+        },
+        {
+          "terminal": "JP1-5",
+          "net": "XSHUT"
+        },
+        {
+          "terminal": "JP1-6",
+          "net": "SCL"
+        },
+        {
+          "terminal": "JP1-7",
+          "net": "SDA"
+        }
+      ],
+      "mountingHoles": "top-pair",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "d4835ed694638ec9ab1c171bb847823c8f107bf3e755391118bfbe66436233b2"
+    },
+    {
+      "id": "adafruit-lis3dh",
+      "name": "Adafruit LIS3DH accelerometer (original)",
+      "short": "LIS3DH",
+      "kind": "sensor",
+      "icon": "motion",
+      "width": 24,
+      "height": 30,
+      "pins": [
+        {
+          "name": "VIN",
+          "number": "JP2-1",
+          "x": 4,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "3Vo",
+          "number": "JP2-2",
+          "x": 6,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "JP2-3",
+          "x": 8,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "JP2-4",
+          "x": 10,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SDA",
+          "number": "JP2-5",
+          "x": 14,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "SDO",
+          "number": "JP2-6",
+          "x": 16,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "CS",
+          "number": "JP2-7",
+          "x": 18,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "INT1",
+          "number": "JP2-8",
+          "x": 20,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 1
+        },
+        {
+          "name": "ADC1",
+          "number": "JP1-1",
+          "x": 10,
+          "y": 2,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "ADC2",
+          "number": "JP1-2",
+          "x": 14,
+          "y": 2,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "ADC3",
+          "number": "JP1-3",
+          "x": 16,
+          "y": 2,
+          "side": "top",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-lis3dh-triple-axis-accelerometer-breakout/downloads",
+        "https://github.com/adafruit/Adafruit-LIS3DH-Breakout-PCB/blob/master/Adafruit%20LIS3DH%20Original.brd"
+      ],
+      "sourceSha256": "10a27f354c2f8e66f49b6caf35e3b74cc36dbe03a294ce52f804b348bb21dfa5",
+      "notes": "Original eight-pin main header plus three ADC inputs. VIN 3–5 V; I2C/SPI.",
+      "connectorAliases": [
+        {
+          "terminal": "JP2-1",
+          "net": "VIN"
+        },
+        {
+          "terminal": "JP2-2",
+          "net": "3.3V"
+        },
+        {
+          "terminal": "JP2-3",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP2-4",
+          "net": "SCL"
+        },
+        {
+          "terminal": "JP2-5",
+          "net": "SDA"
+        },
+        {
+          "terminal": "JP2-6",
+          "net": "SDO"
+        },
+        {
+          "terminal": "JP2-7",
+          "net": "CS"
+        },
+        {
+          "terminal": "JP2-8",
+          "net": "INT1"
+        },
+        {
+          "terminal": "JP1-1",
+          "net": "ADC1"
+        },
+        {
+          "terminal": "JP1-2",
+          "net": "ADC2"
+        },
+        {
+          "terminal": "JP1-3",
+          "net": "ADC3"
+        }
+      ],
+      "mountingHoles": "top-pair",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "b598540b090692a79651951e8ebb682ccda38d4cf851889ed72d28a9e1f603e6"
+    },
+    {
+      "id": "adafruit-mpu6050",
+      "name": "Adafruit MPU6050 accelerometer + gyro — STEMMA QT",
+      "short": "MPU6050",
+      "kind": "sensor",
+      "icon": "motion",
+      "width": 24,
+      "height": 30,
+      "pins": [
+        {
+          "name": "AD0",
+          "number": "JP2-1",
+          "x": 6,
+          "y": 2,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "FSYNC",
+          "number": "JP2-2",
+          "x": 8,
+          "y": 2,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "AUX_SCL",
+          "number": "JP2-3",
+          "x": 10,
+          "y": 2,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "AUX_SDA",
+          "number": "JP2-4",
+          "x": 14,
+          "y": 2,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "CLKIN",
+          "number": "JP2-5",
+          "x": 16,
+          "y": 2,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "GND",
+          "number": "JP2-6",
+          "x": 18,
+          "y": 2,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "VIN",
+          "number": "JP3-1",
+          "x": 6,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "3Vo",
+          "number": "JP3-2",
+          "x": 8,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "JP3-3",
+          "x": 10,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "JP3-4",
+          "x": 14,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SDA",
+          "number": "JP3-5",
+          "x": 16,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "INT",
+          "number": "JP3-6",
+          "x": 18,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 1
+        },
+        {
+          "name": "VIN",
+          "number": "CONN3-2",
+          "x": 22,
+          "y": 18,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "SDA",
+          "number": "CONN3-3",
+          "x": 22,
+          "y": 16,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "CONN3-1",
+          "x": 22,
+          "y": 20,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "CONN3-4",
+          "x": 22,
+          "y": 14,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "VIN",
+          "number": "CONN4-2",
+          "x": 2,
+          "y": 16,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "SDA",
+          "number": "CONN4-3",
+          "x": 2,
+          "y": 18,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "CONN4-1",
+          "x": 2,
+          "y": 14,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "CONN4-4",
+          "x": 2,
+          "y": 20,
+          "side": "left",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/mpu6050-6-dof-accelerometer-and-gyro/downloads",
+        "https://github.com/adafruit/Adafruit-MPU6050-PCB/blob/master/Adafruit%20MPU6050.brd"
+      ],
+      "sourceSha256": "2eca3567d03ae5cff840d511415049840be8f25184811bfd1c2ccdb69cf835c8",
+      "notes": "Both six-pin rows and QT ports shown. VIN 3–5 V. AD0 selects address; FSYNC/CLKIN inputs; AUX SCL/SDA for external magnetometer.",
+      "connectorAliases": [
+        {
+          "terminal": "JP2-1",
+          "net": "AD0"
+        },
+        {
+          "terminal": "JP2-2",
+          "net": "FSYNC_IN"
+        },
+        {
+          "terminal": "JP2-3",
+          "net": "SCL_EXT"
+        },
+        {
+          "terminal": "JP2-4",
+          "net": "SDA_EXT"
+        },
+        {
+          "terminal": "JP2-5",
+          "net": "CLKIN"
+        },
+        {
+          "terminal": "JP2-6",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP3-1",
+          "net": "VCC"
+        },
+        {
+          "terminal": "JP3-2",
+          "net": "3.3V"
+        },
+        {
+          "terminal": "JP3-3",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP3-4",
+          "net": "SCL"
+        },
+        {
+          "terminal": "JP3-5",
+          "net": "SDA"
+        },
+        {
+          "terminal": "JP3-6",
+          "net": "INT"
+        },
+        {
+          "terminal": "CONN3-2",
+          "net": "VCC"
+        },
+        {
+          "terminal": "CONN3-3",
+          "net": "SDA"
+        },
+        {
+          "terminal": "CONN3-1",
+          "net": "GND"
+        },
+        {
+          "terminal": "CONN3-4",
+          "net": "SCL"
+        },
+        {
+          "terminal": "CONN4-2",
+          "net": "VCC"
+        },
+        {
+          "terminal": "CONN4-3",
+          "net": "SDA"
+        },
+        {
+          "terminal": "CONN4-1",
+          "net": "GND"
+        },
+        {
+          "terminal": "CONN4-4",
+          "net": "SCL"
+        }
+      ],
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "d7f8fe1af827f67c0fc70fafb5b1632741b2883ec10a84c893160a5e1940fcea"
+    },
+    {
+      "id": "adafruit-scd41",
+      "name": "Adafruit SCD41 CO2 / temperature / humidity — STEMMA QT",
+      "short": "SCD41",
+      "kind": "sensor",
+      "icon": "air",
+      "width": 24,
+      "height": 30,
+      "pins": [
+        {
+          "name": "VIN",
+          "number": "JP2-1",
+          "x": 6,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "3Vo",
+          "number": "JP2-2",
+          "x": 8,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 10
+        },
+        {
+          "name": "GND",
+          "number": "JP2-3",
+          "x": 10,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "JP2-4",
+          "x": 14,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SDA",
+          "number": "JP2-5",
+          "x": 16,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "VIN",
+          "number": "CONN3-2",
+          "x": 22,
+          "y": 12,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "SDA",
+          "number": "CONN3-3",
+          "x": 22,
+          "y": 10,
+          "side": "right",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "CONN3-1",
+          "x": 22,
+          "y": 14,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "CONN3-4",
+          "x": 22,
+          "y": 8,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "VIN",
+          "number": "CONN4-2",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "SDA",
+          "number": "CONN4-3",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "GND",
+          "number": "CONN4-1",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "CONN4-4",
+          "x": 2,
+          "y": 14,
+          "side": "left",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-scd-40-and-scd-41/downloads",
+        "https://github.com/adafruit/Adafruit-SCD-4x-PCB/blob/main/Adafruit%20SCD-41.brd"
+      ],
+      "sourceSha256": "ff2209c94618f266f03a1f8fcde63c90703752aaea600e6d5fa7c5a4af365881",
+      "notes": "SCD41 board revision, not SCD43. Genuine CO2 measurement, I2C; VIN 3–5 V; 3Vo output.",
+      "connectorAliases": [
+        {
+          "terminal": "JP2-1",
+          "net": "VCC"
+        },
+        {
+          "terminal": "JP2-2",
+          "net": "3.3V"
+        },
+        {
+          "terminal": "JP2-3",
+          "net": "GND"
+        },
+        {
+          "terminal": "JP2-4",
+          "net": "SCL"
+        },
+        {
+          "terminal": "JP2-5",
+          "net": "SDA"
+        },
+        {
+          "terminal": "CONN3-2",
+          "net": "VCC"
+        },
+        {
+          "terminal": "CONN3-3",
+          "net": "SDA"
+        },
+        {
+          "terminal": "CONN3-1",
+          "net": "GND"
+        },
+        {
+          "terminal": "CONN3-4",
+          "net": "SCL"
+        },
+        {
+          "terminal": "CONN4-2",
+          "net": "VCC"
+        },
+        {
+          "terminal": "CONN4-3",
+          "net": "SDA"
+        },
+        {
+          "terminal": "CONN4-1",
+          "net": "GND"
+        },
+        {
+          "terminal": "CONN4-4",
+          "net": "SCL"
+        }
+      ],
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "4555b1276a9990cfd47de5291a5dce396b1a0bd12e6fb7831c737447d4cf55ff"
+    },
+    {
+      "id": "adafruit-qt1010",
+      "name": "Adafruit AT42QT1010 momentary capacitive touch",
+      "short": "TOUCH",
+      "kind": "sensor",
+      "icon": "touch",
+      "width": 22,
+      "height": 36,
+      "pins": [
+        {
+          "name": "LEDA",
+          "number": "JP1-1",
+          "x": 4,
+          "y": 28,
+          "side": "bottom",
+          "electricalType": 4
+        },
+        {
+          "name": "VDD",
+          "number": "JP1-2",
+          "x": 6,
+          "y": 28,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "OUT",
+          "number": "JP1-3",
+          "x": 8,
+          "y": 28,
+          "side": "bottom",
+          "electricalType": 1
+        },
+        {
+          "name": "GND",
+          "number": "JP1-4",
+          "x": 10,
+          "y": 28,
+          "side": "bottom",
+          "electricalType": 9
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-capacitive-touch-sensor-breakouts/downloads",
+        "https://github.com/adafruit/Adafruit-Standalone-Capacitive-Sensor-PCB/blob/master/Adafruit%20AT42QT1010%20Breakout.brd"
+      ],
+      "sourceSha256": "d82b8a449ade8dc47fc63a52b3c2ac0721a1cdef7b46772d1fa152cb5d03d289",
+      "notes": "Momentary output, four-pin header LEDA,VDD,OUT,GND. 1.8–5.5 V. LEDA is the LED anode connection; do not treat it as a supply output.",
+      "connectorAliases": [
+        {
+          "terminal": "JP1-1",
+          "net": "LEDA"
+        },
+        {
+          "terminal": "JP1-2",
+          "net": "VDD"
+        },
+        {
+          "terminal": "JP1-3",
+          "net": "OUT"
+        },
+        {
+          "terminal": "JP1-4",
+          "net": "GND"
+        }
+      ],
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 22,
+        "bodyHeight": 30,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "3bfc5436555c40579fca49d94f9f3ce8f5296331ce1c0c41c88f8768ee54e2ed"
+    },
+    {
+      "id": "adafruit-qt1012",
+      "name": "Adafruit AT42QT1012 latching capacitive touch",
+      "short": "TOUCH LATCH",
+      "kind": "sensor",
+      "icon": "touch",
+      "width": 22,
+      "height": 36,
+      "pins": [
+        {
+          "name": "LEDA",
+          "number": "JP1-1",
+          "x": 4,
+          "y": 28,
+          "side": "bottom",
+          "electricalType": 4
+        },
+        {
+          "name": "VDD",
+          "number": "JP1-2",
+          "x": 6,
+          "y": 28,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "TIME",
+          "number": "JP1-3",
+          "x": 8,
+          "y": 28,
+          "side": "bottom",
+          "electricalType": 4
+        },
+        {
+          "name": "OUT",
+          "number": "JP1-4",
+          "x": 10,
+          "y": 28,
+          "side": "bottom",
+          "electricalType": 1
+        },
+        {
+          "name": "GND",
+          "number": "JP1-5",
+          "x": 14,
+          "y": 28,
+          "side": "bottom",
+          "electricalType": 9
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-capacitive-touch-sensor-breakouts/downloads",
+        "https://github.com/adafruit/Adafruit-Standalone-Capacitive-Sensor-PCB/blob/master/Adafruit%20AT42QT1012%20Breakout.brd"
+      ],
+      "sourceSha256": "c51692a9bc142f2d78418c011f1e4200b37ce87eab7e959cbaff99ae7c0436da",
+      "notes": "Latching version, five-pin header LEDA,VDD,TIME,OUT,GND. 1.8–5.5 V. TIME configures timeout.",
+      "connectorAliases": [
+        {
+          "terminal": "JP1-1",
+          "net": "LEDA"
+        },
+        {
+          "terminal": "JP1-2",
+          "net": "VDD"
+        },
+        {
+          "terminal": "JP1-3",
+          "net": "TIME"
+        },
+        {
+          "terminal": "JP1-4",
+          "net": "OUT"
+        },
+        {
+          "terminal": "JP1-5",
+          "net": "GND"
+        }
+      ],
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 22,
+        "bodyHeight": 30,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "55f42b1d1c1e06911f5f2e508b0d440349a0de8d9a4b8ee59292b8ca5049a60f"
+    },
+    {
+      "id": "adafruit-soil",
+      "name": "Adafruit STEMMA I2C capacitive soil moisture",
+      "short": "SOIL I2C",
+      "kind": "sensor",
+      "icon": "soil",
+      "width": 54,
+      "height": 22,
+      "pins": [
+        {
+          "name": "GND",
+          "number": "X1-1",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VIN",
+          "number": "X1-2",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "SDA",
+          "number": "X1-3",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 5
+        },
+        {
+          "name": "SCL",
+          "number": "X1-4",
+          "x": 2,
+          "y": 4,
+          "side": "left",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://learn.adafruit.com/adafruit-stemma-soil-sensor-i2c-capacitive-moisture-sensor/downloads",
+        "https://github.com/adafruit/Adafruit-STEMMA-Soil-Sensor-PCB/blob/master/Adafruit%20STEMMA%20Soil%20Sensor.brd"
+      ],
+      "sourceSha256": "731600be9d83725868a7dc424523f75f377917853a2333997361f63096d35bc5",
+      "notes": "Four-pin STEMMA PH connector GND,VIN,SDA,SCL. VIN 3–5 V; soil moisture and temperature. Connector is not pin-compatible with Grove.",
+      "connectorAliases": [
+        {
+          "terminal": "X1-1",
+          "net": "GND"
+        },
+        {
+          "terminal": "X1-2",
+          "net": "VIN"
+        },
+        {
+          "terminal": "X1-3",
+          "net": "SDA"
+        },
+        {
+          "terminal": "X1-4",
+          "net": "SCL"
+        }
+      ],
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 54,
+        "bodyHeight": 16,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "a2017264ebe00a870ba501cdc83f0b161c239a7f317bc522d57cb0df4905a294"
+    },
+    {
+      "id": "grove-ldr",
+      "name": "Grove Light sensor v1.1",
+      "short": "LIGHT / LDR",
+      "kind": "grove",
+      "icon": "light",
+      "width": 24,
+      "height": 26,
+      "pins": [
+        {
+          "name": "GND",
+          "number": "J1-4",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VCC",
+          "number": "J1-3",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "NC",
+          "number": "J1-2",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 6
+        },
+        {
+          "name": "SIG",
+          "number": "J1-1",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 1
+        }
+      ],
+      "sources": [
+        "https://wiki.seeedstudio.com/Grove-Light_Sensor/",
+        "https://wiki.seeedstudio.com/Grove_System/"
+      ],
+      "notes": "Analogue output; 3.3/5 V supply. Calibrate thresholds for the application. Grove socket numbering: 1 signal/yellow, 2 unused/white, 3 VCC/red, 4 GND/black; socket is on the left in this view.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 20,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "fcd4d755648fc50c10e4c37aa2feb729323db590c0d977a016ab45cf160211b3"
+    },
+    {
+      "id": "grove-sound",
+      "name": "Grove Sound sensor v1.6",
+      "short": "SOUND",
+      "kind": "grove",
+      "icon": "sound",
+      "width": 24,
+      "height": 26,
+      "pins": [
+        {
+          "name": "GND",
+          "number": "J1-4",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VCC",
+          "number": "J1-3",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "NC",
+          "number": "J1-2",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 6
+        },
+        {
+          "name": "SIG",
+          "number": "J1-1",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 1
+        }
+      ],
+      "sources": [
+        "https://wiki.seeedstudio.com/Grove-Sound_Sensor/",
+        "https://wiki.seeedstudio.com/Grove_System/"
+      ],
+      "notes": "Analogue microphone envelope output; not a digital sound-level meter. Grove socket numbering: 1 signal/yellow, 2 unused/white, 3 VCC/red, 4 GND/black; socket is on the left in this view.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 20,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "d22b6900c7f9afc0a378f083357eff58cdde91a0dcb0e4a137bcaa8e750a93a2"
+    },
+    {
+      "id": "grove-pir",
+      "name": "Grove PIR motion sensor v1.2",
+      "short": "PIR MOTION",
+      "kind": "grove",
+      "icon": "pir",
+      "width": 30,
+      "height": 26,
+      "pins": [
+        {
+          "name": "GND",
+          "number": "J1-4",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VCC",
+          "number": "J1-3",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "NC",
+          "number": "J1-2",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 6
+        },
+        {
+          "name": "SIG",
+          "number": "J1-1",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 1
+        }
+      ],
+      "sources": [
+        "https://wiki.seeedstudio.com/Grove-PIR_Motion_Sensor/",
+        "https://wiki.seeedstudio.com/Grove_System/"
+      ],
+      "notes": "Digital motion output. Delay/sensitivity hardware controls shown. Main Grove connector only. Grove socket numbering: 1 signal/yellow, 2 unused/white, 3 VCC/red, 4 GND/black; socket is on the left in this view.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 30,
+        "bodyHeight": 20,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "e4ca5d44e8c6c65c60d9c4865ee6185afc3ad77dddf7abe67f384623cde57843"
+    },
+    {
+      "id": "grove-buzzer",
+      "name": "Grove Buzzer v1.0",
+      "short": "BUZZER",
+      "kind": "grove",
+      "icon": "buzzer",
+      "width": 24,
+      "height": 26,
+      "pins": [
+        {
+          "name": "GND",
+          "number": "J1-4",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VCC",
+          "number": "J1-3",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "NC",
+          "number": "J1-2",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 6
+        },
+        {
+          "name": "SIG",
+          "number": "J1-1",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://wiki.seeedstudio.com/Grove-Buzzer/",
+        "https://wiki.seeedstudio.com/Grove_System/"
+      ],
+      "notes": "Drive SIG with a tone/PWM signal for pitch; digital HIGH also sounds the buzzer. Grove socket numbering: 1 signal/yellow, 2 unused/white, 3 VCC/red, 4 GND/black; socket is on the left in this view.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 20,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "5d8242ace38e4d437d1d4f5bb54246450c06fbe56ddba294e2eadc771d373903"
+    },
+    {
+      "id": "grove-button",
+      "name": "Grove Button v1.0",
+      "short": "BUTTON",
+      "kind": "grove",
+      "icon": "button",
+      "width": 24,
+      "height": 26,
+      "pins": [
+        {
+          "name": "GND",
+          "number": "J1-4",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VCC",
+          "number": "J1-3",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "NC",
+          "number": "J1-2",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 6
+        },
+        {
+          "name": "SIG",
+          "number": "J1-1",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 1
+        }
+      ],
+      "sources": [
+        "https://wiki.seeedstudio.com/Grove-Button/",
+        "https://wiki.seeedstudio.com/Grove_System/"
+      ],
+      "notes": "Momentary button; digital signal output. Grove socket numbering: 1 signal/yellow, 2 unused/white, 3 VCC/red, 4 GND/black; socket is on the left in this view.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 20,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "d385a81f9c51a07664259ef89cbe2cb80c6890fecda7f1f49d94f81b561de5ff"
+    },
+    {
+      "id": "grove-water",
+      "name": "Grove Water sensor v1.0",
+      "short": "WATER LEAK",
+      "kind": "grove",
+      "icon": "water",
+      "width": 24,
+      "height": 26,
+      "pins": [
+        {
+          "name": "GND",
+          "number": "J1-4",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VCC",
+          "number": "J1-3",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "NC",
+          "number": "J1-2",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 6
+        },
+        {
+          "name": "SIG",
+          "number": "J1-1",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 1
+        }
+      ],
+      "sources": [
+        "https://wiki.seeedstudio.com/Grove-Water_Sensor/",
+        "https://wiki.seeedstudio.com/Grove_System/"
+      ],
+      "notes": "Digital detection via exposed conductive tracks; pin 2 unused. Grove socket numbering: 1 signal/yellow, 2 unused/white, 3 VCC/red, 4 GND/black; socket is on the left in this view.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 20,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "2078a4eb9244b3ca9690ed668260e5d66398537bbb349180f09155f84c16b6fe"
+    },
+    {
+      "id": "grove-reed",
+      "name": "Grove Magnetic switch v1.3",
+      "short": "DOOR / REED",
+      "kind": "grove",
+      "icon": "door",
+      "width": 24,
+      "height": 26,
+      "pins": [
+        {
+          "name": "GND",
+          "number": "J1-4",
+          "x": 2,
+          "y": 6,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "VCC",
+          "number": "J1-3",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "NC",
+          "number": "J1-2",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 6
+        },
+        {
+          "name": "SIG",
+          "number": "J1-1",
+          "x": 2,
+          "y": 12,
+          "side": "left",
+          "electricalType": 1
+        }
+      ],
+      "sources": [
+        "https://wiki.seeedstudio.com/Grove-Magnetic_Switch/",
+        "https://wiki.seeedstudio.com/Grove_System/",
+        "https://files.seeedstudio.com/wiki/Grove-Magnetic_Switch/res/Grove-Magnetic_Switch_v1.3_Eagle_File.zip"
+      ],
+      "notes": "Magnetic reed switch with digital output; pin 2 unused. Grove socket numbering: 1 signal/yellow, 2 unused/white, 3 VCC/red, 4 GND/black; socket is on the left in this view.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 24,
+        "bodyHeight": 20,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "d556e975092acdb21d62f07d03ff5fb06d2fc8c62f1e7e2e23286519f63642a0"
+    },
+    {
+      "id": "gravity-dht22",
+      "name": "DFRobot Gravity DHT22 — SEN0137 v2.0",
+      "short": "DHT22",
+      "kind": "gravity",
+      "icon": "climate",
+      "width": 22,
+      "height": 28,
+      "pins": [
+        {
+          "name": "GND",
+          "number": "J1-3",
+          "x": 4,
+          "y": 18,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "VCC",
+          "number": "J1-2",
+          "x": 6,
+          "y": 18,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "DATA",
+          "number": "J1-1",
+          "x": 10,
+          "y": 18,
+          "side": "bottom",
+          "electricalType": 5
+        }
+      ],
+      "sources": [
+        "https://wiki.dfrobot.com/sen0137/",
+        "https://dfimg.dfrobot.com/wiki/17500/SEN0137_dht22-temperature-and-humidity-sensor_schematics_v1.0.pdf"
+      ],
+      "notes": "3.3–5 V; bidirectional single-data-wire bus, not I2C.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 22,
+        "bodyHeight": 22,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "fdf0f1271bd6a313228c9abd7de25667e64a37aeacf39a4f1b8d9e943a2226f8"
+    },
+    {
+      "id": "gravity-ds18b20",
+      "name": "DFRobot Gravity DS18B20 — DFR0024 v2.0",
+      "short": "DS18B20",
+      "kind": "gravity",
+      "icon": "temperature",
+      "width": 22,
+      "height": 28,
+      "pins": [
+        {
+          "name": "GND",
+          "number": "J1-3",
+          "x": 4,
+          "y": 18,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "VCC",
+          "number": "J1-2",
+          "x": 6,
+          "y": 18,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "DQ",
+          "number": "J1-1",
+          "x": 10,
+          "y": 18,
+          "side": "bottom",
+          "electricalType": 5
+        }
+      ],
+      "sources": [
+        "https://wiki.dfrobot.com/dfr0024/",
+        "https://dfimg.dfrobot.com/wiki/17381/DFR0024_ds18b20-temperature-sensor_schematics_v1.0.pdf"
+      ],
+      "notes": "3.3–5 V; 1-Wire temperature module with onboard pull-up.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 22,
+        "bodyHeight": 22,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "ef62286b2fd66e427cfc4f499003cb0c095f92c969dd453473ca7511c827ca95"
+    },
+    {
+      "id": "gravity-soil",
+      "name": "DFRobot capacitive soil moisture — SEN0193",
+      "short": "SOIL ANALOG",
+      "kind": "gravity",
+      "icon": "soil",
+      "width": 14,
+      "height": 54,
+      "pins": [
+        {
+          "name": "GND",
+          "number": "J1-1",
+          "x": 4,
+          "y": 4,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "VCC",
+          "number": "J1-2",
+          "x": 6,
+          "y": 4,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "AOUT",
+          "number": "J1-3",
+          "x": 10,
+          "y": 4,
+          "side": "top",
+          "electricalType": 1
+        }
+      ],
+      "sources": [
+        "https://wiki.dfrobot.com/sen0193/",
+        "https://dfimg.dfrobot.com/wiki/17627/SEN0193_capacitive-soil-moisture-sensor_schematics_1.0.pdf"
+      ],
+      "notes": "3.3–5.5 V supply; analogue output up to 3 V. Calibrate dry/wet readings.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 14,
+        "bodyHeight": 48,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "15cf5da015536d485fcf3031b072623f415a123c5f37189378a0a8248270c4f3"
+    },
+    {
+      "id": "gravity-relay",
+      "name": "DFRobot Gravity relay — DFR0017 v3.0",
+      "short": "RELAY",
+      "kind": "relay",
+      "icon": "relay",
+      "width": 26,
+      "height": 30,
+      "pins": [
+        {
+          "name": "SIG",
+          "number": "J1-3",
+          "x": 2,
+          "y": 8,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "VCC",
+          "number": "J1-2",
+          "x": 2,
+          "y": 10,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "J1-1",
+          "x": 2,
+          "y": 14,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "COM",
+          "number": "J2-1",
+          "x": 24,
+          "y": 6,
+          "side": "right",
+          "electricalType": 4
+        },
+        {
+          "name": "EMPTY",
+          "number": "J2-2",
+          "x": 24,
+          "y": 10,
+          "side": "right",
+          "electricalType": 6
+        },
+        {
+          "name": "NO",
+          "number": "J2-3",
+          "x": 24,
+          "y": 14,
+          "side": "right",
+          "electricalType": 4
+        },
+        {
+          "name": "NC",
+          "number": "J2-4",
+          "x": 24,
+          "y": 18,
+          "side": "right",
+          "electricalType": 4
+        }
+      ],
+      "sources": [
+        "https://wiki.dfrobot.com/dfr0017/",
+        "https://dfimg.dfrobot.com/60191ece025a892c98c6b90b/wikien/0507fe4ab97268f3e5b2f170d69b634e_0x0.png.webp"
+      ],
+      "notes": "V3.0, rotated with control socket left: SIG,VCC,GND top-to-bottom. Four screw terminals at right: COM,EMPTY,NO,NC top-to-bottom. EMPTY is physically present but unconnected; NC means normally closed and is a passive contact, not an unconnected pin. 5 V control supply. No relay simulation model.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 26,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "8e165cc8e45b650a63f1be535c81fb262d4dd03de066a83d8bd4db51dad999d5"
+    },
+    {
+      "id": "hc-sr04",
+      "name": "HC-SR04 ultrasonic distance module",
+      "short": "HC-SR04",
+      "kind": "ultrasonic",
+      "icon": "distance",
+      "width": 30,
+      "height": 24,
+      "pins": [
+        {
+          "name": "VCC",
+          "number": "1",
+          "x": 10,
+          "y": 16,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "TRIG",
+          "number": "2",
+          "x": 14,
+          "y": 16,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "ECHO",
+          "number": "3",
+          "x": 16,
+          "y": 16,
+          "side": "bottom",
+          "electricalType": 1
+        },
+        {
+          "name": "GND",
+          "number": "4",
+          "x": 20,
+          "y": 16,
+          "side": "bottom",
+          "electricalType": 9
+        }
+      ],
+      "sources": [
+        "https://www.handsontec.com/dataspecs/HC-SR04-Ultrasonic.pdf"
+      ],
+      "notes": "5 V module; ECHO is a 5 V output and needs level shifting/division for 3.3 V GPIO. Order VCC,TRIG,ECHO,GND with transducers facing the viewer and header below.",
+      "category": "module",
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 30,
+        "bodyHeight": 18,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": null
+      },
+      "xmlSha256": "d84569f49e04ecbca78b331839ebde18134c1278b51dbd66366975799bf99545"
+    },
+    {
+      "id": "display-lcd1602",
+      "name": "DFRobot Gravity LCD1602 — DFR0555",
+      "short": "LCD1602 / 16x2",
+      "kind": "display",
+      "category": "display",
+      "icon": "display",
+      "displayType": "character",
+      "boardWidth": 174,
+      "boardHeight": 68,
+      "width": 94,
+      "height": 30,
+      "interface": "I2C",
+      "resolution": "16 x 2",
+      "view": "Front face at left; rear wiring view at right. Connector spacing enlarged to the normal grid. Screen glass/ribbons and optional auxiliary interfaces are outside the wiring interface.",
+      "pins": [
+        {
+          "name": "VCC",
+          "number": "I2C-1",
+          "x": 92,
+          "y": 8,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "I2C-2",
+          "x": 92,
+          "y": 10,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "SCL",
+          "number": "I2C-3",
+          "x": 92,
+          "y": 12,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "SDA",
+          "number": "I2C-4",
+          "x": 92,
+          "y": 14,
+          "side": "right",
+          "electricalType": 5
+        }
+      ],
+      "sources": [
+        "https://wiki.dfrobot.com/dfr0555"
+      ],
+      "notes": "16x2 character LCD with integrated I2C interface; 3.3–5 V supply. Connector top-to-bottom VCC,GND,SCL,SDA in the illustrated rear view. The front and rear are two views of one module, not two devices. Wires attach only to the labelled rear contacts.",
+      "sourceFiles": [
+        {
+          "name": "lcd1602-pins.png",
+          "sha256": "ab8146aca4197ffa445d415b6839c04beb2a74d9e74a45ce40dd8ff71d7055af"
+        }
+      ],
+      "columns": 16,
+      "rows": 2,
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 94,
+        "bodyHeight": 24,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": 49.5
+      },
+      "xmlSha256": "092b4dd50822bf822980dbe38bdf38764a800deeddb982840309ccbcd3375160"
+    },
+    {
+      "id": "display-oled12864",
+      "name": "DFRobot Gravity OLED 128x64 — DFR0486",
+      "short": "OLED / 128x64",
+      "kind": "display",
+      "category": "display",
+      "icon": "display",
+      "displayType": "oled",
+      "boardWidth": 124,
+      "boardHeight": 80,
+      "width": 68,
+      "height": 34,
+      "interface": "I2C",
+      "resolution": "128 x 64",
+      "view": "Front face at left; rear wiring view at right. Connector spacing enlarged to the normal grid. Screen glass/ribbons and optional auxiliary interfaces are outside the wiring interface.",
+      "pins": [
+        {
+          "name": "SDA",
+          "number": "I2C-4",
+          "x": 48,
+          "y": 6,
+          "side": "top",
+          "electricalType": 5
+        },
+        {
+          "name": "SCL",
+          "number": "I2C-3",
+          "x": 50,
+          "y": 6,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "GND",
+          "number": "I2C-2",
+          "x": 52,
+          "y": 6,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "VCC",
+          "number": "I2C-1",
+          "x": 54,
+          "y": 6,
+          "side": "top",
+          "electricalType": 9
+        }
+      ],
+      "sources": [
+        "https://wiki.dfrobot.com/dfr0486",
+        "https://dfimg.dfrobot.com/wiki/18672/DFR0486_ssd1306-oled-display-module_schematics_V1.0.pdf"
+      ],
+      "notes": "SSD1306 OLED, 0.96 inch, 3.3–5 V supply. Rear top header left-to-right SDA,SCL,GND,VCC; the Gravity pin numbers run 4,3,2,1 in that view. The front and rear are two views of one module, not two devices. Wires attach only to the labelled rear contacts.",
+      "sourceFiles": [
+        {
+          "name": "oled-pins.png",
+          "sha256": "d0d62440f6d71808a2833199220bad35a852ed3b55a14a586755500f5d769722"
+        },
+        {
+          "name": "oled-schematics.pdf",
+          "sha256": "28db5a03cc01955930d563bc2f8f30799676cdf2e82acede3c9f0cfb70d0a186"
+        },
+        {
+          "name": "oled-dimension.pdf",
+          "sha256": "3ff6dd0e1614a45c1b848598b6df462dce0277c4b056185cad1b8c0829b5a220"
+        }
+      ],
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 68,
+        "bodyHeight": 28,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": 37
+      },
+      "xmlSha256": "902ec30c0a8ae204c813cbef2e4454da51deb017465a359efc0650754152a4e7"
+    },
+    {
+      "id": "display-tft18",
+      "name": "Waveshare 1.8-inch SPI LCD — ST7735S",
+      "short": "1.8in TFT",
+      "kind": "display",
+      "category": "display",
+      "icon": "display",
+      "displayType": "tft",
+      "boardWidth": 90,
+      "boardHeight": 144,
+      "width": 52,
+      "height": 50,
+      "interface": "SPI",
+      "resolution": "128 x 160",
+      "view": "Front face at left; rear wiring view at right. Connector spacing enlarged to the normal grid. Screen glass/ribbons and optional auxiliary interfaces are outside the wiring interface.",
+      "pins": [
+        {
+          "name": "VCC",
+          "number": "P1-1",
+          "x": 48,
+          "y": 8,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "P1-2",
+          "x": 46,
+          "y": 8,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "DIN",
+          "number": "P1-3",
+          "x": 44,
+          "y": 8,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "CLK",
+          "number": "P1-4",
+          "x": 40,
+          "y": 8,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "CS",
+          "number": "P1-5",
+          "x": 38,
+          "y": 8,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "DC",
+          "number": "P1-6",
+          "x": 36,
+          "y": 8,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "RST",
+          "number": "P1-7",
+          "x": 34,
+          "y": 8,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "BL",
+          "number": "P1-8",
+          "x": 30,
+          "y": 8,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "VCC",
+          "number": "P2-1",
+          "x": 48,
+          "y": 36,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "P2-2",
+          "x": 46,
+          "y": 36,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "DIN",
+          "number": "P2-3",
+          "x": 44,
+          "y": 36,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "CLK",
+          "number": "P2-4",
+          "x": 40,
+          "y": 36,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "CS",
+          "number": "P2-5",
+          "x": 38,
+          "y": 36,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "DC",
+          "number": "P2-6",
+          "x": 36,
+          "y": 36,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "RST",
+          "number": "P2-7",
+          "x": 34,
+          "y": 36,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "BL",
+          "number": "P2-8",
+          "x": 30,
+          "y": 36,
+          "side": "bottom",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://www.waveshare.com/wiki/1.8inch_LCD_Module",
+        "https://www.waveshare.net/w/upload/9/95/1.8inch-LCD-Module-Schematic.pdf",
+        "https://www.waveshare.net/w/upload/a/a3/1.8inch_LCD_Module_2D.zip"
+      ],
+      "notes": "128x160 colour TFT. P1 cable connector and P2 solder-header contacts both exposed. Pin order VCC,GND,DIN,CLK,CS,DC,RST,BL. Use 3.3 V supply/logic for Pi/ESP; follow your board revision documentation for 5 V Arduino interfacing. The front and rear are two views of one module, not two devices. Wires attach only to the labelled rear contacts.",
+      "sourceFiles": [
+        {
+          "name": "tft18.pdf",
+          "sha256": "61336b85c89c0ea1f375be03e29d2bd03c820849c6dc6165e60ff70f40eaf3aa"
+        },
+        {
+          "name": "1.8inch_LCD_Module-1.8inch_LCD_Module_2D.zip-1_8inch-lcd-module.pdf",
+          "sha256": "2ee4c402fad9991d99ad79382212414edc06e57b1720c0a37b2627bfda5b1fba"
+        }
+      ],
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 52,
+        "bodyHeight": 44,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": 28.5
+      },
+      "xmlSha256": "7a473eb71a06b34bd5315e8bc6f223eb4aeb58cefedf0ef37a2f31ceeb9c45e6"
+    },
+    {
+      "id": "display-touch28",
+      "name": "Waveshare 2.8-inch capacitive touch LCD",
+      "short": "2.8in TOUCH",
+      "kind": "display",
+      "category": "display",
+      "icon": "display",
+      "displayType": "touchscreen",
+      "boardWidth": 112,
+      "boardHeight": 164,
+      "width": 62,
+      "height": 54,
+      "interface": "SPI display + I2C touch",
+      "resolution": "240 x 320",
+      "view": "Front face at left; rear wiring view at right. Connector spacing enlarged to the normal grid. Screen glass/ribbons and optional auxiliary interfaces are outside the wiring interface.",
+      "pins": [
+        {
+          "name": "VCC",
+          "number": "L4-1",
+          "x": 36,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "L4-2",
+          "x": 38,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "MISO/NC",
+          "number": "L4-3",
+          "x": 40,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 6
+        },
+        {
+          "name": "MOSI",
+          "number": "L4-4",
+          "x": 42,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "SCLK",
+          "number": "L4-5",
+          "x": 44,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "LCD_CS",
+          "number": "L4-6",
+          "x": 46,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "LCD_DC",
+          "number": "L4-7",
+          "x": 48,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "LCD_RST",
+          "number": "L4-8",
+          "x": 50,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "LCD_BL",
+          "number": "L4-9",
+          "x": 52,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "TP_SDA",
+          "number": "L4-10",
+          "x": 54,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 5
+        },
+        {
+          "name": "TP_SCL",
+          "number": "L4-11",
+          "x": 56,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "TP_INT",
+          "number": "L4-12",
+          "x": 58,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 1
+        },
+        {
+          "name": "TP_RST",
+          "number": "L4-13",
+          "x": 60,
+          "y": 40,
+          "side": "bottom",
+          "electricalType": 0
+        }
+      ],
+      "sources": [
+        "https://www.waveshare.com/wiki/2.8inch_Capacitive_Touch_LCD",
+        "https://files.waveshare.com/wiki/2.8inch-Capacitive-Touch-LCD/2.8inch_Capacitive_Touch_LCD_Sch.pdf",
+        "https://www.waveshare.net/w/upload/0/05/2.8inch-Capacitive-Touch-LCD.pdf"
+      ],
+      "notes": "ST7789T3 TFT and CST328 capacitive touch. Thirteen-contact GH1.25 cable interface only; alternative 18-pin host FPC and internal panel/touch ribbons are outside this view. MISO is unavailable: leave this contact unconnected. Supply and host logic must match (3.3 V for Pi/ESP, 5 V for classic Arduino). The front and rear are two views of one module, not two devices. Wires attach only to the labelled rear contacts.",
+      "sourceFiles": [
+        {
+          "name": "touch28.pdf",
+          "sha256": "69d3a8d7e99fb559db066fb8dd78352550e703f341352b36ec1887297facacd2"
+        },
+        {
+          "name": "touch28-dimension.pdf",
+          "sha256": "70993eee89566c3a25d82eb07f5886401e521d5f947f657e7dc6ae7cfe2d6c20"
+        }
+      ],
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 62,
+        "bodyHeight": 48,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": 34
+      },
+      "xmlSha256": "9fc21e5d5a269f6d194df574ab0569fb8e5770258d7cef53f6a4aba70bc9f72b"
+    },
+    {
+      "id": "display-nextion28",
+      "name": "Nextion Basic 2.8-inch resistive touch — NX3224T028_011",
+      "short": "2.8in UART HMI",
+      "kind": "display",
+      "category": "display",
+      "icon": "display",
+      "displayType": "hmi",
+      "boardWidth": 104,
+      "boardHeight": 176,
+      "width": 58,
+      "height": 58,
+      "interface": "TTL UART",
+      "resolution": "240 x 320",
+      "view": "Front face at left; rear wiring view at right. Connector spacing enlarged to the normal grid. Screen glass/ribbons and optional auxiliary interfaces are outside the wiring interface.",
+      "pins": [
+        {
+          "name": "GND",
+          "number": "UART-4",
+          "x": 42,
+          "y": 6,
+          "side": "top",
+          "electricalType": 9
+        },
+        {
+          "name": "RX",
+          "number": "UART-3",
+          "x": 44,
+          "y": 6,
+          "side": "top",
+          "electricalType": 0
+        },
+        {
+          "name": "TX",
+          "number": "UART-2",
+          "x": 46,
+          "y": 6,
+          "side": "top",
+          "electricalType": 1
+        },
+        {
+          "name": "5V",
+          "number": "UART-1",
+          "x": 48,
+          "y": 6,
+          "side": "top",
+          "electricalType": 9
+        }
+      ],
+      "sources": [
+        "https://nextion.tech/datasheets/nx3224t028/",
+        "https://cdn.nextion.tech/wp-content/uploads/2022/03/NX3224T028_dimension.pdf"
+      ],
+      "notes": "Basic series resistive touchscreen with local HMI processor, not an SPI framebuffer. 5 V supply (manufacturer recommends 500 mA supply capacity); TTL UART output typically 3.2 V, RX accepts 2.0–5.0 V HIGH. Cross screen TX to host RX and screen RX to host TX. Rear top connector left-to-right GND,RX,TX,5V. The front and rear are two views of one module, not two devices. Wires attach only to the labelled rear contacts.",
+      "sourceFiles": [
+        {
+          "name": "nextion.pdf",
+          "sha256": "5265faf363884e46fe57cd13bde9ffd987e3d1e42d0f433528724a921ef033de"
+        }
+      ],
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 58,
+        "bodyHeight": 52,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": 32
+      },
+      "xmlSha256": "6d52d840c40f0ad77745d8f04185529b5e899ea489dc1828c1243355ef4cb633"
+    },
+    {
+      "id": "display-epaper213",
+      "name": "Waveshare 2.13-inch e-Paper HAT — V4, 8-pin cable",
+      "short": "2.13in E-PAPER",
+      "kind": "display",
+      "category": "display",
+      "icon": "display",
+      "displayType": "epaper",
+      "boardWidth": 156,
+      "boardHeight": 76,
+      "width": 84,
+      "height": 32,
+      "interface": "SPI",
+      "resolution": "250 x 122",
+      "view": "Front face at left; rear wiring view at right. Connector spacing enlarged to the normal grid. Screen glass/ribbons and optional auxiliary interfaces are outside the wiring interface.",
+      "pins": [
+        {
+          "name": "VCC",
+          "number": "P3-1",
+          "x": 82,
+          "y": 6,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "P3-2",
+          "x": 82,
+          "y": 8,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "DIN",
+          "number": "P3-3",
+          "x": 82,
+          "y": 10,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "CLK",
+          "number": "P3-4",
+          "x": 82,
+          "y": 12,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "CS",
+          "number": "P3-5",
+          "x": 82,
+          "y": 14,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "DC",
+          "number": "P3-6",
+          "x": 82,
+          "y": 16,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "RST",
+          "number": "P3-7",
+          "x": 82,
+          "y": 18,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "BUSY",
+          "number": "P3-8",
+          "x": 82,
+          "y": 20,
+          "side": "right",
+          "electricalType": 1
+        }
+      ],
+      "sources": [
+        "https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT_Manual",
+        "https://www.waveshare.net/w/upload/5/57/2.13inch_e-Paper_HAT_Schematic.pdf"
+      ],
+      "notes": "Black/white SPI e-paper with driver PCB, not a bare FPC panel. Main eight-pin wiring interface VCC,GND,DIN,CLK,CS,DC,RST,BUSY; BUSY is an output. 3.3 V hookup for Pi/ESP; match supply and logic per module documentation. Images persist without continuous refresh; full refresh is slow compared with LCD/OLED. Cable interface P3 only; optional Raspberry Pi 40-pin socket and internal panel FPC are outside this view. The front and rear are two views of one module, not two devices. Wires attach only to the labelled rear contacts.",
+      "sourceFiles": [
+        {
+          "name": "2.13inch_e-Paper_HAT_Manual-2.13inch_e-Paper_HAT_Schematic.pdf",
+          "sha256": "7a1bf0e201fc23046075d9e2f23dc4d2c8a39ebb521c4b6cda4ad0d558f2d8db"
+        }
+      ],
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 84,
+        "bodyHeight": 26,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": 45
+      },
+      "xmlSha256": "23223e466437c16e2dce93d196e3fc9bdd9568f8fa7f380f8c633c7ab01d168f"
+    },
+    {
+      "id": "display-epaper29",
+      "name": "Waveshare 2.9-inch e-Paper Module — V2",
+      "short": "2.9in E-PAPER",
+      "kind": "display",
+      "category": "display",
+      "icon": "display",
+      "displayType": "epaper",
+      "boardWidth": 194,
+      "boardHeight": 84,
+      "width": 104,
+      "height": 34,
+      "interface": "SPI",
+      "resolution": "296 x 128",
+      "view": "Front face at left; rear wiring view at right. Connector spacing enlarged to the normal grid. Screen glass/ribbons and optional auxiliary interfaces are outside the wiring interface.",
+      "pins": [
+        {
+          "name": "VCC",
+          "number": "P1-1",
+          "x": 64,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "P1-2",
+          "x": 68,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 9
+        },
+        {
+          "name": "DIN",
+          "number": "P1-3",
+          "x": 70,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "CLK",
+          "number": "P1-4",
+          "x": 72,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "CS",
+          "number": "P1-5",
+          "x": 74,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "DC",
+          "number": "P1-6",
+          "x": 78,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "RST",
+          "number": "P1-7",
+          "x": 80,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 0
+        },
+        {
+          "name": "BUSY",
+          "number": "P1-8",
+          "x": 82,
+          "y": 22,
+          "side": "bottom",
+          "electricalType": 1
+        }
+      ],
+      "sources": [
+        "https://www.waveshare.com/wiki/2.9inch_e-Paper_Module_Manual",
+        "https://www.waveshare.net/w/upload/8/85/2.9inch_e-Paper_Schematic.pdf"
+      ],
+      "notes": "Black/white SPI e-paper with driver PCB, not a bare FPC panel. Main eight-pin wiring interface VCC,GND,DIN,CLK,CS,DC,RST,BUSY; BUSY is an output. 3.3 V hookup for Pi/ESP; match supply and logic per module documentation. Images persist without continuous refresh; full refresh is slow compared with LCD/OLED. The front and rear are two views of one module, not two devices. Wires attach only to the labelled rear contacts.",
+      "sourceFiles": [
+        {
+          "name": "2.9inch_e-Paper_Module_Manual-2.9inch_e-Paper_Schematic.pdf",
+          "sha256": "3308fb3af4a409eba5185dd771d2af29daa150202327a8e040959bf99952069e"
+        }
+      ],
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 104,
+        "bodyHeight": 28,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": 54.5
+      },
+      "xmlSha256": "18abdb5643b01915dbb81dc33511329762a2c3930929029087874c302aa4d9a1"
+    },
+    {
+      "id": "display-epaper42",
+      "name": "Waveshare 4.2-inch e-Paper Module — V2",
+      "short": "4.2in E-PAPER",
+      "kind": "display",
+      "category": "display",
+      "icon": "display",
+      "displayType": "epaper",
+      "boardWidth": 206,
+      "boardHeight": 160,
+      "width": 110,
+      "height": 54,
+      "interface": "SPI",
+      "resolution": "400 x 300",
+      "view": "Front face at left; rear wiring view at right. Connector spacing enlarged to the normal grid. Screen glass/ribbons and optional auxiliary interfaces are outside the wiring interface.",
+      "pins": [
+        {
+          "name": "VCC",
+          "number": "P1-1",
+          "x": 108,
+          "y": 6,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "P1-2",
+          "x": 108,
+          "y": 8,
+          "side": "right",
+          "electricalType": 9
+        },
+        {
+          "name": "DIN",
+          "number": "P1-3",
+          "x": 108,
+          "y": 10,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "CLK",
+          "number": "P1-4",
+          "x": 108,
+          "y": 12,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "CS",
+          "number": "P1-5",
+          "x": 108,
+          "y": 14,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "DC",
+          "number": "P1-6",
+          "x": 108,
+          "y": 16,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "RST",
+          "number": "P1-7",
+          "x": 108,
+          "y": 18,
+          "side": "right",
+          "electricalType": 0
+        },
+        {
+          "name": "BUSY",
+          "number": "P1-8",
+          "x": 108,
+          "y": 20,
+          "side": "right",
+          "electricalType": 1
+        },
+        {
+          "name": "VCC",
+          "number": "P2-1",
+          "x": 60,
+          "y": 6,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "GND",
+          "number": "P2-2",
+          "x": 60,
+          "y": 8,
+          "side": "left",
+          "electricalType": 9
+        },
+        {
+          "name": "DIN",
+          "number": "P2-3",
+          "x": 60,
+          "y": 10,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "CLK",
+          "number": "P2-4",
+          "x": 60,
+          "y": 12,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "CS",
+          "number": "P2-5",
+          "x": 60,
+          "y": 14,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "DC",
+          "number": "P2-6",
+          "x": 60,
+          "y": 16,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "RST",
+          "number": "P2-7",
+          "x": 60,
+          "y": 18,
+          "side": "left",
+          "electricalType": 0
+        },
+        {
+          "name": "BUSY",
+          "number": "P2-8",
+          "x": 60,
+          "y": 20,
+          "side": "left",
+          "electricalType": 1
+        }
+      ],
+      "sources": [
+        "https://www.waveshare.com/wiki/4.2inch_e-Paper_Module_Manual",
+        "https://www.waveshare.net/w/upload/9/97/4.2inch_e-Paper_Schematic.pdf"
+      ],
+      "notes": "Black/white SPI e-paper with driver PCB, not a bare FPC panel. Main eight-pin wiring interface VCC,GND,DIN,CLK,CS,DC,RST,BUSY; BUSY is an output. 3.3 V hookup for Pi/ESP; match supply and logic per module documentation. Images persist without continuous refresh; full refresh is slow compared with LCD/OLED. Both P1 solder header and P2 cable connector are explicit. The front and rear are two views of one module, not two devices. Wires attach only to the labelled rear contacts.",
+      "sourceFiles": [
+        {
+          "name": "4.2inch_e-Paper_Module_Manual-4.2inch_e-Paper_Schematic.pdf",
+          "sha256": "cf9b0591ad65752363c42ca70a9afbef3524c6299a1f84e53ea0f89a0d2594ba"
+        }
+      ],
+      "layout": {
+        "scale": 0.25,
+        "bodyWidth": 110,
+        "bodyHeight": 48,
+        "normalGrid": 2,
+        "labelFontSize": 6,
+        "rearX": 57.5
+      },
+      "xmlSha256": "0071df3aaafe9a2c78d5aca56f9957bb2d72847d860251f211e31ed9f3c0380b"
+    }
+  ]
+}

@@ -1,0 +1,5379 @@
+{
+  "version": 1,
+  "id": "audio-music",
+  "name": "Audio & Music",
+  "output": "bundled-libraries/audio-music/audio-music.tclib",
+  "artwork": "Original editable TinyCAD vector silhouettes, control surfaces and connector faces. No copied logos, product photography, traces or imported icon sets.",
+  "scope": "Compact system-layout symbols for live sound, studios, recording, podcasts, worship and schools. Each labelled socket is one whole-cable endpoint, not individual electrical contacts. RF marks are explicit logical wireless links. Generic equipment layouts describe the listed sockets, not any specific brand/model. No SPICE or acoustic/firmware simulation.",
+  "reviewed": "2026-11-13",
+  "references": [
+    {
+      "id": "yamaha-cables",
+      "title": "Yamaha PA beginners: cables and connectors",
+      "url": "https://usa.yamaha.com/audio/portable-pa/explore/pa-beginners-guide/equipments/cable.html",
+      "facts": "XLR, TRS/TS, RCA, USB and speaker-cable connector families; balanced mono and stereo TRS are distinct uses."
+    },
+    {
+      "id": "yamaha-live",
+      "title": "Yamaha band PA setup",
+      "url": "https://ph.yamaha.com/en/audio/portable-pa/explore/pa-beginners-guide/setting/band-pa.html",
+      "facts": "Microphones, guitars/bass, keyboard, DI boxes, mixers, powered mains and stage monitors."
+    },
+    {
+      "id": "yamaha-mixers",
+      "title": "Yamaha MG mixer overview",
+      "url": "https://uk.yamaha.com/en/audio/portable-pa/products/mixers/mg/",
+      "facts": "Mono/stereo input strips and separate main, aux, monitor, group, record and headphone outputs; generic layouts do not reproduce a branded console."
+    },
+    {
+      "id": "shure-worship",
+      "title": "Shure house-of-worship audio systems",
+      "url": "https://www.shure.com/en-US/docs/education/house-of-worship-audio-systems",
+      "facts": "Microphone/instrument sources, mixing and processing, loudspeakers, recording/streaming and personal monitoring; mic, line and speaker levels are different."
+    },
+    {
+      "id": "shure-education",
+      "title": "Shure audio systems for music educators",
+      "url": "https://www.shure.com/en-US/docs/education/audio-systems-guide-for-music-educators",
+      "facts": "Recording and reinforcement share microphones/mixing; loudspeaker playback adds power amplification and signal processing."
+    },
+    {
+      "id": "focusrite-recording",
+      "title": "Focusrite recording setup guide",
+      "url": "https://support.focusrite.com/hc/en-gb/articles/24232528717970-What-is-the-easiest-way-to-record",
+      "facts": "Computer, audio interface, DAW, microphones/instruments and headphones or monitor speakers."
+    },
+    {
+      "id": "focusrite-digital",
+      "title": "Focusrite digital interface expansion",
+      "url": "https://support.focusrite.com/hc/en-gb/articles/206849939-How-to-use-the-digital-inputs-and-outputs-to-expand-my-interface-using-Mix-Control",
+      "facts": "ADAT and S/PDIF use different channel/protocol conventions; matching optical shapes do not establish compatibility."
+    },
+    {
+      "id": "midi-trs",
+      "title": "MIDI Association TRS adapter specification",
+      "url": "https://midi.org/specification-for-trs-adapters-adopted-and-released",
+      "facts": "MIDI DIN and mini-TRS interfaces; TRS Type A must be distinguished from legacy Type B."
+    },
+    {
+      "id": "midi-din",
+      "title": "MIDI 1.0 transport specification",
+      "url": "https://midi.org/midi-1-0-detailed-specification",
+      "facts": "DIN5 serial MIDI transport; MIDI carries performance/control data, not an analogue audio signal."
+    },
+    {
+      "id": "neutrik",
+      "title": "Neutrik XLR connector FAQ",
+      "url": "https://www.neutrik.com/en/neutrik/faq/xlr",
+      "facts": "Three-pole XLR is widely used for balanced professional audio. Connector-face artwork is not a conductor-level wiring symbol."
+    },
+    {
+      "id": "stagebox",
+      "title": "Allen & Heath AB168 getting-started guide",
+      "url": "https://support.allen-heath.com/hc/en-gb/articles/40423042937873-AB168-Getting-Started-Guide",
+      "facts": "Representative 16-input/8-output remote stagebox, paired input rows and separate return outputs. Stage-link protocols must match."
+    },
+    {
+      "id": "rode-podcast",
+      "title": "Rode podcast setup guide",
+      "url": "https://rode.com/en-pl/about/news-info/how-to-start-a-podcast-in-5-steps-using-rode-connect",
+      "facts": "USB microphones, computer, headphones and additional phone/music sources in podcast production."
+    },
+    {
+      "id": "radial-di",
+      "title": "Radial direct-box overview",
+      "url": "https://www.radialeng.com/product_category/direct-box",
+      "facts": "Active/passive/stereo DI interfaces, instrument/line sources and balanced mic-level outputs."
+    },
+    {
+      "id": "audinate",
+      "title": "Audinate Dante Controller overview",
+      "url": "https://dev.audinate.com/GA/dante-controller/userguide/webhelp/content/about_dante_controller.htm",
+      "facts": "Network audio devices/channels routed over a compatible Dante network."
+    },
+    {
+      "id": "yamaha-speakers",
+      "title": "Yamaha active and passive speakers",
+      "url": "https://usa.yamaha.com/audio/portable-pa/explore/pa-beginners-guide/equipments/speaker.html",
+      "facts": "Powered speakers accept line-level feeds; passive speakers require power-amplifier outputs. Monitor speakers serve performer monitoring."
+    }
+  ],
+  "sourceReview": {
+    "searches": [
+      {
+        "query": "microphone",
+        "symbolId": 370,
+        "nameId": 9489,
+        "fetched": true
+      },
+      {
+        "query": "speaker",
+        "symbolId": 402,
+        "nameId": 9521,
+        "fetched": true
+      },
+      {
+        "query": "mixer",
+        "symbolId": 1189,
+        "nameId": 10357,
+        "fetched": true
+      },
+      {
+        "query": "MIDI",
+        "suitableResults": 0
+      }
+    ],
+    "decision": "Fetched candidates are circuit symbols or generic mixer blocks. The requested equipment-layout resources use original physical silhouettes, complete-cable socket endpoints and compact control surfaces."
+  },
+  "devices": [
+    {
+      "id": "mic-dynamic",
+      "name": "Dynamic vocal microphone",
+      "short": "Dynamic vocal",
+      "kind": "microphone",
+      "category": "Microphones",
+      "ports": [
+        {
+          "name": "MIC OUT",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "shure-worship",
+        "shure-education"
+      ],
+      "notes": "Mic-level XLR cable endpoint; phantom-power needs depend on the actual microphone.",
+      "shape": "dynamic"
+    },
+    {
+      "id": "mic-condenser",
+      "name": "Large-diaphragm condenser microphone",
+      "short": "Large-diaphragm condenser",
+      "kind": "microphone",
+      "category": "Microphones",
+      "ports": [
+        {
+          "name": "MIC OUT",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "shure-worship",
+        "shure-education"
+      ],
+      "notes": "Mic-level XLR cable endpoint; phantom-power needs depend on the actual microphone.",
+      "shape": "condenser"
+    },
+    {
+      "id": "mic-pencil",
+      "name": "Small-diaphragm condenser microphone",
+      "short": "Small-diaphragm condenser",
+      "kind": "microphone",
+      "category": "Microphones",
+      "ports": [
+        {
+          "name": "MIC OUT",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "shure-worship",
+        "shure-education"
+      ],
+      "notes": "Mic-level XLR cable endpoint; phantom-power needs depend on the actual microphone.",
+      "shape": "pencil"
+    },
+    {
+      "id": "mic-ribbon",
+      "name": "Ribbon microphone",
+      "short": "Ribbon",
+      "kind": "microphone",
+      "category": "Microphones",
+      "ports": [
+        {
+          "name": "MIC OUT",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "shure-worship",
+        "shure-education"
+      ],
+      "notes": "Mic-level XLR cable endpoint; phantom-power needs depend on the actual microphone.",
+      "shape": "ribbon"
+    },
+    {
+      "id": "mic-boundary",
+      "name": "Boundary / surface microphone",
+      "short": "Boundary / surface",
+      "kind": "microphone",
+      "category": "Microphones",
+      "ports": [
+        {
+          "name": "MIC OUT",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "shure-worship",
+        "shure-education"
+      ],
+      "notes": "Mic-level XLR cable endpoint; phantom-power needs depend on the actual microphone.",
+      "shape": "boundary"
+    },
+    {
+      "id": "mic-gooseneck",
+      "name": "Gooseneck / lectern microphone",
+      "short": "Gooseneck / lectern",
+      "kind": "microphone",
+      "category": "Microphones",
+      "ports": [
+        {
+          "name": "MIC OUT",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "shure-worship",
+        "shure-education"
+      ],
+      "notes": "Mic-level XLR cable endpoint; phantom-power needs depend on the actual microphone.",
+      "shape": "gooseneck"
+    },
+    {
+      "id": "mic-usb",
+      "name": "USB podcast microphone",
+      "short": "USB MICROPHONE",
+      "kind": "microphone",
+      "category": "Microphones",
+      "ports": [
+        {
+          "name": "USB",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        }
+      ],
+      "sources": [
+        "rode-podcast"
+      ],
+      "notes": "",
+      "shape": "condenser"
+    },
+    {
+      "id": "wireless-handheld",
+      "name": "Wireless handheld microphone",
+      "short": "Wireless handheld microphone",
+      "kind": "microphone",
+      "category": "Microphones",
+      "ports": [
+        {
+          "name": "RF LINK",
+          "kind": "rf",
+          "signal": "rf",
+          "label": "RF"
+        }
+      ],
+      "sources": [
+        "shure-worship"
+      ],
+      "notes": "RF is a logical radio link to the matching receiver; it is not a cable or interchangeable across wireless systems.",
+      "shape": "dynamic"
+    },
+    {
+      "id": "wireless-lavalier",
+      "name": "Lavalier with wireless bodypack",
+      "short": "Lavalier",
+      "kind": "microphone",
+      "category": "Microphones",
+      "ports": [
+        {
+          "name": "RF LINK",
+          "kind": "rf",
+          "signal": "rf",
+          "label": "RF"
+        }
+      ],
+      "sources": [
+        "shure-worship"
+      ],
+      "notes": "RF is a logical radio link to the matching receiver; it is not a cable or interchangeable across wireless systems.",
+      "shape": "lavalier"
+    },
+    {
+      "id": "wireless-headset",
+      "name": "Headset with wireless bodypack",
+      "short": "Headset",
+      "kind": "microphone",
+      "category": "Microphones",
+      "ports": [
+        {
+          "name": "RF LINK",
+          "kind": "rf",
+          "signal": "rf",
+          "label": "RF"
+        }
+      ],
+      "sources": [
+        "shure-worship"
+      ],
+      "notes": "RF is a logical radio link to the matching receiver; it is not a cable or interchangeable across wireless systems.",
+      "shape": "headset"
+    },
+    {
+      "id": "wireless-receiver-2",
+      "name": "Dual-channel wireless receiver",
+      "short": "WIRELESS RX / 2",
+      "kind": "rack",
+      "category": "Microphones",
+      "ports": [
+        {
+          "name": "RF1",
+          "kind": "rf",
+          "signal": "rf",
+          "label": "RF1"
+        },
+        {
+          "name": "RF2",
+          "kind": "rf",
+          "signal": "rf",
+          "label": "RF2"
+        },
+        {
+          "name": "OUT1",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUT1"
+        },
+        {
+          "name": "OUT2",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUT2"
+        },
+        {
+          "name": "DC",
+          "kind": "dc",
+          "signal": "power-dc",
+          "label": "DC"
+        }
+      ],
+      "sources": [
+        "shure-worship"
+      ],
+      "notes": "",
+      "rack": 1
+    },
+    {
+      "id": "mixer-analog-4",
+      "name": "Analogue mixer — 4 mono + 2 stereo strips",
+      "short": "MIXER 4 MONO + 2 ST",
+      "kind": "mixer",
+      "category": "Mixers",
+      "ports": [
+        {
+          "name": "MIC 1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "1"
+        },
+        {
+          "name": "MIC 2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "2"
+        },
+        {
+          "name": "MIC 3",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "3"
+        },
+        {
+          "name": "MIC 4",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "4"
+        },
+        {
+          "name": "STEREO 1 L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S1L"
+        },
+        {
+          "name": "STEREO 1 R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S1R"
+        },
+        {
+          "name": "STEREO 2 L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S2L"
+        },
+        {
+          "name": "STEREO 2 R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S2R"
+        },
+        {
+          "name": "MAIN L",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "MAIN R",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "AUX 1",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A1"
+        },
+        {
+          "name": "MON L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "ML"
+        },
+        {
+          "name": "MON R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "MR"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        }
+      ],
+      "sources": [
+        "yamaha-mixers"
+      ],
+      "notes": "Generic console. Each combo input is one shared XLR/TRS opening; each stereo strip has separate L/R jacks. The name counts strips, not a marketed channel total.",
+      "mono": 4,
+      "stereo": 2,
+      "aux": 1
+    },
+    {
+      "id": "mixer-analog-8",
+      "name": "Analogue mixer — 8 mono + 2 stereo strips",
+      "short": "MIXER 8 MONO + 2 ST",
+      "kind": "mixer",
+      "category": "Mixers",
+      "ports": [
+        {
+          "name": "MIC 1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "1"
+        },
+        {
+          "name": "MIC 2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "2"
+        },
+        {
+          "name": "MIC 3",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "3"
+        },
+        {
+          "name": "MIC 4",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "4"
+        },
+        {
+          "name": "MIC 5",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "5"
+        },
+        {
+          "name": "MIC 6",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "6"
+        },
+        {
+          "name": "MIC 7",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "7"
+        },
+        {
+          "name": "MIC 8",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "8"
+        },
+        {
+          "name": "STEREO 1 L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S1L"
+        },
+        {
+          "name": "STEREO 1 R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S1R"
+        },
+        {
+          "name": "STEREO 2 L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S2L"
+        },
+        {
+          "name": "STEREO 2 R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S2R"
+        },
+        {
+          "name": "MAIN L",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "MAIN R",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "AUX 1",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A1"
+        },
+        {
+          "name": "AUX 2",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A2"
+        },
+        {
+          "name": "MON L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "ML"
+        },
+        {
+          "name": "MON R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "MR"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        }
+      ],
+      "sources": [
+        "yamaha-mixers"
+      ],
+      "notes": "Generic console. Each combo input is one shared XLR/TRS opening; each stereo strip has separate L/R jacks. The name counts strips, not a marketed channel total.",
+      "mono": 8,
+      "stereo": 2,
+      "aux": 2
+    },
+    {
+      "id": "mixer-analog-12",
+      "name": "Analogue mixer — 12 mono + 2 stereo strips",
+      "short": "MIXER 12 MONO + 2 ST",
+      "kind": "mixer",
+      "category": "Mixers",
+      "ports": [
+        {
+          "name": "MIC 1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "1"
+        },
+        {
+          "name": "MIC 2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "2"
+        },
+        {
+          "name": "MIC 3",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "3"
+        },
+        {
+          "name": "MIC 4",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "4"
+        },
+        {
+          "name": "MIC 5",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "5"
+        },
+        {
+          "name": "MIC 6",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "6"
+        },
+        {
+          "name": "MIC 7",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "7"
+        },
+        {
+          "name": "MIC 8",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "8"
+        },
+        {
+          "name": "MIC 9",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "9"
+        },
+        {
+          "name": "MIC 10",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "10"
+        },
+        {
+          "name": "MIC 11",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "11"
+        },
+        {
+          "name": "MIC 12",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "12"
+        },
+        {
+          "name": "STEREO 1 L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S1L"
+        },
+        {
+          "name": "STEREO 1 R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S1R"
+        },
+        {
+          "name": "STEREO 2 L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S2L"
+        },
+        {
+          "name": "STEREO 2 R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S2R"
+        },
+        {
+          "name": "MAIN L",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "MAIN R",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "AUX 1",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A1"
+        },
+        {
+          "name": "AUX 2",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A2"
+        },
+        {
+          "name": "AUX 3",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A3"
+        },
+        {
+          "name": "AUX 4",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A4"
+        },
+        {
+          "name": "MON L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "ML"
+        },
+        {
+          "name": "MON R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "MR"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        }
+      ],
+      "sources": [
+        "yamaha-mixers"
+      ],
+      "notes": "Generic console. Each combo input is one shared XLR/TRS opening; each stereo strip has separate L/R jacks. The name counts strips, not a marketed channel total.",
+      "mono": 12,
+      "stereo": 2,
+      "aux": 4
+    },
+    {
+      "id": "mixer-analog-16",
+      "name": "Analogue mixer — 16 mono + 2 stereo strips",
+      "short": "MIXER 16 MONO + 2 ST",
+      "kind": "mixer",
+      "category": "Mixers",
+      "ports": [
+        {
+          "name": "MIC 1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "1"
+        },
+        {
+          "name": "MIC 2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "2"
+        },
+        {
+          "name": "MIC 3",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "3"
+        },
+        {
+          "name": "MIC 4",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "4"
+        },
+        {
+          "name": "MIC 5",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "5"
+        },
+        {
+          "name": "MIC 6",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "6"
+        },
+        {
+          "name": "MIC 7",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "7"
+        },
+        {
+          "name": "MIC 8",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "8"
+        },
+        {
+          "name": "MIC 9",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "9"
+        },
+        {
+          "name": "MIC 10",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "10"
+        },
+        {
+          "name": "MIC 11",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "11"
+        },
+        {
+          "name": "MIC 12",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "12"
+        },
+        {
+          "name": "MIC 13",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "13"
+        },
+        {
+          "name": "MIC 14",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "14"
+        },
+        {
+          "name": "MIC 15",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "15"
+        },
+        {
+          "name": "MIC 16",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "16"
+        },
+        {
+          "name": "STEREO 1 L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S1L"
+        },
+        {
+          "name": "STEREO 1 R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S1R"
+        },
+        {
+          "name": "STEREO 2 L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S2L"
+        },
+        {
+          "name": "STEREO 2 R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S2R"
+        },
+        {
+          "name": "MAIN L",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "MAIN R",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "AUX 1",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A1"
+        },
+        {
+          "name": "AUX 2",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A2"
+        },
+        {
+          "name": "AUX 3",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A3"
+        },
+        {
+          "name": "AUX 4",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A4"
+        },
+        {
+          "name": "MON L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "ML"
+        },
+        {
+          "name": "MON R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "MR"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        }
+      ],
+      "sources": [
+        "yamaha-mixers"
+      ],
+      "notes": "Generic console. Each combo input is one shared XLR/TRS opening; each stereo strip has separate L/R jacks. The name counts strips, not a marketed channel total.",
+      "mono": 16,
+      "stereo": 2,
+      "aux": 4
+    },
+    {
+      "id": "mixer-analog-24",
+      "name": "Analogue mixer — 24 mono + 2 stereo strips",
+      "short": "MIXER 24 MONO + 2 ST",
+      "kind": "mixer",
+      "category": "Mixers",
+      "ports": [
+        {
+          "name": "MIC 1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "1"
+        },
+        {
+          "name": "MIC 2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "2"
+        },
+        {
+          "name": "MIC 3",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "3"
+        },
+        {
+          "name": "MIC 4",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "4"
+        },
+        {
+          "name": "MIC 5",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "5"
+        },
+        {
+          "name": "MIC 6",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "6"
+        },
+        {
+          "name": "MIC 7",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "7"
+        },
+        {
+          "name": "MIC 8",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "8"
+        },
+        {
+          "name": "MIC 9",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "9"
+        },
+        {
+          "name": "MIC 10",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "10"
+        },
+        {
+          "name": "MIC 11",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "11"
+        },
+        {
+          "name": "MIC 12",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "12"
+        },
+        {
+          "name": "MIC 13",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "13"
+        },
+        {
+          "name": "MIC 14",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "14"
+        },
+        {
+          "name": "MIC 15",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "15"
+        },
+        {
+          "name": "MIC 16",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "16"
+        },
+        {
+          "name": "MIC 17",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "17"
+        },
+        {
+          "name": "MIC 18",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "18"
+        },
+        {
+          "name": "MIC 19",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "19"
+        },
+        {
+          "name": "MIC 20",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "20"
+        },
+        {
+          "name": "MIC 21",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "21"
+        },
+        {
+          "name": "MIC 22",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "22"
+        },
+        {
+          "name": "MIC 23",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "23"
+        },
+        {
+          "name": "MIC 24",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "24"
+        },
+        {
+          "name": "STEREO 1 L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S1L"
+        },
+        {
+          "name": "STEREO 1 R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S1R"
+        },
+        {
+          "name": "STEREO 2 L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S2L"
+        },
+        {
+          "name": "STEREO 2 R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "S2R"
+        },
+        {
+          "name": "MAIN L",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "MAIN R",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "AUX 1",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A1"
+        },
+        {
+          "name": "AUX 2",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A2"
+        },
+        {
+          "name": "AUX 3",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A3"
+        },
+        {
+          "name": "AUX 4",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A4"
+        },
+        {
+          "name": "AUX 5",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A5"
+        },
+        {
+          "name": "AUX 6",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A6"
+        },
+        {
+          "name": "MON L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "ML"
+        },
+        {
+          "name": "MON R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "MR"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        }
+      ],
+      "sources": [
+        "yamaha-mixers"
+      ],
+      "notes": "Generic console. Each combo input is one shared XLR/TRS opening; each stereo strip has separate L/R jacks. The name counts strips, not a marketed channel total.",
+      "mono": 24,
+      "stereo": 2,
+      "aux": 6
+    },
+    {
+      "id": "mixer-digital-16",
+      "name": "Digital mixing console — 16 local inputs / 8 outputs",
+      "short": "DIGITAL MIXER 16/8",
+      "kind": "mixer",
+      "category": "Mixers",
+      "ports": [
+        {
+          "name": "IN 1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "1"
+        },
+        {
+          "name": "IN 2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "2"
+        },
+        {
+          "name": "IN 3",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "3"
+        },
+        {
+          "name": "IN 4",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "4"
+        },
+        {
+          "name": "IN 5",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "5"
+        },
+        {
+          "name": "IN 6",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "6"
+        },
+        {
+          "name": "IN 7",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "7"
+        },
+        {
+          "name": "IN 8",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "8"
+        },
+        {
+          "name": "IN 9",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "9"
+        },
+        {
+          "name": "IN 10",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "10"
+        },
+        {
+          "name": "IN 11",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "11"
+        },
+        {
+          "name": "IN 12",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "12"
+        },
+        {
+          "name": "IN 13",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "13"
+        },
+        {
+          "name": "IN 14",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "14"
+        },
+        {
+          "name": "IN 15",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "15"
+        },
+        {
+          "name": "IN 16",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "16"
+        },
+        {
+          "name": "OUT 1",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O1"
+        },
+        {
+          "name": "OUT 2",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O2"
+        },
+        {
+          "name": "OUT 3",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O3"
+        },
+        {
+          "name": "OUT 4",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O4"
+        },
+        {
+          "name": "OUT 5",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O5"
+        },
+        {
+          "name": "OUT 6",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O6"
+        },
+        {
+          "name": "OUT 7",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O7"
+        },
+        {
+          "name": "OUT 8",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O8"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "STAGE LINK",
+          "kind": "ethernet",
+          "signal": "stage-link",
+          "label": "LINK"
+        },
+        {
+          "name": "CONTROL LAN",
+          "kind": "ethernet",
+          "signal": "control",
+          "label": "LAN"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        }
+      ],
+      "sources": [
+        "yamaha-mixers",
+        "stagebox"
+      ],
+      "notes": "Stage-link connector requires a matching audio protocol; an RJ45 shell alone does not imply Dante or compatibility with another mixer.",
+      "mono": 16,
+      "digital": true
+    },
+    {
+      "id": "mixer-digital-32",
+      "name": "Digital mixing console — 32 local inputs / 8 outputs",
+      "short": "DIGITAL MIXER 32/8",
+      "kind": "mixer",
+      "category": "Mixers",
+      "ports": [
+        {
+          "name": "IN 1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "1"
+        },
+        {
+          "name": "IN 2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "2"
+        },
+        {
+          "name": "IN 3",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "3"
+        },
+        {
+          "name": "IN 4",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "4"
+        },
+        {
+          "name": "IN 5",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "5"
+        },
+        {
+          "name": "IN 6",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "6"
+        },
+        {
+          "name": "IN 7",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "7"
+        },
+        {
+          "name": "IN 8",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "8"
+        },
+        {
+          "name": "IN 9",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "9"
+        },
+        {
+          "name": "IN 10",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "10"
+        },
+        {
+          "name": "IN 11",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "11"
+        },
+        {
+          "name": "IN 12",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "12"
+        },
+        {
+          "name": "IN 13",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "13"
+        },
+        {
+          "name": "IN 14",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "14"
+        },
+        {
+          "name": "IN 15",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "15"
+        },
+        {
+          "name": "IN 16",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "16"
+        },
+        {
+          "name": "IN 17",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "17"
+        },
+        {
+          "name": "IN 18",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "18"
+        },
+        {
+          "name": "IN 19",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "19"
+        },
+        {
+          "name": "IN 20",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "20"
+        },
+        {
+          "name": "IN 21",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "21"
+        },
+        {
+          "name": "IN 22",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "22"
+        },
+        {
+          "name": "IN 23",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "23"
+        },
+        {
+          "name": "IN 24",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "24"
+        },
+        {
+          "name": "IN 25",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "25"
+        },
+        {
+          "name": "IN 26",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "26"
+        },
+        {
+          "name": "IN 27",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "27"
+        },
+        {
+          "name": "IN 28",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "28"
+        },
+        {
+          "name": "IN 29",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "29"
+        },
+        {
+          "name": "IN 30",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "30"
+        },
+        {
+          "name": "IN 31",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "31"
+        },
+        {
+          "name": "IN 32",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "32"
+        },
+        {
+          "name": "OUT 1",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O1"
+        },
+        {
+          "name": "OUT 2",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O2"
+        },
+        {
+          "name": "OUT 3",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O3"
+        },
+        {
+          "name": "OUT 4",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O4"
+        },
+        {
+          "name": "OUT 5",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O5"
+        },
+        {
+          "name": "OUT 6",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O6"
+        },
+        {
+          "name": "OUT 7",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O7"
+        },
+        {
+          "name": "OUT 8",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "O8"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "STAGE LINK",
+          "kind": "ethernet",
+          "signal": "stage-link",
+          "label": "LINK"
+        },
+        {
+          "name": "CONTROL LAN",
+          "kind": "ethernet",
+          "signal": "control",
+          "label": "LAN"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        }
+      ],
+      "sources": [
+        "yamaha-mixers",
+        "stagebox"
+      ],
+      "notes": "Stage-link connector requires a matching audio protocol; an RJ45 shell alone does not imply Dante or compatibility with another mixer.",
+      "mono": 32,
+      "digital": true
+    },
+    {
+      "id": "mixer-podcast-4",
+      "name": "Four-person podcast / streaming console",
+      "short": "PODCAST / 4",
+      "kind": "mixer",
+      "category": "Mixers",
+      "ports": [
+        {
+          "name": "MIC 1",
+          "kind": "combo",
+          "signal": "mic",
+          "label": "1"
+        },
+        {
+          "name": "MIC 2",
+          "kind": "combo",
+          "signal": "mic",
+          "label": "2"
+        },
+        {
+          "name": "MIC 3",
+          "kind": "combo",
+          "signal": "mic",
+          "label": "3"
+        },
+        {
+          "name": "MIC 4",
+          "kind": "combo",
+          "signal": "mic",
+          "label": "4"
+        },
+        {
+          "name": "HP 1",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "H1"
+        },
+        {
+          "name": "HP 2",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "H2"
+        },
+        {
+          "name": "HP 3",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "H3"
+        },
+        {
+          "name": "HP 4",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "H4"
+        },
+        {
+          "name": "MAIN L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "MAIN R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "USB HOST",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "PHONE",
+          "kind": "minijack",
+          "signal": "headset-ctia",
+          "label": "TEL"
+        }
+      ],
+      "sources": [
+        "rode-podcast"
+      ],
+      "notes": "",
+      "mono": 4,
+      "digital": true
+    },
+    {
+      "id": "interface-2",
+      "name": "USB audio interface — 2 analogue inputs",
+      "short": "USB INTERFACE / 2",
+      "kind": "interface",
+      "category": "Recording and computers",
+      "ports": [
+        {
+          "name": "IN 1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "1"
+        },
+        {
+          "name": "IN 2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "2"
+        },
+        {
+          "name": "MON L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "MON R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "USB"
+        }
+      ],
+      "sources": [
+        "focusrite-recording",
+        "focusrite-digital"
+      ],
+      "notes": "One endpoint per physical socket. An optical ADAT socket is not an analogue connection or automatically optical S/PDIF.",
+      "inputs": 2
+    },
+    {
+      "id": "interface-4",
+      "name": "USB audio interface — 4 analogue inputs",
+      "short": "USB INTERFACE / 4",
+      "kind": "interface",
+      "category": "Recording and computers",
+      "ports": [
+        {
+          "name": "IN 1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "1"
+        },
+        {
+          "name": "IN 2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "2"
+        },
+        {
+          "name": "IN 3",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "3"
+        },
+        {
+          "name": "IN 4",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "4"
+        },
+        {
+          "name": "MON L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "MON R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "MIDI IN",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MI"
+        },
+        {
+          "name": "MIDI OUT",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MO"
+        }
+      ],
+      "sources": [
+        "focusrite-recording",
+        "focusrite-digital"
+      ],
+      "notes": "One endpoint per physical socket. An optical ADAT socket is not an analogue connection or automatically optical S/PDIF.",
+      "inputs": 4
+    },
+    {
+      "id": "interface-8",
+      "name": "USB audio interface — 8 analogue inputs",
+      "short": "USB INTERFACE / 8",
+      "kind": "interface",
+      "category": "Recording and computers",
+      "ports": [
+        {
+          "name": "IN 1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "1"
+        },
+        {
+          "name": "IN 2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "2"
+        },
+        {
+          "name": "IN 3",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "3"
+        },
+        {
+          "name": "IN 4",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "4"
+        },
+        {
+          "name": "IN 5",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "5"
+        },
+        {
+          "name": "IN 6",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "6"
+        },
+        {
+          "name": "IN 7",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "7"
+        },
+        {
+          "name": "IN 8",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "8"
+        },
+        {
+          "name": "MON L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "MON R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "MIDI IN",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MI"
+        },
+        {
+          "name": "MIDI OUT",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MO"
+        },
+        {
+          "name": "ADAT IN",
+          "kind": "optical",
+          "signal": "adat",
+          "label": "AI"
+        },
+        {
+          "name": "ADAT OUT",
+          "kind": "optical",
+          "signal": "adat",
+          "label": "AO"
+        }
+      ],
+      "sources": [
+        "focusrite-recording",
+        "focusrite-digital"
+      ],
+      "notes": "One endpoint per physical socket. An optical ADAT socket is not an analogue connection or automatically optical S/PDIF.",
+      "inputs": 8
+    },
+    {
+      "id": "computer-pc",
+      "name": "Desktop recording PC",
+      "short": "RECORDING PC",
+      "kind": "computer",
+      "category": "Recording and computers",
+      "ports": [
+        {
+          "name": "USB1",
+          "kind": "usb-a",
+          "signal": "usb",
+          "label": "USB1"
+        },
+        {
+          "name": "USB2",
+          "kind": "usb-a",
+          "signal": "usb",
+          "label": "USB2"
+        },
+        {
+          "name": "USB-C",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "UC"
+        },
+        {
+          "name": "LAN",
+          "kind": "ethernet",
+          "signal": "control",
+          "label": "LAN"
+        },
+        {
+          "name": "LINE OUT",
+          "kind": "minijack",
+          "signal": "stereo-line",
+          "label": "OUT"
+        },
+        {
+          "name": "LINE IN",
+          "kind": "minijack",
+          "signal": "stereo-line",
+          "label": "IN"
+        }
+      ],
+      "sources": [
+        "focusrite-recording"
+      ],
+      "notes": "",
+      "shape": "pc"
+    },
+    {
+      "id": "computer-laptop",
+      "name": "Recording / playback laptop",
+      "short": "LAPTOP",
+      "kind": "computer",
+      "category": "Recording and computers",
+      "ports": [
+        {
+          "name": "USB1",
+          "kind": "usb-a",
+          "signal": "usb",
+          "label": "USB1"
+        },
+        {
+          "name": "USB2",
+          "kind": "usb-a",
+          "signal": "usb",
+          "label": "USB2"
+        },
+        {
+          "name": "USB-C",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "UC"
+        },
+        {
+          "name": "HEADSET",
+          "kind": "minijack",
+          "signal": "headset-ctia",
+          "label": "HS"
+        },
+        {
+          "name": "HDMI",
+          "kind": "hdmi",
+          "signal": "video",
+          "label": "HDMI"
+        }
+      ],
+      "sources": [
+        "focusrite-recording",
+        "rode-podcast"
+      ],
+      "notes": "",
+      "shape": "laptop"
+    },
+    {
+      "id": "computer-phone",
+      "name": "Phone / tablet — USB-C and headset",
+      "short": "PHONE / TABLET",
+      "kind": "computer",
+      "category": "Recording and computers",
+      "ports": [
+        {
+          "name": "USB",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "HEADSET",
+          "kind": "minijack",
+          "signal": "headset-ctia",
+          "label": "HS"
+        }
+      ],
+      "sources": [
+        "rode-podcast"
+      ],
+      "notes": "Variant with a headset jack. Devices without this jack need a compatible audio adapter.",
+      "shape": "phone"
+    },
+    {
+      "id": "recorder-stereo",
+      "name": "Portable stereo field recorder",
+      "short": "STEREO RECORDER",
+      "kind": "recorder",
+      "category": "Recording and computers",
+      "ports": [
+        {
+          "name": "IN1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "IN1"
+        },
+        {
+          "name": "IN2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "IN2"
+        },
+        {
+          "name": "LINE OUT",
+          "kind": "minijack",
+          "signal": "stereo-line",
+          "label": "OUT"
+        },
+        {
+          "name": "PHONES",
+          "kind": "minijack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "USB"
+        }
+      ],
+      "sources": [
+        "focusrite-recording"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "recorder-multitrack",
+      "name": "Eight-input multitrack recorder",
+      "short": "MULTITRACK / 8",
+      "kind": "interface",
+      "category": "Recording and computers",
+      "ports": [
+        {
+          "name": "IN 1",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "1"
+        },
+        {
+          "name": "IN 2",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "2"
+        },
+        {
+          "name": "IN 3",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "3"
+        },
+        {
+          "name": "IN 4",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "4"
+        },
+        {
+          "name": "IN 5",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "5"
+        },
+        {
+          "name": "IN 6",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "6"
+        },
+        {
+          "name": "IN 7",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "7"
+        },
+        {
+          "name": "IN 8",
+          "kind": "combo",
+          "signal": "mic-line",
+          "label": "8"
+        },
+        {
+          "name": "LINE L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "LINE R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        }
+      ],
+      "sources": [
+        "focusrite-recording"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "camera-stream",
+      "name": "Streaming camera",
+      "short": "STREAM CAMERA",
+      "kind": "camera",
+      "category": "Recording and computers",
+      "ports": [
+        {
+          "name": "MIC IN",
+          "kind": "minijack",
+          "signal": "stereo-mic",
+          "label": "MIC"
+        },
+        {
+          "name": "HDMI OUT",
+          "kind": "hdmi",
+          "signal": "video",
+          "label": "HDMI"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "USB"
+        }
+      ],
+      "sources": [
+        "shure-worship"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "capture-usb",
+      "name": "HDMI to USB capture interface",
+      "short": "HDMI CAPTURE",
+      "kind": "interface",
+      "category": "Recording and computers",
+      "ports": [
+        {
+          "name": "HDMI IN",
+          "kind": "hdmi",
+          "signal": "video",
+          "label": "IN"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "USB"
+        }
+      ],
+      "sources": [
+        "shure-worship"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "speaker-pa-active",
+      "name": "Powered PA loudspeaker",
+      "short": "Powered PA",
+      "kind": "speaker",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "LINE IN",
+          "kind": "combo",
+          "signal": "line",
+          "label": "IN"
+        },
+        {
+          "name": "LINK OUT",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "LINK"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "yamaha-speakers"
+      ],
+      "notes": "Powered speakers take mic/line signals and mains power; passive speakers take an amplified speaker-level cable. Link routing depends on the actual equipment.",
+      "shape": "cabinet",
+      "powered": true
+    },
+    {
+      "id": "speaker-pa-passive",
+      "name": "Passive PA loudspeaker",
+      "short": "Passive PA",
+      "kind": "speaker",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "SPEAKER IN",
+          "kind": "speakon",
+          "signal": "speaker",
+          "label": "IN"
+        },
+        {
+          "name": "LINK",
+          "kind": "speakon",
+          "signal": "speaker",
+          "label": "LINK"
+        }
+      ],
+      "sources": [
+        "yamaha-speakers"
+      ],
+      "notes": "Powered speakers take mic/line signals and mains power; passive speakers take an amplified speaker-level cable. Link routing depends on the actual equipment.",
+      "shape": "cabinet",
+      "powered": false
+    },
+    {
+      "id": "speaker-monitor-active",
+      "name": "Powered wedge stage monitor",
+      "short": "Powered wedge MONITOR",
+      "kind": "speaker",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "LINE IN",
+          "kind": "combo",
+          "signal": "line",
+          "label": "IN"
+        },
+        {
+          "name": "LINK OUT",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "LINK"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "yamaha-speakers"
+      ],
+      "notes": "Powered speakers take mic/line signals and mains power; passive speakers take an amplified speaker-level cable. Link routing depends on the actual equipment.",
+      "shape": "wedge",
+      "powered": true
+    },
+    {
+      "id": "speaker-monitor-passive",
+      "name": "Passive wedge stage monitor",
+      "short": "Passive wedge MONITOR",
+      "kind": "speaker",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "SPEAKER IN",
+          "kind": "speakon",
+          "signal": "speaker",
+          "label": "IN"
+        },
+        {
+          "name": "LINK",
+          "kind": "speakon",
+          "signal": "speaker",
+          "label": "LINK"
+        }
+      ],
+      "sources": [
+        "yamaha-speakers"
+      ],
+      "notes": "Powered speakers take mic/line signals and mains power; passive speakers take an amplified speaker-level cable. Link routing depends on the actual equipment.",
+      "shape": "wedge",
+      "powered": false
+    },
+    {
+      "id": "speaker-sub-active",
+      "name": "Powered subwoofer",
+      "short": "Powered subwoofer",
+      "kind": "speaker",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "LINE IN",
+          "kind": "combo",
+          "signal": "line",
+          "label": "IN"
+        },
+        {
+          "name": "LINK OUT",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "LINK"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "yamaha-speakers"
+      ],
+      "notes": "Powered speakers take mic/line signals and mains power; passive speakers take an amplified speaker-level cable. Link routing depends on the actual equipment.",
+      "shape": "sub",
+      "powered": true
+    },
+    {
+      "id": "speaker-sub-passive",
+      "name": "Passive subwoofer",
+      "short": "Passive subwoofer",
+      "kind": "speaker",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "SPEAKER IN",
+          "kind": "speakon",
+          "signal": "speaker",
+          "label": "IN"
+        },
+        {
+          "name": "LINK",
+          "kind": "speakon",
+          "signal": "speaker",
+          "label": "LINK"
+        }
+      ],
+      "sources": [
+        "yamaha-speakers"
+      ],
+      "notes": "Powered speakers take mic/line signals and mains power; passive speakers take an amplified speaker-level cable. Link routing depends on the actual equipment.",
+      "shape": "sub",
+      "powered": false
+    },
+    {
+      "id": "speaker-studio-monitor",
+      "name": "Powered studio monitor",
+      "short": "Powered studio monitor",
+      "kind": "speaker",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "LINE IN",
+          "kind": "combo",
+          "signal": "line",
+          "label": "IN"
+        },
+        {
+          "name": "LINK OUT",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "LINK"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "yamaha-speakers"
+      ],
+      "notes": "Powered speakers take mic/line signals and mains power; passive speakers take an amplified speaker-level cable. Link routing depends on the actual equipment.",
+      "shape": "studio",
+      "powered": true
+    },
+    {
+      "id": "speaker-column-pa",
+      "name": "Powered column PA",
+      "short": "Powered column PA",
+      "kind": "speaker",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "LINE IN",
+          "kind": "combo",
+          "signal": "line",
+          "label": "IN"
+        },
+        {
+          "name": "LINK OUT",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "LINK"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "yamaha-speakers"
+      ],
+      "notes": "Powered speakers take mic/line signals and mains power; passive speakers take an amplified speaker-level cable. Link routing depends on the actual equipment.",
+      "shape": "column",
+      "powered": true
+    },
+    {
+      "id": "speaker-line-array",
+      "name": "Passive line-array module",
+      "short": "Passive line-array module",
+      "kind": "speaker",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "SPEAKER IN",
+          "kind": "speakon",
+          "signal": "speaker",
+          "label": "IN"
+        },
+        {
+          "name": "LINK",
+          "kind": "speakon",
+          "signal": "speaker",
+          "label": "LINK"
+        }
+      ],
+      "sources": [
+        "yamaha-speakers"
+      ],
+      "notes": "Powered speakers take mic/line signals and mains power; passive speakers take an amplified speaker-level cable. Link routing depends on the actual equipment.",
+      "shape": "array",
+      "powered": false
+    },
+    {
+      "id": "speaker-installed",
+      "name": "Passive installed wall / ceiling speaker",
+      "short": "INSTALLED SPEAKER",
+      "kind": "speaker",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "SPEAKER CABLE",
+          "kind": "terminal",
+          "signal": "speaker",
+          "label": "SPK"
+        }
+      ],
+      "sources": [
+        "yamaha-speakers"
+      ],
+      "notes": "Whole speaker cable, not individual binding posts. Match actual low-impedance or distributed-line speaker systems.",
+      "shape": "installed"
+    },
+    {
+      "id": "amp-power-stereo",
+      "name": "Stereo power amplifier",
+      "short": "STEREO POWER AMP",
+      "kind": "rack",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "IN L",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "IN R",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "OUT L",
+          "kind": "speakon",
+          "signal": "speaker",
+          "label": "L+"
+        },
+        {
+          "name": "OUT R",
+          "kind": "speakon",
+          "signal": "speaker",
+          "label": "R+"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "yamaha-speakers"
+      ],
+      "notes": "",
+      "rack": 2
+    },
+    {
+      "id": "amp-headphone-4",
+      "name": "Four-output headphone amplifier",
+      "short": "HEADPHONE AMP / 4",
+      "kind": "rack",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "LINE L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "LINE R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "PHONES 1",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "1"
+        },
+        {
+          "name": "PHONES 2",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "2"
+        },
+        {
+          "name": "PHONES 3",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "3"
+        },
+        {
+          "name": "PHONES 4",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "4"
+        },
+        {
+          "name": "DC",
+          "kind": "dc",
+          "signal": "power-dc",
+          "label": "DC"
+        }
+      ],
+      "sources": [
+        "focusrite-recording"
+      ],
+      "notes": "",
+      "rack": 1
+    },
+    {
+      "id": "headphones",
+      "name": "Studio headphones",
+      "short": "HEADPHONES",
+      "kind": "headphones",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "STEREO IN",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        }
+      ],
+      "sources": [
+        "focusrite-recording"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "iem-wired",
+      "name": "Wired in-ear monitor beltpack",
+      "short": "WIRED IEM",
+      "kind": "beltpack",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "IN L",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "IN R",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "PHONES",
+          "kind": "minijack",
+          "signal": "headphones",
+          "label": "HP"
+        }
+      ],
+      "sources": [
+        "shure-worship"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "iem-transmitter",
+      "name": "Stereo wireless IEM transmitter",
+      "short": "WIRELESS IEM TX",
+      "kind": "rack",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "IN L",
+          "kind": "combo",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "IN R",
+          "kind": "combo",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "RF LINK",
+          "kind": "rf",
+          "signal": "rf",
+          "label": "RF"
+        },
+        {
+          "name": "DC",
+          "kind": "dc",
+          "signal": "power-dc",
+          "label": "DC"
+        }
+      ],
+      "sources": [
+        "shure-worship"
+      ],
+      "notes": "",
+      "rack": 1
+    },
+    {
+      "id": "iem-receiver",
+      "name": "Wireless IEM beltpack and earpieces",
+      "short": "WIRELESS IEM RX",
+      "kind": "beltpack",
+      "category": "Speakers and amplifiers",
+      "ports": [
+        {
+          "name": "RF LINK",
+          "kind": "rf",
+          "signal": "rf",
+          "label": "RF"
+        },
+        {
+          "name": "PHONES",
+          "kind": "minijack",
+          "signal": "headphones",
+          "label": "HP"
+        }
+      ],
+      "sources": [
+        "shure-worship"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "instrument-electric",
+      "name": "Electric guitar",
+      "short": "Electric guitar",
+      "kind": "guitar",
+      "category": "Instruments and MIDI",
+      "ports": [
+        {
+          "name": "INSTRUMENT OUT",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "yamaha-live"
+      ],
+      "notes": "",
+      "shape": "electric"
+    },
+    {
+      "id": "instrument-bass",
+      "name": "Electric bass guitar",
+      "short": "Electric bass guitar",
+      "kind": "guitar",
+      "category": "Instruments and MIDI",
+      "ports": [
+        {
+          "name": "INSTRUMENT OUT",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "yamaha-live"
+      ],
+      "notes": "",
+      "shape": "bass"
+    },
+    {
+      "id": "instrument-acoustic",
+      "name": "Electro-acoustic guitar",
+      "short": "Electro-acoustic guitar",
+      "kind": "guitar",
+      "category": "Instruments and MIDI",
+      "ports": [
+        {
+          "name": "INSTRUMENT OUT",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "yamaha-live"
+      ],
+      "notes": "",
+      "shape": "acoustic"
+    },
+    {
+      "id": "combo-guitar",
+      "name": "Guitar combo amplifier",
+      "short": "Guitar combo amplifier",
+      "kind": "speaker",
+      "category": "Instruments and MIDI",
+      "ports": [
+        {
+          "name": "INSTRUMENT IN",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "IN"
+        },
+        {
+          "name": "LINE OUT",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "DI"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "yamaha-live"
+      ],
+      "notes": "",
+      "shape": "guitar",
+      "powered": true
+    },
+    {
+      "id": "combo-bass",
+      "name": "Bass combo amplifier",
+      "short": "Bass combo amplifier",
+      "kind": "speaker",
+      "category": "Instruments and MIDI",
+      "ports": [
+        {
+          "name": "INSTRUMENT IN",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "IN"
+        },
+        {
+          "name": "LINE OUT",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "DI"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "yamaha-live"
+      ],
+      "notes": "",
+      "shape": "bass",
+      "powered": true
+    },
+    {
+      "id": "keyboard-49",
+      "name": "Stage keyboard / synthesizer — 49 keys",
+      "short": "KEYBOARD / 49",
+      "kind": "keyboard",
+      "category": "Instruments and MIDI",
+      "ports": [
+        {
+          "name": "OUT L/MONO",
+          "kind": "jack",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "OUT R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "MIDI IN",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MI"
+        },
+        {
+          "name": "MIDI OUT",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MO"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "SUSTAIN",
+          "kind": "jack",
+          "signal": "pedal",
+          "label": "PED"
+        }
+      ],
+      "sources": [
+        "yamaha-live",
+        "midi-din"
+      ],
+      "notes": "",
+      "keys": 49
+    },
+    {
+      "id": "keyboard-61",
+      "name": "Stage keyboard / synthesizer — 61 keys",
+      "short": "KEYBOARD / 61",
+      "kind": "keyboard",
+      "category": "Instruments and MIDI",
+      "ports": [
+        {
+          "name": "OUT L/MONO",
+          "kind": "jack",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "OUT R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "MIDI IN",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MI"
+        },
+        {
+          "name": "MIDI OUT",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MO"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "SUSTAIN",
+          "kind": "jack",
+          "signal": "pedal",
+          "label": "PED"
+        }
+      ],
+      "sources": [
+        "yamaha-live",
+        "midi-din"
+      ],
+      "notes": "",
+      "keys": 61
+    },
+    {
+      "id": "keyboard-88",
+      "name": "Stage keyboard / synthesizer — 88 keys",
+      "short": "KEYBOARD / 88",
+      "kind": "keyboard",
+      "category": "Instruments and MIDI",
+      "ports": [
+        {
+          "name": "OUT L/MONO",
+          "kind": "jack",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "OUT R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "MIDI IN",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MI"
+        },
+        {
+          "name": "MIDI OUT",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MO"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "SUSTAIN",
+          "kind": "jack",
+          "signal": "pedal",
+          "label": "PED"
+        }
+      ],
+      "sources": [
+        "yamaha-live",
+        "midi-din"
+      ],
+      "notes": "",
+      "keys": 88
+    },
+    {
+      "id": "midi-controller",
+      "name": "USB / MIDI keyboard controller",
+      "short": "MIDI CONTROLLER",
+      "kind": "keyboard",
+      "category": "Instruments and MIDI",
+      "ports": [
+        {
+          "name": "MIDI OUT",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MO"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "SUSTAIN",
+          "kind": "jack",
+          "signal": "pedal",
+          "label": "PED"
+        }
+      ],
+      "sources": [
+        "midi-din"
+      ],
+      "notes": "",
+      "keys": 25
+    },
+    {
+      "id": "drum-machine",
+      "name": "Drum machine / pad sampler",
+      "short": "DRUM / SAMPLER",
+      "kind": "pads",
+      "category": "Instruments and MIDI",
+      "ports": [
+        {
+          "name": "OUT L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "OUT R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "MIDI IN",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MI"
+        },
+        {
+          "name": "MIDI OUT",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "MO"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        }
+      ],
+      "sources": [
+        "midi-din",
+        "yamaha-live"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "dj-controller",
+      "name": "DJ controller / mixer",
+      "short": "DJ CONTROLLER",
+      "kind": "pads",
+      "category": "Instruments and MIDI",
+      "ports": [
+        {
+          "name": "MIC",
+          "kind": "combo",
+          "signal": "mic",
+          "label": "MIC"
+        },
+        {
+          "name": "MAIN L",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "L"
+        },
+        {
+          "name": "MAIN R",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        },
+        {
+          "name": "USB",
+          "kind": "usb-b",
+          "signal": "usb",
+          "label": "USB"
+        }
+      ],
+      "sources": [
+        "yamaha-cables"
+      ],
+      "notes": "",
+      "dj": true
+    },
+    {
+      "id": "di-passive",
+      "name": "Passive mono DI box",
+      "short": "PASSIVE MONO DI BOX",
+      "kind": "box",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "IN L",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "IN"
+        },
+        {
+          "name": "THRU L",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "THRU"
+        },
+        {
+          "name": "OUT L",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "radial-di"
+      ],
+      "notes": "DI transforms an instrument/unbalanced source for a balanced mic-level feed; THRU is a separate instrument path. Active/passive power requirements depend on hardware."
+    },
+    {
+      "id": "di-active",
+      "name": "Active mono DI box",
+      "short": "ACTIVE MONO DI BOX",
+      "kind": "box",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "IN L",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "IN"
+        },
+        {
+          "name": "THRU L",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "THRU"
+        },
+        {
+          "name": "OUT L",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "radial-di"
+      ],
+      "notes": "DI transforms an instrument/unbalanced source for a balanced mic-level feed; THRU is a separate instrument path. Active/passive power requirements depend on hardware."
+    },
+    {
+      "id": "di-stereo",
+      "name": "Stereo DI box",
+      "short": "STEREO DI BOX",
+      "kind": "box",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "IN L",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "IN"
+        },
+        {
+          "name": "THRU L",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "THRU"
+        },
+        {
+          "name": "OUT L",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUT"
+        },
+        {
+          "name": "IN R",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "INR"
+        },
+        {
+          "name": "THRU R",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "THR"
+        },
+        {
+          "name": "OUT R",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "OUTR"
+        }
+      ],
+      "sources": [
+        "radial-di"
+      ],
+      "notes": "DI transforms an instrument/unbalanced source for a balanced mic-level feed; THRU is a separate instrument path. Active/passive power requirements depend on hardware."
+    },
+    {
+      "id": "reamp",
+      "name": "Reamp box",
+      "short": "REAMP",
+      "kind": "box",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "BALANCED IN",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "IN"
+        },
+        {
+          "name": "AMP OUT",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "OUT"
+        }
+      ],
+      "sources": [
+        "radial-di"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "splitter-mic",
+      "name": "Microphone splitter — 1 in / 3 out",
+      "short": "MIC SPLITTER",
+      "kind": "box",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "MIC IN",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "IN"
+        },
+        {
+          "name": "MIC OUT 1",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "1"
+        },
+        {
+          "name": "MIC OUT 2",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "2"
+        },
+        {
+          "name": "MIC OUT 3",
+          "kind": "xlr-m",
+          "signal": "mic",
+          "label": "3"
+        }
+      ],
+      "sources": [
+        "shure-worship"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "stagebox-analog-8",
+      "name": "Analogue stage snake — 8 sends / 4 returns",
+      "short": "ANALOG SNAKE 8/4",
+      "kind": "stagebox",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "SEND 1",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "1"
+        },
+        {
+          "name": "SEND 2",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "2"
+        },
+        {
+          "name": "SEND 3",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "3"
+        },
+        {
+          "name": "SEND 4",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "4"
+        },
+        {
+          "name": "SEND 5",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "5"
+        },
+        {
+          "name": "SEND 6",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "6"
+        },
+        {
+          "name": "SEND 7",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "7"
+        },
+        {
+          "name": "SEND 8",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "8"
+        },
+        {
+          "name": "RETURN 1",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R1"
+        },
+        {
+          "name": "RETURN 2",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R2"
+        },
+        {
+          "name": "RETURN 3",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R3"
+        },
+        {
+          "name": "RETURN 4",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R4"
+        },
+        {
+          "name": "MULTICORE",
+          "kind": "multicore",
+          "signal": "analog-multicore",
+          "label": "SNAKE"
+        }
+      ],
+      "sources": [
+        "yamaha-live"
+      ],
+      "notes": "MULTICORE represents the matching complete analogue trunk; it is not a network cable. Individual fanout channels are represented by the numbered sockets.",
+      "inputs": 8
+    },
+    {
+      "id": "stagebox-analog-16",
+      "name": "Analogue stage snake — 16 sends / 4 returns",
+      "short": "ANALOG SNAKE 16/4",
+      "kind": "stagebox",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "SEND 1",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "1"
+        },
+        {
+          "name": "SEND 2",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "2"
+        },
+        {
+          "name": "SEND 3",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "3"
+        },
+        {
+          "name": "SEND 4",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "4"
+        },
+        {
+          "name": "SEND 5",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "5"
+        },
+        {
+          "name": "SEND 6",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "6"
+        },
+        {
+          "name": "SEND 7",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "7"
+        },
+        {
+          "name": "SEND 8",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "8"
+        },
+        {
+          "name": "SEND 9",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "9"
+        },
+        {
+          "name": "SEND 10",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "10"
+        },
+        {
+          "name": "SEND 11",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "11"
+        },
+        {
+          "name": "SEND 12",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "12"
+        },
+        {
+          "name": "SEND 13",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "13"
+        },
+        {
+          "name": "SEND 14",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "14"
+        },
+        {
+          "name": "SEND 15",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "15"
+        },
+        {
+          "name": "SEND 16",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "16"
+        },
+        {
+          "name": "RETURN 1",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R1"
+        },
+        {
+          "name": "RETURN 2",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R2"
+        },
+        {
+          "name": "RETURN 3",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R3"
+        },
+        {
+          "name": "RETURN 4",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R4"
+        },
+        {
+          "name": "MULTICORE",
+          "kind": "multicore",
+          "signal": "analog-multicore",
+          "label": "SNAKE"
+        }
+      ],
+      "sources": [
+        "yamaha-live"
+      ],
+      "notes": "MULTICORE represents the matching complete analogue trunk; it is not a network cable. Individual fanout channels are represented by the numbered sockets.",
+      "inputs": 16
+    },
+    {
+      "id": "stagebox-analog-24",
+      "name": "Analogue stage snake — 24 sends / 8 returns",
+      "short": "ANALOG SNAKE 24/8",
+      "kind": "stagebox",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "SEND 1",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "1"
+        },
+        {
+          "name": "SEND 2",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "2"
+        },
+        {
+          "name": "SEND 3",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "3"
+        },
+        {
+          "name": "SEND 4",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "4"
+        },
+        {
+          "name": "SEND 5",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "5"
+        },
+        {
+          "name": "SEND 6",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "6"
+        },
+        {
+          "name": "SEND 7",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "7"
+        },
+        {
+          "name": "SEND 8",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "8"
+        },
+        {
+          "name": "SEND 9",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "9"
+        },
+        {
+          "name": "SEND 10",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "10"
+        },
+        {
+          "name": "SEND 11",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "11"
+        },
+        {
+          "name": "SEND 12",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "12"
+        },
+        {
+          "name": "SEND 13",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "13"
+        },
+        {
+          "name": "SEND 14",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "14"
+        },
+        {
+          "name": "SEND 15",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "15"
+        },
+        {
+          "name": "SEND 16",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "16"
+        },
+        {
+          "name": "SEND 17",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "17"
+        },
+        {
+          "name": "SEND 18",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "18"
+        },
+        {
+          "name": "SEND 19",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "19"
+        },
+        {
+          "name": "SEND 20",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "20"
+        },
+        {
+          "name": "SEND 21",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "21"
+        },
+        {
+          "name": "SEND 22",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "22"
+        },
+        {
+          "name": "SEND 23",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "23"
+        },
+        {
+          "name": "SEND 24",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "24"
+        },
+        {
+          "name": "RETURN 1",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R1"
+        },
+        {
+          "name": "RETURN 2",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R2"
+        },
+        {
+          "name": "RETURN 3",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R3"
+        },
+        {
+          "name": "RETURN 4",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R4"
+        },
+        {
+          "name": "RETURN 5",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R5"
+        },
+        {
+          "name": "RETURN 6",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R6"
+        },
+        {
+          "name": "RETURN 7",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R7"
+        },
+        {
+          "name": "RETURN 8",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R8"
+        },
+        {
+          "name": "MULTICORE",
+          "kind": "multicore",
+          "signal": "analog-multicore",
+          "label": "SNAKE"
+        }
+      ],
+      "sources": [
+        "yamaha-live"
+      ],
+      "notes": "MULTICORE represents the matching complete analogue trunk; it is not a network cable. Individual fanout channels are represented by the numbered sockets.",
+      "inputs": 24
+    },
+    {
+      "id": "stagebox-digital-16",
+      "name": "Digital stagebox — 16 inputs / 8 outputs",
+      "short": "DIGITAL STAGEBOX 16/8",
+      "kind": "stagebox",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "IN 1",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "1"
+        },
+        {
+          "name": "IN 2",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "2"
+        },
+        {
+          "name": "IN 3",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "3"
+        },
+        {
+          "name": "IN 4",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "4"
+        },
+        {
+          "name": "IN 5",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "5"
+        },
+        {
+          "name": "IN 6",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "6"
+        },
+        {
+          "name": "IN 7",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "7"
+        },
+        {
+          "name": "IN 8",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "8"
+        },
+        {
+          "name": "IN 9",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "9"
+        },
+        {
+          "name": "IN 10",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "10"
+        },
+        {
+          "name": "IN 11",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "11"
+        },
+        {
+          "name": "IN 12",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "12"
+        },
+        {
+          "name": "IN 13",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "13"
+        },
+        {
+          "name": "IN 14",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "14"
+        },
+        {
+          "name": "IN 15",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "15"
+        },
+        {
+          "name": "IN 16",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "16"
+        },
+        {
+          "name": "OUT 1",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R1"
+        },
+        {
+          "name": "OUT 2",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R2"
+        },
+        {
+          "name": "OUT 3",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R3"
+        },
+        {
+          "name": "OUT 4",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R4"
+        },
+        {
+          "name": "OUT 5",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R5"
+        },
+        {
+          "name": "OUT 6",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R6"
+        },
+        {
+          "name": "OUT 7",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R7"
+        },
+        {
+          "name": "OUT 8",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R8"
+        },
+        {
+          "name": "STAGE LINK",
+          "kind": "ethernet",
+          "signal": "stage-link",
+          "label": "LINK"
+        },
+        {
+          "name": "EXPAND",
+          "kind": "ethernet",
+          "signal": "stage-link",
+          "label": "EXP"
+        }
+      ],
+      "sources": [
+        "stagebox"
+      ],
+      "notes": "Generic 16/8 hardware family. Match the actual stage-link protocol; an EtherCON/RJ45 connector is not sufficient evidence of compatibility.",
+      "inputs": 16
+    },
+    {
+      "id": "stagebox-dante-16",
+      "name": "Dante stagebox — 16 inputs / 8 outputs",
+      "short": "DANTE STAGEBOX 16/8",
+      "kind": "stagebox",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "IN 1",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "1"
+        },
+        {
+          "name": "IN 2",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "2"
+        },
+        {
+          "name": "IN 3",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "3"
+        },
+        {
+          "name": "IN 4",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "4"
+        },
+        {
+          "name": "IN 5",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "5"
+        },
+        {
+          "name": "IN 6",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "6"
+        },
+        {
+          "name": "IN 7",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "7"
+        },
+        {
+          "name": "IN 8",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "8"
+        },
+        {
+          "name": "IN 9",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "9"
+        },
+        {
+          "name": "IN 10",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "10"
+        },
+        {
+          "name": "IN 11",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "11"
+        },
+        {
+          "name": "IN 12",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "12"
+        },
+        {
+          "name": "IN 13",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "13"
+        },
+        {
+          "name": "IN 14",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "14"
+        },
+        {
+          "name": "IN 15",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "15"
+        },
+        {
+          "name": "IN 16",
+          "kind": "xlr",
+          "signal": "mic",
+          "label": "16"
+        },
+        {
+          "name": "OUT 1",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R1"
+        },
+        {
+          "name": "OUT 2",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R2"
+        },
+        {
+          "name": "OUT 3",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R3"
+        },
+        {
+          "name": "OUT 4",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R4"
+        },
+        {
+          "name": "OUT 5",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R5"
+        },
+        {
+          "name": "OUT 6",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R6"
+        },
+        {
+          "name": "OUT 7",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R7"
+        },
+        {
+          "name": "OUT 8",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "R8"
+        },
+        {
+          "name": "PRIMARY",
+          "kind": "ethernet",
+          "signal": "dante",
+          "label": "PRI"
+        },
+        {
+          "name": "SECONDARY",
+          "kind": "ethernet",
+          "signal": "dante",
+          "label": "SEC"
+        }
+      ],
+      "sources": [
+        "audinate"
+      ],
+      "notes": "Primary/secondary roles and redundancy depend on the real device/network configuration. Secondary is not automatically a general LAN output.",
+      "inputs": 16
+    },
+    {
+      "id": "patchbay-trs-24",
+      "name": "TRS patchbay — 24 top / 24 bottom sockets",
+      "short": "TRS PATCHBAY / 24 PAIRS",
+      "kind": "patchbay",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "TOP 1",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A1"
+        },
+        {
+          "name": "TOP 2",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A2"
+        },
+        {
+          "name": "TOP 3",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A3"
+        },
+        {
+          "name": "TOP 4",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A4"
+        },
+        {
+          "name": "TOP 5",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A5"
+        },
+        {
+          "name": "TOP 6",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A6"
+        },
+        {
+          "name": "TOP 7",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A7"
+        },
+        {
+          "name": "TOP 8",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A8"
+        },
+        {
+          "name": "TOP 9",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A9"
+        },
+        {
+          "name": "TOP 10",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A10"
+        },
+        {
+          "name": "TOP 11",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A11"
+        },
+        {
+          "name": "TOP 12",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A12"
+        },
+        {
+          "name": "TOP 13",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A13"
+        },
+        {
+          "name": "TOP 14",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A14"
+        },
+        {
+          "name": "TOP 15",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A15"
+        },
+        {
+          "name": "TOP 16",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A16"
+        },
+        {
+          "name": "TOP 17",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A17"
+        },
+        {
+          "name": "TOP 18",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A18"
+        },
+        {
+          "name": "TOP 19",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A19"
+        },
+        {
+          "name": "TOP 20",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A20"
+        },
+        {
+          "name": "TOP 21",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A21"
+        },
+        {
+          "name": "TOP 22",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A22"
+        },
+        {
+          "name": "TOP 23",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A23"
+        },
+        {
+          "name": "TOP 24",
+          "kind": "jack",
+          "signal": "line",
+          "label": "A24"
+        },
+        {
+          "name": "BOTTOM 1",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B1"
+        },
+        {
+          "name": "BOTTOM 2",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B2"
+        },
+        {
+          "name": "BOTTOM 3",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B3"
+        },
+        {
+          "name": "BOTTOM 4",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B4"
+        },
+        {
+          "name": "BOTTOM 5",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B5"
+        },
+        {
+          "name": "BOTTOM 6",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B6"
+        },
+        {
+          "name": "BOTTOM 7",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B7"
+        },
+        {
+          "name": "BOTTOM 8",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B8"
+        },
+        {
+          "name": "BOTTOM 9",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B9"
+        },
+        {
+          "name": "BOTTOM 10",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B10"
+        },
+        {
+          "name": "BOTTOM 11",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B11"
+        },
+        {
+          "name": "BOTTOM 12",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B12"
+        },
+        {
+          "name": "BOTTOM 13",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B13"
+        },
+        {
+          "name": "BOTTOM 14",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B14"
+        },
+        {
+          "name": "BOTTOM 15",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B15"
+        },
+        {
+          "name": "BOTTOM 16",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B16"
+        },
+        {
+          "name": "BOTTOM 17",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B17"
+        },
+        {
+          "name": "BOTTOM 18",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B18"
+        },
+        {
+          "name": "BOTTOM 19",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B19"
+        },
+        {
+          "name": "BOTTOM 20",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B20"
+        },
+        {
+          "name": "BOTTOM 21",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B21"
+        },
+        {
+          "name": "BOTTOM 22",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B22"
+        },
+        {
+          "name": "BOTTOM 23",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B23"
+        },
+        {
+          "name": "BOTTOM 24",
+          "kind": "jack",
+          "signal": "line",
+          "label": "B24"
+        }
+      ],
+      "sources": [
+        "yamaha-cables"
+      ],
+      "notes": "Forty-eight front sockets; normal/half-normal/thru routing is a hardware setting and is not modelled by automatic hidden connections.",
+      "count": 24
+    },
+    {
+      "id": "midi-thru-4",
+      "name": "MIDI thru box — 1 in / 4 out",
+      "short": "MIDI THRU / 4",
+      "kind": "box",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "MIDI IN",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "IN"
+        },
+        {
+          "name": "THRU 1",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "1"
+        },
+        {
+          "name": "THRU 2",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "2"
+        },
+        {
+          "name": "THRU 3",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "3"
+        },
+        {
+          "name": "THRU 4",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "4"
+        },
+        {
+          "name": "DC",
+          "kind": "dc",
+          "signal": "power-dc",
+          "label": "DC"
+        }
+      ],
+      "sources": [
+        "midi-din"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "network-audio-switch",
+      "name": "Eight-port audio-network switch",
+      "short": "AUDIO LAN / 8",
+      "kind": "rack",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "PORT 1",
+          "kind": "ethernet",
+          "signal": "dante",
+          "label": "1"
+        },
+        {
+          "name": "PORT 2",
+          "kind": "ethernet",
+          "signal": "dante",
+          "label": "2"
+        },
+        {
+          "name": "PORT 3",
+          "kind": "ethernet",
+          "signal": "dante",
+          "label": "3"
+        },
+        {
+          "name": "PORT 4",
+          "kind": "ethernet",
+          "signal": "dante",
+          "label": "4"
+        },
+        {
+          "name": "PORT 5",
+          "kind": "ethernet",
+          "signal": "dante",
+          "label": "5"
+        },
+        {
+          "name": "PORT 6",
+          "kind": "ethernet",
+          "signal": "dante",
+          "label": "6"
+        },
+        {
+          "name": "PORT 7",
+          "kind": "ethernet",
+          "signal": "dante",
+          "label": "7"
+        },
+        {
+          "name": "PORT 8",
+          "kind": "ethernet",
+          "signal": "dante",
+          "label": "8"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "audinate"
+      ],
+      "notes": "",
+      "rack": 1
+    },
+    {
+      "id": "processor-eq",
+      "name": "Stereo equalizer",
+      "short": "STEREO EQUALIZER",
+      "kind": "rack",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "IN L",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "IL"
+        },
+        {
+          "name": "IN R",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "IR"
+        },
+        {
+          "name": "OUT L",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "OL"
+        },
+        {
+          "name": "OUT R",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "OR"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "shure-education"
+      ],
+      "notes": "",
+      "rack": 1,
+      "processor": "eq"
+    },
+    {
+      "id": "processor-compressor",
+      "name": "Stereo compressor / limiter",
+      "short": "STEREO COMPRESSOR / LIMITER",
+      "kind": "rack",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "IN L",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "IL"
+        },
+        {
+          "name": "IN R",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "IR"
+        },
+        {
+          "name": "OUT L",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "OL"
+        },
+        {
+          "name": "OUT R",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "OR"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "shure-education"
+      ],
+      "notes": "",
+      "rack": 1,
+      "processor": "compressor"
+    },
+    {
+      "id": "processor-effects",
+      "name": "Stereo effects processor",
+      "short": "STEREO EFFECTS PROCESSOR",
+      "kind": "rack",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "IN L",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "IL"
+        },
+        {
+          "name": "IN R",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "IR"
+        },
+        {
+          "name": "OUT L",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "OL"
+        },
+        {
+          "name": "OUT R",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "OR"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "shure-education"
+      ],
+      "notes": "",
+      "rack": 1,
+      "processor": "effects"
+    },
+    {
+      "id": "processor-crossover",
+      "name": "Active crossover / speaker processor",
+      "short": "ACTIVE CROSSOVER / SPEAKER PROCESSOR",
+      "kind": "rack",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "IN L",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "IL"
+        },
+        {
+          "name": "IN R",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "IR"
+        },
+        {
+          "name": "OUT L",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "OL"
+        },
+        {
+          "name": "OUT R",
+          "kind": "xlr-m",
+          "signal": "line",
+          "label": "OR"
+        },
+        {
+          "name": "AC",
+          "kind": "iec",
+          "signal": "power-ac",
+          "label": "AC"
+        }
+      ],
+      "sources": [
+        "shure-education"
+      ],
+      "notes": "",
+      "rack": 1,
+      "processor": "crossover"
+    },
+    {
+      "id": "monitor-controller",
+      "name": "Stereo studio monitor controller",
+      "short": "MONITOR CONTROL",
+      "kind": "box",
+      "category": "Patching and routing",
+      "ports": [
+        {
+          "name": "SOURCE L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "IL"
+        },
+        {
+          "name": "SOURCE R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "IR"
+        },
+        {
+          "name": "MON A L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "AL"
+        },
+        {
+          "name": "MON A R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "AR"
+        },
+        {
+          "name": "MON B L",
+          "kind": "jack",
+          "signal": "line",
+          "label": "BL"
+        },
+        {
+          "name": "MON B R",
+          "kind": "jack",
+          "signal": "line",
+          "label": "BR"
+        },
+        {
+          "name": "PHONES",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "HP"
+        }
+      ],
+      "sources": [
+        "focusrite-recording"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "connector-xlr-f",
+      "name": "XLR 3 female cable endpoint",
+      "short": "XLR 3 female cable endpoint",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "XLR 3 female cable endpoint",
+          "kind": "xlr",
+          "signal": "balanced-audio",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-xlr-m",
+      "name": "XLR 3 male cable endpoint",
+      "short": "XLR 3 male cable endpoint",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "XLR 3 male cable endpoint",
+          "kind": "xlr-m",
+          "signal": "balanced-audio",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-trs-balanced",
+      "name": "6.35 mm TRS — balanced mono",
+      "short": "6.35 mm TRS — balanced mono",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "6.35 mm TRS — balanced mono",
+          "kind": "jack",
+          "signal": "line",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-trs-stereo",
+      "name": "6.35 mm TRS — stereo headphones",
+      "short": "6.35 mm TRS — stereo headphones",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "6.35 mm TRS — stereo headphones",
+          "kind": "jack",
+          "signal": "headphones",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-ts-instrument",
+      "name": "6.35 mm TS — instrument",
+      "short": "6.35 mm TS — instrument",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "6.35 mm TS — instrument",
+          "kind": "jack",
+          "signal": "instrument",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-minijack-stereo",
+      "name": "3.5 mm TRS — stereo audio",
+      "short": "3.5 mm TRS — stereo audio",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "3.5 mm TRS — stereo audio",
+          "kind": "minijack",
+          "signal": "stereo-line",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-trrs-ctia",
+      "name": "3.5 mm TRRS — CTIA headset",
+      "short": "3.5 mm TRRS — CTIA headset",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "3.5 mm TRRS — CTIA headset",
+          "kind": "minijack",
+          "signal": "headset-ctia",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-rca",
+      "name": "RCA / phono cable endpoint",
+      "short": "RCA / phono cable endpoint",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "RCA / phono cable endpoint",
+          "kind": "rca",
+          "signal": "unbalanced-audio",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-speakon",
+      "name": "speakON speaker-cable endpoint",
+      "short": "speakON speaker-cable endpoint",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "speakON speaker-cable endpoint",
+          "kind": "speakon",
+          "signal": "speaker",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-midi-din",
+      "name": "5-pin DIN MIDI endpoint",
+      "short": "5-pin DIN MIDI endpoint",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "5-pin DIN MIDI endpoint",
+          "kind": "din5",
+          "signal": "midi",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "midi-trs"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-midi-trs-a",
+      "name": "3.5 mm TRS MIDI — Type A",
+      "short": "3.5 mm TRS MIDI — Type A",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "3.5 mm TRS MIDI — Type A",
+          "kind": "minijack",
+          "signal": "midi-a",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "midi-trs"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-midi-trs-b",
+      "name": "3.5 mm TRS MIDI — Type B",
+      "short": "3.5 mm TRS MIDI — Type B",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "3.5 mm TRS MIDI — Type B",
+          "kind": "minijack",
+          "signal": "midi-b",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "midi-trs"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-adat",
+      "name": "TOSLINK — ADAT endpoint",
+      "short": "TOSLINK — ADAT endpoint",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "TOSLINK — ADAT endpoint",
+          "kind": "optical",
+          "signal": "adat",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-spdif",
+      "name": "RCA — coaxial S/PDIF endpoint",
+      "short": "RCA — coaxial S/PDIF endpoint",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "RCA — coaxial S/PDIF endpoint",
+          "kind": "rca",
+          "signal": "spdif",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-usb-c",
+      "name": "USB-C audio/data cable endpoint",
+      "short": "USB-C audio/data cable endpoint",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "USB-C audio/data cable endpoint",
+          "kind": "usb-c",
+          "signal": "usb",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "connector-ethercon",
+      "name": "EtherCON / RJ45 audio-network endpoint",
+      "short": "EtherCON / RJ45 audio-network endpoint",
+      "kind": "connector",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "EtherCON / RJ45 audio-network endpoint",
+          "kind": "ethernet",
+          "signal": "dante",
+          "label": "CABLE"
+        }
+      ],
+      "sources": [
+        "yamaha-cables",
+        "focusrite-digital"
+      ],
+      "notes": "One complete-cable endpoint for system layouts, not a conductor-level pinout. Identical connector shells can carry different signal formats; use the labelled cable type."
+    },
+    {
+      "id": "adapter-xlr-coupler",
+      "name": "XLR female-to-male patch lead",
+      "short": "XLR female-to-male patch lead",
+      "kind": "adapter",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "XLR FEMALE",
+          "kind": "xlr",
+          "signal": "balanced-audio",
+          "label": "F"
+        },
+        {
+          "name": "XLR MALE",
+          "kind": "xlr-m",
+          "signal": "balanced-audio",
+          "label": "M"
+        }
+      ],
+      "sources": [
+        "yamaha-cables"
+      ],
+      "notes": "Cable-level routing resource; stereo breakout and insert leads have different functions and are not interchangeable."
+    },
+    {
+      "id": "adapter-trs-xlr",
+      "name": "Balanced TRS-to-XLR lead",
+      "short": "Balanced TRS-to-XLR lead",
+      "kind": "adapter",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "TRS BALANCED",
+          "kind": "jack",
+          "signal": "line",
+          "label": "TRS"
+        },
+        {
+          "name": "XLR",
+          "kind": "xlr",
+          "signal": "line",
+          "label": "XLR"
+        }
+      ],
+      "sources": [
+        "yamaha-cables"
+      ],
+      "notes": "Cable-level routing resource; stereo breakout and insert leads have different functions and are not interchangeable."
+    },
+    {
+      "id": "adapter-stereo-breakout",
+      "name": "Stereo minijack to dual TS breakout",
+      "short": "Stereo minijack to dual TS breakout",
+      "kind": "adapter",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "STEREO",
+          "kind": "minijack",
+          "signal": "stereo-line",
+          "label": "ST"
+        },
+        {
+          "name": "LEFT",
+          "kind": "jack",
+          "signal": "unbalanced-audio",
+          "label": "L"
+        },
+        {
+          "name": "RIGHT",
+          "kind": "jack",
+          "signal": "unbalanced-audio",
+          "label": "R"
+        }
+      ],
+      "sources": [
+        "yamaha-cables"
+      ],
+      "notes": "Cable-level routing resource; stereo breakout and insert leads have different functions and are not interchangeable."
+    },
+    {
+      "id": "adapter-insert",
+      "name": "TRS insert lead — send / return",
+      "short": "TRS insert lead — send / return",
+      "kind": "adapter",
+      "category": "Connectors and adapters",
+      "ports": [
+        {
+          "name": "INSERT",
+          "kind": "jack",
+          "signal": "insert",
+          "label": "TRS"
+        },
+        {
+          "name": "SEND",
+          "kind": "jack",
+          "signal": "unbalanced-audio",
+          "label": "SND"
+        },
+        {
+          "name": "RETURN",
+          "kind": "jack",
+          "signal": "unbalanced-audio",
+          "label": "RET"
+        }
+      ],
+      "sources": [
+        "yamaha-cables"
+      ],
+      "notes": "Cable-level routing resource; stereo breakout and insert leads have different functions and are not interchangeable."
+    },
+    {
+      "id": "position-mic-boom",
+      "name": "Boom microphone stand",
+      "short": "Boom microphone stand",
+      "kind": "stand",
+      "category": "Room and stage positions",
+      "ports": [],
+      "sources": [
+        "shure-worship",
+        "shure-education"
+      ],
+      "notes": "Physical placement aid; no electrical connections or acoustic simulation."
+    },
+    {
+      "id": "position-pop-filter",
+      "name": "Microphone pop filter",
+      "short": "Microphone pop filter",
+      "kind": "popfilter",
+      "category": "Room and stage positions",
+      "ports": [],
+      "sources": [
+        "shure-worship",
+        "shure-education"
+      ],
+      "notes": "Physical placement aid; no electrical connections or acoustic simulation."
+    },
+    {
+      "id": "position-drums",
+      "name": "Acoustic drum kit position",
+      "short": "Acoustic drum kit position",
+      "kind": "drums",
+      "category": "Room and stage positions",
+      "ports": [],
+      "sources": [
+        "shure-worship",
+        "shure-education"
+      ],
+      "notes": "Physical placement aid; no electrical connections or acoustic simulation."
+    },
+    {
+      "id": "position-lectern",
+      "name": "Lectern / pulpit position",
+      "short": "Lectern / pulpit position",
+      "kind": "lectern",
+      "category": "Room and stage positions",
+      "ports": [],
+      "sources": [
+        "shure-worship",
+        "shure-education"
+      ],
+      "notes": "Physical placement aid; no electrical connections or acoustic simulation."
+    },
+    {
+      "id": "position-acoustic-panel",
+      "name": "Acoustic treatment panel",
+      "short": "Acoustic treatment panel",
+      "kind": "treatment",
+      "category": "Room and stage positions",
+      "ports": [],
+      "sources": [
+        "shure-worship",
+        "shure-education"
+      ],
+      "notes": "Physical placement aid; no electrical connections or acoustic simulation."
+    }
+  ]
+}

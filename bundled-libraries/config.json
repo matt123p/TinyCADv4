@@ -8,6 +8,30 @@
       "description": "Physical network devices with socket-centred cable connections: consumer switches, routers and access points, plus matching 19-inch 1U switches, routers, firewalls and patch panels."
     },
     {
+      "id": "embedded-smart-home",
+      "name": "Embedded processors and smart home",
+      "path": "embedded-smart-home/embedded-smart-home.tclib",
+      "description": "Physical PCB views of ESP32/ESP8266 devkits, Raspberry Pi 3/4/5, Arduino Uno/Nano/Mega, 26 sensor/actuator modules and 8 LCD/OLED/touch/e-paper displays. Original vector artwork, function icons and labelled header-pad connections. Named revisions; wiring layouts without simulation models."
+    },
+    {
+      "id": "audio-music",
+      "name": "Audio & Music",
+      "path": "audio-music/audio-music.tclib",
+      "description": "99 compact original vector resources for live sound, studios, podcasts, recording, churches and schools. Microphones, mixers, recording interfaces, instruments/MIDI, speakers, amplifiers, routing, connectors and stage equipment. Connections represent whole cables centred in their sockets."
+    },
+    {
+      "id": "test-measurement",
+      "name": "Test & Measurement",
+      "path": "test-measurement/test-measurement.tclib",
+      "description": "78 compact original vector laboratory setup resources: supplies, loads, oscilloscopes, meters, RF instruments, acquisition, probes, heaters, thermal equipment, relays, controls, pumps and bench apparatus. Separate conductor, complete-cable and fluid-hose connection points; no simulation models."
+    },
+    {
+      "id": "solar",
+      "name": "Solar power and batteries",
+      "path": "solar/Solar-Power-and-Batteries.TCLib",
+      "description": "52 conceptual home-energy planning symbols: solar panels and arrays, inverters, batteries, EV chargers, supply and backup equipment, protection, monitoring and home loads. Connections represent whole cables or logical links, rather than physical electrical terminals."
+    },
+    {
       "id": "spice",
       "name": "SPICE essentials",
       "path": "spice/spice.tclib",

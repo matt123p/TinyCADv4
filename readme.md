@@ -55,8 +55,26 @@ engine architecture, simulation workflows, file formats, libraries and editor to
 Standard libraries include 47 original vector network devices with matching 19-inch
 rack panels and cable connections inside their sockets. Use **Open Example → Examples**
 for the transistor amplifier or **Small office network**, which embeds its devices
-for standalone editing. See [Libraries and examples](docs/libraries.md) for the five
+for standalone editing. See [Libraries and examples](docs/libraries.md) for the nine
 bundled libraries, artwork provenance, rack conventions and build/test commands.
+
+The **Embedded processors and smart home** standard library adds 44 physical PCB
+views: ESP32/ESP8266 devkits, Raspberry Pi 3/4/5, Arduino Uno/Nano/Mega and sensor
+modules, plus LCD/OLED/touch/e-paper displays with front and rear wiring views. See the
+[library guide](docs/embedded-smart-home.md) for the inventory, previews and pinout sources.
+
+The **Audio & Music** standard library adds 99 compact original vector resources for
+PA, studios, podcasts, recording, instruments/MIDI and cabling, with socket-centred
+whole-cable connections. See the [guide](docs/audio-music.md). Embedded PCB views
+also use compact placement sizes: [18 mixed components on A4](docs/embedded-smart-home-a4.png).
+
+The **Test & Measurement** standard library adds 78 compact lab resources for power,
+instruments, probes, acquisition, thermal equipment, relays, controls and apparatus.
+Connections distinguish individual conductors, complete cables and fluid hoses. See
+the [guide](docs/test-measurement.md) and [A4 preview](docs/test-measurement-a4.png).
+
+The **Solar power and batteries** standard library includes 52 supplied symbols
+for conceptual home-energy planning, with whole-cable and logical-link connections.
 
 ## Installation
 

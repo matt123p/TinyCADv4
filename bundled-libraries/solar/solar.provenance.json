@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "id": "solar",
+  "name": "Solar power and batteries",
+  "source": "User-supplied library",
+  "sourceFile": "Solar-Power-and-Batteries.TCLib",
+  "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+  "symbolCount": 52,
+  "entryCount": 52,
+  "import": "Bundled byte-for-byte without editing component artwork, connections, descriptions or attributes.",
+  "convention": "Conceptual home-energy planning. Connection points represent whole cables or logical links, not individual electrical terminals. No embedded SPICE attributes."
+}
