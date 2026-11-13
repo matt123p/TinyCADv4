@@ -1,4 +1,27 @@
 {
   "version": 1,
-  "groups": []
+  "groups": [
+    {
+      "id": "examples",
+      "title": "Examples",
+      "preview": "images/AMP.svg",
+      "description": "Example drawings to explore and edit in TinyCAD. Select a drawing and choose **Open drawing** to open an editable copy.",
+      "examples": [
+        {
+          "id": "amp",
+          "title": "Transistor amplifier",
+          "path": "drawings/AMP.dsn",
+          "preview": "images/AMP.svg",
+          "description": "A transistor amplifier schematic from the original TinyCAD examples, drawn by Matt Pyne. Open the drawing to explore its components and connections, or use it as a starting point for your own design."
+        },
+        {
+          "id": "network-layout",
+          "title": "Small office network",
+          "path": "drawings/network-layout.dsn",
+          "preview": "images/network-layout.png",
+          "description": "A small office network built from the **Network layout** bundled library. All seven device definitions are embedded, so this drawing opens without loading the library.\n\nThe four matching 19-inch 1U panels are a router, a 24-port PoE+ switch with four SFP+ cages, a 24-port patch panel, and a blank panel. An ISP fibre terminal, ceiling access point, and five-port desk switch complete the layout.\n\n| Connection | Route |\n| --- | --- |\n| Internet hand-off | ONT1 LAN1 to RTR1 WAN1 |\n| Rack uplink | RTR1 SFP+1 to SW1 SFP+1 |\n| Ceiling access point | SW1 port 4 to PP1 port 1 to AP1 PoE/LAN |\n| Desk switch | SW1 port 6 to PP1 port 3 to DS1 port 1 |\n\nShort rack patch leads and longer office cable runs meet at the patch-panel sockets. Each socket represents one whole cable connection. Spare ports and the external ISP fibre endpoint are intentionally left open. This is a physical cable plan with no SPICE simulation model; circuit-checker notices about open sockets and wires entering panel outlines are expected.\n\nChoose **Open drawing** to edit a copy. Keep rack devices at their default scale and use a vertical step of **120 drawing units** to stack additional 1U panels. Add more devices from **Standard → Network layout**, and use **Save As** to keep your own plan."
+        }
+      ]
+    }
+  ]
 }

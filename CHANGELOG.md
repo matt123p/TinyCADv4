@@ -4,11 +4,17 @@
 
 ### Added
 
+- Network layout standard library with 47 original vector symbols: consumer devices, matching 19-inch 1U rack panels, copper and SFP+ switches, PoE variants, routers, firewalls, access points and patch panels. Cable connections snap inside the sockets.
+- An Examples collection containing the original transistor amplifier drawing and an editable small office network with stacked rack panels, patch leads and office cable runs.
 - Reopen a loaded example's explanation in a resizable right-hand panel beside the simulation charts, with independent show/hide controls.
 - Five captioned desktop video walkthroughs in the SPICE tutorials, with offline playback in the bundled example browser.
 
 - Schematic auto-layout for the whole sheet or selected items, with High, Medium and Low strength settings and explanations beside each option.
 - Run auto-layout in a background worker with cancellation, connection checks and a single Undo step to revert the result.
+
+### Changed
+
+- Remove the nine A-level, BTEC and degree course bundles. Keep GCSE Physics, Teaching components and all other standard libraries, including Network layout.
 
 ### Fixed
 
@@ -27,6 +33,8 @@
 
 ### Maintenance
 
+- Generate course bundles only when they are listed in the bundled library catalogue; retain the full teaching source inventory.
+- Add reproducible network library generation, artwork previews and checks for socket wiring, rack alignment, rotation, save/load and the bundled office network.
 - Add layout algorithm, dialog, worker, editor and browser regression suites, including the original amplifier and a captured layout with pin loops, with automated CI coverage.
 - Document auto-layout behavior and commands for running the test suites.
 

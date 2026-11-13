@@ -18,6 +18,11 @@ const json = async (file) =>
 export async function buildTeachingLibraries() {
   const master = await json('docs/symbol-libraries/all-symbols.json'),
     manifest = await json('docs/symbol-libraries/library-manifest.json');
+  const catalog = await json('bundled-libraries/config.json');
+  const bundledIds = new Set(catalog.libraries.map((library) => library.id));
+  const courses = manifest.libraries.filter((course) =>
+    bundledIds.has(course.library_id),
+  );
   const selections = await json('library-sources/teaching/selections.json');
   const spiceBytes = await readFile(
     path.join(root, 'bundled-libraries/spice/spice.tclib'),
@@ -201,7 +206,7 @@ export async function buildTeachingLibraries() {
     return { library, provenance, entries: selected };
   };
   const shared = await write('teaching', 'Teaching components', entries);
-  for (const course of manifest.libraries) {
+  for (const course of courses) {
     const ids = new Set(course.symbols.map((s) => s.id));
     await write(
       course.library_id,
@@ -210,7 +215,7 @@ export async function buildTeachingLibraries() {
     );
   }
   console.log(
-    `Built ${entries.length} modelled entries for 96 canonical types and ${manifest.libraries.length} course bundles.`,
+    `Built ${entries.length} modelled entries for 96 canonical types and ${courses.length} course bundles.`,
   );
   return shared;
 }

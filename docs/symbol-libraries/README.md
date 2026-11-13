@@ -2,6 +2,8 @@
 
 These are data inputs to the checked-in library generators. The [teaching catalogue](../teaching-catalogue.md) supplies course context, stable experiment IDs and syllabus sources; [libraries](../libraries.md) and [teaching models](../teaching-simulation-models.md) describe the executable bundles.
 
+The inventory retains all ten courses as source material. Only courses listed in [the bundled library catalogue](../../bundled-libraries/config.json) generate bundled course libraries; currently this is GCSE Physics. A-level, BTEC and degree course libraries are not bundled.
+
 | File | Purpose |
 | --- | --- |
 | [library-manifest.json](library-manifest.json) | Complete collection: ten courses, 214 experiments, symbol records and built-in-tool dependencies. |

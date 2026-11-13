@@ -52,6 +52,14 @@ and a bundled native engine in Electron. Simulation sheets, instruments and
 results live in the drawing. See the [technical reference](docs/README.md) for
 engine architecture, simulation workflows, file formats, libraries and editor tools.
 
+Standard libraries include 47 original vector network devices with matching 19-inch
+rack panels and cable connections inside their sockets. Use **Open Example → Examples**
+for the transistor amplifier or **Small office network**, which embeds its devices
+for standalone editing. See [Libraries and examples](docs/libraries.md) for the seven
+bundled libraries, artwork provenance, rack conventions and build/test commands.
+GCSE Physics and Teaching components remain bundled; A-level, BTEC and degree
+course inventories are retained as source material without individual bundles.
+
 ## Installation
 
 ### Preferred: App Stores

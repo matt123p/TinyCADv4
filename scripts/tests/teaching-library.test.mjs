@@ -33,7 +33,15 @@ test('every selected canonical component and style variant has embedded simulati
     ),
   );
   const SQL = await librarySqlite();
-  for (const course of manifest.libraries) {
+  const catalog = JSON.parse(
+    await readFile(
+      new URL('../../bundled-libraries/config.json', import.meta.url),
+    ),
+  );
+  const bundledIds = new Set(catalog.libraries.map((library) => library.id));
+  for (const course of manifest.libraries.filter((course) =>
+    bundledIds.has(course.library_id),
+  )) {
     const db = new SQL.Database(
       await readFile(
         new URL(

@@ -1,0 +1,441 @@
+{
+  "version": 1,
+  "id": "network-layout",
+  "name": "Network layout",
+  "output": "bundled-libraries/network-layout/network-layout.tclib",
+  "notes": "Original generic physical artwork for cable and rack planning. Each socket is one passive cable endpoint, not an RJ45 contact pinout or a SPICE device. All rack faces are 264 x 24 XML units (1320 x 120 internal units), with the same native bottom-right anchor. SFP+ endpoints represent whole transceiver slots.",
+  "references": [
+    {
+      "title": "TP-Link desktop switch front panels",
+      "url": "https://static.tp-link.com/TL-SG105_%26_TL-SG108_V3_Datasheet_1479040787021d.pdf"
+    },
+    {
+      "title": "QNAP 4 RJ45 + 2 SFP+ desktop switch",
+      "url": "https://www.qnap.com/en/product/qsw-2104-2s"
+    },
+    {
+      "title": "MikroTik ten-port rack router",
+      "url": "https://mikrotik.com/product/rb4011igs_rm"
+    },
+    {
+      "title": "Ubiquiti 48-port switch with four SFP+ uplinks",
+      "url": "https://techspecs.ui.com/unifi/switching/usw-pro-48-poe"
+    },
+    {
+      "title": "Ubiquiti ceiling access point",
+      "url": "https://techspecs.ui.com/unifi/wifi/u6-pro"
+    },
+    {
+      "title": "NETGEAR 300-series port-count and mounting table",
+      "url": "https://www.netgear.com/images/datasheet/switches/300-Series_Gigabit_DS.pdf"
+    },
+    {
+      "title": "TP-Link four powered ports plus one uplink",
+      "url": "https://www.tp-link.com/us/business-networking/poe-switch/tl-sg1005p/"
+    },
+    {
+      "title": "TP-Link ten total ports: eight RJ45 plus two SFP",
+      "url": "https://www.tp-link.com/sg/business-networking/smart-switch/t1500g-10ps/v1/"
+    },
+    {
+      "title": "MikroTik eight copper plus two SFP+",
+      "url": "https://mikrotik.com/product/crs310_8g_2s_in"
+    },
+    {
+      "title": "MikroTik 24 copper plus two SFP+",
+      "url": "https://mikrotik.com/product/CRS326-24G-2SplusRM"
+    },
+    {
+      "title": "Ubiquiti eight-slot SFP+ aggregation switch",
+      "url": "https://techspecs.ui.com/unifi/switching/usw-aggregation"
+    },
+    {
+      "title": "Cisco specialist 32-port QSFP28 switch",
+      "url": "https://www.cisco.com/c/en/us/products/collateral/switches/nexus-3000-series-switches/datasheet-c78-740895.html"
+    }
+  ],
+  "sourceReview": {
+    "searches": ["router", "switch network", "access point"],
+    "inspected": [
+      {
+        "symbolId": 1697,
+        "nameId": 10886,
+        "name": "SWITCH-8",
+        "owner": "alanjshea"
+      },
+      {
+        "symbolId": 1706,
+        "nameId": 10896,
+        "name": "Network Router",
+        "owner": "alanjshea"
+      },
+      {
+        "symbolId": 1709,
+        "nameId": 10899,
+        "name": "Wireless Access Point",
+        "owner": "alanjshea"
+      }
+    ],
+    "decision": "Custom physical artwork requested. Existing symbols have perspective/icon geometry and edge terminals; they do not provide the requested socket-centred connections or matching rack envelopes. No donor geometry or pin mappings are used. Manufacturer references inform generic device families, not exact product replicas."
+  },
+  "devices": [
+    {
+      "id": "desktop-switch-4",
+      "name": "Switch - desktop - 4 RJ45",
+      "kind": "switch",
+      "copper": 4
+    },
+    {
+      "id": "desktop-switch-5",
+      "name": "Switch - desktop - 5 RJ45",
+      "kind": "switch",
+      "copper": 5
+    },
+    {
+      "id": "desktop-switch-8",
+      "name": "Switch - desktop - 8 RJ45",
+      "kind": "switch",
+      "copper": 8
+    },
+    {
+      "id": "desktop-switch-16",
+      "name": "Switch - desktop - 16 RJ45",
+      "kind": "switch",
+      "copper": 16
+    },
+    {
+      "id": "desktop-switch-4-2sfp",
+      "name": "Switch - desktop - 4 RJ45 + 2 SFP+",
+      "kind": "switch",
+      "copper": 4,
+      "sfp": 2
+    },
+    {
+      "id": "desktop-switch-8-2sfp",
+      "name": "Switch - desktop - 8 RJ45 + 2 SFP+",
+      "kind": "switch",
+      "copper": 8,
+      "sfp": 2
+    },
+    {
+      "id": "desktop-switch-24",
+      "name": "Switch - desktop - 24 RJ45",
+      "kind": "switch",
+      "copper": 24
+    },
+    {
+      "id": "desktop-switch-5-poe",
+      "name": "Switch - desktop - 4 PoE+ + 1 RJ45 uplink",
+      "kind": "switch",
+      "copper": 5,
+      "poePorts": 4
+    },
+    {
+      "id": "desktop-switch-8-poe",
+      "name": "Switch - desktop - 8 PoE+ RJ45",
+      "kind": "switch",
+      "copper": 8,
+      "poePorts": 8
+    },
+    {
+      "id": "rack-switch-4",
+      "name": "Switch - 19in 1U - 4 RJ45",
+      "kind": "switch",
+      "rack": true,
+      "copper": 4
+    },
+    {
+      "id": "rack-switch-5",
+      "name": "Switch - 19in 1U - 5 RJ45",
+      "kind": "switch",
+      "rack": true,
+      "copper": 5
+    },
+    {
+      "id": "rack-switch-8-2sfp",
+      "name": "Switch - 19in 1U - 8 RJ45 + 2 SFP+",
+      "kind": "switch",
+      "rack": true,
+      "copper": 8,
+      "sfp": 2
+    },
+    {
+      "id": "rack-switch-10-2sfp",
+      "name": "Switch - 19in 1U - 10 RJ45 + 2 SFP+",
+      "kind": "switch",
+      "rack": true,
+      "copper": 10,
+      "sfp": 2
+    },
+    {
+      "id": "rack-switch-16",
+      "name": "Switch - 19in 1U - 16 RJ45",
+      "kind": "switch",
+      "rack": true,
+      "copper": 16
+    },
+    {
+      "id": "rack-switch-16-2sfp",
+      "name": "Switch - 19in 1U - 16 RJ45 + 2 SFP+",
+      "kind": "switch",
+      "rack": true,
+      "copper": 16,
+      "sfp": 2
+    },
+    {
+      "id": "rack-switch-24",
+      "name": "Switch - 19in 1U - 24 RJ45",
+      "kind": "switch",
+      "rack": true,
+      "copper": 24
+    },
+    {
+      "id": "rack-switch-24-2sfp",
+      "name": "Switch - 19in 1U - 24 RJ45 + 2 SFP+",
+      "kind": "switch",
+      "rack": true,
+      "copper": 24,
+      "sfp": 2
+    },
+    {
+      "id": "rack-switch-24-4sfp",
+      "name": "Switch - 19in 1U - 24 RJ45 + 4 SFP+",
+      "kind": "switch",
+      "rack": true,
+      "copper": 24,
+      "sfp": 4
+    },
+    {
+      "id": "rack-switch-32-4sfp",
+      "name": "Switch - 19in 1U - 32 RJ45 + 4 SFP+",
+      "kind": "switch",
+      "rack": true,
+      "copper": 32,
+      "sfp": 4
+    },
+    {
+      "id": "rack-switch-48-4sfp",
+      "name": "Switch - 19in 1U - 48 RJ45 + 4 SFP+",
+      "kind": "switch",
+      "rack": true,
+      "copper": 48,
+      "sfp": 4
+    },
+    {
+      "id": "rack-switch-8",
+      "name": "Switch - 19in 1U - 8 RJ45",
+      "kind": "switch",
+      "rack": true,
+      "copper": 8
+    },
+    {
+      "id": "rack-switch-48",
+      "name": "Switch - 19in 1U - 48 RJ45",
+      "kind": "switch",
+      "rack": true,
+      "copper": 48
+    },
+    {
+      "id": "rack-switch-16-poe",
+      "name": "Switch - 19in 1U - 16 PoE+ RJ45 + 2 SFP+",
+      "kind": "switch",
+      "rack": true,
+      "copper": 16,
+      "poePorts": 16,
+      "sfp": 2
+    },
+    {
+      "id": "rack-switch-24-poe",
+      "name": "Switch - 19in 1U - 24 PoE+ RJ45 + 4 SFP+",
+      "kind": "switch",
+      "rack": true,
+      "copper": 24,
+      "poePorts": 24,
+      "sfp": 4
+    },
+    {
+      "id": "rack-switch-48-poe",
+      "name": "Switch - 19in 1U - 48 PoE+ RJ45 + 4 SFP+",
+      "kind": "switch",
+      "rack": true,
+      "copper": 48,
+      "poePorts": 48,
+      "sfp": 4
+    },
+    {
+      "id": "wifi-router-4",
+      "name": "Router - Wi-Fi - 1 WAN + 4 LAN",
+      "kind": "wifi-router",
+      "copper": 5,
+      "wan": 1
+    },
+    {
+      "id": "wifi-router-8",
+      "name": "Router - Wi-Fi - 1 WAN + 8 LAN",
+      "kind": "wifi-router",
+      "copper": 9,
+      "wan": 1
+    },
+    {
+      "id": "desktop-router-4",
+      "name": "Router - desktop - 1 WAN + 4 LAN",
+      "kind": "router",
+      "copper": 5,
+      "wan": 1
+    },
+    {
+      "id": "rack-router-4-2sfp",
+      "name": "Router - 19in 1U - 4 RJ45 + 2 SFP+",
+      "kind": "router",
+      "rack": true,
+      "copper": 4,
+      "sfp": 2,
+      "wan": 1
+    },
+    {
+      "id": "rack-router-8-2sfp",
+      "name": "Router - 19in 1U - 8 RJ45 + 2 SFP+",
+      "kind": "router",
+      "rack": true,
+      "copper": 8,
+      "sfp": 2,
+      "wan": 2
+    },
+    {
+      "id": "rack-router-10-2sfp",
+      "name": "Router - 19in 1U - 10 RJ45 + 2 SFP+",
+      "kind": "router",
+      "rack": true,
+      "copper": 10,
+      "sfp": 2,
+      "wan": 2
+    },
+    {
+      "id": "desktop-firewall-6",
+      "name": "Firewall - desktop - 6 RJ45",
+      "kind": "firewall",
+      "copper": 6,
+      "wan": 2
+    },
+    {
+      "id": "rack-firewall-6-2sfp",
+      "name": "Firewall - 19in 1U - 6 RJ45 + 2 SFP+",
+      "kind": "firewall",
+      "rack": true,
+      "copper": 6,
+      "sfp": 2,
+      "wan": 2
+    },
+    {
+      "id": "ap-ceiling-1",
+      "name": "Access point - ceiling - 1 PoE LAN",
+      "kind": "ap-ceiling",
+      "copper": 1,
+      "poe": true
+    },
+    {
+      "id": "ap-ceiling-2",
+      "name": "Access point - ceiling - 2 LAN",
+      "kind": "ap-ceiling",
+      "copper": 2,
+      "poe": true
+    },
+    {
+      "id": "ap-wall-4",
+      "name": "Access point - wall - 1 PoE uplink + 4 LAN",
+      "kind": "ap-wall",
+      "copper": 5,
+      "poe": true
+    },
+    {
+      "id": "ap-desktop-2",
+      "name": "Access point - desktop - 2 LAN",
+      "kind": "ap-desktop",
+      "copper": 2,
+      "poe": true
+    },
+    {
+      "id": "mesh-node-2",
+      "name": "Access point - mesh node - 2 LAN",
+      "kind": "mesh",
+      "copper": 2
+    },
+    {
+      "id": "rack-controller-4",
+      "name": "Wi-Fi controller - 19in 1U - 4 RJ45",
+      "kind": "controller",
+      "rack": true,
+      "copper": 4
+    },
+    {
+      "id": "patch-panel-12",
+      "name": "Patch panel - 19in 1U - 12 RJ45",
+      "kind": "patch",
+      "rack": true,
+      "copper": 12
+    },
+    {
+      "id": "patch-panel-24",
+      "name": "Patch panel - 19in 1U - 24 RJ45",
+      "kind": "patch",
+      "rack": true,
+      "copper": 24
+    },
+    {
+      "id": "patch-panel-48",
+      "name": "Patch panel - 19in 1U - 48 RJ45",
+      "kind": "patch",
+      "rack": true,
+      "copper": 48
+    },
+    {
+      "id": "fibre-ont",
+      "name": "ONT - desktop - fibre + LAN",
+      "kind": "ont",
+      "copper": 1,
+      "fibre": 1
+    },
+    {
+      "id": "poe-injector",
+      "name": "PoE injector - LAN in + PoE out",
+      "kind": "injector",
+      "copper": 2
+    },
+    {
+      "id": "rack-blank",
+      "name": "Blank panel - 19in 1U",
+      "kind": "blank",
+      "rack": true,
+      "copper": 0
+    },
+    {
+      "id": "rack-aggregation-8",
+      "name": "Aggregation switch - 19in 1U - 8 SFP+",
+      "kind": "aggregation",
+      "rack": true,
+      "copper": 0,
+      "sfp": 8
+    },
+    {
+      "id": "rack-aggregation-16",
+      "name": "Aggregation switch - 19in 1U - 16 SFP+",
+      "kind": "aggregation",
+      "rack": true,
+      "copper": 0,
+      "sfp": 16
+    }
+  ],
+  "survey": {
+    "date": "2026-11-13",
+    "scope": "Manufacturer catalogue coverage, not sales or market-share statistics.",
+    "coreCopperCounts": [5, 8, 16, 24, 48],
+    "commonUplinkMixes": [
+      "8 RJ45 + 2 SFP/SFP+",
+      "16 RJ45 + 2 SFP/SFP+",
+      "24 RJ45 + 2 or 4 SFP/SFP+",
+      "48 RJ45 + 4 SFP+"
+    ],
+    "naming": "Count actual sockets. A five-port PoE switch may have four powered sockets and one uplink. A ten-port switch may mean eight RJ45 plus two SFP, not ten RJ45.",
+    "extended": "4 RJ45, 10 RJ45 + 2 SFP+, and 32 RJ45 + 4 SFP+ are generic additional layout options requested for coverage; not claimed to be core manufacturer configurations. 32-port examples in the survey are specialist QSFP/fibre equipment."
+  }
+}
