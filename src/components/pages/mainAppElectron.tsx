@@ -10,6 +10,9 @@ import { CurrentFile } from '../../state/stores/altStoreReducer';
 import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
 
 export interface MainAppElectronProps {
+  hasExampleExplanation: boolean;
+  exampleExplanationVisible: boolean;
+  simulationPanelVisible: boolean;
   selected_sheet: number;
   editSymbol: tclibLibraryEntry;
   editLibrary: tclib;
@@ -32,6 +35,14 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
       window.electronAPI.setMenuMode(!!props.editLibrary);
     }
   }, [props.editLibrary]);
+
+  useEffect(() => {
+    window.electronAPI?.setViewMenuState?.({
+      hasExampleExplanation: props.hasExampleExplanation,
+      exampleExplanationVisible: props.exampleExplanationVisible,
+      simulationPanelVisible: props.simulationPanelVisible,
+    });
+  }, [props.hasExampleExplanation, props.exampleExplanationVisible, props.simulationPanelVisible]);
 
   useEffect(() => {
     props.dispatch(initialise() as any);

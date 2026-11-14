@@ -32,8 +32,49 @@
 }
 
 .top-bar .top-bar-right {
+  display: flex;
+  align-items: center;
   flex: 0 1 auto;
   margin-left: auto;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.topbar-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover,
+  &[aria-pressed='true'] {
+    background-color: #555;
+  }
+
+  &:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 1px;
+  }
 }
 
 .menu,

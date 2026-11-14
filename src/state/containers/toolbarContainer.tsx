@@ -9,8 +9,6 @@ const mapStateToProps = (state: docDrawing) => {
   const view = state.docStore.present.view;
   const update_view = new updateView();
   return {
-    hasExampleExplanation: !!state.altStore.exampleExplanation,
-    exampleExplanationVisible: state.altStore.exampleExplanationVisible,
     simulationPanelVisible: state.altStore.simulationPanelVisible,
     simulationSheet: !state.docStore.present.editSymbol && sheet?.kind === 'simulation',
     menu_command: view.menu_command,

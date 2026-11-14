@@ -36,10 +36,13 @@ export const buildNativeMenuTranslations = (t: TFunction<'common'>): NativeMenuT
   flipVertical: menuLabel(t, 'toolbar.flipVertical', 'Flip Vertical'),
 
   view: menuLabel(t, 'toolbar.view', 'View'),
+  viewExplanation: menuLabel(t, 'examples.viewExplanation', 'View Explanation'),
+  showCharts: menuLabel(t, 'toolbar.showCharts', 'Show Charts'),
   zoomIn: menuLabel(t, 'toolbar.zoomIn', 'Zoom In'),
   zoomOut: menuLabel(t, 'toolbar.zoomOut', 'Zoom Out'),
 
   tools: menuLabel(t, 'toolbar.tools', 'Tools'),
+  autoLayout: menuLabel(t, 'autoLayout.title', 'Auto-layout'),
   annotateSymbols: menuLabel(t, 'toolbar.annotateSymbols', 'Annotate Symbols...'),
   billOfMaterials: menuLabel(t, 'toolbar.billOfMaterials', 'Bill of Materials...'),
   checkDesignRules: menuLabel(t, 'toolbar.checkDesignRules', 'Check Design Rules'),

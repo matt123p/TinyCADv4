@@ -51,6 +51,7 @@ declare global {
                 libraries: { name: string, id: string, folderId?: string | null }[];
                 libraryFolders: { id: string, name: string }[];
             }) => void;
+            setViewMenuState: (state: { hasExampleExplanation: boolean; exampleExplanationVisible: boolean; simulationPanelVisible: boolean }) => void;
             setMenuMode: (mode: boolean) => void;
             setMenuTranslations: (translations: Record<string, string>) => void;
 

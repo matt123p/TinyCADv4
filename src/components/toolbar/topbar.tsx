@@ -1,15 +1,31 @@
-﻿import { PersonProhibitedRegular, PersonRegular } from '@fluentui/react-icons';
-import React, { ChangeEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
+﻿import {
+  BookOpenRegular,
+  FolderOpenRegular,
+  PersonProhibitedRegular,
+  PersonRegular,
+} from '@fluentui/react-icons';
+import React, {
+  ChangeEvent,
+  KeyboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dispatch } from 'redux';
 import { renameFile } from '../../io/files';
 import { CurrentFile, CurrentUser } from '../../state/stores/altStoreReducer';
 import { openExternalUrl } from '../../util/navigation';
+import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
 
 interface TopbarProps {
   user: CurrentUser;
   file: CurrentFile;
   saveNeeded: boolean;
+  canOpenExamples: boolean;
+  hasExampleExplanation: boolean;
+  exampleExplanationVisible: boolean;
   dispatch: Dispatch;
 }
 
@@ -17,6 +33,9 @@ export const Topbar: React.FC<TopbarProps> = ({
   user,
   file,
   saveNeeded,
+  canOpenExamples,
+  hasExampleExplanation,
+  exampleExplanationVisible,
   dispatch,
 }) => {
   const { t } = useTranslation();
@@ -43,7 +62,7 @@ export const Topbar: React.FC<TopbarProps> = ({
         return msg;
       }
     },
-    [saveNeeded, t]
+    [saveNeeded, t],
   );
 
   useEffect(() => {
@@ -147,9 +166,52 @@ export const Topbar: React.FC<TopbarProps> = ({
             </li>
           </ul>
         </div>
-        <div className="top-bar-right">{login}</div>
+        <div className="top-bar-right">
+          {canOpenExamples && (
+            <div className="topbar-actions">
+              <button
+                type="button"
+                className="topbar-action"
+                title={t('examples.openExample')}
+                aria-label={t('examples.openExample')}
+                onClick={() =>
+                  dispatch(actionSelectDialog('open_example', null))
+                }
+              >
+                <FolderOpenRegular />
+                {t('examples.openExample')}
+              </button>
+              {hasExampleExplanation && (
+                <button
+                  type="button"
+                  className="topbar-action"
+                  title={t(
+                    exampleExplanationVisible
+                      ? 'examples.hideExplanation'
+                      : 'examples.showExplanation',
+                  )}
+                  aria-label={t(
+                    exampleExplanationVisible
+                      ? 'examples.hideExplanation'
+                      : 'examples.showExplanation',
+                  )}
+                  aria-pressed={exampleExplanationVisible}
+                  onClick={() =>
+                    dispatch({
+                      type: 'example/explanation',
+                      visible: !exampleExplanationVisible,
+                    })
+                  }
+                >
+                  <BookOpenRegular />
+                  {t('examples.explanation')}
+                </button>
+              )}
+            </div>
+          )}
+          {login}
+        </div>
       </div>
     </div>
   );
 };
-

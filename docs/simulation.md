@@ -90,7 +90,7 @@ also offer a PNG image download. Probe and source-preview charts provide CSV too
 The right-hand **Simulation charts** panel is available in browser and Electron.
 It opens for simulation drawings and automatically adds a chart for each probe.
 Without probes, a simulation setup gets an output chart. **Simulation → Show charts**
-opens the panel again after it is hidden. Drag its left edge to resize it.
+opens the panel again after it is hidden. Electron also provides **View → Show Charts** at the top of its native View menu; its check mark follows panel visibility. The toolbar's Simulation menu remains available in both modes. Drag the panel's left edge to resize it.
 
 Choose a simulation setup and acquisition, then use **Run** or **Stop** without
 leaving the drawing. Charts update during acquisition. Saved acquisitions remain
@@ -113,7 +113,7 @@ another drawing or starting another simulation.
 
 ## Circuit Explorer
 
-Circuit Explorer lives in the right-hand chart panel in browser and Electron. Use **Simulation → Show charts**, then select a setup. Its analysis settings remain on the Simulation sheet.
+Circuit Explorer lives in the right-hand chart panel in browser and Electron. Use **Simulation → Show charts** (or **View → Show Charts** in Electron), then select a setup. Its analysis settings remain on the Simulation sheet.
 
 ### Examples and temporary tuning
 

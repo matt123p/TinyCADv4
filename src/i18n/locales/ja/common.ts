@@ -35,6 +35,7 @@ const common = {
   topbar: { unsavedWarning: '設計は保存されていません。このまま離れますか？' },
   designApp: { showSidePanel: 'サイドパネルを表示' },
   toolbar: {
+    showCharts: "グラフを表示",
     simulation: "シミュレーション",
     spiceComponents: {
       title: "部品",
@@ -116,6 +117,7 @@ const common = {
     listMode: { symbols: 'シンボル', netlist: 'ネットリスト' },
   },
   examples: {
+    viewExplanation: "解説を表示",
     explanation: "解説",
     explanationTitle: "サンプルの解説",
     showExplanation: "サンプルの解説を表示",

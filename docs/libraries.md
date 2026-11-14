@@ -129,6 +129,8 @@ Regression commands are `test:spice`, `test:digital`, `test:functional`, `test:s
 
 ## Bundled examples
 
+In a browser, **Open Example** is on the right of the title bar. **Explanation** appears beside it when the current drawing has an example explanation, and toggles that panel. In Electron, use **File → Open Example**, after **Open Recent** and a separator; **View → View Explanation** toggles the panel and is disabled when no explanation is available.
+
 [bundled-examples/config.json](../bundled-examples/config.json) defines the **Examples** collection, containing seven drawings: the transistor amplifier, small office network, ESP32 climate station, solar/battery home, podcast studio, laboratory bench and motor-control bench. Each new library has a connected example with a Markdown explanation and matching preview. The bundled SPICE and XSPICE examples are defined in [tutorials/catalog.json](../tutorials/catalog.json), with drawings, descriptions and previews under [tutorials](../tutorials/README.md). The packaging script merges both catalogues into `dist/bundled-examples/config.json` and copies tutorial resources under `dist/bundled-examples/tutorials/`. Both catalogues use [bundled-examples.schema.json](../schemas/bundled-examples.schema.json).
 
 | Example | Editable drawing | Preview |

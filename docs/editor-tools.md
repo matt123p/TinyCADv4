@@ -2,7 +2,7 @@
 
 ## Auto-layout
 
-Use the **Auto-layout** toolbar button while editing a schematic. The dialog
+Use the **Auto-layout** toolbar button beside **Simulation** while editing a schematic, or **Tools → Auto-layout** in Electron. The dialog
 explains the operation and offers **Whole sheet** or **Selected Items**. Selected
 Items is disabled unless the selection includes a supported circuit item.
 When a selection is available, it is the default scope.

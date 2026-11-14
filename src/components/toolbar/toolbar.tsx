@@ -45,7 +45,6 @@ import {
   ShareRegular,
   LibraryRegular,
   FolderOpenRegular,
-  BookOpenRegular,
   SaveCopyRegular,
   QuestionCircleRegular,
   ColorRegular,
@@ -188,8 +187,6 @@ const useStyles = makeStyles({
 });
 
 interface ToolbarProps {
-  hasExampleExplanation?: boolean;
-  exampleExplanationVisible?: boolean;
   simulationPanelVisible?: boolean;
   simulationToolbarRef?: React.Ref<HTMLSpanElement>;
   simulationSheet?: boolean;
@@ -506,10 +503,6 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
     return (
       <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
         <FluentToolbar>
-          <ToolbarButton aria-label={t('examples.openExample')} title={t('examples.openExample')}
-            icon={<FolderOpenRegular />} onClick={() => props.dispatch(actionSelectDialog('open_example', null))}>
-            {t('examples.openExample')}
-          </ToolbarButton>
           {process.env.TARGET_SYSTEM === 'filesystem' && (
              <ToolbarButton
                 aria-label={t('toolbar.open')}
@@ -679,22 +672,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           onClick={() => props.dispatch(fileNew())}
         />} 
 
-        <ToolbarButton aria-label={t('examples.openExample')} title={t('examples.openExample')}
-          icon={<FolderOpenRegular />} onClick={() => props.dispatch(actionSelectDialog('open_example', null))}>
-          {t('examples.openExample')}
-        </ToolbarButton>
 
-        {!props.editSymbol && props.hasExampleExplanation && (
-          <ToolbarButton
-            aria-label={t(props.exampleExplanationVisible ? 'examples.hideExplanation' : 'examples.showExplanation')}
-            title={t(props.exampleExplanationVisible ? 'examples.hideExplanation' : 'examples.showExplanation')}
-            aria-pressed={!!props.exampleExplanationVisible}
-            icon={<BookOpenRegular />}
-            onClick={() => props.dispatch({ type: 'example/explanation', visible: !props.exampleExplanationVisible })}
-          >
-            {t('examples.explanation')}
-          </ToolbarButton>
-        )}
 
         {/* Save buttons */}
         <ToolbarButton
@@ -771,6 +749,14 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             </Menu>
           </MenuList></MenuPopover>
         </Menu>
+        {!props.editLibrary && !props.simulationSheet && (
+          <ToolbarButton
+            aria-label={t('autoLayout.title')}
+            title={t('autoLayout.title')}
+            icon={<ArrowAutofitContentRegular />}
+            onClick={() => props.dispatch(actionSelectDialog('auto_layout', null))}
+          />
+        )}
         </>}
         <ToolbarDivider className={styles.divider} />
         {/* Undo/Redo */}
@@ -931,14 +917,6 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         <ToolbarDivider className={styles.divider} />
 
         {/* Rotate/Flip buttons */}
-        {!props.editSymbol && !props.editLibrary && (
-          <ToolbarButton
-            aria-label={t('autoLayout.title')}
-            title={t('autoLayout.title')}
-            icon={<ArrowAutofitContentRegular />}
-            onClick={() => props.dispatch(actionSelectDialog('auto_layout', null))}
-          />
-        )}
 
         <ToolbarButton
           aria-label={t('toolbar.rotateCounterClockwise')}

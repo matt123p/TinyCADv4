@@ -42,6 +42,7 @@ const common = {
   topbar: { unsavedWarning: 'Entwurf nicht gespeichert – möchten Sie die Seite wirklich verlassen?' },
   designApp: { showSidePanel: 'Seitenleiste anzeigen' },
   toolbar: {
+    showCharts: "Diagramme anzeigen",
     simulation: "Simulation",
     spiceComponents: {
       title: "Bauteile",
@@ -124,6 +125,7 @@ const common = {
     listMode: { symbols: 'Symbole', netlist: 'Netzliste' },
   },
   examples: {
+    viewExplanation: "Erklärung anzeigen",
     explanation: "Erklärung",
     explanationTitle: "Erklärung zum Beispiel",
     showExplanation: "Erklärung zum Beispiel anzeigen",

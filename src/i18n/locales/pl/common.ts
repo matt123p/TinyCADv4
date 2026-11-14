@@ -57,6 +57,7 @@ const common = {
     showSidePanel: 'Pokaż panel boczny',
   },
   toolbar: {
+    showCharts: "Pokaż wykresy",
     simulation: "Symulacja",
     spiceComponents: {
       title: "Elementy",
@@ -551,6 +552,7 @@ const common = {
     },
   },
   examples: {
+    viewExplanation: "Pokaż objaśnienie",
     explanation: "Objaśnienie",
     explanationTitle: "Objaśnienie przykładu",
     showExplanation: "Pokaż objaśnienie przykładu",

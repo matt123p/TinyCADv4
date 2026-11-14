@@ -35,6 +35,7 @@ const common = {
   topbar: { unsavedWarning: '设计尚未保存，确定要离开吗？' },
   designApp: { showSidePanel: '显示侧边栏' },
   toolbar: {
+    showCharts: "显示图表",
     simulation: "仿真",
     spiceComponents: {
       title: "元件",
@@ -115,6 +116,7 @@ const common = {
     listMode: { symbols: '符号', netlist: '网表' },
   },
   examples: {
+    viewExplanation: "查看说明",
     explanation: "说明",
     explanationTitle: "示例说明",
     showExplanation: "显示示例说明",

@@ -57,6 +57,7 @@ const common = {
     showSidePanel: 'Show side panel',
   },
   toolbar: {
+    showCharts: "Show Charts",
     simulation: "Simulation",
     spiceComponents: {
       title: "Components",
@@ -551,6 +552,7 @@ const common = {
     },
   },
   examples: {
+    viewExplanation: "View Explanation",
     explanation: "Explanation",
     explanationTitle: "Example explanation",
     showExplanation: "Show example explanation",

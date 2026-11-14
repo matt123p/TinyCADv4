@@ -35,6 +35,7 @@ const common = {
   topbar: { unsavedWarning: 'Le schéma n’est pas enregistré. Voulez-vous vraiment quitter ?' },
   designApp: { showSidePanel: 'Afficher le panneau latéral' },
   toolbar: {
+    showCharts: "Afficher les graphiques",
     simulation: "Simulation",
     spiceComponents: {
       title: "Composants",
@@ -116,6 +117,7 @@ const common = {
     listMode: { symbols: 'Symboles', netlist: 'Netlist' },
   },
   examples: {
+    viewExplanation: "Afficher l’explication",
     explanation: "Explication",
     explanationTitle: "Explication de l’exemple",
     showExplanation: "Afficher l’explication de l’exemple",

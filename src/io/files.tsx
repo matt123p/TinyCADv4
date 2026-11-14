@@ -848,6 +848,16 @@ export function handleMenuCommand(command: string) {
         dispatch(actionCommand('mirror_v'));
         break;
       // View
+      case 'view-explanation':
+        if (!state.docStore.present.editSymbol && !editLibrary && state.altStore.exampleExplanation) {
+          dispatch({ type: 'example/explanation', visible: !state.altStore.exampleExplanationVisible });
+        }
+        break;
+      case 'view-show-charts':
+        if (!state.docStore.present.editSymbol && !editLibrary) {
+          dispatch({ type: 'simulation/panel', visible: !state.altStore.simulationPanelVisible });
+        }
+        break;
       case 'view-zoom-in':
         dispatch(actionCommand('zoom_in'));
         break;
@@ -855,6 +865,14 @@ export function handleMenuCommand(command: string) {
         dispatch(actionCommand('zoom_out'));
         break;
       // Tools
+      case 'tools-auto-layout': {
+        const present = state.docStore.present;
+        const sheet = present.drawing.sheets[present.view.selected_sheet];
+        if (!present.editSymbol && !editLibrary && sheet && sheet.kind !== 'simulation') {
+          dispatch(actionSelectDialog('auto_layout', null));
+        }
+        break;
+      }
       case 'tools-annotate':
         dispatch(actionSelectDialog('annotate', null));
         break;

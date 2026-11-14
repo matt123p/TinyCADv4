@@ -35,6 +35,7 @@ const common = {
   topbar: { unsavedWarning: 'Disegno non salvato: vuoi davvero uscire?' },
   designApp: { showSidePanel: 'Mostra pannello laterale' },
   toolbar: {
+    showCharts: "Mostra grafici",
     simulation: "Simulazione",
     spiceComponents: {
       title: "Componenti",
@@ -116,6 +117,7 @@ const common = {
     listMode: { symbols: 'Simboli', netlist: 'Netlist' },
   },
   examples: {
+    viewExplanation: "Visualizza spiegazione",
     explanation: "Spiegazione",
     explanationTitle: "Spiegazione dell’esempio",
     showExplanation: "Mostra spiegazione dell’esempio",

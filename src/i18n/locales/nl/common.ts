@@ -57,6 +57,7 @@ const common = {
     showSidePanel: 'Zijpaneel tonen',
   },
   toolbar: {
+    showCharts: "Grafieken weergeven",
     simulation: "Simulatie",
     spiceComponents: {
       title: "Componenten",
@@ -551,6 +552,7 @@ const common = {
     },
   },
   examples: {
+    viewExplanation: "Uitleg weergeven",
     explanation: "Uitleg",
     explanationTitle: "Uitleg bij voorbeeld",
     showExplanation: "Uitleg bij voorbeeld tonen",

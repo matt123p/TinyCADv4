@@ -1,6 +1,7 @@
 import { isDrawingFile } from '../shared/drawingFiles.js';
 import { registerSimulation } from './simulation.js';
 import { chartWindowOptions, configureChartWindow } from './chartWindows.js';
+import { drawingOpenMenu, drawingViewMenu } from './drawingMenus.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import Store from 'electron-store';
@@ -24,6 +25,7 @@ const store = new Store(); // Create store instance
 let mainWindow;
 let fileToOpen = null;
 let isLibraryMode = false;
+let viewMenuState = { hasExampleExplanation: false, exampleExplanationVisible: false, simulationPanelVisible: false };
 let menuTranslations = {};
 let refreshMenu = () => {};
 let ipcHandlersRegistered = false;
@@ -123,12 +125,7 @@ function createWindow() {
             ]
           },
           { label: getMenuLabel('open', 'Open'), accelerator: 'CmdOrCtrl+O', click: () => mainWindow.webContents.send('menu-command', 'file-open') },
-          { label: getMenuLabel('openExample', 'Open Example'), click: () => mainWindow.webContents.send('menu-command', 'file-open-example') },
-          {
-            label: getMenuLabel('openRecent', 'Open Recent'),
-            submenu: recentMenu.length > 0 ? recentMenu : [{ label: getMenuLabel('noRecentFiles', 'No Recent Files'), enabled: false }]
-          },
-          { type: 'separator' },
+          ...drawingOpenMenu(getMenuLabel, recentMenu, command => mainWindow.webContents.send('menu-command', command)),
           { label: getMenuLabel('save', 'Save'), accelerator: 'CmdOrCtrl+S', click: () => mainWindow.webContents.send('menu-command', 'file-save') },
           { label: getMenuLabel('saveAs', 'Save As...'), accelerator: 'CmdOrCtrl+Shift+S', click: () => mainWindow.webContents.send('menu-command', 'file-save-as') },
           { label: getMenuLabel('saveWithoutResults', 'Save without results...'), click: () => mainWindow.webContents.send('menu-command', 'file-save-without-results') },
@@ -170,14 +167,13 @@ function createWindow() {
       },
       {
         label: getMenuLabel('view', 'View'),
-        submenu: [
-          { label: getMenuLabel('zoomIn', 'Zoom In'), accelerator: 'CmdOrCtrl+Plus', click: () => mainWindow.webContents.send('menu-command', 'view-zoom-in') },
-          { label: getMenuLabel('zoomOut', 'Zoom Out'), accelerator: 'CmdOrCtrl+-', click: () => mainWindow.webContents.send('menu-command', 'view-zoom-out') },
-        ]
+        submenu: drawingViewMenu(getMenuLabel, viewMenuState, isLibraryMode,
+          command => mainWindow.webContents.send('menu-command', command))
       },
       ...(isLibraryMode ? [] : [{
         label: getMenuLabel('tools', 'Tools'),
         submenu: [
+          { label: getMenuLabel('autoLayout', 'Auto-layout'), click: () => mainWindow.webContents.send('menu-command', 'tools-auto-layout') },
           { label: getMenuLabel('annotateSymbols', 'Annotate Symbols...'), click: () => mainWindow.webContents.send('menu-command', 'tools-annotate') },
           { label: getMenuLabel('billOfMaterials', 'Bill of Materials...'), click: () => mainWindow.webContents.send('menu-command', 'tools-bom') },
           { type: 'separator' },
@@ -498,6 +494,19 @@ function createWindow() {
     ipcMain.on('set-menu-mode', (event, mode) => {
       if (isLibraryMode !== mode) {
         isLibraryMode = mode;
+        refreshMenu();
+      }
+    });
+
+    ipcMain.on('set-view-menu-state', (event, state) => {
+      if (!mainWindow || event.sender !== mainWindow.webContents || !state || typeof state !== 'object') return;
+      const next = {
+        hasExampleExplanation: state.hasExampleExplanation === true,
+        exampleExplanationVisible: state.exampleExplanationVisible === true,
+        simulationPanelVisible: state.simulationPanelVisible === true,
+      };
+      if (Object.keys(next).some(key => next[key] !== viewMenuState[key])) {
+        viewMenuState = next;
         refreshMenu();
       }
     });
