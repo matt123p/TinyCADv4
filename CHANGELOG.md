@@ -4,6 +4,13 @@
 
 ### Added
 
+- Integrated local ngspice simulation in browser and desktop builds, with Simulation sheets for operating point, transient, AC, DC sweep, noise, transfer-function and pole-zero analyses. Desktop also supports event-driven XSPICE models.
+- Configurable voltage/current sources, controlled sources, voltage/differential/current probes and virtual oscilloscopes, multimeters, function generators and bench supplies.
+- Circuit Explorer for temporary tuning, parameter sweeps, named measurements, requirements, DC overlays, frequency-response investigations, tolerance studies, test cases and power/stress reports.
+- Compressed `.dzn` drawings containing schematics, embedded symbols, simulation setups, model attachments and optional retained results, with run history, CSV/PNG exports and Save without results.
+- SPICE essentials, Digital logic, Functional blocks, and Sensors and interfaces standard libraries with configurable simulation models.
+- Eleven-chapter SPICE and six-chapter XSPICE courses with 28 distinct runnable drawings, model definitions, analysis settings and retained reference acquisitions.
+
 - Motors & Motion standard library with 66 original compact vector resources for robotics and automation: motors, steppers, servos, source-checked carrier boards, generic drivers, feedback, limits, solenoids, actuators and mechanical parts.
 
 - Test & Measurement standard library with 78 original compact vector resources for laboratory power supplies/loads, instruments, acquisition, probes, thermal equipment, relays, controls, pumps and apparatus. Connection points distinguish individual conductors, complete cables and fluid hoses.
@@ -15,14 +22,23 @@
 - Embedded processors and smart home standard library with 44 original vector PCB views: ESP32/ESP8266 devkits, Raspberry Pi 3/4/5, Arduino Uno/Nano/Mega, 26 sensor/actuator modules and eight LCD/OLED/touch/e-paper displays with front/rear wiring views. Header contacts use physical pin layouts; sensor boards include function icons and source-checked revision-specific pin maps.
 
 - Network layout standard library with 47 original vector symbols: consumer devices, matching 19-inch 1U rack panels, copper and SFP+ switches, PoE variants, routers, firewalls, access points and patch panels. Cable connections snap inside the sockets.
-- An Examples collection containing the original transistor amplifier drawing and an editable small office network with stacked rack panels, patch leads and office cable runs.
+- An Examples collection with seven editable drawings: the original transistor amplifier, small office network, ESP32 climate/display station, home solar/battery plan, podcast studio, laboratory bench and motor-control bench. Equipment layouts include connection explanations and embedded symbols.
 - Reopen a loaded example's explanation in a resizable right-hand panel beside the simulation charts, with independent show/hide controls.
 - Five captioned desktop video walkthroughs in the SPICE tutorials, with offline playback in the bundled example browser.
 
 - Schematic auto-layout for the whole sheet or selected items, with High, Medium and Low strength settings and explanations beside each option.
 - Run auto-layout in a background worker with cancellation, connection checks and a single Undo step to revert the result.
 
+### Changed
+
+- Move Open Example and the current example's Explanation control to the browser title bar. In desktop builds, provide File → Open Example and View → View Explanation.
+- Add View → Show Charts in desktop builds while keeping the chart toggle in the toolbar's Simulation menu.
+- Group Auto-layout beside Simulation on the toolbar and provide the same command under Tools in desktop builds.
+
 ### Fixed
+
+- Prevent auto-layout routes from creating unintended connections at wire endpoints, bends, power terminals and sockets, including zero-length socket pins.
+- Remove small label boxes that overlap terminal text in Test & Measurement and Motors & Motion artwork, and update the affected bundled examples.
 
 - Reduce embedded controller artwork to about one third of its previous dimensions and sensor/display modules to about one quarter, rebuilding readable labels and on-grid header pads while preserving all pin identities and electrical types. Representative A4 pages fit 18 components at native placement size.
 
@@ -41,6 +57,8 @@
 - Treat hidden transistor pins as connection points rather than visible stems, preventing artificial return bends and repairing existing loops in the amplifier example.
 
 ### Maintenance
+
+- Expand the online manual with bundled-library and example guides, the complete SPICE/XSPICE courses, simulation and `.dzn` references, a dedicated layout tidy-up page, and current browser video walkthroughs. Add reproducible media capture and manual verification, and update all eight manual translations.
 
 - Add reproducible motion-library generation, manufacturer pin-map provenance, native galleries, A4 placement reviews and real-editor wiring/save-load checks.
 
