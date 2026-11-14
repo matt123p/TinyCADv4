@@ -14,7 +14,7 @@ The [A4 preview](test-measurement-a4.png) fits 18 mixed instruments, probes, hea
 
 ## Connections
 
-All connection points sit at visible socket openings, screw terminals or lead tips, on the normal drawing grid. The component's hidden **Ports** attribute records the full name, connector kind, endpoint unit and signal domain. Short artwork labels abbreviate these names.
+All connection points sit at visible socket openings, screw terminals or lead tips, on the normal drawing grid. The component's hidden **Ports** attribute records the full name, connector kind, endpoint unit and signal domain. Short artwork labels abbreviate these names. Label backings have no outline, keeping small captions clear while retaining contrast on dark panels.
 
 | Endpoint unit | Meaning and examples |
 | --- | --- |

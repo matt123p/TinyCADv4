@@ -108,11 +108,16 @@ class Search {
   stopped: LayoutResult['stopped'] = 'converged';
   readonly electrical: string;
   readonly physical: string;
+  readonly nativeElectrical: string;
+  readonly nativePhysical: string;
   constructor(sheet: dsnSheet, public o: LayoutSettings) {
     this.sheet = sheet;
     this.analysis = analysePrepared(sheet, o);
     this.electrical = connectivitySignature(sheet);
     this.physical = connectivitySignature(sheet, true);
+    const native = withNativeJunctions(sheet);
+    this.nativeElectrical = connectivitySignature(native);
+    this.nativePhysical = connectivitySignature(native, true);
   }
   available() {
     if (this.o.cancelled?.()) {
@@ -183,11 +188,11 @@ class Search {
         connectivitySignature(candidate, true) !== this.physical)
     )
       return false;
-    if (!forceText && this.o.nativeWireJunctions) {
+    if (!forceText) {
       const native = withNativeJunctions(candidate);
       if (
-        connectivitySignature(native) !== this.electrical ||
-        connectivitySignature(native, true) !== this.physical
+        connectivitySignature(native) !== this.nativeElectrical ||
+        connectivitySignature(native, true) !== this.nativePhysical
       )
         return false;
     }
@@ -1677,7 +1682,11 @@ export function optimiseLayout(
   };
   const preserved =
     connectivitySignature(result, false, wireOrigins) === search.electrical &&
-    connectivitySignature(result, true, wireOrigins) === search.physical;
+    connectivitySignature(result, true, wireOrigins) === search.physical &&
+    connectivitySignature(withNativeJunctions(result), false, wireOrigins) ===
+      search.nativeElectrical &&
+    connectivitySignature(withNativeJunctions(result), true, wireOrigins) ===
+      search.nativePhysical;
   if (!preserved)
     throw new Error('Layout invariant failed: connectivity changed');
   return {

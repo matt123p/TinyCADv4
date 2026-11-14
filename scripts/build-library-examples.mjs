@@ -49,9 +49,14 @@ const font = `<FONT id="1"><HEIGHT>12</HEIGHT><WIDTH>0</WIDTH><WEIGHT>400</WEIGH
 const resources =
   font +
   '<STYLE id="1"><STYLE>0</STYLE><THICKNESS>1</THICKNESS><COLOR>0</COLOR></STYLE>';
-function nets(drawing) {
+function nets(drawing, native = false) {
   const generator = new api.NetlistGenerator();
-  api.makeNetForDrawing(drawing, generator);
+  api.makeNetForDrawing(
+    native
+      ? { ...drawing, sheets: drawing.sheets.map(api.withNativeJunctions) }
+      : drawing,
+    generator,
+  );
   return Object.values(generator.nets)
     .map((n) =>
       [
@@ -220,6 +225,30 @@ class Example {
       wanted,
       `${this.id}: draft connects exact intended pins`,
     );
+    assert.deepEqual(
+      nets(this.drawing, true),
+      wanted,
+      `${this.id}: endpoints and sockets must not short other nets`,
+    );
+    const layout = api.optimiseLayout(this.sheet, {
+      disturbance: 'low',
+      phases: ['symbol-text', 'net-labels', 'routing', 'junctions'],
+      lockedIds: this.sheet.items
+        .filter((i) => ['symbol', 'text'].includes(i.NodeName))
+        .map((i) => i._id),
+      maxPasses: 3,
+      maxEvaluations: 1500,
+    });
+    assert.ok(
+      layout.connectivityPreserved &&
+        api.sameConnectivity(this.sheet, layout.sheet, layout.wireOrigins),
+    );
+    this.drawing.sheets[0] = this.sheet = layout.sheet;
+    assert.deepEqual(
+      nets(this.drawing, true),
+      wanted,
+      `${this.id}: local tidy preserves native contacts`,
+    );
     let xml = new TextDecoder().decode(
       await api.encodeDrawing(this.drawing, 'xml'),
     );
@@ -239,6 +268,11 @@ class Example {
       wanted,
       'Native save/load preserves topology',
     );
+    assert.deepEqual(
+      nets(restored, true),
+      wanted,
+      'Native save/load preserves endpoint and socket contacts',
+    );
     await fs.writeFile(`${out}/${this.id}-draft.dsn`, xml);
     return {
       id: this.id,
@@ -246,6 +280,13 @@ class Example {
       page: this.sheet.details.page_size.map((n) => n / 5),
       sources: this.sources,
       expectedNets: wanted,
+      localLayout: {
+        connectivityPreserved: layout.connectivityPreserved,
+        nativeContactsPreserved: true,
+        stopped: layout.stopped,
+        before: layout.before.metrics,
+        after: layout.after.metrics,
+      },
       draftSha256: sha(xml),
     };
   }
@@ -473,7 +514,8 @@ const examples = [];
   );
   e.wire(
     e.pin('MIX1', '6'),
-    [100, 66],
+    [120, 70],
+    [100, 70],
     [100, 140],
     [220, 140],
     [220, 134],
@@ -683,7 +725,7 @@ const examples = [];
     '0',
   );
   e.tail('LIMIT1', '1', [[39, 180]], '0');
-  e.tail('LIMIT1', '2', [[47, 180]], 'LIMIT_NC', 1);
+  e.tail('LIMIT1', '2', [[47, 198]], 'LIMIT_NC', 1);
   e.note(
     202,
     128,

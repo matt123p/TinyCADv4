@@ -6,6 +6,7 @@ Reports are cached by input hash under build/library-examples/mcp.
 import base64
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 import time
 import urllib.request
@@ -14,6 +15,7 @@ ROOT = Path('build/library-examples')
 REPORTS = ROOT / 'mcp'
 REPORTS.mkdir(exist_ok=True)
 DEST = Path('bundled-examples')
+POLICY = 'native-contact-protection-v1'
 
 
 def call(name, **arguments):
@@ -46,7 +48,8 @@ for example in manifest['examples']:
     sha = digest(definition)
     assert sha == example['draftSha256'], 'Review exactly the builder output'
     cache = REPORTS / (name + '.json')
-    if cache.exists() and json.loads(cache.read_text()).get('draftSha256') == sha:
+    previous = json.loads(cache.read_text()) if cache.exists() else {}
+    if previous.get('draftSha256') == sha and previous.get('policy') == POLICY:
         report = json.loads(cache.read_text())
         definition = (REPORTS / (name + '.dsn')).read_bytes().decode('utf-8')
         assert digest(definition) == report['finalSha256']
@@ -54,9 +57,10 @@ for example in manifest['examples']:
         validation = structured(call('validate_drawing', definition=definition))
         assert validation.get('structurallyValid'), (name, validation)
         sheet = validation['sheets'][0]
-        # Keep the intentional equipment layout and explanatory notes. Wires,
-        # native power objects and net labels remain eligible for refinement.
-        locks = [i['id'] for i in sheet['items'] if i['type'] in ('symbol', 'text')]
+        # The local builder already tidies with endpoint/terminal protection.
+        # Preserve those routes when using servers with older routing code;
+        # labels remain eligible for the final service annotation pass.
+        locks = [i['id'] for i in sheet['items'] if i['type'] in ('symbol', 'text', 'wire', 'power', 'junction')]
         time.sleep(1.1)
         tidy = structured(call('auto_tidy_drawing', definition=definition, sheet=1,
                                disturbance='low', lockedIds=locks,
@@ -64,11 +68,15 @@ for example in manifest['examples']:
                                maxPasses=3, maxEvaluations=1500, seed=1))
         assert all(tidy.get(k) for k in ['connectivityPreserved', 'serializationConnectivityPreserved', 'serializationPhysicalConnectivityPreserved']), (name, tidy)
         definition = tidy['definition']
-        report = {'draftSha256': sha, 'finalSha256': digest(definition),
+        report = {'draftSha256': sha, 'finalSha256': digest(definition), 'policy': POLICY,
                   'initialValidation': validation,
                   'tidy': {k: v for k, v in tidy.items() if k != 'definition'}}
-        cache.write_text(json.dumps(report, indent=2) + '\n')
         (REPORTS / (name + '.dsn')).write_text(definition)
+    independent = subprocess.run(['node', 'scripts/check-example-connections.mjs', name],
+                                 input=definition.encode(), capture_output=True)
+    assert independent.returncode == 0, independent.stderr.decode()
+    report['independentChecks'] = json.loads(independent.stdout)
+    cache.write_text(json.dumps(report, indent=2) + '\n')
     print(name, 'tidy:', json.dumps(report['tidy'].get('layoutQuality')), flush=True)
     print('stopped:', report['tidy'].get('stopped'), 'phase evaluations:',
           sum(p.get('evaluations', 0) for p in report['tidy'].get('phaseProgress', [])), flush=True)
@@ -98,6 +106,7 @@ for example in manifest['examples']:
     example['checks'] = {k: report['tidy'][k] for k in [
         'connectivityPreserved', 'serializationConnectivityPreserved',
         'serializationPhysicalConnectivityPreserved', 'layoutQuality', 'stopped']}
+    example['checks'].update(report['independentChecks'])
     example['electricalDiagnostics'] = report['tidy'].get('validation', {}).get('errors', [])
     time.sleep(1.1)
 manifest['service'] = 'https://www.tinycad.net/mcp'

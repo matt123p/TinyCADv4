@@ -54,6 +54,12 @@ cannot conceal a broken wire. Never infer the intended circuit from a misplaced
 junction: a nearby dot can move to an already-connected branch only if both
 partitions are unchanged; flag ambiguous repairs instead of joining separate nets.
 
+Every routing proposal also checks the contacts made by the editor's wire cleanup.
+A wire endpoint, bend, socket/pin or power terminal touching the middle of another
+wire forms a connection, even without a stored junction dot. Shortcuts must preserve
+these native electrical and physical partitions as well as the literal netlist.
+This protection is always enabled, including for zero-length physical socket pins.
+
 Rules, in priority order:
 
 1. Preserve symbol identity, pin numbers, orientation, scale, values, hidden
@@ -171,7 +177,7 @@ pin artwork, note boxes and page furniture are not redesigned. Misplaced
 junctions are reported, not automatically moved to join previously separate
 nets. The original electrical topology is always the authority.
 
-`npm run test:layout` checks the algorithm, dialog, worker and editor integration. `npm run test:layout:browser` exercises the real browser UI, worker and save/reopen path with Chromium; failure artifacts are under `.tmp/layout-browser-results`. The suites cover disturbance/scopes, selection/locks, cancellation, stale snapshots, ID allocation, undo/redo, input immutability and connectivity. `nativeWireJunctions: true` additionally rejects accidental connections at wire endpoints/terminals in generated drawings.
+`npm run test:layout` checks the algorithm, dialog, worker and editor integration. `npm run test:layout:browser` exercises the real browser UI, worker and save/reopen path with Chromium; failure artifacts are under `.tmp/layout-browser-results`. The suites cover disturbance/scopes, selection/locks, cancellation, stale snapshots, ID allocation, undo/redo, input immutability, endpoint/socket shorts and connectivity after native wire cleanup. The legacy `nativeWireJunctions` option is deprecated; it cannot disable this protection.
 
 ## Markdown text boxes
 

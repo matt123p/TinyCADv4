@@ -66,11 +66,62 @@
           "U1:J3-6"
         ]
       ],
-      "draftSha256": "e3137a3645627f9012a03aee2079b3dde1002769f7c030a5e74ded93df0ba2c6",
-      "finalSha256": "30bdb21840c5306de008168a7e7a1ce08c621ab95aab11384fdb5344c3af81fc",
+      "localLayout": {
+        "connectivityPreserved": true,
+        "nativeContactsPreserved": true,
+        "stopped": "converged",
+        "before": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 13,
+          "crossings": 2,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 6,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 2255,
+          "logicalProximity": 4920,
+          "inlineImbalance": 0,
+          "wireLength": 2255,
+          "bends": 6,
+          "area": 693250,
+          "labelDistance": 0
+        },
+        "after": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 13,
+          "crossings": 2,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 5.517187500000091,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 1989.228125,
+          "logicalProximity": 4920,
+          "inlineImbalance": 0,
+          "wireLength": 1989.228125,
+          "bends": 4,
+          "area": 693250,
+          "labelDistance": 0
+        }
+      },
+      "draftSha256": "dab1be10f583feb216b5cbcab4c5c078bcc65f461b21354118e02eeb106f586d",
+      "finalSha256": "659aaff7f141b604d4fa7de82f4cf3fa34064db5e3bd655821e4006075f9fda7",
       "previews": {
-        "png": "cd4a28886ba9a0281e41b50f08d0e11b98560c5e3ea3116c711a6c53005c41ba",
-        "svg": "80d974780f356bb3c91ac47eac461d317274bbcb261265a277fa14d220243cf5"
+        "png": "9d6904d689d77fda2e923a2384143a0e3ba70e692648eaad334cd3ee15facdf9",
+        "svg": "1fa3235aa23024bff387e440e9c2a67c7249be20e9f349e465ae516ea53ad26c"
       },
       "checks": {
         "connectivityPreserved": true,
@@ -79,7 +130,7 @@
         "layoutQuality": {
           "status": "incomplete",
           "converged": true,
-          "readabilityImproved": true,
+          "readabilityImproved": false,
           "remainingDiagnosticCount": 15,
           "remainingByCode": {
             "wire-body": 13,
@@ -90,7 +141,9 @@
           ],
           "message": "Layout cleanup is incomplete. Electrical validation and preserved connectivity do not establish drawing readability. Continue with the recommended phases on the returned definition, repair persistent overlaps manually, and inspect the final preview before presenting it as cleaned up."
         },
-        "stopped": "converged"
+        "stopped": "converged",
+        "electricalConnectivityPreserved": true,
+        "nativeContactsPreserved": true
       },
       "electricalDiagnostics": [
         {
@@ -710,7 +763,58 @@
           "PVISO1:PV_IN"
         ]
       ],
-      "draftSha256": "d9d145b7e562bc6f7bbc612dc617030f0a67512a648fe3835f80cd5a57296658",
+      "localLayout": {
+        "connectivityPreserved": true,
+        "nativeContactsPreserved": true,
+        "stopped": "converged",
+        "before": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 18,
+          "crossings": 1,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 3355,
+          "logicalProximity": 5657.5,
+          "inlineImbalance": 200,
+          "wireLength": 3355,
+          "bends": 8,
+          "area": 1952625,
+          "labelDistance": 0
+        },
+        "after": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 18,
+          "crossings": 1,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 3205,
+          "logicalProximity": 5657.5,
+          "inlineImbalance": 155,
+          "wireLength": 3205,
+          "bends": 8,
+          "area": 1927000,
+          "labelDistance": 0
+        }
+      },
+      "draftSha256": "b894376e148c193f62e99970a9eee3c7cc822f96263804aafbf179ada7bd5392",
       "finalSha256": "457870b06ff906d1b36d5e2bdfa6d2b73455bf6755381bd3cdb5388a4b4a4288",
       "previews": {
         "png": "76574b1783325f1aba059f3da24797c0ceec3b7d5c936801d4287873352b955f",
@@ -734,7 +838,9 @@
           ],
           "message": "Layout cleanup is incomplete. Electrical validation and preserved connectivity do not establish drawing readability. Continue with the recommended phases on the returned definition, repair persistent overlaps manually, and inspect the final preview before presenting it as cleaned up."
         },
-        "stopped": "converged"
+        "stopped": "converged",
+        "electricalConnectivityPreserved": true,
+        "nativeContactsPreserved": true
       },
       "electricalDiagnostics": [
         {
@@ -872,11 +978,62 @@
           "PC1:1"
         ]
       ],
-      "draftSha256": "96f339f774acee2a4da629ecce0ff731ffeb771994685c995df1063b8872e6a4",
-      "finalSha256": "c7cd334e048fc72c09a4070d84854786c3ff70a8dd115037f40d773157ef9475",
+      "localLayout": {
+        "connectivityPreserved": true,
+        "nativeContactsPreserved": true,
+        "stopped": "converged",
+        "before": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 11,
+          "crossings": 4,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 5065,
+          "logicalProximity": 3515,
+          "inlineImbalance": 0,
+          "wireLength": 5065,
+          "bends": 18,
+          "area": 961950,
+          "labelDistance": 0
+        },
+        "after": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 11,
+          "crossings": 4,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 4865,
+          "logicalProximity": 3515,
+          "inlineImbalance": 0,
+          "wireLength": 4865,
+          "bends": 15,
+          "area": 946050,
+          "labelDistance": 0
+        }
+      },
+      "draftSha256": "3f361cd44bbe4e36a35ad3e3db55ab345030df2680f78bb0b392e19e1230b6c5",
+      "finalSha256": "faf46666bf3a89ee93b2dd760dc7ff79c38f7733d721ea7f6ffb4dac81df6f90",
       "previews": {
-        "png": "05064a79094ddd1f6ce6aa11c65305b7f436caf9ef25ac3b6cbf823bcb0399fe",
-        "svg": "84ec9817e55e07187e36e3dea8aa552ecad2161887e3f98e6d6da4f81d2776a8"
+        "png": "2a754056d4155c04f089affc003eef29a5aa4eb4ff568d2fd0ba75511317d067",
+        "svg": "41bf45c117fce2800cd9e5276f9c9a4d6c03faeee594dd8a5a42edde4450271e"
       },
       "checks": {
         "connectivityPreserved": true,
@@ -885,18 +1042,20 @@
         "layoutQuality": {
           "status": "incomplete",
           "converged": true,
-          "readabilityImproved": true,
-          "remainingDiagnosticCount": 12,
+          "readabilityImproved": false,
+          "remainingDiagnosticCount": 15,
           "remainingByCode": {
-            "wire-body": 10,
-            "crossing": 2
+            "wire-body": 11,
+            "crossing": 4
           },
           "recommendedPhases": [
             "routing"
           ],
           "message": "Layout cleanup is incomplete. Electrical validation and preserved connectivity do not establish drawing readability. Continue with the recommended phases on the returned definition, repair persistent overlaps manually, and inspect the final preview before presenting it as cleaned up."
         },
-        "stopped": "converged"
+        "stopped": "converged",
+        "electricalConnectivityPreserved": true,
+        "nativeContactsPreserved": true
       },
       "electricalDiagnostics": [
         {
@@ -1045,56 +1204,56 @@
           "reference": "PSU1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "01a4ddee54cc2826a2aedf08eb27f183a81d3af3a05301cce7dc6adc3ef55035",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
           "componentId": "psu-1",
           "nameId": 1,
           "symbolId": 1,
           "name": "DC bench supply \u2014 1 output",
-          "xmlSha256": "1c229593d9083cf46f4c7a0f9fe5c783c3c279c9fa4c2dfd97354361e949d23b"
+          "xmlSha256": "65c052e66f943840bddfc5d0c2a6abc8bde241a9bf3a43f0e4fd8e7fece09467"
         },
         {
           "reference": "DMM1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "01a4ddee54cc2826a2aedf08eb27f183a81d3af3a05301cce7dc6adc3ef55035",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
           "componentId": "dmm-bench",
           "nameId": 16,
           "symbolId": 16,
           "name": "Bench multimeter \u2014 voltage/current and four-wire sense",
-          "xmlSha256": "1bcb0d7feeade220f860b9bfeeffc768fb8fa3616790d76fa944bbed6e9dcf7b"
+          "xmlSha256": "8fbd64246bac867f4504ff469d98cffc46c382f5e4b88caa6e23db8f31c70ffc"
         },
         {
           "reference": "LOAD1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "01a4ddee54cc2826a2aedf08eb27f183a81d3af3a05301cce7dc6adc3ef55035",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
           "componentId": "load-1",
           "nameId": 7,
           "symbolId": 7,
           "name": "DC electronic load \u2014 1 channel",
-          "xmlSha256": "652bc6c3978572c612b99d06b03303a4dbe46139bbae2dc55cc8187a802e312d"
+          "xmlSha256": "30b49cf027b1d265c5c8c7387aac92abf408625784e4654359bb2cce2aa6509f"
         },
         {
           "reference": "GEN1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "01a4ddee54cc2826a2aedf08eb27f183a81d3af3a05301cce7dc6adc3ef55035",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
           "componentId": "generator-1",
           "nameId": 14,
           "symbolId": 14,
           "name": "Function / arbitrary waveform generator \u2014 1 channel",
-          "xmlSha256": "4972e36b8e489f58a89ba4dff73d8b95eb2ce337b649f7cc1e539d5630f3ee5f"
+          "xmlSha256": "7879823c41868ccc1fa514c90f5890d4550cadaa1399eea254a4e114769303c7"
         },
         {
           "reference": "SCOPE1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "01a4ddee54cc2826a2aedf08eb27f183a81d3af3a05301cce7dc6adc3ef55035",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
           "componentId": "scope-2",
           "nameId": 11,
           "symbolId": 11,
           "name": "Digital oscilloscope \u2014 2 channels",
-          "xmlSha256": "5cc8d1e941990ff9f3bf8280f93b7a2663d98dcd44423e1e1dcb2d53d1386d6d"
+          "xmlSha256": "23a9575611341abc81c0fa7acbefc16b757020c59e4e2c650b5020f30e044d20"
         }
       ],
       "expectedNets": [
@@ -1113,11 +1272,62 @@
           "SCOPE1:1"
         ]
       ],
-      "draftSha256": "256fb312c11d04cc139e0c6da98f44c2c6ed327fc2ce63809ce3bde7ae868cf7",
-      "finalSha256": "65c2d72e2638400bab6ff2da404b0a2e7cad5ad06d7c4e5c224d0a6ba1c3c853",
+      "localLayout": {
+        "connectivityPreserved": true,
+        "nativeContactsPreserved": true,
+        "stopped": "converged",
+        "before": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 8,
+          "crossings": 2,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 20,
+          "connectedDistance": 3255,
+          "logicalProximity": 2695,
+          "inlineImbalance": 0,
+          "wireLength": 3955,
+          "bends": 6,
+          "area": 926250,
+          "labelDistance": 0
+        },
+        "after": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 8,
+          "crossings": 2,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 20,
+          "connectedDistance": 3255,
+          "logicalProximity": 2695,
+          "inlineImbalance": 0,
+          "wireLength": 3955,
+          "bends": 6,
+          "area": 926250,
+          "labelDistance": 0
+        }
+      },
+      "draftSha256": "3718b321c6a84dee5d6ac91e92c3d6ec71e6e6a5e8d59b018b400560c952fd8e",
+      "finalSha256": "c9bd7f675c0d13ecc14df59929beb52b84f09afebbd49e01c035ea7d202966bd",
       "previews": {
-        "png": "cc7a4bf50dd7b166ffdab4a46622241423335bc3d213e7b99d467bc1be036b9f",
-        "svg": "75556660e0dcca5bf1dccc0ae3dd720df38d79e2521e3940dd85d8bfc9e657d1"
+        "png": "f648fd65f568b0bf90d3d3cbf4e56a501bf2a4c3826e5ae7339ec90ad0ff2182",
+        "svg": "f75e1efba326ea41177327d276befa0fb083bda0555bed84cc1ca7e2b12be9c1"
       },
       "checks": {
         "connectivityPreserved": true,
@@ -1137,7 +1347,9 @@
           ],
           "message": "Layout cleanup is incomplete. Electrical validation and preserved connectivity do not establish drawing readability. Continue with the recommended phases on the returned definition, repair persistent overlaps manually, and inspect the final preview before presenting it as cleaned up."
         },
-        "stopped": "converged"
+        "stopped": "converged",
+        "electricalConnectivityPreserved": true,
+        "nativeContactsPreserved": true
       },
       "electricalDiagnostics": [
         {
@@ -1345,45 +1557,45 @@
           "reference": "DRV1",
           "library": "motors-motion",
           "libraryPath": "motors-motion/motors-motion.tclib",
-          "librarySha256": "febaffdbc3a3ab41167da42b9f926de2cdee4cd0191e616dcd08a2a088d2cd9e",
+          "librarySha256": "8132a58bf4422b7dd51b6cae035087fefff8de7cf266c14d3bea09d468abad54",
           "componentId": "driver-brushed",
           "nameId": 29,
           "symbolId": 29,
           "name": "High-power brushed DC driver \u2014 PWM/direction",
-          "xmlSha256": "93cdaeec4bff7fa62c79fded32724255150cba64cd20bd6ed89fdb8a351abee5"
+          "xmlSha256": "d881ef665c1754f08a5075ededeb25bb609ea1a4caab1357ff25180afaac4866"
         },
         {
           "reference": "M1",
           "library": "motors-motion",
           "libraryPath": "motors-motion/motors-motion.tclib",
-          "librarySha256": "febaffdbc3a3ab41167da42b9f926de2cdee4cd0191e616dcd08a2a088d2cd9e",
+          "librarySha256": "8132a58bf4422b7dd51b6cae035087fefff8de7cf266c14d3bea09d468abad54",
           "componentId": "motor-planetary",
           "nameId": 7,
           "symbolId": 7,
           "name": "Planetary DC gearmotor",
-          "xmlSha256": "2e10d9097b89f048cdc74a3fffbe16064f536ae3926f0054bdca9e3adff3639d"
+          "xmlSha256": "04cd35a51028c5f45fdb53d644c393b054315608046061d69204edee1273fb54"
         },
         {
           "reference": "PSU1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "01a4ddee54cc2826a2aedf08eb27f183a81d3af3a05301cce7dc6adc3ef55035",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
           "componentId": "psu-1",
           "nameId": 1,
           "symbolId": 1,
           "name": "DC bench supply \u2014 1 output",
-          "xmlSha256": "1c229593d9083cf46f4c7a0f9fe5c783c3c279c9fa4c2dfd97354361e949d23b"
+          "xmlSha256": "65c052e66f943840bddfc5d0c2a6abc8bde241a9bf3a43f0e4fd8e7fece09467"
         },
         {
           "reference": "LIMIT1",
           "library": "motors-motion",
           "libraryPath": "motors-motion/motors-motion.tclib",
-          "librarySha256": "febaffdbc3a3ab41167da42b9f926de2cdee4cd0191e616dcd08a2a088d2cd9e",
+          "librarySha256": "8132a58bf4422b7dd51b6cae035087fefff8de7cf266c14d3bea09d468abad54",
           "componentId": "limit-roller",
           "nameId": 42,
           "symbolId": 42,
           "name": "SPDT roller limit microswitch",
-          "xmlSha256": "d44e777f4d898bcc0ae3caa8a42b9d2960a6e51c04a672cd4cf7343933645142"
+          "xmlSha256": "e3492badd1e277935d4b455721461091d8583b5d869e2d535a6aa4d28fcf8e45"
         }
       ],
       "expectedNets": [
@@ -1423,11 +1635,62 @@
           "U1:J1-11"
         ]
       ],
-      "draftSha256": "8219a0d9c21c4ea273fa043de2a18991944bde08b3dcaaa7918752d29ace4921",
-      "finalSha256": "2314e1366814ae5dbe31f6c4eb9b1808979040dda36376f71065eaf6543a5d85",
+      "localLayout": {
+        "connectivityPreserved": true,
+        "nativeContactsPreserved": true,
+        "stopped": "converged",
+        "before": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 22,
+          "crossings": 5,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 2,
+          "annotationCrowding": 7,
+          "componentDisorder": 0,
+          "labelOverhangs": 8,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 20,
+          "connectedDistance": 3190,
+          "logicalProximity": 4570,
+          "inlineImbalance": 0,
+          "wireLength": 3550,
+          "bends": 15,
+          "area": 1099912.2031860352,
+          "labelDistance": 0
+        },
+        "after": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 22,
+          "crossings": 5,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 6.382284800552469,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 10,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 20,
+          "connectedDistance": 2891.29375,
+          "logicalProximity": 4570,
+          "inlineImbalance": 0,
+          "wireLength": 3251.29375,
+          "bends": 14,
+          "area": 948600,
+          "labelDistance": 0
+        }
+      },
+      "draftSha256": "a9fdb8cf0f5eec2acacfdb8a44854132c21d032cf76f6ca201fa54efdd1263b2",
+      "finalSha256": "7e59ceb389c84c9b065a75449b1a36d2d3f46ff98bd7c568030b0bdbabe72165",
       "previews": {
-        "png": "f950d7201092067b84a2669731f1d619f74502391c81074c46a0d1b2093bb62a",
-        "svg": "cdee979cf38651766900f8e8f773be0584727fc82cbc7256d54eacee150401bf"
+        "png": "746e6c0fb8a4f11548a38e51e3cf269324f9ae0bf7cad29314920387d462c42e",
+        "svg": "83d14097e33fe9fa85fc95e8db68c6955637ae60584eebf46a95c9b8eb9f946d"
       },
       "checks": {
         "connectivityPreserved": true,
@@ -1436,18 +1699,20 @@
         "layoutQuality": {
           "status": "incomplete",
           "converged": true,
-          "readabilityImproved": true,
-          "remainingDiagnosticCount": 23,
+          "readabilityImproved": false,
+          "remainingDiagnosticCount": 27,
           "remainingByCode": {
-            "wire-body": 21,
-            "crossing": 2
+            "wire-body": 22,
+            "crossing": 5
           },
           "recommendedPhases": [
             "routing"
           ],
           "message": "Layout cleanup is incomplete. Electrical validation and preserved connectivity do not establish drawing readability. Continue with the recommended phases on the returned definition, repair persistent overlaps manually, and inspect the final preview before presenting it as cleaned up."
         },
-        "stopped": "converged"
+        "stopped": "converged",
+        "electricalConnectivityPreserved": true,
+        "nativeContactsPreserved": true
       },
       "electricalDiagnostics": [
         {

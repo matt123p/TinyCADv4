@@ -617,7 +617,8 @@ export function motorsMotionSymbol(device) {
       );
     } else {
       const tw = textWidth(p.label);
-      rect(x - tw / 2, y - 4, tw, 2, 'white', 2);
+      // Keep the light backing for contrast, with no outline through the text.
+      rect(x - tw / 2, y - 4, tw, 2, 'white', 4);
       text(x - tw / 2 + 0.6, y - 2.2, p.label);
     }
     art.push(

@@ -257,6 +257,47 @@ function solve(s, o = {}) {
   return result;
 }
 
+test('routing cannot shortcut across another wire endpoint, even when nativeWireJunctions is false', () => {
+  const input = sheet(
+    wire(1,[0,0],[0,40],[80,40],[80,0]),
+    wire(2,[40,0],[40,-40]),
+  );
+  const unsafe = {...input,items:[wire(1,[0,0],[80,0]),input.items[1]]};
+  assert.equal(api.connectivitySignature(input),api.connectivitySignature(unsafe),
+    'the literal netlist misses the unmarked T contact');
+  assert.equal(api.sameConnectivity(input,unsafe),false,
+    'native endpoint joining must detect the short');
+  const result = solve(input,{phases:['routing'],lockedIds:[2],nativeWireJunctions:false});
+  assert.ok(api.sameConnectivity(api.withNativeJunctions(input),api.withNativeJunctions(result.sheet),result.wireOrigins));
+});
+
+test('routing cannot pass through wired or unused zero-length socket pins', () => {
+  const board = symbol(1,200,100,{
+    width:80,height:40,showText:false,
+    ports:[[-70,-20,1],[-50,-20,1],[-30,-20,1]],
+  });
+  for (const p of board._symbol.outlines[0].active_points) p.pin.length=0;
+  const input = sheet(board,
+    wire(2,[130,80],[130,140],[210,140],[210,80]),
+    wire(3,[150,80],[150,180]),
+  );
+  const unsafe={...input,items:[board,wire(2,[130,80],[210,80]),input.items[2]]};
+  assert.equal(api.connectivitySignature(input),api.connectivitySignature(unsafe));
+  assert.equal(api.sameConnectivity(input,unsafe),false,
+    'the shortcut touches the control socket and the spare socket');
+  for (const nativeWireJunctions of [undefined,false,true]) {
+    const result=solve(input,{phases:['routing'],lockedIds:[1,3],nativeWireJunctions});
+    assert.ok(api.sameConnectivity(api.withNativeJunctions(input),api.withNativeJunctions(result.sheet),result.wireOrigins));
+  }
+});
+
+test('an existing unmarked T contact is preserved as part of the native baseline', () => {
+  const input=sheet(wire(1,[0,0],[80,0]),wire(2,[40,0],[40,-40]));
+  const moved=sheet(input.items[0],wire(2,[60,0],[60,-40]));
+  assert.ok(api.sameConnectivity(input,moved),'the same two wires remain joined after native cleanup');
+  solve(input,{phases:['routing'],nativeWireJunctions:true});
+});
+
 test('symbol labels avoid all four pin sides and preserve hidden fields', () => {
   const s = symbol(1, 100, 100, {
     width: 40,

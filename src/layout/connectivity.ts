@@ -107,10 +107,16 @@ export function sameConnectivity(
   b: dsnSheet,
   wireOrigins: Record<number, number> = {},
 ) {
+  const nativeA = withNativeJunctions(a),
+    nativeB = withNativeJunctions(b);
   return (
     connectivitySignature(a) === connectivitySignature(b, false, wireOrigins) &&
     connectivitySignature(a, true) ===
-      connectivitySignature(b, true, wireOrigins)
+      connectivitySignature(b, true, wireOrigins) &&
+    connectivitySignature(nativeA) ===
+      connectivitySignature(nativeB, false, wireOrigins) &&
+    connectivitySignature(nativeA, true) ===
+      connectivitySignature(nativeB, true, wireOrigins)
   );
 }
 

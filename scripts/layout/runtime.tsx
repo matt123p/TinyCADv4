@@ -30,6 +30,7 @@ export { XMLBuilder } from '../../src/util/xmlbuilder';
 export { updateSymbol } from '../../src/manipulators/updateSymbol';
 export { NetlistGenerator } from '../../src/io/netlists/netlistGenerator';
 export { makeNetForDrawing } from '../../src/web-worker/netlist';
+export { withNativeJunctions } from '../../src/layout/connectivity';
 
 export function circuitBounds(sheet: dsnSheet) {
   return union(

@@ -753,7 +753,8 @@ export function testMeasurementSymbol(device) {
       }
     }
     const tw = textWidth(p.label);
-    rect(x - tw / 2, y - 4.3, tw, 2.1, 'white', 2);
+    // Keep contrast on dark panels without a border crowding the small glyphs.
+    rect(x - tw / 2, y - 4.3, tw, 2.1, 'white', 4);
     // Avoid Markdown list syntax while retaining polarity in the native and
     // service renderers (the latter renders NOTE_TEXT as plain text).
     const displayLabel =

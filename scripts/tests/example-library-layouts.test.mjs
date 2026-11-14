@@ -114,9 +114,14 @@ test('all five new library examples retain their source artwork, exact nets and 
   );
   const libs = new Map(),
     sourceArt = new Map();
-  const connections = (drawing) => {
+  const connections = (drawing, native = false) => {
     const generator = new api.NetlistGenerator();
-    api.makeNetForDrawing(drawing, generator);
+    api.makeNetForDrawing(
+      native
+        ? { ...drawing, sheets: drawing.sheets.map(api.withNativeJunctions) }
+        : drawing,
+      generator,
+    );
     return sorted(
       Object.values(generator.nets)
         .map((net) => [
@@ -167,6 +172,7 @@ test('all five new library examples retain their source artwork, exact nets and 
     assert.equal(proof.checks.connectivityPreserved, true);
     assert.equal(proof.checks.serializationConnectivityPreserved, true);
     assert.equal(proof.checks.serializationPhysicalConnectivityPreserved, true);
+    assert.equal(proof.checks.nativeContactsPreserved, true);
     assert.ok(
       Object.keys(proof.checks.layoutQuality.remainingByCode).every((code) =>
         ['wire-body', 'crossing'].includes(code),
@@ -271,6 +277,11 @@ test('all five new library examples retain their source artwork, exact nets and 
       sorted(expected[proof.id]),
       proof.id + ' has only the intended connected pins',
     );
+    assert.deepEqual(
+      connections(drawing, true),
+      sorted(expected[proof.id]),
+      proof.id + ' must not short through another socket or wire endpoint',
+    );
     const reopened = await api.decodeDrawing(
       await api.encodeDrawing(drawing, 'xml'),
     );
@@ -278,6 +289,11 @@ test('all five new library examples retain their source artwork, exact nets and 
       connections(reopened),
       sorted(expected[proof.id]),
       'Save/reopen preserves wiring',
+    );
+    assert.deepEqual(
+      connections(reopened, true),
+      sorted(expected[proof.id]),
+      'Save/reopen and native wire cleanup preserve all intended connections',
     );
     assert.deepEqual(
       reopened.sheets[0].items

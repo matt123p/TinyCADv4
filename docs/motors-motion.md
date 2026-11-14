@@ -12,7 +12,7 @@ The [A4 preview](motors-motion-a4.png) shows 16 mixed motors, servos, drivers, f
 
 ![Sixteen motion resources at native placement size on A4](motors-motion-a4.png)
 
-Each visible contact/socket has an on-grid connection point. The hidden **Ports** attribute lists its full name, connector kind, endpoint unit, signal domain and electrical type. Small artwork labels abbreviate names; an **n** prefix identifies active-low signals on the named carriers. Header pad/terminal graphics carry the connection points, so native pin stems and duplicate pin text are suppressed deliberately.
+Each visible contact/socket has an on-grid connection point. The hidden **Ports** attribute lists its full name, connector kind, endpoint unit, signal domain and electrical type. Small artwork labels abbreviate names; an **n** prefix identifies active-low signals on the named carriers. Label backings have no outline so their borders cannot crowd the text. Header pad/terminal graphics carry the connection points, so native pin stems and duplicate pin text are suppressed deliberately.
 
 | Endpoint unit | Meaning |
 | --- | --- |
