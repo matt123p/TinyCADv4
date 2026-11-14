@@ -110,7 +110,7 @@ export abstract class updateRectBase implements SimpleAdd, IsInside {
     var s: CssStyle = {};
     if (this.item.filled) {
       if (this.item.hatch > 0) {
-        s.fill = `url(#hatch${this.item.hatch}${this.item.fill_colour}`;
+        s.fill = `url(#hatch${this.item.hatch}${this.item.fill_colour})`;
       } else {
         s.fill = this.item.fill_colour;
       }

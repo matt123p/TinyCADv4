@@ -122,9 +122,9 @@ export function sameConnectivity(
 
 /** Named nets count as connections too. Divide fanout weight so a common supply
  * rail cannot overwhelm the proximity preference for local signal connections. */
-export function symbolConnections(sheet: dsnSheet) {
+export function symbolConnections(sheet: dsnSheet, signature = connectivitySignature(sheet)) {
   const pairs = new Map<string, { a: number; b: number; weight: number }>();
-  for (const group of JSON.parse(connectivitySignature(sheet)) as string[]) {
+  for (const group of JSON.parse(signature) as string[]) {
     const ids = [
       ...new Set(
         group

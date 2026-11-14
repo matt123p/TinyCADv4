@@ -11,6 +11,7 @@ import {
   refresh,
 } from '../../src/layout/geometry';
 export * from '../../src/layout';
+export { analyseRouteMetrics } from '../../src/layout/analyse';
 export {
   pins,
   bodyRect,

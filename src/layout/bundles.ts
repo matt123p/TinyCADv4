@@ -10,10 +10,9 @@ export interface WirePath {
 }
 
 /** Recover unbranched routes from TinyCAD's native two-point wire items. */
-export function wirePaths(sheet: dsnSheet): WirePath[] {
+export function wirePaths(sheet: dsnSheet, ports = symbols(sheet).flatMap(pins)): WirePath[] {
   const ws = wires(sheet),
-    used = new Set<number>(),
-    ports = symbols(sheet).flatMap(pins);
+    used = new Set<number>();
   const endpoints = new Map<string, dsnWire[]>();
   const key = (p: number[]) => p[0] + ',' + p[1];
   for (const w of ws)
@@ -63,8 +62,8 @@ export function wirePaths(sheet: dsnSheet): WirePath[] {
 
 /** A straight drawing span may consist of several native wire records. Labels
  * can cover their shared vertex without overhanging the actual drawn line. */
-export function wireSpans(sheet: dsnSheet) {
-  return wirePaths(sheet).flatMap((path) => {
+export function wireSpans(sheet: dsnSheet, paths = wirePaths(sheet)) {
+  return paths.flatMap((path) => {
     const ps = clean(path.points);
     return ps
       .slice(1)
@@ -111,10 +110,9 @@ export function pathReplacements(
 
 /** Explicit grouping by endpoint owners: names alone never imply a connection.
  * Wires stored in either direction are normalised to the same owner order. */
-export function wireBundles(sheet: dsnSheet) {
-  const ports = symbols(sheet).flatMap(pins);
+export function wireBundles(sheet: dsnSheet, paths = wirePaths(sheet), ports = symbols(sheet).flatMap(pins)) {
   const groups = new Map<string, WirePath[]>();
-  for (const path of wirePaths(sheet)) {
+  for (const path of paths) {
     const ps = path.points;
     const start = ports.filter((p) => same(p.p, ps[0]));
     const end = ports.filter((p) => same(p.p, ps[ps.length - 1]));
@@ -134,9 +132,9 @@ export function wireBundles(sheet: dsnSheet) {
   return [...groups.values()].filter((g) => g.length >= 2);
 }
 
-export function bundleDisorder(sheet: dsnSheet, pitch: number) {
+export function bundleDisorder(sheet: dsnSheet, pitch: number, bundles = wireBundles(sheet)) {
   let cost = 0;
-  for (const group of wireBundles(sheet)) {
+  for (const group of bundles) {
     const first = group[0].points;
     const horizontal =
       Math.abs(first[0][0] - first[first.length - 1][0]) >=

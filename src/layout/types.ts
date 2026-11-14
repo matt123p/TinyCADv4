@@ -17,6 +17,12 @@ export type LayoutPhase =
   | 'junctions';
 export interface LayoutOptions {
   phases?: LayoutPhase[];
+  /** Share a bounded search across phases instead of exhausting it on the first one. */
+  balancePhases?: boolean;
+  /** Input was just constructed by the native XML reader; retain its fresh text caches. */
+  prepared?: boolean;
+  /** Host resource fraction remaining (0..1), used to return a safe partial proposal. */
+  remainingBudget?: () => number;
   disturbance?: 'low' | 'medium' | 'high';
   /** Optional classification override for the editor/MCP caller. */
   largeSymbolIds?: number[];
@@ -40,6 +46,9 @@ export interface LayoutOptions {
   cancelled?: () => boolean;
 }
 export interface LayoutSettings extends LayoutOptions {
+  /** Original verified topology, reused while scoring connectivity-preserving proposals. */
+  symbolConnections?: { a: number; b: number; weight: number }[];
+  physicalPartition?: string;
   fixedSymbolIds?: number[];
   grid: number;
   clearance: number;
@@ -96,6 +105,7 @@ export interface LayoutResult {
   before: LayoutAnalysis;
   after: LayoutAnalysis;
   evaluations: number;
+  phaseProgress: { phase: LayoutPhase; pass: number; evaluations: number; budgetExhausted: boolean }[];
   stopped: 'converged' | 'budget' | 'cancelled' | 'pass-limit';
   connectivityPreserved: boolean;
 }

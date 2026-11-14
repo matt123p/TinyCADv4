@@ -11,11 +11,12 @@ import {
   LayoutAnalysis,
   LayoutMetrics,
   LayoutOptions,
+  LayoutPhase,
   LayoutResult,
   LayoutSettings,
   Point,
 } from './types';
-import { analysePrepared, labelFits } from './analyse';
+import { analysePrepared, analyseRouteMetrics, labelFits } from './analyse';
 import { labelPositions, labelSpanLength } from './labels';
 import { labelGroups } from './labelGroups';
 import {
@@ -106,26 +107,57 @@ class Search {
   analysis: LayoutAnalysis;
   evaluations = 0;
   stopped: LayoutResult['stopped'] = 'converged';
+  phaseProgress: LayoutResult['phaseProgress'] = [];
+  private phaseLimit = Infinity;
+  private phaseExhausted = false;
+  private phaseResourceLimit = -Infinity;
+  runPhase(phase: LayoutPhase, pass: number, budget: number, remainingPhases: number, action: () => void) {
+    const start = this.evaluations;
+    this.phaseLimit = start + budget;
+    this.phaseExhausted = false;
+    const resources = this.o.remainingBudget?.();
+    this.phaseResourceLimit = resources == null ? -Infinity : resources - resources / remainingPhases;
+    try {
+      if (budget > 0 && this.available()) action();
+      else this.phaseExhausted = true;
+    }
+    finally {
+      this.phaseProgress.push({ phase, pass, evaluations: this.evaluations - start,
+        budgetExhausted: this.phaseExhausted || budget === 0 });
+      this.phaseLimit = Infinity;
+      this.phaseResourceLimit = -Infinity;
+    }
+  }
   readonly electrical: string;
   readonly physical: string;
   readonly nativeElectrical: string;
   readonly nativePhysical: string;
   constructor(sheet: dsnSheet, public o: LayoutSettings) {
     this.sheet = sheet;
-    this.analysis = analysePrepared(sheet, o);
     this.electrical = connectivitySignature(sheet);
     this.physical = connectivitySignature(sheet, true);
     const native = withNativeJunctions(sheet);
     this.nativeElectrical = connectivitySignature(native);
     this.nativePhysical = connectivitySignature(native, true);
+    // Accepted proposals must preserve these partitions. Reuse their membership
+    // for scoring; every geometry-changing acceptance still verifies connectivity.
+    o.symbolConnections = symbolConnections(sheet, this.electrical);
+    o.physicalPartition = this.physical;
+    this.analysis = analysePrepared(sheet, o);
   }
   available() {
     if (this.o.cancelled?.()) {
       this.stopped = 'cancelled';
       return false;
     }
-    if (this.evaluations >= this.o.maxEvaluations) {
+    const resources = this.o.remainingBudget?.() ?? Infinity;
+    if (this.evaluations >= this.o.maxEvaluations || resources <= 0) {
       this.stopped = 'budget';
+      if (this.phaseLimit !== Infinity) this.phaseExhausted = true;
+      return false;
+    }
+    if (this.evaluations >= this.phaseLimit || resources <= this.phaseResourceLimit) {
+      this.phaseExhausted = true;
       return false;
     }
     return true;
@@ -857,7 +889,7 @@ function moveSymbol(search: Search, s: dsnSymbol, dx: number, dy: number) {
             : replacements.get(i._id) || i,
         ),
       };
-      const m = analysePrepared(tmp, o).metrics;
+      const m = analyseRouteMetrics(tmp, o.pinLead);
       const cost =
         m.diagonalSegments * 1e9 +
         m.wireBodyCollisions * 1e8 +
@@ -954,12 +986,12 @@ function attractConnectedClusters(search: Search) {
     .map((s) => s._id)) {
     if (!search.available()) return;
     const sheet = search.sheet,
-      island = componentIslands(sheet).find((c) => c.symbol._id === id);
+      island = componentIslands(sheet, search.physical).find((c) => c.symbol._id === id);
     if (!island) continue; // Physically attached neighbours use endpoint rerouting.
     const { symbol: s, ids } = island;
     if (sheet.items.some((i) => ids.has(i._id) && !movable(i, search.o)))
       continue;
-    const neighbours = symbolConnections(sheet).flatMap((p) =>
+    const neighbours = symbolConnections(sheet, search.electrical).flatMap((p) =>
       p.a === id
         ? [{ id: p.b, weight: p.weight }]
         : p.b === id
@@ -1002,12 +1034,12 @@ function attractConnectedClusters(search: Search) {
  * the same reference order, with each part's stubs and annotations kept intact. */
 function arrangeComponentPatterns(search: Search) {
   const { o } = search;
-  const groups = componentPatterns(search.sheet).map((g) =>
+  const groups = componentPatterns(search.sheet, search.physical).map((g) =>
     g.map((c) => c.symbol._id),
   );
   for (const memberIds of groups) {
     if (!search.available()) return;
-    const islands = componentIslands(search.sheet);
+    const islands = componentIslands(search.sheet, search.physical);
     const group = memberIds.map((id) =>
       islands.find((c) => c.symbol._id === id),
     );
@@ -1277,8 +1309,10 @@ function alignLabelGroups(search: Search) {
 }
 
 function placeNetLabels(search: Search) {
+  if (!search.available()) return;
   const { o } = search;
   alignLabelGroups(search);
+  if (!search.available()) return;
   // A successfully formed column is a joint constraint, not a collection of
   // independent labels that can subsequently drift towards different centres.
   const aligned = new Set<number>();
@@ -1304,6 +1338,7 @@ function placeNetLabels(search: Search) {
         !aligned.has(i._id),
     )
     .map((i) => i._id)) {
+    if (!search.available()) return;
     const label = search.sheet.items.find((i) => i._id === id) as dsnLabel;
     const attached = wires(search.sheet).filter((w) =>
       wireContains(w, label.point),
@@ -1391,7 +1426,8 @@ function placeNetLabels(search: Search) {
           }
         }
     }
-    for (const candidate of options)
+    for (const candidate of options) {
+      if (!search.available()) return;
       search.replace(
         new Map<number, DocItem>([
           [id, candidate.label],
@@ -1406,6 +1442,7 @@ function placeNetLabels(search: Search) {
             : []),
         ]),
       );
+    }
   }
 }
 
@@ -1429,7 +1466,8 @@ function textCandidates(s: dsnSymbol, o: LayoutSettings): dsnSymbol[] {
     cx = (b.x1 + b.x2) / 2,
     cy = (b.y1 + b.y2) / 2;
   const result: dsnSymbol[] = [];
-  for (const gap of [o.clearance, o.clearance * 2]) {
+  // A small visual margin beyond collision clearance keeps labels readable.
+  for (const gap of [o.clearance + 2, o.clearance * 2 + 2]) {
     const positions = [
       [cx - w / 2, b.y1 - gap - h],
       [cx - w / 2, b.y2 + gap],
@@ -1483,9 +1521,12 @@ function placeSymbolText(search: Search) {
         !o.lockedIds?.includes(s._id),
     )
     .map((s) => s._id)) {
+    if (!search.available()) return;
     const s = symbols(search.sheet).find((s) => s._id === id);
-    for (const candidate of textCandidates(s, o))
+    for (const candidate of textCandidates(s, o)) {
+      if (!search.available()) return;
       search.replace(new Map([[id, candidate]]), true);
+    }
   }
 }
 
@@ -1607,7 +1648,7 @@ export function optimiseLayout(
   options: LayoutOptions = {},
 ): LayoutResult {
   const o = settings(sheet, options),
-    initial = cloneSheet(sheet),
+    initial = o.prepared ? { ...sheet, items: sheet.items.map(item => ({ ...item })) } : cloneSheet(sheet),
     search = new Search(initial, o),
     before = search.analysis;
   const enabled = (phase: NonNullable<LayoutOptions['phases']>[number]) =>
@@ -1615,25 +1656,68 @@ export function optimiseLayout(
   let converged = false;
   for (let pass = 0; pass < o.maxPasses && search.available(); pass++) {
     const start = search.sheet;
-    if (enabled('routing')) simplifyBacktracks(search);
-    // Give text room first so compaction can reserve its actual footprint.
-    if (enabled('symbol-text')) placeSymbolText(search);
-    if (enabled('net-labels')) placeNetLabels(search);
-    if (enabled('routing')) repairObstructions(search, enabled('placement'));
-    if (enabled('routing')) routeBundles(search);
-    if (enabled('placement')) {
-      arrangeComponentPatterns(search);
-      placeSymbols(search);
-      attractConnectedClusters(search);
+    const progressStart = search.phaseProgress.length;
+    if (o.balancePhases) {
+      const allStages: [LayoutPhase, () => void][] = [
+        ['symbol-text', () => placeSymbolText(search)],
+        ['net-labels', () => placeNetLabels(search)],
+        ['routing', () => {
+          simplifyBacktracks(search);
+          repairObstructions(search, enabled('placement'));
+          routeBundles(search);
+          routeWires(search);
+          simplifyBacktracks(search);
+        }],
+        ['placement', () => {
+          arrangeComponentPatterns(search);
+          placeSymbols(search);
+          attractConnectedClusters(search);
+        }],
+        ['compaction', () => compact(search)],
+        ['junctions', () => junctions(search)],
+      ];
+      const stages = allStages.filter(([phase]) => enabled(phase));
+      // Spend scarce runtime on actual obstructions before cosmetic label distance.
+      const metrics = search.analysis.metrics;
+      const priority = (phase: LayoutPhase) => {
+        if (phase === 'routing' && (metrics.wireBodyCollisions || metrics.pinExitViolations || metrics.diagonalSegments)) return 0;
+        if (phase === 'placement' && metrics.bodyCollisions) return 1;
+        if (phase === 'symbol-text' && metrics.textCollisions) return 2;
+        if (phase === 'net-labels' && metrics.labelOverhangs) return 3;
+        return 4 + ['symbol-text', 'net-labels', 'routing', 'placement', 'compaction', 'junctions'].indexOf(phase);
+      };
+      stages.sort((a, b) => priority(a[0]) - priority(b[0]));
+      for (let i = 0; i < stages.length; i++) {
+        const remaining = Math.max(0, o.maxEvaluations - search.evaluations);
+        search.runPhase(stages[i][0], pass + 1, Math.floor(remaining / (stages.length - i)), stages.length - i, stages[i][1]);
+      }
+    } else {
+      // Match the editor's sequence without dividing the search into phase quotas.
+      // Still report progress and honor the caller's total/resource allowance.
+      const run = (phase: LayoutPhase, action: () => void) => {
+        if (enabled(phase) && search.available())
+          search.runPhase(phase, pass + 1, o.maxEvaluations - search.evaluations, 1, action);
+      };
+      run('routing', () => simplifyBacktracks(search));
+      // Give text room first so compaction can reserve its actual footprint.
+      run('symbol-text', () => placeSymbolText(search));
+      run('net-labels', () => placeNetLabels(search));
+      run('routing', () => repairObstructions(search, enabled('placement')));
+      run('routing', () => routeBundles(search));
+      run('placement', () => {
+        arrangeComponentPatterns(search);
+        placeSymbols(search);
+        attractConnectedClusters(search);
+      });
+      run('routing', () => routeWires(search));
+      run('compaction', () => compact(search));
+      run('symbol-text', () => placeSymbolText(search));
+      run('net-labels', () => placeNetLabels(search));
+      run('placement', () => arrangeComponentPatterns(search));
+      // Placement and label clearance can add elbows late in the last pass.
+      run('routing', () => simplifyBacktracks(search));
     }
-    if (enabled('routing')) routeWires(search);
-    if (enabled('compaction')) compact(search);
-    if (enabled('symbol-text')) placeSymbolText(search);
-    if (enabled('net-labels')) placeNetLabels(search);
-    if (enabled('placement')) arrangeComponentPatterns(search);
-    // Placement and label clearance can add elbows late in the last pass.
-    if (enabled('routing')) simplifyBacktracks(search);
-    if (search.sheet === start) {
+    if (search.sheet === start && !search.phaseProgress.slice(progressStart).some(p => p.budgetExhausted)) {
       converged = true;
       break;
     }
@@ -1641,9 +1725,10 @@ export function optimiseLayout(
   if (!converged && search.stopped === 'converged')
     search.stopped = 'pass-limit';
   if (enabled('symbol-text')) annealText(search);
-  if (enabled('junctions')) junctions(search);
+  if (!o.balancePhases && enabled('junctions')) junctions(search);
   const originals = new Map(sheet.items.map((i) => [i._id, i]));
   const wireOrigins: Record<number, number> = {};
+  let splitWires = false;
   let nextId = Math.max(0, ...search.sheet.items.map((i) => i._id)) + 1;
   search.sheet = {
     ...search.sheet,
@@ -1654,6 +1739,7 @@ export function optimiseLayout(
         (originals.has(i._id) && !changed(originals.get(i._id), i))
       )
         return [i];
+      splitWires = true;
       return segments(i).map((s, index) => {
         const id = index ? nextId++ : i._id;
         if (index) wireOrigins[id] = i._id;
@@ -1666,7 +1752,11 @@ export function optimiseLayout(
       });
     }),
   };
-  const after = analysePrepared(search.sheet, o);
+  // Search already analysed the accepted geometry. Only segment splitting changes
+  // its representation and requires another full analysis.
+  const after = splitWires
+    ? analysePrepared(search.sheet, { ...o, physicalPartition: undefined })
+    : search.analysis;
   const changes = search.sheet.items.flatMap((i) =>
     !originals.has(i._id) || changed(originals.get(i._id), i)
       ? [{ id: i._id, before: originals.get(i._id), after: i }]
@@ -1696,6 +1786,7 @@ export function optimiseLayout(
     before,
     after,
     evaluations: search.evaluations,
+    phaseProgress: search.phaseProgress,
     stopped: search.stopped,
     connectivityPreserved: preserved,
   };

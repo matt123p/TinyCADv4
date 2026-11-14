@@ -3,7 +3,12 @@ import { dsnSheet } from '../src/model/dsnDrawing';
 
 export class updateView {
   rebuildHatches(sheet: dsnSheet): dsnSheet {
-    let hatches = sheet.items
+    // Placed symbols draw their embedded outline primitives too. Their hatch
+    // definitions must be available in the outer SVG, just like sheet artwork.
+    const items = sheet.items.flatMap(item => item.NodeName === 'symbol'
+      ? [item, ...item._symbol.outlines.flatMap(outline => outline.items)]
+      : [item]);
+    let hatches = items
       .map((item) => (isFilled(item) ? item : null))
       .filter(
         (item): item is NonNullable<typeof item> =>

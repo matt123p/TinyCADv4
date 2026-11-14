@@ -41,6 +41,7 @@ export class XMLBuilder {
         '>',
       'text/xml',
     );
+    // A headless DOM may retain the XML declaration as a processing instruction.
     this.insert = this.xmlDoc.documentElement;
   }
 
@@ -86,7 +87,7 @@ export class XMLBuilder {
       }
     }
 
-    if (s) {
+    if (s !== undefined && s !== null) {
       node.appendChild(this.xmlDoc.createTextNode(String(s)));
     }
 

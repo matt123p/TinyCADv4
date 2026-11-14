@@ -47,3 +47,4 @@ server.bundle.js
 # Generated plugin packages and browser test results
 /plugin-release/
 /test-results/
+/drawing-server.bundle.js

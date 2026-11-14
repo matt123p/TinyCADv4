@@ -15,7 +15,7 @@ import TText from '../src/components/svg/Text';
 import TWire from '../src/components/svg/Wire';
 import TImage from '../src/components/svg/Image';
 import { DocItem, dsnSymbol } from '../src/model/dsnItem';
-import { SheetOptions } from '../src/model/dsnDrawing';
+import { NetlistTypes, SheetOptions } from '../src/model/dsnDrawing';
 import { updatePin } from '../src/manipulators/updatePin';
 import ServerSymbol from './ServerSymbol';
 
@@ -31,6 +31,7 @@ interface ServerDrawingProps {
   parent: dsnSymbol | null;
   items: DocItem[];
   options: SheetOptions;
+  netlistTypes?: NetlistTypes;
 }
 
 const ServerDrawing: FunctionComponent<ServerDrawingProps> = (
@@ -278,8 +279,8 @@ const ServerDrawing: FunctionComponent<ServerDrawingProps> = (
                 dr={dr}
                 scale_x={scaleX}
                 scale_y={scaleY}
-                color={props.options.color_wire}
-                lineWidth={1}
+                color={props.netlistTypes?.[item.net_type]?.wireColor || props.options.color_wire}
+                lineWidth={props.netlistTypes?.[item.net_type]?.wireThickness || 1}
                 hover={false}
                 selected={false}
                 selected_handle={-1}

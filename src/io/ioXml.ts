@@ -176,7 +176,9 @@ export class ioXML {
       netTypeAssignments: {},
     };
 
-    let root = xmlBuilder.getElementsByTagName('TinyCADSheets');
+    // A single-sheet drawing may contain a multipart symbol's nested TinyCADSheets.
+    let root = xmlBuilder.xmlDoc.documentElement?.nodeName === 'TinyCAD'
+      ? [] : xmlBuilder.getElementsByTagName('TinyCADSheets');
     if (root.length === 0) {
       root = xmlBuilder.getElementsByTagName('TinyCAD');
       if (root.length >= 1) {
@@ -1959,7 +1961,7 @@ export class ioXML {
               if (outlinesNodes[m].nodeName === 'TinyCAD') {
                 let def = this.from_tinycad(
                   root,
-                  selected_nodes[l],
+                  outlinesNodes[m],
                   false,
                 ).items;
                 if (def.length > 0) {

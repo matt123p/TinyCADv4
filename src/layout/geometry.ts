@@ -222,7 +222,20 @@ export function symbolArtwork(symbol: dsnSymbol) {
         }),
       );
     }
-    if (bounds) (item.NodeName === T.Text ? annotations : shapes).push(bounds);
+    if (bounds) {
+      // SVG strokes straddle the path. Scale their visible half-width with the
+      // symbol transform so labels and routing clear the painted edge.
+      if ('stroked' in item && item.stroked && item.line_width > 0) {
+        const half = item.line_width / 2;
+        bounds = {
+          x1: bounds.x1 - half * Math.abs(sx),
+          y1: bounds.y1 - half * Math.abs(sy),
+          x2: bounds.x2 + half * Math.abs(sx),
+          y2: bounds.y2 + half * Math.abs(sy),
+        };
+      }
+      (item.NodeName === T.Text ? annotations : shapes).push(bounds);
+    }
   }
   const body = shapes.length ? union(shapes) : bodyRect(symbol);
   const pinBounds = pins(symbol)
