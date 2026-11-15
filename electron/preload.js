@@ -1,6 +1,21 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+    chatgptAccount: (operation, args) => ipcRenderer.invoke('chatgpt-account', { operation, args }),
+    chatgptRequest: (request) => ipcRenderer.invoke('chatgpt-request', request),
+    cancelChatGPTRequest: (id) => ipcRenderer.send('chatgpt-cancel', id),
+    onChatGPTStream: (callback) => {
+        const listener = (_, event) => callback(event);
+        ipcRenderer.on('chatgpt-stream', listener);
+        return () => ipcRenderer.removeListener('chatgpt-stream', listener);
+    },
+    chatRequest: (request) => ipcRenderer.invoke('chat-request', request),
+    onChatStream: (callback) => {
+        const listener = (_, event) => callback(event);
+        ipcRenderer.on('chat-stream', listener);
+        return () => ipcRenderer.removeListener('chat-stream', listener);
+    },
+    cancelChatRequest: (id) => ipcRenderer.send('chat-cancel', id),
     onMenuCommand: (callback) => {
         const listener = (_, command) => callback(command);
         ipcRenderer.on('menu-command', listener);

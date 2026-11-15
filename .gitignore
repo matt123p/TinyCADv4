@@ -48,3 +48,4 @@ server.bundle.js
 /plugin-release/
 /test-results/
 /drawing-server.bundle.js
+/src/chat/native.bundle.js

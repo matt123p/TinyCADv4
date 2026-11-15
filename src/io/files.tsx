@@ -1,3 +1,4 @@
+import { tinycadUrl } from './apiServer';
 import { withoutResults } from '../simulation/document';
 import { drawingFileName, isCompressedDrawing } from '../../shared/drawingFiles.js';
 import { encodeDrawing } from './dsnCodec';
@@ -931,7 +932,7 @@ export function handleMenuCommand(command: string) {
       case 'help-help':
         dispatch(
           actionMenuBrowserOpen(
-            'https://www.tinycad.net/Online/Home',
+            tinycadUrl('/Online/Home'),
             'Help',
           ),
         );

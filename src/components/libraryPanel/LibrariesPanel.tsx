@@ -1,3 +1,4 @@
+import { tinycadUrl } from '../../io/apiServer';
 import { BundledLibraries } from './BundledLibraries';
 import { librarySymbolSelection } from '../../io/librarySymbols';
 import type { StandardLibraryNavigation } from '../../state/actions/libraryActions';
@@ -1099,7 +1100,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
                   ) : (
                     <span className={styles.emptyStateText}>
                       <a
-                        href="https://www.tinycad.net/Online/Libraries"
+                        href={tinycadUrl('/Online/Libraries')}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ color: tokens.colorBrandForegroundLink }}

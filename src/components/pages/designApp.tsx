@@ -1,3 +1,4 @@
+import { ChatPanel } from '../chat/ChatPanel';
 import React, {
   FunctionComponent,
   useState,
@@ -123,6 +124,9 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   }, [dispatch, props.simulationSheet, props.selectedSpiceControl]);
   const styles = useStyles();
   const { t } = useTranslation();
+  const [chatOpen, setChatOpen] = useState(false);
+  const toggleChat = useCallback(() => setChatOpen(previous => !previous), []);
+  const closeChat = useCallback(() => setChatOpen(false), []);
   const [sidePanelVisible, setSidePanelVisible] = useState(true);
   const [sidePanelWidth, setSidePanelWidth] = useState(loadSidePanelWidth);
   const [sidePanelResizing, setSidePanelResizing] = useState(false);
@@ -190,7 +194,8 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
     >
       <SimulationFailureDialog />
-      <ToolbarContainer simulationToolbarRef={setSimulationToolbarTarget} />
+      <ToolbarContainer simulationToolbarRef={setSimulationToolbarTarget} chatOpen={chatOpen} onToggleChat={toggleChat} />
+      <ChatPanel open={chatOpen} onClose={closeChat} />
       <div className="mid-container">
         <div
           className={`side-panel-container${

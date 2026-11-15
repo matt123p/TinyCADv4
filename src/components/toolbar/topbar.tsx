@@ -1,4 +1,5 @@
-﻿import {
+import { tinycadUrl } from '../../io/apiServer';
+import {
   BookOpenRegular,
   FolderOpenRegular,
   PersonProhibitedRegular,
@@ -133,7 +134,7 @@ export const Topbar: React.FC<TopbarProps> = ({
           <ul className="menu">
             <li>
               <a
-                href="https://www.tinycad.net"
+                href={tinycadUrl('/')}
                 className="top-bar-title"
                 target="_blank"
                 rel="noreferrer"

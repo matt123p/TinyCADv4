@@ -6,6 +6,8 @@ import { LayoutChange } from '../../layout/types';
 import { Coordinate } from '../../model/dsnItem';
 
 export enum DocActionTypes {
+  ApplyChatLibrary = '[Document] ApplyChatLibrary',
+  ApplyChatEdit = '[Document] ApplyChatEdit',
   ApplyAutoLayout = '[Document] ApplyAutoLayout',
   SetDocument = '[Document] SetDocument',
   RenameDocument = '[Document] RenameDocument',
@@ -98,7 +100,26 @@ export interface ApplyAutoLayout {
   changes: LayoutChange[];
 }
 
+export interface ApplyChatEdit {
+  type: DocActionTypes.ApplyChatEdit;
+  source: dsnDrawing;
+  sourceSymbol: import('../../model/tclib').tclibLibraryEntry;
+  drawing: dsnDrawing;
+}
+
+export interface ApplyChatLibrary {
+  type: DocActionTypes.ApplyChatLibrary;
+  source: dsnDrawing;
+  sourceLibrary: import('../../model/tclib').tclib;
+  sourceSymbol: import('../../model/tclib').tclibLibraryEntry;
+  library: import('../../model/tclib').tclib;
+  symbol: import('../../model/tclib').tclibLibraryEntry;
+  drawing: dsnDrawing;
+}
+
 export type DocActions =
+  | ApplyChatLibrary
+  | ApplyChatEdit
   | ApplyAutoLayout
   | SetDocument
   | RenameDocument
