@@ -4,6 +4,13 @@
 
 ### Added
 
+- Integrated AI chatbot in browser and desktop builds, opened from the toolbar, with Markdown replies, file attachments and expandable thinking, tool-call and image activity.
+- Bring-your-own-key connections for OpenAI, Anthropic, Google Gemini, Z.AI and compatible providers, plus locally hosted Ollama. Guided connection setup and account settings keep API keys hidden after entry; model and thinking controls are available directly in chat.
+- Sign in with ChatGPT using an eligible paid subscription in desktop and local browser builds, with account usage controls and online search with source citations.
+- Direct AI tools to inspect the current unsaved drawing, metadata, netlist and SVG/PNG previews, then create, add, edit and auto-layout circuitry in place with revision checks and Undo/Redo.
+- PDF and image reference imports for creating editable circuits and symbols, including a compact IC generator. Generated symbols can be placed ready to wire or added individually or in batches to the active library, with instructions tailored to drawing or library editing.
+- AI search of bundled libraries before online symbol searches or new artwork generation. Runtime instructions list the available libraries; search all bundled libraries or a specific library and place results by component ID while preserving original artwork and SPICE attributes.
+
 - Integrated local ngspice simulation in browser and desktop builds, with Simulation sheets for operating point, transient, AC, DC sweep, noise, transfer-function and pole-zero analyses. Desktop also supports event-driven XSPICE models.
 - Configurable voltage/current sources, controlled sources, voltage/differential/current probes and virtual oscilloscopes, multimeters, function generators and bench supplies.
 - Circuit Explorer for temporary tuning, parameter sweeps, named measurements, requirements, DC overlays, frequency-response investigations, tolerance studies, test cases and power/stress reports.
@@ -57,6 +64,8 @@
 - Treat hidden transistor pins as connection points rather than visible stems, preventing artificial return bends and repairing existing loops in the amplifier example.
 
 ### Maintenance
+
+- Add chatbot provider, authentication, streaming, native editor tool and browser regression tests, including bundled-library search, component placement and Undo checks.
 
 - Expand the online manual with bundled-library and example guides, the complete SPICE/XSPICE courses, simulation and `.dzn` references, a dedicated layout tidy-up page, and current browser video walkthroughs. Add reproducible media capture and manual verification, and update all eight manual translations.
 
