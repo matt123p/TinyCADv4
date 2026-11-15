@@ -1,3 +1,6 @@
+import { bundledLibraries } from '../io/bundledLibraries';
+import { searchBundledSymbols } from './bundled-search';
+import { bundledLibraryInstructions } from './prompt';
 import { apiServer } from '../io/apiServer';
 import { Store } from 'redux';
 import { ioXML } from '../io/ioXml';
@@ -42,6 +45,7 @@ export function createEditorTools(
   };
   let nextRevision = 1;
   const found = new Map<number, any>();
+  const bundledFound = new Map<string, string>();
   const present = () => (store.getState() as docDrawing).docStore.present;
   const revision = () => {
     const { drawing, editLibrary: library, editSymbol: symbol } = present();
@@ -115,7 +119,7 @@ export function createEditorTools(
     const asset = components.get(componentId);
     if (!asset)
       throw new Error(
-        'Unknown componentId. Use search_symbols, create_ic_symbol or store_component first.',
+        'Unknown componentId. Use search_bundled_symbols, search_symbols, create_ic_symbol or store_component first.',
       );
     if (asset.definition) return asset;
     const source = asset.source;
@@ -189,7 +193,16 @@ export function createEditorTools(
     return {
       componentId: asset.componentId,
       ...(asset.source
-        ? { symbolId: asset.source.symbolId, nameId: asset.source.nameId }
+        ? {
+            symbolId: asset.source.symbolId,
+            nameId: asset.source.nameId,
+            ...(asset.source.libraryId
+              ? {
+                  libraryId: asset.source.libraryId,
+                  libraryName: asset.source.libraryName,
+                }
+              : {}),
+          }
         : {}),
       name: asset.name,
       reference: asset.reference,
@@ -204,13 +217,18 @@ export function createEditorTools(
     checkArguments(input, spec.parameters);
     const args: any = { ...input };
     if (signal.aborted) throw new DOMException('Stopped', 'AbortError');
-    if (name === 'read_skill_reference')
+    if (name === 'read_skill_reference') {
+      await bundledLibraries.initialize();
       return {
         data: {
           path: args.path,
           content:
             args.path === 'SKILL.md'
-              ? resources['references/editor-common.md'] +
+              ? bundledLibraryInstructions(
+                  bundledLibraries.getSnapshot().catalog?.libraries,
+                ) +
+                '\n' +
+                resources['references/editor-common.md'] +
                 '\n' +
                 resources[
                   present().editLibrary
@@ -220,6 +238,7 @@ export function createEditorTools(
               : (resources as Record<string, string>)[args.path],
         },
       };
+    }
     if (name === 'read_drawing' || name === 'read_metadata') {
       const snapshot = current();
       const info = await native(
@@ -244,6 +263,48 @@ export function createEditorTools(
                 selectedIds,
               },
       };
+    }
+    if (name === 'search_bundled_symbols') {
+      const { matches, ...result } = await searchBundledSymbols(
+        bundledLibraries,
+        args,
+        signal,
+      );
+      const symbols = matches.map(({ library, entry, definition }) => {
+        const key = JSON.stringify([library.id, entry.NameID]);
+        let componentId = bundledFound.get(key);
+        if (!componentId) {
+          componentId = retain({
+            name: entry.Name,
+            reference: entry.Reference,
+            description: entry.Description,
+            definition,
+            attributes: entry.Attributes.map((attribute) => ({
+              name: attribute.AttName,
+              value: attribute.AttValue,
+            })),
+            source: {
+              libraryId: library.id,
+              libraryName: library.name,
+              symbolId: entry.SymbolID,
+              nameId: entry.NameID,
+            },
+          }).componentId;
+          bundledFound.set(key, componentId);
+        }
+        return {
+          componentId,
+          libraryId: library.id,
+          libraryName: library.name,
+          symbolId: entry.SymbolID,
+          nameId: entry.NameID,
+          name: entry.Name,
+          description: entry.Description,
+          reference: entry.Reference,
+          partsPerPackage: entry.ppp,
+        };
+      });
+      return { data: { ...result, symbols } };
     }
     if (name === 'search_symbols') {
       if (!args.query.trim())
@@ -313,7 +374,10 @@ export function createEditorTools(
       const asset = await resolveComponent(id, signal);
       const validation = await native(
         'validate_component',
-        { definition: asset.definition },
+        {
+          definition: asset.definition,
+          librarySymbol: !!asset.source?.libraryId,
+        },
         signal,
       );
       return renderResult(
@@ -324,7 +388,10 @@ export function createEditorTools(
           ...(validation.valid
             ? await native(
                 'render_component',
-                { definition: asset.definition },
+                {
+                  definition: asset.definition,
+                  librarySymbol: !!asset.source?.libraryId,
+                },
                 signal,
               )
             : {
@@ -387,7 +454,10 @@ export function createEditorTools(
         const component = { ...asset, ...item, name: item.name || asset.name };
         const validation = await native(
           'validate_component',
-          { definition: component.definition },
+          {
+            definition: component.definition,
+            librarySymbol: !!component.source?.libraryId,
+          },
           signal,
         );
         if (!validation.valid) return { error: true, data: validation };
@@ -456,6 +526,7 @@ export function createEditorTools(
       ) {
         const asset = await resolveComponent(args.componentId, signal);
         args.componentDefinition = asset.definition;
+        args.librarySymbol = !!asset.source?.libraryId;
         args.name ||= asset.name;
         args.description ||= asset.description;
         args.attributes ||= asset.attributes;

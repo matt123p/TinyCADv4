@@ -132,6 +132,19 @@ export class BundledLibraryManager {
     this.publish({ catalog, selected, error });
     await Promise.all(selected.map((id) => this.load(id)));
   }
+  /** Read any catalog library without selecting it or changing user preferences. */
+  async readLibrary(id: string): Promise<tclib> {
+    await this.initialize();
+    const entry = this.snapshot.catalog?.libraries.find(
+      (entry) => entry.id === id,
+    );
+    if (!entry) throw new Error(`Unknown bundled library: ${id}`);
+    const selected = this.snapshot.libraries.find(
+      (lib) => lib.fileId === BUNDLED_LIBRARY_PREFIX + id,
+    );
+    return selected || this.source.load(entry);
+  }
+
   async select(ids: string[]) {
     if (!this.snapshot.catalog || this.snapshot.saving) return;
     const selected = this.snapshot.catalog.libraries

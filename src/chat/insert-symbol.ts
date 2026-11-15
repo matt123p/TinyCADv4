@@ -4,7 +4,11 @@ import { ioXML } from '../io/ioXml';
 import { updateSymbol } from '../manipulators/updateSymbol';
 
 export function insertSymbol(args: any) {
-  const component = validateXml(args.componentDefinition);
+  const component = validateXml(
+    args.componentDefinition,
+    false,
+    !!args.librarySymbol,
+  );
   if (!component.valid) throw new Error(JSON.stringify(component));
   const xml = parseXml(args.definition, true),
     symbol = parseXml(args.componentDefinition, false);

@@ -2123,3 +2123,61 @@ test('final response snapshots do not duplicate streamed tool calls', async () =
   assert.equal(reply.calls.length, 1);
   assert.deepEqual(reply.native.responses, [call]);
 });
+
+test('bundled search scopes libraries, ranks names, paginates and reports incomplete searches', async () => {
+  const { searchBundledSymbols } = loadComponent('src/chat/bundled-search.ts', {});
+  const libraries = [{ id: 'a', name: 'Analog', path: 'a.tclib' }, { id: 'b', name: 'Boards', path: 'b.tclib' }];
+  const loads = [];
+  const entry = (NameID, Name, Description = '', Attributes = []) => ({ NameID, SymbolID: NameID, Name, Description, Attributes });
+  const entries = [entry(1, 'Resistor'), entry(2, 'Trimmer resistor'), entry(3, 'Part', 'precision resistor', [{ AttName: 'SPICE', AttValue: 'model=R' }])];
+  let fail = false;
+  const source = {
+    initialize: async () => {},
+    getSnapshot: () => ({ catalog: { libraries }, error: '' }),
+    readLibrary: async id => {
+      loads.push(id);
+      if (fail && id === 'b') throw new Error('Broken library');
+      const names = id === 'a' ? entries : [entry(1, 'Resistor board')];
+      return { names, symbols: names.map(n => ({ SymbolId: n.SymbolID, Data: '<TinyCAD/>' })) };
+    },
+  };
+  const signal = new AbortController().signal;
+  const all = await searchBundledSymbols(source, { query: 'resistor', pageSize: 2 }, signal);
+  assert.equal(all.total, 4);
+  assert.equal(all.hasMore, true);
+  assert.equal(all.complete, true);
+  assert.deepEqual(all.matches.map(m => m.entry.Name), ['Resistor', 'Trimmer resistor']);
+  const page = await searchBundledSymbols(source, { query: 'resistor', page: 2, pageSize: 2 }, signal);
+  assert.deepEqual(page.matches.map(m => m.entry.Name), ['Resistor board', 'Part']);
+  loads.length = 0;
+  const scoped = await searchBundledSymbols(source, { query: 'model=R', libraryId: 'a' }, signal);
+  assert.deepEqual(loads, ['a']);
+  assert.equal(scoped.matches[0].entry.Name, 'Part');
+  await assert.rejects(searchBundledSymbols(source, { query: 'resistor', libraryId: 'invented' }, signal), /Unknown bundled library/);
+  await assert.rejects(searchBundledSymbols(source, { query: ' ' }, signal), /search terms/);
+  fail = true;
+  const partial = await searchBundledSymbols(source, { query: 'resistor' }, signal);
+  assert.equal(partial.complete, false);
+  assert.deepEqual(partial.errors, [{ libraryId: 'b', message: 'Broken library' }]);
+  assert.equal(partial.total, 3);
+  const controller = new AbortController(); controller.abort();
+  await assert.rejects(searchBundledSymbols(source, { query: 'resistor' }, controller.signal), /abort/i);
+});
+
+test('runtime instructions inject bundled library names and search priority in both editor modes', () => {
+  const { editorChatSystem } = loadComponent('src/chat/prompt.ts', { './skill/resources.json': resources });
+  for (const library of [false, true]) {
+    const prompt = editorChatSystem({ library, webSearch: false, bundledLibraries: [{ id: 'custom-bundle', name: 'My bundled parts', description: 'Local symbols' }] });
+    assert.match(prompt, /search_bundled_symbols BEFORE the online search_symbols/);
+    assert.match(prompt, /My bundled parts/);
+    assert.match(prompt, /custom-bundle/);
+    assert.match(prompt, library ? /CURRENT EDITOR MODE: LIBRARY/ : /CURRENT EDITOR MODE: DRAWING/);
+  }
+});
+
+
+test('existing bundled passive pin labels are preserved while generated symbols require names', () => {
+  const blank = symbol.replace(/(<PIN[^>]*>)[^<]*(<\/PIN>)/g, '$1$2');
+  assert.equal(native('validate_component', { definition: blank }).valid, false);
+  assert.equal(native('validate_component', { definition: blank, librarySymbol: true }).valid, true);
+});

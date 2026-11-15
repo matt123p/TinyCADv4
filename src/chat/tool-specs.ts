@@ -39,8 +39,25 @@ const spec = (
 ): ToolSpec => ({ name, description, parameters: obj(properties, required) });
 export const toolSpecs: ToolSpec[] = [
   spec(
+    'search_bundled_symbols',
+    'Search bundled TinyCAD libraries FIRST, before online search or generating a symbol. Searches names, descriptions and attributes in all catalog libraries, including unselected ones; optionally restrict by libraryId. Returns reusable componentIds for get_symbol, place_component or add_library_components, with original SPICE attributes. Does not change library selection. Check errors before treating missing matches as absent.',
+    {
+      query: str(
+        'Part name, family or generic kind; all words must match',
+        200,
+      ),
+      libraryId: str(
+        'Exact ID from the runtime bundled library catalog; omit to search all',
+        128,
+      ),
+      page: int(1, 100),
+      pageSize: int(1, 10),
+    },
+    ['query'],
+  ),
+  spec(
     'search_symbols',
-    'Search the public TinyCAD library by exact part, family, generic kind, #label or @owner. Search before creating geometry. Returns actual symbolId/nameId pairs and a componentId ready for direct placement; no XML needs copying.',
+    'Search the public TinyCAD library by exact part, family, generic kind, #label or @owner. Use search_bundled_symbols first, then search here if no suitable bundled part exists. Returns actual symbolId/nameId pairs and a componentId ready for direct placement; no XML needs copying.',
     {
       query: str('Search terms', 200),
       page: int(1, 100),
@@ -50,10 +67,10 @@ export const toolSpecs: ToolSpec[] = [
   ),
   spec(
     'get_symbol',
-    'Fetch a symbol identified by search_symbols. Returns a reusable componentId, source metadata, validation and preview. Use componentId with place_component; XML is returned only with includeDefinition=true. Never invent IDs.',
+    'Fetch a symbol identified by search_bundled_symbols or search_symbols. Returns a reusable componentId, source metadata, validation and preview. Use componentId with place_component; XML is returned only with includeDefinition=true. Never invent IDs.',
     {
       componentId: str(
-        'Handle returned by search_symbols or a creation tool',
+        'Handle returned by bundled/online search or a creation tool',
         128,
       ),
       includeDefinition: { type: 'boolean' },

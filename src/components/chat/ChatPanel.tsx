@@ -1,3 +1,4 @@
+import { bundledLibraries } from '../../io/bundledLibraries';
 import { ConnectionSettings } from './ConnectionSettings';
 import { sliderThinkingLevel } from '../../chat/thinking';
 import {
@@ -217,6 +218,9 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
             },
             geminiGoogle?.auth || byokAuth(settings.provider, key),
           );
+      // Catalog data is refreshed into the instructions for every model request.
+      // A missing catalog must not prevent chatting or online-library fallback.
+      await bundledLibraries.initialize().catch(() => {});
       const attachments = await readAttachments(
         files,
         settings.provider,
@@ -230,6 +234,8 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
             editorChatSystem({
               library: !!store.getState().docStore.present.editLibrary,
               webSearch: !!chatGPT?.sharing,
+              bundledLibraries:
+                bundledLibraries.getSnapshot().catalog?.libraries,
             }),
           toolSpecs,
           createEditorTools(store, (file) => {

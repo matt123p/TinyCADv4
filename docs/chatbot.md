@@ -151,6 +151,15 @@ All original MCP function names are local tools: `search_symbols`, `get_symbol`,
 `insert_symbol`, `read_skill_reference`, and `export_file`. No MCP connection is
 used. Public library search/retrieval uses TinyCAD's existing REST endpoints.
 
+The runtime system prompt and `read_skill_reference` (`SKILL.md`) include the
+available bundled library names, IDs and descriptions. The assistant searches
+`search_bundled_symbols` **first**, before online search or symbol generation.
+Omit `libraryId` to search all bundled libraries (including unselected libraries),
+or pass a catalog ID to restrict the search. Names, descriptions and attributes
+are searched; results are paginated and include original artwork and SPICE
+attributes through reusable component IDs. Searches do not change the selected
+library. Load errors are reported separately from a complete search with no matches.
+
 Search results return a session-local `componentId`. `get_symbol` supplies metadata,
 pin mappings, validation and a preview; XML is omitted unless explicitly requested
 with `includeDefinition=true`. `create_ic_symbol` and `store_component` also return

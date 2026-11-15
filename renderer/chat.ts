@@ -13,15 +13,20 @@ import { NetlistGenerator } from '../src/io/netlists/netlistGenerator';
 import { makeNetForDrawing } from '../src/web-worker/netlist';
 import { resetServerIds } from './serverGlobalId';
 
-function validated(definition: string, drawing: boolean) {
-  const result = validateXml(definition, drawing);
+function validated(
+  definition: string,
+  drawing: boolean,
+  librarySymbol = false,
+) {
+  const result = validateXml(definition, drawing, librarySymbol);
   if (!result.valid) throw new Error(JSON.stringify(result));
   return parseXml(definition, drawing);
 }
 export function nativeTool(name: string, args: any): any {
   const { definition } = args;
   if (name === 'insert_symbol') return insertSymbol(args);
-  if (name === 'validate_component') return validateXml(definition);
+  if (name === 'validate_component')
+    return validateXml(definition, false, !!args.librarySymbol);
   if (name === 'validate_drawing') {
     const structural = validateXml(definition, true);
     return structural.valid
@@ -29,7 +34,7 @@ export function nativeTool(name: string, args: any): any {
       : { ...structural, structurallyValid: false };
   }
   if (name === 'render_component') {
-    validated(definition, false);
+    validated(definition, false, !!args.librarySymbol);
     const svg = renderTinyCadSymbolSvg(definition);
     if (!svg) throw new Error('Could not render the component.');
     return { svg };

@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 import { serveLayoutApp } from '../layout-browser/serve-app.mjs';
 import PDFDocument from 'pdfkit';
@@ -2284,4 +2285,52 @@ test('IC generator titles fit within their editable text boxes without clipping'
     expect(measurements.center[1]).toBeCloseTo(generated.height / 2);
     expect(generated.pinPitch).toBe(2);
   }
+});
+
+
+test('bundled library search injects the catalog and places original SPICE symbols without online fetches', async ({ page }) => {
+  const root = new URL('../../../', import.meta.url);
+  const catalog = JSON.parse(await readFile(new URL('bundled-libraries/config.json', root), 'utf8'));
+  catalog.libraries = catalog.libraries.filter(entry => ['spice', 'digital'].includes(entry.id));
+  const requested = [];
+  await page.route('**/bundled-libraries/**', async route => {
+    const pathname = new URL(route.request().url()).pathname;
+    if (pathname.endsWith('/config.json')) {
+      await route.fulfill({ json: catalog });
+      return;
+    }
+    const entry = catalog.libraries.find(entry => pathname.endsWith('/' + entry.path));
+    if (!entry) { await route.abort(); return; }
+    requested.push(entry.id);
+    await route.fulfill({ body: await readFile(new URL('bundled-libraries/' + entry.path, root)), contentType: 'application/octet-stream' });
+  });
+  let online = 0;
+  await page.route('**/api/search/**', async route => { online++; await route.abort(); });
+  const skill = (await run(page, 'read_skill_reference', { path: 'SKILL.md' })).data.content;
+  expect(skill).toContain('SPICE essentials');
+  expect(skill).toContain('Digital logic');
+  expect(skill).toContain('search_bundled_symbols BEFORE the online search_symbols');
+  expect(requested).toEqual([]); // The runtime catalog does not eagerly load SQLite.
+  const before = await snapshot(page);
+  const all = (await run(page, 'search_bundled_symbols', { query: 'resistor' })).data;
+  expect(all.complete).toBe(true);
+  expect(all.searchedLibraries.sort()).toEqual(['digital', 'spice']);
+  const resistor = all.symbols.find(symbol => symbol.name === 'Resistor');
+  expect(resistor.libraryId).toBe('spice');
+  requested.length = 0;
+  const scoped = (await run(page, 'search_bundled_symbols', { query: 'Resistor', libraryId: 'spice' })).data;
+  expect(requested).toEqual(['spice']);
+  expect(scoped.symbols.find(symbol => symbol.name === 'Resistor').componentId).toBe(resistor.componentId);
+  const symbol = (await run(page, 'get_symbol', { componentId: resistor.componentId })).data;
+  expect(symbol.validation.valid).toBe(true);
+  expect(symbol.attributes.some(attribute => attribute.name === '$$SPICE')).toBe(true);
+  expect(symbol.definition).toBeUndefined();
+  expect((await snapshot(page)).xml).toBe(before.xml);
+  const read = (await run(page, 'read_drawing')).data;
+  const placed = (await run(page, 'place_component', { componentId: resistor.componentId, baseRevision: read.revision, sheet: 1 })).data;
+  expect(placed.applied).toBe(true);
+  expect((await snapshot(page)).xml).toContain('$$SPICE');
+  await page.evaluate(() => window.chatTest.undo());
+  expect((await snapshot(page)).xml).toBe(before.xml);
+  expect(online).toBe(0);
 });

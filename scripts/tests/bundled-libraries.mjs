@@ -101,6 +101,13 @@ assert.deepEqual(
   [],
   'reading the catalog must never load unselected files',
 );
+await manager.readLibrary('connectors');
+assert.deepEqual(loads, ['connectors']);
+assert.deepEqual(manager.getSnapshot().selected, []);
+assert.deepEqual(saved, [], 'chat reads never save a selection');
+assert.deepEqual(manager.getSnapshot().libraries, [], 'chat reads never populate the library panel');
+await assert.rejects(manager.readLibrary('invented'), /Unknown bundled library/);
+loads.length = 0;
 await manager.select(['passives']);
 assert.deepEqual(loads, ['passives']);
 assert.deepEqual(saved, ['passives']);

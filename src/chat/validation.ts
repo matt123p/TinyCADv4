@@ -64,7 +64,11 @@ export function parseXml(xml: string, drawing: boolean) {
     throw new Error('Expected well-formed TinyCAD XML without namespaces.');
   return b;
 }
-export function validateXml(xml: string, drawing = false) {
+export function validateXml(
+  xml: string,
+  drawing = false,
+  librarySymbol = false,
+) {
   const schema = (drawing ? drawingSchemaSource : schemaSource) as Rule;
   const types = new Map(
     schema.children
@@ -330,7 +334,14 @@ export function validateXml(xml: string, drawing = false) {
       else if (scopes.get(scope).has(number))
         add('duplicate_pin_number', n, `Duplicate physical pin ${number}.`);
       scopes.get(scope).add(number);
-      if (Number(n.getAttribute('show')) & 1 && !n.textContent.trim())
+      // Existing library artwork can intentionally leave passive pin labels blank.
+      // Require names for newly generated standalone symbols only.
+      if (
+        !drawing &&
+        !librarySymbol &&
+        Number(n.getAttribute('show')) & 1 &&
+        !n.textContent.trim()
+      )
         add('pin_name', n, 'Displayed pin name is blank.');
       const pos = (n.getAttribute('pos') || '').split(',').map(Number);
       if (pos.some((v: number) => !Number.isInteger(v)))
