@@ -6,8 +6,8 @@ import {
 } from '../../state/dispatcher/AppDispatcher';
 import { docDrawing } from '../../state/undo/undo';
 
-export let apiServer =
-  window.location.hostname === 'localhost' ? '' : 'https://www.tinycad.net';
+import { apiServer } from '../../io/apiServer';
+export { apiServer } from '../../io/apiServer';
 
 export interface SearchLabel {
   labelId: number;

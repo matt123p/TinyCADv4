@@ -8,6 +8,13 @@ interface ElectronLibraryLoadError {
 declare global {
     interface Window {
         electronAPI: {
+            chatgptAccount: (operation: string, args?: Record<string, unknown>) => Promise<{result?: any; error?: {message: string; code?: string}}>;
+            chatgptRequest: (request: {id: string; body: unknown}) => Promise<{streamed?: boolean; error?: {message: string; code?: string}}>;
+            cancelChatGPTRequest: (id: string) => void;
+            onChatGPTStream: (callback: (event: {id: string; type: string; text?: string; status?: number}) => void) => () => void;
+            chatRequest: (request: { id: string; operation: string; authorization: string; body?: string }) => Promise<{ status: number; body: string; streamed?: boolean }>;
+            onChatStream: (callback: (event: { id: string; type: string; status?: number; text?: string }) => void) => () => void;
+            cancelChatRequest: (id: string) => void;
             onMenuCommand: (callback: (command: string) => void) => () => void;
             onMenuCommandWithData: (callback: (command: string, data: any) => void) => () => void;
             // Context menu

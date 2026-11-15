@@ -1,3 +1,4 @@
+import { tinycadUrl } from './apiServer';
 import React from 'react';
 
 import { ActionCreators } from 'redux-undo';
@@ -878,7 +879,7 @@ export function handleMenuCommand(command: string) {
       case 'help-help':
         dispatch(
           actionMenuBrowserOpen(
-            'https://www.tinycad.net/Online/Home',
+            tinycadUrl('/Online/Home'),
             'Help',
           ),
         );

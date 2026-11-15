@@ -1,0 +1,1723 @@
+{
+  "kind": "schema",
+  "attributeFormDefault": "unqualified",
+  "elementFormDefault": "qualified",
+  "children": [
+    {
+      "kind": "element",
+      "name": "TinyCAD",
+      "type": "tinycad",
+      "children": []
+    },
+    {
+      "kind": "element",
+      "name": "TinyCADSheets",
+      "type": "tinyCadSheetsType",
+      "children": []
+    },
+    {
+      "kind": "complexType",
+      "name": "tinycad",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "1",
+              "name": "NAME",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "1",
+              "name": "DETAILS",
+              "type": "detailsType",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "name": "FONT",
+              "type": "fontType",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "name": "STYLE",
+              "type": "styleType",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "name": "FILL",
+              "type": "fillType",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "name": "SYMBOLDEF",
+              "type": "symbolDefType",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "name": "IMAGE",
+              "type": "imageType",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "1",
+              "name": "OPTIONS",
+              "type": "optionsType",
+              "children": []
+            },
+            {
+              "kind": "choice",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "children": [
+                {
+                  "kind": "element",
+                  "name": "PIN",
+                  "type": "pinType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "POLYGON",
+                  "type": "polygonType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "RECTANGLE",
+                  "type": "rectangleType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "WIRE",
+                  "type": "wireType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "ELLIPSE",
+                  "type": "ellipseType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "JUNCTION",
+                  "type": "junctionType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "TEXT",
+                  "type": "textType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "LABEL",
+                  "type": "labelType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "BUS",
+                  "type": "busType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "BUSNAME",
+                  "type": "busNameType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "BUSSLASH",
+                  "type": "busSlashType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "NOCONNECT",
+                  "type": "junctionType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "POWER",
+                  "type": "powerType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "METAFILE",
+                  "type": "metafileType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "SYMBOL",
+                  "type": "symbolType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "NOTE_TEXT",
+                  "type": "noteTextType",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "ruler",
+                  "type": "emptyType",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "tinyCadSheetsType",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "choice",
+              "minOccurs": "1",
+              "maxOccurs": "unbounded",
+              "children": [
+                {
+                  "kind": "element",
+                  "name": "TinyCAD",
+                  "type": "tinycad",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "HierarchicalSymbol",
+                  "type": "tinycad",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "name": "DSNSETTINGS",
+              "type": "dsnSettingsType",
+              "minOccurs": "0",
+              "maxOccurs": "1",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "NETLIST_TYPES",
+              "type": "netlistTypesType",
+              "minOccurs": "0",
+              "maxOccurs": "1",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "dsnSettingsType",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "name": "SHOW_RULERS",
+              "type": "xs:string",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "netlistTypesType",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "name": "TYPE",
+              "type": "netlistTypeType",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "NET",
+              "type": "netAssignmentType",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "netlistTypeType",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "name": "ATTR",
+              "type": "netlistAttrType",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "children": []
+            }
+          ]
+        },
+        {
+          "kind": "attribute",
+          "name": "name",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "wireColor",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "labelColor",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "powerColor",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "wireThickness",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "netlistAttrType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "key",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "value",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "netAssignmentType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "name",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "type",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "detailsType",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "name": "Size",
+              "type": "sizeType",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "GUIDES",
+              "type": "guidesType",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "TITLE",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "AUTHOR",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "REVISION",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "DOCNUMBER",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "ORGANISATION",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "SHEETS",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "SHOWS",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "DATE",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "GRID",
+              "type": "gridType",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "sizeType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "width",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "height",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "guidesType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "horiz",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "vert",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "gridType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "spacing",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "snap",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "fontType",
+      "children": [
+        {
+          "kind": "all",
+          "children": [
+            {
+              "kind": "element",
+              "name": "HEIGHT",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "WIDTH",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "WEIGHT",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "ITALIC",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "UNDERLINE",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "STRIKEOUT",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "CHARSET",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "FACENAME",
+              "type": "xs:string",
+              "children": []
+            }
+          ]
+        },
+        {
+          "kind": "attribute",
+          "name": "id",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "styleType",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "name": "STYLE",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "THICKNESS",
+              "type": "xs:unsignedByte",
+              "children": []
+            }
+          ]
+        },
+        {
+          "kind": "attribute",
+          "name": "id",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "fillType",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "name": "INDEX",
+              "type": "xs:byte",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR",
+              "type": "xs:string",
+              "children": []
+            }
+          ]
+        },
+        {
+          "kind": "attribute",
+          "name": "id",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "symbolDefType",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "name": "NAME",
+              "type": "typedTextType",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "GUID",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "REF",
+              "type": "typedTextType",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "DESCRIPTION",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "PPP",
+              "type": "xs:string",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "REF_POINT",
+              "type": "refPointType",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "choice",
+              "children": [
+                {
+                  "kind": "element",
+                  "name": "TinyCAD",
+                  "type": "tinycad",
+                  "children": []
+                },
+                {
+                  "kind": "element",
+                  "name": "TinyCADSheets",
+                  "type": "tinyCadSheetsType",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "attribute",
+          "name": "id",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "typedTextType",
+      "children": [
+        {
+          "kind": "simpleContent",
+          "children": [
+            {
+              "kind": "extension",
+              "base": "xs:string",
+              "children": [
+                {
+                  "kind": "attribute",
+                  "name": "type",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "refPointType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "pos",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "power",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "part",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "imageType",
+      "children": [
+        {
+          "kind": "sequence",
+          "minOccurs": "0",
+          "children": [
+            {
+              "kind": "any",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "processContents": "skip",
+              "children": []
+            }
+          ]
+        },
+        {
+          "kind": "attribute",
+          "name": "id",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "type",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "optionsType",
+      "children": [
+        {
+          "kind": "all",
+          "children": [
+            {
+              "kind": "element",
+              "name": "GRID",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "UNITS",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "SHOW_LABEL_CONNECTION_POINT",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_WIRE",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_BUS",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_JUNCTION",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_NOCONNECT",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_LABEL",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_POWER",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_PIN",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_HIDDEN_PIN",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_BACKGROUND",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_NOTETEXT_FILL",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_NOTETEXT_LINE",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "COLOR_NOTETEXT_TEXT",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "FONT",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "STYLE",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "name": "SCROLLBAR",
+              "type": "xs:string",
+              "minOccurs": "0",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "hintType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "pin",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "net",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "pointType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "pos",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "arc",
+          "type": "xs:unsignedByte",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "control",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "control2",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "pinType",
+      "children": [
+        {
+          "kind": "simpleContent",
+          "children": [
+            {
+              "kind": "extension",
+              "base": "xs:string",
+              "children": [
+                {
+                  "kind": "attribute",
+                  "name": "pos",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "which",
+                  "type": "xs:unsignedByte",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "elec",
+                  "type": "xs:unsignedByte",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "direction",
+                  "type": "xs:unsignedByte",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "part",
+                  "type": "xs:unsignedByte",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "number",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "show",
+                  "type": "xs:unsignedByte",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "length",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "number_pos",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "centre_name",
+                  "type": "xs:unsignedByte",
+                  "use": "optional",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "polygonType",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "minOccurs": "1",
+              "maxOccurs": "unbounded",
+              "name": "POINT",
+              "type": "pointType",
+              "children": []
+            }
+          ]
+        },
+        {
+          "kind": "attribute",
+          "name": "pos",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "style",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "fill",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "polygon",
+          "type": "xs:unsignedByte",
+          "use": "optional",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "rectangleType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "a",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "b",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "style",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "fill",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "wireType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "a",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "b",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "style",
+          "type": "xs:unsignedInt",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "net_type",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "ellipseType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "a",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "b",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "style",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "fill",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "junctionType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "pos",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "textType",
+      "children": [
+        {
+          "kind": "simpleContent",
+          "children": [
+            {
+              "kind": "extension",
+              "base": "xs:string",
+              "children": [
+                {
+                  "kind": "attribute",
+                  "name": "pos",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "direction",
+                  "type": "xs:unsignedByte",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "font",
+                  "type": "xs:unsignedInt",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "color",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "labelType",
+      "mixed": "true",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "name": "HINT",
+              "type": "hintType",
+              "children": []
+            }
+          ]
+        },
+        {
+          "kind": "attribute",
+          "name": "pos",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "direction",
+          "type": "xs:unsignedByte",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "font",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "color",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "style",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "busType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "a",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "b",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "busNameType",
+      "children": [
+        {
+          "kind": "simpleContent",
+          "children": [
+            {
+              "kind": "extension",
+              "base": "xs:string",
+              "children": [
+                {
+                  "kind": "attribute",
+                  "name": "pos",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "font",
+                  "type": "xs:unsignedInt",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "color",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "direction",
+                  "type": "xs:unsignedByte",
+                  "use": "required",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "busSlashType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "pos",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "direction",
+          "type": "xs:unsignedByte",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "powerType",
+      "mixed": "true",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "name": "HINT",
+              "type": "hintType",
+              "children": []
+            }
+          ]
+        },
+        {
+          "kind": "attribute",
+          "name": "pos",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "which",
+          "type": "xs:unsignedInt",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "direction",
+          "type": "xs:unsignedByte",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "metafileType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "a",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "b",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "id",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "style",
+          "type": "xs:unsignedInt",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "fill",
+          "type": "xs:unsignedInt",
+          "use": "optional",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "fieldType",
+      "children": [
+        {
+          "kind": "attribute",
+          "name": "pos",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "value",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "description",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "type",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "show",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "symbolType",
+      "children": [
+        {
+          "kind": "sequence",
+          "children": [
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "name": "FIELD",
+              "type": "fieldType",
+              "children": []
+            },
+            {
+              "kind": "element",
+              "minOccurs": "0",
+              "maxOccurs": "unbounded",
+              "name": "HINT",
+              "type": "hintType",
+              "children": []
+            }
+          ]
+        },
+        {
+          "kind": "attribute",
+          "name": "pos",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "id",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "show_power",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "can_scale",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "scale_x",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "scale_y",
+          "type": "xs:string",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "part",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "rotate",
+          "type": "xs:string",
+          "use": "required",
+          "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "noteTextType",
+      "children": [
+        {
+          "kind": "simpleContent",
+          "children": [
+            {
+              "kind": "extension",
+              "base": "xs:string",
+              "children": [
+                {
+                  "kind": "attribute",
+                  "name": "a",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "b",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "font",
+                  "type": "xs:unsignedInt",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "color",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "style",
+                  "type": "xs:unsignedInt",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "fill",
+                  "type": "xs:unsignedInt",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "direction",
+                  "type": "xs:unsignedByte",
+                  "use": "required",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
+                  "name": "border_style",
+                  "type": "xs:unsignedByte",
+                  "use": "required",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "emptyType",
+      "children": []
+    }
+  ]
+}

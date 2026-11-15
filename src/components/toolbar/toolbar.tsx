@@ -24,6 +24,7 @@ import {
   MenuDivider,
 } from '@fluentui/react-components';
 import {
+  ChatSparkleRegular,
   ArrowUndoRegular,
   ArrowRedoRegular,
   ZoomInRegular,
@@ -168,6 +169,8 @@ const useStyles = makeStyles({
 });
 
 interface ToolbarProps {
+  chatOpen?: boolean;
+  onToggleChat?: () => void;
   menu_command: string;
   wireMode: WireMode;
   can_undo: boolean;
@@ -426,6 +429,19 @@ const ScrollableToolbarWrapper: React.FC<{ children: React.ReactNode; className?
 export const Toolbar: React.FC<ToolbarProps> = (props) => {
   const styles = useStyles();
   const { t, i18n } = useTranslation();
+  const chatButton = props.onToggleChat && (
+    <ToolbarButton
+      aria-label="Chat"
+      title="Chat"
+      icon={<ChatSparkleRegular />}
+      aria-expanded={!!props.chatOpen}
+      aria-controls="tinycad-chat"
+      className={props.chatOpen ? styles.highlight : undefined}
+      onClick={props.onToggleChat}
+    >
+      Chat
+    </ToolbarButton>
+  );
   const m = props.menu_command;
   const currentLanguageAbbreviation = normalizeLanguageCode(i18n.language).slice(0, 2).toLowerCase();
 
@@ -453,6 +469,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           >
             {t('toolbar.downloadBom')}
           </ToolbarButton>
+          {chatButton}
         </FluentToolbar>
       </ScrollableToolbarWrapper>
     );
@@ -471,6 +488,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           >
             {t('toolbar.close')}
           </ToolbarButton>
+          {chatButton}
         </FluentToolbar>
       </ScrollableToolbarWrapper>
     );
@@ -527,6 +545,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             disabled={!props.can_redo}
             onClick={() => props.dispatch(ActionCreators.redo())}
           />
+          {chatButton}
         </FluentToolbar>
       </ScrollableToolbarWrapper>
     );
@@ -919,6 +938,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         )}
 
         <div className={styles.spacer} />
+
+        {chatButton}
 
         {/* Far Items */}
         <>

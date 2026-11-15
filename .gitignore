@@ -44,3 +44,5 @@ server.bundle.js
 build/
 
 drawing-server.bundle.js
+
+src/chat/native.bundle.js

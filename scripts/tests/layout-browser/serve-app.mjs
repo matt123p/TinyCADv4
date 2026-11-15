@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export async function serveLayoutApp() {
+export async function serveLayoutApp(fixture = 'layout-browser') {
   const root = fileURLToPath(new URL('../../../', import.meta.url));
   await mkdir(path.join(root, '.tmp'), { recursive: true });
   const directory = await mkdtemp(path.join(root, '.tmp/layout-browser-'));
@@ -21,7 +21,7 @@ export async function serveLayoutApp() {
     // An explicit target keeps this build separate from a developer's dist and
     // cache, while production optimization exercises Parcel's worker bundling.
     const bundler = new Parcel({
-      entries: path.join(root, 'scripts/tests/fixtures/layout-browser.html'),
+      entries: path.join(root, `scripts/tests/fixtures/${fixture}.html`),
       defaultConfig: '@parcel/config-default',
       mode: 'production',
       env: { TARGET_SYSTEM: 'filesystem' },
@@ -35,13 +35,13 @@ export async function serveLayoutApp() {
       } },
     });
     await bundler.run();
-    const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
+    const mime = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
       '.json': 'application/json', '.ttf': 'font/ttf', '.wasm': 'application/wasm' };
     server = createServer(async (request, response) => {
       try {
         const url = new URL(request.url, 'http://localhost');
         const relative = decodeURIComponent(url.pathname).replace(/^\/layout\//, '');
-        const filename = path.resolve(dist, relative || 'layout-browser.html');
+        const filename = path.resolve(dist, relative || `${fixture}.html`);
         if (!filename.startsWith(dist + path.sep)) { response.writeHead(403); response.end(); return; }
         response.setHeader('Content-Type', mime[path.extname(filename)] || 'application/octet-stream');
         response.end(await readFile(filename));

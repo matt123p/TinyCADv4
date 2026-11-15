@@ -1,3 +1,4 @@
+import { ChatPanel } from '../chat/ChatPanel';
 import React, { FunctionComponent, useState, useCallback, useEffect } from 'react';
 import { makeStyles, Button } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
@@ -70,6 +71,9 @@ function saveSidePanelWidth(width: number) {
 export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const styles = useStyles();
   const { t } = useTranslation();
+  const [chatOpen, setChatOpen] = useState(false);
+  const toggleChat = useCallback(() => setChatOpen(previous => !previous), []);
+  const closeChat = useCallback(() => setChatOpen(false), []);
   const [sidePanelVisible, setSidePanelVisible] = useState(true);
   const [sidePanelWidth, setSidePanelWidth] = useState(loadSidePanelWidth);
   const [sidePanelResizing, setSidePanelResizing] = useState(false);
@@ -122,7 +126,8 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       className="page-container"
       style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
     >
-      <ToolbarContainer />
+      <ToolbarContainer chatOpen={chatOpen} onToggleChat={toggleChat} />
+      <ChatPanel open={chatOpen} onClose={closeChat} />
       <div className="mid-container">
         <div
           className={`side-panel-container${sidePanelVisible ? '' : ' side-panel-collapsed'}${sidePanelResizing ? ' side-panel-resizing' : ''}`}

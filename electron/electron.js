@@ -1,3 +1,5 @@
+import { registerChatGPTHandlers } from '../chatgpt/bridge.js';
+import { registerChatHandlers } from './chat.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import Store from 'electron-store';
@@ -8,7 +10,7 @@ import { loadLibrary, loadLibraryToWebContents, saveLibrary, sendLibraries, remo
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const { app, ipcMain, BrowserWindow, Menu, dialog, shell } = await import('electron');
+const { app, ipcMain, BrowserWindow, Menu, dialog, shell, safeStorage } = await import('electron');
 const isDev = (await import('electron-is-dev')).default;
 const isMac = process.platform === 'darwin'
 const electronMajorVersion = Number.parseInt(process.versions.electron.split('.')[0] || '0', 10);
@@ -355,6 +357,8 @@ function createWindow() {
 
   if (!ipcHandlersRegistered) {
     ipcHandlersRegistered = true;
+    registerChatHandlers(ipcMain);
+    registerChatGPTHandlers(ipcMain, { app, shell, safeStorage });
 
     ipcMain.on('window-minimize', () => {
       mainWindow?.minimize();

@@ -154,6 +154,26 @@ export function DocStoreReducer(
   let update_library;
 
   switch (action.type) {
+    case DocActionTypes.ApplyChatLibrary: {
+      if (state.drawing !== action.source || state.editLibrary !== action.sourceLibrary || state.editSymbol !== action.sourceSymbol) return state;
+      return { ...state, drawing: action.drawing, editLibrary: action.library, editSymbol: action.symbol, heterogeneous: action.drawing.sheets.length > 1, bom: null,
+        drawingVersion: state.drawingVersion + 1,
+        view: { ...state.view, selected_sheet: 0, _selected_array: [], selectable: null, hover_obj: null, hover_ids: [], hover_pins: [], hiddenItemIds: [], add: null, drag: null, display_add: false, in_add_rect: false, selection_candidates: null, _in_select_rect: false, menu_command: '', cursor: 'auto', tracker: { a: null, b: null, _drag: null, _dragArray: null, _primary_horz: false } },
+      };
+    }
+    case DocActionTypes.ApplyChatEdit: {
+      if (state.drawing !== action.source || state.editSymbol !== action.sourceSymbol) return state;
+      state = { ...state, drawing: action.drawing, bom: null };
+      sheet = activeSheet(state);
+      view = { ...view, selected_sheet: Math.max(0, Math.min(view.selected_sheet, action.drawing.sheets.length - 1)),
+        _selected_array: [], selectable: null, hover_obj: null, hover_ids: [], hover_pins: [],
+        hiddenItemIds: [], add: null, drag: null, display_add: false, in_add_rect: false,
+        selection_candidates: null, _in_select_rect: false, menu_command: '', cursor: 'auto',
+        tracker: { a: null, b: null, _drag: null, _dragArray: null, _primary_horz: false },
+      };
+      break;
+    }
+
     case DocActionTypes.ApplyAutoLayout: {
       // A worker result belongs only to the sheet snapshot it was computed from.
       if (!sheet || sheet !== action.source || state.editSymbol || state.editLibrary || !action.changes.length) {
