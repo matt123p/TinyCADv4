@@ -1,4 +1,3 @@
-import { ChatPanel } from '../chat/ChatPanel';
 import React, {
   FunctionComponent,
   useState,
@@ -23,6 +22,11 @@ import { Browser } from '../sheets/browser';
 import { tclibLibraryEntry } from '../../model/tclib';
 import { BrowserSheetData } from '../../model/dsnView';
 import type { StandardLibraryNavigation } from '../../state/actions/libraryActions';
+
+// Keep the entire chatbot dependency graph out of browser builds.
+const ChatPanel = process.env.TARGET_SYSTEM === 'electron'
+  ? lazy(() => import('../chat/ChatPanel').then((m) => ({ default: m.ChatPanel })))
+  : null;
 
 const SimulationSheet = lazy(() =>
   import('../simulation/SimulationSheet').then((m) => ({
@@ -194,8 +198,16 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
     >
       <SimulationFailureDialog />
-      <ToolbarContainer simulationToolbarRef={setSimulationToolbarTarget} chatOpen={chatOpen} onToggleChat={toggleChat} />
-      <ChatPanel open={chatOpen} onClose={closeChat} />
+      <ToolbarContainer
+        simulationToolbarRef={setSimulationToolbarTarget}
+        chatOpen={chatOpen}
+        onToggleChat={process.env.TARGET_SYSTEM === 'electron' ? toggleChat : undefined}
+      />
+      {process.env.TARGET_SYSTEM === 'electron' && ChatPanel && (
+        <Suspense fallback={null}>
+          <ChatPanel open={chatOpen} onClose={closeChat} />
+        </Suspense>
+      )}
       <div className="mid-container">
         <div
           className={`side-panel-container${

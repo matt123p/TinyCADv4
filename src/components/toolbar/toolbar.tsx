@@ -451,7 +451,7 @@ const ScrollableToolbarWrapper: React.FC<{ children: React.ReactNode; className?
 export const Toolbar: React.FC<ToolbarProps> = (props) => {
   const styles = useStyles();
   const { t, i18n } = useTranslation();
-  const chatButton = props.onToggleChat && (
+  const chatButton = process.env.TARGET_SYSTEM === 'electron' && props.onToggleChat && (
     <ToolbarButton
       aria-label="Chat"
       title="Chat"

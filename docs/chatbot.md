@@ -1,5 +1,8 @@
 # TinyCAD assistant
 
+The assistant is available only in the Electron desktop version. Browser builds
+have no Chat button, chatbot dialog, AI providers, LLM tools, or chat workers.
+
 Open **Chat** in the toolbar. When disconnected, the conversation area shows
 **Click here to Sign in to use AI**. Click it or the header's **settings gear**
 to open the centered **AI settings** popup. Setup has three steps:
@@ -27,7 +30,7 @@ to open the centered **AI settings** popup. Setup has three steps:
 Only one AI provider is active at a time, and the local ChatGPT runtime retains
 one account. A successful different-account sign-in replaces the previous account;
 older multi-account stores keep only the selected account on the next load.
-Browser API keys stay in memory. Desktop API keys are saved with OS-backed
+Desktop API keys are saved with OS-backed
 encryption when secure storage is available; otherwise setup explains that they
 remain in memory until TinyCAD quits. Credentials never enter saved preferences.
 
@@ -65,11 +68,7 @@ control. All non-secret provider, endpoint, model, thinking and connection-metho
 settings are persisted. Desktop restores the last completed connection on launch
 when its credentials are available. Clearing a key removes its saved credential
 while retaining preferences. Chat history remains in memory. Desktop API keys
-and ChatGPT OAuth credentials use the protected storage described below; browser
-API keys stay in memory. Browser storage has no general OS-keychain equivalent;
-localStorage and IndexedDB are accessible to scripts on the same origin. Web
-Crypto encryption with a browser-retained key does not prevent hostile same-origin
-scripts from using that key. No browser credential persistence is implemented.
+and ChatGPT OAuth credentials use the protected storage described below.
 
 ## Local Ollama
 
@@ -87,11 +86,8 @@ imports also require vision. PDFs are rasterized locally before model requests.
 Configure enough model context for the circuit tools; see Ollama's
 [OpenAI compatibility and context setup](https://docs.ollama.com/api/openai-compatibility#setting-the-local-context-size).
 
-For browser access, configure `OLLAMA_ORIGINS` with the exact TinyCAD serving
-origin (including its port) and restart Ollama. The wizard shows the current origin
-and links the [Ollama origin configuration guide](https://docs.ollama.com/faq#how-can-i-allow-additional-web-origins-to-access-ollama).
-The browser may also request local-network permission. These requests go directly
-to the local server; TinyCAD's hosted server does not relay them. Tool/vision/thinking
+Requests go directly to the local server; TinyCAD's hosted server does not relay
+them. Tool/vision/thinking
 capabilities depend on the installed model. Cloud models configured through an
 Ollama server can use that server's cloud connection; choose a local model for
 local inference.
@@ -104,8 +100,8 @@ access or free access to every model.
 
 Every browser build uses the origin that served the editor for TinyCAD website
 and API access. Requests are root-relative, e.g. `/api/search/search`, regardless
-of hostname, port, or build/deployment environment. This covers chatbot symbol
-search/retrieval, the library panel, thumbnails, account requests, website links
+of hostname, port, or build/deployment environment. This covers
+the library panel, thumbnails, account requests, website links
 and help pages. The serving host must serve or proxy these routes.
 
 Electron uses `https://www.tinycad.net` for TinyCAD website/API requests because
@@ -118,7 +114,7 @@ Choose **OpenAI compatible**, enter the provider's API base URL and API key,
 and choose a model. If the endpoint cannot list models, enter its exact model
 ID when prompted; Next checks it with a short greeting. Model and reasoning
 support depend on the service. Requests go directly to the configured endpoint
-in both browser and desktop builds. The endpoint must allow browser CORS and
+in the desktop renderer. The endpoint must allow renderer CORS and
 use HTTPS except for localhost; TinyCAD does not provide a provider relay.
 
 ## Circuit tools, Markdown and files
@@ -227,12 +223,14 @@ Checks:
 npm run typecheck
 npm run typecheck:server
 npm run test:chat
+npm run test:chat:builds
 npm run test:chat:browser
 ```
 
 Relay controller tests are in the TinyCAD.net service's `ChatControllerTests`.
-Browser tests use production Parcel builds and real native/PDF workers with
-mocked paid-provider responses. They cover connection order, model filtering,
+Playwright tests verify that browser builds have no assistant and exercise the
+Electron renderer with a test IPC bridge, real native/PDF workers and mocked
+paid-provider responses. They cover connection order, model filtering,
 composer settings, CORS routing, Markdown, native edits, stale revisions,
 Undo/Redo, previews, library exports and PDF import. Live paid-provider behavior
 still needs a valid API key.
@@ -282,7 +280,7 @@ The compact grouping follows the expandable reasoning/tool activity pattern
 Recovery follows [Anthropic's guidance for incomplete tool-use outputs](https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons);
 [OpenAI's completion limits include non-visible reasoning tokens](https://developers.openai.com/api/docs/guides/token-counting).
 
-## Sign in with ChatGPT (desktop and browser development)
+## Sign in with ChatGPT (Electron desktop)
 
 Select **ChatGPT**, then **Sign in with ChatGPT**. Complete OpenAI sign-in and
 approve ChatGPT plan usage in the external browser. TinyCAD shows the connected
@@ -299,25 +297,18 @@ confirmed. Account changes start a new chat; requests are pinned to their select
 registration so a different account cannot be charged mid-conversation.
 
 This release supports the [public open-source/local flow](https://developers.openai.com/siwc/token-sharing-open-source).
-Production browser builds offer API keys and hide ChatGPT OAuth, account-method
-controls and subscription-allowance guidance, including when served on localhost.
-OAuth is enabled only in Electron or a browser build with `NODE_ENV=development`.
+Browser builds exclude the assistant entirely, including during development.
 Hosted account-plan usage is outside this release and requires OpenAI approval. No hosted OAuth client ID or
 secret is needed for the desktop/local flow.
 
 ### Run locally
 
-`npm run dev` provides Electron sign-in through its main process. For browser
-use, `npm run start:fs` and `npm run start:ga` start the local account runtime
-alongside Parcel automatically. Restart the development server after updating.
+`npm run dev` provides Electron sign-in through its main process. Browser commands
+`npm run start:fs` and `npm run start:ga` run only the editor without a chat runtime.
 Use Node 22 or newer for development.
 
-For another local browser development setup, run `npm run chatgpt:local` and proxy
-`/api/chat/chatgpt` to `http://127.0.0.1:43195`, preserving the path. The broker is
-loopback-only, validates origins/hosts, has no cross-origin API, and requires a
-runtime-issued CSRF token for mutations. Do not expose it as a shared multi-user
-public service. The temporary OAuth callback uses a separately selected loopback
-port and stops after completion, cancellation, or ten minutes.
+The temporary OAuth callback uses a separately selected loopback port and stops
+after completion, cancellation, or ten minutes.
 
 ### Credentials and inference
 
@@ -339,8 +330,7 @@ remain persistent. Legacy plaintext desktop OAuth credentials are encrypted on
 load, or removed from disk and retained only in memory when no keyring is available.
 An inaccessible encrypted account remains untouched until explicitly replaced or
 signed out. A corrupt/unlockable saved API key reports a reconnection error; it
-is never interpreted as plaintext. The browser runtime uses
-`~/.config/tinycad/chatgpt/accounts.json`. File storage uses atomic writes and
+is never interpreted as plaintext. File storage uses atomic writes and
 owner-only permissions; rotating refreshes are serialized across processes.
 Neither renderer state, browser storage, chat exports nor logs receive access
 or refresh tokens. API keys are decrypted only for the trusted TinyCAD main frame

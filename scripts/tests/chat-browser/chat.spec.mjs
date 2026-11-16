@@ -3,12 +3,13 @@ import { test, expect } from '@playwright/test';
 import { serveLayoutApp } from '../layout-browser/serve-app.mjs';
 import PDFDocument from 'pdfkit';
 import { createServer } from 'node:http';
+import { installElectronBridge } from './electron-bridge.mjs';
 let app;
 const circuit =
   '<TinyCADSheets><TinyCAD><NAME>Main</NAME><WIRE a="10,10" b="30,10"/></TinyCAD><TinyCAD><NAME>Preserve me</NAME><WIRE a="50,50" b="70,50"/></TinyCAD></TinyCADSheets>';
 test.beforeAll(async () => {
   test.setTimeout(180000);
-  app = await serveLayoutApp('chat-browser', 'filesystem', 'development');
+  app = await serveLayoutApp('chat-browser', 'electron', 'development');
 });
 test.afterAll(async () => {
   await app?.close();
@@ -16,6 +17,7 @@ test.afterAll(async () => {
 test.beforeEach(async ({ page }) => {
   page.chatErrors = [];
   page.on('pageerror', (e) => page.chatErrors.push(e.message));
+  await installElectronBridge(page);
   await page.goto(app.baseURL);
   await expect(
     page.getByRole('button', { name: 'Chat', exact: true }),
@@ -313,12 +315,6 @@ test('a user edit during native validation wins over the pending AI write', asyn
 test('public-library REST search pagination and fetched source artwork are used by direct tools', async ({
   page,
 }) => {
-  await expect(page.locator('.top-bar-title')).toHaveAttribute('href', '/');
-  let directRequests = 0;
-  await page.route('https://www.tinycad.net/api/**', async (route) => {
-    directRequests++;
-    await route.abort('blockedbyclient');
-  });
   const rows = Array.from({ length: 35 }, (_, i) => ({
     symbolID: i + 1,
     nameID: i + 101,
@@ -328,7 +324,7 @@ test('public-library REST search pagination and fetched source artwork are used 
   }));
   await page.route('**/api/search/search?*', async (route) => {
     const url = new URL(route.request().url());
-    expect(url.origin).toBe(new URL(page.url()).origin);
+    expect(url.origin).toBe('https://www.tinycad.net');
     const params = url.searchParams;
     expect(params.get('orderBy')).toBe('d');
     const index = Number(params.get('page')) - 1;
@@ -345,7 +341,7 @@ test('public-library REST search pagination and fetched source artwork are used 
   const clipboard = `<TinyCAD><NAME></NAME><STYLE id="1"><STYLE>0</STYLE><COLOR>000000</COLOR><THICKNESS>1</THICKNESS></STYLE><SYMBOLDEF id="1"><NAME type="0">Part 21</NAME><REF type="0">U?</REF><DESCRIPTION>Public source</DESCRIPTION><PPP>1</PPP><TinyCAD>${artwork}</TinyCAD></SYMBOLDEF><SYMBOL id="1" pos="0,0"><FIELD description="Package" value="Verified source"/></SYMBOL></TinyCAD>`;
   await page.route('**/api/search/copy?*', async (route) => {
     const url = new URL(route.request().url());
-    expect(url.origin).toBe(new URL(page.url()).origin);
+    expect(url.origin).toBe('https://www.tinycad.net');
     const params = url.searchParams;
     expect(params.get('id')).toBe('21');
     expect(params.get('name')).toBe('Part 21');
@@ -378,7 +374,6 @@ test('public-library REST search pagination and fetched source artwork are used 
   expect(placed.data.applied).toBe(true);
   expect(placed.data.pins[0].number).toBe('1');
   expect((await snapshot(page)).xml).toContain('Verified source');
-  expect(directRequests).toBe(0);
   expect(fetched.data.attributes).toContainEqual({
     name: 'Package',
     value: 'Verified source',
@@ -1803,6 +1798,7 @@ test('account settings show the current email and require sign-out before connec
   await page.getByRole('button', { name: 'AI settings', exact: true }).click();
   await dialog.getByRole('button', { name: 'Sign out', exact: true }).click();
   expect(account.logouts()).toBe(1);
+  await expect(dialog).not.toBeVisible();
   await page.route('https://api.anthropic.com/v1/models', (route) =>
     route.fulfill({ json: { data: [{ id: 'claude-sonnet-5' }] } }),
   );
