@@ -1051,17 +1051,20 @@ export class ioXML {
               point: null,
               point_b: null,
             } as dsnText;
-            const txt_size = measureText(getFont(o), o.text);
+            // Markdown text reserves three units of padding on every side.
+            // Legacy TEXT has no explicit box, so include that padding in its bounds.
+            // Leave a pixel for rounding/kerning differences between Markdown runs.
+            const txt_size = Math.ceil(measureText(getFont(o), o.text)) + 1;
             const pos = this.coords(node.getAttribute('pos'));
             switch (rotation) {
               case 0: // Right
               case 2: // Left
-                o.point = [pos[0], pos[1] - o.font_size - 2];
-                o.point_b = [pos[0] + txt_size + 4, pos[1]];
+                o.point = [pos[0], pos[1] - o.font_size - 6];
+                o.point_b = [pos[0] + txt_size + 6, pos[1]];
                 break;
               case 3: // Up
               case 1: // Down
-                o.point = [pos[0] - o.font_size - 2, pos[1] - txt_size - 4];
+                o.point = [pos[0] - o.font_size - 6, pos[1] - txt_size - 6];
                 o.point_b = [pos[0], pos[1]];
                 break;
             }

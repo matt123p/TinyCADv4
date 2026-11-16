@@ -74,6 +74,8 @@ const aliases = {
   './tclib': path.join(rendererRoot, 'tclib-shim.ts'),
   '../model/tclib': path.join(rendererRoot, 'tclib-shim.ts'),
   '../../model/tclib': path.join(rendererRoot, 'tclib-shim.ts'),
+  '../simulation/contracts': path.join(rendererRoot, 'simulation-contracts-shim.ts'),
+  './contracts': path.join(rendererRoot, 'simulation-contracts-shim.ts'),
 };
 
 export async function buildServerBundle({
@@ -103,8 +105,6 @@ export async function buildServerBundle({
         ...aliases,
         ...(drawing
           ? {
-              '../simulation/contracts': path.join(rendererRoot, 'simulation-contracts-shim.ts'),
-              './contracts': path.join(rendererRoot, 'simulation-contracts-shim.ts'),
               './updateView': path.join(rendererRoot, 'updateViewShim.ts'),
               '../state/dispatcher/AppDispatcher': path.join(
                 rendererRoot,
