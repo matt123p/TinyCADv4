@@ -15,9 +15,6 @@ const {
   './stream': loadComponent('src/chat/stream.ts', {}),
   './errors': loadComponent('src/chat/errors.ts', {}),
   './models': loadComponent('src/chat/models.ts', {}),
-  './network': loadComponent('src/chat/network.ts', {
-    '../io/apiServer': loadComponent('src/io/apiServer.ts', {}),
-  }),
 });
 const { ChatSession } = loadComponent('src/chat/session.ts', {});
 const { toolSpecs, checkArguments } = loadComponent(
@@ -46,10 +43,7 @@ const drawing =
 const settings = (provider) => ({
   provider,
   model: 'test-model',
-  endpoint:
-    provider === 'glm'
-      ? 'https://api.z.ai/api/paas/v4'
-      : 'https://example.com/v1',
+  endpoint: 'https://example.com/v1',
   maxTokens: 1024,
 });
 const image = { name: 'image.png', mime: 'image/png', data: 'aGVsbG8=' };
@@ -186,7 +180,7 @@ test('Gemini preserves exact signed functionCall parts and returns native file i
   assert.equal(req.body.contents[2].parts[0].functionResponse.id, 'native-id');
   assert.ok(req.body.tools[0].functionDeclarations[0].parametersJsonSchema);
 });
-test('GLM preserves reasoning content and uses compatible tool wire format', () => {
+test('Compatible mode preserves reasoning content and uses compatible tool wire format', () => {
   const message = {
     role: 'assistant',
     content: '',
@@ -199,11 +193,11 @@ test('GLM preserves reasoning content and uses compatible tool wire format', () 
       },
     ],
   };
-  const answer = parseProviderResponse('glm', {
+  const answer = parseProviderResponse('compatible', {
     choices: [{ message, finish_reason: 'tool_calls' }],
   });
   const request = providerRequest(
-    settings('glm'),
+    settings('compatible'),
     [{ role: 'user', text: 'Read' }, answer],
     'skill',
     toolSpecs,
@@ -242,7 +236,6 @@ test('auth stays out of bodies, errors and query strings; insecure remote endpoi
     'openai',
     'anthropic',
     'gemini',
-    'glm',
     'compatible',
   ]) {
     const auth = byokAuth(provider, 'test-private-key');
@@ -255,7 +248,6 @@ test('auth stays out of bodies, errors and query strings; insecure remote endpoi
         assert.ok(
           Object.values(init.headers).includes(
             provider === 'openai' ||
-              provider === 'glm' ||
               provider === 'compatible'
               ? 'Bearer test-private-key'
               : 'test-private-key',
@@ -486,9 +478,6 @@ test('thinking controls use each provider’s native parameters and default send
       .thinkingConfig,
     { thinkingBudget: 2048 },
   );
-  assert.deepEqual(request('glm', 'high').thinking, { type: 'enabled' });
-  assert.equal(request('glm', 'high').reasoning_effort, 'high');
-  assert.deepEqual(request('glm', 'disabled').thinking, { type: 'disabled' });
   assert.throws(
     () => request('anthropic', 'budget', { thinkingBudget: 8192 }),
     /less than/,
@@ -610,11 +599,11 @@ test('ChatGPT model lists expose only Sol, Luna and Astra families', async () =>
     'gpt-6.1-sol',
   ]);
 });
-test('Z.AI completions use the same-origin relay rather than browser requests to api.z.ai', async () => {
+test('Compatible completions go directly to the configured endpoint', async () => {
   const urls = [];
   const transport = createTransport(
-    { ...settings('glm'), endpoint: 'https://api.z.ai/api/paas/v4' },
-    byokAuth('glm', 'private-key'),
+    { ...settings('compatible'), endpoint: 'https://llm.example/custom/v1' },
+    byokAuth('compatible', 'private-key'),
     async (url, init) => {
       urls.push(url);
       assert.equal(init.headers.Authorization, 'Bearer private-key');
@@ -632,7 +621,7 @@ test('Z.AI completions use the same-origin relay rather than browser requests to
     [],
     new AbortController().signal,
   );
-  assert.deepEqual(urls, ['/api/chat/glm/chat/completions']);
+  assert.deepEqual(urls, ['https://llm.example/custom/v1/chat/completions']);
 });
 test('changing a model preserves portable conversation and reconstructs tool calls without old signatures', async () => {
   const session = new ChatSession('skill', [], async () => ({ data: {} }));
@@ -838,7 +827,7 @@ test('persistent output limits stop after bounded recovery and preserve tool saf
   assert.equal(session.messages[0].status, 'error');
 });
 test('reasoning supplied by providers stays separate from user-facing text', () => {
-  const openai = parseProviderResponse('glm', {
+  const openai = parseProviderResponse('compatible', {
     choices: [
       {
         message: {
@@ -948,7 +937,7 @@ test('latest models include every family at the highest numeric version', () => 
   );
   assert.deepEqual(modelVersion('claude-sonnet-4-20250514'), [4, 0]);
   assert.equal(modelOutputTokens('openai', 'gpt-6.1-sol'), 128000);
-  assert.equal(modelOutputTokens('glm', 'glm-5.3'), 131072);
+  assert.equal(modelOutputTokens('compatible', 'custom-model'), 65536);
 });
 test('OpenAI streaming joins fragmented tools and reasoning, and rejects incomplete streams', async () => {
   const events = [];
@@ -991,11 +980,11 @@ test('OpenAI streaming joins fragmented tools and reasoning, and rejects incompl
   );
   const body = await readProviderStream(
     response,
-    'glm',
+    'compatible',
     new AbortController().signal,
     (event) => events.push(event),
   );
-  const answer = parseProviderResponse('glm', body);
+  const answer = parseProviderResponse('compatible', body);
   assert.equal(answer.reasoning, 'Inspecting the diagram…');
   assert.deepEqual(answer.calls, [
     { id: 'read', name: 'read_drawing', arguments: {} },
@@ -1005,7 +994,7 @@ test('OpenAI streaming joins fragmented tools and reasoning, and rejects incompl
   await assert.rejects(
     readProviderStream(
       sse(chunks.slice(0, 2)),
-      'glm',
+      'compatible',
       new AbortController().signal,
     ),
     /before the reply was complete/,
@@ -1105,75 +1094,6 @@ test('stream cancellation stops reading without returning partial tool calls', a
   assert.equal(cancelled, true);
 });
 
-test('Electron network bridge delivers progress before IPC completion and cleans up on Stop', async () => {
-  const { providerFetch } = loadComponent('src/chat/network.ts', {
-    '../io/apiServer': { isElectron: true },
-  });
-  const savedWindow = globalThis.window;
-  const cryptoDescriptor = Object.getOwnPropertyDescriptor(
-    globalThis,
-    'crypto',
-  );
-  Object.defineProperty(globalThis, 'crypto', {
-    configurable: true,
-    value: { randomUUID: () => 'stream-request' },
-  });
-  let listener,
-    finish,
-    removed = 0;
-  const cancelled = [];
-  globalThis.window = {
-    electronAPI: {
-      onChatStream(callback) {
-        listener = callback;
-        return () => {
-          removed++;
-        };
-      },
-      cancelChatRequest(id) {
-        cancelled.push(id);
-      },
-      chatRequest() {
-        queueMicrotask(() => {
-          listener({ id: 'stream-request', type: 'start', status: 200 });
-          listener({
-            id: 'stream-request',
-            type: 'chunk',
-            text: 'data: live progress\n\n',
-          });
-        });
-        return new Promise((resolve) => {
-          finish = resolve;
-        });
-      },
-    },
-  };
-  try {
-    const abort = new AbortController();
-    const response = await providerFetch(
-      settings('glm'),
-      'https://api.z.ai/api/paas/v4/chat/completions',
-      { body: '{"stream":true}', signal: abort.signal },
-    );
-    assert.equal(response.headers.get('Content-Type'), 'text/event-stream');
-    const reader = response.body.getReader();
-    assert.equal(
-      new TextDecoder().decode((await reader.read()).value),
-      'data: live progress\n\n',
-    );
-    const pending = reader.read();
-    abort.abort();
-    await assert.rejects(pending, /Stopped/);
-    assert.deepEqual(cancelled, ['stream-request']);
-    assert.equal(removed, 1);
-    finish({ status: 200, body: '', streamed: true });
-  } finally {
-    globalThis.window = savedWindow;
-    if (cryptoDescriptor)
-      Object.defineProperty(globalThis, 'crypto', cryptoDescriptor);
-    else delete globalThis.crypto;
-  }
-});
 
 const chatgptModule = loadComponent('src/chat/chatgpt.ts', {
   './response-output': loadComponent('src/chat/response-output.ts', {}),

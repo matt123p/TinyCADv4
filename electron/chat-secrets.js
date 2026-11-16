@@ -107,7 +107,7 @@ export class ChatSecretStore {
   validate(value) {
     if (
       !value ||
-      !['openai', 'anthropic', 'gemini', 'glm', 'compatible'].includes(
+      !['openai', 'anthropic', 'gemini', 'compatible'].includes(
         value.provider,
       ) ||
       typeof value.endpoint !== 'string' ||

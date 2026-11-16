@@ -612,7 +612,7 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
             </div>
           ))}
           {files.some((f) => f.type === 'application/pdf') &&
-            ['glm', 'compatible', 'ollama'].includes(settings.provider) && (
+            ['compatible', 'ollama'].includes(settings.provider) && (
               <label>
                 PDF pages (up to 20; blank = all)
                 <input

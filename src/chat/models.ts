@@ -35,7 +35,6 @@ export function latestModels(ids: string[]): string[] {
 }
 export function modelOutputTokens(provider: string, model: string): number {
   if (provider === 'openai' && isChatGptModel(model)) return 128000;
-  if (provider === 'glm' && modelVersion(model)[0] >= 5) return 131072;
   return CHAT_OUTPUT_TOKENS;
 }
 

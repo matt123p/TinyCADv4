@@ -2,7 +2,6 @@ export type ProviderKind =
   | 'openai'
   | 'anthropic'
   | 'gemini'
-  | 'glm'
   | 'compatible'
   | 'ollama';
 export interface ProviderSettings {
@@ -70,7 +69,7 @@ export interface ChatMessage {
   imagesViewed?: boolean;
   call?: ToolCall;
   result?: ToolResult;
-  // Keep provider blocks intact, including Gemini thought signatures and GLM reasoning.
+  // Keep provider blocks intact, including thought signatures and provider reasoning.
   native?: unknown;
 }
 export interface ToolSpec {
@@ -102,7 +101,6 @@ export const providerDefaults: Record<
     endpoint: 'https://generativelanguage.googleapis.com/v1beta',
     model: '',
   },
-  glm: { endpoint: 'https://api.z.ai/api/paas/v4', model: '' },
   compatible: { endpoint: 'http://localhost:11434/v1', model: '' },
   ollama: { endpoint: 'http://localhost:11434/v1', model: '' },
 };

@@ -1,12 +1,4 @@
 {
-  "/api/chat/glm": {
-    "target": "https://api.z.ai",
-    "changeOrigin": true,
-    "secure": true,
-    "pathRewrite": {
-      "^/api/chat/glm": "/api/paas/v4"
-    }
-  },
   "/api/chat/chatgpt": {
     "target": "http://127.0.0.1:43195",
     "changeOrigin": true

@@ -42,7 +42,6 @@ export const providerLabels: Record<ProviderKind, string> = {
   openai: chatGPTSignInAvailable ? 'ChatGPT' : 'OpenAI',
   anthropic: 'Anthropic Claude',
   gemini: 'Google Gemini',
-  glm: 'Z.AI GLM',
   compatible: 'OpenAI compatible',
   ollama: 'Ollama (hosted locally)',
 };
@@ -68,11 +67,6 @@ const keyHelp: Record<
     url: 'https://aistudio.google.com/apikey',
     label: 'Google AI Studio API keys',
     text: 'Open Google AI Studio, sign in, choose or import your Google Cloud project, and create an API key. Copy it into TinyCAD. Gemini offers a free API tier for supported models, subject to availability and usage limits; paid models and higher usage require billing.',
-  },
-  glm: {
-    url: 'https://z.ai/manage-apikey/apikey-list',
-    label: 'Z.AI API keys',
-    text: 'Sign in to the Z.AI developer platform, open API keys, create a key, and paste it below. Use a key with access to the GLM models you want.',
   },
 };
 
@@ -258,22 +252,6 @@ export function ConnectionWizard({
           settings.provider === 'openai'
             ? 'No Sol, Luna or Astra models are available for this key.'
             : 'No models are available for this connection.',
-        );
-      // Z.AI may supply a fallback catalog without verifying credentials.
-      if (settings.provider === 'glm')
-        await createTransport(
-          {
-            ...settings,
-            model: defaultModel(available, settings.model),
-            maxTokens: 256,
-            thinkingLevel: 'default',
-          },
-          byokAuth(settings.provider, secret),
-        ).complete(
-          [{ role: 'user', text: 'Reply with OK.' }],
-          'Connection test. Reply with OK. Do not call tools.',
-          [],
-          abort.signal,
         );
       abort.signal.throwIfAborted();
       if (active.current)
@@ -648,8 +626,6 @@ export function ConnectionWizard({
                     ? 'Your API key will be saved using your operating system’s secure storage.'
                     : 'Secure storage is unavailable. Your API key will stay in memory and you must enter it again after quitting TinyCAD.'
                   : 'API keys stay in memory.'}
-                {settings.provider === 'glm' &&
-                  ' Z.AI uses the TinyCAD relay and a short greeting to check your key.'}
               </p>
             </>
           )}

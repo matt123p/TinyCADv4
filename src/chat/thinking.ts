@@ -41,7 +41,6 @@ export const thinkingLevels: Record<ProviderKind, string[]> = {
     'disabled',
   ],
   gemini: ['default', 'minimal', 'low', 'medium', 'high', 'budget', 'disabled'],
-  glm: ['default', 'low', 'medium', 'high', 'max', 'disabled'],
 };
 export function thinkingParameters(
   settings: ProviderSettings,
@@ -74,10 +73,6 @@ export function thinkingParameters(
       thinkingConfig:
         level === 'disabled' ? { thinkingBudget: 0 } : { thinkingLevel: level },
     };
-  if (settings.provider === 'glm')
-    return level === 'disabled'
-      ? { thinking: { type: 'disabled' } }
-      : { thinking: { type: 'enabled' }, reasoning_effort: level };
   return { reasoning_effort: level };
 }
 

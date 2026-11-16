@@ -4,7 +4,6 @@ import { chartWindowOptions, configureChartWindow } from './chartWindows.js';
 import { drawingOpenMenu, drawingViewMenu } from './drawingMenus.js';
 import { registerChatGPTHandlers } from '../chatgpt/bridge.js';
 import { registerChatSecretHandlers } from './chat-secrets.js';
-import { registerChatHandlers } from './chat.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import Store from 'electron-store';
@@ -373,7 +372,6 @@ function createWindow() {
       directory: path.join(__dirname, '../dist/bundled-examples') });
     registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
       directory: path.join(__dirname, isDev ? '../bundled-libraries' : '../dist/bundled-libraries') });
-    registerChatHandlers(ipcMain);
     registerChatSecretHandlers(ipcMain, { app, safeStorage });
     registerChatGPTHandlers(ipcMain, { app, shell, safeStorage });
 

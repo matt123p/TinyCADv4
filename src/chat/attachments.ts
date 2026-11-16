@@ -16,7 +16,7 @@ export async function readAttachments(
   for (const file of files) {
     if (
       file.type === 'application/pdf' &&
-      ['glm', 'compatible', 'ollama'].includes(provider)
+      ['compatible', 'ollama'].includes(provider)
     ) {
       const { pdfImages } = await import('./pdf-import');
       converted.push(...(await pdfImages(file, pages, signal)));

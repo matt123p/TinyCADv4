@@ -4,7 +4,7 @@ Open **Chat** in the toolbar. When disconnected, the conversation area shows
 **Click here to Sign in to use AI**. Click it or the header's **settings gear**
 to open the centered **AI settings** popup. Setup has three steps:
 
-1. **Provider:** choose ChatGPT, Anthropic, Gemini, Z.AI, local Ollama or a compatible endpoint.
+1. **Provider:** choose ChatGPT, Anthropic, Gemini, local Ollama or a compatible endpoint.
    The page explains the three hosted options: eligible paid ChatGPT allowance,
    Gemini's limited free API tier, or a key from another provider.
 2. **Account or API key:** ChatGPT has two radio choices: **Sign In with ChatGPT**
@@ -22,7 +22,7 @@ to open the centered **AI settings** popup. Setup has three steps:
    checks happen automatically on Next from step 2, or during account sign-in.
    Failed checks keep the user on step 2. There is no Test Connection button.
    Endpoints without a model list ask for a model ID in step 2 and verify it with
-   a short greeting on Next. Z.AI also checks its key with a short greeting.
+   a short greeting on Next.
 
 Only one AI provider is active at a time, and the local ChatGPT runtime retains
 one account. A successful different-account sign-in replaces the previous account;
@@ -59,8 +59,7 @@ reasoning. Connecting a different provider/key starts a new chat.
 
 ChatGPT lists only Sol, Luna and Astra models available to the supplied key.
 Other providers use their model lists, with custom IDs available when needed.
-Z.AI falls back to its documented model catalog when its model-list endpoint
-is absent. Model availability, vision and reasoning support depend on the
+Model availability, vision and reasoning support depend on the
 provider/account. The output-token limit is an internal default and has no user
 control. All non-secret provider, endpoint, model, thinking and connection-method
 settings are persisted. Desktop restores the last completed connection on launch
@@ -111,34 +110,16 @@ and help pages. The serving host must serve or proxy these routes.
 
 Electron uses `https://www.tinycad.net` for TinyCAD website/API requests because
 its editor loads from `file://`. The shared `src/io/apiServer.ts` selects routing
-using `TARGET_SYSTEM`, not localhost or production hostname detection. Z.AI
-uses a same-origin browser relay and an Electron main-process bridge.
+using `TARGET_SYSTEM`, not localhost or production hostname detection.
 
-## Z.AI and CORS
+## OpenAI-compatible providers
 
-Z.AI does not permit direct browser requests from the editor's origin. Its
-requests use a fixed-origin TinyCAD relay:
-
-- Local Parcel development: `.proxyrc` maps `/api/chat/glm/*` to Z.AI before the
-  general `/api` route. **Restart the dev server after updating the proxy.**
-  It works on whichever port Parcel selects, including localhost:1235.
-- Hosted browser editor: the TinyCAD.net `ChatController` provides
-  `/api/chat/glm/models` and `/api/chat/glm/chat/completions`. The host serving
-  the browser must expose or proxy these routes; deployments using the TinyCAD.net
-  backend must include this controller.
-- Electron: the preload bridge forwards the same two operations to the main
-  process, where browser CORS does not apply. Stop aborts the owned request.
-
-The destination is fixed to `https://api.z.ai/api/paas/v4`. The relay forwards
-only the user's provider credential and request payload; it does not store keys,
-forward site cookies, log request bodies, or follow provider redirects. Hosted
-requests and responses are bounded to 20 MiB and 180 seconds. Error responses
-exclude provider bodies. The hosted relay allows the TinyCAD editor origins.
-
-Unlike direct providers, Z.AI keys/messages/files pass transiently through the
-relay. The connection panel explains this. OpenAI, Anthropic, Gemini and custom
-compatible endpoints retain direct requests; compatible endpoints must allow
-browser CORS. HTTPS is required except for localhost.
+Choose **OpenAI compatible**, enter the provider's API base URL and API key,
+and choose a model. If the endpoint cannot list models, enter its exact model
+ID when prompted; Next checks it with a short greeting. Model and reasoning
+support depend on the service. Requests go directly to the configured endpoint
+in both browser and desktop builds. The endpoint must allow browser CORS and
+use HTTPS except for localhost; TinyCAD does not provide a provider relay.
 
 ## Circuit tools, Markdown and files
 
@@ -148,7 +129,7 @@ Markdown images become links rather than automatically loading third-party URLs.
 Actual TinyCAD preview images appear as chat attachments.
 
 Attach PDFs, PNGs, JPEGs or WebPs to reconstruct editable circuits or symbols.
-OpenAI, Anthropic and Gemini receive PDFs natively. GLM/compatible endpoints
+OpenAI, Anthropic and Gemini receive PDFs natively. Compatible endpoints
 receive locally rendered selected PDF pages (up to 20). Inputs total at most
 10 MiB and six files; converted images are also bounded to 10 MiB. Provider
 limits still apply. Select a model supporting tools and vision for diagrams.
@@ -275,7 +256,7 @@ input, duplicate SVG text is omitted from the provider tool-result payload;
 editable XML and other necessary tool data remain available.
 
 For API-key connections, the app starts with a 65,536-token output/reasoning allowance, raised to 128,000
-for ChatGPT Sol/Luna/Astra and 131,072 for GLM 5 models. Conversation history
+for ChatGPT Sol/Luna/Astra. Conversation history
 is preserved; this allowance does not change the input context window.
 A truncated provider response below the cap triggers bounded automatic recovery: retry the
 same input with a larger internal output allowance, up to two retries and a
@@ -287,8 +268,7 @@ output-size setting. Completed edits remain undoable. Provider-specific limits
 can still prevent completion, and retries can consume additional API credits.
 
 Requests stream through OpenAI-compatible SSE, Anthropic messages streaming and
-Gemini streamGenerateContent. The Z.AI browser and Electron relays forward live
-chunks instead of buffering the entire reply. In-progress provider text/thinking
+Gemini streamGenerateContent. In-progress provider text/thinking
 and tool preparation appear inside the activity row. Expanded activity includes
 a timestamped phase log, current operation and elapsed time. Collapsed activity
 shows the latest tool, image inspection or provider-supplied thinking excerpt.

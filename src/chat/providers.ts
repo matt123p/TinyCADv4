@@ -1,7 +1,6 @@
 import { ModelOutputLimitError, isModelOutputLimit } from './errors';
 import { readProviderStream } from './stream';
 import { isChatGptModel, modelOutputTokens } from './models';
-import { providerFetch } from './network';
 import { thinkingParameters } from './thinking';
 import {
   Attachment,
@@ -384,8 +383,7 @@ export function createTransport(
         }
         let response: Response;
         try {
-          response = await providerFetch(
-            settings,
+          response = await send(
             base.href.replace(/\/$/, '') + request.path,
             {
               method: 'POST',
@@ -395,7 +393,6 @@ export function createTransport(
               body: json(request.body),
               signal,
             },
-            send,
           );
         } catch (e) {
           if (signal.aborted) throw e;
@@ -494,8 +491,7 @@ export async function listProviderModels(
           [settings.provider === 'gemini' ? 'pageToken' : 'after_id']: cursor,
         })}`
       : '';
-    const response = await providerFetch(
-      settings,
+    const response = await send(
       `${base}/models${query}`,
       {
         headers,
@@ -503,12 +499,7 @@ export async function listProviderModels(
         credentials: 'omit',
         redirect: 'error',
       },
-      send,
     );
-    // Z.AI has no consistent model-list endpoint. Use its documented catalog
-    // when the endpoint is absent; authentication errors still surface.
-    if (settings.provider === 'glm' && [404, 405].includes(response.status))
-      return ['glm-5.3', 'glm-5.2', 'glm-5.1', 'glm-5', 'glm-4.7', 'glm-4.6'];
     if (!response.ok && settings.provider === 'gemini' && headers.Authorization)
       throw googleOAuthFailure(response.status);
     if (!response.ok)

@@ -534,55 +534,6 @@ test('create then insert a symbol preserves the current circuit and supports wir
   expect((await snapshot(page)).xml).toContain('Preserve me');
 });
 
-test('Z.AI connects and chats through a same-origin relay without browser CORS requests', async ({
-  page,
-}) => {
-  let directRequests = 0;
-  await page.route('https://api.z.ai/**', async (route) => {
-    directRequests++;
-    await route.abort('blockedbyclient');
-  });
-  await page.route('**/api/chat/glm/models', (route) =>
-    route.fulfill({ status: 404, json: { error: 'No model list' } }),
-  );
-  await page.route('**/api/chat/glm/chat/completions', async (route) => {
-    expect(route.request().headers().authorization).toBe(
-      'Bearer private-glm-key',
-    );
-    expect(route.request().postDataJSON().model).toBe('glm-5.3');
-    await route.fulfill({
-      json: {
-        choices: [
-          { message: { role: 'assistant', content: 'Z.AI relay is working.' } },
-        ],
-      },
-    });
-  });
-  await page.getByRole('button', { name: 'Chat', exact: true }).click();
-  await expect(page.getByLabel('API key', { exact: true })).toHaveCount(0);
-  await expect(
-    page.getByRole('button', {
-      name: 'Select model and thinking level',
-      exact: true,
-    }),
-  ).toBeDisabled();
-  await chooseProvider(page, 'glm');
-  await page.getByLabel('API key', { exact: true }).fill('private-glm-key');
-  await connectApiKey(page);
-  await selectModel(page, 'glm-5.3');
-  await page.getByLabel('Message', { exact: true }).fill('Hello');
-  await page.getByRole('button', { name: 'Send', exact: true }).click();
-  await expect(
-    page.getByText('Z.AI relay is working.', { exact: true }),
-  ).toBeVisible();
-  expect(directRequests).toBe(0);
-  expect(
-    await page.evaluate(() =>
-      JSON.stringify({ ...localStorage, ...sessionStorage }),
-    ),
-  ).not.toContain('private-glm-key');
-});
-
 test('reasoning, tool calls and viewed images stay inside one collapsed activity row', async ({
   page,
 }) => {
@@ -2068,9 +2019,16 @@ test('Chat is a native toolbar button with no floating launcher or overlapping c
 test('provider setup explains paid ChatGPT allowance, free Gemini and API-key instructions', async ({
   page,
 }) => {
+  await page.evaluate(() => localStorage.setItem('tinycad.chat.settings.v1', JSON.stringify({
+    provider: 'retired-provider', endpoint: 'https://retired.example/v1', model: 'old-model',
+  })));
+  await page.reload();
   await page.getByRole('button', { name: 'Chat', exact: true }).click();
   await page.getByRole('button', { name: 'AI settings', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'AI settings', exact: true });
+  expect(await dialog.getByLabel('Provider', { exact: true }).locator('option').evaluateAll(
+    options => options.map(option => option.value).filter(Boolean),
+  )).toEqual(['openai', 'anthropic', 'gemini', 'compatible', 'ollama']);
   await expect(dialog.locator('.chat-provider-guidance')).toContainText(
     'If you pay for ChatGPT',
   );
@@ -2090,7 +2048,6 @@ test('provider setup explains paid ChatGPT allowance, free Gemini and API-key in
   for (const [provider, link] of [
     ['anthropic', 'Claude Console API keys'],
     ['gemini', 'Get a Gemini API key'],
-    ['glm', 'Z.AI API keys'],
     ['compatible', 'create an OpenAI API key'],
   ]) {
     await chooseProvider(page, provider);
