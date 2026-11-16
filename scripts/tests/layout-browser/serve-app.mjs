@@ -6,7 +6,7 @@ import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export async function serveLayoutApp(fixture = 'layout-browser') {
+export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 'filesystem', nodeEnv = 'production') {
   const root = fileURLToPath(new URL('../../../', import.meta.url));
   await mkdir(path.join(root, '.tmp'), { recursive: true });
   const directory = await mkdtemp(path.join(root, '.tmp/layout-browser-'));
@@ -26,7 +26,7 @@ export async function serveLayoutApp(fixture = 'layout-browser') {
       entries: path.join(root, `scripts/tests/fixtures/${fixture}.html`),
       defaultConfig: '@parcel/config-default',
       mode: 'production',
-      env: { TARGET_SYSTEM: 'filesystem' },
+      env: { TARGET_SYSTEM: targetSystem, NODE_ENV: nodeEnv },
       shouldDisableCache: true,
       cacheDir: path.join(directory, 'cache'),
       // A filesystem cache releases files after each operation. LMDB keeps its

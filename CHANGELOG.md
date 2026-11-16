@@ -4,9 +4,11 @@
 
 ### Added
 
+- Desktop chatbot credentials use OS-backed encryption on Windows, macOS and Linux, with setup notices and memory-only credentials when secure storage is unavailable. Saved connections and all provider, endpoint, model and thinking settings restore on restart.
+
 - Integrated AI chatbot in browser and desktop builds, opened from the toolbar, with Markdown replies, file attachments and expandable thinking, tool-call and image activity.
 - Bring-your-own-key connections for OpenAI, Anthropic, Google Gemini, Z.AI and compatible providers, plus locally hosted Ollama. Guided connection setup and account settings keep API keys hidden after entry; model and thinking controls are available directly in chat.
-- Sign in with ChatGPT using an eligible paid subscription in desktop and local browser builds, with account usage controls and online search with source citations.
+- Sign in with ChatGPT using an eligible paid subscription in desktop and local browser builds, with account usage controls and online search with source citations. Production browser builds hide ChatGPT OAuth and offer API-key setup.
 - Direct AI tools to inspect the current unsaved drawing, metadata, netlist and SVG/PNG previews, then create, add, edit and auto-layout circuitry in place with revision checks and Undo/Redo.
 - PDF and image reference imports for creating editable circuits and symbols, including a compact IC generator. Generated symbols can be placed ready to wire or added individually or in batches to the active library, with instructions tailored to drawing or library editing.
 - AI search of bundled libraries before online symbol searches or new artwork generation. Runtime instructions list the available libraries; search all bundled libraries or a specific library and place results by component ID while preserving original artwork and SPICE attributes.

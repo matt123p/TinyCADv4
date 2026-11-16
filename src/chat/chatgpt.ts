@@ -13,8 +13,15 @@ import { toolPayload } from './providers';
 import { thinkingParameters } from './thinking';
 import { ModelOutputLimitError } from './errors';
 
+// Hosted browser builds have no approved OAuth backend. Local development
+// uses the loopback broker; Electron always uses its main-process runtime.
+export const chatGPTSignInAvailable =
+  isElectron || process.env.NODE_ENV === 'development';
+
 export interface ChatGPTAccount {
   available: boolean;
+  secureStorage?: boolean;
+  memoryOnly?: boolean;
   connected?: boolean;
   sharing?: boolean;
   pending?: boolean;
@@ -50,6 +57,10 @@ export async function chatGPTAccount(
   operation: string,
   args?: Record<string, unknown>,
 ): Promise<any> {
+  if (!chatGPTSignInAvailable)
+    throw new Error(
+      'ChatGPT sign-in is available in TinyCAD Desktop and browser development builds.',
+    );
   if (isElectron) {
     if (!window.electronAPI?.chatgptAccount)
       throw new Error('Restart TinyCAD to enable ChatGPT sign-in.');

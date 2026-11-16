@@ -1,7 +1,10 @@
 import { relayChatGPTStream } from './response-stream.js';
 import { ChatGPTRuntime, safeError, ChatGPTError } from './runtime.js';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import {
+  secureEncryption,
+  trustedChatSender,
+} from '../electron/chat-secrets.js';
 
 export async function accountCommand(runtime, operation, args = {}) {
   if (operation === 'session') return runtime.session();
@@ -38,43 +41,24 @@ export async function relayResponse(runtime, body, controller, notify) {
 
 export function registerChatGPTHandlers(ipcMain, { app, shell, safeStorage }) {
   let runtime;
-  const getRuntime = () =>
-    (runtime ||= new ChatGPTRuntime({
-      storageDir: join(app.getPath('userData'), 'chatgpt'),
-      ...(safeStorage.isEncryptionAvailable() &&
-      safeStorage.getSelectedStorageBackend?.() !== 'basic_text'
-        ? {
-            encryption: {
-              encrypt: (text) =>
-                safeStorage.encryptString(text).toString('base64'),
-              decrypt: (text) =>
-                safeStorage.decryptString(Buffer.from(text, 'base64')),
-            },
-          }
-        : {}),
-    }));
+  const getRuntime = () => {
+    if (!runtime) {
+      const encryption = secureEncryption(safeStorage);
+      runtime = new ChatGPTRuntime({
+        storageDir: join(app.getPath('userData'), 'chatgpt'),
+        encryption,
+        memoryCredentials: !encryption,
+      });
+    }
+    return runtime;
+  };
   const pending = new Map();
   let loginOwner, loginClosed;
   const detachLogin = () => {
     if (loginOwner) loginOwner.removeListener('destroyed', loginClosed);
     loginOwner = undefined;
   };
-  const trusted = (event) => {
-    try {
-      if (event.senderFrame !== event.sender.mainFrame) return false;
-      const url = new URL(event.senderFrame.url);
-      url.search = '';
-      url.hash = '';
-      return (
-        url.href ===
-          pathToFileURL(join(app.getAppPath(), 'dist', 'index-electron.html'))
-            .href ||
-        (!app.isPackaged && url.origin === 'http://localhost:1234')
-      );
-    } catch {
-      return false;
-    }
-  };
+  const trusted = (event) => trustedChatSender(event, app);
   ipcMain.handle('chatgpt-account', async (event, request) => {
     if (!trusted(event))
       return {

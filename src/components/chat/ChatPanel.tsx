@@ -1,3 +1,8 @@
+import {
+  desktopSecret,
+  isElectron,
+  chatConnectionKey as connectionKey,
+} from '../../chat/desktop-storage';
 import { bundledLibraries } from '../../io/bundledLibraries';
 import { ConnectionSettings } from './ConnectionSettings';
 import { sliderThinkingLevel } from '../../chat/thinking';
@@ -10,6 +15,7 @@ import { watchGeminiGoogleAccount } from '../../chat/gemini-google';
 import { ChatGPTPlanWelcome } from './ChatGPTPlanWelcome';
 import {
   chatGPTAccount,
+  chatGPTSignInAvailable,
   chatGPTStatus,
   createChatGPTTransport,
   openChatGPTUsage,
@@ -39,6 +45,27 @@ import { readAttachments } from '../../chat/attachments';
 import './chat.css';
 
 const storageKey = 'tinycad.chat.settings.v1';
+function savePreferences(settings: ProviderSettings) {
+  const {
+    provider,
+    endpoint,
+    model,
+    maxTokens,
+    thinkingBudget,
+    thinkingLevel,
+  } = settings;
+  localStorage.setItem(
+    storageKey,
+    JSON.stringify({
+      provider,
+      endpoint,
+      model,
+      maxTokens,
+      thinkingBudget,
+      thinkingLevel,
+    }),
+  );
+}
 function loadSettings(): ProviderSettings {
   const fallback: ProviderSettings = {
     provider: 'openai',
@@ -62,8 +89,12 @@ function loadSettings(): ProviderSettings {
           (s.provider !== 'openai' || isChatGptModel(s.model))
             ? s.model
             : '',
-        maxTokens: CHAT_OUTPUT_TOKENS,
-        thinkingBudget: 4096,
+        maxTokens: Number.isFinite(s.maxTokens)
+          ? s.maxTokens
+          : CHAT_OUTPUT_TOKENS,
+        thinkingBudget: Number.isFinite(s.thinkingBudget)
+          ? s.thinkingBudget
+          : 4096,
         thinkingLevel: sliderThinkingLevel(s.provider, s.thinkingLevel),
       };
   } catch {
@@ -95,6 +126,7 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
   const [models, setModels] = useState<string[]>([]);
   const [savingConnection, setSavingConnection] = useState(false);
   const [configure, setConfigure] = useState(false);
+  const [restoring, setRestoring] = useState(isElectron);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [downloads, setDownloads] = useState<Download[]>([]);
   const [input, setInput] = useState('');
@@ -139,9 +171,90 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
     urls.current.forEach((url) => URL.revokeObjectURL(url));
     urls.current = [];
   };
+  // Restore the credential only for the exact provider and endpoint saved at
+  // Finish. A custom endpoint must never receive another connection's API key.
+  useEffect(() => {
+    if (!isElectron) return;
+    let active = true;
+    const restore = async () => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(connectionKey) || 'null');
+        if (
+          !saved ||
+          saved.active === false ||
+          saved.provider !== settings.provider ||
+          saved.endpoint !== settings.endpoint
+        )
+          return;
+        let next: ChatConnection;
+        if (saved.kind === 'api-key') {
+          const credential = await desktopSecret('load');
+          if (
+            !credential.key ||
+            credential.provider !== settings.provider ||
+            credential.endpoint !== settings.endpoint
+          )
+            return;
+          next = { kind: 'api-key', key: credential.key };
+        } else if (saved.kind === 'chatgpt') {
+          const account = await chatGPTAccount('session');
+          if (!account.connected || !account.sharing) return;
+          next = { kind: 'chatgpt', account };
+        } else if (saved.kind === 'local') next = { kind: 'local' };
+        else return;
+        if (active) {
+          setConnection(next);
+          setModels(
+            Array.isArray(saved.models)
+              ? saved.models.filter((m: unknown) => typeof m === 'string')
+              : [],
+          );
+        }
+      } catch (e) {
+        if (active)
+          setError(
+            e instanceof Error
+              ? e.message
+              : 'Could not restore the AI connection.',
+          );
+      } finally {
+        if (active) setRestoring(false);
+      }
+    };
+    void restore();
+    return () => {
+      active = false;
+    };
+  }, []);
+  useEffect(() => {
+    try {
+      savePreferences(settings);
+    } catch {
+      /* Optional preferences. */
+    }
+  }, [settings]);
   const disconnect = async () => {
-    if (connection?.kind === 'chatgpt') await chatGPTAccount('logout');
+    let remoteRevoked = true;
+    if (connection?.kind === 'chatgpt') {
+      const result = await chatGPTAccount('logout');
+      remoteRevoked = result.remoteRevoked !== false;
+    }
+    if (isElectron) await desktopSecret('clear');
+    try {
+      const saved = JSON.parse(localStorage.getItem(connectionKey) || 'null');
+      if (saved)
+        localStorage.setItem(
+          connectionKey,
+          JSON.stringify({ ...saved, active: false }),
+        );
+    } catch {
+      /* Credentials have already been cleared. */
+    }
     reset();
+    if (!remoteRevoked)
+      setError(
+        'Signed out locally, but remote sign-out was not confirmed. Disconnect TinyCAD in ChatGPT Settings.',
+      );
     setConnection(undefined);
     setModels([]);
     setConfigure(false);
@@ -160,13 +273,31 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
       if (next !== connection) reset();
       else if (defaults.model !== settings.model)
         session.current?.changeModel();
+      if (isElectron) {
+        if (next.kind === 'api-key')
+          await desktopSecret('save', {
+            provider: defaults.provider,
+            endpoint: defaults.endpoint,
+            key: next.key,
+          });
+        else await desktopSecret('clear');
+      }
       setConnection(next);
       setSettings(defaults);
       setModels(available);
       setConfigure(false);
       try {
-        const { maxTokens, thinkingBudget, ...preferences } = defaults;
-        localStorage.setItem(storageKey, JSON.stringify(preferences));
+        savePreferences(defaults);
+        localStorage.setItem(
+          connectionKey,
+          JSON.stringify({
+            kind: next.kind,
+            active: true,
+            provider: defaults.provider,
+            endpoint: defaults.endpoint,
+            models: available,
+          }),
+        );
       } catch {
         /* Optional non-secret preferences. */
       }
@@ -248,8 +379,7 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
           }),
         );
       try {
-        const { maxTokens, thinkingBudget, ...preferences } = settings;
-        localStorage.setItem(storageKey, JSON.stringify(preferences));
+        savePreferences(settings);
       } catch {
         /* Non-secret preferences only. */
       }
@@ -295,7 +425,7 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
               aria-label="AI settings"
               title="AI settings"
               aria-haspopup="dialog"
-              disabled={busy || savingConnection}
+              disabled={busy || savingConnection || restoring}
               onClick={() => setConfigure(true)}
             >
               <svg
@@ -381,9 +511,12 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
             <button
               type="button"
               className="chat-sign-in"
+              disabled={restoring}
               onClick={() => setConfigure(true)}
             >
-              Click here to Sign in to use AI
+              {chatGPTSignInAvailable
+                ? 'Click here to Sign in to use AI'
+                : 'Click here to connect AI'}
             </button>
           )}
           {authenticated && !messages.length && (

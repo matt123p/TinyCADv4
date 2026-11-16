@@ -131,6 +131,12 @@ export function ChatGPTConnection({
         Running AI requests in TinyCAD uses your ChatGPT allowance and counts
         towards your plan limits. This option does not require an API key.
       </small>
+      {account?.memoryOnly && (
+        <p role="status">
+          Secure storage is unavailable. Your ChatGPT sign-in will stay in
+          memory for this session only.
+        </p>
+      )}
       {account?.identity?.email && (
         <strong className="chat-account-email">{account.identity.email}</strong>
       )}

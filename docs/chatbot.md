@@ -27,7 +27,9 @@ to open the centered **AI settings** popup. Setup has three steps:
 Only one AI provider is active at a time, and the local ChatGPT runtime retains
 one account. A successful different-account sign-in replaces the previous account;
 older multi-account stores keep only the selected account on the next load.
-API keys stay in memory and never enter saved preferences.
+Browser API keys stay in memory. Desktop API keys are saved with OS-backed
+encryption when secure storage is available; otherwise setup explains that they
+remain in memory until TinyCAD quits. Credentials never enter saved preferences.
 
 For an existing connection, the settings gear opens a separate **AI settings**
 view showing the provider, connection method and account email (when applicable).
@@ -60,8 +62,15 @@ Other providers use their model lists, with custom IDs available when needed.
 Z.AI falls back to its documented model catalog when its model-list endpoint
 is absent. Model availability, vision and reasoning support depend on the
 provider/account. The output-token limit is an internal default and has no user
-control. Only non-secret connection/model/thinking preferences are persisted.
-API keys and chat history remain in memory. ChatGPT OAuth connections are kept in the protected local runtime described below.
+control. All non-secret provider, endpoint, model, thinking and connection-method
+settings are persisted. Desktop restores the last completed connection on launch
+when its credentials are available. Clearing a key removes its saved credential
+while retaining preferences. Chat history remains in memory. Desktop API keys
+and ChatGPT OAuth credentials use the protected storage described below; browser
+API keys stay in memory. Browser storage has no general OS-keychain equivalent;
+localStorage and IndexedDB are accessible to scripts on the same origin. Web
+Crypto encryption with a browser-retained key does not prevent hostile same-origin
+scripts from using that key. No browser credential persistence is implemented.
 
 ## Local Ollama
 
@@ -293,7 +302,7 @@ The compact grouping follows the expandable reasoning/tool activity pattern
 Recovery follows [Anthropic's guidance for incomplete tool-use outputs](https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons);
 [OpenAI's completion limits include non-visible reasoning tokens](https://developers.openai.com/api/docs/guides/token-counting).
 
-## Sign in with ChatGPT (desktop and local browser)
+## Sign in with ChatGPT (desktop and browser development)
 
 Select **ChatGPT**, then **Sign in with ChatGPT**. Complete OpenAI sign-in and
 approve ChatGPT plan usage in the external browser. TinyCAD shows the connected
@@ -310,8 +319,10 @@ confirmed. Account changes start a new chat; requests are pinned to their select
 registration so a different account cannot be charged mid-conversation.
 
 This release supports the [public open-source/local flow](https://developers.openai.com/siwc/token-sharing-open-source).
-Public hosted TinyCAD continues to offer API keys; hosted account-plan usage is
-outside this release and requires OpenAI approval. No hosted OAuth client ID or
+Production browser builds offer API keys and hide ChatGPT OAuth, account-method
+controls and subscription-allowance guidance, including when served on localhost.
+OAuth is enabled only in Electron or a browser build with `NODE_ENV=development`.
+Hosted account-plan usage is outside this release and requires OpenAI approval. No hosted OAuth client ID or
 secret is needed for the desktop/local flow.
 
 ### Run locally
@@ -321,7 +332,7 @@ use, `npm run start:fs` and `npm run start:ga` start the local account runtime
 alongside Parcel automatically. Restart the development server after updating.
 Use Node 22 or newer for development.
 
-For another locally hosted browser setup, run `npm run chatgpt:local` and proxy
+For another local browser development setup, run `npm run chatgpt:local` and proxy
 `/api/chat/chatgpt` to `http://127.0.0.1:43195`, preserving the path. The broker is
 loopback-only, validates origins/hosts, has no cross-origin API, and requires a
 runtime-issued CSRF token for mutations. Do not expose it as a shared multi-user
@@ -337,12 +348,24 @@ It verifies ID-token signature, issuer, audience, expiration and nonce using
 code exchange; existing accounts must match their verified subject.
 
 OAuth credentials remain in the local runtime. Electron stores them under
-`app.getPath('userData')/chatgpt/accounts.json`, encrypted with Electron
-`safeStorage` when secure OS encryption is available. The browser runtime uses
+`app.getPath('userData')/chatgpt/accounts.json`. API keys are stored separately in
+`app.getPath('userData')/chat/api-key.json`, bound to their provider and endpoint.
+Both use Electron `safeStorage`: Windows DPAPI, macOS Keychain, or the Linux
+Secret Service/KWallet keyring. Linux `basic_text` is rejected. Availability is
+checked with an encryption/decryption round trip. If secure storage is unavailable,
+setup informs the user, API keys and OAuth tokens stay in process memory, and no
+new credentials are written to disk. Registration metadata and all preferences
+remain persistent. Legacy plaintext desktop OAuth credentials are encrypted on
+load, or removed from disk and retained only in memory when no keyring is available.
+An inaccessible encrypted account remains untouched until explicitly replaced or
+signed out. A corrupt/unlockable saved API key reports a reconnection error; it
+is never interpreted as plaintext. The browser runtime uses
 `~/.config/tinycad/chatgpt/accounts.json`. File storage uses atomic writes and
 owner-only permissions; rotating refreshes are serialized across processes.
 Neither renderer state, browser storage, chat exports nor logs receive access
-or refresh tokens. Electron also keeps authorization URLs with ID-token hints
+or refresh tokens. API keys are decrypted only for the trusted TinyCAD main frame
+and used in renderer memory by the existing provider adapters; they never enter
+browser storage. Electron also keeps authorization URLs with ID-token hints
 out of renderer IPC. These are TinyCAD-specific registrations; the integration
 does not read Codex credentials or browser cookies.
 

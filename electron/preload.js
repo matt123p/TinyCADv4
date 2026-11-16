@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+    chatSecret: (operation, value) => ipcRenderer.invoke('chat-secret', { operation, value }),
     chatgptAccount: (operation, args) => ipcRenderer.invoke('chatgpt-account', { operation, args }),
     chatgptRequest: (request) => ipcRenderer.invoke('chatgpt-request', request),
     cancelChatGPTRequest: (id) => ipcRenderer.send('chatgpt-cancel', id),

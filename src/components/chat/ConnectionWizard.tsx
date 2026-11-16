@@ -1,7 +1,16 @@
+import {
+  desktopSecret,
+  isElectron,
+  chatConnectionKey,
+} from '../../chat/desktop-storage';
 import React, { useEffect, useRef, useState } from 'react';
 import { ChatGPTConnection } from './ChatGPTConnection';
 import { ModelPicker } from './ModelPicker';
-import { ChatGPTAccount, chatGPTAccount } from '../../chat/chatgpt';
+import {
+  ChatGPTAccount,
+  chatGPTAccount,
+  chatGPTSignInAvailable,
+} from '../../chat/chatgpt';
 import { GeminiGoogleConnection as GoogleConnection } from '../../chat/gemini-google';
 import {
   byokAuth,
@@ -30,7 +39,7 @@ export interface ConnectionSetup {
   models: string[];
 }
 export const providerLabels: Record<ProviderKind, string> = {
-  openai: 'ChatGPT',
+  openai: chatGPTSignInAvailable ? 'ChatGPT' : 'OpenAI',
   anthropic: 'Anthropic Claude',
   gemini: 'Google Gemini',
   glm: 'Z.AI GLM',
@@ -44,7 +53,11 @@ const keyHelp: Record<
   openai: {
     url: 'https://platform.openai.com/api-keys',
     label: 'OpenAI API keys',
-    text: 'Open the OpenAI dashboard, create a secret API key in your project, and paste it below. API keys use separate API billing. To use your eligible paid ChatGPT subscription allowance instead, select Sign In with ChatGPT.',
+    text:
+      'Open the OpenAI dashboard, create a secret API key in your project, and paste it below. API keys use separate API billing.' +
+      (chatGPTSignInAvailable
+        ? ' To use your eligible paid ChatGPT subscription allowance instead, select Sign In with ChatGPT.'
+        : ''),
   },
   anthropic: {
     url: 'https://platform.claude.com/settings/keys',
@@ -63,6 +76,22 @@ const keyHelp: Record<
   },
 };
 
+function rememberedMethod(provider: ProviderKind): 'account' | 'api-key' {
+  if (!chatGPTSignInAvailable) return 'api-key';
+  if (isElectron) {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(chatConnectionKey) || 'null',
+      );
+      if (saved?.provider === provider && saved.kind === 'api-key')
+        return 'api-key';
+    } catch {
+      /* Optional preferences. */
+    }
+  }
+  return 'account';
+}
+
 export function ConnectionWizard({
   settings: initialSettings,
   onFinish,
@@ -74,11 +103,17 @@ export function ConnectionWizard({
 }) {
   const [step, setStep] = useState(1);
   const [provider, setProvider] = useState<ProviderKind | ''>('');
-  const [settings, setSettings] = useState({
-    ...initialSettings,
-    thinkingLevel: 'medium',
-  });
-  const [method, setMethod] = useState<'account' | 'api-key'>('account');
+  const [settings, setSettings] = useState(initialSettings);
+  const [secure, setSecure] = useState<boolean>();
+  useEffect(() => {
+    if (isElectron)
+      desktopSecret('status')
+        .then((s) => setSecure(s.secure === true))
+        .catch(() => setSecure(false));
+  }, []);
+  const [method, setMethod] = useState<'account' | 'api-key'>(() =>
+    rememberedMethod(initialSettings.provider),
+  );
   const [key, setKey] = useState(''),
     [showKey, setShowKey] = useState(false);
   const [models, setModels] = useState<string[]>([]);
@@ -128,7 +163,7 @@ export function ConnectionWizard({
       setModels([]);
       setManualModel(false);
       setModelId('');
-      setMethod(next === 'openai' ? 'account' : 'api-key');
+      setMethod(next === 'openai' ? rememberedMethod(next) : 'api-key');
       setSettings({
         provider: next,
         ...providerDefaults[next],
@@ -136,6 +171,7 @@ export function ConnectionWizard({
         model: next === initialSettings.provider ? initialSettings.model : '',
         thinkingLevel: 'medium',
         thinkingBudget: 4096,
+        ...(next === initialSettings.provider ? initialSettings : {}),
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not change provider.');
@@ -296,7 +332,10 @@ export function ConnectionWizard({
       if (active.current) setPending(false);
     }
   };
-  const accountMethod = settings.provider === 'openai' && method === 'account';
+  const accountMethod =
+    chatGPTSignInAvailable &&
+    settings.provider === 'openai' &&
+    method === 'account';
   return (
     <dialog
       ref={dialog}
@@ -319,17 +358,19 @@ export function ConnectionWizard({
         </button>
       </div>
       <ol className="chat-wizard-steps" aria-label="Connection setup steps">
-        {['Provider', 'Account or API key', 'Pick Model'].map(
-          (label, index) => (
-            <li
-              key={label}
-              aria-current={step === index + 1 ? 'step' : undefined}
-            >
-              <span>{index + 1}</span>
-              {label}
-            </li>
-          ),
-        )}
+        {[
+          'Provider',
+          chatGPTSignInAvailable ? 'Account or API key' : 'API key',
+          'Pick Model',
+        ].map((label, index) => (
+          <li
+            key={label}
+            aria-current={step === index + 1 ? 'step' : undefined}
+          >
+            <span>{index + 1}</span>
+            {label}
+          </li>
+        ))}
       </ol>
       <h3 className={step === 2 ? 'chat-wizard-provider' : undefined}>
         {step === 2
@@ -339,13 +380,16 @@ export function ConnectionWizard({
       {step === 1 && (
         <>
           <div className="chat-provider-guidance">
+            {chatGPTSignInAvailable && (
+              <p>
+                If you pay for ChatGPT, you can use your eligible subscription
+                allowance with this app.
+              </p>
+            )}
             <p>
-              If you pay for ChatGPT, you can use your eligible subscription
-              allowance with this app.
-            </p>
-            <p>
-              If you don't have a subscription, Google Gemini offers a free API
-              option, subject to model availability and usage limits.
+              {chatGPTSignInAvailable
+                ? "If you don't have a subscription, Google Gemini offers a free API option, subject to model availability and usage limits."
+                : 'Google Gemini offers a free API option, subject to model availability and usage limits.'}
             </p>
             <p>Otherwise, use an API key from your preferred AI provider.</p>
             <p>
@@ -399,7 +443,7 @@ export function ConnectionWizard({
               </p>
             </div>
           )}
-          {settings.provider === 'openai' && (
+          {chatGPTSignInAvailable && settings.provider === 'openai' && (
             <fieldset className="chat-auth-method">
               <legend>Connect using:</legend>
               <label>
@@ -596,8 +640,14 @@ export function ConnectionWizard({
                 </label>
               )}
               <p className="chat-wizard-hint">
-                Your connection is checked when you click Next. API keys stay in
-                memory.
+                Your connection is checked when you click Next.{' '}
+                {isElectron
+                  ? secure === undefined
+                    ? 'Checking secure storage…'
+                    : secure
+                    ? 'Your API key will be saved using your operating system’s secure storage.'
+                    : 'Secure storage is unavailable. Your API key will stay in memory and you must enter it again after quitting TinyCAD.'
+                  : 'API keys stay in memory.'}
                 {settings.provider === 'glm' &&
                   ' Z.AI uses the TinyCAD relay and a short greeting to check your key.'}
               </p>

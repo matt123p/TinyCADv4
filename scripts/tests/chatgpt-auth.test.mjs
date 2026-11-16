@@ -612,3 +612,18 @@ test('signing in with a different account replaces the saved account instead of 
   assert.equal(stored.profiles.length, 1);
   assert.equal(stored.profiles[0].identity.email, 'second@example.test');
 });
+
+test('a fresh Electron memory-only sign-in stores registration metadata without tokens and cannot resume after restart', async (t) => {
+  const { runtime, directory } = await fixture(t, { memoryCredentials: true });
+  const { response } = await complete(runtime);
+  assert.equal(response.status, 200);
+  assert.equal((await runtime.session()).connected, true);
+  assert.equal(await runtime.access(), 'private-access');
+  const disk = await readFile(join(directory, 'accounts.json'), 'utf8');
+  assert.equal(disk.includes('private-access'), false);
+  assert.equal(disk.includes('private-refresh'), false);
+  assert.equal(disk.includes('signed-id'), false);
+  assert.equal(disk.includes('oaiapp_tinycad'), true);
+  const restored = new ChatGPTRuntime({ storageDir: directory, memoryCredentials: true });
+  assert.equal((await restored.session()).connected, false);
+});

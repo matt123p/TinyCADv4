@@ -8,7 +8,14 @@ import {
   timingSafeEqual,
   webcrypto,
 } from 'node:crypto';
-import { mkdir, readFile, writeFile, rename, chmod } from 'node:fs/promises';
+import {
+  mkdir,
+  readFile,
+  writeFile,
+  rename,
+  chmod,
+  rm,
+} from 'node:fs/promises';
 import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
@@ -90,10 +97,18 @@ export async function verifyChatGPTIdentity(
   };
 }
 export class ChatGPTRuntime {
-  constructor({ storageDir, send = fetch, verifyIdentity, encryption }) {
+  constructor({
+    storageDir,
+    send = fetch,
+    verifyIdentity,
+    encryption,
+    memoryCredentials = false,
+  }) {
     this.directory = storageDir;
     this.send = send;
     this.encryption = encryption;
+    this.memoryCredentials = memoryCredentials;
+    this.credentials = new Map();
     this.verify = verifyIdentity || verifyChatGPTIdentity;
     this.pending = null;
     this.requests = new Set();
@@ -107,14 +122,24 @@ export class ChatGPTRuntime {
       retries: { retries: 120, minTimeout: 100, maxTimeout: 500 },
     });
     try {
-      let state;
+      let state,
+        plaintext = false;
       try {
         const saved = JSON.parse(
           await readFile(join(this.directory, 'accounts.json'), 'utf8'),
         );
-        state = saved.encrypted
-          ? JSON.parse(this.encryption.decrypt(saved.data))
-          : saved;
+        plaintext = !saved.encrypted;
+        if (saved.encrypted && !this.encryption && this.memoryCredentials) {
+          this.protectedFileLocked = true;
+          state = this.unavailableState ||= {
+            version: 1,
+            hostId: `urn:uuid:${randomUUID()}`,
+            profiles: [],
+          };
+        } else
+          state = saved.encrypted
+            ? JSON.parse(this.encryption.decrypt(saved.data))
+            : saved;
       } catch (error) {
         if (error.code !== 'ENOENT')
           throw new ChatGPTError(
@@ -126,6 +151,21 @@ export class ChatGPTRuntime {
           hostId: `urn:uuid:${randomUUID()}`,
           profiles: [],
         };
+        await this.save(state);
+      }
+      // Upgrade legacy plaintext Electron records immediately. Without a keyring,
+      // keep their credentials only for this process and remove them from disk.
+      if (this.memoryCredentials) {
+        let migrated = false;
+        for (const profile of state.profiles) {
+          if (profile.credentials) {
+            this.credentials.set(profile.id, profile.credentials);
+            migrated = true;
+          } else profile.credentials = this.credentials.get(profile.id);
+        }
+        if (migrated) await this.save(state);
+      } else if (this.encryption && plaintext) {
+        // Also encrypt records written by older versions before returning them.
         await this.save(state);
       }
       // Keep only the active account when upgrading older multi-account stores.
@@ -146,12 +186,30 @@ export class ChatGPTRuntime {
   async save(state) {
     const file = join(this.directory, 'accounts.json');
     const temporary = `${file}.${randomUUID()}.tmp`;
+    let persisted = state;
+    if (this.memoryCredentials) {
+      this.credentials.clear();
+      persisted = {
+        ...state,
+        profiles: state.profiles.map((profile) => {
+          const { credentials, ...metadata } = profile;
+          if (credentials) this.credentials.set(profile.id, credentials);
+          return metadata;
+        }),
+      };
+    }
+    if (this.protectedFileLocked && !state.profiles.length) {
+      this.unavailableState = persisted;
+      return;
+    }
+    // An explicit new registration replaces an inaccessible old connection.
+    this.protectedFileLocked = false;
     const data = this.encryption
       ? {
           encrypted: true,
-          data: this.encryption.encrypt(JSON.stringify(state)),
+          data: this.encryption.encrypt(JSON.stringify(persisted)),
         }
-      : state;
+      : persisted;
     await writeFile(temporary, JSON.stringify(data), {
       mode: 0o600,
       flag: 'wx',
@@ -163,6 +221,8 @@ export class ChatGPTRuntime {
     const selected = state.profiles.find((p) => p.id === state.activeId);
     return {
       available: true,
+      secureStorage: !!this.encryption,
+      memoryOnly: this.memoryCredentials,
       connected: !!selected?.credentials,
       sharing:
         !!selected?.credentials &&
@@ -534,6 +594,13 @@ export class ChatGPTRuntime {
     let remoteRevoked = true;
     await this.locked(async (state) => {
       const profile = state.profiles.find((p) => p.id === state.activeId);
+      if (this.protectedFileLocked) {
+        // Explicit sign-out must not revive an old account when the keyring returns.
+        await rm(join(this.directory, 'accounts.json'), { force: true });
+        this.protectedFileLocked = false;
+        remoteRevoked = false;
+        await this.save(state);
+      }
       if (profile?.credentials?.refreshToken) {
         try {
           const discovery = await this.send(

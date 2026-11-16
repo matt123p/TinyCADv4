@@ -8,7 +8,7 @@ const circuit =
   '<TinyCADSheets><TinyCAD><NAME>Main</NAME><WIRE a="10,10" b="30,10"/></TinyCAD><TinyCAD><NAME>Preserve me</NAME><WIRE a="50,50" b="70,50"/></TinyCAD></TinyCADSheets>';
 test.beforeAll(async () => {
   test.setTimeout(180000);
-  app = await serveLayoutApp('chat-browser');
+  app = await serveLayoutApp('chat-browser', 'filesystem', 'development');
 });
 test.afterAll(async () => {
   await app?.close();
