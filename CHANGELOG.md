@@ -51,7 +51,6 @@
 
 - Reduce embedded controller artwork to about one third of its previous dimensions and sensor/display modules to about one quarter, rebuilding readable labels and on-grid header pads while preserving all pin identities and electrical types. Representative A4 pages fit 18 components at native placement size.
 
-- Show draggable component artwork directly in the library picker lists for Standard, My Libraries and Online results; fit and centre wide and tall symbols within their previews.
 - Give the browser SPICE engine sufficient stack space for amplifier examples and detect stack overflows instead of reporting misleading component or out-of-memory errors.
 - Show simulation error messages in red and immediately display a failure popup for runs started from sheets, charts or instruments.
 - Open the failed run's diagnostics directly from its error message or popup, and retain solver errors even when a run produces no samples.

@@ -8,11 +8,11 @@ Each entry has a stable unique `id`, display `name`, relative `path` and optiona
 
 Library source tabs appear as **Standard**, **Online**, then **My Libraries**. New users start on Standard; the last selected source is remembered locally for subsequent sessions.
 
-The **Standard Libraries** selector loads one library at a time. Only the catalogue loads initially; unselected libraries are not downloaded or parsed. Choosing another library releases the previous one. The selection persists separately from personal library configuration. Failed loads offer Retry and allow a different selection. Standard libraries support preview, search, placement and replacement; personal libraries retain their editing controls. Standard and personal library entries show their names above draggable artwork previews; online search results show draggable thumbnails. Wide and tall symbols fit within each preview without clipping. Selecting a symbol also shows its description above the larger preview, with wrapping and scrolling for longer text. The library summary wraps without a line clamp.
+The **Standard Libraries** selector loads one library at a time. Only the catalogue loads initially; unselected libraries are not downloaded or parsed. Choosing another library releases the previous one. The selection persists separately from personal library configuration. Failed loads offer Retry and allow a different selection. Standard libraries support preview, search, placement and replacement; personal libraries retain their editing controls. Standard, personal and online lists use compact text rows. Selecting a component shows its draggable artwork or thumbnail in the separate preview. Wide and tall symbols fit within each preview without clipping. Selecting a symbol also shows its description above the larger preview, with wrapping and scrolling for longer text. The library summary wraps without a line clamp.
 
 Packaged assets live under `dist/bundled-libraries/`. Browser deployment preserves that directory; desktop reads packaged resources through restricted IPC. [package-libraries.mjs](../scripts/package-libraries.mjs) validates the catalogue and referenced files. Tests: `npm run test:libraries`.
 
-The picker browser regression runs with `npm run test:layout:browser -- library-previews.spec.mjs`. It covers inline artwork in all three library sources, complete rack-panel previews, filtering, selection and the drag payload used for placement.
+The picker browser regression runs with `npm run test:layout:browser -- library-previews.spec.mjs`. It covers compact rows in all three library sources, selected rack-panel previews, filtering, selection and the drag payload used for placement.
 
 ## Bundles and electrical conventions
 

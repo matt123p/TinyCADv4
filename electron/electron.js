@@ -9,6 +9,7 @@ import path from 'path';
 import Store from 'electron-store';
 import { registerBundledLibraries } from './bundledLibraries.js';
 import { registerBundledExamples } from './bundledExamples.js';
+import { registerOnlineLibrary } from './onlineLibrary.js';
 import fs from 'fs';
 import { spawn } from 'child_process';
 import { loadFile, saveFile, sendRecentFiles } from './io.js';
@@ -16,7 +17,7 @@ import { loadLibrary, loadLibraryToWebContents, saveLibrary, sendLibraries, remo
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const { app, ipcMain, BrowserWindow, Menu, dialog, shell, safeStorage } = await import('electron');
+const { app, ipcMain, BrowserWindow, Menu, dialog, shell, safeStorage, net } = await import('electron');
 const isDev = (await import('electron-is-dev')).default;
 const isMac = process.platform === 'darwin'
 const electronMajorVersion = Number.parseInt(process.versions.electron.split('.')[0] || '0', 10);
@@ -373,6 +374,8 @@ function createWindow() {
     registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
       directory: path.join(__dirname, isDev ? '../bundled-libraries' : '../dist/bundled-libraries') });
     registerChatSecretHandlers(ipcMain, { app, safeStorage });
+    registerOnlineLibrary({ ipcMain, app, getWindow: () => mainWindow,
+      send: (url, options) => net.fetch(url, options) });
     registerChatGPTHandlers(ipcMain, { app, shell, safeStorage });
 
     ipcMain.on('window-minimize', () => {

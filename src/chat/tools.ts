@@ -2,6 +2,7 @@ import { bundledLibraries } from '../io/bundledLibraries';
 import { searchBundledSymbols } from './bundled-search';
 import { bundledLibraryInstructions } from './prompt';
 import { apiServer } from '../io/apiServer';
+import { fetchOnlineLibrary } from '../io/onlineLibrary';
 import { Store } from 'redux';
 import { ioXML } from '../io/ioXml';
 import { XMLBuilder } from '../util/xmlbuilder';
@@ -27,7 +28,7 @@ export function createEditorTools(
   store: Store,
   artifact: (file: ChatArtifact) => void,
   native = nativeCall,
-  send: typeof fetch = fetch,
+  send = fetchOnlineLibrary,
 ): ToolExecutor {
   const revisions = new WeakMap<
     object,

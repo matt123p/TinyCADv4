@@ -262,7 +262,6 @@ const SymbolView: React.FunctionComponent<SymbolViewProps> = (
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchCancel}
           style={{ maxWidth: '100%', maxHeight: 'calc(100% - 20px)', objectFit: 'contain' }}
-          crossOrigin="anonymous"
           src={
             `${apiServer}/api/Search/Thumbnail?size=md&id=` +
             props.searchSymbol.symbolID

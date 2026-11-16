@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import { makeStyles, tokens, mergeClasses } from '@fluentui/react-components';
-import SymbolView from './SymbolView';
+import { DocumentRegular } from '@fluentui/react-icons';
 import { SearchResult, SearchSymbol } from './Search';
 import { SymbolSortMode, sortEntriesByName } from './sorting';
 
@@ -14,8 +14,7 @@ const useStyles = makeStyles({
   },
   item: {
     display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'stretch',
+    alignItems: 'center',
     padding: '6px 12px',
     cursor: 'pointer',
     fontSize: '12px',
@@ -34,12 +33,11 @@ const useStyles = makeStyles({
       backgroundColor: tokens.colorBrandBackgroundHover,
     },
   },
-  preview: {
-    height: '100px',
-    width: '100%',
-    marginTop: '6px',
-    overflow: 'hidden',
-    backgroundColor: tokens.colorNeutralBackground1,
+  icon: {
+    width: '14px',
+    height: '14px',
+    marginRight: '8px',
+    flexShrink: 0,
   },
   name: {
     fontWeight: 500,
@@ -48,7 +46,7 @@ const useStyles = makeStyles({
     whiteSpace: 'nowrap',
   },
   description: {
-    marginTop: '4px',
+    marginLeft: '8px',
     color: tokens.colorNeutralForeground4,
     fontSize: '11px',
     overflow: 'hidden',
@@ -115,21 +113,13 @@ const OnlineView: React.FunctionComponent<OnlineViewProps> = (
             onClick={() => props.onSelect(n)}
             onDoubleClick={() => props.onSelected(n)}
           >
+            <DocumentRegular className={styles.icon} />
             <span className={styles.name} title={n.name}>{n.name}</span>
             {n.description?.length > 0 && (
               <span className={mergeClasses(styles.description, isActive && styles.descriptionActive)}>
                 {n.description}
               </span>
             )}
-            <div className={styles.preview}>
-              <SymbolView
-                width={300}
-                height={100}
-                symbol={null}
-                name={null}
-                searchSymbol={n}
-              />
-            </div>
           </li>
         );
       })}

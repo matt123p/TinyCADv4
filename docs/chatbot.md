@@ -107,6 +107,9 @@ and help pages. The serving host must serve or proxy these routes.
 Electron uses `https://www.tinycad.net` for TinyCAD website/API requests because
 its editor loads from `file://`. The shared `src/io/apiServer.ts` selects routing
 using `TARGET_SYSTEM`, not localhost or production hostname detection.
+Public online-library searches and symbol downloads run through a restricted
+Electron main-process bridge, because those endpoints do not permit cross-origin
+renderer requests. Browser builds continue to use their same-origin API proxy.
 
 ## OpenAI-compatible providers
 

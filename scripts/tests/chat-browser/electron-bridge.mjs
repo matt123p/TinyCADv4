@@ -11,6 +11,13 @@ export async function installElectronBridge(page) {
         'onSimulation',
       ].map(name => [name, () => () => {}])),
       setTitle() {},
+      async onlineLibraryRequest(resource) {
+        const response = await fetch('https://www.tinycad.net' + resource);
+        return {
+          status: response.status, statusText: response.statusText,
+          contentType: response.headers.get('content-type'), body: await response.text(),
+        };
+      },
       setMenuMode() {},
       openExternal: async url => { window.open(url, '_blank'); },
       chatSecret: async () => ({ result: { secure: false } }),

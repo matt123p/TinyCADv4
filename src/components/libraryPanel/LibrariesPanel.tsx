@@ -638,6 +638,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     setState(prev => ({
       ...prev,
       source,
+      findFilter: '',
       displaySymbol: null,
       displayName: null,
       displaySearchSymbol: null,
@@ -648,12 +649,6 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
       draggedFolderId: null,
       searchResult: null,
     }));
-    if (source === 'online') {
-      const filter = state.findFilter;
-      Search(filter).then(results => setState(prev =>
-        prev.source === 'online' && prev.findFilter === filter
-          ? { ...prev, searchResult: results } : prev));
-    }
   };
 
   const persistConfig = (nextConfig: UserConfig) => {

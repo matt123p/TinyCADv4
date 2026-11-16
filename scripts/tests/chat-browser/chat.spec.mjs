@@ -83,6 +83,29 @@ const run = (page, name, args = {}) =>
   });
 const snapshot = (page) => page.evaluate(() => window.chatTest.snapshot());
 
+test('Online library panel searches through the desktop bridge and displays a preview', async ({ page }) => {
+  await page.route('https://www.tinycad.net/api/search/Search?*', route => {
+    expect(new URL(route.request().url()).searchParams.get('key')).toBe('123');
+    return route.fulfill({ json: {
+      total: 1, pageSize: 25, symbols: [{ symbolID: 1951, nameID: 11150,
+        name: 'SIEMENS', description: 'S7-1200 SM1231 Analog Inputs Module', labels: [] }],
+    } });
+  });
+  await page.route('**/api/Search/Thumbnail?*', route => route.fulfill({
+    contentType: 'image/png',
+    body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7X8AAAAASUVORK5CYII=', 'base64'),
+  }));
+  await page.getByRole('tab', { name: 'Online', exact: true }).click();
+  await page.getByPlaceholder(/Search TinyCAD.net/i).fill('123');
+  await page.getByText('SIEMENS', { exact: true }).click();
+  await expect(page.getByRole('button', { name: /^SIEMENS S7-1200/ }).locator('img')).toHaveCount(0);
+  const preview = page.locator('img[src*="/api/Search/Thumbnail"]');
+  await expect(preview).toBeVisible();
+  await expect(preview).not.toHaveAttribute('crossorigin');
+  await expect.poll(() => preview.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  await expect(page.getByText(/Problem talking to server/)).toHaveCount(0);
+});
+
 test('real worker reads unsaved native state, renders vision images, adds and edits with Undo/Redo', async ({
   page,
 }) => {

@@ -8,6 +8,7 @@ interface ElectronLibraryLoadError {
 declare global {
     interface Window {
         electronAPI: {
+            onlineLibraryRequest: (resource: string) => Promise<{status: number; statusText: string; contentType: string; body: string}>;
             chatSecret: (operation: string, value?: { provider: string; endpoint: string; key: string }) => Promise<{ result?: { secure?: boolean; provider?: string; endpoint?: string; key?: string }; error?: string }>;
             chatgptAccount: (operation: string, args?: Record<string, unknown>) => Promise<{result?: any; error?: {message: string; code?: string}}>;
             chatgptRequest: (request: {id: string; body: unknown}) => Promise<{streamed?: boolean; error?: {message: string; code?: string}}>;
