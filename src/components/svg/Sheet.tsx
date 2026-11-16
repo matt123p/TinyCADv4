@@ -1739,6 +1739,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                     width={this.props.page_size[0] * scale}
                     height={this.props.page_size[1] * scale}
                     className="pageRectangle"
+                    style={{ fill: this.props.options.color_background }}
                   />
         
                   <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
@@ -1917,6 +1918,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                 width={this.props.page_size[0] * scale}
                 height={this.props.page_size[1] * scale}
                 className="pageRectangle"
+                style={{ fill: this.props.options.color_background }}
               />
 
               <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>

@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- Apply the Background Colour setting to the drawing page with rulers on or off, including the touch loupe (#33).
 - Remove unnecessary local down-and-up wire detours when shorter routes clear nearby objects, annotations and other wires, while preserving connections and fixed anchors.
 - Treat hidden transistor pins as connection points rather than visible stems, preventing artificial return bends and repairing existing loops in the amplifier example.
 
