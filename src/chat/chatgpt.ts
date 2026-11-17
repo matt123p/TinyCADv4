@@ -213,7 +213,9 @@ async function desktopResponse(
       ended = false;
     const encoder = new TextEncoder();
     let unsubscribe = () => {};
+    let endTimeout: ReturnType<typeof setTimeout>;
     const cleanup = () => {
+      clearTimeout(endTimeout);
       unsubscribe();
       signal.removeEventListener('abort', abort);
     };
@@ -263,8 +265,16 @@ async function desktopResponse(
       .chatgptRequest({ id, body })
       .then((reply) => {
         if (reply.error) fail(failure(reply.error));
-        else if (!ended)
-          fail(new Error('The ChatGPT stream ended unexpectedly.'));
+        else if (!ended) {
+          // The invoke reply and stream events use separate IPC messages.
+          // A successful reply can overtake the final queued chunks/end event.
+          if (reply.streamed)
+            endTimeout = setTimeout(
+              () => fail(new Error('The ChatGPT stream ended unexpectedly.')),
+              5000,
+            );
+          else fail(new Error('The ChatGPT stream ended unexpectedly.'));
+        }
       })
       .catch((error) => fail(error));
   });

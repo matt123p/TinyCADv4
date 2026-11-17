@@ -83,6 +83,65 @@ const run = (page, name, args = {}) =>
   });
 const snapshot = (page) => page.evaluate(() => window.chatTest.snapshot());
 
+test('attachments show files immediately and invalid selections keep existing files', async ({
+  page,
+}) => {
+  await page.route('https://api.openai.com/v1/models', (route) =>
+    route.fulfill({ json: { data: [{ id: 'gpt-6.1-sol' }] } }),
+  );
+  await page.getByRole('button', { name: 'Chat', exact: true }).click();
+  const upload = page.getByLabel('Attach PDF or image', { exact: true });
+  await expect(upload).toBeDisabled();
+  await chooseProvider(page, 'openai');
+  await page.getByLabel('API key', { exact: true }).fill('private-test-key');
+  await connectApiKey(page);
+  await selectModel(page, 'GPT-6.1 Sol');
+  await upload.setInputFiles({
+    name: 'datasheet.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.4'),
+  });
+  await expect(page.locator('.chat-attachment-status')).toBeEmpty();
+  await expect(page.locator('.chat-attachment')).toContainText(
+    'datasheet.pdf (1 KiB)',
+  );
+  await upload.setInputFiles({
+    name: 'too-large.png',
+    mimeType: 'image/png',
+    buffer: Buffer.alloc(10 * 1024 * 1024 + 1),
+  });
+  await expect(page.locator('.chat-error')).toContainText(
+    'Attach up to six files, totaling at most 10 MiB.',
+  );
+  await expect(page.locator('.chat-attachment')).toHaveCount(1);
+  await upload.setInputFiles({
+    name: 'notes.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('unsupported'),
+  });
+  await expect(page.locator('.chat-error')).toContainText(
+    'notes.txt: Supported imports: PDF, PNG, JPEG and WebP.',
+  );
+  await upload.setInputFiles({
+    name: 'circuit.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('image'),
+  });
+  await expect(page.locator('.chat-error')).toHaveCount(0);
+  await expect(page.locator('.chat-attachment')).toHaveCount(2);
+  await expect(page.locator('.chat-attachment-status')).toBeEmpty();
+  await page
+    .getByRole('button', { name: 'Remove datasheet.pdf', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Remove circuit.png', exact: true })
+    .click();
+  await expect(page.locator('.chat-attachment-status')).toBeEmpty();
+  await expect(
+    page.getByRole('button', { name: 'Send', exact: true }),
+  ).toBeDisabled();
+});
+
 test('Online library panel searches through the desktop bridge and displays a preview', async ({ page }) => {
   await page.route('https://www.tinycad.net/api/search/Search?*', route => {
     expect(new URL(route.request().url()).searchParams.get('key')).toBe('123');
@@ -987,9 +1046,16 @@ async function mockChatGPTSignIn(
     ).toBeVisible();
     await page.getByRole('button', { name: 'Got it', exact: true }).click();
     await expect(page.locator('.chat-plan-indicator')).toContainText(
-      'Using ChatGPT plan',
+      'Using ChatGPT',
+    );
+    await expect(page.locator('.chat-plan-indicator')).not.toContainText(
+      'subscriber@example.test',
     );
     if (chooseModel) await selectModel(page, 'GPT-6.1 Sol', 'High');
+    if (chooseModel)
+      await expect(page.locator('.chat-plan-indicator > span')).toHaveText(
+        'Using ChatGPT Sol 6.1',
+      );
   }
   return { logouts: () => logoutCount };
 }
@@ -1002,6 +1068,14 @@ const responseSSE = (output) =>
 test('ChatGPT account sign-in reads and edits the current circuit through Responses tools without an API key', async ({
   page,
 }) => {
+  // Electron's invoke reply can arrive before the separate stream-end event.
+  await page.evaluate(() => {
+    const subscribe = window.electronAPI.onChatGPTStream;
+    window.electronAPI.onChatGPTStream = (callback) => subscribe((event) => {
+      if (event.type === 'end') setTimeout(() => callback(event), 50);
+      else callback(event);
+    });
+  });
   await page.evaluate((xml) => window.chatTest.load(xml), circuit);
   let count = 0;
   await page.route('https://api.openai.com/**', () => {

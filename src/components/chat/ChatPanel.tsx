@@ -26,6 +26,7 @@ import { thinkingLevels } from '../../chat/thinking';
 import {
   CHAT_OUTPUT_TOKENS,
   isChatGptModel,
+  modelLabel,
   modelOutputTokens,
 } from '../../chat/models';
 import React, { useEffect, useRef, useState } from 'react';
@@ -41,7 +42,7 @@ import {
 import { createEditorTools } from '../../chat/tools';
 import { toolSpecs } from '../../chat/tool-specs';
 import { editorChatSystem } from '../../chat/prompt';
-import { readAttachments } from '../../chat/attachments';
+import { readAttachments, validateAttachments } from '../../chat/attachments';
 import './chat.css';
 
 const storageKey = 'tinycad.chat.settings.v1';
@@ -133,6 +134,7 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
   const [files, setFiles] = useState<File[]>([]);
   const [pdfPages, setPdfPages] = useState('');
   const [busy, setBusy] = useState(false);
+  const [preparingAttachments, setPreparingAttachments] = useState(false);
   const [error, setError] = useState('');
   const controller = useRef<AbortController>();
   const session = useRef<ChatSession>();
@@ -336,6 +338,7 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
       return;
     }
     setBusy(true);
+    setPreparingAttachments(files.length > 0);
     setError('');
     const abort = new AbortController();
     controller.current = abort;
@@ -358,6 +361,7 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
         pdfPages,
         abort.signal,
       );
+      setPreparingAttachments(false);
       if (abort.signal.aborted) return;
       if (!session.current)
         session.current = new ChatSession(
@@ -405,6 +409,7 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
       );
     } finally {
       controller.current = undefined;
+      setPreparingAttachments(false);
       setBusy(false);
     }
   };
@@ -549,10 +554,11 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
           {chatGPT?.sharing && (
             <div className="chat-plan-indicator">
               <span>
-                Using ChatGPT plan ·{' '}
-                {chatGPT.identity?.email ||
-                  chatGPT.identity?.name ||
-                  'Connected account'}
+                Using ChatGPT{settings.model && ' '}
+                {modelLabel(settings.model).replace(
+                  /^GPT-(\d+(?:\.\d+)?) (Sol|Luna|Astra)/i,
+                  '$2 $1',
+                )}
               </span>
               <button type="button" onClick={openChatGPTUsage}>
                 Manage usage
@@ -596,18 +602,37 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
               }
             }}
           />
+          <div className="chat-attachment-status" role="status">
+            {preparingAttachments ? 'Preparing attachments…' : ''}
+          </div>
           {files.map((f, i) => (
             <div key={i} className="chat-attachment">
-              {f.name}
+              <span>
+                {f.name}{' '}
+                <small>({Math.max(1, Math.ceil(f.size / 1024))} KiB)</small>
+              </span>
               <button
                 type="button"
                 disabled={busy || !authenticated || !settings.model}
                 aria-label={`Remove ${f.name}`}
+                title={`Remove ${f.name}`}
                 onClick={() =>
                   setFiles((previous) => previous.filter((_, j) => i !== j))
                 }
               >
-                ×
+                <svg
+                  aria-hidden="true"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" />
+                </svg>
               </button>
             </div>
           ))}
@@ -630,7 +655,17 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
               disabled={busy || savingConnection || !authenticated}
               onChange={selectModel}
             />
-            <label className="chat-import">
+            <label
+              className="chat-import"
+              aria-disabled={busy || !authenticated || !settings.model}
+              title={
+                !authenticated
+                  ? 'Connect AI before attaching files.'
+                  : !settings.model
+                  ? 'Choose a model before attaching files.'
+                  : 'Attach up to six PDF or image files, totaling at most 10 MiB.'
+              }
+            >
               Import PDF/image
               <input
                 aria-label="Attach PDF or image"
@@ -639,11 +674,21 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
                 accept="application/pdf,image/png,image/jpeg,image/webp"
                 disabled={busy || !authenticated || !settings.model}
                 onChange={(e) => {
-                  setFiles((previous) => [
-                    ...previous,
-                    ...Array.from(e.target.files || []),
-                  ]);
+                  const selected = Array.from(e.target.files || []);
                   e.target.value = '';
+                  if (!selected.length) return;
+                  try {
+                    const next = [...files, ...selected];
+                    validateAttachments(next);
+                    setFiles(next);
+                    setError('');
+                  } catch (e) {
+                    setError(
+                      e instanceof Error
+                        ? e.message
+                        : 'Could not attach files.',
+                    );
+                  }
                 }}
               />
             </label>

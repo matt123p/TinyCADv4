@@ -184,11 +184,36 @@
   cursor: pointer;
   width: 100%;
 }
+.chat-import[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: default;
+}
+.chat-import input:disabled {
+  cursor: default;
+}
+.chat-attachment-status:not(:empty) {
+  margin-top: 8px;
+  color: #173f56;
+}
 .chat-attachment {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 4px;
+  gap: 8px;
+}
+.chat-attachment > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.chat-attachment > button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 5px;
 }
 .chat-error {
   color: #9d2424;
