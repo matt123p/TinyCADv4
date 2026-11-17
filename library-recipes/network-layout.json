@@ -3,7 +3,7 @@
   "id": "network-layout",
   "name": "Network layout",
   "output": "bundled-libraries/network-layout/network-layout.tclib",
-  "notes": "Original generic physical artwork for cable and rack planning. Each socket is one passive cable endpoint, not an RJ45 contact pinout or a SPICE device. All rack faces are 264 x 24 XML units (1320 x 120 internal units), with the same native bottom-right anchor. SFP+ endpoints represent whole transceiver slots.",
+  "notes": "Original generic physical artwork for cable and rack planning, compacted to about 30% of the original dimensions. Each socket is one passive cable endpoint, not an RJ45 contact pinout or a SPICE device. All rack faces are 80 x 8 XML units (400 x 40 internal units), with the same native bottom-right anchor. Socket artwork and endpoints move together onto the normal grid. SFP+ endpoints represent whole transceiver slots.",
   "references": [
     {
       "title": "TP-Link desktop switch front panels",

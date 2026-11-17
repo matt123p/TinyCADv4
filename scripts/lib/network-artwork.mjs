@@ -1,6 +1,14 @@
 import { createHash } from 'node:crypto';
 
-export const rackSize = { width: 264, height: 24 };
+export const networkScale = 0.3;
+const sourceRackSize = { width: 264, height: 24 };
+const compactSize = (n) => Math.ceil((n * networkScale) / 2) * 2;
+export const rackSize = {
+  width: compactSize(sourceRackSize.width),
+  height: compactSize(sourceRackSize.height),
+};
+// Keep labels readable independently of the compact faceplate scale.
+const fontSizes = [6, 8, 10, 5];
 const xml = (value) =>
   String(value).replace(
     /[&<>"']/g,
@@ -26,7 +34,7 @@ const fills = Object.keys(colours);
 const fill = (name) => fills.indexOf(name) + 1;
 
 function resources() {
-  const fonts = [6, 8, 10].map(
+  const fonts = fontSizes.map(
     (height, i) =>
       `<FONT id="${i + 1}"><HEIGHT>${height}</HEIGHT><WIDTH>0</WIDTH><WEIGHT>${
         i === 2 ? 700 : 400
@@ -36,13 +44,13 @@ function resources() {
     ...fonts,
     `<STYLE id="1"><STYLE>0</STYLE><COLOR>${bgr(
       colours.ink,
-    )}</COLOR><THICKNESS>1</THICKNESS></STYLE>`,
+    )}</COLOR><THICKNESS>0</THICKNESS></STYLE>`,
     `<STYLE id="2"><STYLE>0</STYLE><COLOR>${bgr(
       colours.edge,
-    )}</COLOR><THICKNESS>1</THICKNESS></STYLE>`,
+    )}</COLOR><THICKNESS>0</THICKNESS></STYLE>`,
     `<STYLE id="3"><STYLE>0</STYLE><COLOR>${bgr(
       colours.gold,
-    )}</COLOR><THICKNESS>1</THICKNESS></STYLE>`,
+    )}</COLOR><THICKNESS>0</THICKNESS></STYLE>`,
     ...fills.map(
       (name) =>
         `<FILL id="${fill(name)}"><INDEX>0</INDEX><COLOR>${bgr(
@@ -54,37 +62,83 @@ function resources() {
 
 export function networkSymbol(device) {
   const art = [],
-    ports = [];
+    ports = [],
+    socketQueue = [];
+  let width,
+    height,
+    socketOrigin = null;
+  const round = (n) => +n.toFixed(5);
+  const point = (x, y) => {
+    const sx = compactSize(width) / width,
+      sy = compactSize(height) / height;
+    if (!socketOrigin) return [round(x * sx), round(y * sy)];
+    // Artwork and labels share the bank's uniformly spaced grid terminal.
+    const { x: cx, y: cy, target, pitch } = socketOrigin;
+    return [
+      round(target[0] + (x - cx) * Math.min(sx, (pitch - 0.4) / 7)),
+      round(target[1] + (y - cy) * sy),
+    ];
+  };
   const rect = (x, y, w, h, colour = 'metal', style = 1) =>
     art.push(
-      `<RECTANGLE a="${x},${y}" b="${x + w},${y + h}" style="${style}" fill="${
-        colour ? fill(colour) : 0
-      }"/>`,
+      `<RECTANGLE a="${point(x, y)}" b="${point(
+        x + w,
+        y + h,
+      )}" style="${style}" fill="${colour ? fill(colour) : 0}"/>`,
     );
   const ellipse = (x, y, w, h, colour = 'white', style = 1) =>
     art.push(
-      `<ELLIPSE a="${x},${y}" b="${x + w},${y + h}" style="${style}" fill="${
-        colour ? fill(colour) : 0
-      }"/>`,
+      `<ELLIPSE a="${point(x, y)}" b="${point(
+        x + w,
+        y + h,
+      )}" style="${style}" fill="${colour ? fill(colour) : 0}"/>`,
     );
   const line = (x1, y1, x2, y2, style = 2) =>
     art.push(
-      `<POLYGON pos="${x1},${y1}" style="${style}" fill="0"><POINT pos="0,0" arc="0"/><POINT pos="${
-        x2 - x1
-      },${y2 - y1}" arc="0"/></POLYGON>`,
+      `<POLYGON pos="${point(
+        x1,
+        y1,
+      )}" style="${style}" fill="0"><POINT pos="0,0" arc="0"/><POINT pos="${point(
+        x2,
+        y2,
+      ).map((v, i) => round(v - point(x1, y1)[i]))}" arc="0"/></POLYGON>`,
     );
-  const text = (x, y, value, font = 1, colour = 'ink') => {
+  const text = (
+    x,
+    y,
+    value,
+    font = 1,
+    colour = 'ink',
+    centred = false,
+    inside = false,
+  ) => {
     // Explicit text bounds include the native Markdown renderer's padding.
     // Legacy TEXT computes a box too small for its first baseline at these
     // small faceplate font sizes, clipping labels in the current editor.
-    const size = [6, 8, 10][font - 1];
-    const left = x - 0.6,
-      top = y - (size + 3) / 5;
-    const width =
+    const bodyWidth = compactSize(width);
+    if (
+      !socketOrigin &&
+      (String(value).length * fontSizes[font - 1] * 0.6) / 5 > bodyWidth - 1.2
+    )
+      font = 1;
+    const size = fontSizes[font - 1];
+    const glyphWidth = (String(value).length * size * 0.6) / 5;
+    let [tx, ty] = point(x, y);
+    if (centred) {
+      tx = socketOrigin.target[0] - glyphWidth / 2;
+      ty = socketOrigin.target[1] + (inside ? 0.45 : -1.15);
+    } else {
+      tx = Math.max(0.6, Math.min(tx, bodyWidth - glyphWidth - 0.6));
+    }
+    const left = round(tx - 0.6),
+      top = device.rack
+        ? Math.max(0, ty - (size + 3) / 5)
+        : ty - (size + 3) / 5;
+    const boxWidth =
       (String(value).length * size * (font === 3 ? 1.5 : 1.3) + 6) / 5;
     const height = (size * 1.4 + 6) / 5;
     art.push(
-      `<NOTE_TEXT a="${left},${top}" b="${left + width},${
+      `<NOTE_TEXT a="${left},${top}" b="${left + boxWidth},${
         top + height
       }" direction="3" font="${font}" color="${bgr(
         colours[colour],
@@ -94,10 +148,16 @@ export function networkSymbol(device) {
   const led = (x, y, colour = 'green') =>
     ellipse(x - 0.5, y - 0.5, 1, 1, colour, 2);
   function socket(x, y, name, kind = 'rj45', label = name) {
+    socketQueue.push({ x, y, name, kind, label });
+  }
+  function drawSocket(entry) {
+    const { x, y, name, kind, label } = entry;
     // Each physical socket is one cable endpoint. No external pin stems or
     // automatic named-power connections: wires terminate inside the opening.
     const number = String(ports.length + 1);
-    ports.push({ number, name, kind, x, y });
+    socketOrigin = entry;
+    const [px, py] = point(x, y);
+    ports.push({ number, name, kind, x: px, y: py });
     if (kind === 'rj45') {
       rect(
         x - 3.4,
@@ -123,12 +183,14 @@ export function networkSymbol(device) {
       line(x, y - 1.6, x, y + 1.6);
       rect(x - 2, y + 1.4, 4, 0.4, kind === 'fibre' ? 'white' : 'blue', 2);
     }
-    text(x - String(label).length * 0.34, y - 3.5, label);
+    const inside = /^\d+$/.test(String(label)) || kind === 'sfp';
+    text(x, y, label, inside ? 4 : 1, inside ? 'white' : 'ink', true, inside);
     art.push(
-      `<PIN pos="${x},${y}" which="0" elec="4" direction="0" part="0" number="${number}" show="0" length="0" number_pos="0" centre_name="0">${xml(
+      `<PIN pos="${px},${py}" which="0" elec="4" direction="0" part="0" number="${number}" show="0" length="0" number_pos="0" centre_name="0">${xml(
         name,
       )}</PIN>`,
     );
+    socketOrigin = null;
   }
   function copperName(i) {
     if (device.kind === 'injector') return i === 0 ? 'LAN IN' : 'PoE OUT';
@@ -159,9 +221,8 @@ export function networkSymbol(device) {
     ont: 'FIBRE ONT',
     injector: 'PoE INJECTOR',
   }[device.kind];
-  let width, height;
   if (device.rack) {
-    ({ width, height } = rackSize);
+    ({ width, height } = sourceRackSize);
     rect(0, 0, width, height, 'edge');
     rect(6, 0, width - 12, height, 'metal');
     for (const x of [3, width - 3]) {
@@ -297,10 +358,67 @@ export function networkSymbol(device) {
       );
     if (device.fibre) socket(48, panelY + 2, 'FIBRE', 'fibre', 'FIBRE');
   }
+  // Lay out each port bank as a whole. Snapping individual scaled sockets
+  // produces alternating 2/4-unit gaps; bank pitch stays on the normal grid.
+  const bodyWidth = compactSize(width),
+    sy = compactSize(height) / height;
+  const snap = (n) => Math.round(n / 2) * 2;
+  const bankStarts = new Map();
+  for (const kind of ['sfp', 'fibre', 'rj45']) {
+    const entries = socketQueue.filter((p) => p.kind === kind);
+    const rows = [...new Set(entries.map((p) => p.y))].sort((a, b) => a - b);
+    const firstY = rows.length ? snap(rows[0] * sy) : 0;
+    for (const [rowIndex, rowY] of rows.entries()) {
+      const row = entries.filter((p) => p.y === rowY).sort((a, b) => a.x - b.x);
+      let start,
+        pitch = 4;
+      if (kind === 'rj45') {
+        const limit = device.rack
+          ? device.sfp
+            ? 64
+            : 76
+          : Math.min(
+              bodyWidth - 2,
+              ...[...bankStarts.values()].map((x) => x - 4),
+            );
+        const minimum = device.rack ? 16 : 2;
+        if ((row.length - 1) * pitch > limit - minimum) pitch = 2;
+        const span = (row.length - 1) * pitch;
+        start = device.rack
+          ? minimum
+          : Math.min(
+              Math.floor((limit - span) / 2) * 2,
+              Math.max(minimum, snap((minimum + limit - span) / 2)),
+            );
+      } else {
+        start = device.rack
+          ? device.kind === 'aggregation'
+            ? 16
+            : 68
+          : kind === 'fibre'
+          ? snap((row[0].x * bodyWidth) / width)
+          : bodyWidth - 2 - (row.length - 1) * pitch;
+        bankStarts.set(kind, Math.min(bankStarts.get(kind) ?? Infinity, start));
+      }
+      row.forEach((entry, column) =>
+        Object.assign(entry, {
+          target: [start + column * pitch, firstY + rowIndex * 4],
+          pitch,
+        }),
+      );
+    }
+  }
+  socketQueue.forEach(drawSocket);
   return {
     device,
-    width,
-    height,
+    width: compactSize(width),
+    height: compactSize(height),
+    layout: {
+      scale: networkScale,
+      sourceWidth: width,
+      sourceHeight: height,
+      normalGrid: 2,
+    },
     ports,
     xml: '<TinyCAD>\n' + [...resources(), ...art].join('\n') + '\n</TinyCAD>\n',
   };
@@ -311,7 +429,9 @@ export function networkArtwork(recipe) {
   const description = (record) =>
     `${record.device.name}. ${
       record.device.rack
-        ? 'Matching 19-inch 1U face; stack at 24 XML units (120 drawing units). '
+        ? `Matching 19-inch 1U face; stack at ${rackSize.height} XML units (${
+            rackSize.height * 5
+          } drawing units). `
         : record.device.kind.startsWith('ap-')
         ? 'Socket panel shown for cable planning. '
         : ''
@@ -321,6 +441,7 @@ export function networkArtwork(recipe) {
     id: recipe.id,
     name: recipe.name,
     artwork: 'Original generic physical network device artwork',
+    scale: networkScale,
     convention: recipe.notes,
     references: recipe.references,
     sourceReview: recipe.sourceReview,

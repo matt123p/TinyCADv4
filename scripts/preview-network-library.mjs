@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import sharp from 'sharp';
 import { networkArtwork } from './lib/network-artwork.mjs';
 import { layoutRuntime } from './lib/layout-runtime.mjs';
+import { layoutProofPage } from './lib/layout-proof-page.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const { DOMParser, XMLSerializer } = createRequire(import.meta.url)(
@@ -21,6 +22,11 @@ const { records } = networkArtwork(
 );
 const api = await layoutRuntime();
 await mkdir(output, { recursive: true });
+const proof = await layoutProofPage(records, records.map(record => record.device.id));
+await writeFile(path.join(output, 'network-layout-a4.dsn'), proof.dsn);
+await writeFile(path.join(output, 'network-layout-a4.svg'), proof.svg);
+await sharp(Buffer.from(proof.svg)).resize({ width: 1782 }).png()
+  .toFile(path.join(root, 'docs/network-layout-a4.png'));
 const thumbnails = [];
 for (const record of records) {
   const component = new DOMParser().parseFromString(record.xml, 'text/xml');

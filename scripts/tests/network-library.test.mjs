@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { networkArtwork } from '../lib/network-artwork.mjs';
+import { networkArtwork, rackSize } from '../lib/network-artwork.mjs';
+import { layoutProofPage, recordDrawing } from '../lib/layout-proof-page.mjs';
+import { layoutRuntime } from '../lib/layout-runtime.mjs';
 import { serializeLibrary, librarySqlite } from '../lib/library-from-sql.mjs';
 import { runRegression } from './run-regression.mjs';
 
@@ -91,14 +93,17 @@ test('network sockets have separate on-grid cable endpoints inside their opening
         const a = xy(pins[i].getAttribute('pos')),
           b = xy(pins[j].getAttribute('pos'));
         assert.ok(
-          Math.abs(a[0] - b[0]) >= 8 || Math.abs(a[1] - b[1]) >= 6,
+          Math.abs(a[0] - b[0]) >= 2 || Math.abs(a[1] - b[1]) >= 2,
           record.device.id + ': socket artwork overlaps',
         );
       }
     if (record.device.rack) {
       const face = doc.getElementsByTagName('RECTANGLE')[0];
       assert.equal(face.getAttribute('a'), '0,0');
-      assert.equal(face.getAttribute('b'), '264,24');
+      assert.equal(
+        face.getAttribute('b'),
+        `${rackSize.width},${rackSize.height}`,
+      );
     }
   }
   for (const count of [5, 8, 16, 24, 48])
@@ -193,7 +198,7 @@ test('actual editor placement preserves rack anchors, socket wiring, rotations a
     for (const [i, record] of records.entries()) {
       const xml = new XMLBuilder(); xml.fromText(record.xml);
       const parsed = io.from_dsn(xml);
-      const point = record.rack ? [2000, 300 + rackIndex++ * 120] : [5000, 300 + i * 500];
+      const point = record.rack ? [2000, 300 + rackIndex++ * 40] : [5000, 300 + i * 500];
       sheet = new updateView().handleSelectLibrarySymbol({}, sheet, library.names[i], parsed.sheets.map(s => s.items), point).sheet;
       const symbol = sheet.items.at(-1);
       symbols.push(symbol);
@@ -202,9 +207,9 @@ test('actual editor placement preserves rack anchors, socket wiring, rotations a
       const updater = new updateSymbol(symbol), outline = updater.outline();
       assert.equal(updater.active_points().length, record.ports.length, record.id);
       if (record.rack) {
-        assert.deepEqual(outline.ref_point, [1320, 120], record.id + ': common bottom-right insertion anchor');
-        assert.deepEqual(outline.size, [1320, 120], record.id + ': common rack envelope');
-        rackOrigins.push([symbol.point[0] - 1320, symbol.point[1] - 120]);
+        assert.deepEqual(outline.ref_point, [400, 40], record.id + ': common bottom-right insertion anchor');
+        assert.deepEqual(outline.size, [400, 40], record.id + ': common rack envelope');
+        rackOrigins.push([symbol.point[0] - 400, symbol.point[1] - 40]);
       }
       for (let rotation = 0; rotation < 8; rotation++) {
         const u = new updateSymbol({...symbol, rotation, _active_points: null});
@@ -220,7 +225,7 @@ test('actual editor placement preserves rack anchors, socket wiring, rotations a
     }
     for (let i = 1; i < rackOrigins.length; i++) {
       assert.equal(rackOrigins[i][0], rackOrigins[0][0], 'Rack faces align horizontally');
-      assert.equal(rackOrigins[i][1] - rackOrigins[i-1][1], 120, 'Rack faces stack edge-to-edge');
+      assert.equal(rackOrigins[i][1] - rackOrigins[i-1][1], 40, 'Rack faces stack edge-to-edge');
     }
     const signature = s => new updateSymbol(s).active_points().map(([x,y,p]) => [x,y,p.number,p.name]);
     const saved = io.to_dsn({...drawing, sheets:[sheet]}, true, true).tostring();
@@ -239,4 +244,91 @@ test('actual editor placement preserves rack anchors, socket wiring, rotations a
     const references = [source.text.find(t=>t.description==='Ref').value,target.text.find(t=>t.description==='Ref').value];
     assert.ok(Object.values(netlist.nets).some(net => references.every(ref => net.some(n => n.reference === ref && n.pin === '1'))), 'A cable connects exactly the two intended socket terminals');
   `);
+});
+
+test('all network devices are about 30 percent size and fit on one A4 page at native scale', async () => {
+  for (const record of result.records) {
+    assert.equal(record.layout.scale, 0.3);
+    for (const [size, original] of [
+      [record.width, record.layout.sourceWidth],
+      [record.height, record.layout.sourceHeight],
+    ]) {
+      assert.ok(
+        size / original >= 0.3 && size / original <= 0.36,
+        record.device.id + ': compact body size',
+      );
+    }
+  }
+  const proof = await layoutProofPage(
+    result.records,
+    result.records.map((record) => record.device.id),
+  );
+  assert.equal(proof.placements.length, recipe.devices.length);
+  assert.equal(proof.placements.length, 47);
+  assert.ok(proof.placements.every((placement) => placement.width < 450));
+});
+
+test('compact network panels retain readable fonts and uniform port-bank gaps', () => {
+  for (const record of result.records) {
+    const doc = new DOMParser().parseFromString(record.xml, 'text/xml');
+    const heights = Array.from(doc.getElementsByTagName('FONT')).map((f) =>
+      Number(f.getElementsByTagName('HEIGHT')[0].textContent),
+    );
+    assert.ok(
+      heights.every((height) => height >= 5),
+      record.device.id + ': labels must remain readable after compacting',
+    );
+    assert.ok(
+      Math.max(...heights) >= 10,
+      record.device.id + ': prominent device title',
+    );
+    for (const kind of ['rj45', 'sfp']) {
+      const ports = record.ports.filter((p) => p.kind === kind);
+      for (const y of new Set(ports.map((p) => p.y))) {
+        const row = ports.filter((p) => p.y === y).sort((a, b) => a.x - b.x);
+        if (row.length < 2) continue;
+        const pitch = row[1].x - row[0].x;
+        assert.ok(pitch >= 2 && pitch % 2 === 0);
+        for (let i = 2; i < row.length; i++)
+          assert.equal(
+            row[i].x - row[i - 1].x,
+            pitch,
+            record.device.id + ': consistent adjacent port spacing',
+          );
+      }
+    }
+  }
+  for (const id of ['desktop-firewall-6', 'rack-firewall-6-2sfp']) {
+    const ports = result.records.find((r) => r.device.id === id).ports;
+    const wan1 = ports.find((p) => p.name === 'WAN1'),
+      wan2 = ports.find((p) => p.name === 'WAN2'),
+      lan1 = ports.find((p) => p.name === 'LAN1');
+    assert.equal(
+      wan2.x - wan1.x,
+      lan1.x - wan2.x,
+      id + ': WAN/LAN boundary must not collapse',
+    );
+    assert.equal(wan2.x - wan1.x, 4, id + ': leave space for WAN/LAN labels');
+  }
+});
+
+test('network faceplate labels render as complete single lines in the native renderer', async () => {
+  const api = await layoutRuntime();
+  for (const record of result.records) {
+    const drawing = await recordDrawing(api, record);
+    const svg = new DOMParser().parseFromString(
+      api.renderCircuit(drawing.sheets[0]),
+      'image/svg+xml',
+    );
+    const visible = Array.from(svg.getElementsByTagName('text')).map(
+      (node) => node.textContent,
+    );
+    const xml = new DOMParser().parseFromString(record.xml, 'text/xml');
+    for (const note of Array.from(xml.getElementsByTagName('NOTE_TEXT'))) {
+      assert.ok(
+        visible.includes(note.textContent),
+        record.device.id + ': label wraps or clips: ' + note.textContent,
+      );
+    }
+  }
 });
