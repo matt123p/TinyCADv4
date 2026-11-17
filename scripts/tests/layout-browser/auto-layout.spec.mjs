@@ -225,7 +225,10 @@ test('saving and reopening a layout retains its native wire and label geometry',
   await openDrawing(page); await openDialog(page); await runLayout(page);
   const laidOut = await snapshot(page);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect.poll(() => page.evaluate(() => window.savedLayout || '')).toContain('<TinyCADSheets>');
+  await expect.poll(() => page.evaluate(() => {
+    const saved = window.savedLayout;
+    return typeof saved === 'string' ? saved : saved ? new TextDecoder().decode(saved) : '';
+  })).toContain('<TinyCADSheets>');
   await page.evaluate(() => {
     const xml = window.savedLayout;
     window.showOpenFilePicker = async () => [{ name: 'Reopened.dsn', getFile: async () => new File([xml], 'Reopened.dsn') }];

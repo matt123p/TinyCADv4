@@ -8,6 +8,12 @@ interface ElectronLibraryLoadError {
 declare global {
     interface Window {
         electronAPI: {
+            onlineLibraryRequest: (resource: string) => Promise<{status: number; statusText: string; contentType: string; body: string}>;
+            chatSecret: (operation: string, value?: { provider: string; endpoint: string; key: string }) => Promise<{ result?: { secure?: boolean; provider?: string; endpoint?: string; key?: string }; error?: string }>;
+            chatgptAccount: (operation: string, args?: Record<string, unknown>) => Promise<{result?: any; error?: {message: string; code?: string}}>;
+            chatgptRequest: (request: {id: string; body: unknown}) => Promise<{streamed?: boolean; error?: {message: string; code?: string}}>;
+            cancelChatGPTRequest: (id: string) => void;
+            onChatGPTStream: (callback: (event: {id: string; type: string; text?: string; status?: number}) => void) => () => void;
             onMenuCommand: (callback: (command: string) => void) => () => void;
             onMenuCommandWithData: (callback: (command: string, data: any) => void) => () => void;
             // Context menu
@@ -19,16 +25,26 @@ declare global {
             close: () => void;
             setTitle: (title: string) => void;
 
+            startSimulation: (request: import('./simulation/contracts').EngineRequest) => Promise<void>;
+            stopSimulation: (runId: string) => void;
+            onSimulation: (callback: (runId: string, event: import('./simulation/contracts').EngineEvent) => void) => () => void;
             // Files
             loadFile: (file?: { name: string, id: string }) => void;
             saveFile: (data: {
                 name: string;
                 id: FileIdType | string;
                 folderId: FileIdType | string;
-                content: string
+                content: string | Uint8Array
             }) => void;
 
+            // Bundled examples
+            exampleCatalog: () => Promise<unknown>;
+            readExampleResource: (path: string) => Promise<Uint8Array>;
+
             // Libraries
+            bundledLibraryCatalog: () => Promise<unknown>;
+            readBundledLibrary: (id: string) => Promise<Uint8Array>;
+            bundledLibrarySelection: (ids?: string[]) => Promise<unknown>;
             loadLibrary: (file?: { name?: string, id?: string, silent?: boolean, folderId?: string | null }) => void;
             saveLibrary: (data: {
                 name: string;
@@ -41,11 +57,12 @@ declare global {
                 libraries: { name: string, id: string, folderId?: string | null }[];
                 libraryFolders: { id: string, name: string }[];
             }) => void;
+            setViewMenuState: (state: { hasExampleExplanation: boolean; exampleExplanationVisible: boolean; simulationPanelVisible: boolean }) => void;
             setMenuMode: (mode: boolean) => void;
             setMenuTranslations: (translations: Record<string, string>) => void;
 
             // Callbacks
-            fileLoaded: (callback: (data: { content: string, name: string, id: string }) => void) => () => void;
+            fileLoaded: (callback: (data: { content: string | Uint8Array, name: string, id: string }) => void) => () => void;
             fileSaved: (callback: (data: { success: boolean, name: string, id: string }) => void) => () => void;
             recentFiles: (callback: (data: { name: string, id: string }[]) => void) => () => void;
             libraryLoaded: (callback: (data: { content: ArrayBuffer, name: string, id: string, lastModified?: Date | string }) => void) => () => void;
@@ -68,6 +85,7 @@ declare global {
             saveSvg: (data: { content: string, name: string }) => void;
             onPdfSaved: (callback: (data: { success: boolean, path?: string, error?: string, cancelled?: boolean }) => void) => () => void;
             openKicadImport: () => Promise<{ fileName: string, content: string } | null>;
+            openImageImport: () => Promise<{ fileName: string, mime: string, content: string } | null>;
 
             // Window management
             openNewWindow: (arg: string) => void;

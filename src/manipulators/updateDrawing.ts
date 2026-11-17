@@ -26,6 +26,7 @@ import { updateView } from './updateView';
 import { dsnView, FindResult } from '../model/dsnView';
 import { updateSymbol } from './updateSymbol';
 import { dsnBomEntry } from '../model/dsnBomEntry';
+import { readControl } from '../simulation/controls';
 
 // Constructor
 export class updateDrawing {
@@ -308,6 +309,10 @@ export class updateDrawing {
       let ax = netlist.symbols[i];
       let a = ax[1];
       let ref_a = a.text.find((t) => t.description === 'Ref')?.value;
+      if (drc_options.MissingSpice && !a.text.find(field => field.description === '$$SPICE')?.value?.trim()) {
+        r.push({ symbol: ref_a || 'Unnamed symbol', pin: '', text: 'No SPICE information',
+          a: [...a.point], id: a._id, sheet: ax[0] });
+      }
       let ref_ra = ref_a;
       const update_symbol_a = new updateSymbol(a);
       if (update_symbol_a.parts() > 1) {
@@ -367,6 +372,10 @@ export class updateDrawing {
 
       b = a;
     }
+
+    const instrumentSymbols = new Set(netlist.symbols
+      .filter(([, symbol]) => readControl(symbol)?.kind === 'instrument')
+      .map(([sheet, symbol]) => `${sheet}:${symbol._id}`));
 
     // Now check each net for problems
     for (let net in netlist.nets) {
@@ -461,7 +470,9 @@ export class updateDrawing {
         } else if (
           drc_options.UnConnected &&
           total === 1 &&
-          eprop.not_connecteds === 0
+          eprop.not_connecteds === 0 &&
+          !netlist.nets[net].every(node => node.symbol &&
+            instrumentSymbols.has(`${node.sheet}:${node.symbol._id}`))
         ) {
           this._addDrcError(drawing, r, 'Unconnected nets', netlist.nets[net]);
         }

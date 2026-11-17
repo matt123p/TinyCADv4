@@ -6,8 +6,9 @@ import {
 } from '../../state/dispatcher/AppDispatcher';
 import { docDrawing } from '../../state/undo/undo';
 
-export let apiServer =
-  window.location.hostname === 'localhost' ? '' : 'https://www.tinycad.net';
+import { apiServer } from '../../io/apiServer';
+import { fetchOnlineLibrary } from '../../io/onlineLibrary';
+export { apiServer } from '../../io/apiServer';
 
 export interface SearchLabel {
   labelId: number;
@@ -51,7 +52,7 @@ export function Search(key: string) {
       p.set('page', page.toString());
       p.set('orderBy', orderBy);
 
-      fetch(`${apiServer}/api/search/Search?` + p.toString(), {
+      fetchOnlineLibrary(`${apiServer}/api/search/Search?` + p.toString(), {
         credentials: 'include',
         mode: 'cors',
       })
@@ -93,7 +94,7 @@ export function FetchSymbolData(symbol: SearchSymbol) {
   let p = new URLSearchParams(window.location.search);
   p.set('id', symbol.symbolID.toString());
   p.set('name', symbol.name);
-  return fetch(`${apiServer}/api/search/copy?${p.toString()}`, {
+  return fetchOnlineLibrary(`${apiServer}/api/search/copy?${p.toString()}`, {
     credentials: 'include',
     method: 'GET',
     mode: 'cors',

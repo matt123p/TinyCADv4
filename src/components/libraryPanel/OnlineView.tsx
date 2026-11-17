@@ -109,12 +109,12 @@ const OnlineView: React.FunctionComponent<OnlineViewProps> = (
             key={n.nameID}
             className={mergeClasses(styles.item, isActive && styles.itemActive)}
             role="button"
-            aria-pressed="false"
+            aria-pressed={isActive}
             onClick={() => props.onSelect(n)}
             onDoubleClick={() => props.onSelected(n)}
           >
             <DocumentRegular className={styles.icon} />
-            <span className={styles.name}>{n.name}</span>
+            <span className={styles.name} title={n.name}>{n.name}</span>
             {n.description?.length > 0 && (
               <span className={mergeClasses(styles.description, isActive && styles.descriptionActive)}>
                 {n.description}

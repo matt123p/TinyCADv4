@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import fs, { readFile } from 'node:fs/promises';
 import { layoutRuntime } from '../lib/layout-runtime.mjs';
 
 const api = await layoutRuntime();
@@ -31,6 +31,30 @@ function assertTransistorExits(sheet) {
     }
   }
 }
+
+test('a label at an explicit junction can fit an incident wire without moving the branch', () => {
+  const input = sheet(
+    wire(1, [100, 100], [200, 100]),
+    wire(2, [100, 100], [100, 200]),
+    { NodeName: 'junction', _id: 3, point: [100, 100] },
+    label(4, [100, 100], 'BASE'),
+  );
+  const r = solve(input, { phases: ['net-labels'], lockedIds: [1, 2, 3] });
+  assert.ok(r.before.metrics.labelOverhangs > 0);
+  assert.equal(r.after.metrics.labelOverhangs, 0);
+  assert.ok(r.changes.every(c => c.id === 4));
+});
+
+test('a label on an unjoined crossing retains its exact electrical anchor', () => {
+  const input = sheet(
+    wire(1, [0, 100], [200, 100]),
+    wire(2, [100, 0], [100, 200]),
+    label(3, [100, 100], 'BASE'),
+  );
+  const r = solve(input, { phases: ['net-labels'] });
+  assert.deepEqual(r.sheet.items.find(i => i._id === 3).point, [100, 100]);
+  assert.equal(r.changes.length, 0);
+});
 
 for (const disturbance of ['low', 'medium', 'high']) {
   test(`the actual amplifier does not acquire transistor pin loops at ${disturbance} strength`, async () => {
@@ -232,6 +256,47 @@ function solve(s, o = {}) {
     );
   return result;
 }
+
+test('routing cannot shortcut across another wire endpoint, even when nativeWireJunctions is false', () => {
+  const input = sheet(
+    wire(1,[0,0],[0,40],[80,40],[80,0]),
+    wire(2,[40,0],[40,-40]),
+  );
+  const unsafe = {...input,items:[wire(1,[0,0],[80,0]),input.items[1]]};
+  assert.equal(api.connectivitySignature(input),api.connectivitySignature(unsafe),
+    'the literal netlist misses the unmarked T contact');
+  assert.equal(api.sameConnectivity(input,unsafe),false,
+    'native endpoint joining must detect the short');
+  const result = solve(input,{phases:['routing'],lockedIds:[2],nativeWireJunctions:false});
+  assert.ok(api.sameConnectivity(api.withNativeJunctions(input),api.withNativeJunctions(result.sheet),result.wireOrigins));
+});
+
+test('routing cannot pass through wired or unused zero-length socket pins', () => {
+  const board = symbol(1,200,100,{
+    width:80,height:40,showText:false,
+    ports:[[-70,-20,1],[-50,-20,1],[-30,-20,1]],
+  });
+  for (const p of board._symbol.outlines[0].active_points) p.pin.length=0;
+  const input = sheet(board,
+    wire(2,[130,80],[130,140],[210,140],[210,80]),
+    wire(3,[150,80],[150,180]),
+  );
+  const unsafe={...input,items:[board,wire(2,[130,80],[210,80]),input.items[2]]};
+  assert.equal(api.connectivitySignature(input),api.connectivitySignature(unsafe));
+  assert.equal(api.sameConnectivity(input,unsafe),false,
+    'the shortcut touches the control socket and the spare socket');
+  for (const nativeWireJunctions of [undefined,false,true]) {
+    const result=solve(input,{phases:['routing'],lockedIds:[1,3],nativeWireJunctions});
+    assert.ok(api.sameConnectivity(api.withNativeJunctions(input),api.withNativeJunctions(result.sheet),result.wireOrigins));
+  }
+});
+
+test('an existing unmarked T contact is preserved as part of the native baseline', () => {
+  const input=sheet(wire(1,[0,0],[80,0]),wire(2,[40,0],[40,-40]));
+  const moved=sheet(input.items[0],wire(2,[60,0],[60,-40]));
+  assert.ok(api.sameConnectivity(input,moved),'the same two wires remain joined after native cleanup');
+  solve(input,{phases:['routing'],nativeWireJunctions:true});
+});
 
 test('symbol labels avoid all four pin sides and preserve hidden fields', () => {
   const s = symbol(1, 100, 100, {
@@ -514,6 +579,35 @@ test('power keep-outs include the full rotated ground artwork', () => {
   }
 });
 
+test('simulation drawings preserve connectivity and simulation metadata after layout and save/reopen', async () => {
+  for (const id of ['voltage-divider', 'rc-charging', 'rc-low-pass']) {
+    const drawing = await api.decodeDrawing(
+      await fs.readFile('examples/simulation/' + id + '.dzn'),
+    );
+    const r = solve(drawing.sheets[0]);
+    const updated = {
+      ...drawing,
+      sheets: [r.sheet, ...drawing.sheets.slice(1)],
+    };
+    const reopened = await api.decodeDrawing(
+      await api.encodeDrawing(updated, 'zip-v1'),
+    );
+    const aligned = {
+      ...reopened.sheets[0],
+      items: reopened.sheets[0].items.map((i, j) => ({
+        ...i,
+        _id: r.sheet.items[j]._id,
+      })),
+    };
+    assert.equal(aligned.items.length, r.sheet.items.length);
+    assert.ok(api.sameConnectivity(r.sheet, aligned), id + ' save/reopen');
+    assert.deepEqual(
+      reopened.sheets.slice(1).map((s) => s.simulation),
+      drawing.sheets.slice(1).map((s) => s.simulation),
+    );
+  }
+});
+
 test('regular grouping cannot move a locked or excluded component or its stubs', () => {
   const input = sheet(
     symbol(1, 100, 100, { showText: false }),
@@ -606,6 +700,34 @@ test('visible body bounds and compact text placement follow rotation, mirroring 
         fields[1].x2,
         'left-side fields align towards body',
       );
+  }
+});
+
+test('junction artwork follows its wire under every symbol rotation, mirror and scale', () => {
+  for (let rotation = 0; rotation < 8; rotation++) {
+    const base = symbol(1, 200, 200, { rotation, showText: false });
+    const s = api.refresh({
+      ...base,
+      scale_x: 2,
+      scale_y: 3,
+      _symbol: {
+        ...base._symbol,
+        outlines: [
+          {
+            ...base._symbol.outlines[0],
+            items: [
+              wire(900, [-30, -10], [-10, -10]),
+              { NodeName: 'junction', _id: 901, point: [-10, -10] },
+            ],
+          },
+        ],
+      },
+    });
+    const svg = api.renderCircuit(sheet(s));
+    const end = /<path d="M[^L]+L\s*([-\d.]+) ([-\d.]+)/.exec(svg);
+    const dot = /<circle cx="([-\d.]+)" cy="([-\d.]+)" r="5"/.exec(svg);
+    assert.ok(end && dot, 'rendered wire and dot for rotation ' + rotation);
+    assert.deepEqual(dot.slice(1).map(Number), end.slice(1).map(Number));
   }
 });
 
@@ -915,6 +1037,57 @@ test('related pin labels form a common column and fan out only when their text n
   }
 });
 
+test('aligned label fan-out reserves intervening unlabelled ground rows on either face', () => {
+  for (const right of [false, true]) {
+    const s = symbol(1, 180, 180, {
+      height: 60,
+      showText: false,
+      ports: [0, 10, 20, 30].map((y) => [
+        right ? 0 : -40,
+        y - 40,
+        right ? 2 : 0,
+      ]),
+    });
+    const ps = api.pins(s);
+    const endX = right ? 260 : 60;
+    const ground = api.refresh({
+      ...font,
+      NodeName: 'power',
+      _id: 9,
+      point: [endX, ps[1].p[1]],
+      which: 4,
+      rotation: 0,
+      text: '0',
+      textData: null,
+      _magnetic: null,
+      _no_show: false,
+    });
+    const input = sheet(
+      s,
+      ...ps.map((p, i) => wire(2 + i, p.p, [endX, p.p[1]])),
+      ...[0, 2, 3].map((index, i) =>
+        label(6 + i, [right ? 210 : 90, ps[index].p[1]], i ? 'VCC' : 'CLK'),
+      ),
+      ground,
+    );
+    const r = solve(input, { phases: ['net-labels'], lockedIds: [1, 3, 9] });
+    assert.ok(r.before.metrics.textCollisions > 0);
+    assert.equal(r.after.metrics.textCollisions, 0);
+    assert.equal(r.after.metrics.labelAlignment, 0);
+    assert.equal(r.after.metrics.labelOverhangs, 0);
+    assert.equal(r.after.metrics.crossings, 0);
+    assert.equal(r.after.metrics.pinExitViolations, 0);
+    for (const id of [1, 3, 9])
+      assert.strictEqual(
+        r.sheet.items.find((i) => i._id === id),
+        input.items.find((i) => i._id === id),
+      );
+    const group = r.sheet.items.filter((i) => i.NodeName === 'label');
+    assert.ok(group[0].point[1] < ps[1].p[1]);
+    assert.ok(group[1].point[1] > ps[1].p[1]);
+    assert.ok(group[2].point[1] > group[1].point[1]);
+  }
+});
 function backtrackFixture(transform = p => p) {
   // The outer route is constrained by obstacles; only its local down/right/up
   // excursion is redundant. TinyCAD stores each leg as an individual item.

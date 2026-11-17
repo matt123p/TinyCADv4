@@ -143,6 +143,8 @@ function loadTcLibImplementation(
 }
 
 export function saveTcLibrary(library: tclib): Promise<ArrayBuffer> {
+  if (library.readOnly)
+    return Promise.reject(new Error('Standard libraries are read-only.'));
   return getSql().then(() => saveTcLibImplementation(library));
 }
 

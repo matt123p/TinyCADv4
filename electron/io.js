@@ -1,3 +1,4 @@
+import { isDrawingFile, drawingFileName, isCompressedDrawing } from '../shared/drawingFiles.js';
 import { dialog } from "electron";
 import fs from "fs";
 import path from "path";
@@ -16,7 +17,7 @@ export function loadFile(mainWindow, file, isLibraryMode, openNewWindow) {
     else {
         dialog.showOpenDialog({
             filters: [
-                { name: 'TinyCAD Drawings', extensions: ['dsn'] },
+                { name: 'TinyCAD Drawings', extensions: ['dsn', 'dzn'] },
                 { name: 'TinyCAD Libraries', extensions: ['tclib'] }
             ],
             properties: ['openFile']
@@ -31,7 +32,7 @@ export function loadFile(mainWindow, file, isLibraryMode, openNewWindow) {
 
 function processLoadFile(mainWindow, filePath, isLibraryMode, openNewWindow) {
     const isLib = filePath.toLowerCase().endsWith('.tclib');
-    const isDsn = filePath.toLowerCase().endsWith('.dsn');
+    const isDsn = isDrawingFile(filePath);
 
     if (isLib) {
         // Libraries always open in new instance
@@ -50,7 +51,7 @@ function processLoadFile(mainWindow, filePath, isLibraryMode, openNewWindow) {
 }
 
 function readFileInternal(mainWindow, currentFilePath) {
-    fs.readFile(currentFilePath, 'utf8', (err, data) => {
+    fs.readFile(currentFilePath, (err, data) => {
         if (!err) {
             addRecentFile(mainWindow, currentFilePath);
             mainWindow.webContents.send('file-loaded', { name: path.basename(currentFilePath), id: currentFilePath, content: data });
@@ -63,13 +64,16 @@ function readFileInternal(mainWindow, currentFilePath) {
 }
 
 export function saveFile(mainWindow, data) {
-    if (data.id) {
+    const compressed = isCompressedDrawing(data.content);
+    const name = drawingFileName(data.name, compressed);
+    const folder = data.id ? path.dirname(data.id) : typeof data.folderId === 'string' ? (isDrawingFile(data.folderId) ? path.dirname(data.folderId) : data.folderId) : '';
+    if (data.id && path.basename(data.id) === name) {
         saveFileInternal(mainWindow, data.id, data.content);
     }
     else {
         dialog.showSaveDialog({
-            filters: [{ name: 'TinyCAD drawings', extensions: ['dsn'] }],
-            defaultPath: !!data.folderId ? data.folderId : undefined,
+            filters: [{ name: compressed ? 'TinyCAD compressed drawings' : 'TinyCAD drawings', extensions: [compressed ? 'dzn' : 'dsn'] }],
+            defaultPath: path.join(folder, name),
         }).then(result => {
             if (!result.canceled && result.filePath) {
                 saveFileInternal(mainWindow, result.filePath, data.content);
@@ -82,12 +86,18 @@ export function saveFile(mainWindow, data) {
 }
 
 function saveFileInternal(mainWindow, currentFilePath, content) {
-    // Check for double extension
-    if (currentFilePath.toLowerCase().endsWith('.dsn.dsn')) {
-        currentFilePath = currentFilePath.slice(0, -4);
+    const normalizedPath = drawingFileName(currentFilePath, isCompressedDrawing(content));
+    if (normalizedPath !== currentFilePath && fs.existsSync(normalizedPath)) {
+        mainWindow.webContents.send('file-saved', { success: false });
+        dialog.showErrorBox('Drawing already exists', `Save again using ${normalizedPath} to confirm replacing that file.`);
+        return;
     }
+    currentFilePath = normalizedPath;
 
-    fs.writeFile(currentFilePath, content, 'utf8', err => {
+    const temporary = `${currentFilePath}.${process.pid}.${Date.now()}.tmp`;
+    fs.writeFile(temporary, content, { flag: 'wx', flush: true }, err => {
+        if (!err) { try { fs.renameSync(temporary, currentFilePath); } catch (e) { err = e; } }
+        if (err) { try { fs.unlinkSync(temporary); } catch {} }
         if (err) {
             mainWindow.webContents.send('file-saved', { success: false });
             error(mainWindow, err);

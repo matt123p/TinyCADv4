@@ -19,7 +19,11 @@ import {
 import { analysePrepared, analyseRouteMetrics, labelFits } from './analyse';
 import { labelPositions, labelSpanLength } from './labels';
 import { labelGroups } from './labelGroups';
-import { connectivitySignature, symbolConnections } from './connectivity';
+import {
+  connectivitySignature,
+  symbolConnections,
+  withNativeJunctions,
+} from './connectivity';
 import { pathReplacements, wireBundles, wirePaths, wireSpans } from './bundles';
 import {
   componentIslands,
@@ -126,10 +130,15 @@ class Search {
   }
   readonly electrical: string;
   readonly physical: string;
+  readonly nativeElectrical: string;
+  readonly nativePhysical: string;
   constructor(sheet: dsnSheet, public o: LayoutSettings) {
     this.sheet = sheet;
     this.electrical = connectivitySignature(sheet);
     this.physical = connectivitySignature(sheet, true);
+    const native = withNativeJunctions(sheet);
+    this.nativeElectrical = connectivitySignature(native);
+    this.nativePhysical = connectivitySignature(native, true);
     // Accepted proposals must preserve these partitions. Reuse their membership
     // for scoring; every geometry-changing acceptance still verifies connectivity.
     o.symbolConnections = symbolConnections(sheet, this.electrical);
@@ -211,6 +220,14 @@ class Search {
         connectivitySignature(candidate, true) !== this.physical)
     )
       return false;
+    if (!forceText) {
+      const native = withNativeJunctions(candidate);
+      if (
+        connectivitySignature(native) !== this.nativeElectrical ||
+        connectivitySignature(native, true) !== this.nativePhysical
+      )
+        return false;
+    }
     this.sheet = candidate;
     this.analysis = analysis;
     return true;
@@ -1189,7 +1206,60 @@ function alignLabelGroups(search: Search) {
       (originalGroup[0].pin.p[1] +
         originalGroup[originalGroup.length - 1].pin.p[1]) /
       2;
-    for (const fan of [false, true])
+    // Unlabelled connections (often a reset wired to ground) still occupy a
+    // row. Spreading only the labelled pins can put a label across that wire.
+    // Reserve their existing rows and spread each labelled block around them;
+    // the unlabelled routes and their terminals need not move.
+    const owner = symbols(search.sheet).find(
+      (s) => s._id === originalGroup[0].pin.id,
+    );
+    const fixedRows = pins(owner)
+      .filter(
+        (p) =>
+          p.direction[0] === sign &&
+          !originalGroup.some((c) => same(c.pin.p, p.p)) &&
+          wires(search.sheet).some((w) => wireContains(w, p.p)),
+      )
+      .map((p) => p.p[1])
+      .sort((a, b) => a - b);
+    const reserved = originalGroup.map((c) => c.pin.p[1]);
+    let feasible = true;
+    for (let k = 0; k <= fixedRows.length; k++) {
+      const lower = k ? fixedRows[k - 1] : -Infinity;
+      const upper = k < fixedRows.length ? fixedRows[k] : Infinity;
+      const indices = originalGroup
+        .map((c, i) => i)
+        .filter(
+          (i) =>
+            originalGroup[i].pin.p[1] > lower &&
+            originalGroup[i].pin.p[1] < upper,
+        );
+      if (indices.length && upper - lower < (indices.length + 1) * pitch) {
+        feasible = false;
+        break;
+      }
+      let previous = lower;
+      for (const i of indices) {
+        reserved[i] = Math.max(reserved[i], previous + pitch);
+        previous = reserved[i];
+      }
+      let next = upper;
+      for (const i of [...indices].reverse()) {
+        reserved[i] = Math.min(reserved[i], next - pitch);
+        next = reserved[i];
+      }
+    }
+    const rows = [
+      { fan: false, ys: originalGroup.map((c) => c.pin.p[1]) },
+      {
+        fan: true,
+        ys: originalGroup.map((c, i) =>
+          snap(middle + (i - (originalGroup.length - 1) / 2) * pitch, o.grid),
+        ),
+      },
+      ...(fixedRows.length && feasible ? [{ fan: true, ys: reserved }] : []),
+    ];
+    for (const { fan, ys } of rows)
       for (const extra of [0, o.grid * 2, o.corridor]) {
         if (!search.available()) return;
         const bendSpace = fan
@@ -1204,12 +1274,7 @@ function alignLabelGroups(search: Search) {
         const freeX = sign < 0 ? x - o.clearance : x + width + o.clearance;
         const replacements = new Map<number, DocItem>();
         for (const [i, c] of originalGroup.entries()) {
-          const y = fan
-            ? snap(
-                middle + (i - (originalGroup.length - 1) / 2) * pitch,
-                o.grid,
-              )
-            : c.pin.p[1];
+          const y = ys[i];
           const track =
             c.pin.p[0] +
             sign *
@@ -1278,7 +1343,22 @@ function placeNetLabels(search: Search) {
     const attached = wires(search.sheet).filter((w) =>
       wireContains(w, label.point),
     );
-    if (attached.length !== 1) continue; // Ambiguous crossing: keep its exact anchor.
+    if (attached.length !== 1) {
+      // An explicit junction makes these incident wires one physical net.
+      // Try each supporting span without moving wires or the junction itself.
+      // Unjoined crossings remain ambiguous and retain their exact anchor.
+      if (attached.length > 1 && search.sheet.items.some(
+        (i) => i.NodeName === T.Junction && same(i.point, label.point),
+      )) {
+        for (const span of spans.filter((s) =>
+          attached.some((w) => s.members.includes(w._id)),
+        )) {
+          for (const placed of labelPositions(label, span.a, span.b, o))
+            search.replace(new Map<number, DocItem>([[id, placed]]));
+        }
+      }
+      continue;
+    }
     const wire = attached[0];
     const crowded = search.analysis.diagnostics.some(
       (d) =>
@@ -1692,7 +1772,11 @@ export function optimiseLayout(
   };
   const preserved =
     connectivitySignature(result, false, wireOrigins) === search.electrical &&
-    connectivitySignature(result, true, wireOrigins) === search.physical;
+    connectivitySignature(result, true, wireOrigins) === search.physical &&
+    connectivitySignature(withNativeJunctions(result), false, wireOrigins) ===
+      search.nativeElectrical &&
+    connectivitySignature(withNativeJunctions(result), true, wireOrigins) ===
+      search.nativePhysical;
   if (!preserved)
     throw new Error('Layout invariant failed: connectivity changed');
   return {

@@ -191,8 +191,6 @@ export abstract class updateRectBase implements SimpleAdd, IsInside {
         return 'e-resize';
       case 8: // Mid bottom
         return 's-resize';
-      case -2: // Text icon
-        return 'text';
       // case 0:		// Middle
       default:
         // Anything else

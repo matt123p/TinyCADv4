@@ -24,9 +24,14 @@ export {
 export { wireBundles, wirePaths, wireSpans } from '../../src/layout/bundles';
 export { labelGroups } from '../../src/layout/labelGroups';
 export { blank } from '../../src/io/ioXml';
+export { decodeDrawing, encodeDrawing } from '../../src/io/dsnCodec';
+export { initialiseLayoutRuntime } from './headless';
 export { ioXML } from '../../src/io/ioXml';
 export { XMLBuilder } from '../../src/util/xmlbuilder';
 export { updateSymbol } from '../../src/manipulators/updateSymbol';
+export { NetlistGenerator } from '../../src/io/netlists/netlistGenerator';
+export { makeNetForDrawing } from '../../src/web-worker/netlist';
+export { withNativeJunctions } from '../../src/layout/connectivity';
 
 export function circuitBounds(sheet: dsnSheet) {
   return union(

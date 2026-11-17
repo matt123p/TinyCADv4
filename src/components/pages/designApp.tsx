@@ -1,4 +1,12 @@
-import React, { FunctionComponent, useState, useCallback, useEffect } from 'react';
+import React, {
+  FunctionComponent,
+  useState,
+  useCallback,
+  useEffect,
+  lazy,
+  Suspense,
+} from 'react';
+import { useDispatch } from 'react-redux';
 import { makeStyles, Button } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
 import { PanelLeftExpandRegular } from '@fluentui/react-icons';
@@ -9,13 +17,48 @@ import BomContainer from '../../state/containers/bomContainer';
 import SheetbarContainer from '../../state/containers/sheetbarContainer';
 import BottomPanelContainer from '../../state/containers/bottomPanelContainer';
 import { ResizeHandle } from '../panel/ResizeHandle';
+import { SimulationFailureDialog } from '../simulation/SimulationFailureDialog';
 import { Browser } from '../sheets/browser';
 import { tclibLibraryEntry } from '../../model/tclib';
 import { BrowserSheetData } from '../../model/dsnView';
+import type { StandardLibraryNavigation } from '../../state/actions/libraryActions';
+
+// Keep the entire chatbot dependency graph out of browser builds.
+const ChatPanel = process.env.TARGET_SYSTEM === 'electron'
+  ? lazy(() => import('../chat/ChatPanel').then((m) => ({ default: m.ChatPanel })))
+  : null;
+
+const SimulationSheet = lazy(() =>
+  import('../simulation/SimulationSheet').then((m) => ({
+    default: m.SimulationSheet,
+  })),
+);
+const ChartWorkspace = lazy(() =>
+  import('../simulation/ChartWorkspace').then((m) => ({
+    default: m.ChartWorkspace,
+  })),
+);
+const ExampleExplanationPanel = lazy(() =>
+  import('../examples/ExampleExplanationPanel').then((m) => ({
+    default: m.ExampleExplanationPanel,
+  })),
+);
+const InstrumentWindowHost = lazy(() =>
+  import('../simulation/InstrumentWindows').then((m) => ({
+    default: m.InstrumentWindowHost,
+  })),
+);
 
 // TODO: These styles seem common, maybe they should be in a common CSS or utility?
 // For now, mirroring what was seen in mainAppElectron.tsx
 const useStyles = makeStyles({
+  rightPanels: {
+    display: 'flex',
+    minWidth: 0,
+    minHeight: 0,
+    maxWidth: '60vw',
+    flexShrink: 0,
+  },
   toggleButton: {
     position: 'absolute',
     top: '8px',
@@ -27,6 +70,11 @@ const useStyles = makeStyles({
 });
 
 export interface DesignAppProps {
+  hasExampleExplanation?: boolean;
+  standardLibraryNavigation?: StandardLibraryNavigation;
+  simulationPanelActivated?: boolean;
+  selectedSpiceControl?: boolean;
+  simulationSheet: boolean;
   editSymbol: tclibLibraryEntry;
   selected_sheet: number;
   browserSheets: BrowserSheetData[];
@@ -68,19 +116,38 @@ function saveSidePanelWidth(width: number) {
 }
 
 export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    const show = () => dispatch({ type: 'simulation/panel', visible: true });
+    window.addEventListener('tinycad:show-charts', show);
+    return () => window.removeEventListener('tinycad:show-charts', show);
+  }, [dispatch]);
+  useEffect(() => {
+    if (props.simulationSheet || props.selectedSpiceControl)
+      dispatch({ type: 'simulation/panel', visible: true });
+  }, [dispatch, props.simulationSheet, props.selectedSpiceControl]);
   const styles = useStyles();
   const { t } = useTranslation();
+  const [chatOpen, setChatOpen] = useState(false);
+  const toggleChat = useCallback(() => setChatOpen(previous => !previous), []);
+  const closeChat = useCallback(() => setChatOpen(false), []);
   const [sidePanelVisible, setSidePanelVisible] = useState(true);
   const [sidePanelWidth, setSidePanelWidth] = useState(loadSidePanelWidth);
   const [sidePanelResizing, setSidePanelResizing] = useState(false);
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200);
+  const [simulationToolbarTarget, setSimulationToolbarTarget] =
+    useState<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (props.standardLibraryNavigation) setSidePanelVisible(true);
+  }, [props.standardLibraryNavigation]);
 
   const toggleSidePanel = useCallback(() => {
-    setSidePanelVisible(prev => !prev);
+    setSidePanelVisible((prev) => !prev);
   }, []);
 
   const handleSidePanelResize = useCallback((delta: number) => {
-    setSidePanelWidth(prev => {
+    setSidePanelWidth((prev) => {
       const next = Math.max(
         MIN_SIDE_PANEL_WIDTH,
         Math.min(MAX_SIDE_PANEL_WIDTH, prev + delta),
@@ -91,24 +158,32 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   }, []);
 
   const handleBottomPanelResize = useCallback((delta: number) => {
-    setBottomPanelHeight(prev => Math.max(100, Math.min(500, prev - delta)));
+    setBottomPanelHeight((prev) => Math.max(100, Math.min(500, prev - delta)));
   }, []);
 
   useEffect(() => {
     if (props.editSymbol) {
       setBottomPanelHeight(350);
+    } else if (props.selectedSpiceControl) {
+      setBottomPanelHeight(340);
     }
-  }, [props.editSymbol]);
+  }, [props.editSymbol, props.selectedSpiceControl]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (
-      event.key !== 'Escape' || event.defaultPrevented ||
-      !props.creating || props.dialogOpen
+      event.key !== 'Escape' ||
+      event.defaultPrevented ||
+      !props.creating ||
+      props.dialogOpen
     ) {
       return;
     }
     const target = event.target as HTMLElement;
-    if (target.closest('input, textarea, [contenteditable="true"], [role="dialog"], [role="menu"]')) {
+    if (
+      target.closest(
+        'input, textarea, [contenteditable="true"], [role="dialog"], [role="menu"]',
+      )
+    ) {
       return;
     }
     event.preventDefault();
@@ -122,10 +197,22 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       className="page-container"
       style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
     >
-      <ToolbarContainer />
+      <SimulationFailureDialog />
+      <ToolbarContainer
+        simulationToolbarRef={setSimulationToolbarTarget}
+        chatOpen={chatOpen}
+        onToggleChat={process.env.TARGET_SYSTEM === 'electron' ? toggleChat : undefined}
+      />
+      {process.env.TARGET_SYSTEM === 'electron' && ChatPanel && (
+        <Suspense fallback={null}>
+          <ChatPanel open={chatOpen} onClose={closeChat} />
+        </Suspense>
+      )}
       <div className="mid-container">
         <div
-          className={`side-panel-container${sidePanelVisible ? '' : ' side-panel-collapsed'}${sidePanelResizing ? ' side-panel-resizing' : ''}`}
+          className={`side-panel-container${
+            sidePanelVisible ? '' : ' side-panel-collapsed'
+          }${sidePanelResizing ? ' side-panel-resizing' : ''}`}
           style={sidePanelVisible ? { width: sidePanelWidth } : undefined}
         >
           {sidePanelVisible && (
@@ -152,16 +239,49 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               props.editSymbol ? 'circuit-container-es' : 'circuit-container'
             }
           >
-            {props.selected_sheet >= 0 ? <SheetContainer /> : null}
+            {props.selected_sheet >= 0 ? (
+              props.simulationSheet ? (
+                <Suspense fallback={null}>
+                  <SimulationSheet toolbarTarget={simulationToolbarTarget} />
+                </Suspense>
+              ) : (
+                <SheetContainer />
+              )
+            ) : null}
             {props.selected_sheet === -1 ? <BomContainer /> : null}
-            {props.selected_sheet < -1 ? <Browser url={props.browserSheets[-2 - props.selected_sheet].url} /> : null}
+            {props.selected_sheet < -1 ? (
+              <Browser
+                url={props.browserSheets[-2 - props.selected_sheet].url}
+              />
+            ) : null}
             <SheetbarContainer />
           </div>
-          <div className="bottom-panel-wrapper" style={{ height: bottomPanelHeight }}>
-            <ResizeHandle direction="vertical" onResize={handleBottomPanelResize} />
+          <div
+            className="bottom-panel-wrapper"
+            style={{ height: bottomPanelHeight }}
+          >
+            <ResizeHandle
+              direction="vertical"
+              onResize={handleBottomPanelResize}
+            />
             <BottomPanelContainer />
           </div>
         </div>
+        {!props.editSymbol && (props.simulationPanelActivated || props.hasExampleExplanation) && (
+          <div className={styles.rightPanels}>
+            {props.simulationPanelActivated && (
+              <Suspense fallback={null}>
+                <ChartWorkspace />
+                <InstrumentWindowHost />
+              </Suspense>
+            )}
+            {props.hasExampleExplanation && (
+              <Suspense fallback={null}>
+                <ExampleExplanationPanel />
+              </Suspense>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -29,6 +29,8 @@ export interface LayoutOptions {
   /** Omitted means all supported circuit items. An empty list selects nothing. */
   selectedIds?: number[];
   lockedIds?: number[];
+  /** @deprecated Endpoint/terminal contacts are always preserved, even when false. */
+  nativeWireJunctions?: boolean;
   grid?: number;
   clearance?: number;
   /** Separation between unrelated annotations, beyond literal collision avoidance. */

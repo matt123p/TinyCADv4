@@ -1,14 +1,15 @@
-import React, { Dispatch, useRef, useState } from 'react';
+import { tinycadUrl } from '../../io/apiServer';
+import { BundledLibraries } from './BundledLibraries';
+import { librarySymbolSelection } from '../../io/librarySymbols';
+import type { StandardLibraryNavigation } from '../../state/actions/libraryActions';
+import React, { Dispatch, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { loadLibraries, saveLibraryConfig } from '../../io/files';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../../model/tclib';
 import SymbolView from './SymbolView';
 import {
   actionSelectDialog,
-  actionSelectLibrarySymbol,
 } from '../../state/dispatcher/AppDispatcher';
-import { ioXML } from '../../io/ioXml';
-import { XMLBuilder } from '../../util/xmlbuilder';
 import LibraryView from './LibraryView';
 import {
   Input,
@@ -16,11 +17,13 @@ import {
   makeStyles,
   mergeClasses,
   tokens,
-  ToggleButton,
+  Tab,
+  TabList,
 } from '@fluentui/react-components';
 import {
   SearchRegular,
   GlobeRegular,
+  LibraryRegular,
   FolderRegular,
   PanelLeftContractRegular,
   DocumentAddRegular,
@@ -35,7 +38,6 @@ import {
   EditRegular,
   ReOrderDotsVerticalRegular,
 } from '@fluentui/react-icons';
-import { docDrawing } from '../../state/undo/undo';
 import OnlineView from './OnlineView';
 import { Search, SearchResult, SearchSymbol, SelectSymbol } from './Search';
 import { openCurrentAppUrl, openExternalUrl } from '../../util/navigation';
@@ -49,6 +51,11 @@ import {
   loadSymbolSortMode,
   saveSymbolSortMode,
 } from './sorting';
+import {
+  LibrarySource,
+  loadLibrarySource,
+  saveLibrarySource,
+} from './sourcePreference';
 
 const ROOT_LIBRARY_FOLDER_ID = '__root__';
 
@@ -85,16 +92,22 @@ const useStyles = makeStyles({
       paddingLeft: '32px',
     },
   },
-  sourceToggle: {
+  sourceTabs: {
     display: 'flex',
-    gap: '4px',
     backgroundColor: tokens.colorNeutralBackground3,
-    padding: '4px',
     borderRadius: '6px',
   },
-  toggleButton: {
+  sourceTab: {
     flex: 1,
-    minWidth: '0',
+    minWidth: 0,
+    padding: '6px 4px',
+    '& .fui-Tab__content': {
+      whiteSpace: 'normal',
+      overflowWrap: 'anywhere',
+      textAlign: 'center',
+      fontSize: '12px',
+      lineHeight: '16px',
+    },
   },
   content: {
     flex: 1,
@@ -249,6 +262,24 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground1,
     padding: '8px',
   },
+  symbolDetails: {
+    maxHeight: '112px',
+    overflowY: 'auto',
+    overflowWrap: 'anywhere',
+    marginBottom: '8px',
+  },
+  symbolPreviewName: {
+    fontSize: tokens.fontSizeBase300,
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground1,
+  },
+  symbolDescription: {
+    margin: '4px 0 0',
+    fontSize: tokens.fontSizeBase200,
+    lineHeight: tokens.lineHeightBase200,
+    color: tokens.colorNeutralForeground2,
+    whiteSpace: 'pre-wrap',
+  },
   symbolPreviewInner: {
     border: `1px solid ${tokens.colorNeutralStroke1}`,
     borderRadius: '6px',
@@ -275,6 +306,7 @@ const useStyles = makeStyles({
 });
 
 interface LibrariesPanelProps {
+  standardLibraryNavigation?: StandardLibraryNavigation;
   libraries: tclib[];
   config: UserConfig;
   dispatch: Dispatch<any>;
@@ -290,7 +322,7 @@ interface LibrariesPanelState {
   selectedId: string | null;
   selectedFolderId: string | null;
   hoveredFolderId: string | null;
-  online: boolean;
+  source: LibrarySource;
   searchResult: SearchResult | null;
   expandedFolders: Record<string, boolean>;
   expandedLibraries: Record<string, boolean>;
@@ -348,29 +380,17 @@ function areExpandedStatesEqual(
   return leftKeys.every((key) => left[key] === right[key]);
 }
 
-function selectSymbol(lib: tclib, name: tclibLibraryEntry) {
-  return (dispatch: Dispatch<any>, getState: { (): docDrawing }) => {
-    const symbol = lib.symbols.find((s) => s.SymbolId == name.SymbolID);
-    const io = new ioXML();
-    const xmlBuilder = new XMLBuilder();
-    xmlBuilder.fromText(symbol.Data);
-    const doc = io.from_dsn(xmlBuilder);
-    const items = doc.sheets.map((sheet) => sheet.items);
-    dispatch(actionSelectLibrarySymbol(name, items, null));
-  };
-}
-
 export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
   props: LibrariesPanelProps,
 ) => {
   const styles = useStyles();
   const { t } = useTranslation();
+  const sourceTabsId = useId();
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const searchExpansionSnapshotRef = useRef<SearchExpansionSnapshot | null>(null);
   const isElectron = process.env.TARGET_SYSTEM === 'electron';
-  const isFileSystem = process.env.TARGET_SYSTEM === 'filesystem';
   const canUseLibraryFolders = isElectron;
-  const [state, setState] = useState<LibrariesPanelState>({
+  const [state, setState] = useState<LibrariesPanelState>(() => ({
     findFilter: '',
     displaySymbol: null,
     displayName: null,
@@ -378,16 +398,28 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     selectedId: null,
     selectedFolderId: ROOT_LIBRARY_FOLDER_ID,
     hoveredFolderId: null,
-    online: true,
+    source: loadLibrarySource(),
     searchResult: null,
     expandedFolders: {},
     expandedLibraries: {},
     dragOverFolderId: null,
     draggedFolderId: null,
     sortMode: loadSymbolSortMode(),
-  });
+  }));
+  React.useEffect(() => {
+    saveLibrarySource(state.source);
+  }, [state.source]);
+  React.useEffect(() => {
+    const navigation = props.standardLibraryNavigation;
+    if (!navigation) return;
+    setState(prev => ({ ...prev, source: 'standard', findFilter: '', searchResult: null,
+      selectedId: null, selectedFolderId: ROOT_LIBRARY_FOLDER_ID,
+      displaySymbol: null, displayName: null, displaySearchSymbol: null,
+    }));
+  }, [props.standardLibraryNavigation]);
+
   const config = normalizeUserConfig(props.config);
-  const orderedLibraries = sortLibrariesByConfig(props.libraries, config);
+  const orderedLibraries = sortLibrariesByConfig(props.libraries.filter(lib => !lib.readOnly), config);
   const libraryEntriesById = new Map(
     config.libraries.map((library) => [`${library.id}`, library]),
   );
@@ -409,7 +441,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
   React.useEffect(() => {
     const shouldAutoExpandSearchMatches =
       canUseLibraryFolders &&
-      !state.online &&
+      state.source === 'personal' &&
       config.libraryFolders.length > 0 &&
       state.findFilter.length > 0;
 
@@ -491,7 +523,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     state.expandedFolders,
     state.expandedLibraries,
     state.findFilter,
-    state.online,
+    state.source,
   ]);
 
   React.useEffect(() => {
@@ -499,13 +531,16 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
   }, []);
 
   React.useEffect(() => {
-    if (state.selectedId && !state.online) {
+    if (state.selectedId && state.source !== 'online') {
       const lastColonIndex = state.selectedId.lastIndexOf(':');
       if (lastColonIndex > 0) {
         const fileId = state.selectedId.substring(0, lastColonIndex);
         const nameId = parseInt(state.selectedId.substring(lastColonIndex + 1));
 
         const lib = props.libraries.find((l) => l.fileId + '' === fileId);
+        if (!lib) {
+          setState(prev => ({ ...prev, selectedId: null, displaySymbol: null, displayName: null, displaySearchSymbol: null }));
+        }
         if (lib) {
           const nameEntry = lib.names.find((n) => n.NameID === nameId);
           if (nameEntry) {
@@ -524,11 +559,11 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
         }
       }
     }
-  }, [props.libraries, state.selectedId, state.online]);
+  }, [props.libraries, state.selectedId, state.source]);
 
   React.useEffect(() => {
     const handleDocumentMouseDown = (event: MouseEvent) => {
-      if (!canUseLibraryFolders || state.online || !state.selectedFolderId) {
+      if (!canUseLibraryFolders || state.source !== 'personal' || !state.selectedFolderId) {
         return;
       }
 
@@ -552,17 +587,15 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     return () => {
       document.removeEventListener('mousedown', handleDocumentMouseDown);
     };
-  }, [canUseLibraryFolders, state.online, state.selectedFolderId]);
+  }, [canUseLibraryFolders, state.source, state.selectedFolderId]);
 
   const handleSearchChange = (value: string) => {
     const filterValue = value.toLocaleLowerCase();
     setState((prev) => ({ ...prev, findFilter: filterValue }));
-    if (state.online) {
+    if (state.source === 'online') {
       Search(value).then((results) =>
-        setState((prev) => ({
-          ...prev,
-          searchResult: results,
-        })),
+        setState((prev) => prev.source === 'online' && prev.findFilter === filterValue
+          ? { ...prev, searchResult: results } : prev),
       );
     }
   };
@@ -600,31 +633,22 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     }
   };
 
-  const handleSourceChange = (online: boolean) => {
-    const resetSelection: Partial<LibrariesPanelState> = {
+  const handleSourceChange = (source: LibrarySource) => {
+    if (source === state.source) return;
+    setState(prev => ({
+      ...prev,
+      source,
+      findFilter: '',
       displaySymbol: null,
       displayName: null,
       displaySearchSymbol: null,
       selectedId: null,
-    };
-
-    if (online) {
-      Search(state.findFilter).then((results) =>
-        setState((prev) => ({
-          ...prev,
-          ...resetSelection,
-          online: true,
-          searchResult: results,
-        })),
-      );
-    } else {
-      setState((prev) => ({
-        ...prev,
-        ...resetSelection,
-        online: false,
-        searchResult: null,
-      }));
-    }
+      selectedFolderId: ROOT_LIBRARY_FOLDER_ID,
+      hoveredFolderId: null,
+      dragOverFolderId: null,
+      draggedFolderId: null,
+      searchResult: null,
+    }));
   };
 
   const persistConfig = (nextConfig: UserConfig) => {
@@ -837,16 +861,17 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     }));
   };
 
-  const renderLibraryList = (libraries: tclib[]) =>
+  const renderLibraryList = (libraries: tclib[], showHeader = true) =>
     libraries.map((lib) => (
       <LibraryView
         lib={lib}
+        showHeader={showHeader}
         key={lib.fileId + ''}
         selectedId={state.selectedId}
         findFilter={state.findFilter}
         sortMode={state.sortMode}
-        open={isLibraryOpen(state.expandedLibraries, `${lib.fileId}`)}
-        draggable={canUseLibraryFolders}
+        open={!!state.findFilter || isLibraryOpen(state.expandedLibraries, `${lib.fileId}`)}
+        draggable={canUseLibraryFolders && !lib.readOnly}
         onLibraryClick={(selectedLibrary: tclib) => {
           const selectedFolderId = getLibraryFolderId(`${selectedLibrary.fileId}`);
           setState((prev) => ({
@@ -894,7 +919,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
           }));
         }}
         onSelected={(selectedLibrary: tclib, name: tclibLibraryEntry) => {
-          props.dispatch(selectSymbol(selectedLibrary, name));
+          props.dispatch(librarySymbolSelection(selectedLibrary, name));
         }}
       />
     ));
@@ -907,7 +932,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
             <SearchRegular className={styles.searchIcon} />
             <Input
               className={styles.searchInput}
-              placeholder={state.online ? t('library.searchOnline') : t('library.searchLibraries')}
+              placeholder={state.source === 'online' ? t('library.searchOnline') : t('library.searchLibraries')}
               value={state.findFilter}
               onChange={(e, data) => handleSearchChange(data.value)}
             />
@@ -921,34 +946,31 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
             />
           )}
         </div>
-        {!isFileSystem && (
-          <div className={styles.sourceToggle}>
-            <ToggleButton
-              className={styles.toggleButton}
-              checked={state.online}
-              onClick={() => handleSourceChange(true)}
-              icon={<GlobeRegular />}
-              size="small"
-              appearance={state.online ? 'primary' : 'subtle'}
-            >
-              {t('library.online')}
-            </ToggleButton>
-            <ToggleButton
-              className={styles.toggleButton}
-              checked={!state.online}
-              onClick={() => handleSourceChange(false)}
-              icon={<FolderRegular />}
-              size="small"
-              appearance={!state.online ? 'primary' : 'subtle'}
-            >
-              {t('library.myLibraries')}
-            </ToggleButton>
-          </div>
-        )}
+        <TabList className={styles.sourceTabs} size="small" appearance="subtle"
+          selectTabOnFocus
+          aria-label={t('library.libraries')} selectedValue={state.source}
+          onTabSelect={(_, data) => handleSourceChange(data.value as LibrarySource)}>
+          <Tab className={styles.sourceTab} icon={<LibraryRegular />} value="standard" id={`${sourceTabsId}-standard`}
+            aria-controls={`${sourceTabsId}-panel`}>
+            {t('library.bundledTab')}
+          </Tab>
+          <Tab className={styles.sourceTab} icon={<GlobeRegular />} value="online" id={`${sourceTabsId}-online`}
+            aria-controls={`${sourceTabsId}-panel`}>
+            {t('library.online')}
+          </Tab>
+          <Tab className={styles.sourceTab} icon={<FolderRegular />} value="personal" id={`${sourceTabsId}-personal`}
+            aria-controls={`${sourceTabsId}-panel`}>
+            {t('library.myLibraries')}
+          </Tab>
+        </TabList>
       </div>
 
-      <div className={styles.content}>
-        {!state.online && !isFileSystem && (
+      <div className={styles.content} role="tabpanel" id={`${sourceTabsId}-panel`}
+        aria-labelledby={`${sourceTabsId}-${state.source}`}>
+        <BundledLibraries visible={state.source === 'standard'} renderLibraries={libraries => renderLibraryList(libraries, false)}
+          toolbarActions={<Button className={styles.addButton} appearance="subtle" size="small"
+            icon={getSortIcon()} title={getSortTitle()} onClick={handleSortModeChange} />} />
+        {state.source === 'personal' && (
           <>
             <div className={styles.libraryHeader}>
               <span className={styles.libraryTitle}>{t('library.libraries')}</span>
@@ -1060,7 +1082,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
               </div>
             </div>
             <div className={styles.treeContainer} ref={treeContainerRef}>
-              {props.libraries.length === 0 && config.libraryFolders.length === 0 ? (
+              {orderedLibraries.length === 0 && config.libraryFolders.length === 0 ? (
                 <div className={styles.emptyState}>
                   {isElectron ? (
                     <>
@@ -1073,7 +1095,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
                   ) : (
                     <span className={styles.emptyStateText}>
                       <a
-                        href="https://www.tinycad.net/Online/Libraries"
+                        href={tinycadUrl('/Online/Libraries')}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ color: tokens.colorBrandForegroundLink }}
@@ -1283,7 +1305,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
             </div>
           </>
         )}
-        {!!((state.online || isFileSystem) && state.searchResult) && (
+        {!!(state.source === 'online' && state.searchResult) && (
           <div className={styles.treeContainer}>
             <OnlineView
               searchResult={state.searchResult}
@@ -1302,7 +1324,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
             />
           </div>
         )}
-        {(state.online || isFileSystem) && !state.searchResult && (
+        {state.source === 'online' && !state.searchResult && (
           <div className={styles.emptyState}>
             <GlobeRegular style={{ fontSize: '32px' }} />
             <span className={styles.emptyStateText}>
@@ -1314,6 +1336,14 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
       </div>
 
       <div className={styles.symbolPreview}>
+        {state.displayName && (
+          <div className={styles.symbolDetails} tabIndex={0}>
+            <div className={styles.symbolPreviewName}>{state.displayName.Name}</div>
+            {state.displayName.Description && (
+              <p className={styles.symbolDescription}>{state.displayName.Description}</p>
+            )}
+          </div>
+        )}
         <div className={styles.symbolPreviewInner}>
           <SymbolView
             width={160}

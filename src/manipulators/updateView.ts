@@ -66,10 +66,11 @@ import { updatePin } from './updatePin';
 import { updateLabel } from './updateLabel';
 import { updateBusLabel } from './updateBusLabel';
 import { dsnBomEntry } from '../model/dsnBomEntry';
-import { tclibLibraryEntry } from '../model/tclib';
+import { tclibLibraryEntry, TextDisplayMethod } from '../model/tclib';
 import { ReplaceSymbolScope } from '../state/actions/symbolActions';
 import md5 from 'md5';
 import { store } from '../startup';
+import { imageClip, imageClipFields, imagePixelSize, setImageProperties } from '../model/imageProperties';
 import {
   actionMenuSetContextMenu,
   actionSelectDialog,
@@ -749,6 +750,17 @@ export class updateView {
   }
 
   click_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
+    if (((view.menu_command === 'add_spice_control' || view.menu_command === 'add_library_symbol') && view.add?.NodeName === DocItemTypes.Symbol)
+      || (view.menu_command === 'add_spice_ground' && view.add?.NodeName === DocItemTypes.Power)) {
+      const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+      const magnetic = snap.snap_magnetic(p, false, sheet.items);
+      if (magnetic?.wire) {
+        const split = this.split_magnetic_wire_if_needed(magnetic, sheet.items);
+        sheet = { ...sheet, items: split.items };
+      }
+      const moved = this.mousemove_add(view, sheet, p).view;
+      return this.complete_add(moved, sheet);
+    }
     const updater_add = updateSimpleAddFactory(view.add);
     if (updater_add instanceof updateWire) updater_add.wireMode = view.wireMode ?? '90';
     const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
@@ -834,6 +846,22 @@ export class updateView {
   }
 
   mousemove_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
+    if (view.menu_command === 'add_spice_ground' && view.add?.NodeName === DocItemTypes.Power) {
+      const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+      const point = snap.snap_magnetic(p, false, sheet.items)?.point ?? snap.snap(p);
+      const add = new updatePower({ ...view.add, point, _no_show: false, _magnetic: null }).post_construction();
+      return { sheet, view: { ...view, add, display_add: true, cursor: 'copy' } };
+    }
+    if ((view.menu_command === 'add_spice_control' || view.menu_command === 'add_library_symbol') && view.add?.NodeName === DocItemTypes.Symbol) {
+      const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
+      const target = snap.snap_magnetic(p, false, sheet.items)?.point ?? snap.snap(p);
+      const pin = new updateSymbol(view.add).active_points().find(p => p[2].number === '1');
+      const point: Coordinate = pin
+        ? [target[0] - (pin[0] - view.add.point[0]), target[1] - (pin[1] - view.add.point[1])]
+        : target;
+      const add = new updateSymbol({ ...view.add, point, _active_points: null }).post_construction();
+      return { sheet, view: { ...view, add, display_add: true, cursor: 'copy' } };
+    }
     const update_add = updateMoveAddFactory(view.add);
     if (update_add instanceof updateWire) update_add.wireMode = view.wireMode ?? '90';
     const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
@@ -2294,6 +2322,15 @@ export class updateView {
   // between this object and the target object then the target
   // is set to null
   copyStyleObject(from: DocItem, to: MergedStyle) {
+    if (from?.NodeName === DocItemTypes.Image) {
+      to.image = true;
+      to.fixed_aspect = StyleSet(to.fixed_aspect, from.fixed_aspect ?? false);
+      const clip = imageClip(from);
+      for (const key of imageClipFields) to[key] = StyleSet(to[key], clip[key]);
+      const [width, height] = imagePixelSize(from.imageData);
+      to.image_width = Math.min(to.image_width ?? width, width);
+      to.image_height = Math.min(to.image_height ?? height, height);
+    }
     if (isStroked(from)) {
       to.line = true;
       to.stroked = StyleSet(to.stroked, from.stroked);
@@ -2336,6 +2373,10 @@ export class updateView {
         return e._id === id;
       });
       let obj = a;
+
+      if (a?.NodeName === DocItemTypes.Image && style.image) {
+        a = setImageProperties(a, style);
+      }
 
       if (isStroked(a) && style.line) {
         a = update(a, {
@@ -2389,6 +2430,8 @@ export class updateView {
         items: { $set: items },
       });
     }
+
+    if (style.image) return { sheet, view: this._updateSelection(view, sheet, view._selected_handle, view._selected_array) };
 
     // Update the selection too
     // We want to update the properties in the style but keep the flags if they are already set
@@ -2968,21 +3011,22 @@ export class updateView {
         display: name.ShowRef,
       },
       ...name.Attributes.filter(
-        (attribute) =>
-          attribute.AttName !== 'Reference' &&
-          attribute.AttName.indexOf('$$') !== 0,
+        (attribute) => attribute.AttName !== 'Reference',
       ).map((attribute) => ({
         description: attribute.AttName,
         value: attribute.AttValue,
-        display: attribute.ShowAtt,
+        display: attribute.AttName.startsWith('$$')
+          ? TextDisplayMethod.NeverShow
+          : attribute.ShowAtt,
       })),
     ];
 
     const text = fieldDefinitions.map((field) => {
       const existingField = existingFields.get(field.description);
-      const value = keepFieldValues && existingField
-        ? existingField.value
-        : field.value;
+      const value =
+        keepFieldValues && existingField && !field.description.startsWith('$$')
+          ? existingField.value
+          : field.value;
 
       return {
         description: field.description,
@@ -3238,6 +3282,12 @@ export class updateView {
     return sheet;
   }
 
+  setSpiceProperty(view: dsnView, sheet: dsnSheet, name: string, value: string): dsnSheet {
+    const symbol = this.getSelectedSymbol(view, sheet);
+    if (!symbol) return sheet;
+    return this.updateObject(sheet, symbol, new updateSymbol(symbol).setSpiceProperty(name, value));
+  }
+
   showValue(
     view: dsnView,
     sheet: dsnSheet,
@@ -3418,6 +3468,17 @@ export class updateView {
     return { view: view, sheet: sheet };
   }
 
+  beginLibrarySymbolPlacement(view: dsnView, sheet: dsnSheet, name: tclibLibraryEntry, items: DocItem[][]): viewResult {
+    const idle = this.cancel_add(view, sheet).view;
+    const prepared = this.handleSelectLibrarySymbol(idle, sheet, name, items, null);
+    const symbol = prepared.sheet.items[prepared.sheet.items.length - 1];
+    return {
+      sheet: { ...prepared.sheet, items: prepared.sheet.items.slice(0, -1) },
+      view: { ...idle, add: symbol, display_add: false, cursor: 'copy',
+        menu_command: 'add_library_symbol', _selected_array: [] },
+    };
+  }
+
   handleSelectLibrarySymbol(
     view: dsnView,
     sheet: dsnSheet,
@@ -3442,8 +3503,12 @@ export class updateView {
     if (!point) {
       point = [100, 100];
     }
-    point[0] = point[0] + selected_symboldef.outlines[0].size[0] / 2.0;
-    point[1] = point[1] + selected_symboldef.outlines[0].size[1] / 2.0;
+    // Centering an odd number of grid cells can leave every pin half a cell
+    // off-grid. Snap the insertion anchor after applying the center offset.
+    point = new Snap(sheet.details.grid, sheet.details.grid_snap).snap([
+      point[0] + selected_symboldef.outlines[0].size[0] / 2.0,
+      point[1] + selected_symboldef.outlines[0].size[1] / 2.0,
+    ]);
 
     const update_symbol = new updateSymbol(null);
 
@@ -3480,16 +3545,23 @@ export class updateView {
           ],
         },
         ...name.Attributes.filter(
-          (a) => a.AttName !== 'Reference' && a.AttName.indexOf('$$') !== 0,
+          (a) => a.AttName !== 'Reference',
         ).map((a) => ({
           position: [
             5.0,
-            posfn(update_symbol.show_text(a.ShowAtt, a.AttValue)),
+            posfn(
+              !a.AttName.startsWith('$$') &&
+                update_symbol.show_text(a.ShowAtt, a.AttValue),
+            ),
           ],
           value: a.AttValue,
           description: a.AttName,
-          show: update_symbol.show_text(a.ShowAtt, a.AttValue),
-          display: a.ShowAtt,
+          show:
+            !a.AttName.startsWith('$$') &&
+            update_symbol.show_text(a.ShowAtt, a.AttValue),
+          display: a.AttName.startsWith('$$')
+            ? TextDisplayMethod.NeverShow
+            : a.ShowAtt,
         })),
       ],
       hints: [],

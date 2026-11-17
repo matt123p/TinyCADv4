@@ -3,6 +3,8 @@ import { BottomPanel } from '../../components/panel/BottomPanel';
 import { updateView } from '../../manipulators/updateView';
 import { connect } from 'react-redux';
 import { activeSheet } from '../stores/docStoreReducer';
+import { DocItemTypes } from '../../model/dsnItem';
+import { readControl } from '../../simulation/controls';
 
 const mapStateToProps = (state: docDrawing) => {
   const sheet = activeSheet(state.docStore.present);
@@ -13,7 +15,8 @@ const mapStateToProps = (state: docDrawing) => {
   // Check if we're in library edit mode
   const isLibraryEditMode = !!state.docStore.present.editLibrary;
   return {
-    selectedSymbol: update_view.getSelectedSymbol(view, sheet),
+    selectedSymbol: update_view.getSelectedSymbol(view, sheet) ||
+      (view.add?.NodeName === DocItemTypes.Symbol && readControl(view.add) ? view.add : null),
     selectedPin: update_view.getSelectedPin(view, sheet),
     selectedItem: update_view.getSelected(view, sheet),
     hasSelection: hasSelection,

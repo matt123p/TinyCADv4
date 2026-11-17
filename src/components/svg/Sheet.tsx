@@ -1,5 +1,6 @@
 import React, { Dispatch } from 'react';
 import { TDrawing } from './Drawing';
+import { OperatingPointOverlay } from '../simulation/OperatingPointOverlay';
 import TDesignDetails from './DesignDetails';
 import TDesignGuides from './DesignGuides';
 import { TouchLoupe } from './TouchLoupe';
@@ -1621,6 +1622,8 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     const PIXELS_PER_MM = 5;
     let border = this.border;
     let scale = this.props.zoom / 100.0;
+    // The pattern scales with the drawing; keep each grid point one screen pixel.
+    const gridPointSize = 1 / scale;
     // Offset for the SVG content within the scrollable area
     // This matches the transform matrix offset
     let offset = (border + 0.5) * scale;
@@ -1695,10 +1698,12 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                     height={this.props.details.grid}
                     patternUnits="userSpaceOnUse"
                   >
-                    <circle
-                      cx={this.props.details.grid / 2}
-                      cy={this.props.details.grid / 2}
-                      r="0.75"
+                    <rect
+                      x={(this.props.details.grid - gridPointSize) / 2}
+                      y={(this.props.details.grid - gridPointSize) / 2}
+                      width={gridPointSize}
+                      height={gridPointSize}
+                      shapeRendering="crispEdges"
                       fill="#a0a0a0"
                     />
                   </pattern>
@@ -1743,7 +1748,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                   />
         
                   <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
-                    {this.props.options.show_grid && this.props.zoom > 100 ? (
+                    {this.props.options.show_grid && this.props.zoom > 125 ? (
                       <rect
                         x="0"
                         y="0"
@@ -1791,6 +1796,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                       netlistTypes={this.props.netlistTypes}
                       netTypeAssignments={this.props.netTypeAssignments}
                     />
+                    <OperatingPointOverlay sheetName={this.props.sheet_name}/>
                     {markers}
                     {selectrect}
                     {handles}
@@ -1874,10 +1880,12 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                 height={this.props.details.grid}
                 patternUnits="userSpaceOnUse"
               >
-                <circle
-                  cx={this.props.details.grid / 2}
-                  cy={this.props.details.grid / 2}
-                  r="0.75"
+                <rect
+                  x={(this.props.details.grid - gridPointSize) / 2}
+                  y={(this.props.details.grid - gridPointSize) / 2}
+                  width={gridPointSize}
+                  height={gridPointSize}
+                  shapeRendering="crispEdges"
                   fill="#a0a0a0"
                 />
               </pattern>
@@ -1922,7 +1930,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
               />
 
               <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
-                {this.props.options.show_grid && this.props.zoom > 100 ? (
+                {this.props.options.show_grid && this.props.zoom > 125 ? (
                   <rect
                     x="0"
                     y="0"
@@ -1970,6 +1978,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                   netlistTypes={this.props.netlistTypes}
                   netTypeAssignments={this.props.netTypeAssignments}
                 />
+                <OperatingPointOverlay sheetName={this.props.sheet_name}/>
                 {markers}
                 {selectrect}
                 {handles}

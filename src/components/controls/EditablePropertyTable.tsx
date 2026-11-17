@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useId } from 'react';
 import {
   Button,
   makeStyles,
@@ -155,6 +155,7 @@ interface EditablePropertyTableProps {
   items: PropertyItem[];
   showOptions?: { key: number; text: string }[];
   showColumn?: boolean;
+  addLabel?: string;
   onNameChange: (id: string | number, name: string) => void;
   onValueChange: (id: string | number, value: string) => void;
   onShowChange: (id: string | number, show: any) => void;
@@ -167,6 +168,7 @@ export const EditablePropertyTable: React.FC<EditablePropertyTableProps> = ({
   items,
   showOptions,
   showColumn = true,
+  addLabel,
   onNameChange,
   onValueChange,
   onShowChange,
@@ -174,6 +176,7 @@ export const EditablePropertyTable: React.FC<EditablePropertyTableProps> = ({
   onAdd,
 }) => {
   const styles = useStyles();
+  const tableId = useId();
   const { t } = useTranslation();
   const [focusedCell, setFocusedCell] = useState<{ row: number; col: number } | null>(null);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
@@ -253,7 +256,7 @@ export const EditablePropertyTable: React.FC<EditablePropertyTableProps> = ({
   // Focus the cell when focusedCell changes
   useEffect(() => {
     if (focusedCell && tableRef.current) {
-      const cellId = `prop-cell-${focusedCell.row}-${focusedCell.col}`;
+      const cellId = `${tableId}-prop-cell-${focusedCell.row}-${focusedCell.col}`;
       const cell = document.getElementById(cellId);
       if (cell) {
         const focusable = cell.querySelector('input, button, span[tabindex]') as HTMLElement;
@@ -274,7 +277,7 @@ export const EditablePropertyTable: React.FC<EditablePropertyTableProps> = ({
   return (
     <div className={styles.container}>
       <div className={styles.tableContainer}>
-        <table className={styles.table} ref={tableRef}>
+        <table aria-label={title} className={styles.table} ref={tableRef}>
           <thead className={styles.thead}>
             <tr>
               {showColumn ? (
@@ -289,7 +292,7 @@ export const EditablePropertyTable: React.FC<EditablePropertyTableProps> = ({
                   icon={<AddRegular />}
                   onClick={onAdd}
                 >
-                  {t('dialogues.netlistTypeEditor.addAttribute')}
+                  {addLabel || t('dialogues.netlistTypeEditor.addAttribute')}
                 </Button>
               </th>
             </tr>
@@ -309,7 +312,7 @@ export const EditablePropertyTable: React.FC<EditablePropertyTableProps> = ({
                 >
                   {showColumn ? (
                     <td 
-                      id={`prop-cell-${rowIndex}-${COL_SHOW}`}
+                      id={`${tableId}-prop-cell-${rowIndex}-${COL_SHOW}`}
                       className={`${styles.cell} ${styles.cellCenter} ${isFocusedRow && focusedCell?.col === COL_SHOW ? styles.cellFocused : ''}`}
                     >
                       {showOptions ? (
@@ -345,7 +348,7 @@ export const EditablePropertyTable: React.FC<EditablePropertyTableProps> = ({
                   
                   {/* Name */}
                   <td 
-                    id={`prop-cell-${rowIndex}-${COL_NAME}`}
+                    id={`${tableId}-prop-cell-${rowIndex}-${COL_NAME}`}
                     className={`${styles.cell} ${isFocusedRow && focusedCell?.col === COL_NAME ? styles.cellFocused : ''}`}
                   >
                     {item.editable ? (
@@ -372,7 +375,7 @@ export const EditablePropertyTable: React.FC<EditablePropertyTableProps> = ({
                   
                   {/* Value */}
                   <td 
-                    id={`prop-cell-${rowIndex}-${COL_VALUE}`}
+                    id={`${tableId}-prop-cell-${rowIndex}-${COL_VALUE}`}
                     className={`${styles.cell} ${isFocusedRow && focusedCell?.col === COL_VALUE ? styles.cellFocused : ''}`}
                   >
                     <input
@@ -387,7 +390,7 @@ export const EditablePropertyTable: React.FC<EditablePropertyTableProps> = ({
                   
                   {/* Delete button */}
                   <td 
-                    id={`prop-cell-${rowIndex}-${COL_DELETE}`}
+                    id={`${tableId}-prop-cell-${rowIndex}-${COL_DELETE}`}
                     className={`${styles.cell} ${styles.cellCenter} ${isFocusedRow && focusedCell?.col === COL_DELETE ? styles.cellFocused : ''}`}
                   >
                     {item.deletable && showDelete && (

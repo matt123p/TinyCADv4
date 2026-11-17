@@ -33,6 +33,24 @@ test('standalone bundle runs without browser/Node globals and assigns repeatable
   );
 });
 
+test('standalone roundtrip preserves simulation data and saved document/sheet identities without crypto', async () => {
+  const { layoutRuntime } = await import('../lib/layout-runtime.mjs');
+  const native = await layoutRuntime();
+  const drawing = await native.decodeDrawing(fs.readFileSync(
+    new URL('../../examples/simulation/voltage-divider.dzn', import.meta.url),
+  ));
+  const simulation = drawing.sheets.filter(sheet => sheet.kind === 'simulation');
+  assert.ok(simulation.length, 'fixture includes an actual simulation sheet');
+  const xml = new TextDecoder().decode(await native.encodeDrawing(drawing, 'xml'));
+  const runtime = api();
+  const result = runtime.tidyTinyCadDrawing(xml, 1, { selectedIds: [] });
+  const restored = await native.decodeDrawing(new TextEncoder().encode(result.definition));
+  assert.equal(restored.documentId, drawing.documentId);
+  assert.deepEqual(restored.sheets.map(sheet => sheet.id), drawing.sheets.map(sheet => sheet.id));
+  assert.deepEqual(restored.sheets.filter(sheet => sheet.kind === 'simulation'), simulation);
+  assert.equal(runtime.tidyTinyCadDrawing(xml, 1, { selectedIds: [] }).definition, result.definition);
+});
+
 test('renders page details and content views with real drawing primitives', () => {
   const runtime = api();
   const page = runtime.renderTinyCadDrawingSvg(circuit);

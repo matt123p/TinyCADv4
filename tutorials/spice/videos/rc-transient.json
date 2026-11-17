@@ -1,0 +1,45 @@
+{
+  "title": "04 · RC charging, timestep and time constant",
+  "recorded": "2026-11-12T21:31:04.984Z",
+  "application": "TinyCAD Desktop (Electron)",
+  "solver": "bundled native ngspice",
+  "durationSeconds": 44.91,
+  "width": 1600,
+  "height": 1000,
+  "captions": [
+    {
+      "start": 0.00047873499999968774,
+      "text": "rc-step applies a 0–1 V step to a 1 kΩ / 1 µF network. The output charges gradually."
+    },
+    {
+      "start": 5.577199379,
+      "text": "The saved transient runs for 5 ms. Maximum step limits the spacing between solver points."
+    },
+    {
+      "start": 11.227500822,
+      "text": "Halve maximum step from 5us to 2.5us to check that the measured response is stable."
+    },
+    {
+      "start": 16.897564821,
+      "text": "Add a Value measurement on OUT at 1ms to inspect one time constant."
+    },
+    {
+      "start": 24.062458270000004,
+      "text": "Add Time constant with initial level 0 and final level 1. Here R × C = 1 ms."
+    },
+    {
+      "start": 31.667396063,
+      "text": "Run again to capture both measurements with the finer timestep."
+    },
+    {
+      "start": 37.322738994,
+      "text": "Named measurements show about 0.632 V at 1 ms and a time constant close to 1 ms."
+    }
+  ],
+  "checks": [
+    {
+      "name": "time-constant",
+      "text": "Setup\nMeasurements\nData\nHistory\nDiagnostics\nNamed measurements\nEdit measurements and requirements\nMeasurement\tResult\tEvidence\nout · Value · at 1ms\t0.6319366 V\tvalue; 0–0.005 s. tinycad-metrics-1\nout · Time constant · 0 → 1\t0.001000500 s\ttimeConstant; 0–0.005 s. tinycad-metrics-1\nExport named measurements\nSignals / probes\n\nSelect outputs to display. Current direction follows the device’s SPICE pin order. Empty selection shows all signals.\n\nout [V]\nin [V]\nv1#branch [A]\nDifferential voltage, gain and power traces\n\nStatistics over the real component of all accepted samples (sample-weighted mean/RMS, not an AC RMS voltage measurement). Transient samples may be nonuniform.\n\nSignal\tMinimum\tMaximum\tMean\tRMS\tPeak–peak\tUnit\nout\t0.000000\t0.9932587\t0.7947503\t0.8348456\t0.9932587\tV\nin\t0.000000\t1.000000\t0.9948813\t0.9972164\t1.000000\tV\nExport measurements\nExport CSV\nExport JSON\nExport SPICE raw"
+    }
+  ]
+}

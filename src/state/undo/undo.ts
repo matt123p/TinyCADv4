@@ -23,12 +23,14 @@ const reduceWithHistory = undoable(DocStoreReducer, {
     currentState: docStore,
     previousHistory: StateWithHistory<docStore>,
   ) => {
+    if (action.type === 'simulation/diagnostics' || action.type === 'simulation/panel') return false;
     const now = new Date();
     needHistory =
       needHistory ||
       currentState.drawing != previousHistory._latestUnfiltered?.drawing;
     let undoCheckpoint = now.getTime() - lastEvent.getTime() > 500;
-    if (action.type === MenuActionTypes.MenuCommand || action.type === DocActionTypes.ApplyAutoLayout) {
+    if (action.type === MenuActionTypes.MenuSetStyle && action.style.image) undoCheckpoint = true;
+    if (action.type.startsWith('simulation/') || action.type === MenuActionTypes.MenuCommand || action.type === DocActionTypes.ApplyAutoLayout || action.type === DocActionTypes.ApplyChatEdit || action.type === DocActionTypes.ApplyChatLibrary) {
       undoCheckpoint = true;
     }
     if (
@@ -70,6 +72,9 @@ export function DocStoreWithHistory(
   state: StateWithHistory<docStore> | undefined,
   action: AppActionTypes,
 ): StateWithHistory<docStore> {
+  if (state && action.type === MenuActionTypes.MenuSetStyle && action.style.image) {
+    state = { ...state, _latestUnfiltered: state.present };
+  }
   if (
     state && action.type === DocActionTypes.ApplyAutoLayout && action.changes.length &&
     activeSheet(state.present) === action.source &&
@@ -77,6 +82,12 @@ export function DocStoreWithHistory(
   ) {
     // clearHistory omits the initial checkpoint. Layout always needs the exact
     // current sheet as its undo baseline, including immediately after opening.
+    state = { ...state, _latestUnfiltered: state.present };
+  }
+  if (state && action.type === DocActionTypes.ApplyChatLibrary && state.present.drawing === action.source && state.present.editLibrary === action.sourceLibrary && state.present.editSymbol === action.sourceSymbol) {
+    state = { ...state, _latestUnfiltered: state.present };
+  }
+  if (state && action.type === DocActionTypes.ApplyChatEdit && state.present.drawing === action.source && state.present.editSymbol === action.sourceSymbol) {
     state = { ...state, _latestUnfiltered: state.present };
   }
   return reduceWithHistory(state, action);

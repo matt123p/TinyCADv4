@@ -31,6 +31,13 @@ function loadLayoutFonts() {
 
 onmessage = async function (event: MessageEvent<WorkerRequest>) {
   const request = event.data;
+  // Development tooling can send unrelated messages to module workers.
+  // Only messages belonging to our request protocol may reach the dispatcher.
+  if (
+    !request ||
+    !Number.isInteger(request.id) ||
+    typeof request.command !== 'string'
+  ) return;
 
   const response: WorkerResponse = {
     id: request.id,

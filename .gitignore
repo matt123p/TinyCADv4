@@ -40,7 +40,12 @@ todo.md
 assets/
 server.bundle.js
 .DS_Store
-.tmp/
-build/
 
-drawing-server.bundle.js
+/build/
+/public/engines/
+/.tmp/
+# Generated plugin packages and browser test results
+/plugin-release/
+/test-results/
+/drawing-server.bundle.js
+/src/chat/native.bundle.js

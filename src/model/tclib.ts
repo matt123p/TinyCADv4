@@ -95,6 +95,8 @@ export interface tclibLibraryEntry {
 }
 
 export interface tclib {
+  /** Catalog libraries are available for placement only. */
+  readOnly?: boolean;
   fileId: FileIdType;
   modified: string;
   name: string;

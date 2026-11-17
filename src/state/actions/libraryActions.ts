@@ -5,6 +5,8 @@ import { tclib, tclibLibraryEntry } from '../../model/tclib';
 
 export enum LibraryActionTypes {
   SetLibraryList = '[Library] SetLibraryList',
+  SetBundledLibraries = '[Library] SetBundledLibraries',
+  ShowStandardLibrary = '[Library] ShowStandardLibrary',
   SetLibraryData = '[Library] SetLibraryData',
   SelectLibrarySymbol = '[Library] SelectLibrarySymbol',
   ViewLibrary = '[Library] ViewLibrary',
@@ -17,8 +19,23 @@ export enum LibraryActionTypes {
   UpdateCurrentLibrary = '[Library] UpdateCurrentLibrary',
 }
 
+export interface StandardLibraryNavigation {
+  libraryId: string;
+  request: number;
+}
+
+export interface ShowStandardLibrary {
+  type: LibraryActionTypes.ShowStandardLibrary;
+  libraryId: string;
+}
+
 export interface SetLibraryList {
   type: LibraryActionTypes.SetLibraryList;
+  libraries: tclib[];
+}
+
+export interface SetBundledLibraries {
+  type: LibraryActionTypes.SetBundledLibraries;
   libraries: tclib[];
 }
 
@@ -29,6 +46,7 @@ export interface SetLibraryData {
 
 export interface SelectLibrarySymbol {
   type: LibraryActionTypes.SelectLibrarySymbol;
+  beginPlacement?: boolean;
   name: tclibLibraryEntry;
   symbolData: DocItem[][];
   pos: Coordinate;
@@ -77,6 +95,8 @@ export interface UpdateCurrentLibrary {
 }
 
 export type LibraryActions =
+  | ShowStandardLibrary
+  | SetBundledLibraries
   | SetLibraryData
   | SelectLibrarySymbol
   | SetLibraryList

@@ -146,12 +146,18 @@ export const Sheetbar: React.FC<SheetbarProps> = (props) => {
       const canDrag = index >= minDraggableIndex;
       return (
         <SheetTab
-          name={sheet.name}
+          name={sheet.kind === 'simulation' ? `◷ ${sheet.name}` : sheet.name}
           selected={props.selected_sheet === index}
           index={index}
           key={index}
-          canDelete={props.sheets.length > 1}
+          canDelete={props.sheets.length > 1 && (sheet.kind === 'simulation' || props.sheets.filter(s => s.kind !== 'simulation').length > 1)}
           hierarchicalSymbol={sheet.hierarchicalSymbol}
+          additionalMenuItems={sheet.kind === 'simulation' ? [{
+            key: 'duplicate_setup',
+            text: 'Duplicate setup',
+            iconName: 'Copy',
+            onClick: () => props.dispatch({ type: 'simulation/duplicate', sheetId: sheet.id }),
+          }] : undefined}
           draggable={canDrag}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}

@@ -1,0 +1,17 @@
+TinyCAD simulation
+
+.temp 27
+.subckt TUTORIAL_LOGIC A Y
+.model adc adc_bridge(in_low=1 in_high=3)
+.model dac dac_bridge(out_low=0 out_high=5 out_undef=2.5 t_rise=5n t_fall=5n)
+Ain [A] [da] adc
+Ab da dy buf
+.model buf d_buffer(rise_delay=20n fall_delay=20n)
+Aout [dy] [Y] dac
+.ends TUTORIAL_LOGIC
+V1 A 0 DC 0 AC 0 0 PULSE(0 5 5.000000000000001e-7 5e-9 5e-9 5.000000000000001e-7 0.000001)
+X1 A Y TUTORIAL_LOGIC
+
+.save i(V1) v(A) v(Y) v(a) v(y)
+.tran 2e-9 0.000008 0 2e-9
+.end

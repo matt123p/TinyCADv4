@@ -4,19 +4,36 @@
 
 ### Added
 
-- Schematic auto-layout for the whole sheet or selected items, with High, Medium and Low strength settings and explanations beside each option.
-- Run auto-layout in a background worker with cancellation, connection checks and a single Undo step to revert the result.
+- Image properties for fixed aspect ratio, restoring original proportions and clipping each edge in source pixels, preserved per image in TinyCAD XML.
+- Import images from File → Import → Image, alongside image paste and drag-and-drop. Other browser-supported formats, including GIF and WebP, are converted to still PNG images.
+- Integrated AI chatbot in browser and desktop builds, opened from the toolbar, with Markdown replies, file attachments and expandable thinking, tool-call and image activity.
+- Bring-your-own-key connections for OpenAI, Anthropic, Google Gemini and compatible providers, plus locally hosted Ollama. Guided setup keeps API keys hidden after entry and restores saved connections and settings on restart, with model and thinking controls directly in chat. Desktop credentials use OS-backed encryption, with memory-only storage when secure storage is unavailable.
+- Sign in with ChatGPT using an eligible paid subscription in desktop and local browser builds, with account usage controls and online search with source citations. Production browser builds offer API-key setup.
+- Direct AI tools to inspect the current unsaved drawing, metadata, netlist and SVG/PNG previews, search bundled libraries, and create, place or edit circuitry with revision checks and Undo/Redo. Library searches preserve original artwork and SPICE attributes.
+- PDF and image reference imports for creating editable circuits and symbols, including a compact IC generator. Generated symbols can be placed ready to wire or added individually or in batches to the active library.
+- Automatic circuit layout and wire tidy-up, with shorter routes around objects, annotations and other wires, support for hidden transistor pins, and preservation of connections and fixed anchors.
+
+- Integrated local ngspice simulation in browser and desktop builds, with Simulation sheets for operating point, transient, AC, DC sweep, noise, transfer-function and pole-zero analyses. Desktop also supports event-driven XSPICE models.
+- Configurable voltage/current sources, controlled sources, voltage/differential/current probes and virtual oscilloscopes, multimeters, function generators and bench supplies.
+- Circuit Explorer for temporary tuning, parameter sweeps, named measurements, requirements, DC overlays, frequency-response investigations, tolerance studies, test cases and power/stress reports.
+- Compressed `.dzn` drawings containing schematics, embedded symbols, simulation setups, model attachments and optional retained results, with run history, CSV/PNG exports, independent pop-out chart windows and Save without results. Solver diagnostics are retained even when a run produces no samples.
+- Eleven-chapter SPICE and six-chapter XSPICE courses with 28 distinct runnable drawings, model definitions, analysis settings and retained reference acquisitions.
+
+- Bundled standard libraries for SPICE essentials, digital logic, functional blocks, and sensors and interfaces, with configurable simulation models.
+- Bundled standard libraries for motors and motion, test and measurement, audio and music, solar power and batteries, embedded processors and smart home, and network layouts. Libraries include compact vector artwork, physical pin layouts, source-checked pin maps and connection points for individual conductors, complete cables and fluid hoses.
 
 ### Fixed
 
 - Apply the Background Colour setting to the drawing page with rulers on or off, including the touch loupe (#33).
 - Remove unnecessary local down-and-up wire detours when shorter routes clear nearby objects, annotations and other wires, while preserving connections and fixed anchors.
 - Treat hidden transistor pins as connection points rather than visible stems, preventing artificial return bends and repairing existing loops in the amplifier example.
+- Prevent hover and rectangle-selection crashes on symbols with hidden or empty conditional attributes.
 
 ### Maintenance
 
-- Add layout algorithm, dialog, worker, editor and browser regression suites, including the original amplifier and a captured layout with pin loops, with automated CI coverage.
-- Document auto-layout behavior and commands for running the test suites.
+- Expand the online manual with bundled-library and example guides, SPICE/XSPICE courses, simulation and `.dzn` references, layout tidy-up guidance and browser video walkthroughs, with updates to all eight manual translations.
+- Add reproducible library generation, pin-map provenance, artwork galleries, A4 placement reviews and media capture for documentation and verification.
+- Expand regression tests for chatbot providers, authentication, streaming and editor tools; library search, placement, wiring, rotation and save/load; and layout algorithms, dialogs, workers and browser behavior, with automated CI coverage and documented test commands.
 
 ## v4.0.11
 

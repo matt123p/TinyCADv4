@@ -7,6 +7,7 @@ import {
   ChevronRightRegular,
   ChevronDownRegular,
   EditRegular,
+  InfoRegular,
   DocumentRegular,
   WarningRegular,
 } from '@fluentui/react-icons';
@@ -69,6 +70,9 @@ const useStyles = makeStyles({
       backgroundColor: tokens.colorNeutralBackground1Hover,
     },
   },
+  symbolItemFlat: {
+    paddingLeft: '12px',
+  },
   symbolItemActive: {
     backgroundColor: tokens.colorBrandBackground,
     color: tokens.colorNeutralForegroundOnBrand,
@@ -109,19 +113,6 @@ const useStyles = makeStyles({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     fontWeight: 500,
-  },
-  symbolDescription: {
-    marginLeft: '8px',
-    color: tokens.colorNeutralForeground4,
-    fontSize: '11px',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    flex: 1,
-  },
-  symbolDescriptionActive: {
-    color: tokens.colorNeutralForegroundOnBrand,
-    opacity: 0.8,
   },
   actionButtons: {
     display: 'flex',
@@ -191,6 +182,7 @@ interface LibraryViewProps {
   findFilter: string;
   sortMode?: SymbolSortMode;
   open: boolean;
+  showHeader?: boolean;
   selectedId: string | null;
   draggable?: boolean;
   onLibraryClick?(lib: tclib): void;
@@ -221,6 +213,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
   const [hover, setHover] = useState(false);
 
   const isBad = !!props.lib.bad;
+  const showHeader = props.showHeader !== false;
 
   const openLibraryInfo = (e?: React.MouseEvent) => {
     e?.preventDefault();
@@ -231,6 +224,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
         path: `${props.lib.fileId || ''}`,
         bad: isBad,
         loadError: props.lib.loadError,
+        readOnly: props.lib.readOnly,
       }),
     );
   };
@@ -247,7 +241,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
 
   return (
     <ul className={styles.treeItemGroup}>
-      <li
+      {showHeader && <li
         className={mergeClasses(
           styles.libraryItem,
           isBad && styles.libraryItemBad,
@@ -286,6 +280,7 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
         </span>
         <span className={styles.libraryName}>
           {props.lib.name.replace(/\.tclib$/gi, '')}
+          {props.lib.readOnly && <span title={t('library.bundledReadOnly')}> · {t('library.readOnly')}</span>}
         </span>
         {isBad && (
           <button
@@ -310,14 +305,14 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
               )}
               appearance="subtle"
               size="small"
-              icon={<EditRegular />}
+              icon={props.lib.readOnly ? <InfoRegular /> : <EditRegular />}
               title={t('library.libraryOptions')}
               onClick={openLibraryInfo}
             />
           </div>
         )}
-      </li>
-      {props.open &&
+      </li>}
+      {(!showHeader || props.open) &&
         names.map((n, index) => {
           const isActive = props.selectedId === `${props.lib.fileId}:${n.NameID}`;
           return (
@@ -325,21 +320,17 @@ const LibraryView: React.FunctionComponent<LibraryViewProps> = (
               key={n.NameID}
               className={mergeClasses(
                 styles.symbolItem,
+                !showHeader && styles.symbolItemFlat,
                 isActive && styles.symbolItemActive,
                 index === names.length - 1 && styles.symbolItemLast,
               )}
               role="button"
-              aria-pressed="false"
+              aria-pressed={isActive}
               onClick={() => props.onSelect(props.lib, n)}
               onDoubleClick={() => props.onSelected(props.lib, n)}
             >
               <DocumentRegular className={styles.symbolIcon} />
-              <span className={styles.symbolName}>{n.Name}</span>
-              {n.Description?.length > 0 && (
-                <span className={mergeClasses(styles.symbolDescription, isActive && styles.symbolDescriptionActive)}>
-                  {n.Description}
-                </span>
-              )}
+              <span className={styles.symbolName} title={n.Name}>{n.Name}</span>
             </li>
           );
         })}

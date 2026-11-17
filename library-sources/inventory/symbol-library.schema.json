@@ -1,0 +1,642 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TinyCAD teaching symbol-library extraction and generation inventory",
+  "description": "A course coverage inventory, not a geometry, footprint or executable simulation format.",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/collection"
+    },
+    {
+      "$ref": "#/definitions/library"
+    },
+    {
+      "$ref": "#/definitions/deduplicated"
+    }
+  ],
+  "definitions": {
+    "existing_tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "native_tool",
+          "already_provided",
+          "generate_symbol",
+          "used_by_experiments",
+          "common_support_tool"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "native_tool": {
+            "type": "string"
+          },
+          "configuration": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "enum": [
+                  "voltage",
+                  "current"
+                ]
+              },
+              "waveform": {
+                "enum": [
+                  "dc",
+                  "sine",
+                  "pulse",
+                  "triangle",
+                  "pwl",
+                  "exponential",
+                  "fm"
+                ]
+              },
+              "mode": {
+                "enum": [
+                  "dcV",
+                  "acV",
+                  "dcA",
+                  "acA",
+                  "ohm"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "already_provided": {
+            "const": true
+          },
+          "generate_symbol": {
+            "const": false
+          },
+          "used_by_experiments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "used_by_libraries": {
+            "$ref": "#/definitions/ids"
+          },
+          "common_support_tool": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]*$"
+      },
+      "uniqueItems": true
+    },
+    "handoff": {
+      "type": "object",
+      "required": [
+        "date",
+        "scope",
+        "folder_semantics",
+        "identity",
+        "pin_contract",
+        "model_warning",
+        "source_document_base"
+      ],
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "pin": {
+      "type": "object",
+      "required": [
+        "logical_number",
+        "name",
+        "electrical_type",
+        "side"
+      ],
+      "properties": {
+        "logical_number": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "electrical_type": {
+          "enum": [
+            "passive",
+            "input",
+            "output",
+            "bidirectional",
+            "power_input"
+          ]
+        },
+        "side": {
+          "enum": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "symbol": {
+      "type": "object",
+      "required": [
+        "id",
+        "canonical_symbol_id",
+        "name",
+        "folder",
+        "reference_prefix",
+        "asset_kind",
+        "aliases",
+        "search_terms",
+        "pin_numbering",
+        "pins",
+        "drawing_description",
+        "simulation",
+        "configurable_properties",
+        "used_by_experiments",
+        "common_support_symbol",
+        "optional_uses",
+        "library_requirement"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "canonical_symbol_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "folder": {
+          "type": "string",
+          "pattern": "^[^/\\\\]+(?:/[^/\\\\]+)*$"
+        },
+        "reference_prefix": {
+          "type": "string"
+        },
+        "asset_kind": {
+          "enum": [
+            "schematic_symbol",
+            "diagram_block",
+            "editor_primitive"
+          ]
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "search_terms": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "pin_numbering": {
+          "const": "logical_not_package"
+        },
+        "pins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/pin"
+          }
+        },
+        "drawing_description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "simulation": {
+          "type": "object",
+          "required": [
+            "requirement",
+            "ready_to_simulate_from_this_manifest",
+            "note"
+          ],
+          "properties": {
+            "requirement": {
+              "enum": [
+                "primitive",
+                "builtin_instrument",
+                "device_model_required",
+                "subcircuit_model_required",
+                "calibrated_equivalent_required",
+                "electrothermal_or_empirical_model_required",
+                "behavioural_expression_required",
+                "diagram_only",
+                "editor_primitive"
+              ]
+            },
+            "ready_to_simulate_from_this_manifest": {
+              "const": false
+            },
+            "native_tool": {
+              "enum": [
+                "meter",
+                "scope",
+                "generator",
+                "supply",
+                "probe",
+                "differential-probe",
+                "current-probe"
+              ]
+            },
+            "ngspice_family": {
+              "enum": [
+                "R",
+                "C",
+                "L",
+                "V",
+                "I",
+                "E",
+                "G"
+              ]
+            },
+            "note": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "configurable_properties": {
+          "type": "object"
+        },
+        "used_by_experiments": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z]+[0-9]{2}$"
+          }
+        },
+        "common_support_symbol": {
+          "type": "boolean"
+        },
+        "used_by_libraries": {
+          "$ref": "#/definitions/ids"
+        },
+        "library_usage": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "library_id",
+              "used_by_experiments",
+              "common_support_symbol",
+              "optional_uses",
+              "library_requirement"
+            ],
+            "properties": {
+              "library_id": {
+                "type": "string"
+              },
+              "used_by_experiments": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "common_support_symbol": {
+                "type": "boolean"
+              },
+              "optional_uses": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "library_requirement": {
+                "enum": [
+                  "experiment_coverage",
+                  "common_support",
+                  "optional_extension"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "optional_uses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "library_requirement": {
+          "enum": [
+            "experiment_coverage",
+            "common_support",
+            "optional_extension"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "experiment": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "syllabus_reference",
+        "catalogue_support",
+        "catalogue_description",
+        "source_document",
+        "experiment_symbol_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Z]+[0-9]{2}$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "syllabus_reference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "catalogue_support": {
+          "enum": [
+            "Both",
+            "Both, model needed",
+            "Diagram"
+          ]
+        },
+        "catalogue_description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_document": {
+          "type": "string",
+          "pattern": "^library-sources/inventory/course-research\\.txt#[a-z0-9-]+$"
+        },
+        "experiment_symbol_ids": {
+          "$ref": "#/definitions/ids"
+        },
+        "existing_tool_ids": {
+          "$ref": "#/definitions/ids"
+        }
+      },
+      "additionalProperties": false
+    },
+    "library": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "manifest_kind",
+        "library_id",
+        "title",
+        "source_document",
+        "handoff",
+        "syllabus_sources",
+        "common_symbol_ids",
+        "folders",
+        "experiments",
+        "symbols"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "manifest_kind": {
+          "const": "library"
+        },
+        "library_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_document": {
+          "type": "string",
+          "pattern": "^library-sources/inventory/course-research\\.txt#[a-z0-9-]+$"
+        },
+        "handoff": {
+          "$ref": "#/definitions/handoff"
+        },
+        "syllabus_sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "url"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https?://"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "common_symbol_ids": {
+          "$ref": "#/definitions/ids"
+        },
+        "existing_tools": {
+          "$ref": "#/definitions/existing_tools"
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "experiments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/experiment"
+          }
+        },
+        "symbols": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/symbol"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "deduplicated": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "manifest_kind",
+        "handoff",
+        "totals",
+        "source_libraries",
+        "symbols"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "manifest_kind": {
+          "const": "deduplicated_symbols"
+        },
+        "existing_tools": {
+          "$ref": "#/definitions/existing_tools"
+        },
+        "handoff": {
+          "$ref": "#/definitions/handoff"
+        },
+        "totals": {
+          "type": "object",
+          "required": [
+            "unique_symbols",
+            "source_libraries",
+            "experiments"
+          ],
+          "properties": {
+            "unique_symbols": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "source_libraries": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "experiments": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "source_libraries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "library_id",
+              "title",
+              "source_document"
+            ],
+            "properties": {
+              "library_id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "source_document": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "symbols": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/symbol"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "collection": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "manifest_kind",
+        "handoff",
+        "totals",
+        "libraries"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "manifest_kind": {
+          "const": "collection"
+        },
+        "handoff": {
+          "$ref": "#/definitions/handoff"
+        },
+        "totals": {
+          "type": "object",
+          "required": [
+            "libraries",
+            "experiments",
+            "library_symbol_records",
+            "distinct_symbol_types"
+          ],
+          "properties": {
+            "libraries": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "experiments": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "library_symbol_records": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "distinct_symbol_types": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "libraries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/library"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

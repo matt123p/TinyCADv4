@@ -1,3 +1,4 @@
+import { tinycadUrl } from '../../io/apiServer';
 import React, { FunctionComponent, useState, useEffect } from 'react';
 import {
   Dialog,
@@ -186,7 +187,7 @@ export const AboutDialog: FunctionComponent = () => {
                 {t('dialogues.about.description')}
               </Text>
               <a 
-                href="https://www.tinycad.net" 
+                href={tinycadUrl('/')}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className={styles.link}

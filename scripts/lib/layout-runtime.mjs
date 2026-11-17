@@ -35,7 +35,7 @@ export async function layoutRuntime() {
                 ? 'export const store={dispatch(){}};export function getStore(){return store;}'
                 : 'export default {t:key=>key};',
           }));
-          // Use the same conservative font metrics as the existing teaching previews.
+          // Reserve room for font fallback in headless layout previews.
           b.onResolve({ filter: /(^|\/)measureText$/ }, () => ({
             path: path.join(root, 'scripts/layout/renderMeasureText.ts'),
           }));
@@ -59,5 +59,6 @@ export async function layoutRuntime() {
   } finally {
     await fs.rm(output, { force: true });
   }
+  api.initialiseLayoutRuntime();
   return api;
 }
