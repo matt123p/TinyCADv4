@@ -162,6 +162,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     savePdf: (data) => ipcRenderer.send('save-pdf', data),
     saveSvg: (data) => ipcRenderer.send('save-svg', data),
     openKicadImport: () => ipcRenderer.invoke('import-kicad-file'),
+    openImageImport: () => ipcRenderer.invoke('import-image-file'),
     
     onPdfSaved: (callback) => {
         const listener = (event, data) => callback(data);

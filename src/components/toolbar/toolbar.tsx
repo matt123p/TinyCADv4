@@ -79,6 +79,7 @@ import {
   exportPdf,
   exportSvg,
   importSymbolsFromFile,
+  importImageFromFile,
   handleMenuCommand,
 } from '../../io/files';
 import { CurrentFile, ToolbarDefaults } from '../../state/stores/altStoreReducer';
@@ -647,9 +648,19 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
               <MenuItem icon={<SaveCopyRegular />} onClick={() => props.dispatch(exportPdf)}>
                 {t('toolbar.exportPdf')}
               </MenuItem>
-              <MenuItem icon={<ArrowDownloadRegular />} onClick={() => props.dispatch(importSymbolsFromFile() as any)}>
-                {t('toolbar.importKicad')}
-              </MenuItem>
+              <Menu>
+                <MenuTrigger disableButtonEnhancement>
+                  <MenuItem icon={<ArrowDownloadRegular />}>{t('toolbar.import')}</MenuItem>
+                </MenuTrigger>
+                <MenuPopover><MenuList>
+                  <MenuItem icon={<ImageRegular />} onClick={() => props.dispatch(importImageFromFile() as any)}>
+                    {t('toolbar.importImage', { defaultValue: 'Image...' })}
+                  </MenuItem>
+                  <MenuItem icon={<ArrowDownloadRegular />} onClick={() => props.dispatch(importSymbolsFromFile() as any)}>
+                    {t('toolbar.importKicad')}
+                  </MenuItem>
+                </MenuList></MenuPopover>
+              </Menu>
               <MenuDivider />
               <MenuItem icon={<SettingsRegular />} onClick={() => props.dispatch(actionSelectDialog('annotate', null))}>
                 {t('toolbar.annotateSymbols')}

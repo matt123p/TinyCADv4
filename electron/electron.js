@@ -135,7 +135,10 @@ function createWindow() {
           { type: 'separator' },
           {
             label: getMenuLabel('import', 'Import'),
-            submenu: [{ label: getMenuLabel('importKicadSymbols', 'KiCad Symbols...'), click: () => mainWindow.webContents.send('menu-command', 'import-kicad-symbols') }],
+            submenu: [
+              { label: getMenuLabel('importImage', 'Image...'), click: () => mainWindow.webContents.send('menu-command', 'import-image') },
+              { label: getMenuLabel('importKicadSymbols', 'KiCad Symbols...'), click: () => mainWindow.webContents.send('menu-command', 'import-kicad-symbols') },
+            ],
           },
           {
             label: getMenuLabel('export', 'Export'),
@@ -529,6 +532,26 @@ function createWindow() {
 
       menuTranslations = translations;
       refreshMenu();
+    });
+
+    ipcMain.handle('import-image-file', async () => {
+      if (!mainWindow) return null;
+      const result = await dialog.showOpenDialog(mainWindow, {
+        filters: [
+          { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'apng'] },
+          { name: 'All Files', extensions: ['*'] },
+        ],
+        properties: ['openFile'],
+      });
+      if (result.canceled || !result.filePaths.length) return null;
+      const selectedPath = result.filePaths[0];
+      const extension = path.extname(selectedPath).toLowerCase();
+      const mime = ({ '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif', '.webp': 'image/webp', '.avif': 'image/avif',
+        '.bmp': 'image/bmp', '.ico': 'image/x-icon', '.svg': 'image/svg+xml',
+        '.apng': 'image/apng' })[extension] || 'application/octet-stream';
+      const content = await fs.promises.readFile(selectedPath);
+      return { fileName: path.basename(selectedPath), mime, content: content.toString('base64') };
     });
 
     ipcMain.handle('import-kicad-file', async () => {

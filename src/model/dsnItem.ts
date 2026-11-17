@@ -125,6 +125,11 @@ export interface dsnLabel extends dsnPointTextBase {
 export interface dsnImage extends dsnRectBase {
   NodeName: DocItemTypes.Image;
   imageData: libImage;
+  fixed_aspect?: boolean;
+  clip_left?: number;
+  clip_right?: number;
+  clip_top?: number;
+  clip_bottom?: number;
 }
 
 export interface dsnLine extends dsnBase, Stroked, Filled {

@@ -21,6 +21,7 @@ export const buildNativeMenuTranslations = (t: TFunction<'common'>): NativeMenuT
   save: menuLabel(t, 'toolbar.save', 'Save'),
   saveAs: menuLabel(t, 'toolbar.saveAs', 'Save As...'),
   import: menuLabel(t, 'toolbar.import', 'Import'),
+  importImage: menuLabel(t, 'toolbar.importImage', 'Image...'),
   export: menuLabel(t, 'toolbar.export', 'Export'),
   importKicadSymbols: menuLabel(t, 'toolbar.importKicad', 'KiCad Symbols...'),
   print: menuLabel(t, 'toolbar.print', 'Print'),

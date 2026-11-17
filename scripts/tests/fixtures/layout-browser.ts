@@ -1,6 +1,8 @@
 import { store } from '../../../src/startup';
 import { activeSheet } from '../../../src/state/stores/docStoreReducer';
 import { actionEditorEvent, actionSetDocument, actionSetLibraryList } from '../../../src/state/dispatcher/AppDispatcher';
+import { ioXML } from '../../../src/io/ioXml';
+import { XMLBuilder } from '../../../src/util/xmlbuilder';
 
 // This bridge is bundled only into the test entry point. UI interactions still
 // use the real toolbar, dialog, Redux reducers, fonts, and compiled worker.
@@ -16,6 +18,16 @@ import { actionEditorEvent, actionSetDocument, actionSetLibraryList } from '../.
       selectedIds: current.view._selected_array,
       past: store.getState().docStore.past.length,
     };
+  },
+  saveAndReopen() {
+    const xml = new ioXML().to_dsn(store.getState().docStore.present.drawing, true, true).tostring();
+    (window as any).layoutTest.reopenXml(xml);
+    return xml;
+  },
+  reopenXml(xml: string) {
+    const builder = new XMLBuilder();
+    builder.fromText(xml);
+    store.dispatch(actionSetDocument(new ioXML().from_dsn(builder), 'Reopened.dsn', null, null));
   },
   selectLabel(text: string) {
     const state = store.getState();

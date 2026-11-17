@@ -1457,6 +1457,41 @@
           "type": "xs:unsignedInt",
           "use": "optional",
           "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "fixed_aspect",
+          "type": "xs:boolean",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "clip_left",
+          "type": "xs:unsignedInt",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "clip_right",
+          "type": "xs:unsignedInt",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "clip_top",
+          "type": "xs:unsignedInt",
+          "use": "optional",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "clip_bottom",
+          "type": "xs:unsignedInt",
+          "use": "optional",
+          "children": []
         }
       ]
     },

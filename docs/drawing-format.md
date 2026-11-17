@@ -10,6 +10,19 @@ Loading detects content from bytes. Renamed XML `.dzn` and ZIP `.dsn` files rema
 
 [dsnCodec.ts](../src/io/dsnCodec.ts) coordinates document encoding/decoding; [dsnContainer.ts](../src/io/dsnContainer.ts) handles ZIP/XML detection and archive validation. [drawingSaveFormat.ts](../src/io/drawingSaveFormat.ts) and [drawingFiles.js](../shared/drawingFiles.js) own representation selection, naming and MIME constants.
 
+## Image placements
+
+Placed images use `METAFILE` elements referencing an `IMAGE` resource by `id`.
+The original PNG/JPEG bytes remain in the resource; each placement stores its
+own optional `fixed_aspect` (`0` or `1`) and `clip_left`, `clip_right`, `clip_top`,
+`clip_bottom` attributes. Clipping values are non-negative whole pixels in the
+original bitmap, not drawing coordinates. At least one source pixel remains
+in each dimension. Missing attributes retain legacy behavior: free resizing
+and no clipping. The `a` and `b` coordinates bound the visible, clipped image.
+Changing clipping preserves the scale and position of the remaining pixels;
+fixed aspect ratio preserves the current visible rectangle's proportions
+while resizing. The same XML is used inside `.dzn` containers.
+
 ## ZIP container, version 1
 
 ```text

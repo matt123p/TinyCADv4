@@ -29,6 +29,7 @@ const reduceWithHistory = undoable(DocStoreReducer, {
       needHistory ||
       currentState.drawing != previousHistory._latestUnfiltered?.drawing;
     let undoCheckpoint = now.getTime() - lastEvent.getTime() > 500;
+    if (action.type === MenuActionTypes.MenuSetStyle && action.style.image) undoCheckpoint = true;
     if (action.type.startsWith('simulation/') || action.type === MenuActionTypes.MenuCommand || action.type === DocActionTypes.ApplyAutoLayout || action.type === DocActionTypes.ApplyChatEdit || action.type === DocActionTypes.ApplyChatLibrary) {
       undoCheckpoint = true;
     }
@@ -71,6 +72,9 @@ export function DocStoreWithHistory(
   state: StateWithHistory<docStore> | undefined,
   action: AppActionTypes,
 ): StateWithHistory<docStore> {
+  if (state && action.type === MenuActionTypes.MenuSetStyle && action.style.image) {
+    state = { ...state, _latestUnfiltered: state.present };
+  }
   if (
     state && action.type === DocActionTypes.ApplyAutoLayout && action.changes.length &&
     activeSheet(state.present) === action.source &&

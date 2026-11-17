@@ -35,6 +35,15 @@ export interface MergedStyle {
   text: boolean;
   text_colour: boolean;
   border_style: boolean;
+  image?: boolean;
+  fixed_aspect?: boolean;
+  reset_aspect?: boolean;
+  clip_left?: number;
+  clip_right?: number;
+  clip_top?: number;
+  clip_bottom?: number;
+  image_width?: number;
+  image_height?: number;
 
   stroked?: boolean;
   line_colour?: string;

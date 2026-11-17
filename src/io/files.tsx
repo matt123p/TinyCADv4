@@ -732,21 +732,113 @@ export function exportSvg(
   openExternalUrl(url);
 }
 
-export function imageFile(file: File | Blob, pos: Coordinate, imgType: string) {
+export function importImageFromFile() {
+  return async (dispatch: Dispatch<any>) => {
+    if (
+      process.env.TARGET_SYSTEM === 'electron' &&
+      window.electronAPI?.openImageImport
+    ) {
+      try {
+        const picked = await window.electronAPI.openImageImport();
+        if (!picked) return;
+        const data = Uint8Array.from(atob(picked.content), (character) =>
+          character.charCodeAt(0),
+        );
+        const file = new File([data], picked.fileName, { type: picked.mime });
+        dispatch(imageFile(file, null));
+      } catch {
+        dispatch(
+          actionSelectDialog('io_failure', {
+            message: 'Could not open the image file.',
+          }),
+        );
+      }
+      return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.hidden = true;
+    input.oncancel = () => input.remove();
+    input.onchange = () => {
+      const file = input.files?.[0];
+      input.remove();
+      if (!file) return;
+      dispatch(imageFile(file, null));
+    };
+    document.body.appendChild(input);
+    input.click();
+  };
+}
+
+export function imageFile(
+  file: File | Blob,
+  pos: Coordinate,
+  imgType = file.type === 'image/png'
+    ? 'PNG'
+    : file.type === 'image/jpeg'
+    ? 'JPEG'
+    : '',
+) {
   return (dispatch: Dispatch<any>, getState: { (): docDrawing }) => {
+    const failed = () =>
+      dispatch(
+        actionSelectDialog('io_failure', {
+          message:
+            'Could not read the image. Select an image format supported by your browser.',
+        }),
+      );
     const reader = new FileReader();
+    reader.onerror = failed;
     reader.onload = (event) => {
       const img = new Image();
+      img.onerror = failed;
       img.onload = () => {
-        dispatch(
-          actionAddImage(
-            event.target.result as string,
-            imgType,
-            file.size,
-            [img.width, img.height],
-            pos,
-          ),
-        );
+        try {
+          let data = event.target.result as string;
+          let type = imgType;
+          let dataSize = file.size;
+          if (type !== 'PNG' && type !== 'JPEG') {
+            // TinyCAD stores PNG/JPEG bitmaps. Decode other browser-supported
+            // formats and capture a still frame, preserving transparency.
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const context = canvas.getContext('2d');
+            if (!context) throw new Error('Image conversion unavailable.');
+            context.drawImage(img, 0, 0);
+            data = canvas.toDataURL('image/png');
+            if (!data.startsWith('data:image/png;base64,'))
+              throw new Error('Image conversion failed.');
+            dataSize = atob(data.split(',')[1]).length;
+            type = 'PNG';
+          }
+          const present = getState().docStore.present;
+          const index =
+            present.editSymbol && !present.heterogeneous
+              ? 0
+              : present.view.selected_sheet;
+          const sheet = present.drawing.sheets[index];
+          if (!sheet) return;
+          const location =
+            pos ??
+            present.view.contextMenuLastPoint ??
+            ([
+              sheet.details.page_size[0] / 2,
+              sheet.details.page_size[1] / 2,
+            ] as Coordinate);
+          dispatch(
+            actionAddImage(
+              data,
+              type,
+              dataSize,
+              [img.naturalWidth, img.naturalHeight],
+              location,
+            ),
+          );
+        } catch {
+          failed();
+        }
       };
       img.src = event.target.result as string;
     };
@@ -900,6 +992,9 @@ export function handleMenuCommand(command: string) {
         break;
       case 'import-kicad-symbols':
         dispatch(importSymbolsFromFile() as any);
+        break;
+      case 'import-image':
+        dispatch(importImageFromFile() as any);
         break;
       case 'tools-drc':
         dispatch(actionSelectDialog('drc', null));

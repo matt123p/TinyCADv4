@@ -788,15 +788,11 @@ export class ioXML {
             a: root.makeCoords(item.point),
             b: root.makeCoords(item.point_b),
             id: item.imageData.id,
-          };
-          o = root.appendChild('METAFILE', null, a);
-          break;
-        case DocItemTypes.Image:
-          a = {
-            a: root.makeCoords(item.point),
-            b: root.makeCoords(item.point_b),
-            style: item.style_id,
-            fill: item.fill_id,
+            fixed_aspect: item.fixed_aspect ? 1 : 0,
+            clip_left: item.clip_left ?? 0,
+            clip_right: item.clip_right ?? 0,
+            clip_top: item.clip_top ?? 0,
+            clip_bottom: item.clip_bottom ?? 0,
           };
           o = root.appendChild('METAFILE', null, a);
           break;
@@ -975,6 +971,11 @@ export class ioXML {
             point: this.coords(node.getAttribute('a')),
             point_b: this.coords(node.getAttribute('b')),
             imageData: this.imagedef(root, newSheet, node.getAttribute('id')),
+            fixed_aspect: node.getAttribute('fixed_aspect') === '1',
+            clip_left: Math.max(0, parseInt(node.getAttribute('clip_left'), 10) || 0),
+            clip_right: Math.max(0, parseInt(node.getAttribute('clip_right'), 10) || 0),
+            clip_top: Math.max(0, parseInt(node.getAttribute('clip_top'), 10) || 0),
+            clip_bottom: Math.max(0, parseInt(node.getAttribute('clip_bottom'), 10) || 0),
           } as dsnImage;
           break;
         case 'ELLIPSE':

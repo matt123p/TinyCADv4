@@ -4,6 +4,8 @@
 
 ### Added
 
+- Image properties for fixed aspect ratio, restoring original proportions and clipping each edge in source pixels, preserved per image in TinyCAD XML.
+- Import images from File → Import → Image, alongside image paste and drag-and-drop. Other browser-supported formats, including GIF and WebP, are converted to still PNG images.
 - Integrated AI chatbot in browser and desktop builds, opened from the toolbar, with Markdown replies, file attachments and expandable thinking, tool-call and image activity.
 - Bring-your-own-key connections for OpenAI, Anthropic, Google Gemini and compatible providers, plus locally hosted Ollama. Guided setup keeps API keys hidden after entry and restores saved connections and settings on restart, with model and thinking controls directly in chat. Desktop credentials use OS-backed encryption, with memory-only storage when secure storage is unavailable.
 - Sign in with ChatGPT using an eligible paid subscription in desktop and local browser builds, with account usage controls and online search with source citations. Production browser builds offer API-key setup.

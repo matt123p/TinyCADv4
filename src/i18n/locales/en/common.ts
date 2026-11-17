@@ -103,6 +103,7 @@ const common = {
     exportSvg: 'Export to SVG',
     exportPdf: 'Export to PDF',
     importKicad: 'Import KiCad Symbols',
+    importImage: 'Image...',
     annotateSymbols: 'Annotate Symbols',
     billOfMaterials: 'Bill of Materials',
     generateNetlist: 'Generate Netlist',

@@ -70,6 +70,7 @@ import { tclibLibraryEntry, TextDisplayMethod } from '../model/tclib';
 import { ReplaceSymbolScope } from '../state/actions/symbolActions';
 import md5 from 'md5';
 import { store } from '../startup';
+import { imageClip, imageClipFields, imagePixelSize, setImageProperties } from '../model/imageProperties';
 import {
   actionMenuSetContextMenu,
   actionSelectDialog,
@@ -2321,6 +2322,15 @@ export class updateView {
   // between this object and the target object then the target
   // is set to null
   copyStyleObject(from: DocItem, to: MergedStyle) {
+    if (from?.NodeName === DocItemTypes.Image) {
+      to.image = true;
+      to.fixed_aspect = StyleSet(to.fixed_aspect, from.fixed_aspect ?? false);
+      const clip = imageClip(from);
+      for (const key of imageClipFields) to[key] = StyleSet(to[key], clip[key]);
+      const [width, height] = imagePixelSize(from.imageData);
+      to.image_width = Math.min(to.image_width ?? width, width);
+      to.image_height = Math.min(to.image_height ?? height, height);
+    }
     if (isStroked(from)) {
       to.line = true;
       to.stroked = StyleSet(to.stroked, from.stroked);
@@ -2363,6 +2373,10 @@ export class updateView {
         return e._id === id;
       });
       let obj = a;
+
+      if (a?.NodeName === DocItemTypes.Image && style.image) {
+        a = setImageProperties(a, style);
+      }
 
       if (isStroked(a) && style.line) {
         a = update(a, {
@@ -2416,6 +2430,8 @@ export class updateView {
         items: { $set: items },
       });
     }
+
+    if (style.image) return { sheet, view: this._updateSelection(view, sheet, view._selected_handle, view._selected_array) };
 
     // Update the selection too
     // We want to update the properties in the style but keep the flags if they are already set
