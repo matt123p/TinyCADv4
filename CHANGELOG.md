@@ -1,39 +1,26 @@
 # Changelog
 
-## Unreleased
+## v4.1.0
 
 ### Added
 
-- Image properties for fixed aspect ratio, restoring original proportions and clipping each edge in source pixels, preserved per image in TinyCAD XML.
-- Import images from File → Import → Image, alongside image paste and drag-and-drop. Other browser-supported formats, including GIF and WebP, are converted to still PNG images.
-- Integrated AI chatbot in browser and desktop builds, opened from the toolbar, with Markdown replies, file attachments and expandable thinking, tool-call and image activity.
-- Bring-your-own-key connections for OpenAI, Anthropic, Google Gemini and compatible providers, plus locally hosted Ollama. Guided setup keeps API keys hidden after entry and restores saved connections and settings on restart, with model and thinking controls directly in chat. Desktop credentials use OS-backed encryption, with memory-only storage when secure storage is unavailable.
-- Sign in with ChatGPT using an eligible paid subscription in desktop and local browser builds, with account usage controls and online search with source citations. Production browser builds offer API-key setup.
-- Direct AI tools to inspect the current unsaved drawing, metadata, netlist and SVG/PNG previews, search bundled libraries, and create, place or edit circuitry with revision checks and Undo/Redo. Library searches preserve original artwork and SPICE attributes.
-- PDF and image reference imports for creating editable circuits and symbols, including a compact IC generator. Generated symbols can be placed ready to wire or added individually or in batches to the active library.
-- Automatic circuit layout and wire tidy-up, with shorter routes around objects, annotations and other wires, support for hidden transistor pins, and preservation of connections and fixed anchors.
-
-- Integrated local ngspice simulation in browser and desktop builds, with Simulation sheets for operating point, transient, AC, DC sweep, noise, transfer-function and pole-zero analyses. Desktop also supports event-driven XSPICE models.
-- Configurable voltage/current sources, controlled sources, voltage/differential/current probes and virtual oscilloscopes, multimeters, function generators and bench supplies.
-- Circuit Explorer for temporary tuning, parameter sweeps, named measurements, requirements, DC overlays, frequency-response investigations, tolerance studies, test cases and power/stress reports.
-- Compressed `.dzn` drawings containing schematics, embedded symbols, simulation setups, model attachments and optional retained results, with run history, CSV/PNG exports, independent pop-out chart windows and Save without results. Solver diagnostics are retained even when a run produces no samples.
-- Eleven-chapter SPICE and six-chapter XSPICE courses with 28 distinct runnable drawings, model definitions, analysis settings and retained reference acquisitions.
-
-- Bundled standard libraries for SPICE essentials, digital logic, functional blocks, and sensors and interfaces, with configurable simulation models.
-- Bundled standard libraries for motors and motion, test and measurement, audio and music, solar power and batteries, embedded processors and smart home, and network layouts. Libraries include compact vector artwork, physical pin layouts, source-checked pin maps and connection points for individual conductors, complete cables and fluid hoses.
+- Integrated AI chat with Markdown, attachments, online search and tools to inspect and edit circuits, drawings and libraries with Undo/Redo. Supports provider API keys, local Ollama and eligible ChatGPT sign-in, with secure desktop credential storage.
+- PDF/image references and an IC generator for creating editable circuits and library symbols.
+- Image import from files, paste and drag-and-drop, with clipping, fixed aspect ratio and proportion reset saved in TinyCAD XML.
+- Local ngspice simulation, desktop XSPICE, configurable sources, probes and virtual bench instruments.
+- Circuit Explorer with tuning, sweeps, measurements, requirements, tolerance studies and power/stress reports.
+- Compressed .dzn drawings with simulation setups, models, retained results, run history and CSV/PNG exports.
+- SPICE/XSPICE courses, runnable examples and expanded standard component libraries.
+- Automatic circuit layout and wire tidy-up that preserve connections and fixed anchors.
 
 ### Fixed
 
-- Apply the Background Colour setting to the drawing page with rulers on or off, including the touch loupe (#33).
-- Remove unnecessary local down-and-up wire detours when shorter routes clear nearby objects, annotations and other wires, while preserving connections and fixed anchors.
-- Treat hidden transistor pins as connection points rather than visible stems, preventing artificial return bends and repairing existing loops in the amplifier example.
-- Prevent hover and rectangle-selection crashes on symbols with hidden or empty conditional attributes.
+- Apply page background colour with or without rulers, including the touch loupe (#33).
+- Fix hidden-pin selection crashes and unnecessary wire detours around transistor pins.
 
 ### Maintenance
 
-- Expand the online manual with bundled-library and example guides, SPICE/XSPICE courses, simulation and `.dzn` references, layout tidy-up guidance and browser video walkthroughs, with updates to all eight manual translations.
-- Add reproducible library generation, pin-map provenance, artwork galleries, A4 placement reviews and media capture for documentation and verification.
-- Expand regression tests for chatbot providers, authentication, streaming and editor tools; library search, placement, wiring, rotation and save/load; and layout algorithms, dialogs, workers and browser behavior, with automated CI coverage and documented test commands.
+- Expand translated manuals, tutorials, library generation and regression coverage.
 
 ## v4.0.11
 
