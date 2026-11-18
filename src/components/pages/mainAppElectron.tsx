@@ -46,6 +46,9 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
 
   useEffect(() => {
     props.dispatch(initialise() as any);
+    if (new URLSearchParams(window.location.search).get('about') === '1') {
+      props.dispatch(actionSelectDialog('about', null));
+    }
     const unsubscribe = window.electronAPI.onMenuCommand((command) => {
       props.dispatch(handleMenuCommand(command) as any);
     });

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Parcel } from '@parcel/core';
@@ -47,6 +47,39 @@ for (const [target, entry] of [
         }
       } else {
         assert.deepEqual(chatAssets, [], 'Browser builds must contain no chatbot UI, providers, tools, or workers');
+      }
+      const notices = path.join(directory, 'dist', 'licenses');
+      assert.match(await readFile(path.join(notices, 'tinycad.txt'), 'utf8'), /TERMS AND CONDITIONS/);
+      const index = JSON.parse(await readFile(path.join(notices, 'index.json'), 'utf8'));
+      const readNotice = (name) => {
+        const entries = index.filter((notice) => notice.name === name);
+        assert.equal(entries.length, 1, `Expected one ${name} entry`);
+        return readFile(path.join(notices, entries[0].file), 'utf8');
+      };
+      const react = await readNotice('React');
+      assert.match(react, /react-dom /);
+      assert.equal([...react.matchAll(/Permission is hereby granted/g)].length, 1);
+      assert.ok(!index.some(({ name }) => ['react', 'react-dom', 'react-is', 'scheduler'].includes(name)));
+      const fluent = await readNotice('Fluent UI');
+      assert.match(fluent, /@fluentui\/react-icons /);
+      assert.match(fluent, /Microsoft Corporation/);
+      assert.match(fluent, /2020 Microsoft Corporation/);
+      assert.equal([...fluent.matchAll(/Permission is hereby granted/g)].length, 1);
+      assert.ok(!index.some(({ name }) => name.startsWith('@fluentui/')));
+      assert.match(await readNotice('SQLite (via sql.js)'), /SQLite is in the public domain[\s\S]*Permission is hereby granted/);
+      assert.match(await readNotice('ngspice'), /Ngspice Licensing[\s\S]*Kenneth S\. Kundert/);
+      assert.ok(index.some(({ name, license }) => name === 'Liberation Fonts' && license === 'OFL-1.1'));
+      assert.ok(!index.some(({ name }) => ['tslib', 'parcel', 'type-fest'].includes(name)));
+      assert.ok(!index.some(({ name }) => name.startsWith('@types/')));
+      assert.equal(index.some(({ name }) => name === 'electron-store'), target === 'electron');
+      if (target === 'electron') {
+        assert.match(await readNotice('XSPICE table code models'), /Version 2, June 1991/);
+      } else {
+        assert.ok(!index.some(({ name }) => name === 'XSPICE table code models'));
+      }
+      for (const { file } of index) {
+        assert.match(file, /^[a-f0-9]{64}\.txt$/);
+        assert.ok((await readFile(path.join(notices, file), 'utf8')).trim());
       }
     } finally {
       await rm(directory, { recursive: true, force: true });

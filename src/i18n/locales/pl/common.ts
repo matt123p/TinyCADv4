@@ -325,7 +325,12 @@ const common = {
       title: 'O TinyCAD',
       version: 'Wersja',
       description: 'Program open source do tworzenia schematów dla systemów Windows, Linux i macOS oraz do użytku w przeglądarce internetowej',
-      licenseTitle: 'Licencja (GNU GPL v3)',
+      tinycadLicense: 'Licencja TinyCAD (tylko GNU GPL v3)',
+      licensePicker: 'Licencja',
+      licensePickerHelp: 'Zmień wybór, aby wyświetlić licencję składnika zewnętrznego.',
+      licenseLoading: 'Wczytywanie informacji o licencji…',
+      licenseUnavailable: 'Nie udało się wczytać informacji o licencji.',
+      openChromiumLicenses: 'Otwórz informacje o licencjach Chromium',
     },
     printPreview: {
       title: 'Podgląd wydruku',

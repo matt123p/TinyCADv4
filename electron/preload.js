@@ -1,6 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+    licenseIndex: () => ipcRenderer.invoke('licenses-index'),
+    readLicense: (file) => ipcRenderer.invoke('licenses-read', file),
+    openChromiumLicenses: () => ipcRenderer.invoke('licenses-open-chromium'),
     onlineLibraryRequest: (resource) => ipcRenderer.invoke('online-library-request', resource),
     chatSecret: (operation, value) => ipcRenderer.invoke('chat-secret', { operation, value }),
     chatgptAccount: (operation, args) => ipcRenderer.invoke('chatgpt-account', { operation, args }),

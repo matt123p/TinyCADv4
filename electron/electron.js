@@ -10,6 +10,7 @@ import Store from 'electron-store';
 import { registerBundledLibraries } from './bundledLibraries.js';
 import { registerBundledExamples } from './bundledExamples.js';
 import { registerOnlineLibrary } from './onlineLibrary.js';
+import { registerLicenseHandlers } from './licenses.js';
 import fs from 'fs';
 import { spawn } from 'child_process';
 import { loadFile, saveFile, sendRecentFiles } from './io.js';
@@ -22,7 +23,6 @@ const isDev = (await import('electron-is-dev')).default;
 const isMac = process.platform === 'darwin'
 const electronMajorVersion = Number.parseInt(process.versions.electron.split('.')[0] || '0', 10);
 const appDisplayName = 'TinyCAD';
-const appCopyright = 'Copyright (c) 2026 Matt Pyne';
 
 const store = new Store(); // Create store instance
 let mainWindow;
@@ -46,6 +46,19 @@ const spawnNewWindow = (filePath) => {
   subprocess.unref();
 };
 
+function showAbout() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow({ openAbout: true });
+    return;
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.focus();
+  const contents = mainWindow.webContents;
+  const show = () => contents.send('menu-command', 'help-about');
+  if (contents.isLoadingMainFrame()) contents.once('did-finish-load', show);
+  else show();
+}
+
 function forceFileExtension(fileName, extension) {
   const parsed = path.parse(fileName || 'drawing');
   return path.join(parsed.dir, `${parsed.name}${extension}`);
@@ -59,7 +72,7 @@ function getWindowIconPath() {
   return path.join(__dirname, '../assets/TinyCAD.png');
 }
 
-function createWindow() {
+function createWindow({ openAbout = false } = {}) {
 
   const getMenuLabel = (key, fallback) => {
     const value = menuTranslations[key];
@@ -106,7 +119,7 @@ function createWindow() {
       ...(isMac ? [{
         label: app.name,
         submenu: [
-          { role: 'about', label: getMenuLabel('aboutTinyCAD', 'About TinyCAD') },
+          { label: getMenuLabel('aboutTinyCAD', 'About TinyCAD'), click: showAbout },
           { type: 'separator' },
           { role: 'services' },
           { type: 'separator' },
@@ -206,7 +219,7 @@ function createWindow() {
           { label: getMenuLabel('manual', 'Manual'), click: () => shell.openExternal('https://docs.tinycad.net/v4/') },
           ...(isMac ? [] : [
             { type: 'separator' },
-            { label: getMenuLabel('aboutTinyCAD', 'About TinyCAD'), click: () => mainWindow.webContents.send('menu-command', 'help-about') },
+            { label: getMenuLabel('aboutTinyCAD', 'About TinyCAD'), click: showAbout },
           ]),
         ]
       }
@@ -265,6 +278,7 @@ function createWindow() {
 
   // Check for command line arguments
   const qp = new URLSearchParams();
+  if (openAbout) qp.set('about', '1');
   for (const arg of process.argv) {
     if (arg === '--new-library') {
       qp.set('action', 'new-library');
@@ -372,6 +386,7 @@ function createWindow() {
   if (!ipcHandlersRegistered) {
     ipcHandlersRegistered = true;
     registerSimulation();
+    registerLicenseHandlers({ ipcMain, app, shell, getWindow: () => mainWindow });
     registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
       directory: path.join(__dirname, '../dist/bundled-examples') });
     registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
@@ -788,15 +803,6 @@ app.on('open-file', (event, filePath) => {
 
 app.whenReady().then(() => {
   app.setName(appDisplayName);
-
-  if (isMac) {
-    app.setAboutPanelOptions({
-      applicationName: appDisplayName,
-      applicationVersion: app.getVersion(),
-      version: app.getVersion(),
-      copyright: appCopyright,
-    });
-  }
 
   if (process.platform === 'win32') {
     app.setAppUserModelId('com.tinycad.app');
