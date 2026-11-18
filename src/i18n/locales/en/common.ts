@@ -326,7 +326,12 @@ const common = {
       title: 'About TinyCAD',
       version: 'Version',
       description: 'An open source schematic capture program for Windows, Linux, macOS and the Web',
-      licenseTitle: 'License (GNU GPL v3)',
+      tinycadLicense: 'TinyCAD license (GNU GPL v3 only)',
+      licensePicker: 'License',
+      licensePickerHelp: 'Change the selection to view a third-party license.',
+      licenseLoading: 'Loading license information…',
+      licenseUnavailable: 'License information could not be loaded.',
+      openChromiumLicenses: 'Open Chromium license notices',
     },
     printPreview: {
       title: 'Print Preview',

@@ -1,0 +1,18 @@
+KLU
+Copyright 2004-2009, Tim Davis. All rights reserved.
+
+AMD
+Copyright (c) Timothy A. Davis, Patrick R. Amestoy, and Iain S. Duff.
+
+COLAMD / SYMAMD
+Stefan I. Larimore and Timothy A. Davis, University of Florida.
+
+BTF
+Copyright (c) 2004-2007. Tim Davis, University of Florida,
+with support from Sandia National Laboratories. All rights reserved.
+
+Numparam
+Copyright (C) 2002 Georg Post.
+
+See the GNU Lesser General Public License included in ngspice's license
+file and the original source and notices shipped with the ngspice engine.

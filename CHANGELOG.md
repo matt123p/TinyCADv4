@@ -12,6 +12,7 @@
 - Compressed .dzn drawings with simulation setups, models, retained results, run history and CSV/PNG exports.
 - SPICE/XSPICE courses, runnable examples and expanded standard component libraries.
 - Automatic circuit layout and wire tidy-up that preserve connections and fixed anchors.
+- About TinyCAD shows the full TinyCAD license and required third-party notices in one picker.
 
 ### Fixed
 

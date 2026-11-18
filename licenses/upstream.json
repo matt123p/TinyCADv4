@@ -1,0 +1,34 @@
+{
+  "@fluentui/react-icons@2.0.320": { "files": ["fluent-icons.txt"] },
+  "@icons/material@0.2.4": { "license": "MIT AND Apache-2.0", "files": ["icons-material.txt", "mdi.txt", "apache-2.0.txt"] },
+  "@napi-rs/canvas-*@0.1.100": { "license": "MIT and bundled Skia notices", "files": ["canvas.txt", "skia.txt"] },
+  "@rollup/rollup-*@4.53.3": { "files": ["rollup.txt"] },
+  "@swc/helpers@0.3.17": { "files": ["swc-helpers-mit.txt"] },
+  "blob@0.0.4": { "license": "MIT", "files": ["blob.txt"] },
+  "brotli@1.3.3": { "license": "MIT AND Apache-2.0", "files": ["brotli.txt", "apache-2.0.txt"] },
+  "dfa@1.2.0": { "files": ["dfa.txt"] },
+  "dompurify": { "license": "Apache-2.0" },
+  "embla-carousel@8.6.0": { "files": ["embla.txt"] },
+  "embla-carousel-autoplay@8.6.0": { "files": ["embla.txt"] },
+  "embla-carousel-fade@8.6.0": { "files": ["embla.txt"] },
+  "fontkit@1.9.0": { "files": ["fontkit.txt"] },
+  "html-parse-stringify@3.0.1": { "files": ["html-parse.txt"] },
+  "jose": { "license": "MIT" },
+  "pdfjs-dist@5.7.284": {
+    "license": "Apache-2.0 and bundled notices",
+    "packageFiles": [
+      "cmaps/LICENSE",
+      "iccs/LICENSE",
+      "standard_fonts/LICENSE_FOXIT",
+      "standard_fonts/LICENSE_LIBERATION",
+      "wasm/LICENSE_JBIG2",
+      "wasm/LICENSE_OPENJPEG",
+      "wasm/LICENSE_PDFJS_JBIG2",
+      "wasm/LICENSE_PDFJS_OPENJPEG",
+      "wasm/LICENSE_PDFJS_QCMS",
+      "wasm/LICENSE_QCMS"
+    ]
+  },
+  "png-js": { "license": "MIT" },
+  "proper-lockfile": { "license": "MIT" }
+}

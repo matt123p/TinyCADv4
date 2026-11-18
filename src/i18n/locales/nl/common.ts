@@ -325,7 +325,12 @@ const common = {
       title: 'Over TinyCAD',
       version: 'Versie',
       description: 'Een opensourceprogramma voor het tekenen van schema’s voor Windows, Linux, macOS en het web',
-      licenseTitle: 'Licentie (GNU GPL v3)',
+      tinycadLicense: 'TinyCAD-licentie (alleen GNU GPL v3)',
+      licensePicker: 'Licentie',
+      licensePickerHelp: 'Kies een ander item om de licentie van een component van derden te bekijken.',
+      licenseLoading: 'Licentiegegevens laden…',
+      licenseUnavailable: 'De licentiegegevens konden niet worden geladen.',
+      openChromiumLicenses: 'Licentievermeldingen van Chromium openen',
     },
     printPreview: {
       title: 'Afdrukvoorbeeld',

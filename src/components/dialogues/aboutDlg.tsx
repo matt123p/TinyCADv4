@@ -1,5 +1,5 @@
 import { tinycadUrl } from '../../io/apiServer';
-import React, { FunctionComponent, useState, useEffect } from 'react';
+import React, { FunctionComponent, useEffect, useId, useState } from 'react';
 import {
   Dialog,
   DialogSurface,
@@ -11,12 +11,12 @@ import {
   makeStyles,
   tokens,
   Text,
-  Spinner,
 } from '@fluentui/react-components';
 import { actionCancelDialog } from '../../state/dispatcher/AppDispatcher';
 import { useDispatch } from 'react-redux';
 import { openExternalUrl } from '../../util/navigation';
 import { useTranslation } from 'react-i18next';
+import { type LicenseNotice, loadLicenseIndex, loadLicenseText } from '../../io/licenses';
 import packageJson from '../../../package.json';
 
 const useStyles = makeStyles({
@@ -48,6 +48,20 @@ const useStyles = makeStyles({
     textAlign: 'center',
     marginBottom: '8px',
   },
+  licensePicker: {
+    display: 'grid',
+    gap: '6px',
+  },
+  select: {
+    boxSizing: 'border-box',
+    width: '100%',
+    minHeight: '32px',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    backgroundColor: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    border: `1px solid ${tokens.colorNeutralStroke1}`,
+  },
   licenseContainer: {
     maxHeight: 'min(220px, 25vh)',
     overflow: 'auto',
@@ -68,11 +82,6 @@ const useStyles = makeStyles({
     fontSize: '14px',
     marginBottom: '8px',
   },
-  loadingContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    padding: '20px',
-  },
   link: {
     color: tokens.colorBrandForeground1,
     textDecoration: 'none',
@@ -82,92 +91,50 @@ const useStyles = makeStyles({
   },
 });
 
-// The license text is embedded to ensure it's always available
-const LICENSE_TEXT = `GNU GENERAL PUBLIC LICENSE
-Version 3, 29 June 2007
+function LicenseText({ file }: { file: string }) {
+  const styles = useStyles();
+  const { t } = useTranslation();
+  const [text, setText] = useState<string>();
+  const [failed, setFailed] = useState(false);
 
-Copyright (C) 2007 Free Software Foundation, Inc.
-<https://fsf.org/>
+  useEffect(() => {
+    let active = true;
+    loadLicenseText(file).then(
+      (body) => { if (active) setText(body); },
+      () => { if (active) setFailed(true); },
+    );
+    return () => { active = false; };
+  }, [file]);
 
-Everyone is permitted to copy and distribute verbatim copies of this
-license document, but changing it is not allowed.
+  if (failed) return <Text role="alert">{t('dialogues.about.licenseUnavailable')}</Text>;
+  if (text === undefined) return <Text role="status">{t('dialogues.about.licenseLoading')}</Text>;
+  return (
+    <div className={styles.licenseContainer} tabIndex={0}>
+      <pre className={styles.licenseText}>{text}</pre>
+    </div>
+  );
+}
 
-PREAMBLE
-
-The GNU General Public License is a free, copyleft license for
-software and other kinds of works.
-
-The licenses for most software and other practical works are designed
-to take away your freedom to share and change the works. By contrast,
-the GNU General Public License is intended to guarantee your freedom
-to share and change all versions of a program--to make sure it remains
-free software for all its users. We, the Free Software Foundation, use
-the GNU General Public License for most of our software; it applies
-also to any other work released this way by its authors. You can apply
-it to your programs, too.
-
-When we speak of free software, we are referring to freedom, not
-price. Our General Public Licenses are designed to make sure that you
-have the freedom to distribute copies of free software (and charge for
-them if you wish), that you receive source code or can get it if you
-want it, that you can change the software or use pieces of it in new
-free programs, and that you know you can do these things.
-
-To protect your rights, we need to prevent others from denying you
-these rights or asking you to surrender the rights. Therefore, you
-have certain responsibilities if you distribute copies of the
-software, or if you modify it: responsibilities to respect the freedom
-of others.
-
-For example, if you distribute copies of such a program, whether
-gratis or for a fee, you must pass on to the recipients the same
-freedoms that you received. You must make sure that they, too, receive
-or can get the source code. And you must show them these terms so they
-know their rights.
-
-Developers that use the GNU GPL protect your rights with two steps:
-(1) assert copyright on the software, and (2) offer you this License
-giving you legal permission to copy, distribute and/or modify it.
-
-For the developers' and authors' protection, the GPL clearly explains
-that there is no warranty for this free software. For both users' and
-authors' sake, the GPL requires that modified versions be marked as
-changed, so that their problems will not be attributed erroneously to
-authors of previous versions.
-
-Some devices are designed to deny users access to install or run
-modified versions of the software inside them, although the
-manufacturer can do so. This is fundamentally incompatible with the
-aim of protecting users' freedom to change the software. The
-systematic pattern of such abuse occurs in the area of products for
-individuals to use, which is precisely where it is most unacceptable.
-Therefore, we have designed this version of the GPL to prohibit the
-practice for those products. If such problems arise substantially in
-other domains, we stand ready to extend this provision to those
-domains in future versions of the GPL, as needed to protect the
-freedom of users.
-
-Finally, every program is threatened constantly by software patents.
-States should not allow patents to restrict development and use of
-software on general-purpose computers, but in those that do, we wish
-to avoid the special danger that patents applied to a free program
-could make it effectively proprietary. To prevent this, the GPL
-assures that patents cannot be used to render the program non-free.
-
-The precise terms and conditions for copying, distribution and
-modification follow.
-
-For the full license text, please visit:
-https://www.gnu.org/licenses/gpl-3.0.html`;
-
-//
-// This component represents the About dialogue
-//
 export const AboutDialog: FunctionComponent = () => {
   const dispatch = useDispatch();
   const styles = useStyles();
   const { t } = useTranslation();
   const appVersion = packageJson.version ?? '0.0.0';
+  const selectId = useId();
+  const [notices, setNotices] = useState<LicenseNotice[]>();
+  const [selected, setSelected] = useState('');
+  const [indexFailed, setIndexFailed] = useState(false);
+  const [chromiumFailed, setChromiumFailed] = useState(false);
+  const file = selected === '' ? 'tinycad.txt' : notices?.[Number(selected)]?.file;
+
+  useEffect(() => {
+    let active = true;
+    loadLicenseIndex().then(
+      (index) => { if (active) setNotices(index); },
+      () => { if (active) setIndexFailed(true); },
+    );
+    return () => { active = false; };
+  }, []);
 
   const openTinyCadWebsite = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -196,9 +163,40 @@ export const AboutDialog: FunctionComponent = () => {
                 www.tinycad.net
               </a>
             </div>
-            <div className={styles.licenseTitle}>{t('dialogues.about.licenseTitle')}</div>
-            <div className={styles.licenseContainer}>
-              <pre className={styles.licenseText}>{LICENSE_TEXT}</pre>
+            <div className={styles.licensePicker}>
+              <label className={styles.licenseTitle} htmlFor={selectId}>
+                {t('dialogues.about.licensePicker')}
+              </label>
+              <select
+                className={styles.select}
+                id={selectId}
+                value={selected}
+                aria-describedby={`${selectId}-help`}
+                onChange={(event) => {
+                  setSelected(event.target.value);
+                  setChromiumFailed(false);
+                }}
+              >
+                <option value="">{t('dialogues.about.tinycadLicense')}</option>
+                {notices?.map(({ name, version, license }, index) => (
+                  <option key={index} value={index}>
+                    {[name, version].filter(Boolean).join(' ')}{license ? ` (${license})` : ''}
+                  </option>
+                ))}
+              </select>
+              <Text size={200} id={`${selectId}-help`}>{t('dialogues.about.licensePickerHelp')}</Text>
+              {indexFailed && <Text role="alert">{t('dialogues.about.licenseUnavailable')}</Text>}
+              {!indexFailed && !notices && <Text role="status">{t('dialogues.about.licenseLoading')}</Text>}
+              {file === 'tinycad.txt' && <Text>{packageJson.copyright}</Text>}
+              {file === 'chromium' ? (
+                <>
+                  <Button onClick={() => {
+                    setChromiumFailed(false);
+                    void window.electronAPI.openChromiumLicenses().catch(() => setChromiumFailed(true));
+                  }}>{t('dialogues.about.openChromiumLicenses')}</Button>
+                  {chromiumFailed && <Text role="alert">{t('dialogues.about.licenseUnavailable')}</Text>}
+                </>
+              ) : file && <LicenseText key={file} file={file} />}
             </div>
           </DialogContent>
           <DialogActions>
