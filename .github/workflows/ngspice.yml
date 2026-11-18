@@ -12,8 +12,20 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
+      - name: Identify runner image
+        id: runner-image
+        shell: bash
+        run: printf 'image=%s-%s\n' "${ImageOS:?}" "${ImageVersion:?}" >> "$GITHUB_OUTPUT"
+      # Only exact matches are reusable: the engine, host, patches and build
+      # configuration must agree. Runner image changes refresh native toolchains.
+      - name: Restore WASM engine cache
+        id: engine-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: public/engines/ngspice
+          key: ngspice-v1-wasm-${{ runner.os }}-${{ runner.arch }}-${{ steps.runner-image.outputs.image }}-${{ hashFiles('build-support/ngspice/**', 'native/ngspice-host/**', 'scripts/build-ngspice.py', 'scripts/install-emsdk.py', '.github/workflows/ngspice.yml') }}
       - uses: actions/setup-python@v6
-        if: runner.os != 'Windows'
+        if: runner.os != 'Windows' && steps.engine-cache.outputs.cache-hit != 'true'
         with:
           python-version: '3.12'
       - uses: actions/setup-node@v5
@@ -23,13 +35,23 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: python3 scripts/install-emsdk.py
-      - name: Build and numerically qualify WASM
+        if: steps.engine-cache.outputs.cache-hit != 'true'
+      - name: Build WASM engine
+        if: steps.engine-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           source build/toolchains/emsdk-4.0.23/emsdk_env.sh
           npm run engine:wasm
-          node scripts/tests/qualify-engines.mjs wasm
-          npm run test:simulation
+      - name: Qualify WASM numerical results
+        run: node scripts/tests/qualify-engines.mjs wasm
+      - run: npm run test:simulation
+      # Save only after qualification; PRs consume the default branch cache.
+      - name: Save qualified WASM engine cache
+        if: steps.engine-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        uses: actions/cache/save@v5
+        with:
+          path: public/engines/ngspice
+          key: ${{ steps.engine-cache.outputs.cache-primary-key }}
       - uses: actions/upload-artifact@v6
         with:
           name: ngspice-wasm
@@ -58,8 +80,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
+      - name: Identify runner image
+        id: runner-image
+        shell: bash
+        run: printf 'image=%s-%s\n' "${ImageOS:?}" "${ImageVersion:?}" >> "$GITHUB_OUTPUT"
+      - name: Restore native engine cache
+        id: engine-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: build/engines/native
+          key: ngspice-v1-native-${{ matrix.os }}-${{ matrix.platform }}-${{ matrix.arch }}-${{ steps.runner-image.outputs.image }}-${{ hashFiles('build-support/ngspice/**', 'native/ngspice-host/**', 'scripts/build-ngspice.py', '.github/workflows/ngspice.yml') }}
       - uses: actions/setup-python@v6
-        if: runner.os != 'Windows'
+        if: runner.os != 'Windows' && steps.engine-cache.outputs.cache-hit != 'true'
         with:
           python-version: '3.12'
       - uses: actions/setup-node@v5
@@ -78,7 +110,7 @@ jobs:
           npm rebuild esbuild
       - run: npm run typecheck
       - uses: msys2/setup-msys2@v2
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && steps.engine-cache.outputs.cache-hit != 'true'
         with:
           msystem: ${{ matrix.arch == 'arm64' && 'CLANGARM64' || 'UCRT64' }}
           update: true
@@ -86,10 +118,10 @@ jobs:
             make patch tar
             ${{ matrix.arch == 'arm64' && 'mingw-w64-clang-aarch64-clang mingw-w64-clang-aarch64-python' || 'mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-python' }}
       - name: Build native engine (Unix)
-        if: runner.os != 'Windows'
+        if: runner.os != 'Windows' && steps.engine-cache.outputs.cache-hit != 'true'
         run: npm run engine:native
       - name: Build native engine (Windows)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && steps.engine-cache.outputs.cache-hit != 'true'
         shell: msys2 {0}
         run: |
           export CC=${{ matrix.arch == 'arm64' && 'clang' || 'gcc' }}
@@ -98,6 +130,12 @@ jobs:
       - name: Qualify native numerical results
         run: node scripts/tests/qualify-engines.mjs native
       - run: npm run test:simulation
+      - name: Save qualified native engine cache
+        if: steps.engine-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        uses: actions/cache/save@v5
+        with:
+          path: build/engines/native
+          key: ${{ steps.engine-cache.outputs.cache-primary-key }}
       - uses: actions/upload-artifact@v6
         with:
           name: ngspice-${{ matrix.platform }}-${{ matrix.arch }}
