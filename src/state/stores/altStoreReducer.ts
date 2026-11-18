@@ -5,12 +5,14 @@ import {
   BottomPanels,
 } from '../dispatcher/AppDispatcher';
 import update from 'immutability-helper';
+import { hasSimulation } from '../../io/drawingSaveFormat';
+import type { ExampleContent } from '../../../shared/bundledExamples';
 
 import { DocActionTypes } from '../actions/docActions';
 import { MenuActionTypes } from '../actions/menuActions';
 import { DialogActionTypes } from '../actions/dialogActions';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../../model/tclib';
-import { LibraryActionTypes } from '../actions/libraryActions';
+import { LibraryActionTypes, StandardLibraryNavigation } from '../actions/libraryActions';
 import { TSheet } from '../../components/svg/Sheet';
 import { FindActionTypes } from '../actions/findActions';
 import { store } from '../../startup';
@@ -71,6 +73,11 @@ export interface ToolbarDefaults {
 }
 
 export interface altStore {
+  // Explanation source for the currently loaded example.
+  exampleExplanation: ExampleContent | null;
+  exampleExplanationVisible: boolean;
+  simulationPanelVisible: boolean;
+  simulationPanelActivated: boolean;
   // Which dialogue is currently being shown?
   show_dialogue: string;
   dialogue_props: any;
@@ -78,6 +85,7 @@ export interface altStore {
   // User libraries that haven been loaded
   libraries: tclib[];
   viewLibrary: tclib;
+  standardLibraryNavigation: StandardLibraryNavigation;
 
   // The panel currently being shown
   panel: Panels;
@@ -127,11 +135,16 @@ export interface altStore {
 }
 
 const intialState: altStore = {
+  exampleExplanation: null,
+  exampleExplanationVisible: false,
+  simulationPanelVisible: false,
+  simulationPanelActivated: false,
   dialogue_props: null,
   show_dialogue: null,
 
   libraries: [],
   viewLibrary: null,
+  standardLibraryNavigation: null,
 
   panel: Panels.LibrariesPanel,
   bottomPanel: BottomPanels.StylePanel,
@@ -202,6 +215,30 @@ export function AltStoreReducer(
   action: AppActionTypes | ViewActions,
 ): altStore {
   switch (action.type) {
+    case 'example/loaded':
+      return {
+        ...state,
+        exampleExplanation: action.item,
+        exampleExplanationVisible: false,
+      };
+    case 'example/explanation':
+      return state.exampleExplanation
+        ? { ...state, exampleExplanationVisible: action.visible }
+        : state;
+    case 'simulation/panel':
+      return {
+        ...state,
+        simulationPanelVisible: action.visible,
+        simulationPanelActivated: state.simulationPanelActivated || action.visible,
+      };
+    case 'simulation/add':
+    case 'simulation/duplicate':
+    case 'simulation/insert-control':
+      return {
+        ...state,
+        simulationPanelVisible: true,
+        simulationPanelActivated: true,
+      };
     case ViewActionTypes.SetMousePosition:
       return update(state, {
         mousePosition: { $set: action.position },
@@ -230,8 +267,14 @@ export function AltStoreReducer(
       });
 
     // Load a completely new document
-    case DocActionTypes.SetDocument:
+    case DocActionTypes.SetDocument: {
+      const showSimulation = hasSimulation(action.doc) ||
+        action.doc.representation === 'zip-v1' || /\.dzn$/i.test(action.filename);
       return update(state, {
+        exampleExplanation: { $set: null },
+        exampleExplanationVisible: { $set: false },
+        simulationPanelVisible: { $set: showSimulation },
+        simulationPanelActivated: { $set: showSimulation },
         loginState: { $set: 3 },
         loginError: { $set: null },
 
@@ -242,6 +285,7 @@ export function AltStoreReducer(
         },
         savedVersion: { $set: 1 },
       });
+    }
 
     case DocActionTypes.SetFileData:
       return update(state, {
@@ -326,6 +370,11 @@ export function AltStoreReducer(
     // Editing a library
     //
 
+    case LibraryActionTypes.ShowStandardLibrary:
+      return { ...state, panel: Panels.LibrariesPanel, viewLibrary: null,
+        standardLibraryNavigation: { libraryId: action.libraryId,
+          request: (state.standardLibraryNavigation?.request || 0) + 1 } };
+
     case LibraryActionTypes.ViewLibrary:
       state = update(state, {
         viewLibrary: { $set: !!action.lib ? { ...action.lib } : null },
@@ -340,6 +389,7 @@ export function AltStoreReducer(
       break;
 
     case LibraryActionTypes.EditLibrary:
+      if (action.lib.readOnly) return state;
       state = update(state, {
         loginState: { $set: 3 },
         loginError: { $set: null },
@@ -395,6 +445,9 @@ export function AltStoreReducer(
       });
       break;
 
+    case 'simulation/diagnostics':
+      return action.errors.length ? { ...state, panel: Panels.DrcPanel } : state;
+
     case DialogActionTypes.SetDRC:
       state = update(state, {
         show_dialogue: { $set: null },
@@ -405,7 +458,19 @@ export function AltStoreReducer(
 
     case LibraryActionTypes.SetLibraryList:
       state = update(state, {
-        libraries: { $set: action.libraries },
+        libraries: { $set: [
+          ...action.libraries.filter(lib => !lib.readOnly),
+          ...state.libraries.filter(lib => lib.readOnly),
+        ] },
+      });
+      break;
+
+    case LibraryActionTypes.SetBundledLibraries:
+      state = update(state, {
+        libraries: { $set: [
+          ...state.libraries.filter(lib => !lib.readOnly),
+          ...action.libraries,
+        ] },
       });
       break;
 

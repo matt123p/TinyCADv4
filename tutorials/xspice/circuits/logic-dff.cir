@@ -1,0 +1,19 @@
+TinyCAD simulation
+
+.temp 27
+.subckt TUTORIAL_LOGIC D CLK RESET Q NQ
+.model adc adc_bridge(in_low=1 in_high=3)
+.model dac dac_bridge(out_low=0 out_high=5 out_undef=2.5 t_rise=5n t_fall=5n)
+Ain [D CLK RESET] [dd dc dr] adc
+Aff dd dc NULL dr dq dn flip
+.model flip d_dff(ic=0 clk_delay=20n reset_delay=20n rise_delay=5n fall_delay=5n)
+Aout [dq dn] [Q NQ] dac
+.ends TUTORIAL_LOGIC
+V1 D 0 DC 0 AC 0 0 PULSE(0 5 2.0000000000000002e-7 5e-9 5e-9 0.0000014 0.0000028)
+V2 CLK 0 DC 0 AC 0 0 PULSE(0 5 5.000000000000001e-7 5e-9 5e-9 5.000000000000001e-7 0.000001)
+V3 RESET 0 DC 0 AC 0 0 PULSE(0 5 0.000006 5e-9 5e-9 5.000000000000001e-7 0.000019999999999999998)
+X1 D CLK RESET Q NQ TUTORIAL_LOGIC
+
+.save i(V1) i(V2) i(V3) v(D) v(CLK) v(RESET) v(Q) v(NQ) v(d) v(clk) v(reset) v(q) v(nq)
+.tran 2e-9 0.000008 0 2e-9
+.end

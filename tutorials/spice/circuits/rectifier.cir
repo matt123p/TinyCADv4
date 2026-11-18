@@ -1,0 +1,12 @@
+TinyCAD simulation
+
+.temp 27
+.model TC_D D(Is=1n N=1.8 Rs=0.5 Cjo=2p Tt=4n Bv=100 Ibv=10u)
+C1 OUT 0 100u IC=0V
+D1 IN OUT TC_D
+R1 OUT 0 1k    
+V1 IN 0 DC 0 AC 0 0 SIN(0 5 50 0 0 0)
+
+.save i(V1) v(IN) v(OUT) v(in) v(out)
+.tran 0.000049999999999999996 0.2 0 0.000049999999999999996
+.end

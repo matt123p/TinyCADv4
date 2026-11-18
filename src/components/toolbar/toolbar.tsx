@@ -24,6 +24,7 @@ import {
   MenuDivider,
 } from '@fluentui/react-components';
 import {
+  ChatSparkleRegular,
   ArrowUndoRegular,
   ArrowRedoRegular,
   ZoomInRegular,
@@ -52,8 +53,20 @@ import {
   RulerRegular,
   GlobeRegular,
   CheckmarkRegular,
+  PulseRegular,
+  DataLineRegular,
+  TargetRegular,
+  PulseSquareRegular,
+  ArrowBidirectionalUpDownRegular,
+  ArrowRightRegular,
+  OptionsRegular,
+  DesktopPulseRegular,
+  GaugeRegular,
+  BatteryChargeRegular,
+  ArrowAutofitContentRegular,
 } from '@fluentui/react-icons';
 import { ActionCreators } from 'redux-undo';
+import { SPICE_COMPONENTS, insertSpiceComponent, showSpiceLibrary } from '../../io/spiceComponents';
 import {
   downloadBom,
   fileSave,
@@ -61,10 +74,12 @@ import {
   fileNew,
   fileOpen,
   fileSaveAs,
+  fileSaveWithoutResults,
   librarySaveAs,
   exportPdf,
   exportSvg,
   importSymbolsFromFile,
+  importImageFromFile,
   handleMenuCommand,
 } from '../../io/files';
 import { CurrentFile, ToolbarDefaults } from '../../state/stores/altStoreReducer';
@@ -106,6 +121,12 @@ import discordImage from 'url:../../../images/Discord-Logo-Black.png';
 
 const useStyles = makeStyles({
   toolbarContainer: {
+    '& .fui-ToolbarButton': {
+      fontFamily: tokens.fontFamilyBase,
+      fontSize: tokens.fontSizeBase200,
+      fontWeight: tokens.fontWeightRegular,
+      lineHeight: tokens.lineHeightBase200,
+    },
     display: 'flex',
     alignItems: 'center',
     backgroundColor: 'rgb(230, 230, 230)',
@@ -119,6 +140,7 @@ const useStyles = makeStyles({
     },
   },
   toolbarContent: {
+    fontFamily: tokens.fontFamilyBase,
     marginLeft: '-8px', // Shifts content left to reduce gap
     flexGrow: 1,
     flexShrink: 0,
@@ -167,6 +189,11 @@ const useStyles = makeStyles({
 });
 
 interface ToolbarProps {
+  simulationPanelVisible?: boolean;
+  simulationToolbarRef?: React.Ref<HTMLSpanElement>;
+  simulationSheet?: boolean;
+  chatOpen?: boolean;
+  onToggleChat?: () => void;
   menu_command: string;
   wireMode: WireMode;
   can_undo: boolean;
@@ -425,6 +452,19 @@ const ScrollableToolbarWrapper: React.FC<{ children: React.ReactNode; className?
 export const Toolbar: React.FC<ToolbarProps> = (props) => {
   const styles = useStyles();
   const { t, i18n } = useTranslation();
+  const chatButton = process.env.TARGET_SYSTEM === 'electron' && props.onToggleChat && (
+    <ToolbarButton
+      aria-label="Chat"
+      title="Chat"
+      icon={<ChatSparkleRegular />}
+      aria-expanded={!!props.chatOpen}
+      aria-controls="tinycad-chat"
+      className={props.chatOpen ? styles.highlight : undefined}
+      onClick={props.onToggleChat}
+    >
+      Chat
+    </ToolbarButton>
+  );
   const m = props.menu_command;
   const currentLanguageAbbreviation = normalizeLanguageCode(i18n.language).slice(0, 2).toLowerCase();
 
@@ -452,6 +492,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           >
             {t('toolbar.downloadBom')}
           </ToolbarButton>
+          {chatButton}
         </FluentToolbar>
       </ScrollableToolbarWrapper>
     );
@@ -470,6 +511,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           >
             {t('toolbar.close')}
           </ToolbarButton>
+          {chatButton}
         </FluentToolbar>
       </ScrollableToolbarWrapper>
     );
@@ -495,7 +537,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             aria-label={t('toolbar.save')}
             title={t('toolbar.saveLibrary')}
             icon={<SaveRegular />}
-            disabled={!props.saveNeeded && !props.saveInProgress}
+            disabled={props.saveInProgress || !props.saveNeeded}
             onClick={() => props.dispatch(librarySave)}
           >
             {t('toolbar.save')}
@@ -526,6 +568,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             disabled={!props.can_redo}
             onClick={() => props.dispatch(ActionCreators.redo())}
           />
+          {chatButton}
         </FluentToolbar>
       </ScrollableToolbarWrapper>
     );
@@ -596,15 +639,28 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                     {t('toolbar.open')}
                   </MenuItem>
               )}
+              {!props.editLibrary && <MenuItem icon={<SaveCopyRegular />} disabled={props.saveInProgress} onClick={() => props.dispatch(fileSaveWithoutResults)}>
+                Save without results...
+              </MenuItem>}
               <MenuItem icon={<ImageRegular />} onClick={() => props.dispatch(exportSvg)}>
                 {t('toolbar.exportSvg')}
               </MenuItem>
               <MenuItem icon={<SaveCopyRegular />} onClick={() => props.dispatch(exportPdf)}>
                 {t('toolbar.exportPdf')}
               </MenuItem>
-              <MenuItem icon={<ArrowDownloadRegular />} onClick={() => props.dispatch(importSymbolsFromFile() as any)}>
-                {t('toolbar.importKicad')}
-              </MenuItem>
+              <Menu>
+                <MenuTrigger disableButtonEnhancement>
+                  <MenuItem icon={<ArrowDownloadRegular />}>{t('toolbar.import')}</MenuItem>
+                </MenuTrigger>
+                <MenuPopover><MenuList>
+                  <MenuItem icon={<ImageRegular />} onClick={() => props.dispatch(importImageFromFile() as any)}>
+                    {t('toolbar.importImage', { defaultValue: 'Image...' })}
+                  </MenuItem>
+                  <MenuItem icon={<ArrowDownloadRegular />} onClick={() => props.dispatch(importSymbolsFromFile() as any)}>
+                    {t('toolbar.importKicad')}
+                  </MenuItem>
+                </MenuList></MenuPopover>
+              </Menu>
               <MenuDivider />
               <MenuItem icon={<SettingsRegular />} onClick={() => props.dispatch(actionSelectDialog('annotate', null))}>
                 {t('toolbar.annotateSymbols')}
@@ -646,6 +702,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           onClick={() => props.dispatch(fileNew())}
         />} 
 
+
+
         {/* Save buttons */}
         <ToolbarButton
           aria-label={t('toolbar.save')}
@@ -665,6 +723,71 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
              />
           )}
 
+        {!props.editSymbol && <>
+        <ToolbarDivider className={styles.divider} />
+        <Menu>
+          <MenuTrigger disableButtonEnhancement>
+            <ToolbarButton
+              aria-label={t('toolbar.simulation')}
+              title={t('toolbar.simulation')}
+              icon={<PulseRegular />}
+            />
+          </MenuTrigger>
+          <MenuPopover><MenuList>
+            <MenuItem icon={<PulseRegular />} onClick={() => props.dispatch({ type: 'simulation/add', name: 'Simulation' })}>Simulate</MenuItem>
+            <MenuItem icon={<DataLineRegular />} onClick={() => props.dispatch({ type: 'simulation/panel', visible: !props.simulationPanelVisible })}>{props.simulationPanelVisible ? 'Hide charts' : 'Show charts'}</MenuItem>
+            <MenuDivider />
+            <Menu>
+              <MenuTrigger disableButtonEnhancement>
+                <MenuItem icon={<LibraryRegular />}>{t('toolbar.spiceComponents.title')}</MenuItem>
+              </MenuTrigger>
+              <MenuPopover><MenuList>
+                {SPICE_COMPONENTS.map(component => <MenuItem key={component.id}
+                  onClick={() => props.dispatch(insertSpiceComponent(component.id) as any)}>
+                  {t(component.labelKey)}
+                </MenuItem>)}
+                <MenuDivider />
+                <MenuItem icon={<LibraryRegular />} onClick={() => props.dispatch(showSpiceLibrary() as any)}>
+                  {t('toolbar.spiceComponents.more')}
+                </MenuItem>
+              </MenuList></MenuPopover>
+            </Menu>
+            <Menu>
+              <MenuTrigger disableButtonEnhancement>
+                <MenuItem icon={<PulseRegular />}>SPICE</MenuItem>
+              </MenuTrigger>
+              <MenuPopover><MenuList>
+                <MenuItem icon={<TargetRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'probe' })}>Insert Probe</MenuItem>
+                <MenuItem icon={<PulseSquareRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'source' })}>Insert Source</MenuItem>
+                <MenuItem icon={<ImageIcon src={power5Image} />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'ground' })}>Insert Ground</MenuItem>
+                <MenuDivider />
+                <MenuItem icon={<ArrowBidirectionalUpDownRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'differential-probe' })}>Insert Differential Probe</MenuItem>
+                <MenuItem icon={<ArrowRightRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'current-probe' })}>Insert Current Probe</MenuItem>
+                <MenuItem icon={<OptionsRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'controlled' })}>Insert Controlled Source</MenuItem>
+              </MenuList></MenuPopover>
+            </Menu>
+            <Menu>
+              <MenuTrigger disableButtonEnhancement>
+                <MenuItem icon={<DesktopPulseRegular />}>Lab Equipment</MenuItem>
+              </MenuTrigger>
+              <MenuPopover><MenuList>
+                <MenuItem icon={<DesktopPulseRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'scope' })}>Insert Oscilloscope</MenuItem>
+                <MenuItem icon={<GaugeRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'meter' })}>Insert Multimeter</MenuItem>
+                <MenuItem icon={<PulseSquareRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'generator' })}>Insert Function Generator</MenuItem>
+                <MenuItem icon={<BatteryChargeRegular />} onClick={() => props.dispatch({ type: 'simulation/insert-control', tool: 'supply' })}>Insert Bench Supply</MenuItem>
+              </MenuList></MenuPopover>
+            </Menu>
+          </MenuList></MenuPopover>
+        </Menu>
+        {!props.editLibrary && !props.simulationSheet && (
+          <ToolbarButton
+            aria-label={t('autoLayout.title')}
+            title={t('autoLayout.title')}
+            icon={<ArrowAutofitContentRegular />}
+            onClick={() => props.dispatch(actionSelectDialog('auto_layout', null))}
+          />
+        )}
+        </>}
         <ToolbarDivider className={styles.divider} />
         {/* Undo/Redo */}
         <ToolbarButton
@@ -684,6 +807,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
 
         <ToolbarDivider className={styles.divider} />
         
+        <span ref={props.simulationToolbarRef} style={{ display: 'contents' }} />
+        {!props.simulationSheet && <>
         {/* Pin (Only if editing symbol) */}
         {props.editSymbol && process.env.TARGET_SYSTEM !== 'electron' && (
           <ToolbarButton
@@ -822,6 +947,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         <ToolbarDivider className={styles.divider} />
 
         {/* Rotate/Flip buttons */}
+
         <ToolbarButton
           aria-label={t('toolbar.rotateCounterClockwise')}
           title={t('toolbar.rotateLeft')}
@@ -880,6 +1006,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           onClick={() => props.dispatch(actionToggleRulers())}
         />
 
+        </>}
+
         {process.env.TARGET_SYSTEM !== 'electron' && (
           <>
             <ToolbarDivider className={styles.divider} />
@@ -909,6 +1037,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         )}
 
         <div className={styles.spacer} />
+
+        {chatButton}
 
         {/* Far Items */}
         <>

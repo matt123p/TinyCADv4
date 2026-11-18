@@ -6,6 +6,8 @@ import {
   Dropdown,
   Option,
   SpinButton,
+  Checkbox,
+  Button,
   makeStyles,
 } from '@fluentui/react-components';
 import { MergedStyle } from '../../manipulators/updateInterfaces';
@@ -202,6 +204,37 @@ export const StylePanel: React.FC<StylePanelProps> = (props) => {
 
   return (
     <div className={styles.container}>
+      {selectedStyle.image && (
+        <div className={styles.section}>
+          <div className={styles.titleVertical}>Image</div>
+          <div className={styles.content}>
+            <div className={styles.row}>
+              <Checkbox label="Fixed aspect ratio" checked={selectedStyle.fixed_aspect ?? 'mixed'}
+              onChange={(_, data) => dispatch(actionStyle({ line: false, fill: false, text: false, text_colour: false, border_style: false, image: true, fixed_aspect: data.checked === true }))} />
+              <Button size="small" title="Restore the image's original proportions, accounting for clipping. Keeps its width and top-left position."
+                onClick={() => dispatch(actionStyle({ line: false, fill: false, text: false, text_colour: false, border_style: false, image: true, reset_aspect: true }))}>
+                Reset aspect ratio
+              </Button>
+            </div>
+            <div className={styles.row}>
+              {(['left', 'right', 'top', 'bottom'] as const).map(side => {
+                const key = `clip_${side}` as const;
+                const opposite = side === 'left' ? 'right' : side === 'right' ? 'left' : side === 'top' ? 'bottom' : 'top';
+                const max = Math.max(0, (side === 'left' || side === 'right' ? selectedStyle.image_width : selectedStyle.image_height) - (selectedStyle[`clip_${opposite}`] ?? 0) - 1);
+                const label = `${side.charAt(0).toUpperCase() + side.slice(1)} clipping (px)`;
+                return <label key={side} className={styles.label}>
+                  {label}
+                  <SpinButton aria-label={label} style={{ width: '90px' }} value={selectedStyle[key]} min={0} max={max} step={1}
+                    onChange={(_, data) => {
+                      const value = getClampedSpinButtonValue(data.value, data.displayValue, 0, max);
+                      if (value !== null) dispatch(actionStyle({ line: false, fill: false, text: false, text_colour: false, border_style: false, image: true, [key]: Math.floor(value) }));
+                    }} />
+                </label>;
+              })}
+            </div>
+          </div>
+        </div>
+      )}
       {selectedStyle.line && (
         <div className={styles.section}>
           <div className={styles.titleVertical}>{t('panel.style.line')}</div>

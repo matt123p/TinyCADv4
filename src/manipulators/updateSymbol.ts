@@ -369,8 +369,11 @@ export class updateSymbol
         p = [p[0] + delta.dx, p[1] + delta.dy];
 
         this.item._active_points.push([
-          p[0] + this.item.point[0],
-          p[1] + this.item.point[1],
+          // Scaling can leave floating-point residue (e.g. 40 becomes
+          // 39.99999999999999). Netlist nodes use exact coordinate keys, so
+          // discard arithmetic noise well below the editor's grid precision.
+          Math.round((p[0] + this.item.point[0]) * 1e9) / 1e9,
+          Math.round((p[1] + this.item.point[1]) * 1e9) / 1e9,
           active_point.pin,
         ]);
       }
@@ -888,6 +891,22 @@ export class updateSymbol
     });
   }
 
+  setSpiceProperty(name: string, value: string) {
+    if (!name.startsWith('$$SPICE')) return this.item;
+    const text = this.item.text.slice();
+    const index = text.findIndex(field => field.description === name);
+    const field: SymbolTextItem = {
+      ...(index >= 0 ? text[index] : { position: [0, 0] as Coordinate }),
+      description: name,
+      value,
+      show: false,
+      display: TextDisplayMethod.NeverShow,
+    };
+    if (index >= 0) text[index] = field;
+    else text.push(field);
+    return new updateSymbol({ ...this.item, text, _active_points: null }).post_construction();
+  }
+
   showValue(index: number, value: string) {
     const text = this.layout_text_fields(
       this.item.rotation,
@@ -1267,6 +1286,7 @@ export class updateSymbol
     for (let index = 0; index < this.item.textData.length; ++index) {
       if (
         this.item.text[index].show &&
+        this.item.textData[index] &&
         UpdateTextAreas[index].is_inside_rect(
           this.item.textData[index],
           delta,
@@ -1340,6 +1360,11 @@ export class updateSymbol
         handle: 0,
       });
     }
+    if (!best_match && this.item._symbol.uid?.startsWith('tinycad-spice-')) {
+      const bounds = this.getBoundingRect();
+      if (tp[0] >= bounds.x1 && tp[0] <= bounds.x2 && tp[1] >= bounds.y1 && tp[1] <= bounds.y2)
+        candidates.push({ item: this.item, handle: 0, distance: 0 });
+    }
 
     // Now do the text:
     const UpdateTextAreas = this.create_updateTextArea(
@@ -1347,7 +1372,8 @@ export class updateSymbol
       this.item.point,
     );
     for (let index = 0; index < this.item.textData.length; ++index) {
-      if (this.item.text[index].show) {
+      // Hidden/empty attributes deliberately have no measured text area.
+      if (this.item.text[index].show && this.item.textData[index]) {
         const text = UpdateTextAreas[index].on_isinside(
           this.item.textData[index],
           delta,

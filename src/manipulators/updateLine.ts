@@ -29,7 +29,7 @@ export class updateLine implements SimpleAdd, MoveAdd, IsInside {
     var s: CssStyle = {};
     if (this.item.filled && this.item.polygon) {
       if (this.item.hatch > 0) {
-        s.fill = `url(#hatch${this.item.hatch}${this.item.fill_colour}`;
+        s.fill = `url(#hatch${this.item.hatch}${this.item.fill_colour})`;
       } else {
         s.fill = this.item.fill_colour;
       }

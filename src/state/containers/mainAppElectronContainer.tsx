@@ -4,6 +4,9 @@ import { MainAppElectron } from '../../components/pages/mainAppElectron';
 
 const mapStateToProps = (state: docDrawing) => {
   return {
+    hasExampleExplanation: !!state.altStore.exampleExplanation,
+    exampleExplanationVisible: state.altStore.exampleExplanationVisible,
+    simulationPanelVisible: state.altStore.simulationPanelVisible,
     selected_sheet: state.docStore.present.view.selected_sheet,
     editSymbol: state.docStore.present.editSymbol,
     editLibrary: state.docStore.present.editLibrary,

@@ -1,6 +1,21 @@
 import * as XMLFeatures from 'common-xml-features';
 import { Coordinate } from '../model/dsnItem';
 
+// XML parsers normalize literal attribute whitespace to spaces. Older Node
+// serializers emitted it verbatim, losing multiline SPICE templates on opening
+// in a browser. Character references preserve the original attribute value.
+function preserveAttributeWhitespace(xml: string): string {
+  return xml.replace(
+    /<!\[CDATA\[[\s\S]*?\]\]>|<!--[\s\S]*?-->|<(?:(?:"[^"]*")|(?:'[^']*')|[^'">])*>/g,
+    (markup) =>
+      markup.startsWith('<!')
+        ? markup
+        : markup.replace(/"[^"]*"|'[^']*'/g, (attribute) =>
+            attribute.replace(/[\t\r\n]/g, (c) => `&#${c.charCodeAt(0)};`),
+          ),
+  );
+}
+
 //
 // The xml service
 //
@@ -26,7 +41,8 @@ export class XMLBuilder {
         '>',
       'text/xml',
     );
-    this.insert = this.xmlDoc.childNodes[0];
+    // A headless DOM may retain the XML declaration as a processing instruction.
+    this.insert = this.xmlDoc.documentElement;
   }
 
   fromXML(xml: Document) {
@@ -35,12 +51,17 @@ export class XMLBuilder {
 
   fromText(text: string) {
     let parser = new XMLFeatures.DOMParser();
-    this.xmlDoc = parser.parseFromString(text, 'text/xml');
+    this.xmlDoc = parser.parseFromString(
+      preserveAttributeWhitespace(text),
+      'text/xml',
+    );
   }
 
   tostring(): string {
     let serializer = new XMLFeatures.XMLSerializer();
-    return serializer.serializeToString(this.xmlDoc);
+    return preserveAttributeWhitespace(
+      serializer.serializeToString(this.xmlDoc),
+    );
   }
 
   //
@@ -60,14 +81,14 @@ export class XMLBuilder {
       for (let a in attributes) {
         if (attributes.hasOwnProperty(a)) {
           const typ = this.xmlDoc.createAttribute(a);
-          typ.value = attributes[a];
+          typ.value = String(attributes[a]);
           node.attributes.setNamedItem(typ);
         }
       }
     }
 
-    if (s) {
-      node.appendChild(this.xmlDoc.createTextNode(s));
+    if (s !== undefined && s !== null) {
+      node.appendChild(this.xmlDoc.createTextNode(String(s)));
     }
 
     this.insert.appendChild(node);

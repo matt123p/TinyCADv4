@@ -1,0 +1,5223 @@
+{
+  "version": 1,
+  "id": "test-measurement",
+  "name": "Test & Measurement",
+  "artwork": "Original editable TinyCAD vector equipment, probes, sockets, terminals and apparatus. No product photos, logos, traced artwork or imported icon sets.",
+  "scope": "Compact generic laboratory setup resources, not brand/model replicas or commercial package pinouts. Individual binding posts, screw terminals and bare leads each have one conductor endpoint. BNC/USB/LAN/TC-plug ports are complete cable endpoints; hose ports are complete fluid connections. Endpoint kinds and signal domains are recorded explicitly. No SPICE, instrument measurement, thermal/fluid simulation, automatic internal connections or ratings are provided.",
+  "reviewed": "2026-11-13",
+  "references": [
+    {
+      "id": "supplies",
+      "title": "Keysight E36300 supply front-panel and remote-sense guide",
+      "url": "https://www.keysight.com/blogs/en/tech/bench/2021/12/12/five-tips-to-get-the-most-from-keysights-e36300-series-bench-power-supply",
+      "facts": "Separate output binding posts and remote-sense connections; multi-output supply roles."
+    },
+    {
+      "id": "probes",
+      "title": "Tektronix ABCs of probes",
+      "url": "https://www.tek.com/en/documents/whitepaper/abcs-probes-primer",
+      "facts": "Passive voltage, differential and current probes are different interfaces; probe reference leads are explicit."
+    },
+    {
+      "id": "daq",
+      "title": "NI differential and single-ended signal wiring",
+      "url": "https://knowledge.ni.com/KnowledgeArticleDetails?id=kA03q000000YIfVCAW",
+      "facts": "Differential acquisition uses positive and negative inputs; signal reference and grounding depend on the source."
+    },
+    {
+      "id": "miodaq",
+      "title": "NI USB-6421 overview",
+      "url": "https://www.ni.com/docs/en-US/bundle/usb-6421/page/overview.html",
+      "facts": "Multifunction USB acquisition combines differential analog input, analog output, digital I/O and counters."
+    },
+    {
+      "id": "rtd",
+      "title": "DwyerOmega RTD wiring guide",
+      "url": "https://www.dwyeromega.com/en-us/resources/rtd-2-3-4-wire-connections",
+      "facts": "Two-, three- and four-wire RTD configurations need distinct explicit lead counts; four-wire separates excitation and sense."
+    },
+    {
+      "id": "temperature",
+      "title": "Fluke temperature calibration practice",
+      "url": "https://media.fluke.com/dc5b752b-b589-4f3e-b9b3-b2e3010879ff_original%20file.pdf",
+      "facts": "Probe, reference instrument, bath/dry-block source and controller form common temperature-calibration arrangements."
+    },
+    {
+      "id": "stirring",
+      "title": "IKA hotplate/stirrer technical data",
+      "url": "https://www.ika.com/en/Products-LabEq/Magnetic-Stirrers-pg188/IKA-Plate-Package-10003302/Technical-Data-cptd.html",
+      "facts": "Hotplates combine heating/stirring controls and support an external temperature sensor."
+    },
+    {
+      "id": "heaters",
+      "title": "Watlow cartridge/insertion heaters",
+      "url": "https://www.watlow.com/-/media/documents/catalogs/cartridge-heaters0618.ashx?hash=F29666EA30A3115F6CC044CD5EB5E1C51772862D&la=en",
+      "facts": "Cartridge/insertion heater assemblies use a metal sheath and separate heater leads."
+    },
+    {
+      "id": "relay",
+      "title": "Phoenix Contact PLC-RSC-24DC/21 relay module",
+      "url": "https://www.phoenixcontact.com/en-gb/products/relay-module-plc-rsc-24dc21-2966171",
+      "facts": "DIN-rail SPDT interface relay with A1/A2 control and 11 common, 12 normally closed, 14 normally open conventions; generic drawing is not a footprint."
+    },
+    {
+      "id": "ssr",
+      "title": "Omron G3NA solid-state relay family",
+      "url": "https://www.ia.omron.com/products/family/992/download/catalog.html",
+      "facts": "Hockey-puck SSR packaging separates control input from load output; load and control variants must be distinguished."
+    },
+    {
+      "id": "circulation",
+      "title": "Julabo laboratory circulators",
+      "url": "https://www.julabo.com/en-us/laboratory-circulators",
+      "facts": "Heating/cooling baths and external circulating loops use separate fluid supply and return connections."
+    },
+    {
+      "id": "vacuum",
+      "title": "Pfeiffer vacuum for research",
+      "url": "https://www.pfeiffervacuum.com/global/en/industries/research-development/",
+      "facts": "Laboratory vacuum systems include dry diaphragm pumps and vacuum measurement."
+    },
+    {
+      "id": "pumps",
+      "title": "Watson-Marlow tubing and peristaltic pumps",
+      "url": "https://www.wmfts.com/siteassets/catalog/products/corporate/watson-marlow-pumps/pumpheads/7299/literature/b-wmpumps-medical-devices-en.pdf",
+      "facts": "Rollers drive fluid through tubing; inlet and outlet are hose endpoints rather than electrical contacts."
+    },
+    {
+      "id": "balance",
+      "title": "Mettler Toledo laboratory balances",
+      "url": "https://www.mt.com/gb/en/home/products/Laboratory_Weighing_Solutions/laboratory-balances.html",
+      "facts": "Balances serve sample preparation and can transfer data through USB or serial interfaces."
+    },
+    {
+      "id": "bench",
+      "title": "Rohde & Schwarz electronics bench instruments",
+      "url": "https://www.rohde-schwarz.com/us/products/test-and-measurement/essentials-test-equipment/rs-essentials-dc-power-supplies/5-essential-tools-on-an-electronics-bench_256910.html",
+      "facts": "Core bench roles include oscilloscope, multimeter, power supply, signal generator and spectrum analyzer."
+    },
+    {
+      "id": "lcr",
+      "title": "B&K Precision 891 bench LCR meter",
+      "url": "https://www.bkprecision.com/products/electrical-battery-testers/891",
+      "facts": "Bench LCR measurement uses a four-terminal-pair fixture; current and potential coax terminals are distinct."
+    },
+    {
+      "id": "smu",
+      "title": "Keithley low-level measurements handbook",
+      "url": "https://www.tek.com/vn/documents/product-article/keithley-low-level-measurements-handbook---7th-edition",
+      "facts": "Source-measure units distinguish force, sense and driven guard connections."
+    }
+  ],
+  "sourceReview": {
+    "searches": [
+      {
+        "query": "oscilloscope",
+        "suitableResults": 0
+      },
+      {
+        "query": "power supply",
+        "symbolId": 868,
+        "nameId": 10032,
+        "fetched": true
+      },
+      {
+        "query": "thermocouple",
+        "symbolId": 367,
+        "nameId": 9486,
+        "fetched": true
+      },
+      {
+        "query": "relay",
+        "symbolId": 227,
+        "nameId": 9346,
+        "fetched": true
+      }
+    ],
+    "decision": "Fetched candidates are circuit symbols or an industrial supply block, with incompatible front-panel/physical apparatus geometry and endpoint conventions. Original equipment silhouettes extend the existing physical layout libraries."
+  },
+  "entries": [
+    {
+      "id": "psu-1",
+      "name": "DC bench supply — 1 output",
+      "short": "BENCH DC / 1",
+      "kind": "supply",
+      "category": "Power and loads",
+      "ports": [
+        {
+          "name": "OUT 1 +",
+          "label": "1+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "OUT 1 -",
+          "label": "1-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "CHASSIS EARTH",
+          "label": "PE",
+          "kind": "post",
+          "signal": "earth",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "supplies"
+      ],
+      "notes": "Outputs and earth are separate terminals; no automatic output/earth links or tracking.",
+      "channels": 1,
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "65c052e66f943840bddfc5d0c2a6abc8bde241a9bf3a43f0e4fd8e7fece09467"
+    },
+    {
+      "id": "psu-2",
+      "name": "DC bench supply — 2 outputs",
+      "short": "BENCH DC / 2",
+      "kind": "supply",
+      "category": "Power and loads",
+      "ports": [
+        {
+          "name": "OUT 1 +",
+          "label": "1+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "OUT 1 -",
+          "label": "1-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "OUT 2 +",
+          "label": "2+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "OUT 2 -",
+          "label": "2-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        },
+        {
+          "name": "CHASSIS EARTH",
+          "label": "PE",
+          "kind": "post",
+          "signal": "earth",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "6",
+          "x": 34,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "supplies"
+      ],
+      "notes": "Outputs and earth are separate terminals; no automatic output/earth links or tracking.",
+      "channels": 2,
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "54f4d0ef9d1bbdeaf0965ce1fa2eacc0df05b436f16035f6553b267bc60a8248"
+    },
+    {
+      "id": "psu-3",
+      "name": "DC bench supply — 3 outputs",
+      "short": "BENCH DC / 3",
+      "kind": "supply",
+      "category": "Power and loads",
+      "ports": [
+        {
+          "name": "OUT 1 +",
+          "label": "1+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "OUT 1 -",
+          "label": "1-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "OUT 2 +",
+          "label": "2+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "OUT 2 -",
+          "label": "2-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        },
+        {
+          "name": "OUT 3 +",
+          "label": "3+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 28
+        },
+        {
+          "name": "OUT 3 -",
+          "label": "3-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "6",
+          "x": 34,
+          "y": 28
+        },
+        {
+          "name": "CHASSIS EARTH",
+          "label": "PE",
+          "kind": "post",
+          "signal": "earth",
+          "unit": "conductor",
+          "number": "7",
+          "x": 40,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "8",
+          "x": 46,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "supplies"
+      ],
+      "notes": "Outputs and earth are separate terminals; no automatic output/earth links or tracking.",
+      "channels": 3,
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "2c8d93ccd556388549f6e6f329beae1f41931d3f44da37157a1f18edcc9e00a0"
+    },
+    {
+      "id": "psu-4",
+      "name": "DC bench supply — 4 outputs",
+      "short": "BENCH DC / 4",
+      "kind": "supply",
+      "category": "Power and loads",
+      "ports": [
+        {
+          "name": "OUT 1 +",
+          "label": "1+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "OUT 1 -",
+          "label": "1-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "OUT 2 +",
+          "label": "2+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "OUT 2 -",
+          "label": "2-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        },
+        {
+          "name": "OUT 3 +",
+          "label": "3+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 28
+        },
+        {
+          "name": "OUT 3 -",
+          "label": "3-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "6",
+          "x": 34,
+          "y": 28
+        },
+        {
+          "name": "OUT 4 +",
+          "label": "4+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "7",
+          "x": 40,
+          "y": 28
+        },
+        {
+          "name": "OUT 4 -",
+          "label": "4-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "8",
+          "x": 46,
+          "y": 28
+        },
+        {
+          "name": "CHASSIS EARTH",
+          "label": "PE",
+          "kind": "post",
+          "signal": "earth",
+          "unit": "conductor",
+          "number": "9",
+          "x": 52,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "10",
+          "x": 58,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "supplies"
+      ],
+      "notes": "Outputs and earth are separate terminals; no automatic output/earth links or tracking.",
+      "channels": 4,
+      "width": 64,
+      "height": 40,
+      "bodyWidth": 64,
+      "bodyHeight": 32,
+      "xmlSha256": "5b939b4a9c2370a78faec73f82265d9e40c3678f74c7f574329af1290b20454d"
+    },
+    {
+      "id": "psu-remote-sense",
+      "name": "DC supply — separate remote-sense terminals",
+      "short": "DC / REMOTE SENSE",
+      "kind": "supply",
+      "category": "Power and loads",
+      "ports": [
+        {
+          "name": "FORCE +",
+          "label": "+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "FORCE -",
+          "label": "-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "SENSE +",
+          "label": "S+",
+          "kind": "post",
+          "signal": "sense",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "SENSE -",
+          "label": "S-",
+          "kind": "post",
+          "signal": "sense",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        },
+        {
+          "name": "CHASSIS EARTH",
+          "label": "PE",
+          "kind": "post",
+          "signal": "earth",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "6",
+          "x": 34,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "supplies"
+      ],
+      "notes": "Force and sense contacts remain distinct. Draw required sense links explicitly.",
+      "channels": 1,
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "b47e778d4d12144985025be74e95b480f164b47d5de88782bbb1a2d3d28504a3"
+    },
+    {
+      "id": "smu",
+      "name": "Source-measure unit — four-wire",
+      "short": "SOURCE / MEASURE",
+      "kind": "meter",
+      "category": "Power and loads",
+      "ports": [
+        {
+          "name": "FORCE HI",
+          "label": "FHI",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "FORCE LO",
+          "label": "FLO",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "SENSE HI",
+          "label": "SHI",
+          "kind": "post",
+          "signal": "sense",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "SENSE LO",
+          "label": "SLO",
+          "kind": "post",
+          "signal": "sense",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        },
+        {
+          "name": "GUARD",
+          "label": "GRD",
+          "kind": "post",
+          "signal": "guard",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "6",
+          "x": 34,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "smu"
+      ],
+      "notes": "Source/sense/guard are separate; no measurement engine.",
+      "display": "numeric",
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "2da341dbb1e8ff9e76ef17562ea452490a3470a6dddd00faa3ef76ceed6630d1"
+    },
+    {
+      "id": "load-1",
+      "name": "DC electronic load — 1 channel",
+      "short": "DC LOAD / 1",
+      "kind": "load",
+      "category": "Power and loads",
+      "ports": [
+        {
+          "name": "LOAD 1 +",
+          "label": "1+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "LOAD 1 -",
+          "label": "1-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "supplies"
+      ],
+      "notes": "Load inputs sink power; this is a setup diagram resource, not a simulated load.",
+      "channels": 1,
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "30b49cf027b1d265c5c8c7387aac92abf408625784e4654359bb2cce2aa6509f"
+    },
+    {
+      "id": "load-2",
+      "name": "DC electronic load — 2 channels",
+      "short": "DC LOAD / 2",
+      "kind": "load",
+      "category": "Power and loads",
+      "ports": [
+        {
+          "name": "LOAD 1 +",
+          "label": "1+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "LOAD 1 -",
+          "label": "1-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "LOAD 2 +",
+          "label": "2+",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "LOAD 2 -",
+          "label": "2-",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "5",
+          "x": 28,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "supplies"
+      ],
+      "notes": "Load inputs sink power; this is a setup diagram resource, not a simulated load.",
+      "channels": 2,
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "16139898d407990abd9be00e29e4b93f82fa6f07e9ec261d315428a76eaba2d1"
+    },
+    {
+      "id": "source-ac",
+      "name": "Programmable AC bench source",
+      "short": "AC SOURCE",
+      "kind": "supply",
+      "category": "Power and loads",
+      "ports": [
+        {
+          "name": "AC OUT L",
+          "label": "L",
+          "kind": "post",
+          "signal": "mains",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "AC OUT N",
+          "label": "N",
+          "kind": "post",
+          "signal": "mains",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "CHASSIS EARTH",
+          "label": "PE",
+          "kind": "post",
+          "signal": "earth",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "supplies"
+      ],
+      "notes": "AC output terminal names do not specify ratings or isolation.",
+      "channels": 1,
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "06e108b62d7c18c0e8a784edea7051f6be2f09682fdc79a8933fca4cad8994d2"
+    },
+    {
+      "id": "variac",
+      "name": "Variable autotransformer / Variac",
+      "short": "VARIABLE AC",
+      "kind": "variac",
+      "category": "Power and loads",
+      "ports": [
+        {
+          "name": "AC IN",
+          "label": "AC",
+          "kind": "iec",
+          "signal": "mains",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "AC OUT L",
+          "label": "L",
+          "kind": "post",
+          "signal": "mains",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 34
+        },
+        {
+          "name": "AC OUT N",
+          "label": "N",
+          "kind": "post",
+          "signal": "mains",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 34
+        },
+        {
+          "name": "CHASSIS EARTH",
+          "label": "PE",
+          "kind": "post",
+          "signal": "earth",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "supplies"
+      ],
+      "notes": "An autotransformer is not an isolation transformer.",
+      "width": 36,
+      "height": 48,
+      "bodyWidth": 36,
+      "bodyHeight": 40,
+      "xmlSha256": "c791a85486209730fc873c1e1d0b3581c2759b7701b6fb2fdb436c275359fcb3"
+    },
+    {
+      "id": "scope-2",
+      "name": "Digital oscilloscope — 2 channels",
+      "short": "OSCILLOSCOPE / 2",
+      "kind": "scope",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "CH 1",
+          "label": "1",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 32
+        },
+        {
+          "name": "CH 2",
+          "label": "2",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "2",
+          "x": 10,
+          "y": 32
+        },
+        {
+          "name": "EXT TRIGGER",
+          "label": "TRIG",
+          "kind": "bnc",
+          "signal": "trigger",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 32
+        },
+        {
+          "name": "PROBE CAL",
+          "label": "CAL",
+          "kind": "tip",
+          "signal": "calibration",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 32
+        },
+        {
+          "name": "CAL GROUND",
+          "label": "GND",
+          "kind": "post",
+          "signal": "reference",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 32
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "6",
+          "x": 34,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "probes",
+        "bench"
+      ],
+      "notes": "",
+      "channels": 2,
+      "width": 64,
+      "height": 48,
+      "bodyWidth": 64,
+      "bodyHeight": 40,
+      "xmlSha256": "23a9575611341abc81c0fa7acbefc16b757020c59e4e2c650b5020f30e044d20"
+    },
+    {
+      "id": "scope-4",
+      "name": "Digital oscilloscope — 4 channels",
+      "short": "OSCILLOSCOPE / 4",
+      "kind": "scope",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "CH 1",
+          "label": "1",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 32
+        },
+        {
+          "name": "CH 2",
+          "label": "2",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "2",
+          "x": 10,
+          "y": 32
+        },
+        {
+          "name": "CH 3",
+          "label": "3",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 32
+        },
+        {
+          "name": "CH 4",
+          "label": "4",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 32
+        },
+        {
+          "name": "EXT TRIGGER",
+          "label": "TRIG",
+          "kind": "bnc",
+          "signal": "trigger",
+          "unit": "cable",
+          "number": "5",
+          "x": 28,
+          "y": 32
+        },
+        {
+          "name": "PROBE CAL",
+          "label": "CAL",
+          "kind": "tip",
+          "signal": "calibration",
+          "unit": "conductor",
+          "number": "6",
+          "x": 34,
+          "y": 32
+        },
+        {
+          "name": "CAL GROUND",
+          "label": "GND",
+          "kind": "post",
+          "signal": "reference",
+          "unit": "conductor",
+          "number": "7",
+          "x": 40,
+          "y": 32
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "8",
+          "x": 46,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "probes",
+        "bench"
+      ],
+      "notes": "",
+      "channels": 4,
+      "width": 64,
+      "height": 48,
+      "bodyWidth": 64,
+      "bodyHeight": 40,
+      "xmlSha256": "991fdacef4a5dd69b348b6e56e6e181a6a1f13539c30b2f67e681dcae6240a02"
+    },
+    {
+      "id": "scope-mso",
+      "name": "Mixed-signal oscilloscope — 4 analog / 16 logic",
+      "short": "MSO / 4 + 16",
+      "kind": "scope",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "CH 1",
+          "label": "1",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 32
+        },
+        {
+          "name": "CH 2",
+          "label": "2",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "2",
+          "x": 10,
+          "y": 32
+        },
+        {
+          "name": "CH 3",
+          "label": "3",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 32
+        },
+        {
+          "name": "CH 4",
+          "label": "4",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 32
+        },
+        {
+          "name": "LOGIC D0-D7",
+          "label": "D0-7",
+          "kind": "pod",
+          "signal": "logic-pod",
+          "unit": "cable",
+          "number": "5",
+          "x": 28,
+          "y": 32
+        },
+        {
+          "name": "LOGIC D8-D15",
+          "label": "D8-F",
+          "kind": "pod",
+          "signal": "logic-pod",
+          "unit": "cable",
+          "number": "6",
+          "x": 34,
+          "y": 32
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "7",
+          "x": 40,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "probes",
+        "daq",
+        "bench"
+      ],
+      "notes": "Logic ports each represent an eight-channel pod cable.",
+      "channels": 4,
+      "mso": true,
+      "width": 64,
+      "height": 48,
+      "bodyWidth": 64,
+      "bodyHeight": 40,
+      "xmlSha256": "3c7cc3acca9426ae6ce80750c77f18fab80108a03e947ec8d348673a5fce97cb"
+    },
+    {
+      "id": "generator-1",
+      "name": "Function / arbitrary waveform generator — 1 channel",
+      "short": "WAVE GENERATOR / 1",
+      "kind": "generator",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "OUT 1",
+          "label": "O1",
+          "kind": "bnc",
+          "signal": "waveform",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "SYNC OUT",
+          "label": "SYNC",
+          "kind": "bnc",
+          "signal": "trigger",
+          "unit": "cable",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "EXT TRIGGER",
+          "label": "TRIG",
+          "kind": "bnc",
+          "signal": "trigger",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "probes",
+        "bench"
+      ],
+      "notes": "",
+      "channels": 1,
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "7879823c41868ccc1fa514c90f5890d4550cadaa1399eea254a4e114769303c7"
+    },
+    {
+      "id": "generator-2",
+      "name": "Function / arbitrary waveform generator — 2 channels",
+      "short": "WAVE GENERATOR / 2",
+      "kind": "generator",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "OUT 1",
+          "label": "O1",
+          "kind": "bnc",
+          "signal": "waveform",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "OUT 2",
+          "label": "O2",
+          "kind": "bnc",
+          "signal": "waveform",
+          "unit": "cable",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "SYNC OUT",
+          "label": "SYNC",
+          "kind": "bnc",
+          "signal": "trigger",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "EXT TRIGGER",
+          "label": "TRIG",
+          "kind": "bnc",
+          "signal": "trigger",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "5",
+          "x": 28,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "probes",
+        "bench"
+      ],
+      "notes": "",
+      "channels": 2,
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "9e22c6c46a7c7e9defe49987b1f544cf73a0ad25dfd66e493f7780f6b08dc9a2"
+    },
+    {
+      "id": "dmm-bench",
+      "name": "Bench multimeter — voltage/current and four-wire sense",
+      "short": "BENCH MULTIMETER",
+      "kind": "meter",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "INPUT HI",
+          "label": "HI",
+          "kind": "post",
+          "signal": "measurement",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "INPUT LO",
+          "label": "LO",
+          "kind": "post",
+          "signal": "measurement",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "SENSE HI",
+          "label": "SHI",
+          "kind": "post",
+          "signal": "sense",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "SENSE LO",
+          "label": "SLO",
+          "kind": "post",
+          "signal": "sense",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        },
+        {
+          "name": "CURRENT IN",
+          "label": "I",
+          "kind": "post",
+          "signal": "current",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "6",
+          "x": 34,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "rtd",
+        "daq",
+        "bench"
+      ],
+      "notes": "",
+      "display": "numeric",
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "8fbd64246bac867f4504ff469d98cffc46c382f5e4b88caa6e23db8f31c70ffc"
+    },
+    {
+      "id": "dmm-handheld",
+      "name": "Handheld digital multimeter",
+      "short": "HANDHELD DMM",
+      "kind": "handheld",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "10 A",
+          "label": "10A",
+          "kind": "post",
+          "signal": "current",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 36
+        },
+        {
+          "name": "mA uA",
+          "label": "mA",
+          "kind": "post",
+          "signal": "current",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 36
+        },
+        {
+          "name": "COM",
+          "label": "COM",
+          "kind": "post",
+          "signal": "measurement",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 36
+        },
+        {
+          "name": "V OHM",
+          "label": "V/R",
+          "kind": "post",
+          "signal": "measurement",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 36
+        }
+      ],
+      "sources": [
+        "probes",
+        "bench"
+      ],
+      "notes": "",
+      "display": "numeric",
+      "width": 26,
+      "height": 48,
+      "bodyWidth": 26,
+      "bodyHeight": 40,
+      "xmlSha256": "879f261a36e84a9752ee9cfc4d289765af3c209bb44af387ea78d7bcb1456556"
+    },
+    {
+      "id": "clamp-meter",
+      "name": "Handheld current clamp meter",
+      "short": "CLAMP METER",
+      "kind": "handheld",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "COM",
+          "label": "COM",
+          "kind": "post",
+          "signal": "measurement",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 48
+        },
+        {
+          "name": "V OHM",
+          "label": "V/R",
+          "kind": "post",
+          "signal": "measurement",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 48
+        }
+      ],
+      "sources": [
+        "probes",
+        "bench"
+      ],
+      "notes": "Clamp jaws are a measurement region, not galvanic terminals.",
+      "clamp": true,
+      "width": 26,
+      "height": 60,
+      "bodyWidth": 26,
+      "bodyHeight": 52,
+      "xmlSha256": "5f28263044b10761c72d7b3fabb71cbf107986f61bec03894761960a3a36cd7c"
+    },
+    {
+      "id": "lcr",
+      "name": "LCR meter — four-terminal-pair fixture",
+      "short": "LCR / 4-TERMINAL PAIR",
+      "kind": "meter",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "LCUR",
+          "label": "LCUR",
+          "kind": "bnc",
+          "signal": "lcr",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "LPOT",
+          "label": "LPOT",
+          "kind": "bnc",
+          "signal": "lcr",
+          "unit": "cable",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "HPOT",
+          "label": "HPOT",
+          "kind": "bnc",
+          "signal": "lcr",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "HCUR",
+          "label": "HCUR",
+          "kind": "bnc",
+          "signal": "lcr",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "5",
+          "x": 28,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "lcr"
+      ],
+      "notes": "Each BNC is a complete coax connection; do not merge force and sense cables.",
+      "display": "numeric",
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "ec596d0a4cacfb0ab5a53a2a06e5797dd5f6e1c0a95013cbfa27168b959e5133"
+    },
+    {
+      "id": "counter",
+      "name": "Frequency / time interval counter",
+      "short": "FREQUENCY COUNTER",
+      "kind": "meter",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "INPUT A",
+          "label": "A",
+          "kind": "bnc",
+          "signal": "counter",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "INPUT B",
+          "label": "B",
+          "kind": "bnc",
+          "signal": "counter",
+          "unit": "cable",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "REFERENCE IN",
+          "label": "REF",
+          "kind": "bnc",
+          "signal": "reference-clock",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "probes",
+        "bench"
+      ],
+      "notes": "",
+      "display": "frequency",
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "133c8ce1aada1ea0d49a1a4c1d8d40e7f6dd8f9399b971fe72a1cfac09df5c41"
+    },
+    {
+      "id": "spectrum",
+      "name": "RF spectrum analyzer",
+      "short": "SPECTRUM ANALYZER",
+      "kind": "analyzer",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "RF IN",
+          "label": "RF",
+          "kind": "coax",
+          "signal": "rf-50",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "TRACKING OUT",
+          "label": "TG",
+          "kind": "coax",
+          "signal": "rf-50",
+          "unit": "cable",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "REFERENCE IN",
+          "label": "REF",
+          "kind": "bnc",
+          "signal": "reference-clock",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "probes",
+        "bench"
+      ],
+      "notes": "",
+      "display": "spectrum",
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "a68e4c87722a4769e9e5af3479550471cfdb0b4255273f47dac5e7432880f93d"
+    },
+    {
+      "id": "rf-generator",
+      "name": "RF signal generator",
+      "short": "RF SIGNAL GENERATOR",
+      "kind": "generator",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "RF OUT",
+          "label": "RF",
+          "kind": "coax",
+          "signal": "rf-50",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "MODULATION IN",
+          "label": "MOD",
+          "kind": "bnc",
+          "signal": "modulation",
+          "unit": "cable",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "REFERENCE IN",
+          "label": "REF",
+          "kind": "bnc",
+          "signal": "reference-clock",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "probes",
+        "bench"
+      ],
+      "notes": "",
+      "display": "rf",
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "966db7507693e7da73e7d58c1422dbea157f69287ca197f0b1a6d547675fee88"
+    },
+    {
+      "id": "vna",
+      "name": "Vector network analyzer — two ports",
+      "short": "VNA / 2 PORTS",
+      "kind": "analyzer",
+      "category": "Bench instruments",
+      "ports": [
+        {
+          "name": "PORT 1",
+          "label": "P1",
+          "kind": "coax",
+          "signal": "rf-50",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 28
+        },
+        {
+          "name": "PORT 2",
+          "label": "P2",
+          "kind": "coax",
+          "signal": "rf-50",
+          "unit": "cable",
+          "number": "2",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "REFERENCE IN",
+          "label": "REF",
+          "kind": "bnc",
+          "signal": "reference-clock",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 28
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "probes",
+        "bench"
+      ],
+      "notes": "RF ports are complete coax endpoints; no S-parameter calculation.",
+      "display": "vna",
+      "width": 56,
+      "height": 40,
+      "bodyWidth": 56,
+      "bodyHeight": 32,
+      "xmlSha256": "d3962c4bd860a68de3a1b2eb91eeb31fcb404659e6b7e49da9b8eac0300d1066"
+    },
+    {
+      "id": "logic-analyzer",
+      "name": "USB logic analyzer — 16 channels",
+      "short": "LOGIC ANALYZER / 16",
+      "kind": "daq",
+      "category": "Acquisition and calibration",
+      "ports": [
+        {
+          "name": "D0",
+          "label": "0",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 18
+        },
+        {
+          "name": "D1",
+          "label": "1",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 18
+        },
+        {
+          "name": "D2",
+          "label": "2",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 18
+        },
+        {
+          "name": "D3",
+          "label": "3",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 18
+        },
+        {
+          "name": "D4",
+          "label": "4",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 18
+        },
+        {
+          "name": "D5",
+          "label": "5",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "6",
+          "x": 34,
+          "y": 18
+        },
+        {
+          "name": "D6",
+          "label": "6",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "7",
+          "x": 40,
+          "y": 18
+        },
+        {
+          "name": "D7",
+          "label": "7",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "8",
+          "x": 46,
+          "y": 18
+        },
+        {
+          "name": "D8",
+          "label": "8",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "9",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "D9",
+          "label": "9",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "10",
+          "x": 10,
+          "y": 26
+        },
+        {
+          "name": "D10",
+          "label": "10",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "11",
+          "x": 16,
+          "y": 26
+        },
+        {
+          "name": "D11",
+          "label": "11",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "12",
+          "x": 22,
+          "y": 26
+        },
+        {
+          "name": "D12",
+          "label": "12",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "13",
+          "x": 28,
+          "y": 26
+        },
+        {
+          "name": "D13",
+          "label": "13",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "14",
+          "x": 34,
+          "y": 26
+        },
+        {
+          "name": "D14",
+          "label": "14",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "15",
+          "x": 40,
+          "y": 26
+        },
+        {
+          "name": "D15",
+          "label": "15",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "16",
+          "x": 46,
+          "y": 26
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "terminal",
+          "signal": "reference",
+          "unit": "conductor",
+          "number": "17",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "18",
+          "x": 10,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "daq"
+      ],
+      "notes": "Sixteen separate logic leads plus reference; logic levels and thresholds depend on actual hardware.",
+      "channels": 16,
+      "width": 48,
+      "height": 48,
+      "bodyWidth": 48,
+      "bodyHeight": 40,
+      "xmlSha256": "372a7d6ad8d603565dcb1c3c40143b8f3e5a0adebc3d8d7ebac400ff01a3f5d1"
+    },
+    {
+      "id": "daq-8",
+      "name": "USB DAQ — 8 differential analog inputs",
+      "short": "DAQ / 8 DIFF AI",
+      "kind": "daq",
+      "category": "Acquisition and calibration",
+      "ports": [
+        {
+          "name": "AI0 +",
+          "label": "0+",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 18
+        },
+        {
+          "name": "AI0 -",
+          "label": "0-",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 18
+        },
+        {
+          "name": "AI1 +",
+          "label": "1+",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 18
+        },
+        {
+          "name": "AI1 -",
+          "label": "1-",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 18
+        },
+        {
+          "name": "AI2 +",
+          "label": "2+",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 18
+        },
+        {
+          "name": "AI2 -",
+          "label": "2-",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "6",
+          "x": 34,
+          "y": 18
+        },
+        {
+          "name": "AI3 +",
+          "label": "3+",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "7",
+          "x": 40,
+          "y": 18
+        },
+        {
+          "name": "AI3 -",
+          "label": "3-",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "8",
+          "x": 46,
+          "y": 18
+        },
+        {
+          "name": "AI4 +",
+          "label": "4+",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "9",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "AI4 -",
+          "label": "4-",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "10",
+          "x": 10,
+          "y": 26
+        },
+        {
+          "name": "AI5 +",
+          "label": "5+",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "11",
+          "x": 16,
+          "y": 26
+        },
+        {
+          "name": "AI5 -",
+          "label": "5-",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "12",
+          "x": 22,
+          "y": 26
+        },
+        {
+          "name": "AI6 +",
+          "label": "6+",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "13",
+          "x": 28,
+          "y": 26
+        },
+        {
+          "name": "AI6 -",
+          "label": "6-",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "14",
+          "x": 34,
+          "y": 26
+        },
+        {
+          "name": "AI7 +",
+          "label": "7+",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "15",
+          "x": 40,
+          "y": 26
+        },
+        {
+          "name": "AI7 -",
+          "label": "7-",
+          "kind": "terminal",
+          "signal": "analog-input",
+          "unit": "conductor",
+          "number": "16",
+          "x": 46,
+          "y": 26
+        },
+        {
+          "name": "AO0",
+          "label": "AO",
+          "kind": "terminal",
+          "signal": "analog-output",
+          "unit": "conductor",
+          "number": "17",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "AOGND",
+          "label": "AG",
+          "kind": "terminal",
+          "signal": "analog-output",
+          "unit": "conductor",
+          "number": "18",
+          "x": 10,
+          "y": 34
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "19",
+          "x": 16,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "daq",
+        "miodaq"
+      ],
+      "notes": "Each AI channel has separate + and - conductors. Analog output and reference are explicit.",
+      "channels": 8,
+      "width": 48,
+      "height": 48,
+      "bodyWidth": 48,
+      "bodyHeight": 40,
+      "xmlSha256": "ff254eaffc8cdbf69a0047080324fbda73a32d0e0b52aeeec7ccfe16d7cab45e"
+    },
+    {
+      "id": "dio-8",
+      "name": "USB digital I/O — 8 lines",
+      "short": "DIGITAL I/O / 8",
+      "kind": "daq",
+      "category": "Acquisition and calibration",
+      "ports": [
+        {
+          "name": "D0",
+          "label": "0",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 18
+        },
+        {
+          "name": "D1",
+          "label": "1",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 18
+        },
+        {
+          "name": "D2",
+          "label": "2",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 18
+        },
+        {
+          "name": "D3",
+          "label": "3",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 18
+        },
+        {
+          "name": "D4",
+          "label": "4",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 18
+        },
+        {
+          "name": "D5",
+          "label": "5",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "6",
+          "x": 34,
+          "y": 18
+        },
+        {
+          "name": "D6",
+          "label": "6",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "7",
+          "x": 40,
+          "y": 18
+        },
+        {
+          "name": "D7",
+          "label": "7",
+          "kind": "terminal",
+          "signal": "logic",
+          "unit": "conductor",
+          "number": "8",
+          "x": 46,
+          "y": 18
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "terminal",
+          "signal": "reference",
+          "unit": "conductor",
+          "number": "9",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "10",
+          "x": 10,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "miodaq"
+      ],
+      "notes": "",
+      "channels": 8,
+      "width": 48,
+      "height": 40,
+      "bodyWidth": 48,
+      "bodyHeight": 32,
+      "xmlSha256": "bfcfa03c94a75ee6a53ce1c4cc7e3f2e16fbc7ead19574f7388ae8a549059afd"
+    },
+    {
+      "id": "logger-tc-8",
+      "name": "Thermocouple data logger — 8 inputs",
+      "short": "TEMPERATURE / 8 TC",
+      "kind": "logger",
+      "category": "Acquisition and calibration",
+      "ports": [
+        {
+          "name": "TC 1",
+          "label": "1",
+          "kind": "tc",
+          "signal": "thermocouple",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 18
+        },
+        {
+          "name": "TC 2",
+          "label": "2",
+          "kind": "tc",
+          "signal": "thermocouple",
+          "unit": "cable",
+          "number": "2",
+          "x": 10,
+          "y": 18
+        },
+        {
+          "name": "TC 3",
+          "label": "3",
+          "kind": "tc",
+          "signal": "thermocouple",
+          "unit": "cable",
+          "number": "3",
+          "x": 16,
+          "y": 18
+        },
+        {
+          "name": "TC 4",
+          "label": "4",
+          "kind": "tc",
+          "signal": "thermocouple",
+          "unit": "cable",
+          "number": "4",
+          "x": 22,
+          "y": 18
+        },
+        {
+          "name": "TC 5",
+          "label": "5",
+          "kind": "tc",
+          "signal": "thermocouple",
+          "unit": "cable",
+          "number": "5",
+          "x": 28,
+          "y": 18
+        },
+        {
+          "name": "TC 6",
+          "label": "6",
+          "kind": "tc",
+          "signal": "thermocouple",
+          "unit": "cable",
+          "number": "6",
+          "x": 34,
+          "y": 18
+        },
+        {
+          "name": "TC 7",
+          "label": "7",
+          "kind": "tc",
+          "signal": "thermocouple",
+          "unit": "cable",
+          "number": "7",
+          "x": 40,
+          "y": 18
+        },
+        {
+          "name": "TC 8",
+          "label": "8",
+          "kind": "tc",
+          "signal": "thermocouple",
+          "unit": "cable",
+          "number": "8",
+          "x": 46,
+          "y": 18
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "9",
+          "x": 4,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "Each TC socket is a complete polarized thermocouple cable, not an individual TC conductor.",
+      "channels": 8,
+      "width": 48,
+      "height": 40,
+      "bodyWidth": 48,
+      "bodyHeight": 32,
+      "xmlSha256": "d0ebcf09e34f7a520f458e8aa28916a4c62284084b5299dabbd1793bf2fbc9f8"
+    },
+    {
+      "id": "logger-rtd-4",
+      "name": "Four-wire RTD logger — 4 inputs",
+      "short": "TEMPERATURE / 4 RTD",
+      "kind": "daq",
+      "category": "Acquisition and calibration",
+      "ports": [
+        {
+          "name": "RTD1 A1",
+          "label": "1A1",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 18
+        },
+        {
+          "name": "RTD1 A2",
+          "label": "1A2",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 18
+        },
+        {
+          "name": "RTD1 B1",
+          "label": "1B1",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 18
+        },
+        {
+          "name": "RTD1 B2",
+          "label": "1B2",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 18
+        },
+        {
+          "name": "RTD2 A1",
+          "label": "2A1",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 18
+        },
+        {
+          "name": "RTD2 A2",
+          "label": "2A2",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "6",
+          "x": 34,
+          "y": 18
+        },
+        {
+          "name": "RTD2 B1",
+          "label": "2B1",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "7",
+          "x": 40,
+          "y": 18
+        },
+        {
+          "name": "RTD2 B2",
+          "label": "2B2",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "8",
+          "x": 46,
+          "y": 18
+        },
+        {
+          "name": "RTD3 A1",
+          "label": "3A1",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "9",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "RTD3 A2",
+          "label": "3A2",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "10",
+          "x": 10,
+          "y": 26
+        },
+        {
+          "name": "RTD3 B1",
+          "label": "3B1",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "11",
+          "x": 16,
+          "y": 26
+        },
+        {
+          "name": "RTD3 B2",
+          "label": "3B2",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "12",
+          "x": 22,
+          "y": 26
+        },
+        {
+          "name": "RTD4 A1",
+          "label": "4A1",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "13",
+          "x": 28,
+          "y": 26
+        },
+        {
+          "name": "RTD4 A2",
+          "label": "4A2",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "14",
+          "x": 34,
+          "y": 26
+        },
+        {
+          "name": "RTD4 B1",
+          "label": "4B1",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "15",
+          "x": 40,
+          "y": 26
+        },
+        {
+          "name": "RTD4 B2",
+          "label": "4B2",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "16",
+          "x": 46,
+          "y": 26
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "17",
+          "x": 4,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "rtd",
+        "temperature"
+      ],
+      "notes": "Every four-wire RTD input lead is separate; no internal/netlist short between paired terminals.",
+      "channels": 4,
+      "width": 48,
+      "height": 48,
+      "bodyWidth": 48,
+      "bodyHeight": 40,
+      "xmlSha256": "b99d8778683f515dd316e1cee52e158946f9f5dee451c89cc40b58e908dd50c7"
+    },
+    {
+      "id": "calibrator-tc",
+      "name": "Thermocouple process calibrator",
+      "short": "TC CALIBRATOR",
+      "kind": "handheld",
+      "category": "Acquisition and calibration",
+      "ports": [
+        {
+          "name": "TC SOURCE MEASURE",
+          "label": "TC",
+          "kind": "tc",
+          "signal": "thermocouple",
+          "unit": "cable",
+          "number": "1",
+          "x": 12,
+          "y": 36
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "Thermocouple cable endpoint; temperature type and source/measure mode are hardware settings.",
+      "width": 26,
+      "height": 48,
+      "bodyWidth": 26,
+      "bodyHeight": 40,
+      "xmlSha256": "784875507d71af7180377538a6ea4905a34443dde15db092505bcb3e6520172c"
+    },
+    {
+      "id": "calibrator-loop",
+      "name": "Current-loop calibrator — source/measure",
+      "short": "LOOP CALIBRATOR",
+      "kind": "handheld",
+      "category": "Acquisition and calibration",
+      "ports": [
+        {
+          "name": "LOOP +",
+          "label": "+",
+          "kind": "post",
+          "signal": "current-loop",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 36
+        },
+        {
+          "name": "LOOP -",
+          "label": "-",
+          "kind": "post",
+          "signal": "current-loop",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 36
+        }
+      ],
+      "sources": [
+        "daq"
+      ],
+      "notes": "Separate source/measure terminals; loop power and modes are not simulated.",
+      "width": 26,
+      "height": 48,
+      "bodyWidth": 26,
+      "bodyHeight": 40,
+      "xmlSha256": "6cbfa012ae354d6cad8a0a17cd0b5b987958c8a4e4114a08499ed96c8fbb6062"
+    },
+    {
+      "id": "decade-resistance",
+      "name": "Resistance decade box",
+      "short": "RESISTANCE DECADE",
+      "kind": "decade",
+      "category": "Acquisition and calibration",
+      "ports": [
+        {
+          "name": "RESISTANCE HI",
+          "label": "HI",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 10,
+          "y": 26
+        },
+        {
+          "name": "RESISTANCE LO",
+          "label": "LO",
+          "kind": "post",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 20,
+          "y": 26
+        },
+        {
+          "name": "GUARD",
+          "label": "GRD",
+          "kind": "post",
+          "signal": "guard",
+          "unit": "conductor",
+          "number": "3",
+          "x": 30,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "rtd"
+      ],
+      "notes": "Three endpoints including guard; switch values are illustrative, with no resistor model.",
+      "width": 48,
+      "height": 38,
+      "bodyWidth": 48,
+      "bodyHeight": 30,
+      "xmlSha256": "9d2eec62b3d85cb14b6360653128148c0c2e5eb61cd01d86f4067a088e2fda60"
+    },
+    {
+      "id": "probe-passive",
+      "name": "Passive oscilloscope probe with ground clip",
+      "short": "PASSIVE SCOPE PROBE",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "TIP",
+          "label": "TIP",
+          "kind": "tip",
+          "signal": "measurement",
+          "unit": "conductor",
+          "number": "1",
+          "x": 8,
+          "y": 2
+        },
+        {
+          "name": "GROUND CLIP",
+          "label": "GND",
+          "kind": "clip",
+          "signal": "reference",
+          "unit": "conductor",
+          "number": "2",
+          "x": 20,
+          "y": 14
+        },
+        {
+          "name": "SCOPE",
+          "label": "BNC",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "3",
+          "x": 30,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "probes"
+      ],
+      "notes": "Probe tip and reference clip are separate contacts; coax end is a complete cable.",
+      "shape": "scope",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "8c498ebed6c2d50d2e1cccf919a0b321cb965e890959d888b52b5a9a99aa772b"
+    },
+    {
+      "id": "probe-differential",
+      "name": "Active differential voltage probe",
+      "short": "DIFFERENTIAL PROBE",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "INPUT +",
+          "label": "+",
+          "kind": "tip",
+          "signal": "differential",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 4
+        },
+        {
+          "name": "INPUT -",
+          "label": "-",
+          "kind": "tip",
+          "signal": "differential",
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 4
+        },
+        {
+          "name": "SCOPE",
+          "label": "OUT",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "3",
+          "x": 24,
+          "y": 28
+        },
+        {
+          "name": "POWER",
+          "label": "DC",
+          "kind": "dc",
+          "signal": "dc",
+          "unit": "cable",
+          "number": "4",
+          "x": 32,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "probes"
+      ],
+      "notes": "Two input contacts, one scope cable and power connection; no assumed common with chassis.",
+      "shape": "differential",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "98a4dc86732d4e7fa50dad6eb666c603d8436c4fa9c585ee645bf7996b6954ca"
+    },
+    {
+      "id": "probe-current",
+      "name": "Clamp-on current probe / transducer",
+      "short": "CURRENT PROBE",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "OUTPUT",
+          "label": "OUT",
+          "kind": "bnc",
+          "signal": "scope",
+          "unit": "cable",
+          "number": "1",
+          "x": 24,
+          "y": 30
+        },
+        {
+          "name": "POWER",
+          "label": "DC",
+          "kind": "dc",
+          "signal": "dc",
+          "unit": "cable",
+          "number": "2",
+          "x": 32,
+          "y": 30
+        }
+      ],
+      "sources": [
+        "probes"
+      ],
+      "notes": "Clamp jaws are a measurement region; no fictitious electrical input through the conductor being measured.",
+      "shape": "current",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "d139ebdb126e8791a7c613bb20012fa9f9b5a63fe8c081e93692fb6fb7253969"
+    },
+    {
+      "id": "probe-tc-immersion",
+      "name": "Type K thermocouple — immersion probe",
+      "short": "TYPE K / IMMERSION",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "TYPE K PLUG",
+          "label": "K",
+          "kind": "tc",
+          "signal": "thermocouple-k",
+          "unit": "cable",
+          "number": "1",
+          "x": 28,
+          "y": 12
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "",
+      "shape": "immersion",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "009e4aebe9f41accf1c931f021e983c9eb46686be381efe7461b175a506d985e"
+    },
+    {
+      "id": "probe-tc-surface",
+      "name": "Type K thermocouple — surface probe",
+      "short": "TYPE K / SURFACE",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "TYPE K PLUG",
+          "label": "K",
+          "kind": "tc",
+          "signal": "thermocouple-k",
+          "unit": "cable",
+          "number": "1",
+          "x": 28,
+          "y": 12
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "",
+      "shape": "surface",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "f0ae0ad8282f302f072aca7b5425d66f50679dca61130d1eaea5d4263a3eeaba"
+    },
+    {
+      "id": "probe-tc-bead",
+      "name": "Type K thermocouple — bead-wire probe",
+      "short": "TYPE K / BEAD-WIRE",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "TYPE K PLUG",
+          "label": "K",
+          "kind": "tc",
+          "signal": "thermocouple-k",
+          "unit": "cable",
+          "number": "1",
+          "x": 28,
+          "y": 12
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "",
+      "shape": "bead",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "77752b99985e944ce27737c66a2a672cb9c697754b2ba8b98481274b47a8b9a8"
+    },
+    {
+      "id": "probe-rtd-2",
+      "name": "Pt100 RTD probe — 2 bare leads",
+      "short": "PT100 / 2 WIRES",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "1",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "name": "B",
+          "label": "B",
+          "kind": "lead",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "2",
+          "x": 22,
+          "y": 4
+        }
+      ],
+      "sources": [
+        "rtd"
+      ],
+      "notes": "A and B mark the two element ends; repeated letters identify leads to the same physical end, but netlist connections are not joined automatically.",
+      "shape": "rtd",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "41327b6186e2879081175e1bbe2309287b53124806d9e4ad131abb9736d5a6a2"
+    },
+    {
+      "id": "probe-rtd-3",
+      "name": "Pt100 RTD probe — 3 bare leads",
+      "short": "PT100 / 3 WIRES",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "1",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "lead",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "2",
+          "x": 22,
+          "y": 4
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "lead",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "3",
+          "x": 28,
+          "y": 4
+        }
+      ],
+      "sources": [
+        "rtd"
+      ],
+      "notes": "A and B mark the two element ends; repeated letters identify leads to the same physical end, but netlist connections are not joined automatically.",
+      "shape": "rtd",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "0dee677744c5fe26df11b26b9f9bc37456e238f8bb8dec29c540f88b7fde76db"
+    },
+    {
+      "id": "probe-rtd-4",
+      "name": "Pt100 RTD probe — 4 bare leads",
+      "short": "PT100 / 4 WIRES",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "lead",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "1",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "lead",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "2",
+          "x": 22,
+          "y": 4
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "lead",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "3",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "lead",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "4",
+          "x": 34,
+          "y": 4
+        }
+      ],
+      "sources": [
+        "rtd"
+      ],
+      "notes": "A and B mark the two element ends; repeated letters identify leads to the same physical end, but netlist connections are not joined automatically.",
+      "shape": "rtd",
+      "width": 38,
+      "height": 42,
+      "bodyWidth": 38,
+      "bodyHeight": 34,
+      "xmlSha256": "886c944f0e20df42c17e41829ca0b41de38e146ba4c96aaf9a493add4b9823af"
+    },
+    {
+      "id": "probe-thermistor",
+      "name": "NTC thermistor probe — two bare leads",
+      "short": "NTC / 2 WIRES",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "LEAD A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "thermistor",
+          "unit": "conductor",
+          "number": "1",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "name": "LEAD B",
+          "label": "B",
+          "kind": "lead",
+          "signal": "thermistor",
+          "unit": "conductor",
+          "number": "2",
+          "x": 22,
+          "y": 4
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "",
+      "shape": "bead",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "0195431a2cad707534c132466d68e6f4b9ec18d5fd29e801a2ed2d2ecbbc126e"
+    },
+    {
+      "id": "probe-ph",
+      "name": "pH electrode with BNC cable",
+      "short": "pH ELECTRODE",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "pH ELECTRODE",
+          "label": "pH",
+          "kind": "bnc",
+          "signal": "ph-high-impedance",
+          "unit": "cable",
+          "number": "1",
+          "x": 28,
+          "y": 12
+        }
+      ],
+      "sources": [
+        "stirring"
+      ],
+      "notes": "BNC shape does not imply compatibility with an oscilloscope or a 50-ohm RF input.",
+      "shape": "ph",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "dc99c5f70130609ba78f6533931d4f689ea778390fb1dab3e3110b1e245f34b1"
+    },
+    {
+      "id": "probe-pressure",
+      "name": "Pressure transducer — fluid port and 4-20 mA loop",
+      "short": "PRESSURE TRANSDUCER",
+      "kind": "probe",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "PRESSURE",
+          "label": "P",
+          "kind": "hose",
+          "signal": "pressure",
+          "unit": "hose",
+          "number": "1",
+          "x": 16,
+          "y": 30
+        },
+        {
+          "name": "LOOP +",
+          "label": "+",
+          "kind": "terminal",
+          "signal": "current-loop",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 4
+        },
+        {
+          "name": "LOOP -",
+          "label": "-",
+          "kind": "terminal",
+          "signal": "current-loop",
+          "unit": "conductor",
+          "number": "3",
+          "x": 22,
+          "y": 4
+        }
+      ],
+      "sources": [
+        "daq",
+        "vacuum"
+      ],
+      "notes": "",
+      "shape": "pressure",
+      "width": 36,
+      "height": 42,
+      "bodyWidth": 36,
+      "bodyHeight": 34,
+      "xmlSha256": "fae100e1bf766da0bf66b26ace9c07b8979f05aa8e0f4cdd0ca1e61bcb5b648f"
+    },
+    {
+      "id": "load-cell",
+      "name": "Load cell — four-wire bridge",
+      "short": "LOAD CELL / 4 WIRES",
+      "kind": "loadcell",
+      "category": "Probes and sensors",
+      "ports": [
+        {
+          "name": "EX+",
+          "label": "EX+",
+          "kind": "lead",
+          "signal": "bridge",
+          "unit": "conductor",
+          "number": "1",
+          "x": 10,
+          "y": 22
+        },
+        {
+          "name": "EX-",
+          "label": "EX-",
+          "kind": "lead",
+          "signal": "bridge",
+          "unit": "conductor",
+          "number": "2",
+          "x": 16,
+          "y": 22
+        },
+        {
+          "name": "SIG+",
+          "label": "SIG+",
+          "kind": "lead",
+          "signal": "bridge",
+          "unit": "conductor",
+          "number": "3",
+          "x": 22,
+          "y": 22
+        },
+        {
+          "name": "SIG-",
+          "label": "SIG-",
+          "kind": "lead",
+          "signal": "bridge",
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 22
+        }
+      ],
+      "sources": [
+        "daq",
+        "balance"
+      ],
+      "notes": "Functional bridge lead names; wire colours and capacities are hardware-specific.",
+      "width": 40,
+      "height": 32,
+      "bodyWidth": 40,
+      "bodyHeight": 24,
+      "xmlSha256": "2c3e58edeb8d08d958b78de886550f90254c43d27061f145d53daa0b0950fe3c"
+    },
+    {
+      "id": "hotplate",
+      "name": "Laboratory hotplate",
+      "short": "LAB HOTPLATE",
+      "kind": "hotplate",
+      "category": "Thermal equipment",
+      "ports": [
+        {
+          "name": "TEMP SENSOR",
+          "label": "TEMP",
+          "kind": "sensor",
+          "signal": "temperature-sensor",
+          "unit": "cable",
+          "number": "1",
+          "x": 8,
+          "y": 32
+        },
+        {
+          "name": "AC IN",
+          "label": "AC",
+          "kind": "iec",
+          "signal": "mains",
+          "unit": "cable",
+          "number": "2",
+          "x": 30,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "stirring"
+      ],
+      "notes": "External temperature sensor is a complete device-specific cable; no generic connector pinout.",
+      "stir": false,
+      "width": 38,
+      "height": 42,
+      "bodyWidth": 38,
+      "bodyHeight": 34,
+      "xmlSha256": "b14f4d3683f8f1e870120166b9054f73fc47219ddec310498c4884282979ef69"
+    },
+    {
+      "id": "hotplate-stirrer",
+      "name": "Hotplate with magnetic stirrer",
+      "short": "HOTPLATE / STIRRER",
+      "kind": "hotplate",
+      "category": "Thermal equipment",
+      "ports": [
+        {
+          "name": "TEMP SENSOR",
+          "label": "TEMP",
+          "kind": "sensor",
+          "signal": "temperature-sensor",
+          "unit": "cable",
+          "number": "1",
+          "x": 8,
+          "y": 32
+        },
+        {
+          "name": "AC IN",
+          "label": "AC",
+          "kind": "iec",
+          "signal": "mains",
+          "unit": "cable",
+          "number": "2",
+          "x": 30,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "stirring"
+      ],
+      "notes": "External temperature sensor is a complete device-specific cable; no generic connector pinout.",
+      "stir": true,
+      "width": 38,
+      "height": 42,
+      "bodyWidth": 38,
+      "bodyHeight": 34,
+      "xmlSha256": "0147027ac16eaf8bd2bdaef42ea0a2ee1901fa9e76094c11d63f96d9718f6ea0"
+    },
+    {
+      "id": "heater-cartridge",
+      "name": "Cartridge heater",
+      "short": "CARTRIDGE HEATER",
+      "kind": "heater",
+      "category": "Thermal equipment",
+      "ports": [
+        {
+          "name": "HEATER A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "heater",
+          "unit": "conductor",
+          "number": "1",
+          "x": 28,
+          "y": 10
+        },
+        {
+          "name": "HEATER B",
+          "label": "B",
+          "kind": "lead",
+          "signal": "heater",
+          "unit": "conductor",
+          "number": "2",
+          "x": 34,
+          "y": 10
+        }
+      ],
+      "sources": [
+        "heaters"
+      ],
+      "notes": "Two bare power leads; no voltage, wattage or temperature rating is implied.",
+      "shape": "cartridge",
+      "width": 40,
+      "height": 36,
+      "bodyWidth": 40,
+      "bodyHeight": 28,
+      "xmlSha256": "c57c7601056a13cacb7bf0b6e9a38a4dbb7cadf5cad6a510005ba0b99dbed91b"
+    },
+    {
+      "id": "heater-mat",
+      "name": "Silicone heater mat",
+      "short": "SILICONE HEATER MAT",
+      "kind": "heater",
+      "category": "Thermal equipment",
+      "ports": [
+        {
+          "name": "HEATER A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "heater",
+          "unit": "conductor",
+          "number": "1",
+          "x": 28,
+          "y": 10
+        },
+        {
+          "name": "HEATER B",
+          "label": "B",
+          "kind": "lead",
+          "signal": "heater",
+          "unit": "conductor",
+          "number": "2",
+          "x": 34,
+          "y": 10
+        }
+      ],
+      "sources": [
+        "heaters"
+      ],
+      "notes": "Two bare power leads; no voltage, wattage or temperature rating is implied.",
+      "shape": "mat",
+      "width": 40,
+      "height": 36,
+      "bodyWidth": 40,
+      "bodyHeight": 28,
+      "xmlSha256": "74e65bdf5f8f40a952116a9b1c61926cb7f68f7f2dc5a7cd11cac13a894c8db7"
+    },
+    {
+      "id": "heater-band",
+      "name": "Band heater",
+      "short": "BAND HEATER",
+      "kind": "heater",
+      "category": "Thermal equipment",
+      "ports": [
+        {
+          "name": "HEATER A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "heater",
+          "unit": "conductor",
+          "number": "1",
+          "x": 28,
+          "y": 10
+        },
+        {
+          "name": "HEATER B",
+          "label": "B",
+          "kind": "lead",
+          "signal": "heater",
+          "unit": "conductor",
+          "number": "2",
+          "x": 34,
+          "y": 10
+        }
+      ],
+      "sources": [
+        "heaters"
+      ],
+      "notes": "Two bare power leads; no voltage, wattage or temperature rating is implied.",
+      "shape": "band",
+      "width": 40,
+      "height": 36,
+      "bodyWidth": 40,
+      "bodyHeight": 28,
+      "xmlSha256": "b89d84634a62237c8c1b7fbe90b3f165d85c1edc244130afd24bc749bd608dfb"
+    },
+    {
+      "id": "heater-immersion",
+      "name": "Immersion heater",
+      "short": "IMMERSION HEATER",
+      "kind": "heater",
+      "category": "Thermal equipment",
+      "ports": [
+        {
+          "name": "HEATER A",
+          "label": "A",
+          "kind": "lead",
+          "signal": "heater",
+          "unit": "conductor",
+          "number": "1",
+          "x": 28,
+          "y": 10
+        },
+        {
+          "name": "HEATER B",
+          "label": "B",
+          "kind": "lead",
+          "signal": "heater",
+          "unit": "conductor",
+          "number": "2",
+          "x": 34,
+          "y": 10
+        }
+      ],
+      "sources": [
+        "heaters"
+      ],
+      "notes": "Two bare power leads; no voltage, wattage or temperature rating is implied.",
+      "shape": "immersion",
+      "width": 40,
+      "height": 36,
+      "bodyWidth": 40,
+      "bodyHeight": 28,
+      "xmlSha256": "90c530767c837041260b0b75b0708260b5f034e3020602e81df6abbe18ee5af2"
+    },
+    {
+      "id": "peltier",
+      "name": "Thermoelectric / Peltier module",
+      "short": "PELTIER MODULE",
+      "kind": "heater",
+      "category": "Thermal equipment",
+      "ports": [
+        {
+          "name": "DC +",
+          "label": "+",
+          "kind": "lead",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 28,
+          "y": 10
+        },
+        {
+          "name": "DC -",
+          "label": "-",
+          "kind": "lead",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 34,
+          "y": 10
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "Two supply leads; heat flow reverses with polarity. No thermal model.",
+      "shape": "peltier",
+      "width": 40,
+      "height": 36,
+      "bodyWidth": 40,
+      "bodyHeight": 28,
+      "xmlSha256": "3b644f3f3690e5cecf70861180b6ac6b7d1156b66677bea9304b7aad48ea0727"
+    },
+    {
+      "id": "water-bath",
+      "name": "Temperature-controlled laboratory water bath",
+      "short": "WATER BATH",
+      "kind": "thermal",
+      "category": "Thermal equipment",
+      "ports": [
+        {
+          "name": "EXT SENSOR",
+          "label": "TEMP",
+          "kind": "sensor",
+          "signal": "temperature-sensor",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "AC IN",
+          "label": "AC",
+          "kind": "iec",
+          "signal": "mains",
+          "unit": "cable",
+          "number": "2",
+          "x": 12,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "temperature",
+        "circulation"
+      ],
+      "notes": "",
+      "shape": "bath",
+      "width": 40,
+      "height": 50,
+      "bodyWidth": 40,
+      "bodyHeight": 42,
+      "xmlSha256": "6f0a09b44838a3715b1ce379c42fe67eff1d39ce039c38756749ab3fd6d29a88"
+    },
+    {
+      "id": "dry-well",
+      "name": "Dry-block / dry-well temperature calibrator",
+      "short": "DRY-BLOCK CALIBRATOR",
+      "kind": "thermal",
+      "category": "Thermal equipment",
+      "ports": [
+        {
+          "name": "REFERENCE PROBE",
+          "label": "REF",
+          "kind": "sensor",
+          "signal": "temperature-sensor",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "2",
+          "x": 12,
+          "y": 38
+        },
+        {
+          "name": "AC IN",
+          "label": "AC",
+          "kind": "iec",
+          "signal": "mains",
+          "unit": "cable",
+          "number": "3",
+          "x": 20,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "Top wells are mechanical probe-insertion locations, not electrical contacts.",
+      "shape": "drywell",
+      "width": 40,
+      "height": 50,
+      "bodyWidth": 40,
+      "bodyHeight": 42,
+      "xmlSha256": "e32e3559385ad8817e05385f289a0b19c4859c84b6e2e6ea760356a9f6df5801"
+    },
+    {
+      "id": "oven",
+      "name": "Laboratory drying oven / incubator",
+      "short": "LAB OVEN",
+      "kind": "thermal",
+      "category": "Thermal equipment",
+      "ports": [
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "AC IN",
+          "label": "AC",
+          "kind": "iec",
+          "signal": "mains",
+          "unit": "cable",
+          "number": "2",
+          "x": 12,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "",
+      "shape": "oven",
+      "width": 40,
+      "height": 50,
+      "bodyWidth": 40,
+      "bodyHeight": 42,
+      "xmlSha256": "fa002c5ab5361afebca48330f0979e085f662572d83dd95f3e388a93313ab5ef"
+    },
+    {
+      "id": "chiller",
+      "name": "Recirculating laboratory chiller",
+      "short": "RECIRCULATING CHILLER",
+      "kind": "thermal",
+      "category": "Thermal equipment",
+      "ports": [
+        {
+          "name": "FLUID OUT",
+          "label": "OUT",
+          "kind": "hose",
+          "signal": "fluid",
+          "unit": "hose",
+          "number": "1",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "FLUID RETURN",
+          "label": "IN",
+          "kind": "hose",
+          "signal": "fluid",
+          "unit": "hose",
+          "number": "2",
+          "x": 12,
+          "y": 38
+        },
+        {
+          "name": "EXT SENSOR",
+          "label": "TEMP",
+          "kind": "sensor",
+          "signal": "temperature-sensor",
+          "unit": "cable",
+          "number": "3",
+          "x": 20,
+          "y": 38
+        },
+        {
+          "name": "AC IN",
+          "label": "AC",
+          "kind": "iec",
+          "signal": "mains",
+          "unit": "cable",
+          "number": "4",
+          "x": 28,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "circulation"
+      ],
+      "notes": "Hose supply/return and sensor cable are distinct endpoint kinds.",
+      "shape": "chiller",
+      "width": 44,
+      "height": 50,
+      "bodyWidth": 44,
+      "bodyHeight": 42,
+      "xmlSha256": "aaa471c99a678bd663cd6b36a8e0822337c9fc233ae7773fdd1a4716cf1e0b18"
+    },
+    {
+      "id": "relay-spdt",
+      "name": "DIN-rail SPDT interface relay",
+      "short": "SPDT INTERFACE RELAY",
+      "kind": "relay",
+      "category": "Switching and control",
+      "ports": [
+        {
+          "name": "COIL A1",
+          "label": "A1",
+          "kind": "terminal",
+          "signal": "coil",
+          "unit": "conductor",
+          "number": "A1",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "name": "COIL A2",
+          "label": "A2",
+          "kind": "terminal",
+          "signal": "coil",
+          "unit": "conductor",
+          "number": "A2",
+          "x": 14,
+          "y": 6
+        },
+        {
+          "name": "COMMON 11",
+          "label": "11",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "11",
+          "x": 4,
+          "y": 38
+        },
+        {
+          "name": "NC 12",
+          "label": "12",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "12",
+          "x": 10,
+          "y": 38
+        },
+        {
+          "name": "NO 14",
+          "label": "14",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "14",
+          "x": 16,
+          "y": 38
+        }
+      ],
+      "sources": [
+        "relay"
+      ],
+      "notes": "Generic IEC terminal convention: 11 common, 12 normally closed, 14 normally open. Artwork is not a specific relay socket footprint.",
+      "shape": "din",
+      "width": 28,
+      "height": 50,
+      "bodyWidth": 20,
+      "bodyHeight": 42,
+      "xmlSha256": "7d671101ee4f2f06f13cadf18e30aa5999d2c03c42c68552adc714d7d96a23b4"
+    },
+    {
+      "id": "relay-dpdt",
+      "name": "DPDT relay in terminal socket",
+      "short": "DPDT SOCKET RELAY",
+      "kind": "relay",
+      "category": "Switching and control",
+      "ports": [
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "terminal",
+          "signal": "coil",
+          "unit": "conductor",
+          "number": "A1",
+          "x": 8,
+          "y": 6
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "terminal",
+          "signal": "coil",
+          "unit": "conductor",
+          "number": "A2",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "name": "11",
+          "label": "11",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "11",
+          "x": 6,
+          "y": 30
+        },
+        {
+          "name": "12",
+          "label": "12",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "12",
+          "x": 14,
+          "y": 30
+        },
+        {
+          "name": "14",
+          "label": "14",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "14",
+          "x": 22,
+          "y": 30
+        },
+        {
+          "name": "21",
+          "label": "21",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "21",
+          "x": 6,
+          "y": 20
+        },
+        {
+          "name": "22",
+          "label": "22",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "22",
+          "x": 14,
+          "y": 20
+        },
+        {
+          "name": "24",
+          "label": "24",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "24",
+          "x": 22,
+          "y": 20
+        }
+      ],
+      "sources": [
+        "relay"
+      ],
+      "notes": "Generic numbered terminal socket: 11/21 common, 12/22 NC, 14/24 NO. No automatic contact closure.",
+      "shape": "socket",
+      "width": 34,
+      "height": 42,
+      "bodyWidth": 34,
+      "bodyHeight": 34,
+      "xmlSha256": "b6a2fabbe4c48917c6154952e9935a6ca57adac8544ab10a677124e943ff80ab"
+    },
+    {
+      "id": "relay-ssr",
+      "name": "DC-controlled AC solid-state relay on heatsink",
+      "short": "AC SOLID-STATE RELAY",
+      "kind": "relay",
+      "category": "Switching and control",
+      "ports": [
+        {
+          "name": "LOAD A",
+          "label": "LA",
+          "kind": "terminal",
+          "signal": "ac-load",
+          "unit": "conductor",
+          "number": "1",
+          "x": 10,
+          "y": 6
+        },
+        {
+          "name": "LOAD B",
+          "label": "LB",
+          "kind": "terminal",
+          "signal": "ac-load",
+          "unit": "conductor",
+          "number": "2",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "name": "CONTROL +",
+          "label": "+",
+          "kind": "terminal",
+          "signal": "control-dc",
+          "unit": "conductor",
+          "number": "3",
+          "x": 10,
+          "y": 28
+        },
+        {
+          "name": "CONTROL -",
+          "label": "-",
+          "kind": "terminal",
+          "signal": "control-dc",
+          "unit": "conductor",
+          "number": "4",
+          "x": 24,
+          "y": 28
+        }
+      ],
+      "sources": [
+        "ssr"
+      ],
+      "notes": "Generic AC-load/DC-control configuration. Functional labels are not commercial SSR pin numbers.",
+      "shape": "ssr",
+      "width": 34,
+      "height": 42,
+      "bodyWidth": 34,
+      "bodyHeight": 34,
+      "xmlSha256": "6087030fc99257fb64802d0e492113c3ba9eee44666a0b6af3a7b06498399ffb"
+    },
+    {
+      "id": "relay-board-4",
+      "name": "Four-channel relay interface board",
+      "short": "RELAY BOARD / 4",
+      "kind": "relayboard",
+      "category": "Switching and control",
+      "ports": [
+        {
+          "name": "V+",
+          "label": "V+",
+          "kind": "terminal",
+          "signal": "control-dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 6
+        },
+        {
+          "name": "GND",
+          "label": "GND",
+          "kind": "terminal",
+          "signal": "control-dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 6
+        },
+        {
+          "name": "IN1",
+          "label": "IN1",
+          "kind": "terminal",
+          "signal": "control-dc",
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "name": "IN2",
+          "label": "IN2",
+          "kind": "terminal",
+          "signal": "control-dc",
+          "unit": "conductor",
+          "number": "4",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "name": "IN3",
+          "label": "IN3",
+          "kind": "terminal",
+          "signal": "control-dc",
+          "unit": "conductor",
+          "number": "5",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "name": "IN4",
+          "label": "IN4",
+          "kind": "terminal",
+          "signal": "control-dc",
+          "unit": "conductor",
+          "number": "6",
+          "x": 44,
+          "y": 6
+        },
+        {
+          "name": "NC1",
+          "label": "NC1",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "7",
+          "x": 4,
+          "y": 32
+        },
+        {
+          "name": "COM1",
+          "label": "COM1",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "8",
+          "x": 8,
+          "y": 32
+        },
+        {
+          "name": "NO1",
+          "label": "NO1",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "9",
+          "x": 12,
+          "y": 32
+        },
+        {
+          "name": "NC2",
+          "label": "NC2",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "10",
+          "x": 18,
+          "y": 32
+        },
+        {
+          "name": "COM2",
+          "label": "COM2",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "11",
+          "x": 22,
+          "y": 32
+        },
+        {
+          "name": "NO2",
+          "label": "NO2",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "12",
+          "x": 26,
+          "y": 32
+        },
+        {
+          "name": "NC3",
+          "label": "NC3",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "13",
+          "x": 32,
+          "y": 32
+        },
+        {
+          "name": "COM3",
+          "label": "COM3",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "14",
+          "x": 36,
+          "y": 32
+        },
+        {
+          "name": "NO3",
+          "label": "NO3",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "15",
+          "x": 40,
+          "y": 32
+        },
+        {
+          "name": "NC4",
+          "label": "NC4",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "16",
+          "x": 46,
+          "y": 32
+        },
+        {
+          "name": "COM4",
+          "label": "COM4",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "17",
+          "x": 50,
+          "y": 32
+        },
+        {
+          "name": "NO4",
+          "label": "NO4",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "18",
+          "x": 54,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "relay"
+      ],
+      "notes": "Each coil control and each NC/COM/NO contact is separate. Generic input level/polarity; no assumed supply voltage.",
+      "channels": 4,
+      "width": 58,
+      "height": 46,
+      "bodyWidth": 58,
+      "bodyHeight": 38,
+      "xmlSha256": "d4cabff2a73cfde7807213896138ffef0d6f1e309f504ea5cf675f2a80fe7b57"
+    },
+    {
+      "id": "pid-controller",
+      "name": "Panel PID temperature controller — RTD and SSR drive",
+      "short": "PID TEMP CONTROLLER",
+      "kind": "controller",
+      "category": "Switching and control",
+      "ports": [
+        {
+          "name": "PWR+",
+          "label": "PWR+",
+          "kind": "terminal",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 30
+        },
+        {
+          "name": "PWR-",
+          "label": "PWR-",
+          "kind": "terminal",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 30
+        },
+        {
+          "name": "A",
+          "label": "A",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "3",
+          "x": 16,
+          "y": 30
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "4",
+          "x": 22,
+          "y": 30
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "terminal",
+          "signal": "rtd",
+          "unit": "conductor",
+          "number": "5",
+          "x": 28,
+          "y": 30
+        },
+        {
+          "name": "SSR+",
+          "label": "SSR+",
+          "kind": "terminal",
+          "signal": "control-dc",
+          "unit": "conductor",
+          "number": "6",
+          "x": 4,
+          "y": 40
+        },
+        {
+          "name": "SSR-",
+          "label": "SSR-",
+          "kind": "terminal",
+          "signal": "control-dc",
+          "unit": "conductor",
+          "number": "7",
+          "x": 12,
+          "y": 40
+        },
+        {
+          "name": "ALC",
+          "label": "ALC",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "8",
+          "x": 20,
+          "y": 40
+        },
+        {
+          "name": "ALN",
+          "label": "ALN",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "9",
+          "x": 28,
+          "y": 40
+        }
+      ],
+      "sources": [
+        "rtd",
+        "ssr"
+      ],
+      "notes": "Generic DC-powered controller with 3-wire RTD input, SSR control output and alarm COM/NO terminals; not a universal PID pinout.",
+      "width": 38,
+      "height": 52,
+      "bodyWidth": 38,
+      "bodyHeight": 44,
+      "xmlSha256": "c48acc8d52ec14c99866d7b3761a59ea5b37d1eaf5e203918b4064b35779fbb8"
+    },
+    {
+      "id": "thermostat",
+      "name": "Adjustable mechanical thermostat",
+      "short": "THERMOSTAT",
+      "kind": "switch",
+      "category": "Switching and control",
+      "ports": [
+        {
+          "name": "COM",
+          "label": "COM",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "1",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "NC",
+          "label": "NC",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "2",
+          "x": 12,
+          "y": 26
+        },
+        {
+          "name": "NO",
+          "label": "NO",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "3",
+          "x": 20,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "Changeover contacts with remote sensing bulb; no simulation.",
+      "shape": "thermostat",
+      "width": 32,
+      "height": 38,
+      "bodyWidth": 32,
+      "bodyHeight": 30,
+      "xmlSha256": "9cf3c94f50d6890e887860bab284b880f2d4bb90c8bc5def6083075eb9e7aec0"
+    },
+    {
+      "id": "contactor",
+      "name": "Three-pole contactor with coil terminals",
+      "short": "3-POLE CONTACTOR",
+      "kind": "relay",
+      "category": "Switching and control",
+      "ports": [
+        {
+          "name": "1L1",
+          "label": "1L1",
+          "kind": "terminal",
+          "signal": "mains",
+          "unit": "conductor",
+          "number": "1L1",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "name": "3L2",
+          "label": "3L2",
+          "kind": "terminal",
+          "signal": "mains",
+          "unit": "conductor",
+          "number": "3L2",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "name": "5L3",
+          "label": "5L3",
+          "kind": "terminal",
+          "signal": "mains",
+          "unit": "conductor",
+          "number": "5L3",
+          "x": 26,
+          "y": 6
+        },
+        {
+          "name": "2T1",
+          "label": "2T1",
+          "kind": "terminal",
+          "signal": "mains",
+          "unit": "conductor",
+          "number": "2T1",
+          "x": 6,
+          "y": 30
+        },
+        {
+          "name": "4T2",
+          "label": "4T2",
+          "kind": "terminal",
+          "signal": "mains",
+          "unit": "conductor",
+          "number": "4T2",
+          "x": 16,
+          "y": 30
+        },
+        {
+          "name": "6T3",
+          "label": "6T3",
+          "kind": "terminal",
+          "signal": "mains",
+          "unit": "conductor",
+          "number": "6T3",
+          "x": 26,
+          "y": 30
+        },
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "terminal",
+          "signal": "coil",
+          "unit": "conductor",
+          "number": "A1",
+          "x": 6,
+          "y": 20
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "terminal",
+          "signal": "coil",
+          "unit": "conductor",
+          "number": "A2",
+          "x": 28,
+          "y": 20
+        }
+      ],
+      "sources": [
+        "relay"
+      ],
+      "notes": "Generic IEC line/load and coil labels; no auxiliary contacts or assumed ratings.",
+      "shape": "contactor",
+      "width": 34,
+      "height": 42,
+      "bodyWidth": 34,
+      "bodyHeight": 34,
+      "xmlSha256": "9d0977aa10174c9c3f3e524caf897c446c5d88acaca9ba067b2cbc1f15550ba0"
+    },
+    {
+      "id": "emergency-stop",
+      "name": "Mushroom emergency stop — two NC contacts",
+      "short": "EMERGENCY STOP / 2 NC",
+      "kind": "switch",
+      "category": "Switching and control",
+      "ports": [
+        {
+          "name": "11",
+          "label": "11",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "11",
+          "x": 4,
+          "y": 26
+        },
+        {
+          "name": "12",
+          "label": "12",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "12",
+          "x": 12,
+          "y": 26
+        },
+        {
+          "name": "21",
+          "label": "21",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "21",
+          "x": 20,
+          "y": 26
+        },
+        {
+          "name": "22",
+          "label": "22",
+          "kind": "terminal",
+          "signal": "contact",
+          "unit": "conductor",
+          "number": "22",
+          "x": 28,
+          "y": 26
+        }
+      ],
+      "sources": [
+        "relay"
+      ],
+      "notes": "Two separate normally closed contact pairs. Layout marker does not implement a safety circuit.",
+      "shape": "estop",
+      "width": 32,
+      "height": 38,
+      "bodyWidth": 32,
+      "bodyHeight": 30,
+      "xmlSha256": "8cf004813329f4deae1d3eed95056259878598029b47795742c0924ee75e65c8"
+    },
+    {
+      "id": "solenoid-valve",
+      "name": "DC solenoid valve — fluid in/out",
+      "short": "SOLENOID VALVE",
+      "kind": "actuator",
+      "category": "Switching and control",
+      "ports": [
+        {
+          "name": "COIL +",
+          "label": "+",
+          "kind": "terminal",
+          "signal": "coil",
+          "unit": "conductor",
+          "number": "1",
+          "x": 12,
+          "y": 2
+        },
+        {
+          "name": "COIL -",
+          "label": "-",
+          "kind": "terminal",
+          "signal": "coil",
+          "unit": "conductor",
+          "number": "2",
+          "x": 24,
+          "y": 2
+        },
+        {
+          "name": "FLUID IN",
+          "label": "IN",
+          "kind": "hose",
+          "signal": "fluid",
+          "unit": "hose",
+          "number": "3",
+          "x": 6,
+          "y": 18
+        },
+        {
+          "name": "FLUID OUT",
+          "label": "OUT",
+          "kind": "hose",
+          "signal": "fluid",
+          "unit": "hose",
+          "number": "4",
+          "x": 30,
+          "y": 18
+        }
+      ],
+      "sources": [
+        "circulation"
+      ],
+      "notes": "",
+      "shape": "valve",
+      "width": 34,
+      "height": 42,
+      "bodyWidth": 34,
+      "bodyHeight": 34,
+      "xmlSha256": "d579faf3e6a87c1499d1c6404ef04ded895c44089303aa9eaffc6f27c5287cfb"
+    },
+    {
+      "id": "fan",
+      "name": "DC cooling fan — two leads",
+      "short": "DC COOLING FAN",
+      "kind": "actuator",
+      "category": "Switching and control",
+      "ports": [
+        {
+          "name": "DC +",
+          "label": "+",
+          "kind": "lead",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "1",
+          "x": 10,
+          "y": 32
+        },
+        {
+          "name": "DC -",
+          "label": "-",
+          "kind": "lead",
+          "signal": "dc",
+          "unit": "conductor",
+          "number": "2",
+          "x": 18,
+          "y": 32
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "",
+      "shape": "fan",
+      "width": 34,
+      "height": 42,
+      "bodyWidth": 34,
+      "bodyHeight": 34,
+      "xmlSha256": "63662b7d21845259adde913b8fb3d82ae19225be40957cbec9aa2afa43bbfbed"
+    },
+    {
+      "id": "pump-peristaltic",
+      "name": "Laboratory peristaltic pump",
+      "short": "PERISTALTIC PUMP",
+      "kind": "apparatus",
+      "category": "Bench apparatus and connections",
+      "ports": [
+        {
+          "name": "FLUID IN",
+          "label": "IN",
+          "kind": "hose",
+          "signal": "fluid",
+          "unit": "hose",
+          "number": "1",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "FLUID OUT",
+          "label": "OUT",
+          "kind": "hose",
+          "signal": "fluid",
+          "unit": "hose",
+          "number": "2",
+          "x": 16,
+          "y": 34
+        },
+        {
+          "name": "AC IN",
+          "label": "AC",
+          "kind": "iec",
+          "signal": "mains",
+          "unit": "cable",
+          "number": "3",
+          "x": 28,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "pumps"
+      ],
+      "notes": "",
+      "shape": "peristaltic",
+      "width": 40,
+      "height": 44,
+      "bodyWidth": 40,
+      "bodyHeight": 36,
+      "xmlSha256": "600911ccf37cc54a91efb9f137a9621d1c9e9cc7b8989c69b349b8330837fd25"
+    },
+    {
+      "id": "pump-vacuum",
+      "name": "Laboratory diaphragm vacuum pump",
+      "short": "VACUUM PUMP",
+      "kind": "apparatus",
+      "category": "Bench apparatus and connections",
+      "ports": [
+        {
+          "name": "VACUUM IN",
+          "label": "VAC",
+          "kind": "hose",
+          "signal": "vacuum",
+          "unit": "hose",
+          "number": "1",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "EXHAUST",
+          "label": "EXH",
+          "kind": "hose",
+          "signal": "gas",
+          "unit": "hose",
+          "number": "2",
+          "x": 16,
+          "y": 34
+        },
+        {
+          "name": "AC IN",
+          "label": "AC",
+          "kind": "iec",
+          "signal": "mains",
+          "unit": "cable",
+          "number": "3",
+          "x": 28,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "vacuum"
+      ],
+      "notes": "",
+      "shape": "vacuum",
+      "width": 40,
+      "height": 44,
+      "bodyWidth": 40,
+      "bodyHeight": 36,
+      "xmlSha256": "2f5317ff383d4cf3c3a1655be8144370177f6fb1c4f7bf0f0b9de251a5072c2e"
+    },
+    {
+      "id": "balance",
+      "name": "Laboratory precision balance",
+      "short": "LAB BALANCE",
+      "kind": "apparatus",
+      "category": "Bench apparatus and connections",
+      "ports": [
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "DC POWER",
+          "label": "DC",
+          "kind": "dc",
+          "signal": "dc",
+          "unit": "cable",
+          "number": "2",
+          "x": 16,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "balance"
+      ],
+      "notes": "",
+      "shape": "balance",
+      "width": 40,
+      "height": 44,
+      "bodyWidth": 40,
+      "bodyHeight": 36,
+      "xmlSha256": "88e6506d41f3aac1e9a7a8e8f281c6b5b0a6f6bc95a9ecb854907760f4ec74ae"
+    },
+    {
+      "id": "microscope",
+      "name": "Inspection microscope with USB camera",
+      "short": "INSPECTION MICROSCOPE",
+      "kind": "apparatus",
+      "category": "Bench apparatus and connections",
+      "ports": [
+        {
+          "name": "USB",
+          "label": "USB",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "DC POWER",
+          "label": "DC",
+          "kind": "dc",
+          "signal": "dc",
+          "unit": "cable",
+          "number": "2",
+          "x": 16,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "daq"
+      ],
+      "notes": "",
+      "shape": "microscope",
+      "width": 40,
+      "height": 44,
+      "bodyWidth": 40,
+      "bodyHeight": 36,
+      "xmlSha256": "d85ff20bc499ac9c34203bc0fcd1c0d4c94a6f59a4614f6a50cbea01b5ca6894"
+    },
+    {
+      "id": "soldering-station",
+      "name": "Temperature-controlled soldering station",
+      "short": "SOLDERING STATION",
+      "kind": "apparatus",
+      "category": "Bench apparatus and connections",
+      "ports": [
+        {
+          "name": "IRON HANDPIECE",
+          "label": "IRON",
+          "kind": "sensor",
+          "signal": "handpiece",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "EARTH BOND",
+          "label": "PE",
+          "kind": "post",
+          "signal": "earth",
+          "unit": "conductor",
+          "number": "2",
+          "x": 16,
+          "y": 34
+        },
+        {
+          "name": "AC IN",
+          "label": "AC",
+          "kind": "iec",
+          "signal": "mains",
+          "unit": "cable",
+          "number": "3",
+          "x": 28,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "temperature"
+      ],
+      "notes": "",
+      "shape": "soldering",
+      "width": 40,
+      "height": 44,
+      "bodyWidth": 40,
+      "bodyHeight": 36,
+      "xmlSha256": "cccfaae25aec8df71ecdb0548d283cd6f0c421a78f12ed94382d88861a149adf"
+    },
+    {
+      "id": "pc",
+      "name": "Laboratory control PC / laptop",
+      "short": "LAB CONTROL PC",
+      "kind": "computer",
+      "category": "Bench apparatus and connections",
+      "ports": [
+        {
+          "name": "USB1",
+          "label": "U1",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 34
+        },
+        {
+          "name": "USB2",
+          "label": "U2",
+          "kind": "usb",
+          "signal": "usb",
+          "unit": "cable",
+          "number": "2",
+          "x": 14,
+          "y": 34
+        },
+        {
+          "name": "LAN",
+          "label": "LAN",
+          "kind": "ethernet",
+          "signal": "ethernet",
+          "unit": "cable",
+          "number": "3",
+          "x": 24,
+          "y": 34
+        },
+        {
+          "name": "SERIAL",
+          "label": "RS",
+          "kind": "serial",
+          "signal": "rs232",
+          "unit": "cable",
+          "number": "4",
+          "x": 34,
+          "y": 34
+        }
+      ],
+      "sources": [
+        "miodaq",
+        "balance"
+      ],
+      "notes": "",
+      "width": 44,
+      "height": 42,
+      "bodyWidth": 44,
+      "bodyHeight": 34,
+      "xmlSha256": "504a9fb15cfe540b91ca6db9c483c0082858c5dced789811dd6b581fd5e3bc93"
+    },
+    {
+      "id": "beaker",
+      "name": "Laboratory beaker",
+      "short": "BEAKER",
+      "kind": "glassware",
+      "category": "Bench apparatus and connections",
+      "ports": [],
+      "sources": [
+        "stirring"
+      ],
+      "notes": "",
+      "shape": "beaker",
+      "width": 28,
+      "height": 42,
+      "bodyWidth": 28,
+      "bodyHeight": 34,
+      "xmlSha256": "498af3a7f70aeb50f1f1d9cce26534eecf30e8dc8b62b5970a90a0e77613d915"
+    },
+    {
+      "id": "flask",
+      "name": "Conical / Erlenmeyer flask",
+      "short": "CONICAL FLASK",
+      "kind": "glassware",
+      "category": "Bench apparatus and connections",
+      "ports": [],
+      "sources": [
+        "stirring"
+      ],
+      "notes": "",
+      "shape": "flask",
+      "width": 28,
+      "height": 42,
+      "bodyWidth": 28,
+      "bodyHeight": 34,
+      "xmlSha256": "c0c9c489470d304c5dd7da440e52711bb8142e2f8f37b72e10ecf1e189e585cd"
+    },
+    {
+      "id": "stand-clamp",
+      "name": "Retort stand with clamp",
+      "short": "RETORT STAND / CLAMP",
+      "kind": "stand",
+      "category": "Bench apparatus and connections",
+      "ports": [],
+      "sources": [
+        "stirring"
+      ],
+      "notes": "",
+      "width": 32,
+      "height": 48,
+      "bodyWidth": 32,
+      "bodyHeight": 40,
+      "xmlSha256": "78565b1b630b1bee79e96a240a03429019f9afce14453721ab7912c998fed668"
+    },
+    {
+      "id": "terminal-block-8",
+      "name": "Eight-way terminal strip — both sides explicit",
+      "short": "TERMINAL STRIP / 8",
+      "kind": "terminalblock",
+      "category": "Bench apparatus and connections",
+      "ports": [
+        {
+          "name": "A1",
+          "label": "A1",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "1",
+          "x": 6,
+          "y": 4
+        },
+        {
+          "name": "A2",
+          "label": "A2",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "2",
+          "x": 10,
+          "y": 4
+        },
+        {
+          "name": "A3",
+          "label": "A3",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "3",
+          "x": 14,
+          "y": 4
+        },
+        {
+          "name": "A4",
+          "label": "A4",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "4",
+          "x": 18,
+          "y": 4
+        },
+        {
+          "name": "A5",
+          "label": "A5",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "5",
+          "x": 22,
+          "y": 4
+        },
+        {
+          "name": "A6",
+          "label": "A6",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "6",
+          "x": 26,
+          "y": 4
+        },
+        {
+          "name": "A7",
+          "label": "A7",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "7",
+          "x": 30,
+          "y": 4
+        },
+        {
+          "name": "A8",
+          "label": "A8",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "8",
+          "x": 34,
+          "y": 4
+        },
+        {
+          "name": "B1",
+          "label": "B1",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "9",
+          "x": 6,
+          "y": 14
+        },
+        {
+          "name": "B2",
+          "label": "B2",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "10",
+          "x": 10,
+          "y": 14
+        },
+        {
+          "name": "B3",
+          "label": "B3",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "11",
+          "x": 14,
+          "y": 14
+        },
+        {
+          "name": "B4",
+          "label": "B4",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "12",
+          "x": 18,
+          "y": 14
+        },
+        {
+          "name": "B5",
+          "label": "B5",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "13",
+          "x": 22,
+          "y": 14
+        },
+        {
+          "name": "B6",
+          "label": "B6",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "14",
+          "x": 26,
+          "y": 14
+        },
+        {
+          "name": "B7",
+          "label": "B7",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "15",
+          "x": 30,
+          "y": 14
+        },
+        {
+          "name": "B8",
+          "label": "B8",
+          "kind": "terminal",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "16",
+          "x": 34,
+          "y": 14
+        }
+      ],
+      "sources": [
+        "relay"
+      ],
+      "notes": "Opposite sides are not automatically joined in the TinyCAD netlist; draw desired links explicitly.",
+      "width": 40,
+      "height": 26,
+      "bodyWidth": 40,
+      "bodyHeight": 18,
+      "xmlSha256": "c758e1be8a63f10e45a78f2009b2e783b63b00be6a4737248d9467a7f446bb1d"
+    },
+    {
+      "id": "bnc-breakout",
+      "name": "BNC to two binding posts breakout",
+      "short": "BNC / BANANA BREAKOUT",
+      "kind": "connector",
+      "category": "Bench apparatus and connections",
+      "ports": [
+        {
+          "name": "COAX",
+          "label": "BNC",
+          "kind": "bnc",
+          "signal": "coax",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 12
+        },
+        {
+          "name": "CENTRE",
+          "label": "HI",
+          "kind": "post",
+          "signal": "electrical",
+          "unit": "conductor",
+          "number": "2",
+          "x": 26,
+          "y": 8
+        },
+        {
+          "name": "SHIELD",
+          "label": "LO",
+          "kind": "post",
+          "signal": "reference",
+          "unit": "conductor",
+          "number": "3",
+          "x": 26,
+          "y": 18
+        }
+      ],
+      "sources": [
+        "probes"
+      ],
+      "notes": "Whole coax endpoint plus separate centre and shield posts; internal mapping is descriptive, not a netlist short.",
+      "shape": "breakout",
+      "width": 30,
+      "height": 32,
+      "bodyWidth": 30,
+      "bodyHeight": 24,
+      "xmlSha256": "3a65deeae33aa969fe9f63895e2cde72c174a60ea10e35713029695c76aa7ccf"
+    },
+    {
+      "id": "bnc-tee",
+      "name": "BNC tee adaptor",
+      "short": "BNC TEE",
+      "kind": "connector",
+      "category": "Bench apparatus and connections",
+      "ports": [
+        {
+          "name": "A",
+          "label": "A",
+          "kind": "bnc",
+          "signal": "coax",
+          "unit": "cable",
+          "number": "1",
+          "x": 4,
+          "y": 12
+        },
+        {
+          "name": "B",
+          "label": "B",
+          "kind": "bnc",
+          "signal": "coax",
+          "unit": "cable",
+          "number": "2",
+          "x": 26,
+          "y": 12
+        },
+        {
+          "name": "C",
+          "label": "C",
+          "kind": "bnc",
+          "signal": "coax",
+          "unit": "cable",
+          "number": "3",
+          "x": 14,
+          "y": 4
+        }
+      ],
+      "sources": [
+        "probes"
+      ],
+      "notes": "Three complete coax endpoints; no automatic internal netlist links.",
+      "shape": "tee",
+      "width": 30,
+      "height": 32,
+      "bodyWidth": 30,
+      "bodyHeight": 24,
+      "xmlSha256": "48827acb2a833fbf7030b916b568d82a4532f522261f81a3bcf3a8fba4c392f3"
+    },
+    {
+      "id": "bnc-terminator",
+      "name": "BNC 50-ohm terminator",
+      "short": "50 OHM TERMINATOR",
+      "kind": "connector",
+      "category": "Bench apparatus and connections",
+      "ports": [
+        {
+          "name": "COAX",
+          "label": "BNC",
+          "kind": "bnc",
+          "signal": "rf-50",
+          "unit": "cable",
+          "number": "1",
+          "x": 22,
+          "y": 12
+        }
+      ],
+      "sources": [
+        "probes"
+      ],
+      "notes": "50-ohm label describes the fixture; no termination resistor model.",
+      "shape": "terminator",
+      "width": 30,
+      "height": 32,
+      "bodyWidth": 30,
+      "bodyHeight": 24,
+      "xmlSha256": "15b9d3c0a73e8140b64a54dec1ea9b3baef821299aee8fb93f1c0006c8346cac"
+    }
+  ]
+}

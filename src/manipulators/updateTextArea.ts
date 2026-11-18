@@ -707,6 +707,15 @@ export class updateTextData {
     return r;
   }
 
+  /** Drawing-space text bounds, shared by hit testing and layout tools. */
+  public getBoundingRect(textAreaData: TextAreaData) {
+    const matrix = this.transform_matrix(textAreaData, 0, 0, 0, 1, 1);
+    const [x, y] = matrix.translate;
+    return matrix.rotate === 270
+      ? { x1: x, y1: y - textAreaData.width, x2: x + textAreaData.height, y2: y }
+      : { x1: x, y1: y, x2: x + textAreaData.width, y2: y + textAreaData.height };
+  }
+
   private transform_matrix(
     textAreaData: TextAreaData,
     dx: number,

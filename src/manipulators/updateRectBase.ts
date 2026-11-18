@@ -110,7 +110,7 @@ export abstract class updateRectBase implements SimpleAdd, IsInside {
     var s: CssStyle = {};
     if (this.item.filled) {
       if (this.item.hatch > 0) {
-        s.fill = `url(#hatch${this.item.hatch}${this.item.fill_colour}`;
+        s.fill = `url(#hatch${this.item.hatch}${this.item.fill_colour})`;
       } else {
         s.fill = this.item.fill_colour;
       }
@@ -191,8 +191,6 @@ export abstract class updateRectBase implements SimpleAdd, IsInside {
         return 'e-resize';
       case 8: // Mid bottom
         return 's-resize';
-      case -2: // Text icon
-        return 'text';
       // case 0:		// Middle
       default:
         // Anything else

@@ -303,6 +303,11 @@ export const EditLibraryView: React.FunctionComponent<EditLibraryViewProps> = (
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (
+      e.target instanceof Element &&
+      e.target.closest('input, select, textarea, [role="dialog"]')
+    )
+      return;
     if (!filteredNames.length) return;
 
     const currentIndex = filteredNames.findIndex(
@@ -334,11 +339,7 @@ export const EditLibraryView: React.FunctionComponent<EditLibraryViewProps> = (
       onKeyDown={handleKeyDown}
     >
       <div className={styles.libraryHeader}>
-        <span className={styles.libraryTitle}>
-          {library?.name ?? (typeof library?.fileId === 'string'
-            ? library.fileId
-            : library?.fileId?.name)}
-        </span>
+        <span className={styles.libraryTitle}>{library?.name || (typeof library?.fileId === 'string' ? library.fileId : library?.fileId?.name)}</span>
         <div className={styles.headerActions}>
           <Button
             className={styles.addButton}

@@ -1,0 +1,5108 @@
+{
+  "version": 1,
+  "id": "network-layout",
+  "name": "Network layout",
+  "artwork": "Original generic physical network device artwork",
+  "scale": 0.3,
+  "convention": "Original generic physical artwork for cable and rack planning, compacted to about 30% of the original dimensions. Each socket is one passive cable endpoint, not an RJ45 contact pinout or a SPICE device. All rack faces are 80 x 8 XML units (400 x 40 internal units), with the same native bottom-right anchor. Socket artwork and endpoints move together onto the normal grid. SFP+ endpoints represent whole transceiver slots.",
+  "references": [
+    {
+      "title": "TP-Link desktop switch front panels",
+      "url": "https://static.tp-link.com/TL-SG105_%26_TL-SG108_V3_Datasheet_1479040787021d.pdf"
+    },
+    {
+      "title": "QNAP 4 RJ45 + 2 SFP+ desktop switch",
+      "url": "https://www.qnap.com/en/product/qsw-2104-2s"
+    },
+    {
+      "title": "MikroTik ten-port rack router",
+      "url": "https://mikrotik.com/product/rb4011igs_rm"
+    },
+    {
+      "title": "Ubiquiti 48-port switch with four SFP+ uplinks",
+      "url": "https://techspecs.ui.com/unifi/switching/usw-pro-48-poe"
+    },
+    {
+      "title": "Ubiquiti ceiling access point",
+      "url": "https://techspecs.ui.com/unifi/wifi/u6-pro"
+    },
+    {
+      "title": "NETGEAR 300-series port-count and mounting table",
+      "url": "https://www.netgear.com/images/datasheet/switches/300-Series_Gigabit_DS.pdf"
+    },
+    {
+      "title": "TP-Link four powered ports plus one uplink",
+      "url": "https://www.tp-link.com/us/business-networking/poe-switch/tl-sg1005p/"
+    },
+    {
+      "title": "TP-Link ten total ports: eight RJ45 plus two SFP",
+      "url": "https://www.tp-link.com/sg/business-networking/smart-switch/t1500g-10ps/v1/"
+    },
+    {
+      "title": "MikroTik eight copper plus two SFP+",
+      "url": "https://mikrotik.com/product/crs310_8g_2s_in"
+    },
+    {
+      "title": "MikroTik 24 copper plus two SFP+",
+      "url": "https://mikrotik.com/product/CRS326-24G-2SplusRM"
+    },
+    {
+      "title": "Ubiquiti eight-slot SFP+ aggregation switch",
+      "url": "https://techspecs.ui.com/unifi/switching/usw-aggregation"
+    },
+    {
+      "title": "Cisco specialist 32-port QSFP28 switch",
+      "url": "https://www.cisco.com/c/en/us/products/collateral/switches/nexus-3000-series-switches/datasheet-c78-740895.html"
+    }
+  ],
+  "sourceReview": {
+    "searches": [
+      "router",
+      "switch network",
+      "access point"
+    ],
+    "inspected": [
+      {
+        "symbolId": 1697,
+        "nameId": 10886,
+        "name": "SWITCH-8",
+        "owner": "alanjshea"
+      },
+      {
+        "symbolId": 1706,
+        "nameId": 10896,
+        "name": "Network Router",
+        "owner": "alanjshea"
+      },
+      {
+        "symbolId": 1709,
+        "nameId": 10899,
+        "name": "Wireless Access Point",
+        "owner": "alanjshea"
+      }
+    ],
+    "decision": "Custom physical artwork requested. Existing symbols have perspective/icon geometry and edge terminals; they do not provide the requested socket-centred connections or matching rack envelopes. No donor geometry or pin mappings are used. Manufacturer references inform generic device families, not exact product replicas."
+  },
+  "survey": {
+    "date": "2026-11-13",
+    "scope": "Manufacturer catalogue coverage, not sales or market-share statistics.",
+    "coreCopperCounts": [
+      5,
+      8,
+      16,
+      24,
+      48
+    ],
+    "commonUplinkMixes": [
+      "8 RJ45 + 2 SFP/SFP+",
+      "16 RJ45 + 2 SFP/SFP+",
+      "24 RJ45 + 2 or 4 SFP/SFP+",
+      "48 RJ45 + 4 SFP+"
+    ],
+    "naming": "Count actual sockets. A five-port PoE switch may have four powered sockets and one uplink. A ten-port switch may mean eight RJ45 plus two SFP, not ten RJ45.",
+    "extended": "4 RJ45, 10 RJ45 + 2 SFP+, and 32 RJ45 + 4 SFP+ are generic additional layout options requested for coverage; not claimed to be core manufacturer configurations. 32-port examples in the survey are specialist QSFP/fibre equipment."
+  },
+  "rack": {
+    "width": 80,
+    "height": 8,
+    "anchor": "native bottom-right",
+    "internalScale": 5
+  },
+  "entries": [
+    {
+      "id": "desktop-switch-4",
+      "name": "Switch - desktop - 4 RJ45",
+      "xmlSha256": "8e00894e5d952ba7213ed82293d765d7f804070c1c042b807e8dcc5f31feb5f0",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 10,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 14,
+          "y": 6
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 18,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "desktop-switch-5",
+      "name": "Switch - desktop - 5 RJ45",
+      "xmlSha256": "1bbcd1129e88eaa4f105ce6b647dc865849b4dd98e0917d0b45fee650e6baf74",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 4,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 8,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 12,
+          "y": 6
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "desktop-switch-8",
+      "name": "Switch - desktop - 8 RJ45",
+      "xmlSha256": "7b61e44c2b8fa72524ca1e37210579381ca199e894d069cd106f93197abb465b",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 2,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 10,
+          "y": 6
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 14,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 18,
+          "y": 6
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 22,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 26,
+          "y": 6
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 30,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "desktop-switch-16",
+      "name": "Switch - desktop - 16 RJ45",
+      "xmlSha256": "b6c7cb257e66486fad484957fa1969dcaf79cc66fad07dd6cc6e848c286efc28",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 14,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 18,
+          "y": 6
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 22,
+          "y": 6
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 26,
+          "y": 6
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 30,
+          "y": 6
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 32,
+          "y": 6
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 34,
+          "y": 6
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 38,
+          "y": 6
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 40,
+          "y": 6
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 42,
+          "y": 6
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 44,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "desktop-switch-4-2sfp",
+      "name": "Switch - desktop - 4 RJ45 + 2 SFP+",
+      "xmlSha256": "511e1c9d96424c0efa68f6f554ffdeabdf494c69276236c75794d2ae13e0bc31",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 4,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 8,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 12,
+          "y": 6
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 22,
+          "y": 6
+        },
+        {
+          "number": "6",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 26,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "desktop-switch-8-2sfp",
+      "name": "Switch - desktop - 8 RJ45 + 2 SFP+",
+      "xmlSha256": "82a50c661a5ad3b3a70b70725c4184e7b9cbdaac8cd85a65207b6d6822457881",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 2,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 10,
+          "y": 6
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 14,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 18,
+          "y": 6
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 22,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 26,
+          "y": 6
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 30,
+          "y": 6
+        },
+        {
+          "number": "9",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 34,
+          "y": 6
+        },
+        {
+          "number": "10",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 38,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "desktop-switch-24",
+      "name": "Switch - desktop - 24 RJ45",
+      "xmlSha256": "217416f2f7c6bbe09f8d1315ad45c3ef54c1206a72324c99b850afa4a67d3e6f",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 12,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 12,
+          "y": 10
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 14,
+          "y": 6
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 14,
+          "y": 10
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 16,
+          "y": 10
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 18,
+          "y": 6
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 18,
+          "y": 10
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 20,
+          "y": 10
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 22,
+          "y": 6
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 22,
+          "y": 10
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 24,
+          "y": 10
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 26,
+          "y": 6
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 26,
+          "y": 10
+        },
+        {
+          "number": "17",
+          "name": "17",
+          "kind": "rj45",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "number": "18",
+          "name": "18",
+          "kind": "rj45",
+          "x": 28,
+          "y": 10
+        },
+        {
+          "number": "19",
+          "name": "19",
+          "kind": "rj45",
+          "x": 30,
+          "y": 6
+        },
+        {
+          "number": "20",
+          "name": "20",
+          "kind": "rj45",
+          "x": 30,
+          "y": 10
+        },
+        {
+          "number": "21",
+          "name": "21",
+          "kind": "rj45",
+          "x": 32,
+          "y": 6
+        },
+        {
+          "number": "22",
+          "name": "22",
+          "kind": "rj45",
+          "x": 32,
+          "y": 10
+        },
+        {
+          "number": "23",
+          "name": "23",
+          "kind": "rj45",
+          "x": 34,
+          "y": 6
+        },
+        {
+          "number": "24",
+          "name": "24",
+          "kind": "rj45",
+          "x": 34,
+          "y": 10
+        }
+      ]
+    },
+    {
+      "id": "desktop-switch-5-poe",
+      "name": "Switch - desktop - 4 PoE+ + 1 RJ45 uplink",
+      "xmlSha256": "0db732db7d55a4c463eeb82b5866b306ec7dd59d6b1da375928810c4434149ea",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1/PoE+",
+          "kind": "rj45",
+          "x": 4,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "2/PoE+",
+          "kind": "rj45",
+          "x": 8,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3/PoE+",
+          "kind": "rj45",
+          "x": 12,
+          "y": 6
+        },
+        {
+          "number": "4",
+          "name": "4/PoE+",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "desktop-switch-8-poe",
+      "name": "Switch - desktop - 8 PoE+ RJ45",
+      "xmlSha256": "54fc75a85f5af2e23005db235b21d520ad023864ba71ba087b408e91d19887c4",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1/PoE+",
+          "kind": "rj45",
+          "x": 2,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "2/PoE+",
+          "kind": "rj45",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3/PoE+",
+          "kind": "rj45",
+          "x": 10,
+          "y": 6
+        },
+        {
+          "number": "4",
+          "name": "4/PoE+",
+          "kind": "rj45",
+          "x": 14,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5/PoE+",
+          "kind": "rj45",
+          "x": 18,
+          "y": 6
+        },
+        {
+          "number": "6",
+          "name": "6/PoE+",
+          "kind": "rj45",
+          "x": 22,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7/PoE+",
+          "kind": "rj45",
+          "x": 26,
+          "y": 6
+        },
+        {
+          "number": "8",
+          "name": "8/PoE+",
+          "kind": "rj45",
+          "x": 30,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-4",
+      "name": "Switch - 19in 1U - 4 RJ45",
+      "xmlSha256": "c7712c19d16dfa470b58bd4af60487809dc059302432c9e945d67568d19ad7e8",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-5",
+      "name": "Switch - 19in 1U - 5 RJ45",
+      "xmlSha256": "9f843961d1aa0037f3f197ce01916ea86047cb4f262aa2c2614267f787142e81",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-8-2sfp",
+      "name": "Switch - 19in 1U - 8 RJ45 + 2 SFP+",
+      "xmlSha256": "0b3ae9a0870622dfb42390ea6b7e79983f3447b37f999bb510ba1c4cf89ca688",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 44,
+          "y": 4
+        },
+        {
+          "number": "9",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 4
+        },
+        {
+          "number": "10",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 72,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-10-2sfp",
+      "name": "Switch - 19in 1U - 10 RJ45 + 2 SFP+",
+      "xmlSha256": "12e6cb7822aec1f4a82cca391ff432949f04eed09f882de483b87428a7bc5de7",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 44,
+          "y": 4
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 48,
+          "y": 4
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 52,
+          "y": 4
+        },
+        {
+          "number": "11",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 4
+        },
+        {
+          "number": "12",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 72,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-16",
+      "name": "Switch - 19in 1U - 16 RJ45",
+      "xmlSha256": "85c7d2986082e645686c1ec71821348f094235be956df80517ace4e8911101bd",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 44,
+          "y": 4
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 48,
+          "y": 4
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 52,
+          "y": 4
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 56,
+          "y": 4
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 60,
+          "y": 4
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 64,
+          "y": 4
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 68,
+          "y": 4
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 72,
+          "y": 4
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 76,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-16-2sfp",
+      "name": "Switch - 19in 1U - 16 RJ45 + 2 SFP+",
+      "xmlSha256": "7279137fb3fdd7e4e209a180ed29f812e04f10bade8fd89bbe20dd5ed785577c",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 18,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 22,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 26,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 30,
+          "y": 4
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 34,
+          "y": 4
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 38,
+          "y": 4
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 42,
+          "y": 4
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 44,
+          "y": 4
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 46,
+          "y": 4
+        },
+        {
+          "number": "17",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 4
+        },
+        {
+          "number": "18",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 72,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-24",
+      "name": "Switch - 19in 1U - 24 RJ45",
+      "xmlSha256": "f1c2a4007b012e754247953626d54a27471f1013af3934ad078f71209014ea65",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 2
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 20,
+          "y": 2
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 24,
+          "y": 2
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 28,
+          "y": 2
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 32,
+          "y": 2
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 32,
+          "y": 6
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 36,
+          "y": 2
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 40,
+          "y": 2
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 40,
+          "y": 6
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 44,
+          "y": 2
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 44,
+          "y": 6
+        },
+        {
+          "number": "17",
+          "name": "17",
+          "kind": "rj45",
+          "x": 48,
+          "y": 2
+        },
+        {
+          "number": "18",
+          "name": "18",
+          "kind": "rj45",
+          "x": 48,
+          "y": 6
+        },
+        {
+          "number": "19",
+          "name": "19",
+          "kind": "rj45",
+          "x": 52,
+          "y": 2
+        },
+        {
+          "number": "20",
+          "name": "20",
+          "kind": "rj45",
+          "x": 52,
+          "y": 6
+        },
+        {
+          "number": "21",
+          "name": "21",
+          "kind": "rj45",
+          "x": 56,
+          "y": 2
+        },
+        {
+          "number": "22",
+          "name": "22",
+          "kind": "rj45",
+          "x": 56,
+          "y": 6
+        },
+        {
+          "number": "23",
+          "name": "23",
+          "kind": "rj45",
+          "x": 60,
+          "y": 2
+        },
+        {
+          "number": "24",
+          "name": "24",
+          "kind": "rj45",
+          "x": 60,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-24-2sfp",
+      "name": "Switch - 19in 1U - 24 RJ45 + 2 SFP+",
+      "xmlSha256": "8aa0dcc4d2320f2eb8f9828d66df1af8bdb7cffed2fff7a54534dfaff1416020",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 2
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 20,
+          "y": 2
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 24,
+          "y": 2
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 28,
+          "y": 2
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 32,
+          "y": 2
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 32,
+          "y": 6
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 36,
+          "y": 2
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 40,
+          "y": 2
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 40,
+          "y": 6
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 44,
+          "y": 2
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 44,
+          "y": 6
+        },
+        {
+          "number": "17",
+          "name": "17",
+          "kind": "rj45",
+          "x": 48,
+          "y": 2
+        },
+        {
+          "number": "18",
+          "name": "18",
+          "kind": "rj45",
+          "x": 48,
+          "y": 6
+        },
+        {
+          "number": "19",
+          "name": "19",
+          "kind": "rj45",
+          "x": 52,
+          "y": 2
+        },
+        {
+          "number": "20",
+          "name": "20",
+          "kind": "rj45",
+          "x": 52,
+          "y": 6
+        },
+        {
+          "number": "21",
+          "name": "21",
+          "kind": "rj45",
+          "x": 56,
+          "y": 2
+        },
+        {
+          "number": "22",
+          "name": "22",
+          "kind": "rj45",
+          "x": 56,
+          "y": 6
+        },
+        {
+          "number": "23",
+          "name": "23",
+          "kind": "rj45",
+          "x": 60,
+          "y": 2
+        },
+        {
+          "number": "24",
+          "name": "24",
+          "kind": "rj45",
+          "x": 60,
+          "y": 6
+        },
+        {
+          "number": "25",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 4
+        },
+        {
+          "number": "26",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 72,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-24-4sfp",
+      "name": "Switch - 19in 1U - 24 RJ45 + 4 SFP+",
+      "xmlSha256": "f350f405edd25ba86574ce368a5e6bcf469f25ea0dc578534425570f8f153eda",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 2
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 20,
+          "y": 2
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 24,
+          "y": 2
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 28,
+          "y": 2
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 32,
+          "y": 2
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 32,
+          "y": 6
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 36,
+          "y": 2
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 40,
+          "y": 2
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 40,
+          "y": 6
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 44,
+          "y": 2
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 44,
+          "y": 6
+        },
+        {
+          "number": "17",
+          "name": "17",
+          "kind": "rj45",
+          "x": 48,
+          "y": 2
+        },
+        {
+          "number": "18",
+          "name": "18",
+          "kind": "rj45",
+          "x": 48,
+          "y": 6
+        },
+        {
+          "number": "19",
+          "name": "19",
+          "kind": "rj45",
+          "x": 52,
+          "y": 2
+        },
+        {
+          "number": "20",
+          "name": "20",
+          "kind": "rj45",
+          "x": 52,
+          "y": 6
+        },
+        {
+          "number": "21",
+          "name": "21",
+          "kind": "rj45",
+          "x": 56,
+          "y": 2
+        },
+        {
+          "number": "22",
+          "name": "22",
+          "kind": "rj45",
+          "x": 56,
+          "y": 6
+        },
+        {
+          "number": "23",
+          "name": "23",
+          "kind": "rj45",
+          "x": 60,
+          "y": 2
+        },
+        {
+          "number": "24",
+          "name": "24",
+          "kind": "rj45",
+          "x": 60,
+          "y": 6
+        },
+        {
+          "number": "25",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 2
+        },
+        {
+          "number": "26",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 68,
+          "y": 6
+        },
+        {
+          "number": "27",
+          "name": "SFP+3",
+          "kind": "sfp",
+          "x": 72,
+          "y": 2
+        },
+        {
+          "number": "28",
+          "name": "SFP+4",
+          "kind": "sfp",
+          "x": 72,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-32-4sfp",
+      "name": "Switch - 19in 1U - 32 RJ45 + 4 SFP+",
+      "xmlSha256": "db4cd97c30285fc7ef96f95ee14794bd49234872fb320d913f67091cb8a1ad0b",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 2
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 18,
+          "y": 2
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 18,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 20,
+          "y": 2
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 22,
+          "y": 2
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 22,
+          "y": 6
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 24,
+          "y": 2
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 26,
+          "y": 2
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 26,
+          "y": 6
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 28,
+          "y": 2
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 30,
+          "y": 2
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 30,
+          "y": 6
+        },
+        {
+          "number": "17",
+          "name": "17",
+          "kind": "rj45",
+          "x": 32,
+          "y": 2
+        },
+        {
+          "number": "18",
+          "name": "18",
+          "kind": "rj45",
+          "x": 32,
+          "y": 6
+        },
+        {
+          "number": "19",
+          "name": "19",
+          "kind": "rj45",
+          "x": 34,
+          "y": 2
+        },
+        {
+          "number": "20",
+          "name": "20",
+          "kind": "rj45",
+          "x": 34,
+          "y": 6
+        },
+        {
+          "number": "21",
+          "name": "21",
+          "kind": "rj45",
+          "x": 36,
+          "y": 2
+        },
+        {
+          "number": "22",
+          "name": "22",
+          "kind": "rj45",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "number": "23",
+          "name": "23",
+          "kind": "rj45",
+          "x": 38,
+          "y": 2
+        },
+        {
+          "number": "24",
+          "name": "24",
+          "kind": "rj45",
+          "x": 38,
+          "y": 6
+        },
+        {
+          "number": "25",
+          "name": "25",
+          "kind": "rj45",
+          "x": 40,
+          "y": 2
+        },
+        {
+          "number": "26",
+          "name": "26",
+          "kind": "rj45",
+          "x": 40,
+          "y": 6
+        },
+        {
+          "number": "27",
+          "name": "27",
+          "kind": "rj45",
+          "x": 42,
+          "y": 2
+        },
+        {
+          "number": "28",
+          "name": "28",
+          "kind": "rj45",
+          "x": 42,
+          "y": 6
+        },
+        {
+          "number": "29",
+          "name": "29",
+          "kind": "rj45",
+          "x": 44,
+          "y": 2
+        },
+        {
+          "number": "30",
+          "name": "30",
+          "kind": "rj45",
+          "x": 44,
+          "y": 6
+        },
+        {
+          "number": "31",
+          "name": "31",
+          "kind": "rj45",
+          "x": 46,
+          "y": 2
+        },
+        {
+          "number": "32",
+          "name": "32",
+          "kind": "rj45",
+          "x": 46,
+          "y": 6
+        },
+        {
+          "number": "33",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 2
+        },
+        {
+          "number": "34",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 68,
+          "y": 6
+        },
+        {
+          "number": "35",
+          "name": "SFP+3",
+          "kind": "sfp",
+          "x": 72,
+          "y": 2
+        },
+        {
+          "number": "36",
+          "name": "SFP+4",
+          "kind": "sfp",
+          "x": 72,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-48-4sfp",
+      "name": "Switch - 19in 1U - 48 RJ45 + 4 SFP+",
+      "xmlSha256": "4d8a0edfc37c9c3cd759d01382c08edf218b9c1350a7c3cecca2c0d1f532da41",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 2
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 18,
+          "y": 2
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 18,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 20,
+          "y": 2
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 22,
+          "y": 2
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 22,
+          "y": 6
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 24,
+          "y": 2
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 26,
+          "y": 2
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 26,
+          "y": 6
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 28,
+          "y": 2
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 30,
+          "y": 2
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 30,
+          "y": 6
+        },
+        {
+          "number": "17",
+          "name": "17",
+          "kind": "rj45",
+          "x": 32,
+          "y": 2
+        },
+        {
+          "number": "18",
+          "name": "18",
+          "kind": "rj45",
+          "x": 32,
+          "y": 6
+        },
+        {
+          "number": "19",
+          "name": "19",
+          "kind": "rj45",
+          "x": 34,
+          "y": 2
+        },
+        {
+          "number": "20",
+          "name": "20",
+          "kind": "rj45",
+          "x": 34,
+          "y": 6
+        },
+        {
+          "number": "21",
+          "name": "21",
+          "kind": "rj45",
+          "x": 36,
+          "y": 2
+        },
+        {
+          "number": "22",
+          "name": "22",
+          "kind": "rj45",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "number": "23",
+          "name": "23",
+          "kind": "rj45",
+          "x": 38,
+          "y": 2
+        },
+        {
+          "number": "24",
+          "name": "24",
+          "kind": "rj45",
+          "x": 38,
+          "y": 6
+        },
+        {
+          "number": "25",
+          "name": "25",
+          "kind": "rj45",
+          "x": 40,
+          "y": 2
+        },
+        {
+          "number": "26",
+          "name": "26",
+          "kind": "rj45",
+          "x": 40,
+          "y": 6
+        },
+        {
+          "number": "27",
+          "name": "27",
+          "kind": "rj45",
+          "x": 42,
+          "y": 2
+        },
+        {
+          "number": "28",
+          "name": "28",
+          "kind": "rj45",
+          "x": 42,
+          "y": 6
+        },
+        {
+          "number": "29",
+          "name": "29",
+          "kind": "rj45",
+          "x": 44,
+          "y": 2
+        },
+        {
+          "number": "30",
+          "name": "30",
+          "kind": "rj45",
+          "x": 44,
+          "y": 6
+        },
+        {
+          "number": "31",
+          "name": "31",
+          "kind": "rj45",
+          "x": 46,
+          "y": 2
+        },
+        {
+          "number": "32",
+          "name": "32",
+          "kind": "rj45",
+          "x": 46,
+          "y": 6
+        },
+        {
+          "number": "33",
+          "name": "33",
+          "kind": "rj45",
+          "x": 48,
+          "y": 2
+        },
+        {
+          "number": "34",
+          "name": "34",
+          "kind": "rj45",
+          "x": 48,
+          "y": 6
+        },
+        {
+          "number": "35",
+          "name": "35",
+          "kind": "rj45",
+          "x": 50,
+          "y": 2
+        },
+        {
+          "number": "36",
+          "name": "36",
+          "kind": "rj45",
+          "x": 50,
+          "y": 6
+        },
+        {
+          "number": "37",
+          "name": "37",
+          "kind": "rj45",
+          "x": 52,
+          "y": 2
+        },
+        {
+          "number": "38",
+          "name": "38",
+          "kind": "rj45",
+          "x": 52,
+          "y": 6
+        },
+        {
+          "number": "39",
+          "name": "39",
+          "kind": "rj45",
+          "x": 54,
+          "y": 2
+        },
+        {
+          "number": "40",
+          "name": "40",
+          "kind": "rj45",
+          "x": 54,
+          "y": 6
+        },
+        {
+          "number": "41",
+          "name": "41",
+          "kind": "rj45",
+          "x": 56,
+          "y": 2
+        },
+        {
+          "number": "42",
+          "name": "42",
+          "kind": "rj45",
+          "x": 56,
+          "y": 6
+        },
+        {
+          "number": "43",
+          "name": "43",
+          "kind": "rj45",
+          "x": 58,
+          "y": 2
+        },
+        {
+          "number": "44",
+          "name": "44",
+          "kind": "rj45",
+          "x": 58,
+          "y": 6
+        },
+        {
+          "number": "45",
+          "name": "45",
+          "kind": "rj45",
+          "x": 60,
+          "y": 2
+        },
+        {
+          "number": "46",
+          "name": "46",
+          "kind": "rj45",
+          "x": 60,
+          "y": 6
+        },
+        {
+          "number": "47",
+          "name": "47",
+          "kind": "rj45",
+          "x": 62,
+          "y": 2
+        },
+        {
+          "number": "48",
+          "name": "48",
+          "kind": "rj45",
+          "x": 62,
+          "y": 6
+        },
+        {
+          "number": "49",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 2
+        },
+        {
+          "number": "50",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 68,
+          "y": 6
+        },
+        {
+          "number": "51",
+          "name": "SFP+3",
+          "kind": "sfp",
+          "x": 72,
+          "y": 2
+        },
+        {
+          "number": "52",
+          "name": "SFP+4",
+          "kind": "sfp",
+          "x": 72,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-8",
+      "name": "Switch - 19in 1U - 8 RJ45",
+      "xmlSha256": "6e283ca7d8300d7caba889c233b7bd48a2775a793a28d96b00f1d307ff822462",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 44,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-48",
+      "name": "Switch - 19in 1U - 48 RJ45",
+      "xmlSha256": "80a125401265bf7fde1481ad7c9cc21892ae3f7e3801227d000888790386487c",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 2
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 18,
+          "y": 2
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 18,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 20,
+          "y": 2
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 22,
+          "y": 2
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 22,
+          "y": 6
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 24,
+          "y": 2
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 26,
+          "y": 2
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 26,
+          "y": 6
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 28,
+          "y": 2
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 30,
+          "y": 2
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 30,
+          "y": 6
+        },
+        {
+          "number": "17",
+          "name": "17",
+          "kind": "rj45",
+          "x": 32,
+          "y": 2
+        },
+        {
+          "number": "18",
+          "name": "18",
+          "kind": "rj45",
+          "x": 32,
+          "y": 6
+        },
+        {
+          "number": "19",
+          "name": "19",
+          "kind": "rj45",
+          "x": 34,
+          "y": 2
+        },
+        {
+          "number": "20",
+          "name": "20",
+          "kind": "rj45",
+          "x": 34,
+          "y": 6
+        },
+        {
+          "number": "21",
+          "name": "21",
+          "kind": "rj45",
+          "x": 36,
+          "y": 2
+        },
+        {
+          "number": "22",
+          "name": "22",
+          "kind": "rj45",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "number": "23",
+          "name": "23",
+          "kind": "rj45",
+          "x": 38,
+          "y": 2
+        },
+        {
+          "number": "24",
+          "name": "24",
+          "kind": "rj45",
+          "x": 38,
+          "y": 6
+        },
+        {
+          "number": "25",
+          "name": "25",
+          "kind": "rj45",
+          "x": 40,
+          "y": 2
+        },
+        {
+          "number": "26",
+          "name": "26",
+          "kind": "rj45",
+          "x": 40,
+          "y": 6
+        },
+        {
+          "number": "27",
+          "name": "27",
+          "kind": "rj45",
+          "x": 42,
+          "y": 2
+        },
+        {
+          "number": "28",
+          "name": "28",
+          "kind": "rj45",
+          "x": 42,
+          "y": 6
+        },
+        {
+          "number": "29",
+          "name": "29",
+          "kind": "rj45",
+          "x": 44,
+          "y": 2
+        },
+        {
+          "number": "30",
+          "name": "30",
+          "kind": "rj45",
+          "x": 44,
+          "y": 6
+        },
+        {
+          "number": "31",
+          "name": "31",
+          "kind": "rj45",
+          "x": 46,
+          "y": 2
+        },
+        {
+          "number": "32",
+          "name": "32",
+          "kind": "rj45",
+          "x": 46,
+          "y": 6
+        },
+        {
+          "number": "33",
+          "name": "33",
+          "kind": "rj45",
+          "x": 48,
+          "y": 2
+        },
+        {
+          "number": "34",
+          "name": "34",
+          "kind": "rj45",
+          "x": 48,
+          "y": 6
+        },
+        {
+          "number": "35",
+          "name": "35",
+          "kind": "rj45",
+          "x": 50,
+          "y": 2
+        },
+        {
+          "number": "36",
+          "name": "36",
+          "kind": "rj45",
+          "x": 50,
+          "y": 6
+        },
+        {
+          "number": "37",
+          "name": "37",
+          "kind": "rj45",
+          "x": 52,
+          "y": 2
+        },
+        {
+          "number": "38",
+          "name": "38",
+          "kind": "rj45",
+          "x": 52,
+          "y": 6
+        },
+        {
+          "number": "39",
+          "name": "39",
+          "kind": "rj45",
+          "x": 54,
+          "y": 2
+        },
+        {
+          "number": "40",
+          "name": "40",
+          "kind": "rj45",
+          "x": 54,
+          "y": 6
+        },
+        {
+          "number": "41",
+          "name": "41",
+          "kind": "rj45",
+          "x": 56,
+          "y": 2
+        },
+        {
+          "number": "42",
+          "name": "42",
+          "kind": "rj45",
+          "x": 56,
+          "y": 6
+        },
+        {
+          "number": "43",
+          "name": "43",
+          "kind": "rj45",
+          "x": 58,
+          "y": 2
+        },
+        {
+          "number": "44",
+          "name": "44",
+          "kind": "rj45",
+          "x": 58,
+          "y": 6
+        },
+        {
+          "number": "45",
+          "name": "45",
+          "kind": "rj45",
+          "x": 60,
+          "y": 2
+        },
+        {
+          "number": "46",
+          "name": "46",
+          "kind": "rj45",
+          "x": 60,
+          "y": 6
+        },
+        {
+          "number": "47",
+          "name": "47",
+          "kind": "rj45",
+          "x": 62,
+          "y": 2
+        },
+        {
+          "number": "48",
+          "name": "48",
+          "kind": "rj45",
+          "x": 62,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-16-poe",
+      "name": "Switch - 19in 1U - 16 PoE+ RJ45 + 2 SFP+",
+      "xmlSha256": "51ed8d6443b523958d6bdf450e32c76b9f0d3aa603c36796043c603c933dd8b5",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1/PoE+",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "2/PoE+",
+          "kind": "rj45",
+          "x": 18,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "3/PoE+",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "4/PoE+",
+          "kind": "rj45",
+          "x": 22,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "5/PoE+",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "6/PoE+",
+          "kind": "rj45",
+          "x": 26,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "7/PoE+",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "8/PoE+",
+          "kind": "rj45",
+          "x": 30,
+          "y": 4
+        },
+        {
+          "number": "9",
+          "name": "9/PoE+",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "10",
+          "name": "10/PoE+",
+          "kind": "rj45",
+          "x": 34,
+          "y": 4
+        },
+        {
+          "number": "11",
+          "name": "11/PoE+",
+          "kind": "rj45",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "12",
+          "name": "12/PoE+",
+          "kind": "rj45",
+          "x": 38,
+          "y": 4
+        },
+        {
+          "number": "13",
+          "name": "13/PoE+",
+          "kind": "rj45",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "14",
+          "name": "14/PoE+",
+          "kind": "rj45",
+          "x": 42,
+          "y": 4
+        },
+        {
+          "number": "15",
+          "name": "15/PoE+",
+          "kind": "rj45",
+          "x": 44,
+          "y": 4
+        },
+        {
+          "number": "16",
+          "name": "16/PoE+",
+          "kind": "rj45",
+          "x": 46,
+          "y": 4
+        },
+        {
+          "number": "17",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 4
+        },
+        {
+          "number": "18",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 72,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-24-poe",
+      "name": "Switch - 19in 1U - 24 PoE+ RJ45 + 4 SFP+",
+      "xmlSha256": "748c9c6d68b2bf3cab39218a646a72e4750fcd191ebf77304b2de8e0cc27959b",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1/PoE+",
+          "kind": "rj45",
+          "x": 16,
+          "y": 2
+        },
+        {
+          "number": "2",
+          "name": "2/PoE+",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3/PoE+",
+          "kind": "rj45",
+          "x": 20,
+          "y": 2
+        },
+        {
+          "number": "4",
+          "name": "4/PoE+",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5/PoE+",
+          "kind": "rj45",
+          "x": 24,
+          "y": 2
+        },
+        {
+          "number": "6",
+          "name": "6/PoE+",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7/PoE+",
+          "kind": "rj45",
+          "x": 28,
+          "y": 2
+        },
+        {
+          "number": "8",
+          "name": "8/PoE+",
+          "kind": "rj45",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "number": "9",
+          "name": "9/PoE+",
+          "kind": "rj45",
+          "x": 32,
+          "y": 2
+        },
+        {
+          "number": "10",
+          "name": "10/PoE+",
+          "kind": "rj45",
+          "x": 32,
+          "y": 6
+        },
+        {
+          "number": "11",
+          "name": "11/PoE+",
+          "kind": "rj45",
+          "x": 36,
+          "y": 2
+        },
+        {
+          "number": "12",
+          "name": "12/PoE+",
+          "kind": "rj45",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "number": "13",
+          "name": "13/PoE+",
+          "kind": "rj45",
+          "x": 40,
+          "y": 2
+        },
+        {
+          "number": "14",
+          "name": "14/PoE+",
+          "kind": "rj45",
+          "x": 40,
+          "y": 6
+        },
+        {
+          "number": "15",
+          "name": "15/PoE+",
+          "kind": "rj45",
+          "x": 44,
+          "y": 2
+        },
+        {
+          "number": "16",
+          "name": "16/PoE+",
+          "kind": "rj45",
+          "x": 44,
+          "y": 6
+        },
+        {
+          "number": "17",
+          "name": "17/PoE+",
+          "kind": "rj45",
+          "x": 48,
+          "y": 2
+        },
+        {
+          "number": "18",
+          "name": "18/PoE+",
+          "kind": "rj45",
+          "x": 48,
+          "y": 6
+        },
+        {
+          "number": "19",
+          "name": "19/PoE+",
+          "kind": "rj45",
+          "x": 52,
+          "y": 2
+        },
+        {
+          "number": "20",
+          "name": "20/PoE+",
+          "kind": "rj45",
+          "x": 52,
+          "y": 6
+        },
+        {
+          "number": "21",
+          "name": "21/PoE+",
+          "kind": "rj45",
+          "x": 56,
+          "y": 2
+        },
+        {
+          "number": "22",
+          "name": "22/PoE+",
+          "kind": "rj45",
+          "x": 56,
+          "y": 6
+        },
+        {
+          "number": "23",
+          "name": "23/PoE+",
+          "kind": "rj45",
+          "x": 60,
+          "y": 2
+        },
+        {
+          "number": "24",
+          "name": "24/PoE+",
+          "kind": "rj45",
+          "x": 60,
+          "y": 6
+        },
+        {
+          "number": "25",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 2
+        },
+        {
+          "number": "26",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 68,
+          "y": 6
+        },
+        {
+          "number": "27",
+          "name": "SFP+3",
+          "kind": "sfp",
+          "x": 72,
+          "y": 2
+        },
+        {
+          "number": "28",
+          "name": "SFP+4",
+          "kind": "sfp",
+          "x": 72,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "rack-switch-48-poe",
+      "name": "Switch - 19in 1U - 48 PoE+ RJ45 + 4 SFP+",
+      "xmlSha256": "5a02ac62505c1ef7f96466dc501f21f52d695dda21d651a43d19f7aa74d6b3a5",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1/PoE+",
+          "kind": "rj45",
+          "x": 16,
+          "y": 2
+        },
+        {
+          "number": "2",
+          "name": "2/PoE+",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3/PoE+",
+          "kind": "rj45",
+          "x": 18,
+          "y": 2
+        },
+        {
+          "number": "4",
+          "name": "4/PoE+",
+          "kind": "rj45",
+          "x": 18,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5/PoE+",
+          "kind": "rj45",
+          "x": 20,
+          "y": 2
+        },
+        {
+          "number": "6",
+          "name": "6/PoE+",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7/PoE+",
+          "kind": "rj45",
+          "x": 22,
+          "y": 2
+        },
+        {
+          "number": "8",
+          "name": "8/PoE+",
+          "kind": "rj45",
+          "x": 22,
+          "y": 6
+        },
+        {
+          "number": "9",
+          "name": "9/PoE+",
+          "kind": "rj45",
+          "x": 24,
+          "y": 2
+        },
+        {
+          "number": "10",
+          "name": "10/PoE+",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "number": "11",
+          "name": "11/PoE+",
+          "kind": "rj45",
+          "x": 26,
+          "y": 2
+        },
+        {
+          "number": "12",
+          "name": "12/PoE+",
+          "kind": "rj45",
+          "x": 26,
+          "y": 6
+        },
+        {
+          "number": "13",
+          "name": "13/PoE+",
+          "kind": "rj45",
+          "x": 28,
+          "y": 2
+        },
+        {
+          "number": "14",
+          "name": "14/PoE+",
+          "kind": "rj45",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "number": "15",
+          "name": "15/PoE+",
+          "kind": "rj45",
+          "x": 30,
+          "y": 2
+        },
+        {
+          "number": "16",
+          "name": "16/PoE+",
+          "kind": "rj45",
+          "x": 30,
+          "y": 6
+        },
+        {
+          "number": "17",
+          "name": "17/PoE+",
+          "kind": "rj45",
+          "x": 32,
+          "y": 2
+        },
+        {
+          "number": "18",
+          "name": "18/PoE+",
+          "kind": "rj45",
+          "x": 32,
+          "y": 6
+        },
+        {
+          "number": "19",
+          "name": "19/PoE+",
+          "kind": "rj45",
+          "x": 34,
+          "y": 2
+        },
+        {
+          "number": "20",
+          "name": "20/PoE+",
+          "kind": "rj45",
+          "x": 34,
+          "y": 6
+        },
+        {
+          "number": "21",
+          "name": "21/PoE+",
+          "kind": "rj45",
+          "x": 36,
+          "y": 2
+        },
+        {
+          "number": "22",
+          "name": "22/PoE+",
+          "kind": "rj45",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "number": "23",
+          "name": "23/PoE+",
+          "kind": "rj45",
+          "x": 38,
+          "y": 2
+        },
+        {
+          "number": "24",
+          "name": "24/PoE+",
+          "kind": "rj45",
+          "x": 38,
+          "y": 6
+        },
+        {
+          "number": "25",
+          "name": "25/PoE+",
+          "kind": "rj45",
+          "x": 40,
+          "y": 2
+        },
+        {
+          "number": "26",
+          "name": "26/PoE+",
+          "kind": "rj45",
+          "x": 40,
+          "y": 6
+        },
+        {
+          "number": "27",
+          "name": "27/PoE+",
+          "kind": "rj45",
+          "x": 42,
+          "y": 2
+        },
+        {
+          "number": "28",
+          "name": "28/PoE+",
+          "kind": "rj45",
+          "x": 42,
+          "y": 6
+        },
+        {
+          "number": "29",
+          "name": "29/PoE+",
+          "kind": "rj45",
+          "x": 44,
+          "y": 2
+        },
+        {
+          "number": "30",
+          "name": "30/PoE+",
+          "kind": "rj45",
+          "x": 44,
+          "y": 6
+        },
+        {
+          "number": "31",
+          "name": "31/PoE+",
+          "kind": "rj45",
+          "x": 46,
+          "y": 2
+        },
+        {
+          "number": "32",
+          "name": "32/PoE+",
+          "kind": "rj45",
+          "x": 46,
+          "y": 6
+        },
+        {
+          "number": "33",
+          "name": "33/PoE+",
+          "kind": "rj45",
+          "x": 48,
+          "y": 2
+        },
+        {
+          "number": "34",
+          "name": "34/PoE+",
+          "kind": "rj45",
+          "x": 48,
+          "y": 6
+        },
+        {
+          "number": "35",
+          "name": "35/PoE+",
+          "kind": "rj45",
+          "x": 50,
+          "y": 2
+        },
+        {
+          "number": "36",
+          "name": "36/PoE+",
+          "kind": "rj45",
+          "x": 50,
+          "y": 6
+        },
+        {
+          "number": "37",
+          "name": "37/PoE+",
+          "kind": "rj45",
+          "x": 52,
+          "y": 2
+        },
+        {
+          "number": "38",
+          "name": "38/PoE+",
+          "kind": "rj45",
+          "x": 52,
+          "y": 6
+        },
+        {
+          "number": "39",
+          "name": "39/PoE+",
+          "kind": "rj45",
+          "x": 54,
+          "y": 2
+        },
+        {
+          "number": "40",
+          "name": "40/PoE+",
+          "kind": "rj45",
+          "x": 54,
+          "y": 6
+        },
+        {
+          "number": "41",
+          "name": "41/PoE+",
+          "kind": "rj45",
+          "x": 56,
+          "y": 2
+        },
+        {
+          "number": "42",
+          "name": "42/PoE+",
+          "kind": "rj45",
+          "x": 56,
+          "y": 6
+        },
+        {
+          "number": "43",
+          "name": "43/PoE+",
+          "kind": "rj45",
+          "x": 58,
+          "y": 2
+        },
+        {
+          "number": "44",
+          "name": "44/PoE+",
+          "kind": "rj45",
+          "x": 58,
+          "y": 6
+        },
+        {
+          "number": "45",
+          "name": "45/PoE+",
+          "kind": "rj45",
+          "x": 60,
+          "y": 2
+        },
+        {
+          "number": "46",
+          "name": "46/PoE+",
+          "kind": "rj45",
+          "x": 60,
+          "y": 6
+        },
+        {
+          "number": "47",
+          "name": "47/PoE+",
+          "kind": "rj45",
+          "x": 62,
+          "y": 2
+        },
+        {
+          "number": "48",
+          "name": "48/PoE+",
+          "kind": "rj45",
+          "x": 62,
+          "y": 6
+        },
+        {
+          "number": "49",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 2
+        },
+        {
+          "number": "50",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 68,
+          "y": 6
+        },
+        {
+          "number": "51",
+          "name": "SFP+3",
+          "kind": "sfp",
+          "x": 72,
+          "y": 2
+        },
+        {
+          "number": "52",
+          "name": "SFP+4",
+          "kind": "sfp",
+          "x": 72,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "wifi-router-4",
+      "name": "Router - Wi-Fi - 1 WAN + 4 LAN",
+      "xmlSha256": "eeb73dba9bfffd09be29df906f98ab800ba045fac7f0b5bd16a4859e133eded8",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "WAN1",
+          "kind": "rj45",
+          "x": 4,
+          "y": 12
+        },
+        {
+          "number": "2",
+          "name": "LAN1",
+          "kind": "rj45",
+          "x": 8,
+          "y": 12
+        },
+        {
+          "number": "3",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 12,
+          "y": 12
+        },
+        {
+          "number": "4",
+          "name": "LAN3",
+          "kind": "rj45",
+          "x": 16,
+          "y": 12
+        },
+        {
+          "number": "5",
+          "name": "LAN4",
+          "kind": "rj45",
+          "x": 20,
+          "y": 12
+        }
+      ]
+    },
+    {
+      "id": "wifi-router-8",
+      "name": "Router - Wi-Fi - 1 WAN + 8 LAN",
+      "xmlSha256": "ec4e63afcaf3564af704fcef6268dcd31468e429de5fe6a621a8ee6529ff75c7",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "WAN1",
+          "kind": "rj45",
+          "x": 2,
+          "y": 12
+        },
+        {
+          "number": "2",
+          "name": "LAN1",
+          "kind": "rj45",
+          "x": 6,
+          "y": 12
+        },
+        {
+          "number": "3",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 10,
+          "y": 12
+        },
+        {
+          "number": "4",
+          "name": "LAN3",
+          "kind": "rj45",
+          "x": 14,
+          "y": 12
+        },
+        {
+          "number": "5",
+          "name": "LAN4",
+          "kind": "rj45",
+          "x": 18,
+          "y": 12
+        },
+        {
+          "number": "6",
+          "name": "LAN5",
+          "kind": "rj45",
+          "x": 22,
+          "y": 12
+        },
+        {
+          "number": "7",
+          "name": "LAN6",
+          "kind": "rj45",
+          "x": 26,
+          "y": 12
+        },
+        {
+          "number": "8",
+          "name": "LAN7",
+          "kind": "rj45",
+          "x": 30,
+          "y": 12
+        },
+        {
+          "number": "9",
+          "name": "LAN8",
+          "kind": "rj45",
+          "x": 34,
+          "y": 12
+        }
+      ]
+    },
+    {
+      "id": "desktop-router-4",
+      "name": "Router - desktop - 1 WAN + 4 LAN",
+      "xmlSha256": "75b207479d9a2ffe8111ce596b8abfa8ac3f9ba75d7d1f62ea5555b7241a67dd",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "WAN1",
+          "kind": "rj45",
+          "x": 4,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "LAN1",
+          "kind": "rj45",
+          "x": 8,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 12,
+          "y": 6
+        },
+        {
+          "number": "4",
+          "name": "LAN3",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "LAN4",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "rack-router-4-2sfp",
+      "name": "Router - 19in 1U - 4 RJ45 + 2 SFP+",
+      "xmlSha256": "1d9cccde597d1458aa0ea3d418be8bd52512b5b943f4e883d49448dba48834b4",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "WAN1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "LAN1",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "LAN3",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 72,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-router-8-2sfp",
+      "name": "Router - 19in 1U - 8 RJ45 + 2 SFP+",
+      "xmlSha256": "2b83f79286708b4e7b6ed4b6a7e1fb45680bc22a56ef0ec68bc33c87eac46e9a",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "WAN1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "WAN2",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "LAN1",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "LAN3",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "LAN4",
+          "kind": "rj45",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "LAN5",
+          "kind": "rj45",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "LAN6",
+          "kind": "rj45",
+          "x": 44,
+          "y": 4
+        },
+        {
+          "number": "9",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 4
+        },
+        {
+          "number": "10",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 72,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-router-10-2sfp",
+      "name": "Router - 19in 1U - 10 RJ45 + 2 SFP+",
+      "xmlSha256": "f6298381f33de49cd7ea8a9f5d9c6ffd458e7381d5b665a91e7b4710de9f796a",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "WAN1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "WAN2",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "LAN1",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "LAN3",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "LAN4",
+          "kind": "rj45",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "LAN5",
+          "kind": "rj45",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "LAN6",
+          "kind": "rj45",
+          "x": 44,
+          "y": 4
+        },
+        {
+          "number": "9",
+          "name": "LAN7",
+          "kind": "rj45",
+          "x": 48,
+          "y": 4
+        },
+        {
+          "number": "10",
+          "name": "LAN8",
+          "kind": "rj45",
+          "x": 52,
+          "y": 4
+        },
+        {
+          "number": "11",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 4
+        },
+        {
+          "number": "12",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 72,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "desktop-firewall-6",
+      "name": "Firewall - desktop - 6 RJ45",
+      "xmlSha256": "862ccecb43b2fe7835208b0b6d464fef7165403fe0066a42814c0a54ec3741bb",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "WAN1",
+          "kind": "rj45",
+          "x": 4,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "WAN2",
+          "kind": "rj45",
+          "x": 8,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "LAN1",
+          "kind": "rj45",
+          "x": 12,
+          "y": 6
+        },
+        {
+          "number": "4",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "LAN3",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "6",
+          "name": "LAN4",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "rack-firewall-6-2sfp",
+      "name": "Firewall - 19in 1U - 6 RJ45 + 2 SFP+",
+      "xmlSha256": "728ffa4d53502d203e742e1d3a691e756fe11e2fcd7808939ddef1447d9eaccf",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "WAN1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "WAN2",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "LAN1",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "LAN3",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "LAN4",
+          "kind": "rj45",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 68,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 72,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "ap-ceiling-1",
+      "name": "Access point - ceiling - 1 PoE LAN",
+      "xmlSha256": "ef60c88dc65311e24b3478f12ae263d6266574fe92cbef85ac955612189f5c2e",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "LAN1/PoE",
+          "kind": "rj45",
+          "x": 10,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "id": "ap-ceiling-2",
+      "name": "Access point - ceiling - 2 LAN",
+      "xmlSha256": "861207e45e09d359cb326ccb2f4ad3406a90159f7b576a46b4ec5fb74c003174",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "LAN1/PoE",
+          "kind": "rj45",
+          "x": 8,
+          "y": 14
+        },
+        {
+          "number": "2",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 12,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "id": "ap-wall-4",
+      "name": "Access point - wall - 1 PoE uplink + 4 LAN",
+      "xmlSha256": "b490300f2c944d71434fb8adf2216ec0b32dbb37c86a89780d7b3cd5d90df495",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "PoE IN",
+          "kind": "rj45",
+          "x": 10,
+          "y": 12
+        },
+        {
+          "number": "2",
+          "name": "LAN1",
+          "kind": "rj45",
+          "x": 4,
+          "y": 16
+        },
+        {
+          "number": "3",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 8,
+          "y": 16
+        },
+        {
+          "number": "4",
+          "name": "LAN3",
+          "kind": "rj45",
+          "x": 12,
+          "y": 16
+        },
+        {
+          "number": "5",
+          "name": "LAN4",
+          "kind": "rj45",
+          "x": 16,
+          "y": 16
+        }
+      ]
+    },
+    {
+      "id": "ap-desktop-2",
+      "name": "Access point - desktop - 2 LAN",
+      "xmlSha256": "9e7d8916961e86800018b2efc65ef73185db1febd8cb2a1b329302debbbaa8a5",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "LAN1/PoE",
+          "kind": "rj45",
+          "x": 4,
+          "y": 14
+        },
+        {
+          "number": "2",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 8,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "id": "mesh-node-2",
+      "name": "Access point - mesh node - 2 LAN",
+      "xmlSha256": "4c5a25de28310f0ebaab0530ce9a8b669c69bf355594299cb99370bcbe3cad9c",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "LAN1",
+          "kind": "rj45",
+          "x": 4,
+          "y": 14
+        },
+        {
+          "number": "2",
+          "name": "LAN2",
+          "kind": "rj45",
+          "x": 8,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "id": "rack-controller-4",
+      "name": "Wi-Fi controller - 19in 1U - 4 RJ45",
+      "xmlSha256": "e015145716a9fe07793de513d0498e5a97b6a2fd7f8715837e17959c0fa7008f",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "patch-panel-12",
+      "name": "Patch panel - 19in 1U - 12 RJ45",
+      "xmlSha256": "ec84d38a40e475c75083a416107b180e821775c5ab6edc12c3e6ac937cbce381",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 44,
+          "y": 4
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 48,
+          "y": 4
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 52,
+          "y": 4
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 56,
+          "y": 4
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 60,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "patch-panel-24",
+      "name": "Patch panel - 19in 1U - 24 RJ45",
+      "xmlSha256": "c81294c3f1e54d11eb8cf8fe5139eb6c37529f9ab90815fbcaf1909501720e69",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 18,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 22,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 26,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 30,
+          "y": 4
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 34,
+          "y": 4
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 38,
+          "y": 4
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 42,
+          "y": 4
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 44,
+          "y": 4
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 46,
+          "y": 4
+        },
+        {
+          "number": "17",
+          "name": "17",
+          "kind": "rj45",
+          "x": 48,
+          "y": 4
+        },
+        {
+          "number": "18",
+          "name": "18",
+          "kind": "rj45",
+          "x": 50,
+          "y": 4
+        },
+        {
+          "number": "19",
+          "name": "19",
+          "kind": "rj45",
+          "x": 52,
+          "y": 4
+        },
+        {
+          "number": "20",
+          "name": "20",
+          "kind": "rj45",
+          "x": 54,
+          "y": 4
+        },
+        {
+          "number": "21",
+          "name": "21",
+          "kind": "rj45",
+          "x": 56,
+          "y": 4
+        },
+        {
+          "number": "22",
+          "name": "22",
+          "kind": "rj45",
+          "x": 58,
+          "y": 4
+        },
+        {
+          "number": "23",
+          "name": "23",
+          "kind": "rj45",
+          "x": 60,
+          "y": 4
+        },
+        {
+          "number": "24",
+          "name": "24",
+          "kind": "rj45",
+          "x": 62,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "patch-panel-48",
+      "name": "Patch panel - 19in 1U - 48 RJ45",
+      "xmlSha256": "f88ded946f3e167bd315683c07c0beb69e07f848691fd041a0c323f0b90f5940",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "1",
+          "kind": "rj45",
+          "x": 16,
+          "y": 2
+        },
+        {
+          "number": "2",
+          "name": "2",
+          "kind": "rj45",
+          "x": 16,
+          "y": 6
+        },
+        {
+          "number": "3",
+          "name": "3",
+          "kind": "rj45",
+          "x": 18,
+          "y": 2
+        },
+        {
+          "number": "4",
+          "name": "4",
+          "kind": "rj45",
+          "x": 18,
+          "y": 6
+        },
+        {
+          "number": "5",
+          "name": "5",
+          "kind": "rj45",
+          "x": 20,
+          "y": 2
+        },
+        {
+          "number": "6",
+          "name": "6",
+          "kind": "rj45",
+          "x": 20,
+          "y": 6
+        },
+        {
+          "number": "7",
+          "name": "7",
+          "kind": "rj45",
+          "x": 22,
+          "y": 2
+        },
+        {
+          "number": "8",
+          "name": "8",
+          "kind": "rj45",
+          "x": 22,
+          "y": 6
+        },
+        {
+          "number": "9",
+          "name": "9",
+          "kind": "rj45",
+          "x": 24,
+          "y": 2
+        },
+        {
+          "number": "10",
+          "name": "10",
+          "kind": "rj45",
+          "x": 24,
+          "y": 6
+        },
+        {
+          "number": "11",
+          "name": "11",
+          "kind": "rj45",
+          "x": 26,
+          "y": 2
+        },
+        {
+          "number": "12",
+          "name": "12",
+          "kind": "rj45",
+          "x": 26,
+          "y": 6
+        },
+        {
+          "number": "13",
+          "name": "13",
+          "kind": "rj45",
+          "x": 28,
+          "y": 2
+        },
+        {
+          "number": "14",
+          "name": "14",
+          "kind": "rj45",
+          "x": 28,
+          "y": 6
+        },
+        {
+          "number": "15",
+          "name": "15",
+          "kind": "rj45",
+          "x": 30,
+          "y": 2
+        },
+        {
+          "number": "16",
+          "name": "16",
+          "kind": "rj45",
+          "x": 30,
+          "y": 6
+        },
+        {
+          "number": "17",
+          "name": "17",
+          "kind": "rj45",
+          "x": 32,
+          "y": 2
+        },
+        {
+          "number": "18",
+          "name": "18",
+          "kind": "rj45",
+          "x": 32,
+          "y": 6
+        },
+        {
+          "number": "19",
+          "name": "19",
+          "kind": "rj45",
+          "x": 34,
+          "y": 2
+        },
+        {
+          "number": "20",
+          "name": "20",
+          "kind": "rj45",
+          "x": 34,
+          "y": 6
+        },
+        {
+          "number": "21",
+          "name": "21",
+          "kind": "rj45",
+          "x": 36,
+          "y": 2
+        },
+        {
+          "number": "22",
+          "name": "22",
+          "kind": "rj45",
+          "x": 36,
+          "y": 6
+        },
+        {
+          "number": "23",
+          "name": "23",
+          "kind": "rj45",
+          "x": 38,
+          "y": 2
+        },
+        {
+          "number": "24",
+          "name": "24",
+          "kind": "rj45",
+          "x": 38,
+          "y": 6
+        },
+        {
+          "number": "25",
+          "name": "25",
+          "kind": "rj45",
+          "x": 40,
+          "y": 2
+        },
+        {
+          "number": "26",
+          "name": "26",
+          "kind": "rj45",
+          "x": 40,
+          "y": 6
+        },
+        {
+          "number": "27",
+          "name": "27",
+          "kind": "rj45",
+          "x": 42,
+          "y": 2
+        },
+        {
+          "number": "28",
+          "name": "28",
+          "kind": "rj45",
+          "x": 42,
+          "y": 6
+        },
+        {
+          "number": "29",
+          "name": "29",
+          "kind": "rj45",
+          "x": 44,
+          "y": 2
+        },
+        {
+          "number": "30",
+          "name": "30",
+          "kind": "rj45",
+          "x": 44,
+          "y": 6
+        },
+        {
+          "number": "31",
+          "name": "31",
+          "kind": "rj45",
+          "x": 46,
+          "y": 2
+        },
+        {
+          "number": "32",
+          "name": "32",
+          "kind": "rj45",
+          "x": 46,
+          "y": 6
+        },
+        {
+          "number": "33",
+          "name": "33",
+          "kind": "rj45",
+          "x": 48,
+          "y": 2
+        },
+        {
+          "number": "34",
+          "name": "34",
+          "kind": "rj45",
+          "x": 48,
+          "y": 6
+        },
+        {
+          "number": "35",
+          "name": "35",
+          "kind": "rj45",
+          "x": 50,
+          "y": 2
+        },
+        {
+          "number": "36",
+          "name": "36",
+          "kind": "rj45",
+          "x": 50,
+          "y": 6
+        },
+        {
+          "number": "37",
+          "name": "37",
+          "kind": "rj45",
+          "x": 52,
+          "y": 2
+        },
+        {
+          "number": "38",
+          "name": "38",
+          "kind": "rj45",
+          "x": 52,
+          "y": 6
+        },
+        {
+          "number": "39",
+          "name": "39",
+          "kind": "rj45",
+          "x": 54,
+          "y": 2
+        },
+        {
+          "number": "40",
+          "name": "40",
+          "kind": "rj45",
+          "x": 54,
+          "y": 6
+        },
+        {
+          "number": "41",
+          "name": "41",
+          "kind": "rj45",
+          "x": 56,
+          "y": 2
+        },
+        {
+          "number": "42",
+          "name": "42",
+          "kind": "rj45",
+          "x": 56,
+          "y": 6
+        },
+        {
+          "number": "43",
+          "name": "43",
+          "kind": "rj45",
+          "x": 58,
+          "y": 2
+        },
+        {
+          "number": "44",
+          "name": "44",
+          "kind": "rj45",
+          "x": 58,
+          "y": 6
+        },
+        {
+          "number": "45",
+          "name": "45",
+          "kind": "rj45",
+          "x": 60,
+          "y": 2
+        },
+        {
+          "number": "46",
+          "name": "46",
+          "kind": "rj45",
+          "x": 60,
+          "y": 6
+        },
+        {
+          "number": "47",
+          "name": "47",
+          "kind": "rj45",
+          "x": 62,
+          "y": 2
+        },
+        {
+          "number": "48",
+          "name": "48",
+          "kind": "rj45",
+          "x": 62,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "fibre-ont",
+      "name": "ONT - desktop - fibre + LAN",
+      "xmlSha256": "1b58b57726eec29f73723840d0d8bd20d3ac0f67c8260b3c2e2ea6da4be11d61",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "LAN1",
+          "kind": "rj45",
+          "x": 6,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "FIBRE",
+          "kind": "fibre",
+          "x": 14,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "poe-injector",
+      "name": "PoE injector - LAN in + PoE out",
+      "xmlSha256": "3889897cd5887669efc8fd127db3021af46b3fe2597a5b648b2ef240a4876589",
+      "rack": false,
+      "ports": [
+        {
+          "number": "1",
+          "name": "LAN IN",
+          "kind": "rj45",
+          "x": 10,
+          "y": 6
+        },
+        {
+          "number": "2",
+          "name": "PoE OUT",
+          "kind": "rj45",
+          "x": 14,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "rack-blank",
+      "name": "Blank panel - 19in 1U",
+      "xmlSha256": "5f5be7865cccd47e5adba369e3cb7f352122add3c60fad0a6e22681bd8bf34ca",
+      "rack": true,
+      "ports": []
+    },
+    {
+      "id": "rack-aggregation-8",
+      "name": "Aggregation switch - 19in 1U - 8 SFP+",
+      "xmlSha256": "46576089ef4c67a9b2ba328ce4cc04ba6c049c1663b0b499f09ca5d212c584f3",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "SFP+3",
+          "kind": "sfp",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "SFP+4",
+          "kind": "sfp",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "SFP+5",
+          "kind": "sfp",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "SFP+6",
+          "kind": "sfp",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "SFP+7",
+          "kind": "sfp",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "SFP+8",
+          "kind": "sfp",
+          "x": 44,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "rack-aggregation-16",
+      "name": "Aggregation switch - 19in 1U - 16 SFP+",
+      "xmlSha256": "41fd592d265449b4f16f350dbb48a2821120934b7ec2292d244b4ae204815720",
+      "rack": true,
+      "ports": [
+        {
+          "number": "1",
+          "name": "SFP+1",
+          "kind": "sfp",
+          "x": 16,
+          "y": 4
+        },
+        {
+          "number": "2",
+          "name": "SFP+2",
+          "kind": "sfp",
+          "x": 20,
+          "y": 4
+        },
+        {
+          "number": "3",
+          "name": "SFP+3",
+          "kind": "sfp",
+          "x": 24,
+          "y": 4
+        },
+        {
+          "number": "4",
+          "name": "SFP+4",
+          "kind": "sfp",
+          "x": 28,
+          "y": 4
+        },
+        {
+          "number": "5",
+          "name": "SFP+5",
+          "kind": "sfp",
+          "x": 32,
+          "y": 4
+        },
+        {
+          "number": "6",
+          "name": "SFP+6",
+          "kind": "sfp",
+          "x": 36,
+          "y": 4
+        },
+        {
+          "number": "7",
+          "name": "SFP+7",
+          "kind": "sfp",
+          "x": 40,
+          "y": 4
+        },
+        {
+          "number": "8",
+          "name": "SFP+8",
+          "kind": "sfp",
+          "x": 44,
+          "y": 4
+        },
+        {
+          "number": "9",
+          "name": "SFP+9",
+          "kind": "sfp",
+          "x": 48,
+          "y": 4
+        },
+        {
+          "number": "10",
+          "name": "SFP+10",
+          "kind": "sfp",
+          "x": 52,
+          "y": 4
+        },
+        {
+          "number": "11",
+          "name": "SFP+11",
+          "kind": "sfp",
+          "x": 56,
+          "y": 4
+        },
+        {
+          "number": "12",
+          "name": "SFP+12",
+          "kind": "sfp",
+          "x": 60,
+          "y": 4
+        },
+        {
+          "number": "13",
+          "name": "SFP+13",
+          "kind": "sfp",
+          "x": 64,
+          "y": 4
+        },
+        {
+          "number": "14",
+          "name": "SFP+14",
+          "kind": "sfp",
+          "x": 68,
+          "y": 4
+        },
+        {
+          "number": "15",
+          "name": "SFP+15",
+          "kind": "sfp",
+          "x": 72,
+          "y": 4
+        },
+        {
+          "number": "16",
+          "name": "SFP+16",
+          "kind": "sfp",
+          "x": 76,
+          "y": 4
+        }
+      ]
+    }
+  ]
+}

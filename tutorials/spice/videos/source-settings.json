@@ -1,0 +1,45 @@
+{
+  "title": "03 · Source settings and waveform preview",
+  "recorded": "2026-11-12T21:28:48.467Z",
+  "application": "TinyCAD Desktop (Electron)",
+  "solver": "bundled native ngspice",
+  "durationSeconds": 41.52,
+  "width": 1600,
+  "height": 1000,
+  "captions": [
+    {
+      "start": 0.00040668200000027355,
+      "text": "source-sine drives a 1 kΩ load. Double-click the source body to see its settings."
+    },
+    {
+      "start": 5.155095489000001,
+      "text": "Offset = 1 V, amplitude = 2 V peak and frequency = 1 kHz produce a −1 to +3 V sine."
+    },
+    {
+      "start": 11.325564406000002,
+      "text": "Set offset to 0 and amplitude to 1. The preview immediately changes to a ±1 V sine."
+    },
+    {
+      "start": 17.991915898,
+      "text": "Double the frequency to 2k. There are now twice as many cycles in the preview."
+    },
+    {
+      "start": 23.123708229,
+      "text": "AC amplitude is separate: it excites an AC sweep, not this transient waveform."
+    },
+    {
+      "start": 28.756814393,
+      "text": "Select the Simulation sheet and run the edited source through the actual circuit."
+    },
+    {
+      "start": 34.900014913,
+      "text": "The new trace spans about −1 to +1 V, with ten cycles in the 5 ms acquisition."
+    }
+  ],
+  "checks": [
+    {
+      "name": "changed-source",
+      "text": "Setup\nMeasurements\nData\nHistory\nDiagnostics\nNamed measurements\nEdit measurements and requirements\nMeasurement\tResult\tEvidence\nExport named measurements\nSignals / probes\n\nSelect outputs to display. Current direction follows the device’s SPICE pin order. Empty selection shows all signals.\n\nout [V]\nv1#branch [A]\nDifferential voltage, gain and power traces\n\nStatistics over the real component of all accepted samples (sample-weighted mean/RMS, not an AC RMS voltage measurement). Transient samples may be nonuniform.\n\nSignal\tMinimum\tMaximum\tMean\tRMS\tPeak–peak\tUnit\nout\t-0.9999847\t0.9999847\t0.000008517859\t0.7059782\t1.999969\tV\nExport measurements\nExport CSV\nExport JSON\nExport SPICE raw"
+    }
+  ]
+}

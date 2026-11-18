@@ -1,6 +1,15 @@
+import { isDrawingFile } from '../shared/drawingFiles.js';
+import { registerSimulation } from './simulation.js';
+import { chartWindowOptions, configureChartWindow } from './chartWindows.js';
+import { drawingOpenMenu, drawingViewMenu } from './drawingMenus.js';
+import { registerChatGPTHandlers } from '../chatgpt/bridge.js';
+import { registerChatSecretHandlers } from './chat-secrets.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import Store from 'electron-store';
+import { registerBundledLibraries } from './bundledLibraries.js';
+import { registerBundledExamples } from './bundledExamples.js';
+import { registerOnlineLibrary } from './onlineLibrary.js';
 import fs from 'fs';
 import { spawn } from 'child_process';
 import { loadFile, saveFile, sendRecentFiles } from './io.js';
@@ -8,7 +17,7 @@ import { loadLibrary, loadLibraryToWebContents, saveLibrary, sendLibraries, remo
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const { app, ipcMain, BrowserWindow, Menu, dialog, shell } = await import('electron');
+const { app, ipcMain, BrowserWindow, Menu, dialog, shell, safeStorage, net } = await import('electron');
 const isDev = (await import('electron-is-dev')).default;
 const isMac = process.platform === 'darwin'
 const electronMajorVersion = Number.parseInt(process.versions.electron.split('.')[0] || '0', 10);
@@ -19,6 +28,7 @@ const store = new Store(); // Create store instance
 let mainWindow;
 let fileToOpen = null;
 let isLibraryMode = false;
+let viewMenuState = { hasExampleExplanation: false, exampleExplanationVisible: false, simulationPanelVisible: false };
 let menuTranslations = {};
 let refreshMenu = () => {};
 let ipcHandlersRegistered = false;
@@ -118,17 +128,17 @@ function createWindow() {
             ]
           },
           { label: getMenuLabel('open', 'Open'), accelerator: 'CmdOrCtrl+O', click: () => mainWindow.webContents.send('menu-command', 'file-open') },
-          {
-            label: getMenuLabel('openRecent', 'Open Recent'),
-            submenu: recentMenu.length > 0 ? recentMenu : [{ label: getMenuLabel('noRecentFiles', 'No Recent Files'), enabled: false }]
-          },
-          { type: 'separator' },
+          ...drawingOpenMenu(getMenuLabel, recentMenu, command => mainWindow.webContents.send('menu-command', command)),
           { label: getMenuLabel('save', 'Save'), accelerator: 'CmdOrCtrl+S', click: () => mainWindow.webContents.send('menu-command', 'file-save') },
           { label: getMenuLabel('saveAs', 'Save As...'), accelerator: 'CmdOrCtrl+Shift+S', click: () => mainWindow.webContents.send('menu-command', 'file-save-as') },
+          { label: getMenuLabel('saveWithoutResults', 'Save without results...'), click: () => mainWindow.webContents.send('menu-command', 'file-save-without-results') },
           { type: 'separator' },
           {
             label: getMenuLabel('import', 'Import'),
-            submenu: [{ label: getMenuLabel('importKicadSymbols', 'KiCad Symbols...'), click: () => mainWindow.webContents.send('menu-command', 'import-kicad-symbols') }],
+            submenu: [
+              { label: getMenuLabel('importImage', 'Image...'), click: () => mainWindow.webContents.send('menu-command', 'import-image') },
+              { label: getMenuLabel('importKicadSymbols', 'KiCad Symbols...'), click: () => mainWindow.webContents.send('menu-command', 'import-kicad-symbols') },
+            ],
           },
           {
             label: getMenuLabel('export', 'Export'),
@@ -163,14 +173,13 @@ function createWindow() {
       },
       {
         label: getMenuLabel('view', 'View'),
-        submenu: [
-          { label: getMenuLabel('zoomIn', 'Zoom In'), accelerator: 'CmdOrCtrl+Plus', click: () => mainWindow.webContents.send('menu-command', 'view-zoom-in') },
-          { label: getMenuLabel('zoomOut', 'Zoom Out'), accelerator: 'CmdOrCtrl+-', click: () => mainWindow.webContents.send('menu-command', 'view-zoom-out') },
-        ]
+        submenu: drawingViewMenu(getMenuLabel, viewMenuState, isLibraryMode,
+          command => mainWindow.webContents.send('menu-command', command))
       },
       ...(isLibraryMode ? [] : [{
         label: getMenuLabel('tools', 'Tools'),
         submenu: [
+          { label: getMenuLabel('autoLayout', 'Auto-layout'), click: () => mainWindow.webContents.send('menu-command', 'tools-auto-layout') },
           { label: getMenuLabel('annotateSymbols', 'Annotate Symbols...'), click: () => mainWindow.webContents.send('menu-command', 'tools-annotate') },
           { label: getMenuLabel('billOfMaterials', 'Bill of Materials...'), click: () => mainWindow.webContents.send('menu-command', 'tools-bom') },
           { type: 'separator' },
@@ -222,7 +231,10 @@ function createWindow() {
   }
 
   // Allow TinyCAD to open another app window, but send true external links to the OS browser.
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+  mainWindow.webContents.setWindowOpenHandler((details) => {
+    const chart = chartWindowOptions(details, mainWindow, windowIcon);
+    if (chart) return chart;
+    const { url } = details;
     if (typeof url === 'string' && url.startsWith(appWindowUrl)) {
       return {
         action: 'allow',
@@ -247,6 +259,10 @@ function createWindow() {
     };
   });
 
+  mainWindow.webContents.on('did-create-window', (child, details) => {
+    configureChartWindow(child, details, mainWindow);
+  });
+
   // Check for command line arguments
   const qp = new URLSearchParams();
   for (const arg of process.argv) {
@@ -254,7 +270,7 @@ function createWindow() {
       qp.set('action', 'new-library');
     } else if (arg.toLowerCase().endsWith('.tclib')) {
       qp.set('library', arg);
-    } else if (arg.toLowerCase().endsWith('.dsn')) {
+    } else if (isDrawingFile(arg)) {
       qp.set('file', arg);
     }
   }
@@ -263,7 +279,7 @@ function createWindow() {
   if (fileToOpen) {
     if (fileToOpen.toLowerCase().endsWith('.tclib')) {
       qp.set('library', fileToOpen);
-    } else if (fileToOpen.toLowerCase().endsWith('.dsn')) {
+    } else if (isDrawingFile(fileToOpen)) {
       qp.set('file', fileToOpen);
     }
     fileToOpen = null;
@@ -355,6 +371,15 @@ function createWindow() {
 
   if (!ipcHandlersRegistered) {
     ipcHandlersRegistered = true;
+    registerSimulation();
+    registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
+      directory: path.join(__dirname, '../dist/bundled-examples') });
+    registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
+      directory: path.join(__dirname, isDev ? '../bundled-libraries' : '../dist/bundled-libraries') });
+    registerChatSecretHandlers(ipcMain, { app, safeStorage });
+    registerOnlineLibrary({ ipcMain, app, getWindow: () => mainWindow,
+      send: (url, options) => net.fetch(url, options) });
+    registerChatGPTHandlers(ipcMain, { app, shell, safeStorage });
 
     ipcMain.on('window-minimize', () => {
       mainWindow?.minimize();
@@ -483,6 +508,19 @@ function createWindow() {
       }
     });
 
+    ipcMain.on('set-view-menu-state', (event, state) => {
+      if (!mainWindow || event.sender !== mainWindow.webContents || !state || typeof state !== 'object') return;
+      const next = {
+        hasExampleExplanation: state.hasExampleExplanation === true,
+        exampleExplanationVisible: state.exampleExplanationVisible === true,
+        simulationPanelVisible: state.simulationPanelVisible === true,
+      };
+      if (Object.keys(next).some(key => next[key] !== viewMenuState[key])) {
+        viewMenuState = next;
+        refreshMenu();
+      }
+    });
+
     ipcMain.on('set-menu-translations', (event, translations) => {
       if (!mainWindow || event.sender !== mainWindow.webContents) {
         return;
@@ -494,6 +532,26 @@ function createWindow() {
 
       menuTranslations = translations;
       refreshMenu();
+    });
+
+    ipcMain.handle('import-image-file', async () => {
+      if (!mainWindow) return null;
+      const result = await dialog.showOpenDialog(mainWindow, {
+        filters: [
+          { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'apng'] },
+          { name: 'All Files', extensions: ['*'] },
+        ],
+        properties: ['openFile'],
+      });
+      if (result.canceled || !result.filePaths.length) return null;
+      const selectedPath = result.filePaths[0];
+      const extension = path.extname(selectedPath).toLowerCase();
+      const mime = ({ '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif', '.webp': 'image/webp', '.avif': 'image/avif',
+        '.bmp': 'image/bmp', '.ico': 'image/x-icon', '.svg': 'image/svg+xml',
+        '.apng': 'image/apng' })[extension] || 'application/octet-stream';
+      const content = await fs.promises.readFile(selectedPath);
+      return { fileName: path.basename(selectedPath), mime, content: content.toString('base64') };
     });
 
     ipcMain.handle('import-kicad-file', async () => {
@@ -718,8 +776,8 @@ app.on('open-file', (event, filePath) => {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
 
-    if (filePath.toLowerCase().endsWith('.dsn')) {
-      loadFile(mainWindow, filePath);
+    if (isDrawingFile(filePath)) {
+      loadFile(mainWindow, filePath, isLibraryMode, spawnNewWindow);
     } else if (filePath.toLowerCase().endsWith('.tclib')) {
       loadLibrary(mainWindow, filePath);
     }

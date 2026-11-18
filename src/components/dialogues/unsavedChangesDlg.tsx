@@ -9,12 +9,13 @@ import {
   DialogActions,
   Button,
 } from '@fluentui/react-components';
-import { actionCancelDialog } from '../../state/dispatcher/AppDispatcher';
+import { actionCancelDialog, actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
 import { useDispatch, useSelector } from 'react-redux';
 import { fileSave, librarySave, performPendingAction } from '../../io/files';
 import { docDrawing } from '../../state/undo/undo';
 
 export type UnsavedAction = 
+  | import('../../io/examples').PreparedExample
   | { type: 'file-new' }
   | { type: 'file-open' }
   | { type: 'file-open-recent'; file: { name: string; id: string } }
@@ -64,7 +65,9 @@ export const UnsavedChangesDialog: FunctionComponent<UnsavedChangesDialogProps> 
     if (props.pendingAction.type === 'app-close') {
       window.electronAPI?.sendAppClosingResponse(false);
     }
-    dispatch(actionCancelDialog());
+    if (props.pendingAction.type === 'file-open-example') {
+      dispatch(actionSelectDialog('open_example', { groupId: props.pendingAction.groupId, exampleId: props.pendingAction.exampleId }));
+    } else dispatch(actionCancelDialog());
   };
 
   const handleSave = () => {

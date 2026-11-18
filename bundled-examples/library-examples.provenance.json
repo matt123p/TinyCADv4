@@ -1,0 +1,2215 @@
+{
+  "version": 1,
+  "examples": [
+    {
+      "id": "embedded-climate-station",
+      "title": "ESP32 climate and display station",
+      "page": [
+        297,
+        210
+      ],
+      "sources": [
+        {
+          "reference": "U1",
+          "library": "embedded-smart-home",
+          "libraryPath": "embedded-smart-home/embedded-smart-home.tclib",
+          "librarySha256": "bbe8731729cddcb8a355e27044a011c9b6b42523436195c612f8653978b18f6f",
+          "componentId": "esp32-devkitc-v4",
+          "nameId": 1,
+          "symbolId": 1,
+          "name": "ESP32 DevKitC V4 \u2014 WROOM-32E, 38 pins",
+          "xmlSha256": "9d316a887bd9f7eedd83b614e9e5254dacacc79acfb6c5580f56ddf825ff1a78"
+        },
+        {
+          "reference": "ENV1",
+          "library": "embedded-smart-home",
+          "libraryPath": "embedded-smart-home/embedded-smart-home.tclib",
+          "librarySha256": "bbe8731729cddcb8a355e27044a011c9b6b42523436195c612f8653978b18f6f",
+          "componentId": "adafruit-bme280",
+          "nameId": 13,
+          "symbolId": 13,
+          "name": "Adafruit BME280 temperature / humidity / pressure (original)",
+          "xmlSha256": "b507493c58772b6e0942226d9ff8ab71f7d8707079abaed83fc26e4f726a76ab"
+        },
+        {
+          "reference": "DISP1",
+          "library": "embedded-smart-home",
+          "libraryPath": "embedded-smart-home/embedded-smart-home.tclib",
+          "librarySha256": "bbe8731729cddcb8a355e27044a011c9b6b42523436195c612f8653978b18f6f",
+          "componentId": "display-oled12864",
+          "nameId": 38,
+          "symbolId": 38,
+          "name": "DFRobot Gravity OLED 128x64 \u2014 DFR0486",
+          "xmlSha256": "902ec30c0a8ae204c813cbef2e4454da51deb017465a359efc0650754152a4e7"
+        }
+      ],
+      "expectedNets": [
+        [
+          "DISP1:I2C-1",
+          "ENV1:JP2-1",
+          "U1:J1-1"
+        ],
+        [
+          "DISP1:I2C-2",
+          "ENV1:JP2-3",
+          "ENV1:JP2-5",
+          "U1:J1-14"
+        ],
+        [
+          "DISP1:I2C-3",
+          "ENV1:JP2-4",
+          "U1:J3-3"
+        ],
+        [
+          "DISP1:I2C-4",
+          "ENV1:JP2-6",
+          "U1:J3-6"
+        ]
+      ],
+      "localLayout": {
+        "connectivityPreserved": true,
+        "nativeContactsPreserved": true,
+        "stopped": "converged",
+        "before": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 13,
+          "crossings": 2,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 6,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 2255,
+          "logicalProximity": 4920,
+          "inlineImbalance": 0,
+          "wireLength": 2255,
+          "bends": 6,
+          "area": 693250,
+          "labelDistance": 0
+        },
+        "after": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 13,
+          "crossings": 2,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 5.517187500000091,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 1989.228125,
+          "logicalProximity": 4920,
+          "inlineImbalance": 0,
+          "wireLength": 1989.228125,
+          "bends": 4,
+          "area": 693250,
+          "labelDistance": 0
+        }
+      },
+      "draftSha256": "dab1be10f583feb216b5cbcab4c5c078bcc65f461b21354118e02eeb106f586d",
+      "finalSha256": "659aaff7f141b604d4fa7de82f4cf3fa34064db5e3bd655821e4006075f9fda7",
+      "previews": {
+        "png": "9d6904d689d77fda2e923a2384143a0e3ba70e692648eaad334cd3ee15facdf9",
+        "svg": "1fa3235aa23024bff387e440e9c2a67c7249be20e9f349e465ae516ea53ad26c"
+      },
+      "checks": {
+        "connectivityPreserved": true,
+        "serializationConnectivityPreserved": true,
+        "serializationPhysicalConnectivityPreserved": true,
+        "layoutQuality": {
+          "status": "incomplete",
+          "converged": true,
+          "readabilityImproved": false,
+          "remainingDiagnosticCount": 15,
+          "remainingByCode": {
+            "wire-body": 13,
+            "crossing": 2
+          },
+          "recommendedPhases": [
+            "routing"
+          ],
+          "message": "Layout cleanup is incomplete. Electrical validation and preserved connectivity do not establish drawing readability. Continue with the recommended phases on the returned definition, repair persistent overlaps manually, and inspect the final preview before presenting it as cleaned up."
+        },
+        "stopped": "converged",
+        "electricalConnectivityPreserved": true,
+        "nativeContactsPreserved": true
+      },
+      "electricalDiagnostics": [
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-2",
+          "position": [
+            185,
+            290
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-3",
+          "position": [
+            185,
+            300
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-4",
+          "position": [
+            185,
+            310
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-5",
+          "position": [
+            185,
+            320
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-6",
+          "position": [
+            185,
+            330
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-7",
+          "position": [
+            185,
+            340
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-8",
+          "position": [
+            185,
+            350
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-9",
+          "position": [
+            185,
+            360
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-10",
+          "position": [
+            185,
+            370
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-11",
+          "position": [
+            185,
+            380
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-12",
+          "position": [
+            185,
+            390
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-13",
+          "position": [
+            185,
+            400
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-15",
+          "position": [
+            185,
+            420
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-16",
+          "position": [
+            185,
+            430
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-17",
+          "position": [
+            185,
+            440
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-18",
+          "position": [
+            185,
+            450
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-19",
+          "position": [
+            185,
+            460
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-1",
+          "position": [
+            315,
+            280
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-2",
+          "position": [
+            315,
+            290
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-4",
+          "position": [
+            315,
+            310
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-5",
+          "position": [
+            315,
+            320
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-7",
+          "position": [
+            315,
+            340
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-8",
+          "position": [
+            315,
+            350
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-9",
+          "position": [
+            315,
+            360
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-10",
+          "position": [
+            315,
+            370
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-11",
+          "position": [
+            315,
+            380
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-12",
+          "position": [
+            315,
+            390
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-13",
+          "position": [
+            315,
+            400
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-14",
+          "position": [
+            315,
+            410
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-15",
+          "position": [
+            315,
+            420
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-16",
+          "position": [
+            315,
+            430
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-17",
+          "position": [
+            315,
+            440
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-18",
+          "position": [
+            315,
+            450
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-19",
+          "position": [
+            315,
+            460
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 189,
+          "reference": "ENV1",
+          "pin": "JP2-2",
+          "position": [
+            755,
+            360
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 189,
+          "reference": "ENV1",
+          "pin": "JP2-7",
+          "position": [
+            815,
+            360
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-1",
+          "position": [
+            185,
+            280
+          ],
+          "message": "Power connected to power"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-14",
+          "position": [
+            185,
+            410
+          ],
+          "message": "Power connected to power"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "ESP32 climate and display station",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-3",
+          "position": [
+            315,
+            300
+          ],
+          "message": "No outputs driving inputs"
+        }
+      ]
+    },
+    {
+      "id": "solar-battery-home",
+      "title": "Home solar and battery plan",
+      "page": [
+        420,
+        297
+      ],
+      "sources": [
+        {
+          "reference": "PV1",
+          "library": "solar",
+          "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
+          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "nameId": 2,
+          "symbolId": 2,
+          "name": "Solar - Rooftop solar array",
+          "xmlSha256": "ae49f7e83a5cd6737fd1a278c40e1c9b31afc786bc63b0ecd5c0d68ba336738f"
+        },
+        {
+          "reference": "PVISO1",
+          "library": "solar",
+          "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
+          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "nameId": 34,
+          "symbolId": 34,
+          "name": "Switches and protection - Solar DC isolation switch",
+          "xmlSha256": "48838d4ed9d1f71afc277a31887d7de03affd7b2acef024b4458b34f9caf2267"
+        },
+        {
+          "reference": "INV1",
+          "library": "solar",
+          "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
+          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "nameId": 13,
+          "symbolId": 13,
+          "name": "Storage - Hybrid solar inverter",
+          "xmlSha256": "1556576abcf3bb861117310bafb00047ae60321868f20ee8a4580aacaf8af571"
+        },
+        {
+          "reference": "BAT1",
+          "library": "solar",
+          "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
+          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "nameId": 8,
+          "symbolId": 8,
+          "name": "Storage - Wall battery - DC",
+          "xmlSha256": "6c37e07092f63fd020148020200534223f39d394249ad9b21f9270f1faf0dcc2"
+        },
+        {
+          "reference": "BISO1",
+          "library": "solar",
+          "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
+          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "nameId": 35,
+          "symbolId": 35,
+          "name": "Switches and protection - Battery isolation switch",
+          "xmlSha256": "67c271ef1d7f2ffcfe1a9ded7a8f26fe7edc33f4ad18b649f9f6d1d7ec448088"
+        },
+        {
+          "reference": "ACISO1",
+          "library": "solar",
+          "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
+          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "nameId": 33,
+          "symbolId": 33,
+          "name": "Switches and protection - AC isolation switch",
+          "xmlSha256": "4ba23cb6a9d933402ccecf9a7cb75620d4a7f5a864aba05e3a830c668c2eb9b7"
+        },
+        {
+          "reference": "GRID1",
+          "library": "solar",
+          "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
+          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "nameId": 22,
+          "symbolId": 22,
+          "name": "Supply and backup - Electricity grid",
+          "xmlSha256": "18b2724cfe3fd01ffda43cb6b55fd3ae9c062e855c4cf14dd82470211163493a"
+        },
+        {
+          "reference": "METER1",
+          "library": "solar",
+          "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
+          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "nameId": 23,
+          "symbolId": 23,
+          "name": "Supply and backup - Electricity meter",
+          "xmlSha256": "d49f00ea2ab3c9db7440c3d58b5aa9ff8f20607d89503483c998584ad01c24ce"
+        },
+        {
+          "reference": "CU1",
+          "library": "solar",
+          "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
+          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "nameId": 28,
+          "symbolId": 28,
+          "name": "Supply and backup - Home fuse box",
+          "xmlSha256": "078604170780ee0393cc21eda4f9d7151a81d2bdc2e5ea72e2aa78583721b2af"
+        },
+        {
+          "reference": "HOME1",
+          "library": "solar",
+          "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
+          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "nameId": 48,
+          "symbolId": 48,
+          "name": "Home loads - Household electricity",
+          "xmlSha256": "7edb07c7df9010b819775ae73ea2c19b943c6ce0a9da8e7082b24c408a4593c7"
+        }
+      ],
+      "expectedNets": [
+        [
+          "ACISO1:AC_IN",
+          "INV1:HOME_AC"
+        ],
+        [
+          "ACISO1:AC_OUT",
+          "CU1:SOLAR_AC"
+        ],
+        [
+          "BAT1:BATT_DC",
+          "BISO1:BATT_IN"
+        ],
+        [
+          "BISO1:BATT_OUT",
+          "INV1:BATT_DC"
+        ],
+        [
+          "CU1:AC_IN",
+          "METER1:HOME_AC"
+        ],
+        [
+          "CU1:HOME",
+          "HOME1:HOME_AC"
+        ],
+        [
+          "GRID1:GRID_AC",
+          "METER1:GRID_AC"
+        ],
+        [
+          "INV1:PV_DC",
+          "PVISO1:PV_OUT"
+        ],
+        [
+          "PV1:PV_DC",
+          "PVISO1:PV_IN"
+        ]
+      ],
+      "localLayout": {
+        "connectivityPreserved": true,
+        "nativeContactsPreserved": true,
+        "stopped": "converged",
+        "before": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 18,
+          "crossings": 1,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 3355,
+          "logicalProximity": 5657.5,
+          "inlineImbalance": 200,
+          "wireLength": 3355,
+          "bends": 8,
+          "area": 1952625,
+          "labelDistance": 0
+        },
+        "after": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 18,
+          "crossings": 1,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 3205,
+          "logicalProximity": 5657.5,
+          "inlineImbalance": 155,
+          "wireLength": 3205,
+          "bends": 8,
+          "area": 1927000,
+          "labelDistance": 0
+        }
+      },
+      "draftSha256": "b894376e148c193f62e99970a9eee3c7cc822f96263804aafbf179ada7bd5392",
+      "finalSha256": "457870b06ff906d1b36d5e2bdfa6d2b73455bf6755381bd3cdb5388a4b4a4288",
+      "previews": {
+        "png": "76574b1783325f1aba059f3da24797c0ceec3b7d5c936801d4287873352b955f",
+        "svg": "f4b434caaa57ee8e44b3a43bf4e2008de1b9fab2a5a92d37a08ef3b4071903a4"
+      },
+      "checks": {
+        "connectivityPreserved": true,
+        "serializationConnectivityPreserved": true,
+        "serializationPhysicalConnectivityPreserved": true,
+        "layoutQuality": {
+          "status": "incomplete",
+          "converged": true,
+          "readabilityImproved": false,
+          "remainingDiagnosticCount": 19,
+          "remainingByCode": {
+            "wire-body": 18,
+            "crossing": 1
+          },
+          "recommendedPhases": [
+            "routing"
+          ],
+          "message": "Layout cleanup is incomplete. Electrical validation and preserved connectivity do not establish drawing readability. Continue with the recommended phases on the returned definition, repair persistent overlaps manually, and inspect the final preview before presenting it as cleaned up."
+        },
+        "stopped": "converged",
+        "electricalConnectivityPreserved": true,
+        "nativeContactsPreserved": true
+      },
+      "electricalDiagnostics": [
+        {
+          "code": "design_rule",
+          "sheet": "Home solar and battery plan",
+          "itemId": 31,
+          "reference": "INV1",
+          "pin": "BACKUP",
+          "position": [
+            1490,
+            590
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Home solar and battery plan",
+          "itemId": 55,
+          "reference": "BAT1",
+          "pin": "DATA",
+          "position": [
+            440,
+            865
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Home solar and battery plan",
+          "itemId": 138,
+          "reference": "CU1",
+          "pin": "EV",
+          "position": [
+            1490,
+            1215
+          ],
+          "message": "Unconnected nets"
+        }
+      ]
+    },
+    {
+      "id": "podcast-studio",
+      "title": "Two-person podcast studio",
+      "page": [
+        297,
+        210
+      ],
+      "sources": [
+        {
+          "reference": "MIC1",
+          "library": "audio-music",
+          "libraryPath": "audio-music/audio-music.tclib",
+          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "componentId": "mic-dynamic",
+          "nameId": 1,
+          "symbolId": 1,
+          "name": "Dynamic vocal microphone",
+          "xmlSha256": "e3da32f211b3cebfe9351c057b961061a41bdc8273d1c7202558185d23778b47"
+        },
+        {
+          "reference": "MIC2",
+          "library": "audio-music",
+          "libraryPath": "audio-music/audio-music.tclib",
+          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "componentId": "mic-dynamic",
+          "nameId": 1,
+          "symbolId": 1,
+          "name": "Dynamic vocal microphone",
+          "xmlSha256": "e3da32f211b3cebfe9351c057b961061a41bdc8273d1c7202558185d23778b47"
+        },
+        {
+          "reference": "MIX1",
+          "library": "audio-music",
+          "libraryPath": "audio-music/audio-music.tclib",
+          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "componentId": "mixer-podcast-4",
+          "nameId": 19,
+          "symbolId": 19,
+          "name": "Four-person podcast / streaming console",
+          "xmlSha256": "2c169967b56ef65a1e5065005f4470c53c23ed29a1768c5567a96d1f9124711a"
+        },
+        {
+          "reference": "HP1",
+          "library": "audio-music",
+          "libraryPath": "audio-music/audio-music.tclib",
+          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "componentId": "headphones",
+          "nameId": 42,
+          "symbolId": 42,
+          "name": "Studio headphones",
+          "xmlSha256": "efe704a4934b0072cbc8c706551aae79c1a91121327e06fd3f74406fae9f504c"
+        },
+        {
+          "reference": "HP2",
+          "library": "audio-music",
+          "libraryPath": "audio-music/audio-music.tclib",
+          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "componentId": "headphones",
+          "nameId": 42,
+          "symbolId": 42,
+          "name": "Studio headphones",
+          "xmlSha256": "efe704a4934b0072cbc8c706551aae79c1a91121327e06fd3f74406fae9f504c"
+        },
+        {
+          "reference": "PC1",
+          "library": "audio-music",
+          "libraryPath": "audio-music/audio-music.tclib",
+          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "componentId": "computer-laptop",
+          "nameId": 24,
+          "symbolId": 24,
+          "name": "Recording / playback laptop",
+          "xmlSha256": "fde6a7eb2e0216b4c292f7a8963ea2660ee0c25044fa188dd0f4b0fd8652fd60"
+        }
+      ],
+      "expectedNets": [
+        [
+          "HP1:1",
+          "MIX1:5"
+        ],
+        [
+          "HP2:1",
+          "MIX1:6"
+        ],
+        [
+          "MIC1:1",
+          "MIX1:1"
+        ],
+        [
+          "MIC2:1",
+          "MIX1:2"
+        ],
+        [
+          "MIX1:11",
+          "PC1:1"
+        ]
+      ],
+      "localLayout": {
+        "connectivityPreserved": true,
+        "nativeContactsPreserved": true,
+        "stopped": "converged",
+        "before": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 11,
+          "crossings": 4,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 5065,
+          "logicalProximity": 3515,
+          "inlineImbalance": 0,
+          "wireLength": 5065,
+          "bends": 18,
+          "area": 961950,
+          "labelDistance": 0
+        },
+        "after": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 11,
+          "crossings": 4,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 0,
+          "connectedDistance": 4865,
+          "logicalProximity": 3515,
+          "inlineImbalance": 0,
+          "wireLength": 4865,
+          "bends": 15,
+          "area": 946050,
+          "labelDistance": 0
+        }
+      },
+      "draftSha256": "3f361cd44bbe4e36a35ad3e3db55ab345030df2680f78bb0b392e19e1230b6c5",
+      "finalSha256": "faf46666bf3a89ee93b2dd760dc7ff79c38f7733d721ea7f6ffb4dac81df6f90",
+      "previews": {
+        "png": "2a754056d4155c04f089affc003eef29a5aa4eb4ff568d2fd0ba75511317d067",
+        "svg": "41bf45c117fce2800cd9e5276f9c9a4d6c03faeee594dd8a5a42edde4450271e"
+      },
+      "checks": {
+        "connectivityPreserved": true,
+        "serializationConnectivityPreserved": true,
+        "serializationPhysicalConnectivityPreserved": true,
+        "layoutQuality": {
+          "status": "incomplete",
+          "converged": true,
+          "readabilityImproved": false,
+          "remainingDiagnosticCount": 15,
+          "remainingByCode": {
+            "wire-body": 11,
+            "crossing": 4
+          },
+          "recommendedPhases": [
+            "routing"
+          ],
+          "message": "Layout cleanup is incomplete. Electrical validation and preserved connectivity do not establish drawing readability. Continue with the recommended phases on the returned definition, repair persistent overlaps manually, and inspect the final preview before presenting it as cleaned up."
+        },
+        "stopped": "converged",
+        "electricalConnectivityPreserved": true,
+        "nativeContactsPreserved": true
+      },
+      "electricalDiagnostics": [
+        {
+          "code": "design_rule",
+          "sheet": "Two-person podcast studio",
+          "itemId": 19,
+          "reference": "MIX1",
+          "pin": "3",
+          "position": [
+            640,
+            280
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Two-person podcast studio",
+          "itemId": 19,
+          "reference": "MIX1",
+          "pin": "4",
+          "position": [
+            670,
+            280
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Two-person podcast studio",
+          "itemId": 19,
+          "reference": "MIX1",
+          "pin": "7",
+          "position": [
+            630,
+            330
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Two-person podcast studio",
+          "itemId": 19,
+          "reference": "MIX1",
+          "pin": "8",
+          "position": [
+            660,
+            330
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Two-person podcast studio",
+          "itemId": 19,
+          "reference": "MIX1",
+          "pin": "9",
+          "position": [
+            690,
+            330
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Two-person podcast studio",
+          "itemId": 19,
+          "reference": "MIX1",
+          "pin": "10",
+          "position": [
+            720,
+            330
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Two-person podcast studio",
+          "itemId": 19,
+          "reference": "MIX1",
+          "pin": "12",
+          "position": [
+            600,
+            370
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Two-person podcast studio",
+          "itemId": 126,
+          "reference": "PC1",
+          "pin": "2",
+          "position": [
+            175,
+            930
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Two-person podcast studio",
+          "itemId": 126,
+          "reference": "PC1",
+          "pin": "3",
+          "position": [
+            205,
+            930
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Two-person podcast studio",
+          "itemId": 126,
+          "reference": "PC1",
+          "pin": "4",
+          "position": [
+            235,
+            930
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "Two-person podcast studio",
+          "itemId": 126,
+          "reference": "PC1",
+          "pin": "5",
+          "position": [
+            265,
+            930
+          ],
+          "message": "Unconnected nets"
+        }
+      ]
+    },
+    {
+      "id": "lab-measurement-bench",
+      "title": "DC load and waveform bench",
+      "page": [
+        297,
+        210
+      ],
+      "sources": [
+        {
+          "reference": "PSU1",
+          "library": "test-measurement",
+          "libraryPath": "test-measurement/test-measurement.tclib",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "componentId": "psu-1",
+          "nameId": 1,
+          "symbolId": 1,
+          "name": "DC bench supply \u2014 1 output",
+          "xmlSha256": "65c052e66f943840bddfc5d0c2a6abc8bde241a9bf3a43f0e4fd8e7fece09467"
+        },
+        {
+          "reference": "DMM1",
+          "library": "test-measurement",
+          "libraryPath": "test-measurement/test-measurement.tclib",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "componentId": "dmm-bench",
+          "nameId": 16,
+          "symbolId": 16,
+          "name": "Bench multimeter \u2014 voltage/current and four-wire sense",
+          "xmlSha256": "8fbd64246bac867f4504ff469d98cffc46c382f5e4b88caa6e23db8f31c70ffc"
+        },
+        {
+          "reference": "LOAD1",
+          "library": "test-measurement",
+          "libraryPath": "test-measurement/test-measurement.tclib",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "componentId": "load-1",
+          "nameId": 7,
+          "symbolId": 7,
+          "name": "DC electronic load \u2014 1 channel",
+          "xmlSha256": "30b49cf027b1d265c5c8c7387aac92abf408625784e4654359bb2cce2aa6509f"
+        },
+        {
+          "reference": "GEN1",
+          "library": "test-measurement",
+          "libraryPath": "test-measurement/test-measurement.tclib",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "componentId": "generator-1",
+          "nameId": 14,
+          "symbolId": 14,
+          "name": "Function / arbitrary waveform generator \u2014 1 channel",
+          "xmlSha256": "7879823c41868ccc1fa514c90f5890d4550cadaa1399eea254a4e114769303c7"
+        },
+        {
+          "reference": "SCOPE1",
+          "library": "test-measurement",
+          "libraryPath": "test-measurement/test-measurement.tclib",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "componentId": "scope-2",
+          "nameId": 11,
+          "symbolId": 11,
+          "name": "Digital oscilloscope \u2014 2 channels",
+          "xmlSha256": "23a9575611341abc81c0fa7acbefc16b757020c59e4e2c650b5020f30e044d20"
+        }
+      ],
+      "expectedNets": [
+        [
+          "DMM1:1",
+          "LOAD1:1",
+          "PSU1:1"
+        ],
+        [
+          "DMM1:2",
+          "LOAD1:2",
+          "PSU1:2"
+        ],
+        [
+          "GEN1:1",
+          "SCOPE1:1"
+        ]
+      ],
+      "localLayout": {
+        "connectivityPreserved": true,
+        "nativeContactsPreserved": true,
+        "stopped": "converged",
+        "before": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 8,
+          "crossings": 2,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 20,
+          "connectedDistance": 3255,
+          "logicalProximity": 2695,
+          "inlineImbalance": 0,
+          "wireLength": 3955,
+          "bends": 6,
+          "area": 926250,
+          "labelDistance": 0
+        },
+        "after": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 8,
+          "crossings": 2,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 0,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 20,
+          "connectedDistance": 3255,
+          "logicalProximity": 2695,
+          "inlineImbalance": 0,
+          "wireLength": 3955,
+          "bends": 6,
+          "area": 926250,
+          "labelDistance": 0
+        }
+      },
+      "draftSha256": "3718b321c6a84dee5d6ac91e92c3d6ec71e6e6a5e8d59b018b400560c952fd8e",
+      "finalSha256": "c9bd7f675c0d13ecc14df59929beb52b84f09afebbd49e01c035ea7d202966bd",
+      "previews": {
+        "png": "f648fd65f568b0bf90d3d3cbf4e56a501bf2a4c3826e5ae7339ec90ad0ff2182",
+        "svg": "f75e1efba326ea41177327d276befa0fb083bda0555bed84cc1ca7e2b12be9c1"
+      },
+      "checks": {
+        "connectivityPreserved": true,
+        "serializationConnectivityPreserved": true,
+        "serializationPhysicalConnectivityPreserved": true,
+        "layoutQuality": {
+          "status": "incomplete",
+          "converged": true,
+          "readabilityImproved": false,
+          "remainingDiagnosticCount": 10,
+          "remainingByCode": {
+            "wire-body": 8,
+            "crossing": 2
+          },
+          "recommendedPhases": [
+            "routing"
+          ],
+          "message": "Layout cleanup is incomplete. Electrical validation and preserved connectivity do not establish drawing readability. Continue with the recommended phases on the returned definition, repair persistent overlaps manually, and inspect the final preview before presenting it as cleaned up."
+        },
+        "stopped": "converged",
+        "electricalConnectivityPreserved": true,
+        "nativeContactsPreserved": true
+      },
+      "electricalDiagnostics": [
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 1,
+          "reference": "PSU1",
+          "pin": "3",
+          "position": [
+            180,
+            330
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 1,
+          "reference": "PSU1",
+          "pin": "4",
+          "position": [
+            210,
+            330
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 37,
+          "reference": "DMM1",
+          "pin": "3",
+          "position": [
+            655,
+            330
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 37,
+          "reference": "DMM1",
+          "pin": "4",
+          "position": [
+            685,
+            330
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 37,
+          "reference": "DMM1",
+          "pin": "5",
+          "position": [
+            715,
+            330
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 37,
+          "reference": "DMM1",
+          "pin": "6",
+          "position": [
+            745,
+            330
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 83,
+          "reference": "LOAD1",
+          "pin": "3",
+          "position": [
+            1130,
+            330
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 125,
+          "reference": "GEN1",
+          "pin": "2",
+          "position": [
+            225,
+            805
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 125,
+          "reference": "GEN1",
+          "pin": "3",
+          "position": [
+            255,
+            805
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 125,
+          "reference": "GEN1",
+          "pin": "4",
+          "position": [
+            285,
+            805
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 179,
+          "reference": "SCOPE1",
+          "pin": "2",
+          "position": [
+            1000,
+            805
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 179,
+          "reference": "SCOPE1",
+          "pin": "3",
+          "position": [
+            1030,
+            805
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 179,
+          "reference": "SCOPE1",
+          "pin": "4",
+          "position": [
+            1060,
+            805
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 179,
+          "reference": "SCOPE1",
+          "pin": "5",
+          "position": [
+            1090,
+            805
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC load and waveform bench",
+          "itemId": 179,
+          "reference": "SCOPE1",
+          "pin": "6",
+          "position": [
+            1120,
+            805
+          ],
+          "message": "Unconnected nets"
+        }
+      ]
+    },
+    {
+      "id": "motor-control-bench",
+      "title": "DC motor and limit-control bench",
+      "page": [
+        297,
+        210
+      ],
+      "sources": [
+        {
+          "reference": "U1",
+          "library": "embedded-smart-home",
+          "libraryPath": "embedded-smart-home/embedded-smart-home.tclib",
+          "librarySha256": "bbe8731729cddcb8a355e27044a011c9b6b42523436195c612f8653978b18f6f",
+          "componentId": "esp32-devkitc-v4",
+          "nameId": 1,
+          "symbolId": 1,
+          "name": "ESP32 DevKitC V4 \u2014 WROOM-32E, 38 pins",
+          "xmlSha256": "9d316a887bd9f7eedd83b614e9e5254dacacc79acfb6c5580f56ddf825ff1a78"
+        },
+        {
+          "reference": "DRV1",
+          "library": "motors-motion",
+          "libraryPath": "motors-motion/motors-motion.tclib",
+          "librarySha256": "8132a58bf4422b7dd51b6cae035087fefff8de7cf266c14d3bea09d468abad54",
+          "componentId": "driver-brushed",
+          "nameId": 29,
+          "symbolId": 29,
+          "name": "High-power brushed DC driver \u2014 PWM/direction",
+          "xmlSha256": "d881ef665c1754f08a5075ededeb25bb609ea1a4caab1357ff25180afaac4866"
+        },
+        {
+          "reference": "M1",
+          "library": "motors-motion",
+          "libraryPath": "motors-motion/motors-motion.tclib",
+          "librarySha256": "8132a58bf4422b7dd51b6cae035087fefff8de7cf266c14d3bea09d468abad54",
+          "componentId": "motor-planetary",
+          "nameId": 7,
+          "symbolId": 7,
+          "name": "Planetary DC gearmotor",
+          "xmlSha256": "04cd35a51028c5f45fdb53d644c393b054315608046061d69204edee1273fb54"
+        },
+        {
+          "reference": "PSU1",
+          "library": "test-measurement",
+          "libraryPath": "test-measurement/test-measurement.tclib",
+          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "componentId": "psu-1",
+          "nameId": 1,
+          "symbolId": 1,
+          "name": "DC bench supply \u2014 1 output",
+          "xmlSha256": "65c052e66f943840bddfc5d0c2a6abc8bde241a9bf3a43f0e4fd8e7fece09467"
+        },
+        {
+          "reference": "LIMIT1",
+          "library": "motors-motion",
+          "libraryPath": "motors-motion/motors-motion.tclib",
+          "librarySha256": "8132a58bf4422b7dd51b6cae035087fefff8de7cf266c14d3bea09d468abad54",
+          "componentId": "limit-roller",
+          "nameId": 42,
+          "symbolId": 42,
+          "name": "SPDT roller limit microswitch",
+          "xmlSha256": "e3492badd1e277935d4b455721461091d8583b5d869e2d535a6aa4d28fcf8e45"
+        }
+      ],
+      "expectedNets": [
+        [
+          "DRV1:1",
+          "PSU1:1"
+        ],
+        [
+          "DRV1:2",
+          "DRV1:8",
+          "LIMIT1:1",
+          "PSU1:2",
+          "U1:J1-14"
+        ],
+        [
+          "DRV1:3",
+          "M1:1"
+        ],
+        [
+          "DRV1:4",
+          "M1:2"
+        ],
+        [
+          "DRV1:5",
+          "U1:J3-9"
+        ],
+        [
+          "DRV1:6",
+          "U1:J3-8"
+        ],
+        [
+          "DRV1:7",
+          "U1:J1-9"
+        ],
+        [
+          "LIMIT1:2",
+          "U1:J1-11"
+        ]
+      ],
+      "localLayout": {
+        "connectivityPreserved": true,
+        "nativeContactsPreserved": true,
+        "stopped": "converged",
+        "before": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 22,
+          "crossings": 5,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 2,
+          "annotationCrowding": 7,
+          "componentDisorder": 0,
+          "labelOverhangs": 8,
+          "netLabelPosition": 0,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 20,
+          "connectedDistance": 3190,
+          "logicalProximity": 4570,
+          "inlineImbalance": 0,
+          "wireLength": 3550,
+          "bends": 15,
+          "area": 1099912.2031860352,
+          "labelDistance": 0
+        },
+        "after": {
+          "bodyCollisions": 0,
+          "wireBodyCollisions": 22,
+          "crossings": 5,
+          "overlaps": 0,
+          "diagonalSegments": 0,
+          "pinExitViolations": 0,
+          "textCollisions": 0,
+          "annotationCrowding": 6.382284800552469,
+          "componentDisorder": 0,
+          "labelOverhangs": 0,
+          "netLabelPosition": 10,
+          "labelAlignment": 0,
+          "junctionIssues": 0,
+          "bundleDisorder": 20,
+          "connectedDistance": 2891.29375,
+          "logicalProximity": 4570,
+          "inlineImbalance": 0,
+          "wireLength": 3251.29375,
+          "bends": 14,
+          "area": 948600,
+          "labelDistance": 0
+        }
+      },
+      "draftSha256": "a9fdb8cf0f5eec2acacfdb8a44854132c21d032cf76f6ca201fa54efdd1263b2",
+      "finalSha256": "7e59ceb389c84c9b065a75449b1a36d2d3f46ff98bd7c568030b0bdbabe72165",
+      "previews": {
+        "png": "746e6c0fb8a4f11548a38e51e3cf269324f9ae0bf7cad29314920387d462c42e",
+        "svg": "83d14097e33fe9fa85fc95e8db68c6955637ae60584eebf46a95c9b8eb9f946d"
+      },
+      "checks": {
+        "connectivityPreserved": true,
+        "serializationConnectivityPreserved": true,
+        "serializationPhysicalConnectivityPreserved": true,
+        "layoutQuality": {
+          "status": "incomplete",
+          "converged": true,
+          "readabilityImproved": false,
+          "remainingDiagnosticCount": 27,
+          "remainingByCode": {
+            "wire-body": 22,
+            "crossing": 5
+          },
+          "recommendedPhases": [
+            "routing"
+          ],
+          "message": "Layout cleanup is incomplete. Electrical validation and preserved connectivity do not establish drawing readability. Continue with the recommended phases on the returned definition, repair persistent overlaps manually, and inspect the final preview before presenting it as cleaned up."
+        },
+        "stopped": "converged",
+        "electricalConnectivityPreserved": true,
+        "nativeContactsPreserved": true
+      },
+      "electricalDiagnostics": [
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-1",
+          "position": [
+            235,
+            255
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-2",
+          "position": [
+            235,
+            265
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-3",
+          "position": [
+            235,
+            275
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-4",
+          "position": [
+            235,
+            285
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-5",
+          "position": [
+            235,
+            295
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-6",
+          "position": [
+            235,
+            305
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-7",
+          "position": [
+            235,
+            315
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-8",
+          "position": [
+            235,
+            325
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-10",
+          "position": [
+            235,
+            345
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-12",
+          "position": [
+            235,
+            365
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-13",
+          "position": [
+            235,
+            375
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-15",
+          "position": [
+            235,
+            395
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-16",
+          "position": [
+            235,
+            405
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-17",
+          "position": [
+            235,
+            415
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-18",
+          "position": [
+            235,
+            425
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-19",
+          "position": [
+            235,
+            435
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-1",
+          "position": [
+            365,
+            255
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-2",
+          "position": [
+            365,
+            265
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-3",
+          "position": [
+            365,
+            275
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-4",
+          "position": [
+            365,
+            285
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-5",
+          "position": [
+            365,
+            295
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-6",
+          "position": [
+            365,
+            305
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-7",
+          "position": [
+            365,
+            315
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-10",
+          "position": [
+            365,
+            345
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-11",
+          "position": [
+            365,
+            355
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-12",
+          "position": [
+            365,
+            365
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-13",
+          "position": [
+            365,
+            375
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-14",
+          "position": [
+            365,
+            385
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-15",
+          "position": [
+            365,
+            395
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-16",
+          "position": [
+            365,
+            405
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-17",
+          "position": [
+            365,
+            415
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-18",
+          "position": [
+            365,
+            425
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-19",
+          "position": [
+            365,
+            435
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 285,
+          "reference": "PSU1",
+          "pin": "3",
+          "position": [
+            680,
+            865
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 285,
+          "reference": "PSU1",
+          "pin": "4",
+          "position": [
+            710,
+            865
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 321,
+          "reference": "LIMIT1",
+          "pin": "3",
+          "position": [
+            275,
+            815
+          ],
+          "message": "Unconnected nets"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-14",
+          "position": [
+            235,
+            385
+          ],
+          "message": "Power connected to power"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 189,
+          "reference": "DRV1",
+          "pin": "1",
+          "position": [
+            670,
+            405
+          ],
+          "message": "Power connected to power"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J1-9",
+          "position": [
+            235,
+            335
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-9",
+          "position": [
+            365,
+            335
+          ],
+          "message": "No outputs driving inputs"
+        },
+        {
+          "code": "design_rule",
+          "sheet": "DC motor and limit-control bench",
+          "itemId": 1,
+          "reference": "U1",
+          "pin": "J3-8",
+          "position": [
+            365,
+            325
+          ],
+          "message": "No outputs driving inputs"
+        }
+      ]
+    }
+  ],
+  "service": "https://www.tinycad.net/mcp",
+  "scope": "Equipment/PCB wiring and cable plans; no firmware, hardware testing or SPICE models. Spare ports and physical socket/body-envelope notices are intentional. Preserve real pin types; extended power classification is a known checker limitation."
+}

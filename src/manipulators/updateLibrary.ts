@@ -42,10 +42,14 @@ export class updateLibrary {
       ),
     }));
 
-    let xml = io.to_dsn({ ...doc, sheets: sheets }, false, false).tostring();
+    const document = io.to_dsn({ ...doc, sheets: sheets }, false, false);
     if (doc.sheets.length === 1) {
-      xml = xml.replace('<TinyCADSheets>', '').replace('</TinyCADSheets>', '');
+      // Drawing metadata precedes the sheet. Extract the symbol root rather than
+      // stripping its wrapper and leaving multiple XML document elements.
+      const sheet = document.xmlDoc.getElementsByTagName('TinyCAD')[0];
+      document.xmlDoc.replaceChild(sheet.cloneNode(true), document.xmlDoc.documentElement);
     }
+    const xml = document.tostring();
 
     return update(this.lib, {
       symbols: {

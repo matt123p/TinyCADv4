@@ -4,6 +4,7 @@
 name: Browser Build
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, production]
   pull_request:
@@ -15,7 +16,10 @@ permissions:
   id-token: write
 
 jobs:
+  engines:
+    uses: ./.github/workflows/ngspice.yml
   build:
+    needs: engines
     runs-on: ubuntu-latest
 
     strategy:
@@ -31,6 +35,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - run: npm ci
+      - uses: actions/download-artifact@v7
+        with:
+          name: ngspice-wasm
+          path: public/engines/ngspice
       - run: mkdir -p browser-artifact
       - run: npm run build:ga
         env:
@@ -43,7 +51,7 @@ jobs:
           GOOGLE_ANALYTICS_ID: ${{ secrets.GOOGLE_ANALYTICS_ID }}
       - run: mv dist browser-artifact/fs
       - name: Upload Browser Artifact
-        if: github.ref == 'refs/heads/production'
+        if: github.ref == 'refs/heads/production' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v6
         with:
           name: tinycad-browser

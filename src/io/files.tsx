@@ -1,3 +1,7 @@
+import { tinycadUrl } from './apiServer';
+import { withoutResults } from '../simulation/document';
+import { drawingFileName, isCompressedDrawing } from '../../shared/drawingFiles.js';
+import { encodeDrawing } from './dsnCodec';
 import React from 'react';
 
 import { ActionCreators } from 'redux-undo';
@@ -20,7 +24,7 @@ import {
 } from '../state/dispatcher/AppDispatcher';
 import { Dispatch } from 'redux';
 import { docDrawing } from '../state/undo/undo';
-import { CurrentFile, UserConfig } from '../state/stores/altStoreReducer';
+import { CurrentFile, UserConfig, LibraryFile } from '../state/stores/altStoreReducer';
 import { saveAs } from 'file-saver';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../model/tclib';
 import { libCache } from './libCache';
@@ -45,13 +49,14 @@ import { actionEditLibrarySymbol, actionSelectLibrarySymbol } from '../state/dis
 import { get_global_id } from '../util/global_id';
 import { openCurrentAppUrl, openExternalUrl } from '../util/navigation';
 import { normalizeUserConfig, sortLibrariesByConfig, ConfiguredLibraryFile } from './libraryConfig';
+import { commitExample } from './examples';
 
 export type FileIdType = string | FileSystemFileHandle;
 
 export interface UserManager {
   initialize(dispatch: Dispatch): Promise<void>;
   fileOpen(dispatch: Dispatch, file?: CurrentFile): void;
-  saveFile(xml: string, file: CurrentFile): Promise<any>;
+  saveFile(xml: string | Uint8Array, file: CurrentFile): Promise<any>;
   login(): Promise<void>;
   renameFile(title: string, fileId: FileIdType): Promise<boolean>;
   loadLibrary(
@@ -97,6 +102,9 @@ function checkSaveNeeded(getState: { (): docDrawing }): boolean {
 export function performPendingAction(pendingAction: UnsavedAction) {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
     switch (pendingAction.type) {
+      case 'file-open-example':
+        commitExample(dispatch, pendingAction);
+        break;
       case 'file-new':
         // Create a new blank drawing and reset file data
         dispatch(actionSetDocument(blank(), 'tCad1.dsn', null, null));
@@ -155,6 +163,26 @@ export function fileSaveAs(dispatch: Dispatch, getState: { (): docDrawing }) {
   return internalfileSave(dispatch, getState, true);
 }
 
+// Save a separate copy without changing the open drawing or its saved version.
+export async function fileSaveWithoutResults(dispatch: Dispatch, getState: { (): docDrawing }) {
+  const state = getState();
+  if (state.altStore.saveInProgress || state.docStore.present.editLibrary) return;
+  const { drawing } = state.docStore.present;
+  const file = state.altStore.file;
+  dispatch(actionSetSaveInProgress(true, null));
+  try {
+    const bytes = await encodeDrawing(withoutResults(drawing));
+    await userManager.saveFile(bytes, {
+      ...file, id: null,
+      name: drawingFileName(file.name.replace(/\.(dsn|dzn)$/i, '') + '-without-results', isCompressedDrawing(bytes)),
+    });
+  } catch (error) {
+    if (error) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+  } finally {
+    dispatch(actionSetSaveInProgress(false, null));
+  }
+}
+
 function internalfileSave(
   dispatch: Dispatch,
   getState: { (): docDrawing },
@@ -180,11 +208,11 @@ function internalfileSave(
         drawing,
         netlist,
       );
-      const xml = io.to_dsn(drawing_with_hints, true, true);
-      return userManager.saveFile(xml.tostring(), {
+      return encodeDrawing(drawing_with_hints).then(bytes => userManager.saveFile(bytes, {
         ...file,
+        name: drawingFileName(file.name, isCompressedDrawing(bytes)),
         id: saveAs ? null : file.id,
-      });
+      }));
     })
     .then(
       (meta) => {
@@ -227,6 +255,8 @@ function internalLibrarySave(
   if (saveInProgress) {
     return;
   }
+
+  if (library?.readOnly) return;
 
   if (editSymbol) {
     // First write back the edited symbol to the library
@@ -296,7 +326,7 @@ export function removeLibrary(fileId: string) {
     const currentConfig = normalizeUserConfig(state.altStore.config);
     const updatedConfig = update(currentConfig, {
       libraries: {
-        $apply: (items: ConfiguredLibraryFile[]) => items.filter((library) => library.id !== fileId),
+        $apply: (items: ConfiguredLibraryFile[]) => items.filter((library) => `${library.id}` !== fileId),
       },
     });
 
@@ -702,21 +732,113 @@ export function exportSvg(
   openExternalUrl(url);
 }
 
-export function imageFile(file: File | Blob, pos: Coordinate, imgType: string) {
+export function importImageFromFile() {
+  return async (dispatch: Dispatch<any>) => {
+    if (
+      process.env.TARGET_SYSTEM === 'electron' &&
+      window.electronAPI?.openImageImport
+    ) {
+      try {
+        const picked = await window.electronAPI.openImageImport();
+        if (!picked) return;
+        const data = Uint8Array.from(atob(picked.content), (character) =>
+          character.charCodeAt(0),
+        );
+        const file = new File([data], picked.fileName, { type: picked.mime });
+        dispatch(imageFile(file, null));
+      } catch {
+        dispatch(
+          actionSelectDialog('io_failure', {
+            message: 'Could not open the image file.',
+          }),
+        );
+      }
+      return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.hidden = true;
+    input.oncancel = () => input.remove();
+    input.onchange = () => {
+      const file = input.files?.[0];
+      input.remove();
+      if (!file) return;
+      dispatch(imageFile(file, null));
+    };
+    document.body.appendChild(input);
+    input.click();
+  };
+}
+
+export function imageFile(
+  file: File | Blob,
+  pos: Coordinate,
+  imgType = file.type === 'image/png'
+    ? 'PNG'
+    : file.type === 'image/jpeg'
+    ? 'JPEG'
+    : '',
+) {
   return (dispatch: Dispatch<any>, getState: { (): docDrawing }) => {
+    const failed = () =>
+      dispatch(
+        actionSelectDialog('io_failure', {
+          message:
+            'Could not read the image. Select an image format supported by your browser.',
+        }),
+      );
     const reader = new FileReader();
+    reader.onerror = failed;
     reader.onload = (event) => {
       const img = new Image();
+      img.onerror = failed;
       img.onload = () => {
-        dispatch(
-          actionAddImage(
-            event.target.result as string,
-            imgType,
-            file.size,
-            [img.width, img.height],
-            pos,
-          ),
-        );
+        try {
+          let data = event.target.result as string;
+          let type = imgType;
+          let dataSize = file.size;
+          if (type !== 'PNG' && type !== 'JPEG') {
+            // TinyCAD stores PNG/JPEG bitmaps. Decode other browser-supported
+            // formats and capture a still frame, preserving transparency.
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const context = canvas.getContext('2d');
+            if (!context) throw new Error('Image conversion unavailable.');
+            context.drawImage(img, 0, 0);
+            data = canvas.toDataURL('image/png');
+            if (!data.startsWith('data:image/png;base64,'))
+              throw new Error('Image conversion failed.');
+            dataSize = atob(data.split(',')[1]).length;
+            type = 'PNG';
+          }
+          const present = getState().docStore.present;
+          const index =
+            present.editSymbol && !present.heterogeneous
+              ? 0
+              : present.view.selected_sheet;
+          const sheet = present.drawing.sheets[index];
+          if (!sheet) return;
+          const location =
+            pos ??
+            present.view.contextMenuLastPoint ??
+            ([
+              sheet.details.page_size[0] / 2,
+              sheet.details.page_size[1] / 2,
+            ] as Coordinate);
+          dispatch(
+            actionAddImage(
+              data,
+              type,
+              dataSize,
+              [img.naturalWidth, img.naturalHeight],
+              location,
+            ),
+          );
+        } catch {
+          failed();
+        }
       };
       img.src = event.target.result as string;
     };
@@ -767,6 +889,9 @@ export function handleMenuCommand(command: string) {
           dispatch(fileNew() as any);
         }
         break;
+      case 'file-open-example':
+        dispatch(actionSelectDialog('open_example', null));
+        break;
       case 'file-open':
         dispatch(fileOpen() as any);
         break;
@@ -776,6 +901,9 @@ export function handleMenuCommand(command: string) {
         } else {
           dispatch(fileSave as any);
         }
+        break;
+      case 'file-save-without-results':
+        dispatch(fileSaveWithoutResults as any);
         break;
       case 'file-save-as':
         if (editLibrary) {
@@ -813,6 +941,16 @@ export function handleMenuCommand(command: string) {
         dispatch(actionCommand('mirror_v'));
         break;
       // View
+      case 'view-explanation':
+        if (!state.docStore.present.editSymbol && !editLibrary && state.altStore.exampleExplanation) {
+          dispatch({ type: 'example/explanation', visible: !state.altStore.exampleExplanationVisible });
+        }
+        break;
+      case 'view-show-charts':
+        if (!state.docStore.present.editSymbol && !editLibrary) {
+          dispatch({ type: 'simulation/panel', visible: !state.altStore.simulationPanelVisible });
+        }
+        break;
       case 'view-zoom-in':
         dispatch(actionCommand('zoom_in'));
         break;
@@ -820,6 +958,14 @@ export function handleMenuCommand(command: string) {
         dispatch(actionCommand('zoom_out'));
         break;
       // Tools
+      case 'tools-auto-layout': {
+        const present = state.docStore.present;
+        const sheet = present.drawing.sheets[present.view.selected_sheet];
+        if (!present.editSymbol && !editLibrary && sheet && sheet.kind !== 'simulation') {
+          dispatch(actionSelectDialog('auto_layout', null));
+        }
+        break;
+      }
       case 'tools-annotate':
         dispatch(actionSelectDialog('annotate', null));
         break;
@@ -846,6 +992,9 @@ export function handleMenuCommand(command: string) {
         break;
       case 'import-kicad-symbols':
         dispatch(importSymbolsFromFile() as any);
+        break;
+      case 'import-image':
+        dispatch(importImageFromFile() as any);
         break;
       case 'tools-drc':
         dispatch(actionSelectDialog('drc', null));
@@ -878,7 +1027,7 @@ export function handleMenuCommand(command: string) {
       case 'help-help':
         dispatch(
           actionMenuBrowserOpen(
-            'https://www.tinycad.net/Online/Home',
+            tinycadUrl('/Online/Home'),
             'Help',
           ),
         );

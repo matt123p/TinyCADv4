@@ -1,3 +1,5 @@
+import { createSimulationSheet, validateSetup } from '../simulation/document';
+import { newIdentity } from '../simulation/contracts';
 import { XMLBuilder } from '../util/xmlbuilder';
 import {
   DocItemTypes,
@@ -142,10 +144,12 @@ export class ioXML {
   public from_dsn(xmlBuilder: XMLBuilder) {
     let r: dsnDrawing = {
       sheets: [],
+      documentId: newIdentity(),
       settings: {
         showRulers: true,
       },
       drc: {
+        MissingSpice: false,
         DupRef: true, // Duplicated references
         UnConnect: true, // Unconnected items
         NoConnect: true, // Mode than one item on a no-connect net
@@ -172,7 +176,9 @@ export class ioXML {
       netTypeAssignments: {},
     };
 
-    let root = xmlBuilder.getElementsByTagName('TinyCADSheets');
+    // A single-sheet drawing may contain a multipart symbol's nested TinyCADSheets.
+    let root = xmlBuilder.xmlDoc.documentElement?.nodeName === 'TinyCAD'
+      ? [] : xmlBuilder.getElementsByTagName('TinyCADSheets');
     if (root.length === 0) {
       root = xmlBuilder.getElementsByTagName('TinyCAD');
       if (root.length >= 1) {
@@ -190,6 +196,16 @@ export class ioXML {
           let sheet = this.from_tinycad(nodes[i], nodes[i], false);
           r.sheets.push(sheet);
         }
+        if (nodes[i].nodeName === 'DSNIDENTITY') {
+          r.documentId = nodes[i].getAttribute('id') || r.documentId;
+        }
+        if (nodes[i].nodeName === 'SimulationSheet') {
+          const base = blank().sheets[0];
+          const sheet = createSimulationSheet(base, nodes[i].getAttribute('name') || 'Simulation');
+          sheet.id = nodes[i].getAttribute('id') || sheet.id;
+          sheet.simulation = validateSetup(JSON.parse(this.nodeText(nodes[i])));
+          r.sheets.push(sheet);
+        }
         if (nodes[i].nodeName === 'NETLIST_TYPES') {
           const parsed = this.readNetlistTypes(nodes[i]);
           r.netlistTypes = parsed.types;
@@ -201,6 +217,9 @@ export class ioXML {
       }
     }
 
+    if (!r.sheets.some(sheet => sheet.kind !== 'simulation')) throw new Error('A drawing must contain a schematic sheet.');
+    const sheetIds = r.sheets.map(sheet => sheet.id);
+    if (new Set(sheetIds).size !== sheetIds.length) throw new Error('Duplicate sheet identity.');
     r.netlistTypes = ensureNetlistTypes(r.netlistTypes);
     if (!r.netTypeAssignments) {
       r.netTypeAssignments = {};
@@ -217,7 +236,13 @@ export class ioXML {
     // Create the root object
     let dsn = new XMLBuilder();
     dsn.createDoc('TinyCADSheets');
+    dsn.appendChild('DSNIDENTITY', null, { id: drawing.documentId || '' });
     for (var i = 0; i < drawing.sheets.length; ++i) {
+      const sheet = drawing.sheets[i];
+      if (sheet.kind === 'simulation') {
+        dsn.appendChild('SimulationSheet', JSON.stringify(sheet.simulation), { id: sheet.id, name: sheet.name, version: '1' });
+        continue;
+      }
       this.to_tinycad(
         drawing.sheets[i],
         dsn,
@@ -265,6 +290,8 @@ export class ioXML {
 
     // Create the resources and document for insertion later
     this.to_resources(root, items, fonts, styles, fills, symboldefs, images);
+
+    if (sheet.id) root.insert.setAttribute('id', sheet.id);
 
     // 1.. Add the sheet name
     root.appendChild('NAME', sheet.name, null);
@@ -761,15 +788,11 @@ export class ioXML {
             a: root.makeCoords(item.point),
             b: root.makeCoords(item.point_b),
             id: item.imageData.id,
-          };
-          o = root.appendChild('METAFILE', null, a);
-          break;
-        case DocItemTypes.Image:
-          a = {
-            a: root.makeCoords(item.point),
-            b: root.makeCoords(item.point_b),
-            style: item.style_id,
-            fill: item.fill_id,
+            fixed_aspect: item.fixed_aspect ? 1 : 0,
+            clip_left: item.clip_left ?? 0,
+            clip_right: item.clip_right ?? 0,
+            clip_top: item.clip_top ?? 0,
+            clip_bottom: item.clip_bottom ?? 0,
           };
           o = root.appendChild('METAFILE', null, a);
           break;
@@ -871,6 +894,8 @@ export class ioXML {
     let r: DocItem[] = [];
     let nodes = sheet.childNodes;
     const newSheet: dsnSheet = {
+      id: sheet.getAttribute('id') || newIdentity(),
+      kind: 'schematic',
       name: 'Sheet',
       items: r,
       details: {
@@ -946,6 +971,11 @@ export class ioXML {
             point: this.coords(node.getAttribute('a')),
             point_b: this.coords(node.getAttribute('b')),
             imageData: this.imagedef(root, newSheet, node.getAttribute('id')),
+            fixed_aspect: node.getAttribute('fixed_aspect') === '1',
+            clip_left: Math.max(0, parseInt(node.getAttribute('clip_left'), 10) || 0),
+            clip_right: Math.max(0, parseInt(node.getAttribute('clip_right'), 10) || 0),
+            clip_top: Math.max(0, parseInt(node.getAttribute('clip_top'), 10) || 0),
+            clip_bottom: Math.max(0, parseInt(node.getAttribute('clip_bottom'), 10) || 0),
           } as dsnImage;
           break;
         case 'ELLIPSE':
@@ -1022,17 +1052,20 @@ export class ioXML {
               point: null,
               point_b: null,
             } as dsnText;
-            const txt_size = measureText(getFont(o), o.text);
+            // Markdown text reserves three units of padding on every side.
+            // Legacy TEXT has no explicit box, so include that padding in its bounds.
+            // Leave a pixel for rounding/kerning differences between Markdown runs.
+            const txt_size = Math.ceil(measureText(getFont(o), o.text)) + 1;
             const pos = this.coords(node.getAttribute('pos'));
             switch (rotation) {
               case 0: // Right
               case 2: // Left
-                o.point = [pos[0], pos[1] - o.font_size - 2];
-                o.point_b = [pos[0] + txt_size + 4, pos[1]];
+                o.point = [pos[0], pos[1] - o.font_size - 6];
+                o.point_b = [pos[0] + txt_size + 6, pos[1]];
                 break;
               case 3: // Up
               case 1: // Down
-                o.point = [pos[0] - o.font_size - 2, pos[1] - txt_size - 4];
+                o.point = [pos[0] - o.font_size - 6, pos[1] - txt_size - 6];
                 o.point_b = [pos[0], pos[1]];
                 break;
             }
@@ -1932,7 +1965,7 @@ export class ioXML {
               if (outlinesNodes[m].nodeName === 'TinyCAD') {
                 let def = this.from_tinycad(
                   root,
-                  selected_nodes[l],
+                  outlinesNodes[m],
                   false,
                 ).items;
                 if (def.length > 0) {

@@ -45,6 +45,44 @@ for the full browser and local editing workflows, writing checklist, and pull
 request template. Submit manual changes to TinyCAD-docs; application code changes
 belong in this repository.
 
+## Simulation and technical reference
+
+TinyCAD runs integrated ngspice simulations locally: WebAssembly in the browser
+and a bundled native engine in Electron. Simulation sheets, instruments and
+results live in the drawing. See the [technical reference](docs/README.md) for
+engine architecture, simulation workflows, file formats, libraries and editor tools.
+
+Standard libraries include 47 original vector network devices with matching 19-inch
+rack panels and cable connections inside their sockets. Use **Open Example → Examples**
+for seven editable drawings: the amplifier, office network, ESP32 climate station,
+solar/battery home, podcast studio, laboratory bench and motor-control bench. Each
+layout embeds its devices and includes an explanation with connections and extension
+ideas. See [Libraries and examples](docs/libraries.md) for the ten
+bundled libraries, artwork provenance, rack conventions and build/test commands.
+
+The **Embedded processors and smart home** standard library adds 44 physical PCB
+views: ESP32/ESP8266 devkits, Raspberry Pi 3/4/5, Arduino Uno/Nano/Mega and sensor
+modules, plus LCD/OLED/touch/e-paper displays with front and rear wiring views. See the
+[library guide](docs/embedded-smart-home.md) for the inventory, previews and pinout sources.
+
+The **Audio & Music** standard library adds 99 compact original vector resources for
+PA, studios, podcasts, recording, instruments/MIDI and cabling, with socket-centred
+whole-cable connections. See the [guide](docs/audio-music.md). Embedded PCB views
+also use compact placement sizes: [18 mixed components on A4](docs/embedded-smart-home-a4.png).
+
+The **Test & Measurement** standard library adds 78 compact lab resources for power,
+instruments, probes, acquisition, thermal equipment, relays, controls and apparatus.
+Connections distinguish individual conductors, complete cables and fluid hoses. See
+the [guide](docs/test-measurement.md) and [A4 preview](docs/test-measurement-a4.png).
+
+The **Motors & Motion** standard library adds 66 compact robotics and automation
+resources: motors, steppers, servos, drivers, encoders, limits, solenoids, actuators
+and mechanical parts. See the [guide](docs/motors-motion.md) and
+[A4 placement preview](docs/motors-motion-a4.png).
+
+The **Solar power and batteries** standard library includes 52 supplied symbols
+for conceptual home-energy planning, with whole-cable and logical-link connections.
+
 ## Installation
 
 ### Preferred: App Stores
@@ -76,7 +114,7 @@ TinyCAD for the Web is a full rewrite of the original Windows-only C++ TinyCAD, 
 Compatibility notes:
 
 - This version of TinyCAD is file compatible with the previous version.  You should be able to simply
-  open existing `.dsn` and `.tclib` files.
+  open existing `.dsn` and `.tclib` files. ZIP-compressed drawings use `.dzn`; both drawing extensions load by content/header.
 - The project keeps TinyCAD's core schematic/library workflow and file association concepts.
 - Because this is a rewrite, some edge-case behavior may differ from the legacy C++ implementation.  This should be kept to a miniumum and is not intended. If you have an old design or library that does not behave as expected, please open an issue with a sample file.
 

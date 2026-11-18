@@ -1,5 +1,27 @@
 # Changelog
 
+## v4.1.0 — 2026-11-18
+
+### Added
+
+- Desktop AI chat with Markdown, attachments, online search and tools to inspect and edit circuits, drawings and libraries with Undo/Redo. Supports provider API keys, local Ollama and eligible ChatGPT sign-in, with secure credential storage.
+- PDF/image references and an IC generator for creating editable circuits and library symbols.
+- Image import from files, paste and drag-and-drop, with clipping, fixed aspect ratio and proportion reset saved in TinyCAD XML.
+- Local ngspice simulation, desktop XSPICE, configurable sources, probes and virtual bench instruments.
+- Circuit Explorer with tuning, sweeps, measurements, requirements, tolerance studies and power/stress reports.
+- Compressed .dzn drawings with simulation setups, models, retained results, run history and CSV/PNG exports.
+- SPICE/XSPICE courses, runnable examples and expanded standard component libraries.
+- Automatic circuit layout and wire tidy-up that preserve connections and fixed anchors.
+
+### Fixed
+
+- Apply page background colour with or without rulers, including the touch loupe (#33).
+- Fix hidden-pin selection crashes and unnecessary wire detours around transistor pins.
+
+### Maintenance
+
+- Expand translated manuals, tutorials, library generation and regression coverage.
+
 ## v4.0.11
 
 ### Added

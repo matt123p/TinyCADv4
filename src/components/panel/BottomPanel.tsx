@@ -1,8 +1,9 @@
-import React, { Dispatch } from 'react';
+import React, { Dispatch, lazy, Suspense } from 'react';
 import { makeStyles, tokens } from '@fluentui/react-components';
 import { DocItem, DocItemTypes, dsnPin, dsnSymbol } from '../../model/dsnItem';
 import StylePanelContainer from '../../state/containers/stylePanelContainer';
 import SymbolPanelContainer from '../../state/containers/symbolPanelContainer';
+import { readControl } from '../../simulation/controls';
 import PinPanelContainer from '../../state/containers/pinPanelContainer';
 import DrcPanelContainer from '../../state/containers/drcPanelContainer';
 import { SymbolListPanel } from './SymbolListPanel';
@@ -10,6 +11,13 @@ import { NetlistListPanel } from './NetlistListPanel';
 import { PinListPanel } from './PinListPanel';
 import { dsnDrawing } from '../../model/dsnDrawing';
 import { Panels } from '../../state/dispatcher/AppDispatcher';
+
+const SpiceControlPanel = lazy(() =>
+  import('./SpiceControlPanel').then(m => ({ default: m.SpiceControlPanel })),
+);
+const InstrumentPanel = lazy(() =>
+  import('./InstrumentPanel').then(m => ({ default: m.InstrumentPanel })),
+);
 
 const useStyles = makeStyles({
   container: {
@@ -92,7 +100,10 @@ export const BottomPanel: React.FunctionComponent<BottomPanelProps> = (
       <div className={styles.content}>
         {panelType === 'symbol' && (
           <div className={styles.panelContent}>
-            <SymbolPanelContainer />
+            <Suspense fallback={null}>{readControl(props.selectedSymbol)?.kind==='instrument' ? <InstrumentPanel key={props.selectedSymbol._id} symbol={props.selectedSymbol} drawing={props.drawing} dispatch={props.dispatch}/> : readControl(props.selectedSymbol) ? (
+              <SpiceControlPanel key={props.selectedSymbol._id}
+                symbol={props.selectedSymbol} drawing={props.drawing} dispatch={props.dispatch} />
+            ) : <SymbolPanelContainer />}</Suspense>
           </div>
         )}
         {panelType === 'pin' && (

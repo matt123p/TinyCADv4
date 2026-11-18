@@ -1,6 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+    onlineLibraryRequest: (resource) => ipcRenderer.invoke('online-library-request', resource),
+    chatSecret: (operation, value) => ipcRenderer.invoke('chat-secret', { operation, value }),
+    chatgptAccount: (operation, args) => ipcRenderer.invoke('chatgpt-account', { operation, args }),
+    chatgptRequest: (request) => ipcRenderer.invoke('chatgpt-request', request),
+    cancelChatGPTRequest: (id) => ipcRenderer.send('chatgpt-cancel', id),
+    onChatGPTStream: (callback) => {
+        const listener = (_, event) => callback(event);
+        ipcRenderer.on('chatgpt-stream', listener);
+        return () => ipcRenderer.removeListener('chatgpt-stream', listener);
+    },
     onMenuCommand: (callback) => {
         const listener = (_, command) => callback(command);
         ipcRenderer.on('menu-command', listener);
@@ -23,10 +33,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setTitle: (title) => ipcRenderer.send('window-set-title', title),
     loadFile: (file) => ipcRenderer.send('load-file', file),
     saveFile: (data) => ipcRenderer.send('save-file', data),
+    exampleCatalog: () => ipcRenderer.invoke('bundled-example-catalog'),
+    readExampleResource: (path) => ipcRenderer.invoke('bundled-example-read', path),
+    bundledLibraryCatalog: () => ipcRenderer.invoke('bundled-library-catalog'),
+    readBundledLibrary: (id) => ipcRenderer.invoke('bundled-library-read', id),
+    bundledLibrarySelection: (ids) => ipcRenderer.invoke('bundled-library-selection', ids),
     loadLibrary: (file) => ipcRenderer.send('load-library', file),
     saveLibrary: (data) => ipcRenderer.send('save-library', data),
     removeLibrary: (data) => ipcRenderer.send('remove-library', data),
     saveLibraryConfig: (config) => ipcRenderer.send('save-library-config', config),
+    setViewMenuState: (state) => ipcRenderer.send('set-view-menu-state', state),
     setMenuMode: (mode) => ipcRenderer.send('set-menu-mode', mode),
     setMenuTranslations: (translations) => ipcRenderer.send('set-menu-translations', translations),
 
@@ -116,6 +132,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     sendAppClosingResponse: (response) => ipcRenderer.send('app-closing-response', response),
 
+    startSimulation: request => ipcRenderer.invoke('simulation-start', request),
+    stopSimulation: runId => ipcRenderer.send('simulation-stop', runId),
+    onSimulation: callback => {
+        const listener = (_, id, event) => callback(id, event);
+        ipcRenderer.on('simulation-event', listener);
+        return () => ipcRenderer.removeListener('simulation-event', listener);
+    },
     // Print a PDF using native print dialog (fallback - prints main window)
     printPdf: (pdfBase64) => ipcRenderer.send('print-pdf', pdfBase64),
     
@@ -139,6 +162,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     savePdf: (data) => ipcRenderer.send('save-pdf', data),
     saveSvg: (data) => ipcRenderer.send('save-svg', data),
     openKicadImport: () => ipcRenderer.invoke('import-kicad-file'),
+    openImageImport: () => ipcRenderer.invoke('import-image-file'),
     
     onPdfSaved: (callback) => {
         const listener = (event, data) => callback(data);

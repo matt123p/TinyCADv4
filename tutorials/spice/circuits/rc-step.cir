@@ -1,0 +1,10 @@
+TinyCAD simulation
+
+.temp 27
+C1 OUT 0 1u IC=0V
+R1 IN OUT 1k    
+V1 IN 0 DC 0 AC 0 0 PULSE(0 1 0 0.000001 0.000001 0.01 0.02)
+
+.save i(V1) v(IN) v(OUT) v(in) v(out)
+.tran 0.0000049999999999999996 0.005 0 0.0000049999999999999996
+.end

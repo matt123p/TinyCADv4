@@ -33,29 +33,32 @@ export function measureText(font, string) {
 */
 
 // re-use canvas object for better performance
-let canvas: HTMLCanvasElement = null;
-let context: CanvasRenderingContext2D = null;
+let context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D = null;
+
+function textContext() {
+  if (!context) {
+    const canvas = typeof document === 'undefined'
+      ? new OffscreenCanvas(1, 1)
+      : document.createElement('canvas');
+    context = canvas.getContext('2d') as typeof context;
+  }
+  return context;
+}
 
 export function getFont(item: Text) {
   return item.font_size + 'px ' + item.font_name;
 }
 
 export function measureText(font: string, string: string) {
-  if (!context) {
-    canvas = document.createElement('canvas');
-    context = canvas.getContext('2d');
-  }
-  context.font = font;
-  const metrics = context.measureText(string);
+  const ctx = textContext();
+  ctx.font = font;
+  const metrics = ctx.measureText(string);
   return metrics.width;
 }
 
 export function measureTextOffset(font: string) {
-  if (!context) {
-    canvas = document.createElement('canvas');
-    context = canvas.getContext('2d');
-  }
-  context.font = font;
-  const metrics = context.measureText('gyEW');
+  const ctx = textContext();
+  ctx.font = font;
+  const metrics = ctx.measureText('gyEW');
   return metrics.actualBoundingBoxDescent;
 }

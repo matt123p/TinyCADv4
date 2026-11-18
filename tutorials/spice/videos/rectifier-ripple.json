@@ -1,0 +1,45 @@
+{
+  "title": "06 · Measure settled rectifier ripple",
+  "recorded": "2026-11-12T21:34:15.324Z",
+  "application": "TinyCAD Desktop (Electron)",
+  "solver": "bundled native ngspice",
+  "durationSeconds": 47.87,
+  "width": 1600,
+  "height": 1000,
+  "captions": [
+    {
+      "start": 0.0005743790000001354,
+      "text": "The rectifier charges its reservoir capacitor near each positive input peak."
+    },
+    {
+      "start": 5.592876845000001,
+      "text": "Startup is visible in this 200 ms transient. Measure settled operation over 160–200 ms."
+    },
+    {
+      "start": 11.270287444,
+      "text": "Add Mean on OUT. Set from = 160ms and to = 200ms to exclude startup."
+    },
+    {
+      "start": 19.84660959,
+      "text": "Add Peak-to-peak on OUT using the same window. This measures ripple around the DC level."
+    },
+    {
+      "start": 28.42929786,
+      "text": "Run to capture the mean and ripple measurements alongside the acquisition."
+    },
+    {
+      "start": 34.045278061,
+      "text": "The settled mean is about 3.90 V and the peak-to-peak ripple is about 0.684 V."
+    },
+    {
+      "start": 41.722099633,
+      "text": "Total RMS includes the DC level. AC RMS removes the mean; it answers a different question."
+    }
+  ],
+  "checks": [
+    {
+      "name": "settled-ripple",
+      "text": "Setup\nMeasurements\nData\nHistory\nDiagnostics\nNamed measurements\nEdit measurements and requirements\nMeasurement\tResult\tEvidence\nout · Mean · 160ms–200ms\t3.902217 V\tmean; 0.16–0.2 s. tinycad-metrics-1\nout · Peak-to-peak · 160ms–200ms\t0.6838874 V\tpeakToPeak; 0.16–0.2 s. tinycad-metrics-1\nExport named measurements\nSignals / probes\n\nSelect outputs to display. Current direction follows the device’s SPICE pin order. Empty selection shows all signals.\n\nout [V]\nin [V]\nv1#branch [A]\nDifferential voltage, gain and power traces\n\nStatistics over the real component of all accepted samples (sample-weighted mean/RMS, not an AC RMS voltage measurement). Transient samples may be nonuniform.\n\nSignal\tMinimum\tMaximum\tMean\tRMS\tPeak–peak\tUnit\nout\t3.852719e-23\t4.242008\t3.860183\t3.883871\t4.242008\tV\nin\t-4.999993\t4.999993\t0.00002732336\t3.531564\t9.999987\tV\nExport measurements\nExport CSV\nExport JSON\nExport SPICE raw"
+    }
+  ]
+}

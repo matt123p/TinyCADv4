@@ -1,3 +1,9 @@
+import { createSimulationSheet, withoutResults } from '../../simulation/document';
+import { createControl, updateControl, compactControl, resizeStudentInstruments } from '../../simulation/controlSymbols';
+import { updatePower } from '../../manipulators/updatePower';
+import { applyBindings } from '../../simulation/bindings';
+import { dsnSymbol } from '../../model/dsnItem';
+import { updateSymbol } from '../../manipulators/updateSymbol';
 import {
   actionSelectPanel,
   actionSelectBottomPanel,
@@ -8,6 +14,7 @@ import {
 import update from 'immutability-helper';
 
 import { DocActionTypes } from '../actions/docActions';
+import { get_global_id } from '../../util/global_id';
 import { MenuActionTypes } from '../actions/menuActions';
 import { FindActionTypes } from '../actions/findActions';
 import { DialogActionTypes } from '../actions/dialogActions';
@@ -141,7 +148,89 @@ export function DocStoreReducer(
   state: docStore = intialState,
   action: AppActionTypes,
 ): docStore {
+  if (action.type === 'simulation/apply-tuning') {
+    const target = state.drawing.sheets.find(s => s.id === action.sheetId && s.kind === 'simulation');
+    if (!target || state.editSymbol) return state;
+    const changed = applyBindings(state.drawing, target.simulation, action.overrides);
+    return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...changed.drawing,
+      sheets: changed.drawing.sheets.map(s => s.id === target.id ? { ...s, simulation: changed.setup } : s) } };
+  }
+  if (action.type === 'simulation/insert-control') {
+    if (state.editSymbol) return state;
+    const index = state.drawing.sheets[state.view.selected_sheet]?.kind === 'simulation'
+      ? state.drawing.sheets.findIndex(s => s.kind !== 'simulation') : state.view.selected_sheet;
+    const target = state.drawing.sheets[index];
+    if (!target) return state;
+    const updater = new updateView();
+    let view = updater.cancel_add({ ...state.view, selected_sheet: index, _selected_array: [] }, target).view;
+    let sheet = target;
+    if (action.tool === 'ground') {
+      view = updater.command_add_power(view, sheet, 4).view;
+      if (view.add?.NodeName === DocItemTypes.Power)
+        view = { ...view, add: new updatePower(view.add).updateText(-2, '0'), menu_command: 'add_spice_ground' };
+    } else {
+      const added = createControl(action.tool, sheet, state.drawing);
+      sheet = added.sheet;
+      view = { ...view, add: added.symbol, menu_command: 'add_spice_control', cursor: 'copy' };
+    }
+    return { ...state, view, drawingVersion: state.drawingVersion + 1,
+      drawing: { ...state.drawing, sheets: state.drawing.sheets.map((s, i) => i === index ? sheet : s) } };
+  }
+  if (action.type === 'simulation/configure-control' || action.type === 'simulation/compact-control' || action.type === 'simulation/control-reference') {
+    const sheet = action.type==='simulation/configure-control'&&action.sheetId ? state.drawing.sheets.find(s=>s.id===action.sheetId) : activeSheet(state);
+    if (!sheet || sheet.kind === 'simulation' || state.editSymbol) return state;
+    const updater = new updateView();
+    const selected = action.type==='simulation/configure-control'&&action.symbolId!==undefined ? sheet.items.find((i):i is dsnSymbol=>i.NodeName===DocItemTypes.Symbol&&i._id===action.symbolId) : updater.getSelectedSymbol(state.view, sheet);
+    const symbol = selected || (state.view.add?.NodeName === DocItemTypes.Symbol ? state.view.add : undefined);
+    if (!symbol) return state;
+    const edited = action.type === 'simulation/compact-control'
+      ? compactControl(symbol, sheet, state.drawing)
+      : action.type === 'simulation/control-reference'
+      ? { symbol: new updateSymbol(symbol).showValue(symbol.text.findIndex(f => f.description === 'Ref'), action.value), bridges: [] }
+      : { symbol: updateControl(symbol, action.config, state.drawing), bridges: [] };
+    let configured = edited.symbol;
+    if (!selected) return { ...state, drawingVersion: state.drawingVersion + 1,
+      view: { ...state.view, add: configured }, drawing: { ...state.drawing,
+        sheets: state.drawing.sheets.map(s => s === sheet
+          ? { ...sheet, symbols: { ...sheet.symbols, [configured._symbol.id]: configured._symbol } } : s) } };
+    // A copied control may share its embedded definition. Give this instance
+    // its own artwork before changing source/probe type.
+    if (sheet.items.some(i => i.NodeName === DocItemTypes.Symbol && i !== symbol && i._symbol.id === symbol._symbol.id)) {
+      const id = Math.max(0, ...Object.keys(sheet.symbols).map(Number)) + 1;
+      configured = { ...configured, _symbol: { ...configured._symbol, id } };
+    }
+    const updated = updater.updateObject(sheet, symbol, configured);
+    const changed = { ...updated, items: [...updated.items, ...edited.bridges],
+      symbols: { ...sheet.symbols, [configured._symbol.id]: configured._symbol } };
+    return { ...state, drawingVersion: state.drawingVersion + 1,
+      drawing: { ...state.drawing, sheets: state.drawing.sheets.map(s => s === sheet ? changed : s) } };
+  }
+  if (action.type === 'simulation/diagnostics') {
+    if (action.documentId !== state.drawing.documentId) return state;
+    return { ...state, drawing: { ...state.drawing, drcTable: action.errors },
+      view: action.errors.length ? { ...state.view, _selected_array: [] } : state.view };
+  }
+  if (action.type === 'simulation/add' || action.type === 'simulation/duplicate') {
+    if (state.editSymbol) return state;
+    const source = action.type === 'simulation/duplicate'
+      ? state.drawing.sheets.find(sheet => sheet.id === action.sheetId && sheet.kind === 'simulation')
+      : undefined;
+    if (action.type === 'simulation/duplicate' && !source) return state;
+    const requestedName = action.type === 'simulation/add' ? action.name : source.name + ' copy';
+    let name = requestedName, suffix = 2;
+    while (state.drawing.sheets.some(sheet => sheet.name === name)) name = `${requestedName} (${suffix++})`;
+    const added = createSimulationSheet(source || state.drawing.sheets.find(s => s.kind !== 'simulation') || blank().sheets[0], name);
+    if (source) added.simulation = { ...source.simulation, runs: [], ...(source.simulation.sweeps ? { sweeps: [] } : {}), ...(source.simulation.studyRuns ? { studyRuns: [] } : {}) };
+    return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, sheets: [...state.drawing.sheets, added] }, view: action.type === 'simulation/add' && action.preserveSelection ? state.view : { ...state.view, selected_sheet: state.drawing.sheets.length, _selected_array: [], add: null } };
+  }
+  if (action.type === 'simulation/update') return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, sheets: state.drawing.sheets.map(s => s.id === action.sheetId && s.kind === 'simulation' ? { ...s, simulation: action.setup } : s) } };
+  if (action.type === 'simulation/remove-results') return { ...state, drawingVersion: state.drawingVersion + 1, drawing: withoutResults(state.drawing, action.ids) };
+  if (action.type === 'simulation/format') return { ...state, drawingVersion: state.drawingVersion + 1, drawing: { ...state.drawing, saveFormat: action.representation } };
   let sheet = activeSheet(state);
+  if (sheet?.kind === 'simulation') {
+    const allowed = new Set<string>([DocActionTypes.SetDocument, DocActionTypes.UpdateNetlistHints, DialogActionTypes.SetDRC, FindActionTypes.SetFindSelection, MenuActionTypes.MenuSheetSelect, MenuActionTypes.MenuSheetLeft, MenuActionTypes.MenuSheetRight, MenuActionTypes.MenuSheetMove, MenuActionTypes.MenuSheetRename, MenuActionTypes.MenuSheetAdd, MenuActionTypes.MenuSheetRemove, MenuActionTypes.BrowserOpen, MenuActionTypes.BrowserClose, DocActionTypes.BomClose]);
+    if (!allowed.has(action.type)) return state;
+  }
   let view = state.view;
   const prev_selected_array = view._selected_array;
   const update_view = new updateView();
@@ -153,6 +242,67 @@ export function DocStoreReducer(
   let update_library;
 
   switch (action.type) {
+    case DocActionTypes.ApplyChatLibrary: {
+      if (state.drawing !== action.source || state.editLibrary !== action.sourceLibrary || state.editSymbol !== action.sourceSymbol) return state;
+      return { ...state, drawing: action.drawing, editLibrary: action.library, editSymbol: action.symbol, heterogeneous: action.drawing.sheets.length > 1, bom: null,
+        drawingVersion: state.drawingVersion + 1,
+        view: { ...state.view, selected_sheet: 0, _selected_array: [], selectable: null, hover_obj: null, hover_ids: [], hover_pins: [], hiddenItemIds: [], add: null, drag: null, display_add: false, in_add_rect: false, selection_candidates: null, _in_select_rect: false, menu_command: '', cursor: 'auto', tracker: { a: null, b: null, _drag: null, _dragArray: null, _primary_horz: false } },
+      };
+    }
+    case DocActionTypes.ApplyChatEdit: {
+      if (state.drawing !== action.source || state.editSymbol !== action.sourceSymbol) return state;
+      state = { ...state, drawing: action.drawing, bom: null };
+      sheet = activeSheet(state);
+      view = { ...view, selected_sheet: Math.max(0, Math.min(view.selected_sheet, action.drawing.sheets.length - 1)),
+        _selected_array: [], selectable: null, hover_obj: null, hover_ids: [], hover_pins: [],
+        hiddenItemIds: [], add: null, drag: null, display_add: false, in_add_rect: false,
+        selection_candidates: null, _in_select_rect: false, menu_command: '', cursor: 'auto',
+        tracker: { a: null, b: null, _drag: null, _dragArray: null, _primary_horz: false },
+      };
+      break;
+    }
+
+    case DocActionTypes.ApplyAutoLayout: {
+      // A worker result belongs only to the sheet snapshot it was computed from.
+      if (!sheet || sheet !== action.source || state.editSymbol || state.editLibrary || !action.changes.length) {
+        return state;
+      }
+      const changes = new Map(action.changes.map((change) => [change.id, change]));
+      const existingIds = new Set(sheet.items.map((item) => item._id));
+      const usedIds = new Set(state.drawing.sheets.flatMap((s) => s.items.map((item) => item._id)));
+      const items = sheet.items.flatMap((item) => {
+        const change = changes.get(item._id);
+        return change ? (change.after ? [change.after] : []) : [item];
+      });
+      for (const change of action.changes) {
+        if (!existingIds.has(change.id) && change.after) {
+          // Layout IDs are local to a sheet. Allocate editor IDs for new segments/dots.
+          let id = get_global_id();
+          while (usedIds.has(id)) id = get_global_id();
+          usedIds.add(id);
+          items.push({ ...change.after, _id: id });
+        }
+      }
+      sheet = { ...sheet, items };
+      view = {
+        ...view,
+        add: null,
+        drag: null,
+        tracker: { a: null, b: null, _drag: null, _dragArray: null, _primary_horz: false },
+        in_add_rect: false,
+        display_add: false,
+        cursor: 'auto',
+        selection_candidates: null,
+        _in_select_rect: false,
+        menu_command: '',
+        selectable: null,
+        hover_obj: null,
+        hover_ids: [],
+        hover_pins: [],
+        _selected_array: view._selected_array.filter((id) => items.some((item) => item._id === id)),
+      };
+      break;
+    }
     case AppUiActionTypes.SetWireMode:
       view = update_view.setWireMode(view, sheet, action.mode);
       break;
@@ -170,9 +320,9 @@ export function DocStoreReducer(
 
     // Load a completely new document
     case DocActionTypes.SetDocument:
-      let new_drawing = action.doc;
+      let new_drawing = resizeStudentInstruments(action.doc);
       for (let i = 0; i < new_drawing.sheets.length; ++i) {
-        new_drawing.sheets[i] = update_view.tidy_wires(new_drawing.sheets[i]);
+        if (new_drawing.sheets[i].kind !== 'simulation') new_drawing.sheets[i] = update_view.tidy_wires(new_drawing.sheets[i]);
       }
       state = update(state, {
         drawing: { $set: new_drawing },
@@ -451,7 +601,9 @@ export function DocStoreReducer(
     // Library actions
     //
     case LibraryActionTypes.SelectLibrarySymbol:
-      if (sheet) {
+      if (sheet && action.beginPlacement) {
+        ({ view, sheet } = update_view.beginLibrarySymbolPlacement(view, sheet, action.name, action.symbolData));
+      } else if (sheet) {
         ({ view, sheet } = update_view.handleSelectLibrarySymbol(
           view,
           sheet,
@@ -621,7 +773,7 @@ export function DocStoreReducer(
       }
       break;
     case MenuActionTypes.MenuSheetRemove:
-      if (!state.editSymbol) {
+      if (!state.editSymbol && state.drawing.sheets.length > 1 && (sheet?.kind === 'simulation' || state.drawing.sheets.filter(s => s.kind !== 'simulation').length > 1)) {
         let sheets = state.drawing.sheets.slice();
         sheets.splice(view.selected_sheet, 1);
         let selected_sheet = view.selected_sheet;
@@ -856,6 +1008,10 @@ export function DocStoreReducer(
       }
       break;
 
+    case SymbolActionTypes.SetSymbolSpiceProperty:
+      if (sheet) sheet = update_view.setSpiceProperty(view, sheet, action.name, action.value);
+      break;
+
     case SymbolActionTypes.SetSymbolValue:
       if (sheet) {
         sheet = update_view.showValue(view, sheet, action.index, action.value);
@@ -897,6 +1053,7 @@ export function DocStoreReducer(
     // Editing a library
     //
     case LibraryActionTypes.EditLibrary:
+      if (action.lib.readOnly) return state;
       update_library = new updateLibrary(action.lib);
       if (action.lib.names.length == 0) {
         update_library.lib = update_library.addNewLibrarySymbol();

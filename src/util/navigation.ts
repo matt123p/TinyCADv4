@@ -1,3 +1,5 @@
+import { isElectron, tinycadUrl } from '../io/apiServer';
+
 function openBrowserWindow(url: string): void {
   const link = document.createElement('a');
   link.href = url;
@@ -16,7 +18,8 @@ function canUseElectronShell(url: string): boolean {
 }
 
 export function openExternalUrl(url: string): void {
-  if (window.electronAPI?.openExternal && canUseElectronShell(url)) {
+  url = tinycadUrl(url);
+  if (isElectron && window.electronAPI?.openExternal && canUseElectronShell(url)) {
     window.electronAPI.openExternal(url);
     return;
   }

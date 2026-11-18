@@ -27,6 +27,7 @@ interface DrcDialogProps extends WithTranslation {
 }
 
 interface DrcDialogState {
+  MissingSpice: boolean;
   DupRef: boolean;
   UnConnect: boolean;
   NoConnect: boolean;
@@ -54,6 +55,7 @@ class DrcDialog extends React.PureComponent<DrcDialogProps, DrcDialogState> {
 
     let drc = this.props.drc;
     this.state = {
+      MissingSpice: drc.MissingSpice ?? false,
       DupRef: drc.DupRef,
       UnConnect: drc.UnConnect,
       NoConnect: drc.NoConnect,
@@ -120,6 +122,8 @@ class DrcDialog extends React.PureComponent<DrcDialogProps, DrcDialogState> {
           return { ...s, UnAssignedRefDes: bvalue };
         case '11':
           return { ...s, PowerInputConflict: bvalue };
+        case '13':
+          return { ...s, MissingSpice: bvalue };
         case '12':
           return { ...s, PowerOutputConflict: bvalue };
       }
@@ -162,6 +166,8 @@ class DrcDialog extends React.PureComponent<DrcDialogProps, DrcDialogState> {
         name: t('dialogues.drc.multiplePowerOutputs'),
       },
     ];
+
+    names.push({ value: this.state.MissingSpice, name: 'Symbols with no SPICE information' });
 
     const checkboxes = names.map((item, i) => (
       <Checkbox

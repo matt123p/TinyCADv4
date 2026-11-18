@@ -4,6 +4,9 @@ import { connect } from 'react-redux';
 
 const mapStateToProps = (state: docDrawing) => {
   return {
+    canOpenExamples: state.altStore.loginState === 3,
+    hasExampleExplanation: !!state.altStore.exampleExplanation && !state.docStore.present.editSymbol && !state.docStore.present.editLibrary,
+    exampleExplanationVisible: state.altStore.exampleExplanationVisible,
     user: state.altStore.user,
     file: state.altStore.file,
     saveNeeded:
