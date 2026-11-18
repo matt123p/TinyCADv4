@@ -20,3 +20,13 @@ test('literal missing dependencies stay visible to the Electron build check', ()
     ['unmapped-package'],
   );
 });
+
+test('renderer checks handle deeply nested generated binary expressions', () => {
+  const expression = Array(20000).fill('value').join('+');
+  assert.deepEqual(
+    literalModuleSpecifiers(`import('./before.js');
+      const generated = ${expression} + import('./nested.js');
+      import('./after.js');`),
+    ['./before.js', './nested.js', './after.js'],
+  );
+});
