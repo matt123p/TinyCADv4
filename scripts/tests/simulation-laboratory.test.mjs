@@ -1,6 +1,9 @@
 import {test} from 'node:test';
+import {existsSync} from 'node:fs';
 import {runRegression} from './run-regression.mjs';
-test('laboratory models produce native loading, current limiting, generator and resistance-test readings',async()=>{
+test('laboratory models produce native loading, current limiting, generator and resistance-test readings', {
+  skip: !existsSync('build/engines/native/manifest.json') && 'Native runtime is not staged',
+}, async () => {
  await runRegression(String.raw`
  import assert from 'node:assert/strict';import fs from 'node:fs';import path from 'node:path';import os from 'node:os';import {spawnSync} from 'node:child_process';
  import {defaultInstrument,instrumentTemplate,meterReading,scopeDisplay} from './src/simulation/instruments';

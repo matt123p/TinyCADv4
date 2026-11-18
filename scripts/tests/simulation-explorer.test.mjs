@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { existsSync } from 'node:fs';
 import { runRegression } from './run-regression.mjs';
 
 test('named metrics use time-weighted windows, explicit timing semantics and complex gain with typed failures', async () => {
@@ -71,7 +72,9 @@ test('bindings preserve original values, support source/model properties and pre
  `);
 });
 
-test('native RC sweeps capture reproducible cutoff measurements, cache runs, retain originals and round-trip requirements', async () => {
+test('native RC sweeps capture reproducible cutoff measurements, cache runs, retain originals and round-trip requirements', {
+  skip: !existsSync('build/engines/native/manifest.json') && 'Native runtime is not staged',
+}, async () => {
  await runRegression(String.raw`
  import assert from 'node:assert/strict';
  import fs from 'node:fs';import path from 'node:path';import os from 'node:os';import { spawn } from 'node:child_process';
