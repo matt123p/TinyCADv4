@@ -11,7 +11,11 @@ export function literalModuleSpecifiers(source, filename = 'renderer.js') {
     ts.ScriptKind.JS,
   );
   const specifiers = [];
-  const visit = (node) => {
+  // Generated bundles can contain binary expressions deeper than the JS call
+  // stack. Walk explicitly while preserving source order for import references.
+  const pending = [ast];
+  while (pending.length > 0) {
+    const node = pending.pop();
     if (ts.isCallExpression(node)) {
       const expression = node.expression;
       const dynamicImport = expression.kind === ts.SyntaxKind.ImportKeyword;
@@ -28,8 +32,13 @@ export function literalModuleSpecifiers(source, filename = 'renderer.js') {
       )
         specifiers.push(value.text);
     }
-    ts.forEachChild(node, visit);
-  };
-  visit(ast);
+    const children = [];
+    ts.forEachChild(node, (child) => {
+      children.push(child);
+    });
+    for (let index = children.length - 1; index >= 0; index -= 1) {
+      pending.push(children[index]);
+    }
+  }
   return specifiers;
 }
