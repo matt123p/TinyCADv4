@@ -5,6 +5,11 @@ on:
     branches: [main, production]
   workflow_dispatch:
   workflow_call:
+    inputs:
+      wasm_only:
+        description: Only qualify WASM for browser builds
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -58,6 +63,7 @@ jobs:
           path: public/engines/ngspice
           if-no-files-found: error
   native:
+    if: inputs.wasm_only != true
     strategy:
       fail-fast: false
       matrix:

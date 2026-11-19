@@ -18,6 +18,8 @@ permissions:
 jobs:
   engines:
     uses: ./.github/workflows/ngspice.yml
+    with:
+      wasm_only: true
   build:
     needs: engines
     runs-on: ubuntu-latest
