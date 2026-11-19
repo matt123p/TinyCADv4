@@ -91,7 +91,8 @@
     "prebuild:electron": "npm run chat-bundle",
     "test:chat:browser": "npm run chat-bundle && playwright test --config scripts/tests/chat-browser/playwright.config.mjs",
     "chatgpt:local": "node chatgpt/server.js",
-    "test:electron-build": "node --test scripts/tests/renderer-imports.test.mjs"
+    "test:electron-build": "node --test scripts/tests/renderer-imports.test.mjs",
+    "dist:mas": "node scripts/dist-mas.mjs"
   },
   "build": {
     "appId": "com.tinycad.app",
