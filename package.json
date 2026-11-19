@@ -237,7 +237,14 @@
     "snapcraft": {
       "base": "core24",
       "core24": {
-        "useDestructiveMode": true
+        "useDestructiveMode": true,
+        "plugs": [
+          "default",
+          "browser-support"
+        ],
+        "executableArgs": [
+          "--no-sandbox"
+        ]
       }
     }
   },
