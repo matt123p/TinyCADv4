@@ -6,9 +6,8 @@ import {
 } from '../../state/dispatcher/AppDispatcher';
 import { docDrawing } from '../../state/undo/undo';
 
-import { apiServer } from '../../io/apiServer';
+import { onlineLibraryUrl } from '../../io/apiServer';
 import { fetchOnlineLibrary } from '../../io/onlineLibrary';
-export { apiServer } from '../../io/apiServer';
 
 export interface SearchLabel {
   labelId: number;
@@ -52,7 +51,7 @@ export function Search(key: string) {
       p.set('page', page.toString());
       p.set('orderBy', orderBy);
 
-      fetchOnlineLibrary(`${apiServer}/api/search/Search?` + p.toString(), {
+      fetchOnlineLibrary(onlineLibraryUrl(`/api/search/Search?${p}`), {
         credentials: 'include',
         mode: 'cors',
       })
@@ -94,7 +93,7 @@ export function FetchSymbolData(symbol: SearchSymbol) {
   let p = new URLSearchParams(window.location.search);
   p.set('id', symbol.symbolID.toString());
   p.set('name', symbol.name);
-  return fetchOnlineLibrary(`${apiServer}/api/search/copy?${p.toString()}`, {
+  return fetchOnlineLibrary(onlineLibraryUrl(`/api/search/copy?${p}`), {
     credentials: 'include',
     method: 'GET',
     mode: 'cors',

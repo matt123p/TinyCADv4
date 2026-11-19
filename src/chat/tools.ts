@@ -1,7 +1,7 @@
 import { bundledLibraries } from '../io/bundledLibraries';
 import { searchBundledSymbols } from './bundled-search';
 import { bundledLibraryInstructions } from './prompt';
-import { apiServer } from '../io/apiServer';
+import { onlineLibraryUrl } from '../io/apiServer';
 import { fetchOnlineLibrary } from '../io/onlineLibrary';
 import { Store } from 'redux';
 import { ioXML } from '../io/ioXml';
@@ -125,10 +125,10 @@ export function createEditorTools(
     if (asset.definition) return asset;
     const source = asset.source;
     const response = await send(
-      `${apiServer}/api/search/copy?${new URLSearchParams({
+      onlineLibraryUrl(`/api/search/copy?${new URLSearchParams({
         id: String(source.symbolId),
         name: source.name,
-      })}`,
+      })}`),
       { signal, credentials: 'omit' },
     );
     if (!response.ok) throw new Error(`Library fetch HTTP ${response.status}.`);
@@ -317,11 +317,11 @@ export function createEditorTools(
         first = Math.floor(offset / 25) + 1;
       const query = async (p: number) => {
         const response = await send(
-          `${apiServer}/api/search/search?${new URLSearchParams({
+          onlineLibraryUrl(`/api/search/search?${new URLSearchParams({
             key: args.query,
             page: String(p),
             orderBy: 'd',
-          })}`,
+          })}`),
           { signal, credentials: 'omit' },
         );
         if (!response.ok)

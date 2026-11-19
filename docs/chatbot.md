@@ -98,18 +98,16 @@ access or free access to every model.
 
 ## Browser and Electron URL routing
 
-Every browser build uses the origin that served the editor for TinyCAD website
-and API access. Requests are root-relative, e.g. `/api/search/search`, regardless
-of hostname, port, or build/deployment environment. This covers
-the library panel, thumbnails, account requests, website links
-and help pages. The serving host must serve or proxy these routes.
+The browser editor at `online.tinycad.net` sends public symbol searches,
+downloads and thumbnail requests to `https://www.tinycad.net`, which allows
+cross-origin API requests from the hosted editor. Other browser deployments
+use their serving origin for the library API, including the Parcel development
+proxy. Browser account requests, website links and help pages use the serving
+origin.
 
-Electron uses `https://www.tinycad.net` for TinyCAD website/API requests because
-its editor loads from `file://`. The shared `src/io/apiServer.ts` selects routing
-using `TARGET_SYSTEM`, not localhost or production hostname detection.
-Public online-library searches and symbol downloads run through a restricted
-Electron main-process bridge, because those endpoints do not permit cross-origin
-renderer requests. Browser builds continue to use their same-origin API proxy.
+Electron uses `https://www.tinycad.net` for TinyCAD website and API requests.
+Symbol searches and downloads go through a restricted main-process bridge
+because the editor loads from `file://`.
 
 ## OpenAI-compatible providers
 

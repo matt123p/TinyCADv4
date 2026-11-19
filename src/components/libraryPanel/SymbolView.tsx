@@ -6,8 +6,8 @@ import { XMLBuilder } from '../../util/xmlbuilder';
 import { TDrawing } from '../svg/Drawing';
 import { updateFactory } from '../../manipulators/updateFactory';
 import { connect } from 'react-redux';
+import { onlineLibraryUrl } from '../../io/apiServer';
 import {
-  apiServer,
   error,
   FetchSymbolData,
   SearchSymbol,
@@ -263,8 +263,9 @@ const SymbolView: React.FunctionComponent<SymbolViewProps> = (
           onTouchCancel={handleTouchCancel}
           style={{ maxWidth: '100%', maxHeight: 'calc(100% - 20px)', objectFit: 'contain' }}
           src={
-            `${apiServer}/api/Search/Thumbnail?size=md&id=` +
-            props.searchSymbol.symbolID
+            onlineLibraryUrl(
+              `/api/Search/Thumbnail?size=md&id=${props.searchSymbol.symbolID}`,
+            )
           }
         />
           <div style={{ fontSize: '10px', color: '#666', marginTop: '4px' }}>

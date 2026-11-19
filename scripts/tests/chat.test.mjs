@@ -647,7 +647,7 @@ test('changing a model preserves portable conversation and reconstructs tool cal
   assert.equal(request.body.messages[1].content[0].id, 'call-1');
 });
 
-test('TinyCAD URLs depend only on browser versus Electron, never the page hostname', () => {
+test('TinyCAD website and account URLs use the serving origin in browser builds', () => {
   const original = process.env.TARGET_SYSTEM;
   const loadRouting = (target) => {
     process.env.TARGET_SYSTEM = target;
@@ -663,17 +663,13 @@ test('TinyCAD URLs depend only on browser versus Electron, never the page hostna
     assert.equal(routing.apiServer, '');
     assert.equal(
       routing.tinycadUrl(
-        'https://www.tinycad.net/api/search/search?key=resistor&page=1',
+        'https://www.tinycad.net/api/Account/webUser?lang=en',
       ),
-      '/api/search/search?key=resistor&page=1',
+      '/api/Account/webUser?lang=en',
     );
     assert.equal(
       routing.tinycadUrl('https://tinycad.net/Online/Home#help'),
       '/Online/Home#help',
-    );
-    assert.equal(
-      routing.tinycadUrl('/api/search/copy?id=1'),
-      '/api/search/copy?id=1',
     );
     assert.equal(
       routing.tinycadUrl('https://docs.tinycad.net/v4/'),
@@ -685,7 +681,7 @@ test('TinyCAD URLs depend only on browser versus Electron, never the page hostna
       'https://online.tinycad.net',
     ]) {
       assert.equal(
-        new URL(routing.tinycadUrl('/api/search/search?key=resistor'), origin)
+        new URL(routing.tinycadUrl('/api/Account/webUser'), origin)
           .origin,
         origin,
       );
@@ -694,8 +690,8 @@ test('TinyCAD URLs depend only on browser versus Electron, never the page hostna
   const desktop = loadRouting('electron');
   assert.equal(desktop.apiServer, 'https://www.tinycad.net');
   assert.equal(
-    desktop.tinycadUrl('/api/search/copy?id=1'),
-    'https://www.tinycad.net/api/search/copy?id=1',
+    desktop.tinycadUrl('/api/Account/webUser'),
+    'https://www.tinycad.net/api/Account/webUser',
   );
 });
 
