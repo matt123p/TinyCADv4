@@ -24,6 +24,10 @@ if (fs.existsSync('.env.local')) {
 const dev = args.includes('--dev');
 const team = process.env.MAS_TEAM_ID;
 const appId = process.env.MAS_APP_ID || 'com.tinycad.app';
+const buildVersion = process.env.MAS_BUILD_VERSION || '4.1.1';
+const encryptionDeclaration = process.env.MAS_USES_NON_EXEMPT_ENCRYPTION;
+if (encryptionDeclaration !== undefined && !['true', 'false'].includes(encryptionDeclaration))
+  throw new Error('MAS_USES_NON_EXEMPT_ENCRYPTION must be true or false.');
 const profile = process.env[dev ? 'MAS_DEV_PROVISIONING_PROFILE' : 'MAS_PROVISIONING_PROFILE'];
 if (!/^[A-Z0-9]{10}$/.test(team || '')) throw new Error('Set MAS_TEAM_ID to your Apple Team ID.');
 if (!profile || !fs.existsSync(profile)) throw new Error('Set the MAS provisioning profile path; see docs/mac-app-store.md.');
@@ -61,6 +65,7 @@ const artifacts = await build({
   publish: 'never',
   config: {
     appId,
+    buildVersion,
     directories: { output: 'release/mas-store' },
     forceCodeSigning: true,
     mac: { category: 'public.app-category.productivity', notarize: false },
@@ -70,7 +75,12 @@ const artifacts = await build({
       entitlements: 'scripts/mas/entitlements.plist',
       entitlementsInherit: 'scripts/mas/entitlements.inherit.plist',
       hardenedRuntime: false,
-      extendInfo: { ElectronTeamID: team },
+      extendInfo: {
+        ElectronTeamID: team,
+        ...(encryptionDeclaration === undefined ? {} : {
+          ITSAppUsesNonExemptEncryption: encryptionDeclaration === 'true',
+        }),
+      },
       artifactName: '${productName}-Mac-App-Store-${version}-${arch}.${ext}',
     },
   },

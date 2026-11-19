@@ -22,6 +22,7 @@ Add these values to `.env.local` (existing exported environment variables win):
 ```dotenv
 MAS_TEAM_ID=YOURTEAMID
 MAS_APP_ID=net.tinycad.tinycad
+MAS_BUILD_VERSION=4.1.1
 MAS_PROVISIONING_PROFILE=/absolute/path/TinyCAD_Store.provisionprofile
 MAS_DEV_PROVISIONING_PROFILE=/absolute/path/TinyCAD_Development.provisionprofile
 ```
@@ -36,14 +37,30 @@ npm run dist:mas
 ```
 
 Outputs are in `release/mas-store/`. Upload the generated distribution `.pkg`
-using Apple's Transporter app. Increment the package version for subsequent
-submissions. The build checks the profile's team, bundle ID (`MAS_APP_ID`, default `com.tinycad.app`) and expiry, requires
+using Apple's Transporter app. Increment `MAS_BUILD_VERSION` for subsequent
+Store uploads. It defaults to `4.1.1` and changes only the internal Mac Store
+build number; the shared release version in `package.json` stays `4.1.0`. The build checks the profile's team, bundle ID (`MAS_APP_ID`, default `com.tinycad.app`) and expiry, requires
 signing, and checks the resulting installer signature. Electron-builder checks
 the installer certificate when packaging. No notarization is needed for this
 store workflow. The normal DMG build remains available separately.
 
 The distribution-signed app is intended for Apple processing, rather than local
 launching. Use `--dev` with your development profile for local sandbox testing.
+
+## Export compliance
+
+To include the export-compliance answer in future uploads, set
+`MAS_USES_NON_EXEMPT_ENCRYPTION=false` in `.env.local` if your completed Apple
+questionnaire determines that the app uses only exempt encryption. The script
+writes the Boolean `ITSAppUsesNonExemptEncryption` into the Store app's
+`Info.plist`. Without this setting, Apple continues to ask the questionnaire.
+This declaration includes third-party dependencies such as Electron; HTTPS
+alone does not mean the app contains no encryption. TinyCAD also uses Electron
+safeStorage for credentials and JWT verification for authentication.
+
+If the questionnaire determines that non-exempt encryption is used, set the
+value to `true` and complete Apple's documentation process instead. Existing
+uploaded builds still need their answers supplied in App Store Connect.
 
 ## Sandbox permissions
 
@@ -63,6 +80,14 @@ the signing identifiers and application group information from the profile.
 Electron's child processes and the native simulation helper. The engine hook
 signs nested resources with the store/development application certificate before
 recording their hashes; the outer signing pass skips those resources.
+
+Apple re-signs nested executables for TestFlight and App Store distribution,
+so their delivered bytes may differ from the build-time hashes. In packaged
+MAS builds, an engine executable hash mismatch triggers strict verification of
+the complete app bundle, including nested code, resource seals and an Apple
+trust anchor. Non-executable engine resources still require matching hashes.
+Unpackaged development and non-Store builds continue to require matching hashes for every
+engine file.
 
 No camera, microphone, USB, full-disk access or blanket Documents/Downloads
 access is requested. Bundled component symbols do not require hardware access.

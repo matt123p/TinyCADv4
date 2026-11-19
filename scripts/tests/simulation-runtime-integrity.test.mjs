@@ -68,7 +68,8 @@ async function fixture(run) {
               contents:
                 path === 'electron'
                   ? 'export const {app,ipcMain}=globalThis.runtimeIntegrityMock;'
-                  : 'export const spawn=(...args)=>globalThis.runtimeIntegrityMock.spawn(...args);',
+                  : `export const spawn=(...args)=>globalThis.runtimeIntegrityMock.spawn(...args);
+                     export const execFile=()=>{throw new Error('Unexpected signature verification outside MAS');};`,
             }));
           },
         },
