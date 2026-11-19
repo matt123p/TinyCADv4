@@ -1,6 +1,6 @@
 import { isElectron } from './apiServer';
 
-// Public library endpoints do not allow cross-origin renderer fetches.
+// The public library endpoints require an HTTP origin for browser CORS.
 export async function fetchOnlineLibrary(url: string, options?: RequestInit): Promise<Response> {
   if (!isElectron) return fetch(url, options);
   const bridge = window.electronAPI?.onlineLibraryRequest;

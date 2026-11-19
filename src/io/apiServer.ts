@@ -1,7 +1,17 @@
-// Browser builds always use the origin serving the editor (including its port).
-// Electron loads from file://, so its TinyCAD website/API origin is explicit.
+// Website links and account requests are same-origin in browser builds.
+const websiteOrigin = 'https://www.tinycad.net';
 export const isElectron = process.env.TARGET_SYSTEM === 'electron';
-export const apiServer = isElectron ? 'https://www.tinycad.net' : '';
+export const apiServer = isElectron ? websiteOrigin : '';
+
+export function onlineLibraryUrl(path: string): string {
+  // The public editor is hosted separately from the symbol API.
+  const origin =
+    typeof window !== 'undefined' &&
+    window.location?.hostname === 'online.tinycad.net'
+      ? websiteOrigin
+      : apiServer;
+  return origin + path;
+}
 
 export function tinycadUrl(pathOrUrl: string): string {
   if (pathOrUrl.startsWith('/') && !pathOrUrl.startsWith('//'))

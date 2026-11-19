@@ -1,4 +1,4 @@
-import { tinycadUrl } from './apiServer';
+import { apiServer, tinycadUrl } from './apiServer';
 import { withoutResults } from '../simulation/document';
 import { drawingFileName, isCompressedDrawing } from '../../shared/drawingFiles.js';
 import { encodeDrawing } from './dsnCodec';
@@ -31,7 +31,6 @@ import { libCache } from './libCache';
 import TPrintSheet from '../components/svg/PrintSheet';
 import { render } from 'react-dom';
 import { Coordinate, DocItem, DocItemTypes, dsnPin } from '../model/dsnItem';
-import { apiServer } from '../components/libraryPanel/Search';
 import update from 'immutability-helper';
 
 import { ElectronUserManager } from './electron/electronUserManager';

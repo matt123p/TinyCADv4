@@ -74,16 +74,52 @@ test('desktop library requests preserve HTTP errors and can be stopped while IPC
   } finally { globalThis.window = originalWindow; }
 });
 
-test('browser library requests retain the same-origin URL and fetch options', async () => {
+test('browser library panel searches and downloads from the API host when served by the hosted editor', async () => {
   const originalFetch = globalThis.fetch;
-  const options = { credentials: 'include', mode: 'cors' };
+  const originalWindow = globalThis.window;
+  const originalTarget = process.env.TARGET_SYSTEM;
+  const calls = [];
   try {
     globalThis.fetch = async (url, init) => {
-      assert.equal(url, '/api/search/Search?key=123');
-      assert.equal(init, options);
-      return new Response('{"total":2}');
+      calls.push({ url, init });
+      return new Response(url.includes('/copy?') ? '<TinyCAD/>' : '{"total":2}');
     };
-    const { fetchOnlineLibrary } = loadComponent('src/io/onlineLibrary.ts', { './apiServer': { isElectron: false } });
-    assert.equal((await (await fetchOnlineLibrary('/api/search/Search?key=123', options)).json()).total, 2);
-  } finally { globalThis.fetch = originalFetch; }
+    for (const target of ['filesystem', 'google']) {
+      process.env.TARGET_SYSTEM = target;
+      const routing = loadComponent('src/io/apiServer.ts', {});
+      const library = loadComponent('src/io/onlineLibrary.ts', { './apiServer': routing });
+      const { Search, FetchSymbolData } = loadComponent('src/components/libraryPanel/Search.ts', {
+        '../../io/apiServer': routing,
+        '../../io/onlineLibrary': library,
+      });
+      for (const [page, apiOrigin] of [
+        ['https://online.tinycad.net/fs', 'https://www.tinycad.net'],
+        ['http://localhost:1234/fs', ''],
+        ['https://editor.example:8443/fs', ''],
+      ]) {
+        globalThis.window = { location: new URL(page) };
+        calls.length = 0;
+        assert.equal((await Search('NE555 #spice')).total, 2);
+        const symbol = await FetchSymbolData({ symbolID: 1951, name: 'NE555' });
+        assert.equal(await symbol.text(), '<TinyCAD/>');
+        assert.deepEqual(calls, [
+          {
+            url: apiOrigin + '/api/search/Search?key=NE555+%23spice&page=1&orderBy=N',
+            init: { credentials: 'include', mode: 'cors' },
+          },
+          {
+            url: apiOrigin + '/api/search/copy?id=1951&name=NE555',
+            init: { credentials: 'include', method: 'GET', mode: 'cors' },
+          },
+        ]);
+        const thumbnail = '/api/Search/Thumbnail?size=md&id=1951';
+        assert.equal(routing.onlineLibraryUrl(thumbnail), apiOrigin + thumbnail);
+      }
+    }
+  } finally {
+    globalThis.fetch = originalFetch;
+    globalThis.window = originalWindow;
+    if (originalTarget === undefined) delete process.env.TARGET_SYSTEM;
+    else process.env.TARGET_SYSTEM = originalTarget;
+  }
 });
