@@ -4,15 +4,15 @@ The [PCB layout specification](TinyCAD_PCB_Layout_Complete_Specification.md) gov
 
 ## WP0 · Repository audit and schema
 
-- [x] Record the [schema, pin/package migration rules, capability matrix and portable project decision](pcb-format.md).
+- [x] Record the [schema, pin/package migration rules, capability matrix and project folder contract](pcb-format.md).
 - [x] Trace schematic save/load, connectivity, package metadata, and undo.
 - [x] Qualify schematic identity migration for new placements, legacy `.dsn` and `.dzn`, edits, and clipboard copies (PRJ-02, SYN-01).
 - [x] Audit hierarchy, buses, scalar cross-sheet labels, hidden power, multipart units, and explicit no-connects against reference circuits. Document the initial flat scalar subset and the preflight checks.
 - [x] Verify that unchanged net membership retains its UUID across renames and that split/merge proposals identify prior net IDs for review.
-- [x] Prototype a versioned board document with stable board identity, ordered copper layers, and deterministic serialisation. Verify atomic outline/title edits, stale-command rejection, and undo/redo.
+- [x] Prototype a versioned JSON board document with stable board identity, ordered copper layers, and deterministic serialisation. Verify atomic outline/title edits, stale-command rejection, and undo/redo.
 - [x] Reserve `.dpn` for native standalone PCB layouts.
-- [x] Add source and entity identities, graphic layers, embedded device definitions, optional-field preservation, compatibility tests, and migration rules to the version 1 board schema (PRJ-02, PRJ-03, LAY-01, ARC-01–08).
-- [x] Decide the portable project storage model and migration policy for embedded definitions and circuit snapshots (PRJ-01, PRJ-05).
+- [x] Add source and entity identities, graphic layers, embedded device definitions, optional-field preservation, compatibility tests, and migration rules to the version 1 prototype board schema (PRJ-02, PRJ-03, LAY-01, ARC-01–08).
+- [x] Document the project folder and settings model and the prototype migration policy (PRJ-01, PRJ-05).
 
 ### Repository findings
 
@@ -42,29 +42,40 @@ Run the prototype tests with `npm run test:pcb` and the browser/desktop fixture 
 
 ## WP2–WP6 · M1 manufacturing release
 
-- [ ] WP2 · Portable projects, recovery, embedded device/footprint revisions, reviewed legacy migration, footprint editing/import, curated parts, and atomic ECO with cross-probing (PRJ, SYN, LIB).
-  - [x] Implement the `.tcproject` archive and source-control directory codecs with version, inventory, digest, and source-circuit checks (PRJ-01, PRJ-05).
-  - [ ] Add project open/save, validated Save As with lineage, revision comparison, and crash recovery through the existing TinyCAD shell (PRJ-04–06).
-  - [ ] Compile hierarchical, bus, hidden-power, multipart and no-connect fixtures into stable circuit snapshots, with explicit physical roles and terminal provenance (SYN-01, SYN-08).
+- [ ] WP2 · Project folders, hierarchical schematics, recovery, embedded device/footprint revisions, reviewed legacy migration, footprint editing/import, curated parts, and atomic ECO with cross-probing (PRJ, SYN, LIB).
+  - [x] Prototype the ZIP project archive and directory codecs, including version, inventory, digest and source-circuit checks.
+  - [ ] Implement project folders with a root XML `.tcproject` settings file, root-relative document links and ordinary native source files. Convert supported prototype ZIP projects into new folders and validate their links (PRJ-01, PRJ-05).
+  - [ ] Update the project browser in Electron and Google Drive mode to create, identify and open project roots and navigate the tree. Save edits to the native document, copy the tree on Save As, compare revisions by relative path and verify recovery against saved documents. Preserve independent Libraries visibility and verify that filesystem-only builds omit Projects (PRJ-04, PRJ-06, PRJ-09, AT-21, AT-29).
+  - [ ] Specify and implement the standalone UTF-8 XML `.dpn` codec using `.dsn` naming and embedded-definition conventions. Embed used component, device, footprint and padstack definitions and resolved model assets. Migrate supported prototype JSON boards and project entries, preserving the source and validating the XML copy (§26, AT-28).
+  - [ ] Implement [hierarchical project schematics](pcb-format.md#hierarchical-project-schematics). Read both v3 XML spellings, resolve child files under the project root, and add interface-sheet editing, child placement and instance navigation (SYN-11).
+  - [ ] Expand repeated and nested child instances and bind named ports before building circuit snapshots. Verify v3 connectivity parity and path-stable identities. Use the expanded graph for ERC, BOMs, netlists and PCB cross-probing/ECOs (SYN-01, SYN-11, AT-30).
+  - [ ] Compile bus, hidden-power, multipart and no-connect fixtures into stable circuit snapshots, with explicit physical roles and terminal provenance (SYN-01, SYN-08).
   - [ ] Resolve legacy package hints through reviewed versioned devices, validate explicit mappings, and support embedded dependencies and reviewed library refresh (LIB-01–10).
   - [ ] Preview and apply revision-guarded ECOs atomically, preserve unaffected layout, report impacted copper, and cross-probe board terminals and schematic pins (SYN-02–07).
-  - [ ] Add the TinyCAD SVG footprint editor, dimensional checks, common-package generators and supported KiCad import with a loss report (FPT-01–07).
-  - [ ] Curate and review the starter component core and verify an offline project round trip on a clean installation.
-- [ ] WP3 · Split the browser shell into ES-module entry points for Circuit Design, PCB Design, and Circuit Design + Simulation (WEB-01). Load feature modules, workers and WASM on demand. Preserve edits and undo history when switching workspaces, and release resources owned by the workspace being left.
+  - [ ] Add the TinyCAD SVG footprint editor and dimensional checks. Extend KiCad symbol and footprint import to preserve supported PCB metadata, geometry and model attachment references in native TinyCAD files, with a loss report and save/reopen fixtures (FPT-01–06, §22).
+  - [ ] Define the [starter package catalogue](TinyCAD_PCB_Layout_Complete_Specification.md#102-curated-supplied-library) and write reproducible Python generators that emit matched TinyCAD footprints and STEP models from the same dimensions. Cover multiple sizes and pin counts across the listed surface-mount and through-hole families (FPT-07, FPT-09).
+  - [ ] Review and bundle the generated assets for the PCB engine. Verify the catalogue and embedded asset codec work offline (FPT-09, AT-16).
+- [ ] WP3 · Keep Circuit Design, PCB Design, and Circuit Design + Simulation inside one existing TinyCAD shell (UX-11, WEB-01). Load workspace feature modules, workers and WASM on demand. Preserve edits and undo history when switching workspaces, and release resources owned by the workspace being left.
+  - [ ] Connect the shared project browser to PCB Design. Register the PCB workspace only in Electron and Google Drive mode and verify that filesystem-only builds omit its entry point (PRJ-09).
 - [ ] WP3 · Board editor with one/two layers, outlines and cutouts, mechanical tools, component placement, snapping, manual rule-aware routing, plated/non-plated holes, and slots (GEO, LAY, UI, PLC, RTE).
-- [ ] WP3 · Extend the existing TinyCAD window, toolbar, sheet tabs, panels and dialogues for PCB tools. Reuse the schematic editor's React/SVG sheet techniques for 2D PCB and footprint editing (UX-11, REN-01).
-- [ ] WP3 · Use `.dpn` for PCB open/save dialogs and desktop file associations.
+- [ ] WP3 · Reuse and extend the shared window layout, menus, toolbar, sheet tabs, panels, dialogues, commands, and document lifecycle for PCB tools. Reuse the schematic editor's React/SVG sheet infrastructure for 2D PCB and footprint editing (UX-11, REN-01).
+- [ ] WP3 · Use the standalone XML `.dpn` codec in PCB open/save dialogs, desktop file associations and project board I/O. Verify that a copied board opens offline with its embedded components and model data (AT-28).
 - [ ] WP4 · Deterministic zones/thermals, shared rules, reference fabrication profiles, physical connectivity, parity, DRC coverage and waivers (ZON, RULE, DRC).
 - [ ] WP5 · Basic 3D inspection, frozen manufacturing/assembly outputs, independent read-back preview, release manifest, and KiCad subset export (MEC, OUT, interoperability).
+- [ ] WP5 · Generate BOMs, netlists and other intermediate files as ordinary files in the project tree using the configured output recipes and destinations (OUT-07, AT-29).
 - [ ] WP5 · Load the Three.js/WebGL 2 inspection viewer on demand within TinyCAD. Verify board transforms, viewer resource cleanup and SVG editing when WebGL 2 is unavailable (MEC, WEB-01).
+- [ ] WP5 · Import STEP models from KiCad libraries, including models referenced by imported footprints. Use asymmetric top/bottom placements to test scale, offset and rotation, missing-model reporting and offline reopen. Exercise bundled generated STEP models through the same 3D placement checks (MEC-09, AT-27).
 - [ ] WP6 · Guided teaching workflow, offline use, accessibility, documentation, recovery and performance. Run the reference boards, §28 acceptance cases, independent CAM checks, and physical qualification.
 - [ ] WP6 · Verify WEB-01 in the production browser builds. Trace modules, workers and asset requests for all three cold starts, exercise file opens and direct links, and record idle, peak and retained memory across repeated workspace switches.
 - [ ] WP6 · Qualify PCB SVG performance on the classroom corpus and verify schematic-to-PCB tool, panel and dialogue continuity (AT-25).
+- [ ] WP6 · On a clean installation, run the end-to-end checks for bundled and imported models, copied standalone boards and project folders, generated project outputs, and v3 hierarchy migration and cross-probing (AT-26–30).
 - [ ] WP6 · Qualify release performance on the §27.1 reference school laptop and compare it with the monitored WP1 development-host baseline.
 
 ## WP7–WP8 · Advanced releases
 
-- [ ] WP7 / M2 · Qualify push-and-shove and connected drag, 4/6/8/16-layer boards, richer footprint generation, STEP/DXF, layout reuse, assembly aids, IPC-D-356A, and router exchange.
+- [ ] WP7 / M2 · Qualify walk-around, push-and-shove and connected drag, 4/6/8/16-layer boards, expanded footprint/STEP generation, layout reuse, assembly aids, IPC-D-356A, and router exchange.
+- [ ] WP7 / M2 · Qualify manual 3D model alignment, STEP assembly export, and DXF mechanical exchange (FPT-08, MEC-04–06).
+- [ ] WP7 / M2 · Import the supported KiCad board subset as editable `.dpn`, optionally linked into a project folder through its `.tcproject` settings. Expand library and model import alongside newly supported PCB features and verify native round trips, connectivity and reported losses (§22).
 - [ ] WP7 / M2 · Export bare-board and populated-assembly STL. Verify scale, origin, holes, cutouts, and component envelopes with an independent mesh import (MEC-08).
 - [ ] WP8 / M3 · Qualify pair and length tools, engineering analysis, scoped placement/routing, reviewed AI/MCP changes, assembly variants, and panelisation.
 - [ ] Keep the research capabilities in §29.5 outside the supported release matrix until separately qualified.

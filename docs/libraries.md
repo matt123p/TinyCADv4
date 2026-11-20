@@ -127,6 +127,10 @@ See [spice.json](../library-recipes/spice.json), [digital.json](../library-recip
 
 Regression commands are `test:spice`, `test:digital`, `test:functional`, `test:sensors`, `test:teaching`, `test:network`, `test:embedded` and `test:symbol-artwork` through npm. Coverage includes terminal contracts, actual editor placement, rotated/mirrored geometry, hidden rails, reproducibility, persistence and numerical model cases where an engine is available.
 
+## Planned PCB footprint and model bundles
+
+The PCB engine's M1 starter catalogue will pair native footprints with generated STEP models for common surface-mount and through-hole components. The [package catalogue and generation requirements](TinyCAD_PCB_Layout_Complete_Specification.md#102-curated-supplied-library) list the families and variants. Versioned dimension records will drive the Python build scripts and carry the dimensional references, stable asset IDs and review metadata. Bundled assets will be selectable offline. M2 expands package coverage and adds qualified STEP assembly export.
+
 ## Bundled examples
 
 In a browser, **Open Example** is on the right of the title bar. **Explanation** appears beside it when the current drawing has an example explanation, and toggles that panel. In Electron, use **File → Open Example**, after **Open Recent** and a separator; **View → View Explanation** toggles the panel and is disabled when no explanation is available.

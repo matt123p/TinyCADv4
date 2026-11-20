@@ -275,16 +275,19 @@ A released board is immutable. “Create revision” copies its design state and
 
 ## 7. Project model and document lifecycle
 
+A TinyCAD project is a folder tree. Its root `.tcproject` file identifies the project and stores shared settings and document associations. Schematics, PCB layouts, supporting files and generated outputs are individually accessible in the root or its subfolders.
+
 | ID | Requirement | Acceptance condition | Release |
 |---|---|---|---|
-| PRJ-01 | A project shall contain schematic documents, board documents, resolved device/footprint assets, rules and output recipes | Copy project to a clean machine and regenerate a supported board without fetching libraries | M1 |
+| PRJ-01 | Use a project folder tree with a root `.tcproject` settings file, native schematic and board files, resolved assets, rules and output recipes | Copy the folder tree to a clean machine and regenerate a supported board and its outputs without fetching libraries | M1 |
 | PRJ-02 | Persist stable entity UUIDs independently of names and list order | Rename/reorder and reload without losing any relationship | G0 |
 | PRJ-03 | Use atomic, undoable commands for geometry and logical edits | Undo restores geometry, mappings and connectivity hashes | G0 |
 | PRJ-04 | Autosave committed edits with crash recovery | Forced process termination recovers to the last acknowledged autosave | M1 |
-| PRJ-05 | Save schema version and feature requirements; migrate via a backed-up copy | Old reader rejects unsupported required features without destructive overwrite | M1 |
-| PRJ-06 | Provide save-as, revision comparison and portable archive export | New revision has distinct identity and traceable origin | M1 |
+| PRJ-05 | Version the settings file and declare required features. Convert supported prototype archives to a new folder tree | Converted project opens with its document links intact. The original remains available and unsupported features are reported | M1 |
+| PRJ-06 | Save As copies the project folder tree and records revision lineage. Compare revisions using settings and project files | Copy has a distinct revision identity and traceable origin. Changes are reported by relative file path | M1 |
 | PRJ-07 | Allow multiple alternative boards for one circuit revision | Each board retains independent layout/rules and visible sync status | M2 |
 | PRJ-08 | Offer assembly variants separately from board alternatives | BOM, placement and assembly drawings consistently apply the selected variant | M3 |
+| PRJ-09 | Electron and Google Drive modes shall share a left-hand project browser across Circuit Design, Circuit Design + Simulation and PCB Design. Recognise project roots by their `.tcproject` settings files and offer file and folder operations throughout the tree. Users can show Projects and Libraries together or individually. | Create or open a project folder, navigate nested files, edit a schematic, save a revision and verify independent panel visibility. In filesystem-only mode, verify that the project browser and PCB Design are unavailable | M1 |
 
 Authoritative data comprises circuit intent, physical objects, resolved library definitions, constraints and output configuration. Meshes, spatial indexes, filled-zone polygons and DRC reports are caches unless part of a frozen release record. Rebuild them when their dependency hash changes.
 
@@ -294,7 +297,7 @@ Persist document state separately from personal view state. Switching colour the
 
 ### 8.1 Connectivity contract
 
-The schematic owns logical circuit intent. A compiled connectivity snapshot shall resolve sheet hierarchy, bus members, global/local labels, hidden power pins and multipart devices before board generation. Store stable logical signal and terminal IDs. Do not use SPICE node ordering as the physical pin map: simulator terminals and package pads have independent mappings.
+The schematic owns logical circuit intent. A compiled connectivity snapshot shall start from the selected root and resolve project child instances, named ports, bus members, global/local labels, hidden power pins and multipart devices before board generation. Store stable logical signal and terminal IDs. Simulator terminals and package pads have independent mappings. See the [v3 behavior and implementation contract](pcb-format.md#hierarchical-project-schematics).
 
 Each board records its source circuit revision and a connectivity digest. Net renaming without changed membership does not break copper associations. Net splits and merges are explicit changes; the engine shall not guess identity from names alone. Unplaced parts may remain during editing, but must be resolved before production release unless excluded from the PCB by an explicit component role.
 
@@ -310,6 +313,7 @@ Each board records its source circuit revision and a connectivity digest. Net re
 | SYN-08 | Distinguish virtual, off-board, not-fitted and PCB-only objects | Each role follows its defined release/BOM behaviour | M1 |
 | SYN-09 | Support reviewed reference/value back annotation | A back-annotation proposal updates all affected schematic units atomically | M2 |
 | SYN-10 | Permit pin/gate swapping only from declared equivalence groups | Disallowed swap is rejected; allowed swap updates circuit and board mapping together | M3 |
+| SYN-11 | Author, open and migrate hierarchical project schematics with named child ports, repeated placements and nested instances | Repeated instances keep local nets distinct. ERC, BOM/netlist, PCB cross-probing and ECO use the same instance-aware graph, including after a project copy | M1 |
 
 ### 8.2 Handling physical copper during an ECO
 
@@ -375,15 +379,29 @@ Provide pads, holes, plated slots, lines, arcs, polygons, dimensions, text, cour
 | FPT-03 | Edit plated/non-plated holes and plated slot dimensions independently of copper | Drill/rout output reproduces slot path and plating classification | M1 |
 | FPT-04 | Check duplicate labels, unmapped pads, holes, annular rings, mask and courtyards | Invalid footprint fixture reports specific actionable findings | M1 |
 | FPT-05 | Provide 1:1 print and dimension inspection | A calibration ruler and footprint distances export at exact nominal scale | M1 |
-| FPT-06 | Import a declared subset of KiCad footprints with a loss report | Unsupported electrical primitives block a verified import | M1 |
+| FPT-06 | Import supported KiCad footprint features into editable native definitions with a loss report | Save and reopen preserves supported geometry and pad semantics. Unsupported electrical primitives block a verified import | M1 |
 | FPT-07 | Generate common packages parametrically with reproducible source parameters | Editing pitch regenerates identical equivalent geometry on browser and desktop | M1/M2 |
 | FPT-08 | Provide 3D origin, rotation and body-height alignment | Known asymmetric model aligns to pad 1 on both board sides | M2 |
+| FPT-09 | Generate bundled native footprints and matching STEP models from a versioned package catalogue using Python | Rebuilding preserves asset identities and geometry. Offline placement and native save/reopen preserve the footprint and model pairing | M1 starter / M2 expansion |
 
 M1 generators: axial resistor/diode, radial two-lead component, DIP, single/double-row 2.54 mm headers, simple terminal blocks, SOIC and standard two-pad chip passives. M2: TSSOP, QFP, QFN with exposed pad, BGA/LGA and configurable paste-window patterns. Package presets must state the dimensional source and intended assembly process. Do not label a generator “IPC compliant” without an identified standard edition, implemented rules and validation evidence.
 
 ### 10.2 Curated supplied library
 
-Ship a small, well-tested core rather than making a huge catalogue a release dependency. Target at least 100 useful footprint definitions/device mappings covering common educational circuits; exact coverage is frozen at G0 after auditing TinyCAD's existing symbols. Include through-hole passives, TO-92 variants with explicit pinouts, TO-220 variants, DIP ICs, common op-amp packages, basic SMD passives, SOT-23 variants, connectors, test points, mounting holes and representative MCU/development-board headers.
+Ship a reviewed starter core for educational circuits. Target at least 100 useful footprint definitions/device mappings. Keep representative connectors, test points, mounting holes and MCU/development-board headers in the starter core. Use this package list to seed the versioned catalogue and prioritise variants against the existing TinyCAD symbols.
+
+| Component family | Surface-mount packages | Through-hole packages |
+|---|---|---|
+| ICs | SOIC in multiple pin counts and widths. Add TSSOP, QFP, QFN and BGA/LGA variants in M2 | DIP in multiple pin counts and row spacings |
+| Resistors | Rectangular chips in 0402, 0603, 0805 and 1206 | Cylindrical axial bodies with multiple lead pitches and body sizes |
+| Capacitors | Rectangular ceramic chips and cylindrical aluminium cans in multiple sizes | Radial discs, rectangular film bodies and cylindrical electrolytics with multiple diameters and lead spacings |
+| Diodes | Flat SOD and SMA/SMB body variants | Cylindrical axial DO-35 and DO-41 variants |
+| Inductors | Chip and shielded power-inductor bodies in multiple sizes | Axial and radial packages with multiple lead spacings |
+| Transformers | Low-profile gull-wing packages in multiple body sizes and pin layouts | Bobbin and encapsulated packages in multiple sizes and pin layouts |
+| LEDs | Rectangular chip packages in multiple sizes | Round 3 mm and 5 mm radial packages |
+| Transistors and regulators | SOT-23 and SOT-223 variants | TO-92 and TO-220 variants |
+
+Use one dimensional record per package variant for the Python build scripts. Record the body and lead dimensions, pitch, terminal arrangement, datum, pin-1 or polarity marks, tolerances and source. Generate native pad, drill, mask/paste, silkscreen, fabrication and courtyard geometry as applicable, plus a matching STEP solid in millimetres anchored to the footprint datum. Package the generated assets with stable IDs, catalogue metadata and provenance so the PCB engine can select them offline. Automate pad/lead alignment, dimensions, drill and courtyard checks, and independent STEP read-back. Use representative actual part numbers to review fit and pin mapping, especially for transformers, connectors and package variants with different pinouts.
 
 USB connectors, modules and development boards require model-specific footprints. Their shield pads, mounting features, overhang and antenna keepouts must be reviewed. Do not bundle a plausible generic USB footprint as if it fits every connector.
 
@@ -438,7 +456,7 @@ Store nominal finished-hole size, tolerance and process classification separatel
 
 ### 13.1 Workspace layout
 
-Extend the existing TinyCAD editor shell. Use its sheet tab strip for **Schematic**, **PCB**, **3D**, **Simulation** and **Manufacturing preview**. Support side-by-side schematic and PCB inspection within that shell. Preserve the schematic editor's window layout, tool placement, menus, shortcuts and dialogue conventions for equivalent PCB actions. Add PCB-specific controls to the corresponding existing regions.
+PCB Design is a workspace in the existing TinyCAD application in Electron and supported browser mode. Use the same application window and sheet tab strip for **Schematic**, **PCB**, **3D**, **Simulation** and **Manufacturing preview**. Support side-by-side schematic and PCB inspection within that shell. Reuse and extend the common menus, toolbar, panels, dialogues, commands and shortcuts, along with project navigation, open/save, unsaved changes, recovery and undo integration. Register PCB-specific views, tools and commands through the same shell components and services. Preserve familiar control locations for equivalent actions.
 
 | Region | Required content |
 |---|---|
@@ -465,7 +483,7 @@ Avoid permanently filling both sides with dense panels on a small laptop. Docks 
 | UX-08 | Provide command search, remappable shortcuts and contextual help | Every essential tool is accessible without memorising a shortcut | M1 |
 | UX-09 | Support keyboard property editing and accessible issue navigation | User can reach, inspect and zoom to each issue via keyboard | M1 |
 | UX-10 | Provide touch/pen selection, pan/zoom and enlarged handles | Tablet users can place and edit supported geometry without hover-only controls | M2 |
-| UX-11 | Reuse the TinyCAD editor shell and interaction conventions for PCB editing | Switching between schematic and PCB keeps equivalent controls in familiar positions, including tools, keyboard actions, property dialogues and issue navigation | M1 |
+| UX-11 | Host PCB Design inside the existing TinyCAD application shell and share its components and services | Switch between schematic and PCB in the same window and project context. Verify shared navigation, open/save, unsaved changes, keyboard actions, property dialogues and issue navigation | M1 |
 
 Suggested shortcut actions are route, via, rotate, flip side, move, drag, properties, highlight net, refill zones and full check. Bindings must be checked against existing TinyCAD and browser shortcuts before being assigned. “Flip side” must not share an ambiguous action with “mirror drawing.”
 
@@ -699,8 +717,9 @@ Simulation integration shall cross-highlight schematic operating-point currents/
 | MEC-06 | Import/compare mechanical outline and enclosure revisions | Changed holes/edges produce a reviewed delta, not an automatic reroute | M2 |
 | MEC-07 | Perform declared 2.5D/3D envelope checks | Height/collision reports state which parts lack reliable geometry | M2/M3 |
 | MEC-08 | Export an STL mesh of the bare board or populated assembly for enclosure modelling and fit prototypes | An independent mesh import in millimetres reproduces the board datum, thickness, mounting holes, cutouts and selected component envelopes within the declared tessellation tolerance | M2 |
+| MEC-09 | Import STEP models from KiCad libraries and attach them to native footprints, including attachments read during footprint import | A model with a known offset, rotation and scale aligns on both board sides and reopens offline from a portable project. Missing models are reported | M1 testing and inspection |
 
-Do not make a polished photorealistic renderer a dependency for manufacturing correctness. M1's basic model can use extruded board geometry and body placeholders. STEP conversion or full solid-model operations may require a desktop helper or separately evaluated WASM kernel; this platform distinction must be explicit.
+M1 inspection uses extruded board geometry and can display body placeholders for unavailable models. Qualify KiCad STEP import and generated STEP placement through a supported conversion path for testing and inspection. Document platform availability if conversion requires a desktop helper or an evaluated WASM kernel. Full solid-model operations and qualified STEP assembly export remain M2 work.
 
 Use [Three.js with its WebGL 2 renderer](https://threejs.org/docs/pages/WebGLRenderer) for the interactive 3D inspection view in both browser and Electron. Open it within the TinyCAD shell and load the viewer and model assets only when requested. Build display meshes from the shared board snapshot and placement transforms. Release viewer-owned graphics resources when the view closes. If WebGL 2 is unavailable, show that state in the 3D view and keep the SVG editor usable. STEP and STL export consume board geometry and placement data independently of the interactive viewer.
 
@@ -741,7 +760,7 @@ Ucamco is the format authority for Gerber and its X2 role/attribute semantics [S
 | OUT-04 | Define origins, axes, side and rotations per output adapter | Asymmetric top/bottom test parts land correctly in independent viewers | M1 |
 | OUT-05 | Separate drill plating and handle slots without duplication | Independent CAM viewer reproduces tool sizes, centres, paths and board profile | M1 |
 | OUT-06 | Keep BOM, placement and assembly views consistent | DNP, quantity and reference grouping agree for the selected revision/variant | M1 |
-| OUT-07 | Store output recipes, filenames, layer mapping and precision in the project | Running a saved recipe reproduces equivalent output and manifest hashes | M1 |
+| OUT-07 | Store output recipes, destinations, filenames, layer mapping and precision in project settings | Running a saved recipe writes ordinary files such as BOMs and netlists to the configured project subfolder and reproduces equivalent output and manifest hashes | M1 |
 | OUT-08 | Never mix new output with stale files from an earlier release | ZIP includes only the recipe's expected current files | M1 |
 | OUT-09 | Keep production export independent of a selected manufacturer | A generic release package can be inspected and submitted to another supported fab | M1 |
 | OUT-10 | Provide a final review of generated layers/drills and unresolved warnings | Release record identifies what was reviewed and which checks passed | M1 |
@@ -775,8 +794,10 @@ M3 panels reference immutable board releases rather than copying editable board 
 | Format / workflow | Required direction and limitation | Release |
 |---|---|---|
 | Existing TinyCAD schematics/netlists | Read existing attributes and compiled connectivity; resolve package strings explicitly | M1 |
-| KiCad `.kicad_mod` / `.pretty` | Import supported footprints; report all unsupported electrical/physical primitives | M1 |
-| KiCad `.kicad_pcb` | Export qualified subset for continuation in KiCad; importer follows later | Export: M1; import: M2 |
+| KiCad `.kicad_sym` | Extend symbol import to retain PCB-relevant fields, footprint references and pin labels. Resolve available footprint references and review device mappings | M1 |
+| KiCad `.kicad_mod` / `.pretty` | Import supported footprints, padstacks, graphics and model attachments into native definitions. Report unsupported primitives | M1 |
+| KiCad library STEP models | Import selected STEP assets directly or resolve them from footprint model references. Preserve the local attachment transform and embed resolved assets for offline use | M1 |
+| KiCad `.kicad_pcb` | Export the qualified subset for continuation in KiCad. Import the supported subset as editable native board objects | Export M1, import M2 |
 | Gerber/NC drill | Output plus read-back preview; import as manufacturing artwork, not a reconstructed editable circuit | M1 |
 | CSV | BOM/placement import or mapping where applicable; units and columns previewed | M1/M2 |
 | DXF | Board/keepout mechanical exchange; declared entity subset and units | M2 |
@@ -789,6 +810,8 @@ M3 panels reference immutable board releases rather than copying editable board 
 KiCad's published board format makes it a useful exchange target [S04]. Use a pinned target file-version and a TinyCAD generator identifier. Do not impersonate KiCad's own generator. Export net identity, pads, supported copper, outline, holes, fields and any supported rules. Produce a machine-readable loss report for TinyCAD features with no target equivalent.
 
 An import report shall list source format/version; imported counts; layer and unit mappings; missing assets; unsupported objects; ignored or translated rules; altered text; connectivity differences; and required follow-up. Unsupported critical geometry must not be silently flattened into pictures. Where lossless preservation is possible, retain opaque source metadata without claiming TinyCAD can edit or validate it.
+
+For each new PCB capability, update the versioned native format and the applicable KiCad import path when the qualified KiCad source format represents it. M1 covers the symbol, footprint and model library paths. M2 adds board import, including supported stackup, outlines/cutouts, placements, tracks, vias, zones and rules. Preserve PCB-relevant symbol fields in native symbol libraries and schematic files, physical definitions and layout entities in native boards, and resolved dependencies in portable projects. Qualify each mapping with a native save/reopen fixture that checks geometry, placement and connectivity as applicable. Record source features outside the supported mapping in the import report.
 
 Gerber artwork lacks sufficient complete logical intent to promise exact schematic or editable-board reconstruction. A Gerber viewer and a native PCB importer are distinct features.
 
@@ -915,7 +938,9 @@ Desktop-only capabilities may include local external routing, native STEP conver
 
 #### Browser workspace modules
 
-**WEB-01 (M1).** The browser entry point shall load a small shared shell for navigation, document identification and project access. It shall use native browser ES modules and dynamic `import()` boundaries to load the selected workspace from the production build. Keep feature code, worker entry points, WebAssembly and large workspace assets behind those boundaries. Shared document metadata and file codecs may be used by any workspace that needs them.
+**WEB-01 (M1).** The browser entry point shall load the shared TinyCAD application shell for navigation, document identification and project access. Use native browser ES modules and dynamic `import()` boundaries to register and load the selected workspace within that shell. Keep feature code, worker entry points, WebAssembly and large workspace assets behind those boundaries. Share shell components, commands, document metadata and file codecs across workspaces where applicable.
+
+In the browser, project access and PCB Design require Google Drive mode. The filesystem-only build offers Circuit Design and Circuit Design + Simulation. It shall omit the project browser and PCB workspace entry points, including on direct navigation.
 
 | Workspace | Modules loaded when needed |
 |---|---|
@@ -976,9 +1001,9 @@ Record actual feature coverage, defects, licence/dependency inventory, integrati
 
 ### 26.1 Format goals
 
-Provide an openly documented, versioned native format with deterministic serialisation. Standalone PCB layouts use the `.dpn` extension. TinyCAD schematic drawings use `.dsn` and `.dzn`. The full project container has a proposed `.tcproject` extension pending compatibility review.
+Standalone PCB layouts use a single versioned UTF-8 XML `.dpn` file with deterministic serialisation. Follow the existing TinyCAD `.dsn` naming and embedding conventions, including a TinyCAD-prefixed root, uppercase domain elements, lowercase attributes and local ID references to embedded definitions. Store each used component, device, footprint and padstack definition once per revision, and embed resolved model assets. A standalone copy must support offline editing, inspection and supported outputs using its own definitions, geometry, connectivity and rules. See the [native PCB file contract](pcb-format.md#standalone-board-format).
 
-A portable project should contain a manifest, circuit references or documents, board source, resolved device/footprint definitions, rules, output recipes and optional binary assets. For source control, support the same logical content as a directory of UTF-8 JSON and asset files. Do not commit regenerated meshes, indexes or huge fill caches by default.
+A project uses the same folder tree for authoring, sharing and source control. Its root `.tcproject` is a versioned XML settings file modelled on a Visual Studio `.csproj`. It records project identity, document relationships, shared design settings and output recipes. Paths are relative to the root. Native `.dsn`, `.dzn` and `.dpn` sources, supporting assets, BOMs, netlists and other intermediate outputs live as ordinary files in that tree. Regenerate meshes, indexes and live fill caches from source. See the [project folder contract](pcb-format.md#project-folder-and-settings-file).
 
 ### 26.2 Entity inventory
 
@@ -1005,33 +1030,25 @@ Preserve unknown optional fields where possible. Unknown required features trigg
 
 ### 26.3 Proposed board header example
 
-This is an **illustrative envelope**, not the complete JSON Schema or a loadable finished board. Production schemas must define every entity, invariant and compatibility rule before M1.
+This example shows the proposed XML header and the definition-to-placement reference pattern. Document the complete XML schema and compatibility rules before M1.
 
-```json
-{
-  "format": "tinycad-pcb",
-  "schemaVersion": 1,
-  "boardId": "253e5864-eeda-4dc5-96a8-e7bfac848506",
-  "revision": 42,
-  "lengthUnit": "nm",
-  "angleUnit": "microdegree",
-  "coordinateFrame": "top-view-x-right-y-up-ccw",
-  "sourceCircuit": {
-    "documentId": "79a979dc-c88b-4bac-8aa4-b39ecab3c025",
-    "revision": 18,
-    "connectivityDigest": "sha256:example-placeholder"
-  },
-  "requiredFeatures": ["rigid-board", "through-vias", "positive-copper-zones"],
-  "copperLayers": [
-    {"id": "top", "order": 0},
-    {"id": "bottom", "order": 1}
-  ],
-  "derivedState": {
-    "fill": "stale",
-    "connectivity": "stale",
-    "checks": "stale"
-  }
-}
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<TinyCADPCB version="1">
+  <DPNIDENTITY id="253e5864-eeda-4dc5-96a8-e7bfac848506" revision="42" />
+  <COORDINATES length_unit="nm" angle_unit="microdegree" frame="top-view-x-right-y-up-ccw" />
+  <REQUIREDFEATURE id="embedded-devices" />
+  <COPPERLAYER id="top" order="0" />
+  <COPPERLAYER id="bottom" order="1" />
+  <FOOTPRINTDEF id="1">
+    <!-- Pad geometry and model attachments -->
+  </FOOTPRINTDEF>
+  <DEVICEDEF id="1" footprint_id="1">
+    <!-- Explicit terminal-to-pad mapping -->
+  </DEVICEDEF>
+  <FOOTPRINT id="53f8ce3e-5a4b-4f74-b70b-cdb1fc5fcc86" device_id="1" ref="U1"
+             x="18000000" y="12000000" rotation="0" side="top" />
+</TinyCADPCB>
 ```
 
 ### 26.4 Command contract
@@ -1186,7 +1203,12 @@ Reference circuits are test fixtures, not pre-certified products. Choose actual 
 | AT-22 | Save a supported KiCad export and open it independently | No unexplained supported-object or connectivity loss; declared losses are reported | OUT, interoperability |
 | AT-23 | Re-run a deterministic output recipe | Geometric outputs/hashes match after declared metadata normalisation | OUT, PRJ |
 | AT-24 | Follow the classroom exercise on a clean browser | Complete edit/check/export without AI, hosted routing or manufacturer login | UX, EDU, OUT |
-| AT-25 | Switch from the schematic sheet to PCB and use equivalent tools and property dialogues | The existing shell and familiar control positions are preserved. The 2D board and editing overlays render through SVG, and keyboard, pan/zoom and undo follow TinyCAD conventions | UX-11, REN-01 |
+| AT-25 | Switch from the schematic sheet to PCB and use equivalent tools and property dialogues | Both editors use the same window, project browser, shell components and document services. Edits and undo survive switching. The 2D board and editing overlays render through SVG | UX-11, REN-01, WEB-01 |
+| AT-26 | Rebuild and place generated SMT and through-hole package variants on a clean installation | Footprint and STEP geometry agree on datum, lead positions and orientation. The bundled catalogue works offline and native save/reopen preserves each pairing | FPT-09, PRJ |
+| AT-27 | Import a KiCad symbol and footprint with an asymmetric STEP attachment, then rotate and flip the placement | The native round trip preserves PCB metadata, supported footprint geometry and model alignment. The project opens offline and reports unresolved models during import | FPT-06, MEC-09, interoperability |
+| AT-28 | Copy a standalone XML `.dpn` with repeated component placements and a STEP model to a clean installation | With only the board file, reopen it and verify editable geometry, connectivity, rules, model placement and supported output. Repeated placements resolve to shared embedded definitions. Re-saving unchanged content is deterministic | PRJ, LIB, §26 |
+| AT-29 | Copy a project folder with a `.tcproject`, nested schematic and board files, and generated outputs | Open at the new location via the settings file, resolve document links and regenerate BOM and netlist files in the configured subfolder. Saving a schematic updates its native file. The copied tree retains supporting files | PRJ-01, PRJ-06, PRJ-09, OUT-07 |
+| AT-30 | Open a v3 hierarchy with a repeated multi-sheet child and a nested grandchild, then copy the project and rename an instance | Named ports and instance-local nets match the expected graph and v3 output. The project reopens after the copy. The rename preserves PCB IDs and cross-probes target the correct instance. Missing children, cycles and ambiguous bindings produce located diagnostics | SYN-01, SYN-11, PRJ |
 
 ### 28.4 Copper and assembled connectivity
 
@@ -1221,12 +1243,12 @@ Observe a small group of novice learners and experienced users completing the sa
 |---|---|---|
 | WP0: Audit and schema | Existing TinyCAD graph/undo/persistence audit; stable IDs; terminology; exact capability matrix | Can explain how every existing pin/package attribute migrates |
 | WP1: G0 engine spike | Geometry, mapping, connectivity, simple router/fill, export/read-back prototypes | Seeded short/open and output-corruption tests pass in browser/desktop |
-| WP2: Project and libraries | Native schema, embedded assets, device resolver, footprint editor/import, migration table | Portable offline project and reviewed component core |
-| WP3: Board editing | Outline/layers, placement, selection, snapping, manual routing/vias, undo, and browser workspace loading (WEB-01) | Fixtures A/B/E are editable without hidden state corruption. Each browser workspace loads its required modules and assets |
+| WP2: Project, hierarchy and libraries | Native XML board codec, project folder and settings file, hierarchy authoring and v3 migration, instance-aware connectivity, prototype migration, embedded assets, device resolver, KiCad symbol and footprint import, footprint editor, and Python-generated starter footprint/STEP bundles | Board codec and project folder round trips pass offline. Hierarchical connectivity, native imports and the starter catalogue pass their component tests |
+| WP3: Board editing | Outline/layers, placement, selection, snapping, manual routing/vias, undo, XML board open/save and project browser integration within the existing TinyCAD shell (UX-11, WEB-01) | Fixtures A/B/E are editable in the shared shell. Each supported workspace loads its required modules and assets |
 | WP4: Zones and validation | Zone engine, rule resolver, physical graph, batch/local checks, coverage and waivers | M1 geometry/connectivity acceptance suite passes |
-| WP5: Manufacturing | Writers, output-derived preview, recipes, BOM/placement, manifest and diagnostic export | Independent CAM and physical qualification complete |
-| WP6: M1 productisation | Guided workflow, accessibility, recovery, documentation and performance qualification, including per-workspace browser memory and switch tests | All M1 release conditions below met |
-| WP7: M2 routing and layers | Shove/walk-around, qualified multilayer, block reuse, STEP, router adapter | Stress corpus and multilayer acceptance suite pass |
+| WP5: Manufacturing and 3D | Writers, output-derived preview, project output folders and recipes, BOM/netlist/placement, manifest, diagnostic export, KiCad subset export, and 3D inspection with generated and imported KiCad STEP models | Independent read-back passes. Recipes reproduce project outputs and models pass datum and placement checks |
+| WP6: M1 productisation | Guided workflow, accessibility, recovery, documentation, reference-board and physical qualification, offline project and hierarchy acceptance, and performance qualification | All M1 release conditions below met, including the §28 acceptance cases and browser workspace memory and switch tests |
+| WP7: M2 advanced workflows | Walk-around/shove, connected drag, qualified multilayer, block reuse, manual model alignment, STEP/STL/DXF exchange, expanded generated libraries, KiCad board import, assembly aids, IPC-D-356A and router exchange | Stress corpus, multilayer and mechanical exchange acceptance pass. Supported KiCad boards round-trip in native files |
 | WP8: M3 assistance | Pair/length tools, engineering calculations, variants, panelisation, reviewed AI | Each capability qualified separately with declared coverage |
 
 WP2/WP3 can overlap after the shared schema is stable; WP4 depends on WP1 geometry/rule contracts. Manufacturing read-back begins in G0, not after UI completion. Do not schedule a manufacturing beta based only on placement/routing screenshots.
@@ -1248,7 +1270,7 @@ A failed gate triggers a revised design or narrower declared feature scope. It m
 
 ### 29.3 M1 scope freeze
 
-**Required:** portable project; TinyCAD schematic/ECO integration; explicit mapping and curated starter library; footprint edit/import subset; one/two layers; outlines/cutouts; PTH/NPTH/basic plated slots; placement; manual rule-aware routing and vias; zones/thermals; full supported-feature DRC/connectivity/parity; basic 3D; fabrication/assembly output with read-back; KiCad subset export; recovery and a complete teaching workflow. Browser workspace module separation and memory qualification under WEB-01 are M1 release requirements.
+M1 requires standalone XML board files, portable project folders with hierarchical schematic authoring, schematic/ECO integration, explicit device mapping, a reviewed starter footprint/STEP bundle, native footprint editing and supported KiCad symbol and footprint import. It includes one/two layers, outlines/cutouts, PTH/NPTH/basic plated slots, placement, manual rule-aware routing and vias, zones/thermals and full supported-feature DRC/connectivity/parity. Qualify basic 3D inspection with bundled and imported KiCad STEP models, fabrication/assembly output with read-back, KiCad subset export, recovery and the complete teaching workflow. Verify the shared TinyCAD shell, on-demand browser workspace loading and memory behaviour under UX-11 and WEB-01.
 
 **Permitted simplifications:** no push/shove; no full autorouter; no multilayer editing; no exact STEP assembly export; no PCB import from proprietary tools; no differential-pair solver; no automatic placement; no real-time collaboration. Each simplification is explicit in UI/documentation and does not compromise the qualified two-layer manufacturing workflow.
 
@@ -1256,7 +1278,7 @@ A failed gate triggers a revised design or narrower declared feature scope. It m
 
 ### 29.4 M2 priorities
 
-Prioritise router quality and normal multilayer engineering over adding many importers. Required M2 targets: walk-around/shove, safe connected drag, qualified 4/6/8/16-layer stacks, richer library generation, mechanical STEP/DXF workflow, block reuse, assembly aid, IPC-D-356A and external router exchange. Feature flags can allow independent release of completed items without falsely presenting all M2 work as finished.
+M2 requires walk-around/shove, safe connected drag, qualified 4/6/8/16-layer stacks, expanded footprint/STEP generators, supported KiCad board import, manual model alignment, STEP assembly and STL export, DXF mechanical exchange, block reuse, assembly aids, IPC-D-356A and external router exchange. Extend native persistence and KiCad mappings as additional PCB capabilities qualify. Feature flags can allow independent release of completed items without falsely presenting all M2 work as finished.
 
 ### 29.5 M3 and research boundaries
 
@@ -1289,7 +1311,7 @@ Calendar/effort estimates should follow the repository audit and G0 measurements
 |---|---|---|
 | Core implementation | Extend existing TinyCAD stack; typed engine interfaces | Repository audit and G0 browser/desktop spike |
 | Geometry | Integer nm persistence; robust kernel selected by tests | Boundary/overflow/property test corpus |
-| Native interchange | Open schema plus portable project container and unpacked directory form | Save/load/migration and offline portability tests |
+| Native interchange | Open schemas and a project folder tree with a root `.tcproject` settings file | Save/load, prototype migration and offline folder-copy tests |
 | Footprint source | Curated core plus KiCad import | Pin-map coverage, asset provenance and import loss tests |
 | Routing | Native manual M1; evaluate shove reuse and external adapters | Correctness and interaction benchmarks |
 | Layer scope | One/two M1; qualified rigid multilayer M2 | Layer-span and output qualification |

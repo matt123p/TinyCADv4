@@ -1,6 +1,6 @@
 # PCB schema and schematic migration
 
-This document records the WP0 decisions for native PCB files and the schematic inputs they can use. The [complete specification](TinyCAD_PCB_Layout_Complete_Specification.md) defines the subsequent manufacturing release requirements.
+This document records the native PCB file contract, the WP0 prototype decisions and the schematic inputs a board can use. The [complete specification](TinyCAD_PCB_Layout_Complete_Specification.md) defines the manufacturing release requirements.
 
 ## Schematic identity and migration
 
@@ -30,39 +30,81 @@ Moving, rotating, renaming and renumbering a native item preserve its UUID. Symb
 | Implicit hidden power | A shape-4 pin is emitted with a label and no physical hotspot in the netlist. The hidden-power pass deduplicates by reference within each sheet. | Preserve its intended named connection in the flat subset. Review common power pins when resolving multipart units. |
 | Drawn no-connect | `NOCONNECT` is emitted as a separate node on the same net as the hotspot. | Retain the explicit marker as intent. Warn on a no-connect marker that also joins other terminals. An isolated pin without a marker has no explicit NC intent. |
 | Buses | `BusWire`, `BusSlash`, and `BusLabel` are represented in XML and the editor. The scalar netlist has no member expansion pass. | Detect and stop PCB compilation until the bus expansion is available. |
-| Hierarchy | XML retains a `HierarchicalSymbol` sheet. The existing drawing netlist has no hierarchical instance or port expansion. | Detect and stop PCB compilation until instance and port expansion is available. |
+| Hierarchy | XML retains a `HierarchicalSymbol` sheet. The existing reader and netlist lack placed child-design support and port expansion. | Implement project-backed hierarchy in M1. Until then, reject hierarchy in place of generating an incomplete PCB snapshot. |
 | Multipart symbols | The generator emits each placed unit with its `part` and unit-specific pins. It uses reference text in its hidden-power handling. | Keep unit UUIDs and per-unit pins. Require a physical component binding and review repeated references and common pins before compiling. |
 | Duplicate sheet names and duplicated references | The worker keys sheet snapshots by display name. Legacy exports emit component rows from reference text. | Report conflicts before PCB compilation. No reference-based automatic merging. |
 
 `npm run test:pcb` exercises native XML/DZN migration, clipboard copy, cross-sheet scalar labels, explicit no-connects, hidden power, and detection of hierarchy, buses and multipart units. Net membership fixtures demonstrate ID retention across renames and identify which previous IDs need review after a split or merge. The schematic-to-board compiler and ECO workflow are WP2 deliverables.
 
+## Hierarchical project schematics
+
+### TinyCAD v3 behavior
+
+In v3, the child drawing has a special symbol sheet with artwork and named pins. The parent places that saved drawing as a symbol, with a reference designator, a transform and wire connections. A parent pin connects to matching labels in the child by name. Each drawing can have several normal circuit sheets, and a child can contain further child placements. The parent can open the child drawing or reload its symbol after an edit. [TinyCAD v3 manual](https://docs.tinycad.net/v3/Using-multiple-sheet-schematics/#using-hierarchical-designs) · [C++ symbol editor and XML codec](https://github.com/matt123p/TinyCAD/blob/b503a7b1ee8acef937b00c3a99267cd2d25614db/src/DrawHierarchicalSymbol.cpp)
+
+The child stores its interface in a `HierarchicalSymbol` sheet under `TinyCADSheets`. The parent stores a `HIERARCHICAL_SYMBOL` placement with a `file` attribute, position, rotation, scaling and `FIELD` records. v3 writes the child path relative to the containing drawing when possible and falls back to the original path. Its readers accept the historical spellings `HierachicalSymbol` and `HIERACHICAL_SYMBOL`. [C++ symbol XML codec](https://github.com/matt123p/TinyCAD/blob/b503a7b1ee8acef937b00c3a99267cd2d25614db/src/DrawHierarchicalSymbol.cpp#L59-L66) · [C++ path handling](https://github.com/matt123p/TinyCAD/blob/b503a7b1ee8acef937b00c3a99267cd2d25614db/src/TinyCadDoc.cpp#L1868-L1904)
+
+The C++ netlister gives each placement its own instance index, expands all sheets in that instance, and links the parent pin's hotspot to the child instance's label of the same name. Same-name labels can join across sheets within an instance. Two placements of the same child keep their internal nets separate. Legacy flattened references include the designator path, for example `H2_H1_R1`. The FAQ records failures involving missing instance references and duplicate port pin numbers, even though users wire ports by name. [C++ traversal and port binding](https://github.com/matt123p/TinyCAD/blob/b503a7b1ee8acef937b00c3a99267cd2d25614db/src/NetList.cpp#L1026-L1068) · [C++ instance-scoped labels](https://github.com/matt123p/TinyCAD/blob/b503a7b1ee8acef937b00c3a99267cd2d25614db/src/Net.h#L104-L135) · [TinyCAD v3 FAQ](https://docs.tinycad.net/v3/FAQ/)
+
+### M1 implementation contract
+
+1. **Authoring and navigation.** Open a project from its root `.tcproject`, select a root schematic, edit a child's interface sheet, and place that child from the project tree. Support wiring, rotation, repeated placements, and navigation from a placement to its child and back through the instance path. Show where a child is used and report port changes that affect connected placements. The interface sheet supplies artwork and ports. Compile electrical circuitry from the normal sheets.
+2. **Native persistence and migration.** Keep parents and children as ordinary `.dsn` or `.dzn` files. Preserve the legacy sheet and placement tags on import, accept both historical spellings and write the corrected spellings. Store the reference and transform, child document identity and a project-relative locator for new links, and stable placement and port IDs. Resolve legacy relative paths against the containing schematic first. Resolve or copy legacy absolute and out-of-project targets explicitly during migration, then record the project-relative link. Report missing or ambiguous children and preserve unresolved placements for repair. Verify that a copied project tree opens with its links intact.
+3. **Connectivity and identity.** Build the circuit from the selected root and expand each reachable child placement along its full instance path. Reuse the sheet-local connectivity builder and bind parent hotspots to the matching labels across the child's normal sheets. Use names for legacy port matching and retain the resulting stable binding for edits. Qualify power and hidden-pin scope against legacy fixtures and define deliberate global connections explicitly. Scope ordinary labels to their instance. Give physical units and terminals stable identities based on the placement UUID path and native unit/pin IDs. Use readable designator paths for display and export, and diagnose missing or conflicting references and ambiguous port definitions. Detect cycles by tracking the active document chain, so repeated use in different branches remains valid.
+4. **Shared consumers and diagnostics.** Feed the expanded graph into ERC, project netlist/BOM generation and PCB synchronisation. Carry instance, document, sheet and pin provenance through to PCB cross-probing and ECO previews. Hierarchy placements provide connectivity through ports. Physical component rows come from the instantiated circuit sheets. Block PCB compilation and netlist generation on unresolved children, cycles or ambiguous port bindings and locate the affected placement or port.
+
+Compare v3 and v4 net membership on a legacy fixture with a multi-sheet child placed twice, a nested grandchild, identical internal labels in each branch, named ports, and power and hidden-power pins. Add cases for historical XML spellings, relocatable project links, renamed designators with stable PCB identities, duplicate ports, a missing child and a cycle. Compare connectivity and physical component counts using v3 output and an explicit expected graph.
+
 ## Standalone board format
 
-`.dpn` is UTF-8 JSON with `format: "tinycad-pcb"`, an integer `schemaVersion`, a board UUID, a non-negative revision, and a required-feature list. Version 1 uses integer nanometres and integer microdegrees. In top view, X runs right, Y runs up, and positive angles are counter-clockwise. Bottom placement mirrors local X before the board rotation. In source files, IDs are references and labels remain editable text.
+Production `.dpn` is a single UTF-8 XML document modelled on TinyCAD's `.dsn` format. Use a TinyCAD-prefixed root, uppercase names for domain elements and lowercase attributes for identifiers and values. Follow the `.dsn` pattern of embedding reusable definitions once and referencing them by local ID from placements, as `SYMBOLDEF` and `SYMBOL` do. Keep stable UUIDs for board objects and preserve editable names, references and pad labels as text. See the [proposed XML header](TinyCAD_PCB_Layout_Complete_Specification.md#263-proposed-board-header-example).
 
-| Version 1 field | Contract |
+The board stores its schema version, revision, required features and authoritative geometry. Coordinates use integer nanometres and rotations use integer microdegrees. In top view, X runs right, Y runs up, and positive angles are counter-clockwise. Bottom placement mirrors local X before the board rotation.
+
+| XML data | Contract |
 | --- | --- |
-| `outline` or `profile` | `straight-outline` stores a closed polygon with an implicit final edge. `analytic-profile` stores ordered line and arc edges plus closed cutouts. Exactly one profile representation is present. Coordinates remain within ±500 mm. Curve tessellation is derived and the Gerber profile emits the analytic edges. |
-| `copperLayers`, `graphicLayers` | Ordered physical top and optional bottom copper. Graphic layers have UUIDs, explicit role and side, and editable names. Graphic layer IDs cannot serve as physical copper layer IDs. |
-| `sourceCircuit` | Optional source document UUID, circuit revision and SHA-256 connectivity digest. A board without a source is an independent board. The digest is checked against the accompanying circuit snapshot when the project is loaded. |
-| `footprintDefinitions`, `deviceDefinitions`, `footprints` | Embedded revisioned definitions and per-board placements, declared together with `embedded-devices`. Definitions have IDs and content-digest fields. Devices reference a footprint and explicitly assign every pad ID. Placements reference a device and component UUID and store integer transforms and lock state. |
-| `footprintDefinitions[].pads[].stack` | Explicit padstacks declare `physical-padstacks`. A stack defines polygon or capsule copper, mask and paste per face, with an optional round or straight-slot drill and explicit plating. Placing a bottom footprint mirrors its geometry and swaps its face assignments. |
-| Unknown optional fields | Preserve JSON data at every nesting level when editing or saving. Object keys are sorted on serialization. Geometry or behavior needed to interpret a board must also have a required feature identifier. |
-| Unsupported version or required feature | Reject explicitly before editing. Version 1 files written by the initial straight-outline prototype are accepted without migration. A future migration writes a new candidate, validates it and preserves the original. |
+| Board profile | Store a closed straight polygon with an implicit final edge or an ordered analytic line/arc profile with closed cutouts. Coordinates remain within ±500 mm. Curve tessellation is derived and the Gerber profile emits analytic edges. |
+| Copper and graphic layers | Store copper in physical stack order. Graphic layers have UUIDs, explicit role and side, and editable names. |
+| Source circuit | Optional schematic document UUID, circuit revision and SHA-256 connectivity digest. A project checks the link against its circuit snapshot. The board's own nets and pad assignments support standalone PCB work. |
+| Component, device and footprint definitions | Embed each used definition and padstack once per revision. Devices reference a footprint and explicitly assign every pad ID. Placements reference the embedded definitions and store their stable identities, transforms and lock state. |
+| Physical padstacks | Store copper, mask and paste per face, with an optional round or straight-slot drill and explicit plating. Bottom placement mirrors geometry and swaps face assignments. |
+| Model attachments and assets | Embed resolved STEP bytes once per SHA-256 ID as base64 XML data, with media type and provenance. Model attachments reference that ID and carry the local transform. |
+| Optional XML extensions | Preserve unknown optional elements and attributes where possible. Define deterministic output ordering for known elements and attributes while preserving meaningful order such as the layer stack. |
+| Unsupported version or required feature | Report a compatibility error before editing. The required-feature list identifies geometry and behavior that a reader must understand. |
+
+A standalone board embeds the definitions, models, nets and rules required to reopen, edit, inspect and regenerate supported outputs without the original schematic, library, project folder or sidecar files. The linked schematic and circuit snapshot are project documents used for cross-probing and ECOs.
+
+The G0 and WP0 prototype codec uses JSON. Add a migration path for supported prototype boards and project entries. Keep the original and validate the resulting XML before saving a converted copy.
 
 Board operations apply atomically against an expected revision. Undo and redo restore content with a fresh revision. Future features add typed entity collections for tracks, vias, zones, cutouts, padstacks and mechanical objects. Those collections need implementation-specific checks and required feature identifiers before use. Filled copper, meshes, spatial indexes and live DRC are rebuildable data and stay out of authoring files.
 
-## Portable project decision
+## KiCad import persistence
 
-Use a ZIP container identified by a versioned `manifest.json`, with `.tcproject` as the provisional extension. A source-control directory uses the same logical entries. Store schematic source as native `.dsn` or `.dzn`, PCB source as `.dpn`, and circuit snapshots and output recipes as UTF-8 JSON. Include resolved asset bytes when required for offline use. Keep authoring files and frozen release bundles separate.
+For each supported KiCad feature, use the same versioned native fields and validation as for objects authored in TinyCAD. Keep PCB-relevant symbol fields, pin labels and footprint references in native `.tclib`, `.dsn` and `.dzn` data as applicable. Store reviewed device mappings, footprint graphics, padstacks and model attachments in native `.dpn` definitions. M2 board import uses the typed native entities for supported stackup, placements, routing, zones and rules. Keep unsupported items and unresolved asset references visible in the import report.
 
-| Entry | Content |
-| --- | --- |
-| `manifest.json` | Project UUID, project revision UUID, optional parent revision UUID, schema version, title, required features and entry list with path, kind, content hash and document identity where applicable. |
-| `schematics/<id>.dsn` or `schematics/<id>.dzn` | Recoverable native circuit source. Keep original legacy bytes in the backup when upgrading identities. |
-| `circuits/<id>.json` | Circuit UUID and revision, stable components/units/signals, explicit physical roles, terminal bindings, and intended nets. Retain UUIDs from the previous snapshot when terminal membership is unchanged. |
-| `boards/<id>.dpn` | Board source with frozen device/footprint definitions and the source snapshot identity, revision and connectivity digest. |
-| `rules/<id>.json`, `recipes/<id>.json` | Versioned constraints and output configuration with their own stable IDs. |
-| `assets/<sha256>` | Content-addressed supporting bytes such as 3D models, with provenance, media type and license in the corresponding asset metadata. |
+Store imported and generated STEP attachments with the footprint definition, using the model asset's SHA-256 ID, source, quality, local offset in nanometres, rotation in microdegrees and scale. Apply the attachment transform in footprint coordinates before placing the footprint on the board. Preserve resolved STEP bytes and their provenance in standalone `.dpn` saves and portable projects. Verify import by saving and reopening native files and checking geometry, model alignment and connectivity as applicable.
 
-Write and validate a staged archive before replacing a saved project. Require unique relative paths, a size budget and verified entry hashes at load. Open a migrated copy, retain the source, and block editing when a required feature is unknown. An explicit library refresh replaces dependencies only through a reviewed change set. Implementing archive I/O, digest verification, revision comparison and recovery is part of WP2/WP6.
+## Project folder and settings file
+
+A TinyCAD project is a root folder and its entire subtree. A versioned UTF-8 XML `<name>.tcproject` file at the root identifies the folder as a project and holds its shared settings, similar to a Visual Studio `.csproj`. Keep design documents and generated files as ordinary files in the tree. The layout below is an example. Users can organise and name subfolders to suit the design.
+
+```text
+Sensor Board/
+  Sensor Board.tcproject
+  Circuit.dsn
+  Board.dpn
+  assets/
+  outputs/
+    BOM.csv
+    Circuit.net
+    Circuit.snapshot.json
+  releases/
+```
+
+The settings file records the project UUID, title, schema version, required features, revision lineage, primary documents and schematic-to-board associations. It also stores project-wide design settings, library and asset settings, and output recipes, including their destinations, or root-relative references to shared settings files. Use stable document identities for links and root-relative paths to locate the files. A folder can contain supporting files and subfolders without listing each one in `.tcproject`. Copy or move the whole tree to another location to carry the project with it.
+
+Schematic `.dsn` or `.dzn` and board `.dpn` files remain the editable sources. Generated BOMs, netlists and circuit snapshots are ordinary project files, typically under `outputs/`. Their recipes and source revisions determine freshness. They can be regenerated from the design. Frozen manufacturing releases have their own output and provenance records.
+
+For the M1 workflow, Projects in Electron and Google Drive mode recognises the root settings file and navigates the folder tree. Opening the settings file loads the project context. Saving an edited design writes the design file, and saving project settings writes `.tcproject`. Save As copies the tree and records revision lineage. Revision comparison uses the saved project settings and file contents. Recovery checks for edits to the saved document before restoring an autosave.
+
+Convert a supported prototype ZIP `.tcproject` by writing the settings file and its contents to a new folder and validating document links before opening it. Keep the original archive. Validate referenced paths within the project tree and report missing source files or unsupported required features explicitly.
