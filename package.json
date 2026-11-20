@@ -1,7 +1,7 @@
 {
   "name": "tinycad",
   "productName": "TinyCAD",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "TinyCAD circuit editor",
   "author": {
     "name": "Matt Pyne",
@@ -238,6 +238,24 @@
       "base": "core24",
       "core24": {
         "useDestructiveMode": true,
+        "stagePackages": [
+          "libnspr4",
+          "libnss3",
+          "libgtk-3-0t64",
+          "libcups2t64",
+          "libgbm1",
+          "libgl1",
+          "libglx-mesa0",
+          "libasound2t64",
+          "libsecret-1-0",
+          "libxss1"
+        ],
+        "environment": {
+          "LD_LIBRARY_PATH": "$SNAP/usr/lib/x86_64-linux-gnu:$SNAP_LIBRARY_PATH",
+          "LIBGL_DRIVERS_PATH": "$SNAP/usr/lib/x86_64-linux-gnu/dri",
+          "XDG_DATA_DIRS": "$SNAP/usr/share:/usr/local/share:/usr/share",
+          "XDG_SESSION_TYPE": "x11"
+        },
         "plugs": [
           "default",
           "browser-support"
