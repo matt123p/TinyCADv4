@@ -373,6 +373,9 @@ export function DocStoreReducer(
         ...update_view.cancel_add(state.view, new_drawing.sheets[initialSheet]).view,
         selected_sheet: initialSheet, hiddenItemIds: [], _selected_array: placement ? [placement._id] : [],
         _selected_handle: 0, hover_obj: null,
+        hover_pins: placement && action.project?.openPinId
+          ? [`${placement._id}:@${action.project.openPinId}`]
+          : [],
       };
       state = update(state, {
         drawing: { $set: new_drawing },
@@ -1009,13 +1012,12 @@ export function DocStoreReducer(
         action.drc,
         action.netlist,
       );
-      state = update(state, {
+      return update(state, {
         drawing: {
           drc: { $set: action.drc },
           drcTable: { $set: drcTable },
         },
       });
-      break;
 
     case DialogActionTypes.SetAnnotate:
       state = update(state, {

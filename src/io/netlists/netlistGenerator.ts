@@ -50,6 +50,7 @@ export interface SchematicSource {
   instancePath: readonly string[];
   itemId: number;
   unitId?: string;
+  pinId?: string;
 }
 
 export interface NetListNode {
@@ -85,7 +86,7 @@ export class NetlistGenerator implements NetlistData {
   public nets: { [key: string]: NetList } = {};
   public nodes: { [key: string]: string } = {};
   public eprops: { [key: string]: EProp } = {};
-  public labels: { [key: string]: string } = {};
+  public labels: { [key: string]: string } = Object.create(null);
   public symbols: SymbolRef[] = [];
   public current_netlist = 1;
   public sheet = '';

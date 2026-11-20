@@ -21,6 +21,8 @@ import { XMLBuilder } from '../../../src/util/xmlbuilder';
       sheet: current.view.selected_sheet,
       adding: current.view.add,
       selectedIds: current.view._selected_array,
+      hoverPins: current.view.hover_pins,
+      projectRoot: store.getState().altStore.file.project?.rootId,
       past: store.getState().docStore.past.length,
     };
   },

@@ -65,6 +65,8 @@ interface ProjectContext {
 
 import { childInterface, hierarchyDefinition } from '../../io/hierarchyDrawing';
 import { readProjectSchematic } from '../../io/projectHierarchy';
+import type { boardPadSources } from '../../pcb/hierarchicalSnapshot';
+import type { reviewProjectCircuit } from '../../io/netlists/activeNetlist';
 import { DocActionTypes } from '../../state/actions/docActions';
 import { activeSheet } from '../../state/stores/docStoreReducer';
 
@@ -107,6 +109,14 @@ export default function ProjectBrowser() {
   }>();
   const importSchematic = useRef<HTMLInputElement>(null);
   const [comparison, setComparison] = useState<ProjectRevisionComparison>();
+  const [boardProbe, setBoardProbe] = useState<{
+    name: string;
+    targets: ReturnType<typeof boardPadSources>;
+    open: (target: ReturnType<typeof boardPadSources>[number]) => Promise<void>;
+    review: () => ReturnType<typeof reviewProjectCircuit>;
+  }>();
+  const [boardReview, setBoardReview] =
+    useState<Awaited<ReturnType<typeof reviewProjectCircuit>>['review']>();
   const drive = process.env.TARGET_SYSTEM === 'google';
   const storageKey = `tinycad.driveProjectFolder.${userId || ''}`;
   const folder = trail[trail.length - 1];
@@ -259,6 +269,74 @@ export default function ProjectBrowser() {
   const download = (name: string, data: Uint8Array) => {
     saveAs(new Blob([new Uint8Array(data).buffer]), name);
   };
+
+  const inspectBoardPads = (
+    context: ProjectContext,
+    boardId: string,
+    name: string,
+  ) =>
+    run(async () => {
+      const project = await readProject(context.marker.id, context.root.id);
+      const { board, circuit } = await readProjectBoard(project, boardId);
+      const { boardPadSources } = await import(
+        '../../pcb/hierarchicalSnapshot'
+      );
+      const entry = project.settings.entries.find(
+        ({ kind, id }) => kind === 'schematic' && id === circuit?.documentId,
+      );
+      if (!entry || !circuit?.sources)
+        throw new Error(t('projects.boardProbeMissing'));
+      const location = {
+        id: context.marker.id,
+        name: context.marker.name,
+        rootId: context.root.id,
+        folderId: context.parent?.id ?? (drive ? 'root' : undefined),
+        entryId: entry.id,
+      };
+      const readRoot = (state: docDrawing) => {
+        const active = state.altStore.file.project;
+        return active?.id === location.id && active.entryId === entry.id
+          ? state.docStore.present.drawing
+          : readProjectSchematic(project, entry);
+      };
+      setBoardReview(undefined);
+      setBoardProbe({
+        name,
+        targets: boardPadSources(board, circuit),
+        open: async (target) => {
+          const state = store.getState();
+          const root = await readRoot(state);
+          const { navigateSchematicSource } = await import(
+            '../../io/projectHierarchy'
+          );
+          const result = await navigateSchematicSource(
+            location,
+            root,
+            target.source,
+          );
+          const current = store.getState();
+          if (
+            current.altStore.file !== state.altStore.file ||
+            current.docStore.present.drawing !== state.docStore.present.drawing
+          )
+            return;
+          setBoardProbe(undefined);
+          dispatch(
+            fileOpenProject({
+              type: 'file-open-project',
+              location: result,
+            }) as any,
+          );
+        },
+        review: async () => {
+          const root = await readRoot(store.getState());
+          const { reviewProjectCircuit } = await import(
+            '../../io/netlists/activeNetlist'
+          );
+          return reviewProjectCircuit(location, root, circuit);
+        },
+      });
+    }, false);
 
   const open = (item: ProjectItem) => {
     setError('');
@@ -610,6 +688,15 @@ export default function ProjectBrowser() {
                           {t('hierarchy.placeChild')}
                         </MenuItem>
                       )}
+                      {link?.kind === 'board' && !editingLibrary && (
+                        <MenuItem
+                          onClick={() =>
+                            void inspectBoardPads(context, link.id, item.name)
+                          }
+                        >
+                          {t('projects.boardProbe')}
+                        </MenuItem>
+                      )}
                       {context &&
                         !link &&
                         !item.folder &&
@@ -785,6 +872,81 @@ export default function ProjectBrowser() {
           comparison={comparison}
           onClose={() => setComparison(undefined)}
         />
+      )}
+      {boardProbe && (
+        <Dialog
+          open
+          onOpenChange={(_, data) => {
+            if (!data.open) setBoardProbe(undefined);
+          }}
+        >
+          <DialogSurface>
+            <DialogBody>
+              <DialogTitle>{boardProbe.name}</DialogTitle>
+              <DialogContent>
+                {error && <div role="alert">{error}</div>}
+                {boardReview && (
+                  <p role="status">
+                    {t('projects.boardReviewSummary', {
+                      retained: boardReview.nets.filter(
+                        ({ retainedId }) => retainedId,
+                      ).length,
+                      proposed: boardReview.nets.filter(
+                        ({ retainedId }) => !retainedId,
+                      ).length,
+                      removed: boardReview.removedIds.length,
+                    })}
+                  </p>
+                )}
+                {boardProbe.targets.length ? (
+                  <ul
+                    style={{
+                      maxHeight: '50vh',
+                      overflow: 'auto',
+                      paddingInlineStart: 24,
+                    }}
+                  >
+                    {boardProbe.targets.map((target) => (
+                      <li
+                        key={`${target.footprintId}:${target.padId}:${target.source.unitId}:${target.source.pinId}`}
+                      >
+                        <Button
+                          appearance="subtle"
+                          disabled={blocked}
+                          onClick={(): void => {
+                            void run(() => boardProbe.open(target), false);
+                          }}
+                        >
+                          {target.reference} · {target.padLabel} ·{' '}
+                          {target.signal}
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>{t('projects.boardProbeEmpty')}</p>
+                )}
+              </DialogContent>
+              <DialogActions>
+                <Button
+                  disabled={blocked}
+                  onClick={(): void => {
+                    void run(
+                      async () =>
+                        setBoardReview((await boardProbe.review()).review),
+                      false,
+                    );
+                  }}
+                >
+                  {t('projects.boardReview')}
+                </Button>
+                <Button onClick={() => setBoardProbe(undefined)}>
+                  {t('common.close')}
+                </Button>
+              </DialogActions>
+            </DialogBody>
+          </DialogSurface>
+        </Dialog>
       )}
       {prompt && (
         <ProjectNameDialog

@@ -2,6 +2,8 @@ import { digest } from '../util/sha256';
 import { isEntityId } from '../model/schematicIdentity';
 import { reviewCircuitNets } from './circuitNets';
 import type { CircuitNet, SchematicTerminal } from './circuitNets';
+import { validProjectName } from '../../shared/projectFiles';
+import type { SchematicSource } from '../io/netlists/netlistGenerator';
 
 const componentRoles = [
   'electrical',
@@ -34,7 +36,15 @@ export interface CircuitSnapshot {
   readonly components: readonly CircuitComponent[];
   readonly nets: readonly CircuitNet[];
   readonly noConnects: readonly SchematicTerminal[];
+  readonly sources?: Readonly<Record<string, CircuitSchematicSource>>;
 }
+
+export type CircuitSchematicSource = Omit<
+  SchematicSource,
+  'itemId' | 'unitId' | 'pinId'
+> & {
+  unitId: string;
+};
 
 function terminalKey(terminal: SchematicTerminal): string {
   if (!isEntityId(terminal?.unitId) || !isEntityId(terminal?.pinId))
@@ -66,6 +76,7 @@ export function validateCircuitSnapshot(
 
   const componentIds = new Set<string>();
   const unitIds = new Set<string>();
+  const sheetsByUnit = new Map<string, string>();
   const signalIds = new Set<string>();
   const terminals = new Set<string>();
   for (const component of snapshot.components) {
@@ -90,6 +101,7 @@ export function validateCircuitSnapshot(
       if (!isEntityId(unit.sheetId))
         throw new Error('Invalid schematic sheet identity.');
       componentUnits.add(unit.id.toLowerCase());
+      sheetsByUnit.set(unit.id.toLowerCase(), unit.sheetId);
     }
     for (const signal of component.signals) {
       addId(signalIds, signal?.id);
@@ -104,6 +116,35 @@ export function validateCircuitSnapshot(
           throw new Error('Invalid or duplicate signal terminal.');
         terminals.add(key);
       }
+    }
+  }
+
+  if (snapshot.sources !== undefined) {
+    if (
+      !snapshot.sources ||
+      typeof snapshot.sources !== 'object' ||
+      Array.isArray(snapshot.sources) ||
+      Object.keys(snapshot.sources).length !== sheetsByUnit.size
+    )
+      throw new Error('Invalid circuit source provenance.');
+    for (const [id, source] of Object.entries(snapshot.sources)) {
+      if (
+        !isEntityId(id) ||
+        id !== id.toLowerCase() ||
+        !isEntityId(source?.documentId) ||
+        !isEntityId(source?.unitId) ||
+        !isEntityId(source?.sheetId) ||
+        source.sheetId !== sheetsByUnit.get(id) ||
+        typeof source.documentPath !== 'string' ||
+        !/\.d[sz]n$/i.test(source.documentPath) ||
+        !source.documentPath.split('/').every(validProjectName) ||
+        !Array.isArray(source.instancePath) ||
+        source.instancePath.length > 64 ||
+        !source.instancePath.every(isEntityId) ||
+        (!source.instancePath.length &&
+          (source.documentId !== snapshot.documentId || source.unitId !== id))
+      )
+        throw new Error('Invalid circuit source provenance.');
     }
   }
 

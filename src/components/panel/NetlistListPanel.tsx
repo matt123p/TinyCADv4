@@ -1,4 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useStore } from 'react-redux';
+import { fileOpenProject } from '../../io/files';
+import type { docDrawing } from '../../state/undo/undo';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -114,6 +117,8 @@ const persistentState = {
   searchQuery: '',
 };
 
+const noAssignments: Record<string, string> = {};
+
 const emptyNetlist: NetlistData = {
   nets: {},
   nodes: {},
@@ -217,16 +222,17 @@ function buildRows(
           .filter((x) => !!x),
       ),
     );
+    const rootNodes = nodes.filter(({ source }) => !source?.instancePath.length);
     const parentIds = Array.from(
       new Set(
-        nodes
+        rootNodes
           .map((node) => resolveNodeTargetId(node))
           .filter((id) => typeof id === 'number'),
       ),
     ) as number[];
     const hoverIds = Array.from(
       new Set(
-        nodes
+        rootNodes
           .filter((node) => !!node.parent && allowedHoverTypes.has(node.parent.NodeName))
           .map((node) => resolveNodeParentId(node))
           .filter((id) => typeof id === 'number'),
@@ -234,12 +240,15 @@ function buildRows(
     ) as number[];
     const hoverPins = Array.from(
       new Set(
-        nodes
+        rootNodes
           .map((node) => resolveNodePinKey(node))
           .filter((pinKey) => !!pinKey),
       ),
     ) as string[];
-    const targetNode = pickTargetNode(nodes);
+    const localTarget = pickTargetNode(rootNodes);
+    const targetNode = (localTarget?.parent && localTarget) ||
+      nodes.find((node) => node.symbol && node.source?.instancePath.length) ||
+      pickTargetNode(nodes);
     const primaryNode = targetNode;
     const targetId = resolveNodeTargetId(targetNode);
 
@@ -272,6 +281,7 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
 }) => {
     const { t } = useTranslation();
   const styles = useStyles();
+  const store = useStore<docDrawing>();
   const [searchQuery, setSearchQuery] = useState(persistentState.searchQuery);
   const [netlist, setNetlist] = useState<NetlistData | null>(null);
 
@@ -279,7 +289,7 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
     () => ensureNetlistTypes(drawing?.netlistTypes),
     [drawing?.netlistTypes],
   );
-  const netTypeAssignments = drawing?.netTypeAssignments || {};
+  const netTypeAssignments = netlist?.sources ? noAssignments : drawing?.netTypeAssignments || noAssignments;
   const typeNames = useMemo(() => Object.keys(netlistTypes).sort(), [netlistTypes]);
 
   useEffect(() => {
@@ -385,7 +395,7 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
       columnId: 'type',
       compare: (a, b) => a.type.localeCompare(b.type),
       renderHeaderCell: () => t('panel.netlistList.type'),
-      renderCell: (item) => (
+      renderCell: (item) => netlist?.sources ? <TableCellLayout>{item.type}</TableCellLayout> : (
         <div className={styles.typeCell} onClick={(e) => e.stopPropagation()}>
           <Combobox
             className={styles.typeCombo}
@@ -430,6 +440,7 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
               type="button"
               size="small"
               className={styles.netlistTypesButton}
+              disabled={!!netlist?.sources}
               onClick={() =>
                 dispatch(
                   actionSelectDialog('netlist_type_editor', {
@@ -462,7 +473,27 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
     return row ? row.id : null;
   }, [items, focusedParentId]);
 
-  const handleRowClick = (item: NetItem) => {
+  const handleRowClick = async (item: NetItem) => {
+    const { source, parent } = item.targetNode;
+    if (source?.instancePath.length && source.unitId) {
+      const initial = store.getState();
+      const project = initial.altStore.file.project;
+      if (!project) return;
+      const stillCurrent = () => store.getState().altStore.file === initial.altStore.file &&
+        store.getState().docStore.present.drawing === initial.docStore.present.drawing;
+      try {
+        const { navigateSchematicSource } = await import('../../io/projectHierarchy');
+        const location = await navigateSchematicSource(project, drawing, {
+          ...source,
+          pinId: parent?.NodeName === DocItemTypes.Pin ? parent.pinId : undefined,
+        });
+        if (stillCurrent()) dispatch(fileOpenProject({ type: 'file-open-project', location }));
+      } catch (error) {
+        if (stillCurrent()) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+      }
+      return;
+    }
+    if (source?.instancePath.length) return;
     const id = item.targetId ?? item.hoverIds[0] ?? null;
     if (!id) {
       return;
@@ -482,6 +513,7 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
   };
 
   const handleMouseEnter = (item: NetItem) => {
+    if (item.firstNode.source?.instancePath.length) return;
     const id = item.hoverIds[0] ?? null;
     if (!id && item.hoverPins.length === 0) {
       return;
@@ -501,6 +533,7 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
   };
 
   const handleMouseLeave = (item: NetItem) => {
+    if (item.firstNode.source?.instancePath.length) return;
     const id = item.hoverIds[0] ?? null;
     if (!id) {
       return;

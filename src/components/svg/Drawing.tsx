@@ -17,7 +17,7 @@ import TText from './Text';
 import TWire from './Wire';
 import TImage from './Image';
 import TDesignRuler from './DesignRuler';
-import { dsnSymbol, DocItem } from '../../model/dsnItem';
+import { dsnSymbol, DocItem, DocItemTypes } from '../../model/dsnItem';
 import {
   DEFAULT_NETLIST_TYPE_NAME,
   NetlistTypes,
@@ -100,7 +100,7 @@ export class TDrawing extends React.PureComponent<TDrawingProps> {
       return netlistTypes[typeName] || null;
     };
 
-    if (netlist && sheetName) {
+    if (netlist && !netlist.sources && sheetName) {
       for (const net in netlist.nets) {
         if (!netlist.nets.hasOwnProperty(net)) {
           continue;
@@ -289,12 +289,9 @@ export class TDrawing extends React.PureComponent<TDrawingProps> {
           );
         case 'pin':
           const update_pin = new updatePin(item);
+          const crossProbed = hoverPinNumbers.has('@' + item.pinId);
           return item.part === part &&
-            update_pin.shown(
-              show_power,
-              editLibrary,
-              this.props.heterogeneous,
-            ) ? (
+            (crossProbed || update_pin.shown(show_power, editLibrary, this.props.heterogeneous)) ? (
             <TPin
               key={item._id}
               data={item}
@@ -484,7 +481,8 @@ export class TDrawing extends React.PureComponent<TDrawingProps> {
 
     let items = this.props.items.map((item, index) => {
       const pinHover =
-        item.NodeName === 'pin' && hoverPinNumbers.has((item as any).number);
+        item.NodeName === DocItemTypes.Pin &&
+        (hoverPinNumbers.has(item.number) || hoverPinNumbers.has('@' + item.pinId));
       let hover = this.props.hover === true || hoverIds.has(item._id) || pinHover;
       let selected =
         this.props.selected ||

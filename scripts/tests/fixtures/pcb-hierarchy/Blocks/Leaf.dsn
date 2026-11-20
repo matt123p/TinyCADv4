@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='utf-8'?>
+<TinyCADSheets>
+  <HierarchicalSymbol>
+    <NAME>Interface</NAME>
+    <DETAILS>
+      <Size width="1485" height="1050" />
+      <GUIDES horiz="7" vert="5" />
+      <TITLE />
+      <AUTHOR />
+      <REVISION />
+      <DOCNUMBER />
+      <ORGANISATION />
+      <SHEETS>1 of 1</SHEETS>
+      <SHOWS>1</SHOWS>
+      <DATE />
+      <GRID spacing="50" snap="1" />
+    </DETAILS>
+    <OPTIONS>
+      <GRID>1</GRID>
+      <UNITS>0</UNITS>
+      <SHOW_LABEL_CONNECTION_POINT>1</SHOW_LABEL_CONNECTION_POINT>
+      <COLOR_WIRE>FF0000</COLOR_WIRE>
+      <COLOR_BUS>0000FF</COLOR_BUS>
+      <COLOR_JUNCTION>000000</COLOR_JUNCTION>
+      <COLOR_NOCONNECT>000000</COLOR_NOCONNECT>
+      <COLOR_LABEL>208000</COLOR_LABEL>
+      <COLOR_POWER>000000</COLOR_POWER>
+      <COLOR_PIN>4040C0</COLOR_PIN>
+      <COLOR_HIDDEN_PIN>208020</COLOR_HIDDEN_PIN>
+      <COLOR_BACKGROUND>FFFFFF</COLOR_BACKGROUND>
+      <COLOR_NOTETEXT_FILL>AFFFFF</COLOR_NOTETEXT_FILL>
+      <COLOR_NOTETEXT_LINE>FF0000</COLOR_NOTETEXT_LINE>
+      <COLOR_NOTETEXT_TEXT>FF0000</COLOR_NOTETEXT_TEXT>
+    </OPTIONS>
+    <PIN pos="0,0" direction="3" number="01" length="20" number_pos="0" centre_name="0" which="0" elec="4" part="0" show="1">IN</PIN>
+  </HierarchicalSymbol>
+  <TinyCAD>
+    <NAME>Leaf</NAME>
+    <DETAILS>
+      <Size width="1485" height="1050" />
+      <GUIDES horiz="7" vert="5" />
+      <TITLE />
+      <AUTHOR />
+      <REVISION />
+      <DOCNUMBER />
+      <ORGANISATION />
+      <SHEETS>1 of 1</SHEETS>
+      <SHOWS>1</SHOWS>
+      <DATE />
+      <GRID spacing="50" snap="1" />
+    </DETAILS>
+    <FONT id="1">
+      <HEIGHT>10</HEIGHT>
+      <FACENAME>Arial</FACENAME>
+      <WIDTH>0</WIDTH>
+      <WEIGHT>400</WEIGHT>
+      <ITALIC>0</ITALIC>
+      <UNDERLINE>0</UNDERLINE>
+      <STRIKEOUT>0</STRIKEOUT>
+      <CHARSET>0</CHARSET>
+    </FONT>
+    <FONT id="2">
+      <HEIGHT />
+      <FACENAME />
+      <WIDTH>0</WIDTH>
+      <WEIGHT>400</WEIGHT>
+      <ITALIC>0</ITALIC>
+      <UNDERLINE>0</UNDERLINE>
+      <STRIKEOUT>0</STRIKEOUT>
+      <CHARSET>0</CHARSET>
+    </FONT>
+    <SYMBOLDEF id="1">
+      <NAME type="0">Resistor</NAME>
+      <GUID>c4b2d47e6a3ce0a42dc7625a512168b9</GUID>
+      <REF type="0">R?</REF>
+      <DESCRIPTION />
+      <PPP>1</PPP>
+      <REF_POINT pos="0,0" power="0" part="0" />
+      <TinyCAD>
+        <PIN pos="0,0" direction="3" number="01" length="20" number_pos="0" centre_name="0" which="0" elec="4" part="0" show="1">TERMINAL</PIN>
+      </TinyCAD>
+    </SYMBOLDEF>
+    <OPTIONS>
+      <GRID>1</GRID>
+      <UNITS>0</UNITS>
+      <SHOW_LABEL_CONNECTION_POINT>1</SHOW_LABEL_CONNECTION_POINT>
+      <COLOR_WIRE>FF0000</COLOR_WIRE>
+      <COLOR_BUS>0000FF</COLOR_BUS>
+      <COLOR_JUNCTION>000000</COLOR_JUNCTION>
+      <COLOR_NOCONNECT>000000</COLOR_NOCONNECT>
+      <COLOR_LABEL>208000</COLOR_LABEL>
+      <COLOR_POWER>000000</COLOR_POWER>
+      <COLOR_PIN>4040C0</COLOR_PIN>
+      <COLOR_HIDDEN_PIN>208020</COLOR_HIDDEN_PIN>
+      <COLOR_BACKGROUND>FFFFFF</COLOR_BACKGROUND>
+      <COLOR_NOTETEXT_FILL>AFFFFF</COLOR_NOTETEXT_FILL>
+      <COLOR_NOTETEXT_LINE>FF0000</COLOR_NOTETEXT_LINE>
+      <COLOR_NOTETEXT_TEXT>FF0000</COLOR_NOTETEXT_TEXT>
+    </OPTIONS>
+    <SYMBOL pos="10,20" id="1" show_power="0" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0">
+      <FIELD pos="0,0" value="R1" description="Ref" type="0" show="1" />
+      <FIELD pos="0,0" value="Resistor" description="Name" type="0" show="1" />
+    </SYMBOL>
+    <LABEL pos="10,20" font="1" color="208000" direction="3" style="0">IN</LABEL>
+  </TinyCAD>
+</TinyCADSheets>

@@ -1,6 +1,9 @@
 import { hasChildPlacements } from '../hierarchyDrawing';
 import { wkrGenerateNetlist } from '../../web-worker/worker';
 import type { docDrawing } from '../../state/undo/undo';
+import type { CircuitSnapshot } from '../../pcb/circuitSnapshot';
+import type { dsnDrawing } from '../../model/dsnDrawing';
+import type { OpenProjectAction } from '../projects';
 
 export async function generateActiveNetlist(state: docDrawing) {
   const { drawing } = state.docStore.present;
@@ -10,6 +13,13 @@ export async function generateActiveNetlist(state: docDrawing) {
     throw new Error(
       'Open this schematic from its project to compile its child designs.',
     );
+  return generateProjectHierarchy(location, drawing);
+}
+
+async function generateProjectHierarchy(
+  location: OpenProjectAction['location'],
+  drawing: dsnDrawing,
+) {
   const [{ readProject }, { resolveChild }, { buildHierarchicalNetlist }] =
     await Promise.all([
       import('../projects'),
@@ -17,8 +27,13 @@ export async function generateActiveNetlist(state: docDrawing) {
       import('../../pcb/hierarchicalNetlist'),
     ]);
   const project = await readProject(location.id, location.rootId);
+  const root = project.settings.entries.find(
+    ({ id, kind }) => kind === 'schematic' && id === location.entryId,
+  );
+  if (!root || drawing.documentId !== root.id)
+    throw new Error('The hierarchy root no longer matches its project link.');
   return buildHierarchicalNetlist(
-    { path: location.documentPath, drawing },
+    { path: root.path, drawing },
     async (parent, link) => {
       const child = await resolveChild(
         project,
@@ -32,6 +47,24 @@ export async function generateActiveNetlist(state: docDrawing) {
       return { path: child.path, drawing: child.drawing };
     },
   );
+}
+
+export async function reviewProjectCircuit(
+  location: OpenProjectAction['location'],
+  drawing: dsnDrawing,
+  previous: CircuitSnapshot,
+) {
+  if (drawing.documentId !== previous.documentId)
+    throw new Error('The active schematic and the board source do not match.');
+  const { buildHierarchicalCircuitSnapshot } = await import(
+    '../../pcb/hierarchicalSnapshot'
+  );
+  const graph = await generateProjectHierarchy(location, drawing);
+  return buildHierarchicalCircuitSnapshot(graph, {
+    documentId: previous.documentId,
+    revision: previous.revision + 1,
+    previous: previous.nets,
+  });
 }
 
 /** Expand the same resolved circuit used by ERC and netlist exports. */

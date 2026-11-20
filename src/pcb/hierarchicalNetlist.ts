@@ -53,16 +53,22 @@ export async function stableHierarchyId(
 const referenceOf = (symbol: dsnSymbol) =>
   symbol.text.find(({ description }) => description === 'Ref')?.value?.trim();
 
+export type HierarchicalNetlist = NetlistData & {
+  sources: Record<string, SchematicSource>;
+  unsupportedPcbSource?: SchematicSource;
+};
+
 export async function buildHierarchicalNetlist(
   root: HierarchyDocument,
   resolve: ResolveHierarchyChild,
-): Promise<NetlistData> {
+): Promise<HierarchicalNetlist> {
   const snapshots: SheetSnapshot[] = [];
   const scopes: { key: string; prefix: string }[] = [];
   const bindings: [ScopedNet, ScopedNet][] = [];
   const sources: Record<string, SchematicSource> = Object.create(null);
   const resolved = new Map<string, Promise<HierarchyDocument>>();
   const interfaces = new Map<string, ReturnType<typeof childInterface>>();
+  let unsupportedPcbSource: SchematicSource | undefined;
   let nextId = -1;
   let visits = 0;
   const exportedReferences = new Map<string, string>();
@@ -88,13 +94,15 @@ export async function buildHierarchicalNetlist(
     for (const sheet of doc.drawing.sheets) {
       if (sheet.hierarchicalSymbol || sheet.kind === 'simulation') continue;
       const index = snapshots.length;
-      const sourceOf = (symbol: dsnSymbol): SchematicSource => ({
+      const sourceOf = (item: dsnSheet['items'][number]): SchematicSource => ({
         documentId: doc.drawing.documentId,
         documentPath: doc.path,
         sheetId: sheet.id,
         instancePath,
-        itemId: symbol._id,
-        unitId: symbol.unitId,
+        itemId: item._id,
+        ...(item.NodeName === DocItemTypes.Symbol
+          ? { unitId: item.unitId }
+          : {}),
       });
       const localSources = new Map<
         number,
@@ -102,9 +110,22 @@ export async function buildHierarchicalNetlist(
       >();
       const name = prefix ? `${prefix} / ${sheet.name}` : sheet.name;
       const items: dsnSheet['items'] = [];
+      const itemSources = new Map<number, SchematicSource>();
       for (const item of sheet.items) {
         if (item.NodeName !== DocItemTypes.Symbol) {
-          items.push('hints' in item ? { ...item, hints: [] } : item);
+          if (
+            item.NodeName === DocItemTypes.BusLabel ||
+            item.NodeName === DocItemTypes.BusSlash ||
+            item.NodeName === DocItemTypes.BusWire
+          )
+            unsupportedPcbSource ??= sourceOf(item);
+          const id = instancePath.length ? nextId-- : item._id;
+          itemSources.set(id, sourceOf(item));
+          items.push({
+            ...item,
+            _id: id,
+            ...('hints' in item ? { hints: [] } : {}),
+          });
           continue;
         }
         const source = sourceOf(item);
@@ -226,6 +247,8 @@ export async function buildHierarchicalNetlist(
             const origin = localSources.get(node.symbol._id);
             node.source = origin?.source;
             node.instanceUnitId = origin?.id;
+          } else if (node.parent) {
+            node.source = itemSources.get(node.parent._id);
           }
           if (node.parent?.NodeName === DocItemTypes.Label)
             labels.set(node.label, { sheet: index, net });
@@ -261,5 +284,9 @@ export async function buildHierarchicalNetlist(
   }
 
   await visit(root, [root.path.toLowerCase()], [], []);
-  return { ...mergeSheetSnapshots(snapshots, { scopes, bindings }), sources };
+  return {
+    ...mergeSheetSnapshots(snapshots, { scopes, bindings }),
+    sources,
+    unsupportedPcbSource,
+  };
 }

@@ -30,7 +30,7 @@ Moving, rotating, renaming and renumbering a native item preserve its UUID. Symb
 | Implicit hidden power | A shape-4 pin is emitted with a label and no physical hotspot in the netlist. The hidden-power pass deduplicates by reference within each sheet. | Preserve its intended named connection in the flat subset. Review common power pins when resolving multipart units. |
 | Drawn no-connect | `NOCONNECT` is emitted as a separate node on the same net as the hotspot. | Retain the explicit marker as intent. Warn on a no-connect marker that also joins other terminals. An isolated pin without a marker has no explicit NC intent. |
 | Buses | `BusWire`, `BusSlash`, and `BusLabel` are represented in XML and the editor. The scalar netlist has no member expansion pass. | Detect and stop PCB compilation until the bus expansion is available. |
-| Hierarchy | The project editor reads and saves interface sheets and placed child designs with stable IDs and project-relative links. The flat netlist has no port expansion. | Require instance-aware connectivity before exporting or compiling a hierarchical circuit. |
+| Hierarchy | Project netlist generation expands placed children, binds their named ports, and scopes labels and power by instance. | The PCB snapshot preserves the source document, sheet, placement path, unit and pin UUIDs. |
 | Multipart symbols | The generator emits each placed unit with its `part` and unit-specific pins. It uses reference text in its hidden-power handling. | Keep unit UUIDs and per-unit pins. Require a physical component binding and review repeated references and common pins before compiling. |
 | Duplicate sheet names and duplicated references | The worker keys sheet snapshots by display name. Legacy exports emit component rows from reference text. | Report conflicts before PCB compilation. No reference-based automatic merging. |
 
@@ -63,7 +63,13 @@ Select a placement to open its child, inspect its locator or reload the interfac
 
 Legacy relative locators resolve from the containing schematic and stay within the project. If a target exists in the project tree, **Add child to project and open** registers it explicitly. For an absolute or missing locator, import a copy of the child into the project, then choose **Relink child** on the parent placement. Unresolved placements retain their original locator and any embedded artwork until repaired. Project copying retains document and placement UUIDs along with relative links.
 
-Compare v3 and v4 net membership on a legacy fixture with a multi-sheet child placed twice, a nested grandchild, identical internal labels in each branch, named ports, and power and hidden-power pins. Add cases for historical XML spellings, relocatable project links, renamed designators with stable PCB identities, duplicate ports, a missing child and a cycle. Compare connectivity and physical component counts using v3 output and an explicit expected graph.
+### Compiling and cross-probing
+
+ERC, the live Netlist list, netlist exports and the BOM use the expanded project graph. Register each child in Projects before compilation so that its document, sheet and unit UUIDs are saved. Labels, power symbols and hidden power pins share a name within one instance. Connect separate instances through their declared ports.
+
+The PCB snapshot uses the placement UUID path and the original unit and pin UUIDs. A copied project and a renamed designator keep the existing component, signal and net identities when terminal membership stays the same. In Projects, open the linked board's action menu and choose **Cross-probe schematic…**. A mapped pad opens the original pin in the correct instance. **Review connectivity** compares the current schematic with the board's recorded circuit revision and reports retained nets, proposed nets and previous nets to review. PCB snapshot compilation stops at buses or symbols that require physical-role or multipart review.
+
+The [legacy fixture](../scripts/tests/fixtures/pcb-hierarchy/src/Circuit.dsn) places a two-sheet child twice, with a nested grandchild, named ports, repeated internal labels, a power symbol and a hidden power pin. The [TinyCAD 3.00.04 XML export](../scripts/tests/fixtures/pcb-hierarchy/v3-netlist.xml) and the explicit expected graph both agree with v4 on 14 physical components and six nets. The regression test normalizes the direction of flattened v3 reference paths and compares each terminal by reference and pin number. To regenerate the reference, open the fixture's `src/Circuit.dsn` in v3 and select **Special → Create PCB Net List → XML**. The checked-in reference uses paths relative to the fixture root.
 
 ## Standalone board format
 

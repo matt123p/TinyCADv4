@@ -184,7 +184,7 @@ export async function findChildUsages(
 
 /** Resolve stable schematic provenance from the root, preserving the exact repeated-instance path. */
 export async function navigateSchematicSource(
-  location: OpenProjectDrawing,
+  location: import('./projects').OpenProjectAction['location'],
   root: dsnDrawing,
   source: Omit<import('./netlists/netlistGenerator').SchematicSource, 'itemId'>,
 ): Promise<import('./projects').OpenProjectAction['location']> {
@@ -232,8 +232,23 @@ export async function navigateSchematicSource(
     (item) =>
       item.NodeName === DocItemTypes.Symbol && item.unitId === source.unitId,
   );
-  if (drawing.documentId !== source.documentId || !unit)
+  if (
+    drawing.documentId !== source.documentId ||
+    unit?.NodeName !== DocItemTypes.Symbol
+  )
     throw new Error('The original schematic unit no longer exists.');
+  if (source.pinId) {
+    const outline =
+      unit._symbol.outlines[unit._symbol.heterogeneous ? unit.part : 0];
+    if (
+      !outline?.active_points.some(
+        ({ pin, part }) =>
+          pin.pinId === source.pinId &&
+          (unit._symbol.heterogeneous || part === unit.part),
+      )
+    )
+      throw new Error('The original schematic pin no longer exists.');
+  }
   return {
     id: location.id,
     name: location.name,
@@ -242,6 +257,7 @@ export async function navigateSchematicSource(
     entryId: entry.id,
     openSheetId: source.sheetId,
     openUnitId: source.unitId,
+    openPinId: source.pinId,
     hierarchyTrail: trail,
   };
 }

@@ -5,6 +5,9 @@ import { NetlistData } from './netlistGenerator';
 import { docDrawing } from '../../state/undo/undo';
 import { wkrInitNetlist, wkrUpdateNetlistSheets } from '../../web-worker/worker';
 import { actionStampWireNetTypes } from '../../state/dispatcher/AppDispatcher';
+import { hasChildPlacements } from '../hierarchyDrawing';
+import { projectFilesChanged } from '../projects';
+import { generateActiveNetlist } from './activeNetlist';
 
 const netlistDebug = process.env.NODE_ENV === 'development';
 const netlistIdleDelayMs = 1000;
@@ -144,6 +147,10 @@ export function subscribeNetlist(listener: NetlistListener) {
 export function initializeNetlistSync(store: Store) {
   let previousDrawing: dsnDrawing | null = null;
   let previousVersion = -1;
+  let projectRevision = 0;
+  let previousProjectRevision = -1;
+  let previousFile: docDrawing['altStore']['file'] | null = null;
+  let usedHierarchy = false;
   let running = false;
   let resyncRequested = false;
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -167,6 +174,33 @@ export function initializeNetlistSync(store: Store) {
 
     // Publishing a netlist dispatches an internal action. At version zero that
     // notification must not initialize the same drawing again indefinitely.
+    const hierarchical = hasChildPlacements(drawing);
+    if (hierarchical) {
+      const file = state.altStore.file;
+      const revision = projectRevision;
+      if (drawing === previousDrawing && file === previousFile && revision === previousProjectRevision)
+        return;
+      previousDrawing = drawing;
+      previousFile = file;
+      previousProjectRevision = revision;
+      usedHierarchy = true;
+      // Return no stale partial circuit when a project child is missing or being edited.
+      publishNetlist(null);
+      try {
+        const netlist = await generateActiveNetlist(state);
+        const current = store.getState() as docDrawing;
+        if (current.docStore.present.drawing === drawing && current.altStore.file === file &&
+            projectRevision === revision && !current.docStore.present.editSymbol)
+          publishNetlist(netlist);
+      } catch (error) {
+        netlistLog('could not compile hierarchy', error);
+      }
+      return;
+    }
+    if (usedHierarchy) {
+      previousDrawing = null;
+      usedHierarchy = false;
+    }
     if (drawing === previousDrawing) {
       return;
     }
@@ -243,5 +277,9 @@ export function initializeNetlistSync(store: Store) {
     requestSyncWhenIdle();
   });
 
+  window.addEventListener(projectFilesChanged, () => {
+    projectRevision++;
+    requestSyncWhenIdle();
+  });
   requestSyncWhenIdle();
 }

@@ -133,7 +133,7 @@ export function mergeSheetSnapshots(
     }
 
     for (const label in snapshot.labels) {
-      if (!snapshot.labels.hasOwnProperty(label)) {
+      if (!Object.prototype.hasOwnProperty.call(snapshot.labels, label)) {
         continue;
       }
       const scopedNet = `${index}:${snapshot.labels[label]}`;
@@ -261,11 +261,19 @@ export function mergeSheetSnapshots(
     eprops[finalNet] = groupedEprops.get(root)!;
   }
 
-  const labels: { [key: string]: string } = {};
-  for (const [label, scoped] of labelsToKeys) {
-    const first = Array.from(scoped)[0];
-    const root = uf.find(first);
-    labels[labelNames.get(label)] = rootToFinal.get(root)!;
+  const labels: { [key: string]: string } = Object.create(null);
+  const reservedLabels = new Set(labelNames.values());
+  for (const [key, scoped] of labelsToKeys) {
+    const net = rootToFinal.get(uf.find(scoped.values().next().value))!;
+    const name = labelNames.get(key);
+    let label = name;
+    if (label in labels && labels[label] !== net) {
+      let suffix = 2;
+      do {
+        label = `${name}_${suffix++}`;
+      } while (reservedLabels.has(label) || label in labels);
+    }
+    labels[label] = net;
   }
 
   symbols.sort((ax, bx) => {

@@ -422,3 +422,278 @@ test('opens legacy project paths and repairs an absolute child locator through a
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test('uses expanded project connectivity for exports and cross-probes mapped board pads after a rename', async ({
+  page,
+}, info) => {
+  test.setTimeout(90000);
+  await mkdir(info.project.outputDir, { recursive: true });
+  const directory = await mkdtemp(
+    path.join(info.project.outputDir, 'hierarchy-board-'),
+  );
+  await installProjectBridge(page, directory);
+  const original = path.join(directory, 'Hierarchy');
+  const api = await layoutRuntime();
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  try {
+    const files = new Map();
+    const entries = [];
+    for (const documentPath of [
+      'src/Circuit.dsn',
+      'Blocks/Child.dsn',
+      'Blocks/Leaf.dsn',
+    ]) {
+      const data = await readFile(
+        new URL('../fixtures/pcb-hierarchy/' + documentPath, import.meta.url),
+      );
+      const drawing = await api.decodeDrawing(data);
+      files.set(documentPath, drawing);
+      entries.push({
+        id: drawing.documentId,
+        kind: 'schematic',
+        path: documentPath,
+      });
+    }
+    const rootPath = entries[0].path;
+    const root = files.get(rootPath);
+    const graph = await api.buildHierarchicalNetlist(
+      { path: rootPath, drawing: root },
+      async (parent, link) => {
+        const path = api.childPath(link, parent.path);
+        return { path, drawing: files.get(path) };
+      },
+    );
+    const { snapshot } = await api.buildHierarchicalCircuitSnapshot(graph, {
+      documentId: root.documentId,
+      revision: 1,
+    });
+    const part = snapshot.components.find(
+      ({ reference }) => reference === 'H2_H1_R1',
+    );
+    const { unitId, pinId } = part.signals[0].terminals[0];
+    const source = snapshot.sources[unitId];
+    const id = () => crypto.randomUUID();
+    const positionNm = { x: 1_000_000, y: 1_000_000 };
+    const digest = 'sha256:' + 'a'.repeat(64);
+    const componentId = id();
+    const footprintId = id();
+    const deviceId = id();
+    const padId = id();
+    const board = {
+      ...api.createBoard('Control board', 1, [
+        { x: 0, y: 0 },
+        { x: 10_000_000, y: 0 },
+        { x: 10_000_000, y: 10_000_000 },
+        { x: 0, y: 10_000_000 },
+      ]),
+      requiredFeatures: ['straight-outline', 'embedded-devices'],
+      sourceCircuit: {
+        documentId: root.documentId,
+        revision: snapshot.revision,
+        connectivityDigest: await api.circuitConnectivityDigest(snapshot),
+      },
+      components: [{ id: componentId, logicalId: part.id }],
+      footprintDefinitions: [
+        {
+          id: footprintId,
+          name: 'Fixture terminal',
+          revision: 'r1',
+          definitionDigest: digest,
+          pads: [{ id: padId, label: 'A01', positionNm }],
+        },
+      ],
+      deviceDefinitions: [
+        {
+          id: deviceId,
+          footprintId,
+          revision: 'r1',
+          definitionDigest: digest,
+          packageName: 'Fixture terminal',
+          packageSource: 'Browser fixture',
+          signalIds: [part.signals[0].id],
+          assignments: [
+            { padId, kind: 'signal', signalId: part.signals[0].id },
+          ],
+        },
+      ],
+      footprints: [
+        {
+          id: id(),
+          componentId,
+          deviceId,
+          positionNm,
+          rotationMicrodegree: 0,
+          side: 'top',
+          locked: false,
+        },
+      ],
+    };
+    root.sheets[0].items
+      .find(({ unitId }) => unitId === source.instancePath[0])
+      .text.find(({ description }) => description === 'Ref').value = 'H7';
+    const leaf = files
+      .get(source.documentPath)
+      .sheets.find(({ id }) => id === source.sheetId);
+    const template = leaf.items.find(({ unitId }) => unitId === source.unitId);
+    leaf.items.push({
+      ...template,
+      _id: Math.max(...leaf.items.map(({ _id }) => _id)) + 1,
+      unitId: id(),
+      point: [1_000, 1_000],
+      _active_points: null,
+      text: template.text.map((field) =>
+        field.description === 'Ref' ? { ...field, value: 'R9' } : field,
+      ),
+    });
+    for (const [name, drawing] of files) {
+      const target = path.join(original, name);
+      await mkdir(path.dirname(target), { recursive: true });
+      await writeFile(target, await api.encodeDrawing(drawing, 'xml'));
+    }
+    await writeFile(
+      path.join(original, 'Board.dpn'),
+      await api.encodeBoard(board),
+    );
+    await writeFile(
+      path.join(original, 'Circuit.json'),
+      JSON.stringify(snapshot),
+    );
+    await writeFile(
+      path.join(original, 'Hierarchy.tcproject'),
+      api.encodeProjectSettings({
+        projectId: id(),
+        revisionId: id(),
+        title: 'Hierarchy',
+        requiredFeatures: [],
+        primarySchematic: root.documentId,
+        primaryBoard: board.boardId,
+        entries: [
+          ...entries,
+          { kind: 'board', id: board.boardId, path: 'Board.dpn' },
+          { kind: 'circuit', id: snapshot.snapshotId, path: 'Circuit.json' },
+        ],
+        associations: [{ schematic: root.documentId, board: board.boardId }],
+      }),
+    );
+
+    await page.goto(app.baseURL);
+    await page.getByRole('button', { name: 'Projects', exact: true }).click();
+    const projects = page.getByRole('region', {
+      name: 'Projects',
+      exact: true,
+    });
+    const snapshotUI = () => page.evaluate(() => window.layoutTest.snapshot());
+    await projects
+      .getByRole('button', { name: 'Hierarchy', exact: true })
+      .click();
+    await projects
+      .getByRole('button', { name: 'Open schematic', exact: true })
+      .click();
+    await expect
+      .poll(async () => (await snapshotUI()).drawing.documentId)
+      .toBe(root.documentId);
+
+    await page.evaluate(() => window.hierarchyTestMenu('file-save-as'));
+    const saveAs = page.getByRole('dialog', { name: 'Save project as' });
+    await saveAs.getByRole('textbox', { name: 'Name' }).fill('Verified copy');
+    await saveAs.getByRole('button', { name: 'OK', exact: true }).click();
+    const copy = path.join(directory, 'Verified copy');
+    await expect
+      .poll(
+        async () =>
+          !!(await readFile(path.join(copy, 'Verified copy.tcproject')).catch(
+            () => undefined,
+          )),
+      )
+      .toBe(true);
+    await expect
+      .poll(async () =>
+        (await snapshotUI()).projectRoot?.includes('Verified copy'),
+      )
+      .toBe(true);
+    await page.reload();
+    await page.getByRole('button', { name: 'Projects', exact: true }).click();
+    await projects
+      .getByRole('button', { name: 'Verified copy', exact: true })
+      .click();
+    await projects
+      .getByRole('button', { name: 'Open schematic', exact: true })
+      .click();
+    await expect
+      .poll(async () => (await snapshotUI()).drawing.documentId)
+      .toBe(root.documentId);
+
+    await page.getByRole('button', { name: 'Symbols', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Netlist', exact: true }).click();
+    await expect(
+      page.getByRole('row').filter({ hasText: 'H7_H1_R1.01' }),
+    ).toHaveCount(1);
+    await page.evaluate(() => window.hierarchyTestMenu('tools-bom'));
+    await expect(page.locator('.bomTable')).toContainText('H7_H1_R1');
+    await expect(page.locator('.bomTable')).toContainText('H1_H1_R1');
+    await expect(page.locator('.bomTable tbody tr')).toHaveCount(1);
+    await expect(page.locator('.bomTable tbody tr td').nth(1)).toHaveText('16');
+    await page.evaluate(() => window.hierarchyTestMenu('tools-netlist'));
+    const dialog = page.getByRole('dialog', { name: 'Generate Netlist' });
+    await dialog.getByRole('combobox').click();
+    await page.getByRole('option', { name: 'PADS-PCB', exact: true }).click();
+    const download = page.waitForEvent('download', { timeout: 10000 });
+    await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+    const exported = await readFile(await (await download).path(), 'utf8');
+    expect(exported).toContain('H7_H1_R1.01');
+    expect(exported).toContain('H1_H1_R1.01');
+
+    await projects
+      .getByRole('button', { name: 'Actions for Board.dpn' })
+      .click();
+    await page
+      .getByRole('menuitem', { name: 'Cross-probe schematic…' })
+      .click();
+    const probe = page.getByRole('dialog', { name: 'Board.dpn' });
+    await probe.getByRole('button', { name: 'Review connectivity' }).click();
+    await expect(probe.getByRole('status')).toHaveText(
+      'Nets retained: 6. Nets proposed: 2. Previous nets to review: 0.',
+    );
+    await probe
+      .getByRole('button', { name: 'H2_H1_R1 · A01 · TERMINAL' })
+      .click();
+    await expect
+      .poll(async () => (await snapshotUI()).drawing.documentId)
+      .toBe(source.documentId);
+    const active = await snapshotUI();
+    expect(active.drawing.sheets[active.sheet].id).toBe(source.sheetId);
+    const selected = active.drawing.sheets[active.sheet].items.find(
+      ({ unitId }) => unitId === source.unitId,
+    );
+    expect(active.selectedIds).toEqual([selected._id]);
+    expect(active.hoverPins).toEqual([`${selected._id}:@${pinId}`]);
+    await expect(
+      page.getByRole('region', { name: 'Schematic hierarchy' }),
+    ).toContainText('H7 / H1 · Blocks/Leaf.dsn');
+    await projects
+      .getByRole('button', { name: 'Open schematic', exact: true })
+      .click();
+    await expect
+      .poll(async () => (await snapshotUI()).drawing.documentId)
+      .toBe(root.documentId);
+    const versionBeforeErc = (await snapshotUI()).drawingVersion;
+    await page.evaluate(() => window.hierarchyTestMenu('tools-drc'));
+    const erc = page.getByRole('dialog', { name: 'Design Rules Check' });
+    await erc.getByRole('checkbox', { name: 'Unconnected nets' }).check();
+    await erc.getByRole('button', { name: 'OK', exact: true }).click();
+    const issue = page.getByRole('row').filter({ hasText: 'H7_H1_R9' });
+    await expect(issue).toContainText('Unconnected nets');
+    expect((await snapshotUI()).drawingVersion).toBe(versionBeforeErc);
+    await issue.click();
+    await expect
+      .poll(async () => (await snapshotUI()).drawing.documentId)
+      .toBe(source.documentId);
+    await expect(
+      page.getByRole('region', { name: 'Schematic hierarchy' }),
+    ).toContainText('H7 / H1 · Blocks/Leaf.dsn');
+    expect(errors).toEqual([]);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});

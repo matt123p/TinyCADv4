@@ -1,9 +1,6 @@
-import type {
-  NetlistData,
-  SchematicSource,
-} from '../io/netlists/netlistGenerator';
 import { DocItemTypes } from '../model/dsnItem';
 import { isEntityId } from '../model/schematicIdentity';
+import { readControl } from '../simulation/controls';
 import { reviewCircuitNets } from './circuitNets';
 import type {
   CircuitNet,
@@ -11,8 +8,17 @@ import type {
   SchematicTerminal,
 } from './circuitNets';
 import { validateCircuitSnapshot } from './circuitSnapshot';
-import type { CircuitComponent, CircuitSnapshot } from './circuitSnapshot';
-import { stableHierarchyId } from './hierarchicalNetlist';
+import type {
+  CircuitComponent,
+  CircuitSchematicSource,
+  CircuitSnapshot,
+} from './circuitSnapshot';
+import type { BoardAssets } from './boardAssets';
+import {
+  HierarchyConnectivityError,
+  stableHierarchyId,
+} from './hierarchicalNetlist';
+import type { HierarchicalNetlist } from './hierarchicalNetlist';
 
 interface SnapshotOptions {
   documentId: string;
@@ -21,19 +27,22 @@ interface SnapshotOptions {
 }
 
 export type HierarchicalCircuitSnapshot = CircuitSnapshot & {
-  sources: Record<string, Omit<SchematicSource, 'itemId'>>;
+  sources: Record<string, CircuitSchematicSource>;
 };
 
 /** Project the supported physical subset from the same graph consumed by ERC and netlist export. */
 export async function buildHierarchicalCircuitSnapshot(
-  graph: NetlistData,
+  graph: HierarchicalNetlist,
   { documentId, revision, previous = [] }: SnapshotOptions,
 ): Promise<{
   snapshot: HierarchicalCircuitSnapshot;
   review: ReturnType<typeof reviewCircuitNets>;
 }> {
-  if (!graph.sources)
-    throw new Error('Build the project hierarchy graph first.');
+  if (graph.unsupportedPcbSource)
+    throw new HierarchyConnectivityError(
+      'Review bus connectivity before building a PCB circuit snapshot.',
+      graph.unsupportedPcbSource,
+    );
   const components: CircuitComponent[] = [];
   const sources: HierarchicalCircuitSnapshot['sources'] = Object.create(null);
   const signalKeys = new Set<string>();
@@ -46,9 +55,11 @@ export async function buildHierarchicalCircuitSnapshot(
     const source = graph.sources[id];
     if (
       !source ||
+      !source.unitId ||
       !reference ||
       references.has(reference.toLowerCase()) ||
-      symbol._symbol.parts !== 1
+      symbol._symbol.parts !== 1 ||
+      readControl(symbol)
     )
       throw new Error(
         `Review physical component binding for ${
@@ -85,7 +96,7 @@ export async function buildHierarchicalCircuitSnapshot(
       ...(packageHint === undefined ? {} : { packageHint }),
     });
     const { itemId, ...persistedSource } = source;
-    sources[id] = persistedSource;
+    sources[id] = { ...persistedSource, unitId: source.unitId };
   }
   const aliases = new Map<string, string[]>();
   for (const [label, net] of Object.entries(graph.labels))
@@ -151,23 +162,51 @@ export async function buildHierarchicalCircuitSnapshot(
   return { snapshot, review };
 }
 
-export function findHierarchyTerminal(
-  snapshot: HierarchicalCircuitSnapshot,
-  terminal: SchematicTerminal,
-) {
-  const component = snapshot.components.find(({ units }) =>
-    units.some(({ id }) => id === terminal.unitId),
-  );
-  if (
-    !component?.signals.some(({ terminals }) =>
-      terminals.some(
-        ({ unitId, pinId }) =>
-          unitId === terminal.unitId && pinId === terminal.pinId,
-      ),
-    )
-  )
-    return undefined;
-  const source = snapshot.sources[terminal.unitId];
-  if (!source) return undefined;
-  return { ...source, pinId: terminal.pinId };
+/** Match physical pads through the embedded device map and the circuit's stable IDs. */
+export function boardPadSources(board: BoardAssets, snapshot: CircuitSnapshot) {
+  const byId = <T extends { readonly id: string }>(items: readonly T[]) =>
+    new Map(items.map((item) => [item.id.toLowerCase(), item]));
+  const devices = byId(board.deviceDefinitions ?? []);
+  const definitions = byId(board.footprintDefinitions ?? []);
+  const components = byId(board.components ?? []);
+  const circuit = byId(snapshot.components);
+  const targets: {
+    footprintId: string;
+    padId: string;
+    padLabel: string;
+    reference: string;
+    signal: string;
+    source: CircuitSchematicSource & { pinId: string };
+  }[] = [];
+  for (const footprint of board.footprints ?? []) {
+    const component = components.get(footprint.componentId.toLowerCase());
+    const logical = circuit.get(
+      (component?.logicalId ?? footprint.componentId).toLowerCase(),
+    );
+    const device = devices.get(footprint.deviceId.toLowerCase());
+    if (!logical || !device) continue;
+    const pads = byId(
+      definitions.get(device.footprintId.toLowerCase())?.pads ?? [],
+    );
+    const signals = byId(logical.signals);
+    for (const assignment of device.assignments) {
+      if (assignment.kind !== 'signal') continue;
+      const signal = signals.get(assignment.signalId.toLowerCase());
+      const pad = pads.get(assignment.padId.toLowerCase());
+      if (!pad || !signal) continue;
+      for (const { unitId, pinId } of signal.terminals) {
+        const source = snapshot.sources?.[unitId.toLowerCase()];
+        if (source)
+          targets.push({
+            footprintId: footprint.id,
+            padId: pad.id,
+            padLabel: pad.label,
+            reference: logical.reference,
+            signal: signal.name,
+            source: { ...source, pinId },
+          });
+      }
+    }
+  }
+  return targets;
 }

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<netlist design="src\Circuit.dsn">
+	<parts>
+		<part ref="R1" name="Resistor"/>
+		<part ref="R2" name="Resistor"/>
+		<hierarchical-part filename="Blocks\Child.dsn" ref="H1" name="Child.dsn"/>
+		<hierarchical-part filename="Blocks\Child.dsn" ref="H2" name="Child.dsn"/>
+		<part ref="R1_H1" name="Resistor"/>
+		<part ref="R2_H1" name="Resistor"/>
+		<part ref="R4_H1" name="Resistor"/>
+		<part ref="R5_H1" name="Resistor"/>
+		<part ref="R3_H1" name="Resistor"/>
+		<hierarchical-part filename="Blocks\Leaf.dsn" ref="H1_H1" name="Leaf.dsn"/>
+		<part ref="R1_H2" name="Resistor"/>
+		<part ref="R2_H2" name="Resistor"/>
+		<part ref="R4_H2" name="Resistor"/>
+		<part ref="R5_H2" name="Resistor"/>
+		<part ref="R3_H2" name="Resistor"/>
+		<hierarchical-part filename="Blocks\Leaf.dsn" ref="H1_H2" name="Leaf.dsn"/>
+		<part ref="R1_H1_H1" name="Resistor"/>
+		<part ref="R1_H1_H2" name="Resistor"/>
+	</parts>
+	<nets>
+		<net name="H1_LOCAL" number="9">
+			<pin part="R2_H1" name="TERMINAL" number="01" type="Passive"/>
+			<pin part="R3_H1" name="TERMINAL" number="01" type="Passive"/>
+		</net>
+		<net name="VCC" number="10">
+			<pin part="R5_H1" name="VCC" number="01" type="Passive"/>
+			<pin part="R4_H1" name="TERMINAL" number="01" type="Passive"/>
+		</net>
+		<net name="H1_IN" number="1">
+			<pin part="R1" name="TERMINAL" number="01" type="Passive"/>
+			<hierarchical-pin part="H1" name="IN" number="01" type="Passive"/>
+			<pin part="R1_H1" name="TERMINAL" number="01" type="Passive"/>
+			<hierarchical-pin part="H1_H1" name="IN" number="01" type="Passive"/>
+			<pin part="R1_H1_H1" name="TERMINAL" number="01" type="Passive"/>
+		</net>
+		<net name="H2_LOCAL" number="11">
+			<pin part="R2_H2" name="TERMINAL" number="01" type="Passive"/>
+			<pin part="R3_H2" name="TERMINAL" number="01" type="Passive"/>
+		</net>
+		<net name="VCC" number="12">
+			<pin part="R5_H2" name="VCC" number="01" type="Passive"/>
+			<pin part="R4_H2" name="TERMINAL" number="01" type="Passive"/>
+		</net>
+		<net name="H2_IN" number="2">
+			<pin part="R2" name="TERMINAL" number="01" type="Passive"/>
+			<hierarchical-pin part="H2" name="IN" number="01" type="Passive"/>
+			<pin part="R1_H2" name="TERMINAL" number="01" type="Passive"/>
+			<hierarchical-pin part="H1_H2" name="IN" number="01" type="Passive"/>
+			<pin part="R1_H1_H2" name="TERMINAL" number="01" type="Passive"/>
+		</net>
+	</nets>
+</netlist>

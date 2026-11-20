@@ -289,6 +289,12 @@ export class updateDrawing {
           a: a.slice(),
           id: n.symbol._id,
           sheet: n.sheet,
+          ...(n.source?.instancePath.length ? {
+            source: {
+              ...n.source,
+              pinId: n.parent?.NodeName === DocItemTypes.Pin ? n.parent.pinId : undefined,
+            },
+          } : {}),
         });
         break;
       }
@@ -478,8 +484,8 @@ export class updateDrawing {
           this._addDrcError(drawing, r, 'Unconnected nets', netlist.nets[net]);
         }
 
-        let labels: { [key: string]: NetListNode } = {};
-        let lc_labels: { [key: string]: NetListNode } = {};
+        let labels: { [key: string]: NetListNode } = Object.create(null);
+        let lc_labels: { [key: string]: NetListNode } = Object.create(null);
         for (let i in netlist.nets[net]) {
           if (netlist.nets[net].hasOwnProperty(i)) {
             let n = netlist.nets[net][i];
@@ -496,7 +502,7 @@ export class updateDrawing {
           Object.keys(lc_labels).length === 1
         ) {
           for (let l in labels) {
-            if (labels.hasOwnProperty(l)) {
+            if (Object.prototype.hasOwnProperty.call(labels, l)) {
               let label = labels[l];
               let a = [0, 0];
               if (label.parent && label.parent.NodeName !== DocItemTypes.Wire) {
@@ -517,7 +523,7 @@ export class updateDrawing {
           Object.keys(lc_labels).length > 1
         ) {
           for (let l in labels) {
-            if (labels.hasOwnProperty(l)) {
+            if (Object.prototype.hasOwnProperty.call(labels, l)) {
               let label = labels[l];
               let a = [0, 0];
               if (label.parent && label.parent.NodeName !== DocItemTypes.Wire) {
@@ -542,7 +548,7 @@ export class updateDrawing {
         [symbol._id, netlist.sources[symbol.unitId]]));
       for (const row of r) {
         const origin = origins.get(row.id);
-        if (origin?.instancePath.length) row.source = origin;
+        if (!row.source && origin?.instancePath.length) row.source = origin;
       }
     }
     return r;

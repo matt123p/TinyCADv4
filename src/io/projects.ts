@@ -235,6 +235,7 @@ export async function readProjectBoard(
     throw new Error('PCB document identity does not match its project link.');
 
   const source = board.sourceCircuit;
+  let circuit: import('../pcb/circuitSnapshot').CircuitSnapshot | undefined;
   if (source) {
     const { circuitConnectivityDigest } = await import(
       '../pcb/circuitSnapshot'
@@ -248,7 +249,6 @@ export async function readProjectBoard(
         'PCB source circuit does not match its project schematic association.',
       );
     const text = new TextDecoder('utf-8', { fatal: true });
-    const matches = [];
     for (const entry of project.settings.entries.filter(
       ({ kind }) => kind === 'circuit',
     )) {
@@ -272,14 +272,22 @@ export async function readProjectBoard(
         throw new Error(
           'Circuit snapshot identity does not match its project link.',
         );
-      matches.push(await circuitConnectivityDigest(snapshot));
+      if (
+        circuit ||
+        (await circuitConnectivityDigest(snapshot)) !==
+          source.connectivityDigest
+      )
+        throw new Error(
+          'Missing or inconsistent project circuit snapshot for this PCB.',
+        );
+      circuit = snapshot;
     }
-    if (matches.length !== 1 || matches[0] !== source.connectivityDigest)
+    if (!circuit)
       throw new Error(
         'Missing or inconsistent project circuit snapshot for this PCB.',
       );
   }
-  return { board, data };
+  return { board, data, circuit };
 }
 
 type DrawingEntry = ProjectLink & { data: Uint8Array };
