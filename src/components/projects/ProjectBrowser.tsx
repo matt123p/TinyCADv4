@@ -53,6 +53,7 @@ import { ProjectRevisionDialog } from './ProjectRevisionDialog';
 import type { ProjectRevisionComparison } from './ProjectRevisionDialog';
 import { compareProjectRevisions } from '../../pcb/projectRevisions';
 import type { RevisionInventory } from '../../pcb/projectRevisions';
+import type { ProjectDeviceReview } from '../../io/projectDevices';
 
 type LoadedProject = Awaited<ReturnType<typeof readProject>>;
 
@@ -69,6 +70,8 @@ import type { boardPadSources } from '../../pcb/hierarchicalSnapshot';
 import type { reviewProjectCircuit } from '../../io/netlists/activeNetlist';
 import { DocActionTypes } from '../../state/actions/docActions';
 import { activeSheet } from '../../state/stores/docStoreReducer';
+
+const ProjectDeviceDialog = React.lazy(() => import('./ProjectDeviceDialog'));
 
 interface NamePrompt {
   title: string;
@@ -115,6 +118,7 @@ export default function ProjectBrowser() {
     open: (target: ReturnType<typeof boardPadSources>[number]) => Promise<void>;
     review: () => ReturnType<typeof reviewProjectCircuit>;
   }>();
+  const [deviceReview, setDeviceReview] = useState<ProjectDeviceReview>();
   const [boardReview, setBoardReview] =
     useState<Awaited<ReturnType<typeof reviewProjectCircuit>>['review']>();
   const drive = process.env.TARGET_SYSTEM === 'google';
@@ -697,6 +701,28 @@ export default function ProjectBrowser() {
                           {t('projects.boardProbe')}
                         </MenuItem>
                       )}
+                      {link?.kind === 'board' && context && !editingLibrary && (
+                        <MenuItem
+                          onClick={(): void =>
+                            void run(async () => {
+                              const { openProjectDeviceReview } = await import(
+                                '../../io/projectDevices'
+                              );
+                              setDeviceReview(
+                                await openProjectDeviceReview(
+                                  {
+                                    id: context.marker.id,
+                                    rootId: context.root.id,
+                                  },
+                                  link.id,
+                                ),
+                              );
+                            }, false)
+                          }
+                        >
+                          {t('projects.reviewBoardDevices')}
+                        </MenuItem>
+                      )}
                       {context &&
                         !link &&
                         !item.folder &&
@@ -872,6 +898,14 @@ export default function ProjectBrowser() {
           comparison={comparison}
           onClose={() => setComparison(undefined)}
         />
+      )}
+      {deviceReview && (
+        <React.Suspense fallback={<Spinner />}>
+          <ProjectDeviceDialog
+            review={deviceReview}
+            onClose={() => setDeviceReview(undefined)}
+          />
+        </React.Suspense>
       )}
       {boardProbe && (
         <Dialog

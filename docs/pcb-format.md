@@ -77,6 +77,16 @@ The writer orders known record fields consistently and retains authored list ord
 
 Board operations apply atomically against an expected revision. Undo and redo restore content with a fresh revision. Future features add typed entity collections for tracks, vias, zones and mechanical objects. Those collections need implementation-specific checks and required feature identifiers before use. Filled copper, meshes, spatial indexes and live DRC are rebuildable data and stay out of authoring files.
 
+## Reviewed device definitions
+
+A reusable `.tcdevice.json` file describes one versioned device, its package aliases, reviewed pinout provenance, explicit terminal-to-pad assignments and full footprint. Optional nominal pitch and required body dimensions are in nanometres. Each electrical pad maps to a terminal UUID. Several lands may share a terminal UUID. NC, reserved and mechanical pads each carry an explicit role. Package names and display pin numbers have no effect on the map.
+
+The file has `format: "tinycad-device"` and `version: 1`. The footprint's `definitionDigest` is the SHA-256 of its UTF-8 JSON with sorted object keys and without the digest field. TinyCAD checks the footprint digest and each STEP asset. Publish changed contents under a new revision of the same device UUID. [Device file reader and writer](../src/pcb/deviceLibrary.ts)
+
+The board's `DEVICEDEFS` record embeds the resolved assignments. Its `LIBRARYSOURCE` records the catalogue device and footprint UUIDs, full device file digest, reviewer, evidence, licence and explicit binding from device terminal UUIDs to this component's schematic signal UUIDs. The embedded board definitions, including any STEP bytes, stay usable offline. A catalogue refresh previews changes by pad UUID and updates the selected component only after approval. Its footprint keeps its placement transform.
+
+See the [project device review workflow](project-specification.md#reviewed-pcb-devices) for catalogue discovery and review.
+
 ## KiCad import persistence
 
 For each supported KiCad feature, use the same versioned native fields and validation as for objects authored in TinyCAD. Keep PCB-relevant symbol fields, pin labels and footprint references in native `.tclib`, `.dsn` and `.dzn` data as applicable. Store reviewed device mappings, footprint graphics, padstacks and model attachments in native `.dpn` definitions. M2 board import uses the typed native entities for supported stackup, placements, routing, zones and rules. Keep unsupported items and unresolved asset references visible in the import report.

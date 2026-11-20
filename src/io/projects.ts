@@ -228,7 +228,7 @@ export async function readProjectBoard(
   );
   if (!link) throw new Error('Missing linked PCB document.');
   const file = project.files.get(link.path);
-  const { data } = await projectRequest({ operation: 'read', id: file.id });
+  const { data, version } = await projectRequest({ operation: 'read', id: file.id });
   const { decodeBoard } = await import('../pcb/boardCodec');
   const board = await decodeBoard(data);
   if (board.boardId.toLowerCase() !== link.id)
@@ -287,7 +287,7 @@ export async function readProjectBoard(
         'Missing or inconsistent project circuit snapshot for this PCB.',
       );
   }
-  return { board, data, circuit };
+  return { board, data, circuit, version };
 }
 
 type DrawingEntry = ProjectLink & { data: Uint8Array };

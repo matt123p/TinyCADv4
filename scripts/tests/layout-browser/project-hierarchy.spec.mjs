@@ -677,6 +677,90 @@ test('uses expanded project connectivity for exports and cross-probes mapped boa
     await expect
       .poll(async () => (await snapshotUI()).drawing.documentId)
       .toBe(root.documentId);
+    await projects
+      .getByRole('button', { name: 'Actions for Board.dpn' })
+      .click();
+    await page.getByRole('menuitem', { name: 'Review PCB devices…' }).click();
+    const devices = page.getByRole('dialog', { name: 'Review PCB devices' });
+    await devices
+      .getByLabel('Component', { exact: true })
+      .selectOption(part.id);
+    const terminalId = id();
+    const footprint = {
+      id: footprintId,
+      name: 'Reviewed fixture',
+      revision: 'r2',
+      pads: [{ id: padId, label: '01', positionNm }],
+    };
+    const library = await api.writeLibraryDevice({
+      format: 'tinycad-device',
+      version: 1,
+      id: id(),
+      name: 'Reviewed fixture',
+      revision: 'r2',
+      packageNames: ['Fixture terminal'],
+      mount: 'surface-mount',
+      bodyNm: { width: 1_000_000, height: 1_000_000 },
+      source: 'Browser fixture',
+      license: 'CC0-1.0',
+      review: { by: 'Test', evidence: 'Schematic fixture' },
+      footprint: {
+        ...footprint,
+        definitionDigest: await api.deviceDigest(footprint),
+      },
+      terminals: [{ id: terminalId, name: 'Terminal' }],
+      assignments: [{ padId, kind: 'signal', signalId: terminalId }],
+    });
+    await devices.getByLabel('Add device library file').setInputFiles({
+      name: 'reviewed.tcdevice.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(library),
+    });
+    const deviceChoice = devices.getByLabel('Device revision');
+    await deviceChoice.selectOption({
+      label: 'Reviewed fixture · r2 · 1 pads',
+    });
+    const preview = devices.getByRole('button', {
+      name: 'Preview device changes',
+    });
+    await expect(preview).toBeDisabled();
+    await devices
+      .getByLabel('Signal for pad 01 (1)')
+      .selectOption(part.signals[0].id);
+    await expect(
+      devices.getByRole('img', { name: 'Highlighted schematic pin' }),
+    ).toBeVisible();
+    const padPreview = devices.getByRole('img', {
+      name: 'Footprint pad preview',
+    });
+    await expect(padPreview.locator('[data-highlighted="true"]')).toContainText(
+      '01',
+    );
+    await preview.click();
+    await expect(
+      devices.getByRole('region', { name: 'Proposed device changes' }),
+    ).toContainText('Label');
+    const boardPath = path.join(copy, 'Board.dpn');
+    expect((await api.decodeBoard(await readFile(boardPath))).revision).toBe(
+      board.revision,
+    );
+    await devices
+      .getByRole('button', { name: 'Apply reviewed device' })
+      .click();
+    await expect(devices).toBeHidden();
+    const reviewedBoard = await api.decodeBoard(await readFile(boardPath));
+    expect(reviewedBoard.revision).toBe(board.revision + 1);
+    expect(reviewedBoard.footprints[0]).toEqual({
+      ...board.footprints[0],
+      deviceId: reviewedBoard.deviceDefinitions[0].id,
+    });
+    expect(reviewedBoard.deviceDefinitions[0].library.bindings).toEqual([
+      { terminalId, signalId: part.signals[0].id },
+    ]);
+    expect(await readFile(path.join(copy, 'reviewed.tcdevice.json'))).toEqual(
+      Buffer.from(library),
+    );
+
     const versionBeforeErc = (await snapshotUI()).drawingVersion;
     await page.evaluate(() => window.hierarchyTestMenu('tools-drc'));
     const erc = page.getByRole('dialog', { name: 'Design Rules Check' });

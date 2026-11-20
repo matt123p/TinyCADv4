@@ -94,6 +94,7 @@ const common = {
     folderActions: 'Project folder actions',
     itemActions: 'Actions for {{name}}',
     boardProbe: 'Cross-probe schematic…',
+    reviewBoardDevices: 'Review PCB devices…',
     boardProbeMissing: 'This board has no linked circuit snapshot with schematic sources.',
     boardProbeEmpty: 'No mapped board pads have a schematic source.',
     boardReview: 'Review connectivity',

@@ -40,6 +40,8 @@ export { auditPcbSchematic } from '../../src/pcb/schematicAudit';
 export { reviewCircuitNets } from '../../src/pcb/circuitNets';
 export { decodeProjectSettings, encodeProjectSettings } from '../../src/pcb/projectSettings';
 export { circuitConnectivityDigest } from '../../src/pcb/circuitSnapshot';
+export { deviceDigest, readLibraryDevice, searchLibraryDevices, writeLibraryDevice } from '../../src/pcb/deviceLibrary';
+export { applyDeviceReview, previewDeviceReview } from '../../src/pcb/deviceReview';
 export { createBoard } from '../../src/pcb/board';
 export { encodeBoard, decodeBoard, createBoardModelAsset, readBoardModelAsset } from '../../src/pcb/boardCodec';
 export { driveProjectFiles } from '../../src/io/projectStorage';

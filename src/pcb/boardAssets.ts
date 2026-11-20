@@ -55,6 +55,18 @@ export interface EmbeddedDevice {
   readonly footprintId: string;
   readonly signalIds: readonly string[];
   readonly assignments: readonly PadAssignment[];
+  readonly library?: {
+    readonly id: string;
+    readonly digest: string;
+    readonly footprintId: string;
+    readonly evidence: string;
+    readonly reviewer: string;
+    readonly license: string;
+    readonly bindings: readonly {
+      readonly terminalId: string;
+      readonly signalId: string;
+    }[];
+  };
 }
 
 export interface BoardFootprint extends FootprintPlacement {
@@ -69,6 +81,7 @@ export interface BoardComponent {
   readonly reference?: string;
   readonly value?: string;
   readonly logicalId?: string;
+  readonly deviceId?: string;
   readonly role?: 'electrical' | 'dnp' | 'pcb-only' | 'net-tie';
   readonly units?: CircuitComponent['units'];
   readonly signals?: readonly {
@@ -188,6 +201,7 @@ export function validateBoardAssets(
         typeof component.reference !== 'string') ||
       (component.value !== undefined && typeof component.value !== 'string') ||
       (component.logicalId !== undefined && !isEntityId(component.logicalId)) ||
+      (component.deviceId !== undefined && !isEntityId(component.deviceId)) ||
       (component.role !== undefined &&
         !['electrical', 'dnp', 'pcb-only', 'net-tie'].includes(
           component.role,
@@ -240,6 +254,10 @@ export function validateBoardAssets(
       'Embedded devices must declare the embedded-devices feature.',
     );
   if (!hasAssets) {
+    if ([...componentDefinitions.values()].some(({ deviceId }) => deviceId))
+      throw new Error(
+        'PCB component is missing its reviewed device definition.',
+      );
     if (modelAssets.size)
       throw new Error('Embedded STEP asset has no footprint attachment.');
     if (features.includes('physical-padstacks'))
@@ -293,6 +311,34 @@ export function validateBoardAssets(
       device.assignments,
     );
     if (issues.length) throw new Error(`Invalid device mapping: ${issues[0]}`);
+    if (device.library) {
+      const { id, digest, footprintId, evidence, reviewer, license, bindings } =
+        device.library;
+      const signals = new Set(device.signalIds);
+      if (
+        !isEntityId(id) ||
+        !isDigest(digest) ||
+        !isEntityId(footprintId) ||
+        ![evidence, reviewer, license].every(isText) ||
+        !Array.isArray(bindings) ||
+        bindings.length !== signals.size ||
+        new Set(bindings.map((entry) => entry?.terminalId)).size !==
+          bindings.length ||
+        new Set(bindings.map((entry) => entry?.signalId)).size !==
+          signals.size ||
+        !bindings.every(
+          (entry) =>
+            isEntityId(entry?.terminalId) && signals.has(entry.signalId),
+        )
+      )
+        throw new Error('Invalid reviewed device library binding.');
+    }
+  }
+  for (const component of componentDefinitions.values()) {
+    if (component.deviceId && !devices.has(component.deviceId.toLowerCase()))
+      throw new Error(
+        'PCB component is missing its reviewed device definition.',
+      );
   }
   const components = new Set<string>();
   for (const instance of byId(footprints, 'footprint instance').values()) {
@@ -315,6 +361,11 @@ export function validateBoardAssets(
     );
     if (board.components !== undefined && !component)
       throw new Error('Placement refers to a missing embedded component.');
+    if (
+      component?.deviceId &&
+      component.deviceId.toLowerCase() !== instance.deviceId.toLowerCase()
+    )
+      throw new Error('Placement uses a different device than its component.');
     const signals = new Set(
       devices
         .get(instance.deviceId.toLowerCase())

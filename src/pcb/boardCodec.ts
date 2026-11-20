@@ -129,6 +129,26 @@ const device = record(
       'ASSIGN',
       record({ padId: 'string', kind: 'string', signalId: 'string' }),
     ),
+    library: child(
+      'LIBRARYSOURCE',
+      record(
+        {
+          id: 'string',
+          digest: 'string',
+          footprintId: 'string',
+          evidence: 'string',
+          reviewer: 'string',
+          license: 'string',
+        },
+        {
+          bindings: list(
+            'BINDINGS',
+            'BIND',
+            record({ terminalId: 'string', signalId: 'string' }),
+          ),
+        },
+      ),
+    ),
   },
 );
 const component = record(
@@ -137,6 +157,7 @@ const component = record(
     reference: ['string', 'ref'],
     value: 'string',
     logicalId: 'string',
+    deviceId: 'string',
     role: 'string',
   },
   {

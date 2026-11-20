@@ -237,6 +237,15 @@ TinyCAD automatically compiles connectivity for the selected schematic when the 
 
 Positional re-annotation is a follow-up to manual PCB reference edits. It should preview the proposed numbering order and respect locked designators. Pin and gate exchanges follow the separate [equivalence rules](TinyCAD_PCB_Layout_Complete_Specification.md#81-connectivity-contract) (SYN-10).
 
+
+### Reviewed PCB devices
+
+From the linked board's file actions, open **Review PCB devices**. The board needs an applied circuit snapshot with schematic sources. TinyCAD reads reviewed `.tcdevice.json` definitions in the project root and in the folder containing the selected board. Add a definition to that folder using the file picker, or export the selected version as a reusable library file.
+
+Select the schematic component and choose a device. A legacy `Package` value suggests candidates. Use the name, reviewer, body dimensions, nominal pitch, pad count and mount filters to narrow the choices. The catalogue accepts definitions that include review provenance. TinyCAD flags conflicting definitions with the same device UUID and revision.
+
+Assign each device terminal to a schematic signal. Inspect the highlighted footprint pad and source pin, and switch between source units for a shared signal. Preview the proposed pad, drill, assignment, artwork and model changes before applying. A confirmed review updates the board only if its stored revision still matches the preview. Each component can have its own reviewed binding, and the shared library file stays intact. See the [device file contract](pcb-format.md#reviewed-device-definitions).
+
 ## Project requirements
 
 | ID | Requirement | Acceptance condition | Release |
