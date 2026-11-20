@@ -8,17 +8,22 @@ import {
   DialogSurface,
   DialogTitle,
 } from '@fluentui/react-components';
-import { boardPadSources } from '../../pcb/hierarchicalSnapshot';
+import {
+  boardNetSources,
+  boardPadSources,
+} from '../../pcb/hierarchicalSnapshot';
 import { boardPlacementView } from '../../pcb/boardPlacement';
 import { lengthInNanometres } from '../../pcb/geometry';
 import type { BoardPoint } from '../../pcb/geometry';
 import type { ProjectBoardWorkspace } from '../../io/projectBoardWorkspace';
+import type { BoardWorkspaceProbe } from '../../io/projectPcbProbe';
 
 const mm = (value: number) => String(value / 1_000_000);
 const nm = (value: string) => lengthInNanometres(value, 'mm');
 const point = ({ x, y }: BoardPoint) => `${x},${-y}`;
 const ring = (points: readonly BoardPoint[]) =>
   'M' + points.map(point).join(' L') + ' Z';
+const netHighlight = '#1765db';
 
 export default function ProjectBoardWorkspaceDialog({
   session,
@@ -33,7 +38,7 @@ export default function ProjectBoardWorkspaceDialog({
   session: ProjectBoardWorkspace;
   onClose(): void;
   syncStatus?: string;
-  probe?: { componentId: string; padId?: string };
+  probe?: BoardWorkspaceProbe;
   onProbe(source: ReturnType<typeof boardPadSources>[number]['source']): void;
   onUpdate(): void;
   onEditReferences(): void;
@@ -41,6 +46,8 @@ export default function ProjectBoardWorkspaceDialog({
 }) {
   const [board, setBoard] = useState(session.board);
   const [selected, setSelected] = useState(probe?.componentId ?? '');
+  const [selectedPad, setSelectedPad] = useState(probe?.padId);
+  const [selectedNet, setSelectedNet] = useState(probe?.netId ?? '');
   const [x, setX] = useState('10');
   const [y, setY] = useState('10');
   const [rotation, setRotation] = useState('0');
@@ -72,6 +79,13 @@ export default function ProjectBoardWorkspaceDialog({
           ({ footprintId }) => footprintId === selectedPlacement.id,
         )
       : [];
+  const netSources = useMemo(
+    () =>
+      session.circuit && selectedNet
+        ? boardNetSources(session.circuit, selectedNet)
+        : [],
+    [session.circuit, selectedNet],
+  );
   const area = geometry?.profile.outer.reduce(
     (bounds, p) => [
       Math.min(bounds[0], p.x),
@@ -91,6 +105,21 @@ export default function ProjectBoardWorkspaceDialog({
       if (!netAnchors.has(netId)) netAnchors.set(netId, []);
       netAnchors.get(netId).push(position);
     }
+  }
+
+  function selectComponent(componentId: string, padId?: string) {
+    setSelected(componentId);
+    setSelectedPad(padId);
+    setSelectedNet('');
+  }
+
+  function selectRoutedNet(
+    event: React.MouseEvent<SVGElement>,
+    netId?: string,
+  ) {
+    if (!netId) return;
+    event.stopPropagation();
+    setSelectedNet(netId);
   }
 
   async function place() {
@@ -172,20 +201,34 @@ export default function ProjectBoardWorkspaceDialog({
                     strokeWidth={margin * 0.065}
                   />
                   {(board.tracks ?? []).map(
-                    ({ id, start, end, widthNm, layerId, reviewRequired }) => (
+                    ({
+                      id,
+                      start,
+                      end,
+                      widthNm,
+                      layerId,
+                      reviewRequired,
+                      netId,
+                    }) => (
                       <path
                         key={id}
                         d={'M' + point(start) + ' L' + point(end)}
                         fill="none"
                         strokeLinecap="round"
                         stroke={
-                          reviewRequired
+                          netId && netId === selectedNet
+                            ? netHighlight
+                            : reviewRequired
                             ? '#a52c24'
                             : layerId === 'top'
                             ? '#b17a2d'
                             : '#397188'
                         }
                         strokeWidth={widthNm}
+                        data-net-highlighted={
+                          (!!netId && netId === selectedNet) || undefined
+                        }
+                        onClick={(event) => selectRoutedNet(event, netId)}
                       />
                     ),
                   )}
@@ -196,13 +239,26 @@ export default function ProjectBoardWorkspaceDialog({
                       diameterNm,
                       drillNm,
                       reviewRequired,
+                      netId,
                     }) => (
-                      <g key={id}>
+                      <g
+                        key={id}
+                        onClick={(event) => selectRoutedNet(event, netId)}
+                      >
                         <circle
                           cx={positionNm.x}
                           cy={-positionNm.y}
                           r={diameterNm / 2}
-                          fill={reviewRequired ? '#a52c24' : '#79644e'}
+                          fill={
+                            netId && netId === selectedNet
+                              ? netHighlight
+                              : reviewRequired
+                              ? '#a52c24'
+                              : '#79644e'
+                          }
+                          data-net-highlighted={
+                            (!!netId && netId === selectedNet) || undefined
+                          }
                         />
                         <circle
                           cx={positionNm.x}
@@ -218,7 +274,7 @@ export default function ProjectBoardWorkspaceDialog({
                       <path
                         key={net + ':' + index}
                         d={'M' + point(start) + ' L' + point(end)}
-                        stroke="#8292a3"
+                        stroke={net === selectedNet ? netHighlight : '#8292a3'}
                         fill="none"
                         strokeWidth={margin * 0.04}
                         strokeDasharray={margin * 0.16}
@@ -234,31 +290,56 @@ export default function ProjectBoardWorkspaceDialog({
                       <g
                         key={feature.id}
                         data-component={feature.id}
-                        onClick={() => setSelected(feature.id)}
+                        onClick={() => selectComponent(feature.id)}
                       >
-                        {feature.copper.map(({ id, region }) => (
-                          <path
-                            key={id}
-                            d={[region.outer, ...region.holes]
-                              .map(ring)
-                              .join(' ')}
-                            fill={
-                              feature.id === probe?.componentId &&
-                              id.split(':')[1] === probe.padId
-                                ? '#af242e'
-                                : fill
-                            }
-                            fillRule="evenodd"
-                          />
-                        ))}
+                        {feature.copper.map(({ id, region, netId }) => {
+                          const padId = id.split(':')[1];
+                          const highlighted = !!netId && netId === selectedNet;
+                          return (
+                            <path
+                              key={id}
+                              d={[region.outer, ...region.holes]
+                                .map(ring)
+                                .join(' ')}
+                              fill={
+                                highlighted
+                                  ? netHighlight
+                                  : feature.id === selected &&
+                                    padId === selectedPad
+                                  ? '#af242e'
+                                  : fill
+                              }
+                              fillRule="evenodd"
+                              data-net-highlighted={highlighted || undefined}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                selectComponent(feature.id, padId);
+                              }}
+                            />
+                          );
+                        })}
                         {!feature.copper.length &&
-                          feature.pads.map(({ id, position }) => (
+                          feature.pads.map(({ id, position, netId }) => (
                             <circle
                               key={id}
                               cx={position.x}
                               cy={-position.y}
-                              fill={fill}
+                              fill={
+                                netId && netId === selectedNet
+                                  ? netHighlight
+                                  : feature.id === selected &&
+                                    id === selectedPad
+                                  ? '#af242e'
+                                  : fill
+                              }
                               r={margin * 0.085}
+                              data-net-highlighted={
+                                (!!netId && netId === selectedNet) || undefined
+                              }
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                selectComponent(feature.id, id);
+                              }}
                             />
                           ))}
                         <text
@@ -277,6 +358,49 @@ export default function ProjectBoardWorkspaceDialog({
                 <p role="alert">{layout.error}</p>
               )}
               <div style={{ maxHeight: '65vh', overflow: 'auto' }}>
+                {!!board.nets?.length && (
+                  <label>
+                    Board net{' '}
+                    <select
+                      aria-label="Board net"
+                      style={{ maxWidth: '100%' }}
+                      value={selectedNet}
+                      onChange={(event) => setSelectedNet(event.target.value)}
+                    >
+                      <option value="">Choose a net</option>
+                      {board.nets.map(({ id, name }) => (
+                        <option key={id} value={id}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {selectedNet &&
+                  (netSources.length ? (
+                    <>
+                      <h3>Schematic net terminals</h3>
+                      <ul aria-label="Schematic net terminals">
+                        {netSources.map(
+                          ({ id, reference, signal, number, source }) => (
+                            <li key={id}>
+                              <Button
+                                size="small"
+                                onClick={() => onProbe(source)}
+                              >
+                                {reference} · {signal}
+                                {number ? ' · ' + number : ''}
+                              </Button>
+                            </li>
+                          ),
+                        )}
+                      </ul>
+                    </>
+                  ) : (
+                    <p role="status">
+                      No schematic terminals are linked to this board net.
+                    </p>
+                  ))}
                 <h3>Unplaced components</h3>
                 {unplaced.length ? (
                   <ul aria-label="Unplaced components">
@@ -286,7 +410,7 @@ export default function ProjectBoardWorkspaceDialog({
                           size="small"
                           appearance={id === selected ? 'primary' : 'subtle'}
                           disabled={busy || !deviceId}
-                          onClick={() => setSelected(id)}
+                          onClick={() => selectComponent(id)}
                         >
                           {reference ?? id}
                           {value ? ' · ' + value : ''}
@@ -305,7 +429,13 @@ export default function ProjectBoardWorkspaceDialog({
                         <li
                           key={padId + ':' + source.unitId + ':' + source.pinId}
                         >
-                          <Button size="small" onClick={() => onProbe(source)}>
+                          <Button
+                            size="small"
+                            appearance={
+                              padId === selectedPad ? 'primary' : 'subtle'
+                            }
+                            onClick={() => onProbe(source)}
+                          >
                             {padLabel} · {signal}
                           </Button>
                         </li>
@@ -322,7 +452,7 @@ export default function ProjectBoardWorkspaceDialog({
                           <Button
                             size="small"
                             appearance={id === selected ? 'primary' : 'subtle'}
-                            onClick={() => setSelected(id)}
+                            onClick={() => selectComponent(id)}
                           >
                             {label}
                           </Button>

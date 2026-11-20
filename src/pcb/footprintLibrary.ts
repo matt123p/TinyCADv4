@@ -1,6 +1,7 @@
 import { capsulePolygon, circlePolygon } from './contours';
 import type { PolygonRegion } from './contours';
 import type { PolygonKernel } from './polygonKernel';
+import { regionsTouch } from './copper';
 import {
   deviceDigest,
   canonicalDeviceJson,
@@ -312,7 +313,9 @@ export async function publishFootprintDevice(
       signalId: assigned.get(name),
     });
   }
-  const drilled = definition.pads.some(({ stack }) => stack?.drill?.plated);
+  const drilled = definition.pads.some(
+    ({ stack }) => stack?.drill && (stack.drill.plated || !assigned.size),
+  );
   const surface = definition.pads.some(
     ({ stack }) => !stack?.drill && (stack?.copper.top || stack?.copper.bottom),
   );
@@ -400,12 +403,15 @@ export function inspectFootprintDimensions(
     throw new Error('Enter a nonnegative annular ring size.');
   const issues: { location: string; message: string }[] = [];
   const labels = new Set<string>();
-  function body(shape: PadShape): PolygonRegion {
+  function body(shape: PadShape, origin?: BoardPoint): PolygonRegion {
+    const vertices =
+      shape.kind === 'polygon'
+        ? shape.vertices
+        : capsulePolygon(shape.start, shape.end, shape.widthNm);
     return {
-      outer:
-        shape.kind === 'polygon'
-          ? shape.vertices
-          : capsulePolygon(shape.start, shape.end, shape.widthNm),
+      outer: origin
+        ? vertices.map(({ x, y }) => ({ x: x + origin.x, y: y + origin.y }))
+        : vertices,
       holes: [],
     };
   }
@@ -450,6 +456,59 @@ export function inspectFootprintDimensions(
       }
     }
   }
+  for (const side of ['top', 'bottom'] as const) {
+    for (const layer of ['copper', 'mask'] as const) {
+      const lands = footprint.pads.flatMap(
+        ({ label, positionNm, stack }, index) => {
+          const shape = stack?.[layer]?.[side];
+          if (!shape) return [];
+          const region = body(shape, positionNm);
+          let left = Infinity;
+          let right = -Infinity;
+          let bottom = Infinity;
+          let top = -Infinity;
+          for (const { x, y } of region.outer) {
+            left = Math.min(left, x);
+            right = Math.max(right, x);
+            bottom = Math.min(bottom, y);
+            top = Math.max(top, y);
+          }
+          return [
+            {
+              region,
+              left,
+              right,
+              bottom,
+              top,
+              name: `${label || 'unlabelled'} (${index + 1})`,
+            },
+          ];
+        },
+      );
+      lands.sort((a, b) => a.left - b.left);
+      for (const [index, land] of lands.entries()) {
+        for (let next = index + 1; next < lands.length; next++) {
+          const other = lands[next];
+          if (other.left > land.right) break;
+          if (other.bottom > land.top || land.bottom > other.top) continue;
+          const overlap =
+            layer === 'copper'
+              ? regionsTouch(land.region, other.region)
+              : kernel.boolean('intersection', [land.region], [other.region])
+                  .length > 0;
+          if (overlap) {
+            issues.push({
+              location: `Pads ${land.name} and ${other.name}`,
+              message:
+                layer === 'copper'
+                  ? `The ${side} copper lands touch. Verify the terminal assignments or separate the lands.`
+                  : `The ${side} solder mask openings overlap. Verify the shared opening or separate the apertures.`,
+            });
+          }
+        }
+      }
+    }
+  }
   const courtyard = (footprint.graphics ?? []).filter(({ layer }) =>
     layer.endsWith('CrtYd'),
   );
@@ -486,19 +545,8 @@ export function inspectFootprintDimensions(
         if (
           shapes.some(
             (shape) =>
-              kernel.boolean(
-                'difference',
-                [
-                  {
-                    outer: body(shape).outer.map(({ x, y }) => ({
-                      x: x + positionNm.x,
-                      y: y + positionNm.y,
-                    })),
-                    holes: [],
-                  },
-                ],
-                area,
-              ).length,
+              kernel.boolean('difference', [body(shape, positionNm)], area)
+                .length,
           )
         ) {
           issues.push({

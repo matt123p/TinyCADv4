@@ -206,3 +206,33 @@ export function boardPadSources(board: BoardAssets, snapshot: CircuitSnapshot) {
   }
   return targets;
 }
+
+export function boardNetSources(snapshot: CircuitSnapshot, netId: string) {
+  const net = snapshot.nets.find(
+    ({ id }) => id.toLowerCase() === netId.toLowerCase(),
+  );
+  if (!net) return [];
+  const members = new Set(
+    net.terminals.map((terminal) => terminalKey(terminal).toLowerCase()),
+  );
+  return snapshot.components.flatMap(({ reference, signals }) =>
+    signals.flatMap(({ name, number, terminals }) =>
+      terminals.flatMap((terminal) => {
+        const { unitId, pinId } = terminal;
+        const source = snapshot.sources?.[unitId.toLowerCase()];
+        const id = terminalKey(terminal).toLowerCase();
+        return source && members.has(id)
+          ? [
+              {
+                id,
+                reference,
+                signal: name,
+                number,
+                source: { ...source, pinId },
+              },
+            ]
+          : [];
+      }),
+    ),
+  );
+}

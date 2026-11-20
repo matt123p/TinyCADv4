@@ -59,7 +59,10 @@ import type {
   ProjectCircuitEco,
   ProjectCircuitUndo,
 } from '../../io/projectCircuitEco';
-import type { BoardProbeMatch } from '../../io/projectPcbProbe';
+import type {
+  BoardProbeMatch,
+  BoardWorkspaceProbe,
+} from '../../io/projectPcbProbe';
 import type { CircuitSchematicSource } from '../../pcb/circuitSnapshot';
 import type { ProjectReferenceUndo } from '../../io/projectReferenceEco';
 import type { ReferenceDialogState } from './ProjectReferenceDialog';
@@ -145,10 +148,8 @@ export default function ProjectBrowser() {
   const importSchematic = useRef<HTMLInputElement>(null);
   const [comparison, setComparison] = useState<ProjectRevisionComparison>();
   const [boardWorkspace, setBoardWorkspace] = useState<ProjectBoardWorkspace>();
-  const [boardWorkspaceProbe, setBoardWorkspaceProbe] = useState<{
-    componentId: string;
-    padId?: string;
-  }>();
+  const [boardWorkspaceProbe, setBoardWorkspaceProbe] =
+    useState<BoardWorkspaceProbe>();
   const [footprintEditor, setFootprintEditor] = useState(false);
   const [pcbProbe, setPcbProbe] = useState<BoardProbeMatch[]>();
   const selectedUnit = useSelector((state: docDrawing) => {
@@ -406,7 +407,7 @@ export default function ProjectBrowser() {
   function openBoardWorkspace(
     context: ProjectContext,
     id: string,
-    probe?: { componentId: string; padId?: string },
+    probe?: BoardWorkspaceProbe,
   ) {
     setBoardWorkspaceProbe(probe);
     void run(async () => {
@@ -926,10 +927,12 @@ export default function ProjectBrowser() {
               const { locateSchematicComponentOnBoards } = await import(
                 '../../io/projectPcbProbe'
               );
-              const key =
-                store.getState().docStore.present.view.hover_pins?.[0];
-              const pinId =
-                key && key.includes(':@') ? key.split(':@')[1] : undefined;
+              const view = store.getState().docStore.present.view;
+              const pinPrefix = view._selected_array[0] + ':@';
+              const key = view.hover_pins?.find((pin) =>
+                pin.startsWith(pinPrefix),
+              );
+              const pinId = key?.slice(pinPrefix.length);
               setPcbProbe(
                 await locateSchematicComponentOnBoards(
                   activeProject,
@@ -1403,10 +1406,9 @@ export default function ProjectBrowser() {
         <React.Suspense fallback={<Spinner />}>
           <ProjectPcbProbeDialog
             matches={pcbProbe}
-            onShow={({ boardId, componentId }, padId) => {
+            onShow={(boardId, probe) => {
               setPcbProbe(undefined);
-              if (context)
-                openBoardWorkspace(context, boardId, { componentId, padId });
+              if (context) openBoardWorkspace(context, boardId, probe);
             }}
             onClose={() => setPcbProbe(undefined)}
           />

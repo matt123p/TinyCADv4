@@ -423,6 +423,7 @@ export function DocStoreReducer(
       if (!action.rows && hasChildPlacements(state.drawing)) break;
       if (state.drawing) {
         const bom = action.rows ?? update_drawing.makeBomForDrawing(state.drawing);
+        if (sheet && view._selected_array.length) view = update_view.unselect(view, sheet).view;
         state = update(state, {
           bom: { $set: bom },
         });

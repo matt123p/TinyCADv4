@@ -36,6 +36,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -76,6 +77,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -116,6 +118,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -156,6 +159,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -198,6 +202,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -240,6 +245,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -282,6 +288,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -324,6 +331,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -365,6 +373,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -406,6 +415,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -447,6 +457,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -488,6 +499,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -529,6 +541,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -571,6 +584,7 @@
         "drillNm": 1050000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -613,6 +627,7 @@
         "drillNm": 1050000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -655,6 +670,7 @@
         "drillNm": 1050000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -697,6 +713,7 @@
         "drillNm": 1050000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -739,6 +756,7 @@
         "drillNm": 1050000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -781,6 +799,7 @@
         "drillNm": 1050000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -822,6 +841,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -863,6 +883,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -904,6 +925,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -945,6 +967,7 @@
         "drillNm": 800000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -986,6 +1009,7 @@
         "drillNm": 800000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1027,6 +1051,7 @@
         "drillNm": 800000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1068,6 +1093,7 @@
         "drillNm": 1400000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1109,6 +1135,7 @@
         "drillNm": 1400000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1150,6 +1177,7 @@
         "drillNm": 1400000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1192,6 +1220,7 @@
         "cornerRadiusNm": 50000
       },
       "manufacturing": {
+        "process": "Example reflow land pattern using the manufacturer dimensions; model is a mechanical envelope.",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1201,7 +1230,6 @@
         "pinout": "https://www.ti.com/lit/ds/symlink/lm358.pdf",
         "partNumber": "LM358DR",
         "sourceRevision": "4214825/C and SLOS068AB",
-        "process": "Example reflow land pattern using the manufacturer dimensions; model is a mechanical envelope.",
         "pinoutByPad": {
           "1": "OUT1",
           "2": "IN1−",
@@ -1250,6 +1278,7 @@
         "drillNm": 950000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1291,6 +1320,7 @@
         "drillNm": 950000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1332,6 +1362,7 @@
         "drillNm": 950000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1373,6 +1404,7 @@
         "drillNm": 950000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1414,6 +1446,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1455,6 +1488,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1496,6 +1530,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1537,6 +1572,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1578,6 +1614,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1619,6 +1656,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1660,6 +1698,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1701,6 +1740,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1742,6 +1782,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1783,6 +1824,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1824,6 +1866,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1865,6 +1908,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1906,6 +1950,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1946,6 +1991,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -1986,6 +2032,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2026,6 +2073,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2066,6 +2114,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2106,6 +2155,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2146,6 +2196,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2186,6 +2237,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2226,6 +2278,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2266,6 +2319,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2306,6 +2360,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2346,6 +2401,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2386,6 +2442,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2426,6 +2483,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2467,6 +2525,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2508,6 +2567,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2549,6 +2609,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2590,6 +2651,7 @@
         "drillNm": 850000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2630,6 +2692,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2670,6 +2733,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2710,6 +2774,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2750,6 +2815,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2790,6 +2856,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2830,6 +2897,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2870,6 +2938,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2910,6 +2979,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2950,6 +3020,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -2990,6 +3061,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3030,6 +3102,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3070,6 +3143,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3110,6 +3184,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3150,6 +3225,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3190,6 +3266,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3231,6 +3308,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3272,6 +3350,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3313,6 +3392,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3354,6 +3434,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3395,6 +3476,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3436,6 +3518,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3477,6 +3560,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3518,6 +3602,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3559,6 +3644,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3600,6 +3686,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3642,6 +3729,7 @@
         "drillNm": 1200000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3684,6 +3772,7 @@
         "drillNm": 1200000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3726,6 +3815,7 @@
         "drillNm": 1200000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3768,6 +3858,7 @@
         "drillNm": 1200000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3810,6 +3901,7 @@
         "drillNm": 1200000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3862,6 +3954,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3922,6 +4015,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -3986,6 +4080,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4042,6 +4137,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4058,7 +4154,7 @@
     {
       "id": "to92-inline",
       "name": "TO92-INLINE through-hole envelope",
-      "revision": "1",
+      "revision": "2",
       "family": "tht-transistor",
       "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
       "license": "CC0-1.0",
@@ -4085,12 +4181,13 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1600000,
-          1600000
+          1100000,
+          1100000
         ],
-        "drillNm": 950000
+        "drillNm": 800000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4132,6 +4229,7 @@
         "drillNm": 950000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4173,6 +4271,7 @@
         "drillNm": 950000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4214,6 +4313,7 @@
         "drillNm": 950000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4256,6 +4356,7 @@
         "drillNm": 1050000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4298,6 +4399,7 @@
         "drillNm": 1050000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4340,6 +4442,7 @@
         "drillNm": 1050000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4382,6 +4485,7 @@
         "drillNm": 1050000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4424,6 +4528,7 @@
         "drillNm": 1050000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4465,6 +4570,7 @@
         "drillNm": 1200000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4506,6 +4612,7 @@
         "drillNm": 1200000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4547,6 +4654,7 @@
         "drillNm": 1200000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4588,6 +4696,7 @@
         "drillNm": 1200000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4629,6 +4738,7 @@
         "drillNm": 1200000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4670,6 +4780,7 @@
         "drillNm": 1200000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4712,6 +4823,7 @@
         "nonPlated": true
       },
       "manufacturing": {
+        "process": "Mechanical fastener through a non-plated hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4754,6 +4866,7 @@
         "nonPlated": true
       },
       "manufacturing": {
+        "process": "Mechanical fastener through a non-plated hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4796,6 +4909,7 @@
         "nonPlated": true
       },
       "manufacturing": {
+        "process": "Mechanical fastener through a non-plated hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4836,6 +4950,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4876,6 +4991,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4916,6 +5032,7 @@
         ]
       },
       "manufacturing": {
+        "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -4958,6 +5075,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -5000,6 +5118,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -5041,6 +5160,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -5082,6 +5202,7 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
@@ -5123,6 +5244,184 @@
         "drillNm": 900000
       },
       "manufacturing": {
+        "process": "Hand-soldered through-hole",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "vishay-1n4148-tap-do35-762",
+      "name": "Vishay 1N4148-TAP · DO-35 · 7.62 mm",
+      "revision": "1",
+      "family": "axial-diode",
+      "source": "Vishay 81857 rev. 1.6, DO-35 body and cathode; TinyCAD-authored through-hole land pattern",
+      "license": "CC0-1.0",
+      "documentation": {
+        "package": "https://www.vishay.com/docs/81857/1n4148.pdf",
+        "pinout": "https://www.vishay.com/docs/81857/1n4148.pdf",
+        "partNumber": "1N4148-TAP",
+        "sourceRevision": "Vishay 81857 rev. 1.6, package drawing 6.560-5004.12-4",
+        "pinoutByPad": {
+          "1": "Cathode",
+          "2": "Anode"
+        }
+      },
+      "body": {
+        "envelopeNm": [
+          3400000,
+          1750000,
+          1750000
+        ],
+        "standoffNm": 500000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 7620000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          550000
+        ],
+        "protrusionNm": 2300000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1650000,
+          1650000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "process": "Horizontal through-hole hand assembly at 7.62 mm pitch. The marked square pad is the cathode. The 0.9 mm finished hole and 1.65 mm land are TinyCAD assumptions for formed and trimmed leads.",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "ti-sn74hc00n-pdip14",
+      "name": "TI SN74HC00N · PDIP-14",
+      "revision": "1",
+      "family": "dip",
+      "source": "TI SCLS181H and package drawing 4040049/E, 14-pin case; TinyCAD-authored land pattern",
+      "license": "CC0-1.0",
+      "documentation": {
+        "package": "https://www.ti.com/lit/ds/symlink/sn74hc00.pdf",
+        "pinout": "https://www.ti.com/lit/ds/symlink/sn74hc00.pdf",
+        "partNumber": "SN74HC00N",
+        "sourceRevision": "SCLS181H, section 5 and mechanical drawing 4040049/E (14-pin MS-001 AA)",
+        "pinoutByPad": {
+          "1": "1A",
+          "2": "1B",
+          "3": "1Y",
+          "4": "2A",
+          "5": "2B",
+          "6": "2Y",
+          "7": "GND",
+          "8": "3Y",
+          "9": "3A",
+          "10": "3B",
+          "11": "4Y",
+          "12": "4A",
+          "13": "4B",
+          "14": "VCC"
+        }
+      },
+      "body": {
+        "envelopeNm": [
+          6600000,
+          19690000,
+          5080000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 14,
+        "pitchNm": 2540000,
+        "rowSpacingNm": 7620000
+      },
+      "lead": {
+        "crossSectionNm": [
+          380000,
+          530000
+        ],
+        "protrusionNm": 3180000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "process": "Hand-soldered through-hole. Form leads for a 7.62 mm row span and confirm fit. The 0.9 mm finished holes and 1.6 mm copper lands are TinyCAD dimensions.",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "phoenix-1715721-mkds-508",
+      "name": "Phoenix Contact 1715721 · MKDS 1,5 · 2 positions",
+      "revision": "1",
+      "family": "terminal-block",
+      "source": "Phoenix Contact 1715721, dimensions and drilling plan; TinyCAD-authored copper lands",
+      "license": "CC0-1.0",
+      "documentation": {
+        "package": "https://www.phoenixcontact.com/gb/products/1715721/pdf",
+        "pinout": "https://www.phoenixcontact.com/gb/products/1715721/pdf",
+        "partNumber": "1715721",
+        "sourceRevision": "Phoenix Contact 1715721, 6 November 2025, pages 4, 6 and 7",
+        "pinoutByPad": {
+          "1": "Contact 1",
+          "2": "Contact 2"
+        }
+      },
+      "body": {
+        "envelopeNm": [
+          10160000,
+          9800000,
+          13800000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -2540000,
+            -300000
+          ],
+          [
+            2540000,
+            -300000
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          900000,
+          900000
+        ],
+        "protrusionNm": 3500000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2300000,
+          2300000
+        ],
+        "drillNm": 1300000
+      },
+      "manufacturing": {
+        "process": "Through-hole wave soldering. With the body centred, the double-line edge of the drilling plan is on -Y and the drill row is 4.6 mm from that edge. The square pad marks TinyCAD contact 1. The 2.3 mm copper land is a TinyCAD dimension.",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000

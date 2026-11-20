@@ -2,6 +2,12 @@ import { boardComponentDevice } from '../pcb/deviceReview';
 import type { OpenProjectDrawing } from './projectStorage';
 import { readProject, readProjectBoard } from './projects';
 
+export interface BoardWorkspaceProbe {
+  componentId: string;
+  padId?: string;
+  netId?: string;
+}
+
 export async function locateSchematicComponentOnBoards(
   location: Pick<
     OpenProjectDrawing,
@@ -10,9 +16,16 @@ export async function locateSchematicComponentOnBoards(
   unitId: string,
   pinId?: string,
 ) {
-  const instancePath =
-    location.hierarchyTrail?.map(({ placementId }) => placementId) ?? [];
-  const sourceId = location.hierarchyTrail?.[0]?.entryId ?? location.entryId;
+  const trail = location.hierarchyTrail ?? [];
+  const placements = trail.map(({ placementId }) => placementId);
+  // A board rooted at a child uses the path relative to that child.
+  const sourcePaths = new Map(
+    trail.map(({ entryId }, depth) => [
+      entryId,
+      placements.slice(depth).join('/'),
+    ]),
+  );
+  sourcePaths.set(location.entryId, '');
   const project = await readProject(location.id, location.rootId);
   const associations = new Map(
     project.settings.associations?.map(({ schematic, board }) => [
@@ -23,18 +36,18 @@ export async function locateSchematicComponentOnBoards(
   const boards = project.settings.entries.filter(
     ({ kind, id }) =>
       kind === 'board' &&
-      (!associations.has(id) || associations.get(id) === sourceId),
+      (!associations.has(id) || sourcePaths.has(associations.get(id))),
   );
   const matches = await Promise.all(
     boards.map(async (entry) => {
       const { board, circuit } = await readProjectBoard(project, entry.id);
-      if (circuit?.documentId !== sourceId || !circuit.sources)
-        return undefined;
+      const path = sourcePaths.get(circuit?.documentId);
+      if (path === undefined || !circuit.sources) return undefined;
       const units = new Set(
         Object.entries(circuit.sources).flatMap(([id, source]) =>
           source.documentId === location.entryId &&
           source.unitId === unitId &&
-          source.instancePath.join('/') === instancePath.join('/')
+          source.instancePath.join('/') === path
             ? [id]
             : [],
         ),
@@ -74,12 +87,14 @@ export async function locateSchematicComponentOnBoards(
         const signal = signals.get(binding.signalId);
         const pad = definitions.get(binding.padId);
         if (!pad || !signal) return [];
+        const netId = signalNets.get(signal.id);
         return [
           {
             id: pad.id,
             label: pad.label,
             signal: signal.name,
-            net: netNames.get(signalNets.get(signal.id)),
+            netId,
+            net: netNames.get(netId),
           },
         ];
       });

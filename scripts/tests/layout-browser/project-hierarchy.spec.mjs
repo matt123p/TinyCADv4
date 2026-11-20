@@ -480,6 +480,11 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     );
     const { unitId, pinId } = part.signals[0].terminals[0];
     const source = snapshot.sources[unitId];
+    const partNet = snapshot.nets.find(({ terminals }) =>
+      terminals.some(
+        (terminal) => terminal.unitId === unitId && terminal.pinId === pinId,
+      ),
+    );
     const id = () => crypto.randomUUID();
     const positionNm = { x: 1_000_000, y: 1_000_000 };
     const digest = 'sha256:' + 'a'.repeat(64);
@@ -500,7 +505,14 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
         revision: snapshot.revision,
         connectivityDigest: await api.circuitConnectivityDigest(snapshot),
       },
-      components: [{ id: componentId, logicalId: part.id }],
+      components: [
+        {
+          id: componentId,
+          logicalId: part.id,
+          signals: [{ signalId: part.signals[0].id, netId: partNet.id }],
+        },
+      ],
+      nets: [{ id: partNet.id, name: partNet.names[0] }],
       footprintDefinitions: [
         {
           id: footprintId,
@@ -1043,6 +1055,20 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
         requiredFeatures: [...updated.requiredFeatures, 'routed-copper'],
       }),
     );
+    await projects
+      .getByRole('button', { name: 'Leaf.dpn', exact: true })
+      .click();
+    const boardNet = pcbLayout.getByLabel('Board net', { exact: true });
+    await boardNet.selectOption(oldNet.id);
+    await expect(
+      pcbLayout.getByRole('list', { name: 'Schematic net terminals' }),
+    ).toContainText('R1');
+    await expect(
+      pcbLayout
+        .getByRole('img', { name: 'Board layout' })
+        .locator('[data-net-highlighted="true"]'),
+    ).toHaveCount(1);
+    await pcbLayout.getByRole('button', { name: 'Close', exact: true }).click();
     const leafBeforeRemoval = await readFile(leafPath);
     const revisedLeaf = await api.decodeDrawing(leafBeforeRemoval);
     for (const sheet of revisedLeaf.sheets) {
@@ -1218,20 +1244,49 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
       reverseProbe.getByRole('heading', { name: 'Board.dpn · C12' }),
     ).toBeVisible();
     await expect(
-      reverseProbe.getByRole('button', { name: '01 · TERMINAL' }),
+      reverseProbe.getByRole('heading', { name: 'Blocks/Leaf.dpn · R1' }),
     ).toBeVisible();
-    await reverseProbe.getByRole('button', { name: 'Show on board' }).click();
+    const rootMatch = reverseProbe.getByRole('region', {
+      name: 'Board.dpn',
+      exact: true,
+    });
+    await expect(
+      rootMatch.getByRole('button', { name: '01 · TERMINAL' }),
+    ).toBeVisible();
+    await rootMatch.getByRole('button', { name: 'Show net on board' }).click();
     await expect(
       pcbLayout.getByRole('img', { name: 'Board layout' }),
     ).toBeVisible();
+    await expect(boardNet).toHaveValue(partNet.id);
+    await expect(
+      pcbLayout
+        .getByRole('img', { name: 'Board layout' })
+        .locator('[data-net-highlighted="true"]'),
+    ).toHaveCount(1);
+    await expect(
+      pcbLayout.getByRole('list', { name: 'Schematic connections' }),
+    ).toContainText('01 · TERMINAL');
     await pcbLayout
-      .getByRole('list', { name: 'Schematic connections' })
-      .getByRole('button', { name: '01 · TERMINAL' })
+      .getByRole('list', { name: 'Schematic net terminals' })
+      .getByRole('button', { name: /^C12 · TERMINAL/ })
       .click();
     await expect(pcbLayout).toBeHidden();
     await expect(
       page.getByRole('region', { name: 'Schematic hierarchy' }),
     ).toContainText('H7 / H1');
+    await page.evaluate(() => window.hierarchyTestMenu('tools-bom'));
+    await expect(page.locator('.bomTable')).toContainText('C12');
+    await projects
+      .getByRole('button', { name: 'Open schematic', exact: true })
+      .click();
+    await expect
+      .poll(async () => (await snapshotUI()).drawing.documentId)
+      .toBe(root.documentId);
+    await page.evaluate(() => window.hierarchyTestMenu('tools-bom'));
+    await expect(page.locator('.bomTable')).toContainText('C12');
+    const bomReferences = page.locator('.bomTable tbody tr td').first();
+    await expect(bomReferences).toHaveText(/(?:^|,)H1_H1_R1(?:,|$)/);
+    await expect(bomReferences).not.toHaveText(/(?:^|,)H7_H1_R1(?:,|$)/);
 
     await boardMenu('Undo last back annotation…');
     const undoAnnotation = page.getByRole('dialog', {
@@ -1246,6 +1301,103 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     expect(restoredReference.revision).toBe(synchronized.revision + 1);
     expect(restoredReference.components).toEqual(renamedOnBoard.components);
     expect(restoredReference.footprints).toEqual(renamedOnBoard.footprints);
+
+    const sibling = snapshot.components.find(
+      ({ reference }) => reference === 'H1_H1_R1',
+    );
+    const siblingId = id();
+    const exchangeBoard = {
+      ...restoredReference,
+      components: [
+        ...restoredReference.components,
+        { id: siblingId, logicalId: sibling.id, reference: sibling.reference },
+      ],
+    };
+    await writeFile(boardPath, await api.encodeBoard(exchangeBoard));
+    await boardMenu('Edit PCB references…');
+    await boardRefEditor
+      .getByLabel('Reference for C12', { exact: true })
+      .fill(sibling.reference);
+    await boardRefEditor
+      .getByLabel('Reference for ' + sibling.reference, { exact: true })
+      .fill(part.reference);
+    await boardRefEditor
+      .getByRole('button', { name: 'Save PCB references' })
+      .click();
+    await expect(boardRefEditor).toBeHidden();
+    const stagedExchange = await readFile(boardPath);
+
+    async function previewExchange() {
+      await boardMenu('Update Schematic from PCB…');
+      await reverse
+        .getByRole('combobox', {
+          name: 'Resolve ' + part.reference,
+          exact: true,
+        })
+        .selectOption('pcb');
+      await expect(
+        reverse.getByRole('button', { name: 'Apply reference changes' }),
+      ).toBeEnabled();
+    }
+    await previewExchange();
+    const externallyEdited = Buffer.concat([
+      rootBeforeAnnotation,
+      Buffer.from('\n'),
+    ]);
+    await writeFile(rootFile, externallyEdited);
+    await reverse
+      .getByRole('button', { name: 'Apply reference changes' })
+      .click();
+    await expect(reverse.getByRole('alert')).toContainText(
+      'changed in storage',
+    );
+    expect(await readFile(boardPath)).toEqual(stagedExchange);
+    expect(await readFile(rootFile)).toEqual(externallyEdited);
+    await reverse.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await writeFile(rootFile, rootBeforeAnnotation);
+
+    await previewExchange();
+    await reverse
+      .getByRole('button', { name: 'Apply reference changes' })
+      .click();
+    await expect(reverse).toBeHidden();
+    const exchanged = await api.decodeBoard(await readFile(boardPath));
+    const exchangedRoot = await api.decodeDrawing(await readFile(rootFile));
+    expect(
+      new Map(
+        exchangedRoot.instanceReferences.map(({ componentId, reference }) => [
+          componentId,
+          reference,
+        ]),
+      ),
+    ).toEqual(
+      new Map([
+        [part.id, sibling.reference],
+        [sibling.id, part.reference],
+      ]),
+    );
+    expect(
+      exchanged.appliedCircuit.components.find(({ id }) => id === part.id)
+        .reference,
+    ).toBe(sibling.reference);
+    expect(
+      exchanged.appliedCircuit.components.find(({ id }) => id === sibling.id)
+        .reference,
+    ).toBe(part.reference);
+    expect(exchanged.footprints).toEqual(restoredReference.footprints);
+
+    await boardMenu('Undo last back annotation…');
+    await undoAnnotation
+      .getByRole('button', { name: 'Restore references' })
+      .click();
+    await expect(undoAnnotation).toBeHidden();
+    expect(await readFile(rootFile)).toEqual(rootBeforeAnnotation);
+    const undone = await api.decodeBoard(await readFile(boardPath));
+    const beforeExchange = await api.decodeBoard(stagedExchange);
+    expect(undone).toEqual({
+      ...beforeExchange,
+      revision: exchanged.revision + 1,
+    });
     expect(errors).toEqual([]);
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -1299,6 +1451,9 @@ test('imports a footprint, edits pad coordinates, and exports native and dimensi
       .getByRole('button', { name: 'Browse starter footprint drafts' })
       .click();
     await editor.getByLabel('Starter footprint draft').selectOption('dip-8');
+    await expect(
+      editor.getByText('Hand-soldered through-hole', { exact: false }),
+    ).toBeVisible();
     await editor.getByRole('button', { name: 'Open starter draft' }).click();
     await expect(
       editor.getByRole('img', { name: 'Footprint pad preview' }),
@@ -1357,9 +1512,32 @@ test('imports a footprint, edits pad coordinates, and exports native and dimensi
       await (await dimensionDownload).path(),
       'utf8',
     );
-    expect(drawing).toMatch(/width="\d+(\.\d+)?mm"/);
+    const printedWidth = Number(
+      drawing.match(/<svg[^>]*\bwidth="([\d.]+)mm"/)[1],
+    );
+    const printedHeight = Number(
+      drawing.match(/<svg[^>]*\bheight="([\d.]+)mm"/)[1],
+    );
+    const [, , viewWidth, viewHeight] = drawing
+      .match(/\bviewBox="([^"]+)"/)[1]
+      .split(/\s+/)
+      .map(Number);
+    expect(printedWidth).toBe(viewWidth / 1_000_000);
+    expect(printedHeight).toBe(viewHeight / 1_000_000);
+    expect(drawing).toContain('M 0 0 L 10000000 0');
     expect(drawing).toContain('10 mm');
 
+    await editor.getByRole('button', { name: 'Close', exact: true }).click();
+    await projects
+      .getByRole('button', { name: 'Project folder actions' })
+      .click();
+    await page.getByRole('menuitem', { name: 'Footprint editor…' }).click();
+    await editor.getByLabel('Name', { exact: true }).fill('Test');
+    await editor.getByLabel('New pad label', { exact: true }).fill('01');
+    await editor
+      .getByLabel('Pad shape', { exact: true })
+      .selectOption('rectangle');
+    await editor.getByRole('button', { name: 'Add pad', exact: true }).click();
     await editor.getByLabel('New pad label', { exact: true }).fill('MH');
     await editor.getByLabel('Pad shape', { exact: true }).selectOption('hole');
     await editor.getByLabel('X (mm)', { exact: true }).fill('3');
@@ -1392,7 +1570,8 @@ test('imports a footprint, edits pad coordinates, and exports native and dimensi
       .click();
     const deviceData = await readFile(await (await deviceDownload).path());
     const { definition: device } = await api.readLibraryDevice(deviceData);
-    expect(device.footprint.pads[0].id).toBe(native.definition.pads[0].id);
+    expect(device.footprint.pads[0].label).toBe('01');
+    expect(device.footprint.pads[0].stack.copper.top.kind).toBe('polygon');
     expect(device.terminals[0].name).toBe('Signal');
     await editor.getByRole('button', { name: 'Close', exact: true }).click();
     const libraryPath = path.join(directory, 'Test.tcdevice.json');

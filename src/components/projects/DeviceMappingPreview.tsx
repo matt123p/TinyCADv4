@@ -53,10 +53,12 @@ export function DeviceFootprintPreview({
   footprint,
   selected,
   ruler = false,
+  actualSize = false,
 }: {
   footprint: EmbeddedFootprint;
   selected: string;
   ruler?: boolean;
+  actualSize?: boolean;
 }) {
   // Include the actual pad geometry in the viewport, including asymmetric lands.
   const points = footprint.pads.flatMap(({ positionNm, stack }) => {
@@ -94,15 +96,15 @@ export function DeviceFootprintPreview({
   const width = Math.max(right - left, ruler ? 10_000_000 : 0);
   const height = bottom - top;
   const margin = Math.max(width, height, 1_000_000) / 8;
+  const viewWidth = width + 2 * margin;
+  const viewHeight = height + 2 * margin + (ruler ? 2_500_000 : 0);
   return (
     <svg
       role="img"
       aria-label="Footprint pad preview"
-      width="100%"
-      height="180"
-      viewBox={`${left - margin} ${top - margin} ${width + 2 * margin} ${
-        height + 2 * margin + (ruler ? 2_500_000 : 0)
-      }`}
+      width={actualSize ? viewWidth / 1_000_000 + 'mm' : '100%'}
+      height={actualSize ? viewHeight / 1_000_000 + 'mm' : '180'}
+      viewBox={`${left - margin} ${top - margin} ${viewWidth} ${viewHeight}`}
     >
       {(footprint.graphics ?? []).map((item, index) => (
         <FootprintArtwork key={index} item={item} />

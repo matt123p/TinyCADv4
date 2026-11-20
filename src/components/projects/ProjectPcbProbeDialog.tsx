@@ -8,10 +8,13 @@ import {
   DialogSurface,
   DialogTitle,
 } from '@fluentui/react-components';
-import type { BoardProbeMatch } from '../../io/projectPcbProbe';
+import type {
+  BoardProbeMatch,
+  BoardWorkspaceProbe,
+} from '../../io/projectPcbProbe';
 import { DeviceFootprintPreview } from './DeviceMappingPreview';
 
-type ShowBoard = (match: BoardProbeMatch, padId?: string) => void;
+type ShowBoard = (boardId: string, probe: BoardWorkspaceProbe) => void;
 
 function BoardProbeResult({
   match,
@@ -22,6 +25,8 @@ function BoardProbeResult({
 }) {
   const [pad, setPad] = useState(match.pads[0]?.id);
   const { path, reference, footprint, placement, pads } = match;
+  const activePad = pads.find(({ id }) => id === pad);
+  const probe = { componentId: match.componentId, padId: pad };
   return (
     <section aria-label={path}>
       <h3>
@@ -54,7 +59,18 @@ function BoardProbeResult({
           ))}
         </ul>
       )}
-      <Button onClick={() => onShow(match, pad)}>Show on board</Button>
+      <Button onClick={() => onShow(match.boardId, probe)}>
+        Show on board
+      </Button>
+      {activePad?.netId && (
+        <Button
+          onClick={() =>
+            onShow(match.boardId, { ...probe, netId: activePad.netId })
+          }
+        >
+          Show net on board
+        </Button>
+      )}
     </section>
   );
 }

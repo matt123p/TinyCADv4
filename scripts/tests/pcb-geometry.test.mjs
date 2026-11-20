@@ -6,6 +6,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import test from 'node:test';
 import { build } from 'esbuild';
+import { layoutRuntime } from '../lib/layout-runtime.mjs';
 
 const require = createRequire(import.meta.url);
 const packageRoot = path.dirname(require.resolve('clipper2-wasm/package.json'));
@@ -696,6 +697,97 @@ test('reads Gerber arcs, nested copper, and plated and non-plated drills from ma
       name,
     );
   }
+});
+
+test('authored footprint lands and slot dimensions survive placement and CAM read-back', async () => {
+  const { makeFootprintPad } = await layoutRuntime();
+  const profiles = [
+    'round',
+    'rectangle',
+    'oval',
+    'roundrect',
+    'polygon',
+    'hole',
+  ];
+  const pads = profiles.map((profile, index) =>
+    makeFootprintPad({
+      id: profile,
+      label: String(index + 1),
+      positionNm: point(index * 3_000_000, 0),
+      profile,
+      widthNm: profile === 'round' ? 1_300_000 : 2_000_000,
+      heightNm: 1_300_000,
+      cornerRadiusNm: 200_000,
+      polygon: [
+        point(-400_000, -300_000),
+        point(600_000, -300_000),
+        point(300_000, 400_000),
+      ],
+      drillWidthNm:
+        profile === 'oval' ? 700_000 : profile === 'hole' ? 1_200_000 : 0,
+      drillLengthNm:
+        profile === 'oval' ? 1_300_000 : profile === 'hole' ? 1_200_000 : 0,
+    }),
+  );
+  const assignments = pads.map(({ id: padId }) =>
+    padId === 'hole'
+      ? { padId, kind: 'mechanical' }
+      : { padId, kind: 'signal', signalId: padId },
+  );
+  const placed = api.placeDevice(
+    'J1',
+    { id: 'connector', pads, assignments },
+    {
+      positionNm: point(5_000_000, 18_000_000),
+      rotationMicrodegree: 90_000_000,
+      side: 'bottom',
+    },
+    ['top', 'bottom'],
+    profiles
+      .slice(0, -1)
+      .map((signalId) => ({ signalId, terminalId: signalId, netId: signalId })),
+  );
+  const profile = {
+    outline: edges(polygon(0, 0, 10_000_000, 20_000_000)),
+    cutouts: [],
+  };
+  const snapshot = {
+    profile,
+    layers: ['top', 'bottom'].map((id) => ({
+      id,
+      copper: placed.copper
+        .filter(({ layerId }) => layerId === id)
+        .map(({ region }) => region),
+    })),
+    drills: placed.drills,
+  };
+  assert.deepEqual(
+    api.analyseCopper(kernel, placed.copper, placed.drills).shorts,
+    [],
+  );
+  assert.deepEqual(
+    snapshot.layers.map(({ copper }) => copper.length),
+    [1, 5],
+  );
+  const files = api.writeCamFiles(kernel, snapshot);
+  assert.deepEqual(api.verifyCamFiles(kernel, snapshot, files), []);
+  const [{ start, end, widthNm, plated }] = api.readXnc(
+    files['plated.xnc'],
+  ).drills;
+  assert.deepEqual(
+    { start, end, widthNm, plated },
+    {
+    start: point(5_000_000, 12_300_000),
+    end: point(5_000_000, 11_700_000),
+      widthNm: 700_000,
+      plated: true,
+    },
+  );
+  const [hole] = api.readXnc(files['non-plated.xnc']).drills;
+  assert.deepEqual(hole.start, point(5_000_000, 3_000_000));
+  assert.deepEqual(hole.end, hole.start);
+  assert.equal(hole.widthNm, 1_200_000);
+  assert.equal(hole.plated, false);
 });
 
 test('reopens a copied XML board offline with shared definitions, connectivity and STEP data', async (t) => {

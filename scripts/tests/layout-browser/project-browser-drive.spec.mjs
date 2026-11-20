@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { gunzipSync } from 'node:zlib';
 import { expect, test } from '@playwright/test';
 import { layoutRuntime } from '../../lib/layout-runtime.mjs';
 import { serveLayoutApp } from './serve-app.mjs';
@@ -269,4 +270,34 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
       page.evaluate(() => window.layoutTest.snapshot().drawing.documentId),
     )
     .toBe(drawing.documentId);
+  await sidebar.getByRole('button', { name: 'Project folder actions' }).click();
+  await page.getByRole('menuitem', { name: 'Footprint editor…' }).click();
+  const editor = page.getByRole('dialog', { name: 'Footprint editor' });
+  await editor
+    .getByRole('button', { name: 'Browse starter footprint drafts' })
+    .click();
+  await editor.getByLabel('Starter footprint draft').selectOption('dip-8');
+  await editor.getByRole('button', { name: 'Open starter draft' }).click();
+  await expect(
+    editor.getByText('dip-8.step · Embedded', { exact: false }),
+  ).toBeVisible();
+  const footprintDownload = page.waitForEvent('download');
+  await editor
+    .getByRole('button', { name: 'Export footprint', exact: true })
+    .click();
+  const native = await api.decodeFootprintLibrary(
+    await readFile(await (await footprintDownload).path()),
+  );
+  const bundle = JSON.parse(
+    gunzipSync(
+      await readFile(
+        new URL(
+          '../../../bundled-footprints/starter-v1.json.gz',
+          import.meta.url,
+        ),
+      ),
+    ),
+  );
+  const expected = bundle.variants.find(({ id }) => id === 'dip-8').footprint;
+  expect(native).toEqual(expected);
 });

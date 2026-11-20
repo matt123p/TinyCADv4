@@ -614,7 +614,7 @@ test('compiles labelled bus members, reviewed multipart power pins, roles and no
   );
 });
 
-test('keeps heterogeneous multipart packages separate in repeated schematic instances', async () => {
+test('keeps multipart packages separate and back-annotates both units of the selected instance', async () => {
   const symbol = definition('', 2).replace(
     '<TinyCAD></TinyCAD>',
     '<TinyCADSheets><TinyCAD>' +
@@ -689,4 +689,69 @@ test('keeps heterogeneous multipart packages separate in repeated schematic inst
       component.signals.find(({ number }) => number === 'PWR').terminals,
     );
   }
+  const [selected, sibling] = snapshot.components;
+  const connectivityDigest = await api.circuitConnectivityDigest(snapshot);
+  const board = {
+    ...api.createBoard('Multipart annotation', 2, [
+      { x: 0, y: 0 },
+      { x: 10_000_000, y: 0 },
+      { x: 0, y: 10_000_000 },
+    ]),
+    sourceCircuit: {
+      documentId: root.documentId,
+      revision: snapshot.revision,
+      connectivityDigest,
+    },
+    components: [selected, sibling].map(({ id, reference }) => ({
+      id,
+      reference,
+      role: 'electrical',
+    })),
+  };
+  const edited = api.editBoardReferences(
+    board,
+    new Map([[selected.id, 'U42']]),
+  );
+  const preview = api.previewBackAnnotation(root, edited, snapshot, snapshot);
+  assert.equal(preview.canApply, true);
+  assert.deepEqual(
+    preview.changes[0].sources.map(({ unitId }) => unitId),
+    [a.unitId, b.unitId],
+  );
+  const updated = api.applyBackAnnotation(root, edited, snapshot, snapshot);
+  const reopened = await api.decodeDrawing(
+    await api.encodeDrawing(updated.drawing, 'xml'),
+  );
+  const references = await api.referencesForInstance(reopened, child, [
+    h1.unitId,
+  ]);
+  assert.equal(references[a.unitId], 'U42');
+  assert.equal(references[b.unitId], 'U42');
+  assert.deepEqual(
+    await api.referencesForInstance(reopened, child, [h2.unitId]),
+    {},
+  );
+  const regenerated = await api.buildHierarchicalNetlist(
+    { path: 'Root.dsn', drawing: reopened },
+    async () => ({ path: 'Child.dsn', drawing: child }),
+  );
+  const { snapshot: recompiled } = await api.buildHierarchicalCircuitSnapshot(
+    regenerated,
+    {
+      documentId: root.documentId,
+      revision: updated.board.appliedCircuit.revision,
+      previous: snapshot.nets,
+    },
+  );
+  assert.deepEqual(
+    recompiled.components.map(({ id, reference }) => [id, reference]).sort(),
+    [
+      [selected.id, 'U42'],
+      [sibling.id, sibling.reference],
+    ].sort(),
+  );
+  assert.equal(
+    await api.circuitConnectivityDigest(recompiled),
+    connectivityDigest,
+  );
 });

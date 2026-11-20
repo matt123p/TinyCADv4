@@ -31,7 +31,9 @@ export async function generateActiveNetlist(state: docDrawing) {
           })),
         }
       : drawing;
-  if (!hasChildPlacements(drawing)) return wkrGenerateNetlist(effective);
+  // The incremental worker cache belongs to the drawing, so compile instance overrides separately.
+  if (effective === drawing && !hasChildPlacements(drawing))
+    return wkrGenerateNetlist(drawing);
   if (!location)
     throw new Error(
       'Open this schematic from its project to compile its child designs.',

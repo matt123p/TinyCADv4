@@ -87,7 +87,6 @@ export async function readLibraryDevice(
         definition.pitchNm < 1 ||
         definition.pitchNm > 1_000_000_000)) ||
     !Array.isArray(definition.terminals) ||
-    !definition.terminals.length ||
     definition.terminals.length > 10_000 ||
     !definition.terminals.every(
       (entry) => uuid(entry?.id) && text(entry?.name),
@@ -114,6 +113,13 @@ export async function readLibraryDevice(
     definition.assignments,
   );
   if (issues.length) throw new Error(issues.join(' '));
+  if (
+    !definition.terminals.length &&
+    definition.assignments.some(({ kind }) => kind !== 'mechanical')
+  )
+    throw new Error(
+      'A device without terminals must assign every pad as mechanical.',
+    );
   if (footprint.models?.some(({ assetId }) => !assetId))
     throw new Error('All reviewed footprint models must be embedded.');
   const assets = new Set<string>();
@@ -151,6 +157,28 @@ export async function writeLibraryDevice(
   const bytes = encoder.encode(canonicalDeviceJson(definition) + '\n');
   await readLibraryDevice(bytes);
   return bytes;
+}
+
+export async function readLibraryDeviceCatalogue(
+  bundle: unknown,
+): Promise<DeviceRevision[]> {
+  const catalogue = bundle as { version?: unknown; devices?: unknown[] };
+  if (catalogue?.version !== 1 || !Array.isArray(catalogue.devices))
+    throw new Error('Unsupported bundled device catalogue.');
+  const devices: DeviceRevision[] = [];
+  const revisions = new Set<string>();
+  for (const entry of catalogue.devices) {
+    const device = await readLibraryDevice(
+      encoder.encode(JSON.stringify(entry)),
+    );
+    const { id, revision, name } = device.definition;
+    const key = JSON.stringify([id, revision]);
+    if (revisions.has(key))
+      throw new Error(`Duplicate reviewed device revision for ${name}.`);
+    revisions.add(key);
+    devices.push(device);
+  }
+  return devices;
 }
 
 export function searchLibraryDevices(

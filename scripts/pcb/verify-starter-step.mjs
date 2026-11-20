@@ -3,10 +3,10 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const [destination, readerModule] = process.argv.slice(2);
+const [destination, readerModule, cataloguePath] = process.argv.slice(2);
 if (!destination)
   throw new Error(
-    'Pass the generated catalogue directory and optionally the occt-import-js module path.',
+    'Pass the generated catalogue directory, optional occt-import-js module path and optional source catalogue path.',
   );
 
 const { default: loadReader } = await import(
@@ -18,9 +18,30 @@ const reader = await loadReader();
 const index = JSON.parse(
   await readFile(path.join(destination, 'index.json'), 'utf8'),
 );
+const catalogue = JSON.parse(
+  await readFile(
+    cataloguePath ?? new URL('./starter-footprints.json', import.meta.url),
+    'utf8',
+  ),
+);
+const recipes = new Map(
+  catalogue.variants.map((recipe) => [recipe.id, recipe]),
+);
 const nm = (mm) => Math.round(mm * 1_000_000);
 const within = (actual, expected) => Math.abs(actual - expected) <= 5;
+function matchesBounds([x, y, z], center, size, baseZ) {
+  return (
+    within(nm((x[0] + x[1]) / 2), center.x) &&
+    within(nm((y[0] + y[1]) / 2), center.y) &&
+    within(nm(x[1] - x[0]), size[0]) &&
+    within(nm(y[1] - y[0]), size[1]) &&
+    within(nm(z[0]), baseZ) &&
+    within(nm(z[1] - z[0]), size[2])
+  );
+}
 for (const entry of index.variants) {
+  const recipe = recipes.get(entry.id);
+  assert(recipe, 'Missing source dimensions for ' + entry.id);
   const native = JSON.parse(
     await readFile(path.join(destination, entry.footprint), 'utf8'),
   );
@@ -49,19 +70,27 @@ for (const entry of index.variants) {
     assert(mesh.index.array.length >= 36, entry.step);
     return bounds;
   });
-  // The generator writes one solid per terminal, centred at the authored pad datum.
+  const { envelopeNm, standoffNm } = recipe.body;
+  const body = remaining.findIndex((bounds) =>
+    matchesBounds(bounds, { x: 0, y: 0 }, envelopeNm, standoffNm),
+  );
+  assert.notEqual(body, -1, entry.step + ' body dimensions or datum');
+  remaining.splice(body, 1);
+  const { crossSectionNm, protrusionNm } = recipe.lead;
+  const leadSize = [
+    ...crossSectionNm,
+    standoffNm + Math.floor(envelopeNm[2] / 2) + protrusionNm,
+  ];
+  // Match each terminal to its native pad datum independently of STEP solid order.
   for (const pad of terminals) {
-    const match = remaining.findIndex(
-      ([x, y, z]) =>
-        within(nm((x[0] + x[1]) / 2), pad.positionNm.x) &&
-        within(nm((y[0] + y[1]) / 2), pad.positionNm.y) &&
-        (pad.stack.drill ? z[0] < 0 : within(nm(z[0]), 0)),
+    const match = remaining.findIndex((bounds) =>
+      matchesBounds(bounds, pad.positionNm, leadSize, -protrusionNm),
     );
     assert.notEqual(match, -1, entry.step + ' pad ' + pad.label);
     remaining.splice(match, 1);
   }
-  assert.equal(remaining.length, 1, entry.step);
+  assert.equal(remaining.length, 0, entry.step);
 }
 console.log(
-  `Verified ${index.variants.length} STEP models and terminal locations with OpenCascade.`,
+  `Verified ${index.variants.length} STEP models, body dimensions and terminal positions with OpenCascade.`,
 );

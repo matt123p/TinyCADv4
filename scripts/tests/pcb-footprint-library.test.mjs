@@ -132,6 +132,46 @@ test('authors plated slots and non-plated holes with independent dimensions', as
   const mechanical = api.makeFootprintPad({ ...parameters, profile: 'hole' });
   assert.deepEqual(mechanical.stack.copper, {});
   assert.equal(mechanical.stack.drill.plated, false);
+  const mountingHole = {
+    format: 'tinycad-footprint',
+    version: 1,
+    provenance: { kind: 'authored', source: 'Mounting hole fixture' },
+    definition: await api.footprintDefinition({
+      id: crypto.randomUUID(),
+      name: 'Mounting hole',
+      revision: '1',
+      pads: [mechanical],
+    }),
+  };
+  const publication = {
+    widthNm: 2_400_000,
+    heightNm: 2_200_000,
+    license: 'CC0-1.0',
+    reviewer: 'Fixture reviewer',
+    evidence: 'Fixture hole drawing',
+    packageName: 'Mounting hole',
+  };
+  const data = await api.publishFootprintDevice(mountingHole, {
+    ...publication,
+    mappings: new Map([[mechanical.id, { kind: 'mechanical' }]]),
+  });
+  const { definition: device } = await api.readLibraryDevice(data);
+  assert.equal(device.mount, 'through-hole');
+  assert.deepEqual(device.terminals, []);
+  assert.deepEqual(device.assignments, [
+    { kind: 'mechanical', padId: mechanical.id },
+  ]);
+  assert.deepEqual(
+    device.footprint.pads[0].stack.drill,
+    mechanical.stack.drill,
+  );
+  await assert.rejects(
+    api.publishFootprintDevice(mountingHole, {
+      ...publication,
+      mappings: new Map([[mechanical.id, { kind: 'nc' }]]),
+    }),
+    /must assign every pad as mechanical/,
+  );
   const binary = new Uint8Array(
     await readFile(
       new URL(
@@ -152,6 +192,55 @@ test('authors plated slots and non-plated holes with independent dimensions', as
   );
   assert(findings.some(({ message }) => message.includes('Repeated label')));
   assert(findings.some(({ location }) => location === 'Courtyard'));
+  const overlapping = api.inspectFootprintDimensions(
+    {
+      pads: [
+        plated,
+        {
+          ...plated,
+          id: crypto.randomUUID(),
+          label: '2',
+          positionNm: { x: 2_300_000, y: 0 },
+        },
+        {
+          ...plated,
+          id: crypto.randomUUID(),
+          label: '3',
+          positionNm: { x: 4_700_000, y: 0 },
+        },
+      ],
+    },
+    kernel,
+    150_000,
+  );
+  assert(
+    overlapping.some(
+      ({ location, message }) =>
+        location === 'Pads EP (1) and 2 (2)' &&
+        message.includes('copper lands touch'),
+    ),
+  );
+  assert(
+    overlapping.some(
+      ({ location, message }) =>
+        location === 'Pads EP (1) and 2 (2)' &&
+        message.includes('solder mask openings overlap'),
+    ),
+  );
+  assert(
+    overlapping.some(
+      ({ location, message }) =>
+        location === 'Pads 2 (2) and 3 (3)' &&
+        message.includes('copper lands touch'),
+    ),
+  );
+  assert(
+    !overlapping.some(
+      ({ location, message }) =>
+        location === 'Pads 2 (2) and 3 (3)' &&
+        message.includes('solder mask openings overlap'),
+    ),
+  );
   const inadequate = api.inspectFootprintDimensions(
     {
       pads: [plated],

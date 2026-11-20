@@ -6,13 +6,13 @@ interface StarterEntry {
   id: string;
   family: string;
   footprint: FootprintLibrary;
-  bodyNm?: readonly [number, number];
+  bodyNm: readonly [number, number, number];
+  assemblyProcess: string;
   documentation?: {
     package: string;
     pinout: string;
     partNumber: string;
     sourceRevision: string;
-    process: string;
     pinoutByPad: Record<string, string>;
   };
 }

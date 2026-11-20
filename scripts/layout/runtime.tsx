@@ -2,6 +2,8 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ServerDrawing from '../../renderer/ServerDrawing';
 import SvgDefs from '../../src/components/svg/SvgDefs';
+import { DeviceFootprintPreview } from '../../src/components/projects/DeviceMappingPreview';
+import type { EmbeddedFootprint } from '../../src/pcb/boardAssets';
 import { dsnSheet } from '../../src/model/dsnDrawing';
 import {
   bodyRect,
@@ -40,7 +42,7 @@ export { auditPcbSchematic } from '../../src/pcb/schematicAudit';
 export { reviewCircuitNets } from '../../src/pcb/circuitNets';
 export { decodeProjectSettings, encodeProjectSettings } from '../../src/pcb/projectSettings';
 export { circuitConnectivityDigest } from '../../src/pcb/circuitSnapshot';
-export { deviceDigest, readLibraryDevice, searchLibraryDevices, writeLibraryDevice } from '../../src/pcb/deviceLibrary';
+export { deviceDigest, readLibraryDevice, readLibraryDeviceCatalogue, searchLibraryDevices, writeLibraryDevice } from '../../src/pcb/deviceLibrary';
 export { applyDeviceReview, previewDeviceReview } from '../../src/pcb/deviceReview';
 export { previewCircuitEco, applyCircuitEco } from '../../src/pcb/circuitEco';
 export { loadPolygonKernel } from '../../src/pcb/polygonKernel';
@@ -117,3 +119,9 @@ export { importFootprintLibrary, encodeFootprintLibrary, decodeFootprintLibrary,
 export { kicadImporter } from '../../src/io/kicad/kicadImporter';
 
 export { placeUnplacedComponent } from '../../src/pcb/boardPlacement';
+
+export function renderFootprintAtActualSize(footprint: EmbeddedFootprint) {
+  return renderToStaticMarkup(
+    <DeviceFootprintPreview footprint={footprint} selected="" ruler actualSize />,
+  );
+}

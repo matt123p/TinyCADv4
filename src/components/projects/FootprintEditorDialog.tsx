@@ -85,6 +85,7 @@ export default function FootprintEditorDialog({
   const [starter, setStarter] =
     useState<Awaited<ReturnType<typeof starterFootprints>>>();
   const [starterId, setStarterId] = useState('');
+  const starterDraft = starter?.find(({ id }) => id === starterId);
   const [messages, setMessages] = useState<
     readonly { severity: string; location: string; message: string }[]
   >([]);
@@ -282,7 +283,10 @@ export default function FootprintEditorDialog({
       throw new Error(
         'Add footprint geometry before exporting the print view.',
       );
-    const { width, height } = preview.viewBox.baseVal;
+    const [, , width, height] = preview
+      .getAttribute('viewBox')
+      .split(/\s+/)
+      .map(Number);
     const print = preview.cloneNode(true) as SVGSVGElement;
     print.setAttribute('width', mm(width) + 'mm');
     print.setAttribute('height', mm(height) + 'mm');
@@ -328,15 +332,14 @@ export default function FootprintEditorDialog({
                       </select>
                     </label>{' '}
                     <Button
-                      disabled={!starterId}
+                      disabled={!starterDraft}
                       onClick={(): void => {
+                        if (!starterDraft) return;
                         void run(async () => {
                           const { openStarterFootprint } = await import(
                             '../../io/starterFootprints'
                           );
-                          const entry = starter.find(
-                            ({ id }) => id === starterId,
-                          );
+                          const entry = starterDraft;
                           const draft = await openStarterFootprint(entry);
                           setFile(draft);
                           setMessages([]);
@@ -358,8 +361,8 @@ export default function FootprintEditorDialog({
                           );
                           setDevice({
                             packageName: entry.documentation?.partNumber ?? '',
-                            width: entry.bodyNm ? mm(entry.bodyNm[0]) : '',
-                            height: entry.bodyNm ? mm(entry.bodyNm[1]) : '',
+                            width: mm(entry.bodyNm[0]),
+                            height: mm(entry.bodyNm[1]),
                             license: '',
                             reviewer: '',
                             evidence: entry.documentation
@@ -367,7 +370,7 @@ export default function FootprintEditorDialog({
                                   entry.documentation.sourceRevision,
                                   entry.documentation.package,
                                   entry.documentation.pinout,
-                                  entry.documentation.process,
+                                  entry.assemblyProcess,
                                 ].join(' · ')
                               : '',
                           });
@@ -378,6 +381,12 @@ export default function FootprintEditorDialog({
                     >
                       Open starter draft
                     </Button>
+                    {starterDraft && (
+                      <span>
+                        {' '}
+                        · Intended assembly · {starterDraft.assemblyProcess}
+                      </span>
+                    )}
                   </>
                 ) : (
                   <Button

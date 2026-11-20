@@ -6,6 +6,9 @@ import gzip
 import hashlib
 import json
 import math
+import os
+import subprocess
+import tempfile
 import uuid
 from pathlib import Path
 
@@ -280,8 +283,6 @@ def generate(recipe):
 
 
 def reviewed_devices(directory, definitions):
-    if directory is None:
-        return []
     if not directory.is_dir():
         raise ValueError(f"Reviewed device directory does not exist: {directory}.")
     output = []
@@ -304,6 +305,26 @@ def reviewed_devices(directory, definitions):
     return output
 
 
+def write_reviewed_bundle(path, devices):
+    contents = canonical({"version": 1, "devices": devices}) + "\n"
+    checker_path = Path(__file__).with_name("check-reviewed-devices.mjs")
+    checked = subprocess.run(["node", str(checker_path)], input=contents,
+                             encoding="utf-8", capture_output=True)
+    if checked.returncode:
+        raise ValueError(checked.stderr.strip() or "The reviewed catalogue failed validation.")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pending = tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", newline="\n", dir=path.parent, delete=False
+    )
+    temporary_path = Path(pending.name)
+    try:
+        with pending:
+            pending.write(contents)
+        os.replace(temporary_path, path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", type=Path)
@@ -313,6 +334,8 @@ def main():
     parser.add_argument("--reviewed-bundle", type=Path, help="Write the reviewed device catalogue.")
 
     args = parser.parse_args()
+    if bool(args.reviewed_devices) != bool(args.reviewed_bundle):
+        parser.error("--reviewed-devices and --reviewed-bundle must be provided together")
     catalogue = json.loads(args.catalogue.read_text(encoding="utf-8"))
     if catalogue["version"] != 1:
         raise ValueError("Unsupported starter catalogue version.")
@@ -327,24 +350,30 @@ def main():
             raise ValueError(f"Invalid or duplicate package ID {name!r}.")
         names.add(name)
         footprint, step = generate(recipe)
+        process = recipe["manufacturing"]["process"]
+        if not isinstance(process, str) or not process.strip():
+            raise ValueError(f"{name} needs an intended assembly process.")
         native_name = name + ".tcfootprint.json"
         step_name = name + ".step"
         definition = footprint["definition"]
         definitions[definition["id"]] = definition
         (args.destination / native_name).write_text(canonical(footprint) + "\n", encoding="utf-8")
         (args.destination / step_name).write_bytes(step)
+        evidence = recipe.get("documentation")
+        if evidence and set(evidence["pinoutByPad"]) != {pad["label"] for pad in definition["pads"]}:
+            raise ValueError(f"{name} has a missing or unknown documented pad.")
         if args.bundle:
-            item = {"id": name, "family": recipe["family"], "footprint": footprint}
-            if "documentation" in recipe:
-                evidence = recipe["documentation"]
-                if set(evidence["pinoutByPad"]) != {pad["label"] for pad in footprint["definition"]["pads"]}:
-                    raise ValueError(f"{name} has a missing or unknown documented pad.")
+            item = {"id": name, "family": recipe["family"], "footprint": footprint,
+                    "bodyNm": recipe["body"]["envelopeNm"], "assemblyProcess": process}
+            for key in ("pitchNm", "rowSpacingNm"):
+                if key in recipe["terminals"]:
+                    item[key] = recipe["terminals"][key]
+            if evidence:
                 item["documentation"] = evidence
-                item["bodyNm"] = recipe["body"]["envelopeNm"][:2]
             bundle.append(item)
         variants.append({"id": name, "family": recipe["family"], "footprint": native_name,
                          "step": step_name, "stepSha256": sha256(step), "pinCount": len(footprint["definition"]["pads"]),
-                         "status": "unreviewed"})
+                         "status": "unreviewed", "assemblyProcess": process})
     (args.destination / "index.json").write_text(canonical({"version": 1, "variants": variants}) + "\n", encoding="utf-8")
     if args.bundle:
         args.bundle.parent.mkdir(parents=True, exist_ok=True)
@@ -353,10 +382,7 @@ def main():
                 compressed.write(canonical({"version": 1, "variants": bundle}).encode("utf-8"))
     if args.reviewed_bundle:
         approved = reviewed_devices(args.reviewed_devices, definitions)
-        args.reviewed_bundle.parent.mkdir(parents=True, exist_ok=True)
-        args.reviewed_bundle.write_text(
-            canonical({"version": 1, "devices": approved}) + "\n", encoding="utf-8"
-        )
+        write_reviewed_bundle(args.reviewed_bundle, approved)
 
 
 

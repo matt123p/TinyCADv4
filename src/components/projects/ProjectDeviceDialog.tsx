@@ -64,15 +64,18 @@ export default function ProjectDeviceDialog({
   const [selectedTerminal, setSelectedTerminal] = useState(0);
   const part = components.find(({ id }) => id === componentId);
   const current = boardComponentDevice(board, componentId);
-  const criteria = searchLibraryDevices(catalogue.devices, {
-    packageHint: part?.packageHint,
-    query,
-    mount: mount || undefined,
-    maxWidthNm: width ? Number(width) * 1_000_000 : undefined,
-    maxHeightNm: height ? Number(height) * 1_000_000 : undefined,
-    pitchNm: pitch ? Math.round(Number(pitch) * 1_000_000) : undefined,
-    padCount: padCount ? Number(padCount) : undefined,
-  });
+  const criteria = searchLibraryDevices(
+    catalogue.devices.filter(({ definition }) => definition.terminals.length),
+    {
+      packageHint: part?.packageHint,
+      query,
+      mount: mount || undefined,
+      maxWidthNm: width ? Number(width) * 1_000_000 : undefined,
+      maxHeightNm: height ? Number(height) * 1_000_000 : undefined,
+      pitchNm: pitch ? Math.round(Number(pitch) * 1_000_000) : undefined,
+      padCount: padCount ? Number(padCount) : undefined,
+    },
+  );
   const candidates = [
     ...criteria.exact,
     ...criteria.matches.filter((item) => !criteria.exact.includes(item)),
