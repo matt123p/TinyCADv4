@@ -43,6 +43,13 @@ Run the prototype tests with `npm run test:pcb` and the browser/desktop fixture 
 ## WP2–WP6 · M1 manufacturing release
 
 - [ ] WP2 · Portable projects, recovery, embedded device/footprint revisions, reviewed legacy migration, footprint editing/import, curated parts, and atomic ECO with cross-probing (PRJ, SYN, LIB).
+  - [x] Implement the `.tcproject` archive and source-control directory codecs with version, inventory, digest, and source-circuit checks (PRJ-01, PRJ-05).
+  - [ ] Add project open/save, validated Save As with lineage, revision comparison, and crash recovery through the existing TinyCAD shell (PRJ-04–06).
+  - [ ] Compile hierarchical, bus, hidden-power, multipart and no-connect fixtures into stable circuit snapshots, with explicit physical roles and terminal provenance (SYN-01, SYN-08).
+  - [ ] Resolve legacy package hints through reviewed versioned devices, validate explicit mappings, and support embedded dependencies and reviewed library refresh (LIB-01–10).
+  - [ ] Preview and apply revision-guarded ECOs atomically, preserve unaffected layout, report impacted copper, and cross-probe board terminals and schematic pins (SYN-02–07).
+  - [ ] Add the TinyCAD SVG footprint editor, dimensional checks, common-package generators and supported KiCad import with a loss report (FPT-01–07).
+  - [ ] Curate and review the starter component core and verify an offline project round trip on a clean installation.
 - [ ] WP3 · Split the browser shell into ES-module entry points for Circuit Design, PCB Design, and Circuit Design + Simulation (WEB-01). Load feature modules, workers and WASM on demand. Preserve edits and undo history when switching workspaces, and release resources owned by the workspace being left.
 - [ ] WP3 · Board editor with one/two layers, outlines and cutouts, mechanical tools, component placement, snapping, manual rule-aware routing, plated/non-plated holes, and slots (GEO, LAY, UI, PLC, RTE).
 - [ ] WP3 · Extend the existing TinyCAD window, toolbar, sheet tabs, panels and dialogues for PCB tools. Reuse the schematic editor's React/SVG sheet techniques for 2D PCB and footprint editing (UX-11, REN-01).

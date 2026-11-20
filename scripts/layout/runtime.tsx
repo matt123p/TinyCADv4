@@ -35,6 +35,9 @@ export { makeNetForDrawing } from '../../src/web-worker/netlist';
 export { NetlistWorkerState } from '../../src/web-worker/netlistState';
 export { auditPcbSchematic } from '../../src/pcb/schematicAudit';
 export { reviewCircuitNets } from '../../src/pcb/circuitNets';
+export * from '../../src/pcb/projectArchive';
+export { circuitConnectivityDigest } from '../../src/pcb/circuitSnapshot';
+export { createBoard, serializeBoard } from '../../src/pcb/board';
 export { withNativeJunctions } from '../../src/layout/connectivity';
 
 export function circuitBounds(sheet: dsnSheet) {
