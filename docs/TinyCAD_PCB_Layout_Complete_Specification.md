@@ -438,15 +438,15 @@ Store nominal finished-hole size, tolerance and process classification separatel
 
 ### 13.1 Workspace layout
 
-Use document tabs for **Schematic**, **PCB**, **3D**, **Simulation** and **Manufacturing preview**. PCB and schematic should support side-by-side inspection. Keep TinyCAD's existing visual language and application conventions after a repository/UI audit.
+Extend the existing TinyCAD editor shell. Use its sheet tab strip for **Schematic**, **PCB**, **3D**, **Simulation** and **Manufacturing preview**. Support side-by-side schematic and PCB inspection within that shell. Preserve the schematic editor's window layout, tool placement, menus, shortcuts and dialogue conventions for equivalent PCB actions. Add PCB-specific controls to the corresponding existing regions.
 
 | Region | Required content |
 |---|---|
-| Top command area | Save/undo, sync status, selection/place/route, active layer, grid, width/via preset, Check, Export |
-| Left dock | Project tree, unplaced components, searchable nets/components and libraries |
-| Main canvas | Board, route preview, selective airwires, active geometry and contextual overlays |
-| Right dock | Selection properties, layers/filters, rule explanation; optional existing AI panel as a tab |
-| Bottom dock | Checks, ECO preview, job progress, searchable issues and manufacturing log |
+| Existing top toolbar and menus | Save/undo, sync status, selection/place/route, active layer, grid, width/via preset, Check, Export |
+| Existing collapsible left panel | Project tree, unplaced components, searchable nets/components and libraries, and layers/filters |
+| Existing central drawing area and sheet tab strip | SVG board drawing, route preview, selective airwires and contextual overlays |
+| Existing contextual panels and dialogues | Selection properties, rule explanations and tool settings. Present equivalent actions through the same dialogue types and placements as Circuit Design |
+| Existing bottom panel | Checks, ECO preview, job progress, searchable issues and manufacturing log |
 | Status bar | Units, cursor position, active tool/layer, snapping, outstanding connections and stale-state indicators |
 
 Avoid permanently filling both sides with dense panels on a small laptop. Docks must collapse, and command search must reach every normal action. Display tool mode and next expected action in plain text. Include a quick “reset workspace” action.
@@ -465,6 +465,7 @@ Avoid permanently filling both sides with dense panels on a small laptop. Docks 
 | UX-08 | Provide command search, remappable shortcuts and contextual help | Every essential tool is accessible without memorising a shortcut | M1 |
 | UX-09 | Support keyboard property editing and accessible issue navigation | User can reach, inspect and zoom to each issue via keyboard | M1 |
 | UX-10 | Provide touch/pen selection, pan/zoom and enlarged handles | Tablet users can place and edit supported geometry without hover-only controls | M2 |
+| UX-11 | Reuse the TinyCAD editor shell and interaction conventions for PCB editing | Switching between schematic and PCB keeps equivalent controls in familiar positions, including tools, keyboard actions, property dialogues and issue navigation | M1 |
 
 Suggested shortcut actions are route, via, rotate, flip side, move, drag, properties, highlight net, refill zones and full check. Bindings must be checked against existing TinyCAD and browser shortcuts before being assigned. “Flip side” must not share an ambiguous action with “mirror drawing.”
 
@@ -701,6 +702,8 @@ Simulation integration shall cross-highlight schematic operating-point currents/
 
 Do not make a polished photorealistic renderer a dependency for manufacturing correctness. M1's basic model can use extruded board geometry and body placeholders. STEP conversion or full solid-model operations may require a desktop helper or separately evaluated WASM kernel; this platform distinction must be explicit.
 
+Use [Three.js with its WebGL 2 renderer](https://threejs.org/docs/pages/WebGLRenderer) for the interactive 3D inspection view in both browser and Electron. Open it within the TinyCAD shell and load the viewer and model assets only when requested. Build display meshes from the shared board snapshot and placement transforms. Release viewer-owned graphics resources when the view closes. If WebGL 2 is unavailable, show that state in the 3D view and keep the SVG editor usable. STEP and STL export consume board geometry and placement data independently of the interactive viewer.
+
 Use the same board revision, origin and placement transforms for STEP and STL. STL carries no unit metadata, so write coordinates in millimetres and show that convention in the export dialog. For a populated export, list components represented by approximate bodies or omitted because their dimensions are unavailable.
 
 ## 21. Manufacturing and assembly outputs
@@ -906,9 +909,23 @@ Reuse the current application stack and shared model where appropriate. Use work
 
 Prototype a robust geometry kernel in WASM if the JavaScript implementation cannot meet correctness/performance targets. Clipper2 is a concrete candidate for polygon clipping and offsets; it does not provide a complete PCB router or connectivity checker [S41]. Keep geometry behind a typed interface so the choice can change after G0 tests.
 
-A GPU-backed scene renderer should be evaluated using TinyCAD's existing renderer and target hardware. Canvas/WebGL is a reasonable broad-compatibility starting point; WebGPU can be an optional future acceleration path. SVG remains useful for bounded exports and previews but should not be assumed suitable for every large interactive board. Rendering triangulation may be approximate within a visual tolerance; manufacturing geometry may not inherit that approximation unchecked.
+**REN-01 (M1).** The interactive 2D PCB and footprint editors shall use TinyCAD's existing React/SVG drawing techniques in browser and Electron. Reuse or extend the SVG sheet infrastructure for view transforms, pan/zoom, pointer interaction, selection feedback and overlays. Render board-specific layers, copper, pads and previews as SVG. Optimise SVG performance through layer batching, viewport culling and bounded overlays as needed. Qualify the classroom corpus with this renderer. The WebGL 2 renderer is scoped to the separate 3D inspection view. Display simplification leaves authoritative geometry, connectivity and manufacturing output independent of view settings.
 
 Desktop-only capabilities may include local external routing, native STEP conversion or large-board acceleration. Clearly advertise these differences while retaining editing, checking and normal fabrication export in the browser. A desktop helper must use a versioned protocol and must not expose arbitrary file or shell execution to project files or AI clients.
+
+#### Browser workspace modules
+
+**WEB-01 (M1).** The browser entry point shall load a small shared shell for navigation, document identification and project access. It shall use native browser ES modules and dynamic `import()` boundaries to load the selected workspace from the production build. Keep feature code, worker entry points, WebAssembly and large workspace assets behind those boundaries. Shared document metadata and file codecs may be used by any workspace that needs them.
+
+| Workspace | Modules loaded when needed |
+|---|---|
+| Circuit Design | Schematic editor, schematic libraries and electrical connectivity checks. PCB editing and the simulation runtime stay unloaded. |
+| PCB Design | Board editor and the PCB workers and assets needed for the current operation. A linked schematic may be read or compiled for cross-probing and updates. Load the full schematic editor on entry to Circuit Design and the simulator on entry to Circuit Design + Simulation. |
+| Circuit Design + Simulation | Circuit Design plus simulation tools and plots. Start the solver worker and load its engine and model assets when a simulation operation needs them. PCB editing stays unloaded. |
+
+Opening a file or direct link shall select the requested workspace using lightweight document metadata. Switching workspaces shall preserve edits, undo history and recovery state. On exit, release workspace-owned workers, caches, and graphics resources. If reclaiming an already loaded ES module graph requires a new browser document, restore the workspace from saved or recoverable state in that document.
+
+Acceptance requires a cold-start module and worker trace for each workspace in the production browser builds. Circuit Design must leave PCB and simulation assets unfetched, PCB Design must leave the simulation assets unfetched, and Circuit Design + Simulation must leave PCB assets unfetched. Verify direct links, file opens and repeated workspace switches, including preservation of edits and undo history. Inspect the shipped dependency graph for static imports or preload requests that bypass these boundaries.
 
 ### 25.3 Geometry correctness requirements
 
@@ -1064,7 +1081,7 @@ Hashes use canonical content and include all manufacturing-relevant inputs. Equi
 
 ### 27.1 Proposed measurable performance targets
 
-These are **acceptance targets to benchmark**, not measured TinyCAD capabilities. Qualify on a published reference school laptop: 4 CPU cores, 8 GB RAM, integrated GPU, 1920 × 1080 display, current stable browser, with exact hardware/browser recorded at G0. Desktop benchmarks record equivalent details. Test cold and warm runs and report median/P95, not only best runs.
+These are **acceptance targets to benchmark**, not measured TinyCAD capabilities. For WP1, use the current development machine as the interim G0 baseline and record browser and desktop CPU and memory usage along with exact hardware and runtime versions. For M1 release qualification, use a published reference school laptop with 4 CPU cores, 8 GB RAM, integrated GPU, a 1920 × 1080 display and a current stable browser. Desktop benchmarks record equivalent details. Test cold and warm runs and report median/P95, not only best runs.
 
 | Workload | Proposed target | Milestone |
 |---|---|---|
@@ -1081,6 +1098,8 @@ These are **acceptance targets to benchmark**, not measured TinyCAD capabilities
 Define the classroom corpus around 100 components, 500 pads, 2,000 segments, 50 vias and several zones. Define the engineering stress corpus around 1,000 components, 5,000 pads, 20,000 segments, 1,000 vias and 8 copper layers. These are benchmark sizes, not enforced product limits. Include an adversarial many-vertex zone to expose nonlinear failure modes.
 
 Establish a browser memory budget during G0; a proposed M1 peak target is under 500 MB for the classroom corpus, including assets but excluding unrelated browser tabs. Do not keep duplicate full-board polygon copies in the renderer, worker and history without accounting for their cost. Reconsider numerical targets if G0 shows the need, but publish the revised target and actual evidence.
+
+For WEB-01, report memory at idle after cold entry, at peak during a representative task, and after repeated transitions between the three workspaces. Account for renderer heaps, workers, WASM memory and graphics resources where the browser exposes them. Record any measurement gaps and identify retained resources by workspace.
 
 ### 27.2 Resilience and concurrency
 
@@ -1167,6 +1186,7 @@ Reference circuits are test fixtures, not pre-certified products. Choose actual 
 | AT-22 | Save a supported KiCad export and open it independently | No unexplained supported-object or connectivity loss; declared losses are reported | OUT, interoperability |
 | AT-23 | Re-run a deterministic output recipe | Geometric outputs/hashes match after declared metadata normalisation | OUT, PRJ |
 | AT-24 | Follow the classroom exercise on a clean browser | Complete edit/check/export without AI, hosted routing or manufacturer login | UX, EDU, OUT |
+| AT-25 | Switch from the schematic sheet to PCB and use equivalent tools and property dialogues | The existing shell and familiar control positions are preserved. The 2D board and editing overlays render through SVG, and keyboard, pan/zoom and undo follow TinyCAD conventions | UX-11, REN-01 |
 
 ### 28.4 Copper and assembled connectivity
 
@@ -1202,10 +1222,10 @@ Observe a small group of novice learners and experienced users completing the sa
 | WP0: Audit and schema | Existing TinyCAD graph/undo/persistence audit; stable IDs; terminology; exact capability matrix | Can explain how every existing pin/package attribute migrates |
 | WP1: G0 engine spike | Geometry, mapping, connectivity, simple router/fill, export/read-back prototypes | Seeded short/open and output-corruption tests pass in browser/desktop |
 | WP2: Project and libraries | Native schema, embedded assets, device resolver, footprint editor/import, migration table | Portable offline project and reviewed component core |
-| WP3: Board editing | Outline/layers, placement, selection, snapping, manual routing/vias and undo | Fixtures A/B/E are editable without hidden state corruption |
+| WP3: Board editing | Outline/layers, placement, selection, snapping, manual routing/vias, undo, and browser workspace loading (WEB-01) | Fixtures A/B/E are editable without hidden state corruption. Each browser workspace loads its required modules and assets |
 | WP4: Zones and validation | Zone engine, rule resolver, physical graph, batch/local checks, coverage and waivers | M1 geometry/connectivity acceptance suite passes |
 | WP5: Manufacturing | Writers, output-derived preview, recipes, BOM/placement, manifest and diagnostic export | Independent CAM and physical qualification complete |
-| WP6: M1 productisation | Guided workflow, accessibility, recovery, documentation and performance qualification | All M1 release conditions below met |
+| WP6: M1 productisation | Guided workflow, accessibility, recovery, documentation and performance qualification, including per-workspace browser memory and switch tests | All M1 release conditions below met |
 | WP7: M2 routing and layers | Shove/walk-around, qualified multilayer, block reuse, STEP, router adapter | Stress corpus and multilayer acceptance suite pass |
 | WP8: M3 assistance | Pair/length tools, engineering calculations, variants, panelisation, reviewed AI | Each capability qualified separately with declared coverage |
 
@@ -1222,13 +1242,13 @@ G0 must settle:
 - The exact authoritative connectivity semantics, including jumpers, internal equivalent terminals and net ties.
 - Whether one code path can provide faithful browser/desktop output.
 - The independent parser/CAM qualification route.
-- Which proposed performance targets are realistic on the reference laptop.
+- What the monitored development-host baseline establishes and which performance targets need reference-laptop qualification before M1.
 
 A failed gate triggers a revised design or narrower declared feature scope. It must not be bypassed by relabelling unverified features as completed.
 
 ### 29.3 M1 scope freeze
 
-**Required:** portable project; TinyCAD schematic/ECO integration; explicit mapping and curated starter library; footprint edit/import subset; one/two layers; outlines/cutouts; PTH/NPTH/basic plated slots; placement; manual rule-aware routing and vias; zones/thermals; full supported-feature DRC/connectivity/parity; basic 3D; fabrication/assembly output with read-back; KiCad subset export; recovery and a complete teaching workflow.
+**Required:** portable project; TinyCAD schematic/ECO integration; explicit mapping and curated starter library; footprint edit/import subset; one/two layers; outlines/cutouts; PTH/NPTH/basic plated slots; placement; manual rule-aware routing and vias; zones/thermals; full supported-feature DRC/connectivity/parity; basic 3D; fabrication/assembly output with read-back; KiCad subset export; recovery and a complete teaching workflow. Browser workspace module separation and memory qualification under WEB-01 are M1 release requirements.
 
 **Permitted simplifications:** no push/shove; no full autorouter; no multilayer editing; no exact STEP assembly export; no PCB import from proprietary tools; no differential-pair solver; no automatic placement; no real-time collaboration. Each simplification is explicit in UI/documentation and does not compromise the qualified two-layer manufacturing workflow.
 
@@ -1273,7 +1293,7 @@ Calendar/effort estimates should follow the repository audit and G0 measurements
 | Footprint source | Curated core plus KiCad import | Pin-map coverage, asset provenance and import loss tests |
 | Routing | Native manual M1; evaluate shove reuse and external adapters | Correctness and interaction benchmarks |
 | Layer scope | One/two M1; qualified rigid multilayer M2 | Layer-span and output qualification |
-| Browser 3D | Simple local rendering first | Transform consistency and laptop performance |
+| Interactive rendering | Shared TinyCAD React/SVG techniques for 2D editing. On-demand Three.js/WebGL 2 for 3D inspection | Editor continuity, transform consistency and laptop performance |
 | AI | Same typed commands as UI, optional candidate workflow | Scope, rollback and false-success benchmarks |
 | Manufacturer integrations | Optional export adapters, generic files always available | Profile/source review and actual output acceptance |
 | Collaboration | Single-writer reliable files first | Conflict/recovery tests before multi-user work |

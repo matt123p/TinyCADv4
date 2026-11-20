@@ -6,6 +6,8 @@ import type {
   PadAssignment,
 } from './footprint';
 import { isBoardPoint } from './geometry';
+import { validatePadStack } from './padstack';
+import type { PadStack } from './padstack';
 
 export interface CircuitSource {
   readonly documentId: string;
@@ -35,7 +37,7 @@ export interface EmbeddedFootprint {
   readonly revision: string;
   readonly definitionDigest: string;
   readonly name: string;
-  readonly pads: readonly FootprintPad[];
+  readonly pads: readonly (FootprintPad & { readonly stack?: PadStack })[];
 }
 
 export interface EmbeddedDevice {
@@ -124,9 +126,14 @@ export function validateBoardAssets(
     throw new Error(
       'Embedded devices must declare the embedded-devices feature.',
     );
-  if (!hasAssets) return;
+  if (!hasAssets) {
+    if (features.includes('physical-padstacks'))
+      throw new Error('Physical padstacks need embedded devices.');
+    return;
+  }
 
   const definitions = byId(footprintDefinitions, 'footprint definition');
+  let hasPadstacks = false;
   for (const definition of definitions.values()) {
     if (
       !isText(definition.revision) ||
@@ -140,7 +147,16 @@ export function validateBoardAssets(
     for (const pad of byId(definition.pads, 'pad').values()) {
       if (typeof pad.label !== 'string' || !isBoardPoint(pad.positionNm))
         throw new Error('Invalid footprint pad label or position.');
+      if (pad.stack !== undefined) {
+        hasPadstacks = true;
+        validatePadStack(pad.stack);
+      }
     }
+  }
+  if (hasPadstacks !== features.includes('physical-padstacks')) {
+    throw new Error(
+      'Explicit padstacks must declare the physical-padstacks feature.',
+    );
   }
   const devices = byId(deviceDefinitions, 'device definition');
   for (const device of devices.values()) {

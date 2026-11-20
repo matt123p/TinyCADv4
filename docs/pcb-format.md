@@ -42,10 +42,11 @@ Moving, rotating, renaming and renumbering a native item preserve its UUID. Symb
 
 | Version 1 field | Contract |
 | --- | --- |
-| `outline` | Closed straight polygon, using an implicit final edge from last to first vertex. Integer coordinates within ±500 mm, no zero-length edges, overlap or self-intersection. The `straight-outline` feature is required for this reader. |
+| `outline` or `profile` | `straight-outline` stores a closed polygon with an implicit final edge. `analytic-profile` stores ordered line and arc edges plus closed cutouts. Exactly one profile representation is present. Coordinates remain within ±500 mm. Curve tessellation is derived and the Gerber profile emits the analytic edges. |
 | `copperLayers`, `graphicLayers` | Ordered physical top and optional bottom copper. Graphic layers have UUIDs, explicit role and side, and editable names. Graphic layer IDs cannot serve as physical copper layer IDs. |
 | `sourceCircuit` | Optional source document UUID, circuit revision and SHA-256 connectivity digest. A board without a source is an independent board. The digest is checked against the accompanying circuit snapshot when the project is loaded. |
 | `footprintDefinitions`, `deviceDefinitions`, `footprints` | Embedded revisioned definitions and per-board placements, declared together with `embedded-devices`. Definitions have IDs and content-digest fields. Devices reference a footprint and explicitly assign every pad ID. Placements reference a device and component UUID and store integer transforms and lock state. |
+| `footprintDefinitions[].pads[].stack` | Explicit padstacks declare `physical-padstacks`. A stack defines polygon or capsule copper, mask and paste per face, with an optional round or straight-slot drill and explicit plating. Placing a bottom footprint mirrors its geometry and swaps its face assignments. |
 | Unknown optional fields | Preserve JSON data at every nesting level when editing or saving. Object keys are sorted on serialization. Geometry or behavior needed to interpret a board must also have a required feature identifier. |
 | Unsupported version or required feature | Reject explicitly before editing. Version 1 files written by the initial straight-outline prototype are accepted without migration. A future migration writes a new candidate, validates it and preserves the original. |
 

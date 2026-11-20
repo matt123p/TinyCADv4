@@ -120,7 +120,8 @@ function tokenAsAtom(token: Token): SExprAtom {
   throw new Error('Invalid atom token');
 }
 
-function parseList(tokens: Token[], start: number): [SExprList, number] {
+function parseList(tokens: Token[], start: number, remainingDepth: number): [SExprList, number] {
+  if (remainingDepth === 0) throw new Error('KiCad input exceeds the nesting limit.');
   if (tokens[start]?.type !== 'lparen') {
     throw new Error('Expected list start');
   }
@@ -141,7 +142,7 @@ function parseList(tokens: Token[], start: number): [SExprList, number] {
       return [{ tag, values, children }, index + 1];
     }
     if (token.type === 'lparen') {
-      const [child, nextIndex] = parseList(tokens, index);
+      const [child, nextIndex] = parseList(tokens, index, remainingDepth - 1);
       children.push(child);
       index = nextIndex;
       continue;
@@ -153,12 +154,13 @@ function parseList(tokens: Token[], start: number): [SExprList, number] {
   throw new Error(`Unclosed list for tag "${tag}"`);
 }
 
-export function parseSexpr(input: string): SExprList {
+export function parseSexpr(input: string, options?: { maxDepth: number; singleRoot: boolean }): SExprList {
   const tokens = tokenize(input);
   if (tokens.length === 0) {
     throw new Error('Empty KiCad symbol file');
   }
 
-  const [root] = parseList(tokens, 0);
+  const [root, end] = parseList(tokens, 0, options?.maxDepth ?? Infinity);
+  if (options?.singleRoot && end !== tokens.length) throw new Error('Unexpected data after the KiCad footprint.');
   return root;
 }

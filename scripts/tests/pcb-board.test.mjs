@@ -405,13 +405,17 @@ test('places the same asymmetric pad on either side using exact integer transfor
     }),
     { x: 19_000_000, y: 32_000_000 },
   );
+  assert.deepEqual(
+    placeFootprintPoint(point, {
+      ...placement,
+      rotationMicrodegree: 45_000_000,
+    }),
+    { x: 20_707_107, y: 32_121_320 },
+  );
   assert.throws(
     () =>
-      placeFootprintPoint(point, {
-        ...placement,
-        rotationMicrodegree: 45_000_000,
-      }),
-    /90 degrees/,
+      placeFootprintPoint(point, { ...placement, rotationMicrodegree: 0.5 }),
+    /integer/,
   );
 });
 

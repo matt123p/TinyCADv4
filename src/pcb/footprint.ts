@@ -86,23 +86,26 @@ export function placeFootprintPoint(
     throw new Error('Invalid footprint point, position, or side.');
   }
   const quarterTurn = 90_000_000;
-  if (
-    !Number.isSafeInteger(rotationMicrodegree) ||
-    rotationMicrodegree % quarterTurn !== 0
-  ) {
-    throw new Error(
-      'Only multiples of 90 degrees are supported by this transform.',
-    );
-  }
-  const turns = (((rotationMicrodegree / quarterTurn) % 4) + 4) % 4;
+  if (!Number.isSafeInteger(rotationMicrodegree))
+    throw new Error('Rotation must be an integer number of microdegrees.');
+  const fullTurn = 4 * quarterTurn;
+  const rotation = ((rotationMicrodegree % fullTurn) + fullTurn) % fullTurn;
+  const turns = rotation / quarterTurn;
   const x = side === 'bottom' ? -point.x : point.x;
   const { y } = point;
-  const [dx, dy] = [
+  const quarterTurns = [
     [x, y],
     [-y, x],
     [-x, -y],
     [y, -x],
-  ][turns];
+  ];
+  const radians = (rotation / fullTurn) * (2 * Math.PI);
+  const [dx, dy] = Number.isInteger(turns)
+    ? quarterTurns[turns]
+    : [
+        Math.round(x * Math.cos(radians) - y * Math.sin(radians)),
+        Math.round(x * Math.sin(radians) + y * Math.cos(radians)),
+      ];
   const result = { x: positionNm.x + dx, y: positionNm.y + dy };
   if (!isBoardPoint(result))
     throw new Error(

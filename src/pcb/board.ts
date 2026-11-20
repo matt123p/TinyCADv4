@@ -3,6 +3,8 @@ import type { BoardPoint } from './geometry';
 import { isEntityId } from '../model/schematicIdentity';
 import { validateBoardAssets } from './boardAssets';
 import type { BoardAssets } from './boardAssets';
+import { profileRegion } from './contours';
+import type { BoardProfile } from './contours';
 
 export const BOARD_FILE_EXTENSION = '.dpn';
 
@@ -19,7 +21,11 @@ export interface CopperLayer {
   readonly order: 0 | 1;
 }
 
-type BoardFeature = 'straight-outline' | 'embedded-devices';
+type BoardFeature =
+  | 'straight-outline'
+  | 'analytic-profile'
+  | 'embedded-devices'
+  | 'physical-padstacks';
 
 export interface BoardDocument extends BoardAssets {
   readonly format: typeof boardFormat.format;
@@ -32,12 +38,15 @@ export interface BoardDocument extends BoardAssets {
   readonly title: string;
   readonly requiredFeatures: readonly BoardFeature[];
   readonly copperLayers: readonly CopperLayer[];
-  readonly outline: readonly BoardPoint[];
+  readonly outline?: readonly BoardPoint[];
+  readonly profile?: BoardProfile;
 }
 
 const supportedFeatures: readonly BoardFeature[] = [
   'straight-outline',
+  'analytic-profile',
   'embedded-devices',
+  'physical-padstacks',
 ];
 const copperStack = Object.freeze([
   Object.freeze({ id: 'top', order: 0 } as const),
@@ -79,7 +88,6 @@ function readBoard(value: unknown): BoardDocument {
   }
   if (
     !Array.isArray(board.requiredFeatures) ||
-    !board.requiredFeatures.includes('straight-outline') ||
     !Array.from(board.requiredFeatures).every((feature) =>
       supportedFeatures.includes(feature),
     ) ||
@@ -106,7 +114,24 @@ function readBoard(value: unknown): BoardDocument {
   ) {
     throw new Error('Invalid physical copper layer order.');
   }
-  validateOutline(board.outline);
+  if (board.requiredFeatures.includes('analytic-profile')) {
+    if (
+      !board.profile ||
+      board.outline !== undefined ||
+      board.requiredFeatures.includes('straight-outline')
+    ) {
+      throw new Error('An analytic profile is the sole board outline.');
+    }
+    profileRegion(board.profile);
+  } else {
+    if (
+      board.profile !== undefined ||
+      !board.requiredFeatures.includes('straight-outline')
+    ) {
+      throw new Error('A board needs a declared outline feature.');
+    }
+    validateOutline(board.outline);
+  }
   validateBoardAssets(board, board.requiredFeatures);
   return freezeJson({
     ...board,
@@ -159,7 +184,8 @@ export type BoardOperation =
   | {
       readonly type: 'replaceOutline';
       readonly outline: readonly BoardPoint[];
-    };
+    }
+  | { readonly type: 'replaceProfile'; readonly profile: BoardProfile };
 
 export interface BoardCommand {
   readonly apiVersion: 1;
@@ -213,10 +239,34 @@ export class BoardHistory {
             throw new Error('Enter a board title.');
           candidate = { ...candidate, title: operation.title };
           break;
-        case 'replaceOutline':
+        case 'replaceOutline': {
+          const { profile, ...board } = candidate;
+          const features = candidate.requiredFeatures.filter(
+            (feature) =>
+              feature !== 'analytic-profile' && feature !== 'straight-outline',
+          );
           validateOutline(operation.outline);
-          candidate = { ...candidate, outline: operation.outline };
+          candidate = {
+            ...board,
+            outline: operation.outline,
+            requiredFeatures: [...features, 'straight-outline'],
+          };
           break;
+        }
+        case 'replaceProfile': {
+          const { outline, ...board } = candidate;
+          const features = candidate.requiredFeatures.filter(
+            (feature) =>
+              feature !== 'analytic-profile' && feature !== 'straight-outline',
+          );
+          profileRegion(operation.profile);
+          candidate = {
+            ...board,
+            profile: operation.profile,
+            requiredFeatures: [...features, 'analytic-profile'],
+          };
+          break;
+        }
         default:
           throw new Error('Unsupported board operation.');
       }

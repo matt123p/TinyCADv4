@@ -27,26 +27,33 @@ The [PCB layout specification](TinyCAD_PCB_Layout_Complete_Specification.md) gov
 ## WP1 · G0 engineering experiments
 
 - [x] Verify exact unit conversion and straight-outline predicates, including self-intersections and near-collinear vertices at the coordinate limit.
-- [ ] Add analytic arcs, real cutouts, offsets, and polygon operations behind tested geometry APIs.
-- [ ] Compare TypeScript and candidate WASM geometry on the specification’s mixed SMD/PTH, thermal, plated slot, and polygon pad fixture. Record licensing, performance, cancellation, and correctness.
+- [x] Add analytic arcs, real cutouts, offsets, and polygon operations behind tested geometry APIs.
+- [x] Compare TypeScript and candidate WASM geometry on the mixed SMD/PTH, thermal, plated slot, and polygon pad fixture in Chromium and Electron. Record licensing, latency, worker memory, cancellation, and correctness.
 - [x] Exercise explicit pad assignments with duplicate and alphanumeric labels and test top/bottom quarter-turn transforms on an asymmetric footprint (LIB-01).
-- [ ] Extend mapping and placement to embedded devices, arbitrary orientation, padstacks, and reviewed terminal equivalence (LIB-02–07, LAY-04).
+- [x] Prototype embedded device mapping and placement with arbitrary orientation and physical padstacks. Test reviewed terminal equivalence separately from bare-board copper (LIB-02–07, LAY-04).
 - [x] Test exact round-copper contact, seeded shorts/opens, and plated/non-plated interlayer joins on a bounded fixture.
-- [ ] Extend copper connectivity to drilled annuli, tracks, arbitrary pads, and zone geometry. Define net ties, jumpers, and equivalent terminals.
-- [ ] Prototype rule-aware obstacle routing and via placement. Use the measurements to choose the M1 router strategy.
-- [ ] Prototype Gerber/drill/profile writing and independent read-back. Detect edited or missing manufacturing geometry and verify browser/desktop equivalence.
-- [ ] Publish the G0 supported-feature matrix and stop/go decisions against §29.2.
+- [x] Extend copper connectivity to drilled annuli, tracks, arbitrary pads, and zone geometry. Define net ties, jumpers, and equivalent terminals.
+- [x] Prototype rule-aware obstacle routing and via placement. Use the measurements to choose the M1 router strategy.
+- [x] Prototype Gerber/drill/profile writing and independent read-back. Detect edited or missing manufacturing geometry and verify browser/desktop equivalence.
+- [x] Publish the [G0 supported-feature matrix, measured development-host results and stop/go decisions](pcb-g0.md) against §29.2.
+- [x] Record the monitored G0 comparison on the agreed interim development host. Capture Chromium and Electron process CPU and memory usage and retain the reference-laptop procedure for M1 (§27.1).
 
-Run the prototype fixtures with `npm run test:pcb`. They use round copper discs and explicit interlayer joins. Production connectivity also needs drill voids, routed copper, zones, and validation from independent manufacturing read-back.
+Run the prototype tests with `npm run test:pcb` and the browser/desktop fixture with `npm run qualify:pcb-g0`. The fixture covers routed copper, plated slots, drill voids, thermals, and independent read-back. The manufacturing release needs qualification of the wider supported corpus.
 
 ## WP2–WP6 · M1 manufacturing release
 
 - [ ] WP2 · Portable projects, recovery, embedded device/footprint revisions, reviewed legacy migration, footprint editing/import, curated parts, and atomic ECO with cross-probing (PRJ, SYN, LIB).
+- [ ] WP3 · Split the browser shell into ES-module entry points for Circuit Design, PCB Design, and Circuit Design + Simulation (WEB-01). Load feature modules, workers and WASM on demand. Preserve edits and undo history when switching workspaces, and release resources owned by the workspace being left.
 - [ ] WP3 · Board editor with one/two layers, outlines and cutouts, mechanical tools, component placement, snapping, manual rule-aware routing, plated/non-plated holes, and slots (GEO, LAY, UI, PLC, RTE).
+- [ ] WP3 · Extend the existing TinyCAD window, toolbar, sheet tabs, panels and dialogues for PCB tools. Reuse the schematic editor's React/SVG sheet techniques for 2D PCB and footprint editing (UX-11, REN-01).
 - [ ] WP3 · Use `.dpn` for PCB open/save dialogs and desktop file associations.
 - [ ] WP4 · Deterministic zones/thermals, shared rules, reference fabrication profiles, physical connectivity, parity, DRC coverage and waivers (ZON, RULE, DRC).
 - [ ] WP5 · Basic 3D inspection, frozen manufacturing/assembly outputs, independent read-back preview, release manifest, and KiCad subset export (MEC, OUT, interoperability).
+- [ ] WP5 · Load the Three.js/WebGL 2 inspection viewer on demand within TinyCAD. Verify board transforms, viewer resource cleanup and SVG editing when WebGL 2 is unavailable (MEC, WEB-01).
 - [ ] WP6 · Guided teaching workflow, offline use, accessibility, documentation, recovery and performance. Run the reference boards, §28 acceptance cases, independent CAM checks, and physical qualification.
+- [ ] WP6 · Verify WEB-01 in the production browser builds. Trace modules, workers and asset requests for all three cold starts, exercise file opens and direct links, and record idle, peak and retained memory across repeated workspace switches.
+- [ ] WP6 · Qualify PCB SVG performance on the classroom corpus and verify schematic-to-PCB tool, panel and dialogue continuity (AT-25).
+- [ ] WP6 · Qualify release performance on the §27.1 reference school laptop and compare it with the monitored WP1 development-host baseline.
 
 ## WP7–WP8 · Advanced releases
 

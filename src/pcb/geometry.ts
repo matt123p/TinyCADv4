@@ -45,11 +45,15 @@ export function isBoardPoint(value: unknown): value is BoardPoint {
   );
 }
 
-function samePoint(a: BoardPoint, b: BoardPoint): boolean {
+export function samePoint(a: BoardPoint, b: BoardPoint): boolean {
   return a.x === b.x && a.y === b.y;
 }
 
-function orientation(a: BoardPoint, b: BoardPoint, c: BoardPoint): number {
+export function orientation(
+  a: BoardPoint,
+  b: BoardPoint,
+  c: BoardPoint,
+): number {
   const cross =
     BigInt(b.x - a.x) * BigInt(c.y - a.y) -
     BigInt(b.y - a.y) * BigInt(c.x - a.x);
@@ -67,7 +71,7 @@ function withinSegment(a: BoardPoint, b: BoardPoint, p: BoardPoint): boolean {
   );
 }
 
-function segmentsMeet(
+export function segmentsMeet(
   a: BoardPoint,
   b: BoardPoint,
   c: BoardPoint,
@@ -96,15 +100,18 @@ function segmentsMeet(
 /** One straight-edge contour, with an implicit closing segment. */
 export function validateOutline(
   value: unknown,
+  vertexLimit = 1_024,
 ): asserts value is readonly BoardPoint[] {
   if (
     !Array.isArray(value) ||
     value.length < 3 ||
-    value.length > 1_024 ||
+    value.length > vertexLimit ||
     !Array.from(value).every(isBoardPoint)
   ) {
     throw new Error(
-      'An outline needs 3 to 1,024 vertices within the board coordinate range.',
+      `An outline needs 3 to ${vertexLimit.toLocaleString(
+        'en-US',
+      )} vertices within the board coordinate range.`,
     );
   }
   const vertices = value as readonly BoardPoint[];
@@ -124,11 +131,52 @@ export function validateOutline(
     ) {
       throw new Error('Adjacent outline edges overlap.');
     }
-    for (let j = i + 2; j < count; j++) {
-      if (i === 0 && j === count - 1) continue;
-      if (segmentsMeet(a, b, vertices[j], vertices[(j + 1) % count])) {
+  }
+  const edges = vertices
+    .map((a, i) => {
+      const b = vertices[(i + 1) % count];
+      return { a, b, i, left: Math.min(a.x, b.x), right: Math.max(a.x, b.x) };
+    })
+    .sort((a, b) => a.left - b.left);
+  for (let i = 0; i < count; i++) {
+    const first = edges[i];
+    for (let j = i + 1; j < count && edges[j].left <= first.right; j++) {
+      const second = edges[j];
+      const separation = Math.abs(first.i - second.i);
+      if (separation === 1 || separation === count - 1) continue;
+      if (segmentsMeet(first.a, first.b, second.a, second.b)) {
         throw new Error('The outline intersects itself.');
       }
     }
   }
+}
+
+export type PointLocation = 'inside' | 'outside' | 'boundary';
+
+export function pointInPolygon(
+  point: BoardPoint,
+  polygon: readonly BoardPoint[],
+): PointLocation {
+  let inside = false;
+  for (let i = 0; i < polygon.length; i++) {
+    const a = polygon[i];
+    const b = polygon[(i + 1) % polygon.length];
+    if (point.y < Math.min(a.y, b.y) || point.y > Math.max(a.y, b.y)) continue;
+    const side = orientation(a, b, point);
+    if (side === 0 && withinSegment(a, b, point)) return 'boundary';
+    if (a.y > point.y !== b.y > point.y && side > 0 === b.y > a.y) {
+      inside = !inside;
+    }
+  }
+  return inside ? 'inside' : 'outside';
+}
+
+export function signedDoubleArea(polygon: readonly BoardPoint[]): bigint {
+  let area = BigInt(0);
+  for (let i = 0; i < polygon.length; i++) {
+    const a = polygon[i];
+    const b = polygon[(i + 1) % polygon.length];
+    area += BigInt(a.x) * BigInt(b.y) - BigInt(a.y) * BigInt(b.x);
+  }
+  return area;
 }
