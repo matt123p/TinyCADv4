@@ -1450,6 +1450,31 @@ test('imports a footprint, edits pad coordinates, and exports native and dimensi
     await editor
       .getByRole('button', { name: 'Browse starter footprint drafts' })
       .click();
+    await editor
+      .getByLabel('Starter footprint draft')
+      .selectOption('ti-lm358dr-d0008a');
+    await editor.getByRole('button', { name: 'Open starter draft' }).click();
+    await expect(editor.getByLabel('Datasheet URL')).toHaveValue(
+      'https://www.ti.com/lit/ds/symlink/lm358.pdf',
+    );
+    await expect(
+      editor.getByRole('button', { name: 'Open datasheet' }),
+    ).toBeEnabled();
+    await editor
+      .getByLabel('Starter footprint draft')
+      .selectOption('samesky-sj1-3525n');
+    await editor.getByRole('button', { name: 'Open starter draft' }).click();
+    await expect(editor.getByLabel('Datasheet URL')).toHaveValue(
+      'https://www.sameskydevices.com/product/resource/sj1-352xn.pdf',
+    );
+    await editor.getByRole('button', { name: 'Map as device' }).click();
+    await expect(
+      editor.getByLabel('Assignment for pad MP1 (6)', { exact: true }),
+    ).toHaveValue('mechanical');
+    await expect(
+      editor.getByLabel('Assignment for pad 10 (4)', { exact: true }),
+    ).toHaveValue('signal');
+    await editor.getByRole('button', { name: 'Hide device mapping' }).click();
     await editor.getByLabel('Starter footprint draft').selectOption('dip-8');
     await expect(
       editor.getByText('Hand-soldered through-hole', { exact: false }),
@@ -1480,6 +1505,9 @@ test('imports a footprint, edits pad coordinates, and exports native and dimensi
     await expect(
       editor.getByRole('list', { name: 'Footprint findings' }),
     ).toContainText('Courtyard');
+    const datasheetUrl =
+      'https://example.com/part.pdf?format=full&lang=en#page=2';
+    await editor.getByLabel('Datasheet URL').fill(datasheetUrl);
     const footprintDownload = page.waitForEvent('download');
     await editor
       .getByRole('button', { name: 'Export footprint', exact: true })
@@ -1488,6 +1516,7 @@ test('imports a footprint, edits pad coordinates, and exports native and dimensi
       await readFile(await (await footprintDownload).path()),
     );
     expect(native.definition.pads[0].positionNm.x).toBe(1_500_000);
+    expect(native.definition.datasheetUrl).toBe(datasheetUrl);
     expect(native.definition.graphics[0].layer).toBe('F.SilkS');
     await editor
       .getByRole('button', { name: 'Edit artwork', exact: true })

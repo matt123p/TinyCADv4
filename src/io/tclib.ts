@@ -11,7 +11,7 @@ import { FileIdType } from './files';
 let loadedSQL: SqlJsStatic = null;
 let loadingSQL: Promise<SqlJsStatic> = null;
 
-function getSql(): Promise<SqlJsStatic> {
+export function getSql(): Promise<SqlJsStatic> {
   if (loadedSQL) {
     return Promise.resolve(loadedSQL);
   }

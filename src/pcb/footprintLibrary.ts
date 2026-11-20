@@ -117,7 +117,7 @@ export async function decodeFootprintLibrary(
   validateEmbeddedFootprint(file.definition);
   const { definitionDigest, ...content } = file.definition;
   if (definitionDigest !== (await deviceDigest(content)))
-    throw new Error('The footprint digest does not match its geometry.');
+    throw new Error('The footprint digest does not match its contents.');
   const attachments = new Set(
     file.definition.models?.flatMap(({ assetId }) =>
       assetId ? [assetId] : [],

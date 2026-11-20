@@ -2,7 +2,6 @@
 """Generate native footprint drafts and matching STEP envelope solids."""
 import argparse
 import base64
-import gzip
 import hashlib
 import json
 import math
@@ -36,9 +35,14 @@ def point(x, y):
 
 def land(width, height, round_land=False, radius=0):
     if round_land:
-        if width != height:
-            raise ValueError("A round pad needs equal width and height.")
-        return {"kind": "capsule", "start": ORIGIN, "end": ORIGIN, "widthNm": width}
+        diameter = min(width, height)
+        horizontal = width - diameter
+        vertical = height - diameter
+        return {
+            "kind": "capsule", "widthNm": diameter,
+            "start": point(-(horizontal // 2), -(vertical // 2)),
+            "end": point(horizontal - horizontal // 2, vertical - vertical // 2),
+        }
     left, bottom = -(width // 2), -(height // 2)
     if radius:
         if radius < 0 or radius * 2 >= min(width, height):
@@ -83,9 +87,15 @@ def positions(recipe):
         return [(left, y) for y in axis] + [(right, y) for y in reversed(axis)]
     if arrangement["kind"] == "grid":
         rows, columns = arrangement["rows"], arrangement["columns"]
+        order = arrangement.get("numbering", "column-major")
+        if order == "row-major":
+            indices = ((x, y) for y in range(rows) for x in range(columns))
+        elif order == "column-major":
+            indices = ((x, y) for x in range(columns) for y in range(rows))
+        else:
+            raise ValueError(f"Unsupported grid numbering {order!r}.")
         return [((2 * x - columns + 1) * pitch // 2,
-                 (rows - 1 - 2 * y) * pitch // 2)
-                for x in range(columns) for y in range(rows)]
+                 (rows - 1 - 2 * y) * pitch // 2) for x, y in indices]
     raise ValueError(f"Unsupported terminal arrangement {arrangement['kind']!r}.")
 
 
@@ -104,20 +114,31 @@ def make_pad(recipe, label, x, y):
     if pad.get("nonPlated"):
         if pad.get("drillNm", 0) <= 0:
             raise ValueError("A mounting hole needs an explicit drill.")
-        return {
-            "id": uid(recipe["id"], "pad", label), "label": label,
-            "positionNm": point(x, y), "stack": {
-                "copper": {}, "drill": {"start": ORIGIN, "end": ORIGIN,
-                                        "widthNm": pad["drillNm"], "plated": False},
-            },
-        }
-    round_land = pad["shape"] == "round" and (label != "1" or not pad.get("pinOneSquare", "drillNm" in pad))
+        drill = pad["drillNm"]
+        stack = {"copper": {}, "drill": {"start": ORIGIN, "end": ORIGIN,
+                                         "widthNm": drill, "plated": False}}
+        if pad.get("maskOpening"):
+            opening = land(drill + 2 * mask, drill + 2 * mask, True)
+            stack["mask"] = {"top": opening, "bottom": opening}
+        return {"id": uid(recipe["id"], "pad", label), "label": label,
+                "positionNm": point(x, y), "stack": stack}
+    pin_one_square = pad.get("pinOneSquare", "drillNm" in pad and not recipe.get("symmetricTerminals"))
+    round_land = pad["shape"] == "round" and (label != "1" or not pin_one_square)
     if "drillNm" in pad:
         drill = pad["drillNm"]
         annulus = recipe["manufacturing"]["minAnnulusNm"]
-        if drill <= 0 or min(width, height) < drill + 2 * annulus:
+        slot = pad.get("slotLengthNm", drill)
+        axis = pad.get("slotAxis", "x")
+        if drill <= 0 or slot < drill or axis not in ("x", "y"):
+            raise ValueError(f"{recipe['id']} pad {label} has invalid drill dimensions.")
+        drill_width, drill_height = (slot, drill) if axis == "x" else (drill, slot)
+        if width < drill_width + 2 * annulus or height < drill_height + 2 * annulus:
             raise ValueError(f"{recipe['id']} pad {label} has an insufficient annulus.")
-    radius = pad.get("cornerRadiusNm", 0)
+    # Follow KiCad's rectangular SMD recommendation where the pattern is ours to set.
+    default_radius = (min(width // 4, height // 4, 250_000)
+                      if pad["shape"] == "rectangle" and "drillNm" not in pad
+                      and not recipe.get("landPatternSource") else 0)
+    radius = pad.get("cornerRadiusNm", default_radius)
     copper = land(width, height, round_land, radius)
     mask_land = land(width + 2 * mask, height + 2 * mask, round_land,
                      radius + mask if radius else 0)
@@ -125,9 +146,14 @@ def make_pad(recipe, label, x, y):
     if "drillNm" in pad:
         stack["copper"]["bottom"] = copper
         stack["mask"]["bottom"] = mask_land
-        stack["drill"] = {"start": ORIGIN, "end": ORIGIN,
-                          "widthNm": pad["drillNm"], "plated": True}
-    else:
+        span = slot - drill
+        begin, end = -(span // 2), span - span // 2
+        stack["drill"] = {
+            "start": point(begin, 0) if axis == "x" else point(0, begin),
+            "end": point(end, 0) if axis == "x" else point(0, end),
+            "widthNm": drill, "plated": True,
+        }
+    elif pad.get("paste", True):
         stack["paste"] = {"top": copper}
     return {"id": uid(recipe["id"], "pad", label), "label": label,
             "positionNm": point(x, y), "stack": stack}
@@ -227,6 +253,11 @@ def generate(recipe):
     coords = positions(recipe)
     if len(coords) != len(set(coords)) or not coords:
         raise ValueError(f"{recipe['id']} has absent or overlapping terminal centres.")
+    labels = recipe["terminals"].get("labels", [str(i + 1) for i in range(len(coords))])
+    if (not isinstance(labels, list) or len(labels) != len(coords)
+            or any(not isinstance(label, str) or not label.strip() for label in labels)
+            or len(set(labels)) != len(labels)):
+        raise ValueError(f"{recipe['id']} needs one unique label per land.")
     body = recipe["body"]
     width, height, depth = body["envelopeNm"]
     lift = body["standoffNm"]
@@ -241,8 +272,8 @@ def generate(recipe):
     body_box = Step()
     solids = [body_box.box("body", 0, 0, lift, width, height, depth)]
     pads = []
-    for i, (x, y) in enumerate(coords, 1):
-        pads.append(make_pad(recipe, str(i), x, y))
+    for i, (label, (x, y)) in enumerate(zip(labels, coords), 1):
+        pads.append(make_pad(recipe, label, x, y))
         if pads[-1]["stack"].get("drill", {}).get("plated") is not False:
             solids.append(body_box.box(f"lead-{i}", x, y, -lead["protrusionNm"],
                                        *lead["crossSectionNm"], lift + depth // 2 + lead["protrusionNm"]))
@@ -250,8 +281,8 @@ def generate(recipe):
     asset_name = recipe["id"] + ".step"
     asset_id = sha256(step)
     clearance = recipe["manufacturing"]["courtyardExpansionNm"]
-    pad_sizes = [recipe.get("padOverrides", {}).get(str(i), {}).get("sizeNm", (pad_width, pad_height))
-                 for i in range(1, len(coords) + 1)]
+    pad_sizes = [recipe.get("padOverrides", {}).get(label, {}).get("sizeNm", (pad_width, pad_height))
+                 for label in labels]
     outer_width = max(width, max(2 * abs(x) + sizes[0] for (x, _), sizes in zip(coords, pad_sizes)))
     outer_height = max(height, max(2 * abs(y) + sizes[1] for (_, y), sizes in zip(coords, pad_sizes)))
     pin_one = coords[0]
@@ -262,7 +293,7 @@ def generate(recipe):
          "center": point(pin_one[0] - pad_width // 2 - 350_000, pin_one[1]),
          "end": point(pin_one[0] - pad_width // 2 - 250_000, pin_one[1])},
     ]
-    if recipe["pad"].get("nonPlated"):
+    if recipe["pad"].get("nonPlated") or recipe.get("symmetricTerminals"):
         graphics = graphics[:2]
     definition = {
         "id": uid(recipe["id"], "footprint"), "revision": recipe["revision"],
@@ -271,6 +302,10 @@ def generate(recipe):
                     "assetId": asset_id, "offsetNm": [0, 0, 0],
                     "rotationMicrodegree": [0, 0, 0], "scale": [1, 1, 1]}],
     }
+    datasheet_url = (recipe.get("datasheetUrl") or recipe.get("documentation", {}).get("pinout")
+                     or recipe.get("landPatternSource", {}).get("url"))
+    if datasheet_url:
+        definition["datasheetUrl"] = datasheet_url
     definition["definitionDigest"] = "sha256:" + sha256(canonical(definition).encode())
     footprint = {
         "format": "tinycad-footprint", "version": 1,
@@ -329,7 +364,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", type=Path)
     parser.add_argument("--catalogue", type=Path, default=DEFAULT_CATALOGUE)
-    parser.add_argument("--bundle", type=Path, help="Also write a gzip catalogue for the editor.")
+    parser.add_argument("--bundle", type=Path, help="Write a JSON manifest for the SQLite packager.")
     parser.add_argument("--reviewed-devices", type=Path, help="Include exported devices with review records.")
     parser.add_argument("--reviewed-bundle", type=Path, help="Write the reviewed device catalogue.")
 
@@ -360,8 +395,11 @@ def main():
         (args.destination / native_name).write_text(canonical(footprint) + "\n", encoding="utf-8")
         (args.destination / step_name).write_bytes(step)
         evidence = recipe.get("documentation")
-        if evidence and set(evidence["pinoutByPad"]) != {pad["label"] for pad in definition["pads"]}:
-            raise ValueError(f"{name} has a missing or unknown documented pad.")
+        if evidence:
+            terminals = set(evidence["pinoutByPad"])
+            mechanical = set(evidence.get("mechanicalPads", []))
+            if terminals & mechanical or terminals | mechanical != {pad["label"] for pad in definition["pads"]}:
+                raise ValueError(f"{name} has a missing, unknown or multiply assigned documented pad.")
         if args.bundle:
             item = {"id": name, "family": recipe["family"], "footprint": footprint,
                     "bodyNm": recipe["body"]["envelopeNm"], "assemblyProcess": process}
@@ -370,6 +408,9 @@ def main():
                     item[key] = recipe["terminals"][key]
             if evidence:
                 item["documentation"] = evidence
+            for key in ("landPatternSource", "datasheetFitSource"):
+                if key in recipe:
+                    item[key] = recipe[key]
             bundle.append(item)
         variants.append({"id": name, "family": recipe["family"], "footprint": native_name,
                          "step": step_name, "stepSha256": sha256(step), "pinCount": len(footprint["definition"]["pads"]),
@@ -377,9 +418,7 @@ def main():
     (args.destination / "index.json").write_text(canonical({"version": 1, "variants": variants}) + "\n", encoding="utf-8")
     if args.bundle:
         args.bundle.parent.mkdir(parents=True, exist_ok=True)
-        with args.bundle.open("wb") as output:
-            with gzip.GzipFile(filename="", mode="wb", fileobj=output, mtime=0) as compressed:
-                compressed.write(canonical({"version": 1, "variants": bundle}).encode("utf-8"))
+        args.bundle.write_text(canonical({"version": 1, "variants": bundle}) + "\n", encoding="utf-8")
     if args.reviewed_bundle:
         approved = reviewed_devices(args.reviewed_devices, definitions)
         write_reviewed_bundle(args.reviewed_bundle, approved)

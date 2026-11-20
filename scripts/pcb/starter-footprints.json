@@ -4,9 +4,9 @@
     {
       "id": "chip-0402",
       "name": "CHIP 0402",
-      "revision": "1",
+      "revision": "3",
       "family": "chip-passive",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated draft using Vishay D/CRCW e3, recommended reflow solder pad dimensions for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -19,7 +19,7 @@
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 900000
+        "pitchNm": 1050000
       },
       "lead": {
         "crossSectionNm": [
@@ -31,8 +31,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          500000,
-          700000
+          600000,
+          600000
         ]
       },
       "manufacturing": {
@@ -40,14 +40,18 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "Vishay D/CRCW e3, recommended reflow solder pad dimensions",
+        "url": "https://www.vishay.com/docs/20035/dcrcwe3.pdf"
       }
     },
     {
       "id": "chip-0603",
       "name": "CHIP 0603",
-      "revision": "1",
+      "revision": "3",
       "family": "chip-passive",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated draft using Vishay D/CRCW e3, recommended reflow solder pad dimensions for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -60,7 +64,7 @@
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 1400000
+        "pitchNm": 1500000
       },
       "lead": {
         "crossSectionNm": [
@@ -72,7 +76,7 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          533333,
+          750000,
           1000000
         ]
       },
@@ -81,14 +85,18 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "Vishay D/CRCW e3, recommended reflow solder pad dimensions",
+        "url": "https://www.vishay.com/docs/20035/dcrcwe3.pdf"
       }
     },
     {
       "id": "chip-0805",
       "name": "CHIP 0805",
-      "revision": "1",
+      "revision": "3",
       "family": "chip-passive",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated draft using Vishay D/CRCW e3, recommended reflow solder pad dimensions for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -101,7 +109,7 @@
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 1800000
+        "pitchNm": 1950000
       },
       "lead": {
         "crossSectionNm": [
@@ -113,7 +121,7 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          666666,
+          950000,
           1450000
         ]
       },
@@ -122,14 +130,18 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "Vishay D/CRCW e3, recommended reflow solder pad dimensions",
+        "url": "https://www.vishay.com/docs/20035/dcrcwe3.pdf"
       }
     },
     {
       "id": "chip-1206",
       "name": "CHIP 1206",
-      "revision": "1",
+      "revision": "3",
       "family": "chip-passive",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated draft using Vishay D/CRCW e3, recommended reflow solder pad dimensions for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -142,7 +154,7 @@
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 2900000
+        "pitchNm": 2550000
       },
       "lead": {
         "crossSectionNm": [
@@ -154,7 +166,7 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          1066666,
+          1050000,
           1800000
         ]
       },
@@ -163,6 +175,10 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "Vishay D/CRCW e3, recommended reflow solder pad dimensions",
+        "url": "https://www.vishay.com/docs/20035/dcrcwe3.pdf"
       }
     },
     {
@@ -340,9 +356,9 @@
     {
       "id": "soic-8",
       "name": "SOIC 8",
-      "revision": "1",
+      "revision": "3",
       "family": "soic",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated draft using TI D0008A, example board layout for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -368,23 +384,28 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          1650000,
-          650000
-        ]
+          1550000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
       },
       "manufacturing": {
         "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI D0008A, example board layout",
+        "url": "https://www.ti.com/lit/ml/msoi002k/msoi002k.pdf"
       }
     },
     {
       "id": "soic-14",
       "name": "SOIC 14",
-      "revision": "1",
+      "revision": "3",
       "family": "soic",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated draft using TI D0014A, example board layout for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -410,23 +431,28 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          1650000,
-          650000
-        ]
+          1550000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
       },
       "manufacturing": {
         "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI D0014A, example board layout",
+        "url": "https://www.ti.com/lit/ds/symlink/sn74lv14a.pdf"
       }
     },
     {
       "id": "soic-16",
       "name": "SOIC 16",
-      "revision": "1",
+      "revision": "3",
       "family": "soic",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated draft using TI D0016A, example board layout for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -452,23 +478,28 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          1650000,
-          650000
-        ]
+          1550000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
       },
       "manufacturing": {
         "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI D0016A, example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds432a/mpds432a.pdf"
       }
     },
     {
       "id": "soic-20",
       "name": "SOIC 20",
-      "revision": "1",
+      "revision": "3",
       "family": "soic",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated draft using TI DW0020A, example board layout for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -482,7 +513,7 @@
         "kind": "dual-row",
         "count": 20,
         "pitchNm": 1270000,
-        "rowSpacingNm": 8600000
+        "rowSpacingNm": 9300000
       },
       "lead": {
         "crossSectionNm": [
@@ -494,23 +525,28 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          1650000,
-          650000
-        ]
+          2000000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
       },
       "manufacturing": {
         "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DW0020A, example board layout",
+        "url": "https://www.ti.com/lit/ds/symlink/tlc2543.pdf"
       }
     },
     {
       "id": "soic-24",
       "name": "SOIC 24",
-      "revision": "1",
+      "revision": "3",
       "family": "soic",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated draft using Microchip C04-02025 [SO] Rev F, recommended land pattern for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -524,7 +560,7 @@
         "kind": "dual-row",
         "count": 24,
         "pitchNm": 1270000,
-        "rowSpacingNm": 8600000
+        "rowSpacingNm": 9400000
       },
       "lead": {
         "crossSectionNm": [
@@ -536,8 +572,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          1650000,
-          650000
+          2000000,
+          600000
         ]
       },
       "manufacturing": {
@@ -545,12 +581,16 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "Microchip C04-02025 [SO] Rev F, recommended land pattern",
+        "url": "https://ww1.microchip.com/downloads/aemDocuments/documents/package-outline-drawings/c04-00025f.pdf"
       }
     },
     {
       "id": "header-1x2",
       "name": "HEADER 1X2",
-      "revision": "1",
+      "revision": "2",
       "family": "header",
       "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
       "license": "CC0-1.0",
@@ -588,12 +628,13 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://suddendocs.samtec.com/prints/tsw-mk.pdf"
     },
     {
       "id": "header-1x4",
       "name": "HEADER 1X4",
-      "revision": "1",
+      "revision": "2",
       "family": "header",
       "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
       "license": "CC0-1.0",
@@ -631,12 +672,13 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://suddendocs.samtec.com/prints/tsw-mk.pdf"
     },
     {
       "id": "header-1x8",
       "name": "HEADER 1X8",
-      "revision": "1",
+      "revision": "2",
       "family": "header",
       "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
       "license": "CC0-1.0",
@@ -674,28 +716,30 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://suddendocs.samtec.com/prints/tsw-mk.pdf"
     },
     {
       "id": "header-2x3",
       "name": "HEADER 2X3",
-      "revision": "1",
+      "revision": "3",
       "family": "header",
       "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          7620000,
           5080000,
+          7620000,
           2500000
         ],
         "standoffNm": 300000
       },
       "terminals": {
         "kind": "grid",
-        "rows": 2,
-        "columns": 3,
-        "pitchNm": 2540000
+        "rows": 3,
+        "columns": 2,
+        "pitchNm": 2540000,
+        "numbering": "row-major"
       },
       "lead": {
         "crossSectionNm": [
@@ -717,28 +761,30 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://suddendocs.samtec.com/prints/tsw-mk.pdf"
     },
     {
       "id": "header-2x5",
       "name": "HEADER 2X5",
-      "revision": "1",
+      "revision": "3",
       "family": "header",
       "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          12700000,
           5080000,
+          12700000,
           2500000
         ],
         "standoffNm": 300000
       },
       "terminals": {
         "kind": "grid",
-        "rows": 2,
-        "columns": 5,
-        "pitchNm": 2540000
+        "rows": 5,
+        "columns": 2,
+        "pitchNm": 2540000,
+        "numbering": "row-major"
       },
       "lead": {
         "crossSectionNm": [
@@ -760,28 +806,30 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://suddendocs.samtec.com/prints/tsw-mk.pdf"
     },
     {
       "id": "header-2x8",
       "name": "HEADER 2X8",
-      "revision": "1",
+      "revision": "3",
       "family": "header",
       "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          20320000,
           5080000,
+          20320000,
           2500000
         ],
         "standoffNm": 300000
       },
       "terminals": {
         "kind": "grid",
-        "rows": 2,
-        "columns": 8,
-        "pitchNm": 2540000
+        "rows": 8,
+        "columns": 2,
+        "pitchNm": 2540000,
+        "numbering": "row-major"
       },
       "lead": {
         "crossSectionNm": [
@@ -803,18 +851,19 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://suddendocs.samtec.com/prints/tsw-mk.pdf"
     },
     {
       "id": "axial-762",
       "name": "AXIAL 762",
-      "revision": "1",
+      "revision": "2",
       "family": "axial",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          5500000,
+          6300000,
           2500000,
           2500000
         ],
@@ -827,36 +876,37 @@
       },
       "lead": {
         "crossSectionNm": [
-          550000,
-          550000
+          424264,
+          424264
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1750000,
-          1750000
+          1600000,
+          1600000
         ],
-        "drillNm": 900000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "axial-1016",
       "name": "AXIAL 1016",
-      "revision": "1",
+      "revision": "2",
       "family": "axial",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          6500000,
+          6300000,
           2500000,
           2500000
         ],
@@ -869,38 +919,39 @@
       },
       "lead": {
         "crossSectionNm": [
-          550000,
-          550000
+          424264,
+          424264
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1750000,
-          1750000
+          1600000,
+          1600000
         ],
-        "drillNm": 900000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "axial-1524",
       "name": "AXIAL 1524",
-      "revision": "1",
+      "revision": "2",
       "family": "axial",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          10500000,
-          2500000,
-          2500000
+          9900000,
+          3600000,
+          3600000
         ],
         "standoffNm": 300000
       },
@@ -911,79 +962,38 @@
       },
       "lead": {
         "crossSectionNm": [
-          550000,
-          550000
+          565685,
+          565685
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1750000,
-          1750000
+          2400000,
+          2400000
         ],
-        "drillNm": 900000
+        "drillNm": 1200000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "radial-200",
-      "name": "RADIAL 200",
-      "revision": "1",
-      "family": "radial",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          3800000,
-          3300000,
-          6500000
-        ],
-        "standoffNm": 300000
       },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 2000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          470000,
-          470000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          1500000,
-          1500000
-        ],
-        "drillNm": 800000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
+      "symmetricTerminals": true
     },
     {
       "id": "radial-250",
-      "name": "RADIAL 250",
-      "revision": "1",
+      "name": "Ceramic disc capacitor · 5 × 2.5 mm, 2.5 mm pitch",
+      "revision": "2",
       "family": "radial",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "Non-polarized radial capacitor. PCB land and body plan dimensions follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           5000000,
-          3300000,
+          2500000,
           6500000
         ],
         "standoffNm": 300000
@@ -1003,8 +1013,8 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1500000,
-          1500000
+          1600000,
+          1600000
         ],
         "drillNm": 800000
       },
@@ -1013,19 +1023,20 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "radial-500",
-      "name": "RADIAL 500",
-      "revision": "1",
+      "name": "Ceramic disc capacitor · 7.5 × 2.5 mm, 5 mm pitch",
+      "revision": "2",
       "family": "radial",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "Non-polarized radial capacitor. PCB land and body plan dimensions follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           7500000,
-          3300000,
+          2500000,
           6500000
         ],
         "standoffNm": 300000
@@ -1045,24 +1056,25 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1500000,
-          1500000
+          2000000,
+          2000000
         ],
-        "drillNm": 800000
+        "drillNm": 1000000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "terminal-2",
       "name": "TERMINAL 2",
-      "revision": "1",
+      "revision": "3",
       "family": "terminal-block",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "Phoenix Contact MKDS 1,5 drilling plan and KiCad 9.0.0 copper lands.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1087,24 +1099,30 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          2800000,
-          2800000
+          2600000,
+          2600000
         ],
-        "drillNm": 1400000
+        "drillNm": 1300000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://www.phoenixcontact.com/gb/products/1715721/pdf",
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 650000
+        }
       }
     },
     {
       "id": "terminal-3",
       "name": "TERMINAL 3",
-      "revision": "1",
+      "revision": "3",
       "family": "terminal-block",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "Phoenix Contact MKDS 1,5 drilling plan and KiCad 9.0.0 copper lands.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1129,24 +1147,30 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          2800000,
-          2800000
+          2600000,
+          2600000
         ],
-        "drillNm": 1400000
+        "drillNm": 1300000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://www.phoenixcontact.com/en-us/products/printed-circuit-board-terminal-mkds-15-3-508-1715734?type=pdf",
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 650000
+        }
       }
     },
     {
       "id": "terminal-4",
       "name": "TERMINAL 4",
-      "revision": "1",
+      "revision": "3",
       "family": "terminal-block",
-      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "source": "Phoenix Contact MKDS 1,5 drilling plan and KiCad 9.0.0 copper lands.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1171,22 +1195,28 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          2800000,
-          2800000
+          2600000,
+          2600000
         ],
-        "drillNm": 1400000
+        "drillNm": 1300000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://www.phoenixcontact.com/en-sg/products/pcb-terminal-block-mkds-15-4-508-1715747",
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 650000
+        }
       }
     },
     {
       "id": "ti-lm358dr-d0008a",
       "name": "TI LM358DR · D0008A",
-      "revision": "1",
+      "revision": "2",
       "family": "soic",
       "source": "Texas Instruments D0008A drawing 4214825/C and LM358 datasheet SLOS068AB",
       "license": "CC0-1.0",
@@ -1240,20 +1270,24 @@
           "7": "OUT2",
           "8": "V+"
         }
+      },
+      "landPatternSource": {
+        "name": "TI D0008A, example board layout",
+        "url": "https://www.ti.com/lit/ml/msoi002k/msoi002k.pdf#page=2"
       }
     },
     {
       "id": "axial-do35",
       "name": "Axial diode DO35",
-      "revision": "1",
+      "revision": "3",
       "family": "axial-diode",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Vishay package and lead drawing. Copper, finished holes and formed-lead pitch follow KiCad 9.0.0.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          4300000,
-          1800000,
-          1800000
+          3900000,
+          1900000,
+          1900000
         ],
         "standoffNm": 300000
       },
@@ -1264,32 +1298,33 @@
       },
       "lead": {
         "crossSectionNm": [
-          550000,
-          550000
+          388908,
+          388908
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1800000,
-          1800000
+          1600000,
+          1600000
         ],
-        "drillNm": 950000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://www.vishay.com/docs/81857/1n4148.pdf"
     },
     {
       "id": "axial-do41",
       "name": "Axial diode DO41",
-      "revision": "1",
+      "revision": "3",
       "family": "axial-diode",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Vishay package and lead drawing. Copper, finished holes and formed-lead pitch follow KiCad 9.0.0.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1306,38 +1341,39 @@
       },
       "lead": {
         "crossSectionNm": [
-          550000,
-          550000
+          608111,
+          608111
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1800000,
-          1800000
+          2200000,
+          2200000
         ],
-        "drillNm": 950000
+        "drillNm": 1100000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://www.vishay.com/docs/88503/1n4001.pdf"
     },
     {
       "id": "axial-do15",
       "name": "Axial diode DO15",
-      "revision": "1",
+      "revision": "3",
       "family": "axial-diode",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Diodes Inc. DO-15 case and lead dimensions. Copper, finished holes and formed-lead pitch follow KiCad 9.0.0.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          7600000,
-          3200000,
-          3200000
+          7620000,
+          3600000,
+          3600000
         ],
         "standoffNm": 300000
       },
@@ -1348,32 +1384,33 @@
       },
       "lead": {
         "crossSectionNm": [
-          550000,
-          550000
+          628617,
+          628617
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1800000,
-          1800000
+          2400000,
+          2400000
         ],
-        "drillNm": 950000
+        "drillNm": 1200000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://www.diodes.com/assets/Package-Files/DO-15.pdf#page=1"
     },
     {
       "id": "axial-do201",
       "name": "Axial diode DO201",
-      "revision": "1",
+      "revision": "3",
       "family": "axial-diode",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Vishay package and lead drawing. Copper, finished holes and formed-lead pitch follow KiCad 9.0.0.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1390,32 +1427,33 @@
       },
       "lead": {
         "crossSectionNm": [
-          550000,
-          550000
+          933380,
+          933380
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1800000,
-          1800000
+          3200000,
+          3200000
         ],
-        "drillNm": 950000
+        "drillNm": 1600000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://www.vishay.com/docs/88516/1n5400.pdf"
     },
     {
       "id": "can-radial-40",
       "name": "Radial capacitor 4 mm diameter envelope",
-      "revision": "1",
+      "revision": "2",
       "family": "radial-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1432,18 +1470,18 @@
       },
       "lead": {
         "crossSectionNm": [
-          500000,
-          500000
+          318198,
+          318198
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1700000,
-          1700000
+          1200000,
+          1200000
         ],
-        "drillNm": 900000
+        "drillNm": 600000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
@@ -1455,9 +1493,9 @@
     {
       "id": "can-radial-50",
       "name": "Radial capacitor 5 mm diameter envelope",
-      "revision": "1",
+      "revision": "3",
       "family": "radial-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Nichicon UPW case and lead geometry. Copper and finished holes follow KiCad 9.0.0.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1474,32 +1512,33 @@
       },
       "lead": {
         "crossSectionNm": [
-          500000,
-          500000
+          353553,
+          353553
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1700000,
-          1700000
+          1600000,
+          1600000
         ],
-        "drillNm": 900000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://www.nichicon.co.jp/products/pdfs/upw.pdf"
     },
     {
       "id": "can-radial-63",
       "name": "Radial capacitor 6.3 mm diameter envelope",
-      "revision": "1",
+      "revision": "3",
       "family": "radial-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Nichicon UPW case and lead geometry. Copper and finished holes follow KiCad 9.0.0.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1516,32 +1555,33 @@
       },
       "lead": {
         "crossSectionNm": [
-          500000,
-          500000
+          353553,
+          353553
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1700000,
-          1700000
+          1600000,
+          1600000
         ],
-        "drillNm": 900000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://www.nichicon.co.jp/products/pdfs/upw.pdf"
     },
     {
       "id": "can-radial-80",
       "name": "Radial capacitor 8 mm diameter envelope",
-      "revision": "1",
+      "revision": "3",
       "family": "radial-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Nichicon UPW case and lead geometry. Copper and finished holes follow KiCad 9.0.0.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1558,32 +1598,33 @@
       },
       "lead": {
         "crossSectionNm": [
-          500000,
-          500000
+          424264,
+          424264
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1700000,
-          1700000
+          1600000,
+          1600000
         ],
-        "drillNm": 900000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://www.nichicon.co.jp/products/pdfs/upw.pdf"
     },
     {
       "id": "can-radial-100",
       "name": "Radial capacitor 10 mm diameter envelope",
-      "revision": "1",
+      "revision": "3",
       "family": "radial-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Nichicon UPW case and lead geometry. Copper and finished holes follow KiCad 9.0.0.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1600,32 +1641,33 @@
       },
       "lead": {
         "crossSectionNm": [
-          500000,
-          500000
+          424264,
+          424264
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1700000,
-          1700000
+          2000000,
+          2000000
         ],
-        "drillNm": 900000
+        "drillNm": 1000000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://www.nichicon.co.jp/products/pdfs/upw.pdf"
     },
     {
       "id": "can-radial-125",
       "name": "Radial capacitor 12.5 mm diameter envelope",
-      "revision": "1",
+      "revision": "3",
       "family": "radial-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Nichicon UPW case and lead geometry. Copper and finished holes follow KiCad 9.0.0.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1642,32 +1684,33 @@
       },
       "lead": {
         "crossSectionNm": [
-          500000,
-          500000
+          565685,
+          565685
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1700000,
-          1700000
+          2400000,
+          2400000
         ],
-        "drillNm": 900000
+        "drillNm": 1200000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://www.nichicon.co.jp/products/pdfs/upw.pdf"
     },
     {
       "id": "can-radial-160",
       "name": "Radial capacitor 16 mm diameter envelope",
-      "revision": "1",
+      "revision": "3",
       "family": "radial-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Nichicon UPW case and lead geometry. Copper and finished holes follow KiCad 9.0.0.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1684,74 +1727,33 @@
       },
       "lead": {
         "crossSectionNm": [
-          500000,
-          500000
+          565685,
+          565685
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1700000,
-          1700000
+          2400000,
+          2400000
         ],
-        "drillNm": 900000
+        "drillNm": 1200000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "film-cap-35",
-      "name": "Film capacitor 3.5 mm pitch",
-      "revision": "1",
-      "family": "film-capacitor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          5000000,
-          3000000,
-          5000000
-        ],
-        "standoffNm": 300000
       },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 3500000
-      },
-      "lead": {
-        "crossSectionNm": [
-          500000,
-          500000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          1600000,
-          1600000
-        ],
-        "drillNm": 850000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
+      "datasheetUrl": "https://www.nichicon.co.jp/products/pdfs/upw.pdf"
     },
     {
       "id": "film-cap-50",
       "name": "Film capacitor 5 mm pitch",
-      "revision": "1",
+      "revision": "2",
       "family": "film-capacitor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Non-polarized radial capacitor. PCB land and body plan dimensions follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -1779,25 +1781,26 @@
           1600000,
           1600000
         ],
-        "drillNm": 850000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "film-cap-75",
       "name": "Film capacitor 7.5 mm pitch",
-      "revision": "1",
+      "revision": "2",
       "family": "film-capacitor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Non-polarized radial capacitor. PCB land and body plan dimensions follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          10000000,
+          10300000,
           5000000,
           7000000
         ],
@@ -1818,29 +1821,30 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1600000,
-          1600000
+          2000000,
+          2000000
         ],
-        "drillNm": 850000
+        "drillNm": 1000000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "film-cap-100",
       "name": "Film capacitor 10 mm pitch",
-      "revision": "1",
+      "revision": "2",
       "family": "film-capacitor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Non-polarized radial capacitor. PCB land and body plan dimensions follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          12000000,
-          6000000,
+          11500000,
+          5600000,
           10000000
         ],
         "standoffNm": 300000
@@ -1863,26 +1867,27 @@
           1600000,
           1600000
         ],
-        "drillNm": 850000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "film-cap-150",
       "name": "Film capacitor 15 mm pitch",
-      "revision": "1",
+      "revision": "2",
       "family": "film-capacitor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Non-polarized radial capacitor. PCB land and body plan dimensions follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          17000000,
-          8500000,
+          16500000,
+          8700000,
           12000000
         ],
         "standoffNm": 300000
@@ -1902,29 +1907,30 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1600000,
-          1600000
+          2200000,
+          2200000
         ],
-        "drillNm": 850000
+        "drillNm": 1100000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "film-cap-225",
       "name": "Film capacitor 22.5 mm pitch",
-      "revision": "1",
+      "revision": "2",
       "family": "film-capacitor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Non-polarized radial capacitor. PCB land and body plan dimensions follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          25000000,
-          12500000,
+          24000000,
+          12600000,
           16000000
         ],
         "standoffNm": 300000
@@ -1944,111 +1950,30 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1600000,
-          1600000
+          2400000,
+          2400000
         ],
-        "drillNm": 850000
+        "drillNm": 1200000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "can-smd-40",
       "name": "SMT capacitor 4 mm can envelope",
-      "revision": "1",
+      "revision": "3",
       "family": "smd-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using Panasonic FK, standard case B, land/pad pattern for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           4000000,
           4000000,
-          5000000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 1600000
-      },
-      "lead": {
-        "crossSectionNm": [
-          550000,
-          600000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          1320000,
-          1280000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "can-smd-50",
-      "name": "SMT capacitor 5 mm can envelope",
-      "revision": "1",
-      "family": "smd-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          5000000,
-          5000000,
-          5300000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 2000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          550000,
-          600000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          1650000,
-          1600000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "can-smd-63",
-      "name": "SMT capacitor 6.3 mm can envelope",
-      "revision": "1",
-      "family": "smd-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          6300000,
-          6300000,
           5800000
         ],
         "standoffNm": 0
@@ -2056,7 +1981,7 @@
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 2500000
+        "pitchNm": 3500000
       },
       "lead": {
         "crossSectionNm": [
@@ -2068,8 +1993,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          2079000,
-          2016000
+          2500000,
+          1600000
         ]
       },
       "manufacturing": {
@@ -2077,27 +2002,41 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "pinout": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "partNumber": "Panasonic FK case B",
+        "sourceRevision": "ABA0000C1181, standard land/pad pattern",
+        "pinoutByPad": {
+          "1": "+",
+          "2": "−"
+        }
+      },
+      "landPatternSource": {
+        "name": "Panasonic FK, standard case B, land/pad pattern",
+        "url": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
       }
     },
     {
-      "id": "can-smd-80",
-      "name": "SMT capacitor 8 mm can envelope",
-      "revision": "1",
+      "id": "can-smd-50",
+      "name": "SMT capacitor 5 mm can envelope",
+      "revision": "3",
       "family": "smd-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using Panasonic FK, standard case C, land/pad pattern for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          8000000,
-          8000000,
-          6200000
+          5000000,
+          5000000,
+          5800000
         ],
         "standoffNm": 0
       },
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 3200000
+        "pitchNm": 4300000
       },
       "lead": {
         "crossSectionNm": [
@@ -2109,8 +2048,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          2640000,
-          2560000
+          2800000,
+          1600000
         ]
       },
       "manufacturing": {
@@ -2118,61 +2057,34 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "pinout": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "partNumber": "Panasonic FK case C",
+        "sourceRevision": "ABA0000C1181, standard land/pad pattern",
+        "pinoutByPad": {
+          "1": "+",
+          "2": "−"
+        }
+      },
+      "landPatternSource": {
+        "name": "Panasonic FK, standard case C, land/pad pattern",
+        "url": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
       }
     },
     {
-      "id": "can-smd-100",
-      "name": "SMT capacitor 10 mm can envelope",
-      "revision": "1",
+      "id": "can-smd-63",
+      "name": "SMT capacitor 6.3 mm can envelope",
+      "revision": "3",
       "family": "smd-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using Panasonic FK, standard case D, land/pad pattern for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          10000000,
-          10000000,
-          8000000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 4200000
-      },
-      "lead": {
-        "crossSectionNm": [
-          550000,
-          600000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          3300000,
-          3200000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "can-smd-125",
-      "name": "SMT capacitor 12.5 mm can envelope",
-      "revision": "1",
-      "family": "smd-electrolytic",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          12500000,
-          12500000,
-          10000000
+          6300000,
+          6300000,
+          5800000
         ],
         "standoffNm": 0
       },
@@ -2191,8 +2103,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          4125000,
-          4000000
+          3200000,
+          1600000
         ]
       },
       "manufacturing": {
@@ -2200,40 +2112,219 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "pinout": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "partNumber": "Panasonic FK case D",
+        "sourceRevision": "ABA0000C1181, standard land/pad pattern",
+        "pinoutByPad": {
+          "1": "+",
+          "2": "−"
+        }
+      },
+      "landPatternSource": {
+        "name": "Panasonic FK, standard case D, land/pad pattern",
+        "url": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
+      }
+    },
+    {
+      "id": "can-smd-80",
+      "name": "SMT capacitor 8 mm can envelope",
+      "revision": "3",
+      "family": "smd-electrolytic",
+      "source": "TinyCAD generated draft using Panasonic FK, standard case E, land/pad pattern for copper pad placement.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          8000000,
+          8000000,
+          6200000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 6200000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          600000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          4000000,
+          1600000
+        ]
+      },
+      "manufacturing": {
+        "process": "Surface-mount reflow",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "pinout": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "partNumber": "Panasonic FK case E",
+        "sourceRevision": "ABA0000C1181, standard land/pad pattern",
+        "pinoutByPad": {
+          "1": "+",
+          "2": "−"
+        }
+      },
+      "landPatternSource": {
+        "name": "Panasonic FK, standard case E, land/pad pattern",
+        "url": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
+      }
+    },
+    {
+      "id": "can-smd-100",
+      "name": "SMT capacitor 10 mm can envelope",
+      "revision": "3",
+      "family": "smd-electrolytic",
+      "source": "TinyCAD generated draft using Panasonic FK, standard case G, land/pad pattern for copper pad placement.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10000000,
+          10000000,
+          10200000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 8700000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          600000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          4100000,
+          2000000
+        ]
+      },
+      "manufacturing": {
+        "process": "Surface-mount reflow",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "pinout": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "partNumber": "Panasonic FK case G",
+        "sourceRevision": "ABA0000C1181, standard land/pad pattern",
+        "pinoutByPad": {
+          "1": "+",
+          "2": "−"
+        }
+      },
+      "landPatternSource": {
+        "name": "Panasonic FK, standard case G, land/pad pattern",
+        "url": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
+      }
+    },
+    {
+      "id": "can-smd-125",
+      "name": "Panasonic FK H13 · 12.5 mm SMT electrolytic",
+      "revision": "2",
+      "family": "smd-electrolytic",
+      "source": "Panasonic FK H13, standard land/pad pattern.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          12500000,
+          12500000,
+          13500000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 10100000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          600000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          6200000,
+          2000000
+        ]
+      },
+      "manufacturing": {
+        "process": "Surface-mount reflow",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "pinout": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf",
+        "partNumber": "Panasonic FK H13",
+        "sourceRevision": "ABA0000C1181, standard land/pad pattern",
+        "pinoutByPad": {
+          "1": "+",
+          "2": "−"
+        }
+      },
+      "landPatternSource": {
+        "name": "Panasonic FK H13 standard land/pad pattern",
+        "url": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
       }
     },
     {
       "id": "diode-sod-923",
       "name": "Surface-mount diode SOD-923",
-      "revision": "1",
+      "revision": "3",
       "family": "smd-diode",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using onsemi 0IMD1-001, SOD-923 case 514AB-01 soldering footprint for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          1000000,
+          800000,
           600000,
-          380000
+          400000
         ],
         "standoffNm": 0
       },
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 950000
+        "pitchNm": 840000
       },
       "lead": {
         "crossSectionNm": [
-          250000,
-          350000
+          190000,
+          250000
         ],
         "protrusionNm": 0
       },
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          650000,
-          480000
+          360000,
+          250000
         ]
       },
       "manufacturing": {
@@ -2241,27 +2332,41 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://www.onsemi.com/download/data-sheet/pdf/0imd1-001-d.pdf#page=4",
+        "pinout": "https://www.onsemi.com/download/data-sheet/pdf/0imd1-001-d.pdf#page=2",
+        "partNumber": "0IMD1-001",
+        "sourceRevision": "0IMD1-001/D Rev. 2",
+        "pinoutByPad": {
+          "1": "Cathode",
+          "2": "Anode"
+        }
+      },
+      "landPatternSource": {
+        "name": "onsemi 0IMD1-001, SOD-923 case 514AB-01 soldering footprint",
+        "url": "https://www.onsemi.com/download/data-sheet/pdf/0imd1-001-d.pdf#page=4"
       }
     },
     {
       "id": "diode-sod-523",
-      "name": "Surface-mount diode SOD-523",
-      "revision": "1",
+      "name": "SOD-523 diode (TI DYA0002A)",
+      "revision": "4",
       "family": "smd-diode",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope with copper lands from the TI DYA0002A example board layout.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           1200000,
           800000,
-          650000
+          770000
         ],
         "standoffNm": 0
       },
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 1250000
+        "pitchNm": 1480000
       },
       "lead": {
         "crossSectionNm": [
@@ -2273,36 +2378,42 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          650000,
-          640000
-        ]
+          670000,
+          400000
+        ],
+        "cornerRadiusNm": 50000
       },
       "manufacturing": {
         "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://www.ti.com/lit/ml/mpss124c/mpss124c.pdf#page=2",
+      "landPatternSource": {
+        "name": "TI DYA0002A example board layout",
+        "url": "https://www.ti.com/lit/ml/mpss124c/mpss124c.pdf#page=2"
       }
     },
     {
       "id": "diode-sod-323",
-      "name": "Surface-mount diode SOD-323",
-      "revision": "1",
+      "name": "SOD-323 diode (onsemi case 477)",
+      "revision": "4",
       "family": "smd-diode",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope with copper lands from the onsemi case 477 recommended mounting footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           1700000,
           1250000,
-          950000
+          900000
         ],
         "standoffNm": 0
       },
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 1900000
+        "pitchNm": 2230000
       },
       "lead": {
         "crossSectionNm": [
@@ -2314,8 +2425,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          650000,
-          1000000
+          630000,
+          830000
         ]
       },
       "manufacturing": {
@@ -2323,27 +2434,32 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://www.onsemi.com/download/package-drawing/pdf/477-02.pdf",
+      "landPatternSource": {
+        "name": "onsemi case 477 recommended mounting footprint",
+        "url": "https://www.onsemi.com/download/package-drawing/pdf/477-02.pdf"
       }
     },
     {
       "id": "diode-sod-123",
-      "name": "Surface-mount diode SOD-123",
-      "revision": "1",
+      "name": "SOD-123 diode (Diodes Inc.)",
+      "revision": "4",
       "family": "smd-diode",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope with copper lands from the Diodes Inc. SOD123 suggested pad layout.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          2700000,
-          1600000,
-          1150000
+          2650000,
+          1550000,
+          1050000
         ],
         "standoffNm": 0
       },
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 2750000
+        "pitchNm": 3150000
       },
       "lead": {
         "crossSectionNm": [
@@ -2355,8 +2471,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          650000,
-          1280000
+          900000,
+          950000
         ]
       },
       "manufacturing": {
@@ -2364,27 +2480,32 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://www.diodes.com/assets/Package-Files/SOD123.pdf#page=1",
+      "landPatternSource": {
+        "name": "Diodes Inc. SOD123 suggested pad layout",
+        "url": "https://www.diodes.com/assets/Package-Files/SOD123.pdf#page=1"
       }
     },
     {
       "id": "diode-sma",
-      "name": "Surface-mount diode SMA",
-      "revision": "1",
+      "name": "SMA diode (Diodes Inc.)",
+      "revision": "4",
       "family": "smd-diode",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope with copper lands from the Diodes Inc. SMA suggested pad layout.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          4500000,
-          2700000,
-          2100000
+          4600000,
+          2920000,
+          2400000
         ],
         "standoffNm": 0
       },
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 4200000
+        "pitchNm": 4000000
       },
       "lead": {
         "crossSectionNm": [
@@ -2396,8 +2517,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          1900000,
-          2160000
+          2500000,
+          1700000
         ]
       },
       "manufacturing": {
@@ -2405,27 +2526,32 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://www.diodes.com/assets/Package-Files/SMA.pdf#page=1",
+      "landPatternSource": {
+        "name": "Diodes Inc. SMA suggested pad layout",
+        "url": "https://www.diodes.com/assets/Package-Files/SMA.pdf#page=1"
       }
     },
     {
       "id": "diode-smb",
-      "name": "Surface-mount diode SMB",
-      "revision": "1",
+      "name": "SMB diode (Diodes Inc.)",
+      "revision": "4",
       "family": "smd-diode",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope with copper lands from the Diodes Inc. SMB suggested pad layout.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          4900000,
-          3600000,
-          2250000
+          4570000,
+          3940000,
+          2500000
         ],
         "standoffNm": 0
       },
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 4600000
+        "pitchNm": 4300000
       },
       "lead": {
         "crossSectionNm": [
@@ -2437,8 +2563,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          1900000,
-          2880000
+          2500000,
+          2300000
         ]
       },
       "manufacturing": {
@@ -2446,20 +2572,25 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://www.diodes.com/assets/Package-Files/SMB.pdf#page=1",
+      "landPatternSource": {
+        "name": "Diodes Inc. SMB suggested pad layout",
+        "url": "https://www.diodes.com/assets/Package-Files/SMB.pdf#page=1"
       }
     },
     {
       "id": "diode-smc",
-      "name": "Surface-mount diode SMC",
-      "revision": "1",
+      "name": "SMC diode (Diodes Inc.)",
+      "revision": "4",
       "family": "smd-diode",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope with copper lands from the Diodes Inc. SMC suggested pad layout.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          7100000,
-          5800000,
-          2350000
+          7110000,
+          6220000,
+          2500000
         ],
         "standoffNm": 0
       },
@@ -2478,8 +2609,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          1900000,
-          4640000
+          2500000,
+          3300000
         ]
       },
       "manufacturing": {
@@ -2487,14 +2618,19 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://www.diodes.com/assets/Package-Files/SMC.pdf#page=1",
+      "landPatternSource": {
+        "name": "Diodes Inc. SMC suggested pad layout",
+        "url": "https://www.diodes.com/assets/Package-Files/SMC.pdf#page=1"
       }
     },
     {
       "id": "led-radial-3",
       "name": "3 mm through-hole LED envelope",
-      "revision": "1",
+      "revision": "2",
       "family": "radial-led",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -2519,10 +2655,10 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1650000,
-          1650000
+          1800000,
+          1800000
         ],
-        "drillNm": 850000
+        "drillNm": 900000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
@@ -2534,9 +2670,9 @@
     {
       "id": "led-radial-5",
       "name": "5 mm through-hole LED envelope",
-      "revision": "1",
+      "revision": "2",
       "family": "radial-led",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -2561,10 +2697,10 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1650000,
-          1650000
+          1800000,
+          1800000
         ],
-        "drillNm": 850000
+        "drillNm": 900000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
@@ -2576,9 +2712,9 @@
     {
       "id": "led-radial-8",
       "name": "8 mm through-hole LED envelope",
-      "revision": "1",
+      "revision": "2",
       "family": "radial-led",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -2603,10 +2739,10 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1650000,
-          1650000
+          1800000,
+          1800000
         ],
-        "drillNm": 850000
+        "drillNm": 900000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
@@ -2618,9 +2754,9 @@
     {
       "id": "led-radial-10",
       "name": "10 mm through-hole LED envelope",
-      "revision": "1",
+      "revision": "2",
       "family": "radial-led",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -2645,10 +2781,10 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1650000,
-          1650000
+          1800000,
+          1800000
         ],
-        "drillNm": 850000
+        "drillNm": 900000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
@@ -2660,9 +2796,9 @@
     {
       "id": "led-chip-0603",
       "name": "Chip LED 0603",
-      "revision": "1",
+      "revision": "3",
       "family": "chip-led",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using the Kingbright APT1608 copper land pattern.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -2675,7 +2811,7 @@
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 1360000
+        "pitchNm": 1650000
       },
       "lead": {
         "crossSectionNm": [
@@ -2687,8 +2823,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          700000,
-          760000
+          800000,
+          800000
         ]
       },
       "manufacturing": {
@@ -2696,14 +2832,18 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "Kingbright APT1608, recommended soldering pattern",
+        "url": "https://www.kingbrightusa.com/webimages/catalog/Technical%20Notes.pdf#page=10"
       }
     },
     {
       "id": "led-chip-0805",
       "name": "Chip LED 0805",
-      "revision": "1",
+      "revision": "3",
       "family": "chip-led",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using the Kingbright APT2012 copper land pattern.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -2716,7 +2856,7 @@
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 1700000
+        "pitchNm": 2350000
       },
       "lead": {
         "crossSectionNm": [
@@ -2728,8 +2868,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          700000,
-          1187500
+          1250000,
+          1100000
         ]
       },
       "manufacturing": {
@@ -2737,14 +2877,18 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "Kingbright APT2012, recommended soldering pattern",
+        "url": "https://www.kingbrightusa.com/webimages/catalog/Technical%20Notes.pdf#page=10"
       }
     },
     {
       "id": "led-chip-1206",
       "name": "Chip LED 1206",
-      "revision": "1",
+      "revision": "3",
       "family": "chip-led",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using the Kingbright APT3216 copper land pattern.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -2757,7 +2901,7 @@
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 2720000
+        "pitchNm": 3750000
       },
       "lead": {
         "crossSectionNm": [
@@ -2769,8 +2913,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          700000,
-          1520000
+          1750000,
+          1500000
         ]
       },
       "manufacturing": {
@@ -2778,40 +2922,44 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "Kingbright APT3216, recommended soldering pattern",
+        "url": "https://www.kingbrightusa.com/webimages/catalog/Technical%20Notes.pdf#page=10"
       }
     },
     {
       "id": "led-chip-1210",
-      "name": "Chip LED 1210",
-      "revision": "1",
+      "name": "Chip LED 1210 (Kingbright KPD-3224SYCK)",
+      "revision": "3",
       "family": "chip-led",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope with copper lands from the Kingbright KPD-3224SYCK recommended soldering pattern.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           3200000,
-          2500000,
-          1250000
+          2400000,
+          2400000
         ],
         "standoffNm": 0
       },
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 2720000
+        "pitchNm": 3200000
       },
       "lead": {
         "crossSectionNm": [
-          350000,
-          1500000
+          550000,
+          1800000
         ],
         "protrusionNm": 0
       },
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          700000,
-          2375000
+          1500000,
+          2200000
         ]
       },
       "manufacturing": {
@@ -2819,14 +2967,29 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://www.kingbright.com/attachments/file/psearch/000/00/00/KPD-3224SYCK%28Ver.24B%29.pdf#page=1",
+      "landPatternSource": {
+        "name": "Kingbright KPD-3224SYCK recommended soldering pattern",
+        "url": "https://www.kingbright.com/attachments/file/psearch/000/00/00/KPD-3224SYCK%28Ver.24B%29.pdf#page=1"
+      },
+      "documentation": {
+        "partNumber": "KPD-3224SYCK",
+        "package": "https://www.kingbright.com/attachments/file/psearch/000/00/00/KPD-3224SYCK%28Ver.24B%29.pdf#page=1",
+        "pinout": "https://www.kingbright.com/attachments/file/psearch/000/00/00/KPD-3224SYCK%28Ver.24B%29.pdf#page=1",
+        "sourceRevision": "Kingbright DSAB0876 v24B",
+        "pinoutByPad": {
+          "1": "Cathode",
+          "2": "Anode"
+        }
       }
     },
     {
       "id": "led-chip-3528",
       "name": "Chip LED 3528",
-      "revision": "1",
+      "revision": "3",
       "family": "chip-led",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using the Kingbright AA3528 copper land pattern.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -2839,7 +3002,7 @@
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 2975000
+        "pitchNm": 3100000
       },
       "lead": {
         "crossSectionNm": [
@@ -2851,8 +3014,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          700000,
-          2660000
+          1500000,
+          2200000
         ]
       },
       "manufacturing": {
@@ -2860,101 +3023,23 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "shielded-inductor-20",
-      "name": "Shielded inductor 2 × 1.25 mm envelope",
-      "revision": "1",
-      "family": "smd-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          2000000,
-          1250000,
-          1000000
-        ],
-        "standoffNm": 0
       },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 1700000
-      },
-      "lead": {
-        "crossSectionNm": [
-          520000,
-          500000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          800000,
-          812500
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "shielded-inductor-32",
-      "name": "Shielded inductor 3.2 × 2.5 mm envelope",
-      "revision": "1",
-      "family": "smd-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          3200000,
-          2500000,
-          1700000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 2600000
-      },
-      "lead": {
-        "crossSectionNm": [
-          520000,
-          1000000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          960000,
-          1625000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
+      "landPatternSource": {
+        "name": "Kingbright AA3528, recommended soldering pattern",
+        "url": "https://www.kingbrightusa.com/webimages/catalog/Technical%20Notes.pdf#page=10"
       }
     },
     {
       "id": "shielded-inductor-40",
-      "name": "Shielded inductor 4 × 4 mm envelope",
-      "revision": "1",
+      "name": "Bourns SRN4018BTA · semi-shielded inductor",
+      "revision": "2",
       "family": "smd-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Bourns SRN4018BTA recommended PCB layout.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          4000000,
-          4000000,
+          4200000,
+          4200000,
           1800000
         ],
         "standoffNm": 0
@@ -2962,7 +3047,7 @@
       "terminals": {
         "kind": "inline",
         "count": 2,
-        "pitchNm": 3400000
+        "pitchNm": 3000000
       },
       "lead": {
         "crossSectionNm": [
@@ -2974,254 +3059,8 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          1200000,
-          2600000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "shielded-inductor-47",
-      "name": "Shielded inductor 4.7 × 4.7 mm envelope",
-      "revision": "1",
-      "family": "smd-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          4700000,
-          4700000,
-          2100000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 4000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          520000,
-          1880000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          1410000,
-          3055000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "shielded-inductor-50",
-      "name": "Shielded inductor 5 × 5 mm envelope",
-      "revision": "1",
-      "family": "smd-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          5000000,
-          5000000,
-          2500000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 4200000
-      },
-      "lead": {
-        "crossSectionNm": [
-          520000,
-          2000000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
           1500000,
-          3250000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "shielded-inductor-60",
-      "name": "Shielded inductor 6 × 6 mm envelope",
-      "revision": "1",
-      "family": "smd-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          6000000,
-          6000000,
-          3000000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 5100000
-      },
-      "lead": {
-        "crossSectionNm": [
-          520000,
-          2400000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          1800000,
-          3900000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "shielded-inductor-68",
-      "name": "Shielded inductor 6.8 × 6.8 mm envelope",
-      "revision": "1",
-      "family": "smd-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          6800000,
-          6800000,
-          3400000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 5800000
-      },
-      "lead": {
-        "crossSectionNm": [
-          520000,
-          2720000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          2040000,
-          4420000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "shielded-inductor-80",
-      "name": "Shielded inductor 8 × 8 mm envelope",
-      "revision": "1",
-      "family": "smd-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          8000000,
-          8000000,
-          4000000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 6500000
-      },
-      "lead": {
-        "crossSectionNm": [
-          520000,
-          3200000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          2400000,
-          5200000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "shielded-inductor-100",
-      "name": "Shielded inductor 10 × 10 mm envelope",
-      "revision": "1",
-      "family": "smd-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          10000000,
-          10000000,
           4500000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 8000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          520000,
-          4000000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          3000000,
-          6500000
         ]
       },
       "manufacturing": {
@@ -3229,223 +3068,19 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "shielded-inductor-120",
-      "name": "Shielded inductor 12 × 12 mm envelope",
-      "revision": "1",
-      "family": "smd-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          12000000,
-          12000000,
-          6000000
-        ],
-        "standoffNm": 0
       },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 9600000
-      },
-      "lead": {
-        "crossSectionNm": [
-          520000,
-          4800000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          3600000,
-          7800000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "radial-inductor-4",
-      "name": "Radial inductor 4 mm envelope",
-      "revision": "1",
-      "family": "radial-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          4000000,
-          4000000,
-          5000000
-        ],
-        "standoffNm": 300000
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 2000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          500000,
-          500000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          1650000,
-          1650000
-        ],
-        "drillNm": 900000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "radial-inductor-5",
-      "name": "Radial inductor 5 mm envelope",
-      "revision": "1",
-      "family": "radial-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          5000000,
-          5000000,
-          6250000
-        ],
-        "standoffNm": 300000
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 2000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          500000,
-          500000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          1650000,
-          1650000
-        ],
-        "drillNm": 900000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "radial-inductor-6",
-      "name": "Radial inductor 6 mm envelope",
-      "revision": "1",
-      "family": "radial-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          6000000,
-          6000000,
-          7500000
-        ],
-        "standoffNm": 300000
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 2500000
-      },
-      "lead": {
-        "crossSectionNm": [
-          500000,
-          500000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          1650000,
-          1650000
-        ],
-        "drillNm": 900000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "radial-inductor-8",
-      "name": "Radial inductor 8 mm envelope",
-      "revision": "1",
-      "family": "radial-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          8000000,
-          8000000,
-          10000000
-        ],
-        "standoffNm": 300000
-      },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 3500000
-      },
-      "lead": {
-        "crossSectionNm": [
-          500000,
-          500000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          1650000,
-          1650000
-        ],
-        "drillNm": 900000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
+      "symmetricTerminals": true,
+      "landPatternSource": {
+        "name": "Bourns SRN4018BTA recommended PCB layout",
+        "url": "https://www.bourns.com/docs/product-datasheets/SRN4018BTA.pdf"
       }
     },
     {
       "id": "radial-inductor-10",
-      "name": "Radial inductor 10 mm envelope",
-      "revision": "1",
+      "name": "Fastron 07P · 10 mm body, 5 mm pitch",
+      "revision": "2",
       "family": "radial-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "PCB land and body plan dimensions follow the named KiCad 9.0.0 inductor footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -3470,449 +3105,25 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1650000,
-          1650000
+          2600000,
+          2600000
         ],
-        "drillNm": 900000
+        "drillNm": 1300000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "radial-inductor-12",
-      "name": "Radial inductor 12 mm envelope",
-      "revision": "1",
-      "family": "radial-inductor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          12000000,
-          12000000,
-          15000000
-        ],
-        "standoffNm": 300000
       },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 5000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          500000,
-          500000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          1650000,
-          1650000
-        ],
-        "drillNm": 900000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "transformer-smd-4",
-      "name": "Gull-wing transformer 4 pin envelope",
-      "revision": "1",
-      "family": "smd-transformer",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          5000000,
-          4540000,
-          5000000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "dual-row",
-        "count": 4,
-        "pitchNm": 1270000,
-        "rowSpacingNm": 6000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          850000,
-          470000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          1750000,
-          800000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "transformer-smd-6",
-      "name": "Gull-wing transformer 6 pin envelope",
-      "revision": "1",
-      "family": "smd-transformer",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          8000000,
-          9620000,
-          5000000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "dual-row",
-        "count": 6,
-        "pitchNm": 2540000,
-        "rowSpacingNm": 10000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          850000,
-          470000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          1750000,
-          800000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "transformer-smd-8",
-      "name": "Gull-wing transformer 8 pin envelope",
-      "revision": "1",
-      "family": "smd-transformer",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          10000000,
-          12160000,
-          5000000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "dual-row",
-        "count": 8,
-        "pitchNm": 2540000,
-        "rowSpacingNm": 12000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          850000,
-          470000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          1750000,
-          800000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "transformer-smd-10",
-      "name": "Gull-wing transformer 10 pin envelope",
-      "revision": "1",
-      "family": "smd-transformer",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          12000000,
-          14700000,
-          5000000
-        ],
-        "standoffNm": 0
-      },
-      "terminals": {
-        "kind": "dual-row",
-        "count": 10,
-        "pitchNm": 2540000,
-        "rowSpacingNm": 14000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          850000,
-          470000
-        ],
-        "protrusionNm": 0
-      },
-      "pad": {
-        "shape": "rectangle",
-        "sizeNm": [
-          1750000,
-          800000
-        ]
-      },
-      "manufacturing": {
-        "process": "Surface-mount reflow",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "transformer-tht-4",
-      "name": "Bobbin transformer 4 pin envelope",
-      "revision": "1",
-      "family": "tht-transformer",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          7000000,
-          14000000,
-          15000000
-        ],
-        "standoffNm": 300000
-      },
-      "terminals": {
-        "kind": "dual-row",
-        "count": 4,
-        "pitchNm": 5000000,
-        "rowSpacingNm": 8000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          700000,
-          640000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          2400000,
-          2400000
-        ],
-        "drillNm": 1200000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "transformer-tht-6",
-      "name": "Bobbin transformer 6 pin envelope",
-      "revision": "1",
-      "family": "tht-transformer",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          8000000,
-          19000000,
-          15000000
-        ],
-        "standoffNm": 300000
-      },
-      "terminals": {
-        "kind": "dual-row",
-        "count": 6,
-        "pitchNm": 5000000,
-        "rowSpacingNm": 10000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          700000,
-          640000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          2400000,
-          2400000
-        ],
-        "drillNm": 1200000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "transformer-tht-8",
-      "name": "Bobbin transformer 8 pin envelope",
-      "revision": "1",
-      "family": "tht-transformer",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          11000000,
-          24000000,
-          15000000
-        ],
-        "standoffNm": 300000
-      },
-      "terminals": {
-        "kind": "dual-row",
-        "count": 8,
-        "pitchNm": 5000000,
-        "rowSpacingNm": 12500000
-      },
-      "lead": {
-        "crossSectionNm": [
-          700000,
-          640000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          2400000,
-          2400000
-        ],
-        "drillNm": 1200000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "transformer-tht-10",
-      "name": "Bobbin transformer 10 pin envelope",
-      "revision": "1",
-      "family": "tht-transformer",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          13000000,
-          29000000,
-          15000000
-        ],
-        "standoffNm": 300000
-      },
-      "terminals": {
-        "kind": "dual-row",
-        "count": 10,
-        "pitchNm": 5000000,
-        "rowSpacingNm": 15000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          700000,
-          640000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          2400000,
-          2400000
-        ],
-        "drillNm": 1200000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "transformer-tht-12",
-      "name": "Bobbin transformer 12 pin envelope",
-      "revision": "1",
-      "family": "tht-transformer",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          17000000,
-          34000000,
-          15000000
-        ],
-        "standoffNm": 300000
-      },
-      "terminals": {
-        "kind": "dual-row",
-        "count": 12,
-        "pitchNm": 5000000,
-        "rowSpacingNm": 20000000
-      },
-      "lead": {
-        "crossSectionNm": [
-          700000,
-          640000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          2400000,
-          2400000
-        ],
-        "drillNm": 1200000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
+      "symmetricTerminals": true
     },
     {
       "id": "sot-23-3",
       "name": "SOT-23 3 terminal envelope",
-      "revision": "1",
+      "revision": "3",
       "family": "smd-transistor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using TI DBV0003A, example board layout for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -3926,15 +3137,15 @@
         "kind": "explicit",
         "positionsNm": [
           [
-            -1050000,
-            950000
+            -1300000,
+            475000
           ],
           [
-            -1050000,
-            -950000
+            -1300000,
+            -475000
           ],
           [
-            1050000,
+            1300000,
             0
           ]
         ]
@@ -3949,23 +3160,28 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          950000,
-          620000
-        ]
+          1100000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
       },
       "manufacturing": {
         "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DBV0003A, example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
       }
     },
     {
       "id": "sot-23-5",
       "name": "SOT-23 5 terminal envelope",
-      "revision": "1",
+      "revision": "3",
       "family": "smd-transistor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using TI DBV0005A, example board layout for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -3979,23 +3195,23 @@
         "kind": "explicit",
         "positionsNm": [
           [
-            -1350000,
+            -1300000,
             950000
           ],
           [
-            -1350000,
+            -1300000,
             0
           ],
           [
-            -1350000,
+            -1300000,
             -950000
           ],
           [
-            1350000,
+            1300000,
             -950000
           ],
           [
-            1350000,
+            1300000,
             950000
           ]
         ]
@@ -4010,23 +3226,28 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          950000,
-          620000
-        ]
+          1100000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
       },
       "manufacturing": {
         "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DBV0005A, example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds018t/mpds018t.pdf#page=2"
       }
     },
     {
       "id": "sot-23-6",
       "name": "SOT-23 6 terminal envelope",
-      "revision": "1",
+      "revision": "3",
       "family": "smd-transistor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using TI DBV0006A, example board layout for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -4040,27 +3261,27 @@
         "kind": "explicit",
         "positionsNm": [
           [
-            -1350000,
+            -1300000,
             950000
           ],
           [
-            -1350000,
+            -1300000,
             0
           ],
           [
-            -1350000,
+            -1300000,
             -950000
           ],
           [
-            1350000,
+            1300000,
             -950000
           ],
           [
-            1350000,
+            1300000,
             0
           ],
           [
-            1350000,
+            1300000,
             950000
           ]
         ]
@@ -4075,23 +3296,28 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          950000,
-          620000
-        ]
+          1100000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
       },
       "manufacturing": {
         "process": "Surface-mount reflow",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DBV0006A, example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds026q/mpds026q.pdf#page=2"
       }
     },
     {
       "id": "sot-223-4",
       "name": "SOT-223 with thermal tab",
-      "revision": "1",
+      "revision": "3",
       "family": "smd-transistor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated draft using TI DCY0004A, numbered tab and example board layout for copper pad placement.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -4105,19 +3331,19 @@
         "kind": "explicit",
         "positionsNm": [
           [
-            -3150000,
+            -2900000,
             2300000
           ],
           [
-            -3150000,
+            -2900000,
             0
           ],
           [
-            -3150000,
+            -2900000,
             -2300000
           ],
           [
-            3150000,
+            2900000,
             0
           ]
         ]
@@ -4132,9 +3358,10 @@
       "pad": {
         "shape": "rectangle",
         "sizeNm": [
-          1900000,
-          1150000
-        ]
+          2150000,
+          950000
+        ],
+        "cornerRadiusNm": 50000
       },
       "manufacturing": {
         "process": "Surface-mount reflow",
@@ -4145,18 +3372,23 @@
       "padOverrides": {
         "4": {
           "sizeNm": [
-            2100000,
-            3700000
+            2150000,
+            3250000
           ]
         }
-      }
+      },
+      "landPatternSource": {
+        "name": "TI DCY0004A, numbered tab and example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds094b/mpds094b.pdf#page=2"
+      },
+      "datasheetUrl": "https://www.ti.com/lit/ds/slvs059v/slvs059v.pdf"
     },
     {
       "id": "to92-inline",
-      "name": "TO92-INLINE through-hole envelope",
-      "revision": "2",
+      "name": "TO-92 straight leads (TI LP0003A)",
+      "revision": "4",
       "family": "tht-transistor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TI LP0003A straight-lead board layout with 0.11 mm nominal side annulus.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -4173,32 +3405,42 @@
       },
       "lead": {
         "crossSectionNm": [
-          580000,
-          450000
+          550000,
+          460000
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1100000,
-          1100000
+          1070000,
+          1500000
         ],
-        "drillNm": 800000
+        "drillNm": 850000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
+        "minAnnulusNm": 110000
+      },
+      "datasheetUrl": "https://www.ti.com/lit/ds/symlink/lm2936.pdf#page=39",
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 50000
+        }
+      },
+      "landPatternSource": {
+        "name": "TI LP0003A straight-lead example board layout",
+        "url": "https://www.ti.com/lit/ds/symlink/lm2936.pdf#page=39"
       }
     },
     {
       "id": "to92-spread",
-      "name": "TO92-SPREAD through-hole envelope",
-      "revision": "1",
+      "name": "TO-92 formed leads (TI LP0003A)",
+      "revision": "2",
       "family": "tht-transistor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TinyCAD generated envelope with copper lands from the TI LP0003A formed-lead example board layout.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -4211,7 +3453,7 @@
       "terminals": {
         "kind": "inline",
         "count": 3,
-        "pitchNm": 2540000
+        "pitchNm": 2600000
       },
       "lead": {
         "crossSectionNm": [
@@ -4223,24 +3465,34 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1600000,
-          1600000
+          1400000,
+          1400000
         ],
-        "drillNm": 950000
+        "drillNm": 900000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://www.ti.com/lit/ds/symlink/lm2936.pdf#page=39",
+      "landPatternSource": {
+        "name": "TI LP0003A formed-lead example board layout",
+        "url": "https://www.ti.com/lit/ds/symlink/lm2936.pdf#page=39"
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 50000
+        }
       }
     },
     {
       "id": "to220-3",
-      "name": "TO220-3 through-hole envelope",
-      "revision": "1",
+      "name": "TO-220-3 (TI KCS0003B)",
+      "revision": "2",
       "family": "tht-transistor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "TI KCS0003B example board layout.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -4257,38 +3509,48 @@
       },
       "lead": {
         "crossSectionNm": [
-          580000,
-          450000
+          900000,
+          500000
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1600000,
-          1600000
+          1700000,
+          1700000
         ],
-        "drillNm": 950000
+        "drillNm": 1200000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 50000
+        }
+      },
+      "datasheetUrl": "https://www.ti.com/lit/ml/mpsf053a/mpsf053a.pdf#page=2",
+      "landPatternSource": {
+        "name": "TI KCS0003B example board layout",
+        "url": "https://www.ti.com/lit/ml/mpsf053a/mpsf053a.pdf#page=2"
       }
     },
     {
       "id": "to220-5",
-      "name": "TO220-5 through-hole envelope",
-      "revision": "1",
+      "name": "TO-220-5 straight leads (Analog Devices 05-08-1421)",
+      "revision": "2",
       "family": "tht-transistor",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Analog Devices specifies a 1.70 mm straight-row pitch and a 0.965 × 0.584 mm maximum lead section. TinyCAD uses 1.30 mm finished holes and 1.60 × 2.00 mm lands with a 0.15 mm side annulus.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          11000000,
-          5000000,
-          14000000
+          10541000,
+          4572000,
+          15748000
         ],
         "standoffNm": 300000
       },
@@ -4299,8 +3561,8 @@
       },
       "lead": {
         "crossSectionNm": [
-          580000,
-          450000
+          965000,
+          584000
         ],
         "protrusionNm": 2200000
       },
@@ -4308,21 +3570,26 @@
         "shape": "round",
         "sizeNm": [
           1600000,
-          1600000
+          2000000
         ],
-        "drillNm": 950000
+        "drillNm": 1300000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
+        "maskExpansionNm": 25000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "datasheetUrl": "https://mds.analog.com/api/public/content/TO-220_5_05-08-1421_STRAIGHT_LEAD.pdf",
+      "datasheetFitSource": {
+        "name": "Analog Devices 05-08-1421 straight-lead package drawing",
+        "url": "https://mds.analog.com/api/public/content/TO-220_5_05-08-1421_STRAIGHT_LEAD.pdf"
       }
     },
     {
       "id": "header-1x10",
       "name": "Single-row header 10 pins",
-      "revision": "1",
+      "revision": "2",
       "family": "header",
       "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
       "license": "CC0-1.0",
@@ -4360,12 +3627,13 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://suddendocs.samtec.com/prints/tsw-mk.pdf"
     },
     {
       "id": "header-1x12",
       "name": "Single-row header 12 pins",
-      "revision": "1",
+      "revision": "2",
       "family": "header",
       "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
       "license": "CC0-1.0",
@@ -4403,12 +3671,13 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://suddendocs.samtec.com/prints/tsw-mk.pdf"
     },
     {
       "id": "header-1x14",
       "name": "Single-row header 14 pins",
-      "revision": "1",
+      "revision": "2",
       "family": "header",
       "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
       "license": "CC0-1.0",
@@ -4446,12 +3715,13 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://suddendocs.samtec.com/prints/tsw-mk.pdf"
     },
     {
       "id": "header-1x16",
       "name": "Single-row header 16 pins",
-      "revision": "1",
+      "revision": "2",
       "family": "header",
       "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
       "license": "CC0-1.0",
@@ -4489,12 +3759,13 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://suddendocs.samtec.com/prints/tsw-mk.pdf"
     },
     {
       "id": "header-1x20",
       "name": "Single-row header 20 pins",
-      "revision": "1",
+      "revision": "2",
       "family": "header",
       "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
       "license": "CC0-1.0",
@@ -4532,19 +3803,20 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "datasheetUrl": "https://suddendocs.samtec.com/prints/tsw-mk.pdf"
     },
     {
       "id": "terminal-block-6",
       "name": "Terminal block 6 positions 3.5 mm pitch",
-      "revision": "1",
+      "revision": "2",
       "family": "terminal-block",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Phoenix Contact PT 1,5/..-3,5-H. Pad centres, drills and body plan follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           21000000,
-          8000000,
+          7600000,
           7000000
         ],
         "standoffNm": 300000
@@ -4564,8 +3836,8 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          2200000,
-          2200000
+          2400000,
+          2400000
         ],
         "drillNm": 1200000
       },
@@ -4574,19 +3846,24 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 250000
+        }
       }
     },
     {
       "id": "terminal-block-8",
       "name": "Terminal block 8 positions 3.5 mm pitch",
-      "revision": "1",
+      "revision": "2",
       "family": "terminal-block",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Phoenix Contact PT 1,5/..-3,5-H. Pad centres, drills and body plan follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           28000000,
-          8000000,
+          7600000,
           7000000
         ],
         "standoffNm": 300000
@@ -4606,8 +3883,8 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          2200000,
-          2200000
+          2400000,
+          2400000
         ],
         "drillNm": 1200000
       },
@@ -4616,19 +3893,24 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 250000
+        }
       }
     },
     {
       "id": "terminal-block-10",
       "name": "Terminal block 10 positions 3.5 mm pitch",
-      "revision": "1",
+      "revision": "2",
       "family": "terminal-block",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Phoenix Contact PT 1,5/..-3,5-H. Pad centres, drills and body plan follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           35000000,
-          8000000,
+          7600000,
           7000000
         ],
         "standoffNm": 300000
@@ -4648,8 +3930,8 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          2200000,
-          2200000
+          2400000,
+          2400000
         ],
         "drillNm": 1200000
       },
@@ -4658,19 +3940,24 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 250000
+        }
       }
     },
     {
       "id": "terminal-block-12",
       "name": "Terminal block 12 positions 3.5 mm pitch",
-      "revision": "1",
+      "revision": "2",
       "family": "terminal-block",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Phoenix Contact PT 1,5/..-3,5-H. Pad centres, drills and body plan follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           42000000,
-          8000000,
+          7600000,
           7000000
         ],
         "standoffNm": 300000
@@ -4690,8 +3977,8 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          2200000,
-          2200000
+          2400000,
+          2400000
         ],
         "drillNm": 1200000
       },
@@ -4700,19 +3987,24 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 250000
+        }
       }
     },
     {
       "id": "terminal-block-16",
       "name": "Terminal block 16 positions 3.5 mm pitch",
-      "revision": "1",
+      "revision": "2",
       "family": "terminal-block",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Phoenix Contact PT 1,5/..-3,5-H. Pad centres, drills and body plan follow the mapped KiCad 9.0.0 footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           56000000,
-          8000000,
+          7600000,
           7000000
         ],
         "standoffNm": 300000
@@ -4732,8 +4024,8 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          2200000,
-          2200000
+          2400000,
+          2400000
         ],
         "drillNm": 1200000
       },
@@ -4742,22 +4034,27 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 250000
+        }
       }
     },
     {
       "id": "terminal-block-20",
-      "name": "Terminal block 20 positions 3.5 mm pitch",
-      "revision": "1",
+      "name": "Phoenix Contact PT 1,5/20-3,5-H (1709678)",
+      "revision": "3",
       "family": "terminal-block",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "source": "Phoenix Contact specifies 20 positions at 3.50 mm pitch, 0.90 mm leads and 1.20 mm finished holes. TinyCAD uses 2.40 mm lands with a 0.60 mm nominal annulus.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
           70000000,
-          8000000,
-          7000000
+          7550000,
+          9150000
         ],
-        "standoffNm": 300000
+        "standoffNm": 0
       },
       "terminals": {
         "kind": "inline",
@@ -4766,16 +4063,16 @@
       },
       "lead": {
         "crossSectionNm": [
-          800000,
-          800000
+          636396,
+          636396
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          2200000,
-          2200000
+          2400000,
+          2400000
         ],
         "drillNm": 1200000
       },
@@ -4784,14 +4081,24 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 250000
+        }
+      },
+      "datasheetUrl": "https://www.phoenixcontact.com/en-pc/products/pcb-terminal-block-pt-15-20-35-h-1709678",
+      "datasheetFitSource": {
+        "name": "Phoenix Contact 1709678 PCB design",
+        "url": "https://www.phoenixcontact.com/en-pc/products/pcb-terminal-block-pt-15-20-35-h-1709678"
       }
     },
     {
       "id": "mount-m2",
       "name": "M2 clearance hole and head envelope",
       "family": "mounting-hole",
-      "revision": "1",
-      "source": "TinyCAD mechanical head envelope and drill assumptions for a clearance hole; verify against hardware",
+      "revision": "2",
+      "source": "KiCad 9.0.0 non-plated metric clearance drill and mask opening.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -4819,12 +4126,13 @@
           4000000,
           4000000
         ],
-        "drillNm": 2300000,
-        "nonPlated": true
+        "drillNm": 2200000,
+        "nonPlated": true,
+        "maskOpening": true
       },
       "manufacturing": {
         "process": "Mechanical fastener through a non-plated hole",
-        "maskExpansionNm": 50000,
+        "maskExpansionNm": 0,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
       }
@@ -4833,8 +4141,8 @@
       "id": "mount-m25",
       "name": "M25 clearance hole and head envelope",
       "family": "mounting-hole",
-      "revision": "1",
-      "source": "TinyCAD mechanical head envelope and drill assumptions for a clearance hole; verify against hardware",
+      "revision": "2",
+      "source": "KiCad 9.0.0 non-plated metric clearance drill and mask opening.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -4862,12 +4170,13 @@
           5000000,
           5000000
         ],
-        "drillNm": 2800000,
-        "nonPlated": true
+        "drillNm": 2700000,
+        "nonPlated": true,
+        "maskOpening": true
       },
       "manufacturing": {
         "process": "Mechanical fastener through a non-plated hole",
-        "maskExpansionNm": 50000,
+        "maskExpansionNm": 0,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
       }
@@ -4876,8 +4185,8 @@
       "id": "mount-m3",
       "name": "M3 clearance hole and head envelope",
       "family": "mounting-hole",
-      "revision": "1",
-      "source": "TinyCAD mechanical head envelope and drill assumptions for a clearance hole; verify against hardware",
+      "revision": "2",
+      "source": "KiCad 9.0.0 non-plated metric clearance drill and mask opening.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -4905,22 +4214,23 @@
           6000000,
           6000000
         ],
-        "drillNm": 3300000,
-        "nonPlated": true
+        "drillNm": 3200000,
+        "nonPlated": true,
+        "maskOpening": true
       },
       "manufacturing": {
         "process": "Mechanical fastener through a non-plated hole",
-        "maskExpansionNm": 50000,
+        "maskExpansionNm": 0,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
       }
     },
     {
       "id": "test-point-10",
-      "name": "1 mm surface-mount test point",
+      "name": "1 mm bare test pad",
       "family": "test-point",
-      "revision": "1",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "revision": "2",
+      "source": "Bare probe pad following the mapped KiCad 9.0.0 TestPoint footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -4947,21 +4257,23 @@
         "sizeNm": [
           1000000,
           1000000
-        ]
+        ],
+        "paste": false
       },
       "manufacturing": {
-        "process": "Surface-mount reflow",
+        "process": "Bare PCB test pad",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "test-point-15",
-      "name": "1.5 mm surface-mount test point",
+      "name": "1.5 mm bare test pad",
       "family": "test-point",
-      "revision": "1",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "revision": "2",
+      "source": "Bare probe pad following the mapped KiCad 9.0.0 TestPoint footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -4988,21 +4300,23 @@
         "sizeNm": [
           1500000,
           1500000
-        ]
+        ],
+        "paste": false
       },
       "manufacturing": {
-        "process": "Surface-mount reflow",
+        "process": "Bare PCB test pad",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "test-point-25",
-      "name": "2.5 mm surface-mount test point",
+      "name": "2.5 mm bare test pad",
       "family": "test-point",
-      "revision": "1",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "revision": "2",
+      "source": "Bare probe pad following the mapped KiCad 9.0.0 TestPoint footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
@@ -5029,69 +4343,28 @@
         "sizeNm": [
           2500000,
           2500000
-        ]
+        ],
+        "paste": false
       },
       "manufacturing": {
-        "process": "Surface-mount reflow",
+        "process": "Bare PCB test pad",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "module-header-1524",
-      "name": "40-pin module header 15.24 mm spacing",
-      "family": "module-header",
-      "revision": "1",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          15240000,
-          50800000,
-          2500000
-        ],
-        "standoffNm": 300000
       },
-      "terminals": {
-        "kind": "dual-row",
-        "count": 40,
-        "pitchNm": 2540000,
-        "rowSpacingNm": 15240000
-      },
-      "lead": {
-        "crossSectionNm": [
-          500000,
-          500000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          1600000,
-          1600000
-        ],
-        "drillNm": 900000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
-      }
+      "symmetricTerminals": true
     },
     {
       "id": "module-header-1778",
-      "name": "40-pin module header 17.78 mm spacing",
+      "name": "Raspberry Pi Pico 40-pin through-hole header grid",
       "family": "module-header",
-      "revision": "1",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "revision": "3",
+      "source": "Raspberry Pi Pico through-hole header grid, 2.54 mm pitch, 17.78 mm between rows. Host-board lands are 1.60 mm with 1.00 mm finished holes for 0.64 mm square header tails.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          17780000,
-          50800000,
+          21000000,
+          51000000,
           2500000
         ],
         "standoffNm": 300000
@@ -5104,8 +4377,8 @@
       },
       "lead": {
         "crossSectionNm": [
-          500000,
-          500000
+          640000,
+          640000
         ],
         "protrusionNm": 2200000
       },
@@ -5115,69 +4388,32 @@
           1600000,
           1600000
         ],
-        "drillNm": 900000
+        "drillNm": 1000000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
-    },
-    {
-      "id": "axial-inductor-635",
-      "name": "Axial inductor 6.35 mm pitch",
-      "family": "axial-inductor",
-      "revision": "1",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
-      "license": "CC0-1.0",
-      "body": {
-        "envelopeNm": [
-          4850000,
-          3800000,
-          3800000
-        ],
-        "standoffNm": 300000
       },
-      "terminals": {
-        "kind": "inline",
-        "count": 2,
-        "pitchNm": 6350000
-      },
-      "lead": {
-        "crossSectionNm": [
-          500000,
-          500000
-        ],
-        "protrusionNm": 2200000
-      },
-      "pad": {
-        "shape": "round",
-        "sizeNm": [
-          1550000,
-          1550000
-        ],
-        "drillNm": 900000
-      },
-      "manufacturing": {
-        "process": "Hand-soldered through-hole",
-        "maskExpansionNm": 50000,
-        "courtyardExpansionNm": 550000,
-        "minAnnulusNm": 150000
+      "datasheetUrl": "https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf",
+      "datasheetFitSource": {
+        "name": "Raspberry Pi Pico module mechanical drawing",
+        "url": "https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf"
       }
     },
     {
       "id": "axial-inductor-762",
-      "name": "Axial inductor 7.62 mm pitch",
+      "name": "Vishay IM-1 · 7.62 mm pitch",
       "family": "axial-inductor",
-      "revision": "1",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "revision": "2",
+      "source": "PCB land and body plan dimensions follow the named KiCad 9.0.0 inductor footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          6120000,
-          3800000,
-          3800000
+          5300000,
+          2200000,
+          2200000
         ],
         "standoffNm": 300000
       },
@@ -5188,38 +4424,39 @@
       },
       "lead": {
         "crossSectionNm": [
-          500000,
-          500000
+          400000,
+          400000
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1550000,
-          1550000
+          1600000,
+          1600000
         ],
-        "drillNm": 900000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "axial-inductor-1016",
-      "name": "Axial inductor 10.16 mm pitch",
+      "name": "Vishay IM-2 · 10.16 mm pitch",
       "family": "axial-inductor",
-      "revision": "1",
-      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "revision": "2",
+      "source": "PCB land and body plan dimensions follow the named KiCad 9.0.0 inductor footprint.",
       "license": "CC0-1.0",
       "body": {
         "envelopeNm": [
-          8660000,
-          3800000,
-          3800000
+          6600000,
+          2700000,
+          2700000
         ],
         "standoffNm": 300000
       },
@@ -5230,32 +4467,33 @@
       },
       "lead": {
         "crossSectionNm": [
-          500000,
-          500000
+          400000,
+          400000
         ],
         "protrusionNm": 2200000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1550000,
-          1550000
+          1600000,
+          1600000
         ],
-        "drillNm": 900000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
-      }
+      },
+      "symmetricTerminals": true
     },
     {
       "id": "vishay-1n4148-tap-do35-762",
       "name": "Vishay 1N4148-TAP · DO-35 · 7.62 mm",
-      "revision": "1",
+      "revision": "3",
       "family": "axial-diode",
-      "source": "Vishay 81857 rev. 1.6, DO-35 body and cathode; TinyCAD-authored through-hole land pattern",
+      "source": "Vishay package and lead drawing. Copper, finished holes and formed-lead pitch follow KiCad 9.0.0.",
       "license": "CC0-1.0",
       "documentation": {
         "package": "https://www.vishay.com/docs/81857/1n4148.pdf",
@@ -5269,9 +4507,9 @@
       },
       "body": {
         "envelopeNm": [
-          3400000,
-          1750000,
-          1750000
+          3900000,
+          1900000,
+          1900000
         ],
         "standoffNm": 500000
       },
@@ -5282,18 +4520,18 @@
       },
       "lead": {
         "crossSectionNm": [
-          550000,
-          550000
+          388908,
+          388908
         ],
         "protrusionNm": 2300000
       },
       "pad": {
         "shape": "round",
         "sizeNm": [
-          1650000,
-          1650000
+          1600000,
+          1600000
         ],
-        "drillNm": 900000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Horizontal through-hole hand assembly at 7.62 mm pitch. The marked square pad is the cathode. The 0.9 mm finished hole and 1.65 mm land are TinyCAD assumptions for formed and trimmed leads.",
@@ -5305,9 +4543,9 @@
     {
       "id": "ti-sn74hc00n-pdip14",
       "name": "TI SN74HC00N · PDIP-14",
-      "revision": "1",
+      "revision": "3",
       "family": "dip",
-      "source": "TI SCLS181H and package drawing 4040049/E, 14-pin case; TinyCAD-authored land pattern",
+      "source": "TI SN74HC00N PDIP case drawing and pinout. Copper and finished holes follow the KiCad 9.0.0 DIP-14 footprint.",
       "license": "CC0-1.0",
       "documentation": {
         "package": "https://www.ti.com/lit/ds/symlink/sn74hc00.pdf",
@@ -5358,21 +4596,26 @@
           1600000,
           1600000
         ],
-        "drillNm": 900000
+        "drillNm": 800000
       },
       "manufacturing": {
         "process": "Hand-soldered through-hole. Form leads for a 7.62 mm row span and confirm fit. The 0.9 mm finished holes and 1.6 mm copper lands are TinyCAD dimensions.",
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 400000
+        }
       }
     },
     {
       "id": "phoenix-1715721-mkds-508",
       "name": "Phoenix Contact 1715721 · MKDS 1,5 · 2 positions",
-      "revision": "1",
+      "revision": "3",
       "family": "terminal-block",
-      "source": "Phoenix Contact 1715721, dimensions and drilling plan; TinyCAD-authored copper lands",
+      "source": "Phoenix Contact MKDS 1,5 drilling plan and KiCad 9.0.0 copper lands.",
       "license": "CC0-1.0",
       "documentation": {
         "package": "https://www.phoenixcontact.com/gb/products/1715721/pdf",
@@ -5415,8 +4658,8 @@
       "pad": {
         "shape": "round",
         "sizeNm": [
-          2300000,
-          2300000
+          2600000,
+          2600000
         ],
         "drillNm": 1300000
       },
@@ -5425,6 +4668,1294 @@
         "maskExpansionNm": 50000,
         "courtyardExpansionNm": 550000,
         "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 650000
+        }
+      }
+    },
+    {
+      "id": "bc847b-sot23",
+      "name": "BC847B · NPN BJT",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "BC847B pinout from Nexperia BC847x series, pinning. Copper lands use the TI DBV0003A SOT-23 layout.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1650000,
+          3000000,
+          1350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1300000,
+            475000
+          ],
+          [
+            -1300000,
+            -475000
+          ],
+          [
+            1300000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          430000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1100000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
+      },
+      "manufacturing": {
+        "process": "Surface-mount reflow",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DBV0003A, SOT-23 example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "documentation": {
+        "package": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2",
+        "pinout": "https://assets.nexperia.com/documents/data-sheet/BC847X_SER.pdf",
+        "partNumber": "BC847B",
+        "sourceRevision": "Nexperia BC847x series, pinning",
+        "pinoutByPad": {
+          "1": "Base",
+          "2": "Emitter",
+          "3": "Collector"
+        }
+      }
+    },
+    {
+      "id": "bc857b-sot23",
+      "name": "BC857B · PNP BJT",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "BC857B pinout from Nexperia BC856/BC857/BC858, pinning. Copper lands use the TI DBV0003A SOT-23 layout.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1650000,
+          3000000,
+          1350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1300000,
+            475000
+          ],
+          [
+            -1300000,
+            -475000
+          ],
+          [
+            1300000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          430000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1100000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
+      },
+      "manufacturing": {
+        "process": "Surface-mount reflow",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DBV0003A, SOT-23 example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "documentation": {
+        "package": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2",
+        "pinout": "https://assets.nexperia.com/documents/data-sheet/BC856_BC857_BC858.pdf",
+        "partNumber": "BC857B",
+        "sourceRevision": "Nexperia BC856/BC857/BC858, pinning",
+        "pinoutByPad": {
+          "1": "Base",
+          "2": "Emitter",
+          "3": "Collector"
+        }
+      }
+    },
+    {
+      "id": "bc547b-to92",
+      "name": "BC547B · NPN BJT",
+      "revision": "2",
+      "family": "tht-transistor",
+      "source": "onsemi BC547B straight-lead outline and pinout. KiCad 9.0.0 copper with a finished drill increased to 0.80 mm for the maximum lead diagonal.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4700000,
+          4100000,
+          5000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 3,
+        "pitchNm": 1270000
+      },
+      "lead": {
+        "crossSectionNm": [
+          560000,
+          520000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1050000,
+          1500000
+        ],
+        "drillNm": 800000
+      },
+      "manufacturing": {
+        "process": "Hand-soldered through-hole",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 125000
+      },
+      "datasheetUrl": "https://www.onsemi.com/download/data-sheet/pdf/bc550-d.pdf",
+      "documentation": {
+        "package": "https://www.onsemi.com/download/data-sheet/pdf/bc550-d.pdf",
+        "pinout": "https://www.onsemi.com/download/data-sheet/pdf/bc550-d.pdf",
+        "partNumber": "BC547B",
+        "sourceRevision": "onsemi BC546–BC550, straight-lead TO-92 pinout",
+        "pinoutByPad": {
+          "1": "Collector",
+          "2": "Base",
+          "3": "Emitter"
+        }
+      }
+    },
+    {
+      "id": "nexperia-2n7002bk-sot23",
+      "name": "2N7002BK · N-channel MOSFET",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "2N7002BK pinout from Nexperia 2N7002BK, Table 2. Copper lands use the TI DBV0003A SOT-23 layout.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1650000,
+          3000000,
+          1350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1300000,
+            475000
+          ],
+          [
+            -1300000,
+            -475000
+          ],
+          [
+            1300000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          430000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1100000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
+      },
+      "manufacturing": {
+        "process": "Surface-mount reflow",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DBV0003A, SOT-23 example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "documentation": {
+        "package": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2",
+        "pinout": "https://assets.nexperia.com/documents/data-sheet/2N7002BK.pdf",
+        "partNumber": "2N7002BK",
+        "sourceRevision": "Nexperia 2N7002BK, Table 2",
+        "pinoutByPad": {
+          "1": "Gate",
+          "2": "Source",
+          "3": "Drain"
+        }
+      }
+    },
+    {
+      "id": "nexperia-bss84-sot23",
+      "name": "BSS84 · P-channel MOSFET",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "BSS84 pinout from Nexperia BSS84, Table 2. Copper lands use the TI DBV0003A SOT-23 layout.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1650000,
+          3000000,
+          1350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1300000,
+            475000
+          ],
+          [
+            -1300000,
+            -475000
+          ],
+          [
+            1300000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          430000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1100000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
+      },
+      "manufacturing": {
+        "process": "Surface-mount reflow",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DBV0003A, SOT-23 example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "documentation": {
+        "package": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2",
+        "pinout": "https://assets.nexperia.com/documents/data-sheet/BSS84.pdf",
+        "partNumber": "BSS84",
+        "sourceRevision": "Nexperia BSS84, Table 2",
+        "pinoutByPad": {
+          "1": "Gate",
+          "2": "Source",
+          "3": "Drain"
+        }
+      }
+    },
+    {
+      "id": "onsemi-mmbfj113-sot23",
+      "name": "MMBFJ113 · N-channel JFET",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "MMBFJ113 pinout from onsemi MMBFJ113, SOT-23 pinout. Copper lands use the TI DBV0003A SOT-23 layout.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1650000,
+          3000000,
+          1350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1300000,
+            475000
+          ],
+          [
+            -1300000,
+            -475000
+          ],
+          [
+            1300000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          430000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1100000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
+      },
+      "manufacturing": {
+        "process": "Surface-mount reflow",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DBV0003A, SOT-23 example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "documentation": {
+        "package": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2",
+        "pinout": "https://www.onsemi.com/download/data-sheet/pdf/mmbfj113-d.pdf",
+        "partNumber": "MMBFJ113",
+        "sourceRevision": "onsemi MMBFJ113, SOT-23 pinout",
+        "pinoutByPad": {
+          "1": "Drain",
+          "2": "Source",
+          "3": "Gate"
+        }
+      }
+    },
+    {
+      "id": "onsemi-mmbfj176-sot23",
+      "name": "MMBFJ176 · P-channel JFET",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "MMBFJ176 pinout from onsemi J175/D. Copper lands use the TI DBV0003A SOT-23 layout.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1650000,
+          3000000,
+          1350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1300000,
+            475000
+          ],
+          [
+            -1300000,
+            -475000
+          ],
+          [
+            1300000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          430000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1100000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
+      },
+      "manufacturing": {
+        "process": "Surface-mount reflow",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DBV0003A, SOT-23 example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "documentation": {
+        "package": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2",
+        "pinout": "https://www.onsemi.com/pdf/datasheet/j175-d.pdf",
+        "partNumber": "MMBFJ176",
+        "sourceRevision": "onsemi J175/D Rev. 3, SOT-23 pinout",
+        "pinoutByPad": {
+          "1": "Drain",
+          "2": "Source",
+          "3": "Gate"
+        }
+      }
+    },
+    {
+      "id": "onsemi-fqp30n06l-to220",
+      "name": "FQP30N06L · N-channel power MOSFET",
+      "revision": "2",
+      "family": "tht-transistor",
+      "source": "Nominal pitch 2.54 mm. The 1.25 mm finished hole gives about 0.17 mm diametral clearance over the 0.90 × 0.60 mm lead tip. The board seats below the wider lead shoulders.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10400000,
+          4700000,
+          15700000
+        ],
+        "standoffNm": 3000000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 3,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          900000,
+          600000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1950000,
+          1950000
+        ],
+        "drillNm": 1250000
+      },
+      "manufacturing": {
+        "process": "Hand-soldered through-hole",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://www.onsemi.com/pdf/datasheet/fqp30n06l-d.pdf",
+        "pinout": "https://www.onsemi.com/pdf/datasheet/fqp30n06l-d.pdf",
+        "partNumber": "FQP30N06L",
+        "sourceRevision": "onsemi FQP30N06L, TO-220 pinout",
+        "pinoutByPad": {
+          "1": "Gate",
+          "2": "Drain",
+          "3": "Source"
+        }
+      },
+      "datasheetUrl": "https://www.onsemi.com/pdf/datasheet/fqp30n06l-d.pdf#page=8",
+      "datasheetFitSource": {
+        "name": "onsemi FQP30N06L mechanical drawing",
+        "url": "https://www.onsemi.com/pdf/datasheet/fqp30n06l-d.pdf#page=8"
+      }
+    },
+    {
+      "id": "st-stgp10nc60kd-to220",
+      "name": "STGP10NC60KD · IGBT",
+      "revision": "2",
+      "family": "tht-transistor",
+      "source": "Nominal pitch 2.54 mm. The 1.25 mm finished hole gives about 0.13 mm diametral clearance over the 0.88 × 0.70 mm lead tip. The board seats below the wider lead shoulders.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10400000,
+          4700000,
+          15700000
+        ],
+        "standoffNm": 4000000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 3,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          880000,
+          700000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1950000,
+          1950000
+        ],
+        "drillNm": 1250000
+      },
+      "manufacturing": {
+        "process": "Hand-soldered through-hole",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://www.st.com/resource/en/datasheet/stgp10nc60kd.pdf",
+        "pinout": "https://www.st.com/resource/en/datasheet/stgp10nc60kd.pdf",
+        "partNumber": "STGP10NC60KD",
+        "sourceRevision": "ST STGP10NC60KD, TO-220 pinout",
+        "pinoutByPad": {
+          "1": "Gate",
+          "2": "Collector",
+          "3": "Emitter"
+        }
+      },
+      "datasheetUrl": "https://www.st.com/resource/en/datasheet/stgp10nc60kd.pdf#page=21",
+      "datasheetFitSource": {
+        "name": "ST STGP10NC60KD TO-220 type A mechanical drawing",
+        "url": "https://www.st.com/resource/en/datasheet/stgp10nc60kd.pdf#page=21"
+      }
+    },
+    {
+      "id": "nexperia-bav99-sot23",
+      "name": "BAV99 · Dual switching diode",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "BAV99 pinout from Nexperia BAV99, Table 2. Copper lands use the TI DBV0003A SOT-23 layout.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1650000,
+          3000000,
+          1350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1300000,
+            475000
+          ],
+          [
+            -1300000,
+            -475000
+          ],
+          [
+            1300000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          430000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1100000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
+      },
+      "manufacturing": {
+        "process": "Surface-mount reflow",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DBV0003A, SOT-23 example board layout",
+        "url": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "documentation": {
+        "package": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2",
+        "pinout": "https://assets.nexperia.com/documents/data-sheet/BAV99.pdf",
+        "partNumber": "BAV99",
+        "sourceRevision": "Nexperia BAV99, Table 2",
+        "pinoutByPad": {
+          "1": "A1",
+          "2": "K2",
+          "3": "K1/A2"
+        }
+      }
+    },
+    {
+      "id": "ti-tl431cdbzr-sot23",
+      "name": "TL431CDBZR · Shunt reference",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "TI TL431 DBZ pinout and DBZ0003A example board layout.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1400000,
+          3040000,
+          1120000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1050000,
+            475000
+          ],
+          [
+            -1050000,
+            -475000
+          ],
+          [
+            1050000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          430000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1300000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
+      },
+      "manufacturing": {
+        "process": "Surface-mount reflow",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "landPatternSource": {
+        "name": "TI DBZ0003A, example board layout",
+        "url": "https://www.ti.com/lit/ds/symlink/tl431.pdf"
+      },
+      "documentation": {
+        "package": "https://www.ti.com/lit/ds/symlink/tl431.pdf",
+        "pinout": "https://www.ti.com/lit/ds/symlink/tl431.pdf",
+        "partNumber": "TL431CDBZR",
+        "sourceRevision": "TI TL431, DBZ package, Table 5-1",
+        "pinoutByPad": {
+          "1": "Cathode",
+          "2": "REF",
+          "3": "Anode"
+        }
+      }
+    },
+    {
+      "id": "jst-xh-2-vertical",
+      "name": "JST B2B-XH-A · 2.50 mm wire-to-board",
+      "revision": "2",
+      "family": "connector",
+      "source": "JST XH top-entry drill pattern with 1.00 mm finished holes. Copper dimensions follow the corresponding KiCad 9.0.0 footprint.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          7400000,
+          5750000,
+          7000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1250000,
+            0
+          ],
+          [
+            1250000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1700000,
+          2000000
+        ],
+        "drillNm": 1000000
+      },
+      "manufacturing": {
+        "process": "Hand- or wave-soldered through-hole",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://www.jst-mfg.com/product/pdf/eng/eXH.pdf",
+        "pinout": "https://www.jst-mfg.com/product/pdf/eng/eXH.pdf",
+        "partNumber": "B2B-XH-A",
+        "sourceRevision": "JST XH, top-entry through-hole PCB layout",
+        "pinoutByPad": {
+          "1": "Pin 1",
+          "2": "Pin 2"
+        }
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 250000
+        }
+      },
+      "datasheetUrl": "https://www.jst-mfg.com/product/pdf/eng/eXH.pdf#page=2"
+    },
+    {
+      "id": "jst-xh-4-vertical",
+      "name": "JST B4B-XH-A · 2.50 mm wire-to-board",
+      "revision": "2",
+      "family": "connector",
+      "source": "JST XH top-entry drill pattern with 1.00 mm finished holes. Copper dimensions follow the corresponding KiCad 9.0.0 footprint.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          12400000,
+          5750000,
+          7000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -3750000,
+            0
+          ],
+          [
+            -1250000,
+            0
+          ],
+          [
+            1250000,
+            0
+          ],
+          [
+            3750000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1700000,
+          1950000
+        ],
+        "drillNm": 1000000
+      },
+      "manufacturing": {
+        "process": "Hand- or wave-soldered through-hole",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://www.jst-mfg.com/product/pdf/eng/eXH.pdf",
+        "pinout": "https://www.jst-mfg.com/product/pdf/eng/eXH.pdf",
+        "partNumber": "B4B-XH-A",
+        "sourceRevision": "JST XH, top-entry through-hole PCB layout",
+        "pinoutByPad": {
+          "1": "Pin 1",
+          "2": "Pin 2",
+          "3": "Pin 3",
+          "4": "Pin 4"
+        }
+      },
+      "padOverrides": {
+        "1": {
+          "cornerRadiusNm": 250000
+        }
+      },
+      "datasheetUrl": "https://www.jst-mfg.com/product/pdf/eng/eXH.pdf#page=2"
+    },
+    {
+      "id": "samesky-sj1-3525n",
+      "name": "Same Sky SJ1-3525N · 3.5 mm switched stereo jack",
+      "revision": "1",
+      "family": "connector",
+      "source": "The Same Sky top-view drawing confirms the five plated slots and five locating holes. The KiCad reference adds a board cutout that needs an application-specific decision.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          12000000,
+          11000000,
+          6000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            0,
+            2000000
+          ],
+          [
+            -5000000,
+            -3000000
+          ],
+          [
+            5000000,
+            -3000000
+          ],
+          [
+            -2500000,
+            -3000000
+          ],
+          [
+            2500000,
+            -3000000
+          ],
+          [
+            -5000000,
+            4500000
+          ],
+          [
+            5000000,
+            4500000
+          ],
+          [
+            -5000000,
+            2000000
+          ],
+          [
+            5000000,
+            2000000
+          ],
+          [
+            0,
+            -3000000
+          ]
+        ],
+        "labels": [
+          "1",
+          "2",
+          "3",
+          "10",
+          "11",
+          "MP1",
+          "MP2",
+          "MP3",
+          "MP4",
+          "MP5"
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          200000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1500000,
+          2100000
+        ],
+        "drillNm": 800000,
+        "slotLengthNm": 1500000,
+        "slotAxis": "y"
+      },
+      "manufacturing": {
+        "process": "Hand- or wave-soldered through-hole",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "1": {
+          "shape": "rectangle",
+          "sizeNm": [
+            2100000,
+            1500000
+          ],
+          "drillNm": 800000,
+          "slotLengthNm": 1500000,
+          "slotAxis": "x"
+        },
+        "MP1": {
+          "shape": "round",
+          "sizeNm": [
+            1200000,
+            1200000
+          ],
+          "drillNm": 1200000,
+          "nonPlated": true
+        },
+        "MP2": {
+          "shape": "round",
+          "sizeNm": [
+            1200000,
+            1200000
+          ],
+          "drillNm": 1200000,
+          "nonPlated": true
+        },
+        "MP3": {
+          "shape": "round",
+          "sizeNm": [
+            1200000,
+            1200000
+          ],
+          "drillNm": 1200000,
+          "nonPlated": true
+        },
+        "MP4": {
+          "shape": "round",
+          "sizeNm": [
+            1200000,
+            1200000
+          ],
+          "drillNm": 1200000,
+          "nonPlated": true
+        },
+        "MP5": {
+          "shape": "round",
+          "sizeNm": [
+            1200000,
+            1200000
+          ],
+          "drillNm": 1200000,
+          "nonPlated": true
+        }
+      },
+      "documentation": {
+        "package": "https://www.sameskydevices.com/product/resource/sj1-352xn.pdf",
+        "pinout": "https://www.sameskydevices.com/product/resource/sj1-352xn.pdf",
+        "partNumber": "SJ1-3525N",
+        "sourceRevision": "Same Sky SJ1-352XN, page 2, 2024-09-12",
+        "pinoutByPad": {
+          "1": "Sleeve",
+          "2": "Tip",
+          "3": "Ring",
+          "10": "Tip switch",
+          "11": "Ring switch"
+        },
+        "mechanicalPads": [
+          "MP1",
+          "MP2",
+          "MP3",
+          "MP4",
+          "MP5"
+        ]
+      }
+    },
+    {
+      "id": "samesky-pj-102a",
+      "name": "Same Sky PJ-102A · 2.0 mm switched DC barrel jack",
+      "revision": "2",
+      "family": "connector",
+      "source": "All three contact positions and orientations follow the top-view drawing with 1.00 × 1.60 mm finished plated slots. TinyCAD adds 0.375 mm of copper around the nominal slot.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          14400000,
+          9400000,
+          11000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            6500000,
+            0
+          ],
+          [
+            500000,
+            0
+          ],
+          [
+            3500000,
+            -4700000
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          400000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1750000,
+          2350000
+        ],
+        "drillNm": 1000000,
+        "slotLengthNm": 1600000,
+        "slotAxis": "y"
+      },
+      "manufacturing": {
+        "process": "Hand- or wave-soldered through-hole",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "3": {
+          "shape": "rectangle",
+          "sizeNm": [
+            2350000,
+            1750000
+          ],
+          "drillNm": 1000000,
+          "slotLengthNm": 1600000,
+          "slotAxis": "x"
+        }
+      },
+      "documentation": {
+        "package": "https://www.sameskydevices.com/product/resource/pj-102a.pdf",
+        "pinout": "https://www.sameskydevices.com/product/resource/pj-102a.pdf",
+        "partNumber": "PJ-102A",
+        "sourceRevision": "Same Sky PJ-102A, page 2, 2025-03-11",
+        "pinoutByPad": {
+          "1": "Centre contact",
+          "2": "Sleeve",
+          "3": "Sleeve switch"
+        }
+      },
+      "datasheetUrl": "https://www.sameskydevices.com/product/resource/pj-102a.pdf#page=2",
+      "datasheetFitSource": {
+        "name": "Same Sky PJ-102A recommended PCB layout",
+        "url": "https://www.sameskydevices.com/product/resource/pj-102a.pdf#page=2"
+      }
+    },
+    {
+      "id": "amphenol-rjhse5380",
+      "name": "Amphenol RJHSE5380 · shielded 8P8C Ethernet jack",
+      "revision": "1",
+      "family": "connector",
+      "source": "Amphenol RJHSE5380. Board contact, shield and locating hole dimensions checked against the KiCad 9.0.0 part footprint.",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          16510000,
+          15750000,
+          13400000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -3560000,
+            -125000
+          ],
+          [
+            -2544000,
+            -1905000
+          ],
+          [
+            -1528000,
+            -125000
+          ],
+          [
+            -512000,
+            -1905000
+          ],
+          [
+            504000,
+            -125000
+          ],
+          [
+            1520000,
+            -1905000
+          ],
+          [
+            2536000,
+            -125000
+          ],
+          [
+            3552000,
+            -1905000
+          ],
+          [
+            -6350000,
+            2415000
+          ],
+          [
+            6350000,
+            2415000
+          ],
+          [
+            -8130000,
+            -1015000
+          ],
+          [
+            8130000,
+            -1015000
+          ]
+        ],
+        "labels": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "MP1",
+          "MP2",
+          "SH1",
+          "SH2"
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1500000,
+          1500000
+        ],
+        "drillNm": 890000
+      },
+      "manufacturing": {
+        "process": "Hand- or wave-soldered through-hole",
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "MP1": {
+          "shape": "round",
+          "sizeNm": [
+            3250000,
+            3250000
+          ],
+          "drillNm": 3250000,
+          "nonPlated": true
+        },
+        "MP2": {
+          "shape": "round",
+          "sizeNm": [
+            3250000,
+            3250000
+          ],
+          "drillNm": 3250000,
+          "nonPlated": true
+        },
+        "SH1": {
+          "shape": "round",
+          "sizeNm": [
+            2300000,
+            2300000
+          ],
+          "drillNm": 1570000
+        },
+        "SH2": {
+          "shape": "round",
+          "sizeNm": [
+            2300000,
+            2300000
+          ],
+          "drillNm": 1570000
+        }
+      },
+      "documentation": {
+        "package": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_RJ.pretty/RJ45_Amphenol_RJHSE5380.kicad_mod",
+        "pinout": "https://www.amphenol-cs.com/media/wysiwyg/files/documentation/datasheet/inputoutput/io-modjack-rjhse.pdf",
+        "partNumber": "RJHSE5380",
+        "sourceRevision": "Amphenol RJHSE series, no-LED variant; KiCad 9.0.0 reference",
+        "pinoutByPad": {
+          "1": "Contact 1",
+          "2": "Contact 2",
+          "3": "Contact 3",
+          "4": "Contact 4",
+          "5": "Contact 5",
+          "6": "Contact 6",
+          "7": "Contact 7",
+          "8": "Contact 8",
+          "SH1": "Shield",
+          "SH2": "Shield"
+        },
+        "mechanicalPads": [
+          "MP1",
+          "MP2"
+        ]
       }
     }
   ]

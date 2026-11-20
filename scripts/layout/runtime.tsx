@@ -125,3 +125,5 @@ export function renderFootprintAtActualSize(footprint: EmbeddedFootprint) {
     <DeviceFootprintPreview footprint={footprint} selected="" ruler actualSize />,
   );
 }
+
+export { readStarterFootprints, readStarterFootprint, readStarterDevices } from '../../src/pcb/starterCatalogue';

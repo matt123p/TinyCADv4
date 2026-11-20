@@ -102,6 +102,7 @@ const footprint = record(
     revision: 'string',
     definitionDigest: 'string',
     name: 'string',
+    datasheetUrl: ['string', 'datasheet'],
   },
   {
     pads: list(

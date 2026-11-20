@@ -96,9 +96,13 @@ function readPad(pad: SExprList, index: number, footprint: SExprList): PhysicalP
     'solder_paste_margin_ratio',
     'pinfunction',
     'pintype',
+    'remove_unused_layers',
   ];
   const other = pad.children.find(({ tag }) => !supported.includes(tag));
   if (other) throw new Error(`Unsupported pad option ${other.tag}.`);
+  const removeUnused = child(pad, 'remove_unused_layers');
+  if (removeUnused && (removeUnused.values.length !== 1 || removeUnused.values[0] !== 'no'))
+    throw new Error('Removing unused copper layers is unsupported.');
   const at = child(pad, 'at')?.values;
   const positionNm = point(at);
   const rotationMicrodegree = at.length === 3 ? dimension(at[2]) : 0;
@@ -208,6 +212,7 @@ function readPad(pad: SExprList, index: number, footprint: SExprList): PhysicalP
     return w > 0 && h > 0 ? rotateLand(standardLand(shape, w, h, ratio)) : undefined;
   };
   for (const layer of layers) {
+    if (layer === 'F&B.Cu' && type === 'np_thru_hole') continue;
     const match = /^(F|B|\*)\.(Cu|Mask|Paste)$/.exec(String(layer));
     if (!match) throw new Error(`Unsupported pad layer ${layer}.`);
     const [, side, role] = match;
@@ -268,7 +273,11 @@ function readGraphic(node: SExprList, layer: FootprintGraphicLayer): FootprintGr
     case 'fp_poly': {
       const points = child(node, 'pts')?.children;
       if (!points?.length || points.some(({ tag }) => tag !== 'xy')) throw new Error('Unsupported footprint polygon points.');
-      return { ...style, kind: 'polygon', points: points.map(({ values }) => point(values)) };
+      const vertices = points.map(({ values }) => point(values));
+      const first = vertices[0];
+      const last = vertices[vertices.length - 1];
+      if (first.x === last.x && first.y === last.y) vertices.pop();
+      return { ...style, kind: 'polygon', points: vertices };
     }
     case 'property':
     case 'fp_text': {
@@ -353,6 +362,10 @@ export function importKicadFootprint(source: string): {
     )
       continue;
     const graphicLayer = child(node, 'layer')?.values[0];
+    if (graphicLayer === 'Cmts.User' && (node.tag.startsWith('fp_') || node.tag === 'property')) {
+      issues.push({ severity: 'warning', location: node.tag, message: 'Comment-layer annotation was omitted.' });
+      continue;
+    }
     if (node.tag === 'property' && graphicLayer === undefined && !child(node, 'at')) continue;
     if (node.tag === 'embedded_fonts' && node.values[0] === 'no') continue;
     if (node.tag === 'model' || footprintGraphicLayers.includes(graphicLayer as FootprintGraphicLayer)) {
@@ -374,7 +387,9 @@ export function importKicadFootprint(source: string): {
     issues.push({
       severity: 'blocker',
       location: node.tag,
-      message: 'Object is outside the supported footprint import subset.',
+      message: graphicLayer === 'Edge.Cuts'
+        ? 'This footprint proposes a board cut. Transfer it to the board outline and review it separately.'
+        : 'Object is outside the supported footprint import subset.',
     });
   }
   return {

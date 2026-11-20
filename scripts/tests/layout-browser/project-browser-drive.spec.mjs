@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { gunzipSync } from 'node:zlib';
+import { librarySqlite } from '../../lib/library-from-sql.mjs';
 import { expect, test } from '@playwright/test';
 import { layoutRuntime } from '../../lib/layout-runtime.mjs';
 import { serveLayoutApp } from './serve-app.mjs';
@@ -288,16 +288,18 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   const native = await api.decodeFootprintLibrary(
     await readFile(await (await footprintDownload).path()),
   );
-  const bundle = JSON.parse(
-    gunzipSync(
-      await readFile(
-        new URL(
-          '../../../bundled-footprints/starter-v1.json.gz',
-          import.meta.url,
-        ),
-      ),
+  const SQL = await librarySqlite();
+  const db = new SQL.Database(
+    await readFile(
+      new URL('../../../bundled-footprints/starter-v1.tplib', import.meta.url),
     ),
   );
-  const expected = bundle.variants.find(({ id }) => id === 'dip-8').footprint;
-  expect(native).toEqual(expected);
+  try {
+    const entry = api
+      .readStarterFootprints(db)
+      .find(({ id }) => id === 'dip-8');
+    expect(native).toEqual(await api.readStarterFootprint(db, entry));
+  } finally {
+    db.close();
+  }
 });

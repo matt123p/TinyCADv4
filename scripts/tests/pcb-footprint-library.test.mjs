@@ -12,6 +12,36 @@ const kicadFootprint = `(footprint "Fixture"
   (model "example.step" (offset (xyz 0.1 0.2 0.3)) (scale (xyz 1 1 1)) (rotate (xyz 0 0 90)))
 )`;
 
+test('imports KiCad 9 closed graphics and through-hole pads with all copper layers retained', async () => {
+  const source = `(footprint "KiCad9" (layer "F.Cu")
+    (fp_poly (pts (xy 0 0) (xy 2 0) (xy 2 2) (xy 0 0)) (layer "F.SilkS"))
+    (fp_circle (center 0 0) (end 2 0) (layer "Cmts.User"))
+    (pad "1" thru_hole circle (at 0 0) (size 2 2) (drill 1)
+      (layers "*.Cu" "*.Mask") (remove_unused_layers no))
+  )`;
+  const { footprint, issues } = await api.importFootprintLibrary(
+    source,
+    'kicad9.kicad_mod',
+  );
+  assert.equal(footprint.definition.graphics[0].points.length, 3);
+  assert.ok(footprint.definition.pads[0].stack.copper.bottom);
+  assert.deepEqual(
+    issues.map(({ severity }) => severity),
+    ['warning'],
+  );
+  const blocked = await api.importFootprintLibrary(
+    source.replace('remove_unused_layers no', 'remove_unused_layers yes'),
+    'conditional-copper.kicad_mod',
+  );
+  assert.equal(blocked.footprint, undefined);
+  assert.ok(
+    blocked.issues.some(
+      ({ severity, message }) =>
+        severity === 'blocker' && message.includes('unused copper layers'),
+    ),
+  );
+});
+
 test('imports KiCad geometry, preserves native draft and enforces resolved reviewed device dependencies', async () => {
   const { footprint, issues } = await api.importFootprintLibrary(
     kicadFootprint,
@@ -76,21 +106,41 @@ test('imports KiCad geometry, preserves native draft and enforces resolved revie
     'CC0-1.0',
   );
   const { definitionDigest: oldDigest, ...definition } = footprint.definition;
+  const datasheetUrl =
+    'https://example.com/device.pdf?revision=1&lang=en#page=2';
+  for (const url of [
+    'javascript:alert(1)',
+    'file:///tmp/device.pdf',
+    '/device.pdf',
+    'https://',
+    'https://x@y.test/device.pdf',
+  ]) {
+    await assert.rejects(
+      api.footprintDefinition({ ...definition, datasheetUrl: url }),
+      /datasheet URL/,
+    );
+  }
   const resolved = {
     ...footprint,
     assets: [asset],
     definition: await api.footprintDefinition({
       ...definition,
+      datasheetUrl,
       models: definition.models.map((model) => ({
         ...model,
         assetId: asset.id,
       })),
     }),
   };
+  const reopened = await api.decodeFootprintLibrary(
+    await api.encodeFootprintLibrary(resolved),
+  );
+  assert.equal(reopened.definition.datasheetUrl, datasheetUrl);
   const { definition: device } = await api.readLibraryDevice(
     await api.publishFootprintDevice(resolved, config),
   );
   assert.equal(device.mount, 'mixed');
+  assert.equal(device.footprint.datasheetUrl, datasheetUrl);
   assert.equal(device.terminals.length, 1);
   assert.equal(device.assignments[0].signalId, device.assignments[1].signalId);
   assert.equal(device.footprint.models[0].assetId, asset.id);

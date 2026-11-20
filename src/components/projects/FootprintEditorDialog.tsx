@@ -9,6 +9,8 @@ import {
   DialogTitle,
 } from '@fluentui/react-components';
 import { saveAs } from 'file-saver';
+import { openExternalUrl } from '../../util/navigation';
+import { isFootprintDatasheetUrl } from '../../pcb/boardAssets';
 import { createBoardModelAsset } from '../../pcb/boardCodec';
 import {
   decodeFootprintLibrary,
@@ -259,8 +261,12 @@ export default function FootprintEditorDialog({
   }
 
   async function save(asDevice = false) {
-    const { definitionDigest, ...fields } = definition;
-    const valid = await footprintDefinition(fields);
+    const { definitionDigest, datasheetUrl, ...fields } = definition;
+    const url = datasheetUrl?.trim();
+    const valid = await footprintDefinition({
+      ...fields,
+      ...(url ? { datasheetUrl: url } : {}),
+    });
     const updated = { ...file, definition: valid };
     const bytes = asDevice
       ? await publishFootprintDevice(updated, {
@@ -345,7 +351,17 @@ export default function FootprintEditorDialog({
                           setMessages([]);
                           setMappings(
                             new Map(
-                              draft.definition.pads.flatMap(({ id, label }) => {
+                              draft.definition.pads.flatMap<
+                                [string, FootprintDeviceMapping]
+                              >(({ id, label }) => {
+                                if (
+                                  entry.documentation?.mechanicalPads?.includes(
+                                    label,
+                                  )
+                                )
+                                  return [
+                                    [id, { kind: 'mechanical' } as const],
+                                  ];
                                 const terminal =
                                   entry.documentation?.pinoutByPad[label];
                                 return terminal
@@ -435,6 +451,28 @@ export default function FootprintEditorDialog({
                     }
                   />
                 </label>
+              </p>
+              <p>
+                <label>
+                  Datasheet URL{' '}
+                  <input
+                    type="url"
+                    value={definition.datasheetUrl ?? ''}
+                    onChange={(event) =>
+                      updateDefinition({ datasheetUrl: event.target.value })
+                    }
+                  />
+                </label>{' '}
+                {isFootprintDatasheetUrl(definition.datasheetUrl?.trim()) && (
+                  <Button
+                    appearance="subtle"
+                    onClick={() =>
+                      openExternalUrl(definition.datasheetUrl.trim())
+                    }
+                  >
+                    Open datasheet
+                  </Button>
+                )}
               </p>
               {!!messages.length && (
                 <ul aria-label="KiCad import report">

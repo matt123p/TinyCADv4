@@ -42,6 +42,7 @@ export interface EmbeddedFootprint {
   readonly revision: string;
   readonly definitionDigest: string;
   readonly name: string;
+  readonly datasheetUrl?: string;
   readonly pads: readonly (FootprintPad & { readonly stack?: PadStack })[];
   readonly graphics?: readonly FootprintGraphic[];
   readonly models?: readonly FootprintModel[];
@@ -401,6 +402,22 @@ export function validateBoardAssets(
   }
 }
 
+export function isFootprintDatasheetUrl(value: unknown): value is string {
+  if (
+    typeof value !== 'string' ||
+    value.length > 4096 ||
+    !/^https?:\/\//i.test(value) ||
+    /[\s\u0000-\u001f\u007f\\]/.test(value)
+  )
+    return false;
+  try {
+    const url = new URL(value);
+    return !!url.hostname && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
+
 export function validateEmbeddedFootprint(definition: EmbeddedFootprint): void {
   if (
     !isEntityId(definition?.id) ||
@@ -411,6 +428,11 @@ export function validateEmbeddedFootprint(definition: EmbeddedFootprint): void {
     throw new Error(
       'Invalid footprint identity, name, revision, or definition digest.',
     );
+  if (
+    definition.datasheetUrl !== undefined &&
+    !isFootprintDatasheetUrl(definition.datasheetUrl)
+  )
+    throw new Error('Enter an absolute HTTP or HTTPS datasheet URL.');
   for (const pad of byId(definition.pads, 'pad').values()) {
     if (typeof pad.label !== 'string' || !isBoardPoint(pad.positionNm))
       throw new Error('Invalid footprint pad label or position.');

@@ -42,7 +42,7 @@ Run the prototype tests with `npm run test:pcb` and the browser/desktop fixture 
 
 ## WP2–WP6 · M1 manufacturing release
 
-- [ ] WP2 · Project folders, hierarchical schematics, recovery, embedded device/footprint revisions, reviewed resolution of legacy schematic package hints, footprint editing/import, curated parts, and atomic ECO with cross-probing (PRJ, SYN, LIB).
+- [x] WP2 · Project folders, hierarchical schematics, recovery, embedded device/footprint revisions, reviewed resolution of legacy schematic package hints, footprint editing/import, curated parts, and atomic ECO with cross-probing (PRJ, SYN, LIB).
   - [x] Implement project folders with a root XML `.tcproject` settings file, validated root-relative links and ordinary native source files (PRJ-01, PRJ-05).
   - [x] Update the project browser in Electron and Google Drive mode to create, identify and open project roots and navigate the tree. Save edits to the native document, copy the tree on Save As, compare revisions by relative path and verify recovery against saved documents. Preserve independent Libraries visibility and verify that filesystem-only builds omit Projects (PRJ-04, PRJ-06, PRJ-09, AT-21, AT-29).
   - [x] Specify and implement the standalone UTF-8 XML `.dpn` codec using `.dsn` naming and embedded-definition conventions. Embed used component, device, footprint and padstack definitions and resolved model assets. Verify an offline round trip (§26 and the codec portion of AT-28).
@@ -64,10 +64,9 @@ Run the prototype tests with `npm run test:pcb` and the browser/desktop fixture 
     - [x] Edit pad and artwork geometry, verify 1:1 SVG dimensions, and author, map, place and reopen a new connector without its source library.
     - [x] Verify author-created pad profiles and plated and non-plated drill geometry against manufacturing read-back.
   - [x] Define the [starter package catalogue](TinyCAD_PCB_Layout_Complete_Specification.md#102-curated-supplied-library) and write reproducible Python generators that emit matched TinyCAD footprints and STEP models from the same dimensions. Cover multiple sizes and pin counts across the listed surface-mount and through-hole families (FPT-07, FPT-09).
-    - [x] Generate and bundle 126 native footprint drafts with STEP geometry and assembly assumptions. Verify their dimensions with OpenCascade and the footprint editor checks. Open a bundled draft offline in Electron and Google Drive builds.
-  - [ ] Review and bundle the generated assets for the PCB engine. Verify the catalogue and embedded asset codec work offline (FPT-09, AT-16).
-    - [x] Bundle draft footprints separately from approved device exports. Validate each approval against its exact generated revision and verify SMT and through-hole placements reopen from embedded assets after deleting their source library.
-    - [x] Generate print-scale review sheets with dimensional references, assembly assumptions and exact geometry digests.
+    - [x] Generate 115 native footprints with STEP geometry and assembly assumptions. Verify all 115 in OpenCascade and with footprint editor checks. Open a bundled footprint offline in Electron and Google Drive builds.
+  - [x] Review and bundle the generated assets for the PCB engine. Verify the catalogue and embedded asset codec work offline (FPT-09, AT-16, AT-26).
+    - [x] Package 115 geometry-reviewed footprints and 21 named device mappings in the SQLite-based `.tplib` library. Pin review evidence to exact footprint digests and verify SMT and through-hole placements reopen from embedded assets after deleting their source library.
 - [ ] WP3 · Keep Circuit Design, PCB Design, and Circuit Design + Simulation inside one existing TinyCAD shell (UX-11, WEB-01). Load workspace feature modules, workers and WASM on demand. Preserve edits and undo history when switching workspaces, and release resources owned by the workspace being left.
   - [ ] Connect the shared project browser to PCB Design in Electron and Google Drive mode. Register standalone PCB Design in the filesystem-only browser build and verify direct `.dpn` opens (PRJ-09, WEB-01, AT-28).
 - [ ] WP3 · Board editor with one/two layers, outlines and cutouts, mechanical tools, component placement, snapping, manual rule-aware routing, plated/non-plated holes, and slots (GEO, LAY, UI, PLC, RTE).

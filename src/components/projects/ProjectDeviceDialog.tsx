@@ -1,3 +1,4 @@
+import { openExternalUrl } from '../../util/navigation';
 import React, { useEffect, useState } from 'react';
 import {
   Button,
@@ -294,6 +295,18 @@ export default function ProjectDeviceDialog({
                     Reviewed by {chosen.definition.review.by} ·{' '}
                     {chosen.definition.review.evidence}
                   </p>
+                  {chosen.definition.footprint.datasheetUrl && (
+                    <Button
+                      appearance="subtle"
+                      onClick={() =>
+                        openExternalUrl(
+                          chosen.definition.footprint.datasheetUrl,
+                        )
+                      }
+                    >
+                      Open datasheet
+                    </Button>
+                  )}
                   <table style={{ width: '100%' }}>
                     <thead>
                       <tr>

@@ -1,0 +1,1412 @@
+{
+  "version": 1,
+  "acceptance": "The user accepted KiCad-matched or datasheet-derived geometry and explicitly accepted the two final connector exceptions.",
+  "footprints": [
+    {
+      "id": "chip-0402",
+      "digest": "sha256:e0fdab31228760e1723a7aae3b61ea172a41d440bfdf981fa0f27128bde1b894",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Resistor_SMD.pretty/R_0402_1005Metric.kicad_mod",
+        "landPattern": "https://www.vishay.com/docs/20035/dcrcwe3.pdf"
+      }
+    },
+    {
+      "id": "chip-0603",
+      "digest": "sha256:13d4617392b0293a68ca0220244d509ea83344e4e406f6b8fb716159d0e60142",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Resistor_SMD.pretty/R_0603_1608Metric.kicad_mod",
+        "landPattern": "https://www.vishay.com/docs/20035/dcrcwe3.pdf"
+      }
+    },
+    {
+      "id": "chip-0805",
+      "digest": "sha256:6bc38c2776e23006248ce2712c5da5502585c18e94ae4581ec07d75c31eaff90",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Resistor_SMD.pretty/R_0805_2012Metric.kicad_mod",
+        "landPattern": "https://www.vishay.com/docs/20035/dcrcwe3.pdf"
+      }
+    },
+    {
+      "id": "chip-1206",
+      "digest": "sha256:9c0094027fbc15c60e293eca3f8837fcbb482723f011dbd042ece4213b0d7bed",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Resistor_SMD.pretty/R_1206_3216Metric.kicad_mod",
+        "landPattern": "https://www.vishay.com/docs/20035/dcrcwe3.pdf"
+      }
+    },
+    {
+      "id": "dip-8",
+      "digest": "sha256:5ee16cd31b45c92583e6f62f852d960b780851528214e7d3bb45ae89073f7798",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_DIP.pretty/DIP-8_W7.62mm.kicad_mod"
+      }
+    },
+    {
+      "id": "dip-14",
+      "digest": "sha256:849131567378604efdfe8c1aaf86710e0313d3b2201a142332dcff10bca93e41",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_DIP.pretty/DIP-14_W7.62mm.kicad_mod"
+      }
+    },
+    {
+      "id": "dip-16",
+      "digest": "sha256:6a8ef4d807ee9ffcf13713be21c360ce2f9601ee0f36fa13fb67d2b804a80c1b",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_DIP.pretty/DIP-16_W7.62mm.kicad_mod"
+      }
+    },
+    {
+      "id": "dip-24",
+      "digest": "sha256:7130e763ce89351a241981ed2862ec0857ba6a2c87930352986a7974034712a5",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_DIP.pretty/DIP-24_W15.24mm.kicad_mod"
+      }
+    },
+    {
+      "id": "soic-8",
+      "digest": "sha256:7ccd0cf3886aaaf894b99ae07d94130349121edd4c89e2ee829ed0b3f52e660a",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_SO.pretty/SOIC-8_3.9x4.9mm_P1.27mm.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/msoi002k/msoi002k.pdf"
+      }
+    },
+    {
+      "id": "soic-14",
+      "digest": "sha256:c1f1bbcc04615a06587276fdeb627f6b911f5e37c22cd9ad378efa56a628cc29",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_SO.pretty/SOIC-14_3.9x8.7mm_P1.27mm.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ds/symlink/sn74lv14a.pdf"
+      }
+    },
+    {
+      "id": "soic-16",
+      "digest": "sha256:68ead759f68275955e6d42b9756f426ef416ba095e05e00c53e3fa1805c982fb",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_SO.pretty/SOIC-16_3.9x9.9mm_P1.27mm.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds432a/mpds432a.pdf"
+      }
+    },
+    {
+      "id": "soic-20",
+      "digest": "sha256:de8e736b28b1789951c9933d54210a8b2082f0c0a287f2c2ca6a1b1890129e7f",
+      "basis": [
+        "kicad",
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_SO.pretty/SOIC-20W_7.5x12.8mm_P1.27mm.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ds/symlink/tlc2543.pdf"
+      }
+    },
+    {
+      "id": "soic-24",
+      "digest": "sha256:a92ccc11c723d8462b0ac9d5801b1744ac4dbcdb154887d0cde2029c6e86635e",
+      "basis": [
+        "kicad",
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_SO.pretty/SOIC-24W_7.5x15.4mm_P1.27mm.kicad_mod",
+        "landPattern": "https://ww1.microchip.com/downloads/aemDocuments/documents/package-outline-drawings/c04-00025f.pdf"
+      }
+    },
+    {
+      "id": "header-1x2",
+      "digest": "sha256:ff287f3d39ced58742a5641a320fde89f762432b71cea6cd2e2dac9d3c5d2f52",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_PinHeader_2.54mm.pretty/PinHeader_1x02_P2.54mm_Vertical.kicad_mod"
+      }
+    },
+    {
+      "id": "header-1x4",
+      "digest": "sha256:d3e5aa170475bf5d2d9bcd8c84a84306b82e42c0f7718f9aa425199d89d9f886",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_PinHeader_2.54mm.pretty/PinHeader_1x04_P2.54mm_Vertical.kicad_mod"
+      }
+    },
+    {
+      "id": "header-1x8",
+      "digest": "sha256:b07beb399f832383d7238e1b544eb5d6b4ccfa88237e7bfe99469fb4700fa280",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_PinHeader_2.54mm.pretty/PinHeader_1x08_P2.54mm_Vertical.kicad_mod"
+      }
+    },
+    {
+      "id": "header-2x3",
+      "digest": "sha256:43a964012357a76325c369ab441360821b49719cc66e39df0e04f30464f67ead",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_PinHeader_2.54mm.pretty/PinHeader_2x03_P2.54mm_Vertical.kicad_mod"
+      }
+    },
+    {
+      "id": "header-2x5",
+      "digest": "sha256:e3036f3fc80f1ba51c70d97d1ead751447b6b6cba6a37f0426d3723d43085b6a",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_PinHeader_2.54mm.pretty/PinHeader_2x05_P2.54mm_Vertical.kicad_mod"
+      }
+    },
+    {
+      "id": "header-2x8",
+      "digest": "sha256:e589ce86e59a247b3a3f0c6087592f0bfca9e77935401f235ffb9ccace0b2dfd",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_PinHeader_2.54mm.pretty/PinHeader_2x08_P2.54mm_Vertical.kicad_mod"
+      }
+    },
+    {
+      "id": "axial-762",
+      "digest": "sha256:6293d4f3ae896c1d74d9e20cf681e4be9c4aabc50267c0ddf6f03812d185cf44",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Resistor_THT.pretty/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "axial-1016",
+      "digest": "sha256:dde10137dffb4432d2e8a5a4eb4ef5d4206762c542f2b0078d719d7b64642a25",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Resistor_THT.pretty/R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "axial-1524",
+      "digest": "sha256:75e4a6ea2309abaf8a90f3173ab9f09b2806e543a3ebeeb80f98876300932207",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Resistor_THT.pretty/R_Axial_DIN0411_L9.9mm_D3.6mm_P15.24mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "radial-250",
+      "digest": "sha256:da8ffe8dd28c646d4a5dfab2c6ec2d3a67cb032ebc57a17cdcd2da30e71f09ed",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/C_Disc_D5.0mm_W2.5mm_P2.50mm.kicad_mod"
+      }
+    },
+    {
+      "id": "radial-500",
+      "digest": "sha256:f7b39f8739676d43bbdc861f7331cc2d3e04da1027fe009030a8ee2b74ce3d45",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/C_Disc_D7.5mm_W2.5mm_P5.00mm.kicad_mod"
+      }
+    },
+    {
+      "id": "terminal-2",
+      "digest": "sha256:8ed6bd7bc06e17d967eef069532f3debdf0fee35e5a36cfdf9b704716a38a032",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TerminalBlock_Phoenix.pretty/TerminalBlock_Phoenix_MKDS-1%2C5-2-5.08_1x02_P5.08mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "terminal-3",
+      "digest": "sha256:6606c972b17dc19967c4ec6706297d9a37e13feda528d46ceb283aa2506a019d",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TerminalBlock_Phoenix.pretty/TerminalBlock_Phoenix_MKDS-1%2C5-3-5.08_1x03_P5.08mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "terminal-4",
+      "digest": "sha256:1129307b8f693af47490ff18b746b8377426c07aca069df791e80bf908d2e8aa",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TerminalBlock_Phoenix.pretty/TerminalBlock_Phoenix_MKDS-1%2C5-4-5.08_1x04_P5.08mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "ti-lm358dr-d0008a",
+      "digest": "sha256:c3842c1870b2e9242e7773d21b46c1334523ad92a7e83ed0af41fa2838733631",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_SO.pretty/SOIC-8_3.9x4.9mm_P1.27mm.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/msoi002k/msoi002k.pdf#page=2"
+      },
+      "device": {
+        "partNumber": "LM358DR",
+        "pinout": {
+          "1": "OUT1",
+          "2": "IN1−",
+          "3": "IN1+",
+          "4": "V−",
+          "5": "IN2+",
+          "6": "IN2−",
+          "7": "OUT2",
+          "8": "V+"
+        }
+      }
+    },
+    {
+      "id": "axial-do35",
+      "digest": "sha256:ce4e673014ccd5d483f527c2d4a50d4617e6b961494c48734b6fd9d8ed6b6d72",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_THT.pretty/D_DO-35_SOD27_P7.62mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "axial-do41",
+      "digest": "sha256:d2980fba3d2381ae85cec6d7f6b2d2106efd5d926af7f753b994437313f2f5d5",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_THT.pretty/D_DO-41_SOD81_P10.16mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "axial-do15",
+      "digest": "sha256:fbb7b80d99308a1c0726e7c144ee51ad35f2998276ca8c65c00fc68e46b6202c",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_THT.pretty/D_DO-15_P12.70mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "axial-do201",
+      "digest": "sha256:90ab93b5299e0ab9d2e7ed9275dbf13f0c0fad2619d245e4e1d9fd78919e879a",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_THT.pretty/D_DO-201AD_P15.24mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "can-radial-40",
+      "digest": "sha256:ba0856758a5fd89a9ae099131f920bde57006dfe5a6cef78950611f65e33bb22",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/CP_Radial_D4.0mm_P2.00mm.kicad_mod"
+      }
+    },
+    {
+      "id": "can-radial-50",
+      "digest": "sha256:4426162a081e1e2cde0dfbf5bf278840696d6b4679c7fd6f32b41da5e45bcb6b",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/CP_Radial_D5.0mm_P2.00mm.kicad_mod"
+      }
+    },
+    {
+      "id": "can-radial-63",
+      "digest": "sha256:f3ddb0b832948ce3387cf2ef3f871b8535298a2f814bb3ab1904a9ac516d130b",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/CP_Radial_D6.3mm_P2.50mm.kicad_mod"
+      }
+    },
+    {
+      "id": "can-radial-80",
+      "digest": "sha256:f2f20efe4f51bd60c8f6d00cbf1d04ccd6321acabda96ce80b71e357dd6e0fd5",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/CP_Radial_D8.0mm_P3.50mm.kicad_mod"
+      }
+    },
+    {
+      "id": "can-radial-100",
+      "digest": "sha256:888c208986c364a575fcb55a5155f7e7ca6c42bf00c8fb6c3d1aac7e6e5b6b19",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/CP_Radial_D10.0mm_P5.00mm.kicad_mod"
+      }
+    },
+    {
+      "id": "can-radial-125",
+      "digest": "sha256:16fefdf5e7e58eb9967be4f726dc6c03df7480319d844c4e5f93a3131428fead",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/CP_Radial_D12.5mm_P5.00mm.kicad_mod"
+      }
+    },
+    {
+      "id": "can-radial-160",
+      "digest": "sha256:e7533a5b1ec169006178e47eb9245dba659cf4ee3a05561f2a0ba5f27adac3b4",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/CP_Radial_D16.0mm_P7.50mm.kicad_mod"
+      }
+    },
+    {
+      "id": "film-cap-50",
+      "digest": "sha256:70a7357f45819735c6eb90297dff542e43d7f39f91c2eafb01da480039278187",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/C_Rect_L7.0mm_W3.5mm_P5.00mm.kicad_mod"
+      }
+    },
+    {
+      "id": "film-cap-75",
+      "digest": "sha256:793a7d96f32776ae45c033122aa07d61d426ecfd7c550b3e3eab8449f47134cd",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/C_Rect_L10.3mm_W5.0mm_P7.50mm_MKS4.kicad_mod"
+      }
+    },
+    {
+      "id": "film-cap-100",
+      "digest": "sha256:9f113c3218b7528ac5594aa4fd58e5a96f9db588f2f44c341ed7d5df893c0141",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/C_Rect_L11.5mm_W5.6mm_P10.00mm_MKT.kicad_mod"
+      }
+    },
+    {
+      "id": "film-cap-150",
+      "digest": "sha256:9da15ed1cb37a847b1cf99ff70943fe1599de54138f46238a254b1f7dc1eba11",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/C_Rect_L16.5mm_W8.7mm_P15.00mm_MKT.kicad_mod"
+      }
+    },
+    {
+      "id": "film-cap-225",
+      "digest": "sha256:6fe676616c8261c78513ebb0ab3844a0b89fc606526eadba4907cd75ee60788d",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_THT.pretty/C_Rect_L24.0mm_W12.6mm_P22.50mm_MKT.kicad_mod"
+      }
+    },
+    {
+      "id": "can-smd-40",
+      "digest": "sha256:b9755291a4fd46d953d0df6c37fe211671cb906816ed055241b74573ea9b3ac2",
+      "basis": [
+        "kicad",
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_SMD.pretty/CP_Elec_4x5.3.kicad_mod",
+        "landPattern": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
+      }
+    },
+    {
+      "id": "can-smd-50",
+      "digest": "sha256:302ef234b3793014eb0b1b5f5e5ec5de8b1fc0bfbbe139f714295f14514d144f",
+      "basis": [
+        "kicad",
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_SMD.pretty/CP_Elec_5x5.3.kicad_mod",
+        "landPattern": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
+      }
+    },
+    {
+      "id": "can-smd-63",
+      "digest": "sha256:6d567da26c03fd6611769ea2ab5b00b76999584392bd61ee4d1661947b9a240a",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_SMD.pretty/CP_Elec_6.3x5.8.kicad_mod",
+        "landPattern": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
+      }
+    },
+    {
+      "id": "can-smd-80",
+      "digest": "sha256:f973c091a3b048cfc3dee588f7869307ddb24d804a1644f691a362873b6f65a6",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_SMD.pretty/CP_Elec_8x6.2.kicad_mod",
+        "landPattern": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
+      }
+    },
+    {
+      "id": "can-smd-100",
+      "digest": "sha256:98af79483d89d10fa4f35f8d25a8b927f4a2c3a57f2d86a4c91bfb4ccd768306",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Capacitor_SMD.pretty/CP_Elec_10x7.9.kicad_mod",
+        "landPattern": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
+      }
+    },
+    {
+      "id": "can-smd-125",
+      "digest": "sha256:531a754039c49d073c2ef82326ba9ef4d904ff2600bd89161779aa7bf066651b",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "landPattern": "https://industrial.panasonic.com/cdbs/www-data/pdf/RDE0000/ABA0000C1181.pdf"
+      }
+    },
+    {
+      "id": "diode-sod-923",
+      "digest": "sha256:86fdadaebd830ed5e562508c9a9b6d083c191e85ef86bb263d09d306cf8a8e34",
+      "basis": [
+        "kicad",
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_SMD.pretty/D_SOD-923.kicad_mod",
+        "landPattern": "https://www.onsemi.com/download/data-sheet/pdf/0imd1-001-d.pdf#page=4"
+      }
+    },
+    {
+      "id": "diode-sod-523",
+      "digest": "sha256:62f6067e6303e41d761e3e7c73a143e81c4e169ef39eee6122fd8995d3a765ff",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_SMD.pretty/D_SOD-523.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpss124c/mpss124c.pdf#page=2"
+      }
+    },
+    {
+      "id": "diode-sod-323",
+      "digest": "sha256:c2d743ec7f69789fbc218b101c09a6c3c17452d6ae0cbb99a721f45878fba6bd",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_SMD.pretty/D_SOD-323.kicad_mod",
+        "landPattern": "https://www.onsemi.com/download/package-drawing/pdf/477-02.pdf"
+      }
+    },
+    {
+      "id": "diode-sod-123",
+      "digest": "sha256:d42db41e6b8adbfc456d86d0402974a97654766ce8be6ec5d31daf66fde10e9f",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_SMD.pretty/D_SOD-123.kicad_mod",
+        "landPattern": "https://www.diodes.com/assets/Package-Files/SOD123.pdf#page=1"
+      }
+    },
+    {
+      "id": "diode-sma",
+      "digest": "sha256:8d18769f1b895f871d46e40c16519272668b535bb5996a51990fefcc08b3521f",
+      "basis": [
+        "kicad",
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_SMD.pretty/D_SMA.kicad_mod",
+        "landPattern": "https://www.diodes.com/assets/Package-Files/SMA.pdf#page=1"
+      }
+    },
+    {
+      "id": "diode-smb",
+      "digest": "sha256:88d60bd925694ff6adaa5bdc73cf622955f3444661259f4206feac739863d883",
+      "basis": [
+        "kicad",
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_SMD.pretty/D_SMB.kicad_mod",
+        "landPattern": "https://www.diodes.com/assets/Package-Files/SMB.pdf#page=1"
+      }
+    },
+    {
+      "id": "diode-smc",
+      "digest": "sha256:a244726fdccf6e50c39c812a71f154a833bed6f5c64c63035ee1be85f631991b",
+      "basis": [
+        "kicad",
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_SMD.pretty/D_SMC.kicad_mod",
+        "landPattern": "https://www.diodes.com/assets/Package-Files/SMC.pdf#page=1"
+      }
+    },
+    {
+      "id": "led-radial-3",
+      "digest": "sha256:b541445eae150ae3dff4b6d28ace42662f317c639c9c2a442324d70aaeb73368",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/LED_THT.pretty/LED_D3.0mm.kicad_mod"
+      }
+    },
+    {
+      "id": "led-radial-5",
+      "digest": "sha256:41dde88dd40dfef5b326a5d93e2a1b0d1b7ee6b696348c1da5f36d69233b01b8",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/LED_THT.pretty/LED_D5.0mm.kicad_mod"
+      }
+    },
+    {
+      "id": "led-radial-8",
+      "digest": "sha256:16bdc95d731db0714fb9ff217766222286e5d3c1c2e662058f00c7accebd9b0c",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/LED_THT.pretty/LED_D8.0mm.kicad_mod"
+      }
+    },
+    {
+      "id": "led-radial-10",
+      "digest": "sha256:fec827b8d9163e900174caec5923b3598735eaf2f6a6367d022d93720308b42c",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/LED_THT.pretty/LED_D10.0mm.kicad_mod"
+      }
+    },
+    {
+      "id": "led-chip-0603",
+      "digest": "sha256:cb9f9cb6a37767fb799478d783d5acc8d983be85eb2cb7251bbd6879de3fbc72",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/LED_SMD.pretty/LED_0603_1608Metric.kicad_mod",
+        "landPattern": "https://www.kingbrightusa.com/webimages/catalog/Technical%20Notes.pdf#page=10"
+      }
+    },
+    {
+      "id": "led-chip-0805",
+      "digest": "sha256:4d04f5e9a1f7acf7fd453f4986573e171137daee39d5a899045cd86034727eba",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/LED_SMD.pretty/LED_0805_2012Metric.kicad_mod",
+        "landPattern": "https://www.kingbrightusa.com/webimages/catalog/Technical%20Notes.pdf#page=10"
+      }
+    },
+    {
+      "id": "led-chip-1206",
+      "digest": "sha256:19f07a08048b78b624262b8a7fe45ab83a69896f6ab82198f0db44f70c89510f",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/LED_SMD.pretty/LED_1206_3216Metric.kicad_mod",
+        "landPattern": "https://www.kingbrightusa.com/webimages/catalog/Technical%20Notes.pdf#page=10"
+      }
+    },
+    {
+      "id": "led-chip-1210",
+      "digest": "sha256:c0e59868c04a428eba9c3ddf00946224791223de00956888c90e71e0634ecce5",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/LED_SMD.pretty/LED_1210_3225Metric.kicad_mod",
+        "landPattern": "https://www.kingbright.com/attachments/file/psearch/000/00/00/KPD-3224SYCK%28Ver.24B%29.pdf#page=1"
+      },
+      "device": {
+        "partNumber": "KPD-3224SYCK",
+        "pinout": {
+          "1": "Cathode",
+          "2": "Anode"
+        }
+      }
+    },
+    {
+      "id": "led-chip-3528",
+      "digest": "sha256:c28d9410efd3bc2552fb064e62b0d5d9aab3a7a027d3ebff883038dec7096a0e",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/LED_SMD.pretty/LED_Everlight-SMD3528_3.5x2.8mm_67-21ST.kicad_mod",
+        "landPattern": "https://www.kingbrightusa.com/webimages/catalog/Technical%20Notes.pdf#page=10"
+      }
+    },
+    {
+      "id": "shielded-inductor-40",
+      "digest": "sha256:40c6113f4ed863ffd144f217286812613768d3a3168ded7133310f1b117d5499",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "landPattern": "https://www.bourns.com/docs/product-datasheets/SRN4018BTA.pdf"
+      }
+    },
+    {
+      "id": "radial-inductor-10",
+      "digest": "sha256:c6e72dcd5887ac2ab43cea14ad0cb3528eaf23b703a7e9f39489cbf1203293b6",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Inductor_THT.pretty/L_Radial_D10.0mm_P5.00mm_Fastron_07P.kicad_mod"
+      }
+    },
+    {
+      "id": "sot-23-3",
+      "digest": "sha256:66580355bab1db83730deed40f277c23e06935441f24edefafa70ab5d1711e6a",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      }
+    },
+    {
+      "id": "sot-23-5",
+      "digest": "sha256:46c6c8e43046ae8b45d1efc82ff7692d0ce9b3d3cb5af6aaafebb312ddd21d1a",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-23-5.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds018t/mpds018t.pdf#page=2"
+      }
+    },
+    {
+      "id": "sot-23-6",
+      "digest": "sha256:cb20e0bbb5b6852b34eba39faa11da12c9c4d05ece088de810bcf3def642cf0a",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-23-6.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds026q/mpds026q.pdf#page=2"
+      }
+    },
+    {
+      "id": "sot-223-4",
+      "digest": "sha256:e10d26b683131101efd257611593fc5d5e6187ea43d24b57c3c4026608ceb695",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-223-3_TabPin2.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds094b/mpds094b.pdf#page=2"
+      }
+    },
+    {
+      "id": "to92-inline",
+      "digest": "sha256:ad0f7a1d10acee64fdb8183191933d0d482c67bb23147f12c999bb8beb1a68c6",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_THT.pretty/TO-92_Inline.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ds/symlink/lm2936.pdf#page=39"
+      }
+    },
+    {
+      "id": "to92-spread",
+      "digest": "sha256:a3037bb11dde7bfa3cf6448e7675ee1fcc76a768f06e7d8e3dcc79f62ad4fe45",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_THT.pretty/TO-92_Inline_Wide.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ds/symlink/lm2936.pdf#page=39"
+      }
+    },
+    {
+      "id": "to220-3",
+      "digest": "sha256:bfe72e393afd3c2c2c7af65305fa01fcda807d3c169e95703ecd6dedbf846679",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_THT.pretty/TO-220-3_Vertical.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpsf053a/mpsf053a.pdf#page=2"
+      }
+    },
+    {
+      "id": "to220-5",
+      "digest": "sha256:bbe36d0c770438a3d2e638cc01ba35b604827f8bde7fe166307f2be19cf90231",
+      "basis": [
+        "datasheet-fit"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_THT.pretty/TO-220-5_Vertical.kicad_mod",
+        "datasheetFit": "https://mds.analog.com/api/public/content/TO-220_5_05-08-1421_STRAIGHT_LEAD.pdf"
+      }
+    },
+    {
+      "id": "header-1x10",
+      "digest": "sha256:979df4b5b1a322e3d3055ac8ce3664912f3b2ad3231ba8600571b2a12722803a",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_PinHeader_2.54mm.pretty/PinHeader_1x10_P2.54mm_Vertical.kicad_mod"
+      }
+    },
+    {
+      "id": "header-1x12",
+      "digest": "sha256:11f4c3442ea4d4c0926ca418e31eaa01101ddbe05b2d2c9bad59489a2fc9620b",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_PinHeader_2.54mm.pretty/PinHeader_1x12_P2.54mm_Vertical.kicad_mod"
+      }
+    },
+    {
+      "id": "header-1x14",
+      "digest": "sha256:2fdc88b67de9e40122dfd1308a69cf831b673da8efdb4f6e7560a3dca0347f27",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_PinHeader_2.54mm.pretty/PinHeader_1x14_P2.54mm_Vertical.kicad_mod"
+      }
+    },
+    {
+      "id": "header-1x16",
+      "digest": "sha256:e944d3c2e5d2bc287225ad23731825c30621d3ec971df9ea4832966018731eab",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_PinHeader_2.54mm.pretty/PinHeader_1x16_P2.54mm_Vertical.kicad_mod"
+      }
+    },
+    {
+      "id": "header-1x20",
+      "digest": "sha256:6778b6e1da5ed83dc79c769ab0ffd3e8f24a10c7f64767214d4e26f15824f6c0",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_PinHeader_2.54mm.pretty/PinHeader_1x20_P2.54mm_Vertical.kicad_mod"
+      }
+    },
+    {
+      "id": "terminal-block-6",
+      "digest": "sha256:7b99f404a1f7c41f6c9692cc6cce892af839c5efa194f9fa67e4fb3a817c13b9",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TerminalBlock_Phoenix.pretty/TerminalBlock_Phoenix_PT-1%2C5-6-3.5-H_1x06_P3.50mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "terminal-block-8",
+      "digest": "sha256:97a25ddbcf17b944b68f54b24b0853d784a1f87f75f428ca9ad7280333cb3798",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TerminalBlock_Phoenix.pretty/TerminalBlock_Phoenix_PT-1%2C5-8-3.5-H_1x08_P3.50mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "terminal-block-10",
+      "digest": "sha256:29a3085299585b2c797e64e4717df33c86e5ac8665f91a124b625f3fc9c26c08",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TerminalBlock_Phoenix.pretty/TerminalBlock_Phoenix_PT-1%2C5-10-3.5-H_1x10_P3.50mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "terminal-block-12",
+      "digest": "sha256:2ed1da8e690c0b895c44969725515becbbac94712994db4c156853556be48fc3",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TerminalBlock_Phoenix.pretty/TerminalBlock_Phoenix_PT-1%2C5-12-3.5-H_1x12_P3.50mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "terminal-block-16",
+      "digest": "sha256:b921b45e9f27a3a896b86942c3be9f3acff13e52afdba36506e18963548c36bc",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TerminalBlock_Phoenix.pretty/TerminalBlock_Phoenix_PT-1%2C5-16-3.5-H_1x16_P3.50mm_Horizontal.kicad_mod"
+      }
+    },
+    {
+      "id": "terminal-block-20",
+      "digest": "sha256:a6ef999b7f76823d00f77d5a739d38998b212239187ab9393975e8f9c32f2f83",
+      "basis": [
+        "datasheet-fit"
+      ],
+      "sources": {
+        "datasheetFit": "https://www.phoenixcontact.com/en-pc/products/pcb-terminal-block-pt-15-20-35-h-1709678"
+      }
+    },
+    {
+      "id": "mount-m2",
+      "digest": "sha256:fe4fed3204a735d8f60b6bdaec9769555bfc789cf42359416d93fb10b9b61c26",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/MountingHole.pretty/MountingHole_2.2mm_M2.kicad_mod"
+      }
+    },
+    {
+      "id": "mount-m25",
+      "digest": "sha256:fcb08441519873032eba2aa106c7a56bd0bdb161edf14bbcbf3819e8705e6d1a",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/MountingHole.pretty/MountingHole_2.7mm_M2.5.kicad_mod"
+      }
+    },
+    {
+      "id": "mount-m3",
+      "digest": "sha256:bcd88a4ce6fb65272d861ef24e4c6d7ac01aa4a883e6fd3285d6debdcc2e94a3",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/MountingHole.pretty/MountingHole_3.2mm_M3.kicad_mod"
+      }
+    },
+    {
+      "id": "test-point-10",
+      "digest": "sha256:2bde468edc6e151b25b48bfc0c779d444d222a01d81c1ca904965712932b73c8",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TestPoint.pretty/TestPoint_Pad_D1.0mm.kicad_mod"
+      }
+    },
+    {
+      "id": "test-point-15",
+      "digest": "sha256:a2a6195c17826779e721072daf2c212b8a53e5406e4b1384d5775a920961f6b0",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TestPoint.pretty/TestPoint_Pad_D1.5mm.kicad_mod"
+      }
+    },
+    {
+      "id": "test-point-25",
+      "digest": "sha256:b0a72fb69193a2c793ae90ed498af4c140d654bcc479de5712cd001fd0eb0d6f",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TestPoint.pretty/TestPoint_Pad_D2.5mm.kicad_mod"
+      }
+    },
+    {
+      "id": "module-header-1778",
+      "digest": "sha256:340a9b348168a18dbce2d0a6e042cc582172a0364ffe4ee2bb2a3c5ecd4679e7",
+      "basis": [
+        "datasheet-fit"
+      ],
+      "sources": {
+        "datasheetFit": "https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf"
+      }
+    },
+    {
+      "id": "axial-inductor-762",
+      "digest": "sha256:9b5afbdb9f404191cc017c110ccf19786a687398566fc0ffbce5e9fad64bf4b2",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Inductor_THT.pretty/L_Axial_L5.3mm_D2.2mm_P7.62mm_Horizontal_Vishay_IM-1.kicad_mod"
+      }
+    },
+    {
+      "id": "axial-inductor-1016",
+      "digest": "sha256:a666876452f1a8329a9209cc7f8ac022678e600641d4bc3547b13d8241d1d7de",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Inductor_THT.pretty/L_Axial_L6.6mm_D2.7mm_P10.16mm_Horizontal_Vishay_IM-2.kicad_mod"
+      }
+    },
+    {
+      "id": "vishay-1n4148-tap-do35-762",
+      "digest": "sha256:7f7f148867c2646604d17caa7af591ef0345f12232ad059df6b63a8ec4cea9ab",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Diode_THT.pretty/D_DO-35_SOD27_P7.62mm_Horizontal.kicad_mod"
+      },
+      "device": {
+        "partNumber": "1N4148-TAP",
+        "pinout": {
+          "1": "Cathode",
+          "2": "Anode"
+        }
+      }
+    },
+    {
+      "id": "ti-sn74hc00n-pdip14",
+      "digest": "sha256:62ab042160cc3542eef3ba2eb0249d5da509b0dd2a17fb6219d3772632ba0702",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_DIP.pretty/DIP-14_W7.62mm.kicad_mod"
+      },
+      "device": {
+        "partNumber": "SN74HC00N",
+        "pinout": {
+          "1": "1A",
+          "2": "1B",
+          "3": "1Y",
+          "4": "2A",
+          "5": "2B",
+          "6": "2Y",
+          "7": "GND",
+          "8": "3Y",
+          "9": "3A",
+          "10": "3B",
+          "11": "4Y",
+          "12": "4A",
+          "13": "4B",
+          "14": "VCC"
+        }
+      }
+    },
+    {
+      "id": "phoenix-1715721-mkds-508",
+      "digest": "sha256:dc8d2b8e190cbc5b7040e774a1edebaa2618150a67b65d3f4f127ba4ff8bb818",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/TerminalBlock_Phoenix.pretty/TerminalBlock_Phoenix_MKDS-1%2C5-2-5.08_1x02_P5.08mm_Horizontal.kicad_mod"
+      },
+      "device": {
+        "partNumber": "1715721",
+        "pinout": {
+          "1": "Contact 1",
+          "2": "Contact 2"
+        }
+      }
+    },
+    {
+      "id": "bc847b-sot23",
+      "digest": "sha256:1744222094c18fef9504d92192b0a50290b9af449aa07b20491ca7c44ed2454c",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "device": {
+        "partNumber": "BC847B",
+        "pinout": {
+          "1": "Base",
+          "2": "Emitter",
+          "3": "Collector"
+        }
+      }
+    },
+    {
+      "id": "bc857b-sot23",
+      "digest": "sha256:36083c693906c28ed691bffe3c6ab72b2b7a3ec0096a629495ed30a5aee5ce56",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "device": {
+        "partNumber": "BC857B",
+        "pinout": {
+          "1": "Base",
+          "2": "Emitter",
+          "3": "Collector"
+        }
+      }
+    },
+    {
+      "id": "bc547b-to92",
+      "digest": "sha256:b88d36ab00bae15c2f964ef27255ed7ed6d0baf80002c3b1a2a65c79613f17ef",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_THT.pretty/TO-92_Inline.kicad_mod"
+      },
+      "device": {
+        "partNumber": "BC547B",
+        "pinout": {
+          "1": "Collector",
+          "2": "Base",
+          "3": "Emitter"
+        }
+      }
+    },
+    {
+      "id": "nexperia-2n7002bk-sot23",
+      "digest": "sha256:a12702b5cf4e1cba04e45b9946e8de3f9904bacd693b3b28bffed332922697e5",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "device": {
+        "partNumber": "2N7002BK",
+        "pinout": {
+          "1": "Gate",
+          "2": "Source",
+          "3": "Drain"
+        }
+      }
+    },
+    {
+      "id": "nexperia-bss84-sot23",
+      "digest": "sha256:34450476d5fe945c999dbf0c7058031bb40013e56f58b891a60c76d6af00aab7",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "device": {
+        "partNumber": "BSS84",
+        "pinout": {
+          "1": "Gate",
+          "2": "Source",
+          "3": "Drain"
+        }
+      }
+    },
+    {
+      "id": "onsemi-mmbfj113-sot23",
+      "digest": "sha256:deb0b2e555a0a3991b123e4cb1eccba20cff282bcde2c3c30b271f0a99e292af",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "device": {
+        "partNumber": "MMBFJ113",
+        "pinout": {
+          "1": "Drain",
+          "2": "Source",
+          "3": "Gate"
+        }
+      }
+    },
+    {
+      "id": "onsemi-mmbfj176-sot23",
+      "digest": "sha256:643d6d73f3d79cfa021a1131d7d246c72d544b7295161e00b382e462e54e1e1d",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "device": {
+        "partNumber": "MMBFJ176",
+        "pinout": {
+          "1": "Drain",
+          "2": "Source",
+          "3": "Gate"
+        }
+      }
+    },
+    {
+      "id": "onsemi-fqp30n06l-to220",
+      "digest": "sha256:4a07b5a67c090fd9160677f81551b94a5e3f96735affa2fdd95a15f05209f31d",
+      "basis": [
+        "datasheet-fit"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_THT.pretty/TO-220-3_Vertical.kicad_mod",
+        "datasheetFit": "https://www.onsemi.com/pdf/datasheet/fqp30n06l-d.pdf#page=8"
+      },
+      "device": {
+        "partNumber": "FQP30N06L",
+        "pinout": {
+          "1": "Gate",
+          "2": "Drain",
+          "3": "Source"
+        }
+      }
+    },
+    {
+      "id": "st-stgp10nc60kd-to220",
+      "digest": "sha256:107d9579e6cf7653c453c5740ba5ad2d845672586c3b99dbeaf94eb425521db5",
+      "basis": [
+        "datasheet-fit"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_THT.pretty/TO-220-3_Vertical.kicad_mod",
+        "datasheetFit": "https://www.st.com/resource/en/datasheet/stgp10nc60kd.pdf#page=21"
+      },
+      "device": {
+        "partNumber": "STGP10NC60KD",
+        "pinout": {
+          "1": "Gate",
+          "2": "Collector",
+          "3": "Emitter"
+        }
+      }
+    },
+    {
+      "id": "nexperia-bav99-sot23",
+      "digest": "sha256:e7a21acd41e60bf21475a2f2c2ac3d84b4ec5686059572b54dcc3cb84de0f22f",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ml/mpds017p/mpds017p.pdf#page=2"
+      },
+      "device": {
+        "partNumber": "BAV99",
+        "pinout": {
+          "1": "A1",
+          "2": "K2",
+          "3": "K1/A2"
+        }
+      }
+    },
+    {
+      "id": "ti-tl431cdbzr-sot23",
+      "digest": "sha256:1061e96f60c7e3dc4a05bdc4303b1913424018d66d969b2139033499980d3bbf",
+      "basis": [
+        "land-pattern"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod",
+        "landPattern": "https://www.ti.com/lit/ds/symlink/tl431.pdf"
+      },
+      "device": {
+        "partNumber": "TL431CDBZR",
+        "pinout": {
+          "1": "Cathode",
+          "2": "REF",
+          "3": "Anode"
+        }
+      }
+    },
+    {
+      "id": "jst-xh-2-vertical",
+      "digest": "sha256:55386b4295030386ac28945d59b999307919d39a81b81f8b5ce65c210847f143",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_JST.pretty/JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical.kicad_mod"
+      },
+      "device": {
+        "partNumber": "B2B-XH-A",
+        "pinout": {
+          "1": "Pin 1",
+          "2": "Pin 2"
+        }
+      }
+    },
+    {
+      "id": "jst-xh-4-vertical",
+      "digest": "sha256:b14d1dbb275efe3a4c479ebd48e03a34b50c3ea1f7d16a3a91b188ce7cc2feaa",
+      "basis": [
+        "kicad"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_JST.pretty/JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical.kicad_mod"
+      },
+      "device": {
+        "partNumber": "B4B-XH-A",
+        "pinout": {
+          "1": "Pin 1",
+          "2": "Pin 2",
+          "3": "Pin 3",
+          "4": "Pin 4"
+        }
+      }
+    },
+    {
+      "id": "samesky-sj1-3525n",
+      "digest": "sha256:bd07e4dae2d8fce92f430fc2b94420d995c536513e7d067db3598ca7e0be946a",
+      "basis": [
+        "user"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_Audio.pretty/Jack_3.5mm_CUI_SJ1-3525N_Horizontal.kicad_mod"
+      },
+      "notes": "User accepted this footprint for the starter catalogue. The board cutout shown in KiCad remains a board-layout decision.",
+      "device": {
+        "partNumber": "SJ1-3525N",
+        "pinout": {
+          "1": "Sleeve",
+          "2": "Tip",
+          "3": "Ring",
+          "10": "Tip switch",
+          "11": "Ring switch"
+        },
+        "mechanicalPads": [
+          "MP1",
+          "MP2",
+          "MP3",
+          "MP4",
+          "MP5"
+        ]
+      }
+    },
+    {
+      "id": "samesky-pj-102a",
+      "digest": "sha256:721fb15b6559598f4d100a3e63bfe09f726db1eb650b5016d968767b1d37c772",
+      "basis": [
+        "datasheet-fit"
+      ],
+      "sources": {
+        "datasheetFit": "https://www.sameskydevices.com/product/resource/pj-102a.pdf#page=2"
+      },
+      "device": {
+        "partNumber": "PJ-102A",
+        "pinout": {
+          "1": "Centre contact",
+          "2": "Sleeve",
+          "3": "Sleeve switch"
+        }
+      }
+    },
+    {
+      "id": "amphenol-rjhse5380",
+      "digest": "sha256:99179e4dbd9d80f081e1ab25fc6baf2635c79f720c5baccc10b5303a1095650b",
+      "basis": [
+        "user"
+      ],
+      "sources": {
+        "kicad": "https://gitlab.com/kicad/libraries/kicad-footprints/-/blob/9.0.0/Connector_RJ.pretty/RJ45_Amphenol_RJHSE5380.kicad_mod"
+      },
+      "notes": "User accepted this footprint for the starter catalogue. KiCad uses a shared shield label and unlabelled locating holes.",
+      "device": {
+        "partNumber": "RJHSE5380",
+        "pinout": {
+          "1": "Contact 1",
+          "2": "Contact 2",
+          "3": "Contact 3",
+          "4": "Contact 4",
+          "5": "Contact 5",
+          "6": "Contact 6",
+          "7": "Contact 7",
+          "8": "Contact 8",
+          "SH1": "Shield",
+          "SH2": "Shield"
+        },
+        "mechanicalPads": [
+          "MP1",
+          "MP2"
+        ]
+      }
+    }
+  ]
+}
