@@ -63,7 +63,7 @@ export function nativeTool(name: string, args: any): any {
   }
   if (name === 'read_netlist') {
     const xml = validated(definition, true);
-    const drawing = new ioXML().from_dsn(xml);
+    const drawing = new ioXML({ migrateEntityIds: false }).from_dsn(xml);
     const nets = new NetlistGenerator();
     makeNetForDrawing(drawing, nets);
     return {
@@ -87,7 +87,7 @@ export function nativeTool(name: string, args: any): any {
     // Existing user drawings can contain legacy geometry. Reading is never blocked
     // by generation-only validation rules; writes still require structural checks.
     resetServerIds();
-    const drawing = new ioXML().from_dsn(parseXml(definition, true));
+    const drawing = new ioXML({ migrateEntityIds: false }).from_dsn(parseXml(definition, true));
     return {
       metadata: drawing.sheets.map((s, i) => ({
         sheet: i + 1,

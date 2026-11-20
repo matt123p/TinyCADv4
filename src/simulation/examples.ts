@@ -9,6 +9,7 @@ import {
 import { libSymbol } from '../model/dsnDrawing';
 import { TextDisplayMethod } from '../model/tclib';
 import { get_global_id } from '../util/global_id';
+import { newSchematicEntityId } from '../model/schematicIdentity';
 import { createSimulationSheet } from './document';
 import { createControl, ControlTool, updateControl } from './controlSymbols';
 import { defaultSource, SourceConfig } from './controls';
@@ -64,6 +65,7 @@ export function createTeachingDrawing(kind: TeachingExample) {
     ...font,
     NodeName: DocItemTypes.Pin,
     _id: get_global_id(),
+    pinId: newSchematicEntityId(),
     point: examplePoint(point),
     number,
     name: number,
@@ -173,6 +175,7 @@ export function createTeachingDrawing(kind: TeachingExample) {
       ...font,
       NodeName: DocItemTypes.Symbol,
       _id: get_global_id(),
+      unitId: newSchematicEntityId(),
       point,
       show_power: false,
       allow_resize: false,

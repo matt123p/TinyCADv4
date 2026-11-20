@@ -44,6 +44,7 @@
     "test:engines": "node scripts/tests/qualify-engines.mjs",
     "typecheck": "tsc --noEmit",
     "test:layout": "node --test scripts/tests/layout.test.mjs scripts/tests/auto-layout-dialog.test.mjs scripts/tests/auto-layout-worker.test.mjs scripts/tests/auto-layout-ui.mjs",
+    "test:pcb": "node --test scripts/tests/pcb-*.test.mjs",
     "layout:review": "node scripts/layout-drawing.mjs",
     "benchmark:simulation": "node scripts/benchmark-simulation.mjs",
     "generate:simulation-examples": "node scripts/generate-simulation-examples.mjs",

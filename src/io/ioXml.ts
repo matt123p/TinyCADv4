@@ -1,5 +1,6 @@
 import { createSimulationSheet, validateSetup } from '../simulation/document';
 import { newIdentity } from '../simulation/contracts';
+import { readSchematicEntityId } from '../model/schematicIdentity';
 import { XMLBuilder } from '../util/xmlbuilder';
 import {
   DocItemTypes,
@@ -137,6 +138,7 @@ export function blank() {
 }
 
 export class ioXML {
+  constructor(private readonly readOptions: { migrateEntityIds?: boolean } = {}) {}
   // IO operations
   //
 
@@ -220,6 +222,10 @@ export class ioXML {
     if (!r.sheets.some(sheet => sheet.kind !== 'simulation')) throw new Error('A drawing must contain a schematic sheet.');
     const sheetIds = r.sheets.map(sheet => sheet.id);
     if (new Set(sheetIds).size !== sheetIds.length) throw new Error('Duplicate sheet identity.');
+    const unitIds = r.sheets.flatMap((sheet) => sheet.items.flatMap((item) =>
+      item.NodeName === DocItemTypes.Symbol && item.unitId ? [item.unitId] : [],
+    ));
+    if (new Set(unitIds).size !== unitIds.length) throw new Error('Duplicate schematic unit identity.');
     r.netlistTypes = ensureNetlistTypes(r.netlistTypes);
     if (!r.netTypeAssignments) {
       r.netTypeAssignments = {};
@@ -734,6 +740,7 @@ export class ioXML {
             part: item.part,
             show: 0,
           };
+          if (item.pinId) a.pin_uuid = item.pinId;
           if (item.show_name) {
             // tslint:disable-next-line: no-bitwise
             a.show |= 1;
@@ -806,6 +813,7 @@ export class ioXML {
             scale_y: item.scale_y,
             part: item.part,
           };
+          if (item.unitId) a.unit_uuid = item.unitId;
 
           // tslint:disable-next-line: no-bitwise
           let mirror = (item.rotation & 4) !== 0;
@@ -1246,6 +1254,7 @@ export class ioXML {
           o = {
             NodeName: DocItemTypes.Pin,
             _id: get_global_id(),
+            pinId: readSchematicEntityId(node.getAttribute('pin_uuid'), this.readOptions.migrateEntityIds !== false),
             point: this.coords(node.getAttribute('pos')),
             rotation: this.rotation2(node.getAttribute('direction')),
             name: this.nodeText(node) ?? '',
@@ -1370,6 +1379,7 @@ export class ioXML {
             o = {
               NodeName: DocItemTypes.Symbol,
               _id: get_global_id(),
+              unitId: readSchematicEntityId(node.getAttribute('unit_uuid'), this.readOptions.migrateEntityIds !== false),
               point: this.coords(node.getAttribute('pos')),
               show_power: parseInt(node.getAttribute('show_power'), 10) !== 0,
               allow_resize: parseInt(node.getAttribute('can_scale'), 10) !== 0,

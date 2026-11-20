@@ -1213,6 +1213,13 @@
                 },
                 {
                   "kind": "attribute",
+                  "name": "pin_uuid",
+                  "type": "xs:string",
+                  "use": "optional",
+                  "children": []
+                },
+                {
+                  "kind": "attribute",
                   "name": "direction",
                   "type": "xs:unsignedByte",
                   "use": "required",
@@ -1580,6 +1587,13 @@
           "name": "show_power",
           "type": "xs:string",
           "use": "required",
+          "children": []
+        },
+        {
+          "kind": "attribute",
+          "name": "unit_uuid",
+          "type": "xs:string",
+          "use": "optional",
           "children": []
         },
         {

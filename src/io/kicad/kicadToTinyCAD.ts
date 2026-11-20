@@ -3,6 +3,7 @@ import { updatePin } from '../../manipulators/updatePin';
 import { DocItem, DocItemTypes, dsnEllipse, dsnLine, dsnPin, dsnRectangle, dsnText } from '../../model/dsnItem';
 import { TextDisplayMethod, tclibLibraryEntry } from '../../model/tclib';
 import { get_global_id } from '../../util/global_id';
+import { newSchematicEntityId } from '../../model/schematicIdentity';
 import { ImportedSymbol } from './importer';
 import { arcToDPoints } from './arcApprox';
 import {
@@ -276,6 +277,7 @@ function makePin(pin: KiPin, showNames: boolean, showNumbers: boolean): dsnPin {
   const p: dsnPin = {
     NodeName: DocItemTypes.Pin,
     _id: get_global_id(),
+    pinId: newSchematicEntityId(),
     point,
     rotation: angleToRotation(pin.position.angle),
     name: pin.name,

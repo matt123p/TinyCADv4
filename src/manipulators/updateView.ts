@@ -1,4 +1,5 @@
 import { dsnView, FindResult, WireMode } from '../model/dsnView';
+import { newSchematicEntityId } from '../model/schematicIdentity';
 import {
   dsnRectangle,
   DocItemTypes,
@@ -1905,6 +1906,7 @@ export class updateView {
     const n: dsnPin = {
       NodeName: DocItemTypes.Pin,
       _id: get_global_id(),
+      pinId: newSchematicEntityId(),
       point: [0, 0],
       rotation: 0,
       name: '',
@@ -2781,6 +2783,9 @@ export class updateView {
         if (item.NodeName === DocItemTypes.Symbol) {
           // Point to the correct symbol
           item._symbol = symbol_map[item._symbol.id];
+          item.unitId = newSchematicEntityId();
+        } else if (item.NodeName === DocItemTypes.Pin) {
+          item.pinId = newSchematicEntityId();
         }
         items.push(item);
         selected_array.push(copy_items[i]._id);
@@ -2924,9 +2929,13 @@ export class updateView {
       const ioxml = new ioXML();
       const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
       const heterogeneous = items.length > 1;
-      const outlines = items.map((item) =>
-        ioxml.normalize_symbol(item, snap, null, false, heterogeneous),
-      );
+      const outlines = items.map((outline) => {
+        const identified = outline.map((item) => item.NodeName === DocItemTypes.Pin && !item.pinId
+          ? { ...item, pinId: newSchematicEntityId() }
+          : item,
+        );
+        return ioxml.normalize_symbol(identified, snap, null, false, heterogeneous);
+      });
 
       selected_symboldef = {
         id: next_symbol_id,
@@ -3515,6 +3524,7 @@ export class updateView {
     let newSymbol: dsnSymbol = {
       NodeName: DocItemTypes.Symbol,
       _id: get_global_id(),
+      unitId: newSchematicEntityId(),
       point: point,
       show_power: false,
       allow_resize: false,

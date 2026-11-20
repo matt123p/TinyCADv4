@@ -149,6 +149,8 @@ export interface PinTextData {
 
 export interface dsnPin extends dsnPointBase, Text {
   NodeName: DocItemTypes.Pin;
+  /** Stable within the symbol definition. Pin numbers remain editable labels. */
+  pinId?: string;
 
   rotation: number;
   name: string;
@@ -199,6 +201,8 @@ export interface dsnSymbolHint {
 
 export interface dsnSymbol extends dsnPointBase, Text {
   NodeName: DocItemTypes.Symbol;
+  /** Stable identity of this placed schematic unit. */
+  unitId?: string;
   show_power: boolean;
   allow_resize: boolean;
   scale_x: number;

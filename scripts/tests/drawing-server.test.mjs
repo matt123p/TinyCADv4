@@ -16,8 +16,8 @@ function symbol(ref, pos = '20,20', part = 0) {
   return `<SYMBOL pos="${pos}" id="1" show_power="0" can_scale="0" scale_x="1" scale_y="1" part="${part}" rotate="0"><FIELD pos="0,0" value="${ref}" description="Ref" type="0" show="1"/></SYMBOL>`;
 }
 const circuit = `<TinyCAD><NAME>Main</NAME>${font}<WIRE a="20,20" b="60,20"/><LABEL pos="20.2,20" direction="0" font="1" color="000000" style="0">SIGNAL</LABEL><WIRE a="20,60" b="60,60"/><LABEL pos="20.2,60" direction="0" font="1" color="000000" style="0">OTHER</LABEL></TinyCAD>`;
-function api(remainingBudget) {
-  const context = vm.createContext({ console, __tinycadLayoutBudget: remainingBudget });
+function api(remainingBudget, crypto) {
+  const context = vm.createContext({ console, crypto, __tinycadLayoutBudget: remainingBudget });
   vm.runInContext(bundle, context, { timeout: 10000 });
   return context.TinyCADDrawingServerBundle;
 }
@@ -31,6 +31,14 @@ test('standalone bundle runs without browser/Node globals and assigns repeatable
     JSON.stringify(first),
     JSON.stringify(runtime.validateTinyCadDrawing(circuit)),
   );
+});
+
+test('standalone edits leave legacy identity allocation to the editor even when crypto exists', () => {
+  const runtime = api(undefined, globalThis.crypto);
+  const xml = `<TinyCAD>${symboldef}${symbol('U1')}</TinyCAD>`;
+  const result = runtime.tidyTinyCadDrawing(xml, 1, { selectedIds: [] });
+  assert.doesNotMatch(result.definition, /unit_uuid|pin_uuid/);
+  assert.equal(runtime.tidyTinyCadDrawing(xml, 1, { selectedIds: [] }).definition, result.definition);
 });
 
 test('standalone roundtrip preserves simulation data and saved document/sheet identities without crypto', async () => {
@@ -47,6 +55,11 @@ test('standalone roundtrip preserves simulation data and saved document/sheet id
   const restored = await native.decodeDrawing(new TextEncoder().encode(result.definition));
   assert.equal(restored.documentId, drawing.documentId);
   assert.deepEqual(restored.sheets.map(sheet => sheet.id), drawing.sheets.map(sheet => sheet.id));
+  const componentIds = (document) => document.sheets.flatMap((sheet) => sheet.items
+    .filter((item) => item.NodeName === 'symbol')
+    .map((item) => [item.unitId, item._symbol.outlines.flatMap((outline) => outline.items
+      .filter((part) => part.NodeName === 'pin').map((pin) => pin.pinId))]));
+  assert.deepEqual(componentIds(restored), componentIds(drawing));
   assert.deepEqual(restored.sheets.filter(sheet => sheet.kind === 'simulation'), simulation);
   assert.equal(runtime.tidyTinyCadDrawing(xml, 1, { selectedIds: [] }).definition, result.definition);
 });

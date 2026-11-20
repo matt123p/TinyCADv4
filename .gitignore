@@ -37,6 +37,7 @@ node_modules/*
 .env.local
 .certs/
 todo.md
+!/docs/TODO.md
 assets/
 server.bundle.js
 .DS_Store

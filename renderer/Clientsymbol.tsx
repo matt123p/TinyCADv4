@@ -32,7 +32,7 @@ export function parseClientsymbolDocument(
     const xml = new XMLBuilder();
     xml.fromText(xmlText);
 
-    const io = new ioXML();
+    const io = new ioXML({ migrateEntityIds: false });
     const drawing = io.from_dsn(xml);
     const sheet = drawing?.sheets?.[0];
     if (!sheet || sheet.items.length === 0) {

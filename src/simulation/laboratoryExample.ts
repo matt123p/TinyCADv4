@@ -1,5 +1,6 @@
 import { createTeachingDrawing } from './examples';
 import { createControl, updateControl } from './controlSymbols';
+import { newSchematicEntityId } from '../model/schematicIdentity';
 import { defaultInstrument } from './instruments';
 import { DocItemTypes, dsnSymbol } from '../model/dsnItem';
 import { updateSymbol } from '../manipulators/updateSymbol';
@@ -100,6 +101,7 @@ export function createLaboratoryDrawing() {
   const load = new updateSymbol({
     ...resistor,
     _id: get_global_id(),
+    unitId: newSchematicEntityId(),
     point: [
       resistor.point[0] + 1400 - pin[0],
       resistor.point[1] + 100 - pin[1],

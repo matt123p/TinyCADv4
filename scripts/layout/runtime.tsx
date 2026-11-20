@@ -29,8 +29,12 @@ export { initialiseLayoutRuntime } from './headless';
 export { ioXML } from '../../src/io/ioXml';
 export { XMLBuilder } from '../../src/util/xmlbuilder';
 export { updateSymbol } from '../../src/manipulators/updateSymbol';
+export { updateView } from '../../src/manipulators/updateView';
 export { NetlistGenerator } from '../../src/io/netlists/netlistGenerator';
 export { makeNetForDrawing } from '../../src/web-worker/netlist';
+export { NetlistWorkerState } from '../../src/web-worker/netlistState';
+export { auditPcbSchematic } from '../../src/pcb/schematicAudit';
+export { reviewCircuitNets } from '../../src/pcb/circuitNets';
 export { withNativeJunctions } from '../../src/layout/connectivity';
 
 export function circuitBounds(sheet: dsnSheet) {

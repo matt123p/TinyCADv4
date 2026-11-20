@@ -2,6 +2,7 @@
 import { dsnDrawing, dsnSheet, libSymbol } from '../model/dsnDrawing';
 import { TextDisplayMethod } from '../model/tclib';
 import { get_global_id } from '../util/global_id';
+import { newSchematicEntityId } from '../model/schematicIdentity';
 import { updateSymbol } from '../manipulators/updateSymbol';
 import { updatePin } from '../manipulators/updatePin';
 import { updateWire } from '../manipulators/updateWire';
@@ -812,6 +813,7 @@ export function createControl(
     ...font,
     NodeName: DocItemTypes.Symbol,
     _id: get_global_id(),
+    unitId: newSchematicEntityId(),
     point: [0, 0],
     show_power: false,
     allow_resize: false,

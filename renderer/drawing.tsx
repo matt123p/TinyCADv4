@@ -31,7 +31,7 @@ function parseDrawing(xml: string): dsnDrawing {
     builder.getElementsByTagName('parsererror').length
   )
     throw new Error('Expected TinyCAD or TinyCADSheets drawing XML.');
-  const drawing = new ioXML().from_dsn(builder);
+  const drawing = new ioXML({ migrateEntityIds: false }).from_dsn(builder);
   if (!drawing.sheets.length || drawing.sheets.length > 16)
     throw new Error('Drawings must have 1–16 sheets.');
   for (const sheet of drawing.sheets) {
