@@ -3,8 +3,8 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { verifyEngineFiles, verifySignedMacBundle } from './engine-integrity.js';
 
 const jobs = new Map();
 const root = () =>
@@ -27,21 +27,10 @@ async function verifiedRuntime() {
     throw new Error(
       'Bundled ngspice does not match this application architecture.',
     );
-  const verified = new Set();
-  for (const entry of manifest.files) {
-    if (!/^[A-Za-z0-9_.+-]+$/.test(entry.path))
-      throw new Error('Invalid bundled engine path.');
-    const data = await fs.readFile(path.join(directory, entry.path));
-    if (crypto.createHash('sha256').update(data).digest('hex') !== entry.sha256)
-      throw new Error(`Bundled engine integrity check failed: ${entry.path}`);
-    verified.add(entry.path);
-  }
-  if (
-    ![manifest.helper, manifest.library, ...manifest.modules].every((file) =>
-      verified.has(file),
-    )
-  )
-    throw new Error('Engine manifest has an unverified executable.');
+  await verifyEngineFiles(directory, manifest, {
+    allowResignedCode: app.isPackaged && process.platform === 'darwin' && process.mas === true,
+    verifyBundle: () => verifySignedMacBundle(path.resolve(process.resourcesPath, '../..')),
+  });
   return { directory, manifest };
 }
 

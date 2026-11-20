@@ -1,5 +1,11 @@
 # Changelog
 
+## v4.1.1 — 2026-11-20
+
+### Fixed
+
+- Bundle the Electron runtime libraries required to launch the Linux Snap and use XWayland on Wayland desktops.
+
 ## v4.1.0 — 2026-11-18
 
 ### Added

@@ -46,7 +46,8 @@ jobs:
   publish-snap:
     needs: engines
     if: inputs.publish_snap == true
-    runs-on: ubuntu-latest
+    # Snapcraft destructive mode requires the host to match the core24 base.
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:

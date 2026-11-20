@@ -186,7 +186,10 @@ jobs:
 
   release:
     name: Tag and Release
-    if: github.event_name == 'push' && github.ref == 'refs/heads/production'
+    # An unused engine path is skipped, so check the packaging results directly.
+    if: >-
+      ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/production'
+      && needs.build-linux.result == 'success' && needs.build.result == 'success' }}
     needs: [build-linux, build]
     runs-on: ubuntu-latest
     permissions:

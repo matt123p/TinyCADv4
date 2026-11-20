@@ -1,13 +1,12 @@
 name: Qualify ngspice engines
 on:
-  pull_request:
-  push:
-    branches: [main, production]
+  # Desktop Build qualifies all engines on pushes and pull requests.
+  # Keep this entry point for explicit qualification and reusable callers.
   workflow_dispatch:
   workflow_call:
     inputs:
       wasm_only:
-        description: Only qualify WASM for browser builds
+        description: 'Only qualify WASM for browser builds'
         type: boolean
         default: false
 permissions:
@@ -17,18 +16,16 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-      - name: Identify runner image
-        id: runner-image
-        shell: bash
-        run: printf 'image=%s-%s\n' "${ImageOS:?}" "${ImageVersion:?}" >> "$GITHUB_OUTPUT"
-      # Only exact matches are reusable: the engine, host, patches and build
-      # configuration must agree. Runner image changes refresh native toolchains.
+      # Cache compiled outputs by locked source, host and build scripts. The
+      # emsdk is pinned; hosted runner image rollouts do not change the WASM ABI.
+      # Bump the recipe version in these keys when workflow build flags change.
+      # Always qualify restored binaries before uploading or saving them.
       - name: Restore WASM engine cache
         id: engine-cache
         uses: actions/cache/restore@v5
         with:
           path: public/engines/ngspice
-          key: ngspice-v1-wasm-${{ runner.os }}-${{ runner.arch }}-${{ steps.runner-image.outputs.image }}-${{ hashFiles('build-support/ngspice/**', 'native/ngspice-host/**', 'scripts/build-ngspice.py', 'scripts/install-emsdk.py', '.github/workflows/ngspice.yml') }}
+          key: ngspice-v2-wasm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('build-support/ngspice/**', 'native/ngspice-host/**', 'scripts/build-ngspice.py', 'scripts/install-emsdk.py') }}
       - uses: actions/setup-python@v6
         if: runner.os != 'Windows' && steps.engine-cache.outputs.cache-hit != 'true'
         with:
@@ -86,16 +83,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
-      - name: Identify runner image
-        id: runner-image
-        shell: bash
-        run: printf 'image=%s-%s\n' "${ImageOS:?}" "${ImageVersion:?}" >> "$GITHUB_OUTPUT"
+      # The runner OS release and CPU select the runtime ABI. Image patch
+      # versions can coexist in one run and must not fragment this cache.
       - name: Restore native engine cache
         id: engine-cache
         uses: actions/cache/restore@v5
         with:
           path: build/engines/native
-          key: ngspice-v1-native-${{ matrix.os }}-${{ matrix.platform }}-${{ matrix.arch }}-${{ steps.runner-image.outputs.image }}-${{ hashFiles('build-support/ngspice/**', 'native/ngspice-host/**', 'scripts/build-ngspice.py', '.github/workflows/ngspice.yml') }}
+          key: ngspice-v2-native-${{ matrix.os }}-${{ matrix.platform }}-${{ matrix.arch }}-${{ hashFiles('build-support/ngspice/**', 'native/ngspice-host/**', 'scripts/build-ngspice.py') }}
       - uses: actions/setup-python@v6
         if: runner.os != 'Windows' && steps.engine-cache.outputs.cache-hit != 'true'
         with:

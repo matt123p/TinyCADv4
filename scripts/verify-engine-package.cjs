@@ -4,7 +4,8 @@ const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 
 module.exports = async (context) => {
-  const platform = context.electronPlatformName;
+  const isMas = context.electronPlatformName === 'mas';
+  const platform = isMas ? 'darwin' : context.electronPlatformName;
   const arch = { 1: 'x64', 3: 'arm64' }[context.arch];
   if (!arch) throw new Error('Unsupported ngspice package architecture');
   const resources =
@@ -39,9 +40,11 @@ module.exports = async (context) => {
       ['find-identity', '-v', '-p', 'codesigning'],
       { encoding: 'utf8' },
     );
-    const identity = identities.match(
-      /"(Developer ID Application:[^"]+)"/,
-    )?.[1];
+    const identity = isMas
+      ? process.env.MAS_ENGINE_IDENTITY
+      : identities.match(/"(Developer ID Application:[^"]+)"/)?.[1];
+    if (isMas && (!identity || !identities.includes(identity)))
+      throw new Error('MAS engine signing requires a valid MAS_ENGINE_IDENTITY');
     if (
       !identity &&
       context.packager.platformSpecificBuildOptions.forceCodeSigning
@@ -55,8 +58,9 @@ module.exports = async (context) => {
       ])
         execFileSync('codesign', [
           '--force',
-          '--options',
-          'runtime',
+          ...(isMas
+            ? ['--entitlements', path.resolve('scripts/mas/entitlements.inherit.plist')]
+            : ['--options', 'runtime']),
           '--timestamp',
           '--sign',
           identity,
