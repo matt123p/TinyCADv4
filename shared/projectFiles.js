@@ -13,3 +13,13 @@ export function projectFileTitle(name) {
     ? name.slice(0, -PROJECT_FILE_EXTENSION.length)
     : name;
 }
+
+export function validProjectName(name) {
+  return (
+    typeof name === 'string' &&
+    name.length > 0 &&
+    name.length <= 240 &&
+    !/[\/\\<>:"|?*\x00-\x1f]|[. ]$/.test(name) &&
+    !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name)
+  );
+}

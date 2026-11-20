@@ -1,23 +1,14 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { constants } from 'node:fs';
+import { constants, createReadStream } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import {
   MAX_PROJECT_FILE_BYTES,
   isProjectFile,
+  validProjectName,
 } from '../shared/projectFiles.js';
 
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
-
-function validName(name) {
-  return (
-    typeof name === 'string' &&
-    name.length > 0 &&
-    name.length <= 240 &&
-    !/[/\\<>:"|?*\x00-\x1f]|[. ]$/.test(name) &&
-    !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name)
-  );
-}
 
 export function registerProjectFiles({
   ipcMain,
@@ -53,23 +44,38 @@ export function registerProjectFiles({
       throw new Error('Projects are available only to the host main frame.');
     }
     if (request.operation === 'choose') {
+      const currentProject = request.containProject;
       const selection = await dialog.showOpenDialog(window, {
-        defaultPath: root,
+        defaultPath: currentProject ? path.dirname(root) : root,
         properties: ['openDirectory'],
       });
       if (selection.canceled) return null;
-      root = await fs.realpath(selection.filePaths[0]);
+      const selected = await fs.realpath(selection.filePaths[0]);
+      if (currentProject) {
+        const relative = path.relative(selected, currentProject);
+        if (
+          !relative ||
+          relative === '..' ||
+          relative.startsWith('..' + path.sep) ||
+          path.isAbsolute(relative)
+        ) {
+          throw new Error('Choose a parent folder of the open project.');
+        }
+      }
+      root = selected;
       store.set('projectFolder', root);
       return { id: root, name: path.basename(root) || root };
     }
-    if (request.operation === 'root')
+    if (request.operation === 'root') {
+      root = await fs.realpath(root).catch(() => root);
       return { id: root, name: path.basename(root) || root };
+    }
 
     const base = await fs.realpath(root);
     const resolve = async (id, directory) => {
       if (typeof id !== 'string' || !path.isAbsolute(id))
         throw new Error('Invalid project location.');
-      const target = await fs.realpath(id);
+      const target = path.resolve(id);
       const relative = path.relative(base, target);
       if (
         (!directory && !relative) ||
@@ -79,17 +85,16 @@ export function registerProjectFiles({
       ) {
         throw new Error('Location is outside the project folder.');
       }
+      if ((await fs.realpath(target)) !== target)
+        throw new Error('Symbolic links are unavailable in project trees.');
       const stat = await fs.stat(target);
-      if (
-        directory
-          ? !stat.isDirectory()
-          : !stat.isFile() || !isProjectFile(target)
-      )
+      if (directory ? !stat.isDirectory() : !stat.isFile())
         throw new Error('Invalid project file or folder.');
       return target;
     };
     const destination = async (folder, name) => {
-      if (!validName(name)) throw new Error('Invalid file or folder name.');
+      if (!validProjectName(name))
+        throw new Error('Invalid file or folder name.');
       return path.join(await resolve(folder, true), name);
     };
     const read = async (id) => {
@@ -127,15 +132,20 @@ export function registerProjectFiles({
     if (operation === 'list') {
       const parent = await resolve(folder, true);
       return (await fs.readdir(parent, { withFileTypes: true }))
-        .filter(
-          (item) =>
-            !item.name.startsWith('.') &&
-            (item.isDirectory() || (item.isFile() && isProjectFile(item.name))),
+        .filter((item) =>
+          request.tree
+            ? !/^\.tinycad-[0-9a-f-]+\.tmp$/.test(item.name)
+            : !item.name.startsWith('.') &&
+              (item.isDirectory() ||
+                (item.isFile() && isProjectFile(item.name))),
         )
         .map((item) => ({
           id: path.join(parent, item.name),
           name: item.name,
           folder: item.isDirectory(),
+          ...(!item.isDirectory() && !item.isFile()
+            ? { unsupported: true }
+            : {}),
         }));
     }
     if (operation === 'read') {
@@ -143,8 +153,9 @@ export function registerProjectFiles({
       return { data: new Uint8Array(data), version: hash(data) };
     }
     if (operation === 'mkdir') {
-      await fs.mkdir(await destination(folder, name));
-      return;
+      const target = await destination(folder, name);
+      await fs.mkdir(target);
+      return { id: target, name };
     }
     if (operation === 'rename' || operation === 'move') {
       const source = await resolve(id, request.directory === true);
@@ -165,8 +176,6 @@ export function registerProjectFiles({
         }
         await fs.rename(source, target);
       } else {
-        if (!isProjectFile(name))
-          throw new Error('Project files use the .tcproject extension.');
         await linkNewFile(source, target);
         try {
           await fs.unlink(source);
@@ -184,12 +193,30 @@ export function registerProjectFiles({
       await shell.trashItem(target);
       return;
     }
+    if (operation === 'copy') {
+      const source = await resolve(id, false);
+      await fs.copyFile(
+        source,
+        await destination(folder, name),
+        constants.COPYFILE_EXCL,
+      );
+      return;
+    }
+    if (operation === 'fingerprint') {
+      const source = await resolve(id, false);
+      const digest = createHash('sha256');
+      for await (const part of createReadStream(source, {
+        flags: constants.O_RDONLY | (constants.O_NOFOLLOW || 0),
+      }))
+        digest.update(part);
+      return digest.digest('hex');
+    }
     if (operation === 'write') {
       const { data, version } = request;
       if (
         !(data instanceof Uint8Array) ||
         data.length > MAX_PROJECT_FILE_BYTES ||
-        !isProjectFile(name)
+        !validProjectName(name)
       )
         throw new Error('Invalid project data.');
       const target = id

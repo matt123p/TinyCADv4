@@ -27,6 +27,7 @@ test('projects share the editor sidebar and save schematic changes and a revisio
   const frame = {};
   const webContents = { mainFrame: frame };
   let handler;
+  let chosenFolder;
   registerProjectFiles({
     ipcMain: {
       handle: (_, callback) => {
@@ -34,8 +35,9 @@ test('projects share the editor sidebar and save schematic changes and a revisio
       },
     },
     getWindow: () => ({ webContents }),
-    store: { get: (_, fallback) => fallback },
+    store: { get: (_, fallback) => fallback, set: () => {} },
     documents: directory,
+    dialog: { showOpenDialog: async () => ({ filePaths: [chosenFolder] }) },
   });
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -93,45 +95,70 @@ test('projects share the editor sidebar and save schematic changes and a revisio
     await create('New folder…', 'Amp');
     await sidebar.getByRole('button', { name: 'Amp', exact: true }).click();
     await create('New project…', 'Transistor amplifier');
+    const sourceRoot = path.join(directory, 'Amp', 'Transistor amplifier');
+    const sourceSettings = path.join(
+      sourceRoot,
+      'Transistor amplifier.tcproject',
+    );
+    const sourceDrawing = path.join(sourceRoot, 'Circuit.dsn');
+    const api = await layoutRuntime();
+    await expect
+      .poll(async () =>
+        Boolean(await readFile(sourceSettings).catch(() => null)),
+      )
+      .toBe(true);
+    const created = api.decodeProjectSettings(await readFile(sourceSettings));
+    const board = api.createBoard('Amplifier layout', 2, [
+      { x: 0, y: 0 },
+      { x: 2_000_000, y: 0 },
+      { x: 2_000_000, y: 2_000_000 },
+      { x: 0, y: 2_000_000 },
+    ]);
+    const boardId = board.boardId;
+    const boardData = new TextEncoder().encode(api.serializeBoard(board));
+    await mkdir(path.join(sourceRoot, 'layouts'));
+    const boardPath = 'layouts/Main.dpn';
+    await writeFile(path.join(sourceRoot, boardPath), boardData);
+    const first = {
+      ...created,
+      primaryBoard: boardId,
+      associations: [{ schematic: created.primarySchematic, board: boardId }],
+      entries: [
+        ...created.entries,
+        { kind: 'board', id: boardId, path: boardPath },
+      ],
+    };
+    await writeFile(sourceSettings, api.encodeProjectSettings(first));
+    const settingsBytes = await readFile(sourceSettings);
+    await mkdir(path.join(sourceRoot, 'outputs'));
+    await writeFile(path.join(sourceRoot, 'outputs', 'notes.txt'), 'keep me');
     await sidebar
-      .getByRole('button', {
-        name: 'Transistor amplifier.tcproject',
-        exact: true,
-      })
+      .getByRole('button', { name: 'Transistor amplifier', exact: true })
       .click();
     await sidebar
       .getByRole('button', { name: 'Open schematic', exact: true })
       .click();
-    await expect(
-      sidebar.getByRole('button', { name: 'Open schematic', exact: true }),
-    ).toBeVisible();
-
-    const api = await layoutRuntime();
-    const filename = path.join(
-      directory,
-      'Amp',
-      'Transistor amplifier.tcproject',
-    );
-    const first = await api.decodeProjectArchive(await readFile(filename));
     await expect
       .poll(() =>
         page.evaluate(() => window.layoutTest.snapshot().drawing.documentId),
       )
-      .toBe(first.entries[0].id);
+      .toBe(first.primarySchematic);
     await page.evaluate(() =>
       window.layoutTest.renameCurrentSheet('Amplifier circuit'),
     );
     await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Save', exact: true }),
+    ).toBeDisabled();
     await expect
       .poll(
         async () =>
           (
-            await api.decodeProjectArchive(await readFile(filename))
-          ).parentRevisionId,
+            await api.decodeDrawing(await readFile(sourceDrawing))
+          ).sheets[0].name,
       )
-      .toBe(first.revisionId);
-    const saved = await api.decodeProjectArchive(await readFile(filename));
-    await assertProjectSheet(saved, 'Amplifier circuit');
+      .toBe('Amplifier circuit');
+    expect(await readFile(sourceSettings)).toEqual(settingsBytes);
 
     await page.evaluate(() => window.projectTestMenu('file-save-as'));
     const dialog = page.getByRole('dialog', { name: 'Save project as' });
@@ -139,19 +166,31 @@ test('projects share the editor sidebar and save schematic changes and a revisio
       .getByRole('textbox', { name: 'Name' })
       .fill('Amplifier revision');
     await dialog.getByRole('button', { name: 'OK', exact: true }).click();
-    await expect(
-      sidebar.getByRole('button', {
-        name: 'Amplifier revision.tcproject',
-        exact: true,
-      }),
-    ).toBeVisible();
-    const copy = await api.decodeProjectArchive(
-      await readFile(
-        path.join(directory, 'Amp', 'Amplifier revision.tcproject'),
-      ),
+    const copyRoot = path.join(directory, 'Amp', 'Amplifier revision');
+    const copySettings = path.join(copyRoot, 'Amplifier revision.tcproject');
+    await expect
+      .poll(async () => {
+        const bytes = await readFile(copySettings).catch(() => null);
+        return bytes && api.decodeProjectSettings(bytes).parentRevisionId;
+      })
+      .toBe(first.revisionId);
+    const copy = api.decodeProjectSettings(await readFile(copySettings));
+    expect(copy.projectId).toBe(first.projectId);
+    expect(copy.associations).toEqual(first.associations);
+    expect(await readFile(path.join(copyRoot, boardPath))).toEqual(
+      Buffer.from(boardData),
     );
-    expect(copy.projectId).toBe(saved.projectId);
-    expect(copy.parentRevisionId).toBe(saved.revisionId);
+    await sidebar.getByRole('button', { name: 'layouts', exact: true }).click();
+    const download = page.waitForEvent('download');
+    await sidebar
+      .getByRole('button', { name: 'Main.dpn', exact: true })
+      .click();
+    expect((await download).suggestedFilename()).toBe('Main.dpn');
+    await sidebar.getByRole('button', { name: 'Parent folder' }).click();
+
+    expect(
+      await readFile(path.join(copyRoot, 'outputs', 'notes.txt'), 'utf8'),
+    ).toBe('keep me');
 
     await sidebar
       .getByRole('button', {
@@ -161,19 +200,35 @@ test('projects share the editor sidebar and save schematic changes and a revisio
     await page
       .getByRole('menuitem', { name: 'Set as comparison base' })
       .click();
+    await sidebar.getByRole('button', { name: 'Parent folder' }).click();
     await sidebar
-      .getByRole('button', { name: 'Actions for Amplifier revision.tcproject' })
+      .getByRole('button', { name: 'Amplifier revision', exact: true })
       .click();
-    await page
-      .getByRole('menuitem', {
-        name: 'Compare with Transistor amplifier.tcproject',
-      })
-      .click();
+    const copyMarker = sidebar.getByRole('button', {
+      name: 'Actions for Amplifier revision.tcproject',
+    });
+    await expect(
+      sidebar.getByRole('button', { name: 'Open schematic' }),
+    ).toBeVisible();
+    await copyMarker.click();
+    const compare = page.getByRole('menuitem', {
+      name: 'Compare with Transistor amplifier.tcproject',
+    });
+    await compare.click();
     const comparison = page.getByRole('dialog', {
       name: 'Compare project revisions',
     });
     await expect(
       comparison.getByText('Project files are identical.'),
+    ).toBeVisible();
+    await comparison
+      .getByRole('button', { name: 'Close', exact: true })
+      .click();
+    await writeFile(path.join(copyRoot, 'outputs', 'notes.txt'), 'changed');
+    await copyMarker.click();
+    await compare.click();
+    await expect(
+      comparison.getByText('Changed outputs/notes.txt'),
     ).toBeVisible();
     await comparison
       .getByRole('button', { name: 'Close', exact: true })
@@ -217,7 +272,7 @@ test('projects share the editor sidebar and save schematic changes and a revisio
     await sidebar.getByRole('button', { name: 'Amp', exact: true }).click();
     await sidebar
       .getByRole('button', {
-        name: 'Amplifier revision.tcproject',
+        name: 'Amplifier revision',
         exact: true,
       })
       .click();
@@ -251,14 +306,35 @@ test('projects share the editor sidebar and save schematic changes and a revisio
     await expect(page.locator('.simulation-sheet')).toBeVisible();
     await expect(sidebar).toBeVisible();
     await expect(page.locator('.side-panel')).toBeVisible();
+    await page.reload();
+    await page.getByRole('button', { name: 'Projects', exact: true }).click();
+    chosenFolder = copyRoot;
+    await sidebar
+      .getByRole('button', { name: 'Project folder actions' })
+      .click();
+    await page
+      .getByRole('menuitem', { name: 'Choose project folder…' })
+      .click();
+    await expect(
+      sidebar.getByRole('button', { name: 'Open schematic' }),
+    ).toBeVisible();
+    await sidebar.getByRole('button', { name: 'Open schematic' }).click();
+    await expect
+      .poll(() =>
+        page.evaluate(() => window.layoutTest.snapshot().drawing.documentId),
+      )
+      .toBe(first.primarySchematic);
+    chosenFolder = path.dirname(copyRoot);
+    await page.evaluate(() => window.projectTestMenu('file-save-as'));
+    const siblingSave = page.getByRole('dialog', { name: 'Save project as' });
+    await siblingSave
+      .getByRole('textbox', { name: 'Name' })
+      .fill('Sibling revision');
+    await siblingSave.getByRole('button', { name: 'OK', exact: true }).click();
+    await expect(
+      sidebar.getByRole('button', { name: 'Sibling revision', exact: true }),
+    ).toBeVisible();
     expect(errors).toEqual([]);
-
-    async function assertProjectSheet(project, name) {
-      const drawing = await api.decodeDrawing(
-        project.entries.find(({ kind }) => kind === 'schematic').data,
-      );
-      expect(drawing.sheets[0].name).toBe(name);
-    }
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

@@ -1,6 +1,3 @@
-import { digest } from '../io/dsnContainer';
-import type { PcbProject, ProjectEntry } from './projectArchive';
-
 interface EntryFingerprint {
   path: string;
   digest: string;
@@ -12,31 +9,7 @@ export interface RevisionInventory {
   parentRevisionId?: string;
   title: string;
   entries: ReadonlyMap<string, EntryFingerprint>;
-}
-
-export async function revisionInventory(
-  project: PcbProject,
-): Promise<RevisionInventory> {
-  const entries = new Map<string, EntryFingerprint>();
-  for (const { kind, id, path, data, asset } of project.entries) {
-    const hash = await digest(data);
-    entries.set(`${kind}:${id}`, {
-      path,
-      digest: JSON.stringify([
-        hash,
-        asset?.source,
-        asset?.mediaType,
-        asset?.license,
-      ]),
-    });
-  }
-  return {
-    projectId: project.projectId,
-    revisionId: project.revisionId,
-    parentRevisionId: project.parentRevisionId,
-    title: project.title,
-    entries,
-  };
+  settings?: EntryFingerprint;
 }
 
 export interface RevisionChange {
@@ -52,6 +25,13 @@ export function compareProjectRevisions(
   if (before.projectId !== after.projectId)
     throw new Error('Choose revisions of the same project.');
   const changes: RevisionChange[] = [];
+  if (before.settings?.digest !== after.settings?.digest) {
+    changes.push({
+      kind: 'changed',
+      before: before.settings?.path,
+      after: after.settings?.path,
+    });
+  }
   for (const [id, entry] of before.entries) {
     const next = after.entries.get(id);
     if (!next) changes.push({ kind: 'removed', before: entry.path });

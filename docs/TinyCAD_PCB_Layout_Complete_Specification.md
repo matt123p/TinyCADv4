@@ -283,7 +283,7 @@ A TinyCAD project is a folder tree. Its root `.tcproject` file identifies the pr
 | PRJ-02 | Persist stable entity UUIDs independently of names and list order | Rename/reorder and reload without losing any relationship | G0 |
 | PRJ-03 | Use atomic, undoable commands for geometry and logical edits | Undo restores geometry, mappings and connectivity hashes | G0 |
 | PRJ-04 | Autosave committed edits with crash recovery | Forced process termination recovers to the last acknowledged autosave | M1 |
-| PRJ-05 | Version the settings file and declare required features. Convert supported prototype archives to a new folder tree | Converted project opens with its document links intact. The original remains available and unsupported features are reported | M1 |
+| PRJ-05 | Version the XML settings file and declare required features | A copied folder opens with its document links intact. Missing links and unsupported required features are reported | M1 |
 | PRJ-06 | Save As copies the project folder tree and records revision lineage. Compare revisions using settings and project files | Copy has a distinct revision identity and traceable origin. Changes are reported by relative file path | M1 |
 | PRJ-07 | Allow multiple alternative boards for one circuit revision | Each board retains independent layout/rules and visible sync status | M2 |
 | PRJ-08 | Offer assembly variants separately from board alternatives | BOM, placement and assembly drawings consistently apply the selected variant | M3 |

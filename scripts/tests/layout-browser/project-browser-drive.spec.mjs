@@ -18,19 +18,15 @@ test('Google mode opens the remembered Drive project folder and its project sche
 }) => {
   const api = await layoutRuntime();
   const drawing = api.blank();
-  const data = await api.encodeDrawing(drawing, 'xml');
-  const archive = await api.encodeProjectArchive({
+  let data = await api.encodeDrawing(drawing, 'zip-v1');
+  const settings = api.encodeProjectSettings({
     projectId: crypto.randomUUID(),
     revisionId: crypto.randomUUID(),
     title: 'Shared circuit',
     requiredFeatures: [],
+    primarySchematic: drawing.documentId,
     entries: [
-      {
-        kind: 'schematic',
-        id: drawing.documentId,
-        path: api.projectEntryPath('schematic', drawing.documentId),
-        data,
-      },
+      { kind: 'schematic', id: drawing.documentId, path: 'src/Circuit.dzn' },
     ],
   });
   await page.addInitScript(() => {
@@ -59,6 +55,7 @@ test('Google mode opens the remembered Drive project folder and its project sche
     };
   });
   const listed = [];
+  let version = 1;
   await page.route('https://**/*', (route) => route.abort());
   await page.route('https://www.googleapis.com/drive/v3/**', async (route) => {
     const url = new URL(route.request().url());
@@ -66,34 +63,74 @@ test('Google mode opens the remembered Drive project folder and its project sche
       return route.fulfill({ json: { files: [] } });
     if (url.pathname.endsWith('/files')) {
       listed.push(url.searchParams.get('q'));
-      return route.fulfill({
-        json: {
-          files: [
-            {
-              id: 'project',
-              name: 'Shared.tcproject',
-              mimeType: 'application/zip',
-            },
-          ],
-        },
-      });
+      const files = {
+        designs: [
+          {
+            id: 'shared',
+            name: 'Shared',
+            mimeType: 'application/vnd.google-apps.folder',
+          },
+        ],
+        shared: [
+          {
+            id: 'project',
+            name: 'Shared.tcproject',
+            mimeType: 'application/xml',
+          },
+          {
+            id: 'source',
+            name: 'src',
+            mimeType: 'application/vnd.google-apps.folder',
+          },
+        ],
+        source: [
+          {
+            id: 'drawing',
+            name: 'Circuit.dzn',
+            mimeType: 'application/octet-stream',
+          },
+        ],
+      };
+      const folder = url.searchParams.get('q').split("'")[1];
+      return route.fulfill({ json: { files: files[folder] ?? [] } });
     }
     if (url.searchParams.get('alt') === 'media')
       return route.fulfill({
-        body: Buffer.from(archive),
-        contentType: 'application/zip',
+        body: Buffer.from(url.pathname.endsWith('/drawing') ? data : settings),
+        contentType: 'application/xml',
       });
-    return route.fulfill({ json: { version: '1' } });
+    return route.fulfill({
+      json: {
+        version: url.pathname.endsWith('/drawing') ? String(version) : '1',
+      },
+    });
   });
+  await page.route(
+    'https://www.googleapis.com/upload/drive/v3/files/drawing?**',
+    async (route) => {
+      const request = route.request();
+      expect(request.method()).toBe('PATCH');
+      const boundary = request.headers()['content-type'].split('boundary=')[1];
+      const body = request.postDataBuffer();
+      const content = Buffer.from(
+        'Content-Type: application/octet-stream\r\n\r\n',
+      );
+      const start = body.indexOf(content) + content.length;
+      const end = body.lastIndexOf(Buffer.from(`\r\n--${boundary}--`));
+      data = body.subarray(start, end);
+      version++;
+      return route.fulfill({
+        json: { id: 'drawing', name: 'Circuit.dzn', version: String(version) },
+      });
+    },
+  );
   const sidebar = page.getByRole('region', { name: 'Projects', exact: true });
   async function open() {
     await page.getByRole('button', { name: 'Projects', exact: true }).click();
     await expect(
       sidebar.getByText('My projects', { exact: true }),
     ).toBeVisible();
-    await sidebar
-      .getByRole('button', { name: 'Shared.tcproject', exact: true })
-      .click();
+    await sidebar.getByRole('button', { name: 'Shared', exact: true }).click();
     await sidebar
       .getByRole('button', { name: 'Open schematic', exact: true })
       .click();
@@ -105,7 +142,24 @@ test('Google mode opens the remembered Drive project folder and its project sche
       page.evaluate(() => window.layoutTest.snapshot().drawing.documentId),
     )
     .toBe(drawing.documentId);
-  expect(listed).toEqual(["'designs' in parents and trashed = false"]);
+  expect(listed).toEqual(
+    expect.arrayContaining([
+      "'designs' in parents and trashed = false",
+      "'shared' in parents and trashed = false",
+      "'source' in parents and trashed = false",
+    ]),
+  );
+  await page.evaluate(() =>
+    window.layoutTest.renameCurrentSheet('Saved to Drive'),
+  );
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(() => version).toBe(2);
+  await expect(
+    page.getByRole('button', { name: 'Save', exact: true }),
+  ).toBeDisabled();
+  const saved = await api.decodeDrawing(data);
+  expect(saved.representation).toBe('zip-v1');
+  expect(saved.sheets[0].name).toBe('Saved to Drive');
   await page.evaluate(() =>
     window.layoutTest.renameCurrentSheet('Local Drive recovery'),
   );
@@ -127,7 +181,7 @@ test('Google mode opens the remembered Drive project folder and its project sche
     await page.evaluate(
       () => window.layoutTest.snapshot().drawing.sheets[0].name,
     ),
-  ).toBe(drawing.sheets[0].name);
+  ).toBe('Saved to Drive');
   await page.reload();
   await open();
   await expect

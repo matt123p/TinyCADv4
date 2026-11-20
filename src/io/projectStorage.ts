@@ -3,6 +3,7 @@ import {
   PROJECT_FILE_EXTENSION,
   isProjectFile,
   projectFileTitle,
+  validProjectName,
 } from '../../shared/projectFiles';
 
 export interface ProjectLocation {
@@ -12,6 +13,7 @@ export interface ProjectLocation {
 
 export interface ProjectItem extends ProjectLocation {
   folder: boolean;
+  unsupported?: boolean;
 }
 
 export interface ProjectFile extends ProjectLocation {
@@ -20,13 +22,17 @@ export interface ProjectFile extends ProjectLocation {
 
 export interface OpenProjectDrawing extends ProjectFile {
   entryId: string;
+  rootId: string;
+  documentPath: string;
   folderId: string;
 }
 
 export type ProjectStorageRequest =
-  | { operation: 'root' | 'choose' }
-  | { operation: 'list'; folder: string }
-  | { operation: 'read'; id: string }
+  | { operation: 'root' }
+  | { operation: 'choose'; containProject?: string }
+  | { operation: 'list'; folder: string; tree?: boolean }
+  | { operation: 'read' | 'fingerprint'; id: string }
+  | { operation: 'copy'; id: string; folder: string; name: string }
   | { operation: 'mkdir'; folder: string; name: string }
   | { operation: 'trash'; id: string; directory: boolean }
   | {
@@ -51,7 +57,9 @@ export interface ProjectStorageResult {
   choose: ProjectLocation | null;
   list: ProjectItem[];
   read: { data: Uint8Array; version: string };
-  mkdir: void;
+  mkdir: ProjectLocation;
+  copy: void;
+  fingerprint: string;
   trash: void;
   rename: ProjectLocation;
   move: ProjectLocation;
@@ -59,12 +67,16 @@ export interface ProjectStorageResult {
 }
 
 const folderMime = 'application/vnd.google-apps.folder';
-const projectMime = 'application/zip';
+const shortcutMime = 'application/vnd.google-apps.shortcut';
 
 export function projectFileName(name: string): string {
   const title = name.trim();
   if (!projectFileTitle(title).trim()) throw new Error('Enter a project name.');
-  return isProjectFile(title) ? title : title + PROJECT_FILE_EXTENSION;
+  const filename = isProjectFile(title)
+    ? title
+    : title + PROJECT_FILE_EXTENSION;
+  if (!validProjectName(filename)) throw new Error('Invalid project name.');
+  return filename;
 }
 
 type DriveRequest = (
@@ -110,6 +122,8 @@ export async function driveProjectFiles(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(value),
   });
+  if ('name' in request && !validProjectName(request.name))
+    throw new Error('Invalid file or folder name.');
   switch (request.operation) {
     case 'root':
     case 'choose':
@@ -127,8 +141,13 @@ export async function driveProjectFiles(
       do {
         const page = await (await drive(`/files?${query}`)).json();
         for (const { id, name, mimeType } of page.files) {
-          if (mimeType === folderMime || isProjectFile(name))
-            items.push({ id, name, folder: mimeType === folderMime });
+          if (request.tree || mimeType === folderMime || isProjectFile(name))
+            items.push({
+              id,
+              name,
+              folder: mimeType === folderMime,
+              ...(mimeType === shortcutMime ? { unsupported: true } : {}),
+            });
         }
         if (!page.nextPageToken) break;
         query.set('pageToken', page.nextPageToken);
@@ -148,15 +167,37 @@ export async function driveProjectFiles(
       return { data, version };
     }
     case 'mkdir':
+      return (
+        await drive(
+          '/files?fields=id,name',
+          json('POST', {
+            name: request.name,
+            mimeType: folderMime,
+            parents: [request.folder],
+          }),
+        )
+      ).json();
+    case 'copy':
       await drive(
-        '/files',
+        `${file(request.id)}/copy`,
         json('POST', {
           name: request.name,
-          mimeType: folderMime,
           parents: [request.folder],
         }),
       );
       return;
+    case 'fingerprint': {
+      const meta = await (
+        await drive(
+          `${file(request.id)}?fields=sha256Checksum,md5Checksum,version`,
+        )
+      ).json();
+      return (
+        meta.sha256Checksum ||
+        meta.md5Checksum ||
+        `${request.id}:${meta.version}`
+      );
+    }
     case 'trash':
       await drive(file(request.id), json('PATCH', { trashed: true }));
       return;
@@ -179,18 +220,23 @@ export async function driveProjectFiles(
       ).json();
     }
     case 'write': {
+      let etag: string;
       if (request.id) {
-        const meta = await (
-          await drive(`${file(request.id)}?fields=version`)
-        ).json();
+        const response = await drive(`${file(request.id)}?fields=version`);
+        etag = response.headers.get('ETag');
+        const meta = await response.json();
         if (meta.version !== request.version)
           throw new Error(
             'Project changed on Drive. Reopen it or save a copy.',
           );
       }
+      const mimeType =
+        isProjectFile(request.name) || /\.dsn$/i.test(request.name)
+          ? 'application/xml'
+          : 'application/octet-stream';
       const metadata = {
         name: request.name,
-        mimeType: projectMime,
+        mimeType,
         ...(request.id ? {} : { parents: [request.folder] }),
       };
       const boundary = `tinycad-${crypto.randomUUID()}`;
@@ -198,7 +244,7 @@ export async function driveProjectFiles(
         `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(
           metadata,
         )}\r\n`,
-        `--${boundary}\r\nContent-Type: ${projectMime}\r\n\r\n`,
+        `--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`,
         new Uint8Array(request.data).buffer,
         `\r\n--${boundary}--\r\n`,
       ]);
@@ -210,6 +256,7 @@ export async function driveProjectFiles(
             method: request.id ? 'PATCH' : 'POST',
             headers: {
               'Content-Type': `multipart/related; boundary=${boundary}`,
+              ...(etag ? { 'If-Match': etag } : {}),
             },
             body,
           },
