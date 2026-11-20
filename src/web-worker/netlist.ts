@@ -90,10 +90,10 @@ export function makeNetForSheet(
           }
 
           /// Has this symbol had it's power connected?
-          if (!(myRefDes in Connected)) {
+          if (instancePorts || !(myRefDes in Connected)) {
             Connected[myRefDes] = true;
 
-            let power_pins = update_ap.power_pins();
+            let power_pins = update_ap.power_pins(instancePorts);
             for (let k = 0; k < power_pins.length; ++k) {
               let pointer = power_pins[k];
               let pin = pointer[2];
@@ -104,7 +104,7 @@ export function makeNetForSheet(
 
               // Look up the netlist this power pin belongs to
               netlist = null;
-              if (pointer[2].name in Powers) {
+              if (!instancePorts && pointer[2].name in Powers) {
                 netlist = Powers[pointer[2].name];
               }
               netlist = netlist_builder.Add({
@@ -162,11 +162,11 @@ export function makeNetForSheet(
           sheet: null,
           hints: ObjPtr.hints || [],
         };
-        if (n.label in Powers) {
+        if (!instancePorts && n.label in Powers) {
           n.netlist = Powers[n.label];
         }
         netlist = netlist_builder.Add(n);
-        if (!(n.label in Powers)) {
+        if (!instancePorts && !(n.label in Powers)) {
           Powers[n.label] = netlist;
         }
         break;

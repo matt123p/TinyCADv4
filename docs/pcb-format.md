@@ -24,17 +24,27 @@ Moving, rotating, renaming and renumbering a native item preserve its UUID. Symb
 
 ## Connectivity capability matrix
 
-| Input | Evidence from the current netlist | Initial PCB compiler contract |
+| Input | Evidence from the schematic | PCB compiler contract |
 | --- | --- | --- |
 | Flat scalar wires and ordinary pins | `makeNetForSheet` joins scalar wire endpoints, visible pin hotspots, junctions and attached labels. The worker merges sheet snapshots on named labels. | Reuse the worker's scalar graph for unique sheet names and references. Bind terminals by UUID and retain label aliases. |
-| Implicit hidden power | A shape-4 pin is emitted with a label and no physical hotspot in the netlist. The hidden-power pass deduplicates by reference within each sheet. | Preserve its intended named connection in the flat subset. Review common power pins when resolving multipart units. |
-| Drawn no-connect | `NOCONNECT` is emitted as a separate node on the same net as the hotspot. | Retain the explicit marker as intent. Warn on a no-connect marker that also joins other terminals. An isolated pin without a marker has no explicit NC intent. |
-| Buses | `BusWire`, `BusSlash`, and `BusLabel` are represented in XML and the editor. The scalar netlist has no member expansion pass. | Detect and stop PCB compilation until the bus expansion is available. |
+| Implicit hidden power | A hidden shape-4 pin supplies a named connection without a wire hotspot. | Compile it on its authored unit and scope its name to the schematic instance. A shown power pin follows its drawn connection. |
+| Drawn no-connect | `NOCONNECT` is emitted as a separate node on the same net as the hotspot. | Persist an explicit no-connect on its terminal. Diagnose orphaned markers and markers that share a live connection. |
+| Buses | Bus wires, entry slashes and bus names group signals visually. Scalar wires and their labels carry member connectivity. | Compile members independently using labels such as `DATA(0)` and `DATA(1)`. Diagnose a VHDL vector range such as `DATA(7:0)` when used as an electrical PCB wire label. [TinyCAD bus documentation](https://docs.tinycad.net/v4/Buses/) |
 | Hierarchy | See the [project hierarchy contract](project-specification.md#hierarchical-project-schematics). | The PCB snapshot preserves the source document, sheet, placement path, unit and pin UUIDs. |
-| Multipart symbols | The generator emits each placed unit with its `part` and unit-specific pins. It uses reference text in its hidden-power handling. | Keep unit UUIDs and per-unit pins. Require a physical component binding and review repeated references and common pins before compiling. |
-| Duplicate sheet names and duplicated references | The worker keys sheet snapshots by display name. Legacy exports emit component rows from reference text. | Report conflicts before PCB compilation. No reference-based automatic merging. |
+| Multipart symbols | Each placed symbol specifies its unit and pin definitions. | Use a reviewed package binding to combine units and retain each terminal's source UUIDs. |
+| Duplicate references | Legacy exports use reference text. | Diagnose references that collide between physical components. Match units by their explicit binding. |
 
-`npm run test:pcb` exercises native XML/DZN migration, clipboard copy, cross-sheet scalar labels, explicit no-connects, hidden power, and detection of hierarchy, buses and multipart units. Net membership fixtures demonstrate ID retention across renames and identify which previous IDs need review after a split or merge. The schematic-to-board compiler and ECO workflow are WP2 deliverables.
+### Authoring PCB component intent
+
+Use the symbol's placed attributes to specify physical intent. These fields are saved in both `.dsn` and `.dzn`.
+
+| Attribute | Value |
+|---|---|
+| `PCB Role` | `electrical`, `dnp`, `virtual`, `off-board` or `net-tie`. Ordinary symbols default to electrical and built-in simulation controls default to virtual. Virtual and off-board symbols retain their schematic provenance and contribute no physical terminal memberships. Adding or removing them leaves the physical connectivity digest unchanged when the PCB nets are identical. Use a separate electrical connector for an off-board device's board interface. Author PCB-only components on the board. |
+| `PCB Component` | Set the same reviewed UUID on each unit in a multipart package. Place each unit once and give all units the same reference, role and value. Supply a consistent package hint when available. The binding is scoped to the source document and hierarchy instance and preserves component identity across a rename. |
+| `PCB Shared Pins` | An optional JSON list of pin numbers, such as `["EP"]`, on every unit of a reviewed package. Each listed pin must appear on at least two units with consistent pin definitions and one common net or explicit no-connect intent. Each shared signal retains every source terminal. |
+
+`npm run test:pcb` exercises these fields and circuit snapshots through XML and compressed DZN saves. Net membership fixtures demonstrate ID retention across renames and identify which previous IDs need review after a split or merge.
 
 ## Standalone board format
 

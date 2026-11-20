@@ -383,7 +383,7 @@ export class updateSymbol
     return this.item._active_points;
   }
 
-  power_pins() {
+  power_pins(unitOnly = false) {
     if (this.item.show_power) {
       // We only return hidden power pins, as there we are showing
       // power pins, then we don't need to return them.
@@ -401,6 +401,10 @@ export class updateSymbol
       // Is this a power pin?
       if (!active_point.power) {
         // No
+        continue;
+      }
+
+      if (unitOnly && !this.item._symbol.heterogeneous && active_point.part !== this.item.part) {
         continue;
       }
 

@@ -194,7 +194,7 @@ test('keeps colliding exported label names on separate nets', async () => {
   );
 });
 
-test('reports the source of a bus before creating an incomplete PCB snapshot', async () => {
+test('keeps visual buses electrically inert and locates vector labels that need scalar members', async () => {
   const { files, root, child, h1 } = await fixture();
   const sheet = child.sheets[1];
   sheet.items.push({
@@ -206,15 +206,25 @@ test('reports the source of a bus before creating an incomplete PCB snapshot', a
     ],
   });
   const graph = await compile(files);
+  const { snapshot } = await api.buildHierarchicalCircuitSnapshot(graph, {
+    documentId: root.documentId,
+    revision: 1,
+  });
+  assert.equal(snapshot.nets.length, expected.length);
+  const shape = sheet.items.find(
+    ({ NodeName, text }) => NodeName === 'label' && text === 'LOCAL',
+  );
+  shape.text = 'DATA(7:0)';
   await assert.rejects(
-    api.buildHierarchicalCircuitSnapshot(graph, {
+    api.buildHierarchicalCircuitSnapshot(await compile(files), {
       documentId: root.documentId,
       revision: 1,
     }),
     (error) =>
       error instanceof api.HierarchyConnectivityError &&
-      /Review bus connectivity/.test(error.message) &&
+      /Use a scalar wire label/.test(error.message) &&
       error.source.sheetId === sheet.id &&
+      error.source.itemId === shape._id &&
       error.source.instancePath[0] === h1.unitId,
   );
 });

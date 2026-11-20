@@ -1,6 +1,4 @@
 import { DocItemTypes } from '../model/dsnItem';
-import { isEntityId } from '../model/schematicIdentity';
-import { readControl } from '../simulation/controls';
 import { reviewCircuitNets } from './circuitNets';
 import type {
   CircuitNet,
@@ -9,7 +7,6 @@ import type {
 } from './circuitNets';
 import { validateCircuitSnapshot } from './circuitSnapshot';
 import type {
-  CircuitComponent,
   CircuitSchematicSource,
   CircuitSnapshot,
 } from './circuitSnapshot';
@@ -19,6 +16,7 @@ import {
   stableHierarchyId,
 } from './hierarchicalNetlist';
 import type { HierarchicalNetlist } from './hierarchicalNetlist';
+import { compileSchematicComponents, terminalKey } from './schematicComponents';
 
 interface SnapshotOptions {
   documentId: string;
@@ -38,96 +36,93 @@ export async function buildHierarchicalCircuitSnapshot(
   snapshot: HierarchicalCircuitSnapshot;
   review: ReturnType<typeof reviewCircuitNets>;
 }> {
-  if (graph.unsupportedPcbSource)
-    throw new HierarchyConnectivityError(
-      'Review bus connectivity before building a PCB circuit snapshot.',
-      graph.unsupportedPcbSource,
-    );
-  const components: CircuitComponent[] = [];
-  const sources: HierarchicalCircuitSnapshot['sources'] = Object.create(null);
-  const signalKeys = new Set<string>();
-  const references = new Set<string>();
-  for (const [, symbol] of graph.symbols) {
-    const id = symbol.unitId;
-    const reference = symbol.text.find(
-      ({ description }) => description === 'Ref',
-    )?.value;
-    const source = graph.sources[id];
-    if (
-      !source ||
-      !source.unitId ||
-      !reference ||
-      references.has(reference.toLowerCase()) ||
-      symbol._symbol.parts !== 1 ||
-      readControl(symbol)
-    )
-      throw new Error(
-        `Review physical component binding for ${
-          reference || '(unnamed)'
-        } before building its snapshot.`,
-      );
-    references.add(reference.toLowerCase());
-    const packageHint = symbol.text.find(
-      ({ description }) => description.toLowerCase() === 'package',
-    )?.value;
-    const value =
-      symbol.text.find(({ description }) => description === 'Value')?.value ??
-      symbol.text.find(({ description }) => description === 'Name')?.value ??
-      '';
-    const signals = [];
-    for (const { pin, part } of symbol._symbol.outlines[0].active_points) {
-      if (!symbol._symbol.heterogeneous && part !== symbol.part) continue;
-      if (!isEntityId(pin.pinId) || signalKeys.has(id + ':' + pin.pinId))
-        throw new Error(`Review pin identity for ${reference}.`);
-      signalKeys.add(id + ':' + pin.pinId);
-      signals.push({
-        id: await stableHierarchyId('schematic-signal', id, pin.pinId),
-        name: pin.name || pin.number,
-        terminals: [{ unitId: id, pinId: pin.pinId }],
-      });
-    }
-    components.push({
-      id,
-      reference,
-      value,
-      role: 'electrical',
-      units: [{ id, sheetId: source.sheetId }],
-      signals,
-      ...(packageHint === undefined ? {} : { packageHint }),
-    });
-    const { itemId, ...persistedSource } = source;
-    sources[id] = { ...persistedSource, unitId: source.unitId };
-  }
+  const { components, sources, terminals, sharedSignals } =
+    await compileSchematicComponents(graph);
   const aliases = new Map<string, string[]>();
   for (const [label, net] of Object.entries(graph.labels))
     aliases.set(net, [...(aliases.get(net) ?? []), label]);
   const drafts: CircuitNetDraft[] = [];
   const noConnects: SchematicTerminal[] = [];
+  const noConnect = Symbol('no-connect');
+  const connections = new Map<string, string | typeof noConnect>();
   for (const [net, nodes] of Object.entries(graph.nets)) {
-    const terminals = new Map<string, SchematicTerminal>();
-    for (const node of nodes) {
-      const unitId = node.instanceUnitId;
-      if (!unitId || node.parent?.NodeName !== DocItemTypes.Pin) continue;
-      const pinId = node.parent.pinId;
-      const key = unitId + ':' + pinId;
-      if (!signalKeys.has(key))
-        throw new Error('A net references an unknown physical terminal.');
-      terminals.set(key, { unitId, pinId });
-    }
-    if (!terminals.size) continue;
-    if (
-      nodes.some(({ parent }) => parent?.NodeName === DocItemTypes.NoConnect)
-    ) {
-      if (terminals.size !== 1 || nodes.some(({ label }) => label))
-        throw new Error(
-          'An explicit no-connect marker shares a connected net.',
+    const pinNodes = nodes.filter(
+      ({ instanceUnitId, parent }) =>
+        instanceUnitId && parent?.NodeName === DocItemTypes.Pin,
+    );
+    const markers = nodes.filter(
+      ({ parent }) => parent?.NodeName === DocItemTypes.NoConnect,
+    );
+    const range = nodes.find(
+      ({ label, parent }) =>
+        parent?.NodeName === DocItemTypes.Label &&
+        /\(\d+\s*:\s*\d+\)$/.test(label?.trim()),
+    );
+    if (range?.source)
+      throw new HierarchyConnectivityError(
+        'Use a scalar wire label for each PCB bus member.',
+        range.source,
+      );
+
+    if (markers.length) {
+      const marker = markers[0];
+      const pin = pinNodes[0];
+      if (
+        markers.length !== 1 ||
+        pinNodes.length !== 1 ||
+        nodes.some(({ label, port }) => label || port) ||
+        marker.source?.sheetId !== pin?.source?.sheetId ||
+        marker.a?.[0] !== pin?.a?.[0] ||
+        marker.a?.[1] !== pin?.a?.[1]
+      )
+        throw new HierarchyConnectivityError(
+          'An explicit no-connect must be attached to exactly one otherwise unconnected pin.',
+          marker.source,
         );
-      noConnects.push(...terminals.values());
-    } else
+    }
+
+    const members = new Map<string, SchematicTerminal>();
+    const identity = markers.length ? noConnect : net;
+    for (const node of pinNodes) {
+      if (node.parent.NodeName !== DocItemTypes.Pin) continue;
+      const terminal = {
+        unitId: node.instanceUnitId,
+        pinId: node.parent.pinId,
+      };
+      const key = terminalKey(terminal);
+      const source = terminals.get(key);
+      if (!source)
+        throw new HierarchyConnectivityError(
+          'A net references an unknown schematic terminal.',
+          node.source,
+        );
+      if (connections.has(key) && connections.get(key) !== identity)
+        throw new HierarchyConnectivityError(
+          'A terminal belongs to more than one schematic net.',
+          source.source,
+        );
+      if (source.physical) members.set(key, terminal);
+      connections.set(key, identity);
+    }
+    if (!members.size) continue;
+    if (markers.length) noConnects.push(...members.values());
+    else
       drafts.push({
         names: aliases.get(net) ?? [],
-        terminals: [...terminals.values()],
+        terminals: [...members.values()],
       });
+  }
+  for (const signal of sharedSignals) {
+    const [first, ...rest] = signal.terminals.map(terminalKey);
+    const connection = connections.get(first);
+    if (
+      connection === undefined ||
+      rest.some((key) => connections.get(key) !== connection)
+    )
+      throw new HierarchyConnectivityError(
+        `Shared pin ${signal.number} has inconsistent net or no-connect assignments.`,
+        terminals.get(first).source,
+      );
   }
   const review = reviewCircuitNets(previous, drafts);
   const nets = await Promise.all(

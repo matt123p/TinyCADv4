@@ -302,3 +302,344 @@ test('retains net identity across renames and reports prior net IDs affected by 
     [first.id, second.id].sort(),
   );
 });
+
+async function compileCircuit(drawing, previous) {
+  const graph = await api.buildHierarchicalNetlist(
+    { drawing, path: 'Circuit.dsn' },
+    async () => assert.fail('This fixture has no child schematics'),
+  );
+  return api.buildHierarchicalCircuitSnapshot(graph, {
+    documentId: drawing.documentId,
+    revision: previous ? 2 : 1,
+    previous: previous?.nets,
+  });
+}
+
+function field(symbol, description, value) {
+  symbol.text.push({
+    ...symbol.text.find((entry) => entry.description === 'Ref'),
+    description,
+    value,
+    show: false,
+  });
+}
+
+test('compiles labelled bus members, reviewed multipart power pins, roles and no-connect intent through native saves', async () => {
+  const multi = definition(
+    pinXml('01', 'DATA0') +
+      pinXml('EP', 'GND', 4, 0, '0,2') +
+      pinXml('02', 'DATA1', 0, 1) +
+      pinXml('EP', 'GND', 4, 1, '0,2') +
+      pinXml('8', 'VDD', 4, 1, '0,4') +
+      pinXml('NC', 'Unused', 0, 1, '0,7'),
+    2,
+  );
+  const single = definition(pinXml('A01', 'Terminal')).replace(
+    'id="1"',
+    'id="2"',
+  );
+  const another = (ref, position) =>
+    instance(ref, position).replace('id="1"', 'id="2"');
+  const drawing = parse(
+    '<TinyCADSheets><TinyCAD><NAME>First</NAME>' +
+      multi +
+      single +
+      instance('U1', '20,20') +
+      another('R1', '20,60') +
+      another('X1', '20,100') +
+      '</TinyCAD><TinyCAD><NAME>Second</NAME>' +
+      multi +
+      single +
+      instance('U1', '20,20', 1) +
+      another('R2', '20,60') +
+      another('X2', '20,100') +
+      another('NT1', '20,130') +
+      '</TinyCAD></TinyCADSheets>',
+  );
+  const [first, second] = drawing.sheets;
+  const [a, r1, probe] = symbols(first);
+  const [b, r2, offboard, tie] = symbols(second);
+  const placed = (symbol, pin) =>
+    new api.updateSymbol(symbol)
+      .active_points()
+      .find(([, , definition]) => definition.number === pin)
+      .slice(0, 2);
+  const bind = crypto.randomUUID();
+  for (const unit of [a, b]) {
+    field(unit, 'PCB Component', bind);
+    field(unit, 'PCB Shared Pins', '["EP"]');
+  }
+  field(r1, 'PCB Role', 'dnp');
+  field(
+    probe,
+    '$$SPICE_CONTROL',
+    '{"kind":"probe","mode":"voltage","invert":false}',
+  );
+  field(offboard, 'PCB Role', 'off-board');
+  field(tie, 'PCB Role', 'net-tie');
+
+  let id = 20000;
+  const label = (sheet, text, point) => {
+    const item = {
+      NodeName: 'label',
+      _id: id++,
+      point,
+      text,
+      hints: [],
+      rotation: 0,
+      which: 0,
+    };
+    sheet.items.push(item);
+    return item;
+  };
+  const busMember = (sheet, symbol, pin, name, x) => {
+    const start = placed(symbol, pin);
+    const end = [x, start[1]];
+    sheet.items.push(
+      { NodeName: 'wire', _id: id++, d_points: [start, end] },
+      { NodeName: 'busslash', _id: id++, point: end, rotation: 0 },
+    );
+    label(sheet, name, end);
+  };
+  busMember(first, a, '01', 'DATA(0)', 400);
+  busMember(first, r1, 'A01', 'DATA(1)', 400);
+  busMember(second, b, '02', 'DATA(1)', 400);
+  busMember(second, r2, 'A01', 'DATA(0)', 400);
+  for (const sheet of drawing.sheets) {
+    sheet.items.push(
+      {
+        NodeName: 'buswire',
+        _id: id++,
+        d_points: [
+          [400, 0],
+          [400, 400],
+        ],
+      },
+      {
+        NodeName: 'buslabel',
+        _id: id++,
+        point: [400, 100],
+        text: 'DATA(1:0)',
+        rotation: 0,
+      },
+    );
+  }
+  label(first, 'DATA(0)', placed(probe, 'A01'));
+  label(second, 'DATA(1)', placed(offboard, 'A01'));
+  const marker = { NodeName: 'noconnect', _id: id++, point: placed(b, 'NC') };
+  second.items.push(marker);
+  const { snapshot } = await compileCircuit(drawing);
+  const component = (ref) =>
+    snapshot.components.find(({ reference }) => reference === ref);
+  const u1 = component('U1');
+  assert.deepEqual(
+    u1.units.map(({ id }) => id),
+    [a.unitId, b.unitId],
+  );
+  assert.equal(u1.signals.length, 5);
+  assert.equal(
+    u1.signals.find(({ number }) => number === 'EP').terminals.length,
+    2,
+  );
+  for (const [name, physicalUnits] of [
+    ['DATA(0)', [a.unitId, r2.unitId]],
+    ['DATA(1)', [b.unitId, r1.unitId]],
+    ['GND', [a.unitId, b.unitId]],
+    ['VDD', [b.unitId]],
+  ]) {
+    assert.deepEqual(
+      snapshot.nets
+        .find(({ names }) => names.includes(name))
+        .terminals.map(({ unitId }) => unitId)
+        .sort(),
+      physicalUnits.sort(),
+    );
+  }
+  assert.equal(component('R1').role, 'dnp');
+  assert.equal(component('X1').role, 'virtual');
+  assert.equal(component('X2').role, 'off-board');
+  assert.equal(component('NT1').role, 'net-tie');
+  assert.deepEqual(
+    snapshot.noConnects,
+    u1.signals.find(({ number }) => number === 'NC').terminals,
+  );
+  for (const terminal of u1.signals.flatMap(({ terminals }) => terminals)) {
+    assert.equal(snapshot.sources[terminal.unitId].unitId, terminal.unitId);
+    assert.equal(
+      snapshot.sources[terminal.unitId].documentId,
+      drawing.documentId,
+    );
+  }
+
+  const shared = u1.signals.find(({ number }) => number === 'EP');
+  const projected = api.boardPadSources(
+    {
+      footprints: [{ id: 'placement', deviceId: 'device', componentId: u1.id }],
+      deviceDefinitions: [
+        {
+          id: 'device',
+          footprintId: 'definition',
+          assignments: [{ kind: 'signal', padId: 'pad', signalId: shared.id }],
+        },
+      ],
+      footprintDefinitions: [
+        { id: 'definition', pads: [{ id: 'pad', label: 'EP' }] },
+      ],
+    },
+    JSON.parse(JSON.stringify(snapshot)),
+  );
+  assert.deepEqual(
+    projected.map(({ source }) => [
+      source.sheetId,
+      source.unitId,
+      source.pinId,
+    ]),
+    shared.terminals.map(({ unitId, pinId }) => [
+      snapshot.sources[unitId].sheetId,
+      unitId,
+      pinId,
+    ]),
+  );
+  const invalid = structuredClone(snapshot);
+  invalid.nets[0].terminals.push(component('X1').signals[0].terminals[0]);
+  await assert.rejects(
+    api.circuitConnectivityDigest(invalid),
+    /nonphysical terminal/,
+  );
+  const withoutProbe = structuredClone(snapshot);
+  withoutProbe.components = withoutProbe.components.filter(({ reference }) => reference !== 'X1');
+  delete withoutProbe.sources[probe.unitId];
+  assert.equal(
+    await api.circuitConnectivityDigest(withoutProbe),
+    await api.circuitConnectivityDigest(snapshot),
+  );
+
+  for (const encoding of ['xml', 'zip-v1']) {
+    const reopened = await api.decodeDrawing(
+      await api.encodeDrawing(drawing, encoding),
+    );
+    reopened.sheets.reverse();
+    for (const sheet of reopened.sheets) {
+      sheet.items.reverse();
+      symbols(sheet)
+        .find(({ part, _symbol }) => _symbol.parts === 2)
+        .text.find(({ description }) => description === 'Ref').value = 'U9';
+    }
+    const { snapshot: revision, review } = await compileCircuit(
+      reopened,
+      snapshot,
+    );
+    assert.equal(
+      revision.components.find(({ reference }) => reference === 'U9').id,
+      u1.id,
+    );
+    assert.deepEqual(review.removedIds, []);
+    assert.equal(
+      await api.circuitConnectivityDigest(revision),
+      await api.circuitConnectivityDigest(snapshot),
+    );
+  }
+
+  // An annotation must not silently disconnect a net.
+  const invalidLabel = label(second, 'ALREADY_CONNECTED', marker.point);
+  await assert.rejects(
+    compileCircuit(drawing),
+    ({ source, message }) =>
+      source.itemId === marker._id &&
+      source.sheetId === second.id &&
+      /no-connect/.test(message),
+  );
+  second.items.splice(second.items.indexOf(invalidLabel), 1);
+
+  b.show_power = true;
+  b._active_points = null;
+  await assert.rejects(
+    compileCircuit(drawing),
+    /Shared pin EP has inconsistent/,
+  );
+  b.show_power = false;
+  b._active_points = null;
+  b.text = b.text.filter(({ description }) => description !== 'PCB Component');
+  await assert.rejects(
+    compileCircuit(drawing),
+    ({ source, message }) =>
+      source.unitId === b.unitId && /reviewed package UUID/.test(message),
+  );
+});
+
+test('keeps heterogeneous multipart packages separate in repeated schematic instances', async () => {
+  const symbol = definition('', 2).replace(
+    '<TinyCAD></TinyCAD>',
+    '<TinyCADSheets><TinyCAD>' +
+      pinXml('1', 'IN') +
+      '</TinyCAD><TinyCAD>' +
+      pinXml('A1', 'OUT') +
+      pinXml('PWR', 'VCC', 4, 0, '0,2') +
+      '</TinyCAD></TinyCADSheets>',
+  );
+  const child = parse(
+    '<TinyCADSheets><HierarchicalSymbol><NAME>Module</NAME>' +
+      pinXml('1', 'IN') +
+      '</HierarchicalSymbol><TinyCAD><NAME>Circuit</NAME>' +
+      symbol +
+      instance('U1', '20,20') +
+      instance('U1', '40,20', 1) +
+      '</TinyCAD></TinyCADSheets>',
+  );
+  const [sheet] = child.sheets.filter((item) => !item.hierarchicalSymbol);
+  const [a, b] = symbols(sheet);
+  assert.equal(a._symbol.heterogeneous, true);
+  const binding = crypto.randomUUID();
+  for (const unit of [a, b]) field(unit, 'PCB Component', binding);
+  sheet.items.push({
+    NodeName: 'label',
+    _id: 22000,
+    text: 'IN',
+    hints: [],
+    point: new api.updateSymbol(a).active_points()[0].slice(0, 2),
+  });
+  const makeChild = (ref, x) =>
+    `<HIERARCHICAL_SYMBOL file="Child.dsn" pos="${x},20" rotate="0">` +
+    `<FIELD type="0" description="Ref" value="${ref}" show="1" pos="0,0"/>` +
+    '</HIERARCHICAL_SYMBOL>';
+  const root = parse(
+    '<TinyCAD>' + makeChild('H1', 80) + makeChild('H2', 120) + '</TinyCAD>',
+  );
+  const [h1, h2] = symbols(root.sheets[0]);
+  const graph = await api.buildHierarchicalNetlist(
+    { path: 'Root.dsn', drawing: root },
+    async () => ({ path: 'Child.dsn', drawing: child }),
+  );
+  const { snapshot } = await api.buildHierarchicalCircuitSnapshot(graph, {
+    documentId: root.documentId,
+    revision: 1,
+  });
+  assert.deepEqual(
+    snapshot.components.map(({ reference }) => reference),
+    ['H1_U1', 'H2_U1'],
+  );
+  assert.equal(new Set(snapshot.components.map(({ id }) => id)).size, 2);
+  for (const [i, component] of snapshot.components.entries()) {
+    const path = [i === 0 ? h1.unitId : h2.unitId];
+    assert.deepEqual(component.signals.map(({ number }) => number).sort(), [
+      '1',
+      'A1',
+      'PWR',
+    ]);
+    assert.deepEqual(
+      component.units.map(({ id }) => snapshot.sources[id].instancePath),
+      [path, path],
+    );
+    assert.deepEqual(
+      component.units.map(({ id }) => snapshot.sources[id].unitId),
+      [a.unitId, b.unitId],
+    );
+    const power = snapshot.nets.find(({ names }) =>
+      names.includes(`H${i + 1}_VCC`),
+    );
+    assert.deepEqual(
+      power.terminals,
+      component.signals.find(({ number }) => number === 'PWR').terminals,
+    );
+  }
+});

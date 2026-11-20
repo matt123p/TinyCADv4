@@ -5,7 +5,7 @@ import type { CircuitNet, SchematicTerminal } from './circuitNets';
 import { validProjectName } from '../../shared/projectFiles';
 import type { SchematicSource } from '../io/netlists/netlistGenerator';
 
-const componentRoles = [
+export const componentRoles = [
   'electrical',
   'dnp',
   'virtual',
@@ -24,6 +24,7 @@ export interface CircuitComponent {
   readonly signals: readonly {
     id: string;
     name: string;
+    number?: string;
     terminals: readonly SchematicTerminal[];
   }[];
 }
@@ -37,6 +38,10 @@ export interface CircuitSnapshot {
   readonly nets: readonly CircuitNet[];
   readonly noConnects: readonly SchematicTerminal[];
   readonly sources?: Readonly<Record<string, CircuitSchematicSource>>;
+}
+
+export function hasBoardConnectivity(role: CircuitComponent['role']): boolean {
+  return role !== 'virtual' && role !== 'off-board';
 }
 
 export type CircuitSchematicSource = Omit<
@@ -79,6 +84,7 @@ export function validateCircuitSnapshot(
   const sheetsByUnit = new Map<string, string>();
   const signalIds = new Set<string>();
   const terminals = new Set<string>();
+  const physicalTerminals = new Set<string>();
   for (const component of snapshot.components) {
     addId(componentIds, component?.id);
     if (
@@ -105,7 +111,11 @@ export function validateCircuitSnapshot(
     }
     for (const signal of component.signals) {
       addId(signalIds, signal?.id);
-      if (typeof signal.name !== 'string' || !Array.isArray(signal.terminals))
+      if (
+        typeof signal.name !== 'string' ||
+        (signal.number !== undefined && typeof signal.number !== 'string') ||
+        !Array.isArray(signal.terminals)
+      )
         throw new Error('Invalid circuit signal.');
       for (const terminal of signal.terminals) {
         const key = terminalKey(terminal);
@@ -115,6 +125,8 @@ export function validateCircuitSnapshot(
         )
           throw new Error('Invalid or duplicate signal terminal.');
         terminals.add(key);
+        if (hasBoardConnectivity(component.role))
+          physicalTerminals.add(key);
       }
     }
   }
@@ -161,26 +173,33 @@ export function validateCircuitSnapshot(
   const connected = new Set<string>();
   for (const terminal of snapshot.nets.flatMap((net) => net.terminals)) {
     const key = terminalKey(terminal);
-    if (!terminals.has(key))
-      throw new Error('Circuit net refers to an unknown terminal.');
+    if (!physicalTerminals.has(key))
+      throw new Error(
+        'Circuit net refers to an unknown or nonphysical terminal.',
+      );
     connected.add(key);
   }
   const noConnects = new Set<string>();
   for (const terminal of snapshot.noConnects) {
     const key = terminalKey(terminal);
-    if (!terminals.has(key) || connected.has(key) || noConnects.has(key))
+    if (
+      !physicalTerminals.has(key) ||
+      connected.has(key) ||
+      noConnects.has(key)
+    )
       throw new Error('Invalid explicit no-connect terminal.');
     noConnects.add(key);
   }
 }
 
-/** Aliases, component labels, and input order are outside the connectivity identity. */
+/** Compare the physical circuit independently of aliases, labels and input order. */
 export async function circuitConnectivityDigest(
   snapshot: CircuitSnapshot,
 ): Promise<string> {
   validateCircuitSnapshot(snapshot);
   const content = {
     components: snapshot.components
+      .filter(({ role }) => hasBoardConnectivity(role))
       .map((component) => [
         component.id.toLowerCase(),
         component.role,

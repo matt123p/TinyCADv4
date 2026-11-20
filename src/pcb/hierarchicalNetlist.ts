@@ -55,7 +55,6 @@ const referenceOf = (symbol: dsnSymbol) =>
 
 export type HierarchicalNetlist = NetlistData & {
   sources: Record<string, SchematicSource>;
-  unsupportedPcbSource?: SchematicSource;
 };
 
 export async function buildHierarchicalNetlist(
@@ -68,7 +67,6 @@ export async function buildHierarchicalNetlist(
   const sources: Record<string, SchematicSource> = Object.create(null);
   const resolved = new Map<string, Promise<HierarchyDocument>>();
   const interfaces = new Map<string, ReturnType<typeof childInterface>>();
-  let unsupportedPcbSource: SchematicSource | undefined;
   let nextId = -1;
   let visits = 0;
   const exportedReferences = new Map<string, string>();
@@ -113,12 +111,6 @@ export async function buildHierarchicalNetlist(
       const itemSources = new Map<number, SchematicSource>();
       for (const item of sheet.items) {
         if (item.NodeName !== DocItemTypes.Symbol) {
-          if (
-            item.NodeName === DocItemTypes.BusLabel ||
-            item.NodeName === DocItemTypes.BusSlash ||
-            item.NodeName === DocItemTypes.BusWire
-          )
-            unsupportedPcbSource ??= sourceOf(item);
           const id = instancePath.length ? nextId-- : item._id;
           itemSources.set(id, sourceOf(item));
           items.push({
@@ -225,12 +217,18 @@ export async function buildHierarchicalNetlist(
               )
             : item.unitId;
           const runtimeId = instancePath.length ? nextId-- : item._id;
+          if (sources[id])
+            throw new HierarchyConnectivityError(
+              'Duplicate schematic unit identity.',
+              source,
+            );
           sources[id] = source;
           localSources.set(runtimeId, { source, id });
           items.push({
             ...item,
             _id: runtimeId,
             unitId: id,
+            _active_points: null,
             hints: [],
             text: item.text.map((field) =>
               field.description === 'Ref'
@@ -287,6 +285,5 @@ export async function buildHierarchicalNetlist(
   return {
     ...mergeSheetSnapshots(snapshots, { scopes, bindings }),
     sources,
-    unsupportedPcbSource,
   };
 }

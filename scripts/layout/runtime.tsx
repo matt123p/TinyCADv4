@@ -27,7 +27,7 @@ export { blank } from '../../src/io/ioXml';
 export { decodeDrawing, encodeDrawing } from '../../src/io/dsnCodec';
 export { initialiseLayoutRuntime } from './headless';
 export { buildHierarchicalNetlist, HierarchyConnectivityError } from '../../src/pcb/hierarchicalNetlist';
-export { buildHierarchicalCircuitSnapshot } from '../../src/pcb/hierarchicalSnapshot';
+export { boardPadSources, buildHierarchicalCircuitSnapshot } from '../../src/pcb/hierarchicalSnapshot';
 export { childPath, childInterface, hierarchyDefinition, refreshPlacement, affectedPorts } from '../../src/io/hierarchyDrawing';
 export { ioXML } from '../../src/io/ioXml';
 export { XMLBuilder } from '../../src/util/xmlbuilder';
