@@ -1266,7 +1266,10 @@ test('imports a footprint, edits pad coordinates, and exports native and dimensi
     new URL('../fixtures/pcb-hierarchy/Blocks/Leaf.dsn', import.meta.url),
   );
   const source = await api.decodeDrawing(sourceData);
-  await writeFile(path.join(directory, 'Circuit.dsn'), sourceData);
+  await writeFile(
+    path.join(directory, 'Circuit.dsn'),
+    await api.encodeDrawing(source, 'xml'),
+  );
   await writeFile(
     path.join(directory, 'Connector.tcproject'),
     api.encodeProjectSettings({
@@ -1431,7 +1434,10 @@ test('imports a footprint, edits pad coordinates, and exports native and dimensi
       name: 'PCB layout',
       exact: true,
     });
-    await layout.getByRole('button', { name: /R1/ }).click();
+    await layout
+      .getByRole('list', { name: 'Unplaced components' })
+      .getByRole('button', { name: /^R1/ })
+      .click();
     await layout.getByRole('button', { name: 'Place and save' }).click();
     await expect(
       layout.getByRole('list', { name: 'Placed components' }),
