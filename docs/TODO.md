@@ -11,8 +11,8 @@ The [PCB layout specification](TinyCAD_PCB_Layout_Complete_Specification.md) gov
 - [x] Verify that unchanged net membership retains its UUID across renames and that split/merge proposals identify prior net IDs for review.
 - [x] Prototype a versioned JSON board document with stable board identity, ordered copper layers, and deterministic serialisation. Verify atomic outline/title edits, stale-command rejection, and undo/redo.
 - [x] Reserve `.dpn` for native standalone PCB layouts.
-- [x] Add source and entity identities, graphic layers, embedded device definitions, optional-field preservation, compatibility tests, and migration rules to the version 1 prototype board schema (PRJ-02, PRJ-03, LAY-01, ARC-01–08).
-- [x] Document the project folder and settings model and the prototype migration policy (PRJ-01, PRJ-05).
+- [x] Add source and entity identities, graphic layers, embedded device definitions, optional-field preservation and compatibility tests to the version 1 prototype board schema (PRJ-02, PRJ-03, LAY-01, ARC-01–08).
+- [x] Document the project folder and settings model (PRJ-01, PRJ-05).
 
 ### Repository findings
 
@@ -45,7 +45,7 @@ Run the prototype tests with `npm run test:pcb` and the browser/desktop fixture 
 - [ ] WP2 · Project folders, hierarchical schematics, recovery, embedded device/footprint revisions, reviewed legacy migration, footprint editing/import, curated parts, and atomic ECO with cross-probing (PRJ, SYN, LIB).
   - [x] Implement project folders with a root XML `.tcproject` settings file, validated root-relative links and ordinary native source files (PRJ-01, PRJ-05).
   - [x] Update the project browser in Electron and Google Drive mode to create, identify and open project roots and navigate the tree. Save edits to the native document, copy the tree on Save As, compare revisions by relative path and verify recovery against saved documents. Preserve independent Libraries visibility and verify that filesystem-only builds omit Projects (PRJ-04, PRJ-06, PRJ-09, AT-21, AT-29).
-  - [ ] Specify and implement the standalone UTF-8 XML `.dpn` codec using `.dsn` naming and embedded-definition conventions. Embed used component, device, footprint and padstack definitions and resolved model assets. Migrate supported prototype JSON boards and project entries, preserving the source and validating the XML copy (§26, AT-28).
+  - [x] Specify and implement the standalone UTF-8 XML `.dpn` codec using `.dsn` naming and embedded-definition conventions. Embed used component, device, footprint and padstack definitions and resolved model assets. Verify an offline round trip (§26 and the codec portion of AT-28).
   - [ ] Implement [hierarchical project schematics](pcb-format.md#hierarchical-project-schematics). Read both v3 XML spellings, resolve child files under the project root, and add interface-sheet editing, child placement and instance navigation (SYN-11).
   - [ ] Expand repeated and nested child instances and bind named ports before building circuit snapshots. Verify v3 connectivity parity and path-stable identities. Use the expanded graph for ERC, BOMs, netlists and PCB cross-probing/ECOs (SYN-01, SYN-11, AT-30).
   - [ ] Compile bus, hidden-power, multipart and no-connect fixtures into stable circuit snapshots, with explicit physical roles and terminal provenance (SYN-01, SYN-08).

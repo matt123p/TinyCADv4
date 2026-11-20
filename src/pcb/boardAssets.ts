@@ -5,9 +5,11 @@ import type {
   FootprintPlacement,
   PadAssignment,
 } from './footprint';
-import { isBoardPoint } from './geometry';
+import { BOARD_COORDINATE_LIMIT_NM, isBoardPoint } from './geometry';
 import { validatePadStack } from './padstack';
 import type { PadStack } from './padstack';
+import type { RouteRules } from './routing';
+import type { CircuitComponent } from './circuitSnapshot';
 import { validateFootprintDetails } from './footprintDetails';
 import type { FootprintGraphic, FootprintModel } from './footprintDetails';
 
@@ -62,8 +64,39 @@ export interface BoardFootprint extends FootprintPlacement {
   readonly locked: boolean;
 }
 
+export interface BoardComponent {
+  readonly id: string;
+  readonly reference?: string;
+  readonly value?: string;
+  readonly logicalId?: string;
+  readonly role?: 'electrical' | 'dnp' | 'pcb-only' | 'net-tie';
+  readonly units?: CircuitComponent['units'];
+  readonly signals?: readonly {
+    readonly signalId: string;
+    readonly netId: string;
+  }[];
+}
+
+export interface BoardNet {
+  readonly id: string;
+  readonly name: string;
+  readonly aliases?: readonly string[];
+}
+
+export interface BoardModelAsset {
+  readonly id: string;
+  readonly mediaType: 'model/step';
+  readonly source: string;
+  readonly license?: string;
+  readonly base64: string;
+}
+
 export interface BoardAssets {
   readonly sourceCircuit?: CircuitSource;
+  readonly components?: readonly BoardComponent[];
+  readonly nets?: readonly BoardNet[];
+  readonly rules?: RouteRules;
+  readonly modelAssets?: readonly BoardModelAsset[];
   readonly graphicLayers?: readonly GraphicLayer[];
   readonly footprintDefinitions?: readonly EmbeddedFootprint[];
   readonly deviceDefinitions?: readonly EmbeddedDevice[];
@@ -123,6 +156,82 @@ export function validateBoardAssets(
         throw new Error('Invalid graphic layer role, side, or name.');
     }
   }
+  const nets = byId(board.nets ?? [], 'net');
+  for (const net of nets.values()) {
+    if (
+      !isText(net.name) ||
+      (net.aliases !== undefined &&
+        (!Array.isArray(net.aliases) || !net.aliases.every(isText)))
+    )
+      throw new Error('Invalid board net names.');
+  }
+  if (
+    board.rules !== undefined &&
+    ![
+      board.rules?.minWidthNm,
+      board.rules?.clearanceNm,
+      board.rules?.edgeClearanceNm,
+      board.rules?.minViaAnnulusNm,
+    ].every(
+      (dimension, index) =>
+        Number.isSafeInteger(dimension) &&
+        dimension >= (index === 0 ? 1 : 0) &&
+        dimension <= BOARD_COORDINATE_LIMIT_NM,
+    )
+  ) {
+    throw new Error('Invalid board routing rules.');
+  }
+  const componentDefinitions = byId(board.components ?? [], 'component');
+  for (const component of componentDefinitions.values()) {
+    if (
+      (component.reference !== undefined &&
+        typeof component.reference !== 'string') ||
+      (component.value !== undefined && typeof component.value !== 'string') ||
+      (component.logicalId !== undefined && !isEntityId(component.logicalId)) ||
+      (component.role !== undefined &&
+        !['electrical', 'dnp', 'pcb-only', 'net-tie'].includes(
+          component.role,
+        )) ||
+      (component.signals !== undefined && !Array.isArray(component.signals))
+    )
+      throw new Error('Invalid board component definition.');
+    if (component.units !== undefined) {
+      const units = byId(component.units, 'schematic unit');
+      if ([...units.values()].some(({ sheetId }) => !isEntityId(sheetId)))
+        throw new Error('Invalid component schematic sheet identity.');
+    }
+    const seen = new Set<string>();
+    for (const binding of component.signals ?? []) {
+      if (
+        !isEntityId(binding?.signalId) ||
+        seen.has(binding.signalId.toLowerCase()) ||
+        !isEntityId(binding.netId) ||
+        !nets.has(binding.netId.toLowerCase())
+      )
+        throw new Error('Invalid component signal-to-net binding.');
+      seen.add(binding.signalId.toLowerCase());
+    }
+  }
+
+  const modelAssets = new Set<string>();
+  if (board.modelAssets !== undefined) {
+    if (!Array.isArray(board.modelAssets) || board.modelAssets.length > 4096)
+      throw new Error('Invalid STEP model asset collection.');
+    for (const asset of board.modelAssets) {
+      if (
+        typeof asset?.id !== 'string' ||
+        !/^[a-f0-9]{64}$/.test(asset.id) ||
+        modelAssets.has(asset.id) ||
+        asset.mediaType !== 'model/step' ||
+        !isText(asset.source) ||
+        (asset.license !== undefined && !isText(asset.license)) ||
+        !isText(asset.base64)
+      )
+        throw new Error('Invalid or duplicate STEP model asset.');
+      modelAssets.add(asset.id);
+    }
+  }
+
   const hasAssets = [footprintDefinitions, deviceDefinitions, footprints].some(
     (value) => value !== undefined,
   );
@@ -131,6 +240,8 @@ export function validateBoardAssets(
       'Embedded devices must declare the embedded-devices feature.',
     );
   if (!hasAssets) {
+    if (modelAssets.size)
+      throw new Error('Embedded STEP asset has no footprint attachment.');
     if (features.includes('physical-padstacks'))
       throw new Error('Physical padstacks need embedded devices.');
     return;
@@ -138,8 +249,17 @@ export function validateBoardAssets(
 
   const definitions = byId(footprintDefinitions, 'footprint definition');
   let hasPadstacks = false;
+  const attachedAssets = new Set<string>();
   for (const definition of definitions.values()) {
     validateEmbeddedFootprint(definition);
+    for (const { assetId } of definition.models ?? []) {
+      if (assetId === undefined) continue;
+      if (!modelAssets.has(assetId))
+        throw new Error(
+          'Footprint model refers to a missing embedded STEP asset.',
+        );
+      attachedAssets.add(assetId);
+    }
     hasPadstacks ||= definition.pads.some((pad) => pad.stack !== undefined);
   }
   if (hasPadstacks !== features.includes('physical-padstacks')) {
@@ -147,6 +267,8 @@ export function validateBoardAssets(
       'Explicit padstacks must declare the physical-padstacks feature.',
     );
   }
+  if ([...modelAssets].some((id) => !attachedAssets.has(id)))
+    throw new Error('Embedded STEP asset has no footprint attachment.');
   const devices = byId(deviceDefinitions, 'device definition');
   for (const device of devices.values()) {
     const definition =
@@ -188,14 +310,39 @@ export function validateBoardAssets(
     ) {
       throw new Error('Invalid footprint placement or component binding.');
     }
+    const component = componentDefinitions.get(
+      instance.componentId.toLowerCase(),
+    );
+    if (board.components !== undefined && !component)
+      throw new Error('Placement refers to a missing embedded component.');
+    const signals = new Set(
+      devices
+        .get(instance.deviceId.toLowerCase())
+        .signalIds.map((id) => id.toLowerCase()),
+    );
+    if (
+      component?.signals?.some(
+        ({ signalId }) => !signals.has(signalId.toLowerCase()),
+      )
+    )
+      throw new Error('Component binding refers to an unknown device signal.');
     components.add(instance.componentId.toLowerCase());
   }
 }
 
 export function validateEmbeddedFootprint(definition: EmbeddedFootprint): void {
-  if (!isEntityId(definition?.id) || !isText(definition.revision) || !isText(definition.name) || !isDigest(definition.definitionDigest)) throw new Error('Invalid footprint identity, name, revision, or definition digest.');
+  if (
+    !isEntityId(definition?.id) ||
+    !isText(definition.revision) ||
+    !isText(definition.name) ||
+    !isDigest(definition.definitionDigest)
+  )
+    throw new Error(
+      'Invalid footprint identity, name, revision, or definition digest.',
+    );
   for (const pad of byId(definition.pads, 'pad').values()) {
-    if (typeof pad.label !== 'string' || !isBoardPoint(pad.positionNm)) throw new Error('Invalid footprint pad label or position.');
+    if (typeof pad.label !== 'string' || !isBoardPoint(pad.positionNm))
+      throw new Error('Invalid footprint pad label or position.');
     if (pad.stack !== undefined) validatePadStack(pad.stack);
   }
   validateFootprintDetails(definition.graphics, definition.models);

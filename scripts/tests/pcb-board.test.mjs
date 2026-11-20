@@ -24,9 +24,8 @@ const {
   BoardRevisionConflict,
   createBoard,
   lengthInNanometres,
-  parseBoard,
+  validateBoard,
   placeFootprintPoint,
-  serializeBoard,
   validateOutline,
   validatePadMap,
 } = await import(
@@ -48,7 +47,7 @@ const triangle = points([
   [0, 10_000_000],
 ]);
 
-test('round trips an embedded device and preserves optional fields across edits', () => {
+test('validates an embedded device and preserves optional fields across edits', () => {
   const board = createBoard('Embedded device', 2, rectangle);
   const [
     documentId,
@@ -109,7 +108,7 @@ test('round trips an embedded device and preserves optional fields across edits'
     ],
     vendorInfo: { list: ['a', 'b'], origin: 'test' },
   };
-  const loaded = parseBoard(JSON.stringify(input));
+  const loaded = validateBoard(input);
   assert.equal(loaded.sourceCircuit.documentId, documentId);
   assert.equal(loaded.graphicLayers[0].role, 'silk');
   assert.equal(loaded.footprintDefinitions[0].pads[0].label, '01');
@@ -120,50 +119,37 @@ test('round trips an embedded device and preserves optional fields across edits'
     expectedRevision: 0,
     operations: [{ type: 'rename', title: 'Edited' }],
   });
-  const restored = parseBoard(serializeBoard(edited));
+  const restored = validateBoard(edited);
   assert.deepEqual(restored.vendorInfo, input.vendorInfo);
   assert.deepEqual(restored.footprintDefinitions, input.footprintDefinitions);
   assert.deepEqual(restored.deviceDefinitions, input.deviceDefinitions);
   assert.deepEqual(restored.footprints, input.footprints);
   assert.throws(
-    () =>
-      parseBoard(
-        JSON.stringify({ ...input, requiredFeatures: ['straight-outline'] }),
-      ),
+    () => validateBoard({ ...input, requiredFeatures: ['straight-outline'] }),
     /embedded-devices/,
   );
   assert.throws(
     () =>
-      parseBoard(
-        JSON.stringify({
-          ...input,
-          graphicLayers: [{ ...input.graphicLayers[0], role: 'copper' }],
-        }),
-      ),
+      validateBoard({
+        ...input,
+        graphicLayers: [{ ...input.graphicLayers[0], role: 'copper' }],
+      }),
     /graphic layer/,
   );
   assert.throws(
     () =>
-      parseBoard(
-        JSON.stringify({
-          ...input,
-          footprints: [
-            { ...input.footprints[0], deviceId: crypto.randomUUID() },
-          ],
-        }),
-      ),
+      validateBoard({
+        ...input,
+        footprints: [{ ...input.footprints[0], deviceId: crypto.randomUUID() }],
+      }),
     /component binding/,
   );
   assert.throws(
     () =>
-      parseBoard(
-        JSON.stringify({
-          ...input,
-          deviceDefinitions: [
-            { ...input.deviceDefinitions[0], assignments: [] },
-          ],
-        }),
-      ),
+      validateBoard({
+        ...input,
+        deviceDefinitions: [{ ...input.deviceDefinitions[0], assignments: [] }],
+      }),
     /device mapping/,
   );
 });
@@ -265,11 +251,8 @@ test('accepts a one-square-nanometre cross product near the coordinate limit', (
   );
 });
 
-test('round trips a deterministic two-layer board without changing identity', () => {
+test('validates physical layer order and supported board features', () => {
   const board = createBoard('Example Ω', 2, rectangle);
-  const encoded = serializeBoard(board);
-  assert.equal(serializeBoard(parseBoard(encoded)), encoded);
-  assert.equal(parseBoard(encoded).boardId, board.boardId);
   assert.deepEqual(board.copperLayers, [
     { id: 'top', order: 0 },
     { id: 'bottom', order: 1 },
@@ -277,28 +260,21 @@ test('round trips a deterministic two-layer board without changing identity', ()
   assert.deepEqual(createBoard('One layer', 1, rectangle).copperLayers, [
     { id: 'top', order: 0 },
   ]);
-  assert.throws(
-    () => parseBoard(JSON.stringify({ ...board, schemaVersion: 2 })),
-    /version/,
-  );
+  assert.throws(() => validateBoard({ ...board, schemaVersion: 2 }), /version/);
   assert.throws(
     () =>
-      parseBoard(
-        JSON.stringify({
-          ...board,
-          requiredFeatures: ['straight-outline', 'arcs'],
-        }),
-      ),
+      validateBoard({
+        ...board,
+        requiredFeatures: ['straight-outline', 'arcs'],
+      }),
     /feature/,
   );
   assert.throws(
     () =>
-      parseBoard(
-        JSON.stringify({
-          ...board,
-          copperLayers: [...board.copperLayers].reverse(),
-        }),
-      ),
+      validateBoard({
+        ...board,
+        copperLayers: [...board.copperLayers].reverse(),
+      }),
     /layer order/,
   );
 });

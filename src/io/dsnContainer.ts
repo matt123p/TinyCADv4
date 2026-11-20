@@ -5,6 +5,9 @@ import {
   Uint8ArrayReader,
   Uint8ArrayWriter,
 } from '@zip.js/zip.js';
+import { digest } from '../util/sha256';
+
+export { digest } from '../util/sha256';
 
 export const DSN_MIME = COMPRESSED_DRAWING_MIME;
 const MAX_INPUT = 256 * 1024 * 1024;
@@ -13,16 +16,6 @@ const MAX_ENTRIES = 10000;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true });
 export type Payloads = Record<string, Uint8Array>;
-
-export async function digest(bytes: Uint8Array): Promise<string> {
-  const hash = await crypto.subtle.digest(
-    'SHA-256',
-    new Uint8Array(bytes).buffer,
-  );
-  return Array.from(new Uint8Array(hash), (n) =>
-    n.toString(16).padStart(2, '0'),
-  ).join('');
-}
 
 export function validPath(name: string): boolean {
   return /^(?:drawing\.xml|results\/[A-Za-z0-9_-]{1,80}\/(?:index\.json|\d+-(?:real|imaginary)\.bin))$/.test(

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -21,6 +22,8 @@ const compiled = await build({
       export * from './src/pcb/camWriter';
       export * from './src/pcb/camReadback';
       export * from './src/pcb/board';
+      export * from './src/pcb/boardCodec';
+      export * from './src/pcb/footprint';
       export * from './src/pcb/kicadFootprint';
       export * from './src/pcb/geometryRevision';
     `,
@@ -29,6 +32,7 @@ const compiled = await build({
   bundle: true,
   format: 'esm',
   platform: 'neutral',
+  mainFields: ['module', 'main'],
   write: false,
   plugins: [
     {
@@ -80,7 +84,7 @@ const area = (regions) =>
     0,
   );
 
-test('preserves an analytic outline and rejects invalid cutout topology', () => {
+test('preserves an analytic outline and rejects invalid cutout topology', async () => {
   const centre = point(0, 0);
   const right = point(2_000_000, 0);
   const left = point(-2_000_000, 0);
@@ -132,7 +136,7 @@ test('preserves an analytic outline and rejects invalid cutout topology', () => 
   });
   assert.equal(resultBoard.outline, undefined);
   assert.deepEqual(
-    api.parseBoard(api.serializeBoard(resultBoard)).profile,
+    (await api.decodeBoard(await api.encodeBoard(resultBoard))).profile,
     profile,
   );
   assert.deepEqual(history.undo(1).outline, board.outline);
@@ -223,71 +227,65 @@ test('binds a saved physical padstack and rejects stale board results after an e
     kind: 'polygon',
     vertices: polygon(-500_000, -200_000, 500_000, 200_000),
   };
-  const saved = api.parseBoard(
-    JSON.stringify({
-      ...api.createBoard('Padstack', 2, polygon(0, 0, 10_000_000, 10_000_000)),
-      requiredFeatures: [
-        'straight-outline',
-        'embedded-devices',
-        'physical-padstacks',
-      ],
-      footprintDefinitions: [
-        {
-          id: footprintId,
-          name: 'Part',
-          revision: 'v1',
-          definitionDigest: digest,
-          pads: [
-            {
-              id: padId,
-              label: '01',
-              positionNm: point(0, 0),
-              stack: { copper: { top: shape } },
-            },
-          ],
-        },
-      ],
-      deviceDefinitions: [
-        {
-          id: deviceId,
-          revision: 'v1',
-          definitionDigest: digest,
-          packageName: 'Part',
-          packageSource: 'Fixture',
-          footprintId,
-          signalIds: [signalId],
-          assignments: [{ padId, kind: 'signal', signalId }],
-        },
-      ],
-      footprints: [
-        {
-          id: instanceId,
-          componentId,
-          deviceId,
-          positionNm: point(2_000_000, 3_000_000),
-          side: 'bottom',
-          rotationMicrodegree: 30_000_000,
-          locked: true,
-        },
-      ],
-    }),
-  );
-  const placed = api.placeEmbeddedDevice(
-    api.parseBoard(api.serializeBoard(saved)),
-    instanceId,
-    [{ signalId, terminalId: 'J1.01', netId: 'GND' }],
-  );
+  const saved = api.validateBoard({
+    ...api.createBoard('Padstack', 2, polygon(0, 0, 10_000_000, 10_000_000)),
+    requiredFeatures: [
+      'straight-outline',
+      'embedded-devices',
+      'physical-padstacks',
+    ],
+    footprintDefinitions: [
+      {
+        id: footprintId,
+        name: 'Part',
+        revision: 'v1',
+        definitionDigest: digest,
+        pads: [
+          {
+            id: padId,
+            label: '01',
+            positionNm: point(0, 0),
+            stack: { copper: { top: shape } },
+          },
+        ],
+      },
+    ],
+    deviceDefinitions: [
+      {
+        id: deviceId,
+        revision: 'v1',
+        definitionDigest: digest,
+        packageName: 'Part',
+        packageSource: 'Fixture',
+        footprintId,
+        signalIds: [signalId],
+        assignments: [{ padId, kind: 'signal', signalId }],
+      },
+    ],
+    footprints: [
+      {
+        id: instanceId,
+        componentId,
+        deviceId,
+        positionNm: point(2_000_000, 3_000_000),
+        side: 'bottom',
+        rotationMicrodegree: 30_000_000,
+        locked: true,
+      },
+    ],
+  });
+  const placed = api.placeEmbeddedDevice(saved, instanceId, [
+    { signalId, terminalId: 'J1.01', netId: 'GND' },
+  ]);
   assert.equal(placed.copper[0].layerId, 'bottom');
   assert.equal(placed.copper[0].terminalId, 'J1.01');
   assert.equal(placed.copper[0].region.outer.length, 4);
   assert.throws(
     () =>
-      api.parseBoard(
-        JSON.stringify({
-          ...saved,
-          requiredFeatures: ['straight-outline', 'embedded-devices'],
-        }),
-      ),
+      api.validateBoard({
+        ...saved,
+        requiredFeatures: ['straight-outline', 'embedded-devices'],
+      }),
     /physical-padstacks/,
   );
   const history = new api.BoardHistory(saved);
@@ -698,4 +696,327 @@ test('reads Gerber arcs, nested copper, and plated and non-plated drills from ma
       name,
     );
   }
+});
+
+test('reopens a copied XML board offline with shared definitions, connectivity and STEP data', async (t) => {
+  const id = () => crypto.randomUUID();
+  const footprintId = id(),
+    deviceId = id(),
+    signalId = id(),
+    padId = id(),
+    ncPadId = id();
+  const netId = id();
+  const origin = point(0, 0);
+  const shape = {
+    kind: 'capsule',
+    start: origin,
+    end: origin,
+    widthNm: 800_000,
+  };
+  const stack = {
+    copper: { top: shape, bottom: shape },
+    mask: { top: shape },
+    paste: {},
+    drill: {
+      start: point(-100_000, 0),
+      end: point(100_000, 0),
+      widthNm: 300_000,
+      plated: true,
+    },
+  };
+  const digest = 'sha256:' + 'a'.repeat(64);
+  const part21 = new TextEncoder().encode(
+    [
+      'ISO-10303-21;',
+      'HEADER;',
+      "FILE_DESCRIPTION(('TinyCAD fixture'),'2;1');",
+      "FILE_NAME('fixture.step','2026-01-01T00:00:00',('TinyCAD'),('TinyCAD'),'TinyCAD','TinyCAD','');",
+      "FILE_SCHEMA(('CONFIG_CONTROL_DESIGN'));",
+      'ENDSEC;',
+      'DATA;',
+      "#1=CARTESIAN_POINT('',(0.,0.,0.));",
+      'ENDSEC;',
+      'END-ISO-10303-21;',
+    ].join('\n'),
+  );
+  const modelAsset = await api.createBoardModelAsset(
+    part21,
+    'Fixture Ω',
+    'CC0-1.0',
+  );
+  const profile = {
+    outline: edges(polygon(0, 0, 15_000_000, 12_000_000)),
+    cutouts: [edges(polygon(7_000_000, 7_000_000, 8_000_000, 8_000_000))],
+  };
+  const { outline, ...board } = api.createBoard(
+    'Offline Ω & <layout>',
+    2,
+    polygon(0, 0, 15_000_000, 12_000_000),
+  );
+  const components = ['U01', 'U02'].map((reference) => ({
+    id: id(),
+    logicalId: id(),
+    reference,
+    value: 'Fixture Ω',
+    role: 'electrical',
+    units: [{ id: id(), sheetId: id() }],
+    signals: [{ signalId, netId }],
+  }));
+  const original = api.validateBoard({
+    ...board,
+    profile,
+    components,
+    requiredFeatures: [
+      'analytic-profile',
+      'embedded-devices',
+      'physical-padstacks',
+    ],
+    sourceCircuit: {
+      documentId: id(),
+      revision: 2,
+      connectivityDigest: digest,
+    },
+    graphicLayers: [{ id: id(), role: 'silk', side: 'top', name: 'F. Silk' }],
+    nets: [{ id: netId, name: '3V3', aliases: ['VCC'] }],
+    rules: {
+      minWidthNm: 200_000,
+      clearanceNm: 180_000,
+      edgeClearanceNm: 250_000,
+      minViaAnnulusNm: 100_000,
+    },
+    footprintDefinitions: [
+      {
+        id: footprintId,
+        revision: 'r1',
+        definitionDigest: digest,
+        name: 'Asymmetric & model',
+        pads: [
+          {
+            id: padId,
+            label: '01',
+            positionNm: point(100_000, 200_000),
+            stack,
+            vendor: { text: 'preserve' },
+          },
+          { id: ncPadId, label: 'A1', positionNm: point(1_300_000, 0), stack },
+        ],
+        graphics: [
+          {
+            kind: 'text',
+            layer: 'F.SilkS',
+            strokeNm: 100_000,
+            filled: false,
+            at: point(200_000, 400_000),
+            text: '<A> Ω\nβ',
+            sizeNm: point(600_000, 500_000),
+            rotationMicrodegree: 90_000_000,
+            visible: true,
+            align: ['left'],
+          },
+        ],
+        models: [
+          {
+            assetId: modelAsset.id,
+            kind: 'step',
+            source: 'fixture.step',
+            quality: 'generated-envelope',
+            offsetNm: [100_000, 200_000, 300_000],
+            rotationMicrodegree: [0, 0, 90_000_000],
+            scale: [1, 0.75, 1.25],
+          },
+        ],
+      },
+    ],
+    deviceDefinitions: [
+      {
+        id: deviceId,
+        footprintId,
+        revision: 'r1',
+        definitionDigest: digest,
+        packageName: 'X2',
+        packageSource: 'Fixture',
+        signalIds: [signalId],
+        assignments: [
+          { padId, kind: 'signal', signalId },
+          { padId: ncPadId, kind: 'nc' },
+        ],
+      },
+    ],
+    footprints: components.map(({ id: componentId }, index) => ({
+      id: id(),
+      componentId,
+      deviceId,
+      side: index ? 'bottom' : 'top',
+      positionNm: point(2_000_000 + index * 5_000_000, 3_000_000),
+      rotationMicrodegree: 90_000_000,
+      locked: index === 1,
+    })),
+    modelAssets: [modelAsset],
+  });
+  const bytes = await api.encodeBoard(original);
+  const xml = new TextDecoder().decode(bytes);
+  assert.match(
+    xml,
+    /^<\?xml version="1.0" encoding="UTF-8"\?>\s+<TinyCADPCB version="1">/,
+  );
+  assert.equal((xml.match(/<PADSTACKDEF /g) ?? []).length, 1);
+  assert.equal((xml.match(/<FOOTPRINTDEF /g) ?? []).length, 1);
+  assert.equal((xml.match(/<DEVICEDEF /g) ?? []).length, 1);
+  assert.equal((xml.match(/<MODELASSET /g) ?? []).length, 1);
+  assert.equal((xml.match(/<FOOTPRINT /g) ?? []).length, 2);
+  assert.match(xml, /label="01"/);
+  const directory = await mkdtemp(path.join(tmpdir(), 'tinycad-dpn-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const filename = path.join(directory, 'copied.dpn');
+  await writeFile(filename, bytes);
+  const boardCopy = await api.decodeBoard(await readFile(filename));
+  assert.deepEqual(boardCopy, original);
+  assert.deepEqual(await api.encodeBoard(boardCopy), bytes);
+  assert.deepEqual(
+    await api.readBoardModelAsset(boardCopy.modelAssets[0]),
+    part21,
+  );
+  const [x, y] = boardCopy.footprintDefinitions[0].models[0].offsetNm;
+  assert.deepEqual(
+    api.placeFootprintPoint(point(x, y), boardCopy.footprints[1]),
+    point(6_800_000, 2_900_000),
+  );
+
+  function cam(board) {
+    const placed = board.footprints.map((instance) => {
+      const component = board.components.find(
+        ({ id }) => id === instance.componentId,
+      );
+      const bindings = component.signals.map((signal) => ({
+        ...signal,
+        terminalId: component.reference + '.01',
+      }));
+      return api.placeEmbeddedDevice(board, instance.id, bindings);
+    });
+    const copper = placed.flatMap(({ copper }) => copper);
+    const drills = placed.flatMap(({ drills }) => drills);
+    const analysis = api.analyseCopper(kernel, copper, drills);
+    assert.equal(analysis.bareOpens.nets.length, 1);
+    const snapshot = {
+      profile: board.profile,
+      layers: board.copperLayers.map(({ id }) => ({
+        id,
+        copper: copper
+          .filter(({ layerId }) => layerId === id)
+          .map(({ region }) => region),
+      })),
+      drills,
+    };
+    const files = api.writeCamFiles(kernel, snapshot);
+    assert.deepEqual(api.verifyCamFiles(kernel, snapshot, files), []);
+    return files;
+  }
+  assert.deepEqual(cam(boardCopy), cam(original));
+
+  const history = new api.BoardHistory(boardCopy);
+  const changedProfile = { ...profile, cutouts: [] };
+  const edited = history.apply({
+    apiVersion: 1,
+    boardId: boardCopy.boardId,
+    expectedRevision: boardCopy.revision,
+    operations: [{ type: 'replaceProfile', profile: changedProfile }],
+  });
+  const editedCopy = await api.decodeBoard(await api.encodeBoard(edited));
+  assert.deepEqual(editedCopy.profile, changedProfile);
+  assert.deepEqual(editedCopy.modelAssets, boardCopy.modelAssets);
+
+  const parse = (text) => api.decodeBoard(new TextEncoder().encode(text));
+  await assert.rejects(
+    parse(xml.replace('padstack_id="1"', 'padstack_id="9"')),
+    /Missing PCB padstack/,
+  );
+  await assert.rejects(
+    parse(xml.replace(modelAsset.base64, btoa('other STEP bytes'))),
+    /SHA-256/,
+  );
+  await assert.rejects(
+    parse(
+      xml.replace(
+        `asset_id="${modelAsset.id}"`,
+        `asset_id="${'f'.repeat(64)}"`,
+      ),
+    ),
+    /missing embedded STEP asset/,
+  );
+  await assert.rejects(parse(xml.replace(deviceId, id())), /component binding/);
+});
+
+test('preserves optional XML records through a board edit and rejects unsupported requirements', async () => {
+  const encode = (text) => new TextEncoder().encode(text);
+  const text = (bytes) => new TextDecoder().decode(bytes);
+  const board = api.createBoard(
+    'One layer Ω',
+    1,
+    polygon(0, 0, 4_000_000, 3_000_000),
+  );
+  const xml = text(await api.encodeBoard(board));
+  const extension = '<VENDOR version="2"><PARAM name="Ω"/>free text</VENDOR>';
+  const input = xml
+    .replace(
+      '<TinyCADPCB version="1">',
+      '<TinyCADPCB version="1" vendor="AC &amp; DC">',
+    )
+    .replace('</TinyCADPCB>', extension + '</TinyCADPCB>')
+    .replace('<POINT x="0" y="0"/>', '<POINT x="0" y="0" annotation="datum"/>')
+    .replace('<DPNIDENTITY ', '<DPNIDENTITY vendor_title="Revision metadata" ');
+  const loaded = await api.decodeBoard(encode(input));
+  const history = new api.BoardHistory(loaded);
+  const edited = history.apply({
+    apiVersion: 1,
+    boardId: loaded.boardId,
+    expectedRevision: loaded.revision,
+    operations: [{ type: 'rename', title: 'Updated' }],
+  });
+  const saved = await api.encodeBoard(edited);
+  assert(text(saved).includes(extension));
+  assert.match(text(saved), /vendor="AC &amp; DC"/);
+  assert.match(text(saved), /annotation="datum"/);
+  assert.match(text(saved), /vendor_title="Revision metadata"/);
+  assert.deepEqual(await api.encodeBoard(await api.decodeBoard(saved)), saved);
+  assert.equal((await api.decodeBoard(saved)).title, 'Updated');
+
+  await assert.rejects(
+    api.decodeBoard(encode(JSON.stringify(board))),
+    /TinyCADPCB XML/,
+  );
+  await assert.rejects(
+    api.decodeBoard(
+      encode(
+        xml.replace('<TinyCADPCB version="1">', '<TinyCADPCB version="9">'),
+      ),
+    ),
+    /version/,
+  );
+  await assert.rejects(
+    api.decodeBoard(encode(xml.replace('straight-outline', 'future-outline'))),
+    /feature requirements/,
+  );
+  await assert.rejects(
+    api.decodeBoard(
+      encode(
+        xml.replace('</TinyCADPCB>', '<VENDOR required="true"/></TinyCADPCB>'),
+      ),
+    ),
+    /Unsupported required/,
+  );
+  await assert.rejects(
+    api.decodeBoard(
+      encode(
+        xml.replace(
+          '<TinyCADPCB',
+          '<!DOCTYPE pcb SYSTEM "file:///tmp/pcb"><TinyCADPCB',
+        ),
+      ),
+    ),
+    /Invalid PCB XML/,
+  );
+  await assert.rejects(
+    api.decodeBoard(encode(xml.replace('x="4000000"', 'x="4.5"'))),
+    /integer value/,
+  );
 });

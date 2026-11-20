@@ -108,17 +108,37 @@ test('projects share the editor sidebar and save schematic changes and a revisio
       )
       .toBe(true);
     const created = api.decodeProjectSettings(await readFile(sourceSettings));
-    const board = api.createBoard('Amplifier layout', 2, [
-      { x: 0, y: 0 },
-      { x: 2_000_000, y: 0 },
-      { x: 2_000_000, y: 2_000_000 },
-      { x: 0, y: 2_000_000 },
-    ]);
+    const circuit = {
+      schemaVersion: 1,
+      snapshotId: crypto.randomUUID(),
+      documentId: created.primarySchematic,
+      revision: 1,
+      components: [],
+      nets: [],
+      noConnects: [],
+    };
+    const board = {
+      ...api.createBoard('Amplifier layout', 2, [
+        { x: 0, y: 0 },
+        { x: 2_000_000, y: 0 },
+        { x: 2_000_000, y: 2_000_000 },
+        { x: 0, y: 2_000_000 },
+      ]),
+      sourceCircuit: {
+        documentId: circuit.documentId,
+        revision: circuit.revision,
+        connectivityDigest: await api.circuitConnectivityDigest(circuit),
+      },
+    };
     const boardId = board.boardId;
-    const boardData = new TextEncoder().encode(api.serializeBoard(board));
+    const boardData = await api.encodeBoard(board);
     await mkdir(path.join(sourceRoot, 'layouts'));
     const boardPath = 'layouts/Main.dpn';
     await writeFile(path.join(sourceRoot, boardPath), boardData);
+    await writeFile(
+      path.join(sourceRoot, 'Circuit.snapshot.json'),
+      JSON.stringify(circuit),
+    );
     const first = {
       ...created,
       primaryBoard: boardId,
@@ -126,6 +146,11 @@ test('projects share the editor sidebar and save schematic changes and a revisio
       entries: [
         ...created.entries,
         { kind: 'board', id: boardId, path: boardPath },
+        {
+          kind: 'circuit',
+          id: circuit.snapshotId,
+          path: 'Circuit.snapshot.json',
+        },
       ],
     };
     await writeFile(sourceSettings, api.encodeProjectSettings(first));
@@ -186,6 +211,15 @@ test('projects share the editor sidebar and save schematic changes and a revisio
       .getByRole('button', { name: 'Main.dpn', exact: true })
       .click();
     expect((await download).suggestedFilename()).toBe('Main.dpn');
+    const circuitPath = path.join(sourceRoot, 'Circuit.snapshot.json');
+    await writeFile(circuitPath, JSON.stringify({ ...circuit, revision: 2 }));
+    await sidebar
+      .getByRole('button', { name: 'Main.dpn', exact: true })
+      .click();
+    await expect(sidebar.getByRole('alert')).toContainText(
+      'Missing or inconsistent project circuit snapshot',
+    );
+    await writeFile(circuitPath, JSON.stringify(circuit));
     await sidebar.getByRole('button', { name: 'Parent folder' }).click();
 
     expect(

@@ -20,7 +20,7 @@ export interface FootprintModelTransform {
 }
 
 export interface FootprintModel extends FootprintModelTransform {
-  readonly assetId: string;
+  readonly assetId?: string;
   readonly kind: 'step';
   readonly source: string;
   readonly quality: 'imported-unreviewed' | 'generated-envelope';
@@ -53,7 +53,7 @@ export function validateFootprintDetails(graphics: readonly FootprintGraphic[] =
   }
   for (const model of models as readonly FootprintModel[]) {
     const triple = (value: unknown, validate: (n: number) => boolean) => Array.isArray(value) && value.length === 3 && value.every(validate);
-    if (!model || model.kind !== 'step' || typeof model.assetId !== 'string' || !/^[a-f0-9]{64}$/.test(model.assetId) || typeof model.source !== 'string' || !model.source.trim() || !['imported-unreviewed', 'generated-envelope'].includes(model.quality) ||
+    if (!model || model.kind !== 'step' || (model.assetId !== undefined && (typeof model.assetId !== 'string' || !/^[a-f0-9]{64}$/.test(model.assetId))) || typeof model.source !== 'string' || !model.source.trim() || !['imported-unreviewed', 'generated-envelope'].includes(model.quality) ||
       !triple(model.offsetNm, Number.isSafeInteger) || !triple(model.rotationMicrodegree, Number.isSafeInteger) || !triple(model.scale, (x) => Number.isFinite(x) && x > 0)) throw new Error('Invalid footprint STEP model or transform.');
   }
 }

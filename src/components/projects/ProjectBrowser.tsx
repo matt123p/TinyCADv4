@@ -36,6 +36,7 @@ import {
   projectRequest,
   projectRootChanged,
   readProject,
+  readProjectBoard,
   savedProjectRevision,
   saveProjectDrawing,
 } from '../../io/projects';
@@ -273,10 +274,10 @@ export default function ProjectBrowser() {
     if (link?.kind === 'schematic') openDrawing(context, link.id);
     else
       void run(async () => {
-        const { data } = await projectRequest({
-          operation: 'read',
-          id: item.id,
-        });
+        const { data } =
+          link?.kind === 'board'
+            ? await readProjectBoard(context.project, link.id)
+            : await projectRequest({ operation: 'read', id: item.id });
         download(item.name, data);
       }, false);
   };

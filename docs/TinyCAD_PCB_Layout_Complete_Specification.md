@@ -1028,26 +1028,33 @@ A project uses the same folder tree for authoring, sharing and source control. I
 
 Preserve unknown optional fields where possible. Unknown required features trigger an explicit compatibility error. User-visible pad labels are strings; references and net names may contain Unicode but must be normalised/preserved predictably for each export format.
 
-### 26.3 Proposed board header example
+### 26.3 Board XML example
 
-This example shows the proposed XML header and the definition-to-placement reference pattern. Document the complete XML schema and compatibility rules before M1.
+This excerpt shows the version 1 header and the definition-to-placement reference pattern. See the [native PCB file contract](pcb-format.md#standalone-board-format) for the field map and compatibility rules.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <TinyCADPCB version="1">
-  <DPNIDENTITY id="253e5864-eeda-4dc5-96a8-e7bfac848506" revision="42" />
-  <COORDINATES length_unit="nm" angle_unit="microdegree" frame="top-view-x-right-y-up-ccw" />
-  <REQUIREDFEATURE id="embedded-devices" />
-  <COPPERLAYER id="top" order="0" />
-  <COPPERLAYER id="bottom" order="1" />
-  <FOOTPRINTDEF id="1">
-    <!-- Pad geometry and model attachments -->
-  </FOOTPRINTDEF>
-  <DEVICEDEF id="1" footprint_id="1">
-    <!-- Explicit terminal-to-pad mapping -->
-  </DEVICEDEF>
-  <FOOTPRINT id="53f8ce3e-5a4b-4f74-b70b-cdb1fc5fcc86" device_id="1" ref="U1"
-             x="18000000" y="12000000" rotation="0" side="top" />
+  <DPNIDENTITY id="253e5864-eeda-4dc5-96a8-e7bfac848506" revision="42"/>
+  <COORDINATES length_unit="nm" angle_unit="microdegree" frame="top-view-x-right-y-up-ccw"/>
+  <TITLE>Classroom amplifier</TITLE>
+  <REQUIREDFEATURES>
+    <REQUIREDFEATURE id="embedded-devices"/>
+    <REQUIREDFEATURE id="straight-outline"/>
+  </REQUIREDFEATURES>
+  <COPPERLAYERS>
+    <COPPERLAYER id="top" order="0"/>
+    <COPPERLAYER id="bottom" order="1"/>
+  </COPPERLAYERS>
+  <!-- Board outline and referenced definitions omitted from this excerpt -->
+  <FOOTPRINTS>
+    <FOOTPRINT id="53f8ce3e-5a4b-4f74-b70b-cdb1fc5fcc86"
+               component_id="36a93569-d781-42a5-a72f-4071ffe031fe"
+               device_id="18ea760d-e5de-497b-af11-27793b4df943"
+               side="top" locked="false" rotation="0">
+      <POSITION x="18000000" y="12000000"/>
+    </FOOTPRINT>
+  </FOOTPRINTS>
 </TinyCADPCB>
 ```
 
@@ -1243,7 +1250,7 @@ Observe a small group of novice learners and experienced users completing the sa
 |---|---|---|
 | WP0: Audit and schema | Existing TinyCAD graph/undo/persistence audit; stable IDs; terminology; exact capability matrix | Can explain how every existing pin/package attribute migrates |
 | WP1: G0 engine spike | Geometry, mapping, connectivity, simple router/fill, export/read-back prototypes | Seeded short/open and output-corruption tests pass in browser/desktop |
-| WP2: Project, hierarchy and libraries | Native XML board codec, project folder and settings file, hierarchy authoring and v3 migration, instance-aware connectivity, prototype migration, embedded assets, device resolver, KiCad symbol and footprint import, footprint editor, and Python-generated starter footprint/STEP bundles | Board codec and project folder round trips pass offline. Hierarchical connectivity, native imports and the starter catalogue pass their component tests |
+| WP2: Project, hierarchy and libraries | Native XML board codec, project folder and settings file, hierarchy authoring and v3 migration, instance-aware connectivity, embedded assets, device resolver, KiCad symbol and footprint import, footprint editor, and Python-generated starter footprint/STEP bundles | Board codec and project folder round trips pass offline. Hierarchical connectivity, native imports and the starter catalogue pass their component tests |
 | WP3: Board editing | Outline/layers, placement, selection, snapping, manual routing/vias, undo, XML board open/save and project browser integration within the existing TinyCAD shell (UX-11, WEB-01) | Fixtures A/B/E are editable in the shared shell. Each supported workspace loads its required modules and assets |
 | WP4: Zones and validation | Zone engine, rule resolver, physical graph, batch/local checks, coverage and waivers | M1 geometry/connectivity acceptance suite passes |
 | WP5: Manufacturing and 3D | Writers, output-derived preview, project output folders and recipes, BOM/netlist/placement, manifest, diagnostic export, KiCad subset export, and 3D inspection with generated and imported KiCad STEP models | Independent read-back passes. Recipes reproduce project outputs and models pass datum and placement checks |
@@ -1311,7 +1318,7 @@ Calendar/effort estimates should follow the repository audit and G0 measurements
 |---|---|---|
 | Core implementation | Extend existing TinyCAD stack; typed engine interfaces | Repository audit and G0 browser/desktop spike |
 | Geometry | Integer nm persistence; robust kernel selected by tests | Boundary/overflow/property test corpus |
-| Native interchange | Open schemas and a project folder tree with a root `.tcproject` settings file | Save/load, prototype migration and offline folder-copy tests |
+| Native interchange | Open schemas and a project folder tree with a root `.tcproject` settings file | Save/load and offline folder-copy tests |
 | Footprint source | Curated core plus KiCad import | Pin-map coverage, asset provenance and import loss tests |
 | Routing | Native manual M1; evaluate shove reuse and external adapters | Correctness and interaction benchmarks |
 | Layer scope | One/two M1; qualified rigid multilayer M2 | Layer-span and output qualification |

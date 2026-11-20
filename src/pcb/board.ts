@@ -60,7 +60,7 @@ export function createBoard(
 ): BoardDocument {
   if (layerCount !== 1 && layerCount !== 2)
     throw new Error('Choose one or two copper layers.');
-  return readBoard({
+  return validateBoard({
     ...boardFormat,
     boardId: crypto.randomUUID(),
     revision: 0,
@@ -71,7 +71,7 @@ export function createBoard(
   });
 }
 
-function readBoard(value: unknown): BoardDocument {
+export function validateBoard(value: unknown): BoardDocument {
   if (!value || typeof value !== 'object')
     throw new Error('Expected a TinyCAD PCB document.');
   const board = value as BoardDocument;
@@ -171,14 +171,6 @@ function freezeJson(value: unknown, depth = 0): unknown {
   throw new Error('PCB document contains a non-JSON value.');
 }
 
-export function parseBoard(json: string): BoardDocument {
-  return readBoard(JSON.parse(json));
-}
-
-export function serializeBoard(board: BoardDocument): string {
-  return JSON.stringify(readBoard(board), null, 2) + '\n';
-}
-
 export type BoardOperation =
   | { readonly type: 'rename'; readonly title: string }
   | {
@@ -212,7 +204,7 @@ export class BoardHistory {
   private readonly future: BoardDocument[] = [];
 
   constructor(board: BoardDocument) {
-    this.current = readBoard(board);
+    this.current = validateBoard(board);
   }
 
   get board(): BoardDocument {
@@ -271,7 +263,7 @@ export class BoardHistory {
           throw new Error('Unsupported board operation.');
       }
     }
-    const next = readBoard({
+    const next = validateBoard({
       ...candidate,
       revision: this.current.revision + 1,
     });
@@ -299,7 +291,7 @@ export class BoardHistory {
     }
     const previous = from[from.length - 1];
     if (!previous) return this.current;
-    const next = readBoard({
+    const next = validateBoard({
       ...previous,
       revision: this.current.revision + 1,
     });

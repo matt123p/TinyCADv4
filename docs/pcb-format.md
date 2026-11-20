@@ -57,7 +57,7 @@ Compare v3 and v4 net membership on a legacy fixture with a multi-sheet child pl
 
 ## Standalone board format
 
-Production `.dpn` is a single UTF-8 XML document modelled on TinyCAD's `.dsn` format. Use a TinyCAD-prefixed root, uppercase names for domain elements and lowercase attributes for identifiers and values. Follow the `.dsn` pattern of embedding reusable definitions once and referencing them by local ID from placements, as `SYMBOLDEF` and `SYMBOL` do. Keep stable UUIDs for board objects and preserve editable names, references and pad labels as text. See the [proposed XML header](TinyCAD_PCB_Layout_Complete_Specification.md#263-proposed-board-header-example).
+Production `.dpn` is a single UTF-8 XML document modelled on TinyCAD's `.dsn` format. Use a TinyCAD-prefixed root, uppercase names for domain elements and lowercase attributes for identifiers and values. Follow the `.dsn` pattern of embedding reusable definitions once and referencing them by local ID from placements, as `SYMBOLDEF` and `SYMBOL` do. Keep stable UUIDs for board objects and preserve editable names, references and pad labels as text. See the [XML board example](TinyCAD_PCB_Layout_Complete_Specification.md#263-board-xml-example).
 
 The board stores its schema version, revision, required features and authoritative geometry. Coordinates use integer nanometres and rotations use integer microdegrees. In top view, X runs right, Y runs up, and positive angles are counter-clockwise. Bottom placement mirrors local X before the board rotation.
 
@@ -74,9 +74,15 @@ The board stores its schema version, revision, required features and authoritati
 
 A standalone board embeds the definitions, models, nets and rules required to reopen, edit, inspect and regenerate supported outputs without the original schematic, library, project folder or sidecar files. The linked schematic and circuit snapshot are project documents used for cross-probing and ECOs.
 
-The G0 and WP0 prototype codec uses JSON. Add a migration path for supported prototype boards and project entries. Keep the original and validate the resulting XML before saving a converted copy.
+Version 1 is the first persisted board format. `DPNIDENTITY`, `COORDINATES`, `TITLE`, `REQUIREDFEATURES` and `COPPERLAYERS` describe every board. An `OUTLINE` contains ordered integer `POINT` records. A `PROFILE` has an `OUTLINE` of ordered `EDGE` records and a `CUTOUTS` collection. Each edge carries `START` and `END`. Arcs also carry `CENTRE` and a `clockwise` flag.
 
-Board operations apply atomically against an expected revision. Undo and redo restore content with a fresh revision. Future features add typed entity collections for tracks, vias, zones, cutouts, padstacks and mechanical objects. Those collections need implementation-specific checks and required feature identifiers before use. Filled copper, meshes, spatial indexes and live DRC are rebuildable data and stay out of authoring files.
+`FOOTPRINTS` references `COMPONENTDEFS` and `DEVICEDEFS` by embedded UUID. Devices reference `FOOTPRINTDEFS` by UUID and map their `SIGNALS` to pad IDs in `ASSIGNMENTS`. Pads reference `PADSTACKDEFS` by a positive file-local integer ID. Identical stacks share a single definition. Each stack defines face geometry in `COPPER`, optional `MASK` and `PASTE`, and an optional `DRILL` with separate endpoints and an explicit plating flag. Component definitions carry schematic unit and sheet UUIDs where available. Component signal bindings reference UUIDs in `NETS`, and `RULES` stores board-wide routing widths and clearances in nanometres.
+
+`MODELASSETS` stores canonical base64 in each `MODELASSET` record. Its ID is the lowercase SHA-256 hex digest of the decoded bytes. TinyCAD verifies the digest on read and write. An attachment with an asset ID must resolve in the file. An attachment with only a source and transform records an unresolved model. The codec does not fetch external files. Each model asset is limited to 32 MiB, with 64 MiB for all assets and 128 MiB for the complete XML file.
+
+The writer orders known record fields consistently and retains authored list order. Optional XML attributes and child elements on domain records survive edits. Unknown properties in the in-memory board model use named `PROPERTY` elements. Structural lists accept their declared item type. An unsupported required feature or format version prevents loading. The version 1 field map is maintained in the board codec. [Board codec](../src/pcb/boardCodec.ts)
+
+Board operations apply atomically against an expected revision. Undo and redo restore content with a fresh revision. Future features add typed entity collections for tracks, vias, zones and mechanical objects. Those collections need implementation-specific checks and required feature identifiers before use. Filled copper, meshes, spatial indexes and live DRC are rebuildable data and stay out of authoring files.
 
 ## KiCad import persistence
 

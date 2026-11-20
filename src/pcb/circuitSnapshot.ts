@@ -1,4 +1,4 @@
-import { digest } from '../io/dsnContainer';
+import { digest } from '../util/sha256';
 import { isEntityId } from '../model/schematicIdentity';
 import { reviewCircuitNets } from './circuitNets';
 import type { CircuitNet, SchematicTerminal } from './circuitNets';

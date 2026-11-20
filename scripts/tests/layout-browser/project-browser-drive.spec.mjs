@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { layoutRuntime } from '../../lib/layout-runtime.mjs';
 import { serveLayoutApp } from './serve-app.mjs';
@@ -13,20 +14,29 @@ test.afterAll(async () => {
   await app?.close();
 });
 
-test('Google mode opens the remembered Drive project folder and its project schematic', async ({
+test('Google mode opens native schematic and PCB files in the remembered Drive project', async ({
   page,
 }) => {
   const api = await layoutRuntime();
   const drawing = api.blank();
   let data = await api.encodeDrawing(drawing, 'zip-v1');
+  const board = api.createBoard('Shared layout', 1, [
+    { x: 0, y: 0 },
+    { x: 3_000_000, y: 0 },
+    { x: 3_000_000, y: 2_000_000 },
+    { x: 0, y: 2_000_000 },
+  ]);
+  const boardData = await api.encodeBoard(board);
   const settings = api.encodeProjectSettings({
     projectId: crypto.randomUUID(),
     revisionId: crypto.randomUUID(),
     title: 'Shared circuit',
     requiredFeatures: [],
     primarySchematic: drawing.documentId,
+    primaryBoard: board.boardId,
     entries: [
       { kind: 'schematic', id: drawing.documentId, path: 'src/Circuit.dzn' },
+      { kind: 'board', id: board.boardId, path: 'Board.dpn' },
     ],
   });
   await page.addInitScript(() => {
@@ -77,6 +87,7 @@ test('Google mode opens the remembered Drive project folder and its project sche
             name: 'Shared.tcproject',
             mimeType: 'application/xml',
           },
+          { id: 'board', name: 'Board.dpn', mimeType: 'application/xml' },
           {
             id: 'source',
             name: 'src',
@@ -94,11 +105,16 @@ test('Google mode opens the remembered Drive project folder and its project sche
       const folder = url.searchParams.get('q').split("'")[1];
       return route.fulfill({ json: { files: files[folder] ?? [] } });
     }
-    if (url.searchParams.get('alt') === 'media')
+    if (url.searchParams.get('alt') === 'media') {
+      const file = url.pathname.split('/').at(-1);
       return route.fulfill({
-        body: Buffer.from(url.pathname.endsWith('/drawing') ? data : settings),
-        contentType: 'application/xml',
+        body: Buffer.from(
+          { drawing: data, board: boardData, project: settings }[file],
+        ),
+        contentType:
+          file === 'drawing' ? 'application/octet-stream' : 'application/xml',
       });
+    }
     return route.fulfill({
       json: {
         version: url.pathname.endsWith('/drawing') ? String(version) : '1',
@@ -149,6 +165,13 @@ test('Google mode opens the remembered Drive project folder and its project sche
       "'source' in parents and trashed = false",
     ]),
   );
+  const downloading = page.waitForEvent('download');
+  await sidebar.getByRole('button', { name: 'Board.dpn', exact: true }).click();
+  const copiedBoard = await downloading;
+  expect(copiedBoard.suggestedFilename()).toBe('Board.dpn');
+  expect(
+    await api.decodeBoard(await readFile(await copiedBoard.path())),
+  ).toEqual(board);
   await page.evaluate(() =>
     window.layoutTest.renameCurrentSheet('Saved to Drive'),
   );
