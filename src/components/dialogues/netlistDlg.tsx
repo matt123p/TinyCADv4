@@ -18,7 +18,8 @@ import {
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import { docDrawing } from '../../state/undo/undo';
-import { wkrGenerateNetlist } from '../../web-worker/worker';
+import { generateActiveNetlist } from '../../io/netlists/activeNetlist';
+import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
 import { downloadNetlist } from '../../io/netlists/netlistFiles';
 
 interface NetlistDialogProps extends WithTranslation {
@@ -64,11 +65,12 @@ class NetlistDialog extends React.PureComponent<
       this.setState({ busy: true });
       this.props.dispatch(
         (dispatch: Dispatch, getState: { (): docDrawing }) => {
-          wkrGenerateNetlist(getState().docStore.present.drawing).then(
+          const initial = getState();
+          generateActiveNetlist(initial).then(
             (netlist) => {
-              if (!this.cancel) {
+              if (!this.cancel && getState().docStore.present.drawing === initial.docStore.present.drawing && getState().altStore.file === initial.altStore.file) {
                 // Write the netlist hints back to the drawing
-                this.props.dispatch(actionUpdateNetlistHints(netlist));
+                if (!netlist.sources) this.props.dispatch(actionUpdateNetlistHints(netlist));
 
                 // We can close the dialogue
                 this.props.dispatch(actionCancelDialog());
@@ -81,7 +83,10 @@ class NetlistDialog extends React.PureComponent<
                 );
               }
             },
-          );
+            (error) => {
+              if (!this.cancel) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+            },
+          ).finally(() => { if (!this.cancel) this.setState({ busy: false }); });
         },
       );
     }

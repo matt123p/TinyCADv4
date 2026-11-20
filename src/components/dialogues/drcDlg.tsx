@@ -16,7 +16,8 @@ import {
   actionCancelDialog,
 } from '../../state/dispatcher/AppDispatcher';
 import { connect } from 'react-redux';
-import { wkrGenerateNetlist } from '../../web-worker/worker';
+import { generateActiveNetlist } from '../../io/netlists/activeNetlist';
+import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
 import { Dispatch, AnyAction } from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
 import { docDrawing } from '../../state/undo/undo';
@@ -78,13 +79,17 @@ class DrcDialog extends React.PureComponent<DrcDialogProps, DrcDialogState> {
       this.setState({ busy: true });
       this.props.dispatch(
         (dispatch: Dispatch, getState: { (): docDrawing }) => {
-          wkrGenerateNetlist(getState().docStore.present.drawing).then(
+          const initial = getState();
+          generateActiveNetlist(initial).then(
             (netlist) => {
-              if (!this.cancel) {
+              if (!this.cancel && getState().docStore.present.drawing === initial.docStore.present.drawing && getState().altStore.file === initial.altStore.file) {
                 dispatch(actionDrc(this.state, netlist));
               }
             },
-          );
+            (error) => {
+              if (!this.cancel) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+            },
+          ).finally(() => { if (!this.cancel) this.setState({ busy: false }); });
         },
       );
     }

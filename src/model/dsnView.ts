@@ -1,3 +1,4 @@
+import type { SchematicSource } from '../io/netlists/netlistGenerator';
 import { DocItem, Coordinate } from './dsnItem';
 import { dragObject } from '../manipulators/dragObject';
 import { ContextMenuList, MergedStyle } from '../manipulators/updateInterfaces';
@@ -23,6 +24,7 @@ export interface ViewTracker {
 }
 
 export interface FindResult {
+  source?: SchematicSource;
   symbol: string;
   text: string;
   pin?: string;

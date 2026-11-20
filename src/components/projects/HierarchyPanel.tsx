@@ -153,7 +153,7 @@ export default function HierarchyPanel() {
     entryId: string,
     hierarchyTrail: readonly HierarchyFrame[],
     openSheetId?: string,
-    openPlacementId?: string,
+    openUnitId?: string,
   ) => {
     dispatch(
       fileOpenProject({
@@ -166,7 +166,7 @@ export default function HierarchyPanel() {
           entryId,
           hierarchyTrail,
           openSheetId,
-          openPlacementId,
+          openUnitId,
         },
       }) as any,
     );

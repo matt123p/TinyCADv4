@@ -1,3 +1,4 @@
+import type { SchematicSource } from '../io/netlists/netlistGenerator';
 import { DocItem, Coordinate, dsnPin } from './dsnItem';
 import { Snap } from '../manipulators/snap';
 import type { SimulationSetup } from '../simulation/contracts';
@@ -156,6 +157,7 @@ export interface dsnSheet {
 }
 
 export interface DrcError {
+  source?: SchematicSource;
   symbol?: string;
   pin?: string;
   text: string;

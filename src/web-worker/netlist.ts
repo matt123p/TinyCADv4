@@ -33,6 +33,7 @@ import { Coordinate, DocItemTypes } from '../model/dsnItem';
 export function makeNetForSheet(
   sheet: dsnSheet,
   netlist_builder: NetlistGenerator,
+  instancePorts = false,
 ) {
   if (sheet.hierarchicalSymbol) return;
   // Here is some temporary data for this function
@@ -48,6 +49,15 @@ export function makeNetForSheet(
     switch (ObjPtr.NodeName) {
       case DocItemTypes.Symbol:
         {
+          if (instancePorts && ObjPtr.hierarchy) {
+            for (const [x, y, pin] of new updateSymbol(ObjPtr).active_points()) {
+              netlist_builder.Add({
+                a: [x, y], sheet: null, netlist: null, eprop: null, hints: [],
+                port: { placementId: ObjPtr.unitId, name: pin.name.trim() },
+              });
+            }
+            break;
+          }
           netlist_builder.addSymbol(ObjPtr);
 
           let myRefDes = ObjPtr.text.find((a) => a.description === 'Ref').value;

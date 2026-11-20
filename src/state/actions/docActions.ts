@@ -1,3 +1,4 @@
+import type { dsnBomEntry } from '../../model/dsnBomEntry';
 import { TSheet } from '../../components/svg/Sheet';
 import { FileIdType } from '../../io/files';
 import { NetlistData } from '../../io/netlists/netlistGenerator';
@@ -55,6 +56,7 @@ export interface RenameDocument {
 
 export interface BomGenerate {
   type: DocActionTypes.BomGenerate;
+  rows?: dsnBomEntry[];
 }
 
 export interface BomClose {

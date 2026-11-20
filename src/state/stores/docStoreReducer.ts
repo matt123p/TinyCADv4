@@ -367,8 +367,8 @@ export function DocStoreReducer(
       const initialSheet = action.project?.openSheetId
         ? Math.max(0, new_drawing.sheets.findIndex(s => s.id === action.project.openSheetId))
         : 0;
-      const placement = action.project?.openPlacementId &&
-        new_drawing.sheets[initialSheet]?.items.find(i => isChildPlacement(i) && i.unitId === action.project.openPlacementId);
+      const placement = action.project?.openUnitId &&
+        new_drawing.sheets[initialSheet]?.items.find(i => i.NodeName === DocItemTypes.Symbol && i.unitId === action.project.openUnitId);
       const newView: dsnView = {
         ...update_view.cancel_add(state.view, new_drawing.sheets[initialSheet]).view,
         selected_sheet: initialSheet, hiddenItemIds: [], _selected_array: placement ? [placement._id] : [],
@@ -417,12 +417,9 @@ export function DocStoreReducer(
       break;
 
     case DocActionTypes.BomGenerate:
-      if (hasChildPlacements(state.drawing)) {
-        setTimeout(() => getStore().dispatch(actionSelectDialog('io_failure', { message: 'Hierarchical drawings need instance-aware connectivity before generating a bill of materials.' })));
-        break;
-      }
+      if (!action.rows && hasChildPlacements(state.drawing)) break;
       if (state.drawing) {
-        const bom = update_drawing.makeBomForDrawing(state.drawing);
+        const bom = action.rows ?? update_drawing.makeBomForDrawing(state.drawing);
         state = update(state, {
           bom: { $set: bom },
         });

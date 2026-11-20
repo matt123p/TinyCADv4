@@ -537,6 +537,14 @@ export class updateDrawing {
       }
     }
 
+    if (netlist.sources) {
+      const origins = new Map(netlist.symbols.map(([, symbol]) =>
+        [symbol._id, netlist.sources[symbol.unitId]]));
+      for (const row of r) {
+        const origin = origins.get(row.id);
+        if (origin?.instancePath.length) row.source = origin;
+      }
+    }
     return r;
   }
 

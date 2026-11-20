@@ -34,7 +34,7 @@ export interface OpenProjectDrawing extends ProjectFile {
   documentPath: string;
   hierarchyTrail?: readonly HierarchyFrame[];
   openSheetId?: string;
-  openPlacementId?: string;
+  openUnitId?: string;
   folderId: string;
 }
 

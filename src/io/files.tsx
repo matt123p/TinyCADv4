@@ -1,4 +1,4 @@
-import { hasChildPlacements } from './hierarchyDrawing';
+import { generateActiveBom, generateActiveNetlist } from './netlists/activeNetlist';
 import { apiServer, tinycadUrl } from './apiServer';
 import { withoutResults } from '../simulation/document';
 import { drawingFileName, isCompressedDrawing } from '../../shared/drawingFiles.js';
@@ -9,7 +9,6 @@ import { ActionCreators } from 'redux-undo';
 import { ioXML } from './ioXml';
 import {
   actionAddImage,
-  actionBomGenerate,
   actionCommand,
   actionMenuBrowserOpen,
   actionRename,
@@ -995,32 +994,22 @@ export function handleMenuCommand(command: string) {
         dispatch(actionSelectDialog('annotate', null));
         break;
       case 'tools-bom':
-        dispatch(actionBomGenerate());
+        dispatch(generateActiveBom() as any);
         break;
       case 'tools-netlist':
         dispatch(actionSelectDialog('netlist', null));
         break;
       case 'tools-spice':
-        if (hasChildPlacements(state.docStore.present.drawing)) {
-          dispatch(actionSelectDialog('io_failure', { message: 'Hierarchical drawings need instance-aware connectivity before exporting a netlist.' }));
-          break;
-        }
-        wkrGenerateNetlist(state.docStore.present.drawing).then((netlist) => {
-          dispatch(actionUpdateNetlistHints(netlist));
-          downloadNetlist(state.altStore.file.name, 'SPICE', netlist);
-        });
+      case 'tools-vhdl': {
+        if (command === 'tools-vhdl' && process.env.TARGET_SYSTEM !== 'electron') break;
+        generateActiveNetlist(state).then(netlist => {
+          if (getState().docStore.present.drawing !== state.docStore.present.drawing ||
+              getState().altStore.file !== state.altStore.file) return;
+          if (!netlist.sources) dispatch(actionUpdateNetlistHints(netlist));
+          downloadNetlist(state.altStore.file.name, command === 'tools-spice' ? 'SPICE' : 'VHDL', netlist);
+        }, error => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
         break;
-      case 'tools-vhdl':
-        if (process.env.TARGET_SYSTEM !== 'electron') break;
-        if (hasChildPlacements(state.docStore.present.drawing)) {
-          dispatch(actionSelectDialog('io_failure', { message: 'Hierarchical drawings need instance-aware connectivity before exporting a netlist.' }));
-          break;
-        }
-        wkrGenerateNetlist(state.docStore.present.drawing).then((netlist) => {
-          dispatch(actionUpdateNetlistHints(netlist));
-          downloadNetlist(state.altStore.file.name, 'VHDL', netlist);
-        });
-        break;
+      }
       case 'import-kicad-symbols':
         dispatch(importSymbolsFromFile() as any);
         break;

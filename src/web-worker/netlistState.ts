@@ -11,7 +11,7 @@ import { dsnDrawing, dsnSheet } from '../model/dsnDrawing';
 import { DocItemTypes } from '../model/dsnItem';
 import { makeNetForSheet } from './netlist';
 
-interface SheetSnapshot {
+export interface SheetSnapshot {
   nets: { [key: string]: NetList };
   eprops: { [key: string]: EProp };
   labels: { [key: string]: string };
@@ -84,11 +84,11 @@ function findMaxHintFromSheet(sheet: dsnSheet): number {
   return maxHint;
 }
 
-function createSheetSnapshot(sheet: dsnSheet): SheetSnapshot {
+export function createSheetSnapshot(sheet: dsnSheet, instancePorts = false): SheetSnapshot {
   const builder = new NetlistGenerator();
   builder.sheet = sheet.name;
   builder.SetNewNet(findMaxHintFromSheet(sheet));
-  makeNetForSheet(sheet, builder);
+  makeNetForSheet(sheet, builder, instancePorts);
   builder.complete();
 
   return {
@@ -99,9 +99,21 @@ function createSheetSnapshot(sheet: dsnSheet): SheetSnapshot {
   };
 }
 
-function mergeSheetSnapshots(sheets: SheetSnapshot[]): NetlistData {
+export interface ScopedNet {
+  sheet: number;
+  net: string;
+}
+
+export function mergeSheetSnapshots(
+  sheets: SheetSnapshot[],
+  hierarchy?: {
+    scopes: readonly { key: string; prefix: string }[];
+    bindings: readonly [ScopedNet, ScopedNet][];
+  },
+): NetlistData {
   const uf = new UnionFind();
   const labelsToKeys = new Map<string, Set<string>>();
+  const labelNames = new Map<string, string>();
   const flatNets = new Map<string, NetListNode[]>();
   const flatEprops = new Map<string, EProp>();
   const symbols: SymbolRef[] = [];
@@ -126,10 +138,11 @@ function mergeSheetSnapshots(sheets: SheetSnapshot[]): NetlistData {
       }
       const scopedNet = `${index}:${snapshot.labels[label]}`;
       uf.add(scopedNet);
-      if (!labelsToKeys.has(label)) {
-        labelsToKeys.set(label, new Set<string>());
-      }
-      labelsToKeys.get(label)!.add(scopedNet);
+      const scope = hierarchy?.scopes[index];
+      const key = scope ? JSON.stringify([scope.key, label]) : label;
+      labelNames.set(key, scope?.prefix ? scope.prefix + '_' + label : label);
+      if (!labelsToKeys.has(key)) labelsToKeys.set(key, new Set());
+      labelsToKeys.get(key).add(scopedNet);
     }
   }
 
@@ -139,6 +152,9 @@ function mergeSheetSnapshots(sheets: SheetSnapshot[]): NetlistData {
       uf.union(arr[0], arr[i]);
     }
   }
+
+  for (const [a, b] of hierarchy?.bindings ?? [])
+    uf.union(`${a.sheet}:${a.net}`, `${b.sheet}:${b.net}`);
 
   const groupedNets = new Map<string, NetListNode[]>();
   const groupedEprops = new Map<string, EProp>();
@@ -249,7 +265,7 @@ function mergeSheetSnapshots(sheets: SheetSnapshot[]): NetlistData {
   for (const [label, scoped] of labelsToKeys) {
     const first = Array.from(scoped)[0];
     const root = uf.find(first);
-    labels[label] = rootToFinal.get(root)!;
+    labels[labelNames.get(label)] = rootToFinal.get(root)!;
   }
 
   symbols.sort((ax, bx) => {

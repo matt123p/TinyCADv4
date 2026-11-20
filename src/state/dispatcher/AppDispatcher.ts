@@ -199,9 +199,10 @@ export function actionBomClose() {
   return action;
 }
 
-export function actionBomGenerate() {
+export function actionBomGenerate(rows?: BomGenerate['rows']) {
   const action: BomGenerate = {
     type: DocActionTypes.BomGenerate,
+    rows,
   };
   return action;
 }

@@ -181,3 +181,67 @@ export async function findChildUsages(
   }
   return { uses, unread };
 }
+
+/** Resolve stable schematic provenance from the root, preserving the exact repeated-instance path. */
+export async function navigateSchematicSource(
+  location: OpenProjectDrawing,
+  root: dsnDrawing,
+  source: Omit<import('./netlists/netlistGenerator').SchematicSource, 'itemId'>,
+): Promise<import('./projects').OpenProjectAction['location']> {
+  const project = await readProject(location.id, location.rootId);
+  let entry = project.settings.entries.find(
+    (link) => link.kind === 'schematic' && link.id === location.entryId,
+  );
+  if (!entry)
+    throw new Error('The hierarchy root is no longer part of the project.');
+  let drawing = root;
+  const trail: import('./projectStorage').HierarchyFrame[] = [];
+  for (const placementId of source.instancePath) {
+    const sheet = drawing.sheets.find((sheet) =>
+      sheet.items.some(
+        (item) => isChildPlacement(item) && item.unitId === placementId,
+      ),
+    );
+    const placement = sheet?.items.find(
+      (item) => isChildPlacement(item) && item.unitId === placementId,
+    );
+    if (!placement || !isChildPlacement(placement))
+      throw new Error('The source placement no longer exists.');
+    const reference =
+      placement.text.find(({ description }) => description === 'Ref')?.value ||
+      'H?';
+    trail.push({
+      entryId: entry.id,
+      name: entry.path,
+      sheetId: sheet.id,
+      reference,
+      placementId,
+    });
+    const child = await resolveChild(
+      project,
+      { rootId: location.rootId, documentPath: entry.path },
+      placement.hierarchy,
+    );
+    if (!child.entry)
+      throw new Error('The source schematic is no longer part of the project.');
+    entry = child.entry;
+    drawing = child.drawing;
+  }
+  const sheet = drawing.sheets.find(({ id }) => id === source.sheetId);
+  const unit = sheet?.items.find(
+    (item) =>
+      item.NodeName === DocItemTypes.Symbol && item.unitId === source.unitId,
+  );
+  if (drawing.documentId !== source.documentId || !unit)
+    throw new Error('The original schematic unit no longer exists.');
+  return {
+    id: location.id,
+    name: location.name,
+    rootId: location.rootId,
+    folderId: location.folderId,
+    entryId: entry.id,
+    openSheetId: source.sheetId,
+    openUnitId: source.unitId,
+    hierarchyTrail: trail,
+  };
+}

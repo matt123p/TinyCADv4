@@ -43,6 +43,15 @@ export interface NetListSymbol {
   point: Coordinate;
 }
 
+export interface SchematicSource {
+  documentId: string;
+  documentPath: string;
+  sheetId: string;
+  instancePath: readonly string[];
+  itemId: number;
+  unitId?: string;
+}
+
 export interface NetListNode {
   a: Coordinate;
   sheet: string;
@@ -54,6 +63,9 @@ export interface NetListNode {
   pin?: string;
   parent?: dsnPin | dsnPower | dsnWire | dsnLabel | dsnJunction | dsnNoConnect;
   hints: dsnSymbolHint[];
+  port?: { placementId: string; name: string };
+  source?: SchematicSource;
+  instanceUnitId?: string;
 }
 
 export interface NetlistData {
@@ -62,6 +74,7 @@ export interface NetlistData {
   eprops: { [key: string]: EProp };
   labels: { [key: string]: string };
   symbols: SymbolRef[];
+  sources?: Record<string, SchematicSource>;
 }
 
 export type SymbolRef = [string, dsnSymbol];

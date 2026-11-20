@@ -10,6 +10,10 @@ import {
 } from '@fluentui/react-components';
 import { Dismiss20Regular } from '@fluentui/react-icons';
 import { actionFindSelection, actionSelectPanel, Panels } from '../../state/dispatcher/AppDispatcher';
+import { useStore } from 'react-redux';
+import { fileOpenProject } from '../../io/files';
+import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
+import type { docDrawing } from '../../state/undo/undo';
 import { PersistentDataGrid } from '../controls/PersistentDataGrid';
 
 const useStyles = makeStyles({
@@ -49,10 +53,26 @@ export const DrcPanel: React.FC<DrcPanelProps> = ({
   hover_point,
   dispatch,
 }) => {
+  const store = useStore<docDrawing>();
   const styles = useStyles();
   const { t } = useTranslation();
 
   const handleRowClick = (item: FindResult) => {
+    if (item.source) {
+      const initial = store.getState();
+      const project = initial.altStore.file.project;
+      if (!project) return;
+      import('../../io/projectHierarchy').then(({ navigateSchematicSource }) =>
+        navigateSchematicSource(project, initial.docStore.present.drawing, item.source),
+      ).then(location => {
+        if (store.getState().altStore.file === initial.altStore.file)
+          dispatch(fileOpenProject({ type: 'file-open-project', location }));
+      }, error => {
+        if (store.getState().altStore.file === initial.altStore.file)
+          dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+      });
+      return;
+    }
     // Mode 3: Center without selecting - switch to sheet and center the item
     if (item.id < 0) return;
     dispatch(actionFindSelection(3, item));

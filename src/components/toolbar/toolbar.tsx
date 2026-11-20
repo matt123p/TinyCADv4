@@ -1,3 +1,4 @@
+import { generateActiveBom } from '../../io/netlists/activeNetlist';
 import React, { Dispatch } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -6,7 +7,6 @@ import {
   actionCommandWithDefault,
   actionMenuBrowserClose,
   actionSelectDialog,
-  actionBomGenerate,
 } from '../../state/dispatcher/AppDispatcher';
 import {
   Toolbar as FluentToolbar,
@@ -666,7 +666,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
               <MenuItem icon={<SettingsRegular />} onClick={() => props.dispatch(actionSelectDialog('annotate', null))}>
                 {t('toolbar.annotateSymbols')}
               </MenuItem>
-              <MenuItem icon={<DataAreaRegular />} onClick={() => props.dispatch(actionBomGenerate())}>
+              <MenuItem icon={<DataAreaRegular />} onClick={() => props.dispatch(generateActiveBom() as any)}>
                 {t('toolbar.billOfMaterials')}
               </MenuItem>
               <MenuItem icon={<ShareRegular />} onClick={() => props.dispatch(actionSelectDialog('netlist', null))}>
