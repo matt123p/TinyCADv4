@@ -11,6 +11,7 @@ import { registerBundledLibraries } from './bundledLibraries.js';
 import { registerBundledExamples } from './bundledExamples.js';
 import { registerOnlineLibrary } from './onlineLibrary.js';
 import { registerLicenseHandlers } from './licenses.js';
+import { registerProjectFiles } from './projectFiles.js';
 import fs from 'fs';
 import { spawn } from 'child_process';
 import { loadFile, saveFile, sendRecentFiles } from './io.js';
@@ -387,6 +388,7 @@ function createWindow({ openAbout = false } = {}) {
     ipcHandlersRegistered = true;
     registerSimulation();
     registerLicenseHandlers({ ipcMain, app, shell, getWindow: () => mainWindow });
+    registerProjectFiles({ ipcMain, dialog, shell, store, getWindow: () => mainWindow, documents: app.getPath('documents') });
     registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
       directory: path.join(__dirname, '../dist/bundled-examples') });
     registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,

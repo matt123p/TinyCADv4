@@ -22,6 +22,8 @@ const mapStateToProps = (state: docDrawing) => {
     dialogOpen: !!state.altStore.show_dialogue,
     selected_sheet: state.docStore.present.view.selected_sheet,
     editSymbol: state.docStore.present.editSymbol,
+    editLibrary: !!present.editLibrary,
+    hasOpenProject: !!state.altStore.file.project,
     browserSheets: state.docStore.present.view.browserSheets,
   };
 };

@@ -177,6 +177,8 @@ export function actionSetDocument(
   filename: string,
   id: FileIdType,
   folderId: string,
+  project?: SetDocument['project'],
+  recovered?: boolean,
 ) {
   const action: SetDocument = {
     type: DocActionTypes.SetDocument,
@@ -184,6 +186,8 @@ export function actionSetDocument(
     filename,
     id,
     folderId,
+    project,
+    recovered,
   };
   return action;
 }
@@ -241,6 +245,7 @@ export function actionSetFileData(
   id: FileIdType,
   folderId: string,
   drawingVersion: number,
+  project?: SetFileData['project'],
 ) {
   const action: SetFileData = {
     type: DocActionTypes.SetFileData,
@@ -248,6 +253,7 @@ export function actionSetFileData(
     id,
     folderId,
     drawingVersion,
+    project,
   };
   return action;
 }

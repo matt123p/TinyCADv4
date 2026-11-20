@@ -49,10 +49,13 @@ import { get_global_id } from '../util/global_id';
 import { openCurrentAppUrl, openExternalUrl } from '../util/navigation';
 import { normalizeUserConfig, sortLibrariesByConfig, ConfiguredLibraryFile } from './libraryConfig';
 import { commitExample } from './examples';
+import type { OpenProjectAction } from './projects';
+import type { ProjectStorageRequest } from './projectStorage';
 
 export type FileIdType = string | FileSystemFileHandle;
 
 export interface UserManager {
+  projectFiles?(request: ProjectStorageRequest): Promise<unknown>;
   initialize(dispatch: Dispatch): Promise<void>;
   fileOpen(dispatch: Dispatch, file?: CurrentFile): void;
   saveFile(xml: string | Uint8Array, file: CurrentFile): Promise<any>;
@@ -101,6 +104,11 @@ function checkSaveNeeded(getState: { (): docDrawing }): boolean {
 export function performPendingAction(pendingAction: UnsavedAction) {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
     switch (pendingAction.type) {
+      case 'file-open-project':
+        if (process.env.TARGET_SYSTEM === 'electron' || process.env.TARGET_SYSTEM === 'google') {
+          return import('./projects').then(({ openProjectDrawing }) => openProjectDrawing(pendingAction, dispatch, getState));
+        }
+        break;
       case 'file-open-example':
         commitExample(dispatch, pendingAction);
         break;
@@ -121,6 +129,14 @@ export function performPendingAction(pendingAction: UnsavedAction) {
         }
         break;
     }
+  };
+}
+
+export function fileOpenProject(pendingAction: OpenProjectAction) {
+  return (dispatch: Dispatch, getState: () => docDrawing) => {
+    if (getState().altStore.saveInProgress) return;
+    if (checkSaveNeeded(getState)) dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
+    else dispatch(performPendingAction(pendingAction) as any);
   };
 }
 
@@ -166,6 +182,10 @@ export function fileSaveAs(dispatch: Dispatch, getState: { (): docDrawing }) {
 export async function fileSaveWithoutResults(dispatch: Dispatch, getState: { (): docDrawing }) {
   const state = getState();
   if (state.altStore.saveInProgress || state.docStore.present.editLibrary) return;
+  if ((process.env.TARGET_SYSTEM === 'electron' || process.env.TARGET_SYSTEM === 'google') && state.altStore.file.project) {
+    dispatch(actionSelectDialog('project_save_as', { omitResults: true }));
+    return;
+  }
   const { drawing } = state.docStore.present;
   const file = state.altStore.file;
   dispatch(actionSetSaveInProgress(true, null));
@@ -195,6 +215,11 @@ function internalfileSave(
   // If we are already saving the file, then ignore this...
   if (saveInProgress) {
     return;
+  }
+
+  if ((process.env.TARGET_SYSTEM === 'electron' || process.env.TARGET_SYSTEM === 'google') && file.project) {
+    if (saveAs) return dispatch(actionSelectDialog('project_save_as', {}));
+    return import('./projects').then(({ saveProjectDrawing }) => saveProjectDrawing(dispatch, getState));
   }
 
   dispatch(actionSetSaveInProgress(true, null));

@@ -7,9 +7,9 @@ import React, {
   Suspense,
 } from 'react';
 import { useDispatch } from 'react-redux';
-import { makeStyles, Button } from '@fluentui/react-components';
+import { makeStyles, Button, ToggleButton } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
-import { PanelLeftExpandRegular } from '@fluentui/react-icons';
+import { PanelLeftContractRegular, PanelLeftExpandRegular } from '@fluentui/react-icons';
 import ToolbarContainer from '../../state/containers/toolbarContainer';
 import SidePanelContainer from '../../state/containers/sidePanelContainer';
 import SheetContainer from '../../state/containers/sheetContainer';
@@ -26,6 +26,13 @@ import type { StandardLibraryNavigation } from '../../state/actions/libraryActio
 // Keep the entire chatbot dependency graph out of browser builds.
 const ChatPanel = process.env.TARGET_SYSTEM === 'electron'
   ? lazy(() => import('../chat/ChatPanel').then((m) => ({ default: m.ChatPanel })))
+  : null;
+
+const ProjectBrowser = process.env.TARGET_SYSTEM === 'electron' || process.env.TARGET_SYSTEM === 'google'
+  ? lazy(() => import('../projects/ProjectBrowser'))
+  : null;
+const ProjectAutosave = process.env.TARGET_SYSTEM === 'electron' || process.env.TARGET_SYSTEM === 'google'
+  ? lazy(() => import('../projects/ProjectAutosave'))
   : null;
 
 const SimulationSheet = lazy(() =>
@@ -76,6 +83,8 @@ export interface DesignAppProps {
   selectedSpiceControl?: boolean;
   simulationSheet: boolean;
   editSymbol: tclibLibraryEntry;
+  editLibrary?: boolean;
+  hasOpenProject?: boolean;
   selected_sheet: number;
   browserSheets: BrowserSheetData[];
   creating: boolean;
@@ -132,6 +141,8 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const toggleChat = useCallback(() => setChatOpen(previous => !previous), []);
   const closeChat = useCallback(() => setChatOpen(false), []);
   const [sidePanelVisible, setSidePanelVisible] = useState(true);
+  const [showProjects, setShowProjects] = useState(false);
+  const [showLibraries, setShowLibraries] = useState(true);
   const [sidePanelWidth, setSidePanelWidth] = useState(loadSidePanelWidth);
   const [sidePanelResizing, setSidePanelResizing] = useState(false);
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200);
@@ -139,8 +150,11 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     useState<HTMLSpanElement>(null);
 
   useEffect(() => {
-    if (props.standardLibraryNavigation) setSidePanelVisible(true);
-  }, [props.standardLibraryNavigation]);
+    if (props.standardLibraryNavigation || props.editLibrary) {
+      setSidePanelVisible(true);
+      setShowLibraries(true);
+    }
+  }, [props.standardLibraryNavigation, props.editLibrary]);
 
   const toggleSidePanel = useCallback(() => {
     setSidePanelVisible((prev) => !prev);
@@ -203,6 +217,9 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
         chatOpen={chatOpen}
         onToggleChat={process.env.TARGET_SYSTEM === 'electron' ? toggleChat : undefined}
       />
+      {ProjectAutosave && props.hasOpenProject && (
+        <Suspense fallback={null}><ProjectAutosave /></Suspense>
+      )}
       {process.env.TARGET_SYSTEM === 'electron' && ChatPanel && (
         <Suspense fallback={null}>
           <ChatPanel open={chatOpen} onClose={closeChat} />
@@ -231,7 +248,21 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               title={t('designApp.showSidePanel')}
             />
           )}
-          <SidePanelContainer toggleSidePanel={toggleSidePanel} />
+          {ProjectBrowser ? (
+            <>
+              {sidePanelVisible && <div className="left-panel-controls" role="group" aria-label={t('projects.sidebarPanels')}>
+                <ToggleButton size="small" appearance="subtle" checked={showProjects} disabled={showProjects && !showLibraries} onClick={() => setShowProjects(!showProjects)}>{t('projects.title')}</ToggleButton>
+                <ToggleButton size="small" appearance="subtle" checked={showLibraries} disabled={(showLibraries && !showProjects) || props.editLibrary} onClick={() => setShowLibraries(!showLibraries)}>{t('projects.libraries')}</ToggleButton>
+                {!showLibraries && <Button size="small" appearance="subtle" icon={<PanelLeftContractRegular />} title={t('projects.hideSidebar')} aria-label={t('projects.hideSidebar')} onClick={toggleSidePanel} />}
+              </div>}
+              {showProjects && <div className="left-panel-section" hidden={!sidePanelVisible}>
+                <Suspense fallback={null}><ProjectBrowser /></Suspense>
+              </div>}
+              {showLibraries && <div className="left-panel-section" hidden={!sidePanelVisible}>
+                <SidePanelContainer toggleSidePanel={toggleSidePanel} />
+              </div>}
+            </>
+          ) : <SidePanelContainer toggleSidePanel={toggleSidePanel} />}
         </div>
         <div className="main-content-area">
           <div

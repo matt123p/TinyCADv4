@@ -24,6 +24,9 @@ import { LibraryFolderDialog } from './libraryFolderDlg';
 import { ReplaceSymbolDialog } from './replaceSymbolDlg';
 import OpenExampleDialog from './openExampleDlg';
 
+const ProjectSaveAsDialog = process.env.TARGET_SYSTEM === 'filesystem' ? null : React.lazy(() => import('../projects/ProjectSaveAsDialog'));
+const ProjectRecoveryDialog = process.env.TARGET_SYSTEM === 'filesystem' ? null : React.lazy(() => import('../projects/ProjectRecoveryDialog'));
+
 interface TDialogueProps {
   show_dialogue: string;
   dialogue_props: any;
@@ -36,6 +39,10 @@ const TDialogue: FunctionComponent<TDialogueProps> = (
   props: TDialogueProps,
 ) => {
   switch (props.show_dialogue) {
+    case 'project_recovery':
+      return ProjectRecoveryDialog && <React.Suspense fallback={null}><ProjectRecoveryDialog prompt={props.dialogue_props} /></React.Suspense>;
+    case 'project_save_as':
+      return ProjectSaveAsDialog && <React.Suspense fallback={null}><ProjectSaveAsDialog omitResults={props.dialogue_props?.omitResults} /></React.Suspense>;
     case 'open_example':
       return <OpenExampleDialog groupId={props.dialogue_props?.groupId} exampleId={props.dialogue_props?.exampleId} />;
     case 'auto_layout':

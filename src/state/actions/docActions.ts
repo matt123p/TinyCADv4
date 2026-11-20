@@ -4,6 +4,7 @@ import { NetlistData } from '../../io/netlists/netlistGenerator';
 import { dsnDrawing, dsnSheet, NetlistTypes, Size } from '../../model/dsnDrawing';
 import { LayoutChange } from '../../layout/types';
 import { Coordinate } from '../../model/dsnItem';
+import type { OpenProjectDrawing } from '../../io/projectStorage';
 
 export enum DocActionTypes {
   ApplyChatLibrary = '[Document] ApplyChatLibrary',
@@ -29,6 +30,8 @@ export interface SetDocument {
   filename: string;
   id: FileIdType;
   folderId: string;
+  project?: OpenProjectDrawing;
+  recovered?: boolean;
 }
 
 export interface SetFileData {
@@ -37,6 +40,7 @@ export interface SetFileData {
   id: FileIdType;
   folderId: string;
   drawingVersion: number;
+  project?: OpenProjectDrawing;
 }
 
 export interface RenameDocument {

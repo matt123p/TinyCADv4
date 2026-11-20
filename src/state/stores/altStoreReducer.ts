@@ -7,6 +7,7 @@ import {
 import update from 'immutability-helper';
 import { hasSimulation } from '../../io/drawingSaveFormat';
 import type { ExampleContent } from '../../../shared/bundledExamples';
+import type { OpenProjectDrawing } from '../../io/projectStorage';
 
 import { DocActionTypes } from '../actions/docActions';
 import { MenuActionTypes } from '../actions/menuActions';
@@ -51,6 +52,7 @@ export interface CurrentFile {
   id: FileIdType | string;
   name: string;
   folderId?: string;
+  project?: OpenProjectDrawing;
 }
 
 export interface UserConfig {
@@ -282,8 +284,9 @@ export function AltStoreReducer(
           name: { $set: action.filename },
           id: { $set: action.id },
           folderId: { $set: action.folderId },
+          project: { $set: action.project },
         },
-        savedVersion: { $set: 1 },
+        savedVersion: { $set: action.recovered ? 0 : 1 },
       });
     }
 
@@ -297,6 +300,7 @@ export function AltStoreReducer(
           name: { $set: action.filename },
           id: { $set: action.id },
           folderId: { $set: action.folderId },
+          project: { $set: action.project },
         },
         savedVersion: { $set: action.drawingVersion },
       });
@@ -398,6 +402,7 @@ export function AltStoreReducer(
           name: { $set: action.filename },
           id: { $set: action.id },
           folderId: { $set: action.folderId },
+          project: { $set: undefined },
         },
         savedVersion: { $set: 0 },
         panel: { $set: Panels.LibrariesPanel },

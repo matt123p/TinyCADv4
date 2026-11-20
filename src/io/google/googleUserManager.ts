@@ -20,6 +20,7 @@ import { XMLBuilder } from '../../util/xmlbuilder';
 import { logWebUser, UserManager } from '../files';
 import { ioXML } from '../ioXml';
 import update from 'immutability-helper';
+import type { ProjectStorageRequest } from '../projectStorage';
 
 // The Browser API Key obtained from the Google API Console.
 const getGoogleClientId = () => {
@@ -197,6 +198,20 @@ export class GoogleUserManager implements UserManager {
   private getToken() {
     return gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse(true)
       .access_token;
+  }
+
+  async projectFiles(request: ProjectStorageRequest) {
+    const { driveProjectFiles } = await import('../projectStorage');
+    return driveProjectFiles(request, async (resource, options) => {
+      const headers = new Headers(options?.headers);
+      headers.set('Authorization', `Bearer ${this.getToken()}`);
+      const url = resource.startsWith('/upload/')
+        ? `https://www.googleapis.com/upload/drive/v3${resource.slice('/upload'.length)}`
+        : `https://www.googleapis.com/drive/v3${resource}`;
+      const response = await fetch(url, { ...options, headers });
+      if (!response.ok) throw new Error(`Project operation on Google Drive failed (${response.status}).`);
+      return response;
+    });
   }
 
   loadFileMetadata(fileId: string) {

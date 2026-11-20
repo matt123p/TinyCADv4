@@ -16,6 +16,7 @@ import { docDrawing } from '../../state/undo/undo';
 
 export type UnsavedAction = 
   | import('../../io/examples').PreparedExample
+  | import('../../io/projects').OpenProjectAction
   | { type: 'file-new' }
   | { type: 'file-open' }
   | { type: 'file-open-recent'; file: { name: string; id: string } }

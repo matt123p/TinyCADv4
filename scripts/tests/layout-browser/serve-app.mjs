@@ -6,7 +6,7 @@ import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 'filesystem', nodeEnv = 'production') {
+export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 'filesystem', nodeEnv = 'production', env = {}) {
   const root = fileURLToPath(new URL('../../../', import.meta.url));
   await mkdir(path.join(root, '.tmp'), { recursive: true });
   const directory = await mkdtemp(path.join(root, '.tmp/layout-browser-'));
@@ -26,7 +26,7 @@ export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 
       entries: path.join(root, `scripts/tests/fixtures/${fixture}.html`),
       defaultConfig: '@parcel/config-default',
       mode: 'production',
-      env: { TARGET_SYSTEM: targetSystem, NODE_ENV: nodeEnv },
+      env: { ...env, TARGET_SYSTEM: targetSystem, NODE_ENV: nodeEnv },
       shouldDisableCache: true,
       cacheDir: path.join(directory, 'cache'),
       // A filesystem cache releases files after each operation. LMDB keeps its
@@ -39,7 +39,11 @@ export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 
         publicUrl: './', sourceMap: false, optimize: true,
       } },
     });
-    await bundler.run();
+    const { bundleGraph } = await bundler.run();
+    const sourceAssets = new Set();
+    for (const bundle of bundleGraph.getBundles()) {
+      bundle.traverseAssets((asset) => { sourceAssets.add(asset.filePath); });
+    }
     const mime = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
       '.json': 'application/json', '.ttf': 'font/ttf', '.wasm': 'application/wasm' };
     server = createServer(async (request, response) => {
@@ -56,6 +60,10 @@ export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 
       server.once('error', reject);
       server.listen(0, '127.0.0.1', resolve);
     });
-    return { baseURL: `http://127.0.0.1:${server.address().port}/layout/`, close };
+    return {
+      baseURL: `http://127.0.0.1:${server.address().port}/layout/`,
+      hasSourceAsset: (relative) => sourceAssets.has(path.join(root, relative)),
+      close,
+    };
   } catch (error) { await close(); throw error; }
 }

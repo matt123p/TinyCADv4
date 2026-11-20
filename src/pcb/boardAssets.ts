@@ -8,6 +8,8 @@ import type {
 import { isBoardPoint } from './geometry';
 import { validatePadStack } from './padstack';
 import type { PadStack } from './padstack';
+import { validateFootprintDetails } from './footprintDetails';
+import type { FootprintGraphic, FootprintModel } from './footprintDetails';
 
 export interface CircuitSource {
   readonly documentId: string;
@@ -38,6 +40,8 @@ export interface EmbeddedFootprint {
   readonly definitionDigest: string;
   readonly name: string;
   readonly pads: readonly (FootprintPad & { readonly stack?: PadStack })[];
+  readonly graphics?: readonly FootprintGraphic[];
+  readonly models?: readonly FootprintModel[];
 }
 
 export interface EmbeddedDevice {
@@ -135,23 +139,8 @@ export function validateBoardAssets(
   const definitions = byId(footprintDefinitions, 'footprint definition');
   let hasPadstacks = false;
   for (const definition of definitions.values()) {
-    if (
-      !isText(definition.revision) ||
-      !isText(definition.name) ||
-      !isDigest(definition.definitionDigest)
-    ) {
-      throw new Error(
-        'Invalid footprint name, revision, or definition digest.',
-      );
-    }
-    for (const pad of byId(definition.pads, 'pad').values()) {
-      if (typeof pad.label !== 'string' || !isBoardPoint(pad.positionNm))
-        throw new Error('Invalid footprint pad label or position.');
-      if (pad.stack !== undefined) {
-        hasPadstacks = true;
-        validatePadStack(pad.stack);
-      }
-    }
+    validateEmbeddedFootprint(definition);
+    hasPadstacks ||= definition.pads.some((pad) => pad.stack !== undefined);
   }
   if (hasPadstacks !== features.includes('physical-padstacks')) {
     throw new Error(
@@ -201,4 +190,13 @@ export function validateBoardAssets(
     }
     components.add(instance.componentId.toLowerCase());
   }
+}
+
+export function validateEmbeddedFootprint(definition: EmbeddedFootprint): void {
+  if (!isEntityId(definition?.id) || !isText(definition.revision) || !isText(definition.name) || !isDigest(definition.definitionDigest)) throw new Error('Invalid footprint identity, name, revision, or definition digest.');
+  for (const pad of byId(definition.pads, 'pad').values()) {
+    if (typeof pad.label !== 'string' || !isBoardPoint(pad.positionNm)) throw new Error('Invalid footprint pad label or position.');
+    if (pad.stack !== undefined) validatePadStack(pad.stack);
+  }
+  validateFootprintDetails(definition.graphics, definition.models);
 }

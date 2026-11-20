@@ -5,6 +5,7 @@ import {
   ZipWriter,
 } from '@zip.js/zip.js';
 import { digest, unpackDsn } from '../io/dsnContainer';
+import { MAX_PROJECT_FILE_BYTES } from '../../shared/projectFiles';
 import { isEntityId } from '../model/schematicIdentity';
 import { XMLBuilder } from '../util/xmlbuilder';
 import { parseBoard } from './board';
@@ -13,11 +14,10 @@ import {
   validateCircuitSnapshot,
 } from './circuitSnapshot';
 
-export const PROJECT_FILE_EXTENSION = '.tcproject';
+export { PROJECT_FILE_EXTENSION } from '../../shared/projectFiles';
 const format = 'tinycad-project';
 const manifestPath = 'manifest.json';
 const maxEntries = 10_000;
-const maxArchiveBytes = 256 * 1024 * 1024;
 const maxDecodedBytes = 512 * 1024 * 1024;
 const maxManifestBytes = 4 * 1024 * 1024;
 const maxDocumentBytes = 32 * 1024 * 1024;
@@ -365,7 +365,7 @@ export async function encodeProjectArchive(
       level: name.endsWith('.dzn') ? 0 : 6,
     });
   const archive = await writer.close();
-  if (archive.length > maxArchiveBytes)
+  if (archive.length > MAX_PROJECT_FILE_BYTES)
     throw new Error('Compressed project exceeds its size limit.');
   return archive;
 }
@@ -375,7 +375,7 @@ export async function decodeProjectArchive(
 ): Promise<PcbProject> {
   if (
     !(bytes instanceof Uint8Array) ||
-    bytes.length > maxArchiveBytes ||
+    bytes.length > MAX_PROJECT_FILE_BYTES ||
     bytes[0] !== 0x50 ||
     bytes[1] !== 0x4b ||
     bytes[2] !== 3 ||

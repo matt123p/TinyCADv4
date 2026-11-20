@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     maximize: () => ipcRenderer.send('window-maximize'),
     close: () => ipcRenderer.send('window-close'),
     setTitle: (title) => ipcRenderer.send('window-set-title', title),
+    projectFiles: (request) => ipcRenderer.invoke('project-files', request),
     loadFile: (file) => ipcRenderer.send('load-file', file),
     saveFile: (data) => ipcRenderer.send('save-file', data),
     exampleCatalog: () => ipcRenderer.invoke('bundled-example-catalog'),

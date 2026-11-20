@@ -1,6 +1,6 @@
 import { store } from '../../../src/startup';
 import { activeSheet } from '../../../src/state/stores/docStoreReducer';
-import { actionEditorEvent, actionSetDocument, actionSetLibraryList } from '../../../src/state/dispatcher/AppDispatcher';
+import { actionEditorEvent, actionSetDocument, actionSetLibraryList, actionSheetRename } from '../../../src/state/dispatcher/AppDispatcher';
 import { ioXML } from '../../../src/io/ioXml';
 import { XMLBuilder } from '../../../src/util/xmlbuilder';
 
@@ -9,6 +9,9 @@ import { XMLBuilder } from '../../../src/util/xmlbuilder';
 (window as any).layoutTest = {
   installLibrary(library: any) {
     store.dispatch(actionSetLibraryList([library]));
+  },
+  renameCurrentSheet(name: string) {
+    store.dispatch(actionSheetRename(name));
   },
   snapshot() {
     const current = store.getState().docStore.present;

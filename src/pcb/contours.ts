@@ -44,7 +44,7 @@ function squaredRadius(centre: BoardPoint, point: BoardPoint): bigint {
 }
 
 /** Coordinates are rounded only after reserving 1 nm for the rounding error. */
-function arcVertices(
+export function arcVertices(
   centre: BoardPoint,
   radius: number,
   start: number,

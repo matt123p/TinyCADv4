@@ -62,6 +62,53 @@ async function makeProject(encoding = 'xml') {
   };
 }
 
+test('compares stable entry identities across project revisions', async () => {
+  const original = await makeProject();
+  const [board, circuit, schematic] = original.entries;
+  const recipeId = crypto.randomUUID();
+  const recipePath = api.projectEntryPath('recipe', recipeId);
+  const replacement = {
+    ...original,
+    revisionId: crypto.randomUUID(),
+    parentRevisionId: original.revisionId,
+    entries: [
+      {
+        ...schematic,
+        path: api.projectEntryPath('schematic', schematic.id, true),
+        data: await api.encodeDrawing(drawing, 'zip-v1'),
+      },
+      circuit,
+      {
+        kind: 'recipe',
+        id: recipeId,
+        path: recipePath,
+        data: encoder.encode(
+          JSON.stringify({ id: recipeId, schemaVersion: 1 }),
+        ),
+      },
+    ],
+  };
+  const before = await api.revisionInventory(original);
+  const after = await api.revisionInventory(replacement);
+  assert.deepEqual(api.compareProjectRevisions(before, after), [
+    { kind: 'removed', before: board.path },
+    { kind: 'added', after: recipePath },
+    {
+      kind: 'changed',
+      before: schematic.path,
+      after: replacement.entries[0].path,
+    },
+  ]);
+  assert.throws(
+    () =>
+      api.compareProjectRevisions(before, {
+        ...after,
+        projectId: crypto.randomUUID(),
+      }),
+    /same project/,
+  );
+});
+
 test('round trips the same linked project through a deterministic archive and loose files', async () => {
   for (const encoding of ['xml', 'zip-v1']) {
     const project = await makeProject(encoding);
@@ -108,5 +155,81 @@ test('rejects a damaged file, a different source circuit, and an unknown require
   await assert.rejects(
     api.decodeProjectFiles(incompatibleFiles),
     /Unsupported required project features/,
+  );
+});
+
+test('lists paged Drive project files and folders and skips ordinary drawings', async () => {
+  const calls = [];
+  const files = await api.driveProjectFiles(
+    { operation: 'list', folder: 'root' },
+    async (resource) => {
+      const query = new URL(resource, 'https://example.test').searchParams;
+      calls.push(query.get('pageToken'));
+      assert.equal(query.get('q'), "'root' in parents and trashed = false");
+      return query.has('pageToken')
+        ? Response.json({
+            files: [
+              {
+                id: 'boards',
+                name: 'Boards',
+                mimeType: 'application/vnd.google-apps.folder',
+              },
+            ],
+          })
+        : Response.json({
+            nextPageToken: 'next',
+            files: [
+              {
+                id: 'circuit',
+                name: 'Circuit.dsn',
+                mimeType: 'application/octet-stream',
+              },
+              {
+                id: 'project',
+                name: 'Amp.tcproject',
+                mimeType: 'application/zip',
+              },
+            ],
+          });
+    },
+  );
+  assert.deepEqual(calls, [null, 'next']);
+  assert.deepEqual(files, [
+    { id: 'project', name: 'Amp.tcproject', folder: false },
+    { id: 'boards', name: 'Boards', folder: true },
+  ]);
+});
+
+test('checks Drive revision tokens around reads and before overwriting a project', async () => {
+  const document = new Uint8Array([1, 2, 3]);
+  const requests = [];
+  const drive = async (resource, options) => {
+    requests.push(resource);
+    if (resource.endsWith('?alt=media')) return new Response(document);
+    if (resource.endsWith('?fields=version'))
+      return Response.json({ version: '4' });
+    assert.equal(options.method, 'PATCH');
+    assert.match(options.headers['Content-Type'], /^multipart\/related;/);
+    assert.match(await options.body.text(), /Amp\.tcproject/);
+    return Response.json({ id: 'amp', name: 'Amp.tcproject', version: '5' });
+  };
+  assert.deepEqual(
+    await api.driveProjectFiles({ operation: 'read', id: 'amp' }, drive),
+    { data: document, version: '4' },
+  );
+  assert.equal(requests.length, 3);
+  const write = {
+    operation: 'write',
+    id: 'amp',
+    folder: 'root',
+    name: 'Amp.tcproject',
+    data: document,
+    version: '3',
+  };
+  await assert.rejects(api.driveProjectFiles(write, drive), /changed on Drive/);
+  assert.equal(requests.length, 4);
+  assert.equal(
+    (await api.driveProjectFiles({ ...write, version: '4' }, drive)).version,
+    '5',
   );
 });

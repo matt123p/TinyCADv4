@@ -156,7 +156,7 @@ export const Topbar: React.FC<TopbarProps> = ({
               ) : (
                 <span
                   onClick={() => {
-                    if (process.env.TARGET_SYSTEM === 'google') {
+                    if (process.env.TARGET_SYSTEM === 'google' && !file.project) {
                       setEdit(true);
                     }
                   }}

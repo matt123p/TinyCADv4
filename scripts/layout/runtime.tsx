@@ -38,6 +38,8 @@ export { reviewCircuitNets } from '../../src/pcb/circuitNets';
 export * from '../../src/pcb/projectArchive';
 export { circuitConnectivityDigest } from '../../src/pcb/circuitSnapshot';
 export { createBoard, serializeBoard } from '../../src/pcb/board';
+export { driveProjectFiles } from '../../src/io/projectStorage';
+export { compareProjectRevisions, revisionInventory } from '../../src/pcb/projectRevisions';
 export { withNativeJunctions } from '../../src/layout/connectivity';
 
 export function circuitBounds(sheet: dsnSheet) {
