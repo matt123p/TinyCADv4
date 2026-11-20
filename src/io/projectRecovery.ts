@@ -3,6 +3,7 @@ import { MAX_PROJECT_FILE_BYTES } from '../../shared/projectFiles';
 
 const databaseName = 'tinycad-project-recovery';
 const storeName = 'drawings';
+const referenceStore = 'reference-transactions';
 
 export function projectRecoveryKey(
   account: string,
@@ -24,9 +25,13 @@ let connection: Promise<IDBDatabase>;
 function openRecoveryDatabase(): Promise<IDBDatabase> {
   if (connection) return connection;
   connection = new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open(databaseName, 1);
-    request.onupgradeneeded = () =>
-      request.result.createObjectStore(storeName, { keyPath: 'key' });
+    const request = indexedDB.open(databaseName, 2);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(storeName))
+        request.result.createObjectStore(storeName, { keyPath: 'key' });
+      if (!request.result.objectStoreNames.contains(referenceStore))
+        request.result.createObjectStore(referenceStore, { keyPath: 'key' });
+    };
     request.onerror = () => reject(request.error);
     request.onsuccess = () => {
       const database = request.result;
@@ -89,4 +94,51 @@ export function deleteRecoveryDraft(key: string, token: string): Promise<void> {
   return withDraft(key, true, (store, draft) => {
     if (draft?.token === token) store.delete(key);
   });
+}
+
+export interface ReferenceRecoveryJournal {
+  key: string;
+  source: {
+    id: string;
+    folder: string;
+    name: string;
+    data: Uint8Array;
+    before: string;
+    after: string;
+  };
+  board: { id: string; before: string; after: string };
+}
+
+async function referenceJournalRequest<T>(
+  mode: IDBTransactionMode,
+  operation: (store: IDBObjectStore) => IDBRequest<T>,
+): Promise<T> {
+  const db = await openRecoveryDatabase();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(referenceStore, mode, { durability: 'strict' });
+    const request = operation(tx.objectStore(referenceStore));
+    tx.oncomplete = () => resolve(request.result);
+    tx.onabort = () =>
+      reject(
+        tx.error ||
+          new Error('The reference recovery transaction was aborted.'),
+      );
+  });
+}
+
+export function readReferenceJournal(key: string) {
+  return referenceJournalRequest<ReferenceRecoveryJournal>(
+    'readonly',
+    (store) => store.get(key),
+  );
+}
+
+export async function writeReferenceJournal(
+  journal: ReferenceRecoveryJournal,
+): Promise<void> {
+  await referenceJournalRequest('readwrite', (store) => store.add(journal));
+}
+
+export async function deleteReferenceJournal(key: string): Promise<void> {
+  await referenceJournalRequest('readwrite', (store) => store.delete(key));
 }

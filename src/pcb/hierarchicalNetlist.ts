@@ -12,6 +12,7 @@ import type {
 import type { dsnDrawing, dsnSheet } from '../model/dsnDrawing';
 import { DocItemTypes } from '../model/dsnItem';
 import type { dsnSymbol, HierarchicalLink } from '../model/dsnItem';
+import { instanceReferenceKey } from '../model/schematicReferences';
 import { isEntityId } from '../model/schematicIdentity';
 import { digest } from '../util/sha256';
 import {
@@ -70,6 +71,12 @@ export async function buildHierarchicalNetlist(
   let nextId = -1;
   let visits = 0;
   const exportedReferences = new Map<string, string>();
+  const references = new Map(
+    (root.drawing.instanceReferences ?? []).map((entry) => [
+      instanceReferenceKey(entry).toLowerCase(),
+      entry.reference,
+    ]),
+  );
 
   async function visit(
     doc: HierarchyDocument,
@@ -199,15 +206,6 @@ export async function buildHierarchicalNetlist(
             );
           }
         } else {
-          const exportRef = prefix ? `${prefix}_${reference}` : reference;
-          const exportOwner = JSON.stringify([scopeKey, folded]);
-          const owner = exportedReferences.get(exportRef.toUpperCase());
-          if (owner && owner !== exportOwner)
-            throw new HierarchyConnectivityError(
-              `Ambiguous expanded reference ${exportRef}.`,
-              source,
-            );
-          exportedReferences.set(exportRef.toUpperCase(), exportOwner);
           const id = instancePath.length
             ? await stableHierarchyId(
                 'schematic-unit',
@@ -216,6 +214,37 @@ export async function buildHierarchicalNetlist(
                 item.unitId,
               )
             : item.unitId;
+          const binding = item.text
+            .find(
+              ({ description }) =>
+                description.trim().toLowerCase() === 'pcb component',
+            )
+            ?.value?.trim()
+            .toLowerCase();
+          const componentId = isEntityId(binding)
+            ? await stableHierarchyId(
+                'schematic-component',
+                source.documentId,
+                ...instancePath,
+                binding,
+              )
+            : id;
+          const override = references.get(
+            instanceReferenceKey({ instancePath, componentId }).toLowerCase(),
+          );
+          const exportRef =
+            override ?? (prefix ? `${prefix}_${reference}` : reference);
+          const exportOwner =
+            override !== undefined
+              ? componentId
+              : JSON.stringify([scopeKey, folded]);
+          const owner = exportedReferences.get(exportRef.toUpperCase());
+          if (owner && owner !== exportOwner)
+            throw new HierarchyConnectivityError(
+              `Ambiguous expanded reference ${exportRef}.`,
+              source,
+            );
+          exportedReferences.set(exportRef.toUpperCase(), exportOwner);
           const runtimeId = instancePath.length ? nextId-- : item._id;
           if (sources[id])
             throw new HierarchyConnectivityError(

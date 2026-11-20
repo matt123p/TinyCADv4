@@ -1,3 +1,5 @@
+import type { ProjectBoardWorkspace } from '../../io/projectBoardWorkspace';
+import type { projectCircuitStatus } from '../../io/projectCircuitStatus';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -53,6 +55,14 @@ import { ProjectRevisionDialog } from './ProjectRevisionDialog';
 import type { ProjectRevisionComparison } from './ProjectRevisionDialog';
 import { compareProjectRevisions } from '../../pcb/projectRevisions';
 import type { RevisionInventory } from '../../pcb/projectRevisions';
+import type {
+  ProjectCircuitEco,
+  ProjectCircuitUndo,
+} from '../../io/projectCircuitEco';
+import type { BoardProbeMatch } from '../../io/projectPcbProbe';
+import type { CircuitSchematicSource } from '../../pcb/circuitSnapshot';
+import type { ProjectReferenceUndo } from '../../io/projectReferenceEco';
+import type { ReferenceDialogState } from './ProjectReferenceDialog';
 import type { ProjectDeviceReview } from '../../io/projectDevices';
 
 type LoadedProject = Awaited<ReturnType<typeof readProject>>;
@@ -69,8 +79,22 @@ import { readProjectSchematic } from '../../io/projectHierarchy';
 import type { boardPadSources } from '../../pcb/hierarchicalSnapshot';
 import type { reviewProjectCircuit } from '../../io/netlists/activeNetlist';
 import { DocActionTypes } from '../../state/actions/docActions';
+import { DocItemTypes } from '../../model/dsnItem';
 import { activeSheet } from '../../state/stores/docStoreReducer';
 
+const ProjectCircuitDialog = React.lazy(() => import('./ProjectCircuitDialog'));
+const ProjectReferenceDialog = React.lazy(
+  () => import('./ProjectReferenceDialog'),
+);
+const ProjectPcbProbeDialog = React.lazy(
+  () => import('./ProjectPcbProbeDialog'),
+);
+const ProjectBoardWorkspaceDialog = React.lazy(
+  () => import('./ProjectBoardWorkspaceDialog'),
+);
+const FootprintEditorDialog = React.lazy(
+  () => import('./FootprintEditorDialog'),
+);
 const ProjectDeviceDialog = React.lazy(() => import('./ProjectDeviceDialog'));
 
 interface NamePrompt {
@@ -100,6 +124,14 @@ export default function ProjectBrowser() {
   const [context, setContext] = useState<ProjectContext>();
   const [rootRefresh, setRootRefresh] = useState(0);
   const [refresh, setRefresh] = useState(0);
+  const drawingVersion = useSelector((state: docDrawing) =>
+    state.altStore.file.project
+      ? state.docStore.present.drawingVersion
+      : undefined,
+  );
+  const [sync, setSync] = useState<
+    ReadonlyMap<string, Awaited<ReturnType<typeof projectCircuitStatus>>>
+  >(new Map());
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -112,12 +144,36 @@ export default function ProjectBrowser() {
   }>();
   const importSchematic = useRef<HTMLInputElement>(null);
   const [comparison, setComparison] = useState<ProjectRevisionComparison>();
+  const [boardWorkspace, setBoardWorkspace] = useState<ProjectBoardWorkspace>();
+  const [boardWorkspaceProbe, setBoardWorkspaceProbe] = useState<{
+    componentId: string;
+    padId?: string;
+  }>();
+  const [footprintEditor, setFootprintEditor] = useState(false);
+  const [pcbProbe, setPcbProbe] = useState<BoardProbeMatch[]>();
+  const selectedUnit = useSelector((state: docDrawing) => {
+    const present = state.docStore.present;
+    if (present.view._selected_array.length !== 1) return undefined;
+    const item = activeSheet(present)?.items.find(
+      ({ _id }) => _id === present.view._selected_array[0],
+    );
+    if (item?.NodeName === DocItemTypes.Symbol && !item.hierarchy)
+      return item.unitId;
+    return undefined;
+  });
   const [boardProbe, setBoardProbe] = useState<{
     name: string;
     targets: ReturnType<typeof boardPadSources>;
     open: (target: ReturnType<typeof boardPadSources>[number]) => Promise<void>;
     review: () => ReturnType<typeof reviewProjectCircuit>;
   }>();
+  const [referenceDialog, setReferenceDialog] =
+    useState<ReferenceDialogState>();
+  const [referenceUndo, setReferenceUndo] = useState<ProjectReferenceUndo>();
+  const [confirmReferenceUndo, setConfirmReferenceUndo] = useState(false);
+  const [circuitUndo, setCircuitUndo] = useState<ProjectCircuitUndo>();
+  const [confirmCircuitUndo, setConfirmCircuitUndo] = useState(false);
+  const [circuitEco, setCircuitEco] = useState<ProjectCircuitEco>();
   const [deviceReview, setDeviceReview] = useState<ProjectDeviceReview>();
   const [boardReview, setBoardReview] =
     useState<Awaited<ReturnType<typeof reviewProjectCircuit>>['review']>();
@@ -127,6 +183,8 @@ export default function ProjectBrowser() {
   const blocked = busy || saving;
   const atProjectRoot = !!context && context.root.id === folder?.id;
   const treeMode = Boolean(context);
+  const markerId = context?.marker.id;
+  const projectRootId = context?.root.id;
   const relativePrefix = context
     ? trail
         .slice(trail.findIndex(({ id }) => id === context.root.id) + 1)
@@ -195,7 +253,16 @@ export default function ProjectBrowser() {
           ),
         );
         setSelected((item) => result.find(({ id }) => id === item?.id));
-        if (treeMode && !atProjectRoot) return;
+        if (treeMode && !atProjectRoot) {
+          const project = await readProject(markerId, projectRootId);
+          if (current)
+            setContext((value) =>
+              value?.marker.id === markerId && value.root.id === projectRootId
+                ? { ...value, project }
+                : value,
+            );
+          return;
+        }
         const markers = result.filter(
           (item) =>
             !item.folder && !item.unsupported && isProjectFile(item.name),
@@ -230,7 +297,69 @@ export default function ProjectBrowser() {
     return () => {
       current = false;
     };
-  }, [folder, refresh, treeMode, atProjectRoot, trail, t]);
+  }, [
+    folder,
+    refresh,
+    treeMode,
+    atProjectRoot,
+    markerId,
+    projectRootId,
+    trail,
+    t,
+  ]);
+
+  useEffect(() => {
+    if (!context || !folder || saving) return;
+    let current = true;
+    const { project, root } = context;
+    const parentPath = trail
+      .slice(trail.findIndex(({ id }) => id === root.id) + 1)
+      .map(({ name }) => name)
+      .join('/')
+      .toLowerCase();
+    const boards = project.settings.entries.filter(
+      ({ kind, path }) =>
+        kind === 'board' &&
+        path.split('/').slice(0, -1).join('/').toLowerCase() === parentPath,
+    );
+    const timer = window.setTimeout(async () => {
+      const { projectCircuitStatus } = await import(
+        '../../io/projectCircuitStatus'
+      );
+      if (!current) return;
+      const state = store.getState();
+      const source =
+        state.altStore.file.project?.id === context.marker.id
+          ? state.docStore.present.drawing
+          : undefined;
+      for (const board of boards) {
+        if (!current) return;
+        const status = await projectCircuitStatus(
+          project,
+          root.id,
+          board.id,
+          source,
+        );
+        if (current)
+          setSync((previous) =>
+            new Map(previous).set(context.marker.id + ':' + board.id, status),
+          );
+      }
+    }, 350);
+    return () => {
+      current = false;
+      window.clearTimeout(timer);
+    };
+  }, [
+    context,
+    folder,
+    trail,
+    saving,
+    refresh,
+    drawingVersion,
+    activeProject,
+    store,
+  ]);
 
   async function run(operation: () => Promise<unknown>, updateListing = true) {
     setError('');
@@ -273,6 +402,145 @@ export default function ProjectBrowser() {
   const download = (name: string, data: Uint8Array) => {
     saveAs(new Blob([new Uint8Array(data).buffer]), name);
   };
+
+  function openBoardWorkspace(
+    context: ProjectContext,
+    id: string,
+    probe?: { componentId: string; padId?: string },
+  ) {
+    setBoardWorkspaceProbe(probe);
+    void run(async () => {
+      const { openProjectBoardWorkspace } = await import(
+        '../../io/projectBoardWorkspace'
+      );
+      setBoardWorkspace(
+        await openProjectBoardWorkspace(
+          { id: context.marker.id, rootId: context.root.id },
+          id,
+        ),
+      );
+    }, false);
+  }
+
+  function navigateFromBoardCanvas(
+    source: ReturnType<typeof boardPadSources>[number]['source'],
+  ) {
+    if (!context || !boardWorkspace?.circuit) return;
+    void run(async () => {
+      const { navigateSchematicSource } = await import(
+        '../../io/projectHierarchy'
+      );
+      const { circuit } = boardWorkspace;
+      const root = context.project.settings.entries.find(
+        ({ id, kind }) => id === circuit.documentId && kind === 'schematic',
+      );
+      const drawing = await readProjectSchematic(context.project, root);
+      const destination = await navigateSchematicSource(
+        {
+          id: context.marker.id,
+          rootId: context.root.id,
+          name: context.marker.name,
+          folderId: context.parent?.id ?? (drive ? 'root' : undefined),
+          entryId: root.id,
+        },
+        drawing,
+        source,
+      );
+      setBoardWorkspace(undefined);
+      dispatch(
+        fileOpenProject({
+          type: 'file-open-project',
+          location: destination,
+        }) as any,
+      );
+    }, false);
+  }
+
+  async function openCircuitEco(
+    context: ProjectContext,
+    destination: Parameters<
+      typeof import('../../io/projectCircuitEco').openProjectCircuitEco
+    >[1],
+  ) {
+    const { openProjectCircuitEco } = await import(
+      '../../io/projectCircuitEco'
+    );
+    const next = await openProjectCircuitEco(
+      { id: context.marker.id, rootId: context.root.id },
+      destination,
+      (sourceId) => {
+        const state = store.getState();
+        const location = state.altStore.file.project;
+        return location?.id === context.marker.id &&
+          location.entryId === sourceId
+          ? state.docStore.present.drawing
+          : undefined;
+      },
+    );
+    setCircuitEco(next);
+  }
+
+  async function openReferenceDialog(
+    context: ProjectContext,
+    boardId: string,
+    kind: ReferenceDialogState['kind'],
+  ) {
+    const location = { id: context.marker.id, rootId: context.root.id };
+    const access = await import('../../io/projectReferenceEco');
+    if (kind === 'edit') {
+      setReferenceDialog({
+        kind,
+        operation: await access.openBoardReferenceEdit(location, boardId),
+      });
+      return;
+    }
+    const operation = await access.openProjectBackAnnotation(
+      location,
+      boardId,
+      (id) => {
+        const state = store.getState();
+        const current = state.altStore.file.project;
+        return (
+          current?.id === location.id &&
+          current.entryId === id &&
+          state.docStore.present.drawingVersion !== state.altStore.savedVersion
+        );
+      },
+    );
+    setReferenceDialog({ kind, operation });
+  }
+
+  function reloadAnnotatedDrawing(undo: ProjectReferenceUndo) {
+    const current = store.getState().altStore.file.project;
+    if (
+      current?.id !== undo.projectId ||
+      (current.entryId !== undo.affectedEntry &&
+        current.hierarchyTrail?.[0]?.entryId !== undo.affectedEntry)
+    )
+      return;
+    dispatch(
+      fileOpenProject({ type: 'file-open-project', location: current }) as any,
+    );
+  }
+
+  async function locateReference(source: CircuitSchematicSource) {
+    if (!context || referenceDialog?.kind !== 'annotate') return;
+    const { navigateSchematicSource } = await import(
+      '../../io/projectHierarchy'
+    );
+    const location = await navigateSchematicSource(
+      {
+        id: context.marker.id,
+        name: context.marker.name,
+        rootId: context.root.id,
+        folderId: context.parent?.id ?? (drive ? 'root' : undefined),
+        entryId: referenceDialog.operation.sourceId,
+      },
+      referenceDialog.operation.drawing,
+      source,
+    );
+    dispatch(fileOpenProject({ type: 'file-open-project', location }) as any);
+  }
 
   const inspectBoardPads = (
     context: ProjectContext,
@@ -363,14 +631,17 @@ export default function ProjectBrowser() {
       return;
     }
     if (!context) return;
-    const link = linkedPaths.find(({ path }) => path === relativePath(item));
+    const link = linkedPaths.find(
+      ({ path }) => path.toLowerCase() === relativePath(item).toLowerCase(),
+    );
     if (link?.kind === 'schematic') openDrawing(context, link.id);
+    else if (link?.kind === 'board') openBoardWorkspace(context, link.id);
     else
       void run(async () => {
-        const { data } =
-          link?.kind === 'board'
-            ? await readProjectBoard(context.project, link.id)
-            : await projectRequest({ operation: 'read', id: item.id });
+        const { data } = await projectRequest({
+          operation: 'read',
+          id: item.id,
+        });
         download(item.name, data);
       }, false);
   };
@@ -604,6 +875,12 @@ export default function ProjectBrowser() {
                 {t('projects.paste')}
               </MenuItem>
               <MenuItem
+                disabled={blocked}
+                onClick={() => setFootprintEditor(true)}
+              >
+                {t('projects.footprintEditor')}
+              </MenuItem>
+              <MenuItem
                 disabled={!folder}
                 onClick={() => {
                   setError('');
@@ -639,6 +916,33 @@ export default function ProjectBrowser() {
         placeholder={t('projects.search')}
         aria-label={t('projects.search')}
       />
+      {context && activeProject?.id === context.marker.id && selectedUnit && (
+        <Button
+          appearance="subtle"
+          size="small"
+          disabled={blocked}
+          onClick={(): void => {
+            void run(async () => {
+              const { locateSchematicComponentOnBoards } = await import(
+                '../../io/projectPcbProbe'
+              );
+              const key =
+                store.getState().docStore.present.view.hover_pins?.[0];
+              const pinId =
+                key && key.includes(':@') ? key.split(':@')[1] : undefined;
+              setPcbProbe(
+                await locateSchematicComponentOnBoards(
+                  activeProject,
+                  selectedUnit,
+                  pinId,
+                ),
+              );
+            }, false);
+          }}
+        >
+          {t('projects.findInPcb')}
+        </Button>
+      )}
       {error && (
         <div className="project-browser-status" role="alert">
           {error}
@@ -653,6 +957,21 @@ export default function ProjectBrowser() {
               ({ path }) =>
                 path.toLowerCase() === relativePath(item).toLowerCase(),
             );
+            const status =
+              link?.kind === 'board' && context
+                ? sync.get(context.marker.id + ':' + link.id)
+                : undefined;
+            const associatedBoards =
+              link?.kind === 'schematic'
+                ? linkedPaths.filter(
+                    (board) =>
+                      board.kind === 'board' &&
+                      context.project.settings.associations?.some(
+                        ({ schematic, board: id }) =>
+                          schematic === link.id && id === board.id,
+                      ),
+                  )
+                : [];
             return (
               <li key={item.id}>
                 <Button
@@ -666,6 +985,11 @@ export default function ProjectBrowser() {
                 >
                   {item.name}
                 </Button>
+                {status && (
+                  <small className="project-board-sync" title={status.detail}>
+                    {t('projects.syncStatus.' + status.status)}
+                  </small>
+                )}
                 <Menu>
                   <MenuTrigger disableButtonEnhancement>
                     <Button
@@ -687,9 +1011,45 @@ export default function ProjectBrowser() {
                       >
                         {t('projects.open')}
                       </MenuItem>
+                      {!editingLibrary &&
+                        associatedBoards.map((board) => (
+                          <MenuItem
+                            key={board.id}
+                            onClick={(): void => {
+                              void run(
+                                () =>
+                                  openCircuitEco(context, {
+                                    boardId: board.id,
+                                  }),
+                                false,
+                              );
+                            }}
+                          >
+                            {t('projects.updateBoardCircuit')}
+                            {associatedBoards.length > 1
+                              ? ' · ' + board.path
+                              : ''}
+                          </MenuItem>
+                        ))}
                       {link?.kind === 'schematic' && canPlace(link.id) && (
                         <MenuItem onClick={() => void placeChild(link)}>
                           {t('hierarchy.placeChild')}
+                        </MenuItem>
+                      )}
+                      {link?.kind === 'board' && context && (
+                        <MenuItem
+                          icon={<ArrowDownloadRegular />}
+                          onClick={(): void => {
+                            void run(async () => {
+                              const { data } = await readProjectBoard(
+                                context.project,
+                                link.id,
+                              );
+                              download(item.name, data);
+                            }, false);
+                          }}
+                        >
+                          {t('projects.downloadBoard')}
                         </MenuItem>
                       )}
                       {link?.kind === 'board' && !editingLibrary && (
@@ -723,6 +1083,84 @@ export default function ProjectBrowser() {
                           {t('projects.reviewBoardDevices')}
                         </MenuItem>
                       )}
+                      {link?.kind === 'board' && context && !editingLibrary && (
+                        <MenuItem
+                          onClick={(): void =>
+                            void run(
+                              () =>
+                                openCircuitEco(context, { boardId: link.id }),
+                              false,
+                            )
+                          }
+                        >
+                          {t('projects.updateBoardCircuit')}
+                        </MenuItem>
+                      )}
+                      {link?.kind === 'board' && context && !editingLibrary && (
+                        <>
+                          <MenuItem
+                            onClick={(): void => {
+                              void run(
+                                () =>
+                                  openReferenceDialog(context, link.id, 'edit'),
+                                false,
+                              );
+                            }}
+                          >
+                            {t('projects.editBoardReferences')}
+                          </MenuItem>
+                          <MenuItem
+                            onClick={(): void => {
+                              void run(
+                                () =>
+                                  openReferenceDialog(
+                                    context,
+                                    link.id,
+                                    'annotate',
+                                  ),
+                                false,
+                              );
+                            }}
+                          >
+                            {t('projects.updateSchematicReferences')}
+                          </MenuItem>
+                        </>
+                      )}
+                      {link?.kind === 'board' &&
+                        referenceUndo?.boardId === link.id &&
+                        referenceUndo.projectId === context?.marker.id && (
+                          <MenuItem
+                            onClick={() => setConfirmReferenceUndo(true)}
+                          >
+                            {t('projects.undoReferenceAnnotation')}
+                          </MenuItem>
+                        )}
+                      {link?.kind === 'board' &&
+                        circuitUndo?.boardId === link.id &&
+                        circuitUndo.projectId === context?.marker.id && (
+                          <MenuItem onClick={() => setConfirmCircuitUndo(true)}>
+                            {t('projects.undoCircuitUpdate')}
+                          </MenuItem>
+                        )}
+                      {link?.kind === 'schematic' &&
+                        context &&
+                        !editingLibrary && (
+                          <MenuItem
+                            onClick={() =>
+                              setPrompt({
+                                title: t('projects.createBoardCircuit'),
+                                name: link.path.replace(/\.d[sz]n$/i, '.dpn'),
+                                submit: (path) =>
+                                  openCircuitEco(context, {
+                                    sourceId: link.id,
+                                    path,
+                                  }),
+                              })
+                            }
+                          >
+                            {t('projects.createBoardCircuit')}
+                          </MenuItem>
+                        )}
                       {context &&
                         !link &&
                         !item.folder &&
@@ -898,6 +1336,187 @@ export default function ProjectBrowser() {
           comparison={comparison}
           onClose={() => setComparison(undefined)}
         />
+      )}
+      {boardWorkspace && (
+        <React.Suspense fallback={<Spinner />}>
+          <ProjectBoardWorkspaceDialog
+            session={boardWorkspace}
+            probe={boardWorkspaceProbe}
+            onProbe={navigateFromBoardCanvas}
+            onUpdate={() => {
+              setBoardWorkspace(undefined);
+              if (context)
+                void run(
+                  () =>
+                    openCircuitEco(context, {
+                      boardId: boardWorkspace.board.boardId,
+                    }),
+                  false,
+                );
+            }}
+            onEditReferences={() => {
+              setBoardWorkspace(undefined);
+              if (context)
+                void run(
+                  () =>
+                    openReferenceDialog(
+                      context,
+                      boardWorkspace.board.boardId,
+                      'edit',
+                    ),
+                  false,
+                );
+            }}
+            onBackAnnotate={() => {
+              setBoardWorkspace(undefined);
+              if (context)
+                void run(
+                  () =>
+                    openReferenceDialog(
+                      context,
+                      boardWorkspace.board.boardId,
+                      'annotate',
+                    ),
+                  false,
+                );
+            }}
+            syncStatus={
+              sync.get(context?.marker.id + ':' + boardWorkspace.board.boardId)
+                ? t(
+                    'projects.syncStatus.' +
+                      sync.get(
+                        context?.marker.id + ':' + boardWorkspace.board.boardId,
+                      ).status,
+                  )
+                : undefined
+            }
+            onClose={() => setBoardWorkspace(undefined)}
+          />
+        </React.Suspense>
+      )}
+      {footprintEditor && (
+        <React.Suspense fallback={<Spinner />}>
+          <FootprintEditorDialog onClose={() => setFootprintEditor(false)} />
+        </React.Suspense>
+      )}
+      {pcbProbe && (
+        <React.Suspense fallback={<Spinner />}>
+          <ProjectPcbProbeDialog
+            matches={pcbProbe}
+            onShow={({ boardId, componentId }, padId) => {
+              setPcbProbe(undefined);
+              if (context)
+                openBoardWorkspace(context, boardId, { componentId, padId });
+            }}
+            onClose={() => setPcbProbe(undefined)}
+          />
+        </React.Suspense>
+      )}
+      {referenceDialog && (
+        <React.Suspense fallback={<Spinner />}>
+          <ProjectReferenceDialog
+            state={referenceDialog}
+            onClose={() => setReferenceDialog(undefined)}
+            onApplied={(undo) => {
+              setReferenceUndo(undo);
+              reloadAnnotatedDrawing(undo);
+            }}
+            onLocate={locateReference}
+          />
+        </React.Suspense>
+      )}
+      {confirmReferenceUndo && referenceUndo && (
+        <Dialog
+          open
+          onOpenChange={(_, data) => {
+            if (!data.open && !blocked) setConfirmReferenceUndo(false);
+          }}
+        >
+          <DialogSurface>
+            <DialogBody>
+              <DialogTitle>{t('projects.undoReferenceAnnotation')}</DialogTitle>
+              <DialogContent>{t('projects.undoReferenceDetail')}</DialogContent>
+              <DialogActions>
+                <Button
+                  appearance="primary"
+                  disabled={blocked}
+                  onClick={(): void => {
+                    void run(async () => {
+                      try {
+                        await referenceUndo.restore();
+                        reloadAnnotatedDrawing(referenceUndo);
+                        setReferenceUndo(undefined);
+                      } finally {
+                        setConfirmReferenceUndo(false);
+                      }
+                    }, false);
+                  }}
+                >
+                  {t('projects.undoReferenceAction')}
+                </Button>
+                <Button
+                  disabled={blocked}
+                  onClick={() => setConfirmReferenceUndo(false)}
+                >
+                  {t('common.cancel')}
+                </Button>
+              </DialogActions>
+            </DialogBody>
+          </DialogSurface>
+        </Dialog>
+      )}
+      {circuitEco && (
+        <React.Suspense fallback={<Spinner />}>
+          <ProjectCircuitDialog
+            update={circuitEco}
+            onApplied={setCircuitUndo}
+            onCreated={(id) => {
+              if (context) openBoardWorkspace(context, id);
+            }}
+            onClose={() => setCircuitEco(undefined)}
+          />
+        </React.Suspense>
+      )}
+      {confirmCircuitUndo && circuitUndo && (
+        <Dialog
+          open
+          onOpenChange={(_, data) => {
+            if (!data.open && !blocked) setConfirmCircuitUndo(false);
+          }}
+        >
+          <DialogSurface>
+            <DialogBody>
+              <DialogTitle>{t('projects.undoCircuitUpdate')}</DialogTitle>
+              <DialogContent>
+                {t('projects.undoCircuitUpdateDetail')}
+              </DialogContent>
+              <DialogActions>
+                <Button
+                  appearance="primary"
+                  disabled={blocked}
+                  onClick={(): void => {
+                    void run(async () => {
+                      try {
+                        await circuitUndo.restore();
+                        setCircuitUndo(undefined);
+                      } finally {
+                        setConfirmCircuitUndo(false);
+                      }
+                    }, false);
+                  }}
+                >
+                  {t('projects.undoCircuitUpdateAction')}
+                </Button>
+                <Button
+                  disabled={blocked}
+                  onClick={() => setConfirmCircuitUndo(false)}
+                >
+                  {t('common.cancel')}
+                </Button>
+              </DialogActions>
+            </DialogBody>
+          </DialogSurface>
+        </Dialog>
       )}
       {deviceReview && (
         <React.Suspense fallback={<Spinner />}>

@@ -222,7 +222,7 @@ function parsePin(node: SExprList): KiPin {
   };
 }
 
-function parseSubSymbol(node: SExprList, parentName: string): KiSubSymbol {
+function parseSubSymbol(node: SExprList, parentName: string, issues: string[]): KiSubSymbol {
   const name = asString(node.values[0], '');
   const suffix = name.startsWith(parentName + '_')
     ? name.substring(parentName.length + 1)
@@ -236,13 +236,19 @@ function parseSubSymbol(node: SExprList, parentName: string): KiSubSymbol {
 
   for (const c of nodeChildren(node)) {
     if (c.tag === 'pin') {
-      pins.push(parsePin(c));
+      const pin = parsePin(c);
+      if (!['input', 'output', 'bidirectional', 'tri_state', 'passive', 'free',
+        'unspecified', 'power_in', 'power_out', 'open_collector', 'open_emitter', 'not_connected'].includes(pin.electricalType))
+        issues.push(`Pin ${pin.number}: unsupported electrical type ${pin.electricalType}; imported as passive.`);
+      if (!['line', 'inverted', 'clock', 'inverted_clock', 'input_low', 'clock_low',
+        'output_low', 'edge_clock_high', 'non_logic'].includes(pin.graphicStyle))
+        issues.push(`Pin ${pin.number}: unsupported graphic style ${pin.graphicStyle}; imported as a line.`);
+      pins.push(pin);
       continue;
     }
     const g = parseGraphic(c);
-    if (g) {
-      graphics.push(g);
-    }
+    if (g) graphics.push(g);
+    else issues.push(`Unsupported symbol graphic: ${c.tag}.`);
   }
 
   return { unit, style, graphics, pins };
@@ -263,7 +269,12 @@ function parseTopSymbol(node: SExprList): KiSymbol {
   const pinNumbersNode = child(node, 'pin_numbers');
   const offsetNode = child(pinNamesNode as any, 'offset');
 
-  const subsymbols = children(node, 'symbol').map((s) => parseSubSymbol(s, name));
+  const issues: string[] = [];
+  const subsymbols = children(node, 'symbol').map((s) => parseSubSymbol(s, name, issues));
+  const flag = (tag: string) => {
+    const value = child(node, tag)?.values[0];
+    return value === 'yes' ? true : value === 'no' ? false : undefined;
+  };
 
   return {
     name,
@@ -280,6 +291,9 @@ function parseTopSymbol(node: SExprList): KiSymbol {
     power: !!child(node, 'power'),
     extendsName: asString(child(node, 'extends')?.values[0], ''),
     subsymbols,
+    onBoard: flag('on_board'),
+    inBom: flag('in_bom'),
+    issues,
   };
 }
 
@@ -295,8 +309,12 @@ function mergeInherited(symbols: KiSymbol[]) {
     }
     const parent = byName[symbol.extendsName];
     if (!parent) {
+      symbol.issues.push(`Missing inherited symbol ${symbol.extendsName}.`);
       continue;
     }
+    symbol.onBoard ??= parent.onBoard;
+    symbol.inBom ??= parent.inBom;
+    symbol.issues.push(...parent.issues);
 
     const existingUnits = new Set(symbol.subsymbols.map((s) => `${s.unit}:${s.style}`));
     const inherited = parent.subsymbols

@@ -3,6 +3,8 @@ import type { BoardPoint } from './geometry';
 import { isEntityId } from '../model/schematicIdentity';
 import { validateBoardAssets } from './boardAssets';
 import type { BoardAssets } from './boardAssets';
+import { validateBoardRouting } from './boardRouting';
+import type { BoardTrack, BoardVia } from './boardRouting';
 import { profileRegion } from './contours';
 import type { BoardProfile } from './contours';
 
@@ -25,7 +27,9 @@ type BoardFeature =
   | 'straight-outline'
   | 'analytic-profile'
   | 'embedded-devices'
-  | 'physical-padstacks';
+  | 'physical-padstacks'
+  | 'applied-circuit'
+  | 'routed-copper';
 
 export interface BoardDocument extends BoardAssets {
   readonly format: typeof boardFormat.format;
@@ -40,6 +44,8 @@ export interface BoardDocument extends BoardAssets {
   readonly copperLayers: readonly CopperLayer[];
   readonly outline?: readonly BoardPoint[];
   readonly profile?: BoardProfile;
+  readonly tracks?: readonly BoardTrack[];
+  readonly vias?: readonly BoardVia[];
 }
 
 const supportedFeatures: readonly BoardFeature[] = [
@@ -47,6 +53,8 @@ const supportedFeatures: readonly BoardFeature[] = [
   'analytic-profile',
   'embedded-devices',
   'physical-padstacks',
+  'applied-circuit',
+  'routed-copper',
 ];
 const copperStack = Object.freeze([
   Object.freeze({ id: 'top', order: 0 } as const),
@@ -133,6 +141,7 @@ export function validateBoard(value: unknown): BoardDocument {
     validateOutline(board.outline);
   }
   validateBoardAssets(board, board.requiredFeatures);
+  validateBoardRouting(board);
   return freezeJson({
     ...board,
     requiredFeatures: [...board.requiredFeatures].sort(),

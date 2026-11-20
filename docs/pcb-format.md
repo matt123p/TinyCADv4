@@ -56,7 +56,8 @@ The board stores its schema version, revision, required features and authoritati
 | --- | --- |
 | Board profile | Store a closed straight polygon with an implicit final edge or an ordered analytic line/arc profile with closed cutouts. Coordinates remain within ±500 mm. Curve tessellation is derived and the Gerber profile emits analytic edges. |
 | Copper and graphic layers | Store copper in physical stack order. Graphic layers have UUIDs, explicit role and side, and editable names. |
-| Source circuit | Optional schematic document UUID, circuit revision and SHA-256 connectivity digest. A project checks the link against its circuit snapshot. The board's own nets and pad assignments support standalone PCB work. |
+| Source circuit | Optional schematic document UUID, circuit revision and SHA-256 connectivity digest. An applied ECO embeds the corresponding circuit in `APPLIEDCIRCUIT`. The board's own nets and pad assignments support standalone PCB work. |
+| Routed copper | Tracks store endpoints, width and layer. Through vias store a position, diameter and drill. Routes may retain their geometry with no net assignment. `reviewRequired` flags copper affected by an ECO. |
 | Component, device and footprint definitions | Embed each used definition and padstack once per revision. Devices reference a footprint and explicitly assign every pad ID. Placements reference the embedded definitions and store their stable identities, transforms and lock state. |
 | Physical padstacks | Store copper, mask and paste per face, with an optional round or straight-slot drill and explicit plating. Bottom placement mirrors geometry and swaps face assignments. |
 | Model attachments and assets | Embed resolved STEP bytes once per SHA-256 ID as base64 XML data, with media type and provenance. Model attachments reference that ID and carry the local transform. |
@@ -71,11 +72,13 @@ Version 1 is the first persisted board format. `DPNIDENTITY`, `COORDINATES`, `TI
 
 `FOOTPRINTS` references `COMPONENTDEFS` and `DEVICEDEFS` by embedded UUID. Devices reference `FOOTPRINTDEFS` by UUID and map their `SIGNALS` to pad IDs in `ASSIGNMENTS`. Pads reference `PADSTACKDEFS` by a positive file-local integer ID. Identical stacks share a single definition. Each stack defines face geometry in `COPPER`, optional `MASK` and `PASTE`, and an optional `DRILL` with separate endpoints and an explicit plating flag. Component definitions carry schematic unit and sheet UUIDs where available. Component signal bindings reference UUIDs in `NETS`, and `RULES` stores board-wide routing widths and clearances in nanometres.
 
+`APPLIEDCIRCUIT` stores the exact compiled components, signals, net members, no-connects and instance provenance for an applied ECO. Its identity and revision match `SOURCECIRCUIT`, and the reader verifies its physical connectivity digest. The circuit and board layout commit in a single version-guarded board write. A net rename can keep its UUID and copper. When a net is retired, its tracks and vias retain their geometry and IDs, and affected routes with unresolved assignment open with the review flag set.
+
 `MODELASSETS` stores canonical base64 in each `MODELASSET` record. Its ID is the lowercase SHA-256 hex digest of the decoded bytes. TinyCAD verifies the digest on read and write. An attachment with an asset ID must resolve in the file. An attachment with only a source and transform records an unresolved model. The codec does not fetch external files. Each model asset is limited to 32 MiB, with 64 MiB for all assets and 128 MiB for the complete XML file.
 
 The writer orders known record fields consistently and retains authored list order. Optional XML attributes and child elements on domain records survive edits. Unknown properties in the in-memory board model use named `PROPERTY` elements. Structural lists accept their declared item type. An unsupported required feature or format version prevents loading. The version 1 field map is maintained in the board codec. [Board codec](../src/pcb/boardCodec.ts)
 
-Board operations apply atomically against an expected revision. Undo and redo restore content with a fresh revision. Future features add typed entity collections for tracks, vias, zones and mechanical objects. Those collections need implementation-specific checks and required feature identifiers before use. Filled copper, meshes, spatial indexes and live DRC are rebuildable data and stay out of authoring files.
+Board operations apply atomically against an expected revision. Undo and redo restore content with a fresh revision. Future features add typed entity collections for zones and mechanical objects. Those collections need implementation-specific checks and required feature identifiers before use. Filled copper, meshes, spatial indexes and live DRC are rebuildable data and stay out of authoring files.
 
 ## Reviewed device definitions
 
@@ -86,6 +89,12 @@ The file has `format: "tinycad-device"` and `version: 1`. The footprint's `defin
 The board's `DEVICEDEFS` record embeds the resolved assignments. Its `LIBRARYSOURCE` records the catalogue device and footprint UUIDs, full device file digest, reviewer, evidence, licence and explicit binding from device terminal UUIDs to this component's schematic signal UUIDs. The embedded board definitions, including any STEP bytes, stay usable offline. A catalogue refresh previews changes by pad UUID and updates the selected component only after approval. Its footprint keeps its placement transform.
 
 See the [project device review workflow](project-specification.md#reviewed-pcb-devices) for catalogue discovery and review.
+
+## Native footprint drafts
+
+The Project Browser's **Footprint editor** opens `.kicad_mod` and `.tcfootprint.json` files. The native draft stores editable pad geometry and UUIDs, graphic layers, import diagnostics, and unresolved or embedded model references. The editor supports pad arrays and alignment, independent copper, mask, paste and drill edits, footprint artwork and model transforms, origin changes, and distances between pad centres. Unsupported electrical geometry blocks import. Imported drafts carry unreviewed provenance. A user can supply a local STEP file for each model reference and retain its placement transform. **Export 1:1 SVG** writes physical dimensions in millimetres and includes a 10 mm calibration mark. Print at actual size.
+
+**Map as device** records an explicit assignment for each pad and requires review evidence, package dimensions and licensing metadata. Exported devices use the same reusable format as the Project Browser's device catalogue. KiCad symbol import retains the original footprint locator and also supplies its package name as a search hint. Symbol import preserves KiCad board and BOM flags and reports unsupported pin and artwork features in the importer.
 
 ## KiCad import persistence
 

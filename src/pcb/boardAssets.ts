@@ -9,7 +9,8 @@ import { BOARD_COORDINATE_LIMIT_NM, isBoardPoint } from './geometry';
 import { validatePadStack } from './padstack';
 import type { PadStack } from './padstack';
 import type { RouteRules } from './routing';
-import type { CircuitComponent } from './circuitSnapshot';
+import { validateCircuitSnapshot } from './circuitSnapshot';
+import type { CircuitSnapshot, CircuitComponent } from './circuitSnapshot';
 import { validateFootprintDetails } from './footprintDetails';
 import type { FootprintGraphic, FootprintModel } from './footprintDetails';
 
@@ -106,6 +107,7 @@ export interface BoardModelAsset {
 
 export interface BoardAssets {
   readonly sourceCircuit?: CircuitSource;
+  readonly appliedCircuit?: CircuitSnapshot;
   readonly components?: readonly BoardComponent[];
   readonly nets?: readonly BoardNet[];
   readonly rules?: RouteRules;
@@ -157,6 +159,24 @@ export function validateBoardAssets(
     throw new Error(
       'Invalid source circuit identity, revision, or connectivity digest.',
     );
+  }
+  if (
+    (board.appliedCircuit !== undefined) !==
+    features.includes('applied-circuit')
+  )
+    throw new Error(
+      'An embedded circuit must declare the applied-circuit feature.',
+    );
+  if (board.appliedCircuit) {
+    const snapshot = board.appliedCircuit;
+    validateCircuitSnapshot(snapshot);
+    if (
+      sourceCircuit?.documentId !== snapshot.documentId ||
+      sourceCircuit?.revision !== snapshot.revision
+    )
+      throw new Error(
+        'The embedded circuit does not match the board source revision.',
+      );
   }
   if (graphicLayers !== undefined) {
     for (const layer of byId(graphicLayers, 'graphic layer').values()) {

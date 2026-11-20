@@ -54,6 +54,7 @@ const mapStateToProps = (state: docDrawing) => {
     editingLibrary: !!state.docStore.present.editLibrary,
     heterogeneous: heterogeneous,
     showRulers: state.docStore.present.drawing.settings.showRulers,
+    instanceReferencesByUnit: state.altStore.file.project?.instanceReferencesByUnit,
     netlistTypes: state.docStore.present.drawing.netlistTypes,
     netTypeAssignments: state.docStore.present.drawing.netTypeAssignments,
   };

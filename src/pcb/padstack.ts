@@ -42,7 +42,7 @@ export interface PhysicalDevice {
 export interface TerminalBinding {
   readonly signalId: string;
   readonly terminalId: string;
-  readonly netId: string;
+  readonly netId?: string;
 }
 
 export function validatePadStack(stack: PadStack): void {
@@ -117,8 +117,10 @@ export function placeDevice(
   const signals = new Map(
     bindings.map((binding) => [binding.signalId, binding]),
   );
-  if (bindings.some(({ terminalId, netId }) => !terminalId || !netId))
-    throw new Error('Terminal and net IDs are required.');
+  if (bindings.some(({ terminalId, netId }) => !terminalId || netId === ''))
+    throw new Error(
+      'A terminal needs an ID and any supplied net ID must be nonempty.',
+    );
   const issues = validatePadMap(
     bindings.map(({ signalId }) => signalId),
     device.pads,
@@ -178,7 +180,7 @@ export function placeDevice(
           region: { outer: flatten(shape), holes: [] },
         };
         copper.push(
-          binding
+          binding?.netId
             ? { ...land, netId: binding.netId, terminalId: binding.terminalId }
             : land,
         );

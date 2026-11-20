@@ -258,12 +258,13 @@ export async function compileSchematicComponents(graph: HierarchicalNetlist) {
         });
       }
     }
+    const packageHint = packageHints.values().next().value ?? first.packageHint;
     components.push({
       id,
       reference,
       role,
       value,
-      packageHint: packageHints.values().next().value ?? first.packageHint,
+      ...(packageHint === undefined ? {} : { packageHint }),
       units: group.map(({ symbol, source }) => ({
         id: symbol.unitId,
         sheetId: source.sheetId,

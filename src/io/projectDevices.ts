@@ -14,6 +14,9 @@ import {
 import type { DeviceRevision } from '../pcb/deviceLibrary';
 import { applyDeviceReview } from '../pcb/deviceReview';
 import type { DeviceReview } from '../pcb/deviceReview';
+import type { dsnDrawing } from '../model/dsnDrawing';
+import type { BoardDocument } from '../pcb/board';
+import type { CircuitSnapshot } from '../pcb/circuitSnapshot';
 import { encodeBoard } from '../pcb/boardCodec';
 
 export async function openProjectDeviceReview(
@@ -26,6 +29,10 @@ export async function openProjectDeviceReview(
   );
   if (!entry) throw new Error('The PCB is no longer linked to this project.');
   const { board, circuit, version } = await readProjectBoard(project, boardId);
+  if (board.tracks?.length || board.vias?.length)
+    throw new Error(
+      'Use Update PCB from Schematic to review device changes on a routed board.',
+    );
   if (!circuit?.sources)
     throw new Error(
       'This PCB needs an applied circuit snapshot with schematic sources.',
@@ -36,12 +43,81 @@ export async function openProjectDeviceReview(
     ? (await findProjectPath(location.rootId, parentPath, true))?.id
     : location.rootId;
   if (!folder) throw new Error('The PCB folder no longer exists.');
-  const folders = [...new Set([location.rootId, folder])];
+  return projectDeviceReview({
+    project,
+    rootId: location.rootId,
+    folder,
+    board,
+    circuit,
+    async apply(review: DeviceReview) {
+      const latest = await readProject(location.id, location.rootId);
+      const current = await readProjectBoard(latest, boardId);
+      if (
+        latest.files.get(entry.path)?.id !== file.id ||
+        current.version !== version
+      )
+        throw new Error(
+          'The board changed in storage. Reopen the device review.',
+        );
+      const data = await encodeBoard(applyDeviceReview(current.board, review));
+      await projectRequest({
+        operation: 'write',
+        id: file.id,
+        folder,
+        name: file.name,
+        data,
+        version,
+      });
+      window.dispatchEvent(new Event(projectFilesChanged));
+    },
+  });
+}
+
+/** Resolve catalogue and source previews for either a stored board or an ECO draft. */
+export async function projectDeviceReview({
+  project,
+  rootId,
+  folder,
+  board,
+  circuit,
+  componentId,
+  apply,
+  activeDrawing,
+}: {
+  project: Awaited<ReturnType<typeof readProject>>;
+  rootId: string;
+  folder: string;
+  board: BoardDocument;
+  circuit: CircuitSnapshot;
+  componentId?: string;
+  apply: (review: DeviceReview) => Promise<void>;
+  activeDrawing?: (id: string) => dsnDrawing | undefined;
+}) {
+  const folders = [...new Set([rootId, folder])];
 
   async function readCatalogue() {
     const devices = new Map<string, DeviceRevision>();
     const badRevisions = new Set<string>();
     const warnings: string[] = [];
+    function add(device: DeviceRevision) {
+      const { id, name, revision } = device.definition;
+      const key = JSON.stringify([id, revision]);
+      if (devices.has(key) && devices.get(key).digest !== device.digest) {
+        if (!badRevisions.has(key))
+          warnings.push(
+            `Conflicting contents for ${name}, revision ${revision}.`,
+          );
+        badRevisions.add(key);
+      } else devices.set(key, device);
+    }
+    try {
+      const { starterReviewedDevices } = await import(
+        './starterReviewedDevices'
+      );
+      for (const device of await starterReviewedDevices()) add(device);
+    } catch (error) {
+      warnings.push(error instanceof Error ? error.message : String(error));
+    }
     for (const scope of folders) {
       for (const item of await projectRequest({
         operation: 'list',
@@ -59,17 +135,7 @@ export async function openProjectDeviceReview(
             operation: 'read',
             id: item.id,
           });
-          const device = await readLibraryDevice(data);
-          const key = JSON.stringify([
-            device.definition.id,
-            device.definition.revision,
-          ]);
-          if (devices.has(key) && devices.get(key).digest !== device.digest) {
-            badRevisions.add(key);
-            warnings.push(
-              `Conflicting contents for ${device.definition.name}, revision ${device.definition.revision}.`,
-            );
-          } else devices.set(key, device);
+          add(await readLibraryDevice(data));
         } catch (error) {
           warnings.push(
             `${item.name}: ${
@@ -90,6 +156,7 @@ export async function openProjectDeviceReview(
   return {
     board,
     circuit,
+    componentId,
     catalogue: await readCatalogue(),
     async addLibrary(name: string, data: Uint8Array) {
       if (!name.toLowerCase().endsWith(deviceLibraryExtension))
@@ -113,7 +180,9 @@ export async function openProjectDeviceReview(
       );
       if (!sheetEntry)
         throw new Error('The source schematic is no longer found.');
-      const drawing = await readProjectSchematic(project, sheetEntry);
+      const drawing =
+        activeDrawing?.(sheetEntry.id) ??
+        (await readProjectSchematic(project, sheetEntry));
       const sheet = drawing.sheets.find((item) => item.id === source.sheetId);
       const symbol = sheet?.items.find(
         (item) =>
@@ -124,30 +193,10 @@ export async function openProjectDeviceReview(
         throw new Error('The source schematic unit no longer exists.');
       return { symbol, options: sheet.options, source };
     },
-    async apply(review: DeviceReview) {
-      const latest = await readProject(location.id, location.rootId);
-      const current = await readProjectBoard(latest, boardId);
-      if (
-        latest.files.get(entry.path)?.id !== file.id ||
-        current.version !== version
-      )
-        throw new Error(
-          'The board changed in storage. Reopen the device review.',
-        );
-      const data = await encodeBoard(applyDeviceReview(current.board, review));
-      await projectRequest({
-        operation: 'write',
-        id: file.id,
-        folder,
-        name: file.name,
-        data,
-        version,
-      });
-      window.dispatchEvent(new Event(projectFilesChanged));
-    },
+    apply,
   };
 }
 
 export type ProjectDeviceReview = Awaited<
-  ReturnType<typeof openProjectDeviceReview>
+  ReturnType<typeof projectDeviceReview>
 >;

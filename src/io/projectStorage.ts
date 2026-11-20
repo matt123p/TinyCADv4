@@ -33,6 +33,7 @@ export interface OpenProjectDrawing extends ProjectFile {
   rootId: string;
   documentPath: string;
   hierarchyTrail?: readonly HierarchyFrame[];
+  instanceReferencesByUnit?: Readonly<Record<string, string>>;
   openSheetId?: string;
   openUnitId?: string;
   openPinId?: string;

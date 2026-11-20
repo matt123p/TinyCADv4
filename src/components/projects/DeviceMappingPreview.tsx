@@ -2,6 +2,7 @@ import React from 'react';
 import type { ProjectDeviceReview } from '../../io/projectDevices';
 import type { EmbeddedFootprint } from '../../pcb/boardAssets';
 import { updateSymbol } from '../../manipulators/updateSymbol';
+import { artworkBounds, FootprintArtwork } from './FootprintArtwork';
 import { TDrawing } from '../svg/Drawing';
 
 export function SchematicTerminalPreview({
@@ -51,13 +52,18 @@ export function SchematicTerminalPreview({
 export function DeviceFootprintPreview({
   footprint,
   selected,
+  ruler = false,
 }: {
   footprint: EmbeddedFootprint;
   selected: string;
+  ruler?: boolean;
 }) {
   // Include the actual pad geometry in the viewport, including asymmetric lands.
   const points = footprint.pads.flatMap(({ positionNm, stack }) => {
-    const shape = stack?.copper.top ?? stack?.copper.bottom;
+    const shape =
+      stack?.copper.top ??
+      stack?.copper.bottom ??
+      (stack?.drill && { ...stack.drill, kind: 'capsule' as const });
     const corners =
       shape?.kind === 'polygon'
         ? shape.vertices
@@ -72,6 +78,9 @@ export function DeviceFootprintPreview({
       y: -y - positionNm.y,
     }));
   });
+  for (const item of footprint.graphics ?? []) {
+    points.push(...artworkBounds(item).map(({ x, y }) => ({ x, y: -y })));
+  }
   let left = Infinity;
   let right = -Infinity;
   let top = Infinity;
@@ -82,7 +91,7 @@ export function DeviceFootprintPreview({
     top = Math.min(top, y);
     bottom = Math.max(bottom, y);
   }
-  const width = right - left;
+  const width = Math.max(right - left, ruler ? 10_000_000 : 0);
   const height = bottom - top;
   const margin = Math.max(width, height, 1_000_000) / 8;
   return (
@@ -92,9 +101,12 @@ export function DeviceFootprintPreview({
       width="100%"
       height="180"
       viewBox={`${left - margin} ${top - margin} ${width + 2 * margin} ${
-        height + 2 * margin
+        height + 2 * margin + (ruler ? 2_500_000 : 0)
       }`}
     >
+      {(footprint.graphics ?? []).map((item, index) => (
+        <FootprintArtwork key={index} item={item} />
+      ))}
       {footprint.pads.map(({ positionNm, id, label, stack }) => {
         const shape = stack?.copper.top ?? stack?.copper.bottom;
         const colour = selected === id ? '#c24611' : '#225f9d';
@@ -130,11 +142,27 @@ export function DeviceFootprintPreview({
                 strokeWidth={shape.widthNm}
                 strokeLinecap="round"
               />
-            ) : (
+            ) : stack?.drill ? null : (
               <circle r={margin / 4} fill={colour} />
             )}
+            {stack?.drill && (
+              <line
+                x1={stack.drill.start.x}
+                y1={-stack.drill.start.y}
+                x2={
+                  stack.drill.start.x === stack.drill.end.x &&
+                  stack.drill.start.y === stack.drill.end.y
+                    ? stack.drill.end.x + 1
+                    : stack.drill.end.x
+                }
+                y2={-stack.drill.end.y}
+                stroke={shape ? '#fff' : colour}
+                strokeWidth={stack.drill.widthNm}
+                strokeLinecap="round"
+              />
+            )}
             <text
-              fill="#fff"
+              fill={stack?.drill && shape ? colour : '#fff'}
               fontSize={margin * 0.5}
               textAnchor="middle"
               dominantBaseline="central"
@@ -144,6 +172,19 @@ export function DeviceFootprintPreview({
           </g>
         );
       })}
+      {ruler && (
+        <g transform={`translate(${left} ${bottom + margin / 2 + 550_000})`}>
+          <path
+            d="M 0 -250000 L 0 250000 M 0 0 L 10000000 0 M 10000000 -250000 L 10000000 250000"
+            fill="none"
+            stroke="#111"
+            strokeWidth="65000"
+          />
+          <text x="5000000" y="850000" fontSize="450000" textAnchor="middle">
+            10 mm
+          </text>
+        </g>
+      )}
     </svg>
   );
 }

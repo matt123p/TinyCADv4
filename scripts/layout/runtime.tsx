@@ -42,6 +42,8 @@ export { decodeProjectSettings, encodeProjectSettings } from '../../src/pcb/proj
 export { circuitConnectivityDigest } from '../../src/pcb/circuitSnapshot';
 export { deviceDigest, readLibraryDevice, searchLibraryDevices, writeLibraryDevice } from '../../src/pcb/deviceLibrary';
 export { applyDeviceReview, previewDeviceReview } from '../../src/pcb/deviceReview';
+export { previewCircuitEco, applyCircuitEco } from '../../src/pcb/circuitEco';
+export { loadPolygonKernel } from '../../src/pcb/polygonKernel';
 export { createBoard } from '../../src/pcb/board';
 export { encodeBoard, decodeBoard, createBoardModelAsset, readBoardModelAsset } from '../../src/pcb/boardCodec';
 export { driveProjectFiles } from '../../src/io/projectStorage';
@@ -106,3 +108,12 @@ export function renderCircuit(sheet: dsnSheet, bounds = circuitBounds(sheet)) {
     </svg>,
   );
 }
+
+export { editBoardReferences, previewBackAnnotation, applyBackAnnotation } from '../../src/pcb/referenceEco';
+export { referencesForInstance } from '../../src/io/projectHierarchy';
+
+export { importFootprintLibrary, encodeFootprintLibrary, decodeFootprintLibrary, footprintDefinition, makeFootprintPad, publishFootprintDevice, inspectFootprintDimensions, translateFootprintOrigin } from '../../src/pcb/footprintLibrary';
+
+export { kicadImporter } from '../../src/io/kicad/kicadImporter';
+
+export { placeUnplacedComponent } from '../../src/pcb/boardPlacement';

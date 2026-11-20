@@ -1,6 +1,11 @@
 import { digest } from '../util/sha256';
 import { boardFormat, validateBoard } from './board';
 import type { BoardDocument } from './board';
+import { circuitConnectivityDigest } from './circuitSnapshot';
+import type {
+  CircuitSchematicSource,
+  CircuitSnapshot,
+} from './circuitSnapshot';
 import type { BoardModelAsset, EmbeddedFootprint } from './boardAssets';
 import {
   child,
@@ -192,6 +197,72 @@ const asset = record(
   { base64: child('DATA') },
 );
 
+const terminal = record({ unitId: 'string', pinId: 'string' });
+const appliedCircuit = record(
+  {
+    schemaVersion: 'integer',
+    documentId: 'string',
+    revision: 'integer',
+    snapshotId: 'string',
+  },
+  {
+    components: list(
+      'COMPONENTS',
+      'COMPONENT',
+      record(
+        {
+          id: 'string',
+          reference: 'string',
+          value: 'string',
+          role: 'string',
+          packageHint: 'string',
+        },
+        {
+          units: list(
+            'UNITS',
+            'UNIT',
+            record({ id: 'string', sheetId: 'string' }),
+          ),
+          signals: list(
+            'SIGNALS',
+            'SIGNAL',
+            record(
+              { id: 'string', name: 'string', number: 'string' },
+              { terminals: list('TERMINALS', 'TERMINAL', terminal) },
+            ),
+          ),
+        },
+      ),
+    ),
+    nets: list(
+      'NETS',
+      'NET',
+      record(
+        { id: 'string' },
+        {
+          names: list('NAMES', 'NAME'),
+          terminals: list('TERMINALS', 'TERMINAL', terminal),
+        },
+      ),
+    ),
+    noConnects: list('NOCONNECTS', 'TERMINAL', terminal),
+    sources: list(
+      'SOURCES',
+      'SOURCE',
+      record(
+        {
+          instanceUnitId: 'string',
+          documentId: 'string',
+          documentPath: 'string',
+          sheetId: 'string',
+          unitId: 'string',
+        },
+        { instancePath: list('INSTANCEPATH', 'PLACEMENT') },
+      ),
+    ),
+  },
+);
+
 const boardXml = record(
   { version: 'integer' },
   {
@@ -241,6 +312,7 @@ const boardXml = record(
         connectivityDigest: 'string',
       }),
     ),
+    appliedCircuit: child('APPLIEDCIRCUIT', appliedCircuit),
     graphicLayers: list(
       'GRAPHICLAYERS',
       'GRAPHICLAYER',
@@ -253,6 +325,34 @@ const boardXml = record(
       record(
         { id: 'string', name: 'string' },
         { aliases: list('ALIASES', 'ALIAS') },
+      ),
+    ),
+    tracks: list(
+      'TRACKS',
+      'TRACK',
+      record(
+        {
+          id: 'string',
+          netId: 'string',
+          layerId: 'string',
+          widthNm: 'integer',
+          reviewRequired: 'boolean',
+        },
+        { start: child('START', point), end: child('END', point) },
+      ),
+    ),
+    vias: list(
+      'VIAS',
+      'VIA',
+      record(
+        {
+          id: 'string',
+          netId: 'string',
+          diameterNm: 'integer',
+          drillNm: 'integer',
+          reviewRequired: 'boolean',
+        },
+        { positionNm: child('POSITION', point) },
       ),
     ),
     rules: child(
@@ -283,7 +383,15 @@ function fromVector(
   return [value?.x, value?.y, value?.z];
 }
 
-function validateStandalone(board: BoardDocument) {
+async function validateStandalone(board: BoardDocument) {
+  if (
+    board.appliedCircuit &&
+    (await circuitConnectivityDigest(board.appliedCircuit)) !==
+      board.sourceCircuit.connectivityDigest
+  )
+    throw new Error(
+      'Embedded circuit connectivity does not match the board source digest.',
+    );
   if (board.footprints?.length && !board.components)
     throw new Error(
       'Standalone PCB placements need embedded component definitions.',
@@ -367,9 +475,10 @@ export async function encodeBoard(board: BoardDocument): Promise<Uint8Array> {
     footprintDefinitions,
     profile,
     dpnXmlHeader,
+    appliedCircuit,
     ...content
   } = validateBoard(board) as XmlBoardDocument;
-  validateStandalone(board);
+  await validateStandalone(board);
   await verifyAssets(board.modelAssets);
 
   // The board validator canonicalizes property order, so structurally identical stacks
@@ -402,6 +511,18 @@ export async function encodeBoard(board: BoardDocument): Promise<Uint8Array> {
   const root = boardXml.write('TinyCADPCB', {
     ...content,
     version: schemaVersion,
+    ...(appliedCircuit
+      ? {
+          appliedCircuit: {
+            ...appliedCircuit,
+            sources:
+              appliedCircuit.sources &&
+              Object.entries(appliedCircuit.sources).map(
+                ([instanceUnitId, source]) => ({ ...source, instanceUnitId }),
+              ),
+          },
+        }
+      : {}),
     identity: { ...dpnXmlHeader?.identity, boardId, revision },
     coordinates: {
       ...dpnXmlHeader?.coordinates,
@@ -445,8 +566,11 @@ type WireFootprint = Omit<EmbeddedFootprint, 'pads' | 'models'> & {
 
 type WireBoard = Omit<
   XmlBoardDocument,
-  'requiredFeatures' | 'profile' | 'footprintDefinitions'
+  'requiredFeatures' | 'profile' | 'footprintDefinitions' | 'appliedCircuit'
 > & {
+  appliedCircuit?: Omit<CircuitSnapshot, 'sources'> & {
+    sources?: (CircuitSchematicSource & { instanceUnitId: string })[];
+  };
   version: number;
   identity: Pick<BoardDocument, 'boardId' | 'revision'>;
   coordinates: Pick<
@@ -476,6 +600,7 @@ export async function decodeBoard(bytes: Uint8Array): Promise<BoardDocument> {
     padstacks,
     footprintDefinitions,
     dpnXmlHeader,
+    appliedCircuit: wireCircuit,
     ...content
   } = boardXml.read(xml) as unknown as WireBoard;
   const stacks = new Map<string, PadStack>();
@@ -526,6 +651,20 @@ export async function decodeBoard(bytes: Uint8Array): Promise<BoardDocument> {
     header.identity = identityExtensions;
   if (Object.keys(coordinateExtensions).length)
     header.coordinates = coordinateExtensions;
+  let embeddedCircuit: CircuitSnapshot | undefined;
+  if (wireCircuit) {
+    const { sources, ...snapshot } = wireCircuit;
+    const provenance = new Map<string, CircuitSchematicSource>();
+    for (const { instanceUnitId, ...source } of sources ?? []) {
+      if (provenance.has(instanceUnitId))
+        throw new Error('Duplicate embedded circuit instance unit.');
+      provenance.set(instanceUnitId, source);
+    }
+    embeddedCircuit = {
+      ...snapshot,
+      ...(sources ? { sources: Object.fromEntries(provenance) } : {}),
+    };
+  }
   const board = validateBoard({
     ...content,
     boardId,
@@ -534,6 +673,7 @@ export async function decodeBoard(bytes: Uint8Array): Promise<BoardDocument> {
     angleUnit,
     coordinateFrame,
     ...(Object.keys(header).length ? { dpnXmlHeader: header } : {}),
+    ...(embeddedCircuit ? { appliedCircuit: embeddedCircuit } : {}),
     format: boardFormat.format,
     schemaVersion: version,
     requiredFeatures: requiredFeatures?.map(({ id }) => id),
@@ -547,7 +687,7 @@ export async function decodeBoard(bytes: Uint8Array): Promise<BoardDocument> {
       : {}),
     ...(definitions ? { footprintDefinitions: definitions } : {}),
   });
-  validateStandalone(board);
+  await validateStandalone(board);
   await verifyAssets(board.modelAssets);
   return board;
 }

@@ -20,7 +20,8 @@ export type DeviceBindings = NonNullable<EmbeddedDevice['library']>['bindings'];
 
 export function boardComponentDevice(board: BoardDocument, logicalId: string) {
   const part = board.components?.find(
-    ({ id, logicalId: logical }) => (logical ?? id) === logicalId,
+    ({ id, logicalId: logical, role }) =>
+      role !== 'pcb-only' && (logical ?? id) === logicalId,
   );
   const placement =
     part &&
@@ -226,6 +227,7 @@ export async function previewDeviceReview(
   };
   return {
     expected: board,
+    selection: { revision, bindings },
     component: { ...(previous.part ?? newComponent), deviceId: device.id },
     previous,
     device,
@@ -254,6 +256,17 @@ export function applyDeviceReview(
   )
     throw new BoardRevisionConflict(review.expected.revision, board.revision);
 
+  return validateBoard({
+    ...withReviewedDevice(board, review),
+    revision: board.revision + 1,
+  });
+}
+
+/** Add a reviewed device to a draft board before validating the whole transaction. */
+export function withReviewedDevice(
+  board: BoardDocument,
+  review: DeviceReview,
+): BoardDocument {
   const { component, device, footprint } = review;
   const components = [
     ...(board.components ?? []).filter(({ id }) => id !== component.id),
@@ -305,9 +318,8 @@ export function applyDeviceReview(
     (feature) =>
       feature !== 'embedded-devices' && feature !== 'physical-padstacks',
   );
-  return validateBoard({
+  return {
     ...board,
-    revision: board.revision + 1,
     components,
     footprints,
     deviceDefinitions,
@@ -317,12 +329,12 @@ export function applyDeviceReview(
     ),
     requiredFeatures: [
       ...requiredFeatures,
-      'embedded-devices',
+      'embedded-devices' as const,
       ...(footprintDefinitions.some((item) =>
         item.pads.some((pad) => pad.stack),
       )
-        ? ['physical-padstacks']
+        ? ['physical-padstacks' as const]
         : []),
     ],
-  });
+  };
 }

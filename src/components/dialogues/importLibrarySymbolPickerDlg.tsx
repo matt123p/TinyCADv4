@@ -125,6 +125,13 @@ export const ImportLibrarySymbolPickerDialog: FunctionComponent<ImportLibrarySym
                 );
               })}
             </div>
+            {selectedSymbols.some((symbol) => symbol.issues?.length) && (
+              <ul aria-label="Symbol import report">
+                {selectedSymbols.flatMap((symbol) => (symbol.issues ?? []).map((issue) => (
+                  <li key={symbol.name.Name + ':' + issue}>{symbol.name.Name} · {issue}</li>
+                )))}
+              </ul>
+            )}
           </DialogContent>
           <DialogActions>
             <Button

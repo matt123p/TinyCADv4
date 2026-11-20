@@ -56,7 +56,7 @@ function oval(width: number, height: number) {
   };
 }
 
-function standardLand(shape: unknown, width: number, height: number, radiusRatio = 0): PadShape {
+export function standardLand(shape: unknown, width: number, height: number, radiusRatio = 0): PadShape {
   if (width <= 0 || height <= 0) throw new Error('Invalid KiCad land size.');
   if (shape === 'oval' || (shape === 'circle' && width === height)) return oval(width, height);
   if (shape === 'rect') return { kind: 'polygon', vertices: rectangle(width, height) };

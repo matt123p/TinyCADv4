@@ -17,6 +17,7 @@ test.afterAll(async () => {
 test('Google mode opens native schematic and PCB files in the remembered Drive project', async ({
   page,
 }) => {
+  test.setTimeout(90000);
   const api = await layoutRuntime();
   const drawing = api.blank();
   let data = await api.encodeDrawing(drawing, 'zip-v1');
@@ -177,8 +178,17 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
       "'source' in parents and trashed = false",
     ]),
   );
-  const downloading = page.waitForEvent('download');
+  const layout = page.getByRole('dialog', { name: 'PCB layout', exact: true });
   await sidebar.getByRole('button', { name: 'Board.dpn', exact: true }).click();
+  await expect(layout.getByRole('img', { name: 'Board layout' })).toBeVisible();
+  await layout.getByRole('button', { name: 'Close', exact: true }).click();
+  const downloading = page.waitForEvent('download');
+  await sidebar
+    .getByRole('button', { name: 'Actions for Board.dpn', exact: true })
+    .click();
+  await page
+    .getByRole('menuitem', { name: 'Download PCB', exact: true })
+    .click();
   const copiedBoard = await downloading;
   expect(copiedBoard.suggestedFilename()).toBe('Board.dpn');
   expect(

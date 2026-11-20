@@ -39,7 +39,10 @@ export default function ProjectDeviceDialog({
 }) {
   const { board, circuit } = review;
   const components = circuit.components.filter(
-    ({ role }) => hasBoardConnectivity(role) && role !== 'pcb-only',
+    ({ id, role }) =>
+      hasBoardConnectivity(role) &&
+      role !== 'pcb-only' &&
+      (!review.componentId || id === review.componentId),
   );
   const [componentId, setComponentId] = useState(components[0]?.id ?? '');
   const [catalogue, setCatalogue] = useState(review.catalogue);
@@ -499,7 +502,9 @@ export default function ProjectDeviceDialog({
                     })
                   }
                 >
-                  Apply reviewed device
+                  {review.componentId
+                    ? 'Stage reviewed device'
+                    : 'Apply reviewed device'}
                 </Button>
               </>
             ) : (

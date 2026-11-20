@@ -1,3 +1,4 @@
+import { validateInstanceReferences } from '../model/schematicReferences';
 import { createSimulationSheet, validateSetup } from '../simulation/document';
 import { newIdentity } from '../simulation/contracts';
 import { readSchematicEntityId } from '../model/schematicIdentity';
@@ -201,6 +202,22 @@ export class ioXML {
         if (nodes[i].nodeName === 'DSNIDENTITY') {
           r.documentId = nodes[i].getAttribute('id') || r.documentId;
         }
+        if (nodes[i].nodeName === 'INSTANCE_REFERENCES') {
+          if (r.instanceReferences) throw new Error('Duplicate instance reference collection.');
+          r.instanceReferences = [];
+          const references = [];
+          for (const row of Array.from<Element>(nodes[i].childNodes)) {
+            if (row.nodeType !== 1) continue;
+            if (row.nodeName !== 'REFERENCE') throw new Error('Invalid schematic instance reference.');
+            references.push({
+              instancePath: (row.getAttribute('path') || '').split('/'),
+              componentId: row.getAttribute('component'),
+              reference: row.getAttribute('value'),
+            });
+          }
+          validateInstanceReferences(references);
+          r.instanceReferences = references;
+        }
         if (nodes[i].nodeName === 'SimulationSheet') {
           const base = blank().sheets[0];
           const sheet = createSimulationSheet(base, nodes[i].getAttribute('name') || 'Simulation');
@@ -248,6 +265,14 @@ export class ioXML {
     let dsn = new XMLBuilder();
     dsn.createDoc('TinyCADSheets');
     dsn.appendChild('DSNIDENTITY', null, { id: drawing.documentId || '' });
+    if (drawing.instanceReferences?.length) {
+      validateInstanceReferences(drawing.instanceReferences);
+      const references = dsn.appendChild('INSTANCE_REFERENCES');
+      for (const { instancePath, componentId, reference } of drawing.instanceReferences)
+        references.appendChild('REFERENCE', null, {
+          path: instancePath.join('/'), component: componentId, value: reference,
+        });
+    }
     for (var i = 0; i < drawing.sheets.length; ++i) {
       const sheet = drawing.sheets[i];
       if (sheet.kind === 'simulation') {

@@ -67,6 +67,10 @@ export async function readProject(id: string, rootId: string) {
   ).filter((item) => !item.folder && isProjectFile(item.name));
   if (markers.length !== 1 || markers[0].id !== id || markers[0].unsupported)
     throw new Error('A project folder needs exactly one root settings file.');
+  const { recoverProjectReferenceUpdate } = await import(
+    './projectReferenceTransaction'
+  );
+  await recoverProjectReferenceUpdate(id);
   const files = await resolveProjectLinks(rootId, settings, true);
   const missingSchematics = settings.entries.filter(
     ({ kind, path }) => kind === 'schematic' && !files.has(path),
@@ -228,14 +232,17 @@ export async function readProjectBoard(
   );
   if (!link) throw new Error('Missing linked PCB document.');
   const file = project.files.get(link.path);
-  const { data, version } = await projectRequest({ operation: 'read', id: file.id });
+  const { data, version } = await projectRequest({
+    operation: 'read',
+    id: file.id,
+  });
   const { decodeBoard } = await import('../pcb/boardCodec');
   const board = await decodeBoard(data);
   if (board.boardId.toLowerCase() !== link.id)
     throw new Error('PCB document identity does not match its project link.');
 
   const source = board.sourceCircuit;
-  let circuit: import('../pcb/circuitSnapshot').CircuitSnapshot | undefined;
+  let circuit = board.appliedCircuit;
   if (source) {
     const { circuitConnectivityDigest } = await import(
       '../pcb/circuitSnapshot'
@@ -248,6 +255,7 @@ export async function readProjectBoard(
       throw new Error(
         'PCB source circuit does not match its project schematic association.',
       );
+    if (circuit) return { board, data, circuit, version };
     const text = new TextDecoder('utf-8', { fatal: true });
     for (const entry of project.settings.entries.filter(
       ({ kind }) => kind === 'circuit',
@@ -598,6 +606,24 @@ export async function openProjectDrawing(
         drawing,
       );
     }
+    let instanceReferencesByUnit: OpenProjectDrawing['instanceReferencesByUnit'];
+    if (location.hierarchyTrail?.length) {
+      const { readProjectSchematic, referencesForInstance } = await import(
+        './projectHierarchy'
+      );
+      const rootEntry = project.settings.entries.find(
+        ({ kind, id }) =>
+          kind === 'schematic' && id === location.hierarchyTrail[0].entryId,
+      );
+      if (rootEntry) {
+        const root = await readProjectSchematic(project, rootEntry);
+        instanceReferencesByUnit = await referencesForInstance(
+          root,
+          drawing,
+          location.hierarchyTrail.map(({ placementId }) => placementId),
+        );
+      }
+    }
     if (!stillOpening()) return;
     if (draft && action.recovery?.choice === 'discard')
       await deleteRecoveryDraft(key, draft.token);
@@ -620,6 +646,7 @@ export async function openProjectDrawing(
               ...location,
               version,
               documentPath: entry.path,
+              instanceReferencesByUnit,
             },
         recovered,
       ),
@@ -649,14 +676,11 @@ export async function saveProjectDrawing(
   const source = altStore.file.project;
   if (altStore.saveInProgress || present.editLibrary || (!source && !copy))
     return;
+  const saveStarted = Date.now();
   dispatch(actionSetSaveInProgress(true, null));
   try {
     const recoveryKey =
       source && projectRecoveryKey(altStore.user?.id || '', source);
-    const recovery =
-      recoveryKey && !copy?.omitResults
-        ? await readRecoveryDraft(recoveryKey).catch((): undefined => undefined)
-        : undefined;
     const original = source
       ? await readProject(source.id, source.rootId)
       : undefined;
@@ -734,8 +758,15 @@ export async function saveProjectDrawing(
       });
       location = { ...source, version: await digest(entry.data) };
     }
-    if (recovery && recovery.sourceVersion === source.version) {
-      await deleteRecoveryDraft(recoveryKey, recovery.token).catch(() => {});
+    if (recoveryKey && !copy?.omitResults) {
+      const recovery = await readRecoveryDraft(recoveryKey).catch(
+        (): undefined => undefined,
+      );
+      if (
+        recovery?.sourceVersion === source.version &&
+        recovery.time <= saveStarted
+      )
+        await deleteRecoveryDraft(recoveryKey, recovery.token).catch(() => {});
     }
     const current = getState().altStore.file;
     if (

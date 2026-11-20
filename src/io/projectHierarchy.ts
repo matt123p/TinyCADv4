@@ -1,3 +1,6 @@
+import { isEntityId } from '../model/schematicIdentity';
+import type { dsnSymbol } from '../model/dsnItem';
+import { instanceReferenceKey } from '../model/schematicReferences';
 import { DocItemTypes } from '../model/dsnItem';
 import type { HierarchicalLink } from '../model/dsnItem';
 import type { dsnDrawing } from '../model/dsnDrawing';
@@ -260,4 +263,56 @@ export async function navigateSchematicSource(
     openPinId: source.pinId,
     hierarchyTrail: trail,
   };
+}
+
+/** Translate a root's physical references to the local units of this child view. */
+export async function referencesForInstance(
+  root: dsnDrawing,
+  child: dsnDrawing,
+  instancePath: readonly string[],
+): Promise<Readonly<Record<string, string>>> {
+  const refs = new Map(
+    (root.instanceReferences ?? [])
+      .filter(
+        (entry) => entry.instancePath.join('/') === instancePath.join('/'),
+      )
+      .map((entry) => [instanceReferenceKey(entry), entry.reference]),
+  );
+  if (!refs.size) return {};
+  const { stableHierarchyId } = await import('../pcb/hierarchicalNetlist');
+  const units = child.sheets.flatMap(({ items }) =>
+    items.filter(
+      (item): item is dsnSymbol =>
+        item.NodeName === DocItemTypes.Symbol && !isChildPlacement(item),
+    ),
+  );
+  const entries = await Promise.all(
+    units.map(async (item) => {
+      const binding = item.text
+        .find(
+          ({ description }) =>
+            description.trim().toLowerCase() === 'pcb component',
+        )
+        ?.value?.trim()
+        .toLowerCase();
+      const componentId = isEntityId(binding)
+        ? await stableHierarchyId(
+            'schematic-component',
+            child.documentId,
+            ...instancePath,
+            binding,
+          )
+        : await stableHierarchyId(
+            'schematic-unit',
+            root.documentId,
+            ...instancePath,
+            item.unitId,
+          );
+      const reference = refs.get(
+        instanceReferenceKey({ instancePath, componentId }),
+      );
+      return [item.unitId, reference] as const;
+    }),
+  );
+  return Object.fromEntries(entries.filter(([, reference]) => !!reference));
 }

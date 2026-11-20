@@ -12,6 +12,7 @@ interface TSymbolProps {
   dy: number;
   dr: number;
   data: dsnSymbol;
+  instanceReference?: string;
   options: any;
   hover: boolean;
   hover_ids?: number[];
@@ -33,7 +34,13 @@ const TSymbol: FunctionComponent<TSymbolProps> = (props: TSymbolProps) => {
   const update_item = new updateSymbol(item);
   update_item.calcRefDelta(scope);
 
-  const text = item.textData
+  const renderedText = useMemo(() => {
+    if (!props.instanceReference) return item.textData;
+    const display = { ...item, text: item.text.map((field) =>
+      field.description === 'Ref' ? { ...field, value: props.instanceReference } : field) };
+    return new updateSymbol(display).post_construction().textData;
+  }, [item, props.instanceReference]);
+  const text = renderedText
     .filter((t) => !!t)
     .map((t, index) => (
       <TTextEditArea

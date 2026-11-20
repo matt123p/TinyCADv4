@@ -174,7 +174,8 @@ export function initializeNetlistSync(store: Store) {
 
     // Publishing a netlist dispatches an internal action. At version zero that
     // notification must not initialize the same drawing again indefinitely.
-    const hierarchical = hasChildPlacements(drawing);
+    const hierarchical = hasChildPlacements(drawing) ||
+      !!Object.keys(state.altStore.file.project?.instanceReferencesByUnit ?? {}).length;
     if (hierarchical) {
       const file = state.altStore.file;
       const revision = projectRevision;

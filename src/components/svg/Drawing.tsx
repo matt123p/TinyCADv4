@@ -38,6 +38,7 @@ interface TDrawingProps {
   scale_y: number;
   parent: dsnSymbol;
   items: DocItem[];
+  instanceReferencesByUnit?: Readonly<Record<string, string>>;
   selection: number[];
   selected_handle: number;
   options: SheetOptions;
@@ -372,6 +373,7 @@ export class TDrawing extends React.PureComponent<TDrawingProps> {
             <TSymbol
               key={item._id}
               data={item}
+              instanceReference={this.props.instanceReferencesByUnit?.[item.unitId]}
               dx={dx}
               dy={dy}
               dr={dr}

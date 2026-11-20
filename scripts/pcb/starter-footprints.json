@@ -1,0 +1,5132 @@
+{
+  "version": 1,
+  "variants": [
+    {
+      "id": "chip-0402",
+      "name": "CHIP 0402",
+      "revision": "1",
+      "family": "chip-passive",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1000000,
+          500000,
+          350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 900000
+      },
+      "lead": {
+        "crossSectionNm": [
+          200000,
+          500000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          500000,
+          700000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "chip-0603",
+      "name": "CHIP 0603",
+      "revision": "1",
+      "family": "chip-passive",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1600000,
+          800000,
+          650000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 1400000
+      },
+      "lead": {
+        "crossSectionNm": [
+          320000,
+          800000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          533333,
+          1000000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "chip-0805",
+      "name": "CHIP 0805",
+      "revision": "1",
+      "family": "chip-passive",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          2000000,
+          1250000,
+          800000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 1800000
+      },
+      "lead": {
+        "crossSectionNm": [
+          400000,
+          1250000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          666666,
+          1450000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "chip-1206",
+      "name": "CHIP 1206",
+      "revision": "1",
+      "family": "chip-passive",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3200000,
+          1600000,
+          900000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2900000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          1600000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1066666,
+          1800000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "dip-8",
+      "name": "DIP 8",
+      "revision": "1",
+      "family": "dip",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          6620000,
+          10160000,
+          3800000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 8,
+        "pitchNm": 2540000,
+        "rowSpacingNm": 7620000
+      },
+      "lead": {
+        "crossSectionNm": [
+          450000,
+          300000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "dip-14",
+      "name": "DIP 14",
+      "revision": "1",
+      "family": "dip",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          6620000,
+          17780000,
+          3800000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 14,
+        "pitchNm": 2540000,
+        "rowSpacingNm": 7620000
+      },
+      "lead": {
+        "crossSectionNm": [
+          450000,
+          300000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "dip-16",
+      "name": "DIP 16",
+      "revision": "1",
+      "family": "dip",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          6620000,
+          20320000,
+          3800000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 16,
+        "pitchNm": 2540000,
+        "rowSpacingNm": 7620000
+      },
+      "lead": {
+        "crossSectionNm": [
+          450000,
+          300000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "dip-24",
+      "name": "DIP 24",
+      "revision": "1",
+      "family": "dip",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          14240000,
+          30480000,
+          3800000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 24,
+        "pitchNm": 2540000,
+        "rowSpacingNm": 15240000
+      },
+      "lead": {
+        "crossSectionNm": [
+          450000,
+          300000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "soic-8",
+      "name": "SOIC 8",
+      "revision": "1",
+      "family": "soic",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3900000,
+          5080000,
+          1650000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 8,
+        "pitchNm": 1270000,
+        "rowSpacingNm": 5400000
+      },
+      "lead": {
+        "crossSectionNm": [
+          1000000,
+          420000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1650000,
+          650000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "soic-14",
+      "name": "SOIC 14",
+      "revision": "1",
+      "family": "soic",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3900000,
+          8890000,
+          1650000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 14,
+        "pitchNm": 1270000,
+        "rowSpacingNm": 5400000
+      },
+      "lead": {
+        "crossSectionNm": [
+          1000000,
+          420000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1650000,
+          650000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "soic-16",
+      "name": "SOIC 16",
+      "revision": "1",
+      "family": "soic",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3900000,
+          10160000,
+          1650000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 16,
+        "pitchNm": 1270000,
+        "rowSpacingNm": 5400000
+      },
+      "lead": {
+        "crossSectionNm": [
+          1000000,
+          420000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1650000,
+          650000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "soic-20",
+      "name": "SOIC 20",
+      "revision": "1",
+      "family": "soic",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          7100000,
+          12700000,
+          1650000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 20,
+        "pitchNm": 1270000,
+        "rowSpacingNm": 8600000
+      },
+      "lead": {
+        "crossSectionNm": [
+          1000000,
+          420000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1650000,
+          650000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "soic-24",
+      "name": "SOIC 24",
+      "revision": "1",
+      "family": "soic",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          7100000,
+          15240000,
+          1650000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 24,
+        "pitchNm": 1270000,
+        "rowSpacingNm": 8600000
+      },
+      "lead": {
+        "crossSectionNm": [
+          1000000,
+          420000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1650000,
+          650000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "header-1x2",
+      "name": "HEADER 1X2",
+      "revision": "1",
+      "family": "header",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5080000,
+          2540000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "grid",
+        "rows": 1,
+        "columns": 2,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 1050000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "header-1x4",
+      "name": "HEADER 1X4",
+      "revision": "1",
+      "family": "header",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10160000,
+          2540000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "grid",
+        "rows": 1,
+        "columns": 4,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 1050000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "header-1x8",
+      "name": "HEADER 1X8",
+      "revision": "1",
+      "family": "header",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          20320000,
+          2540000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "grid",
+        "rows": 1,
+        "columns": 8,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 1050000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "header-2x3",
+      "name": "HEADER 2X3",
+      "revision": "1",
+      "family": "header",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          7620000,
+          5080000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "grid",
+        "rows": 2,
+        "columns": 3,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 1050000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "header-2x5",
+      "name": "HEADER 2X5",
+      "revision": "1",
+      "family": "header",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          12700000,
+          5080000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "grid",
+        "rows": 2,
+        "columns": 5,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 1050000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "header-2x8",
+      "name": "HEADER 2X8",
+      "revision": "1",
+      "family": "header",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          20320000,
+          5080000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "grid",
+        "rows": 2,
+        "columns": 8,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 1050000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "axial-762",
+      "name": "AXIAL 762",
+      "revision": "1",
+      "family": "axial",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5500000,
+          2500000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 7620000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          550000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "axial-1016",
+      "name": "AXIAL 1016",
+      "revision": "1",
+      "family": "axial",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          6500000,
+          2500000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 10160000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          550000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "axial-1524",
+      "name": "AXIAL 1524",
+      "revision": "1",
+      "family": "axial",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10500000,
+          2500000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 15240000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          550000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "radial-200",
+      "name": "RADIAL 200",
+      "revision": "1",
+      "family": "radial",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3800000,
+          3300000,
+          6500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          470000,
+          470000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1500000,
+          1500000
+        ],
+        "drillNm": 800000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "radial-250",
+      "name": "RADIAL 250",
+      "revision": "1",
+      "family": "radial",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5000000,
+          3300000,
+          6500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          470000,
+          470000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1500000,
+          1500000
+        ],
+        "drillNm": 800000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "radial-500",
+      "name": "RADIAL 500",
+      "revision": "1",
+      "family": "radial",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          7500000,
+          3300000,
+          6500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 5000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          470000,
+          470000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1500000,
+          1500000
+        ],
+        "drillNm": 800000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "terminal-2",
+      "name": "TERMINAL 2",
+      "revision": "1",
+      "family": "terminal-block",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10160000,
+          9000000,
+          8000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 5080000
+      },
+      "lead": {
+        "crossSectionNm": [
+          900000,
+          900000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2800000,
+          2800000
+        ],
+        "drillNm": 1400000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "terminal-3",
+      "name": "TERMINAL 3",
+      "revision": "1",
+      "family": "terminal-block",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          15240000,
+          9000000,
+          8000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 3,
+        "pitchNm": 5080000
+      },
+      "lead": {
+        "crossSectionNm": [
+          900000,
+          900000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2800000,
+          2800000
+        ],
+        "drillNm": 1400000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "terminal-4",
+      "name": "TERMINAL 4",
+      "revision": "1",
+      "family": "terminal-block",
+      "source": "TinyCAD educational envelope assumptions, starter footprint catalogue v1",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          20320000,
+          9000000,
+          8000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 4,
+        "pitchNm": 5080000
+      },
+      "lead": {
+        "crossSectionNm": [
+          900000,
+          900000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2800000,
+          2800000
+        ],
+        "drillNm": 1400000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "ti-lm358dr-d0008a",
+      "name": "TI LM358DR · D0008A",
+      "revision": "1",
+      "family": "soic",
+      "source": "Texas Instruments D0008A drawing 4214825/C and LM358 datasheet SLOS068AB",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3980000,
+          5000000,
+          1640000
+        ],
+        "standoffNm": 110000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 8,
+        "pitchNm": 1270000,
+        "rowSpacingNm": 5400000
+      },
+      "lead": {
+        "crossSectionNm": [
+          1270000,
+          510000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1550000,
+          600000
+        ],
+        "cornerRadiusNm": 50000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "documentation": {
+        "package": "https://www.ti.com/lit/ml/msoi002k/msoi002k.pdf",
+        "pinout": "https://www.ti.com/lit/ds/symlink/lm358.pdf",
+        "partNumber": "LM358DR",
+        "sourceRevision": "4214825/C and SLOS068AB",
+        "process": "Example reflow land pattern using the manufacturer dimensions; model is a mechanical envelope.",
+        "pinoutByPad": {
+          "1": "OUT1",
+          "2": "IN1−",
+          "3": "IN1+",
+          "4": "V−",
+          "5": "IN2+",
+          "6": "IN2−",
+          "7": "OUT2",
+          "8": "V+"
+        }
+      }
+    },
+    {
+      "id": "axial-do35",
+      "name": "Axial diode DO35",
+      "revision": "1",
+      "family": "axial-diode",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4300000,
+          1800000,
+          1800000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 7620000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          550000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1800000,
+          1800000
+        ],
+        "drillNm": 950000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "axial-do41",
+      "name": "Axial diode DO41",
+      "revision": "1",
+      "family": "axial-diode",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5200000,
+          2700000,
+          2700000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 10160000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          550000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1800000,
+          1800000
+        ],
+        "drillNm": 950000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "axial-do15",
+      "name": "Axial diode DO15",
+      "revision": "1",
+      "family": "axial-diode",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          7600000,
+          3200000,
+          3200000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 12700000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          550000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1800000,
+          1800000
+        ],
+        "drillNm": 950000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "axial-do201",
+      "name": "Axial diode DO201",
+      "revision": "1",
+      "family": "axial-diode",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          9500000,
+          5300000,
+          5300000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 15240000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          550000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1800000,
+          1800000
+        ],
+        "drillNm": 950000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-radial-40",
+      "name": "Radial capacitor 4 mm diameter envelope",
+      "revision": "1",
+      "family": "radial-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4000000,
+          4000000,
+          4000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1700000,
+          1700000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-radial-50",
+      "name": "Radial capacitor 5 mm diameter envelope",
+      "revision": "1",
+      "family": "radial-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5000000,
+          5000000,
+          6000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1700000,
+          1700000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-radial-63",
+      "name": "Radial capacitor 6.3 mm diameter envelope",
+      "revision": "1",
+      "family": "radial-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          6300000,
+          6300000,
+          7000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1700000,
+          1700000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-radial-80",
+      "name": "Radial capacitor 8 mm diameter envelope",
+      "revision": "1",
+      "family": "radial-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          8000000,
+          8000000,
+          10000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 3500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1700000,
+          1700000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-radial-100",
+      "name": "Radial capacitor 10 mm diameter envelope",
+      "revision": "1",
+      "family": "radial-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10000000,
+          10000000,
+          12000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 5000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1700000,
+          1700000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-radial-125",
+      "name": "Radial capacitor 12.5 mm diameter envelope",
+      "revision": "1",
+      "family": "radial-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          12500000,
+          12500000,
+          16000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 5000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1700000,
+          1700000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-radial-160",
+      "name": "Radial capacitor 16 mm diameter envelope",
+      "revision": "1",
+      "family": "radial-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          16000000,
+          16000000,
+          20000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 7500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1700000,
+          1700000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "film-cap-35",
+      "name": "Film capacitor 3.5 mm pitch",
+      "revision": "1",
+      "family": "film-capacitor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5000000,
+          3000000,
+          5000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 3500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "film-cap-50",
+      "name": "Film capacitor 5 mm pitch",
+      "revision": "1",
+      "family": "film-capacitor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          7000000,
+          3500000,
+          6000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 5000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "film-cap-75",
+      "name": "Film capacitor 7.5 mm pitch",
+      "revision": "1",
+      "family": "film-capacitor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10000000,
+          5000000,
+          7000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 7500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "film-cap-100",
+      "name": "Film capacitor 10 mm pitch",
+      "revision": "1",
+      "family": "film-capacitor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          12000000,
+          6000000,
+          10000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 10000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "film-cap-150",
+      "name": "Film capacitor 15 mm pitch",
+      "revision": "1",
+      "family": "film-capacitor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          17000000,
+          8500000,
+          12000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 15000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "film-cap-225",
+      "name": "Film capacitor 22.5 mm pitch",
+      "revision": "1",
+      "family": "film-capacitor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          25000000,
+          12500000,
+          16000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 22500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-smd-40",
+      "name": "SMT capacitor 4 mm can envelope",
+      "revision": "1",
+      "family": "smd-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4000000,
+          4000000,
+          5000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 1600000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          600000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1320000,
+          1280000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-smd-50",
+      "name": "SMT capacitor 5 mm can envelope",
+      "revision": "1",
+      "family": "smd-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5000000,
+          5000000,
+          5300000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          600000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1650000,
+          1600000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-smd-63",
+      "name": "SMT capacitor 6.3 mm can envelope",
+      "revision": "1",
+      "family": "smd-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          6300000,
+          6300000,
+          5800000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          600000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          2079000,
+          2016000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-smd-80",
+      "name": "SMT capacitor 8 mm can envelope",
+      "revision": "1",
+      "family": "smd-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          8000000,
+          8000000,
+          6200000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 3200000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          600000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          2640000,
+          2560000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-smd-100",
+      "name": "SMT capacitor 10 mm can envelope",
+      "revision": "1",
+      "family": "smd-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10000000,
+          10000000,
+          8000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 4200000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          600000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          3300000,
+          3200000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "can-smd-125",
+      "name": "SMT capacitor 12.5 mm can envelope",
+      "revision": "1",
+      "family": "smd-electrolytic",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          12500000,
+          12500000,
+          10000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 5000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          550000,
+          600000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          4125000,
+          4000000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "diode-sod-923",
+      "name": "Surface-mount diode SOD-923",
+      "revision": "1",
+      "family": "smd-diode",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1000000,
+          600000,
+          380000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 950000
+      },
+      "lead": {
+        "crossSectionNm": [
+          250000,
+          350000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          650000,
+          480000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "diode-sod-523",
+      "name": "Surface-mount diode SOD-523",
+      "revision": "1",
+      "family": "smd-diode",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1200000,
+          800000,
+          650000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 1250000
+      },
+      "lead": {
+        "crossSectionNm": [
+          250000,
+          350000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          650000,
+          640000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "diode-sod-323",
+      "name": "Surface-mount diode SOD-323",
+      "revision": "1",
+      "family": "smd-diode",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1700000,
+          1250000,
+          950000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 1900000
+      },
+      "lead": {
+        "crossSectionNm": [
+          250000,
+          350000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          650000,
+          1000000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "diode-sod-123",
+      "name": "Surface-mount diode SOD-123",
+      "revision": "1",
+      "family": "smd-diode",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          2700000,
+          1600000,
+          1150000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2750000
+      },
+      "lead": {
+        "crossSectionNm": [
+          250000,
+          350000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          650000,
+          1280000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "diode-sma",
+      "name": "Surface-mount diode SMA",
+      "revision": "1",
+      "family": "smd-diode",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4500000,
+          2700000,
+          2100000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 4200000
+      },
+      "lead": {
+        "crossSectionNm": [
+          250000,
+          350000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1900000,
+          2160000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "diode-smb",
+      "name": "Surface-mount diode SMB",
+      "revision": "1",
+      "family": "smd-diode",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4900000,
+          3600000,
+          2250000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 4600000
+      },
+      "lead": {
+        "crossSectionNm": [
+          250000,
+          350000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1900000,
+          2880000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "diode-smc",
+      "name": "Surface-mount diode SMC",
+      "revision": "1",
+      "family": "smd-diode",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          7100000,
+          5800000,
+          2350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 6900000
+      },
+      "lead": {
+        "crossSectionNm": [
+          250000,
+          350000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1900000,
+          4640000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "led-radial-3",
+      "name": "3 mm through-hole LED envelope",
+      "revision": "1",
+      "family": "radial-led",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3000000,
+          3000000,
+          5300000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          450000,
+          450000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1650000,
+          1650000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "led-radial-5",
+      "name": "5 mm through-hole LED envelope",
+      "revision": "1",
+      "family": "radial-led",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5000000,
+          5000000,
+          8500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          450000,
+          450000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1650000,
+          1650000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "led-radial-8",
+      "name": "8 mm through-hole LED envelope",
+      "revision": "1",
+      "family": "radial-led",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          8000000,
+          8000000,
+          10000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          450000,
+          450000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1650000,
+          1650000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "led-radial-10",
+      "name": "10 mm through-hole LED envelope",
+      "revision": "1",
+      "family": "radial-led",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10000000,
+          10000000,
+          13000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          450000,
+          450000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1650000,
+          1650000
+        ],
+        "drillNm": 850000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "led-chip-0603",
+      "name": "Chip LED 0603",
+      "revision": "1",
+      "family": "chip-led",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1600000,
+          800000,
+          600000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 1360000
+      },
+      "lead": {
+        "crossSectionNm": [
+          350000,
+          480000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          700000,
+          760000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "led-chip-0805",
+      "name": "Chip LED 0805",
+      "revision": "1",
+      "family": "chip-led",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          2000000,
+          1250000,
+          800000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 1700000
+      },
+      "lead": {
+        "crossSectionNm": [
+          350000,
+          750000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          700000,
+          1187500
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "led-chip-1206",
+      "name": "Chip LED 1206",
+      "revision": "1",
+      "family": "chip-led",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3200000,
+          1600000,
+          1000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2720000
+      },
+      "lead": {
+        "crossSectionNm": [
+          350000,
+          960000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          700000,
+          1520000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "led-chip-1210",
+      "name": "Chip LED 1210",
+      "revision": "1",
+      "family": "chip-led",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3200000,
+          2500000,
+          1250000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2720000
+      },
+      "lead": {
+        "crossSectionNm": [
+          350000,
+          1500000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          700000,
+          2375000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "led-chip-3528",
+      "name": "Chip LED 3528",
+      "revision": "1",
+      "family": "chip-led",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3500000,
+          2800000,
+          1900000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2975000
+      },
+      "lead": {
+        "crossSectionNm": [
+          350000,
+          1680000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          700000,
+          2660000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "shielded-inductor-20",
+      "name": "Shielded inductor 2 × 1.25 mm envelope",
+      "revision": "1",
+      "family": "smd-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          2000000,
+          1250000,
+          1000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 1700000
+      },
+      "lead": {
+        "crossSectionNm": [
+          520000,
+          500000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          800000,
+          812500
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "shielded-inductor-32",
+      "name": "Shielded inductor 3.2 × 2.5 mm envelope",
+      "revision": "1",
+      "family": "smd-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3200000,
+          2500000,
+          1700000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2600000
+      },
+      "lead": {
+        "crossSectionNm": [
+          520000,
+          1000000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          960000,
+          1625000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "shielded-inductor-40",
+      "name": "Shielded inductor 4 × 4 mm envelope",
+      "revision": "1",
+      "family": "smd-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4000000,
+          4000000,
+          1800000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 3400000
+      },
+      "lead": {
+        "crossSectionNm": [
+          520000,
+          1600000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1200000,
+          2600000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "shielded-inductor-47",
+      "name": "Shielded inductor 4.7 × 4.7 mm envelope",
+      "revision": "1",
+      "family": "smd-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4700000,
+          4700000,
+          2100000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 4000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          520000,
+          1880000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1410000,
+          3055000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "shielded-inductor-50",
+      "name": "Shielded inductor 5 × 5 mm envelope",
+      "revision": "1",
+      "family": "smd-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5000000,
+          5000000,
+          2500000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 4200000
+      },
+      "lead": {
+        "crossSectionNm": [
+          520000,
+          2000000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1500000,
+          3250000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "shielded-inductor-60",
+      "name": "Shielded inductor 6 × 6 mm envelope",
+      "revision": "1",
+      "family": "smd-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          6000000,
+          6000000,
+          3000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 5100000
+      },
+      "lead": {
+        "crossSectionNm": [
+          520000,
+          2400000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1800000,
+          3900000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "shielded-inductor-68",
+      "name": "Shielded inductor 6.8 × 6.8 mm envelope",
+      "revision": "1",
+      "family": "smd-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          6800000,
+          6800000,
+          3400000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 5800000
+      },
+      "lead": {
+        "crossSectionNm": [
+          520000,
+          2720000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          2040000,
+          4420000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "shielded-inductor-80",
+      "name": "Shielded inductor 8 × 8 mm envelope",
+      "revision": "1",
+      "family": "smd-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          8000000,
+          8000000,
+          4000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 6500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          520000,
+          3200000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          2400000,
+          5200000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "shielded-inductor-100",
+      "name": "Shielded inductor 10 × 10 mm envelope",
+      "revision": "1",
+      "family": "smd-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10000000,
+          10000000,
+          4500000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 8000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          520000,
+          4000000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          3000000,
+          6500000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "shielded-inductor-120",
+      "name": "Shielded inductor 12 × 12 mm envelope",
+      "revision": "1",
+      "family": "smd-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          12000000,
+          12000000,
+          6000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 9600000
+      },
+      "lead": {
+        "crossSectionNm": [
+          520000,
+          4800000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          3600000,
+          7800000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "radial-inductor-4",
+      "name": "Radial inductor 4 mm envelope",
+      "revision": "1",
+      "family": "radial-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4000000,
+          4000000,
+          5000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1650000,
+          1650000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "radial-inductor-5",
+      "name": "Radial inductor 5 mm envelope",
+      "revision": "1",
+      "family": "radial-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5000000,
+          5000000,
+          6250000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1650000,
+          1650000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "radial-inductor-6",
+      "name": "Radial inductor 6 mm envelope",
+      "revision": "1",
+      "family": "radial-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          6000000,
+          6000000,
+          7500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 2500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1650000,
+          1650000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "radial-inductor-8",
+      "name": "Radial inductor 8 mm envelope",
+      "revision": "1",
+      "family": "radial-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          8000000,
+          8000000,
+          10000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 3500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1650000,
+          1650000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "radial-inductor-10",
+      "name": "Radial inductor 10 mm envelope",
+      "revision": "1",
+      "family": "radial-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10000000,
+          10000000,
+          12500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 5000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1650000,
+          1650000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "radial-inductor-12",
+      "name": "Radial inductor 12 mm envelope",
+      "revision": "1",
+      "family": "radial-inductor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          12000000,
+          12000000,
+          15000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 5000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1650000,
+          1650000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "transformer-smd-4",
+      "name": "Gull-wing transformer 4 pin envelope",
+      "revision": "1",
+      "family": "smd-transformer",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5000000,
+          4540000,
+          5000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 4,
+        "pitchNm": 1270000,
+        "rowSpacingNm": 6000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          850000,
+          470000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1750000,
+          800000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "transformer-smd-6",
+      "name": "Gull-wing transformer 6 pin envelope",
+      "revision": "1",
+      "family": "smd-transformer",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          8000000,
+          9620000,
+          5000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 6,
+        "pitchNm": 2540000,
+        "rowSpacingNm": 10000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          850000,
+          470000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1750000,
+          800000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "transformer-smd-8",
+      "name": "Gull-wing transformer 8 pin envelope",
+      "revision": "1",
+      "family": "smd-transformer",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          10000000,
+          12160000,
+          5000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 8,
+        "pitchNm": 2540000,
+        "rowSpacingNm": 12000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          850000,
+          470000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1750000,
+          800000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "transformer-smd-10",
+      "name": "Gull-wing transformer 10 pin envelope",
+      "revision": "1",
+      "family": "smd-transformer",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          12000000,
+          14700000,
+          5000000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 10,
+        "pitchNm": 2540000,
+        "rowSpacingNm": 14000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          850000,
+          470000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1750000,
+          800000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "transformer-tht-4",
+      "name": "Bobbin transformer 4 pin envelope",
+      "revision": "1",
+      "family": "tht-transformer",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          7000000,
+          14000000,
+          15000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 4,
+        "pitchNm": 5000000,
+        "rowSpacingNm": 8000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          700000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2400000,
+          2400000
+        ],
+        "drillNm": 1200000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "transformer-tht-6",
+      "name": "Bobbin transformer 6 pin envelope",
+      "revision": "1",
+      "family": "tht-transformer",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          8000000,
+          19000000,
+          15000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 6,
+        "pitchNm": 5000000,
+        "rowSpacingNm": 10000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          700000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2400000,
+          2400000
+        ],
+        "drillNm": 1200000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "transformer-tht-8",
+      "name": "Bobbin transformer 8 pin envelope",
+      "revision": "1",
+      "family": "tht-transformer",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          11000000,
+          24000000,
+          15000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 8,
+        "pitchNm": 5000000,
+        "rowSpacingNm": 12500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          700000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2400000,
+          2400000
+        ],
+        "drillNm": 1200000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "transformer-tht-10",
+      "name": "Bobbin transformer 10 pin envelope",
+      "revision": "1",
+      "family": "tht-transformer",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          13000000,
+          29000000,
+          15000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 10,
+        "pitchNm": 5000000,
+        "rowSpacingNm": 15000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          700000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2400000,
+          2400000
+        ],
+        "drillNm": 1200000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "transformer-tht-12",
+      "name": "Bobbin transformer 12 pin envelope",
+      "revision": "1",
+      "family": "tht-transformer",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          17000000,
+          34000000,
+          15000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 12,
+        "pitchNm": 5000000,
+        "rowSpacingNm": 20000000
+      },
+      "lead": {
+        "crossSectionNm": [
+          700000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2400000,
+          2400000
+        ],
+        "drillNm": 1200000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "sot-23-3",
+      "name": "SOT-23 3 terminal envelope",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1650000,
+          3000000,
+          1350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1050000,
+            950000
+          ],
+          [
+            -1050000,
+            -950000
+          ],
+          [
+            1050000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          430000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          950000,
+          620000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "sot-23-5",
+      "name": "SOT-23 5 terminal envelope",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1650000,
+          3000000,
+          1350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1350000,
+            950000
+          ],
+          [
+            -1350000,
+            0
+          ],
+          [
+            -1350000,
+            -950000
+          ],
+          [
+            1350000,
+            -950000
+          ],
+          [
+            1350000,
+            950000
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          430000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          950000,
+          620000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "sot-23-6",
+      "name": "SOT-23 6 terminal envelope",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1650000,
+          3000000,
+          1350000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -1350000,
+            950000
+          ],
+          [
+            -1350000,
+            0
+          ],
+          [
+            -1350000,
+            -950000
+          ],
+          [
+            1350000,
+            -950000
+          ],
+          [
+            1350000,
+            0
+          ],
+          [
+            1350000,
+            950000
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          650000,
+          430000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          950000,
+          620000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "sot-223-4",
+      "name": "SOT-223 with thermal tab",
+      "revision": "1",
+      "family": "smd-transistor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          3600000,
+          6500000,
+          1800000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "explicit",
+        "positionsNm": [
+          [
+            -3150000,
+            2300000
+          ],
+          [
+            -3150000,
+            0
+          ],
+          [
+            -3150000,
+            -2300000
+          ],
+          [
+            3150000,
+            0
+          ]
+        ]
+      },
+      "lead": {
+        "crossSectionNm": [
+          850000,
+          650000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "rectangle",
+        "sizeNm": [
+          1900000,
+          1150000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      },
+      "padOverrides": {
+        "4": {
+          "sizeNm": [
+            2100000,
+            3700000
+          ]
+        }
+      }
+    },
+    {
+      "id": "to92-inline",
+      "name": "TO92-INLINE through-hole envelope",
+      "revision": "1",
+      "family": "tht-transistor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4700000,
+          4100000,
+          5000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 3,
+        "pitchNm": 1270000
+      },
+      "lead": {
+        "crossSectionNm": [
+          580000,
+          450000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 950000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "to92-spread",
+      "name": "TO92-SPREAD through-hole envelope",
+      "revision": "1",
+      "family": "tht-transistor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4700000,
+          4100000,
+          5000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 3,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          580000,
+          450000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 950000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "to220-3",
+      "name": "TO220-3 through-hole envelope",
+      "revision": "1",
+      "family": "tht-transistor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          11000000,
+          5000000,
+          14000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 3,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          580000,
+          450000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 950000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "to220-5",
+      "name": "TO220-5 through-hole envelope",
+      "revision": "1",
+      "family": "tht-transistor",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          11000000,
+          5000000,
+          14000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 5,
+        "pitchNm": 1700000
+      },
+      "lead": {
+        "crossSectionNm": [
+          580000,
+          450000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 950000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "header-1x10",
+      "name": "Single-row header 10 pins",
+      "revision": "1",
+      "family": "header",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          25400000,
+          2540000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "grid",
+        "rows": 1,
+        "columns": 10,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 1050000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "header-1x12",
+      "name": "Single-row header 12 pins",
+      "revision": "1",
+      "family": "header",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          30480000,
+          2540000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "grid",
+        "rows": 1,
+        "columns": 12,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 1050000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "header-1x14",
+      "name": "Single-row header 14 pins",
+      "revision": "1",
+      "family": "header",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          35560000,
+          2540000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "grid",
+        "rows": 1,
+        "columns": 14,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 1050000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "header-1x16",
+      "name": "Single-row header 16 pins",
+      "revision": "1",
+      "family": "header",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          40640000,
+          2540000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "grid",
+        "rows": 1,
+        "columns": 16,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 1050000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "header-1x20",
+      "name": "Single-row header 20 pins",
+      "revision": "1",
+      "family": "header",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          50800000,
+          2540000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "grid",
+        "rows": 1,
+        "columns": 20,
+        "pitchNm": 2540000
+      },
+      "lead": {
+        "crossSectionNm": [
+          640000,
+          640000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1750000,
+          1750000
+        ],
+        "drillNm": 1050000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "terminal-block-6",
+      "name": "Terminal block 6 positions 3.5 mm pitch",
+      "revision": "1",
+      "family": "terminal-block",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          21000000,
+          8000000,
+          7000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 6,
+        "pitchNm": 3500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          800000,
+          800000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2200000,
+          2200000
+        ],
+        "drillNm": 1200000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "terminal-block-8",
+      "name": "Terminal block 8 positions 3.5 mm pitch",
+      "revision": "1",
+      "family": "terminal-block",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          28000000,
+          8000000,
+          7000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 8,
+        "pitchNm": 3500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          800000,
+          800000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2200000,
+          2200000
+        ],
+        "drillNm": 1200000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "terminal-block-10",
+      "name": "Terminal block 10 positions 3.5 mm pitch",
+      "revision": "1",
+      "family": "terminal-block",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          35000000,
+          8000000,
+          7000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 10,
+        "pitchNm": 3500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          800000,
+          800000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2200000,
+          2200000
+        ],
+        "drillNm": 1200000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "terminal-block-12",
+      "name": "Terminal block 12 positions 3.5 mm pitch",
+      "revision": "1",
+      "family": "terminal-block",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          42000000,
+          8000000,
+          7000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 12,
+        "pitchNm": 3500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          800000,
+          800000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2200000,
+          2200000
+        ],
+        "drillNm": 1200000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "terminal-block-16",
+      "name": "Terminal block 16 positions 3.5 mm pitch",
+      "revision": "1",
+      "family": "terminal-block",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          56000000,
+          8000000,
+          7000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 16,
+        "pitchNm": 3500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          800000,
+          800000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2200000,
+          2200000
+        ],
+        "drillNm": 1200000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "terminal-block-20",
+      "name": "Terminal block 20 positions 3.5 mm pitch",
+      "revision": "1",
+      "family": "terminal-block",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          70000000,
+          8000000,
+          7000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 20,
+        "pitchNm": 3500000
+      },
+      "lead": {
+        "crossSectionNm": [
+          800000,
+          800000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2200000,
+          2200000
+        ],
+        "drillNm": 1200000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "mount-m2",
+      "name": "M2 clearance hole and head envelope",
+      "family": "mounting-hole",
+      "revision": "1",
+      "source": "TinyCAD mechanical head envelope and drill assumptions for a clearance hole; verify against hardware",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4000000,
+          4000000,
+          2000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 1,
+        "pitchNm": 0
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          4000000,
+          4000000
+        ],
+        "drillNm": 2300000,
+        "nonPlated": true
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "mount-m25",
+      "name": "M25 clearance hole and head envelope",
+      "family": "mounting-hole",
+      "revision": "1",
+      "source": "TinyCAD mechanical head envelope and drill assumptions for a clearance hole; verify against hardware",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          5000000,
+          5000000,
+          2000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 1,
+        "pitchNm": 0
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          5000000,
+          5000000
+        ],
+        "drillNm": 2800000,
+        "nonPlated": true
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "mount-m3",
+      "name": "M3 clearance hole and head envelope",
+      "family": "mounting-hole",
+      "revision": "1",
+      "source": "TinyCAD mechanical head envelope and drill assumptions for a clearance hole; verify against hardware",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          6000000,
+          6000000,
+          2000000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 1,
+        "pitchNm": 0
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          6000000,
+          6000000
+        ],
+        "drillNm": 3300000,
+        "nonPlated": true
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "test-point-10",
+      "name": "1 mm surface-mount test point",
+      "family": "test-point",
+      "revision": "1",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1000000,
+          1000000,
+          550000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 1,
+        "pitchNm": 0
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1000000,
+          1000000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "test-point-15",
+      "name": "1.5 mm surface-mount test point",
+      "family": "test-point",
+      "revision": "1",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          1500000,
+          1500000,
+          550000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 1,
+        "pitchNm": 0
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1500000,
+          1500000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "test-point-25",
+      "name": "2.5 mm surface-mount test point",
+      "family": "test-point",
+      "revision": "1",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          2500000,
+          2500000,
+          550000
+        ],
+        "standoffNm": 0
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 1,
+        "pitchNm": 0
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 0
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          2500000,
+          2500000
+        ]
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "module-header-1524",
+      "name": "40-pin module header 15.24 mm spacing",
+      "family": "module-header",
+      "revision": "1",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          15240000,
+          50800000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 40,
+        "pitchNm": 2540000,
+        "rowSpacingNm": 15240000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "module-header-1778",
+      "name": "40-pin module header 17.78 mm spacing",
+      "family": "module-header",
+      "revision": "1",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          17780000,
+          50800000,
+          2500000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "dual-row",
+        "count": 40,
+        "pitchNm": 2540000,
+        "rowSpacingNm": 17780000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1600000,
+          1600000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "axial-inductor-635",
+      "name": "Axial inductor 6.35 mm pitch",
+      "family": "axial-inductor",
+      "revision": "1",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          4850000,
+          3800000,
+          3800000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 6350000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1550000,
+          1550000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "axial-inductor-762",
+      "name": "Axial inductor 7.62 mm pitch",
+      "family": "axial-inductor",
+      "revision": "1",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          6120000,
+          3800000,
+          3800000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 7620000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1550000,
+          1550000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    },
+    {
+      "id": "axial-inductor-1016",
+      "name": "Axial inductor 10.16 mm pitch",
+      "family": "axial-inductor",
+      "revision": "1",
+      "source": "TinyCAD educational dimensions and keepout assumptions; verify the actual component before use",
+      "license": "CC0-1.0",
+      "body": {
+        "envelopeNm": [
+          8660000,
+          3800000,
+          3800000
+        ],
+        "standoffNm": 300000
+      },
+      "terminals": {
+        "kind": "inline",
+        "count": 2,
+        "pitchNm": 10160000
+      },
+      "lead": {
+        "crossSectionNm": [
+          500000,
+          500000
+        ],
+        "protrusionNm": 2200000
+      },
+      "pad": {
+        "shape": "round",
+        "sizeNm": [
+          1550000,
+          1550000
+        ],
+        "drillNm": 900000
+      },
+      "manufacturing": {
+        "maskExpansionNm": 50000,
+        "courtyardExpansionNm": 550000,
+        "minAnnulusNm": 150000
+      }
+    }
+  ]
+}

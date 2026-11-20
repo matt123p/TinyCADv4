@@ -1,3 +1,4 @@
+import type { SchematicInstanceReference } from './schematicReferences';
 import type { SchematicSource } from '../io/netlists/netlistGenerator';
 import { DocItem, Coordinate, dsnPin } from './dsnItem';
 import { Snap } from '../manipulators/snap';
@@ -210,6 +211,7 @@ export interface DsnSettings {
 
 export interface dsnDrawing {
   documentId?: string;
+  instanceReferences?: readonly SchematicInstanceReference[];
   representation?: 'zip-v1' | 'xml';
   saveFormat?: 'auto' | 'zip-v1' | 'xml';
   sheets: dsnSheet[];

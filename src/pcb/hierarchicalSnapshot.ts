@@ -175,6 +175,7 @@ export function boardPadSources(board: BoardAssets, snapshot: CircuitSnapshot) {
   }[] = [];
   for (const footprint of board.footprints ?? []) {
     const component = components.get(footprint.componentId.toLowerCase());
+    if (component?.role === 'pcb-only') continue;
     const logical = circuit.get(
       (component?.logicalId ?? footprint.componentId).toLowerCase(),
     );

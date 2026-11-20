@@ -206,9 +206,23 @@ test('projects share the editor sidebar and save schematic changes and a revisio
       Buffer.from(boardData),
     );
     await sidebar.getByRole('button', { name: 'layouts', exact: true }).click();
-    const download = page.waitForEvent('download');
+    const layout = page.getByRole('dialog', {
+      name: 'PCB layout',
+      exact: true,
+    });
     await sidebar
       .getByRole('button', { name: 'Main.dpn', exact: true })
+      .click();
+    await expect(
+      layout.getByRole('img', { name: 'Board layout' }),
+    ).toBeVisible();
+    await layout.getByRole('button', { name: 'Close', exact: true }).click();
+    const download = page.waitForEvent('download');
+    await sidebar
+      .getByRole('button', { name: 'Actions for Main.dpn', exact: true })
+      .click();
+    await page
+      .getByRole('menuitem', { name: 'Download PCB', exact: true })
       .click();
     expect((await download).suggestedFilename()).toBe('Main.dpn');
     const circuitPath = path.join(sourceRoot, 'Circuit.snapshot.json');

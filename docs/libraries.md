@@ -127,9 +127,15 @@ See [spice.json](../library-recipes/spice.json), [digital.json](../library-recip
 
 Regression commands are `test:spice`, `test:digital`, `test:functional`, `test:sensors`, `test:teaching`, `test:network`, `test:embedded` and `test:symbol-artwork` through npm. Coverage includes terminal contracts, actual editor placement, rotated/mirrored geometry, hidden rails, reproducibility, persistence and numerical model cases where an engine is available.
 
-## Planned PCB footprint and model bundles
+## PCB footprint and model bundles
 
-The PCB engine's M1 starter catalogue will pair native footprints with generated STEP models for common surface-mount and through-hole components. The [package catalogue and generation requirements](TinyCAD_PCB_Layout_Complete_Specification.md#102-curated-supplied-library) list the families and variants. Versioned dimension records will drive the Python build scripts and carry the dimensional references, stable asset IDs and review metadata. Bundled assets will be selectable offline. M2 expands package coverage and adds qualified STEP assembly export.
+The PCB engine's M1 starter catalogue pairs native footprints with generated STEP models. The [starter recipes](../scripts/pcb/starter-footprints.json) generate 123 draft variants across surface-mount and through-hole families. The footprint editor loads the bundled drafts offline. Most dimension records describe generic educational envelopes. The LM358DR draft uses TI’s D0008A land pattern and the package-specific pinout. The catalogue retains draft status until the fit and pin mapping have been reviewed. See the [catalogue requirements](TinyCAD_PCB_Layout_Complete_Specification.md#102-curated-supplied-library) for the manufacturer fit and pin-mapping review required for the bundled catalogue. [D0008A package drawing](https://www.ti.com/lit/ml/msoi002k/msoi002k.pdf) · [LM358DR pinout](https://www.ti.com/lit/ds/symlink/lm358.pdf)
+
+Generate the individual drafts with `python3 scripts/pcb/generate-starter-footprints.py /tmp/tinycad-footprints`. Add `--bundle bundled-footprints/starter-v1.json.gz` to rebuild the offline catalogue used by the editor. Each native footprint embeds the matching STEP model, and the generator also writes the STEP file and a catalogue index. Open a generated footprint in TinyCAD’s footprint editor to inspect the geometry.
+
+The draft catalogue and reviewed device catalogue are separate. After reviewing package fit and terminal assignments, export the approved `.tcdevice.json` files from the editor. Pass their directory as `--reviewed-devices` and set `--reviewed-bundle bundled-footprints/reviewed-v1.json`. The generator checks that each approval matches an exact generated footprint revision, and the resolver opens the resulting device definitions offline alongside project-local devices.
+
+With `occt-import-js` 0.0.23 available, run `node scripts/pcb/verify-starter-step.mjs /tmp/tinycad-footprints path/to/occt-import-js.js` to verify that OpenCascade reads every solid and the terminal locations match the native pad centres. `npm run test:pcb` also rebuilds the catalogue twice, verifies that the output is identical, and opens every native footprint offline. [OpenCascade reader](https://github.com/kovacsv/occt-import-js)
 
 ## Bundled examples
 

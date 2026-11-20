@@ -183,15 +183,19 @@ test('lists bus, hierarchy and multipart capability gaps by source item or sheet
       'PORT',
     )}</HierarchicalSymbol></TinyCADSheets>`,
   );
-  const interfaceSheet = drawing.sheets.find((sheet) => sheet.hierarchicalSymbol);
-  drawing.sheets.find((sheet) => !sheet.hierarchicalSymbol).items.push({
-    NodeName: 'buswire',
-    _id: 32767,
-    d_points: [
-      [100, 100],
-      [200, 100],
-    ],
-  });
+  const interfaceSheet = drawing.sheets.find(
+    (sheet) => sheet.hierarchicalSymbol,
+  );
+  drawing.sheets
+    .find((sheet) => !sheet.hierarchicalSymbol)
+    .items.push({
+      NodeName: 'buswire',
+      _id: 32767,
+      d_points: [
+        [100, 100],
+        [200, 100],
+      ],
+    });
   const issues = api.auditPcbSchematic(drawing);
   assert.deepEqual(
     issues.map((issue) => issue.code),
@@ -437,6 +441,47 @@ test('compiles labelled bus members, reviewed multipart power pins, roles and no
     [a.unitId, b.unitId],
   );
   assert.equal(u1.signals.length, 5);
+  const board = {
+    ...api.createBoard('Multipart', 2, [
+      { x: 0, y: 0 },
+      { x: 10_000_000, y: 0 },
+      { x: 0, y: 10_000_000 },
+    ]),
+    components: [{ id: u1.id, reference: 'U12', role: 'electrical' }],
+    sourceCircuit: {
+      documentId: snapshot.documentId,
+      revision: snapshot.revision,
+      connectivityDigest: await api.circuitConnectivityDigest(snapshot),
+    },
+  };
+  const renumbered = api.applyBackAnnotation(
+    drawing,
+    board,
+    snapshot,
+    snapshot,
+  );
+  const reopened = await api.decodeDrawing(
+    await api.encodeDrawing(renumbered.drawing, 'zip-v1'),
+  );
+  const renamedUnits = reopened.sheets
+    .flatMap(symbols)
+    .filter(({ unitId }) => unitId === a.unitId || unitId === b.unitId);
+  assert.deepEqual(
+    renamedUnits.map(({ part }) => part),
+    [0, 1],
+  );
+  assert.deepEqual(
+    renamedUnits.map(
+      ({ text }) => text.find(({ description }) => description === 'Ref').value,
+    ),
+    ['U12', 'U12'],
+  );
+  const compiledRename = (await compileCircuit(reopened, snapshot)).snapshot;
+  assert.equal(
+    await api.circuitConnectivityDigest(compiledRename),
+    board.sourceCircuit.connectivityDigest,
+  );
+
   assert.equal(
     u1.signals.find(({ number }) => number === 'EP').terminals.length,
     2,
@@ -507,7 +552,9 @@ test('compiles labelled bus members, reviewed multipart power pins, roles and no
     /nonphysical terminal/,
   );
   const withoutProbe = structuredClone(snapshot);
-  withoutProbe.components = withoutProbe.components.filter(({ reference }) => reference !== 'X1');
+  withoutProbe.components = withoutProbe.components.filter(
+    ({ reference }) => reference !== 'X1',
+  );
   delete withoutProbe.sources[probe.unitId];
   assert.equal(
     await api.circuitConnectivityDigest(withoutProbe),

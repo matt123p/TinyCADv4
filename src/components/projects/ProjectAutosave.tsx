@@ -64,11 +64,14 @@ export default function ProjectAutosave() {
           lastWritten.current = { key, token, version: file.version };
         if (written && matchesEditor()) setStatus({ time: Date.now() });
         if (!written && matchesEditor()) setStatus({ failed: true });
+        const latest = store.getState();
+        const latestFile = latest.altStore.file.project;
         if (
           written &&
-          store.getState().altStore.file.project === file &&
-          store.getState().docStore.present.drawingVersion ===
-            store.getState().altStore.savedVersion
+          latestFile?.id === file.id &&
+          latestFile?.entryId === file.entryId &&
+          latest.docStore.present.drawingVersion ===
+            latest.altStore.savedVersion
         ) {
           await deleteRecoveryDraft(key, token);
         }

@@ -116,6 +116,9 @@ export interface KiSymbol {
   power: boolean;
   extendsName?: string;
   subsymbols: KiSubSymbol[];
+  onBoard?: boolean;
+  inBom?: boolean;
+  issues: string[];
 }
 
 export interface KiCadLibrary {

@@ -1,3 +1,4 @@
+import { DocItemTypes } from '../../model/dsnItem';
 import { hasChildPlacements } from '../hierarchyDrawing';
 import { wkrGenerateNetlist } from '../../web-worker/worker';
 import type { docDrawing } from '../../state/undo/undo';
@@ -7,18 +8,42 @@ import type { OpenProjectAction } from '../projects';
 
 export async function generateActiveNetlist(state: docDrawing) {
   const { drawing } = state.docStore.present;
-  if (!hasChildPlacements(drawing)) return wkrGenerateNetlist(drawing);
   const location = state.altStore.file.project;
+  const references = location?.instanceReferencesByUnit;
+  const effective =
+    references && Object.keys(references).length
+      ? {
+          ...drawing,
+          sheets: drawing.sheets.map((sheet) => ({
+            ...sheet,
+            items: sheet.items.map((item) =>
+              item.NodeName === DocItemTypes.Symbol && references[item.unitId]
+                ? {
+                    ...item,
+                    text: item.text.map((field) =>
+                      field.description === 'Ref'
+                        ? { ...field, value: references[item.unitId] }
+                        : field,
+                    ),
+                  }
+                : item,
+            ),
+          })),
+        }
+      : drawing;
+  if (!hasChildPlacements(drawing)) return wkrGenerateNetlist(effective);
   if (!location)
     throw new Error(
       'Open this schematic from its project to compile its child designs.',
     );
-  return generateProjectHierarchy(location, drawing);
+  return generateProjectHierarchy(location, effective);
 }
 
 async function generateProjectHierarchy(
-  location: OpenProjectAction['location'],
+  location: Pick<OpenProjectAction['location'], 'id' | 'rootId' | 'entryId'>,
   drawing: dsnDrawing,
+  observe?: (path: string, source: dsnDrawing) => void,
+  openDrawing?: (id: string) => dsnDrawing | undefined,
 ) {
   const [{ readProject }, { resolveChild }, { buildHierarchicalNetlist }] =
     await Promise.all([
@@ -32,6 +57,7 @@ async function generateProjectHierarchy(
   );
   if (!root || drawing.documentId !== root.id)
     throw new Error('The hierarchy root no longer matches its project link.');
+  observe?.(root.path, drawing);
   return buildHierarchicalNetlist(
     { path: root.path, drawing },
     async (parent, link) => {
@@ -44,26 +70,38 @@ async function generateProjectHierarchy(
         throw new Error(
           `Add ${child.path} to this project to persist its schematic identities.`,
         );
-      return { path: child.path, drawing: child.drawing };
+      const drawing = openDrawing?.(child.entry.id) ?? child.drawing;
+      observe?.(child.path, drawing);
+      return { path: child.path, drawing };
     },
   );
 }
 
 export async function reviewProjectCircuit(
-  location: OpenProjectAction['location'],
+  location: Pick<OpenProjectAction['location'], 'id' | 'rootId' | 'entryId'>,
   drawing: dsnDrawing,
   previous: CircuitSnapshot,
+  observe?: (path: string, source: dsnDrawing) => void,
+  openDrawing?: (id: string) => dsnDrawing | undefined,
 ) {
-  if (drawing.documentId !== previous.documentId)
+  if (
+    drawing.documentId !== location.entryId ||
+    (previous && drawing.documentId !== previous.documentId)
+  )
     throw new Error('The active schematic and the board source do not match.');
   const { buildHierarchicalCircuitSnapshot } = await import(
     '../../pcb/hierarchicalSnapshot'
   );
-  const graph = await generateProjectHierarchy(location, drawing);
+  const graph = await generateProjectHierarchy(
+    location,
+    drawing,
+    observe,
+    openDrawing,
+  );
   return buildHierarchicalCircuitSnapshot(graph, {
-    documentId: previous.documentId,
-    revision: previous.revision + 1,
-    previous: previous.nets,
+    documentId: drawing.documentId,
+    revision: previous ? previous.revision + 1 : 1,
+    previous: previous?.nets,
   });
 }
 
@@ -77,7 +115,12 @@ export function generateActiveBom() {
       '../../state/dispatcher/AppDispatcher'
     );
     const initial = getState();
-    if (!hasChildPlacements(initial.docStore.present.drawing)) {
+    if (
+      !hasChildPlacements(initial.docStore.present.drawing) &&
+      !Object.keys(
+        initial.altStore.file.project?.instanceReferencesByUnit ?? {},
+      ).length
+    ) {
       dispatch(actionBomGenerate());
       return;
     }

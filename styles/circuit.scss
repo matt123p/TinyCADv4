@@ -176,6 +176,12 @@
   overflow: auto;
 }
 
+.project-board-sync {
+  min-width: 0;
+  color: var(--colorNeutralForeground2);
+  font-size: 11px;
+}
+
 .project-browser-toolbar > span,
 .project-file-label {
   flex: 1 1 0;

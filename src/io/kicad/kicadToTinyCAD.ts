@@ -378,6 +378,23 @@ function toImported(symbol: KiSymbol, includeDeMorgan: boolean): ImportedSymbol 
       ShowAtt: p.effects.hidden ? TextDisplayMethod.HideValue : TextDisplayMethod.ShowValue,
     }));
 
+  const footprint = property(symbol, 'Footprint', '').trim();
+  const packageName = footprint.split(':').at(-1)?.trim();
+  if (packageName && !attrs.some(({ AttName }) => AttName.toLowerCase() === 'package')) {
+    attrs.push({
+      AttName: 'Package',
+      AttValue: packageName,
+      ShowAtt: TextDisplayMethod.HideValue,
+    });
+  }
+
+  for (const [key, value] of [['KiCad On Board', symbol.onBoard], ['KiCad In BOM', symbol.inBom]]) {
+    if (typeof value === 'boolean')
+      attrs.push({ AttName: String(key), AttValue: value ? 'yes' : 'no', ShowAtt: TextDisplayMethod.HideValue });
+  }
+  if (symbol.onBoard === false && !attrs.some(({ AttName }) => AttName.toLowerCase() === 'pcb role'))
+    attrs.push({ AttName: 'PCB Role', AttValue: 'virtual', ShowAtt: TextDisplayMethod.HideValue });
+
   const units = collectUnits(symbol, includeDeMorgan);
   const unitKeys = Object.keys(units).map((x) => Number(x)).sort((a, b) => a - b);
   const symbolData = unitKeys.map((unitId) => {
@@ -407,7 +424,7 @@ function toImported(symbol: KiSymbol, includeDeMorgan: boolean): ImportedSymbol 
     Attributes: attrs,
   };
 
-  return { name, symbolData };
+  return { name, symbolData, ...(symbol.issues?.length ? { issues: [...new Set(symbol.issues)] } : {}) };
 }
 
 export function convertKicadLibrary(lib: KiCadLibrary): ImportedSymbol[] {

@@ -4,6 +4,7 @@ import { tclibLibraryEntry } from '../../model/tclib';
 export interface ImportedSymbol {
   name: tclibLibraryEntry;
   symbolData: DocItem[][];
+  issues?: string[];
 }
 
 export interface SymbolImporter {

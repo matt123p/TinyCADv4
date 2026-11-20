@@ -76,6 +76,7 @@ interface TSheetProps {
   editingLibrary: boolean;
   heterogeneous: boolean;
   showRulers: boolean;
+  instanceReferencesByUnit?: Readonly<Record<string, string>>;
   netlistTypes: NetlistTypes;
   netTypeAssignments: { [net: string]: string };
 }
@@ -1775,6 +1776,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                       dy={0}
                       dr={0}
                       items={this.props.items}
+                      instanceReferencesByUnit={this.props.instanceReferencesByUnit}
                       hover_obj={this.props.hover_obj}
                       hover_ids={this.props.hover_ids}
                       hover_pins={this.props.hover_pins}
@@ -1957,6 +1959,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
                   dy={0}
                   dr={0}
                   items={this.props.items}
+                      instanceReferencesByUnit={this.props.instanceReferencesByUnit}
                   hover_obj={this.props.hover_obj}
                   hover_ids={this.props.hover_ids}
                   hover_pins={this.props.hover_pins}
