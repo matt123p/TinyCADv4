@@ -7,7 +7,8 @@ These documents describe TinyCAD's current implementation and the contracts usef
 | [SPICE engine](spice-engine.md) | Runtime architecture, engine identity, model inputs, lifecycle, limits and verification. |
 | [Simulation](simulation.md) | Analyses, sources, probes, charts, Circuit Explorer and virtual instruments. |
 | [Drawing format](drawing-format.md) | XML/ZIP persistence, simulation records, numerical results and storage adapters. |
-| [PCB and project formats](pcb-format.md) | Standalone XML boards, schematic migration, project folders and `.tcproject` settings. |
+| [Project specification](project-specification.md) | Project browser, file tabs and Save All, Git source control, `.tcproject` settings, generated files, recovery and hierarchical schematics. |
+| [PCB format](pcb-format.md) | Standalone XML boards, schematic identity and pin/package migration. |
 | [Libraries and examples](libraries.md) | Ten standard libraries, physical board/equipment layouts, seven explained example drawings, generation, provenance and content ownership. |
 | [Teaching models](teaching-simulation-models.md) | Configurable digital, functional and sensor model behaviour and limitations. |
 | [Editor tools](editor-tools.md) | Layout API, connectivity constraints and Markdown drawing notes. |

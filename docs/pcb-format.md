@@ -20,7 +20,7 @@ This document records the native PCB file contract, the WP0 prototype decisions 
 
 Opening legacy drawings in the editor assigns unit/pin UUIDs in memory. Saving as `.dsn` or `.dzn` persists them. The standalone drawing service preserves provided UUIDs and leaves legacy identity allocation to the editor. Malformed UUIDs and duplicate placed-unit UUIDs fail parsing. Distinct pin IDs are checked per selected outline during PCB preflight, which allows shared outlines and common power pins.
 
-Moving, rotating, renaming and renumbering a native item preserve its UUID. Symbol replacement preserves the placed-unit UUID and adopts the replacement pin definitions, which need renewed device-map review. Clipboard paste assigns new IDs to placed units and individually copied pin objects. Instances that share a symbol definition keep its pin-definition IDs. Save As and operating-system file copies retain schematic identity. Creating an independent project revision will use explicit project lineage and a fresh revision identity.
+Moving, rotating, renaming and renumbering a native item preserve its UUID. Symbol replacement preserves the placed-unit UUID and adopts the replacement pin definitions, which need renewed device-map review. Clipboard paste assigns new IDs to placed units and individually copied pin objects. Instances that share a symbol definition keep its pin-definition IDs. Save As and operating-system file copies retain schematic identity. See [project revision lineage](project-specification.md#document-lifecycle-and-recovery).
 
 ## Connectivity capability matrix
 
@@ -30,46 +30,11 @@ Moving, rotating, renaming and renumbering a native item preserve its UUID. Symb
 | Implicit hidden power | A shape-4 pin is emitted with a label and no physical hotspot in the netlist. The hidden-power pass deduplicates by reference within each sheet. | Preserve its intended named connection in the flat subset. Review common power pins when resolving multipart units. |
 | Drawn no-connect | `NOCONNECT` is emitted as a separate node on the same net as the hotspot. | Retain the explicit marker as intent. Warn on a no-connect marker that also joins other terminals. An isolated pin without a marker has no explicit NC intent. |
 | Buses | `BusWire`, `BusSlash`, and `BusLabel` are represented in XML and the editor. The scalar netlist has no member expansion pass. | Detect and stop PCB compilation until the bus expansion is available. |
-| Hierarchy | Project netlist generation expands placed children, binds their named ports, and scopes labels and power by instance. | The PCB snapshot preserves the source document, sheet, placement path, unit and pin UUIDs. |
+| Hierarchy | See the [project hierarchy contract](project-specification.md#hierarchical-project-schematics). | The PCB snapshot preserves the source document, sheet, placement path, unit and pin UUIDs. |
 | Multipart symbols | The generator emits each placed unit with its `part` and unit-specific pins. It uses reference text in its hidden-power handling. | Keep unit UUIDs and per-unit pins. Require a physical component binding and review repeated references and common pins before compiling. |
 | Duplicate sheet names and duplicated references | The worker keys sheet snapshots by display name. Legacy exports emit component rows from reference text. | Report conflicts before PCB compilation. No reference-based automatic merging. |
 
 `npm run test:pcb` exercises native XML/DZN migration, clipboard copy, cross-sheet scalar labels, explicit no-connects, hidden power, and detection of hierarchy, buses and multipart units. Net membership fixtures demonstrate ID retention across renames and identify which previous IDs need review after a split or merge. The schematic-to-board compiler and ECO workflow are WP2 deliverables.
-
-## Hierarchical project schematics
-
-### TinyCAD v3 behavior
-
-In v3, the child drawing has a special symbol sheet with artwork and named pins. The parent places that saved drawing as a symbol, with a reference designator, a transform and wire connections. A parent pin connects to matching labels in the child by name. Each drawing can have several normal circuit sheets, and a child can contain further child placements. The parent can open the child drawing or reload its symbol after an edit. [TinyCAD v3 manual](https://docs.tinycad.net/v3/Using-multiple-sheet-schematics/#using-hierarchical-designs) · [C++ symbol editor and XML codec](https://github.com/matt123p/TinyCAD/blob/b503a7b1ee8acef937b00c3a99267cd2d25614db/src/DrawHierarchicalSymbol.cpp)
-
-The child stores its interface in a `HierarchicalSymbol` sheet under `TinyCADSheets`. The parent stores a `HIERARCHICAL_SYMBOL` placement with a `file` attribute, position, rotation, scaling and `FIELD` records. v3 writes the child path relative to the containing drawing when possible and falls back to the original path. Its readers accept the historical spellings `HierachicalSymbol` and `HIERACHICAL_SYMBOL`. [C++ symbol XML codec](https://github.com/matt123p/TinyCAD/blob/b503a7b1ee8acef937b00c3a99267cd2d25614db/src/DrawHierarchicalSymbol.cpp#L59-L66) · [C++ path handling](https://github.com/matt123p/TinyCAD/blob/b503a7b1ee8acef937b00c3a99267cd2d25614db/src/TinyCadDoc.cpp#L1868-L1904)
-
-The C++ netlister gives each placement its own instance index, expands all sheets in that instance, and links the parent pin's hotspot to the child instance's label of the same name. Same-name labels can join across sheets within an instance. Two placements of the same child keep their internal nets separate. Legacy flattened references include the designator path, for example `H2_H1_R1`. The FAQ records failures involving missing instance references and duplicate port pin numbers, even though users wire ports by name. [C++ traversal and port binding](https://github.com/matt123p/TinyCAD/blob/b503a7b1ee8acef937b00c3a99267cd2d25614db/src/NetList.cpp#L1026-L1068) · [C++ instance-scoped labels](https://github.com/matt123p/TinyCAD/blob/b503a7b1ee8acef937b00c3a99267cd2d25614db/src/Net.h#L104-L135) · [TinyCAD v3 FAQ](https://docs.tinycad.net/v3/FAQ/)
-
-### M1 implementation contract
-
-1. **Authoring and navigation.** Open a project from its root `.tcproject`, select a root schematic, edit a child's interface sheet, and place that child from the project tree. Support wiring, rotation, repeated placements, and navigation from a placement to its child and back through the instance path. Show where a child is used and report port changes that affect connected placements. The interface sheet supplies artwork and ports. Compile electrical circuitry from the normal sheets.
-2. **Native persistence and migration.** Keep parents and children as ordinary `.dsn` or `.dzn` files. Preserve the legacy sheet and placement tags on import, accept both historical spellings and write the corrected spellings. Store the reference and transform, child document identity and a project-relative locator for new links, and stable placement and port IDs. Resolve legacy relative paths against the containing schematic first. Resolve or copy legacy absolute and out-of-project targets explicitly during migration, then record the project-relative link. Report missing or ambiguous children and preserve unresolved placements for repair. Verify that a copied project tree opens with its links intact.
-3. **Connectivity and identity.** Build the circuit from the selected root and expand each reachable child placement along its full instance path. Reuse the sheet-local connectivity builder and bind parent hotspots to the matching labels across the child's normal sheets. Use names for legacy port matching and retain the resulting stable binding for edits. Qualify power and hidden-pin scope against legacy fixtures and define deliberate global connections explicitly. Scope ordinary labels to their instance. Give physical units and terminals stable identities based on the placement UUID path and native unit/pin IDs. Use readable designator paths for display and export, and diagnose missing or conflicting references and ambiguous port definitions. Detect cycles by tracking the active document chain, so repeated use in different branches remains valid.
-4. **Shared consumers and diagnostics.** Feed the expanded graph into ERC, project netlist/BOM generation and PCB synchronisation. Carry instance, document, sheet and pin provenance through to PCB cross-probing and ECO previews. Hierarchy placements provide connectivity through ports. Physical component rows come from the instantiated circuit sheets. Block PCB compilation and netlist generation on unresolved children, cycles or ambiguous port bindings and locate the affected placement or port.
-
-### Editing project hierarchy
-
-Use **New schematic…** or **Import schematic…** in Projects to add a child drawing. Existing project files can be registered with **Add to project**. Open the child and choose **Add hierarchical symbol**, then use the drawing tools and the **Pin** tool to create its interface. Give each port a unique name in the pin panel. Use the same names on labels in the child's normal circuit sheets.
-
-Open the parent and choose **Place as child symbol** from the child file's project menu. Place and wire the symbol with the usual editing tools. Each placement has its own designator and UUID. The document saves the child's project-relative path, UUID and a copy of its interface artwork with its port identities.
-
-Select a placement to open its child, inspect its locator or reload the interface. The hierarchy bar shows the instance path and **Back to parent** returns to the selected placement. **Where used** lists placements in the registered project drawings. Reloading asks for review when a connected port name or hotspot changes. Existing wires retain their coordinates.
-
-Legacy relative locators resolve from the containing schematic and stay within the project. If a target exists in the project tree, **Add child to project and open** registers it explicitly. For an absolute or missing locator, import a copy of the child into the project, then choose **Relink child** on the parent placement. Unresolved placements retain their original locator and any embedded artwork until repaired. Project copying retains document and placement UUIDs along with relative links.
-
-### Compiling and cross-probing
-
-ERC, the live Netlist list, netlist exports and the BOM use the expanded project graph. Register each child in Projects before compilation so that its document, sheet and unit UUIDs are saved. Labels, power symbols and hidden power pins share a name within one instance. Connect separate instances through their declared ports.
-
-The PCB snapshot uses the placement UUID path and the original unit and pin UUIDs. A copied project and a renamed designator keep the existing component, signal and net identities when terminal membership stays the same. In Projects, open the linked board's action menu and choose **Cross-probe schematic…**. A mapped pad opens the original pin in the correct instance. **Review connectivity** compares the current schematic with the board's recorded circuit revision and reports retained nets, proposed nets and previous nets to review. PCB snapshot compilation stops at buses or symbols that require physical-role or multipart review.
-
-The [legacy fixture](../scripts/tests/fixtures/pcb-hierarchy/src/Circuit.dsn) places a two-sheet child twice, with a nested grandchild, named ports, repeated internal labels, a power symbol and a hidden power pin. The [TinyCAD 3.00.04 XML export](../scripts/tests/fixtures/pcb-hierarchy/v3-netlist.xml) and the explicit expected graph both agree with v4 on 14 physical components and six nets. The regression test normalizes the direction of flattened v3 reference paths and compares each terminal by reference and pin number. To regenerate the reference, open the fixture's `src/Circuit.dsn` in v3 and select **Special → Create PCB Net List → XML**. The checked-in reference uses paths relative to the fixture root.
 
 ## Standalone board format
 
@@ -90,6 +55,8 @@ The board stores its schema version, revision, required features and authoritati
 
 A standalone board embeds the definitions, models, nets and rules required to reopen, edit, inspect and regenerate supported outputs without the original schematic, library, project folder or sidecar files. The linked schematic and circuit snapshot are project documents used for cross-probing and ECOs.
 
+Standalone PCB editing in the desktop and filesystem-only browser builds follows the [Single File workflow](project-specification.md#single-file-and-project-modes).
+
 Version 1 is the first persisted board format. `DPNIDENTITY`, `COORDINATES`, `TITLE`, `REQUIREDFEATURES` and `COPPERLAYERS` describe every board. An `OUTLINE` contains ordered integer `POINT` records. A `PROFILE` has an `OUTLINE` of ordered `EDGE` records and a `CUTOUTS` collection. Each edge carries `START` and `END`. Arcs also carry `CENTRE` and a `clockwise` flag.
 
 `FOOTPRINTS` references `COMPONENTDEFS` and `DEVICEDEFS` by embedded UUID. Devices reference `FOOTPRINTDEFS` by UUID and map their `SIGNALS` to pad IDs in `ASSIGNMENTS`. Pads reference `PADSTACKDEFS` by a positive file-local integer ID. Identical stacks share a single definition. Each stack defines face geometry in `COPPER`, optional `MASK` and `PASTE`, and an optional `DRILL` with separate endpoints and an explicit plating flag. Component definitions carry schematic unit and sheet UUIDs where available. Component signal bindings reference UUIDs in `NETS`, and `RULES` stores board-wide routing widths and clearances in nanometres.
@@ -106,27 +73,6 @@ For each supported KiCad feature, use the same versioned native fields and valid
 
 Store imported and generated STEP attachments with the footprint definition, using the model asset's SHA-256 ID, source, quality, local offset in nanometres, rotation in microdegrees and scale. Apply the attachment transform in footprint coordinates before placing the footprint on the board. Preserve resolved STEP bytes and their provenance in standalone `.dpn` saves and portable projects. Verify import by saving and reopening native files and checking geometry, model alignment and connectivity as applicable.
 
-## Project folder and settings file
+## Project integration
 
-A TinyCAD project is a root folder and its entire subtree. A versioned UTF-8 XML `<name>.tcproject` file at the root identifies the folder as a project and holds its shared settings, similar to a Visual Studio `.csproj`. Keep design documents and generated files as ordinary files in the tree. The layout below is an example. Users can organise and name subfolders to suit the design.
-
-```text
-Sensor Board/
-  Sensor Board.tcproject
-  Circuit.dsn
-  Board.dpn
-  assets/
-  outputs/
-    BOM.csv
-    Circuit.net
-    Circuit.snapshot.json
-  releases/
-```
-
-The settings file records the project UUID, title, schema version, required features, revision lineage, primary documents and schematic-to-board associations. It also stores project-wide design settings, library and asset settings, and output recipes, including their destinations, or root-relative references to shared settings files. Use stable document identities for links and root-relative paths to locate the files. A folder can contain supporting files and subfolders without listing each one in `.tcproject`. Copy or move the whole tree to another location to carry the project with it.
-
-Schematic `.dsn` or `.dzn` and board `.dpn` files remain the editable sources. Generated BOMs, netlists and circuit snapshots are ordinary project files, typically under `outputs/`. Their recipes and source revisions determine freshness. They can be regenerated from the design. Frozen manufacturing releases have their own output and provenance records.
-
-For the M1 workflow, Projects in Electron and Google Drive mode recognises the root settings file and navigates the folder tree. Opening the settings file loads the project context. Saving an edited design writes the design file, and saving project settings writes `.tcproject`. Save As copies the tree and records revision lineage. Revision comparison uses the saved project settings and file contents. Recovery checks for edits to the saved document before restoring an autosave.
-
-Version 1 uses a `TinyCADProject` XML root with one `SETTINGS` element for identity, lineage and primary documents. `FILE` elements link document IDs to folder-relative paths. `ASSOCIATION` elements link schematic and PCB IDs. TinyCAD validates that referenced paths resolve within the project tree and reports missing files, ambiguous names and unsupported required features. Schematic saves retain the format of their linked `.dsn` or `.dzn` file.
+For the folder layout, `.tcproject` schema and project file lifecycle, see the [project specification](project-specification.md).

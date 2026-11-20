@@ -10,7 +10,7 @@ Loading detects content from bytes. Renamed XML `.dzn` and ZIP `.dsn` files rema
 
 [dsnCodec.ts](../src/io/dsnCodec.ts) coordinates document encoding/decoding; [dsnContainer.ts](../src/io/dsnContainer.ts) handles ZIP/XML detection and archive validation. [drawingSaveFormat.ts](../src/io/drawingSaveFormat.ts) and [drawingFiles.js](../shared/drawingFiles.js) own representation selection, naming and MIME constants.
 
-For linked child designs, see the [hierarchical schematic contract](pcb-format.md#hierarchical-project-schematics) for v3 XML compatibility and project-relative document resolution.
+For linked child designs, see the [hierarchical schematic contract](project-specification.md#hierarchical-project-schematics) for v3 XML compatibility and project-relative document resolution.
 
 ## Image placements
 
