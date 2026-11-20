@@ -1,9 +1,14 @@
 import { ActionCreators } from 'redux-undo';
 import type { Dispatch } from 'redux';
 import { isCompressedDrawing } from '../../shared/drawingFiles';
-import { isProjectFile, projectFileTitle } from '../../shared/projectFiles';
+import {
+  isProjectFile,
+  projectFileTitle,
+  validProjectName,
+} from '../../shared/projectFiles';
 import { decodeDrawing, encodeDrawing } from './dsnCodec';
 import { blank } from './ioXml';
+import { hasChildPlacements } from './hierarchyDrawing';
 import { userManager } from './files';
 import { digest } from './dsnContainer';
 import {
@@ -55,47 +60,164 @@ export function projectRequest<T extends ProjectStorageRequest>(
 }
 
 export async function readProject(id: string, rootId: string) {
-  const { data } = await projectRequest({ operation: 'read', id });
+  const { data, version } = await projectRequest({ operation: 'read', id });
   const settings = decodeProjectSettings(data);
   const markers = (
     await projectRequest({ operation: 'list', folder: rootId, tree: true })
   ).filter((item) => !item.folder && isProjectFile(item.name));
   if (markers.length !== 1 || markers[0].id !== id || markers[0].unsupported)
     throw new Error('A project folder needs exactly one root settings file.');
-  const files = await resolveProjectLinks(rootId, settings);
-  return { settings, files, marker: markers[0] };
+  const files = await resolveProjectLinks(rootId, settings, true);
+  const missingSchematics = settings.entries.filter(
+    ({ kind, path }) => kind === 'schematic' && !files.has(path),
+  );
+  return { settings, files, marker: markers[0], version, missingSchematics };
 }
 
-async function resolveProjectLinks(rootId: string, settings: ProjectSettings) {
+type ProjectList = (folder: string) => Promise<ProjectItem[]>;
+
+const listProjectFolder: ProjectList = (folder) =>
+  projectRequest({ operation: 'list', folder, tree: true });
+
+export async function findProjectPath(
+  rootId: string,
+  path: string,
+  directory = false,
+  list = listProjectFolder,
+): Promise<ProjectItem | undefined> {
+  let folder = rootId;
+  const parts = path.split('/');
+  let item: ProjectItem;
+  for (const [index, part] of parts.entries()) {
+    if (!validProjectName(part))
+      throw new Error(`Invalid project path: ${path}`);
+    const matches = (await list(folder)).filter(
+      ({ name }) => name.toLowerCase() === part.toLowerCase(),
+    );
+    [item] = matches;
+    const isFolder = directory || index < parts.length - 1;
+    if (matches.length !== 1 || item.unsupported || item.folder !== isFolder)
+      return undefined;
+    folder = item.id;
+  }
+  return item;
+}
+
+async function resolveProjectLinks(
+  rootId: string,
+  settings: ProjectSettings,
+  allowMissingSchematics = false,
+) {
   const lists = new Map<string, Promise<ProjectItem[]>>();
   const files = new Map<string, ProjectItem>();
   const list = (folder: string) => {
-    if (!lists.has(folder))
-      lists.set(
-        folder,
-        projectRequest({ operation: 'list', folder, tree: true }),
-      );
+    if (!lists.has(folder)) lists.set(folder, listProjectFolder(folder));
     return lists.get(folder);
   };
   for (const link of settings.entries) {
-    let folder = rootId;
-    const parts = link.path.split('/');
-    for (const [index, part] of parts.entries()) {
-      const matches = (await list(folder)).filter(
-        ({ name }) => name.toLowerCase() === part.toLowerCase(),
-      );
-      const [item] = matches;
-      const isFolder = index < parts.length - 1;
-      if (matches.length !== 1 || item.unsupported || item.folder !== isFolder)
-        throw new Error(`Missing or ambiguous project link: ${link.path}`);
-      folder = item.id;
-      if (!item.folder) files.set(link.path, item);
-    }
+    const item = await findProjectPath(rootId, link.path, false, list);
+    if (item) files.set(link.path, item);
+    else if (!allowMissingSchematics || link.kind !== 'schematic')
+      throw new Error(`Missing or ambiguous project link: ${link.path}`);
   }
   return files;
 }
 
 type LoadedProject = Awaited<ReturnType<typeof readProject>>;
+
+export async function addProjectSchematic(
+  projectRoot: Pick<OpenProjectDrawing, 'id' | 'rootId'>,
+  path: string,
+  input?: Uint8Array,
+  useExisting = false,
+) {
+  const { id, rootId } = projectRoot;
+  const project = await readProject(id, rootId);
+  const match = project.settings.entries.find(
+    ({ path: name }) => name.toLowerCase() === path.toLowerCase(),
+  );
+  if (
+    match &&
+    useExisting &&
+    match.kind === 'schematic' &&
+    project.files.has(match.path)
+  )
+    return match;
+  if (match) throw new Error(`A document already uses ${path}.`);
+  const parts = path.split('/');
+  const name = parts.pop();
+  const folder = parts.length
+    ? (await findProjectPath(rootId, parts.join('/'), true))?.id
+    : rootId;
+  if (!folder || !validProjectName(name) || !/\.d[sz]n$/i.test(name))
+    throw new Error('Choose a schematic filename inside the project.');
+  const matches = (await listProjectFolder(folder)).filter(
+    ({ name: candidate }) => candidate.toLowerCase() === name.toLowerCase(),
+  );
+  if (
+    useExisting
+      ? matches.length !== 1 || matches[0].unsupported || matches[0].folder
+      : matches.length > 0
+  )
+    throw new Error(`The schematic path is unavailable or ambiguous: ${path}`);
+  const file = useExisting ? matches[0] : undefined;
+  const saved = file
+    ? await projectRequest({ operation: 'read', id: file.id })
+    : undefined;
+  const drawing =
+    input || saved ? await decodeDrawing(input || saved.data) : blank();
+  const entry: ProjectLink = {
+    kind: 'schematic',
+    id: drawing.documentId.toLowerCase(),
+    path,
+  };
+  const settings = encodeProjectSettings({
+    ...project.settings,
+    entries: [...project.settings.entries, entry],
+    primarySchematic: project.settings.primarySchematic ?? entry.id,
+  });
+  const data = await encodeDrawing(
+    drawing,
+    /\.dzn$/i.test(name) ? 'zip-v1' : 'xml',
+  );
+  const written = await projectRequest({
+    operation: 'write',
+    folder,
+    name,
+    data,
+    ...(file ? { id: file.id, version: saved.version } : {}),
+  });
+  try {
+    await projectRequest({
+      operation: 'write',
+      id,
+      folder: rootId,
+      name: project.marker.name,
+      data: settings,
+      version: project.version,
+    });
+  } catch (error) {
+    if (file) {
+      await projectRequest({
+        operation: 'write',
+        id: written.id,
+        folder,
+        name,
+        data: saved.data,
+        version: written.version,
+      }).catch(() => {});
+    } else {
+      await projectRequest({
+        operation: 'trash',
+        id: written.id,
+        directory: false,
+      }).catch(() => {});
+    }
+    throw error;
+  }
+  window.dispatchEvent(new Event(projectFilesChanged));
+  return entry;
+}
 
 export async function readProjectBoard(
   project: LoadedProject,
@@ -424,10 +546,10 @@ export async function openProjectDrawing(
       throw new Error(
         'Project schematic has been removed. Refresh the project browser.',
       );
-    const saved = await projectRequest({
-      operation: 'read',
-      id: project.files.get(entry.path).id,
-    });
+    const file = project.files.get(entry.path);
+    if (!file)
+      throw new Error(`Missing or ambiguous project schematic: ${entry.path}`);
+    const saved = await projectRequest({ operation: 'read', id: file.id });
     if (isCompressedDrawing(saved.data) !== /\.dzn$/i.test(entry.path))
       throw new Error(
         `Project schematic encoding does not match its filename: ${entry.path}`,
@@ -455,11 +577,19 @@ export async function openProjectDrawing(
       throw new Error('The recovery copy is no longer available.');
     const recovered = !!draft && action.recovery?.choice === 'restore';
     const data = recovered ? draft.data : saved.data;
-    const drawing = await decodeDrawing(data);
+    let drawing = await decodeDrawing(data);
     if (drawing.documentId.toLowerCase() !== location.entryId)
       throw new Error(
         'The recovered schematic identity does not match the project.',
       );
+    if (!recovered && hasChildPlacements(drawing)) {
+      const { loadLegacyInterfaces } = await import('./projectHierarchy');
+      drawing = await loadLegacyInterfaces(
+        project,
+        { rootId: location.rootId, documentPath: entry.path },
+        drawing,
+      );
+    }
     if (!stillOpening()) return;
     if (draft && action.recovery?.choice === 'discard')
       await deleteRecoveryDraft(key, draft.token);
@@ -534,7 +664,7 @@ export async function saveProjectDrawing(
       documentFile &&
       (await projectRequest({ operation: 'read', id: documentFile.id }));
     const savedVersion = saved && (await digest(saved.data));
-    if (source && savedVersion !== source.version)
+    if (source && (!documentFile || savedVersion !== source.version))
       throw new Error(
         'The saved schematic changed in storage. Reopen it before saving.',
       );
@@ -582,6 +712,7 @@ export async function saveProjectDrawing(
         version: await digest(entry.data),
         entryId,
         documentPath: entry.path,
+        hierarchyTrail: source?.hierarchyTrail,
       };
     } else {
       const file = documentFile;

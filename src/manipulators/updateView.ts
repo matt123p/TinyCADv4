@@ -1,3 +1,4 @@
+import type { HierarchicalLink } from '../model/dsnItem';
 import { dsnView, FindResult, WireMode } from '../model/dsnView';
 import { newSchematicEntityId } from '../model/schematicIdentity';
 import {
@@ -793,6 +794,9 @@ export class updateView {
     if (update_add instanceof updateWire) update_add.wireMode = view.wireMode ?? '90';
     if (update_add) {
       let obj = update_add.complete_add();
+      if (obj.NodeName === DocItemTypes.Symbol && obj.hierarchy) {
+        sheet = { ...sheet, symbols: { ...sheet.symbols, [obj._symbol.id]: obj._symbol } };
+      }
       sheet = this.tidy_wires(
         update(sheet, {
           items: { $push: [obj] },
@@ -856,7 +860,8 @@ export class updateView {
     if ((view.menu_command === 'add_spice_control' || view.menu_command === 'add_library_symbol') && view.add?.NodeName === DocItemTypes.Symbol) {
       const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
       const target = snap.snap_magnetic(p, false, sheet.items)?.point ?? snap.snap(p);
-      const pin = new updateSymbol(view.add).active_points().find(p => p[2].number === '1');
+      const pins = new updateSymbol(view.add).active_points();
+      const pin = pins.find(p => p[2].number === '1') ?? (view.add.hierarchy ? pins[0] : undefined);
       const point: Coordinate = pin
         ? [target[0] - (pin[0] - view.add.point[0]), target[1] - (pin[1] - view.add.point[1])]
         : target;
@@ -1910,14 +1915,18 @@ export class updateView {
       point: [0, 0],
       rotation: 0,
       name: '',
-      number: '1',
+      number: sheet.hierarchicalSymbol
+        ? String(1 + Math.max(0, ...sheet.items.flatMap(item =>
+          item.NodeName === DocItemTypes.Pin && /^\d+$/.test(item.number) ? [Number(item.number)] : [],
+        )))
+        : '1',
       length: 20,
       number_pos: 0,
       centre_name: false,
       which: 0,
       elec: 0,
       show_name: true,
-      show_number: true,
+      show_number: !sheet.hierarchicalSymbol,
       part: view.selected_sheet,
       // The label's default style
       font_name: 'Arial',
@@ -3194,7 +3203,7 @@ export class updateView {
     targetSymbolId: number,
     scope: ReplaceSymbolScope,
   ) {
-    if (item._symbol?.uid !== sourceUid) {
+    if (item.hierarchy || item._symbol?.uid !== sourceUid) {
       return false;
     }
 
@@ -3475,6 +3484,21 @@ export class updateView {
       });
 
     return { view: view, sheet: sheet };
+  }
+
+  beginHierarchyPlacement(view: dsnView, sheet: dsnSheet, definition: libSymbol, hierarchy: HierarchicalLink, reference: string): dsnView {
+    const name: tclibLibraryEntry = {
+      id: definition.uid, NameID: 0, SymbolID: definition.id,
+      Name: definition.name.value, Reference: reference, ppp: 1, Description: '',
+      ShowName: TextDisplayMethod.ShowValue, ShowRef: TextDisplayMethod.ShowValue, Attributes: [],
+    };
+    const prepared = this.beginLibrarySymbolPlacement(view, {
+      ...sheet, symbols: { ...sheet.symbols, [definition.id]: definition },
+    }, name, [definition.outlines[0].items]).view;
+    return {
+      ...prepared,
+      add: new updateSymbol({ ...(prepared.add as dsnSymbol), hierarchy, show_power: true }).post_construction(),
+    };
   }
 
   beginLibrarySymbolPlacement(view: dsnView, sheet: dsnSheet, name: tclibLibraryEntry, items: DocItem[][]): viewResult {

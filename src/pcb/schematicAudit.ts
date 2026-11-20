@@ -54,6 +54,10 @@ export function auditPcbSchematic(drawing: dsnDrawing): PcbSchematicIssue[] {
           });
           break;
         case DocItemTypes.Symbol: {
+          if (item.hierarchy) {
+            issues.push({ ...location, code: 'hierarchy', detail: 'Child placement needs instance-aware connectivity.' });
+            break;
+          }
           const unitId = item.unitId?.toLowerCase();
           if (!isEntityId(unitId) || unitIds.has(unitId)) {
             issues.push({

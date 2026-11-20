@@ -24,6 +24,11 @@ import { LibraryFolderDialog } from './libraryFolderDlg';
 import { ReplaceSymbolDialog } from './replaceSymbolDlg';
 import OpenExampleDialog from './openExampleDlg';
 
+import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
+import { hasChildPlacements } from '../../io/hierarchyDrawing';
+import type { docDrawing } from '../../state/undo/undo';
+
 const ProjectSaveAsDialog = process.env.TARGET_SYSTEM === 'filesystem' ? null : React.lazy(() => import('../projects/ProjectSaveAsDialog'));
 const ProjectRecoveryDialog = process.env.TARGET_SYSTEM === 'filesystem' ? null : React.lazy(() => import('../projects/ProjectRecoveryDialog'));
 
@@ -38,6 +43,10 @@ interface TDialogueProps {
 const TDialogue: FunctionComponent<TDialogueProps> = (
   props: TDialogueProps,
 ) => {
+  const { t } = useTranslation();
+  const drawing = useSelector((state: docDrawing) => state.docStore.present.drawing);
+  if (['drc', 'netlist'].includes(props.show_dialogue) && hasChildPlacements(drawing))
+    return <IoFailureDialog message={t('hierarchy.flatOutput')} />;
   switch (props.show_dialogue) {
     case 'project_recovery':
       return ProjectRecoveryDialog && <React.Suspense fallback={null}><ProjectRecoveryDialog prompt={props.dialogue_props} /></React.Suspense>;

@@ -28,6 +28,9 @@ const ChatPanel = process.env.TARGET_SYSTEM === 'electron'
   ? lazy(() => import('../chat/ChatPanel').then((m) => ({ default: m.ChatPanel })))
   : null;
 
+const HierarchyPanel = process.env.TARGET_SYSTEM === 'electron' || process.env.TARGET_SYSTEM === 'google'
+  ? lazy(() => import('../projects/HierarchyPanel'))
+  : null;
 const ProjectBrowser = process.env.TARGET_SYSTEM === 'electron' || process.env.TARGET_SYSTEM === 'google'
   ? lazy(() => import('../projects/ProjectBrowser'))
   : null;
@@ -285,6 +288,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
                 url={props.browserSheets[-2 - props.selected_sheet].url}
               />
             ) : null}
+            {HierarchyPanel && <Suspense fallback={null}><HierarchyPanel /></Suspense>}
             <SheetbarContainer />
           </div>
           <div

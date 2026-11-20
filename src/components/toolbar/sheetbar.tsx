@@ -150,7 +150,7 @@ export const Sheetbar: React.FC<SheetbarProps> = (props) => {
           selected={props.selected_sheet === index}
           index={index}
           key={index}
-          canDelete={props.sheets.length > 1 && (sheet.kind === 'simulation' || props.sheets.filter(s => s.kind !== 'simulation').length > 1)}
+          canDelete={props.sheets.length > 1 && (sheet.kind === 'simulation' || sheet.hierarchicalSymbol || props.sheets.filter(s => s.kind !== 'simulation' && !s.hierarchicalSymbol).length > 1)}
           hierarchicalSymbol={sheet.hierarchicalSymbol}
           additionalMenuItems={sheet.kind === 'simulation' ? [{
             key: 'duplicate_setup',

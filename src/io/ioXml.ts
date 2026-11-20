@@ -190,7 +190,7 @@ export class ioXML {
     } else {
       let nodes = root[0].childNodes;
       for (let i = 0; i < nodes.length; ++i) {
-        if (nodes[i].nodeName === 'HierarchicalSymbol') {
+        if (['HierarchicalSymbol', 'HierachicalSymbol'].includes(nodes[i].nodeName)) {
           let sheet = this.from_tinycad(nodes[i], nodes[i], true);
           r.sheets.push(sheet);
         }
@@ -219,7 +219,12 @@ export class ioXML {
       }
     }
 
-    if (!r.sheets.some(sheet => sheet.kind !== 'simulation')) throw new Error('A drawing must contain a schematic sheet.');
+    const interfaceSheets = r.sheets.filter(sheet => sheet.hierarchicalSymbol);
+    if (interfaceSheets.length > 1) throw new Error('A drawing can have only one hierarchy interface.');
+    if (interfaceSheets.length && r.sheets[0] !== interfaceSheets[0])
+      r.sheets = [interfaceSheets[0], ...r.sheets.filter(sheet => !sheet.hierarchicalSymbol)];
+    if (!r.sheets.some(sheet => sheet.kind !== 'simulation' && !sheet.hierarchicalSymbol))
+      throw new Error('A drawing must contain a schematic sheet.');
     const sheetIds = r.sheets.map(sheet => sheet.id);
     if (new Set(sheetIds).size !== sheetIds.length) throw new Error('Duplicate sheet identity.');
     const unitIds = r.sheets.flatMap((sheet) => sheet.items.flatMap((item) =>
@@ -527,7 +532,7 @@ export class ioXML {
         item.font_id = this.lookup_item(fonts, font);
       }
 
-      if (item.NodeName === DocItemTypes.Symbol) {
+      if (item.NodeName === DocItemTypes.Symbol && (!item.hierarchy || item.hierarchy.cached)) {
         let symboldef = {
           symbol: item._symbol,
         };
@@ -837,7 +842,12 @@ export class ioXML {
               a.rotate = 3 | (mirror ? 4 : 0);
               break;
           }
-          o = root.appendChild('SYMBOL', null, a);
+          if (item.hierarchy) {
+            a.file = item.hierarchy.path;
+            if (item.hierarchy.documentId) a.child_uuid = item.hierarchy.documentId;
+            if (!item.hierarchy.cached) delete a.id;
+          }
+          o = root.appendChild(item.hierarchy ? 'HIERARCHICAL_SYMBOL' : 'SYMBOL', null, a);
 
           for (let j = 0; j < item.text.length; ++j) {
             let field = item.text[j];
@@ -1351,8 +1361,20 @@ export class ioXML {
         case 'ruler':
           // o = <DesignRuler;
           break;
+        case 'HIERACHICAL_SYMBOL':
+        case 'HIERARCHICAL_SYMBOL':
         case 'SYMBOL':
           {
+            const hierarchical = node.nodeName !== 'SYMBOL';
+            const symbolId = node.getAttribute('id');
+            const definition = !hierarchical || symbolId
+              ? this.symboldef(root, newSheet, symbolId) : null;
+            const hierarchy = hierarchical ? {
+              path: node.getAttribute('file') ?? '',
+              ...(node.getAttribute('child_uuid')
+                ? { documentId: readSchematicEntityId(node.getAttribute('child_uuid'), false) } : {}),
+              cached: definition?.id != null,
+            } : undefined;
             let rot = parseInt(node.getAttribute('rotate'), 10);
             // tslint:disable-next-line: no-bitwise
             let mirror = (rot & 4) !== 0;
@@ -1381,13 +1403,14 @@ export class ioXML {
               _id: get_global_id(),
               unitId: readSchematicEntityId(node.getAttribute('unit_uuid'), this.readOptions.migrateEntityIds !== false),
               point: this.coords(node.getAttribute('pos')),
-              show_power: parseInt(node.getAttribute('show_power'), 10) !== 0,
-              allow_resize: parseInt(node.getAttribute('can_scale'), 10) !== 0,
-              scale_x: parseFloat(node.getAttribute('scale_x') ?? '1.0'),
-              scale_y: parseFloat(node.getAttribute('scale_y') ?? '1.0'),
-              part: parseInt(node.getAttribute('part'), 10),
+              show_power: hierarchical || parseInt(node.getAttribute('show_power'), 10) !== 0,
+              allow_resize: !!parseInt(node.getAttribute('can_scale'), 10),
+              scale_x: parseFloat(node.getAttribute('scale_x')) || 1,
+              scale_y: parseFloat(node.getAttribute('scale_y')) || 1,
+              part: hierarchical ? 0 : parseInt(node.getAttribute('part'), 10),
               rotation: rotation,
-              _symbol: this.symboldef(root, newSheet, node.getAttribute('id')),
+              _symbol: hierarchical && !hierarchy.cached ? this.unresolvedChildSymbol(hierarchy.path) : definition,
+              ...(hierarchy ? { hierarchy } : {}),
               text: [],
               font_name: 'Arial',
               font_colour: '#FF0000',
@@ -1408,6 +1431,14 @@ export class ioXML {
               };
               field.position[1] -= o.font_size;
               o.text.push(field);
+            }
+            if (hierarchy) {
+              const label = hierarchy.path.split(/[/\\]/).pop() || 'Missing child';
+              const name = o.text.find((field) => field.description === 'Name');
+              if (name && !name.value) name.value = label;
+              if (!name) o.text.unshift({ description: 'Name', value: label, display: 0, show: true, position: [-50, 0] });
+              if (!o.text.some((field) => field.description === 'Ref'))
+                o.text.push({ description: 'Ref', value: 'H?', display: 0, show: true, position: [-50, 12] });
             }
             let hints = node.getElementsByTagName('HINT');
             for (let j = 0; j < hints.length; ++j) {
@@ -1904,9 +1935,23 @@ export class ioXML {
     return selected_imagedef;
   }
 
+  private unresolvedChildSymbol(path: string): libSymbol {
+    const rectangle: dsnRectangle = {
+      NodeName: DocItemTypes.Rectangle, _id: get_global_id(),
+      point: [-65, -35], point_b: [0, 0], stroked: true,
+      line_colour: '#a65100', line_width: 1, line_pattern: 2,
+      filled: false, hatch: 0, fill_colour: '#ffffff',
+    };
+    return {
+      id: -get_global_id(), uid: null, parts: 1, heterogeneous: false,
+      description: '', name: { value: path, type: 0 }, ref: { value: 'H?', type: 0 },
+      outlines: [{ items: [rectangle], size: [65, 35], ref_point: [0, 0], active_points: [] }],
+    };
+  }
+
   private symboldef(root: any, sheet: dsnSheet, sId: string) {
     const s = parseInt(sId, 10);
-    if (s in sheet.symbols) {
+    if (Object.hasOwn(sheet.symbols, s)) {
       return sheet.symbols[s];
     }
     let symbols = root.getElementsByTagName('SYMBOLDEF');

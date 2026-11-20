@@ -296,3 +296,26 @@
   border: none;
   box-shadow: none !important;
 }
+
+
+.hierarchy-panel {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-top: 1px solid var(--colorNeutralStroke1);
+  background: var(--colorNeutralBackground2);
+}
+
+.hierarchy-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hierarchy-usages {
+  max-height: 8em;
+  margin: 0;
+  padding-left: 12px;
+  overflow: auto;
+  list-style: none;
+}

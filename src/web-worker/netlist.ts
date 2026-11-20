@@ -34,6 +34,7 @@ export function makeNetForSheet(
   sheet: dsnSheet,
   netlist_builder: NetlistGenerator,
 ) {
+  if (sheet.hierarchicalSymbol) return;
   // Here is some temporary data for this function
   let Powers: { [key: string]: any } = {};
   let Connected: { [key: string]: any } = {};

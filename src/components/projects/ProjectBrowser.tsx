@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -27,9 +27,14 @@ import {
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { saveAs } from 'file-saver';
-import { isProjectFile, projectFileTitle } from '../../../shared/projectFiles';
+import {
+  isProjectFile,
+  projectFileTitle,
+  MAX_PROJECT_FILE_BYTES,
+} from '../../../shared/projectFiles';
 import { fileOpenProject } from '../../io/files';
 import {
+  addProjectSchematic,
   createProjectFile,
   duplicateProject,
   projectFilesChanged,
@@ -57,6 +62,11 @@ interface ProjectContext {
   parent: ProjectLocation;
   project: LoadedProject;
 }
+
+import { childInterface, hierarchyDefinition } from '../../io/hierarchyDrawing';
+import { readProjectSchematic } from '../../io/projectHierarchy';
+import { DocActionTypes } from '../../state/actions/docActions';
+import { activeSheet } from '../../state/stores/docStoreReducer';
 
 interface NamePrompt {
   title: string;
@@ -95,6 +105,7 @@ export default function ProjectBrowser() {
     name: string;
     inventory: RevisionInventory;
   }>();
+  const importSchematic = useRef<HTMLInputElement>(null);
   const [comparison, setComparison] = useState<ProjectRevisionComparison>();
   const drive = process.env.TARGET_SYSTEM === 'google';
   const storageKey = `tinycad.driveProjectFolder.${userId || ''}`;
@@ -324,6 +335,62 @@ export default function ProjectBrowser() {
     });
   };
 
+  const schematicPath = (name: string) =>
+    (relativePrefix ? relativePrefix + '/' : '') +
+    (/\.d[sz]n$/i.test(name) ? name : name + '.dsn');
+
+  const addSchematic = async (
+    name: string,
+    file?: File,
+    useExisting = false,
+  ) => {
+    const { marker, root } = context;
+    if (file && file.size > MAX_PROJECT_FILE_BYTES)
+      throw new Error(t('hierarchy.fileTooLarge'));
+    await addProjectSchematic(
+      { id: marker.id, rootId: root.id },
+      schematicPath(name),
+      file ? new Uint8Array(await file.arrayBuffer()) : undefined,
+      useExisting,
+    );
+  };
+
+  const canPlace = (entryId: string) =>
+    !!activeProject &&
+    activeProject.id === context?.marker.id &&
+    activeProject.entryId !== entryId &&
+    !activeProject.hierarchyTrail?.some(
+      ({ entryId: ancestor }) => ancestor === entryId,
+    ) &&
+    !editingLibrary;
+
+  const placeChild = (link: (typeof linkedPaths)[number]) =>
+    run(async () => {
+      const initial = store.getState();
+      const sheet = activeSheet(initial.docStore.present);
+      if (!sheet || sheet.hierarchicalSymbol || sheet.kind === 'simulation')
+        throw new Error(t('hierarchy.circuitOnly'));
+      const loaded = await readProject(context.marker.id, context.root.id);
+      const entry = loaded.settings.entries.find(
+        ({ kind, id }) => kind === 'schematic' && id === link.id,
+      );
+      if (!entry) throw new Error(t('hierarchy.noChild'));
+      const drawing = await readProjectSchematic(loaded, entry);
+      const art = await childInterface(drawing, entry.path.split('/').pop());
+      const current = store.getState();
+      if (
+        current.altStore.file !== initial.altStore.file ||
+        activeSheet(current.docStore.present) !== sheet
+      )
+        return;
+      dispatch({
+        type: DocActionTypes.PlaceChild,
+        source: sheet,
+        definition: hierarchyDefinition(sheet, art),
+        link: { path: entry.path, documentId: entry.id, cached: true },
+      });
+    }, false);
+
   const visibleItems = items.filter((item) =>
     item.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
   );
@@ -406,6 +473,23 @@ export default function ProjectBrowser() {
               >
                 {t('projects.newProject')}
               </MenuItem>
+              {context && (
+                <>
+                  <MenuItem
+                    onClick={() =>
+                      setPrompt({
+                        title: t('hierarchy.newSchematic'),
+                        submit: (name) => addSchematic(name),
+                      })
+                    }
+                  >
+                    {t('hierarchy.newSchematic')}
+                  </MenuItem>
+                  <MenuItem onClick={() => importSchematic.current.click()}>
+                    {t('hierarchy.importSchematic')}
+                  </MenuItem>
+                </>
+              )}
               <MenuItem
                 disabled={!folder || treeMode || editingLibrary}
                 onClick={() =>
@@ -450,6 +534,22 @@ export default function ProjectBrowser() {
           </MenuPopover>
         </Menu>
       </div>
+      <input
+        ref={importSchematic}
+        type="file"
+        hidden
+        accept=".dsn,.dzn"
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0];
+          event.currentTarget.value = '';
+          if (file && context)
+            setPrompt({
+              title: t('hierarchy.importSchematic'),
+              name: file.name,
+              submit: (name) => addSchematic(name, file),
+            });
+        }}
+      />
       <Input
         size="small"
         value={search}
@@ -466,151 +566,182 @@ export default function ProjectBrowser() {
         <Spinner size="tiny" label={t('projects.loading')} />
       ) : (
         <ul className="project-browser-list">
-          {visibleItems.map((item) => (
-            <li key={item.id}>
-              <Button
-                size="small"
-                className="project-file-label"
-                title={item.name}
-                appearance={selected?.id === item.id ? 'primary' : 'subtle'}
-                icon={item.folder ? <FolderRegular /> : <DocumentRegular />}
-                disabled={blocked || item.unsupported}
-                onClick={() => open(item)}
-              >
-                {item.name}
-              </Button>
-              <Menu>
-                <MenuTrigger disableButtonEnhancement>
-                  <Button
-                    size="small"
-                    appearance="subtle"
-                    icon={<MoreHorizontalRegular />}
-                    aria-label={t('projects.itemActions', { name: item.name })}
-                    disabled={blocked}
-                  />
-                </MenuTrigger>
-                <MenuPopover>
-                  <MenuList>
-                    <MenuItem
-                      icon={<FolderOpenRegular />}
-                      disabled={item.unsupported}
-                      onClick={() => open(item)}
-                    >
-                      {t('projects.open')}
-                    </MenuItem>
-                    <MenuItem
-                      disabled={protectedItem(item)}
-                      onClick={() =>
-                        setPrompt({
-                          title: t('common.rename'),
-                          name: item.name,
-                          submit: async (name) => {
-                            await changeLocation(
-                              item,
-                              !item.folder && isProjectFile(item.name)
-                                ? projectFileName(name)
-                                : name,
-                            );
-                          },
-                        })
-                      }
-                    >
-                      {t('common.rename')}
-                    </MenuItem>
-                    <MenuItem
-                      disabled={protectedItem(item)}
-                      onClick={() => setCut({ item, from: folder.id })}
-                    >
-                      {t('projects.cut')}
-                    </MenuItem>
-                    {!item.folder && isProjectFile(item.name) && (
+          {visibleItems.map((item) => {
+            const link = linkedPaths.find(
+              ({ path }) =>
+                path.toLowerCase() === relativePath(item).toLowerCase(),
+            );
+            return (
+              <li key={item.id}>
+                <Button
+                  size="small"
+                  className="project-file-label"
+                  title={item.name}
+                  appearance={selected?.id === item.id ? 'primary' : 'subtle'}
+                  icon={item.folder ? <FolderRegular /> : <DocumentRegular />}
+                  disabled={blocked || item.unsupported}
+                  onClick={() => open(item)}
+                >
+                  {item.name}
+                </Button>
+                <Menu>
+                  <MenuTrigger disableButtonEnhancement>
+                    <Button
+                      size="small"
+                      appearance="subtle"
+                      icon={<MoreHorizontalRegular />}
+                      aria-label={t('projects.itemActions', {
+                        name: item.name,
+                      })}
+                      disabled={blocked}
+                    />
+                  </MenuTrigger>
+                  <MenuPopover>
+                    <MenuList>
                       <MenuItem
-                        disabled={atProjectRoot && !context.parent && !drive}
+                        icon={<FolderOpenRegular />}
+                        disabled={item.unsupported}
+                        onClick={() => open(item)}
+                      >
+                        {t('projects.open')}
+                      </MenuItem>
+                      {link?.kind === 'schematic' && canPlace(link.id) && (
+                        <MenuItem onClick={() => void placeChild(link)}>
+                          {t('hierarchy.placeChild')}
+                        </MenuItem>
+                      )}
+                      {context &&
+                        !link &&
+                        !item.folder &&
+                        !item.unsupported &&
+                        /\.d[sz]n$/i.test(item.name) && (
+                          <MenuItem
+                            onClick={() =>
+                              void run(() =>
+                                addSchematic(item.name, undefined, true),
+                              )
+                            }
+                          >
+                            {t('hierarchy.registerSchematic')}
+                          </MenuItem>
+                        )}
+                      <MenuItem
+                        disabled={protectedItem(item)}
                         onClick={() =>
                           setPrompt({
-                            title: t('projects.duplicate'),
-                            name: projectFileTitle(item.name) + '-copy',
+                            title: t('common.rename'),
+                            name: item.name,
                             submit: async (name) => {
-                              await duplicateProject(
-                                atProjectRoot
-                                  ? context.parent?.id ?? 'root'
-                                  : folder.id,
-                                name,
-                                { id: item.id, rootId: folder.id },
+                              await changeLocation(
+                                item,
+                                !item.folder && isProjectFile(item.name)
+                                  ? projectFileName(name)
+                                  : name,
                               );
                             },
                           })
                         }
                       >
-                        {t('projects.duplicate')}
+                        {t('common.rename')}
                       </MenuItem>
-                    )}
-                    {!item.folder && isProjectFile(item.name) && (
                       <MenuItem
-                        icon={<ArrowDownloadRegular />}
-                        onClick={() =>
-                          run(async () => {
-                            const { data } = await projectRequest({
-                              operation: 'read',
-                              id: item.id,
-                            });
-                            download(item.name, data);
-                          }, false)
-                        }
+                        disabled={protectedItem(item)}
+                        onClick={() => setCut({ item, from: folder.id })}
                       >
-                        {t('projects.downloadSettings')}
+                        {t('projects.cut')}
                       </MenuItem>
-                    )}
-                    {!item.folder && isProjectFile(item.name) && (
-                      <MenuItem
-                        onClick={() =>
-                          run(async () => {
-                            const inventory = await savedProjectRevision(
-                              item.id,
-                              folder.id,
-                            );
-                            setRevisionBase({ name: item.name, inventory });
-                          }, false)
-                        }
-                      >
-                        {t('projects.setBaseRevision')}
-                      </MenuItem>
-                    )}
-                    {!item.folder &&
-                      isProjectFile(item.name) &&
-                      revisionBase && (
+                      {!item.folder && isProjectFile(item.name) && (
                         <MenuItem
+                          disabled={atProjectRoot && !context.parent && !drive}
+                          onClick={() =>
+                            setPrompt({
+                              title: t('projects.duplicate'),
+                              name: projectFileTitle(item.name) + '-copy',
+                              submit: async (name) => {
+                                await duplicateProject(
+                                  atProjectRoot
+                                    ? context.parent?.id ?? 'root'
+                                    : folder.id,
+                                  name,
+                                  { id: item.id, rootId: folder.id },
+                                );
+                              },
+                            })
+                          }
+                        >
+                          {t('projects.duplicate')}
+                        </MenuItem>
+                      )}
+                      {!item.folder && isProjectFile(item.name) && (
+                        <MenuItem
+                          icon={<ArrowDownloadRegular />}
                           onClick={() =>
                             run(async () => {
-                              const before = revisionBase.inventory;
-                              const after = await savedProjectRevision(
-                                item.id,
-                                folder.id,
-                              );
-                              setComparison({
-                                before,
-                                after,
-                                changes: compareProjectRevisions(before, after),
+                              const { data } = await projectRequest({
+                                operation: 'read',
+                                id: item.id,
                               });
+                              download(item.name, data);
                             }, false)
                           }
                         >
-                          {t('projects.compareWithBase', {
-                            name: revisionBase.name,
-                          })}
+                          {t('projects.downloadSettings')}
                         </MenuItem>
                       )}
-                    <MenuItem
-                      disabled={protectedItem(item)}
-                      onClick={() => setTrash(item)}
-                    >
-                      {t('projects.trash')}
-                    </MenuItem>
-                  </MenuList>
-                </MenuPopover>
-              </Menu>
-            </li>
-          ))}
+                      {!item.folder && isProjectFile(item.name) && (
+                        <MenuItem
+                          onClick={() =>
+                            run(async () => {
+                              const inventory = await savedProjectRevision(
+                                item.id,
+                                folder.id,
+                              );
+                              setRevisionBase({ name: item.name, inventory });
+                            }, false)
+                          }
+                        >
+                          {t('projects.setBaseRevision')}
+                        </MenuItem>
+                      )}
+                      {!item.folder &&
+                        isProjectFile(item.name) &&
+                        revisionBase && (
+                          <MenuItem
+                            onClick={() =>
+                              run(async () => {
+                                const before = revisionBase.inventory;
+                                const after = await savedProjectRevision(
+                                  item.id,
+                                  folder.id,
+                                );
+                                setComparison({
+                                  before,
+                                  after,
+                                  changes: compareProjectRevisions(
+                                    before,
+                                    after,
+                                  ),
+                                });
+                              }, false)
+                            }
+                          >
+                            {t('projects.compareWithBase', {
+                              name: revisionBase.name,
+                            })}
+                          </MenuItem>
+                        )}
+                      <MenuItem
+                        disabled={protectedItem(item)}
+                        onClick={() => setTrash(item)}
+                      >
+                        {t('projects.trash')}
+                      </MenuItem>
+                    </MenuList>
+                  </MenuPopover>
+                </Menu>
+              </li>
+            );
+          })}
           {!visibleItems.length && folder && !error && (
             <li className="project-browser-status">
               {t(search ? 'projects.noMatches' : 'projects.empty')}
@@ -621,6 +752,15 @@ export default function ProjectBrowser() {
       {atProjectRoot && (
         <div className="project-browser-contents">
           <strong>{context.project.settings.title}</strong>
+          {context.project.missingSchematics.length > 0 && (
+            <span role="status">
+              {t('hierarchy.unread', {
+                paths: context.project.missingSchematics
+                  .map(({ path }) => path)
+                  .join(', '),
+              })}
+            </span>
+          )}
           {context.project.settings.entries
             .filter(({ kind }) => kind === 'schematic')
             .map((entry) => (
@@ -635,7 +775,7 @@ export default function ProjectBrowser() {
               >
                 {entry.id === context.project.settings.primarySchematic
                   ? t('projects.schematic')
-                  : entry.path}
+                  : t('hierarchy.openSchematicName', { path: entry.path })}
               </Button>
             ))}
         </div>

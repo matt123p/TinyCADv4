@@ -79,6 +79,7 @@ export class updateDrawing {
     let bom: dsnBomEntry[] = [];
     const update_sheet = new updateView();
     for (var i = 0; i < drawing.sheets.length; ++i) {
+      if (drawing.sheets[i].hierarchicalSymbol) continue;
       bom = update_sheet.makeBomForSheet(drawing.sheets[i], bom);
     }
     bom.sort((a, b) => a.Name.localeCompare(b.Name));

@@ -1,3 +1,4 @@
+import { hasChildPlacements } from '../io/hierarchyDrawing';
 import { checkSpiceComponents, locateSpiceErrors } from './diagnostics';
 import { NetlistData } from '../io/netlists/netlistGenerator';
 import { dsnDrawing, DrcError } from '../model/dsnDrawing';
@@ -128,6 +129,8 @@ export async function runSimulation(
   };
   publish();
   try {
+    if (hasChildPlacements(drawing))
+      throw new Error('Hierarchical drawings need instance-aware connectivity before simulation.');
     const circuit = {
       ...drawing,
       sheets: drawing.sheets.filter((sheet) => sheet.kind !== 'simulation'),

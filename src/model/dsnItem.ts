@@ -199,10 +199,18 @@ export interface dsnSymbolHint {
   net: string;
 }
 
+export interface HierarchicalLink {
+  /** Native links store a root-relative path and the child UUID. v3 links only have a locator. */
+  path: string;
+  documentId?: string;
+  cached: boolean;
+}
+
 export interface dsnSymbol extends dsnPointBase, Text {
   NodeName: DocItemTypes.Symbol;
   /** Stable identity of this placed schematic unit. */
   unitId?: string;
+  hierarchy?: HierarchicalLink;
   show_power: boolean;
   allow_resize: boolean;
   scale_x: number;

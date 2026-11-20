@@ -91,6 +91,7 @@ export class PinPanel extends React.PureComponent<
             />
             <Input
               type="text"
+              aria-label={t('panel.pin.name')}
               value={this.props.selectedPin.name}
               onChange={(e, data) =>
                 this.props.dispatch(

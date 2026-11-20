@@ -183,7 +183,8 @@ test('lists bus, hierarchy and multipart capability gaps by source item or sheet
       'PORT',
     )}</HierarchicalSymbol></TinyCADSheets>`,
   );
-  drawing.sheets[0].items.push({
+  const interfaceSheet = drawing.sheets.find((sheet) => sheet.hierarchicalSymbol);
+  drawing.sheets.find((sheet) => !sheet.hierarchicalSymbol).items.push({
     NodeName: 'buswire',
     _id: 32767,
     d_points: [
@@ -194,12 +195,12 @@ test('lists bus, hierarchy and multipart capability gaps by source item or sheet
   const issues = api.auditPcbSchematic(drawing);
   assert.deepEqual(
     issues.map((issue) => issue.code),
-    ['multipart', 'reference', 'multipart', 'bus', 'hierarchy'],
+    ['hierarchy', 'multipart', 'reference', 'multipart', 'bus'],
   );
   assert.equal(issues.find((issue) => issue.code === 'bus').itemId, 32767);
   assert.equal(
     issues.find((issue) => issue.code === 'hierarchy').sheetId,
-    drawing.sheets[1].id,
+    interfaceSheet.id,
   );
   const netlist = new api.NetlistWorkerState().init(drawing);
   assert.deepEqual(

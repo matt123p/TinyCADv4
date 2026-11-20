@@ -4,9 +4,14 @@ import { NetlistData } from '../../io/netlists/netlistGenerator';
 import { dsnDrawing, dsnSheet, NetlistTypes, Size } from '../../model/dsnDrawing';
 import { LayoutChange } from '../../layout/types';
 import { Coordinate } from '../../model/dsnItem';
+import type { dsnSymbol, HierarchicalLink } from '../../model/dsnItem';
+import type { libSymbol } from '../../model/dsnDrawing';
 import type { OpenProjectDrawing } from '../../io/projectStorage';
 
 export enum DocActionTypes {
+  AddHierarchySheet = '[Document] AddHierarchySheet',
+  PlaceChild = '[Document] PlaceChild',
+  RefreshChild = '[Document] RefreshChild',
   ApplyChatLibrary = '[Document] ApplyChatLibrary',
   ApplyChatEdit = '[Document] ApplyChatEdit',
   ApplyAutoLayout = '[Document] ApplyAutoLayout',
@@ -121,7 +126,27 @@ export interface ApplyChatLibrary {
   drawing: dsnDrawing;
 }
 
+export interface AddHierarchySheet { type: DocActionTypes.AddHierarchySheet }
+
+export interface PlaceChild {
+  type: DocActionTypes.PlaceChild;
+  source: dsnSheet;
+  link: HierarchicalLink;
+  definition: libSymbol;
+}
+
+export interface RefreshChild {
+  type: DocActionTypes.RefreshChild;
+  source: dsnSheet;
+  placement: dsnSymbol;
+  definition: libSymbol;
+  link: HierarchicalLink;
+}
+
 export type DocActions =
+  | AddHierarchySheet
+  | PlaceChild
+  | RefreshChild
   | ApplyChatLibrary
   | ApplyChatEdit
   | ApplyAutoLayout

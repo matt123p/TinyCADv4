@@ -289,6 +289,7 @@ export class updateSymbol
   }
 
   getContextMenu(items: ContextMenuList) {
+    if (this.item.hierarchy) return items;
     return [
       ...items.slice(0, 4),
       {

@@ -1,4 +1,5 @@
 import undoable from 'redux-undo';
+import { DocItemTypes } from '../../model/dsnItem';
 
 import { StateWithHistory } from 'redux-undo';
 import { activeSheet, docStore, DocStoreReducer } from '../stores/docStoreReducer';
@@ -23,6 +24,7 @@ const reduceWithHistory = undoable(DocStoreReducer, {
     currentState: docStore,
     previousHistory: StateWithHistory<docStore>,
   ) => {
+    if (action.type === DocActionTypes.PlaceChild) return false;
     if (action.type === 'simulation/diagnostics' || action.type === 'simulation/panel') return false;
     const now = new Date();
     needHistory =
@@ -49,6 +51,10 @@ const reduceWithHistory = undoable(DocStoreReducer, {
       }
       undoCheckpoint = true;
     }
+    if (action.type === DocActionTypes.AddHierarchySheet || action.type === DocActionTypes.RefreshChild ||
+      (action.type === MenuActionTypes.MenuEditor && previousHistory.present.view.add?.NodeName === DocItemTypes.Symbol &&
+        'hierarchy' in previousHistory.present.view.add && !currentState.view.add &&
+        currentState.drawing !== previousHistory.present.drawing)) undoCheckpoint = true;
     if (!!currentState.view.add) {
       undoCheckpoint = false;
     }
@@ -72,6 +78,10 @@ export function DocStoreWithHistory(
   state: StateWithHistory<docStore> | undefined,
   action: AppActionTypes,
 ): StateWithHistory<docStore> {
+  if (state && (action.type === DocActionTypes.AddHierarchySheet ||
+      action.type === DocActionTypes.RefreshChild || action.type === DocActionTypes.PlaceChild)) {
+    state = { ...state, _latestUnfiltered: state.present };
+  }
   if (state && action.type === MenuActionTypes.MenuSetStyle && action.style.image) {
     state = { ...state, _latestUnfiltered: state.present };
   }

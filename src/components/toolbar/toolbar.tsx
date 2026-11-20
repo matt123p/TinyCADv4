@@ -213,6 +213,7 @@ interface ToolbarProps {
   saveNeeded: boolean;
   editLibrary: tclib;
   editSymbol: tclibLibraryEntry;
+  hierarchyInterface: boolean;
   recentFiles: CurrentFile[];
   dispatch: Dispatch<any>;
 }
@@ -810,7 +811,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         <span ref={props.simulationToolbarRef} style={{ display: 'contents' }} />
         {!props.simulationSheet && <>
         {/* Pin (Only if editing symbol) */}
-        {props.editSymbol && process.env.TARGET_SYSTEM !== 'electron' && (
+        {(props.hierarchyInterface || (props.editSymbol && process.env.TARGET_SYSTEM !== 'electron')) && (
           <ToolbarButton
             aria-label={t('toolbar.pin')}
             title={t('toolbar.pin')}

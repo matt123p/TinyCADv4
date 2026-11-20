@@ -38,6 +38,7 @@ test('example controls live in the browser title bar and explanation survives hi
   await page.goto(app.baseURL);
   await expect(page.getByRole('button', { name: 'Projects', exact: true })).toHaveCount(0);
   expect(app.hasSourceAsset('src/components/projects/ProjectBrowser.tsx')).toBe(false);
+  expect(app.hasSourceAsset('src/components/projects/HierarchyPanel.tsx')).toBe(false);
   expect(app.hasSourceAsset('src/pcb/projectSettings.ts')).toBe(false);
   expect(app.hasSourceAsset('src/pcb/boardCodec.ts')).toBe(false);
   const header = page.locator('.top-bar-right');

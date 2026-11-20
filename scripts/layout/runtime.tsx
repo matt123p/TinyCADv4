@@ -26,6 +26,7 @@ export { labelGroups } from '../../src/layout/labelGroups';
 export { blank } from '../../src/io/ioXml';
 export { decodeDrawing, encodeDrawing } from '../../src/io/dsnCodec';
 export { initialiseLayoutRuntime } from './headless';
+export { childPath, childInterface, hierarchyDefinition, refreshPlacement, affectedPorts } from '../../src/io/hierarchyDrawing';
 export { ioXML } from '../../src/io/ioXml';
 export { XMLBuilder } from '../../src/util/xmlbuilder';
 export { updateSymbol } from '../../src/manipulators/updateSymbol';

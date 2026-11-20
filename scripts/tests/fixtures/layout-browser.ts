@@ -1,6 +1,6 @@
 import { store } from '../../../src/startup';
 import { activeSheet } from '../../../src/state/stores/docStoreReducer';
-import { actionEditorEvent, actionSetDocument, actionSetLibraryList, actionSheetRename } from '../../../src/state/dispatcher/AppDispatcher';
+import { actionCommand, actionEditorEvent, actionSetDocument, actionSetLibraryList, actionSheetRename } from '../../../src/state/dispatcher/AppDispatcher';
 import { ioXML } from '../../../src/io/ioXml';
 import { XMLBuilder } from '../../../src/util/xmlbuilder';
 
@@ -18,6 +18,8 @@ import { XMLBuilder } from '../../../src/util/xmlbuilder';
     return {
       drawing: current.drawing,
       drawingVersion: current.drawingVersion,
+      sheet: current.view.selected_sheet,
+      adding: current.view.add,
       selectedIds: current.view._selected_array,
       past: store.getState().docStore.past.length,
     };
@@ -31,6 +33,15 @@ import { XMLBuilder } from '../../../src/util/xmlbuilder';
     const builder = new XMLBuilder();
     builder.fromText(xml);
     store.dispatch(actionSetDocument(new ioXML().from_dsn(builder), 'Reopened.dsn', null, null));
+  },
+  command(name: string) { store.dispatch(actionCommand(name)); },
+  pointer(event: string, point: [number, number]) {
+    store.dispatch(actionEditorEvent(event, point, [0, 0], point, { x: 0, y: 0 }, 0));
+  },
+  selectItem(id: number) {
+    const sheet = activeSheet(store.getState().docStore.present);
+    store.dispatch({ type: '[Find] SetFindSelection', mode: 2,
+      selection: { id, sheet: sheet.name, a: [0, 0], text: '', symbol: '' } } as any);
   },
   selectLabel(text: string) {
     const state = store.getState();

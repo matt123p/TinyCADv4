@@ -10,6 +10,7 @@ const mapStateToProps = (state: docDrawing) => {
   const update_view = new updateView();
   return {
     simulationPanelVisible: state.altStore.simulationPanelVisible,
+    hierarchyInterface: !!sheet?.hierarchicalSymbol,
     simulationSheet: !state.docStore.present.editSymbol && sheet?.kind === 'simulation',
     menu_command: view.menu_command,
     wireMode: view.wireMode ?? '90',

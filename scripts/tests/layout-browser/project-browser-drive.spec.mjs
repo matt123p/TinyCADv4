@@ -27,6 +27,11 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
     { x: 0, y: 2_000_000 },
   ]);
   const boardData = await api.encodeBoard(board);
+  const child =
+    await api.decodeDrawing(`<TinyCADSheets><HierarchicalSymbol><NAME>Interface</NAME>
+    <PIN pos="20,30" direction="3" which="0" elec="0" number="1" length="20" number_pos="0" centre_name="0" part="0" show="1">DATA</PIN>
+    </HierarchicalSymbol><TinyCAD><NAME>Child circuit</NAME></TinyCAD></TinyCADSheets>`);
+  const childData = await api.encodeDrawing(child, 'xml');
   const settings = api.encodeProjectSettings({
     projectId: crypto.randomUUID(),
     revisionId: crypto.randomUUID(),
@@ -37,6 +42,7 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
     entries: [
       { kind: 'schematic', id: drawing.documentId, path: 'src/Circuit.dzn' },
       { kind: 'board', id: board.boardId, path: 'Board.dpn' },
+      { kind: 'schematic', id: child.documentId, path: 'src/Child.dsn' },
     ],
   });
   await page.addInitScript(() => {
@@ -95,6 +101,7 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
           },
         ],
         source: [
+          { id: 'child', name: 'Child.dsn', mimeType: 'application/xml' },
           {
             id: 'drawing',
             name: 'Circuit.dzn',
@@ -109,7 +116,12 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
       const file = url.pathname.split('/').at(-1);
       return route.fulfill({
         body: Buffer.from(
-          { drawing: data, board: boardData, project: settings }[file],
+          {
+            drawing: data,
+            board: boardData,
+            project: settings,
+            child: childData,
+          }[file],
         ),
         contentType:
           file === 'drawing' ? 'application/octet-stream' : 'application/xml',
@@ -213,4 +225,38 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
     )
     .toBe(drawing.documentId);
   await expect(recovery).toHaveCount(0);
+  await sidebar.getByRole('button', { name: 'src', exact: true }).click();
+  await sidebar
+    .getByRole('button', { name: 'Actions for Child.dsn', exact: true })
+    .click();
+  await page.getByRole('menuitem', { name: 'Place as child symbol' }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.layoutTest.snapshot().adding?.hierarchy?.path),
+    )
+    .toBe('src/Child.dsn');
+  await page.evaluate(() =>
+    window.layoutTest.pointer('lbuttondown', [350, 350]),
+  );
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(() => version).toBe(3);
+  const parent = await api.decodeDrawing(data);
+  expect(parent.sheets[0].items[0].hierarchy).toEqual({
+    path: 'src/Child.dsn',
+    documentId: child.documentId,
+    cached: true,
+  });
+  const hierarchy = page.getByRole('region', { name: 'Schematic hierarchy' });
+  await hierarchy.getByRole('button', { name: 'Open child schematic' }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.layoutTest.snapshot().drawing.documentId),
+    )
+    .toBe(child.documentId);
+  await hierarchy.getByRole('button', { name: 'Back to parent' }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.layoutTest.snapshot().drawing.documentId),
+    )
+    .toBe(drawing.documentId);
 });

@@ -1,3 +1,4 @@
+import { hasChildPlacements } from './hierarchyDrawing';
 import { apiServer, tinycadUrl } from './apiServer';
 import { withoutResults } from '../simulation/document';
 import { drawingFileName, isCompressedDrawing } from '../../shared/drawingFiles.js';
@@ -1000,13 +1001,19 @@ export function handleMenuCommand(command: string) {
         dispatch(actionSelectDialog('netlist', null));
         break;
       case 'tools-spice':
+        if (hasChildPlacements(state.docStore.present.drawing)) {
+          dispatch(actionSelectDialog('io_failure', { message: 'Hierarchical drawings need instance-aware connectivity before exporting a netlist.' }));
+          break;
+        }
         wkrGenerateNetlist(state.docStore.present.drawing).then((netlist) => {
           dispatch(actionUpdateNetlistHints(netlist));
           downloadNetlist(state.altStore.file.name, 'SPICE', netlist);
         });
         break;
       case 'tools-vhdl':
-        if (process.env.TARGET_SYSTEM !== 'electron') {
+        if (process.env.TARGET_SYSTEM !== 'electron') break;
+        if (hasChildPlacements(state.docStore.present.drawing)) {
+          dispatch(actionSelectDialog('io_failure', { message: 'Hierarchical drawings need instance-aware connectivity before exporting a netlist.' }));
           break;
         }
         wkrGenerateNetlist(state.docStore.present.drawing).then((netlist) => {

@@ -20,10 +20,21 @@ export interface ProjectFile extends ProjectLocation {
   version: string;
 }
 
+export interface HierarchyFrame {
+  entryId: string;
+  sheetId: string;
+  placementId: string;
+  reference: string;
+  name: string;
+}
+
 export interface OpenProjectDrawing extends ProjectFile {
   entryId: string;
   rootId: string;
   documentPath: string;
+  hierarchyTrail?: readonly HierarchyFrame[];
+  openSheetId?: string;
+  openPlacementId?: string;
   folderId: string;
 }
 

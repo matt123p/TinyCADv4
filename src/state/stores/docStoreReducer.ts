@@ -10,9 +10,12 @@ import {
   AppActionTypes,
   Panels,
   BottomPanels,
+  actionSelectDialog,
 } from '../dispatcher/AppDispatcher';
 import update from 'immutability-helper';
 
+import { hasChildPlacements, isChildPlacement, refreshPlacement } from '../../io/hierarchyDrawing';
+import { newSchematicEntityId } from '../../model/schematicIdentity';
 import { DocActionTypes } from '../actions/docActions';
 import { get_global_id } from '../../util/global_id';
 import { MenuActionTypes } from '../actions/menuActions';
@@ -318,21 +321,65 @@ export function DocStoreReducer(
       });
       break;
 
+    case DocActionTypes.AddHierarchySheet: {
+      const sheets = state.drawing.sheets;
+      if (state.editLibrary || sheets.some(({ hierarchicalSymbol }) => hierarchicalSymbol)) break;
+      const base = sheets.find(({ kind }) => kind !== 'simulation');
+      if (!base) break;
+      const interfaceSheet: dsnSheet = {
+        ...base, id: newSchematicEntityId(), name: 'Hierarchical Symbol',
+        hierarchicalSymbol: true, items: [], symbols: {}, images: {}, hatches: [],
+        details: { ...base.details, show_details: false, show_guides: false },
+      };
+      state = { ...state, drawing: { ...state.drawing, sheets: [interfaceSheet, ...sheets] } };
+      view = { ...update_view.cancel_add(view, interfaceSheet).view, selected_sheet: 0, _selected_array: [], hiddenItemIds: [] };
+      sheet = null;
+      break;
+    }
+
+    case DocActionTypes.PlaceChild:
+      if (sheet === action.source && !sheet.hierarchicalSymbol && !state.editLibrary) {
+        const used = new Set(state.drawing.sheets.flatMap(s => s.items.flatMap(item =>
+          item.NodeName === DocItemTypes.Symbol ? [item.text.find(field => field.description === 'Ref')?.value?.toUpperCase()] : [],
+        )));
+        let index = 1;
+        while (used.has('H' + index)) index++;
+        view = update_view.beginHierarchyPlacement(view, sheet, action.definition, action.link, 'H' + index);
+      }
+      break;
+
+    case DocActionTypes.RefreshChild:
+      if (sheet === action.source && sheet.items.includes(action.placement) && isChildPlacement(action.placement)) {
+        const refreshed = refreshPlacement(action.placement, action.link, action.definition);
+        sheet = update_view.tidy_wires({
+          ...sheet, items: sheet.items.map(item => item === action.placement ? refreshed : item),
+          symbols: { ...sheet.symbols, [action.definition.id]: action.definition },
+        });
+      }
+      break;
+
     // Load a completely new document
     case DocActionTypes.SetDocument:
       let new_drawing = resizeStudentInstruments(action.doc);
       for (let i = 0; i < new_drawing.sheets.length; ++i) {
         if (new_drawing.sheets[i].kind !== 'simulation') new_drawing.sheets[i] = update_view.tidy_wires(new_drawing.sheets[i]);
       }
+      const initialSheet = action.project?.openSheetId
+        ? Math.max(0, new_drawing.sheets.findIndex(s => s.id === action.project.openSheetId))
+        : 0;
+      const placement = action.project?.openPlacementId &&
+        new_drawing.sheets[initialSheet]?.items.find(i => isChildPlacement(i) && i.unitId === action.project.openPlacementId);
+      const newView: dsnView = {
+        ...update_view.cancel_add(state.view, new_drawing.sheets[initialSheet]).view,
+        selected_sheet: initialSheet, hiddenItemIds: [], _selected_array: placement ? [placement._id] : [],
+        _selected_handle: 0, hover_obj: null,
+      };
       state = update(state, {
         drawing: { $set: new_drawing },
         drawingVersion: { $set: 0 },
         editLibrary: { $set: null },
         editSymbol: { $set: null },
-        view: {
-          selected_sheet: { $set: 0 },
-          hiddenItemIds: { $set: [] },
-        },
+        view: { $set: newView },
       });
       view = null;
       break;
@@ -370,6 +417,10 @@ export function DocStoreReducer(
       break;
 
     case DocActionTypes.BomGenerate:
+      if (hasChildPlacements(state.drawing)) {
+        setTimeout(() => getStore().dispatch(actionSelectDialog('io_failure', { message: 'Hierarchical drawings need instance-aware connectivity before generating a bill of materials.' })));
+        break;
+      }
       if (state.drawing) {
         const bom = update_drawing.makeBomForDrawing(state.drawing);
         state = update(state, {
@@ -662,6 +713,7 @@ export function DocStoreReducer(
     // Sheet operations
     //
     case MenuActionTypes.MenuSheetSelect:
+      if (view.add && isChildPlacement(view.add)) view = update_view.cancel_add(view, sheet).view;
       view = update(view, {
         selected_sheet: { $set: action.sheet_index },
       });
@@ -692,7 +744,7 @@ export function DocStoreReducer(
       break;
     case MenuActionTypes.MenuSheetRight:
       if (
-        view.selected_sheet < state.drawing.sheets.length - 1 &&
+        !sheet?.hierarchicalSymbol && view.selected_sheet < state.drawing.sheets.length - 1 &&
         !state.editSymbol
       ) {
         let sheets = state.drawing.sheets.slice();
@@ -750,6 +802,7 @@ export function DocStoreReducer(
       {
         let sheets = state.drawing.sheets.slice();
         let new_sheet: dsnSheet = {
+          id: newSchematicEntityId(),
           items: [],
           details: sheet.details,
           options: sheet.options,
@@ -773,7 +826,7 @@ export function DocStoreReducer(
       }
       break;
     case MenuActionTypes.MenuSheetRemove:
-      if (!state.editSymbol && state.drawing.sheets.length > 1 && (sheet?.kind === 'simulation' || state.drawing.sheets.filter(s => s.kind !== 'simulation').length > 1)) {
+      if (!state.editSymbol && state.drawing.sheets.length > 1 && (sheet?.kind === 'simulation' || sheet?.hierarchicalSymbol || state.drawing.sheets.filter(s => s.kind !== 'simulation' && !s.hierarchicalSymbol).length > 1)) {
         let sheets = state.drawing.sheets.slice();
         sheets.splice(view.selected_sheet, 1);
         let selected_sheet = view.selected_sheet;
