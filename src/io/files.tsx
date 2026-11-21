@@ -977,8 +977,8 @@ export function handleMenuCommand(command: string) {
       case 'tools-spice':
         wkrGenerateNetlist(state.docStore.present.drawing).then((netlist) => {
           dispatch(actionUpdateNetlistHints(netlist));
-          downloadNetlist(state.altStore.file.name, 'SPICE', netlist);
-        });
+          downloadNetlist(state.altStore.file.name, 'SPICE', netlist, state.docStore.present.drawing.spiceModelPacks);
+        }).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
         break;
       case 'tools-vhdl':
         if (process.env.TARGET_SYSTEM !== 'electron') {

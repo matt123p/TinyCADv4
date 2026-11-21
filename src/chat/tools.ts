@@ -8,6 +8,9 @@ import { ioXML } from '../io/ioXml';
 import { XMLBuilder } from '../util/xmlbuilder';
 import { docDrawing } from '../state/undo/undo';
 import { DocActionTypes } from '../state/actions/docActions';
+import { DocItemTypes, type dsnSymbol } from '../model/dsnItem';
+import { BUNDLED_SPICE_SYMBOL, bundledSpiceIdentity, hasCustomSpiceTemplate, modelBinding, symbolField } from '../simulation/catalogBindings';
+import { changeSpiceModel, inspectSpiceModel, searchSpiceModels, spiceSymbolPins } from '../simulation/spiceModelCatalog';
 import { toolSpecs, checkArguments } from './tool-specs';
 import { ToolExecutor, ToolResult } from './types';
 import { nativeCall } from './native-client';
@@ -48,6 +51,20 @@ export function createEditorTools(
   const found = new Map<number, any>();
   const bundledFound = new Map<string, string>();
   const present = () => (store.getState() as docDrawing).docStore.present;
+  function spiceTarget(reference?: string, sheetNumber?: number) {
+    const state = present();
+    if (state.editLibrary || state.editSymbol) throw new Error('Open a circuit drawing to use SPICE model tools.');
+    const matches = state.drawing.sheets.flatMap((sheet, index) => {
+      if (sheet.kind === 'simulation' || (sheetNumber !== undefined && index !== sheetNumber - 1)) return [];
+      if (!reference && index !== state.view.selected_sheet) return [];
+      return sheet.items.filter((item): item is dsnSymbol => item.NodeName === DocItemTypes.Symbol && (reference
+        ? symbolField(item, 'Ref')?.toLowerCase() === reference.toLowerCase()
+        : state.view._selected_array.includes(item._id)
+      )).map((symbol) => ({ sheet, sheetNumber: index + 1, symbol, reference: symbolField(symbol, 'Ref') }));
+    });
+    if (matches.length !== 1) throw new Error(matches.length ? 'Specify one unambiguous placed symbol and sheet.' : 'No matching placed symbol was found.');
+    return matches[0];
+  }
   const revision = () => {
     const { drawing, editLibrary: library, editSymbol: symbol } = present();
     const entries = revisions.get(drawing) || [];
@@ -218,6 +235,35 @@ export function createEditorTools(
     checkArguments(input, spec.parameters);
     const args: any = { ...input };
     if (signal.aborted) throw new DOMException('Stopped', 'AbortError');
+    if (name === 'search_spice_models') {
+      const target = args.reference || args.selected || args.sheet !== undefined ? spiceTarget(args.reference, args.sheet) : undefined;
+      const models = searchSpiceModels(args.query || '', target?.symbol);
+      return { data: { total: models.length, models: models.slice(0, args.limit ?? 10) } };
+    }
+    if (name === 'inspect_spice_target' || name === 'attach_spice_model') {
+      const target = spiceTarget(args.reference, args.sheet);
+      const { symbol, sheet, sheetNumber, reference } = target;
+      if (name === 'inspect_spice_target') {
+        const binding = modelBinding(symbol);
+        return { data: {
+          reference, sheet: sheetNumber, revision: revision(), pins: spiceSymbolPins(symbol),
+          template: symbolField(symbol, '$$SPICE'), customTemplate: hasCustomSpiceTemplate(symbol),
+          attachment: binding && { modelId: binding.modelId, source: binding.source, pins: binding.pins, parameters: binding.parameters },
+          ...(args.modelId || args.packId || args.revision ? { mapping: inspectSpiceModel(symbol, { id: args.modelId, packId: args.packId, revision: args.revision }) } : {}),
+        } };
+      }
+      const source = present().drawing;
+      if (args.baseRevision !== revision()) throw new Error('The drawing changed. Inspect the target again before attaching the model.');
+      const drawing = changeSpiceModel(source, sheet.id, symbol._id, {
+        modelId: args.modelId, packId: args.packId, revision: args.revision, pins: args.pins,
+        parameters: Object.fromEntries((args.parameters ?? []).map(({ name, value }: { name: string; value: string }) => [name, value])),
+        replaceExisting: args.replaceExisting === true,
+      });
+      store.dispatch({ type: 'simulation/catalog-model', source, drawing });
+      if (present().drawing !== drawing) throw new Error('The drawing changed during model attachment.');
+      const binding = modelBinding(spiceTarget(reference, sheetNumber).symbol);
+      return { data: { reference, sheet: sheetNumber, revision: revision(), modelId: binding.modelId, source: binding.source, pins: binding.pins, parameters: binding.parameters } };
+    }
     if (name === 'read_skill_reference') {
       await bundledLibraries.initialize();
       return {
@@ -531,6 +577,11 @@ export function createEditorTools(
         args.name ||= asset.name;
         args.description ||= asset.description;
         args.attributes ||= asset.attributes;
+        if (asset.source?.libraryId === 'spice') args.attributes = [
+          ...(args.attributes ?? []).filter((field: { name: string }) => field.name !== BUNDLED_SPICE_SYMBOL),
+          { name: BUNDLED_SPICE_SYMBOL, value: bundledSpiceIdentity(asset.source.nameId, asset.source.symbolId,
+            (field) => asset.attributes?.find((attribute) => attribute.name === field)?.value) },
+        ];
         if (!args.reference) {
           const prefix =
             (asset.reference || 'U?').replace(/[?*\d]+$/g, '') || 'U';

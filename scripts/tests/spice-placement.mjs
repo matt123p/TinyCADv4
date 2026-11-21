@@ -38,6 +38,7 @@ export function checkSpicePlacement(library, exportFile) {
     return stringify.call(this);
   };
   const results = [];
+  const packageSymbols = [];
   const io = new ioXML();
   const updater = new updateView();
   for (const name of library.names) {
@@ -112,6 +113,20 @@ export function checkSpicePlacement(library, exportFile) {
       name.Name + ' unresolved: ' + out,
     );
     assert.ok(symbol.text.some((t) => t.description === '$$SPICE'));
+    if (name.Name === 'LM358' || name.Name === 'LM324') {
+      const model =
+        name.Name === 'LM358' ? 'TC_LM358_DUAL_OJ' : 'TC_LM324_QUAD_OJ';
+      const terminalCount = name.Name === 'LM358' ? 8 : 14;
+      assert.equal(pins.length, terminalCount);
+      const orderedNets = Array.from(
+        { length: terminalCount },
+        (_, i) => `n${i + 1}`,
+      );
+      assert.ok(
+        out.split('\n').includes(`X${ref} ${orderedNets.join(' ')} ${model}`),
+      );
+      packageSymbols.push(['test', symbol]);
+    }
     assert.ok(
       symbol.text
         .filter((t) => t.description.startsWith('$$'))
@@ -169,6 +184,16 @@ export function checkSpicePlacement(library, exportFile) {
       netlist: out,
     });
   }
+  assert.equal(packageSymbols.length, 2);
+  const packageDeck = writeSpice({
+    symbols: packageSymbols,
+    nets: {},
+    labels: {},
+  });
+  assert.equal(
+    (packageDeck.match(/^\.subckt TC_OPAMP_OJ\b/gm) || []).length,
+    1,
+  );
   writeFileSync(exportFile, JSON.stringify(results, null, 2));
   console.log(
     'Actual placement, hidden metadata, SPICE expansion, and drawing save/load passed for ' +

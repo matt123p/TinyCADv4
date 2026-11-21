@@ -13,6 +13,7 @@ import {
 } from '@fluentui/react-components';
 import {
   actionCancelDialog,
+  actionSelectDialog,
   actionUpdateNetlistHints,
 } from '../../state/dispatcher/AppDispatcher';
 import { connect } from 'react-redux';
@@ -64,7 +65,8 @@ class NetlistDialog extends React.PureComponent<
       this.setState({ busy: true });
       this.props.dispatch(
         (dispatch: Dispatch, getState: { (): docDrawing }) => {
-          wkrGenerateNetlist(getState().docStore.present.drawing).then(
+          const drawing = getState().docStore.present.drawing;
+          wkrGenerateNetlist(drawing).then(
             (netlist) => {
               if (!this.cancel) {
                 // Write the netlist hints back to the drawing
@@ -78,10 +80,14 @@ class NetlistDialog extends React.PureComponent<
                   getState().altStore.file.name,
                   this.state.file_type,
                   netlist,
+                  drawing.spiceModelPacks,
                 );
               }
             },
-          );
+          ).catch((error) => {
+            if (!this.cancel)
+              dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+          });
         },
       );
     }

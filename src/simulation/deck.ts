@@ -4,6 +4,7 @@ import { AnalysisDefinition, SimulationSetup } from './contracts';
 import { parseQuantity, positiveQuantity } from './numbers';
 import { deviceSaveLine } from './deviceReadings';
 import { circuitSaveLine } from '../../shared/spiceSaveVectors';
+import { activeSpiceModelPacks, checkCatalogDefinitions, mergeSpiceModelFiles, type SpiceModelPack } from './catalogBindings';
 
 const token = (value: string) => {
   if (!/^[A-Za-z0-9_.$:#-]+$/.test(value))
@@ -114,6 +115,7 @@ export function validateSpiceText(
 export function buildDeck(
   netlist: NetlistData,
   setup: SimulationSetup,
+  catalogFiles: readonly string[] = [],
 ): string {
   if (!netlist.symbols.length)
     throw new Error('Place and connect a circuit on a schematic sheet first.');
@@ -184,7 +186,8 @@ export function buildDeck(
   const savedDevices = ['op', 'tran', 'ac', 'dc'].includes(setup.analysis.kind)
     ? circuitSaveLine(body, nodes, setup.signals, deviceVectors)
     : '';
-  const deck = `TinyCAD simulation\n${parameters}\n.temp ${parseQuantity(
+  const includes = catalogFiles.map((filename) => `.include ${filename}\n`).join('');
+  const deck = `TinyCAD simulation\n${includes}${parameters}\n.temp ${parseQuantity(
     setup.analysis.temperature,
   )}\n${body}\n${savedDevices ? savedDevices + '\n' : ''}${analysisCommand(
     setup.analysis,
@@ -196,4 +199,13 @@ export function buildDeck(
   }
   validateSpiceText(deck, setup.models);
   return deck;
+}
+
+export function prepareSpiceDeck(netlist: NetlistData, setup: SimulationSetup, packs?: SpiceModelPack[]) {
+  const active = activeSpiceModelPacks(netlist, packs);
+  const files = mergeSpiceModelFiles(active, setup.models);
+  const deck = buildDeck(netlist, { ...setup, models: files }, active.map(({ filename }) => filename));
+  const custom = Object.entries(setup.models).filter(([name]) => !active.some(({ filename }) => filename === name));
+  checkCatalogDefinitions(active, [deck, ...custom.map(([, text]) => text)]);
+  return { deck, files, identity: deck + JSON.stringify(files) };
 }

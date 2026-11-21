@@ -20,7 +20,7 @@ The picker browser regression runs with `npm run test:layout:browser -- library-
 
 | Bundle | Contents and contracts |
 | --- | --- |
-| SPICE essentials | 27 entries: passives, transformer, resonators, discrete semiconductors, coloured LEDs, 741 and independent sources. European and US resistor variants share connectivity. |
+| SPICE essentials | 29 entries: passives, transformer, resonators, discrete semiconductors, coloured LEDs, 741, LM358, LM324 and independent sources. European and US resistor variants share connectivity. |
 | Digital logic | 21 canonical types / 28 entries: gates, combinational blocks, counters, shift register, flip-flops and latches. Seven clocked types have separate rising/falling entries. |
 | Functional blocks | 14 interfaces / 17 entries: ADC/DAC, communications, logger, MCU/FPGA/PLC, sample-and-hold, state machine, PCM/TDM and transducer. ADC, PCM and state machine have both clock-edge variants. |
 | Sensors and interfaces | Ten generic types: test point, Hall, piezo, light/pressure/temperature voltage sensors, moisture, pH, analogue switch and AM modulator. |
@@ -107,11 +107,15 @@ Use **Simulation → Components** for common parts; **More…** opens the full s
 | MOSFET | 2 gate, 3 drain, 4 source; bulk tied to source. |
 | Diode, zener, LED | 1 anode, 2 cathode. |
 | 741 | 3 IN+, 2 IN−, 7 positive supply, 4 negative supply, 6 output. Offset-null pins omitted. |
+| LM358 | Complete eight-pin dual package. Supply pins are 8 (V+) and 4 (V−). |
+| LM324 | Complete 14-pin quad package. Supply pins are 4 (V+) and 11 (V−). |
 | Potentiometer | Ends 1/2, wiper 3; two resistor segments with a 1 micro-ohm floor. |
 | Transformer | Primary 1/2, secondary 3/4; coupled ideal inductors, no saturation/winding resistance. |
 | Resonators | Motional series RLC in parallel with shunt capacitance. |
 
 The 741 behavioural model approximates 200,000 open-loop DC gain, 2 Megohm differential input resistance, 5 Hz dominant pole, 0.5 V/µs slew limit, 75 ohm output resistance and rail clipping with 2 V headroom. It omits bias/offset, common-mode validity, temperature, noise, short-circuit current and full stability effects. Generic diode/transistor/LED/resonator models are teaching approximations; LED colour is not calibrated brightness. Electrolytic polarity is graphical and is not enforced by its ideal capacitor model. Core inductors remain linear.
+
+The LM358 and LM324 include the typical-behaviour OpenJellyBean package models and their dependencies directly in the symbols. Both can simulate after placement with the supply and signal pins wired. The LM358 and LM324 models omit effects such as input common-mode limits, noise and offset drift. [LM358 datasheet](https://www.ti.com/lit/ds/symlink/lm358.pdf) · [LM324 pinout](https://www.ti.com/lit/ds/symlink/lm324-mil.pdf) · [OpenJellyBean definitions](https://github.com/xdylanm/openjellybean/blob/v0.6.0/jellybean.lib)
 
 ## Sources, recipes and provenance
 

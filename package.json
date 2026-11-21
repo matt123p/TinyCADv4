@@ -85,7 +85,7 @@
     "preview:motion": "node scripts/preview-motors-motion-library.mjs",
     "test:motion": "node --test scripts/tests/motion-library.test.mjs",
     "chat-bundle": "node scripts/build-chat-bundle.mjs",
-    "test:chat": "npm run chat-bundle && node --test scripts/tests/chat.test.mjs scripts/tests/chatgpt-auth.test.mjs scripts/tests/chat-secrets.test.mjs",
+    "test:chat": "npm run chat-bundle && node --test scripts/tests/chat.test.mjs scripts/tests/chatgpt-auth.test.mjs scripts/tests/chat-secrets.test.mjs scripts/tests/simulation-model-catalog.test.mjs",
     "test:chat:builds": "npm run chat-bundle && node --test scripts/tests/chat-build-targets.test.mjs",
     "prestart:electron": "npm run chat-bundle",
     "prebuild:electron": "npm run chat-bundle",

@@ -12,6 +12,7 @@ ${resources['references/editor-common.md']}
 ${bundledLibraryInstructions(context.bundledLibraries)}
 
 CURRENT EDITOR MODE: ${context.library ? 'LIBRARY' : 'DRAWING'}
+${context.library ? '' : 'For a request to find or attach a SPICE model, use search_spice_models scoped to the placed component, then inspect_spice_target with the returned model and pack IDs. Cite the verified model source link. Use attach_spice_model only when the user requests attachment, supplying the exact target and current drawing revision. Use the preverified mapping when available. Ask about ambiguous pin roles and obtain approval before replacing a custom template.'}
 ${
   resources[
     context.library

@@ -5,6 +5,7 @@ These documents describe TinyCAD's current implementation and the contracts usef
 | Document | Contents |
 | --- | --- |
 | [SPICE engine](spice-engine.md) | Runtime architecture, engine identity, model inputs, lifecycle, limits and verification. |
+| [Bundled SPICE models](bundled-spice-models.md) | Catalog sources, compatibility, symbol editor and placed-symbol workflows, chatbot tools and simulation export. |
 | [Simulation](simulation.md) | Analyses, sources, probes, charts, Circuit Explorer and virtual instruments. |
 | [Drawing format](drawing-format.md) | XML/ZIP persistence, simulation records, numerical results and storage adapters. |
 | [Libraries and examples](libraries.md) | Ten standard libraries, physical board/equipment layouts, seven explained example drawings, generation, provenance and content ownership. |

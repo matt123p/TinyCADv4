@@ -1,9 +1,10 @@
-import { DrcError } from '../model/dsnDrawing';
+import { DrcError, dsnDrawing } from '../model/dsnDrawing';
 import { SimulationSetup } from './contracts';
 import { SpiceControl } from './controls';
 import { ControlTool } from './controlSymbols';
 
 export type SimulationAction =
+  | { type: 'simulation/catalog-model'; source: dsnDrawing; drawing: dsnDrawing }
   | { type: 'simulation/panel'; visible: boolean }
   | { type: 'simulation/apply-tuning'; sheetId: string; overrides: Record<string, string> }
   | { type: 'simulation/insert-control'; tool: ControlTool | 'ground' }

@@ -1,0 +1,132 @@
+* Provenance: written for circsim from the NE555 datasheet BLOCK DIAGRAM, MIT.
+* This is an in-house behavioral NE555 built directly from the functional block
+* diagram in the datasheet: two comparators, an internal 5k/5k/5k resistor
+* divider, an RS (set-reset) latch, an output buffer, and the open-collector
+* discharge transistor. No ngspice example-netlist text and no vendor model text
+* is copied; only the datasheet topology (which blocks connect to which pins) and
+* its threshold ratios (2/3 Vcc, 1/3 Vcc) inform the implementation.
+*
+* NE555 pinout (standard):
+*   1 GND   2 TRIG   3 OUT   4 RESET   5 CTRL   6 THRES   7 DISCH   8 VCC
+*
+* Convergence: at the operating point (time 0) every decision (comparators,
+* latch, reset gate, output level, discharge switch) is a smooth tanh form
+* rather than a hard ternary, and the latch has no memory, so ngspice Newton
+* iteration always has a slope to follow. An astable has no stable DC point at
+* all (the timing capacitor is open at DC, so the discharge transistor and the
+* comparators chase each other), which makes a sharp model unsolvable from the
+* all-zero starting guess. So the decisions are softened while time is 0 and
+* ramp to full sharpness over the first microsecond of a transient: the
+* comparators, the state readout that drives the output and the discharge
+* switch, and the latch memory. Without that ramp the astable, the monostable at
+* idle and every other 555 board solved only through gmin stepping, source
+* stepping or the transient fallback. The operating point of an oscillator is
+* only a bias snapshot, not a state the circuit stays in.
+*
+* Solver step: the latch must flip cleanly at any solver step. A function
+* generator sets the step to 1/200 of its fastest frequency (5 us at 1 kHz),
+* and the bench runs slow circuits at steps from 1 us to 100 us. Two latch
+* forms fail at some of those steps, so neither is used:
+*  - Any capacitor or lag on the latch is a stiff node. When the step is many
+*    times the lag the trapezoidal integrator rings it with alternating sign,
+*    and a regenerative node rings across its unstable midpoint, so the output
+*    chatters for several steps at every threshold crossing.
+*  - A smooth regenerative memory (q = tanh-shaped function of q) has a fold:
+*    as a comparator moves slowly through its band, the branch the latch sits
+*    on bends back and ends with the slope of its equation at zero. Newton
+*    iteration cannot step past that point, so ngspice halves the step until
+*    it aborts with "Timestep too small ... trouble with node q". The sample
+*    blinker (10 uF, 47k) did that at 2 us and 5 us steps.
+* So the latch is algebraic (no lag) and its memory is a hard decision on its
+* own state. A branch then ends at a jump, where the slope of the equation is
+* still 1, and Newton lands on the other branch in one or two iterations at
+* any step. The hard decision is multiplied by the start-up ramp, so it is
+* absent from the operating point, which stays smooth.
+*
+* ---------------------------------------------------------------------------
+* Subckt node order (matches the pinMap in index.json):
+*   gnd trig out reset ctrl thres disch vcc   (pins 1 2 3 4 5 6 7 8)
+* ---------------------------------------------------------------------------
+.subckt NE555 gnd trig out reset ctrl thres disch vcc
+*
+* ---- internal 5k / 5k / 5k resistor divider ----
+* VCC --[5k]-- ctrl(=2/3 Vcc) --[5k]-- ntrig(=1/3 Vcc) --[5k]-- GND
+* The CTRL pin is brought out at the 2/3 node (so an external cap/voltage on
+* CTRL shifts the upper threshold, per the datasheet).
+rdiv_a vcc ctrl 5k
+rdiv_b ctrl n13 5k
+rdiv_c n13 gnd 5k
+*
+* ---- supply current ----
+* The datasheet supply current (about 3 mA at 5 V, about 10 mA at 15 V, output
+* low, no load) is nearly resistive. This shunt, together with the 15k divider
+* above, draws about 3.1 mA at 5 V and 9.3 mA at 15 V.
+rq vcc gnd 1.8k
+*
+* Start-up ramps used below, written out in each expression on purpose (an
+* intermediate node would start at 0 V and hide the ramp from the first Newton
+* pass):
+*   sf = (time < 1e-6 ? 1 - time/1e-6 : 0) is 1 at time 0 and 0 from 1 us on;
+*   mr = (time < 1e-6 ? time/1e-6 : 1)     is 0 at time 0 and 1 from 1 us on.
+*
+* ---- upper (threshold) comparator ----
+* output -> 1 when THRES > CTRL (2/3 Vcc). Drives the latch RESET input.
+* Smooth step 2 mV wide (1 V wide at time 0).
+bcomphi chi gnd v = 0.5*(1 + tanh(v(thres,ctrl)/(0.002 + 1.0*(time < 1e-6 ? 1 - time/1e-6 : 0))))
+*
+* ---- lower (trigger) comparator ----
+* output -> 1 when TRIG < 1/3 Vcc (node n13). Drives the latch SET input.
+bcomplo clo gnd v = 0.5*(1 + tanh(v(n13,trig)/(0.002 + 1.0*(time < 1e-6 ? 1 - time/1e-6 : 0))))
+*
+* ---- active-low RESET pin gate (datasheet threshold about 1 V) ----
+* rok -> 1 when the pin is high (latch allowed to run), -> 0 when pulled low.
+brok rok gnd v = 0.5*(1 + tanh((v(reset,gnd) - 1)/0.05))
+*
+* ---- RS latch with active-low RESET pin override ----
+* State node 'q' is algebraic: the voltage source below forces
+*   q = run * ( clo + (1-clo)*mr*hold(q) ),   run = (1-chi)*rok,
+*   hold(q) = 1 when q > 0.5, else 0.
+* run is 0 whenever the upper comparator or the RESET pin resets the latch
+* (RESET is dominant, per the datasheet) and clo = 1 sets it. The self-reference
+* through hold(q) is the latch memory, with two branches:
+*   set branch    q = run      (hold = 1), valid while run > 0.5
+*   reset branch  q = run*clo  (hold = 0), valid while run*clo < 0.5
+* so the latch resets when the upper comparator passes its midpoint (THRES =
+* CTRL) or RESET falls through 1 V, and sets when the lower comparator passes
+* its midpoint (TRIG = Vcc/3). The memory term is off at time 0 (mr = 0), so the
+* operating point is the smooth function q = run*clo: output low and discharge
+* on whenever neither comparator is active, with no memory to choose between two
+* states. There is deliberately no capacitor or lag on q (see "Solver step"
+* above): the real part's propagation delay (about 100 ns) is far below the
+* step circsim normally takes.
+bq q gnd v = v(rok,gnd)*(1 - v(chi,gnd))*( v(clo,gnd) + (1 - v(clo,gnd))*(time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0) )
+* Read the latch state for the output. From 1 us on this is the same hard
+* decision as the memory, so the output changes only when q jumps between
+* branches. A readout that moved along a branch (q runs from 1 down to 0.5 on
+* the set branch as THRES approaches CTRL) would let the discharge switch and
+* THRES settle into an analog equilibrium at the threshold. At time 0 it is a
+* smooth step of slope 8 per volt.
+bqd qd gnd v = (time < 1e-6 ? 1 - time/1e-6 : 0)*0.5*(1 + tanh(8*(v(q,gnd) - 0.5))) + (time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0)
+*
+* ---- output buffer (pin 3) ----
+* OUT is HIGH (Vcc - 0.5) when the latch is SET, LOW (0.1 V) when reset,
+* through a small output resistance; RESET low forces the output to 0 V. The
+* buffer is referenced to the gnd pin, so current the load pushes into OUT
+* leaves through gnd on its own. A 0 V sense source in series with the output
+* resistance measures the output current, and a controlled source moves the
+* SOURCED current from vcc to gnd so the supply pin carries the load (faded
+* out below about 2 V so a floating rail carries nothing).
+bout obuf gnd v = v(rok,gnd)*( 0.1 + (v(vcc,gnd) - 0.6)*v(qd,gnd) )
+rout obuf osns 10
+vsns osns out 0
+bsrc vcc gnd i = 0.5*(1 + tanh((v(vcc,gnd) - 1)/0.25))*0.5*( i(vsns) + sqrt(i(vsns)*i(vsns) + 1e-12) )
+*
+* ---- discharge transistor (pin 7, open collector to GND) ----
+* The discharge transistor is ON (DISCH pulled to GND through 15 ohm) when the
+* output is LOW (latch reset) and OFF (1 Gohm) when the output is HIGH. RESET
+* low forces it ON. Modeled as a voltage-controlled conductance from DISCH to
+* GND; the current it sinks leaves through the gnd pin. The state readout inside
+* it is the same as qd from 1 us on, and softer than qd at time 0 (3 per volt),
+* because the loop through THRES is what the operating point has to solve.
+bdisch disch gnd i = v(disch,gnd)*( (1 - ((time < 1e-6 ? 1 - time/1e-6 : 0)*0.5*(1 + tanh(3*(v(q,gnd) - 0.5))) + (time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0))*v(rok,gnd))/15 + (((time < 1e-6 ? 1 - time/1e-6 : 0)*0.5*(1 + tanh(3*(v(q,gnd) - 0.5))) + (time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0))*v(rok,gnd))/1e9 )
+.ends NE555

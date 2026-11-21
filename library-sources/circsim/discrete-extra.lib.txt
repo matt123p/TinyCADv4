@@ -1,0 +1,58 @@
+* Provenance: written for circsim from manufacturer datasheet parameters, MIT.
+* In-house diode, zener and LED .model cards added after the script-derived set
+* (bjt.lib, diodes.lib, led.lib). They are fitted the same way as those cards, by
+* the helper functions that scripts/fit-model-cards.mjs exports (fitDiodeTwoPoint
+* for the Schottky cards, fitLedIs for the LEDs), from datasheet operating points
+* quoted beside each card; nothing is read from any third-party library card.
+* The cards are checked against the known third-party fingerprints by
+* library-fingerprint.test.ts and against their datasheet points by the
+* characterization rows in characterization.json.
+*
+* Non-datasheet assumptions (the same device-class values as the derived set):
+* Schottky emission coefficient n = 1.05, bandgap eg = 0.69 eV, xti = 2, grading
+* m = 0.5 with vj = 0.5 V, and a typical junction capacitance of 250 pF at 4 V
+* (cjo = Cj(4 V) x sqrt(1 + 4 / 0.5)); LEDs n = 1.7 to 1.8, rs 2.5 to 3 ohm, cjo
+* 30 pF, vj 0.75 V, m 0.333, bv 5 V; zeners n = 1.7, tt 50 ns, vj 0.75 V, m 0.333.
+* Figures are transcribed from the datasheet families and approximate
+* typical-curve readings where a typical is stated; they are not yet re-verified
+* against vendor PDFs row by row.
+
+* ---------------------------------------------------------------------------
+* SS34 / SS33 / SS32 / SK34 / B340A 3 A, 40 V-class Schottky (SMA / SMB / SMC).
+* Two-point fit: Vf 0.30 V at 0.1 A (curve reading) and 0.45 V at 3 A (VF 0.50 V
+* max at 3 A, 0.9 x max typical). VRRM 40 V, so bv sits 10 percent above it.
+.model DSS34 D(is=1.72u rs=19.9m n=1.05 tt=0 cjo=750p vj=0.5 m=0.5 bv=44 ibv=1m
++ eg=0.69 xti=2)
+
+* ---------------------------------------------------------------------------
+* 1N5820 / 1N5821 / 1N5822 3 A Schottky rectifier (DO-201AD axial).
+* Two-point fit: Vf 0.38 V at 1 A (curve reading) and 0.47 V at 3 A (VF 0.525 V
+* max at 3 A for the 1N5822, 0.9 x max typical). VRRM 40 V (1N5822), bv 44 V.
+.model D1N5822 D(is=2.54u rs=30.1m n=1.05 tt=0 cjo=750p vj=0.5 m=0.5 bv=44 ibv=1m
++ eg=0.69 xti=2)
+
+* ---------------------------------------------------------------------------
+* BZX55C3V3 / BZX84C3V3 / 1N4728A 3.3 V zener (Vz 3.1 to 3.5 V at 5 mA).
+* Reverse breakdown via bv/ibv; the forward path is an ordinary silicon diode.
+* rs = 8 ohm carries the dynamic impedance (datasheet Zzt 95 ohm max at 5 mA is a
+* ceiling: a larger rs would push the forward drop at 10 mA above its 0.9 V maximum).
+.model DZ3V3 D(is=1n rs=8 n=1.7 tt=50n cjo=450p vj=0.75 m=0.333
++ bv=3.26 ibv=5m eg=1.11)
+
+* ---------------------------------------------------------------------------
+* BZX55C12 / BZX84C12 / 1N4742A 12 V zener (Vz 11.4 to 12.7 V at 5 mA).
+* rs = 15 ohm carries the dynamic impedance (datasheet Zzt 25 ohm max at 5 mA).
+.model DZ12V D(is=1n rs=15 n=1.7 tt=50n cjo=60p vj=0.75 m=0.333
++ bv=11.9 ibv=5m eg=1.11)
+
+* ---------------------------------------------------------------------------
+* YELLOW and ORANGE indicator LEDs, same method as led.lib: is fitted so that
+* Vf(20 mA) hits the middle of the documented class band, n, rs and eg are class
+* values.
+*   yellow  ~2.0-2.2 V -> 2.10 V  (AlGaInP, n = 1.8, rs = 3 ohm, eg = 2.0 eV)
+*   orange  ~1.9-2.1 V -> 2.00 V  (AlGaInP, n = 1.7, rs = 2.5 ohm, eg = 1.95 eV)
+.model LED_YELLOW D(is=1.87e-21 rs=3 n=1.8 cjo=30p vj=0.75 m=0.333 bv=5 ibv=100u
++ eg=2 xti=3)
+
+.model LED_ORANGE D(is=1.1e-21 rs=2.5 n=1.7 cjo=30p vj=0.75 m=0.333 bv=5 ibv=100u
++ eg=1.95 xti=3)

@@ -4,7 +4,7 @@ import { getResult } from '../../simulation/resultStore';
 import { NetlistWorkerState } from '../../web-worker/netlistState';
 import { applyBindings } from '../../simulation/bindings';
 import { digest } from '../../io/dsnContainer';
-import { buildDeck } from '../../simulation/deck';
+import { prepareSpiceDeck } from '../../simulation/deck';
 import { subscribeSession } from '../../simulation/session';
 
 export function useInstrumentAcquisition(
@@ -66,8 +66,7 @@ export function useInstrumentAcquisition(
               });
         digest(
           new TextEncoder().encode(
-            buildDeck(capturedNet, configured.setup) +
-              JSON.stringify(configured.setup.models),
+            prepareSpiceDeck(capturedNet, configured.setup, configured.drawing.spiceModelPacks).identity,
           ),
         ).then(
           (hash) => {

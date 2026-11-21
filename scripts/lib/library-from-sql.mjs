@@ -296,7 +296,7 @@ function checkSpice(component, attributes, pins) {
 }
 
 /** Pure recipe application. Source/account records are never copied to output. */
-export function buildLibraryModel(data, recipe, sourceHash) {
+export function buildLibraryModel(data, recipe, sourceHash, resources = {}) {
   if (
     recipe.version !== 1 ||
     typeof recipe.id !== 'string' ||
@@ -324,7 +324,16 @@ export function buildLibraryModel(data, recipe, sourceHash) {
         'Each recipe component requires a unique id and an optional nonempty display name.',
       );
     ids.add(component.id);
-    const source = sourceComponent(data, component.source, recipe.author);
+    const artwork = resources.artwork?.get(component.artwork);
+    if (component.artwork && !artwork)
+      throw new Error(`Missing local artwork for ${component.id}`);
+    const source = artwork
+      ? {
+          entry: { name: component.name, author: 'TinyCAD contributors' },
+          name: { Description: component.description },
+          symbol: { Data: artwork, ppp: 1, DefRotate: 0 },
+        }
+      : sourceComponent(data, component.source, recipe.author);
     const donor = component.spiceFrom
       ? sourceComponent(data, component.spiceFrom)
       : null;
@@ -362,6 +371,15 @@ export function buildLibraryModel(data, recipe, sourceHash) {
           (name.startsWith('$$') ? 2 : 1),
       });
     }
+    if (component.embedModelLibrary) {
+      if (!resources.prolog)
+        throw new Error(`Missing SPICE model library for ${component.id}`);
+      attributes.set('$$SPICE_PROLOG', {
+        AttName: '$$SPICE_PROLOG',
+        AttValue: resources.prolog,
+        ShowAtt: 2,
+      });
+    }
     // Directive-only symbols deliberately emit a comment, avoiding NO_MODEL warnings.
     if (
       recipe.requireSpice &&
@@ -397,11 +415,12 @@ export function buildLibraryModel(data, recipe, sourceHash) {
     };
     names.push(name);
     const provenance = (selected) => ({
-      nameId: selected.entry.nameId,
-      symbolId: selected.entry.symbolId,
+      ...(selected === source && artwork
+        ? { artwork: component.artwork }
+        : { nameId: selected.entry.nameId, symbolId: selected.entry.symbolId }),
       author: selected.entry.author,
       name: selected.entry.name,
-      description: selected.entry.description,
+      description: selected.entry.description ?? selected.name.Description,
       xmlSha256: sha256(xmlText(selected.symbol.Data)),
     });
     entries.push({
@@ -434,6 +453,7 @@ export function buildLibraryModel(data, recipe, sourceHash) {
       ],
       notes: recipe.notes || '',
       references: recipe.references || [],
+      ...(recipe.modelLibrary ? { modelLibrary: recipe.modelLibrary } : {}),
       entries,
     },
   };

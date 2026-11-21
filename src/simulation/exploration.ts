@@ -3,7 +3,7 @@ import { SimulationSetup, SimulationRun, ResultData } from './contracts';
 import { applyBindings } from './bindings';
 import { runSimulation, getSession, stopSimulation } from './session';
 import { getResult } from './resultStore';
-import { buildDeck } from './deck';
+import { prepareSpiceDeck } from './deck';
 import { NetlistWorkerState } from '../web-worker/netlistState';
 import { digest } from '../io/dsnContainer';
 import { analysisKey, cachedAnalysis } from './analysisCache';
@@ -53,7 +53,7 @@ export async function exploreOnce(
   });
   const circuitHash = await digest(
     new TextEncoder().encode(
-      buildDeck(net, changed.setup) + JSON.stringify(changed.setup.models),
+      prepareSpiceDeck(net, changed.setup, changed.drawing.spiceModelPacks).identity,
     ),
   );
   if (signal.aborted) throw new Error('Exploration cancelled.');

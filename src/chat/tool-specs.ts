@@ -31,6 +31,12 @@ const baseRevision = str(
   'Exact revision returned by read_drawing. Read again after any user or tool edit.',
   64,
 );
+const spiceTarget = { sheet, reference: str('Exact placed component reference. Omit to use the one selected component.', 64) };
+const spiceCatalogId = {
+  modelId: str('Exact model ID from search_spice_models', 80),
+  packId: str('Exact catalog pack ID', 64),
+  revision: str('Exact pack revision from search_spice_models', 80),
+};
 const spec = (
   name: string,
   description: string,
@@ -38,6 +44,20 @@ const spec = (
   required: string[] = [],
 ): ToolSpec => ({ name, description, parameters: obj(properties, required) });
 export const toolSpecs: ToolSpec[] = [
+  spec('search_spice_models', 'Find bundled OpenJellyBean and circsim models by part number, alias or family. Supply a placed component reference for compatible results. Returns descriptions, exact model IDs, source links and terminal order.', {
+    query: str('Part number, alias or device family', 200), ...spiceTarget,
+    selected: { type: 'boolean', description: 'Restrict the search to the selected placed symbol.' },
+    limit: int(1, 20),
+  }),
+  spec('inspect_spice_target', 'Inspect a placed symbol and optionally preview a catalog model mapping. Returns current drawing revision, active pins, existing SPICE template and any preverified or suggested pin mapping.', {
+    ...spiceTarget, ...spiceCatalogId,
+  }),
+  spec('attach_spice_model', 'Attach a bundled SPICE model to a placed symbol in one undoable edit. Bundled symbols use verified mappings. Otherwise supply the reviewed symbol pin numbers in model-terminal order. Obtain explicit approval before replacing a custom template.', {
+    ...spiceTarget, ...spiceCatalogId, baseRevision,
+    pins: array(str('Placed symbol pin number in model terminal order', 32), 64, 1),
+    parameters: array(obj({ name: str('Exact model parameter name', 30), value: str('SPICE quantity', 64) }, ['name', 'value']), 32),
+    replaceExisting: { type: 'boolean', description: 'User approved replacement of their existing custom SPICE template.' },
+  }, ['reference', 'sheet', 'modelId', 'packId', 'revision', 'baseRevision']),
   spec(
     'search_bundled_symbols',
     'Search bundled TinyCAD libraries FIRST, before online search or generating a symbol. Searches names, descriptions and attributes in all catalog libraries, including unselected ones; optionally restrict by libraryId. Returns reusable componentIds for get_symbol, place_component or add_library_components, with original SPICE attributes. Does not change library selection. Check errors before treating missing matches as absent.',
@@ -384,6 +404,8 @@ export function checkArguments(
       throw new Error(
         `${path} must be an integer ${schema.minimum}–${schema.maximum}.`,
       );
+  } else if (schema.type === 'boolean') {
+    if (typeof value !== 'boolean') throw new Error(`${path} must be a boolean.`);
   } else if (schema.type === 'string') {
     if (
       typeof value !== 'string' ||

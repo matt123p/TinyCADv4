@@ -156,6 +156,8 @@ and returns actual rotated pin hotspots. Optional x/y place it in the intended
 functional block; omitted coordinates stage it beside existing content.
 `insert_symbol` remains available for explicitly supplied XML.
 
+Use `search_spice_models` to find bundled OpenJellyBean and circsim models and get a direct upstream source link. `inspect_spice_target` reads the pins and current SPICE template of a placed symbol. `attach_spice_model` applies a compatible model to that symbol in one undoable edit, using the same pin mapping as the picker. [Bundled SPICE models](bundled-spice-models.md)
+
 `auto_layout` reads and applies the current drawing directly, returning compact
 quality/connectivity reports and a new revision. There is no download or XML
 round trip. It requires connectivity and serialization checks to pass. Existing

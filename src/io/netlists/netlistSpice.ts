@@ -1,6 +1,7 @@
 import { NetlistData } from './netlistGenerator';
 import { updateSymbol } from '../../manipulators/updateSymbol';
 import { dsnSymbol } from '../../model/dsnItem';
+import { activeSpiceModelPacks, checkCatalogDefinitions, type SpiceModelPack } from '../../simulation/catalogBindings';
 
 function findSpiceAttribute(symbol: dsnSymbol, name: string) {
     // Legacy library templates use $(NAME) for the editor's Name property.
@@ -335,4 +336,18 @@ export function writeSpice(netlist: NetlistData) {
     }
     
     return txt;
+}
+
+/** Export a standalone SPICE circuit with only the catalog packs it uses. */
+export function writeSpiceWithModels(netlist: NetlistData, packs?: SpiceModelPack[]) {
+    const netlistText = writeSpice(netlist);
+    const embedded = activeSpiceModelPacks(netlist, packs);
+    if (!embedded.length) return netlistText;
+    checkCatalogDefinitions(embedded, [netlistText]);
+    const definitions = embedded.map((pack) => {
+        const notice = pack.licenseText.trimEnd().split(/\r?\n/).map((line) => `* ${line}`).join('\n');
+        return `* ${pack.id} ${pack.revision}\n${notice}\n${pack.spice}\n`;
+    }).join('\n');
+    const titleEnd = netlistText.indexOf('\n') + 1;
+    return netlistText.slice(0, titleEnd) + definitions + netlistText.slice(titleEnd);
 }

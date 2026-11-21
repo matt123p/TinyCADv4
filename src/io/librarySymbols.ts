@@ -1,4 +1,5 @@
 import { tclib, tclibLibraryEntry } from '../model/tclib';
+import { withBundledSpiceIdentity } from '../simulation/catalogBindings';
 import { actionSelectLibrarySymbol } from '../state/dispatcher/AppDispatcher';
 import { XMLBuilder } from '../util/xmlbuilder';
 import { ioXML } from './ioXml';
@@ -16,8 +17,9 @@ export function librarySymbolSelection(
   const builder = new XMLBuilder();
   builder.fromText(symbol.Data);
   const drawing = new ioXML().from_dsn(builder);
+  const placedName = library.fileId === 'bundled:spice' ? withBundledSpiceIdentity(name) : name;
   const action = actionSelectLibrarySymbol(
-    name,
+    placedName,
     drawing.sheets.map((sheet) => sheet.items),
     null,
   );

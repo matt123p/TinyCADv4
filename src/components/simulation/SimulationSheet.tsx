@@ -40,7 +40,7 @@ import {
   clearSimulationDiagnosticsTarget,
 } from '../../simulation/session';
 import { exportResult, download, measurements } from '../../simulation/export';
-import { buildDeck } from '../../simulation/deck';
+import { prepareSpiceDeck } from '../../simulation/deck';
 import { NetlistWorkerState } from '../../web-worker/netlistState';
 import { CircuitExplorer } from './CircuitExplorer';
 import { useInstrumentAcquisition } from './useInstrumentAcquisition';
@@ -204,13 +204,13 @@ export function SimulationSheet({
         ...drawing,
         sheets: drawing.sheets.filter((s) => s.kind !== 'simulation'),
       });
-      const errors = checkSpiceComponents(net, setup);
+      const errors = checkSpiceComponents(net, setup, drawing.spiceModelPacks);
       if (errors.length) {
         reportDiagnostics(errors);
         setError('Correct the SPICE errors listed below.');
         return;
       }
-      setDeck(buildDeck(net, setup));
+      setDeck(prepareSpiceDeck(net, setup, drawing.spiceModelPacks).deck);
       reportDiagnostics([]);
       setTab('diagnostics');
     } catch (e) {
