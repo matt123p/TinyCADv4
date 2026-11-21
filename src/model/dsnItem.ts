@@ -199,11 +199,18 @@ export interface dsnSymbolHint {
   net: string;
 }
 
+export interface BoardInstancePort {
+  portId: string;
+  componentId: string;
+  signalId: string;
+}
+
 export interface HierarchicalLink {
   /** Native links store a root-relative path and the child UUID. v3 links only have a locator. */
   path: string;
   documentId?: string;
   cached: boolean;
+  boardInstance?: { boardId: string; ports: readonly BoardInstancePort[] };
 }
 
 export interface dsnSymbol extends dsnPointBase, Text {

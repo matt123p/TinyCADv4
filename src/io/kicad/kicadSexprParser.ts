@@ -7,8 +7,8 @@ export interface SExprList {
 }
 
 type Token =
-  | { type: 'lparen' }
-  | { type: 'rparen' }
+  | { type: 'lparen'; offset: number }
+  | { type: 'rparen'; offset: number }
   | { type: 'string'; value: string }
   | { type: 'number'; value: number }
   | { type: 'atom'; value: string };
@@ -37,13 +37,13 @@ function tokenize(input: string): Token[] {
     }
 
     if (ch === '(') {
-      tokens.push({ type: 'lparen' });
+      tokens.push({ type: 'lparen', offset: i });
       i += 1;
       continue;
     }
 
     if (ch === ')') {
-      tokens.push({ type: 'rparen' });
+      tokens.push({ type: 'rparen', offset: i });
       i += 1;
       continue;
     }
@@ -120,14 +120,23 @@ function tokenAsAtom(token: Token): SExprAtom {
   throw new Error('Invalid atom token');
 }
 
-function parseList(tokens: Token[], start: number, remainingDepth: number): [SExprList, number] {
+interface ParseOptions {
+  maxDepth: number;
+  singleRoot: boolean;
+  numericTags?: boolean;
+  onList?(list: SExprList, start: number, end: number): void;
+}
+
+function parseList(tokens: Token[], start: number, remainingDepth: number, options?: ParseOptions): [SExprList, number] {
   if (remainingDepth === 0) throw new Error('KiCad input exceeds the nesting limit.');
-  if (tokens[start]?.type !== 'lparen') {
+  const opening = tokens[start];
+  if (opening?.type !== 'lparen') {
     throw new Error('Expected list start');
   }
 
   const tagToken = tokens[start + 1];
-  if (!tagToken || (tagToken.type !== 'atom' && tagToken.type !== 'string')) {
+  if (!tagToken || (tagToken.type !== 'atom' && tagToken.type !== 'string' &&
+      !(options?.numericTags && tagToken.type === 'number'))) {
     throw new Error('Expected list tag');
   }
 
@@ -139,10 +148,12 @@ function parseList(tokens: Token[], start: number, remainingDepth: number): [SEx
   while (index < tokens.length) {
     const token = tokens[index];
     if (token.type === 'rparen') {
-      return [{ tag, values, children }, index + 1];
+      const list = { tag, values, children };
+      options?.onList?.(list, opening.offset, token.offset + 1);
+      return [list, index + 1];
     }
     if (token.type === 'lparen') {
-      const [child, nextIndex] = parseList(tokens, index, remainingDepth - 1);
+      const [child, nextIndex] = parseList(tokens, index, remainingDepth - 1, options);
       children.push(child);
       index = nextIndex;
       continue;
@@ -154,13 +165,13 @@ function parseList(tokens: Token[], start: number, remainingDepth: number): [SEx
   throw new Error(`Unclosed list for tag "${tag}"`);
 }
 
-export function parseSexpr(input: string, options?: { maxDepth: number; singleRoot: boolean }): SExprList {
+export function parseSexpr(input: string, options?: ParseOptions): SExprList {
   const tokens = tokenize(input);
   if (tokens.length === 0) {
-    throw new Error('Empty KiCad symbol file');
+    throw new Error('Empty KiCad document');
   }
 
-  const [root, end] = parseList(tokens, 0, options?.maxDepth ?? Infinity);
-  if (options?.singleRoot && end !== tokens.length) throw new Error('Unexpected data after the KiCad footprint.');
+  const [root, end] = parseList(tokens, 0, options?.maxDepth ?? Infinity, options);
+  if (options?.singleRoot && end !== tokens.length) throw new Error('Unexpected data after the KiCad document.');
   return root;
 }

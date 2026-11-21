@@ -1,5 +1,9 @@
 import { generateActiveBom } from '../../io/netlists/activeNetlist';
+import { chooseProjectFolder, closeProjectMode, saveProjectTabs } from '../../io/projectMode';
 import React, { Dispatch } from 'react';
+import { EditorToolbar } from './EditorToolbar';
+import { EditorFileMenu, EditorHistoryControls, EditorSaveButton } from './FileToolbarControls';
+import { ViewToolbarControls } from './ViewToolbarControls';
 import { useTranslation } from 'react-i18next';
 import {
   actionCommand,
@@ -9,7 +13,6 @@ import {
   actionSelectDialog,
 } from '../../state/dispatcher/AppDispatcher';
 import {
-  Toolbar as FluentToolbar,
   ToolbarButton,
   ToolbarDivider,
   Menu,
@@ -20,15 +23,12 @@ import {
   MenuItemRadio,
   makeStyles,
   tokens,
-  mergeClasses,
   MenuDivider,
 } from '@fluentui/react-components';
 import {
   ChatSparkleRegular,
   ArrowUndoRegular,
   ArrowRedoRegular,
-  ZoomInRegular,
-  ZoomOutRegular,
   ArrowRotateClockwiseRegular,
   ArrowRotateCounterclockwiseRegular,
   FlipHorizontalRegular,
@@ -37,9 +37,8 @@ import {
   DismissRegular,
   ArrowDownloadRegular,
   ChevronDownRegular,
-  ChevronLeftRegular,
-  ChevronRightRegular,
   DocumentAddRegular,
+  DocumentRegular,
   ImageRegular,
   SettingsRegular,
   DataAreaRegular,
@@ -49,8 +48,6 @@ import {
   SaveCopyRegular,
   QuestionCircleRegular,
   ColorRegular,
-  DocumentRegular,
-  RulerRegular,
   GlobeRegular,
   CheckmarkRegular,
   PulseRegular,
@@ -120,32 +117,6 @@ import pinImage from 'url:../../../images/pin.png';
 import discordImage from 'url:../../../images/Discord-Logo-Black.png';
 
 const useStyles = makeStyles({
-  toolbarContainer: {
-    '& .fui-ToolbarButton': {
-      fontFamily: tokens.fontFamilyBase,
-      fontSize: tokens.fontSizeBase200,
-      fontWeight: tokens.fontWeightRegular,
-      lineHeight: tokens.lineHeightBase200,
-    },
-    display: 'flex',
-    alignItems: 'center',
-    backgroundColor: 'rgb(230, 230, 230)',
-    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
-    borderTop: '1px solid white',
-    overflowX: 'auto',
-    scrollbarWidth: 'none',
-    msOverflowStyle: 'none',
-    '&::-webkit-scrollbar': {
-      display: 'none',
-    },
-  },
-  toolbarContent: {
-    fontFamily: tokens.fontFamilyBase,
-    marginLeft: '-8px', // Shifts content left to reduce gap
-    flexGrow: 1,
-    flexShrink: 0,
-    minWidth: 'max-content',
-  },
   highlight: {
     backgroundColor: tokens.colorBrandBackground2,
   },
@@ -290,166 +261,6 @@ const SplitMenuButton: React.FC<{
   );
 };
 
-const ScrollableToolbarWrapper: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [showLeftArrow, setShowLeftArrow] = React.useState(false);
-  const [showRightArrow, setShowRightArrow] = React.useState(false);
-
-  const updateScrollButtons = React.useCallback(() => {
-    const el = containerRef.current;
-    if (el) {
-      const { scrollLeft, scrollWidth, clientWidth } = el;
-      setShowLeftArrow(scrollLeft > 2);
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 2);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    // Check initial scroll state
-    updateScrollButtons();
-
-    // Set up ResizeObserver to track container resizing
-    const resizeObserver = new ResizeObserver(() => {
-      updateScrollButtons();
-    });
-    resizeObserver.observe(el);
-
-    // Also observe the child (FluentToolbar) resize to handle dynamic content loading
-    const child = el.firstElementChild;
-    if (child) {
-      resizeObserver.observe(child);
-    }
-
-    window.addEventListener('resize', updateScrollButtons);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', updateScrollButtons);
-    };
-  }, [updateScrollButtons]);
-
-  const scroll = (direction: 'left' | 'right') => {
-    const el = containerRef.current;
-    if (el) {
-      const amount = direction === 'left' ? -200 : 200;
-      el.scrollBy({ left: amount, behavior: 'smooth' });
-    }
-  };
-
-  return (
-    <div style={{ position: 'relative', width: '100%', overflow: 'hidden', flexShrink: 0 }}>
-      <div
-        ref={containerRef}
-        onScroll={updateScrollButtons}
-        className={className}
-      >
-        {children}
-      </div>
-      
-      {showLeftArrow && (
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: '48px',
-            background: 'linear-gradient(to right, rgb(230, 230, 230) 40%, rgba(230, 230, 230, 0) 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            paddingLeft: '6px',
-            pointerEvents: 'none',
-            zIndex: 10,
-          }}
-        >
-          <button
-            onClick={() => scroll('left')}
-            style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.75)',
-              border: '1px solid rgba(0, 0, 0, 0.15)',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              pointerEvents: 'all',
-              padding: 0,
-              color: '#333',
-              transition: 'background-color 0.2s, box-shadow 0.2s',
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.75)';
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.08)';
-            }}
-          >
-            <ChevronLeftRegular style={{ fontSize: '16px' }} />
-          </button>
-        </div>
-      )}
-
-      {showRightArrow && (
-        <div
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: '48px',
-            background: 'linear-gradient(to left, rgb(230, 230, 230) 40%, rgba(230, 230, 230, 0) 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            paddingRight: '6px',
-            pointerEvents: 'none',
-            zIndex: 10,
-          }}
-        >
-          <button
-            onClick={() => scroll('right')}
-            style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.75)',
-              border: '1px solid rgba(0, 0, 0, 0.15)',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              pointerEvents: 'all',
-              padding: 0,
-              color: '#333',
-              transition: 'background-color 0.2s, box-shadow 0.2s',
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.75)';
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.08)';
-            }}
-          >
-            <ChevronRightRegular style={{ fontSize: '16px' }} />
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
 export const Toolbar: React.FC<ToolbarProps> = (props) => {
   const styles = useStyles();
   const { t, i18n } = useTranslation();
@@ -477,8 +288,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
   // BOM sheet toolbar
   if (props.selected_sheet === -1) {
     return (
-      <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
-        <FluentToolbar>
+      <EditorToolbar>
           <ToolbarButton
             aria-label={t('toolbar.closeBomAria')}
             icon={<DismissRegular />}
@@ -494,16 +304,14 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             {t('toolbar.downloadBom')}
           </ToolbarButton>
           {chatButton}
-        </FluentToolbar>
-      </ScrollableToolbarWrapper>
+        </EditorToolbar>
     );
   }
 
   // Browser sheet toolbar
   if (props.selected_sheet < -1) {
     return (
-      <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
-        <FluentToolbar>
+      <EditorToolbar>
           <ToolbarDivider className={styles.divider} />
           <ToolbarButton
             aria-label={t('toolbar.closeHelpAria')}
@@ -513,16 +321,14 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             {t('toolbar.close')}
           </ToolbarButton>
           {chatButton}
-        </FluentToolbar>
-      </ScrollableToolbarWrapper>
+        </EditorToolbar>
     );
   }
 
   // Library editor toolbar (no symbol selected)
   if (props.editLibrary && !props.editSymbol) {
     return (
-      <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
-        <FluentToolbar>
+      <EditorToolbar>
           {process.env.TARGET_SYSTEM === 'filesystem' && (
              <ToolbarButton
                 aria-label={t('toolbar.open')}
@@ -570,8 +376,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             onClick={() => props.dispatch(ActionCreators.redo())}
           />
           {chatButton}
-        </FluentToolbar>
-      </ScrollableToolbarWrapper>
+        </EditorToolbar>
     );
   }
 
@@ -625,20 +430,25 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
   };
 
   return (
-    <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
-      <FluentToolbar className={styles.toolbarContent}>
+    <EditorToolbar>
         {/* File Menu */}
         {process.env.TARGET_SYSTEM !== 'electron' && (
-         <Menu>
-          <MenuTrigger disableButtonEnhancement>
-            <ToolbarButton icon={<DocumentRegular />} aria-label={t('toolbar.file')} title={t('toolbar.fileMenu')} />
-          </MenuTrigger>
-          <MenuPopover>
-            <MenuList>
+         <EditorFileMenu>
               { process.env.TARGET_SYSTEM === 'filesystem' && (
                   <MenuItem icon={<FolderOpenRegular />} onClick={() => props.dispatch(fileOpen())}>
                     {t('toolbar.open')}
                   </MenuItem>
+              )}
+              {process.env.TARGET_SYSTEM === 'google' && !props.editLibrary && (
+                <>
+                  <MenuItem icon={<FolderOpenRegular />} onClick={() => window.dispatchEvent(new Event(chooseProjectFolder))}>
+                    {t('projects.openFolder')}
+                  </MenuItem>
+                  <MenuItem onClick={() => window.dispatchEvent(new Event(saveProjectTabs))}>Save All</MenuItem>
+                  <MenuItem onClick={() => window.dispatchEvent(new Event(closeProjectMode))}>
+                    {t('projects.closeProject')}
+                  </MenuItem>
+                </>
               )}
               {!props.editLibrary && <MenuItem icon={<SaveCopyRegular />} disabled={props.saveInProgress} onClick={() => props.dispatch(fileSaveWithoutResults)}>
                 Save without results...
@@ -684,9 +494,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                }}>
                {t('toolbar.newCustomLibrary')}
               </MenuItem>
-            </MenuList>
-          </MenuPopover>
-        </Menu>
+         </EditorFileMenu>
         )}
 
         { !props.editLibrary && process.env.TARGET_SYSTEM !== 'electron' && <ToolbarButton
@@ -706,23 +514,12 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
 
 
         {/* Save buttons */}
-        <ToolbarButton
-          aria-label={t('toolbar.save')}
+        <EditorSaveButton disabled={!props.saveNeeded && !props.saveInProgress}
           title={props.editLibrary ? t('toolbar.saveLibrary') : t('toolbar.saveDesign')}
-          icon={<SaveRegular />}
-          disabled={!props.saveNeeded && !props.saveInProgress}
-          onClick={() => props.dispatch(props.editLibrary ? librarySave : fileSave)}
-        >
-        </ToolbarButton>
-
-         {process.env.TARGET_SYSTEM === 'filesystem' && (
-             <ToolbarButton
-               aria-label={t('toolbar.saveAs')}
-               title={t('toolbar.saveAs')}
-                icon={<SaveCopyRegular />}
-                onClick={() => props.dispatch(props.editLibrary ? librarySaveAs : fileSaveAs)}
-             />
-          )}
+          onClick={() => props.dispatch(props.editLibrary ? librarySave : fileSave)} />
+        {process.env.TARGET_SYSTEM === 'filesystem' && (
+          <EditorSaveButton saveAs onClick={() => props.dispatch(props.editLibrary ? librarySaveAs : fileSaveAs)} />
+        )}
 
         {!props.editSymbol && <>
         <ToolbarDivider className={styles.divider} />
@@ -790,21 +587,9 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         )}
         </>}
         <ToolbarDivider className={styles.divider} />
-        {/* Undo/Redo */}
-        <ToolbarButton
-          aria-label={t('toolbar.undo')}
-          title={t('toolbar.undo')}
-          icon={<ArrowUndoRegular />}
-          disabled={!props.can_undo}
-          onClick={() => props.dispatch(ActionCreators.undo())}
-        />
-        <ToolbarButton
-          aria-label={t('toolbar.redo')}
-          title={t('toolbar.redo')}
-          icon={<ArrowRedoRegular />}
-          disabled={!props.can_redo}
-          onClick={() => props.dispatch(ActionCreators.redo())}
-        />
+        <EditorHistoryControls canUndo={props.can_undo} canRedo={props.can_redo}
+          onUndo={() => props.dispatch(ActionCreators.undo())}
+          onRedo={() => props.dispatch(ActionCreators.redo())} />
 
         <ToolbarDivider className={styles.divider} />
         
@@ -980,31 +765,14 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
 
         <ToolbarDivider className={styles.divider} />
 
-        {/* Zoom */}
-        <ToolbarButton
-          aria-label={t('toolbar.zoomIn')}
-          title={t('toolbar.zoomIn')}
-          icon={<ZoomInRegular />}
-          disabled={!props.can_zoom_in}
-          onClick={() => props.dispatch(actionCommand('zoom_in'))}
-        />
-        <ToolbarButton
-          aria-label={t('toolbar.zoomOut')}
-          title={t('toolbar.zoomOut')}
-          icon={<ZoomOutRegular />}
-          disabled={!props.can_zoom_out}
-          onClick={() => props.dispatch(actionCommand('zoom_out'))}
-        />
-
-        <ToolbarDivider className={styles.divider} />
-
-        <ToolbarButton
-          aria-label={t('toolbar.toggleRulers')}
-          title={t('toolbar.toggleRulers')}
-          icon={<RulerRegular />}
-          disabled={false}
-          className={props.showRulers ? styles.highlight : undefined}
-          onClick={() => props.dispatch(actionToggleRulers())}
+        <ViewToolbarControls
+          canZoomIn={props.can_zoom_in}
+          canZoomOut={props.can_zoom_out}
+          showRulers={props.showRulers}
+          dividerClassName={styles.divider}
+          highlightClassName={styles.highlight}
+          onZoom={(direction) => props.dispatch(actionCommand(direction === 'in' ? 'zoom_in' : 'zoom_out'))}
+          onToggleRulers={() => props.dispatch(actionToggleRulers())}
         />
 
         </>}
@@ -1105,7 +873,6 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           </Menu>
         )}
         </>
-      </FluentToolbar>
-    </ScrollableToolbarWrapper>
+      </EditorToolbar>
   );
 };

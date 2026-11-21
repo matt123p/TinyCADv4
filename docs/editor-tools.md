@@ -1,5 +1,7 @@
 # Editor tools
 
+For changes to the editor interface, use the [TinyCAD v4.1.0 design contract](tinycad-ui-design.md).
+
 ## Auto-layout
 
 Use the **Auto-layout** toolbar button beside **Simulation** while editing a schematic, or **Tools → Auto-layout** in Electron. The dialog

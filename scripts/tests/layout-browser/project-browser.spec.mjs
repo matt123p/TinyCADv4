@@ -52,6 +52,7 @@ test('projects share the editor sidebar and save schematic changes and a revisio
     return result?.data ? { ...result, data: Array.from(result.data) } : result;
   });
   await context.addInitScript(() => {
+    localStorage.setItem('tinycad.startupMode', 'project');
     window.electronAPI.projectFiles = async (request) => {
       const result = await window.projectTestFiles(
         request.data ? { ...request, data: Array.from(request.data) } : request,
@@ -206,7 +207,7 @@ test('projects share the editor sidebar and save schematic changes and a revisio
       Buffer.from(boardData),
     );
     await sidebar.getByRole('button', { name: 'layouts', exact: true }).click();
-    const layout = page.getByRole('dialog', {
+    const layout = page.getByRole('region', {
       name: 'PCB layout',
       exact: true,
     });

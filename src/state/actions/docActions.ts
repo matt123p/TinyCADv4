@@ -141,7 +141,7 @@ export interface RefreshChild {
   type: DocActionTypes.RefreshChild;
   source: dsnSheet;
   placement: dsnSymbol;
-  definition: libSymbol;
+  definition?: libSymbol;
   link: HierarchicalLink;
 }
 

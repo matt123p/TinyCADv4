@@ -135,6 +135,7 @@ function getWorker(): Worker {
     try {
       myWorker = new Worker(new URL('./main.ts', import.meta.url), {
         type: 'module',
+        name: 'tinycad-schematic-netlist',
       });
     } catch (error) {
       throw new WorkerTransportError(

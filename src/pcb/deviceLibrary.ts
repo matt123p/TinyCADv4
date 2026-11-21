@@ -1,10 +1,13 @@
 import { isEntityId } from '../model/schematicIdentity';
 import { digest } from '../util/sha256';
+import { canonicalJson } from '../util/canonicalJson';
 import type { BoardModelAsset, EmbeddedFootprint } from './boardAssets';
 import { validateEmbeddedFootprint } from './boardAssets';
 import { readBoardModelAsset } from './boardCodec';
 import type { PadAssignment } from './footprint';
 import { validatePadMap } from './footprint';
+
+export { canonicalJson as canonicalDeviceJson } from '../util/canonicalJson';
 
 export const deviceLibraryExtension = '.tcdevice.json';
 export const maxDeviceLibraryBytes = 48 * 1024 * 1024;
@@ -40,21 +43,8 @@ const text = (value: unknown) =>
 const uuid = (value: string) =>
   isEntityId(value) && value === value.toLowerCase();
 
-export function canonicalDeviceJson(value: unknown): string {
-  return JSON.stringify(value, (_, item) => {
-    if (item && typeof item === 'object' && !Array.isArray(item)) {
-      return Object.fromEntries(
-        Object.keys(item)
-          .sort()
-          .map((key) => [key, item[key]]),
-      );
-    }
-    return item;
-  });
-}
-
 export async function deviceDigest(value: unknown): Promise<string> {
-  return 'sha256:' + (await digest(encoder.encode(canonicalDeviceJson(value))));
+  return 'sha256:' + (await digest(encoder.encode(canonicalJson(value))));
 }
 
 export async function readLibraryDevice(
@@ -154,7 +144,7 @@ export async function readLibraryDevice(
 export async function writeLibraryDevice(
   definition: LibraryDevice,
 ): Promise<Uint8Array> {
-  const bytes = encoder.encode(canonicalDeviceJson(definition) + '\n');
+  const bytes = encoder.encode(canonicalJson(definition) + '\n');
   await readLibraryDevice(bytes);
   return bytes;
 }

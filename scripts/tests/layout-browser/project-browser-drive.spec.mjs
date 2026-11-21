@@ -34,13 +34,14 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
     <PIN pos="20,30" direction="3" which="0" elec="0" number="1" length="20" number_pos="0" centre_name="0" part="0" show="1">DATA</PIN>
     </HierarchicalSymbol><TinyCAD><NAME>Child circuit</NAME></TinyCAD></TinyCADSheets>`);
   const childData = await api.encodeDrawing(child, 'xml');
-  const settings = api.encodeProjectSettings({
+  let settings = api.encodeProjectSettings({
     projectId: crypto.randomUUID(),
     revisionId: crypto.randomUUID(),
     title: 'Shared circuit',
     requiredFeatures: [],
     primarySchematic: drawing.documentId,
     primaryBoard: board.boardId,
+    associations: [{ schematic: drawing.documentId, board: board.boardId }],
     entries: [
       { kind: 'schematic', id: drawing.documentId, path: 'src/Circuit.dzn' },
       { kind: 'board', id: board.boardId, path: 'Board.dpn' },
@@ -48,6 +49,7 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
     ],
   });
   await page.addInitScript(() => {
+    if (!localStorage.getItem('tinycad.startupMode')) localStorage.setItem('tinycad.startupMode', 'project');
     localStorage.setItem(
       'tinycad.driveProjectFolder.test-account',
       JSON.stringify({ id: 'designs', name: 'My projects' }),
@@ -73,15 +75,27 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
     };
   });
   const listed = [];
+  const uploads = [];
+  const importedFolders = [];
   let version = 1;
+  let settingsVersion = 1;
   await page.route('https://**/*', (route) => route.abort());
   await page.route('https://www.googleapis.com/drive/v3/**', async (route) => {
     const url = new URL(route.request().url());
     if (url.searchParams.get('spaces') === 'appDataFolder')
       return route.fulfill({ json: { files: [] } });
+    if (url.pathname.endsWith('/files') && route.request().method() === 'POST') {
+      const metadata = route.request().postDataJSON();
+      const item = { id: 'folder-' + importedFolders.length, name: metadata.name, mimeType: metadata.mimeType };
+      importedFolders.push({ parent: metadata.parents[0], item });
+      return route.fulfill({ json: item });
+    }
     if (url.pathname.endsWith('/files')) {
       listed.push(url.searchParams.get('q'));
       const files = {
+        root: [
+          { id: 'designs', name: 'My projects', mimeType: 'application/vnd.google-apps.folder' },
+        ],
         designs: [
           {
             id: 'shared',
@@ -112,10 +126,15 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
         ],
       };
       const folder = url.searchParams.get('q').split("'")[1];
-      return route.fulfill({ json: { files: files[folder] ?? [] } });
+      return route.fulfill({ json: { files: [
+        ...(files[folder] ?? []),
+        ...[...importedFolders, ...uploads].filter(({ parent }) => parent === folder).map(({ item }) => item),
+      ] } });
     }
     if (url.searchParams.get('alt') === 'media') {
       const file = url.pathname.split('/').at(-1);
+      const imported = uploads.find(({ item }) => item.id === file);
+      if (imported) return route.fulfill({ body: imported.payload, contentType: imported.item.mimeType });
       return route.fulfill({
         body: Buffer.from(
           {
@@ -131,9 +150,18 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
     }
     return route.fulfill({
       json: {
-        version: url.pathname.endsWith('/drawing') ? String(version) : '1',
+        version: url.pathname.endsWith('/drawing') ? String(version) :
+          url.pathname.endsWith('/project') ? String(settingsVersion) : '1',
       },
     });
+  });
+  await page.route('https://www.googleapis.com/drive/v2/files/*', async (route) => {
+    const id = new URL(route.request().url()).pathname.split('/').at(-1);
+    const metadata = {
+      project: { id: 'project', title: 'Shared.tcproject', parents: [{ id: 'shared' }] },
+      shared: { id: 'shared', title: 'Shared' },
+    };
+    return route.fulfill({ json: metadata[id] ?? { id }, status: metadata[id] ? 200 : 404 });
   });
   await page.route(
     'https://www.googleapis.com/upload/drive/v3/files/drawing?**',
@@ -154,9 +182,43 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
       });
     },
   );
+  await page.route('https://www.googleapis.com/upload/drive/v3/files?**', async (route) => {
+    const request = route.request();
+    expect(request.method()).toBe('POST');
+    const boundary = request.headers()['content-type'].split('boundary=')[1];
+    const body = request.postDataBuffer();
+    const parts = body.toString('utf8').split('--' + boundary);
+    const metadata = JSON.parse(parts[1].split('\r\n\r\n')[1]);
+    const [, payload] = parts[2].split('\r\n\r\n');
+    const item = { id: 'uploaded-' + uploads.length, name: metadata.name, mimeType: metadata.mimeType };
+    uploads.push({ item, parent: metadata.parents[0], payload: payload.slice(0, -2) });
+    return route.fulfill({ json: { ...item, version: '1' } });
+  });
+  let textOnDrive;
+  await page.route('https://www.googleapis.com/upload/drive/v3/files/uploaded-1?**', async (route) => {
+    const request = route.request();
+    expect(request.method()).toBe('PATCH');
+    const boundary = request.headers()['content-type'].split('boundary=')[1];
+    const parts = request.postDataBuffer().toString('utf8').split('--' + boundary);
+    const metadata = JSON.parse(parts[1].split('\r\n\r\n')[1]);
+    expect(metadata).toEqual({ name: 'Readme.md', mimeType: 'text/markdown' });
+    textOnDrive = parts[2].split('\r\n\r\n')[1].slice(0, -2);
+    return route.fulfill({ json: { id: 'uploaded-1', name: 'Readme.md', version: '2' } });
+  });
+  await page.route('https://www.googleapis.com/upload/drive/v3/files/project?**', async (route) => {
+    const request = route.request();
+    expect(request.method()).toBe('PATCH');
+    const boundary = request.headers()['content-type'].split('boundary=')[1];
+    const parts = request.postDataBuffer().toString('utf8').split('--' + boundary);
+    const metadata = JSON.parse(parts[1].split('\r\n\r\n')[1]);
+    expect(metadata).toEqual({ name: 'Shared.tcproject', mimeType: 'application/xml' });
+    settings = new TextEncoder().encode(parts[2].split('\r\n\r\n')[1].slice(0, -2));
+    settingsVersion++;
+    return route.fulfill({ json: { id: 'project', name: 'Shared.tcproject', version: String(settingsVersion) } });
+  });
   const sidebar = page.getByRole('region', { name: 'Projects', exact: true });
   async function open() {
-    await page.getByRole('button', { name: 'Projects', exact: true }).click();
+    await expect(sidebar).toBeVisible();
     await expect(
       sidebar.getByText('My projects', { exact: true }),
     ).toBeVisible();
@@ -179,9 +241,15 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
       "'source' in parents and trashed = false",
     ]),
   );
-  const layout = page.getByRole('dialog', { name: 'PCB layout', exact: true });
+  const layout = page.getByRole('region', { name: 'PCB layout', exact: true });
   await sidebar.getByRole('button', { name: 'Board.dpn', exact: true }).click();
   await expect(layout.getByRole('img', { name: 'Board layout' })).toBeVisible();
+  await layout.getByRole('button', { name: 'Run design checks…' }).click();
+  const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+  await expect(checks.getByRole('list', { name: 'PCB findings' })).toContainText(
+    'The associated schematic has not been applied to this board.',
+  );
+  await checks.getByRole('button', { name: 'Close', exact: true }).click();
   await layout.getByRole('button', { name: 'Close', exact: true }).click();
   const downloading = page.waitForEvent('download');
   await sidebar
@@ -302,4 +370,102 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   } finally {
     db.close();
   }
+  await editor.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.evaluate(() => window.layoutTest.renameCurrentSheet('Saved while closing'));
+  const activity = page.getByRole('group', { name: 'Project activity bar' });
+  await activity.getByRole('button', { name: 'Close Project', exact: true }).click();
+  const close = page.getByRole('dialog', { name: 'Close Project', exact: true });
+  await close.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(sidebar).toBeVisible();
+  await activity.getByRole('button', { name: 'Close Project', exact: true }).click();
+  await close.getByRole('button', { name: 'Save and close', exact: true }).click();
+  await expect.poll(() => version).toBe(4);
+  await expect(close).toHaveCount(0);
+  await expect(sidebar).toHaveCount(0);
+  await expect(activity).toHaveCount(0);
+  expect((await api.decodeDrawing(data)).sheets[0].name).toBe('Saved while closing');
+
+  const openFolder = async () => {
+    await page.getByRole('button', { name: 'File', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Open Project Folder…' }).click();
+  };
+  await openFolder();
+  const picker = page.getByRole('dialog', { name: 'Open Project Folder…' });
+  await picker.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(activity).toHaveCount(0);
+  await openFolder();
+  await picker.getByRole('button', { name: 'My projects', exact: true }).click();
+  await picker.getByRole('button', { name: 'Shared', exact: true }).click();
+  await picker.getByRole('button', { name: 'Select folder', exact: true }).click();
+  await expect(sidebar.getByRole('button', { name: 'Shared.tcproject', exact: true })).toBeVisible();
+
+  await page.evaluate(() => localStorage.setItem('tinycad.startupMode', 'single'));
+  const linked = new URL(app.baseURL);
+  linked.searchParams.set('state', JSON.stringify({ action: 'open', ids: ['project'] }));
+  await page.goto(linked.href);
+  await expect(sidebar.getByRole('button', { name: 'Board.dpn', exact: true })).toBeVisible();
+  await expect(activity).toBeVisible();
+
+  const transfer = await page.evaluateHandle(() => {
+    const transfer = new DataTransfer();
+    transfer.items.add(new File(['%PDF-fixture'], 'Vendor data.pdf', { type: 'application/pdf' }));
+    transfer.items.add(new File([], 'Reference'));
+    const getEntry = DataTransferItem.prototype.webkitGetAsEntry;
+    DataTransferItem.prototype.webkitGetAsEntry = function () {
+      if (this.getAsFile()?.name !== 'Reference') return getEntry.call(this);
+      return {
+        name: 'Reference', isDirectory: true,
+      createReader() {
+        let read = false;
+        return { readEntries(done) {
+          if (read) return done([]);
+          read = true;
+          done([{
+            name: 'Readme.md', isFile: true,
+            file: (done) => done(new File(['# Data'], 'Readme.md', { type: 'text/markdown' })),
+          }]);
+        } };
+      },
+      };
+    };
+    return transfer;
+  });
+  await sidebar.dispatchEvent('dragover', { dataTransfer: transfer });
+  await expect(sidebar).toHaveClass(/project-drop-target/);
+  await sidebar.dispatchEvent('drop', { dataTransfer: transfer });
+  const importing = page.getByRole('dialog', { name: 'Add files…' });
+  await expect(importing.getByRole('status')).toHaveText('2 files imported. 0 items skipped.');
+  await importing.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(sidebar.getByRole('button', { name: 'Vendor data.pdf', exact: true })).toBeVisible();
+  expect(uploads).toEqual([{
+    parent: 'shared',
+    item: { id: 'uploaded-0', name: 'Vendor data.pdf', mimeType: 'application/pdf' },
+    payload: '%PDF-fixture',
+  }, {
+    parent: 'folder-0',
+    item: { id: 'uploaded-1', name: 'Readme.md', mimeType: 'text/markdown' },
+    payload: '# Data',
+  }]);
+  expect(importedFolders).toEqual([{
+    parent: 'shared',
+    item: { id: 'folder-0', name: 'Reference', mimeType: 'application/vnd.google-apps.folder' },
+  }]);
+  await sidebar.getByRole('button', { name: 'Reference', exact: true }).click();
+  await expect(sidebar.getByRole('button', { name: 'Readme.md', exact: true })).toBeVisible();
+  await sidebar.getByRole('button', { name: 'Readme.md', exact: true }).click();
+  const editorTab = page.getByRole('textbox', { name: 'Edit Readme.md' });
+  await expect(editorTab).toHaveValue('# Data');
+  await editorTab.fill('# New Drive data\n');
+  await page.getByRole('button', { name: 'Save file', exact: true }).click();
+  await expect.poll(() => textOnDrive).toBe('# New Drive data\n');
+  await expect(page.getByRole('tab', { name: 'Readme.md', exact: true })).toBeVisible();
+  await sidebar.getByRole('button', { name: 'Parent folder', exact: true }).click();
+  await sidebar.getByRole('button', { name: 'Project Settings…', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Author', exact: true }).fill('Drive editor');
+  await page.getByRole('button', { name: 'Save file', exact: true }).click();
+  await expect.poll(() => settingsVersion).toBe(2);
+  const savedSettings = api.decodeProjectSettings(settings);
+  expect(savedSettings.author).toBe('Drive editor');
+  expect(savedSettings.associations).toEqual([{ schematic: drawing.documentId, board: board.boardId }]);
+
 });

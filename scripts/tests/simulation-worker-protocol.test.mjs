@@ -55,7 +55,7 @@ test('initial netlist publication does not repeatedly initialize a version-zero 
       },
     });
     initializeNetlistSync({
-      getState: () => ({ docStore: { present } }),
+      getState: () => ({ docStore: { present }, altStore: { file: {} } }),
       subscribe: callback => { notify = callback; },
       dispatch: () => notify(),
     });

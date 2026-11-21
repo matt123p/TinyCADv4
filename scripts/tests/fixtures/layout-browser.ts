@@ -3,6 +3,7 @@ import { activeSheet } from '../../../src/state/stores/docStoreReducer';
 import { actionCommand, actionEditorEvent, actionSetDocument, actionSetLibraryList, actionSheetRename } from '../../../src/state/dispatcher/AppDispatcher';
 import { ioXML } from '../../../src/io/ioXml';
 import { XMLBuilder } from '../../../src/util/xmlbuilder';
+import { projectRecoveryKey, readRecoveryDraft } from '../../../src/io/projectRecovery';
 
 // This bridge is bundled only into the test entry point. UI interactions still
 // use the real toolbar, dialog, Redux reducers, fonts, and compiled worker.
@@ -12,6 +13,13 @@ import { XMLBuilder } from '../../../src/util/xmlbuilder';
   },
   renameCurrentSheet(name: string) {
     store.dispatch(actionSheetRename(name));
+  },
+  async hasSchematicRecovery(entryId: string) {
+    const { file, user } = store.getState().altStore;
+    if (!file.project) return false;
+    return !!await readRecoveryDraft(projectRecoveryKey(user?.id ?? '', {
+      id: file.project.id, entryId,
+    }));
   },
   snapshot() {
     const current = store.getState().docStore.present;

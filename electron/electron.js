@@ -1,4 +1,4 @@
-import { isDrawingFile } from '../shared/drawingFiles.js';
+import { isBoardFile, isDrawingFile } from '../shared/drawingFiles.js';
 import { registerSimulation } from './simulation.js';
 import { chartWindowOptions, configureChartWindow } from './chartWindows.js';
 import { drawingOpenMenu, drawingViewMenu } from './drawingMenus.js';
@@ -12,6 +12,7 @@ import { registerBundledExamples } from './bundledExamples.js';
 import { registerOnlineLibrary } from './onlineLibrary.js';
 import { registerLicenseHandlers } from './licenses.js';
 import { registerProjectFiles } from './projectFiles.js';
+import { isProjectFile } from '../shared/projectFiles.js';
 import fs from 'fs';
 import { spawn } from 'child_process';
 import { loadFile, saveFile, sendRecentFiles } from './io.js';
@@ -28,6 +29,21 @@ const appDisplayName = 'TinyCAD';
 const store = new Store(); // Create store instance
 let mainWindow;
 let fileToOpen = null;
+let projectToOpen;
+
+function openProjectFile(filename) {
+  projectToOpen = path.resolve(filename);
+  const contents = mainWindow.webContents;
+  const show = () => contents.send('menu-command', 'file-open-project-launch');
+  if (contents.isLoadingMainFrame()) contents.once('did-finish-load', show);
+  else show();
+}
+
+function takeProjectOpen() {
+  const filename = projectToOpen;
+  projectToOpen = undefined;
+  return filename;
+}
 let isLibraryMode = false;
 let viewMenuState = { hasExampleExplanation: false, exampleExplanationVisible: false, simulationPanelVisible: false };
 let menuTranslations = {};
@@ -142,8 +158,11 @@ function createWindow({ openAbout = false } = {}) {
             ]
           },
           { label: getMenuLabel('open', 'Open'), accelerator: 'CmdOrCtrl+O', click: () => mainWindow.webContents.send('menu-command', 'file-open') },
+          { label: getMenuLabel('openProjectFolder', 'Open Project Folder…'), click: () => mainWindow.webContents.send('menu-command', 'file-open-project-folder') },
+          { label: getMenuLabel('closeProject', 'Close Project'), click: () => mainWindow.webContents.send('menu-command', 'file-close-project') },
           ...drawingOpenMenu(getMenuLabel, recentMenu, command => mainWindow.webContents.send('menu-command', command)),
           { label: getMenuLabel('save', 'Save'), accelerator: 'CmdOrCtrl+S', click: () => mainWindow.webContents.send('menu-command', 'file-save') },
+          { label: getMenuLabel('saveAll', 'Save All'), click: () => mainWindow.webContents.send('menu-command', 'file-save-all') },
           { label: getMenuLabel('saveAs', 'Save As...'), accelerator: 'CmdOrCtrl+Shift+S', click: () => mainWindow.webContents.send('menu-command', 'file-save-as') },
           { label: getMenuLabel('saveWithoutResults', 'Save without results...'), click: () => mainWindow.webContents.send('menu-command', 'file-save-without-results') },
           { type: 'separator' },
@@ -283,21 +302,32 @@ function createWindow({ openAbout = false } = {}) {
   for (const arg of process.argv) {
     if (arg === '--new-library') {
       qp.set('action', 'new-library');
+    } else if (isProjectFile(arg)) {
+      projectToOpen = path.resolve(arg);
     } else if (arg.toLowerCase().endsWith('.tclib')) {
       qp.set('library', arg);
-    } else if (isDrawingFile(arg)) {
+    } else if ((isDrawingFile(arg) || isBoardFile(arg))) {
       qp.set('file', arg);
     }
   }
 
   // Check for MacOS file open
   if (fileToOpen) {
-    if (fileToOpen.toLowerCase().endsWith('.tclib')) {
+    if (isProjectFile(fileToOpen)) {
+      projectToOpen = path.resolve(fileToOpen);
+    } else if (fileToOpen.toLowerCase().endsWith('.tclib')) {
       qp.set('library', fileToOpen);
-    } else if (isDrawingFile(fileToOpen)) {
+    } else if ((isDrawingFile(fileToOpen) || isBoardFile(fileToOpen))) {
       qp.set('file', fileToOpen);
     }
     fileToOpen = null;
+  }
+
+  if (projectToOpen) {
+    qp.delete('file');
+    qp.delete('library');
+    qp.delete('action');
+    qp.set('project', '1');
   }
 
   // and load the index.html of the app.
@@ -388,7 +418,7 @@ function createWindow({ openAbout = false } = {}) {
     ipcHandlersRegistered = true;
     registerSimulation();
     registerLicenseHandlers({ ipcMain, app, shell, getWindow: () => mainWindow });
-    registerProjectFiles({ ipcMain, dialog, shell, store, getWindow: () => mainWindow, documents: app.getPath('documents') });
+    registerProjectFiles({ ipcMain, dialog, shell, store, getWindow: () => mainWindow, documents: app.getPath('documents'), takeProjectOpen });
     registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
       directory: path.join(__dirname, '../dist/bundled-examples') });
     registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
@@ -439,7 +469,9 @@ function createWindow({ openAbout = false } = {}) {
         return;
       }
 
-      loadFile(mainWindow, file, isLibraryMode, spawnNewWindow);
+      if (event.sender !== mainWindow.webContents ||
+          event.senderFrame !== mainWindow.webContents.mainFrame) return;
+      loadFile(mainWindow, file, isLibraryMode, spawnNewWindow, openProjectFile);
     });
 
     ipcMain.on('save-file', (event, data) => {
@@ -793,7 +825,9 @@ app.on('open-file', (event, filePath) => {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
 
-    if (isDrawingFile(filePath)) {
+    if (isProjectFile(filePath)) {
+      openProjectFile(filePath);
+    } else if (isDrawingFile(filePath) || isBoardFile(filePath)) {
       loadFile(mainWindow, filePath, isLibraryMode, spawnNewWindow);
     } else if (filePath.toLowerCase().endsWith('.tclib')) {
       loadLibrary(mainWindow, filePath);

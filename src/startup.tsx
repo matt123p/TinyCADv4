@@ -1,5 +1,5 @@
-﻿import { invalidateSimulationDocument } from './simulation/session';
-import { activateResultDocument } from './simulation/resultStore';
+﻿import { invalidateSimulationDocument } from './simulation/lifecycle';
+import { activateResultDocument, moveResultScope, retainProjectResultScopes } from './simulation/resultStore';
 import { DocActionTypes } from './state/actions/docActions';
 import { Middleware } from 'redux';
 import React from 'react';
@@ -11,6 +11,7 @@ import ReduxThunk from 'redux-thunk';
 import { DocStoreWithHistory } from './state/undo/undo';
 import MainAppElectronContainer from './state/containers/mainAppElectronContainer';
 import MainAppBrowserContainer from './state/containers/mainAppBrowserContainer';
+import { schematicTabKey, withSchematicTabs } from './state/schematicTabs';
 import { AltStoreReducer } from './state/stores/altStoreReducer';
 import {
   actionCopyEvent,
@@ -21,16 +22,35 @@ import {
 import { imageFile } from './io/files';
 import i18n from './i18n';
 
-const simulationLifecycle: Middleware = () => next => action => {
+const simulationLifecycle: Middleware = ({ getState }) => next => action => {
+  const changesDocument = action.type === DocActionTypes.SetDocument ||
+    action.type === DocActionTypes.SetFileData ||
+    action.type === 'schematic-tabs/activate' ||
+    action.type === 'schematic-tabs/remove' ||
+    action.type === 'schematic-tabs/enable';
+  if (!changesDocument) return next(action);
+  const previous = getState();
+  const previousScope = schematicTabKey(previous.altStore.file.project);
   if (action.type === DocActionTypes.SetDocument) {
     invalidateSimulationDocument();
-    activateResultDocument(action.doc.documentId);
+    activateResultDocument(action.doc.documentId, schematicTabKey(action.project) ?? null);
   }
-  return next(action);
+  const result = next(action);
+  const current = getState();
+  const scope = schematicTabKey(current.altStore.file.project);
+  if (action.type === 'schematic-tabs/activate' && previousScope !== scope) {
+    invalidateSimulationDocument();
+    activateResultDocument(current.docStore.present.drawing.documentId, scope ?? null);
+  }
+  if (action.type === DocActionTypes.SetFileData) moveResultScope(previousScope, scope);
+  const open = new Set<string>(Object.keys(current.schematicTabs?.inactive ?? {}));
+  if (scope) open.add(scope);
+  retainProjectResultScopes(open);
+  return result;
 };
 
 export const store = createStore(
-  combineReducers({ docStore: DocStoreWithHistory, altStore: AltStoreReducer }),
+  withSchematicTabs(combineReducers({ docStore: DocStoreWithHistory, altStore: AltStoreReducer })),
   // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
   applyMiddleware(ReduxThunk, simulationLifecycle),
 );

@@ -11,7 +11,6 @@ const mapStateToProps = (state: docDrawing) => {
     editSymbol: state.docStore.present.editSymbol,
     editLibrary: state.docStore.present.editLibrary,
     browserSheets: state.docStore.present.view.browserSheets,
-    file: state.altStore.file,
     saveNeeded: state.docStore.present.drawingVersion !== state.altStore.savedVersion,
   };
 };

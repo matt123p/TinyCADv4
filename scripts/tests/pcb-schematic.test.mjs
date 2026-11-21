@@ -15,6 +15,53 @@ const pins = (symbol) =>
   );
 const uid = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/;
 
+test('carries schematic purchasing attributes through the ECO into native PCB BOMs', async () => {
+  const reference = new URL('../../examples/pcb/led-classroom/Reference/', import.meta.url);
+  const board = await api.decodeBoard(await readFile(new URL('LED.dpn', reference)));
+  const drawing = await api.decodeDrawing(await readFile(new URL('LED.dzn', reference)));
+  const resistor = drawing.sheets.flatMap(symbols).find((symbol) =>
+    symbol.text.some(({ description, value }) => description === 'Ref' && value === 'R1'));
+  assert.ok(resistor);
+  const fields = { Manufacturer: 'Example Parts', MPN: '=RES-330', Supplier: 'Parts & Co.',
+    'Supplier SKU': 'A-330', 'Rated Voltage': '75 V', 'Power Rating': '0.25 W', Tolerance: '1%' };
+  const addField = (description, value) =>
+    resistor.text.push({ ...resistor.text[0], description, value, type: 2 });
+  for (const [name, value] of Object.entries(fields)) addField(name, value);
+  async function compile(drawing) {
+    const graph = await api.buildHierarchicalNetlist({ drawing, path: 'LED.dzn' });
+    return (await api.buildHierarchicalCircuitSnapshot(graph, {
+      documentId: drawing.documentId, revision: board.appliedCircuit.revision + 1,
+      previous: board.appliedCircuit.nets,
+    })).snapshot;
+  }
+  const snapshot = await compile(await api.decodeDrawing(await api.encodeDrawing(drawing, 'zip-v1')));
+  const procurement = { manufacturer: 'Example Parts', mpn: '=RES-330', supplier: 'Parts & Co.',
+    supplierPartNumber: 'A-330', voltageRating: '75 V', powerRating: '0.25 W', tolerance: '1%' };
+  assert.deepEqual(snapshot.components.find(({ reference }) => reference === 'R1').procurement, procurement);
+  const eco = await api.previewCircuitEco(board, board.appliedCircuit, snapshot);
+  assert.deepEqual(eco.changes.find(({ reference }) => reference === 'R1').fields, ['Purchasing details']);
+  const saved = await api.decodeBoard(await api.encodeBoard(api.applyCircuitEco(board, eco)));
+  assert.deepEqual(saved.components.find(({ reference }) => reference === 'R1').procurement, procurement);
+  assert.deepEqual(saved.appliedCircuit.components.find(({ reference }) => reference === 'R1').procurement, procurement);
+  assert.deepEqual(saved.footprints, board.footprints);
+  assert.deepEqual(saved.tracks, board.tracks);
+  assert.equal(saved.sourceCircuit.connectivityDigest, board.sourceCircuit.connectivityDigest);
+  const spreadsheet = api.boardAssembly(saved)['bom.csv'];
+  assert.match(spreadsheet, /Manufacturer,MPN,Supplier,Supplier part number,Voltage rating,Power rating,Tolerance/);
+  assert.ok(spreadsheet.includes('"Example Parts","\'=RES-330","Parts & Co.","A-330","75 V","0.25 W","1%"'));
+  assert.ok(api.boardAssembly(saved, undefined, 'raw')['bom.csv'].includes('"=RES-330"'));
+
+  const [part] = saved.components.filter(({ reference }) => reference === 'R1');
+  const equal = { ...part, id: crypto.randomUUID(), reference: 'R2' };
+  const different = { ...part, id: crypto.randomUUID(), reference: 'R3', procurement: { ...procurement, voltageRating: '50 V' } };
+  const bom = api.boardAssembly({ ...saved, footprints: [], components: [part, equal, different] })['bom.csv'];
+  assert.match(bom, /"R1, R2","2"/);
+  assert.match(bom, /"R3","1"/);
+
+  addField('Manufacturer Part Number', 'Other Part');
+  await assert.rejects(compile(drawing), /R1: conflicting MPN attributes/);
+});
+
 test('legacy XML receives stable unit and pin identities through DSN and compressed DZN', async () => {
   const drawing = await api.decodeDrawing(legacy);
   const [sheet] = drawing.sheets;
@@ -135,6 +182,77 @@ function parse(xml) {
   builder.fromText(xml);
   return new api.ioXML().from_dsn(builder);
 }
+
+test('checks named power rails and native electrical pin types', async () => {
+  const checker = new api.updateDrawing();
+  const marker = (name, position) =>
+    `<POWER pos="${position}" direction="0" which="0">${name}</POWER>`;
+  const rail = (types, names = ['VCC', 'VCC']) => {
+    const parts = types.map((type, index) => {
+      const id = String(index + 1);
+      const term = pinXml('1', 'Terminal').replace('elec="4"', `elec="${type}"`);
+      return definition(term).replace('id="1"', `id="${id}"`).replace('<GUID>test', `<GUID>test-${id}`);
+    });
+    const units = types.map((_, index) =>
+      instance(`U${index + 1}`, `${20 + 10 * index},20`).replace('id="1"', `id="${index + 1}"`));
+    return parse(
+      '<TinyCADSheets><TinyCAD><NAME>Rail</NAME>' + parts.join('') + units.join('') +
+      marker(names[0], '20,20') + marker(names[1], '60,20') +
+      [20, 30, 40, 50].map((x) => `<WIRE a="${x},20" b="${x + 10},20"/>`).join('') +
+      '</TinyCAD></TinyCADSheets>',
+    );
+  };
+
+  const compile = [
+    async (drawing) => new api.NetlistWorkerState().init(drawing),
+    async (drawing) => api.buildHierarchicalNetlist({ drawing, path: 'Rail.dsn' }),
+  ];
+  for (const netlist of compile) {
+    const valid = rail([10, 9, 9, 7, 8]);
+    const compiled = await netlist(valid);
+    const railCounts = compiled.eprops[compiled.labels.VCC];
+    assert.equal(railCounts.powers, 2);
+    assert.equal(railCounts.power_outputs, 1);
+    assert.equal(railCounts.power_inputs, 2);
+    assert.equal(railCounts.free, 1);
+    assert.equal(railCounts.unspecified, 1);
+    assert.deepEqual(checker.designRulesCheck(valid, valid.drc, compiled), []);
+
+    for (const [types, message] of [
+      [[10, 10], 'Multiple power outputs on same net'],
+      [[9, 9], 'Multiple power inputs with no driver'],
+      [[10, 1], 'Power connected to an output'],
+    ]) {
+      const drawing = rail(types);
+      assert.deepEqual(checker.designRulesCheck(drawing, drawing.drc, await netlist(drawing))
+        .map(({ text }) => text), [message]);
+    }
+    const openEmitter = await netlist(rail([11]));
+    assert.equal(openEmitter.eprops[openEmitter.labels.VCC].open_emitters, 1);
+
+    const shorted = rail([], ['VCC', 'VDD']);
+    const findings = checker.designRulesCheck(shorted, {
+      ...shorted.drc, MultipleNetNames: false,
+    }, await netlist(shorted));
+    assert.equal(findings.length, 1);
+    assert.equal(findings[0].text, 'Power connected to power');
+    assert.equal(findings[0].symbol, 'VDD');
+    assert.deepEqual(findings[0].a, [300, 100]);
+  }
+});
+
+test('the MCU and sensor schematic passes ERC and still matches its saved PCB', async () => {
+  const reference = new URL('../../examples/pcb/mcu-sensor/', import.meta.url);
+  const drawing = await api.decodeDrawing(await readFile(new URL('Sensor.dsn', reference)));
+  const board = await api.decodeBoard(await readFile(new URL('Sensor.dpn', reference)));
+  const graph = await api.buildHierarchicalNetlist({ drawing, path: 'Sensor.dsn' });
+  assert.deepEqual(new api.updateDrawing().designRulesCheck(drawing, drawing.drc, graph), []);
+  const { snapshot } = await api.buildHierarchicalCircuitSnapshot(graph, {
+    documentId: drawing.documentId, revision: board.sourceCircuit.revision,
+    previous: board.appliedCircuit.nets,
+  });
+  assert.equal(await api.circuitConnectivityDigest(snapshot), board.sourceCircuit.connectivityDigest);
+});
 
 test('audits hidden power by intent and keeps an explicit no-connect attached to its terminal', () => {
   const drawing = parse(

@@ -1,0 +1,390 @@
+<?xml version='1.0' encoding='utf-8'?>
+<TinyCADSheets>
+  <DSNIDENTITY id="f6600000-0000-4000-8000-000000000001" />
+  <TinyCAD id="f6600000-0000-4000-8000-000000000002">
+    <NAME>Wi-Fi temperature node</NAME>
+    <DETAILS>
+      <Size width="1455" height="1180" />
+      <GUIDES horiz="7" vert="5" />
+      <TITLE>Wi-Fi temperature node</TITLE>
+      <AUTHOR />
+      <REVISION>1.0</REVISION>
+      <DOCNUMBER>Reference F</DOCNUMBER>
+      <ORGANISATION>TinyCAD</ORGANISATION>
+      <SHEETS>1 of 1</SHEETS>
+      <SHOWS>0</SHOWS>
+      <DATE />
+      <GRID spacing="50" snap="1" />
+    </DETAILS>
+    <FONT id="1">
+      <HEIGHT>10</HEIGHT>
+      <FACENAME>Arial</FACENAME>
+      <WIDTH>0</WIDTH>
+      <WEIGHT>400</WEIGHT>
+      <ITALIC>0</ITALIC>
+      <UNDERLINE>0</UNDERLINE>
+      <STRIKEOUT>0</STRIKEOUT>
+      <CHARSET>0</CHARSET>
+    </FONT>
+    <FONT id="2">
+      <HEIGHT>12</HEIGHT>
+      <FACENAME>Arial</FACENAME>
+      <WIDTH>0</WIDTH>
+      <WEIGHT>400</WEIGHT>
+      <ITALIC>0</ITALIC>
+      <UNDERLINE>0</UNDERLINE>
+      <STRIKEOUT>0</STRIKEOUT>
+      <CHARSET>0</CHARSET>
+    </FONT>
+    <STYLE id="1">
+      <STYLE>0</STYLE>
+      <COLOR>000000</COLOR>
+      <THICKNESS>1</THICKNESS>
+    </STYLE>
+    <STYLE id="2">
+      <STYLE>5</STYLE>
+      <COLOR>000000</COLOR>
+      <THICKNESS>1</THICKNESS>
+    </STYLE>
+    <SYMBOLDEF id="1">
+      <NAME type="0">ESP32-C3-WROOM-02-N4</NAME>
+      <GUID>f6600000-0000-4000-8000-000000000021</GUID>
+      <REF type="0">U?</REF>
+      <DESCRIPTION>ESP32-C3-WROOM-02-N4 · esp32-c3-wroom-02</DESCRIPTION>
+      <PPP>1</PPP>
+      <REF_POINT pos="0,0" power="false" part="1" />
+      <TinyCAD>
+        <RECTANGLE a="0,0" b="44,44" style="1" fill="0" />
+        <NOTE_TEXT a="9.13085938,19.6" b="35.93085938,23.2" font="2" color="000000" style="2" fill="0" direction="3" border_style="2">ESP32-C3-WROOM-02</NOTE_TEXT>
+        <PIN pos="22,-5" direction="1" number="1" length="25" number_pos="0" centre_name="0" which="0" elec="9" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000101">3V3</PIN>
+        <PIN pos="21,49" direction="0" number="9" length="25" number_pos="0" centre_name="0" which="0" elec="9" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000109">GND</PIN>
+        <PIN pos="23,49" direction="0" number="19" length="25" number_pos="0" centre_name="0" which="0" elec="9" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000119">GND_EP</PIN>
+        <PIN pos="49,6" direction="2" number="18" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000118">IO0</PIN>
+        <PIN pos="49,10" direction="2" number="17" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000117">IO1</PIN>
+        <PIN pos="49,14" direction="2" number="16" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000116">IO2</PIN>
+        <PIN pos="49,18" direction="2" number="15" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000115">IO3</PIN>
+        <PIN pos="49,22" direction="2" number="14" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000114">IO19</PIN>
+        <PIN pos="49,26" direction="2" number="13" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000113">IO18</PIN>
+        <PIN pos="49,30" direction="2" number="12" length="25" number_pos="0" centre_name="0" which="0" elec="1" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000112">TXD</PIN>
+        <PIN pos="49,34" direction="2" number="11" length="25" number_pos="0" centre_name="0" which="0" elec="0" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000111">RXD</PIN>
+        <PIN pos="49,38" direction="2" number="10" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000110">IO10</PIN>
+        <PIN pos="-5,10" direction="3" number="2" length="25" number_pos="0" centre_name="0" which="0" elec="0" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000102">EN</PIN>
+        <PIN pos="-5,14" direction="3" number="3" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000103">IO4</PIN>
+        <PIN pos="-5,18" direction="3" number="4" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000104">IO5</PIN>
+        <PIN pos="-5,22" direction="3" number="5" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000105">IO6</PIN>
+        <PIN pos="-5,26" direction="3" number="6" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000106">IO7</PIN>
+        <PIN pos="-5,30" direction="3" number="7" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000107">IO8</PIN>
+        <PIN pos="-5,34" direction="3" number="8" length="25" number_pos="0" centre_name="0" which="0" elec="5" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000108">IO9</PIN>
+      </TinyCAD>
+    </SYMBOLDEF>
+    <SYMBOLDEF id="2">
+      <NAME type="0">TMP75IDR</NAME>
+      <GUID>f6600000-0000-4000-8000-000000000022</GUID>
+      <REF type="0">U?</REF>
+      <DESCRIPTION>TMP75IDR · soic-8</DESCRIPTION>
+      <PPP>1</PPP>
+      <REF_POINT pos="0,0" power="false" part="1" />
+      <TinyCAD>
+        <RECTANGLE a="0,0" b="34,22" style="1" fill="0" />
+        <NOTE_TEXT a="10.865625,8.6" b="24.265625,12.2" font="2" color="000000" style="2" fill="0" direction="3" border_style="2">TMP75IDR</NOTE_TEXT>
+        <PIN pos="17,-4" direction="1" number="8" length="20" number_pos="0" centre_name="0" which="0" elec="9" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000208">V+</PIN>
+        <PIN pos="17,26" direction="0" number="4" length="20" number_pos="0" centre_name="0" which="0" elec="9" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000204">GND</PIN>
+        <PIN pos="38,7" direction="2" number="7" length="20" number_pos="0" centre_name="0" which="0" elec="0" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000207">A0</PIN>
+        <PIN pos="38,11" direction="2" number="6" length="20" number_pos="0" centre_name="0" which="0" elec="0" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000206">A1</PIN>
+        <PIN pos="38,15" direction="2" number="5" length="20" number_pos="0" centre_name="0" which="0" elec="0" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000205">A2</PIN>
+        <PIN pos="-4,7" direction="3" number="1" length="20" number_pos="0" centre_name="0" which="0" elec="3" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000201">SDA</PIN>
+        <PIN pos="-4,11" direction="3" number="2" length="20" number_pos="0" centre_name="0" which="0" elec="3" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000202">SCL</PIN>
+        <PIN pos="-4,15" direction="3" number="3" length="20" number_pos="0" centre_name="0" which="0" elec="3" part="0" show="3" pin_uuid="f6600000-0000-4000-8000-000000000203">ALERT</PIN>
+      </TinyCAD>
+    </SYMBOLDEF>
+    <SYMBOLDEF id="3">
+      <NAME type="0">Resistor</NAME>
+      <GUID>f6600000-0000-4000-8000-000000000023</GUID>
+      <REF type="0">R?</REF>
+      <DESCRIPTION>Resistor · r-0603</DESCRIPTION>
+      <PPP>1</PPP>
+      <REF_POINT pos="82,47" power="false" part="1" />
+      <TinyCAD>
+        <PIN pos="82,43" direction="1" number="1" length="30" number_pos="0" centre_name="0" which="5" elec="4" part="0" show="0" pin_uuid="f6600000-0000-4000-8000-000000000301" />
+        <PIN pos="82,51" direction="0" number="2" length="30" number_pos="0" centre_name="0" which="5" elec="4" part="0" show="0" pin_uuid="f6600000-0000-4000-8000-000000000302" />
+        <POLYGON polygon="0" style="1" pos="82,43" fill="0">
+          <POINT pos="0,1.6" arc="0" />
+          <POINT pos="0,0" arc="0" />
+        </POLYGON>
+        <POLYGON polygon="0" style="1" pos="82,50.4" fill="0">
+          <POINT pos="0,0" arc="0" />
+          <POINT pos="0,1.6" arc="0" />
+        </POLYGON>
+        <RECTANGLE a="80.4,44.6" b="83.4,50.4" style="1" fill="0" />
+      </TinyCAD>
+    </SYMBOLDEF>
+    <SYMBOLDEF id="4">
+      <NAME type="0">Ceramic capacitor</NAME>
+      <GUID>f6600000-0000-4000-8000-000000000024</GUID>
+      <REF type="0">C?</REF>
+      <DESCRIPTION>Ceramic capacitor · c-0603</DESCRIPTION>
+      <PPP>1</PPP>
+      <REF_POINT pos="94,29" power="false" part="1" />
+      <TinyCAD>
+        <POLYGON polygon="0" style="1" pos="94,30" fill="0">
+          <POINT pos="0,0" arc="0" />
+          <POINT pos="0,3" arc="0" />
+        </POLYGON>
+        <POLYGON polygon="0" style="1" pos="94,26" fill="0">
+          <POINT pos="0,3" arc="0" />
+          <POINT pos="0,0" arc="0" />
+        </POLYGON>
+        <POLYGON polygon="0" style="1" pos="92.4,30" fill="0">
+          <POINT pos="0,0" arc="0" />
+          <POINT pos="3.2,0" arc="0" />
+        </POLYGON>
+        <POLYGON polygon="0" style="1" pos="92.4,29" fill="0">
+          <POINT pos="0,0" arc="0" />
+          <POINT pos="3.2,0" arc="0" />
+        </POLYGON>
+        <PIN pos="94,26" direction="1" number="1" length="30" number_pos="0" centre_name="0" which="5" elec="4" part="0" show="0" pin_uuid="f6600000-0000-4000-8000-000000000401" />
+        <PIN pos="94,33" direction="0" number="2" length="30" number_pos="0" centre_name="0" which="5" elec="4" part="0" show="0" pin_uuid="f6600000-0000-4000-8000-000000000402" />
+      </TinyCAD>
+    </SYMBOLDEF>
+    <SYMBOLDEF id="5">
+      <NAME type="0">Power input</NAME>
+      <GUID>f6600000-0000-4000-8000-000000000025</GUID>
+      <REF type="0">J?</REF>
+      <DESCRIPTION>Power input · header-1x2</DESCRIPTION>
+      <PPP>1</PPP>
+      <REF_POINT pos="8,8" power="false" part="1" />
+      <TinyCAD>
+        <PIN pos="8,8" direction="3" number="1" length="20" number_pos="1" centre_name="0" which="0" elec="10" part="0" show="2" pin_uuid="f6600000-0000-4000-8000-000000000501">3V3</PIN>
+        <PIN pos="8,12" direction="3" number="2" length="20" number_pos="1" centre_name="0" which="0" elec="10" part="0" show="2" pin_uuid="f6600000-0000-4000-8000-000000000502">GND</PIN>
+        <RECTANGLE a="2,6" b="8,14.05" style="1" fill="0" />
+      </TinyCAD>
+    </SYMBOLDEF>
+    <SYMBOLDEF id="6">
+      <NAME type="0">UART and boot</NAME>
+      <GUID>f6600000-0000-4000-8000-000000000026</GUID>
+      <REF type="0">J?</REF>
+      <DESCRIPTION>UART and boot · header-1x4</DESCRIPTION>
+      <PPP>1</PPP>
+      <REF_POINT pos="8,8" power="false" part="1" />
+      <TinyCAD>
+        <PIN pos="8,8" direction="3" number="1" length="20" number_pos="1" centre_name="0" which="0" elec="0" part="0" show="2" pin_uuid="f6600000-0000-4000-8000-000000000601">TXD</PIN>
+        <PIN pos="8,12" direction="3" number="2" length="20" number_pos="1" centre_name="0" which="0" elec="1" part="0" show="2" pin_uuid="f6600000-0000-4000-8000-000000000602">RXD</PIN>
+        <PIN pos="8,16" direction="3" number="3" length="20" number_pos="1" centre_name="0" which="0" elec="4" part="0" show="2" pin_uuid="f6600000-0000-4000-8000-000000000603">BOOT</PIN>
+        <PIN pos="8,20" direction="3" number="4" length="20" number_pos="1" centre_name="0" which="0" elec="4" part="0" show="2" pin_uuid="f6600000-0000-4000-8000-000000000604">RESET</PIN>
+        <RECTANGLE a="2,6" b="8,22" style="1" fill="0" />
+      </TinyCAD>
+    </SYMBOLDEF>
+    <OPTIONS>
+      <GRID>1</GRID>
+      <UNITS>0</UNITS>
+      <SHOW_LABEL_CONNECTION_POINT>1</SHOW_LABEL_CONNECTION_POINT>
+      <COLOR_WIRE>FF0000</COLOR_WIRE>
+      <COLOR_BUS>0000FF</COLOR_BUS>
+      <COLOR_JUNCTION>000000</COLOR_JUNCTION>
+      <COLOR_NOCONNECT>000000</COLOR_NOCONNECT>
+      <COLOR_LABEL>208000</COLOR_LABEL>
+      <COLOR_POWER>000000</COLOR_POWER>
+      <COLOR_PIN>4040C0</COLOR_PIN>
+      <COLOR_HIDDEN_PIN>208020</COLOR_HIDDEN_PIN>
+      <COLOR_BACKGROUND>FFFFFF</COLOR_BACKGROUND>
+      <COLOR_NOTETEXT_FILL>AFFFFF</COLOR_NOTETEXT_FILL>
+      <COLOR_NOTETEXT_LINE>FF0000</COLOR_NOTETEXT_LINE>
+      <COLOR_NOTETEXT_TEXT>FF0000</COLOR_NOTETEXT_TEXT>
+    </OPTIONS>
+    <SYMBOL pos="51,52" id="1" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001000">
+      <FIELD pos="-0.1,-1" value="U1" description="Ref" type="0" show="1" />
+      <FIELD pos="1,7" value="ESP32-C3-WROOM-02-N4" description="Name" type="0" show="0" />
+      <FIELD pos="0,0" value="esp32-c3-wroom-02" description="Package" type="0" show="0" />
+      <FIELD pos="0,0" value="https://documentation.espressif.com/esp32-c3-wroom-02_datasheet_en.html" description="Datasheet" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="73,47" b="73,38" />
+    <POWER pos="73,38" which="0" direction="0">+3V3</POWER>
+    <NOCONNECT pos="100,58" />
+    <NOCONNECT pos="100,62" />
+    <WIRE a="100,66" b="121,66" />
+    <LABEL pos="114.390625,66" font="1" color="386500" direction="2" style="0">STRAP2</LABEL>
+    <NOCONNECT pos="100,70" />
+    <NOCONNECT pos="100,74" />
+    <NOCONNECT pos="100,78" />
+    <WIRE a="100,82" b="124,82" />
+    <LABEL pos="123.5,82" font="1" color="386500" direction="2" style="0">TXD_MCU</LABEL>
+    <WIRE a="100,86" b="111,86" />
+    <LABEL pos="107.61328125,86" font="1" color="386500" direction="2" style="0">RXD</LABEL>
+    <NOCONNECT pos="100,90" />
+    <WIRE a="46,62" b="37.21875,62" />
+    <LABEL pos="37.71875,62" font="1" color="386500" direction="3" style="0">EN</LABEL>
+    <WIRE a="46,66" b="37.21875,66" />
+    <LABEL pos="37.71875,66" font="1" color="386500" direction="3" style="0">SDA</LABEL>
+    <WIRE a="46,70" b="37.21875,70" />
+    <LABEL pos="37.71875,70" font="1" color="386500" direction="3" style="0">SCL</LABEL>
+    <NOCONNECT pos="46,74" />
+    <NOCONNECT pos="46,78" />
+    <WIRE a="46,82" b="37.21875,82" />
+    <LABEL pos="37.71875,82" font="1" color="386500" direction="3" style="0">STRAP8</LABEL>
+    <WIRE a="46,86" b="37.21875,86" />
+    <LABEL pos="37.71875,86" font="1" color="386500" direction="3" style="0">BOOT</LABEL>
+    <WIRE a="72,101" b="72,106" />
+    <WIRE a="74,101" b="74,106" />
+    <WIRE a="72,106" b="74,106" />
+    <POWER pos="72,106" which="4" direction="1">0</POWER>
+    <SYMBOL pos="159,60" id="2" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001001">
+      <FIELD pos="-0.1,-1" value="U2" description="Ref" type="0" show="1" />
+      <FIELD pos="1,7" value="TMP75IDR" description="Name" type="0" show="0" />
+      <FIELD pos="0,0" value="soic-8" description="Package" type="0" show="0" />
+      <FIELD pos="0,0" value="https://www.ti.com/lit/ds/symlink/tmp75.pdf" description="Datasheet" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="176,56" b="176,47" />
+    <POWER pos="176,47" which="0" direction="0">+3V3</POWER>
+    <WIRE a="176,86" b="176,95" />
+    <POWER pos="176,95" which="4" direction="1">0</POWER>
+    <WIRE a="155,67" b="149.8828125,67" />
+    <LABEL pos="150.3828125,67" font="1" color="386500" direction="3" style="0">SDA</LABEL>
+    <WIRE a="155,71" b="149.8828125,71" />
+    <LABEL pos="150.3828125,71" font="1" color="386500" direction="3" style="0">SCL</LABEL>
+    <NOCONNECT pos="155,75" />
+    <WIRE a="197,67" b="206,67" />
+    <WIRE a="197,71" b="206,71" />
+    <WIRE a="197,75" b="206,75" />
+    <WIRE a="206,67" b="206,71" />
+    <WIRE a="206,71" b="206,75" />
+    <JUNCTION pos="206,71" />
+    <JUNCTION pos="206,75" />
+    <WIRE a="206,75" b="206,83" />
+    <POWER pos="206,83" which="4" direction="1">0</POWER>
+    <SYMBOL pos="254,58" id="5" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001002">
+      <FIELD pos="-5.728125,-5.5" value="J1" description="Ref" type="0" show="1" />
+      <FIELD pos="-9.446875,-3" value="3.3 V input" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="header-1x2" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="254,58" b="236,58" />
+    <POWER pos="236,58" which="0" direction="2">+3V3</POWER>
+    <WIRE a="254,62" b="230,62" />
+    <POWER pos="230,62" which="4" direction="2">0</POWER>
+    <SYMBOL pos="254,86" id="6" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001003">
+      <FIELD pos="-6.41171875,17" value="J2" description="Ref" type="0" show="1" />
+      <FIELD pos="-10.8140625,19.5" value="UART / boot" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="header-1x4" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="254,86" b="237.8359375,86" />
+    <LABEL pos="238.3359375,86" font="1" color="386500" direction="3" style="0">TXD</LABEL>
+    <WIRE a="254,90" b="237.8359375,90" />
+    <LABEL pos="238.3359375,90" font="1" color="386500" direction="3" style="0">RXD</LABEL>
+    <WIRE a="254,94" b="237.8359375,94" />
+    <LABEL pos="238.3359375,94" font="1" color="386500" direction="3" style="0">BOOT</LABEL>
+    <WIRE a="254,98" b="237.8359375,98" />
+    <LABEL pos="238.3359375,98" font="1" color="386500" direction="3" style="0">EN</LABEL>
+    <SYMBOL pos="25,144" id="3" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001004">
+      <FIELD pos="2.4,0.25" value="R1" description="Ref" type="0" show="1" />
+      <FIELD pos="2.4,2.75" value="10k" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="r-0603" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="25,140" b="25,134" />
+    <POWER pos="25,134" which="0" direction="0">+3V3</POWER>
+    <WIRE a="25,148" b="25,154" />
+    <LABEL pos="25,154" font="1" color="386500" direction="3" style="2">EN</LABEL>
+    <SYMBOL pos="56,144" id="3" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001005">
+      <FIELD pos="2.4,0.25" value="R2" description="Ref" type="0" show="1" />
+      <FIELD pos="2.4,2.75" value="10k" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="r-0603" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="56,140" b="56,134" />
+    <POWER pos="56,134" which="0" direction="0">+3V3</POWER>
+    <WIRE a="56,148" b="56,154" />
+    <LABEL pos="56,154" font="1" color="386500" direction="3" style="2">STRAP8</LABEL>
+    <SYMBOL pos="87,144" id="3" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001006">
+      <FIELD pos="2.4,0.25" value="R3" description="Ref" type="0" show="1" />
+      <FIELD pos="2.4,2.75" value="10k" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="r-0603" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="87,140" b="87,134" />
+    <POWER pos="87,134" which="0" direction="0">+3V3</POWER>
+    <WIRE a="87,148" b="87,154" />
+    <LABEL pos="87,154" font="1" color="386500" direction="3" style="2">BOOT</LABEL>
+    <SYMBOL pos="118,144" id="3" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001007">
+      <FIELD pos="2.4,0.25" value="R4" description="Ref" type="0" show="1" />
+      <FIELD pos="2.4,2.75" value="10k" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="r-0603" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="118,140" b="118,134" />
+    <POWER pos="118,134" which="0" direction="0">+3V3</POWER>
+    <WIRE a="118,148" b="118,154" />
+    <LABEL pos="118,154" font="1" color="386500" direction="3" style="2">STRAP2</LABEL>
+    <SYMBOL pos="152,144" id="3" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001008">
+      <FIELD pos="2.4,0.25" value="R5" description="Ref" type="0" show="1" />
+      <FIELD pos="2.4,2.75" value="4.7k" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="r-0603" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="152,140" b="152,134" />
+    <POWER pos="152,134" which="0" direction="0">+3V3</POWER>
+    <WIRE a="152,148" b="152,154" />
+    <LABEL pos="152,154" font="1" color="386500" direction="3" style="2">SDA</LABEL>
+    <SYMBOL pos="183,144" id="3" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001009">
+      <FIELD pos="2.4,0.25" value="R6" description="Ref" type="0" show="1" />
+      <FIELD pos="2.4,2.75" value="4.7k" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="r-0603" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="183,140" b="183,134" />
+    <POWER pos="183,134" which="0" direction="0">+3V3</POWER>
+    <WIRE a="183,148" b="183,154" />
+    <LABEL pos="183,154" font="1" color="386500" direction="3" style="2">SCL</LABEL>
+    <SYMBOL pos="226,144" id="3" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001010">
+      <FIELD pos="2.4,0.25" value="R7" description="Ref" type="0" show="1" />
+      <FIELD pos="2.4,2.75" value="499R" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="r-0603" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="226,140" b="226,129" />
+    <LABEL pos="226,129" font="1" color="386500" direction="3" style="2">TXD_MCU</LABEL>
+    <WIRE a="226,148" b="226,154" />
+    <LABEL pos="226,154" font="1" color="386500" direction="3" style="2">TXD</LABEL>
+    <SYMBOL pos="25,181" id="4" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001011">
+      <FIELD pos="2.6,0.25" value="C1" description="Ref" type="0" show="1" />
+      <FIELD pos="2.6,2.75" value="10uF" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="c-0603" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="25,178" b="25,172" />
+    <POWER pos="25,172" which="0" direction="0">+3V3</POWER>
+    <WIRE a="25,185" b="25,190" />
+    <POWER pos="25,190" which="4" direction="1">0</POWER>
+    <SYMBOL pos="56,181" id="4" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001012">
+      <FIELD pos="2.6,0.25" value="C2" description="Ref" type="0" show="1" />
+      <FIELD pos="2.6,2.75" value="100nF" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="c-0603" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="56,178" b="56,172" />
+    <POWER pos="56,172" which="0" direction="0">+3V3</POWER>
+    <WIRE a="56,185" b="56,190" />
+    <POWER pos="56,190" which="4" direction="1">0</POWER>
+    <SYMBOL pos="87,181" id="4" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001013">
+      <FIELD pos="2.6,0.25" value="C3" description="Ref" type="0" show="1" />
+      <FIELD pos="2.6,2.75" value="1uF" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="c-0603" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="87,178" b="87,172" />
+    <LABEL pos="87,172" font="1" color="386500" direction="3" style="2">EN</LABEL>
+    <WIRE a="87,185" b="87,190" />
+    <POWER pos="87,190" which="4" direction="1">0</POWER>
+    <SYMBOL pos="152,181" id="4" show_power="1" can_scale="0" scale_x="1" scale_y="1" part="0" rotate="0" unit_uuid="f6600000-0000-4000-8000-000000001014">
+      <FIELD pos="2.6,0.25" value="C4" description="Ref" type="0" show="1" />
+      <FIELD pos="2.6,2.75" value="100nF" description="Name" type="0" show="1" />
+      <FIELD pos="0,0" value="c-0603" description="Package" type="0" show="0" />
+    </SYMBOL>
+    <WIRE a="152,178" b="152,172" />
+    <POWER pos="152,172" which="0" direction="0">+3V3</POWER>
+    <WIRE a="152,185" b="152,190" />
+    <POWER pos="152,190" which="4" direction="1">0</POWER>
+    <NOTE_TEXT a="108,5" b="204,14" font="1" color="684E30" style="2" fill="0" direction="3" border_style="2"># Wi-Fi temperature node</NOTE_TEXT>
+    <NOTE_TEXT a="22,118" b="128,124" font="1" color="684E30" style="2" fill="0" direction="3" border_style="2">## Reset and boot straps</NOTE_TEXT>
+    <NOTE_TEXT a="147,118" b="209,124" font="1" color="684E30" style="2" fill="0" direction="3" border_style="2">## I²C pull-ups</NOTE_TEXT>
+    <NOTE_TEXT a="219,118" b="266,124" font="1" color="684E30" style="2" fill="0" direction="3" border_style="2">## UART damping</NOTE_TEXT>
+    <NOTE_TEXT a="19,207" b="277,226" font="1" color="684E30" style="2" fill="0" direction="3" border_style="2">Power J1 from regulated 3.3 V. The TMP75 uses I²C address 0x48.
+
+J2 exposes 3.3 V UART levels. Use J1 ground as the serial adapter return. Ground BOOT while pulsing EN low to enter the downloader.</NOTE_TEXT>
+    <JUNCTION pos="72,106" />
+  </TinyCAD>
+  <DSNSETTINGS>
+    <SHOW_RULERS>1</SHOW_RULERS>
+  </DSNSETTINGS>
+  <NETLIST_TYPES>
+    <TYPE name="default" />
+  </NETLIST_TYPES>
+</TinyCADSheets>

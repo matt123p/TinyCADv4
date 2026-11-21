@@ -1,10 +1,84 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import path from 'node:path';
 import test from 'node:test';
+import { librarySqlite } from '../lib/library-from-sql.mjs';
 import { layoutRuntime } from '../lib/layout-runtime.mjs';
 
 const api = await layoutRuntime();
 const id = () => crypto.randomUUID();
 const point = (x, y) => ({ x, y });
+
+test('exposes incompatible SOT-23 Gate and Drain mappings and preserves the Source route', async () => {
+  const SQL = await librarySqlite();
+  const db = new SQL.Database(await readFile(new URL('../../bundled-footprints/starter-v1.tplib', import.meta.url)));
+  let mosfet, jfet;
+  try {
+    const catalogue = await api.readStarterDevices(db);
+    mosfet = catalogue.find(({ definition }) => definition.name.startsWith('2N7002BK'));
+    jfet = catalogue.find(({ definition }) => definition.name.startsWith('MMBFJ113'));
+  } finally {
+    db.close();
+  }
+  assert.ok(mosfet && jfet);
+  assert.deepEqual(mosfet.definition.footprint.pads.map(({ id, ...pad }) => pad),
+    jfet.definition.footprint.pads.map(({ id, ...pad }) => pad), 'Same physical land pattern');
+  assert.notDeepEqual(mosfet.definition.footprint.pads.map(({ id }) => id),
+    jfet.definition.footprint.pads.map(({ id }) => id), 'Independent library pad identities');
+  const unitId = id();
+  const names = ['Gate', 'Source', 'Drain'];
+  const component = {
+    id: id(), reference: 'Q1', value: 'SOT-23 review fixture', role: 'electrical', packageHint: 'SOT-23',
+    units: [{ id: unitId, sheetId: id() }],
+    signals: names.map((name) => ({ id: id(), name, terminals: [{ unitId, pinId: id() }] })),
+  };
+  const nets = component.signals.map(({ name, terminals }) => ({ id: id(), names: [name], terminals }));
+  const snapshot = {
+    schemaVersion: 1, snapshotId: id(), documentId: id(), revision: 1,
+    components: [component], nets, noConnects: [],
+  };
+  const selection = (revision) => new Map([[component.id, {
+    revision, bindings: revision.definition.terminals.map(({ id: terminalId, name }) => ({
+      terminalId, signalId: component.signals.find((signal) => signal.name === name).id,
+    })),
+  }]]);
+  const empty = api.createBoard('SOT-23 map fixture', 2,
+    [point(0, 0), point(30e6, 0), point(30e6, 20e6), point(0, 20e6)]);
+  const install = await api.previewCircuitEco(empty, undefined, snapshot, { selectedDevices: selection(mosfet) });
+  const placed = await api.placeUnplacedComponent(api.applyCircuitEco(empty, install), component.id, {
+    side: 'top', positionNm: point(12e6, 10e6), rotationMicrodegree: 0,
+  });
+  const installed = placed.footprintDefinitions[0];
+  const tracks = installed.pads.map((pad, index) => {
+    const start = api.placeFootprintPoint(pad.positionNm, placed.footprints[0]);
+    const end = pad.positionNm.y === 0
+      ? point(start.x + 3e6, start.y)
+      : point(start.x, start.y + Math.sign(pad.positionNm.y) * 3e6);
+    return { id: id(), netId: nets[index].id, widthNm: 280_000, layerId: 'top', start, end };
+  });
+  const board = await api.decodeBoard(await api.encodeBoard({
+    ...placed, tracks, requiredFeatures: [...placed.requiredFeatures, 'routed-copper'],
+  }));
+  const require = createRequire(import.meta.url);
+  const wasm = await readFile(path.join(path.dirname(require.resolve('clipper2-wasm/package.json')), 'dist/es/clipper2z.wasm'));
+  const kernel = await api.loadPolygonKernel(Uint8Array.from(wasm).buffer);
+  const eco = await api.previewCircuitEco(board, snapshot, { ...snapshot, revision: 2 }, {
+    selectedDevices: selection(jfet), loadKernel: async () => kernel,
+  });
+  assert.equal(eco.unchanged, false);
+  assert.deepEqual(eco.deviceChanges[0].padChanges.map(
+    ({ label, changes, beforeSignal, afterSignal }) => [label, changes, beforeSignal, afterSignal]), [
+    ['1', ['Signal or pad role'], 'Gate', 'Drain'],
+    ['3', ['Signal or pad role'], 'Drain', 'Gate'],
+  ]);
+  assert.deepEqual(eco.affectedCopper.map(({ id }) => id).sort(), [tracks[0].id, tracks[2].id].sort());
+  assert.deepEqual(eco.candidate.tracks.find(({ id }) => id === tracks[1].id), tracks[1]);
+  assert.ok(eco.shorts.some(({ netIds }) => netIds.includes(nets[0].id) && netIds.includes(nets[2].id)));
+  const diagnostic = await api.prepareCamPreview(api.applyCircuitEco(board, eco), kernel);
+  assert.equal(diagnostic.report.issues.filter(({ code }) => code === 'route-review').length, 2);
+  assert.ok(diagnostic.report.issues.some(({ code }) => code === 'short'));
+});
 
 test('reviews stable device mappings and keeps applied revisions portable and independent', async () => {
   const terminalId = id();
@@ -177,7 +251,7 @@ test('reviews stable device mappings and keeps applied revisions portable and in
     bindings,
   );
   assert.deepEqual(changed.padChanges, [
-    { id: pads[0].id, label: '01', changes: ['Position'] },
+    { id: pads[0].id, label: '01', changes: ['Position'], before: pads[0], after: nextFootprint.pads[0] },
   ]);
   const updated = api.applyDeviceReview(reopened, changed);
   assert.equal(updated.footprintDefinitions.length, 1);

@@ -6,6 +6,12 @@ import type { BoardPoint } from './geometry';
 import { pointInPolygon, samePoint } from './geometry';
 import type { PolygonKernel } from './polygonKernel';
 
+export interface CamArtwork {
+  readonly kind: 'mask' | 'paste' | 'silk';
+  readonly side: CopperLayer['id'];
+  readonly regions: readonly PolygonRegion[];
+}
+
 export interface CamSnapshot {
   readonly profile: BoardProfile;
   readonly layers: readonly {
@@ -13,16 +19,17 @@ export interface CamSnapshot {
     copper: readonly PolygonRegion[];
   }[];
   readonly drills: readonly BoardDrill[];
+  readonly artwork?: readonly CamArtwork[];
 }
 
 export type CamFiles = Readonly<Record<string, string>>;
 
-function gerberHeader(fileFunction: string): string[] {
+function gerberHeader(fileFunction: string, polarity = 'Positive'): string[] {
   return [
     '%FSLAX46Y46*%',
     '%MOMM*%',
     `%TF.FileFunction,${fileFunction}*%`,
-    '%TF.FilePolarity,Positive*%',
+    `%TF.FilePolarity,${polarity}*%`,
     '%ADD10C,0.001000*%',
     'D10*',
   ];
@@ -30,12 +37,13 @@ function gerberHeader(fileFunction: string): string[] {
 
 const xy = (p: BoardPoint) => `X${p.x}Y${p.y}`;
 
-function copperGerber(
+function regionGerber(
   kernel: PolygonKernel,
   regions: readonly PolygonRegion[],
   fileFunction: string,
+  polarity?: string,
 ): string {
-  const lines = gerberHeader(fileFunction);
+  const lines = gerberHeader(fileFunction, polarity);
   const merged = kernel.boolean('union', regions, []);
   const rings = merged.flatMap(({ outer, holes }) => [
     { polygon: outer, polarity: 'D' },
@@ -144,10 +152,27 @@ export function writeCamFiles(
     ...Object.fromEntries(
       snapshot.layers.map(({ id, copper }, index) => [
         `copper-${id}.gbr`,
-        copperGerber(
+        regionGerber(
           kernel,
           copper,
           `Copper,L${index + 1},${id === 'top' ? 'Top' : 'Bot'}`,
+        ),
+      ]),
+    ),
+    ...Object.fromEntries(
+      (snapshot.artwork ?? []).map(({ kind, side, regions }) => [
+        `${kind}-${side}.gbr`,
+        regionGerber(
+          kernel,
+          regions,
+          `${
+            kind === 'mask'
+              ? 'Soldermask'
+              : kind === 'paste'
+              ? 'Paste'
+              : 'Legend'
+          },${side === 'top' ? 'Top' : 'Bot'}`,
+          kind === 'mask' ? 'Negative' : 'Positive',
         ),
       ]),
     ),

@@ -35,12 +35,18 @@ test('example controls live in the browser title bar and explanation survives hi
       });
     });
   }
+  const requests = new Set();
+  page.on('request', (request) => requests.add(request.url()));
   await page.goto(app.baseURL);
   await expect(page.getByRole('button', { name: 'Projects', exact: true })).toHaveCount(0);
   expect(app.hasSourceAsset('src/components/projects/ProjectBrowser.tsx')).toBe(false);
   expect(app.hasSourceAsset('src/components/projects/HierarchyPanel.tsx')).toBe(false);
-  expect(app.hasSourceAsset('src/pcb/projectSettings.ts')).toBe(false);
-  expect(app.hasSourceAsset('src/pcb/boardCodec.ts')).toBe(false);
+  const boardBundles = app.bundlesForSource('src/pcb/boardCodec.ts');
+  const projectBundles = app.bundlesForSource('src/pcb/projectSettings.ts');
+  expect(boardBundles.length).toBeGreaterThan(0);
+  expect([...boardBundles, ...projectBundles].filter((file) =>
+    requests.has(new URL(file, app.baseURL).href),
+  )).toEqual([]);
   const header = page.locator('.top-bar-right');
   const open = header.getByRole('button', {
     name: 'Open Example',

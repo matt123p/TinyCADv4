@@ -12,6 +12,7 @@ import {
 } from '../../io/hierarchyDrawing';
 import {
   findChildUsages,
+  linkedBoardSource,
   readProjectSchematic,
   resolveChild,
 } from '../../io/projectHierarchy';
@@ -25,6 +26,9 @@ import { DocActionTypes } from '../../state/actions/docActions';
 import { actionSheetSelect } from '../../state/dispatcher/AppDispatcher';
 import { activeSheet } from '../../state/stores/docStoreReducer';
 import type { docDrawing } from '../../state/undo/undo';
+import { BoardPortDialog, SystemConnectionsDialog } from './ProjectSystemDialog';
+import type { BoardInterface, SystemConnections } from './ProjectSystemDialog';
+import { boardInstanceArtwork, boardInstancePorts, readBoardInterface, reviewProjectSystem } from '../../io/projectSystem';
 
 type Project = Awaited<ReturnType<typeof readProject>>;
 type Usages = Awaited<ReturnType<typeof findChildUsages>>;
@@ -66,6 +70,10 @@ export default function HierarchyPanel() {
       : sheet?.items.find((item) => item._id === selectedId);
   const child =
     placement && isChildPlacement(placement) ? placement : undefined;
+  const boardInstance = child?.hierarchy.boardInstance;
+  const systemDrawing = drawing.sheets.some((sheet) =>
+    sheet.items.some((item) => isChildPlacement(item) && item.hierarchy.boardInstance),
+  );
   const trail = project?.hierarchyTrail ?? emptyTrail;
   const [summary, setSummary] = useState<Project>();
   const [locatorError, setLocatorError] = useState('');
@@ -76,6 +84,12 @@ export default function HierarchyPanel() {
   const [replacement, setReplacement] = useState('');
   const [review, setReview] = useState<Review>();
   const [uses, setUses] = useState<Usages>();
+  const [portMapping, setPortMapping] = useState<{
+    child: typeof child;
+    sheet: typeof sheet;
+    board: BoardInterface;
+  }>();
+  const [systemReview, setSystemReview] = useState<{ drawing: typeof drawing; connections: SystemConnections }>();
   const [busy, setBusy] = useState(false);
   const [refresh, setRefresh] = useState(0);
 
@@ -103,10 +117,9 @@ export default function HierarchyPanel() {
       )
         throw new Error(t('hierarchy.cycle'));
       try {
-        const art = await childInterface(
-          resolved.drawing,
-          resolved.path.split('/').pop(),
-        );
+        const art = boardInstance
+          ? await boardInstanceArtwork(resolved.drawing, linkedBoardSource(loaded, boardInstance.boardId).board)
+          : await childInterface(resolved.drawing, resolved.path.split('/').pop());
         if (current && child._symbol.uid !== art.uid)
           setInterfaceNotice(t('hierarchy.interfaceChanged'));
       } catch (reason) {
@@ -118,7 +131,7 @@ export default function HierarchyPanel() {
     return () => {
       current = false;
     };
-  }, [project, child, refresh, trail, t]);
+  }, [project, child, boardInstance, refresh, trail, t]);
 
   useEffect(() => {
     const reload = () => setRefresh((value) => value + 1);
@@ -206,6 +219,14 @@ export default function HierarchyPanel() {
       const circuit = target.sheets.find(
         (item) => !item.hierarchicalSymbol && item.kind !== 'simulation',
       );
+      if (!child.hierarchy.documentId) {
+        dispatch({
+          type: DocActionTypes.RefreshChild,
+          source: sheet,
+          placement: child,
+          link: { path: entry.path, documentId: entry.id, cached: true },
+        });
+      }
       open(entry.id, [...trail, frame()], circuit?.id);
     });
 
@@ -225,9 +246,10 @@ export default function HierarchyPanel() {
   const reviewChild = (entryId?: string) =>
     run(async () => {
       const loaded = await readProject(project.id, project.rootId);
-      const resolved = entryId
+      const boardLink = boardInstance && linkedBoardSource(loaded, boardInstance.boardId);
+      const resolved = entryId || boardLink
         ? await (async () => {
-            const entry = loaded.settings.entries.find(
+            const entry = boardLink?.source ?? loaded.settings.entries.find(
               (item) => item.kind === 'schematic' && item.id === entryId,
             );
             if (!entry) throw new Error(t('hierarchy.noChild'));
@@ -244,18 +266,26 @@ export default function HierarchyPanel() {
       )
         throw new Error(t('hierarchy.cycle'));
       // Keep the v3 locator for an existing file until it is registered in the project.
-      const link = resolved.entry
+      const link: Review['link'] = resolved.entry
         ? {
             path: resolved.entry.path,
             documentId: resolved.entry.id,
             cached: true,
           }
         : child.hierarchy;
-      const art = await childInterface(
-        resolved.drawing,
-        resolved.path.split('/').pop(),
-      );
+      const art = boardLink
+        ? await boardInstanceArtwork(resolved.drawing, boardLink.board)
+        : await childInterface(resolved.drawing, resolved.path.split('/').pop());
       const definition = hierarchyDefinition(sheet, art);
+      if (boardInstance) {
+        const pins = new Set(boardInstancePorts({ ...child, _symbol: definition }).map(({ id }) => id));
+        link.boardInstance = {
+          ...boardInstance,
+          ports: link.documentId === child.hierarchy.documentId
+            ? boardInstance.ports.filter(({ portId }) => pins.has(portId))
+            : [],
+        };
+      }
       const next = refreshPlacement(child, link, definition);
       const candidate = {
         placement: child.unitId,
@@ -340,10 +370,21 @@ export default function HierarchyPanel() {
         >
           {t('hierarchy.whereUsed')}
         </Button>
+        {systemDrawing && (
+          <Button size="small" appearance="subtle" disabled={blocked} onClick={(): void => void run(async () => {
+            const loaded = await readProject(project.id, project.rootId);
+            const connections = await reviewProjectSystem(loaded, drawing);
+            setSystemReview({ drawing, connections });
+          })}>
+            Review system connections…
+          </Button>
+        )}
         {child && (
           <>
             <span title={child.hierarchy.path}>
-              {child.hierarchy.path.split(/[/\\]/).pop()}
+              {boardInstance
+                ? summary?.settings.entries.find(({ id }) => id === boardInstance.boardId)?.path ?? 'Board instance'
+                : child.hierarchy.path.split(/[/\\]/).pop()}
             </span>
             <Button
               size="small"
@@ -351,7 +392,7 @@ export default function HierarchyPanel() {
               disabled={blocked}
               onClick={enterChild}
             >
-              {t(
+              {boardInstance ? 'Open board source' : t(
                 unregistered
                   ? 'hierarchy.registerAndOpen'
                   : 'hierarchy.openChild',
@@ -365,8 +406,21 @@ export default function HierarchyPanel() {
                 void reviewChild();
               }}
             >
-              {t('hierarchy.reloadChild')}
+              {boardInstance ? 'Reload board interface' : t('hierarchy.reloadChild')}
             </Button>
+            {boardInstance ? (
+              <Button size="small" appearance="subtle" disabled={blocked || !!locatorError || !!interfaceNotice}
+                onClick={(): void => void run(async () => {
+                  const loaded = await readProject(project.id, project.rootId);
+                  const board = await readBoardInterface(loaded, boardInstance.boardId);
+                  if (board.source.id !== child.hierarchy.documentId)
+                    throw new Error('Reload the board interface before mapping its ports.');
+                  setPortMapping({ child, sheet, board });
+                })}
+              >
+                Map board ports…
+              </Button>
+            ) : (
             <Button
               size="small"
               appearance="subtle"
@@ -375,6 +429,7 @@ export default function HierarchyPanel() {
             >
               {t('hierarchy.relink')}
             </Button>
+            )}
           </>
         )}
       </div>
@@ -382,6 +437,25 @@ export default function HierarchyPanel() {
         <div role="status">{locatorError || interfaceNotice}</div>
       )}
       {error && <div role="alert">{error}</div>}
+      {child && boardInstance && portMapping?.child === child && portMapping.sheet === sheet && (
+        <BoardPortDialog
+          item={child}
+          board={portMapping.board}
+          onClose={() => setPortMapping(undefined)}
+          onApply={(ports) => {
+            dispatch({
+              type: DocActionTypes.RefreshChild,
+              source: sheet,
+              placement: child,
+              link: { ...child.hierarchy, boardInstance: { ...boardInstance, ports } },
+            });
+            setPortMapping(undefined);
+          }}
+        />
+      )}
+      {systemReview?.drawing === drawing && (
+        <SystemConnectionsDialog connections={systemReview.connections} onClose={() => setSystemReview(undefined)} />
+      )}
       {child && repair && summary && (
         <div className="hierarchy-actions">
           <Select

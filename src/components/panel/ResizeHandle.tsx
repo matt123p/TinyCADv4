@@ -41,6 +41,8 @@ const useStyles = makeStyles({
 interface ResizeHandleProps {
   direction: 'horizontal' | 'vertical';
   onResize: (delta: number) => void;
+  edge?: 'start' | 'end';
+  label?: string;
   onDragStateChange?: (dragging: boolean) => void;
 }
 
@@ -92,6 +94,18 @@ export const ResizeHandle: React.FunctionComponent<ResizeHandleProps> = (
   return (
     <div
       className={props.direction === 'horizontal' ? styles.horizontalHandle : styles.verticalHandle}
+      style={props.direction === 'horizontal' && props.edge === 'start' ? { left: 0, right: 'auto' } : undefined}
+      role={props.label ? 'separator' : undefined}
+      aria-label={props.label}
+      aria-orientation={props.direction === 'horizontal' ? 'vertical' : 'horizontal'}
+      tabIndex={props.label ? 0 : undefined}
+      onKeyDown={(event) => {
+        const keys = props.direction === 'horizontal' ? ['ArrowLeft', 'ArrowRight'] : ['ArrowUp', 'ArrowDown'];
+        const index = keys.indexOf(event.key);
+        if (index === -1) return;
+        event.preventDefault();
+        props.onResize(index === 0 ? -16 : 16);
+      }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={(e) => {

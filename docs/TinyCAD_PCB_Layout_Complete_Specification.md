@@ -442,13 +442,15 @@ Store nominal finished-hole size, tolerance and process classification separatel
 
 PCB Design is a workspace in the existing TinyCAD application in Electron and supported browser mode. Use the same application window for **Schematic**, **PCB**, **3D**, **Simulation** and **Manufacturing preview**. Follow the [project file tab contract](project-specification.md#file-tabs-and-save-all) for opening and switching files. Support side-by-side schematic and PCB inspection within that shell. Reuse and extend the common menus, toolbar, panels, dialogues, commands and shortcuts, along with project navigation, open/save, unsaved changes, recovery and undo integration. Register PCB-specific views, tools and commands through the same shell components and services. Preserve familiar control locations for equivalent actions.
 
+Implement the [TinyCAD editor design contract](tinycad-ui-design.md#shared-editor-contract) using the v4.1.0 shell as the visual and interaction baseline. The contract defines the shared toolbar, browser dropdowns, Electron native menus, panel roles, contextual commands, zoom and ruler behavior.
+
 | Region | Required content |
 |---|---|
-| Existing top toolbar and menus | Save/undo, sync status, selection/place/route, active layer, grid, width/via preset, Check, Export |
-| Existing collapsible left panel | Project tree, unplaced components, searchable nets/components and libraries, and layers/filters |
+| Existing top toolbar and menus | Shared file, edit and view controls. Add primary PCB tools such as place and route through the existing icon groups and command system. |
+| Existing collapsible left panel | Projects in Project mode, searchable footprint libraries, previews and unplaced components. Start placement by dragging a preview onto the drawing. |
 | Existing central drawing area and sheet tab strip | SVG board drawing, route preview, selective airwires and contextual overlays |
-| Existing contextual panels and dialogues | Selection properties, rule explanations and tool settings. Present equivalent actions through the same dialogue types and placements as Circuit Design |
-| Existing bottom panel | Checks, ECO preview, job progress, searchable issues and manufacturing log |
+| Existing resizable bottom panel | Circuit and net navigation, selected-component and copper properties, and design-check results. |
+| Existing right-hand panel pattern and dialogues | Advanced options such as layers, routing rules, ECO review, 3D inspection and manufacturing. Reuse shared resize, tabs and dialogue behavior where applicable. |
 | Status bar | Units, cursor position, active tool/layer, snapping, outstanding connections and stale-state indicators |
 
 Avoid permanently filling both sides with dense panels on a small laptop. Docks must collapse, and command search must reach every normal action. Display tool mode and next expected action in plain text. Include a quick “reset workspace” action.
@@ -469,7 +471,7 @@ Avoid permanently filling both sides with dense panels on a small laptop. Docks 
 | UX-10 | Provide touch/pen selection, pan/zoom and enlarged handles | Tablet users can place and edit supported geometry without hover-only controls | M2 |
 | UX-11 | Host PCB Design inside the existing TinyCAD application shell and share its components and services | Switch between schematic and PCB in the same window and project context. Verify shared navigation, open/save, unsaved changes, keyboard actions, property dialogues and issue navigation | M1 |
 
-Suggested shortcut actions are route, via, rotate, flip side, move, drag, properties, highlight net, refill zones and full check. Bindings must be checked against existing TinyCAD and browser shortcuts before being assigned. “Flip side” must not share an ambiguous action with “mirror drawing.”
+Suggested shortcut actions are route, via, rotate, flip side, move, drag, properties, highlight net, refill zones and full check. Bindings must be checked against existing TinyCAD and browser shortcuts before being assigned. “Flip side” must not share an ambiguous action with “mirror drawing.” Placement and movement commit to the document's undo history. File writes belong to Save, Save As and Save All. See the [shared placement contract](tinycad-ui-design.md#placement-and-persistence).
 
 ### 13.3 Routing interaction state
 
@@ -1191,6 +1193,7 @@ Reference circuits are test fixtures, not pre-certified products. Choose actual 
 | AT-23 | Re-run a deterministic output recipe | Geometric outputs/hashes match after declared metadata normalisation | OUT, PRJ |
 | AT-24 | Follow the classroom exercise on a clean browser | Complete edit/check/export without AI, hosted routing or manufacturer login | UX, EDU, OUT |
 | AT-25 | Switch from the schematic sheet to PCB and use equivalent tools and property dialogues | Both editors use the same window, project browser, shell components and document services. Edits and undo survive switching. The 2D board and editing overlays render through SVG | UX-11, REN-01, WEB-01 |
+| Shared editor interaction | Open the populated PCB alongside a v4.1.0 reference drawing in comparable browser and Electron windows | Verify common toolbar, menus, panel roles, context menus, zoom, rulers and an undoable drag-to-place workflow with explicit save. Follow the [editor acceptance evidence](tinycad-ui-design.md#acceptance-evidence) | UX-01, UX-07, UX-09, UX-11, REN-01 |
 | AT-26 | Rebuild and place generated SMT and through-hole package variants on a clean installation | Footprint and STEP geometry agree on datum, lead positions and orientation. The bundled catalogue works offline and native save/reopen preserves each pairing | FPT-09, PRJ |
 | AT-27 | Import a KiCad symbol and footprint with an asymmetric STEP attachment, then rotate and flip the placement | The native round trip preserves PCB metadata, supported footprint geometry and model alignment. The project opens offline and reports unresolved models during import | FPT-06, MEC-09, interoperability |
 | AT-28 | Copy a standalone XML `.dpn` with repeated component placements and a STEP model to a clean installation | Open in Single File mode in Electron and the filesystem-only browser build. Verify editable geometry, connectivity, rules, model placement and supported output using only the board file. Repeated placements resolve to shared embedded definitions. Re-saving unchanged content is deterministic | PRJ, LIB, WEB-01, §26 |

@@ -26,6 +26,19 @@ export interface FootprintModel extends FootprintModelTransform {
   readonly quality: 'imported-unreviewed' | 'generated-envelope';
 }
 
+export const footprintAssemblyMarks = {
+  'pin-1': { name: 'Pin 1', glyph: '1' },
+  cathode: { name: 'Cathode', glyph: 'K' },
+  positive: { name: 'Positive terminal', glyph: '+' },
+  negative: { name: 'Negative terminal', glyph: '−' },
+} as const;
+export const footprintAssemblyNotesLimit = 640;
+
+export interface FootprintAssembly {
+  readonly marker?: { readonly kind: keyof typeof footprintAssemblyMarks; readonly padId: string };
+  readonly notes?: string;
+}
+
 export function validateFootprintDetails(graphics: readonly FootprintGraphic[] = [], models: readonly FootprintModel[] = []) {
   if (!Array.isArray(graphics) || graphics.length > 4096 || !Array.isArray(models) || models.length > 32) throw new Error('Invalid footprint graphics or models.');
   for (const item of graphics as readonly FootprintGraphic[]) {

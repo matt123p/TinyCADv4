@@ -38,6 +38,7 @@ declare global {
                 id: FileIdType | string;
                 folderId: FileIdType | string;
                 content: string | Uint8Array
+                expectedVersion?: string;
             }) => void;
 
             // Bundled examples
@@ -67,7 +68,7 @@ declare global {
 
             // Callbacks
             fileLoaded: (callback: (data: { content: string | Uint8Array, name: string, id: string }) => void) => () => void;
-            fileSaved: (callback: (data: { success: boolean, name: string, id: string }) => void) => () => void;
+            fileSaved: (callback: (data: { success: boolean, name: string, id: string, error?: string }) => void) => () => void;
             recentFiles: (callback: (data: { name: string, id: string }[]) => void) => () => void;
             libraryLoaded: (callback: (data: { content: ArrayBuffer, name: string, id: string, lastModified?: Date | string }) => void) => () => void;
             libraryLoadFailed: (callback: (data: { id: string, name: string, error: ElectronLibraryLoadError }) => void) => () => void;

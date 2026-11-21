@@ -53,7 +53,7 @@ export function makeNetForSheet(
             for (const [x, y, pin] of new updateSymbol(ObjPtr).active_points()) {
               netlist_builder.Add({
                 a: [x, y], sheet: null, netlist: null, eprop: null, hints: [],
-                port: { placementId: ObjPtr.unitId, name: pin.name.trim() },
+                port: { placementId: ObjPtr.unitId, name: pin.name.trim(), pinId: pin.pinId },
               });
             }
             break;
@@ -157,7 +157,7 @@ export function makeNetForSheet(
           parent: ObjPtr,
           a: ObjPtr.point,
           label: update_power.get_power_label(),
-          eprop: 7, // Power
+          eprop: 'power-marker',
           netlist: null,
           sheet: null,
           hints: ObjPtr.hints || [],

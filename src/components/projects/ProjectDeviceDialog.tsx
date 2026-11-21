@@ -13,6 +13,7 @@ import {
 import { saveAs } from 'file-saver';
 import type { ProjectDeviceReview } from '../../io/projectDevices';
 import { hasBoardConnectivity } from '../../pcb/circuitSnapshot';
+import { pairFootprintPads } from '../../pcb/footprint';
 import {
   boardComponentDevice,
   deviceMappingIssues,
@@ -26,6 +27,7 @@ import {
   writeLibraryDevice,
 } from '../../pcb/deviceLibrary';
 import type { LibraryDevice } from '../../pcb/deviceLibrary';
+import { DevicePadChanges } from './DevicePadChanges';
 import {
   DeviceFootprintPreview,
   SchematicTerminalPreview,
@@ -465,13 +467,7 @@ export default function ProjectDeviceDialog({
                   {proposal.device.revision}
                 </p>
                 {proposal.padChanges.length > 0 && (
-                  <ul>
-                    {proposal.padChanges.map(({ id, label, changes }) => (
-                      <li key={id}>
-                        {label} · {changes.join(', ')}
-                      </li>
-                    ))}
-                  </ul>
+                  <DevicePadChanges pads={proposal.padChanges} />
                 )}
                 {proposal.graphicsChanged && <p>Footprint artwork changed.</p>}
                 {proposal.modelsChanged && <p>Model attachments changed.</p>}
@@ -487,7 +483,8 @@ export default function ProjectDeviceDialog({
                       Applied footprint
                       <DeviceFootprintPreview
                         footprint={proposal.previous.footprint}
-                        selected={selectedPad}
+                        selected={pairFootprintPads(proposal.previous.footprint.pads, proposal.footprint.pads)
+                          .find(([, next]) => next?.id === selectedPad)?.[0]?.id ?? ''}
                       />
                     </div>
                     <div>

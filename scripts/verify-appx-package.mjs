@@ -31,7 +31,7 @@ try {
     return found;
   };
   const appManifest = await entry('AppxManifest.xml').getData(new TextWriter());
-  for (const extension of ['dsn', 'dzn', 'tclib'])
+  for (const extension of ['dsn', 'dzn', 'dpn', 'tcproject', 'tclib'])
     assert.match(
       appManifest,
       new RegExp(
@@ -127,7 +127,7 @@ try {
       'Missing teaching drawing: ' + name,
     );
   console.log(
-    `AppX verified: win32/${manifest.arch}, ${verified.size} engine resources, .dsn/.dzn/.tclib associations.`,
+    `AppX verified: win32/${manifest.arch}, ${verified.size} engine resources, .dsn/.dzn/.dpn/.tcproject/.tclib associations.`,
   );
   console.log(
     'AppX signature entry: ' +

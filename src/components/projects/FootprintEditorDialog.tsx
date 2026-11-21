@@ -30,10 +30,13 @@ import type {
 import { lengthInNanometres } from '../../pcb/geometry';
 import type { starterFootprints } from '../../io/starterFootprints';
 import type { PadStack } from '../../pcb/padstack';
+import { footprintAssemblyMarks, footprintAssemblyNotesLimit } from '../../pcb/footprintDetails';
+import type { FootprintAssembly, FootprintModel } from '../../pcb/footprintDetails';
 import FootprintModelTransformEditor from './FootprintModelTransformEditor';
 import FootprintLayoutTools from './FootprintLayoutTools';
 import FootprintArtworkEditor from './FootprintArtworkEditor';
 import { DeviceFootprintPreview } from './DeviceMappingPreview';
+import type { SvgViewportHandle } from '../svg/SvgViewport';
 
 type PadDraft = {
   label: string;
@@ -83,6 +86,7 @@ export default function FootprintEditorDialog({
   onClose: () => void;
 }) {
   const footprintSvg = useRef<HTMLDivElement>(null);
+  const footprintViewport = useRef<SvgViewportHandle>(null);
   const [file, setFile] = useState<FootprintLibrary>(emptyFootprint);
   const [starter, setStarter] =
     useState<Awaited<ReturnType<typeof starterFootprints>>>();
@@ -121,6 +125,16 @@ export default function FootprintEditorDialog({
       ...old,
       definition: { ...old.definition, ...fields },
     }));
+  }
+
+  function updateAssembly(fields: Partial<FootprintAssembly>) {
+    const { marker, notes } = { ...definition.assembly, ...fields };
+    updateDefinition({
+      assembly: marker || notes ? {
+        ...(marker ? { marker } : {}),
+        ...(notes ? { notes } : {}),
+      } : undefined,
+    });
   }
 
   function updatePad(
@@ -236,7 +250,10 @@ export default function FootprintEditorDialog({
     }
   }
 
-  async function attachModel(index: number, input: File) {
+  async function attachModel(input: File, index?: number) {
+    const attachments = definition.models ?? [];
+    if (index === undefined && attachments.length >= 32)
+      throw new Error('A footprint can have up to 32 model attachments.');
     if (input.size > 32 * 1024 * 1024)
       throw new Error('STEP file exceeds the input size limit.');
     const data = new Uint8Array(await input.arrayBuffer());
@@ -247,17 +264,48 @@ export default function FootprintEditorDialog({
     )
       throw new Error('Choose a STEP Part 21 file.');
     const asset = await createBoardModelAsset(data, input.name);
-    const models = definition.models.map((model, i) =>
-      i === index ? { ...model, assetId: asset.id } : model,
-    );
+    const model: FootprintModel = {
+      kind: 'step',
+      source: input.name,
+      quality: 'imported-unreviewed',
+      offsetNm: [0, 0, 0],
+      rotationMicrodegree: [0, 0, 0],
+      scale: [1, 1, 1],
+      assetId: asset.id,
+    };
+    const models =
+      index === undefined
+        ? [...attachments, model]
+        : attachments.map((model, i) =>
+            i === index
+              ? {
+                  ...model,
+                  quality: 'imported-unreviewed' as const,
+                  assetId: asset.id,
+                }
+              : model,
+          );
+    updateModels(models, asset);
+  }
+
+  function updateModels(
+    models: readonly FootprintModel[],
+    added?: FootprintLibrary['assets'][number],
+  ) {
     const referenced = new Set(models.map(({ assetId }) => assetId));
-    const assets = [
-      ...(file.assets ?? []).filter(
-        ({ id }) => id !== asset.id && referenced.has(id),
-      ),
-      asset,
-    ];
-    setFile({ ...file, assets, definition: { ...definition, models } });
+    setChecks(undefined);
+    setFile((current) => {
+      const assets = (current.assets ?? []).filter(({ id }) =>
+        referenced.has(id),
+      );
+      if (added && !assets.some(({ id }) => id === added.id))
+        assets.push(added);
+      return {
+        ...current,
+        assets,
+        definition: { ...current.definition, models },
+      };
+    });
   }
 
   async function save(asDevice = false) {
@@ -289,11 +337,11 @@ export default function FootprintEditorDialog({
       throw new Error(
         'Add footprint geometry before exporting the print view.',
       );
-    const [, , width, height] = preview
-      .getAttribute('viewBox')
-      .split(/\s+/)
-      .map(Number);
+    const view = preview.getAttribute('data-fit-view-box');
+    const [, , width, height] = view.split(/\s+/).map(Number);
     const print = preview.cloneNode(true) as SVGSVGElement;
+    print.setAttribute('viewBox', view);
+    print.removeAttribute('data-fit-view-box');
     print.setAttribute('width', mm(width) + 'mm');
     print.setAttribute('height', mm(height) + 'mm');
     const drawing = new XMLSerializer().serializeToString(print);
@@ -474,6 +522,48 @@ export default function FootprintEditorDialog({
                   </Button>
                 )}
               </p>
+              <details>
+                <summary>Assembly drawing</summary>
+                <label>
+                  Assembly marker{' '}
+                  <select
+                    disabled={!definition.pads.length}
+                    value={definition.assembly?.marker?.kind ?? ''}
+                    onChange={(event) => {
+                      const kind = event.target.value as FootprintAssembly['marker']['kind'] | '';
+                      updateAssembly({ marker: kind ? {
+                        kind,
+                        padId: definition.assembly?.marker?.padId ?? pad?.id ?? definition.pads[0].id,
+                      } : undefined });
+                    }}
+                  >
+                    <option value="">No marker</option>
+                    {Object.entries(footprintAssemblyMarks).map(([kind, { name }]) =>
+                      <option key={kind} value={kind}>{name}</option>)}
+                  </select>
+                </label>
+                {definition.assembly?.marker && (
+                  <label>
+                    Marked pad{' '}
+                    <select
+                      value={definition.assembly.marker.padId}
+                      onChange={(event) => updateAssembly({ marker: {
+                        ...definition.assembly.marker, padId: event.target.value,
+                      } })}
+                    >
+                      {definition.pads.map(({ id, label }, index) =>
+                        <option key={id} value={id}>{label || 'Unlabelled'} · {index + 1}</option>)}
+                    </select>
+                  </label>
+                )}
+                <label>
+                  Assembly notes{' '}
+                  <textarea value={definition.assembly?.notes ?? ''} maxLength={footprintAssemblyNotesLimit}
+                    onChange={(event) => updateAssembly({ notes: event.target.value })}
+                    onBlur={(event) => updateAssembly({ notes: event.target.value.trim() })}
+                  />
+                </label>
+              </details>
               {!!messages.length && (
                 <ul aria-label="KiCad import report">
                   {messages.map(({ severity, location, message }, index) => (
@@ -494,10 +584,14 @@ export default function FootprintEditorDialog({
               {definition.pads.length > 0 && (
                 <div ref={footprintSvg}>
                   <DeviceFootprintPreview
+                    key={definition.id}
                     footprint={definition}
                     selected={selected}
+                    viewportRef={footprintViewport}
+                    onSelectPad={setSelected}
                     ruler
                   />
+                  <Button onClick={() => footprintViewport.current?.fit()}>Fit footprint</Button>
                 </div>
               )}
               {!!definition.pads.length && (
@@ -572,8 +666,12 @@ export default function FootprintEditorDialog({
                   <Button
                     size="small"
                     onClick={() => {
+                      const assembly = definition.assembly;
                       updateDefinition({
                         pads: definition.pads.filter(({ id }) => id !== pad.id),
+                        ...(assembly?.marker?.padId.toLowerCase() === pad.id.toLowerCase()
+                          ? { assembly: assembly.notes ? { notes: assembly.notes } : undefined }
+                          : {}),
                       });
                       setSelected('');
                     }}
@@ -785,72 +883,92 @@ export default function FootprintEditorDialog({
               graphics={definition.graphics ?? []}
               onChange={(graphics) => updateDefinition({ graphics })}
             />
-            {!!definition.models?.length && (
-              <fieldset disabled={busy}>
-                <legend>STEP models</legend>
-                {definition.models.map((model, index) => (
-                  <div
-                    key={model.source + ':' + index}
-                    style={{ marginBlock: 8 }}
-                  >
+            <fieldset disabled={busy}>
+              <legend>STEP models</legend>
+              <label>
+                Add STEP model{' '}
+                <input
+                  type="file"
+                  accept=".step,.stp"
+                  onChange={(event) => {
+                    const input = event.currentTarget.files[0];
+                    event.currentTarget.value = '';
+                    if (input) void run(() => attachModel(input));
+                  }}
+                />
+              </label>
+              {(definition.models ?? []).map((model, index) => (
+                <div
+                  key={model.source + ':' + index}
+                  style={{ marginBlock: 8 }}
+                >
+                  <label>
+                    {model.source}
+                    {model.assetId
+                      ? ' · Embedded'
+                      : ' · Select local STEP file'}{' '}
+                    <input
+                      type="file"
+                      accept=".step,.stp"
+                      onChange={(event) => {
+                        const input = event.currentTarget.files[0];
+                        event.currentTarget.value = '';
+                        if (input) void run(() => attachModel(input, index));
+                      }}
+                    />
+                  </label>
+                  {model.assetId && (
                     <label>
-                      {model.source}
-                      {model.assetId
-                        ? ' · Embedded'
-                        : ' · Select local STEP file'}{' '}
+                      {' '}
+                      Model license{' '}
                       <input
-                        type="file"
-                        accept=".step,.stp"
+                        value={
+                          file.assets?.find(({ id }) => id === model.assetId)
+                            ?.license ?? ''
+                        }
                         onChange={(event) => {
-                          const input = event.currentTarget.files[0];
-                          event.currentTarget.value = '';
-                          if (input) void run(() => attachModel(index, input));
+                          const license = event.target.value;
+                          setFile((old) => ({
+                            ...old,
+                            assets: old.assets?.map((asset) =>
+                              asset.id === model.assetId
+                                ? { ...asset, license }
+                                : asset,
+                            ),
+                          }));
                         }}
                       />
                     </label>
-                    {model.assetId && (
-                      <label>
-                        {' '}
-                        Model license{' '}
-                        <input
-                          value={
-                            file.assets?.find(({ id }) => id === model.assetId)
-                              ?.license ?? ''
-                          }
-                          onChange={(event) => {
-                            const license = event.target.value;
-                            setFile((old) => ({
-                              ...old,
-                              assets: old.assets?.map((asset) =>
-                                asset.id === model.assetId
-                                  ? { ...asset, license }
-                                  : asset,
-                              ),
-                            }));
-                          }}
-                        />
-                      </label>
-                    )}
-                    <FootprintModelTransformEditor
-                      key={
-                        model.offsetNm.join(',') +
-                        model.rotationMicrodegree.join(',') +
-                        model.scale.join(',')
-                      }
-                      model={model}
-                      run={run}
-                      onChange={(modified) =>
-                        updateDefinition({
-                          models: definition.models.map((value, i) =>
-                            i === index ? modified : value,
-                          ),
-                        })
-                      }
-                    />
-                  </div>
-                ))}
-              </fieldset>
-            )}
+                  )}
+                  <Button
+                    size="small"
+                    onClick={() =>
+                      updateModels(
+                        definition.models.filter((_, i) => index !== i),
+                      )
+                    }
+                  >
+                    Remove {model.source}
+                  </Button>
+                  <FootprintModelTransformEditor
+                    key={
+                      model.offsetNm.join(',') +
+                      model.rotationMicrodegree.join(',') +
+                      model.scale.join(',')
+                    }
+                    model={model}
+                    run={run}
+                    onChange={(modified) =>
+                      updateDefinition({
+                        models: definition.models.map((value, i) =>
+                          i === index ? modified : value,
+                        ),
+                      })
+                    }
+                  />
+                </div>
+              ))}
+            </fieldset>
             <fieldset disabled={busy || !definition.pads.length}>
               <legend>Dimensions</legend>
               <label>

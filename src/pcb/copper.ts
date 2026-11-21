@@ -1,7 +1,7 @@
 import type { CopperLayer } from './board';
 import { capsulePolygon, polygonBoundariesMeet } from './contours';
 import type { PolygonRegion } from './contours';
-import { pointInPolygon } from './geometry';
+import { orientation, pointInPolygon, segmentIntersectionLocation, segmentsMeet } from './geometry';
 import type { BoardPoint } from './geometry';
 import type { PolygonKernel } from './polygonKernel';
 
@@ -10,10 +10,11 @@ type LayerId = CopperLayer['id'];
 export interface CopperFeature {
   readonly id: string;
   readonly layerId: LayerId;
-  readonly kind: 'pad' | 'track' | 'zone' | 'tie';
+  readonly kind: 'pad' | 'track' | 'via' | 'zone' | 'tie';
   readonly region: PolygonRegion;
   readonly netId?: string;
   readonly terminalId?: string;
+  readonly anchor?: BoardPoint;
 }
 
 export interface BoardDrill {
@@ -88,6 +89,30 @@ export function regionsTouch(a: PolygonRegion, b: PolygonRegion): boolean {
   );
 }
 
+function isolatedBoundaryContact(a: PolygonRegion, b: PolygonRegion): BoardPoint | undefined {
+  let point: BoardPoint | undefined;
+  for (const first of [a.outer, ...a.holes]) {
+    for (const second of [b.outer, ...b.holes]) {
+      for (const [i, start] of first.entries()) {
+        const end = first[(i + 1) % first.length];
+        for (const [j, other] of second.entries()) {
+          const otherEnd = second[(j + 1) % second.length];
+          if (!segmentsMeet(start, end, other, otherEnd)) continue;
+          if (orientation(start, end, other) === 0 &&
+              orientation(start, end, otherEnd) === 0) {
+            const axis = start.x === end.x ? 'y' : 'x';
+            const upper = Math.min(Math.max(start[axis], end[axis]), Math.max(other[axis], otherEnd[axis]));
+            const lower = Math.max(Math.min(start[axis], end[axis]), Math.min(other[axis], otherEnd[axis]));
+            if (upper > lower) return undefined;
+          }
+          point ??= segmentIntersectionLocation(start, end, other, otherEnd);
+        }
+      }
+    }
+  }
+  return point;
+}
+
 class CopperSets {
   private readonly parent: number[];
 
@@ -131,8 +156,8 @@ export function analyseCopper(
   assemblyLinks: readonly AssemblyLink[] = [],
   ties: readonly CopperNetTie[] = [],
 ) {
-  if (features.length > 1_024 || drills.length > 256)
-    throw new Error('Copper extraction exceeds the G0 job limits.');
+  if (features.length > 4_096 || drills.length > 512)
+    throw new Error('Copper extraction exceeds the board job limits.');
   if (
     new Set(features.map(({ id }) => id)).size !== features.length ||
     features.some(({ id }) => !id || id.includes('/'))
@@ -141,15 +166,13 @@ export function analyseCopper(
       'Copper feature IDs must be unique and may not contain a slash.',
     );
   }
-  const holes = drills.map(
-    (drill): { drill: BoardDrill; region: PolygonRegion } => ({
-      drill,
-      region: {
-        outer: capsulePolygon(drill.start, drill.end, drill.widthNm),
-        holes: [],
-      },
-    }),
-  );
+  const holes = drills.map((drill) => {
+    const region: PolygonRegion = {
+      outer: capsulePolygon(drill.start, drill.end, drill.widthNm),
+      holes: [],
+    };
+    return { drill, region, bounds: boundsOf(region) };
+  });
   if (
     new Set(drills.map(({ id }) => id)).size !== drills.length ||
     drills.some(({ id, plated }) => !id || typeof plated !== 'boolean')
@@ -160,7 +183,11 @@ export function analyseCopper(
     if (
       holes
         .slice(i + 1)
-        .some(({ region }) => regionsTouch(holes[i].region, region))
+        .some(
+          ({ region, bounds }) =>
+            boundsMeet(holes[i].bounds, bounds) &&
+            regionsTouch(holes[i].region, region),
+        )
     ) {
       throw new Error(
         'Intersecting drill or slot voids are outside the G0 extraction subset.',
@@ -175,7 +202,7 @@ export function analyseCopper(
       throw new Error('A terminal needs a pad and intended net.');
     const bounds = boundsOf(feature.region);
     const cutters = holes
-      .filter(({ region }) => boundsMeet(bounds, boundsOf(region)))
+      .filter(({ bounds: outer }) => boundsMeet(bounds, outer))
       .map(({ region }) => region);
     const copper = kernel.boolean('difference', [feature.region], cutters);
     copper.forEach((region, index) =>
@@ -186,8 +213,8 @@ export function analyseCopper(
         bounds: boundsOf(region),
       }),
     );
-    if (fragments.length > 2_048)
-      throw new Error('Copper extraction exceeds the G0 fragment limit.');
+    if (fragments.length > 8_192)
+      throw new Error('Copper extraction exceeds the fragment limit.');
   }
   const netByTerminal = new Map<string, string>();
   for (const { terminalId, netId } of features) {
@@ -201,25 +228,54 @@ export function analyseCopper(
   }
   const pairs: Pair[] = [];
   const boundaryOnlyContacts: [string, string][] = [];
+  const pointContacts = new Map<Pair, {
+    fragments: [string, string];
+    netId: string;
+    location: BoardPoint;
+  }>();
   const platedTies = new Set<string>();
-  for (let i = 0; i < fragments.length; i++) {
-    const a = fragments[i];
-    for (let j = i + 1; j < fragments.length; j++) {
-      const b = fragments[j];
-      if (
-        a.feature.layerId !== b.feature.layerId ||
-        !boundsMeet(a.bounds, b.bounds) ||
-        !regionsTouch(a.region, b.region)
-      )
-        continue;
-      pairs.push([i, j]);
-      if (!kernel.boolean('intersection', [a.region], [b.region]).length)
-        boundaryOnlyContacts.push([a.id, b.id]);
+  let candidates = 0;
+  for (const layer of ['top', 'bottom']) {
+    const ordered = fragments
+      .map((fragment, index) => ({ fragment, index }))
+      .filter(({ fragment }) => fragment.feature.layerId === layer)
+      .sort(
+        (a, b) =>
+          a.fragment.bounds[0] - b.fragment.bounds[0] || a.index - b.index,
+      );
+    for (let i = 0; i < ordered.length; i++) {
+      const { fragment: a, index: ai } = ordered[i];
+      for (let j = i + 1; j < ordered.length; j++) {
+        const { fragment: b, index: bi } = ordered[j];
+        if (a.bounds[2] < b.bounds[0]) break;
+        if (!boundsMeet(a.bounds, b.bounds)) continue;
+        candidates++;
+        if (candidates > 400_000)
+          throw new Error(
+            'Copper extraction exceeds the contact candidate budget.',
+          );
+        if (!regionsTouch(a.region, b.region)) continue;
+        const [first, second] = ai < bi ? [ai, bi] : [bi, ai];
+        const pair: Pair = [first, second];
+        pairs.push(pair);
+        if (!kernel.boolean('intersection', [a.region], [b.region]).length) {
+          const contact: [string, string] = [fragments[first].id, fragments[second].id];
+          boundaryOnlyContacts.push(contact);
+          const { netId } = a.feature;
+          if (netId && netId === b.feature.netId) {
+            const location = isolatedBoundaryContact(a.region, b.region);
+            if (location) pointContacts.set(pair, { fragments: contact, netId, location });
+          }
+        }
+      }
     }
   }
-  for (const { drill, region } of holes) {
+  pairs.sort(([a, b], [c, d]) => a - c || b - d);
+  boundaryOnlyContacts.sort(([a, b], [c, d]) =>
+    a < c ? -1 : a > c ? 1 : b < d ? -1 : b > d ? 1 : 0,
+  );
+  for (const { drill, region, bounds: drillBounds } of holes) {
     if (!drill.plated) continue;
-    const drillBounds = boundsOf(region);
     const touching = fragments.flatMap(({ region: copper, bounds }, index) =>
       boundsMeet(bounds, drillBounds) && boundariesMeet(copper, region)
         ? [index]
@@ -239,8 +295,10 @@ export function analyseCopper(
   const physical = new CopperSets(fragments.length);
   const withoutTies = new CopperSets(fragments.length);
   const assembled = new CopperSets(fragments.length);
+  const withoutPointContacts = pointContacts.size ? new CopperSets(fragments.length) : undefined;
   const tiePairs: Pair[] = [];
-  for (const [a, b] of pairs) {
+  for (const pair of pairs) {
+    const [a, b] = pair;
     physical.join(a, b);
     if (
       fragments[a].feature.kind === 'tie' ||
@@ -250,6 +308,7 @@ export function analyseCopper(
     } else {
       withoutTies.join(a, b);
       assembled.join(a, b);
+      if (!pointContacts.has(pair)) withoutPointContacts?.join(a, b);
     }
   }
 
@@ -386,11 +445,15 @@ export function analyseCopper(
         : island
             .filter(
               ({ feature }) =>
-                feature.kind === 'track' || feature.kind === 'zone',
+                feature.kind === 'track' || feature.kind === 'via' || feature.kind === 'zone',
             )
             .map(({ id }) => id),
     ),
     invalidTies: [...new Set(invalidTies)].sort(),
     boundaryOnlyContacts,
+    fragileContacts: withoutPointContacts
+      ? [...pointContacts].flatMap(([[a, b], contact]) =>
+          withoutPointContacts.root(a) !== withoutPointContacts.root(b) ? [contact] : [])
+      : [],
   };
 }

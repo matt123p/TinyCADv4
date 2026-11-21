@@ -3,11 +3,13 @@ import { capsulePolygon } from './contours';
 import type { BoardDocument, CopperLayer } from './board';
 import type { BoardDrill, CopperFeature } from './copper';
 import type { BoardPoint } from './geometry';
+import { samePoint } from './geometry';
 
 interface RouteAssignment {
   readonly id: string;
   readonly netId?: string;
   readonly reviewRequired?: boolean;
+  readonly locked?: boolean;
 }
 
 export interface BoardTrack extends RouteAssignment {
@@ -17,10 +19,17 @@ export interface BoardTrack extends RouteAssignment {
   readonly widthNm: number;
 }
 
+export type ViaTenting = 'both' | 'top' | 'bottom' | 'none';
+
 export interface BoardVia extends RouteAssignment {
   readonly positionNm: BoardPoint;
   readonly diameterNm: number;
   readonly drillNm: number;
+  readonly tenting?: ViaTenting;
+}
+
+export function viaIsTented({ tenting = 'both' }: BoardVia, side: CopperLayer['id']): boolean {
+  return tenting === 'both' || tenting === side;
 }
 
 export function validateBoardRouting(board: BoardDocument) {
@@ -44,7 +53,8 @@ export function validateBoardRouting(board: BoardDocument) {
       ids.has(item.id.toLowerCase()) ||
       (item.netId !== undefined && !nets.has(item.netId)) ||
       (item.reviewRequired !== undefined &&
-        typeof item.reviewRequired !== 'boolean')
+        typeof item.reviewRequired !== 'boolean') ||
+      (item.locked !== undefined && typeof item.locked !== 'boolean')
     )
       throw new Error('Invalid PCB route identity or net assignment.');
     ids.add(item.id.toLowerCase());
@@ -52,15 +62,19 @@ export function validateBoardRouting(board: BoardDocument) {
   for (const { layerId, start, end, widthNm } of tracks ?? []) {
     if (!layers.has(layerId))
       throw new Error('A PCB track needs a physical copper layer.');
+    if (samePoint(start, end))
+      throw new Error('A PCB track needs distinct endpoints.');
     capsulePolygon(start, end, widthNm);
   }
-  for (const { positionNm, diameterNm, drillNm } of vias ?? []) {
+  for (const { positionNm, diameterNm, drillNm, tenting } of vias ?? []) {
     if (layers.size !== 2 || drillNm >= diameterNm)
       throw new Error(
         'A through via needs two copper layers and a positive annular ring.',
       );
     capsulePolygon(positionNm, positionNm, diameterNm);
     capsulePolygon(positionNm, positionNm, drillNm);
+    if (tenting !== undefined && !['both', 'top', 'bottom', 'none'].includes(tenting))
+      throw new Error('Invalid through-via solder mask tenting.');
   }
 }
 
@@ -78,7 +92,19 @@ export function routeGeometry(board: BoardDocument) {
       };
     },
   );
-  const drills: BoardDrill[] = [];
+  const drills: BoardDrill[] = [...(board.mechanicalHoles ?? [])];
+  for (const hole of board.mechanicalHoles ?? []) {
+    if (!hole.plated) continue;
+    const outer = capsulePolygon(hole.start, hole.end, hole.landWidthNm);
+    for (const { id: layerId } of board.copperLayers) {
+      features.push({
+        id: hole.id + ':' + layerId,
+        kind: 'pad',
+        layerId,
+        region: { outer, holes: [] },
+      });
+    }
+  }
   for (const via of board.vias ?? []) {
     const { id, positionNm, diameterNm, drillNm, netId } = via;
     const outer = capsulePolygon(positionNm, positionNm, diameterNm);
@@ -88,8 +114,9 @@ export function routeGeometry(board: BoardDocument) {
       features.push({
         id: featureId,
         layerId,
-        kind: 'track',
+        kind: 'via',
         netId,
+        anchor: positionNm,
         region: { outer, holes: [] },
       });
     }

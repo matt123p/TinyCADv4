@@ -178,6 +178,7 @@ test('previews and atomically applies a forward reference and value update', asy
     snapshotId: id(),
     revision: 2,
     components: [{ ...component, reference: 'C12', value: '2µF' }],
+    nets: [{ ...previous.nets[0], names: ['Supply'] }],
   };
   const review = await api.previewCircuitEco(board, previous, proposed);
   assert.deepEqual(review.changes, [
@@ -190,6 +191,7 @@ test('previews and atomically applies a forward reference and value update', asy
     },
   ]);
   assert.equal(review.netReview.nets[0].retainedId, netId);
+  assert.deepEqual(review.renamedNets, [{ id: netId, before: 'Power', after: 'Supply' }]);
   assert.deepEqual(review.unresolved, []);
   assert.equal(board.components[0].reference, 'C7');
   const applied = api.applyCircuitEco(board, review);
@@ -302,6 +304,36 @@ test('previews and atomically applies a forward reference and value update', asy
     api.applyCircuitEco(reopened, split).tracks,
     unassigned.tracks,
   );
+  assert.deepEqual(split.opens, []);
+
+  const splitBoard = api.applyCircuitEco(reopened, split);
+  const shortened = {
+    ...splitBoard,
+    tracks: [
+      { ...splitBoard.tracks[0], end: { x: 1_300_000, y: 1_100_000 } },
+      splitBoard.tracks[1],
+    ],
+  };
+  const merge = await api.previewCircuitEco(
+    shortened,
+    shortened.appliedCircuit,
+    {
+      ...proposed,
+      snapshotId: id(),
+      revision: 4,
+      nets: [{ ...proposed.nets[0], names: ['Joined'] }],
+    },
+    { loadKernel: () => api.loadPolygonKernel(binary) },
+  );
+  assert.deepEqual(merge.netReview.nets[0].affectedPreviousIds, [...splitIds].sort());
+  assert.deepEqual(merge.opens, [{
+    netId: merge.candidate.nets.find(({ name }) => name === 'Joined').id,
+    terminalGroups: [[`${componentId}:${signalId}`], [`${componentId}:${secondSignalId}`]],
+  }]);
+  assert.deepEqual(merge.shorts, []);
+  assert.deepEqual(merge.affectedCopper, [{ id: routeId, unassigned: false }]);
+  const merged = await api.decodeBoard(await api.encodeBoard(api.applyCircuitEco(shortened, merge)));
+  assert.deepEqual(merged.tracks, shortened.tracks);
 
   const deletion = {
     ...proposed,

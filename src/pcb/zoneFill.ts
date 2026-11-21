@@ -13,6 +13,18 @@ export interface ThermalConnection {
   readonly gapNm: number;
 }
 
+export interface FilledThermalSpoke {
+  readonly padId: string;
+  readonly anchor: BoardPoint;
+  readonly direction: 'east' | 'north' | 'west' | 'south';
+  readonly widthNm: number;
+  readonly pad: PolygonRegion;
+  readonly halo: readonly PolygonRegion[];
+  readonly copper: readonly PolygonRegion[];
+}
+
+const directions = ['east', 'north', 'west', 'south'] as const;
+
 export interface ZoneRequest {
   readonly id: string;
   readonly layerId: CopperLayer['id'];
@@ -21,9 +33,14 @@ export interface ZoneRequest {
   readonly profile: PolygonRegion;
   readonly copper: readonly CopperFeature[];
   readonly drills: readonly BoardDrill[];
+  readonly keepouts?: readonly PolygonRegion[];
   readonly thermals: readonly ThermalConnection[];
+  readonly disconnected?: ReadonlySet<string>;
+  readonly featureClearances?: ReadonlyMap<string, number>;
+  readonly drillClearances?: ReadonlyMap<string, number>;
   readonly clearanceNm: number;
   readonly edgeClearanceNm: number;
+  readonly recordSpoke?: (spoke: FilledThermalSpoke) => void;
 }
 
 /** Produces positive copper. Higher-priority zone copper can be passed in as obstacles. */
@@ -60,11 +77,20 @@ export function fillZone(
   const onLayer = request.copper.filter(
     (feature) => feature.layerId === layerId,
   );
-  const foreign = kernel.offset(
-    onLayer
-      .filter((feature) => feature.netId !== netId)
-      .map(({ region }) => region),
-    clearanceNm + padding,
+  const byClearance = new Map<number, PolygonRegion[]>();
+  for (const feature of onLayer) {
+    if (feature.netId === netId && !request.disconnected?.has(feature.id))
+      continue;
+    const required = Math.max(
+      clearanceNm,
+      request.featureClearances?.get(feature.id) ?? 0,
+    );
+    const regions = byClearance.get(required) ?? [];
+    regions.push(feature.region);
+    byClearance.set(required, regions);
+  }
+  const foreign = [...byClearance].flatMap(([distance, regions]) =>
+    kernel.offset(regions, distance + padding),
   );
   const voids = request.drills.flatMap((drill) =>
     kernel.offset(
@@ -74,16 +100,28 @@ export function fillZone(
           holes: [],
         },
       ],
-      padding + (drill.plated ? 0 : clearanceNm),
+      padding +
+        Math.max(
+          drill.plated ? 0 : clearanceNm,
+          request.drillClearances?.get(drill.id) ?? 0,
+        ),
     ),
   );
-  const base = kernel.boolean('difference', available, [...foreign, ...voids]);
-  const reliefs: { halo: PolygonRegion[]; spokes: PolygonRegion[] }[] = [];
+  const keepouts = kernel.offset(request.keepouts ?? [], padding);
+  const base = kernel.boolean('difference', available, [...foreign, ...voids, ...keepouts]);
+  const reliefs: {
+    thermal: ThermalConnection;
+    pad: PolygonRegion;
+    halo: PolygonRegion[];
+    spokes: PolygonRegion[];
+  }[] = [];
   const seen = new Set<string>();
   for (const thermal of thermals) {
     const pad = onLayer.find(
       ({ id, kind, netId: padNet }) =>
-        id === thermal.padId && kind === 'pad' && padNet === netId,
+        id === thermal.padId &&
+        (kind === 'pad' || kind === 'track' || kind === 'via') &&
+        padNet === netId,
     );
     if (
       !pad ||
@@ -126,16 +164,35 @@ export function fillZone(
         holes: [],
       });
     }
-    reliefs.push({ halo, spokes });
+    reliefs.push({ thermal, pad: pad.region, halo, spokes });
   }
   const clearances = reliefs.flatMap(({ halo }) => halo);
   const withoutReliefs = kernel.boolean('difference', base, clearances);
-  const validSpokes = reliefs.flatMap(({ spokes }, index) =>
-    kernel.boolean(
-      'difference',
-      kernel.boolean('intersection', spokes, base),
-      reliefs.flatMap(({ halo }, other) => (other === index ? [] : halo)),
-    ),
+  const validSpokes = reliefs.flatMap(
+    ({ thermal, pad, halo, spokes }, index) => {
+      const obstacles = reliefs.flatMap(({ halo }, other) =>
+        other === index ? [] : halo,
+      );
+      const copper = kernel.boolean(
+        'difference',
+        kernel.boolean('intersection', spokes, base),
+        obstacles,
+      );
+      if (request.recordSpoke) {
+        spokes.forEach((spoke, direction) => {
+          request.recordSpoke({
+            padId: thermal.padId,
+            anchor: thermal.anchor,
+            direction: directions[direction],
+            widthNm: thermal.spokeWidthNm,
+            pad,
+            halo,
+            copper: kernel.boolean('intersection', copper, [spoke]),
+          });
+        });
+      }
+      return copper;
+    },
   );
   return kernel
     .boolean('union', withoutReliefs, validSpokes)

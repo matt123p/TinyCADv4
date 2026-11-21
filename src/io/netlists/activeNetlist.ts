@@ -5,6 +5,7 @@ import type { docDrawing } from '../../state/undo/undo';
 import type { CircuitSnapshot } from '../../pcb/circuitSnapshot';
 import type { dsnDrawing } from '../../model/dsnDrawing';
 import type { OpenProjectAction } from '../projects';
+import type { readProjectSchematic } from '../projectHierarchy';
 
 export async function generateActiveNetlist(state: docDrawing) {
   const { drawing } = state.docStore.present;
@@ -46,6 +47,7 @@ async function generateProjectHierarchy(
   drawing: dsnDrawing,
   observe?: (path: string, source: dsnDrawing) => void,
   openDrawing?: (id: string) => dsnDrawing | undefined,
+  readSchematic?: typeof readProjectSchematic,
 ) {
   const [{ readProject }, { resolveChild }, { buildHierarchicalNetlist }] =
     await Promise.all([
@@ -67,6 +69,7 @@ async function generateProjectHierarchy(
         project,
         { rootId: location.rootId, documentPath: parent.path },
         link,
+        readSchematic,
       );
       if (!child.entry)
         throw new Error(
@@ -82,9 +85,10 @@ async function generateProjectHierarchy(
 export async function reviewProjectCircuit(
   location: Pick<OpenProjectAction['location'], 'id' | 'rootId' | 'entryId'>,
   drawing: dsnDrawing,
-  previous: CircuitSnapshot,
+  previous: CircuitSnapshot | undefined,
   observe?: (path: string, source: dsnDrawing) => void,
   openDrawing?: (id: string) => dsnDrawing | undefined,
+  readSchematic?: typeof readProjectSchematic,
 ) {
   if (
     drawing.documentId !== location.entryId ||
@@ -99,6 +103,7 @@ export async function reviewProjectCircuit(
     drawing,
     observe,
     openDrawing,
+    readSchematic,
   );
   return buildHierarchicalCircuitSnapshot(graph, {
     documentId: drawing.documentId,
@@ -132,41 +137,41 @@ export function generateActiveBom() {
     try {
       const graph = await generateActiveNetlist(initial);
       if (!stillCurrent()) return;
-      const groups = new Map<
-        string,
-        import('../../model/dsnBomEntry').dsnBomEntry
-      >();
-      const seen = new Set<string>();
-      for (const [, symbol] of graph.symbols) {
-        const reference = symbol.text.find(
-          (field) => field.description === 'Ref',
-        )?.value;
-        const name =
-          symbol.text.find((field) => field.description === 'Name')?.value ||
-          '';
-        const key = name.toLowerCase();
-        const member = JSON.stringify([key, reference.toLowerCase()]);
-        if (seen.has(member)) continue;
-        seen.add(member);
-        const entry = groups.get(key) ?? {
-          Name: name,
-          References: [],
-          Quantity: 0,
-        };
-        entry.References.push(reference);
-        entry.Quantity += 1;
-        groups.set(key, entry);
-      }
-      for (const entry of groups.values())
-        entry.References.sort((a, b) => a.localeCompare(b));
-      dispatch(
-        actionBomGenerate(
-          [...groups.values()].sort((a, b) => a.Name.localeCompare(b.Name)),
-        ),
-      );
+      dispatch(actionBomGenerate(netlistBomRows(graph)));
     } catch (error) {
       if (stillCurrent())
         dispatch(actionSelectDialog('io_failure', { message: String(error) }));
     }
   };
+}
+
+export function netlistBomRows(graph: Awaited<ReturnType<typeof generateActiveNetlist>>) {
+  const groups = new Map<
+    string,
+    import('../../model/dsnBomEntry').dsnBomEntry
+  >();
+  const seen = new Set<string>();
+  for (const [, symbol] of graph.symbols) {
+    const reference = symbol.text.find(
+      (field) => field.description === 'Ref',
+    )?.value ?? '';
+    const name =
+      symbol.text.find((field) => field.description === 'Name')?.value ||
+      '';
+    const key = name.toLowerCase();
+    const member = JSON.stringify([key, reference.toLowerCase()]);
+    if (seen.has(member)) continue;
+    seen.add(member);
+    const entry = groups.get(key) ?? {
+      Name: name,
+      References: [],
+      Quantity: 0,
+    };
+    entry.References.push(reference);
+    entry.Quantity += 1;
+    groups.set(key, entry);
+  }
+  for (const entry of groups.values())
+    entry.References.sort((a, b) => a.localeCompare(b));
+  return [...groups.values()].sort((a, b) => a.Name.localeCompare(b.Name));
 }

@@ -1,3 +1,4 @@
+import type { ResultData } from '../simulation/contracts';
 import type { dsnDrawing } from '../model/dsnDrawing';
 import { encodeBoard } from '../pcb/boardCodec';
 import { validateBoard } from '../pcb/board';
@@ -93,7 +94,8 @@ export async function openProjectBackAnnotation(
   ]);
   if (boardFile.version !== version)
     throw new Error('The PCB changed. Reopen the preview.');
-  const drawing = await decodeDrawing(sourceFile.data);
+  const results = new Map<string, ResultData>();
+  const drawing = await decodeDrawing(sourceFile.data, results);
   function getOpenChild(id: string): undefined {
     if (sourceIsDirty(id))
       throw new Error(
@@ -163,7 +165,7 @@ export async function openProjectBackAnnotation(
         ? 'zip-v1'
         : 'xml';
       const [sourceData, boardData] = await Promise.all([
-        encodeDrawing(result.drawing, representation),
+        encodeDrawing(result.drawing, representation, results),
         encodeBoard(result.board),
       ]);
       getOpenChild(sourceEntry.id);

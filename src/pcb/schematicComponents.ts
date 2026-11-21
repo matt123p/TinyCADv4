@@ -13,6 +13,7 @@ import {
   stableHierarchyId,
 } from './hierarchicalNetlist';
 import type { HierarchicalNetlist } from './hierarchicalNetlist';
+import { procurementFields, validProcurement } from './procurement';
 
 type PhysicalRole = Exclude<CircuitComponent['role'], 'pcb-only'>;
 type Signal = CircuitComponent['signals'][number];
@@ -153,6 +154,18 @@ export async function compileSchematicComponents(graph: HierarchicalNetlist) {
         `${reference}: conflicting package hints.`,
         first.source,
       );
+    const purchasing = procurementFields.flatMap(({ id, column, names }) => {
+      const matches = new Set<string>(names);
+      const values = new Set(group.flatMap(({ symbol }) => symbol.text
+        .filter(({ description }) => matches.has(description.trim().toLowerCase()))
+        .map(({ value }) => value.trim()).filter(Boolean)));
+      if (values.size > 1)
+        throw new HierarchyConnectivityError(`${reference}: conflicting ${column} attributes.`, first.source);
+      return values.size ? [[id, values.values().next().value]] : [];
+    });
+    const procurement = Object.fromEntries(purchasing);
+    if (purchasing.length && !validProcurement(procurement))
+      throw new HierarchyConnectivityError(`${reference}: invalid purchasing attributes.`, first.source);
 
     const signals: Signal[] = [];
     const sharedMembers = new Map<
@@ -265,6 +278,7 @@ export async function compileSchematicComponents(graph: HierarchicalNetlist) {
       role,
       value,
       ...(packageHint === undefined ? {} : { packageHint }),
+      ...(purchasing.length ? { procurement } : {}),
       units: group.map(({ symbol, source }) => ({
         id: symbol.unitId,
         sheetId: source.sheetId,

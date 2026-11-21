@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TinyCADPCB version="1">
+  <DPNIDENTITY id="5ed00000-0000-4000-8000-000000000030" revision="4"/>
+  <COORDINATES length_unit="nm" angle_unit="microdegree" frame="top-view-x-right-y-up-ccw"/>
+  <TITLE>LED classroom board</TITLE>
+  <REQUIREDFEATURES>
+    <REQUIREDFEATURE id="applied-circuit"/>
+    <REQUIREDFEATURE id="embedded-devices"/>
+    <REQUIREDFEATURE id="fabrication-settings"/>
+    <REQUIREDFEATURE id="physical-padstacks"/>
+    <REQUIREDFEATURE id="routed-copper"/>
+    <REQUIREDFEATURE id="straight-outline"/>
+  </REQUIREDFEATURES>
+  <COPPERLAYERS>
+    <COPPERLAYER id="top" order="0"/>
+    <COPPERLAYER id="bottom" order="1"/>
+  </COPPERLAYERS>
+  <OUTLINE>
+    <POINT x="0" y="0"/>
+    <POINT x="40000000" y="0"/>
+    <POINT x="40000000" y="22000000"/>
+    <POINT x="0" y="22000000"/>
+  </OUTLINE>
+  <SOURCECIRCUIT document_id="5ed00000-0000-4000-8000-000000000001" revision="1" connectivity_digest="sha256:3c8ee9ff2113f7333fb36abe301eb4640349580c34c78f3910b2678d8288de23"/>
+  <APPLIEDCIRCUIT schema_version="1" document_id="5ed00000-0000-4000-8000-000000000001" revision="1" snapshot_id="38c9ada5-4023-86cd-ad7d-31325269c7cb">
+    <COMPONENTS>
+      <COMPONENT id="5ed00000-0000-4000-8000-000000000005" reference="D1" value="Red LED" role="electrical" package_hint="led-radial-5">
+        <UNITS>
+          <UNIT id="5ed00000-0000-4000-8000-000000000005" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
+        </UNITS>
+        <SIGNALS>
+          <SIGNAL id="97204c27-d8d7-8793-a04c-d1ec54102b42" name="Cathode" number="1">
+            <TERMINALS>
+              <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000005" pin_id="5ed00000-0000-4000-8000-000000000690"/>
+            </TERMINALS>
+          </SIGNAL>
+          <SIGNAL id="9c146a57-a250-8f6e-a523-3a0d50eb8b31" name="Anode" number="2">
+            <TERMINALS>
+              <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000005" pin_id="5ed00000-0000-4000-8000-000000000691"/>
+            </TERMINALS>
+          </SIGNAL>
+        </SIGNALS>
+      </COMPONENT>
+      <COMPONENT id="5ed00000-0000-4000-8000-000000000003" reference="J1" value="5 V input" role="electrical" package_hint="jst-xh-2-vertical">
+        <UNITS>
+          <UNIT id="5ed00000-0000-4000-8000-000000000003" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
+        </UNITS>
+        <SIGNALS>
+          <SIGNAL id="ed26abd5-5bd8-8997-ad50-36f8f2a69f32" name="+5 V" number="1">
+            <TERMINALS>
+              <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000003" pin_id="5ed00000-0000-4000-8000-000000000750"/>
+            </TERMINALS>
+          </SIGNAL>
+          <SIGNAL id="34ddbcbb-c6d3-8265-af9a-0f96f20083d8" name="0 V" number="2">
+            <TERMINALS>
+              <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000003" pin_id="5ed00000-0000-4000-8000-000000000751"/>
+            </TERMINALS>
+          </SIGNAL>
+        </SIGNALS>
+      </COMPONENT>
+      <COMPONENT id="5ed00000-0000-4000-8000-000000000004" reference="R1" value="330" role="electrical" package_hint="axial-762">
+        <UNITS>
+          <UNIT id="5ed00000-0000-4000-8000-000000000004" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
+        </UNITS>
+        <SIGNALS>
+          <SIGNAL id="0cb137ab-18f5-8693-a321-5f9e17d0290a" name="1" number="1">
+            <TERMINALS>
+              <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000004" pin_id="5ed00000-0000-4000-8000-000000000830"/>
+            </TERMINALS>
+          </SIGNAL>
+          <SIGNAL id="b8a99aca-cfa1-8621-a132-8c22d403bbc1" name="2" number="2">
+            <TERMINALS>
+              <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000004" pin_id="5ed00000-0000-4000-8000-000000000831"/>
+            </TERMINALS>
+          </SIGNAL>
+        </SIGNALS>
+      </COMPONENT>
+    </COMPONENTS>
+    <NETS>
+      <NET id="cbf52e3f-f7da-8506-a65c-8168f1f5a63f">
+        <NAMES>
+          <NAME>5V</NAME>
+        </NAMES>
+        <TERMINALS>
+          <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000003" pin_id="5ed00000-0000-4000-8000-000000000750"/>
+          <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000004" pin_id="5ed00000-0000-4000-8000-000000000830"/>
+        </TERMINALS>
+      </NET>
+      <NET id="84b5bcf1-270b-873f-a7da-d517e1c0baec">
+        <NAMES>
+          <NAME>LED_A</NAME>
+        </NAMES>
+        <TERMINALS>
+          <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000004" pin_id="5ed00000-0000-4000-8000-000000000831"/>
+          <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000005" pin_id="5ed00000-0000-4000-8000-000000000691"/>
+        </TERMINALS>
+      </NET>
+      <NET id="727f756d-c960-8a51-aa76-07e82a590b61">
+        <NAMES>
+          <NAME>0</NAME>
+          <NAME>GND</NAME>
+        </NAMES>
+        <TERMINALS>
+          <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000003" pin_id="5ed00000-0000-4000-8000-000000000751"/>
+          <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000005" pin_id="5ed00000-0000-4000-8000-000000000690"/>
+        </TERMINALS>
+      </NET>
+    </NETS>
+    <NOCONNECTS/>
+    <SOURCES>
+      <SOURCE instance_unit_id="5ed00000-0000-4000-8000-000000000003" document_id="5ed00000-0000-4000-8000-000000000001" document_path="LED.dzn" sheet_id="5ed00000-0000-4000-8000-000000000002" unit_id="5ed00000-0000-4000-8000-000000000003">
+        <INSTANCEPATH/>
+      </SOURCE>
+      <SOURCE instance_unit_id="5ed00000-0000-4000-8000-000000000004" document_id="5ed00000-0000-4000-8000-000000000001" document_path="LED.dzn" sheet_id="5ed00000-0000-4000-8000-000000000002" unit_id="5ed00000-0000-4000-8000-000000000004">
+        <INSTANCEPATH/>
+      </SOURCE>
+      <SOURCE instance_unit_id="5ed00000-0000-4000-8000-000000000005" document_id="5ed00000-0000-4000-8000-000000000001" document_path="LED.dzn" sheet_id="5ed00000-0000-4000-8000-000000000002" unit_id="5ed00000-0000-4000-8000-000000000005">
+        <INSTANCEPATH/>
+      </SOURCE>
+    </SOURCES>
+  </APPLIEDCIRCUIT>
+  <COMPONENTDEFS>
+    <COMPONENTDEF id="5ed00000-0000-4000-8000-000000000005" ref="D1" value="Red LED" logical_id="5ed00000-0000-4000-8000-000000000005" device_id="0a1e74f1-b93f-85d2-ad11-f58b921124ed" role="electrical">
+      <UNITS>
+        <UNIT id="5ed00000-0000-4000-8000-000000000005" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
+      </UNITS>
+      <SIGNALS>
+        <BIND signal_id="97204c27-d8d7-8793-a04c-d1ec54102b42" net_id="727f756d-c960-8a51-aa76-07e82a590b61"/>
+        <BIND signal_id="9c146a57-a250-8f6e-a523-3a0d50eb8b31" net_id="84b5bcf1-270b-873f-a7da-d517e1c0baec"/>
+      </SIGNALS>
+    </COMPONENTDEF>
+    <COMPONENTDEF id="5ed00000-0000-4000-8000-000000000003" ref="J1" value="5 V input" logical_id="5ed00000-0000-4000-8000-000000000003" device_id="24ffd027-7a4f-81f9-a769-7bec67ed5702" role="electrical">
+      <UNITS>
+        <UNIT id="5ed00000-0000-4000-8000-000000000003" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
+      </UNITS>
+      <SIGNALS>
+        <BIND signal_id="ed26abd5-5bd8-8997-ad50-36f8f2a69f32" net_id="cbf52e3f-f7da-8506-a65c-8168f1f5a63f"/>
+        <BIND signal_id="34ddbcbb-c6d3-8265-af9a-0f96f20083d8" net_id="727f756d-c960-8a51-aa76-07e82a590b61"/>
+      </SIGNALS>
+    </COMPONENTDEF>
+    <COMPONENTDEF id="5ed00000-0000-4000-8000-000000000004" ref="R1" value="330" logical_id="5ed00000-0000-4000-8000-000000000004" device_id="87bd3123-48d1-8ac8-a6b6-e9c138eb9b6f" role="electrical">
+      <UNITS>
+        <UNIT id="5ed00000-0000-4000-8000-000000000004" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
+      </UNITS>
+      <SIGNALS>
+        <BIND signal_id="0cb137ab-18f5-8693-a321-5f9e17d0290a" net_id="cbf52e3f-f7da-8506-a65c-8168f1f5a63f"/>
+        <BIND signal_id="b8a99aca-cfa1-8621-a132-8c22d403bbc1" net_id="84b5bcf1-270b-873f-a7da-d517e1c0baec"/>
+      </SIGNALS>
+    </COMPONENTDEF>
+  </COMPONENTDEFS>
+  <NETS>
+    <NET id="cbf52e3f-f7da-8506-a65c-8168f1f5a63f" name="5V">
+      <ALIASES/>
+    </NET>
+    <NET id="84b5bcf1-270b-873f-a7da-d517e1c0baec" name="LED_A">
+      <ALIASES/>
+    </NET>
+    <NET id="727f756d-c960-8a51-aa76-07e82a590b61" name="0">
+      <ALIASES>
+        <ALIAS>GND</ALIAS>
+      </ALIASES>
+    </NET>
+  </NETS>
+  <TRACKS>
+    <TRACK id="5ed00000-0000-4000-8000-000000000200" net_id="cbf52e3f-f7da-8506-a65c-8168f1f5a63f" layer_id="top" width_nm="500000">
+      <START x="7000000" y="7750000"/>
+      <END x="14190000" y="7750000"/>
+    </TRACK>
+    <TRACK id="5ed00000-0000-4000-8000-000000000201" net_id="84b5bcf1-270b-873f-a7da-d517e1c0baec" layer_id="top" width_nm="500000">
+      <START x="21810000" y="7750000"/>
+      <END x="28730000" y="7750000"/>
+    </TRACK>
+    <TRACK id="5ed00000-0000-4000-8000-000000000202" net_id="727f756d-c960-8a51-aa76-07e82a590b61" layer_id="top" width_nm="500000">
+      <START x="7000000" y="10250000"/>
+      <END x="7000000" y="16000000"/>
+    </TRACK>
+    <TRACK id="5ed00000-0000-4000-8000-000000000203" net_id="727f756d-c960-8a51-aa76-07e82a590b61" layer_id="top" width_nm="500000">
+      <START x="7000000" y="16000000"/>
+      <END x="31270000" y="16000000"/>
+    </TRACK>
+    <TRACK id="5ed00000-0000-4000-8000-000000000204" net_id="727f756d-c960-8a51-aa76-07e82a590b61" layer_id="top" width_nm="500000">
+      <START x="31270000" y="16000000"/>
+      <END x="31270000" y="7750000"/>
+    </TRACK>
+  </TRACKS>
+  <VIAS/>
+  <FABRICATION profile_id="classroom-v1" thickness_nm="1600000"/>
+  <PADSTACKDEFS>
+    <PADSTACKDEF id="1">
+      <COPPER>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="-900000" y="-900000"/>
+            <POINT x="900000" y="-900000"/>
+            <POINT x="900000" y="900000"/>
+            <POINT x="-900000" y="900000"/>
+          </VERTICES>
+        </TOP>
+        <BOTTOM kind="polygon">
+          <VERTICES>
+            <POINT x="-900000" y="-900000"/>
+            <POINT x="900000" y="-900000"/>
+            <POINT x="900000" y="900000"/>
+            <POINT x="-900000" y="900000"/>
+          </VERTICES>
+        </BOTTOM>
+      </COPPER>
+      <MASK>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="-950000" y="-950000"/>
+            <POINT x="950000" y="-950000"/>
+            <POINT x="950000" y="950000"/>
+            <POINT x="-950000" y="950000"/>
+          </VERTICES>
+        </TOP>
+        <BOTTOM kind="polygon">
+          <VERTICES>
+            <POINT x="-950000" y="-950000"/>
+            <POINT x="950000" y="-950000"/>
+            <POINT x="950000" y="950000"/>
+            <POINT x="-950000" y="950000"/>
+          </VERTICES>
+        </BOTTOM>
+      </MASK>
+      <DRILL plated="true" width_nm="900000">
+        <START x="0" y="0"/>
+        <END x="0" y="0"/>
+      </DRILL>
+    </PADSTACKDEF>
+    <PADSTACKDEF id="2">
+      <COPPER>
+        <TOP kind="capsule" width_nm="1800000">
+          <START x="0" y="0"/>
+          <END x="0" y="0"/>
+        </TOP>
+        <BOTTOM kind="capsule" width_nm="1800000">
+          <START x="0" y="0"/>
+          <END x="0" y="0"/>
+        </BOTTOM>
+      </COPPER>
+      <MASK>
+        <TOP kind="capsule" width_nm="1900000">
+          <START x="0" y="0"/>
+          <END x="0" y="0"/>
+        </TOP>
+        <BOTTOM kind="capsule" width_nm="1900000">
+          <START x="0" y="0"/>
+          <END x="0" y="0"/>
+        </BOTTOM>
+      </MASK>
+      <DRILL plated="true" width_nm="900000">
+        <START x="0" y="0"/>
+        <END x="0" y="0"/>
+      </DRILL>
+    </PADSTACKDEF>
+    <PADSTACKDEF id="3">
+      <COPPER>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="850000" y="750000"/>
+            <POINT x="830970" y="845671"/>
+            <POINT x="776777" y="926777"/>
+            <POINT x="695671" y="980970"/>
+            <POINT x="600000" y="1000000"/>
+            <POINT x="-600000" y="1000000"/>
+            <POINT x="-695671" y="980970"/>
+            <POINT x="-776777" y="926777"/>
+            <POINT x="-830970" y="845671"/>
+            <POINT x="-850000" y="750000"/>
+            <POINT x="-850000" y="-750000"/>
+            <POINT x="-830970" y="-845671"/>
+            <POINT x="-776777" y="-926777"/>
+            <POINT x="-695671" y="-980970"/>
+            <POINT x="-600000" y="-1000000"/>
+            <POINT x="600000" y="-1000000"/>
+            <POINT x="695671" y="-980970"/>
+            <POINT x="776777" y="-926777"/>
+            <POINT x="830970" y="-845671"/>
+            <POINT x="850000" y="-750000"/>
+          </VERTICES>
+        </TOP>
+        <BOTTOM kind="polygon">
+          <VERTICES>
+            <POINT x="850000" y="750000"/>
+            <POINT x="830970" y="845671"/>
+            <POINT x="776777" y="926777"/>
+            <POINT x="695671" y="980970"/>
+            <POINT x="600000" y="1000000"/>
+            <POINT x="-600000" y="1000000"/>
+            <POINT x="-695671" y="980970"/>
+            <POINT x="-776777" y="926777"/>
+            <POINT x="-830970" y="845671"/>
+            <POINT x="-850000" y="750000"/>
+            <POINT x="-850000" y="-750000"/>
+            <POINT x="-830970" y="-845671"/>
+            <POINT x="-776777" y="-926777"/>
+            <POINT x="-695671" y="-980970"/>
+            <POINT x="-600000" y="-1000000"/>
+            <POINT x="600000" y="-1000000"/>
+            <POINT x="695671" y="-980970"/>
+            <POINT x="776777" y="-926777"/>
+            <POINT x="830970" y="-845671"/>
+            <POINT x="850000" y="-750000"/>
+          </VERTICES>
+        </BOTTOM>
+      </COPPER>
+      <MASK>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="900000" y="750000"/>
+            <POINT x="877164" y="864805"/>
+            <POINT x="812132" y="962132"/>
+            <POINT x="714805" y="1027164"/>
+            <POINT x="600000" y="1050000"/>
+            <POINT x="-600000" y="1050000"/>
+            <POINT x="-714805" y="1027164"/>
+            <POINT x="-812132" y="962132"/>
+            <POINT x="-877164" y="864805"/>
+            <POINT x="-900000" y="750000"/>
+            <POINT x="-900000" y="-750000"/>
+            <POINT x="-877164" y="-864805"/>
+            <POINT x="-812132" y="-962132"/>
+            <POINT x="-714805" y="-1027164"/>
+            <POINT x="-600000" y="-1050000"/>
+            <POINT x="600000" y="-1050000"/>
+            <POINT x="714805" y="-1027164"/>
+            <POINT x="812132" y="-962132"/>
+            <POINT x="877164" y="-864805"/>
+            <POINT x="900000" y="-750000"/>
+          </VERTICES>
+        </TOP>
+        <BOTTOM kind="polygon">
+          <VERTICES>
+            <POINT x="900000" y="750000"/>
+            <POINT x="877164" y="864805"/>
+            <POINT x="812132" y="962132"/>
+            <POINT x="714805" y="1027164"/>
+            <POINT x="600000" y="1050000"/>
+            <POINT x="-600000" y="1050000"/>
+            <POINT x="-714805" y="1027164"/>
+            <POINT x="-812132" y="962132"/>
+            <POINT x="-877164" y="864805"/>
+            <POINT x="-900000" y="750000"/>
+            <POINT x="-900000" y="-750000"/>
+            <POINT x="-877164" y="-864805"/>
+            <POINT x="-812132" y="-962132"/>
+            <POINT x="-714805" y="-1027164"/>
+            <POINT x="-600000" y="-1050000"/>
+            <POINT x="600000" y="-1050000"/>
+            <POINT x="714805" y="-1027164"/>
+            <POINT x="812132" y="-962132"/>
+            <POINT x="877164" y="-864805"/>
+            <POINT x="900000" y="-750000"/>
+          </VERTICES>
+        </BOTTOM>
+      </MASK>
+      <DRILL plated="true" width_nm="1000000">
+        <START x="0" y="0"/>
+        <END x="0" y="0"/>
+      </DRILL>
+    </PADSTACKDEF>
+    <PADSTACKDEF id="4">
+      <COPPER>
+        <TOP kind="capsule" width_nm="1700000">
+          <START x="0" y="-150000"/>
+          <END x="0" y="150000"/>
+        </TOP>
+        <BOTTOM kind="capsule" width_nm="1700000">
+          <START x="0" y="-150000"/>
+          <END x="0" y="150000"/>
+        </BOTTOM>
+      </COPPER>
+      <MASK>
+        <TOP kind="capsule" width_nm="1800000">
+          <START x="0" y="-150000"/>
+          <END x="0" y="150000"/>
+        </TOP>
+        <BOTTOM kind="capsule" width_nm="1800000">
+          <START x="0" y="-150000"/>
+          <END x="0" y="150000"/>
+        </BOTTOM>
+      </MASK>
+      <DRILL plated="true" width_nm="1000000">
+        <START x="0" y="0"/>
+        <END x="0" y="0"/>
+      </DRILL>
+    </PADSTACKDEF>
+    <PADSTACKDEF id="5">
+      <COPPER>
+        <TOP kind="capsule" width_nm="1600000">
+          <START x="0" y="0"/>
+          <END x="0" y="0"/>
+        </TOP>
+        <BOTTOM kind="capsule" width_nm="1600000">
+          <START x="0" y="0"/>
+          <END x="0" y="0"/>
+        </BOTTOM>
+      </COPPER>
+      <MASK>
+        <TOP kind="capsule" width_nm="1700000">
+          <START x="0" y="0"/>
+          <END x="0" y="0"/>
+        </TOP>
+        <BOTTOM kind="capsule" width_nm="1700000">
+          <START x="0" y="0"/>
+          <END x="0" y="0"/>
+        </BOTTOM>
+      </MASK>
+      <DRILL plated="true" width_nm="800000">
+        <START x="0" y="0"/>
+        <END x="0" y="0"/>
+      </DRILL>
+    </PADSTACKDEF>
+  </PADSTACKDEFS>
+  <FOOTPRINTDEFS>
+    <FOOTPRINTDEF id="44fdb2dd-86fa-8cca-a80d-ac7b00c4e5b4" revision="2" definition_digest="sha256:180b04b63f1122d5fd408be58d5f504334f7d96bb400dba3c9ff6c99bd7e5df5" name="5 mm through-hole LED envelope">
+      <PADS>
+        <PAD id="f6bfbeb7-516e-575f-aa4a-d1a19163c4c7" label="1" padstack_id="1">
+          <POSITION x="-1270000" y="0"/>
+        </PAD>
+        <PAD id="4195c25d-f0b7-52ab-9eae-f26319c7e5d6" label="2" padstack_id="2">
+          <POSITION x="1270000" y="0"/>
+        </PAD>
+      </PADS>
+      <GRAPHICS>
+        <GRAPHIC kind="rect" layer="F.Fab" stroke_nm="100000" filled="false">
+          <START x="-2500000" y="-2500000"/>
+          <END x="2500000" y="2500000"/>
+        </GRAPHIC>
+        <GRAPHIC kind="rect" layer="F.CrtYd" stroke_nm="50000" filled="false">
+          <START x="-3050000" y="-3050000"/>
+          <END x="3050000" y="3050000"/>
+        </GRAPHIC>
+        <GRAPHIC kind="circle" layer="F.SilkS" stroke_nm="150000" filled="true">
+          <END x="-2520000" y="0"/>
+          <CENTRE x="-2620000" y="0"/>
+        </GRAPHIC>
+      </GRAPHICS>
+      <MODELS>
+        <MODEL asset_id="a592e76854ef8438ac2a552511ed7524f5e4a9079b918a9d74d3f153dfe364b0" kind="step" source="led-radial-5.step" quality="generated-envelope">
+          <OFFSET x="0" y="0" z="0"/>
+          <ROTATION x="0" y="0" z="0"/>
+          <SCALE x="1" y="1" z="1"/>
+        </MODEL>
+      </MODELS>
+      <ASSEMBLY>
+        <MARKER kind="cathode" pad_id="f6bfbeb7-516e-575f-aa4a-d1a19163c4c7"/>
+        <NOTES>Fit the LED cathode to the pad marked K.</NOTES>
+      </ASSEMBLY>
+    </FOOTPRINTDEF>
+    <FOOTPRINTDEF id="bc8f6717-d881-87c9-a439-1aaa9dd03879" revision="2" definition_digest="sha256:889609bf4ed94fd7991ff740fd9eb844e5435ec9166346dd46fa464423a13ec3" name="JST B2B-XH-A · 2.50 mm wire-to-board" datasheet="https://www.jst-mfg.com/product/pdf/eng/eXH.pdf#page=2">
+      <PADS>
+        <PAD id="43261fe8-f3d7-5c94-a523-ca2a1abb8e75" label="1" padstack_id="3">
+          <POSITION x="-1250000" y="0"/>
+        </PAD>
+        <PAD id="b1ed39bd-e9bf-5600-8a47-b053a67dba97" label="2" padstack_id="4">
+          <POSITION x="1250000" y="0"/>
+        </PAD>
+      </PADS>
+      <GRAPHICS>
+        <GRAPHIC kind="rect" layer="F.Fab" stroke_nm="100000" filled="false">
+          <START x="-3700000" y="-2875000"/>
+          <END x="3700000" y="2875000"/>
+        </GRAPHIC>
+        <GRAPHIC kind="rect" layer="F.CrtYd" stroke_nm="50000" filled="false">
+          <START x="-4250000" y="-3425000"/>
+          <END x="4250000" y="3425000"/>
+        </GRAPHIC>
+        <GRAPHIC kind="circle" layer="F.SilkS" stroke_nm="150000" filled="true">
+          <END x="-2450000" y="0"/>
+          <CENTRE x="-2550000" y="0"/>
+        </GRAPHIC>
+      </GRAPHICS>
+      <MODELS>
+        <MODEL asset_id="0b3a6d3ae6b1c8d83b2da10c0403607c37cd98ff6d976fbc25d71515c6ec7150" kind="step" source="jst-xh-2-vertical.step" quality="generated-envelope">
+          <OFFSET x="0" y="0" z="0"/>
+          <ROTATION x="0" y="0" z="0"/>
+          <SCALE x="1" y="1" z="1"/>
+        </MODEL>
+      </MODELS>
+      <ASSEMBLY>
+        <MARKER kind="pin-1" pad_id="43261fe8-f3d7-5c94-a523-ca2a1abb8e75"/>
+      </ASSEMBLY>
+    </FOOTPRINTDEF>
+    <FOOTPRINTDEF id="f7125739-22a3-862c-ab55-29136ca6d8d5" revision="2" definition_digest="sha256:d54749d6dffe82d7129be8f63e1fa4da4813977d5c38d91cd3d0ddb0c9f69831" name="AXIAL 762">
+      <PADS>
+        <PAD id="9c817d21-40b3-5df6-bcbf-2c2643780191" label="1" padstack_id="5">
+          <POSITION x="-3810000" y="0"/>
+        </PAD>
+        <PAD id="0c98f798-a59c-5e3c-967d-3fe506a7a5f5" label="2" padstack_id="5">
+          <POSITION x="3810000" y="0"/>
+        </PAD>
+      </PADS>
+      <GRAPHICS>
+        <GRAPHIC kind="rect" layer="F.Fab" stroke_nm="100000" filled="false">
+          <START x="-3150000" y="-1250000"/>
+          <END x="3150000" y="1250000"/>
+        </GRAPHIC>
+        <GRAPHIC kind="rect" layer="F.CrtYd" stroke_nm="50000" filled="false">
+          <START x="-5160000" y="-1800000"/>
+          <END x="5160000" y="1800000"/>
+        </GRAPHIC>
+      </GRAPHICS>
+      <MODELS>
+        <MODEL asset_id="85ea73c0cc6a20b2f4dbb9ac590f896e832c10bb29525bd120590569ea2a69f5" kind="step" source="axial-762.step" quality="generated-envelope">
+          <OFFSET x="0" y="0" z="0"/>
+          <ROTATION x="0" y="0" z="0"/>
+          <SCALE x="1" y="1" z="1"/>
+        </MODEL>
+      </MODELS>
+    </FOOTPRINTDEF>
+  </FOOTPRINTDEFS>
+  <DEVICEDEFS>
+    <DEVICEDEF id="0a1e74f1-b93f-85d2-ad11-f58b921124ed" revision="2" definition_digest="sha256:60d20a41beb40c1048985dd0ff8f40d98deb124822fedc04f6665ea3036f69fa" package_name="led-radial-5" package_source="TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions." footprint_id="44fdb2dd-86fa-8cca-a80d-ac7b00c4e5b4">
+      <SIGNALS>
+        <SIGNAL>97204c27-d8d7-8793-a04c-d1ec54102b42</SIGNAL>
+        <SIGNAL>9c146a57-a250-8f6e-a523-3a0d50eb8b31</SIGNAL>
+      </SIGNALS>
+      <ASSIGNMENTS>
+        <ASSIGN pad_id="f6bfbeb7-516e-575f-aa4a-d1a19163c4c7" kind="signal" signal_id="97204c27-d8d7-8793-a04c-d1ec54102b42"/>
+        <ASSIGN pad_id="4195c25d-f0b7-52ab-9eae-f26319c7e5d6" kind="signal" signal_id="9c146a57-a250-8f6e-a523-3a0d50eb8b31"/>
+      </ASSIGNMENTS>
+      <LIBRARYSOURCE id="50d50104-c0bd-860f-a9d8-5b720cf6f245" digest="sha256:ac58b1be84f9b63e5a73b43e630504a346f726c68c0c9dc89a4ffe805eed8bb2" footprint_id="5ed00000-0000-4000-8000-000000000042" evidence="Lesson-local pin mapping. Confirm the actual axial resistor fit and LED cathode on pad 1 before assembly." reviewer="TinyCAD LED classroom exercise" license="CC0-1.0">
+        <BINDINGS>
+          <BIND terminal_id="2b6de1f7-2263-870d-ab7a-7de638d21b83" signal_id="97204c27-d8d7-8793-a04c-d1ec54102b42"/>
+          <BIND terminal_id="d3c04894-7fad-8eef-a3ae-bcf6058491be" signal_id="9c146a57-a250-8f6e-a523-3a0d50eb8b31"/>
+        </BINDINGS>
+      </LIBRARYSOURCE>
+    </DEVICEDEF>
+    <DEVICEDEF id="24ffd027-7a4f-81f9-a769-7bec67ed5702" revision="2" definition_digest="sha256:945bb0cfcfdc4c7d069f2cb9c62a32ef0cdbe2163a1c55a775a30cc90c0c2740" package_name="B2B-XH-A" package_source="JST XH top-entry drill pattern with 1.00 mm finished holes. Copper dimensions follow the corresponding KiCad 9.0.0 footprint." footprint_id="bc8f6717-d881-87c9-a439-1aaa9dd03879">
+      <SIGNALS>
+        <SIGNAL>ed26abd5-5bd8-8997-ad50-36f8f2a69f32</SIGNAL>
+        <SIGNAL>34ddbcbb-c6d3-8265-af9a-0f96f20083d8</SIGNAL>
+      </SIGNALS>
+      <ASSIGNMENTS>
+        <ASSIGN pad_id="43261fe8-f3d7-5c94-a523-ca2a1abb8e75" kind="signal" signal_id="ed26abd5-5bd8-8997-ad50-36f8f2a69f32"/>
+        <ASSIGN pad_id="b1ed39bd-e9bf-5600-8a47-b053a67dba97" kind="signal" signal_id="34ddbcbb-c6d3-8265-af9a-0f96f20083d8"/>
+      </ASSIGNMENTS>
+      <LIBRARYSOURCE id="5ed00000-0000-4000-8000-000000000043" digest="sha256:a16c62fe03d14e6a68bbf61ceed6a0fdb8fc73954d32b0eafbad224a5b2d7dee" footprint_id="5ed00000-0000-4000-8000-000000000040" evidence="The user accepted KiCad-matched or datasheet-derived geometry and explicitly accepted the two final connector exceptions. Terminal assignments for B2B-XH-A verified against https://www.jst-mfg.com/product/pdf/eng/eXH.pdf. Package reference https://www.jst-mfg.com/product/pdf/eng/eXH.pdf. Classroom variant increases legend stroke to 0.15 mm and moves the pin-1 dot 0.1 mm away from the pad." reviewer="TinyCAD starter catalogue verification" license="CC0-1.0">
+        <BINDINGS>
+          <BIND terminal_id="5c00e848-4e90-8d06-aa6c-44658159f1df" signal_id="34ddbcbb-c6d3-8265-af9a-0f96f20083d8"/>
+          <BIND terminal_id="a59338e1-8ca6-83f9-a0c1-598f6a586bf4" signal_id="ed26abd5-5bd8-8997-ad50-36f8f2a69f32"/>
+        </BINDINGS>
+      </LIBRARYSOURCE>
+    </DEVICEDEF>
+    <DEVICEDEF id="87bd3123-48d1-8ac8-a6b6-e9c138eb9b6f" revision="2" definition_digest="sha256:987bbc5c2aec26ac2eb86d6c9ff2aa7a6fd9528e5a64d3ea596aed44e47a1465" package_name="axial-762" package_source="TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions." footprint_id="f7125739-22a3-862c-ab55-29136ca6d8d5">
+      <SIGNALS>
+        <SIGNAL>0cb137ab-18f5-8693-a321-5f9e17d0290a</SIGNAL>
+        <SIGNAL>b8a99aca-cfa1-8621-a132-8c22d403bbc1</SIGNAL>
+      </SIGNALS>
+      <ASSIGNMENTS>
+        <ASSIGN pad_id="9c817d21-40b3-5df6-bcbf-2c2643780191" kind="signal" signal_id="0cb137ab-18f5-8693-a321-5f9e17d0290a"/>
+        <ASSIGN pad_id="0c98f798-a59c-5e3c-967d-3fe506a7a5f5" kind="signal" signal_id="b8a99aca-cfa1-8621-a132-8c22d403bbc1"/>
+      </ASSIGNMENTS>
+      <LIBRARYSOURCE id="4c998032-97a5-8e8e-afd5-1018b00826db" digest="sha256:6c4775335c826f35e449ae15d7d8d56ef3dbebe9b0da1ccec819ace3c3c6ea95" footprint_id="5ed00000-0000-4000-8000-000000000041" evidence="Lesson-local pin mapping. Confirm the actual axial resistor fit and LED cathode on pad 1 before assembly." reviewer="TinyCAD LED classroom exercise" license="CC0-1.0">
+        <BINDINGS>
+          <BIND terminal_id="ae4f5601-427d-8b0b-a343-c76b80b7f102" signal_id="0cb137ab-18f5-8693-a321-5f9e17d0290a"/>
+          <BIND terminal_id="f164c69e-6459-8200-a359-66c0c2e4b0dc" signal_id="b8a99aca-cfa1-8621-a132-8c22d403bbc1"/>
+        </BINDINGS>
+      </LIBRARYSOURCE>
+    </DEVICEDEF>
+  </DEVICEDEFS>
+  <FOOTPRINTS>
+    <FOOTPRINT id="9e9dd731-5a39-89ea-a622-e4b2fdd2428d" device_id="0a1e74f1-b93f-85d2-ad11-f58b921124ed" component_id="5ed00000-0000-4000-8000-000000000005" side="top" locked="false" rotation="180000000">
+      <POSITION x="30000000" y="7750000"/>
+    </FOOTPRINT>
+    <FOOTPRINT id="56d68efa-94a4-8c70-aaf5-cb935d04dc0b" device_id="24ffd027-7a4f-81f9-a769-7bec67ed5702" component_id="5ed00000-0000-4000-8000-000000000003" side="top" locked="false" rotation="90000000">
+      <POSITION x="7000000" y="9000000"/>
+    </FOOTPRINT>
+    <FOOTPRINT id="bea77581-ce81-8fe4-a62b-68dc1f85477c" device_id="87bd3123-48d1-8ac8-a6b6-e9c138eb9b6f" component_id="5ed00000-0000-4000-8000-000000000004" side="top" locked="false" rotation="0">
+      <POSITION x="18000000" y="7750000"/>
+    </FOOTPRINT>
+  </FOOTPRINTS>
+  <MODELASSETS>
+    <MODELASSET id="a592e76854ef8438ac2a552511ed7524f5e4a9079b918a9d74d3f153dfe364b0" media_type="model/step" source="TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions." license="CC0-1.0">
+      <DATA>SVNPLTEwMzAzLTIxOwpIRUFERVI7CkZJTEVfREVTQ1JJUFRJT04oKCdUaW55Q0FEIGRpbWVuc2lvbmFsIGVudmVsb3BlJyksJzI7MScpOwpGSUxFX05BTUUoJ2xlZC1yYWRpYWwtNS5zdGVwJywnMTk3MC0wMS0wMVQwMDowMDowMCcsKCdUaW55Q0FEJyksKCdUaW55Q0FEJyksJ1RpbnlDQUQnLCdUaW55Q0FEJywnJyk7CkZJTEVfU0NIRU1BKCgnQVVUT01PVElWRV9ERVNJR04nKSk7CkVORFNFQzsKREFUQTsKIzE9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMi41LC0yLjUsMC4zKSk7CiMyPUNBUlRFU0lBTl9QT0lOVCgnJywoMi41LC0yLjUsMC4zKSk7CiMzPUNBUlRFU0lBTl9QT0lOVCgnJywoMi41LDIuNSwwLjMpKTsKIzQ9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMi41LDIuNSwwLjMpKTsKIzU9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMi41LC0yLjUsOC44KSk7CiM2PUNBUlRFU0lBTl9QT0lOVCgnJywoMi41LC0yLjUsOC44KSk7CiM3PUNBUlRFU0lBTl9QT0lOVCgnJywoMi41LDIuNSw4LjgpKTsKIzg9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMi41LDIuNSw4LjgpKTsKIzk9VkVSVEVYX1BPSU5UKCcnLCMxKTsKIzEwPVZFUlRFWF9QT0lOVCgnJywjMik7CiMxMT1WRVJURVhfUE9JTlQoJycsIzMpOwojMTI9VkVSVEVYX1BPSU5UKCcnLCM0KTsKIzEzPVZFUlRFWF9QT0lOVCgnJywjNSk7CiMxND1WRVJURVhfUE9JTlQoJycsIzYpOwojMTU9VkVSVEVYX1BPSU5UKCcnLCM3KTsKIzE2PVZFUlRFWF9QT0lOVCgnJywjOCk7CiMxNz1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMTg9VkVDVE9SKCcnLCMxNywxLik7CiMxOT1MSU5FKCcnLCMzLCMxOCk7CiMyMD1FREdFX0NVUlZFKCcnLCMxMSwjMTIsIzE5LC5ULik7CiMyMT1PUklFTlRFRF9FREdFKCcnLCosKiwjMjAsLkYuKTsKIzIyPURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzIzPVZFQ1RPUignJywjMjIsMS4pOwojMjQ9TElORSgnJywjMiwjMjMpOwojMjU9RURHRV9DVVJWRSgnJywjMTAsIzExLCMyNCwuVC4pOwojMjY9T1JJRU5URURfRURHRSgnJywqLCosIzI1LC5GLik7CiMyNz1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiMyOD1WRUNUT1IoJycsIzI3LDEuKTsKIzI5PUxJTkUoJycsIzEsIzI4KTsKIzMwPUVER0VfQ1VSVkUoJycsIzksIzEwLCMyOSwuVC4pOwojMzE9T1JJRU5URURfRURHRSgnJywqLCosIzMwLC5GLik7CiMzMj1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMzMz1WRUNUT1IoJycsIzMyLDEuKTsKIzM0PUxJTkUoJycsIzEsIzMzKTsKIzM1PUVER0VfQ1VSVkUoJycsIzksIzEyLCMzNCwuVC4pOwojMzY9T1JJRU5URURfRURHRSgnJywqLCosIzM1LC5ULik7CiMzNz1FREdFX0xPT1AoJycsKCMyMSwjMjYsIzMxLCMzNikpOwojMzg9RkFDRV9PVVRFUl9CT1VORCgnJywjMzcsLlQuKTsKIzM5PURJUkVDVElPTignJywoMC4sMC4sLTEuKSk7CiM0MD1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiM0MT1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzQsIzM5LCM0MCk7CiM0Mj1QTEFORSgnJywjNDEpOwojNDM9QURWQU5DRURfRkFDRSgnJywoIzM4KSwjNDIsLlQuKTsKIzQ0PURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzQ1PVZFQ1RPUignJywjNDQsMS4pOwojNDY9TElORSgnJywjNSwjNDUpOwojNDc9RURHRV9DVVJWRSgnJywjMTMsIzE0LCM0NiwuVC4pOwojNDg9T1JJRU5URURfRURHRSgnJywqLCosIzQ3LC5ULik7CiM0OT1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiM1MD1WRUNUT1IoJycsIzQ5LDEuKTsKIzUxPUxJTkUoJycsIzYsIzUwKTsKIzUyPUVER0VfQ1VSVkUoJycsIzE0LCMxNSwjNTEsLlQuKTsKIzUzPU9SSUVOVEVEX0VER0UoJycsKiwqLCM1MiwuVC4pOwojNTQ9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzU1PVZFQ1RPUignJywjNTQsMS4pOwojNTY9TElORSgnJywjNywjNTUpOwojNTc9RURHRV9DVVJWRSgnJywjMTUsIzE2LCM1NiwuVC4pOwojNTg9T1JJRU5URURfRURHRSgnJywqLCosIzU3LC5ULik7CiM1OT1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiM2MD1WRUNUT1IoJycsIzU5LDEuKTsKIzYxPUxJTkUoJycsIzUsIzYwKTsKIzYyPUVER0VfQ1VSVkUoJycsIzEzLCMxNiwjNjEsLlQuKTsKIzYzPU9SSUVOVEVEX0VER0UoJycsKiwqLCM2MiwuRi4pOwojNjQ9RURHRV9MT09QKCcnLCgjNDgsIzUzLCM1OCwjNjMpKTsKIzY1PUZBQ0VfT1VURVJfQk9VTkQoJycsIzY0LC5ULik7CiM2Nj1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiM2Nz1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiM2OD1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzUsIzY2LCM2Nyk7CiM2OT1QTEFORSgnJywjNjgpOwojNzA9QURWQU5DRURfRkFDRSgnJywoIzY1KSwjNjksLlQuKTsKIzcxPU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMCwuVC4pOwojNzI9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojNzM9VkVDVE9SKCcnLCM3MiwxLik7CiM3ND1MSU5FKCcnLCMyLCM3Myk7CiM3NT1FREdFX0NVUlZFKCcnLCMxMCwjMTQsIzc0LC5ULik7CiM3Nj1PUklFTlRFRF9FREdFKCcnLCosKiwjNzUsLlQuKTsKIzc3PU9SSUVOVEVEX0VER0UoJycsKiwqLCM0NywuRi4pOwojNzg9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojNzk9VkVDVE9SKCcnLCM3OCwxLik7CiM4MD1MSU5FKCcnLCMxLCM3OSk7CiM4MT1FREdFX0NVUlZFKCcnLCM5LCMxMywjODAsLlQuKTsKIzgyPU9SSUVOVEVEX0VER0UoJycsKiwqLCM4MSwuRi4pOwojODM9RURHRV9MT09QKCcnLCgjNzEsIzc2LCM3NywjODIpKTsKIzg0PUZBQ0VfT1VURVJfQk9VTkQoJycsIzgzLC5ULik7CiM4NT1ESVJFQ1RJT04oJycsKDAuLC0xLiwwLikpOwojODY9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojODc9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMxLCM4NSwjODYpOwojODg9UExBTkUoJycsIzg3KTsKIzg5PUFEVkFOQ0VEX0ZBQ0UoJycsKCM4NCksIzg4LC5ULik7CiM5MD1PUklFTlRFRF9FREdFKCcnLCosKiwjMjUsLlQuKTsKIzkxPURJUkVDVElPTignJywoMC4sMC4sMS4pKTsKIzkyPVZFQ1RPUignJywjOTEsMS4pOwojOTM9TElORSgnJywjMywjOTIpOwojOTQ9RURHRV9DVVJWRSgnJywjMTEsIzE1LCM5MywuVC4pOwojOTU9T1JJRU5URURfRURHRSgnJywqLCosIzk0LC5ULik7CiM5Nj1PUklFTlRFRF9FREdFKCcnLCosKiwjNTIsLkYuKTsKIzk3PU9SSUVOVEVEX0VER0UoJycsKiwqLCM3NSwuRi4pOwojOTg9RURHRV9MT09QKCcnLCgjOTAsIzk1LCM5NiwjOTcpKTsKIzk5PUZBQ0VfT1VURVJfQk9VTkQoJycsIzk4LC5ULik7CiMxMDA9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMTAxPURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzEwMj1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzIsIzEwMCwjMTAxKTsKIzEwMz1QTEFORSgnJywjMTAyKTsKIzEwND1BRFZBTkNFRF9GQUNFKCcnLCgjOTkpLCMxMDMsLlQuKTsKIzEwNT1PUklFTlRFRF9FREdFKCcnLCosKiwjMjAsLlQuKTsKIzEwNj1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMxMDc9VkVDVE9SKCcnLCMxMDYsMS4pOwojMTA4PUxJTkUoJycsIzQsIzEwNyk7CiMxMDk9RURHRV9DVVJWRSgnJywjMTIsIzE2LCMxMDgsLlQuKTsKIzExMD1PUklFTlRFRF9FREdFKCcnLCosKiwjMTA5LC5ULik7CiMxMTE9T1JJRU5URURfRURHRSgnJywqLCosIzU3LC5GLik7CiMxMTI9T1JJRU5URURfRURHRSgnJywqLCosIzk0LC5GLik7CiMxMTM9RURHRV9MT09QKCcnLCgjMTA1LCMxMTAsIzExMSwjMTEyKSk7CiMxMTQ9RkFDRV9PVVRFUl9CT1VORCgnJywjMTEzLC5ULik7CiMxMTU9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMTE2PURJUkVDVElPTignJywoLTEuLDAuLDAuKSk7CiMxMTc9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMzLCMxMTUsIzExNik7CiMxMTg9UExBTkUoJycsIzExNyk7CiMxMTk9QURWQU5DRURfRkFDRSgnJywoIzExNCksIzExOCwuVC4pOwojMTIwPU9SSUVOVEVEX0VER0UoJycsKiwqLCMzNSwuRi4pOwojMTIxPU9SSUVOVEVEX0VER0UoJycsKiwqLCM4MSwuVC4pOwojMTIyPU9SSUVOVEVEX0VER0UoJycsKiwqLCM2MiwuVC4pOwojMTIzPU9SSUVOVEVEX0VER0UoJycsKiwqLCMxMDksLkYuKTsKIzEyND1FREdFX0xPT1AoJycsKCMxMjAsIzEyMSwjMTIyLCMxMjMpKTsKIzEyNT1GQUNFX09VVEVSX0JPVU5EKCcnLCMxMjQsLlQuKTsKIzEyNj1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMTI3PURJUkVDVElPTignJywoMC4sLTEuLDAuKSk7CiMxMjg9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCM0LCMxMjYsIzEyNyk7CiMxMjk9UExBTkUoJycsIzEyOCk7CiMxMzA9QURWQU5DRURfRkFDRSgnJywoIzEyNSksIzEyOSwuVC4pOwojMTMxPUNMT1NFRF9TSEVMTCgnJywoIzQzLCM3MCwjODksIzEwNCwjMTE5LCMxMzApKTsKIzEzMj1NQU5JRk9MRF9TT0xJRF9CUkVQKCdib2R5JywjMTMxKTsKIzEzMz1DQVJURVNJQU5fUE9JTlQoJycsKC0xLjQ5NSwtMC4yMjUsLTIuMikpOwojMTM0PUNBUlRFU0lBTl9QT0lOVCgnJywoLTEuMDQ1LC0wLjIyNSwtMi4yKSk7CiMxMzU9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMS4wNDUsMC4yMjUsLTIuMikpOwojMTM2PUNBUlRFU0lBTl9QT0lOVCgnJywoLTEuNDk1LDAuMjI1LC0yLjIpKTsKIzEzNz1DQVJURVNJQU5fUE9JTlQoJycsKC0xLjQ5NSwtMC4yMjUsNC41NSkpOwojMTM4PUNBUlRFU0lBTl9QT0lOVCgnJywoLTEuMDQ1LC0wLjIyNSw0LjU1KSk7CiMxMzk9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMS4wNDUsMC4yMjUsNC41NSkpOwojMTQwPUNBUlRFU0lBTl9QT0lOVCgnJywoLTEuNDk1LDAuMjI1LDQuNTUpKTsKIzE0MT1WRVJURVhfUE9JTlQoJycsIzEzMyk7CiMxNDI9VkVSVEVYX1BPSU5UKCcnLCMxMzQpOwojMTQzPVZFUlRFWF9QT0lOVCgnJywjMTM1KTsKIzE0ND1WRVJURVhfUE9JTlQoJycsIzEzNik7CiMxNDU9VkVSVEVYX1BPSU5UKCcnLCMxMzcpOwojMTQ2PVZFUlRFWF9QT0lOVCgnJywjMTM4KTsKIzE0Nz1WRVJURVhfUE9JTlQoJycsIzEzOSk7CiMxNDg9VkVSVEVYX1BPSU5UKCcnLCMxNDApOwojMTQ5PURJUkVDVElPTignJywoLTEuLDAuLDAuKSk7CiMxNTA9VkVDVE9SKCcnLCMxNDksMS4pOwojMTUxPUxJTkUoJycsIzEzNSwjMTUwKTsKIzE1Mj1FREdFX0NVUlZFKCcnLCMxNDMsIzE0NCwjMTUxLC5ULik7CiMxNTM9T1JJRU5URURfRURHRSgnJywqLCosIzE1MiwuRi4pOwojMTU0PURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzE1NT1WRUNUT1IoJycsIzE1NCwxLik7CiMxNTY9TElORSgnJywjMTM0LCMxNTUpOwojMTU3PUVER0VfQ1VSVkUoJycsIzE0MiwjMTQzLCMxNTYsLlQuKTsKIzE1OD1PUklFTlRFRF9FREdFKCcnLCosKiwjMTU3LC5GLik7CiMxNTk9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMTYwPVZFQ1RPUignJywjMTU5LDEuKTsKIzE2MT1MSU5FKCcnLCMxMzMsIzE2MCk7CiMxNjI9RURHRV9DVVJWRSgnJywjMTQxLCMxNDIsIzE2MSwuVC4pOwojMTYzPU9SSUVOVEVEX0VER0UoJycsKiwqLCMxNjIsLkYuKTsKIzE2ND1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMxNjU9VkVDVE9SKCcnLCMxNjQsMS4pOwojMTY2PUxJTkUoJycsIzEzMywjMTY1KTsKIzE2Nz1FREdFX0NVUlZFKCcnLCMxNDEsIzE0NCwjMTY2LC5ULik7CiMxNjg9T1JJRU5URURfRURHRSgnJywqLCosIzE2NywuVC4pOwojMTY5PUVER0VfTE9PUCgnJywoIzE1MywjMTU4LCMxNjMsIzE2OCkpOwojMTcwPUZBQ0VfT1VURVJfQk9VTkQoJycsIzE2OSwuVC4pOwojMTcxPURJUkVDVElPTignJywoMC4sMC4sLTEuKSk7CiMxNzI9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMTczPUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMTM2LCMxNzEsIzE3Mik7CiMxNzQ9UExBTkUoJycsIzE3Myk7CiMxNzU9QURWQU5DRURfRkFDRSgnJywoIzE3MCksIzE3NCwuVC4pOwojMTc2PURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzE3Nz1WRUNUT1IoJycsIzE3NiwxLik7CiMxNzg9TElORSgnJywjMTM3LCMxNzcpOwojMTc5PUVER0VfQ1VSVkUoJycsIzE0NSwjMTQ2LCMxNzgsLlQuKTsKIzE4MD1PUklFTlRFRF9FREdFKCcnLCosKiwjMTc5LC5ULik7CiMxODE9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMTgyPVZFQ1RPUignJywjMTgxLDEuKTsKIzE4Mz1MSU5FKCcnLCMxMzgsIzE4Mik7CiMxODQ9RURHRV9DVVJWRSgnJywjMTQ2LCMxNDcsIzE4MywuVC4pOwojMTg1PU9SSUVOVEVEX0VER0UoJycsKiwqLCMxODQsLlQuKTsKIzE4Nj1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMTg3PVZFQ1RPUignJywjMTg2LDEuKTsKIzE4OD1MSU5FKCcnLCMxMzksIzE4Nyk7CiMxODk9RURHRV9DVVJWRSgnJywjMTQ3LCMxNDgsIzE4OCwuVC4pOwojMTkwPU9SSUVOVEVEX0VER0UoJycsKiwqLCMxODksLlQuKTsKIzE5MT1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMxOTI9VkVDVE9SKCcnLCMxOTEsMS4pOwojMTkzPUxJTkUoJycsIzEzNywjMTkyKTsKIzE5ND1FREdFX0NVUlZFKCcnLCMxNDUsIzE0OCwjMTkzLC5ULik7CiMxOTU9T1JJRU5URURfRURHRSgnJywqLCosIzE5NCwuRi4pOwojMTk2PUVER0VfTE9PUCgnJywoIzE4MCwjMTg1LCMxOTAsIzE5NSkpOwojMTk3PUZBQ0VfT1VURVJfQk9VTkQoJycsIzE5NiwuVC4pOwojMTk4PURJUkVDVElPTignJywoMC4sMC4sMS4pKTsKIzE5OT1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiMyMDA9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMxMzcsIzE5OCwjMTk5KTsKIzIwMT1QTEFORSgnJywjMjAwKTsKIzIwMj1BRFZBTkNFRF9GQUNFKCcnLCgjMTk3KSwjMjAxLC5ULik7CiMyMDM9T1JJRU5URURfRURHRSgnJywqLCosIzE2MiwuVC4pOwojMjA0PURJUkVDVElPTignJywoMC4sMC4sMS4pKTsKIzIwNT1WRUNUT1IoJycsIzIwNCwxLik7CiMyMDY9TElORSgnJywjMTM0LCMyMDUpOwojMjA3PUVER0VfQ1VSVkUoJycsIzE0MiwjMTQ2LCMyMDYsLlQuKTsKIzIwOD1PUklFTlRFRF9FREdFKCcnLCosKiwjMjA3LC5ULik7CiMyMDk9T1JJRU5URURfRURHRSgnJywqLCosIzE3OSwuRi4pOwojMjEwPURJUkVDVElPTignJywoMC4sMC4sMS4pKTsKIzIxMT1WRUNUT1IoJycsIzIxMCwxLik7CiMyMTI9TElORSgnJywjMTMzLCMyMTEpOwojMjEzPUVER0VfQ1VSVkUoJycsIzE0MSwjMTQ1LCMyMTIsLlQuKTsKIzIxND1PUklFTlRFRF9FREdFKCcnLCosKiwjMjEzLC5GLik7CiMyMTU9RURHRV9MT09QKCcnLCgjMjAzLCMyMDgsIzIwOSwjMjE0KSk7CiMyMTY9RkFDRV9PVVRFUl9CT1VORCgnJywjMjE1LC5ULik7CiMyMTc9RElSRUNUSU9OKCcnLCgwLiwtMS4sMC4pKTsKIzIxOD1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiMyMTk9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMxMzMsIzIxNywjMjE4KTsKIzIyMD1QTEFORSgnJywjMjE5KTsKIzIyMT1BRFZBTkNFRF9GQUNFKCcnLCgjMjE2KSwjMjIwLC5ULik7CiMyMjI9T1JJRU5URURfRURHRSgnJywqLCosIzE1NywuVC4pOwojMjIzPURJUkVDVElPTignJywoMC4sMC4sMS4pKTsKIzIyND1WRUNUT1IoJycsIzIyMywxLik7CiMyMjU9TElORSgnJywjMTM1LCMyMjQpOwojMjI2PUVER0VfQ1VSVkUoJycsIzE0MywjMTQ3LCMyMjUsLlQuKTsKIzIyNz1PUklFTlRFRF9FREdFKCcnLCosKiwjMjI2LC5ULik7CiMyMjg9T1JJRU5URURfRURHRSgnJywqLCosIzE4NCwuRi4pOwojMjI5PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyMDcsLkYuKTsKIzIzMD1FREdFX0xPT1AoJycsKCMyMjIsIzIyNywjMjI4LCMyMjkpKTsKIzIzMT1GQUNFX09VVEVSX0JPVU5EKCcnLCMyMzAsLlQuKTsKIzIzMj1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiMyMzM9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMjM0PUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMTM0LCMyMzIsIzIzMyk7CiMyMzU9UExBTkUoJycsIzIzNCk7CiMyMzY9QURWQU5DRURfRkFDRSgnJywoIzIzMSksIzIzNSwuVC4pOwojMjM3PU9SSUVOVEVEX0VER0UoJycsKiwqLCMxNTIsLlQuKTsKIzIzOD1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMyMzk9VkVDVE9SKCcnLCMyMzgsMS4pOwojMjQwPUxJTkUoJycsIzEzNiwjMjM5KTsKIzI0MT1FREdFX0NVUlZFKCcnLCMxNDQsIzE0OCwjMjQwLC5ULik7CiMyNDI9T1JJRU5URURfRURHRSgnJywqLCosIzI0MSwuVC4pOwojMjQzPU9SSUVOVEVEX0VER0UoJycsKiwqLCMxODksLkYuKTsKIzI0ND1PUklFTlRFRF9FREdFKCcnLCosKiwjMjI2LC5GLik7CiMyNDU9RURHRV9MT09QKCcnLCgjMjM3LCMyNDIsIzI0MywjMjQ0KSk7CiMyNDY9RkFDRV9PVVRFUl9CT1VORCgnJywjMjQ1LC5ULik7CiMyNDc9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMjQ4PURJUkVDVElPTignJywoLTEuLDAuLDAuKSk7CiMyNDk9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMxMzUsIzI0NywjMjQ4KTsKIzI1MD1QTEFORSgnJywjMjQ5KTsKIzI1MT1BRFZBTkNFRF9GQUNFKCcnLCgjMjQ2KSwjMjUwLC5ULik7CiMyNTI9T1JJRU5URURfRURHRSgnJywqLCosIzE2NywuRi4pOwojMjUzPU9SSUVOVEVEX0VER0UoJycsKiwqLCMyMTMsLlQuKTsKIzI1ND1PUklFTlRFRF9FREdFKCcnLCosKiwjMTk0LC5ULik7CiMyNTU9T1JJRU5URURfRURHRSgnJywqLCosIzI0MSwuRi4pOwojMjU2PUVER0VfTE9PUCgnJywoIzI1MiwjMjUzLCMyNTQsIzI1NSkpOwojMjU3PUZBQ0VfT1VURVJfQk9VTkQoJycsIzI1NiwuVC4pOwojMjU4PURJUkVDVElPTignJywoLTEuLDAuLDAuKSk7CiMyNTk9RElSRUNUSU9OKCcnLCgwLiwtMS4sMC4pKTsKIzI2MD1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzEzNiwjMjU4LCMyNTkpOwojMjYxPVBMQU5FKCcnLCMyNjApOwojMjYyPUFEVkFOQ0VEX0ZBQ0UoJycsKCMyNTcpLCMyNjEsLlQuKTsKIzI2Mz1DTE9TRURfU0hFTEwoJycsKCMxNzUsIzIwMiwjMjIxLCMyMzYsIzI1MSwjMjYyKSk7CiMyNjQ9TUFOSUZPTERfU09MSURfQlJFUCgnbGVhZC0xJywjMjYzKTsKIzI2NT1DQVJURVNJQU5fUE9JTlQoJycsKDEuMDQ1LC0wLjIyNSwtMi4yKSk7CiMyNjY9Q0FSVEVTSUFOX1BPSU5UKCcnLCgxLjQ5NSwtMC4yMjUsLTIuMikpOwojMjY3PUNBUlRFU0lBTl9QT0lOVCgnJywoMS40OTUsMC4yMjUsLTIuMikpOwojMjY4PUNBUlRFU0lBTl9QT0lOVCgnJywoMS4wNDUsMC4yMjUsLTIuMikpOwojMjY5PUNBUlRFU0lBTl9QT0lOVCgnJywoMS4wNDUsLTAuMjI1LDQuNTUpKTsKIzI3MD1DQVJURVNJQU5fUE9JTlQoJycsKDEuNDk1LC0wLjIyNSw0LjU1KSk7CiMyNzE9Q0FSVEVTSUFOX1BPSU5UKCcnLCgxLjQ5NSwwLjIyNSw0LjU1KSk7CiMyNzI9Q0FSVEVTSUFOX1BPSU5UKCcnLCgxLjA0NSwwLjIyNSw0LjU1KSk7CiMyNzM9VkVSVEVYX1BPSU5UKCcnLCMyNjUpOwojMjc0PVZFUlRFWF9QT0lOVCgnJywjMjY2KTsKIzI3NT1WRVJURVhfUE9JTlQoJycsIzI2Nyk7CiMyNzY9VkVSVEVYX1BPSU5UKCcnLCMyNjgpOwojMjc3PVZFUlRFWF9QT0lOVCgnJywjMjY5KTsKIzI3OD1WRVJURVhfUE9JTlQoJycsIzI3MCk7CiMyNzk9VkVSVEVYX1BPSU5UKCcnLCMyNzEpOwojMjgwPVZFUlRFWF9QT0lOVCgnJywjMjcyKTsKIzI4MT1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMjgyPVZFQ1RPUignJywjMjgxLDEuKTsKIzI4Mz1MSU5FKCcnLCMyNjcsIzI4Mik7CiMyODQ9RURHRV9DVVJWRSgnJywjMjc1LCMyNzYsIzI4MywuVC4pOwojMjg1PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyODQsLkYuKTsKIzI4Nj1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMyODc9VkVDVE9SKCcnLCMyODYsMS4pOwojMjg4PUxJTkUoJycsIzI2NiwjMjg3KTsKIzI4OT1FREdFX0NVUlZFKCcnLCMyNzQsIzI3NSwjMjg4LC5ULik7CiMyOTA9T1JJRU5URURfRURHRSgnJywqLCosIzI4OSwuRi4pOwojMjkxPURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzI5Mj1WRUNUT1IoJycsIzI5MSwxLik7CiMyOTM9TElORSgnJywjMjY1LCMyOTIpOwojMjk0PUVER0VfQ1VSVkUoJycsIzI3MywjMjc0LCMyOTMsLlQuKTsKIzI5NT1PUklFTlRFRF9FREdFKCcnLCosKiwjMjk0LC5GLik7CiMyOTY9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMjk3PVZFQ1RPUignJywjMjk2LDEuKTsKIzI5OD1MSU5FKCcnLCMyNjUsIzI5Nyk7CiMyOTk9RURHRV9DVVJWRSgnJywjMjczLCMyNzYsIzI5OCwuVC4pOwojMzAwPU9SSUVOVEVEX0VER0UoJycsKiwqLCMyOTksLlQuKTsKIzMwMT1FREdFX0xPT1AoJycsKCMyODUsIzI5MCwjMjk1LCMzMDApKTsKIzMwMj1GQUNFX09VVEVSX0JPVU5EKCcnLCMzMDEsLlQuKTsKIzMwMz1ESVJFQ1RJT04oJycsKDAuLDAuLC0xLikpOwojMzA0PURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzMwNT1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzI2OCwjMzAzLCMzMDQpOwojMzA2PVBMQU5FKCcnLCMzMDUpOwojMzA3PUFEVkFOQ0VEX0ZBQ0UoJycsKCMzMDIpLCMzMDYsLlQuKTsKIzMwOD1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiMzMDk9VkVDVE9SKCcnLCMzMDgsMS4pOwojMzEwPUxJTkUoJycsIzI2OSwjMzA5KTsKIzMxMT1FREdFX0NVUlZFKCcnLCMyNzcsIzI3OCwjMzEwLC5ULik7CiMzMTI9T1JJRU5URURfRURHRSgnJywqLCosIzMxMSwuVC4pOwojMzEzPURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzMxND1WRUNUT1IoJycsIzMxMywxLik7CiMzMTU9TElORSgnJywjMjcwLCMzMTQpOwojMzE2PUVER0VfQ1VSVkUoJycsIzI3OCwjMjc5LCMzMTUsLlQuKTsKIzMxNz1PUklFTlRFRF9FREdFKCcnLCosKiwjMzE2LC5ULik7CiMzMTg9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzMxOT1WRUNUT1IoJycsIzMxOCwxLik7CiMzMjA9TElORSgnJywjMjcxLCMzMTkpOwojMzIxPUVER0VfQ1VSVkUoJycsIzI3OSwjMjgwLCMzMjAsLlQuKTsKIzMyMj1PUklFTlRFRF9FREdFKCcnLCosKiwjMzIxLC5ULik7CiMzMjM9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMzI0PVZFQ1RPUignJywjMzIzLDEuKTsKIzMyNT1MSU5FKCcnLCMyNjksIzMyNCk7CiMzMjY9RURHRV9DVVJWRSgnJywjMjc3LCMyODAsIzMyNSwuVC4pOwojMzI3PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMjYsLkYuKTsKIzMyOD1FREdFX0xPT1AoJycsKCMzMTIsIzMxNywjMzIyLCMzMjcpKTsKIzMyOT1GQUNFX09VVEVSX0JPVU5EKCcnLCMzMjgsLlQuKTsKIzMzMD1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMzMzE9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMzMyPUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMjY5LCMzMzAsIzMzMSk7CiMzMzM9UExBTkUoJycsIzMzMik7CiMzMzQ9QURWQU5DRURfRkFDRSgnJywoIzMyOSksIzMzMywuVC4pOwojMzM1PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyOTQsLlQuKTsKIzMzNj1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMzMzc9VkVDVE9SKCcnLCMzMzYsMS4pOwojMzM4PUxJTkUoJycsIzI2NiwjMzM3KTsKIzMzOT1FREdFX0NVUlZFKCcnLCMyNzQsIzI3OCwjMzM4LC5ULik7CiMzNDA9T1JJRU5URURfRURHRSgnJywqLCosIzMzOSwuVC4pOwojMzQxPU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMTEsLkYuKTsKIzM0Mj1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMzNDM9VkVDVE9SKCcnLCMzNDIsMS4pOwojMzQ0PUxJTkUoJycsIzI2NSwjMzQzKTsKIzM0NT1FREdFX0NVUlZFKCcnLCMyNzMsIzI3NywjMzQ0LC5ULik7CiMzNDY9T1JJRU5URURfRURHRSgnJywqLCosIzM0NSwuRi4pOwojMzQ3PUVER0VfTE9PUCgnJywoIzMzNSwjMzQwLCMzNDEsIzM0NikpOwojMzQ4PUZBQ0VfT1VURVJfQk9VTkQoJycsIzM0NywuVC4pOwojMzQ5PURJUkVDVElPTignJywoMC4sLTEuLDAuKSk7CiMzNTA9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMzUxPUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMjY1LCMzNDksIzM1MCk7CiMzNTI9UExBTkUoJycsIzM1MSk7CiMzNTM9QURWQU5DRURfRkFDRSgnJywoIzM0OCksIzM1MiwuVC4pOwojMzU0PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyODksLlQuKTsKIzM1NT1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMzNTY9VkVDVE9SKCcnLCMzNTUsMS4pOwojMzU3PUxJTkUoJycsIzI2NywjMzU2KTsKIzM1OD1FREdFX0NVUlZFKCcnLCMyNzUsIzI3OSwjMzU3LC5ULik7CiMzNTk9T1JJRU5URURfRURHRSgnJywqLCosIzM1OCwuVC4pOwojMzYwPU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMTYsLkYuKTsKIzM2MT1PUklFTlRFRF9FREdFKCcnLCosKiwjMzM5LC5GLik7CiMzNjI9RURHRV9MT09QKCcnLCgjMzU0LCMzNTksIzM2MCwjMzYxKSk7CiMzNjM9RkFDRV9PVVRFUl9CT1VORCgnJywjMzYyLC5ULik7CiMzNjQ9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMzY1PURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzM2Nj1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzI2NiwjMzY0LCMzNjUpOwojMzY3PVBMQU5FKCcnLCMzNjYpOwojMzY4PUFEVkFOQ0VEX0ZBQ0UoJycsKCMzNjMpLCMzNjcsLlQuKTsKIzM2OT1PUklFTlRFRF9FREdFKCcnLCosKiwjMjg0LC5ULik7CiMzNzA9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMzcxPVZFQ1RPUignJywjMzcwLDEuKTsKIzM3Mj1MSU5FKCcnLCMyNjgsIzM3MSk7CiMzNzM9RURHRV9DVVJWRSgnJywjMjc2LCMyODAsIzM3MiwuVC4pOwojMzc0PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzNzMsLlQuKTsKIzM3NT1PUklFTlRFRF9FREdFKCcnLCosKiwjMzIxLC5GLik7CiMzNzY9T1JJRU5URURfRURHRSgnJywqLCosIzM1OCwuRi4pOwojMzc3PUVER0VfTE9PUCgnJywoIzM2OSwjMzc0LCMzNzUsIzM3NikpOwojMzc4PUZBQ0VfT1VURVJfQk9VTkQoJycsIzM3NywuVC4pOwojMzc5PURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzM4MD1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMzgxPUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMjY3LCMzNzksIzM4MCk7CiMzODI9UExBTkUoJycsIzM4MSk7CiMzODM9QURWQU5DRURfRkFDRSgnJywoIzM3OCksIzM4MiwuVC4pOwojMzg0PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyOTksLkYuKTsKIzM4NT1PUklFTlRFRF9FREdFKCcnLCosKiwjMzQ1LC5ULik7CiMzODY9T1JJRU5URURfRURHRSgnJywqLCosIzMyNiwuVC4pOwojMzg3PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzNzMsLkYuKTsKIzM4OD1FREdFX0xPT1AoJycsKCMzODQsIzM4NSwjMzg2LCMzODcpKTsKIzM4OT1GQUNFX09VVEVSX0JPVU5EKCcnLCMzODgsLlQuKTsKIzM5MD1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMzkxPURJUkVDVElPTignJywoMC4sLTEuLDAuKSk7CiMzOTI9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMyNjgsIzM5MCwjMzkxKTsKIzM5Mz1QTEFORSgnJywjMzkyKTsKIzM5ND1BRFZBTkNFRF9GQUNFKCcnLCgjMzg5KSwjMzkzLC5ULik7CiMzOTU9Q0xPU0VEX1NIRUxMKCcnLCgjMzA3LCMzMzQsIzM1MywjMzY4LCMzODMsIzM5NCkpOwojMzk2PU1BTklGT0xEX1NPTElEX0JSRVAoJ2xlYWQtMicsIzM5NSk7CiMzOTc9KExFTkdUSF9VTklUKCkgTkFNRURfVU5JVCgqKSBTSV9VTklUKC5NSUxMSS4sLk1FVFJFLikpOwojMzk4PShOQU1FRF9VTklUKCopIFBMQU5FX0FOR0xFX1VOSVQoKSBTSV9VTklUKCQsLlJBRElBTi4pKTsKIzM5OT0oTkFNRURfVU5JVCgqKSBTSV9VTklUKCQsLlNURVJBRElBTi4pIFNPTElEX0FOR0xFX1VOSVQoKSk7CiM0MDA9VU5DRVJUQUlOVFlfTUVBU1VSRV9XSVRIX1VOSVQoTEVOR1RIX01FQVNVUkUoMC4wMDAwMDEpLCMzOTcsJ2Rpc3RhbmNlX2FjY3VyYWN5X3ZhbHVlJywnJyk7CiM0MDE9KEdFT01FVFJJQ19SRVBSRVNFTlRBVElPTl9DT05URVhUKDMpIEdMT0JBTF9VTkNFUlRBSU5UWV9BU1NJR05FRF9DT05URVhUKCgjNDAwKSkgR0xPQkFMX1VOSVRfQVNTSUdORURfQ09OVEVYVCgoIzM5NywjMzk4LCMzOTkpKSBSRVBSRVNFTlRBVElPTl9DT05URVhUKCcnLCczRCcpKTsKIzQwMj1BUFBMSUNBVElPTl9DT05URVhUKCdjb3JlIGRhdGEgZm9yIGF1dG9tb3RpdmUgbWVjaGFuaWNhbCBkZXNpZ24gcHJvY2Vzc2VzJyk7CiM0MDM9QVBQTElDQVRJT05fUFJPVE9DT0xfREVGSU5JVElPTignaW50ZXJuYXRpb25hbCBzdGFuZGFyZCcsJ2F1dG9tb3RpdmVfZGVzaWduJywyMDEwLCM0MDIpOwojNDA0PVBST0RVQ1RfQ09OVEVYVCgnJywjNDAyLCdtZWNoYW5pY2FsJyk7CiM0MDU9UFJPRFVDVCgnbGVkLXJhZGlhbC01JywnbGVkLXJhZGlhbC01JywnJywoIzQwNCkpOwojNDA2PVBST0RVQ1RfUkVMQVRFRF9QUk9EVUNUX0NBVEVHT1JZKCdwYXJ0JywnJywoIzQwNSkpOwojNDA3PVBST0RVQ1RfREVGSU5JVElPTl9GT1JNQVRJT05fV0lUSF9TUEVDSUZJRURfU09VUkNFKCcnLCcnLCM0MDUsLk5PVF9LTk9XTi4pOwojNDA4PVBST0RVQ1RfREVGSU5JVElPTl9DT05URVhUKCdwYXJ0IGRlZmluaXRpb24nLCM0MDIsJ2Rlc2lnbicpOwojNDA5PVBST0RVQ1RfREVGSU5JVElPTignZGVzaWduJywnJywjNDA3LCM0MDgpOwojNDEwPVBST0RVQ1RfREVGSU5JVElPTl9TSEFQRSgnJywnJywjNDA5KTsKIzQxMT1BRFZBTkNFRF9CUkVQX1NIQVBFX1JFUFJFU0VOVEFUSU9OKCcnLCgjMTMyLCMyNjQsIzM5NiksIzQwMSk7CiM0MTI9U0hBUEVfREVGSU5JVElPTl9SRVBSRVNFTlRBVElPTigjNDEwLCM0MTEpOwpFTkRTRUM7CkVORC1JU08tMTAzMDMtMjE7Cg==</DATA>
+    </MODELASSET>
+    <MODELASSET id="0b3a6d3ae6b1c8d83b2da10c0403607c37cd98ff6d976fbc25d71515c6ec7150" media_type="model/step" source="JST XH top-entry drill pattern with 1.00 mm finished holes. Copper dimensions follow the corresponding KiCad 9.0.0 footprint." license="CC0-1.0">
+      <DATA>SVNPLTEwMzAzLTIxOwpIRUFERVI7CkZJTEVfREVTQ1JJUFRJT04oKCdUaW55Q0FEIGRpbWVuc2lvbmFsIGVudmVsb3BlJyksJzI7MScpOwpGSUxFX05BTUUoJ2pzdC14aC0yLXZlcnRpY2FsLnN0ZXAnLCcxOTcwLTAxLTAxVDAwOjAwOjAwJywoJ1RpbnlDQUQnKSwoJ1RpbnlDQUQnKSwnVGlueUNBRCcsJ1RpbnlDQUQnLCcnKTsKRklMRV9TQ0hFTUEoKCdBVVRPTU9USVZFX0RFU0lHTicpKTsKRU5EU0VDOwpEQVRBOwojMT1DQVJURVNJQU5fUE9JTlQoJycsKC0zLjcsLTIuODc1LDAuKSk7CiMyPUNBUlRFU0lBTl9QT0lOVCgnJywoMy43LC0yLjg3NSwwLikpOwojMz1DQVJURVNJQU5fUE9JTlQoJycsKDMuNywyLjg3NSwwLikpOwojND1DQVJURVNJQU5fUE9JTlQoJycsKC0zLjcsMi44NzUsMC4pKTsKIzU9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMy43LC0yLjg3NSw3LikpOwojNj1DQVJURVNJQU5fUE9JTlQoJycsKDMuNywtMi44NzUsNy4pKTsKIzc9Q0FSVEVTSUFOX1BPSU5UKCcnLCgzLjcsMi44NzUsNy4pKTsKIzg9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMy43LDIuODc1LDcuKSk7CiM5PVZFUlRFWF9QT0lOVCgnJywjMSk7CiMxMD1WRVJURVhfUE9JTlQoJycsIzIpOwojMTE9VkVSVEVYX1BPSU5UKCcnLCMzKTsKIzEyPVZFUlRFWF9QT0lOVCgnJywjNCk7CiMxMz1WRVJURVhfUE9JTlQoJycsIzUpOwojMTQ9VkVSVEVYX1BPSU5UKCcnLCM2KTsKIzE1PVZFUlRFWF9QT0lOVCgnJywjNyk7CiMxNj1WRVJURVhfUE9JTlQoJycsIzgpOwojMTc9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzE4PVZFQ1RPUignJywjMTcsMS4pOwojMTk9TElORSgnJywjMywjMTgpOwojMjA9RURHRV9DVVJWRSgnJywjMTEsIzEyLCMxOSwuVC4pOwojMjE9T1JJRU5URURfRURHRSgnJywqLCosIzIwLC5GLik7CiMyMj1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMyMz1WRUNUT1IoJycsIzIyLDEuKTsKIzI0PUxJTkUoJycsIzIsIzIzKTsKIzI1PUVER0VfQ1VSVkUoJycsIzEwLCMxMSwjMjQsLlQuKTsKIzI2PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyNSwuRi4pOwojMjc9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMjg9VkVDVE9SKCcnLCMyNywxLik7CiMyOT1MSU5FKCcnLCMxLCMyOCk7CiMzMD1FREdFX0NVUlZFKCcnLCM5LCMxMCwjMjksLlQuKTsKIzMxPU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMCwuRi4pOwojMzI9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMzM9VkVDVE9SKCcnLCMzMiwxLik7CiMzND1MSU5FKCcnLCMxLCMzMyk7CiMzNT1FREdFX0NVUlZFKCcnLCM5LCMxMiwjMzQsLlQuKTsKIzM2PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzNSwuVC4pOwojMzc9RURHRV9MT09QKCcnLCgjMjEsIzI2LCMzMSwjMzYpKTsKIzM4PUZBQ0VfT1VURVJfQk9VTkQoJycsIzM3LC5ULik7CiMzOT1ESVJFQ1RJT04oJycsKDAuLDAuLC0xLikpOwojNDA9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojNDE9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCM0LCMzOSwjNDApOwojNDI9UExBTkUoJycsIzQxKTsKIzQzPUFEVkFOQ0VEX0ZBQ0UoJycsKCMzOCksIzQyLC5ULik7CiM0ND1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiM0NT1WRUNUT1IoJycsIzQ0LDEuKTsKIzQ2PUxJTkUoJycsIzUsIzQ1KTsKIzQ3PUVER0VfQ1VSVkUoJycsIzEzLCMxNCwjNDYsLlQuKTsKIzQ4PU9SSUVOVEVEX0VER0UoJycsKiwqLCM0NywuVC4pOwojNDk9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojNTA9VkVDVE9SKCcnLCM0OSwxLik7CiM1MT1MSU5FKCcnLCM2LCM1MCk7CiM1Mj1FREdFX0NVUlZFKCcnLCMxNCwjMTUsIzUxLC5ULik7CiM1Mz1PUklFTlRFRF9FREdFKCcnLCosKiwjNTIsLlQuKTsKIzU0PURJUkVDVElPTignJywoLTEuLDAuLDAuKSk7CiM1NT1WRUNUT1IoJycsIzU0LDEuKTsKIzU2PUxJTkUoJycsIzcsIzU1KTsKIzU3PUVER0VfQ1VSVkUoJycsIzE1LCMxNiwjNTYsLlQuKTsKIzU4PU9SSUVOVEVEX0VER0UoJycsKiwqLCM1NywuVC4pOwojNTk9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojNjA9VkVDVE9SKCcnLCM1OSwxLik7CiM2MT1MSU5FKCcnLCM1LCM2MCk7CiM2Mj1FREdFX0NVUlZFKCcnLCMxMywjMTYsIzYxLC5ULik7CiM2Mz1PUklFTlRFRF9FREdFKCcnLCosKiwjNjIsLkYuKTsKIzY0PUVER0VfTE9PUCgnJywoIzQ4LCM1MywjNTgsIzYzKSk7CiM2NT1GQUNFX09VVEVSX0JPVU5EKCcnLCM2NCwuVC4pOwojNjY9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojNjc9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojNjg9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCM1LCM2NiwjNjcpOwojNjk9UExBTkUoJycsIzY4KTsKIzcwPUFEVkFOQ0VEX0ZBQ0UoJycsKCM2NSksIzY5LC5ULik7CiM3MT1PUklFTlRFRF9FREdFKCcnLCosKiwjMzAsLlQuKTsKIzcyPURJUkVDVElPTignJywoMC4sMC4sMS4pKTsKIzczPVZFQ1RPUignJywjNzIsMS4pOwojNzQ9TElORSgnJywjMiwjNzMpOwojNzU9RURHRV9DVVJWRSgnJywjMTAsIzE0LCM3NCwuVC4pOwojNzY9T1JJRU5URURfRURHRSgnJywqLCosIzc1LC5ULik7CiM3Nz1PUklFTlRFRF9FREdFKCcnLCosKiwjNDcsLkYuKTsKIzc4PURJUkVDVElPTignJywoMC4sMC4sMS4pKTsKIzc5PVZFQ1RPUignJywjNzgsMS4pOwojODA9TElORSgnJywjMSwjNzkpOwojODE9RURHRV9DVVJWRSgnJywjOSwjMTMsIzgwLC5ULik7CiM4Mj1PUklFTlRFRF9FREdFKCcnLCosKiwjODEsLkYuKTsKIzgzPUVER0VfTE9PUCgnJywoIzcxLCM3NiwjNzcsIzgyKSk7CiM4ND1GQUNFX09VVEVSX0JPVU5EKCcnLCM4MywuVC4pOwojODU9RElSRUNUSU9OKCcnLCgwLiwtMS4sMC4pKTsKIzg2PURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzg3PUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMSwjODUsIzg2KTsKIzg4PVBMQU5FKCcnLCM4Nyk7CiM4OT1BRFZBTkNFRF9GQUNFKCcnLCgjODQpLCM4OCwuVC4pOwojOTA9T1JJRU5URURfRURHRSgnJywqLCosIzI1LC5ULik7CiM5MT1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiM5Mj1WRUNUT1IoJycsIzkxLDEuKTsKIzkzPUxJTkUoJycsIzMsIzkyKTsKIzk0PUVER0VfQ1VSVkUoJycsIzExLCMxNSwjOTMsLlQuKTsKIzk1PU9SSUVOVEVEX0VER0UoJycsKiwqLCM5NCwuVC4pOwojOTY9T1JJRU5URURfRURHRSgnJywqLCosIzUyLC5GLik7CiM5Nz1PUklFTlRFRF9FREdFKCcnLCosKiwjNzUsLkYuKTsKIzk4PUVER0VfTE9PUCgnJywoIzkwLCM5NSwjOTYsIzk3KSk7CiM5OT1GQUNFX09VVEVSX0JPVU5EKCcnLCM5OCwuVC4pOwojMTAwPURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzEwMT1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMxMDI9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMyLCMxMDAsIzEwMSk7CiMxMDM9UExBTkUoJycsIzEwMik7CiMxMDQ9QURWQU5DRURfRkFDRSgnJywoIzk5KSwjMTAzLC5ULik7CiMxMDU9T1JJRU5URURfRURHRSgnJywqLCosIzIwLC5ULik7CiMxMDY9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMTA3PVZFQ1RPUignJywjMTA2LDEuKTsKIzEwOD1MSU5FKCcnLCM0LCMxMDcpOwojMTA5PUVER0VfQ1VSVkUoJycsIzEyLCMxNiwjMTA4LC5ULik7CiMxMTA9T1JJRU5URURfRURHRSgnJywqLCosIzEwOSwuVC4pOwojMTExPU9SSUVOVEVEX0VER0UoJycsKiwqLCM1NywuRi4pOwojMTEyPU9SSUVOVEVEX0VER0UoJycsKiwqLCM5NCwuRi4pOwojMTEzPUVER0VfTE9PUCgnJywoIzEwNSwjMTEwLCMxMTEsIzExMikpOwojMTE0PUZBQ0VfT1VURVJfQk9VTkQoJycsIzExMywuVC4pOwojMTE1PURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzExNj1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMTE3PUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMywjMTE1LCMxMTYpOwojMTE4PVBMQU5FKCcnLCMxMTcpOwojMTE5PUFEVkFOQ0VEX0ZBQ0UoJycsKCMxMTQpLCMxMTgsLlQuKTsKIzEyMD1PUklFTlRFRF9FREdFKCcnLCosKiwjMzUsLkYuKTsKIzEyMT1PUklFTlRFRF9FREdFKCcnLCosKiwjODEsLlQuKTsKIzEyMj1PUklFTlRFRF9FREdFKCcnLCosKiwjNjIsLlQuKTsKIzEyMz1PUklFTlRFRF9FREdFKCcnLCosKiwjMTA5LC5GLik7CiMxMjQ9RURHRV9MT09QKCcnLCgjMTIwLCMxMjEsIzEyMiwjMTIzKSk7CiMxMjU9RkFDRV9PVVRFUl9CT1VORCgnJywjMTI0LC5ULik7CiMxMjY9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzEyNz1ESVJFQ1RJT04oJycsKDAuLC0xLiwwLikpOwojMTI4PUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjNCwjMTI2LCMxMjcpOwojMTI5PVBMQU5FKCcnLCMxMjgpOwojMTMwPUFEVkFOQ0VEX0ZBQ0UoJycsKCMxMjUpLCMxMjksLlQuKTsKIzEzMT1DTE9TRURfU0hFTEwoJycsKCM0MywjNzAsIzg5LCMxMDQsIzExOSwjMTMwKSk7CiMxMzI9TUFOSUZPTERfU09MSURfQlJFUCgnYm9keScsIzEzMSk7CiMxMzM9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMS41NywtMC4zMiwtMi4yKSk7CiMxMzQ9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMC45MywtMC4zMiwtMi4yKSk7CiMxMzU9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMC45MywwLjMyLC0yLjIpKTsKIzEzNj1DQVJURVNJQU5fUE9JTlQoJycsKC0xLjU3LDAuMzIsLTIuMikpOwojMTM3PUNBUlRFU0lBTl9QT0lOVCgnJywoLTEuNTcsLTAuMzIsMy41KSk7CiMxMzg9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMC45MywtMC4zMiwzLjUpKTsKIzEzOT1DQVJURVNJQU5fUE9JTlQoJycsKC0wLjkzLDAuMzIsMy41KSk7CiMxNDA9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMS41NywwLjMyLDMuNSkpOwojMTQxPVZFUlRFWF9QT0lOVCgnJywjMTMzKTsKIzE0Mj1WRVJURVhfUE9JTlQoJycsIzEzNCk7CiMxNDM9VkVSVEVYX1BPSU5UKCcnLCMxMzUpOwojMTQ0PVZFUlRFWF9QT0lOVCgnJywjMTM2KTsKIzE0NT1WRVJURVhfUE9JTlQoJycsIzEzNyk7CiMxNDY9VkVSVEVYX1BPSU5UKCcnLCMxMzgpOwojMTQ3PVZFUlRFWF9QT0lOVCgnJywjMTM5KTsKIzE0OD1WRVJURVhfUE9JTlQoJycsIzE0MCk7CiMxNDk9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzE1MD1WRUNUT1IoJycsIzE0OSwxLik7CiMxNTE9TElORSgnJywjMTM1LCMxNTApOwojMTUyPUVER0VfQ1VSVkUoJycsIzE0MywjMTQ0LCMxNTEsLlQuKTsKIzE1Mz1PUklFTlRFRF9FREdFKCcnLCosKiwjMTUyLC5GLik7CiMxNTQ9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMTU1PVZFQ1RPUignJywjMTU0LDEuKTsKIzE1Nj1MSU5FKCcnLCMxMzQsIzE1NSk7CiMxNTc9RURHRV9DVVJWRSgnJywjMTQyLCMxNDMsIzE1NiwuVC4pOwojMTU4PU9SSUVOVEVEX0VER0UoJycsKiwqLCMxNTcsLkYuKTsKIzE1OT1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiMxNjA9VkVDVE9SKCcnLCMxNTksMS4pOwojMTYxPUxJTkUoJycsIzEzMywjMTYwKTsKIzE2Mj1FREdFX0NVUlZFKCcnLCMxNDEsIzE0MiwjMTYxLC5ULik7CiMxNjM9T1JJRU5URURfRURHRSgnJywqLCosIzE2MiwuRi4pOwojMTY0PURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzE2NT1WRUNUT1IoJycsIzE2NCwxLik7CiMxNjY9TElORSgnJywjMTMzLCMxNjUpOwojMTY3PUVER0VfQ1VSVkUoJycsIzE0MSwjMTQ0LCMxNjYsLlQuKTsKIzE2OD1PUklFTlRFRF9FREdFKCcnLCosKiwjMTY3LC5ULik7CiMxNjk9RURHRV9MT09QKCcnLCgjMTUzLCMxNTgsIzE2MywjMTY4KSk7CiMxNzA9RkFDRV9PVVRFUl9CT1VORCgnJywjMTY5LC5ULik7CiMxNzE9RElSRUNUSU9OKCcnLCgwLiwwLiwtMS4pKTsKIzE3Mj1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiMxNzM9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMxMzYsIzE3MSwjMTcyKTsKIzE3ND1QTEFORSgnJywjMTczKTsKIzE3NT1BRFZBTkNFRF9GQUNFKCcnLCgjMTcwKSwjMTc0LC5ULik7CiMxNzY9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMTc3PVZFQ1RPUignJywjMTc2LDEuKTsKIzE3OD1MSU5FKCcnLCMxMzcsIzE3Nyk7CiMxNzk9RURHRV9DVVJWRSgnJywjMTQ1LCMxNDYsIzE3OCwuVC4pOwojMTgwPU9SSUVOVEVEX0VER0UoJycsKiwqLCMxNzksLlQuKTsKIzE4MT1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMxODI9VkVDVE9SKCcnLCMxODEsMS4pOwojMTgzPUxJTkUoJycsIzEzOCwjMTgyKTsKIzE4ND1FREdFX0NVUlZFKCcnLCMxNDYsIzE0NywjMTgzLC5ULik7CiMxODU9T1JJRU5URURfRURHRSgnJywqLCosIzE4NCwuVC4pOwojMTg2PURJUkVDVElPTignJywoLTEuLDAuLDAuKSk7CiMxODc9VkVDVE9SKCcnLCMxODYsMS4pOwojMTg4PUxJTkUoJycsIzEzOSwjMTg3KTsKIzE4OT1FREdFX0NVUlZFKCcnLCMxNDcsIzE0OCwjMTg4LC5ULik7CiMxOTA9T1JJRU5URURfRURHRSgnJywqLCosIzE4OSwuVC4pOwojMTkxPURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzE5Mj1WRUNUT1IoJycsIzE5MSwxLik7CiMxOTM9TElORSgnJywjMTM3LCMxOTIpOwojMTk0PUVER0VfQ1VSVkUoJycsIzE0NSwjMTQ4LCMxOTMsLlQuKTsKIzE5NT1PUklFTlRFRF9FREdFKCcnLCosKiwjMTk0LC5GLik7CiMxOTY9RURHRV9MT09QKCcnLCgjMTgwLCMxODUsIzE5MCwjMTk1KSk7CiMxOTc9RkFDRV9PVVRFUl9CT1VORCgnJywjMTk2LC5ULik7CiMxOTg9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMTk5PURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzIwMD1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzEzNywjMTk4LCMxOTkpOwojMjAxPVBMQU5FKCcnLCMyMDApOwojMjAyPUFEVkFOQ0VEX0ZBQ0UoJycsKCMxOTcpLCMyMDEsLlQuKTsKIzIwMz1PUklFTlRFRF9FREdFKCcnLCosKiwjMTYyLC5ULik7CiMyMDQ9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMjA1PVZFQ1RPUignJywjMjA0LDEuKTsKIzIwNj1MSU5FKCcnLCMxMzQsIzIwNSk7CiMyMDc9RURHRV9DVVJWRSgnJywjMTQyLCMxNDYsIzIwNiwuVC4pOwojMjA4PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyMDcsLlQuKTsKIzIwOT1PUklFTlRFRF9FREdFKCcnLCosKiwjMTc5LC5GLik7CiMyMTA9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMjExPVZFQ1RPUignJywjMjEwLDEuKTsKIzIxMj1MSU5FKCcnLCMxMzMsIzIxMSk7CiMyMTM9RURHRV9DVVJWRSgnJywjMTQxLCMxNDUsIzIxMiwuVC4pOwojMjE0PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyMTMsLkYuKTsKIzIxNT1FREdFX0xPT1AoJycsKCMyMDMsIzIwOCwjMjA5LCMyMTQpKTsKIzIxNj1GQUNFX09VVEVSX0JPVU5EKCcnLCMyMTUsLlQuKTsKIzIxNz1ESVJFQ1RJT04oJycsKDAuLC0xLiwwLikpOwojMjE4PURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzIxOT1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzEzMywjMjE3LCMyMTgpOwojMjIwPVBMQU5FKCcnLCMyMTkpOwojMjIxPUFEVkFOQ0VEX0ZBQ0UoJycsKCMyMTYpLCMyMjAsLlQuKTsKIzIyMj1PUklFTlRFRF9FREdFKCcnLCosKiwjMTU3LC5ULik7CiMyMjM9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMjI0PVZFQ1RPUignJywjMjIzLDEuKTsKIzIyNT1MSU5FKCcnLCMxMzUsIzIyNCk7CiMyMjY9RURHRV9DVVJWRSgnJywjMTQzLCMxNDcsIzIyNSwuVC4pOwojMjI3PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyMjYsLlQuKTsKIzIyOD1PUklFTlRFRF9FREdFKCcnLCosKiwjMTg0LC5GLik7CiMyMjk9T1JJRU5URURfRURHRSgnJywqLCosIzIwNywuRi4pOwojMjMwPUVER0VfTE9PUCgnJywoIzIyMiwjMjI3LCMyMjgsIzIyOSkpOwojMjMxPUZBQ0VfT1VURVJfQk9VTkQoJycsIzIzMCwuVC4pOwojMjMyPURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzIzMz1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMyMzQ9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMxMzQsIzIzMiwjMjMzKTsKIzIzNT1QTEFORSgnJywjMjM0KTsKIzIzNj1BRFZBTkNFRF9GQUNFKCcnLCgjMjMxKSwjMjM1LC5ULik7CiMyMzc9T1JJRU5URURfRURHRSgnJywqLCosIzE1MiwuVC4pOwojMjM4PURJUkVDVElPTignJywoMC4sMC4sMS4pKTsKIzIzOT1WRUNUT1IoJycsIzIzOCwxLik7CiMyNDA9TElORSgnJywjMTM2LCMyMzkpOwojMjQxPUVER0VfQ1VSVkUoJycsIzE0NCwjMTQ4LCMyNDAsLlQuKTsKIzI0Mj1PUklFTlRFRF9FREdFKCcnLCosKiwjMjQxLC5ULik7CiMyNDM9T1JJRU5URURfRURHRSgnJywqLCosIzE4OSwuRi4pOwojMjQ0PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyMjYsLkYuKTsKIzI0NT1FREdFX0xPT1AoJycsKCMyMzcsIzI0MiwjMjQzLCMyNDQpKTsKIzI0Nj1GQUNFX09VVEVSX0JPVU5EKCcnLCMyNDUsLlQuKTsKIzI0Nz1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMyNDg9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzI0OT1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzEzNSwjMjQ3LCMyNDgpOwojMjUwPVBMQU5FKCcnLCMyNDkpOwojMjUxPUFEVkFOQ0VEX0ZBQ0UoJycsKCMyNDYpLCMyNTAsLlQuKTsKIzI1Mj1PUklFTlRFRF9FREdFKCcnLCosKiwjMTY3LC5GLik7CiMyNTM9T1JJRU5URURfRURHRSgnJywqLCosIzIxMywuVC4pOwojMjU0PU9SSUVOVEVEX0VER0UoJycsKiwqLCMxOTQsLlQuKTsKIzI1NT1PUklFTlRFRF9FREdFKCcnLCosKiwjMjQxLC5GLik7CiMyNTY9RURHRV9MT09QKCcnLCgjMjUyLCMyNTMsIzI1NCwjMjU1KSk7CiMyNTc9RkFDRV9PVVRFUl9CT1VORCgnJywjMjU2LC5ULik7CiMyNTg9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzI1OT1ESVJFQ1RJT04oJycsKDAuLC0xLiwwLikpOwojMjYwPUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMTM2LCMyNTgsIzI1OSk7CiMyNjE9UExBTkUoJycsIzI2MCk7CiMyNjI9QURWQU5DRURfRkFDRSgnJywoIzI1NyksIzI2MSwuVC4pOwojMjYzPUNMT1NFRF9TSEVMTCgnJywoIzE3NSwjMjAyLCMyMjEsIzIzNiwjMjUxLCMyNjIpKTsKIzI2ND1NQU5JRk9MRF9TT0xJRF9CUkVQKCdsZWFkLTEnLCMyNjMpOwojMjY1PUNBUlRFU0lBTl9QT0lOVCgnJywoMC45MywtMC4zMiwtMi4yKSk7CiMyNjY9Q0FSVEVTSUFOX1BPSU5UKCcnLCgxLjU3LC0wLjMyLC0yLjIpKTsKIzI2Nz1DQVJURVNJQU5fUE9JTlQoJycsKDEuNTcsMC4zMiwtMi4yKSk7CiMyNjg9Q0FSVEVTSUFOX1BPSU5UKCcnLCgwLjkzLDAuMzIsLTIuMikpOwojMjY5PUNBUlRFU0lBTl9QT0lOVCgnJywoMC45MywtMC4zMiwzLjUpKTsKIzI3MD1DQVJURVNJQU5fUE9JTlQoJycsKDEuNTcsLTAuMzIsMy41KSk7CiMyNzE9Q0FSVEVTSUFOX1BPSU5UKCcnLCgxLjU3LDAuMzIsMy41KSk7CiMyNzI9Q0FSVEVTSUFOX1BPSU5UKCcnLCgwLjkzLDAuMzIsMy41KSk7CiMyNzM9VkVSVEVYX1BPSU5UKCcnLCMyNjUpOwojMjc0PVZFUlRFWF9QT0lOVCgnJywjMjY2KTsKIzI3NT1WRVJURVhfUE9JTlQoJycsIzI2Nyk7CiMyNzY9VkVSVEVYX1BPSU5UKCcnLCMyNjgpOwojMjc3PVZFUlRFWF9QT0lOVCgnJywjMjY5KTsKIzI3OD1WRVJURVhfUE9JTlQoJycsIzI3MCk7CiMyNzk9VkVSVEVYX1BPSU5UKCcnLCMyNzEpOwojMjgwPVZFUlRFWF9QT0lOVCgnJywjMjcyKTsKIzI4MT1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMjgyPVZFQ1RPUignJywjMjgxLDEuKTsKIzI4Mz1MSU5FKCcnLCMyNjcsIzI4Mik7CiMyODQ9RURHRV9DVVJWRSgnJywjMjc1LCMyNzYsIzI4MywuVC4pOwojMjg1PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyODQsLkYuKTsKIzI4Nj1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMyODc9VkVDVE9SKCcnLCMyODYsMS4pOwojMjg4PUxJTkUoJycsIzI2NiwjMjg3KTsKIzI4OT1FREdFX0NVUlZFKCcnLCMyNzQsIzI3NSwjMjg4LC5ULik7CiMyOTA9T1JJRU5URURfRURHRSgnJywqLCosIzI4OSwuRi4pOwojMjkxPURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzI5Mj1WRUNUT1IoJycsIzI5MSwxLik7CiMyOTM9TElORSgnJywjMjY1LCMyOTIpOwojMjk0PUVER0VfQ1VSVkUoJycsIzI3MywjMjc0LCMyOTMsLlQuKTsKIzI5NT1PUklFTlRFRF9FREdFKCcnLCosKiwjMjk0LC5GLik7CiMyOTY9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMjk3PVZFQ1RPUignJywjMjk2LDEuKTsKIzI5OD1MSU5FKCcnLCMyNjUsIzI5Nyk7CiMyOTk9RURHRV9DVVJWRSgnJywjMjczLCMyNzYsIzI5OCwuVC4pOwojMzAwPU9SSUVOVEVEX0VER0UoJycsKiwqLCMyOTksLlQuKTsKIzMwMT1FREdFX0xPT1AoJycsKCMyODUsIzI5MCwjMjk1LCMzMDApKTsKIzMwMj1GQUNFX09VVEVSX0JPVU5EKCcnLCMzMDEsLlQuKTsKIzMwMz1ESVJFQ1RJT04oJycsKDAuLDAuLC0xLikpOwojMzA0PURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzMwNT1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzI2OCwjMzAzLCMzMDQpOwojMzA2PVBMQU5FKCcnLCMzMDUpOwojMzA3PUFEVkFOQ0VEX0ZBQ0UoJycsKCMzMDIpLCMzMDYsLlQuKTsKIzMwOD1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiMzMDk9VkVDVE9SKCcnLCMzMDgsMS4pOwojMzEwPUxJTkUoJycsIzI2OSwjMzA5KTsKIzMxMT1FREdFX0NVUlZFKCcnLCMyNzcsIzI3OCwjMzEwLC5ULik7CiMzMTI9T1JJRU5URURfRURHRSgnJywqLCosIzMxMSwuVC4pOwojMzEzPURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzMxND1WRUNUT1IoJycsIzMxMywxLik7CiMzMTU9TElORSgnJywjMjcwLCMzMTQpOwojMzE2PUVER0VfQ1VSVkUoJycsIzI3OCwjMjc5LCMzMTUsLlQuKTsKIzMxNz1PUklFTlRFRF9FREdFKCcnLCosKiwjMzE2LC5ULik7CiMzMTg9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzMxOT1WRUNUT1IoJycsIzMxOCwxLik7CiMzMjA9TElORSgnJywjMjcxLCMzMTkpOwojMzIxPUVER0VfQ1VSVkUoJycsIzI3OSwjMjgwLCMzMjAsLlQuKTsKIzMyMj1PUklFTlRFRF9FREdFKCcnLCosKiwjMzIxLC5ULik7CiMzMjM9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMzI0PVZFQ1RPUignJywjMzIzLDEuKTsKIzMyNT1MSU5FKCcnLCMyNjksIzMyNCk7CiMzMjY9RURHRV9DVVJWRSgnJywjMjc3LCMyODAsIzMyNSwuVC4pOwojMzI3PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMjYsLkYuKTsKIzMyOD1FREdFX0xPT1AoJycsKCMzMTIsIzMxNywjMzIyLCMzMjcpKTsKIzMyOT1GQUNFX09VVEVSX0JPVU5EKCcnLCMzMjgsLlQuKTsKIzMzMD1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMzMzE9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMzMyPUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMjY5LCMzMzAsIzMzMSk7CiMzMzM9UExBTkUoJycsIzMzMik7CiMzMzQ9QURWQU5DRURfRkFDRSgnJywoIzMyOSksIzMzMywuVC4pOwojMzM1PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyOTQsLlQuKTsKIzMzNj1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMzMzc9VkVDVE9SKCcnLCMzMzYsMS4pOwojMzM4PUxJTkUoJycsIzI2NiwjMzM3KTsKIzMzOT1FREdFX0NVUlZFKCcnLCMyNzQsIzI3OCwjMzM4LC5ULik7CiMzNDA9T1JJRU5URURfRURHRSgnJywqLCosIzMzOSwuVC4pOwojMzQxPU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMTEsLkYuKTsKIzM0Mj1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMzNDM9VkVDVE9SKCcnLCMzNDIsMS4pOwojMzQ0PUxJTkUoJycsIzI2NSwjMzQzKTsKIzM0NT1FREdFX0NVUlZFKCcnLCMyNzMsIzI3NywjMzQ0LC5ULik7CiMzNDY9T1JJRU5URURfRURHRSgnJywqLCosIzM0NSwuRi4pOwojMzQ3PUVER0VfTE9PUCgnJywoIzMzNSwjMzQwLCMzNDEsIzM0NikpOwojMzQ4PUZBQ0VfT1VURVJfQk9VTkQoJycsIzM0NywuVC4pOwojMzQ5PURJUkVDVElPTignJywoMC4sLTEuLDAuKSk7CiMzNTA9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMzUxPUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMjY1LCMzNDksIzM1MCk7CiMzNTI9UExBTkUoJycsIzM1MSk7CiMzNTM9QURWQU5DRURfRkFDRSgnJywoIzM0OCksIzM1MiwuVC4pOwojMzU0PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyODksLlQuKTsKIzM1NT1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMzNTY9VkVDVE9SKCcnLCMzNTUsMS4pOwojMzU3PUxJTkUoJycsIzI2NywjMzU2KTsKIzM1OD1FREdFX0NVUlZFKCcnLCMyNzUsIzI3OSwjMzU3LC5ULik7CiMzNTk9T1JJRU5URURfRURHRSgnJywqLCosIzM1OCwuVC4pOwojMzYwPU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMTYsLkYuKTsKIzM2MT1PUklFTlRFRF9FREdFKCcnLCosKiwjMzM5LC5GLik7CiMzNjI9RURHRV9MT09QKCcnLCgjMzU0LCMzNTksIzM2MCwjMzYxKSk7CiMzNjM9RkFDRV9PVVRFUl9CT1VORCgnJywjMzYyLC5ULik7CiMzNjQ9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMzY1PURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzM2Nj1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzI2NiwjMzY0LCMzNjUpOwojMzY3PVBMQU5FKCcnLCMzNjYpOwojMzY4PUFEVkFOQ0VEX0ZBQ0UoJycsKCMzNjMpLCMzNjcsLlQuKTsKIzM2OT1PUklFTlRFRF9FREdFKCcnLCosKiwjMjg0LC5ULik7CiMzNzA9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMzcxPVZFQ1RPUignJywjMzcwLDEuKTsKIzM3Mj1MSU5FKCcnLCMyNjgsIzM3MSk7CiMzNzM9RURHRV9DVVJWRSgnJywjMjc2LCMyODAsIzM3MiwuVC4pOwojMzc0PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzNzMsLlQuKTsKIzM3NT1PUklFTlRFRF9FREdFKCcnLCosKiwjMzIxLC5GLik7CiMzNzY9T1JJRU5URURfRURHRSgnJywqLCosIzM1OCwuRi4pOwojMzc3PUVER0VfTE9PUCgnJywoIzM2OSwjMzc0LCMzNzUsIzM3NikpOwojMzc4PUZBQ0VfT1VURVJfQk9VTkQoJycsIzM3NywuVC4pOwojMzc5PURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzM4MD1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMzgxPUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMjY3LCMzNzksIzM4MCk7CiMzODI9UExBTkUoJycsIzM4MSk7CiMzODM9QURWQU5DRURfRkFDRSgnJywoIzM3OCksIzM4MiwuVC4pOwojMzg0PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyOTksLkYuKTsKIzM4NT1PUklFTlRFRF9FREdFKCcnLCosKiwjMzQ1LC5ULik7CiMzODY9T1JJRU5URURfRURHRSgnJywqLCosIzMyNiwuVC4pOwojMzg3PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzNzMsLkYuKTsKIzM4OD1FREdFX0xPT1AoJycsKCMzODQsIzM4NSwjMzg2LCMzODcpKTsKIzM4OT1GQUNFX09VVEVSX0JPVU5EKCcnLCMzODgsLlQuKTsKIzM5MD1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMzkxPURJUkVDVElPTignJywoMC4sLTEuLDAuKSk7CiMzOTI9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMyNjgsIzM5MCwjMzkxKTsKIzM5Mz1QTEFORSgnJywjMzkyKTsKIzM5ND1BRFZBTkNFRF9GQUNFKCcnLCgjMzg5KSwjMzkzLC5ULik7CiMzOTU9Q0xPU0VEX1NIRUxMKCcnLCgjMzA3LCMzMzQsIzM1MywjMzY4LCMzODMsIzM5NCkpOwojMzk2PU1BTklGT0xEX1NPTElEX0JSRVAoJ2xlYWQtMicsIzM5NSk7CiMzOTc9KExFTkdUSF9VTklUKCkgTkFNRURfVU5JVCgqKSBTSV9VTklUKC5NSUxMSS4sLk1FVFJFLikpOwojMzk4PShOQU1FRF9VTklUKCopIFBMQU5FX0FOR0xFX1VOSVQoKSBTSV9VTklUKCQsLlJBRElBTi4pKTsKIzM5OT0oTkFNRURfVU5JVCgqKSBTSV9VTklUKCQsLlNURVJBRElBTi4pIFNPTElEX0FOR0xFX1VOSVQoKSk7CiM0MDA9VU5DRVJUQUlOVFlfTUVBU1VSRV9XSVRIX1VOSVQoTEVOR1RIX01FQVNVUkUoMC4wMDAwMDEpLCMzOTcsJ2Rpc3RhbmNlX2FjY3VyYWN5X3ZhbHVlJywnJyk7CiM0MDE9KEdFT01FVFJJQ19SRVBSRVNFTlRBVElPTl9DT05URVhUKDMpIEdMT0JBTF9VTkNFUlRBSU5UWV9BU1NJR05FRF9DT05URVhUKCgjNDAwKSkgR0xPQkFMX1VOSVRfQVNTSUdORURfQ09OVEVYVCgoIzM5NywjMzk4LCMzOTkpKSBSRVBSRVNFTlRBVElPTl9DT05URVhUKCcnLCczRCcpKTsKIzQwMj1BUFBMSUNBVElPTl9DT05URVhUKCdjb3JlIGRhdGEgZm9yIGF1dG9tb3RpdmUgbWVjaGFuaWNhbCBkZXNpZ24gcHJvY2Vzc2VzJyk7CiM0MDM9QVBQTElDQVRJT05fUFJPVE9DT0xfREVGSU5JVElPTignaW50ZXJuYXRpb25hbCBzdGFuZGFyZCcsJ2F1dG9tb3RpdmVfZGVzaWduJywyMDEwLCM0MDIpOwojNDA0PVBST0RVQ1RfQ09OVEVYVCgnJywjNDAyLCdtZWNoYW5pY2FsJyk7CiM0MDU9UFJPRFVDVCgnanN0LXhoLTItdmVydGljYWwnLCdqc3QteGgtMi12ZXJ0aWNhbCcsJycsKCM0MDQpKTsKIzQwNj1QUk9EVUNUX1JFTEFURURfUFJPRFVDVF9DQVRFR09SWSgncGFydCcsJycsKCM0MDUpKTsKIzQwNz1QUk9EVUNUX0RFRklOSVRJT05fRk9STUFUSU9OX1dJVEhfU1BFQ0lGSUVEX1NPVVJDRSgnJywnJywjNDA1LC5OT1RfS05PV04uKTsKIzQwOD1QUk9EVUNUX0RFRklOSVRJT05fQ09OVEVYVCgncGFydCBkZWZpbml0aW9uJywjNDAyLCdkZXNpZ24nKTsKIzQwOT1QUk9EVUNUX0RFRklOSVRJT04oJ2Rlc2lnbicsJycsIzQwNywjNDA4KTsKIzQxMD1QUk9EVUNUX0RFRklOSVRJT05fU0hBUEUoJycsJycsIzQwOSk7CiM0MTE9QURWQU5DRURfQlJFUF9TSEFQRV9SRVBSRVNFTlRBVElPTignJywoIzEzMiwjMjY0LCMzOTYpLCM0MDEpOwojNDEyPVNIQVBFX0RFRklOSVRJT05fUkVQUkVTRU5UQVRJT04oIzQxMCwjNDExKTsKRU5EU0VDOwpFTkQtSVNPLTEwMzAzLTIxOwo=</DATA>
+    </MODELASSET>
+    <MODELASSET id="85ea73c0cc6a20b2f4dbb9ac590f896e832c10bb29525bd120590569ea2a69f5" media_type="model/step" source="TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions." license="CC0-1.0">
+      <DATA>SVNPLTEwMzAzLTIxOwpIRUFERVI7CkZJTEVfREVTQ1JJUFRJT04oKCdUaW55Q0FEIGRpbWVuc2lvbmFsIGVudmVsb3BlJyksJzI7MScpOwpGSUxFX05BTUUoJ2F4aWFsLTc2Mi5zdGVwJywnMTk3MC0wMS0wMVQwMDowMDowMCcsKCdUaW55Q0FEJyksKCdUaW55Q0FEJyksJ1RpbnlDQUQnLCdUaW55Q0FEJywnJyk7CkZJTEVfU0NIRU1BKCgnQVVUT01PVElWRV9ERVNJR04nKSk7CkVORFNFQzsKREFUQTsKIzE9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMy4xNSwtMS4yNSwwLjMpKTsKIzI9Q0FSVEVTSUFOX1BPSU5UKCcnLCgzLjE1LC0xLjI1LDAuMykpOwojMz1DQVJURVNJQU5fUE9JTlQoJycsKDMuMTUsMS4yNSwwLjMpKTsKIzQ9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtMy4xNSwxLjI1LDAuMykpOwojNT1DQVJURVNJQU5fUE9JTlQoJycsKC0zLjE1LC0xLjI1LDIuOCkpOwojNj1DQVJURVNJQU5fUE9JTlQoJycsKDMuMTUsLTEuMjUsMi44KSk7CiM3PUNBUlRFU0lBTl9QT0lOVCgnJywoMy4xNSwxLjI1LDIuOCkpOwojOD1DQVJURVNJQU5fUE9JTlQoJycsKC0zLjE1LDEuMjUsMi44KSk7CiM5PVZFUlRFWF9QT0lOVCgnJywjMSk7CiMxMD1WRVJURVhfUE9JTlQoJycsIzIpOwojMTE9VkVSVEVYX1BPSU5UKCcnLCMzKTsKIzEyPVZFUlRFWF9QT0lOVCgnJywjNCk7CiMxMz1WRVJURVhfUE9JTlQoJycsIzUpOwojMTQ9VkVSVEVYX1BPSU5UKCcnLCM2KTsKIzE1PVZFUlRFWF9QT0lOVCgnJywjNyk7CiMxNj1WRVJURVhfUE9JTlQoJycsIzgpOwojMTc9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzE4PVZFQ1RPUignJywjMTcsMS4pOwojMTk9TElORSgnJywjMywjMTgpOwojMjA9RURHRV9DVVJWRSgnJywjMTEsIzEyLCMxOSwuVC4pOwojMjE9T1JJRU5URURfRURHRSgnJywqLCosIzIwLC5GLik7CiMyMj1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMyMz1WRUNUT1IoJycsIzIyLDEuKTsKIzI0PUxJTkUoJycsIzIsIzIzKTsKIzI1PUVER0VfQ1VSVkUoJycsIzEwLCMxMSwjMjQsLlQuKTsKIzI2PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyNSwuRi4pOwojMjc9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMjg9VkVDVE9SKCcnLCMyNywxLik7CiMyOT1MSU5FKCcnLCMxLCMyOCk7CiMzMD1FREdFX0NVUlZFKCcnLCM5LCMxMCwjMjksLlQuKTsKIzMxPU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMCwuRi4pOwojMzI9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMzM9VkVDVE9SKCcnLCMzMiwxLik7CiMzND1MSU5FKCcnLCMxLCMzMyk7CiMzNT1FREdFX0NVUlZFKCcnLCM5LCMxMiwjMzQsLlQuKTsKIzM2PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzNSwuVC4pOwojMzc9RURHRV9MT09QKCcnLCgjMjEsIzI2LCMzMSwjMzYpKTsKIzM4PUZBQ0VfT1VURVJfQk9VTkQoJycsIzM3LC5ULik7CiMzOT1ESVJFQ1RJT04oJycsKDAuLDAuLC0xLikpOwojNDA9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojNDE9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCM0LCMzOSwjNDApOwojNDI9UExBTkUoJycsIzQxKTsKIzQzPUFEVkFOQ0VEX0ZBQ0UoJycsKCMzOCksIzQyLC5ULik7CiM0ND1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiM0NT1WRUNUT1IoJycsIzQ0LDEuKTsKIzQ2PUxJTkUoJycsIzUsIzQ1KTsKIzQ3PUVER0VfQ1VSVkUoJycsIzEzLCMxNCwjNDYsLlQuKTsKIzQ4PU9SSUVOVEVEX0VER0UoJycsKiwqLCM0NywuVC4pOwojNDk9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojNTA9VkVDVE9SKCcnLCM0OSwxLik7CiM1MT1MSU5FKCcnLCM2LCM1MCk7CiM1Mj1FREdFX0NVUlZFKCcnLCMxNCwjMTUsIzUxLC5ULik7CiM1Mz1PUklFTlRFRF9FREdFKCcnLCosKiwjNTIsLlQuKTsKIzU0PURJUkVDVElPTignJywoLTEuLDAuLDAuKSk7CiM1NT1WRUNUT1IoJycsIzU0LDEuKTsKIzU2PUxJTkUoJycsIzcsIzU1KTsKIzU3PUVER0VfQ1VSVkUoJycsIzE1LCMxNiwjNTYsLlQuKTsKIzU4PU9SSUVOVEVEX0VER0UoJycsKiwqLCM1NywuVC4pOwojNTk9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojNjA9VkVDVE9SKCcnLCM1OSwxLik7CiM2MT1MSU5FKCcnLCM1LCM2MCk7CiM2Mj1FREdFX0NVUlZFKCcnLCMxMywjMTYsIzYxLC5ULik7CiM2Mz1PUklFTlRFRF9FREdFKCcnLCosKiwjNjIsLkYuKTsKIzY0PUVER0VfTE9PUCgnJywoIzQ4LCM1MywjNTgsIzYzKSk7CiM2NT1GQUNFX09VVEVSX0JPVU5EKCcnLCM2NCwuVC4pOwojNjY9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojNjc9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojNjg9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCM1LCM2NiwjNjcpOwojNjk9UExBTkUoJycsIzY4KTsKIzcwPUFEVkFOQ0VEX0ZBQ0UoJycsKCM2NSksIzY5LC5ULik7CiM3MT1PUklFTlRFRF9FREdFKCcnLCosKiwjMzAsLlQuKTsKIzcyPURJUkVDVElPTignJywoMC4sMC4sMS4pKTsKIzczPVZFQ1RPUignJywjNzIsMS4pOwojNzQ9TElORSgnJywjMiwjNzMpOwojNzU9RURHRV9DVVJWRSgnJywjMTAsIzE0LCM3NCwuVC4pOwojNzY9T1JJRU5URURfRURHRSgnJywqLCosIzc1LC5ULik7CiM3Nz1PUklFTlRFRF9FREdFKCcnLCosKiwjNDcsLkYuKTsKIzc4PURJUkVDVElPTignJywoMC4sMC4sMS4pKTsKIzc5PVZFQ1RPUignJywjNzgsMS4pOwojODA9TElORSgnJywjMSwjNzkpOwojODE9RURHRV9DVVJWRSgnJywjOSwjMTMsIzgwLC5ULik7CiM4Mj1PUklFTlRFRF9FREdFKCcnLCosKiwjODEsLkYuKTsKIzgzPUVER0VfTE9PUCgnJywoIzcxLCM3NiwjNzcsIzgyKSk7CiM4ND1GQUNFX09VVEVSX0JPVU5EKCcnLCM4MywuVC4pOwojODU9RElSRUNUSU9OKCcnLCgwLiwtMS4sMC4pKTsKIzg2PURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzg3PUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMSwjODUsIzg2KTsKIzg4PVBMQU5FKCcnLCM4Nyk7CiM4OT1BRFZBTkNFRF9GQUNFKCcnLCgjODQpLCM4OCwuVC4pOwojOTA9T1JJRU5URURfRURHRSgnJywqLCosIzI1LC5ULik7CiM5MT1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiM5Mj1WRUNUT1IoJycsIzkxLDEuKTsKIzkzPUxJTkUoJycsIzMsIzkyKTsKIzk0PUVER0VfQ1VSVkUoJycsIzExLCMxNSwjOTMsLlQuKTsKIzk1PU9SSUVOVEVEX0VER0UoJycsKiwqLCM5NCwuVC4pOwojOTY9T1JJRU5URURfRURHRSgnJywqLCosIzUyLC5GLik7CiM5Nz1PUklFTlRFRF9FREdFKCcnLCosKiwjNzUsLkYuKTsKIzk4PUVER0VfTE9PUCgnJywoIzkwLCM5NSwjOTYsIzk3KSk7CiM5OT1GQUNFX09VVEVSX0JPVU5EKCcnLCM5OCwuVC4pOwojMTAwPURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzEwMT1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMxMDI9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMyLCMxMDAsIzEwMSk7CiMxMDM9UExBTkUoJycsIzEwMik7CiMxMDQ9QURWQU5DRURfRkFDRSgnJywoIzk5KSwjMTAzLC5ULik7CiMxMDU9T1JJRU5URURfRURHRSgnJywqLCosIzIwLC5ULik7CiMxMDY9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMTA3PVZFQ1RPUignJywjMTA2LDEuKTsKIzEwOD1MSU5FKCcnLCM0LCMxMDcpOwojMTA5PUVER0VfQ1VSVkUoJycsIzEyLCMxNiwjMTA4LC5ULik7CiMxMTA9T1JJRU5URURfRURHRSgnJywqLCosIzEwOSwuVC4pOwojMTExPU9SSUVOVEVEX0VER0UoJycsKiwqLCM1NywuRi4pOwojMTEyPU9SSUVOVEVEX0VER0UoJycsKiwqLCM5NCwuRi4pOwojMTEzPUVER0VfTE9PUCgnJywoIzEwNSwjMTEwLCMxMTEsIzExMikpOwojMTE0PUZBQ0VfT1VURVJfQk9VTkQoJycsIzExMywuVC4pOwojMTE1PURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzExNj1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMTE3PUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMywjMTE1LCMxMTYpOwojMTE4PVBMQU5FKCcnLCMxMTcpOwojMTE5PUFEVkFOQ0VEX0ZBQ0UoJycsKCMxMTQpLCMxMTgsLlQuKTsKIzEyMD1PUklFTlRFRF9FREdFKCcnLCosKiwjMzUsLkYuKTsKIzEyMT1PUklFTlRFRF9FREdFKCcnLCosKiwjODEsLlQuKTsKIzEyMj1PUklFTlRFRF9FREdFKCcnLCosKiwjNjIsLlQuKTsKIzEyMz1PUklFTlRFRF9FREdFKCcnLCosKiwjMTA5LC5GLik7CiMxMjQ9RURHRV9MT09QKCcnLCgjMTIwLCMxMjEsIzEyMiwjMTIzKSk7CiMxMjU9RkFDRV9PVVRFUl9CT1VORCgnJywjMTI0LC5ULik7CiMxMjY9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzEyNz1ESVJFQ1RJT04oJycsKDAuLC0xLiwwLikpOwojMTI4PUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjNCwjMTI2LCMxMjcpOwojMTI5PVBMQU5FKCcnLCMxMjgpOwojMTMwPUFEVkFOQ0VEX0ZBQ0UoJycsKCMxMjUpLCMxMjksLlQuKTsKIzEzMT1DTE9TRURfU0hFTEwoJycsKCM0MywjNzAsIzg5LCMxMDQsIzExOSwjMTMwKSk7CiMxMzI9TUFOSUZPTERfU09MSURfQlJFUCgnYm9keScsIzEzMSk7CiMxMzM9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtNC4wMjIxMzIsLTAuMjEyMTMyLC0yLjIpKTsKIzEzND1DQVJURVNJQU5fUE9JTlQoJycsKC0zLjU5Nzg2OCwtMC4yMTIxMzIsLTIuMikpOwojMTM1PUNBUlRFU0lBTl9QT0lOVCgnJywoLTMuNTk3ODY4LDAuMjEyMTMyLC0yLjIpKTsKIzEzNj1DQVJURVNJQU5fUE9JTlQoJycsKC00LjAyMjEzMiwwLjIxMjEzMiwtMi4yKSk7CiMxMzc9Q0FSVEVTSUFOX1BPSU5UKCcnLCgtNC4wMjIxMzIsLTAuMjEyMTMyLDEuNTUpKTsKIzEzOD1DQVJURVNJQU5fUE9JTlQoJycsKC0zLjU5Nzg2OCwtMC4yMTIxMzIsMS41NSkpOwojMTM5PUNBUlRFU0lBTl9QT0lOVCgnJywoLTMuNTk3ODY4LDAuMjEyMTMyLDEuNTUpKTsKIzE0MD1DQVJURVNJQU5fUE9JTlQoJycsKC00LjAyMjEzMiwwLjIxMjEzMiwxLjU1KSk7CiMxNDE9VkVSVEVYX1BPSU5UKCcnLCMxMzMpOwojMTQyPVZFUlRFWF9QT0lOVCgnJywjMTM0KTsKIzE0Mz1WRVJURVhfUE9JTlQoJycsIzEzNSk7CiMxNDQ9VkVSVEVYX1BPSU5UKCcnLCMxMzYpOwojMTQ1PVZFUlRFWF9QT0lOVCgnJywjMTM3KTsKIzE0Nj1WRVJURVhfUE9JTlQoJycsIzEzOCk7CiMxNDc9VkVSVEVYX1BPSU5UKCcnLCMxMzkpOwojMTQ4PVZFUlRFWF9QT0lOVCgnJywjMTQwKTsKIzE0OT1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMTUwPVZFQ1RPUignJywjMTQ5LDEuKTsKIzE1MT1MSU5FKCcnLCMxMzUsIzE1MCk7CiMxNTI9RURHRV9DVVJWRSgnJywjMTQzLCMxNDQsIzE1MSwuVC4pOwojMTUzPU9SSUVOVEVEX0VER0UoJycsKiwqLCMxNTIsLkYuKTsKIzE1ND1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMxNTU9VkVDVE9SKCcnLCMxNTQsMS4pOwojMTU2PUxJTkUoJycsIzEzNCwjMTU1KTsKIzE1Nz1FREdFX0NVUlZFKCcnLCMxNDIsIzE0MywjMTU2LC5ULik7CiMxNTg9T1JJRU5URURfRURHRSgnJywqLCosIzE1NywuRi4pOwojMTU5PURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzE2MD1WRUNUT1IoJycsIzE1OSwxLik7CiMxNjE9TElORSgnJywjMTMzLCMxNjApOwojMTYyPUVER0VfQ1VSVkUoJycsIzE0MSwjMTQyLCMxNjEsLlQuKTsKIzE2Mz1PUklFTlRFRF9FREdFKCcnLCosKiwjMTYyLC5GLik7CiMxNjQ9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMTY1PVZFQ1RPUignJywjMTY0LDEuKTsKIzE2Nj1MSU5FKCcnLCMxMzMsIzE2NSk7CiMxNjc9RURHRV9DVVJWRSgnJywjMTQxLCMxNDQsIzE2NiwuVC4pOwojMTY4PU9SSUVOVEVEX0VER0UoJycsKiwqLCMxNjcsLlQuKTsKIzE2OT1FREdFX0xPT1AoJycsKCMxNTMsIzE1OCwjMTYzLCMxNjgpKTsKIzE3MD1GQUNFX09VVEVSX0JPVU5EKCcnLCMxNjksLlQuKTsKIzE3MT1ESVJFQ1RJT04oJycsKDAuLDAuLC0xLikpOwojMTcyPURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzE3Mz1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzEzNiwjMTcxLCMxNzIpOwojMTc0PVBMQU5FKCcnLCMxNzMpOwojMTc1PUFEVkFOQ0VEX0ZBQ0UoJycsKCMxNzApLCMxNzQsLlQuKTsKIzE3Nj1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiMxNzc9VkVDVE9SKCcnLCMxNzYsMS4pOwojMTc4PUxJTkUoJycsIzEzNywjMTc3KTsKIzE3OT1FREdFX0NVUlZFKCcnLCMxNDUsIzE0NiwjMTc4LC5ULik7CiMxODA9T1JJRU5URURfRURHRSgnJywqLCosIzE3OSwuVC4pOwojMTgxPURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzE4Mj1WRUNUT1IoJycsIzE4MSwxLik7CiMxODM9TElORSgnJywjMTM4LCMxODIpOwojMTg0PUVER0VfQ1VSVkUoJycsIzE0NiwjMTQ3LCMxODMsLlQuKTsKIzE4NT1PUklFTlRFRF9FREdFKCcnLCosKiwjMTg0LC5ULik7CiMxODY9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzE4Nz1WRUNUT1IoJycsIzE4NiwxLik7CiMxODg9TElORSgnJywjMTM5LCMxODcpOwojMTg5PUVER0VfQ1VSVkUoJycsIzE0NywjMTQ4LCMxODgsLlQuKTsKIzE5MD1PUklFTlRFRF9FREdFKCcnLCosKiwjMTg5LC5ULik7CiMxOTE9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMTkyPVZFQ1RPUignJywjMTkxLDEuKTsKIzE5Mz1MSU5FKCcnLCMxMzcsIzE5Mik7CiMxOTQ9RURHRV9DVVJWRSgnJywjMTQ1LCMxNDgsIzE5MywuVC4pOwojMTk1PU9SSUVOVEVEX0VER0UoJycsKiwqLCMxOTQsLkYuKTsKIzE5Nj1FREdFX0xPT1AoJycsKCMxODAsIzE4NSwjMTkwLCMxOTUpKTsKIzE5Nz1GQUNFX09VVEVSX0JPVU5EKCcnLCMxOTYsLlQuKTsKIzE5OD1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMxOTk9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMjAwPUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMTM3LCMxOTgsIzE5OSk7CiMyMDE9UExBTkUoJycsIzIwMCk7CiMyMDI9QURWQU5DRURfRkFDRSgnJywoIzE5NyksIzIwMSwuVC4pOwojMjAzPU9SSUVOVEVEX0VER0UoJycsKiwqLCMxNjIsLlQuKTsKIzIwND1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMyMDU9VkVDVE9SKCcnLCMyMDQsMS4pOwojMjA2PUxJTkUoJycsIzEzNCwjMjA1KTsKIzIwNz1FREdFX0NVUlZFKCcnLCMxNDIsIzE0NiwjMjA2LC5ULik7CiMyMDg9T1JJRU5URURfRURHRSgnJywqLCosIzIwNywuVC4pOwojMjA5PU9SSUVOVEVEX0VER0UoJycsKiwqLCMxNzksLkYuKTsKIzIxMD1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMyMTE9VkVDVE9SKCcnLCMyMTAsMS4pOwojMjEyPUxJTkUoJycsIzEzMywjMjExKTsKIzIxMz1FREdFX0NVUlZFKCcnLCMxNDEsIzE0NSwjMjEyLC5ULik7CiMyMTQ9T1JJRU5URURfRURHRSgnJywqLCosIzIxMywuRi4pOwojMjE1PUVER0VfTE9PUCgnJywoIzIwMywjMjA4LCMyMDksIzIxNCkpOwojMjE2PUZBQ0VfT1VURVJfQk9VTkQoJycsIzIxNSwuVC4pOwojMjE3PURJUkVDVElPTignJywoMC4sLTEuLDAuKSk7CiMyMTg9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMjE5PUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMTMzLCMyMTcsIzIxOCk7CiMyMjA9UExBTkUoJycsIzIxOSk7CiMyMjE9QURWQU5DRURfRkFDRSgnJywoIzIxNiksIzIyMCwuVC4pOwojMjIyPU9SSUVOVEVEX0VER0UoJycsKiwqLCMxNTcsLlQuKTsKIzIyMz1ESVJFQ1RJT04oJycsKDAuLDAuLDEuKSk7CiMyMjQ9VkVDVE9SKCcnLCMyMjMsMS4pOwojMjI1PUxJTkUoJycsIzEzNSwjMjI0KTsKIzIyNj1FREdFX0NVUlZFKCcnLCMxNDMsIzE0NywjMjI1LC5ULik7CiMyMjc9T1JJRU5URURfRURHRSgnJywqLCosIzIyNiwuVC4pOwojMjI4PU9SSUVOVEVEX0VER0UoJycsKiwqLCMxODQsLkYuKTsKIzIyOT1PUklFTlRFRF9FREdFKCcnLCosKiwjMjA3LC5GLik7CiMyMzA9RURHRV9MT09QKCcnLCgjMjIyLCMyMjcsIzIyOCwjMjI5KSk7CiMyMzE9RkFDRV9PVVRFUl9CT1VORCgnJywjMjMwLC5ULik7CiMyMzI9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMjMzPURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzIzND1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzEzNCwjMjMyLCMyMzMpOwojMjM1PVBMQU5FKCcnLCMyMzQpOwojMjM2PUFEVkFOQ0VEX0ZBQ0UoJycsKCMyMzEpLCMyMzUsLlQuKTsKIzIzNz1PUklFTlRFRF9FREdFKCcnLCosKiwjMTUyLC5ULik7CiMyMzg9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMjM5PVZFQ1RPUignJywjMjM4LDEuKTsKIzI0MD1MSU5FKCcnLCMxMzYsIzIzOSk7CiMyNDE9RURHRV9DVVJWRSgnJywjMTQ0LCMxNDgsIzI0MCwuVC4pOwojMjQyPU9SSUVOVEVEX0VER0UoJycsKiwqLCMyNDEsLlQuKTsKIzI0Mz1PUklFTlRFRF9FREdFKCcnLCosKiwjMTg5LC5GLik7CiMyNDQ9T1JJRU5URURfRURHRSgnJywqLCosIzIyNiwuRi4pOwojMjQ1PUVER0VfTE9PUCgnJywoIzIzNywjMjQyLCMyNDMsIzI0NCkpOwojMjQ2PUZBQ0VfT1VURVJfQk9VTkQoJycsIzI0NSwuVC4pOwojMjQ3PURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzI0OD1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMjQ5PUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMTM1LCMyNDcsIzI0OCk7CiMyNTA9UExBTkUoJycsIzI0OSk7CiMyNTE9QURWQU5DRURfRkFDRSgnJywoIzI0NiksIzI1MCwuVC4pOwojMjUyPU9SSUVOVEVEX0VER0UoJycsKiwqLCMxNjcsLkYuKTsKIzI1Mz1PUklFTlRFRF9FREdFKCcnLCosKiwjMjEzLC5ULik7CiMyNTQ9T1JJRU5URURfRURHRSgnJywqLCosIzE5NCwuVC4pOwojMjU1PU9SSUVOVEVEX0VER0UoJycsKiwqLCMyNDEsLkYuKTsKIzI1Nj1FREdFX0xPT1AoJycsKCMyNTIsIzI1MywjMjU0LCMyNTUpKTsKIzI1Nz1GQUNFX09VVEVSX0JPVU5EKCcnLCMyNTYsLlQuKTsKIzI1OD1ESVJFQ1RJT04oJycsKC0xLiwwLiwwLikpOwojMjU5PURJUkVDVElPTignJywoMC4sLTEuLDAuKSk7CiMyNjA9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMxMzYsIzI1OCwjMjU5KTsKIzI2MT1QTEFORSgnJywjMjYwKTsKIzI2Mj1BRFZBTkNFRF9GQUNFKCcnLCgjMjU3KSwjMjYxLC5ULik7CiMyNjM9Q0xPU0VEX1NIRUxMKCcnLCgjMTc1LCMyMDIsIzIyMSwjMjM2LCMyNTEsIzI2MikpOwojMjY0PU1BTklGT0xEX1NPTElEX0JSRVAoJ2xlYWQtMScsIzI2Myk7CiMyNjU9Q0FSVEVTSUFOX1BPSU5UKCcnLCgzLjU5Nzg2OCwtMC4yMTIxMzIsLTIuMikpOwojMjY2PUNBUlRFU0lBTl9QT0lOVCgnJywoNC4wMjIxMzIsLTAuMjEyMTMyLC0yLjIpKTsKIzI2Nz1DQVJURVNJQU5fUE9JTlQoJycsKDQuMDIyMTMyLDAuMjEyMTMyLC0yLjIpKTsKIzI2OD1DQVJURVNJQU5fUE9JTlQoJycsKDMuNTk3ODY4LDAuMjEyMTMyLC0yLjIpKTsKIzI2OT1DQVJURVNJQU5fUE9JTlQoJycsKDMuNTk3ODY4LC0wLjIxMjEzMiwxLjU1KSk7CiMyNzA9Q0FSVEVTSUFOX1BPSU5UKCcnLCg0LjAyMjEzMiwtMC4yMTIxMzIsMS41NSkpOwojMjcxPUNBUlRFU0lBTl9QT0lOVCgnJywoNC4wMjIxMzIsMC4yMTIxMzIsMS41NSkpOwojMjcyPUNBUlRFU0lBTl9QT0lOVCgnJywoMy41OTc4NjgsMC4yMTIxMzIsMS41NSkpOwojMjczPVZFUlRFWF9QT0lOVCgnJywjMjY1KTsKIzI3ND1WRVJURVhfUE9JTlQoJycsIzI2Nik7CiMyNzU9VkVSVEVYX1BPSU5UKCcnLCMyNjcpOwojMjc2PVZFUlRFWF9QT0lOVCgnJywjMjY4KTsKIzI3Nz1WRVJURVhfUE9JTlQoJycsIzI2OSk7CiMyNzg9VkVSVEVYX1BPSU5UKCcnLCMyNzApOwojMjc5PVZFUlRFWF9QT0lOVCgnJywjMjcxKTsKIzI4MD1WRVJURVhfUE9JTlQoJycsIzI3Mik7CiMyODE9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzI4Mj1WRUNUT1IoJycsIzI4MSwxLik7CiMyODM9TElORSgnJywjMjY3LCMyODIpOwojMjg0PUVER0VfQ1VSVkUoJycsIzI3NSwjMjc2LCMyODMsLlQuKTsKIzI4NT1PUklFTlRFRF9FREdFKCcnLCosKiwjMjg0LC5GLik7CiMyODY9RElSRUNUSU9OKCcnLCgwLiwxLiwwLikpOwojMjg3PVZFQ1RPUignJywjMjg2LDEuKTsKIzI4OD1MSU5FKCcnLCMyNjYsIzI4Nyk7CiMyODk9RURHRV9DVVJWRSgnJywjMjc0LCMyNzUsIzI4OCwuVC4pOwojMjkwPU9SSUVOVEVEX0VER0UoJycsKiwqLCMyODksLkYuKTsKIzI5MT1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiMyOTI9VkVDVE9SKCcnLCMyOTEsMS4pOwojMjkzPUxJTkUoJycsIzI2NSwjMjkyKTsKIzI5ND1FREdFX0NVUlZFKCcnLCMyNzMsIzI3NCwjMjkzLC5ULik7CiMyOTU9T1JJRU5URURfRURHRSgnJywqLCosIzI5NCwuRi4pOwojMjk2PURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzI5Nz1WRUNUT1IoJycsIzI5NiwxLik7CiMyOTg9TElORSgnJywjMjY1LCMyOTcpOwojMjk5PUVER0VfQ1VSVkUoJycsIzI3MywjMjc2LCMyOTgsLlQuKTsKIzMwMD1PUklFTlRFRF9FREdFKCcnLCosKiwjMjk5LC5ULik7CiMzMDE9RURHRV9MT09QKCcnLCgjMjg1LCMyOTAsIzI5NSwjMzAwKSk7CiMzMDI9RkFDRV9PVVRFUl9CT1VORCgnJywjMzAxLC5ULik7CiMzMDM9RElSRUNUSU9OKCcnLCgwLiwwLiwtMS4pKTsKIzMwND1ESVJFQ1RJT04oJycsKDEuLDAuLDAuKSk7CiMzMDU9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMyNjgsIzMwMywjMzA0KTsKIzMwNj1QTEFORSgnJywjMzA1KTsKIzMwNz1BRFZBTkNFRF9GQUNFKCcnLCgjMzAyKSwjMzA2LC5ULik7CiMzMDg9RElSRUNUSU9OKCcnLCgxLiwwLiwwLikpOwojMzA5PVZFQ1RPUignJywjMzA4LDEuKTsKIzMxMD1MSU5FKCcnLCMyNjksIzMwOSk7CiMzMTE9RURHRV9DVVJWRSgnJywjMjc3LCMyNzgsIzMxMCwuVC4pOwojMzEyPU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMTEsLlQuKTsKIzMxMz1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMzMTQ9VkVDVE9SKCcnLCMzMTMsMS4pOwojMzE1PUxJTkUoJycsIzI3MCwjMzE0KTsKIzMxNj1FREdFX0NVUlZFKCcnLCMyNzgsIzI3OSwjMzE1LC5ULik7CiMzMTc9T1JJRU5URURfRURHRSgnJywqLCosIzMxNiwuVC4pOwojMzE4PURJUkVDVElPTignJywoLTEuLDAuLDAuKSk7CiMzMTk9VkVDVE9SKCcnLCMzMTgsMS4pOwojMzIwPUxJTkUoJycsIzI3MSwjMzE5KTsKIzMyMT1FREdFX0NVUlZFKCcnLCMyNzksIzI4MCwjMzIwLC5ULik7CiMzMjI9T1JJRU5URURfRURHRSgnJywqLCosIzMyMSwuVC4pOwojMzIzPURJUkVDVElPTignJywoMC4sMS4sMC4pKTsKIzMyND1WRUNUT1IoJycsIzMyMywxLik7CiMzMjU9TElORSgnJywjMjY5LCMzMjQpOwojMzI2PUVER0VfQ1VSVkUoJycsIzI3NywjMjgwLCMzMjUsLlQuKTsKIzMyNz1PUklFTlRFRF9FREdFKCcnLCosKiwjMzI2LC5GLik7CiMzMjg9RURHRV9MT09QKCcnLCgjMzEyLCMzMTcsIzMyMiwjMzI3KSk7CiMzMjk9RkFDRV9PVVRFUl9CT1VORCgnJywjMzI4LC5ULik7CiMzMzA9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMzMxPURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzMzMj1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzI2OSwjMzMwLCMzMzEpOwojMzMzPVBMQU5FKCcnLCMzMzIpOwojMzM0PUFEVkFOQ0VEX0ZBQ0UoJycsKCMzMjkpLCMzMzMsLlQuKTsKIzMzNT1PUklFTlRFRF9FREdFKCcnLCosKiwjMjk0LC5ULik7CiMzMzY9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMzM3PVZFQ1RPUignJywjMzM2LDEuKTsKIzMzOD1MSU5FKCcnLCMyNjYsIzMzNyk7CiMzMzk9RURHRV9DVVJWRSgnJywjMjc0LCMyNzgsIzMzOCwuVC4pOwojMzQwPU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMzksLlQuKTsKIzM0MT1PUklFTlRFRF9FREdFKCcnLCosKiwjMzExLC5GLik7CiMzNDI9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMzQzPVZFQ1RPUignJywjMzQyLDEuKTsKIzM0ND1MSU5FKCcnLCMyNjUsIzM0Myk7CiMzNDU9RURHRV9DVVJWRSgnJywjMjczLCMyNzcsIzM0NCwuVC4pOwojMzQ2PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzNDUsLkYuKTsKIzM0Nz1FREdFX0xPT1AoJycsKCMzMzUsIzM0MCwjMzQxLCMzNDYpKTsKIzM0OD1GQUNFX09VVEVSX0JPVU5EKCcnLCMzNDcsLlQuKTsKIzM0OT1ESVJFQ1RJT04oJycsKDAuLC0xLiwwLikpOwojMzUwPURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzM1MT1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzI2NSwjMzQ5LCMzNTApOwojMzUyPVBMQU5FKCcnLCMzNTEpOwojMzUzPUFEVkFOQ0VEX0ZBQ0UoJycsKCMzNDgpLCMzNTIsLlQuKTsKIzM1ND1PUklFTlRFRF9FREdFKCcnLCosKiwjMjg5LC5ULik7CiMzNTU9RElSRUNUSU9OKCcnLCgwLiwwLiwxLikpOwojMzU2PVZFQ1RPUignJywjMzU1LDEuKTsKIzM1Nz1MSU5FKCcnLCMyNjcsIzM1Nik7CiMzNTg9RURHRV9DVVJWRSgnJywjMjc1LCMyNzksIzM1NywuVC4pOwojMzU5PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzNTgsLlQuKTsKIzM2MD1PUklFTlRFRF9FREdFKCcnLCosKiwjMzE2LC5GLik7CiMzNjE9T1JJRU5URURfRURHRSgnJywqLCosIzMzOSwuRi4pOwojMzYyPUVER0VfTE9PUCgnJywoIzM1NCwjMzU5LCMzNjAsIzM2MSkpOwojMzYzPUZBQ0VfT1VURVJfQk9VTkQoJycsIzM2MiwuVC4pOwojMzY0PURJUkVDVElPTignJywoMS4sMC4sMC4pKTsKIzM2NT1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMzNjY9QVhJUzJfUExBQ0VNRU5UXzNEKCcnLCMyNjYsIzM2NCwjMzY1KTsKIzM2Nz1QTEFORSgnJywjMzY2KTsKIzM2OD1BRFZBTkNFRF9GQUNFKCcnLCgjMzYzKSwjMzY3LC5ULik7CiMzNjk9T1JJRU5URURfRURHRSgnJywqLCosIzI4NCwuVC4pOwojMzcwPURJUkVDVElPTignJywoMC4sMC4sMS4pKTsKIzM3MT1WRUNUT1IoJycsIzM3MCwxLik7CiMzNzI9TElORSgnJywjMjY4LCMzNzEpOwojMzczPUVER0VfQ1VSVkUoJycsIzI3NiwjMjgwLCMzNzIsLlQuKTsKIzM3ND1PUklFTlRFRF9FREdFKCcnLCosKiwjMzczLC5ULik7CiMzNzU9T1JJRU5URURfRURHRSgnJywqLCosIzMyMSwuRi4pOwojMzc2PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzNTgsLkYuKTsKIzM3Nz1FREdFX0xPT1AoJycsKCMzNjksIzM3NCwjMzc1LCMzNzYpKTsKIzM3OD1GQUNFX09VVEVSX0JPVU5EKCcnLCMzNzcsLlQuKTsKIzM3OT1ESVJFQ1RJT04oJycsKDAuLDEuLDAuKSk7CiMzODA9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzM4MT1BWElTMl9QTEFDRU1FTlRfM0QoJycsIzI2NywjMzc5LCMzODApOwojMzgyPVBMQU5FKCcnLCMzODEpOwojMzgzPUFEVkFOQ0VEX0ZBQ0UoJycsKCMzNzgpLCMzODIsLlQuKTsKIzM4ND1PUklFTlRFRF9FREdFKCcnLCosKiwjMjk5LC5GLik7CiMzODU9T1JJRU5URURfRURHRSgnJywqLCosIzM0NSwuVC4pOwojMzg2PU9SSUVOVEVEX0VER0UoJycsKiwqLCMzMjYsLlQuKTsKIzM4Nz1PUklFTlRFRF9FREdFKCcnLCosKiwjMzczLC5GLik7CiMzODg9RURHRV9MT09QKCcnLCgjMzg0LCMzODUsIzM4NiwjMzg3KSk7CiMzODk9RkFDRV9PVVRFUl9CT1VORCgnJywjMzg4LC5ULik7CiMzOTA9RElSRUNUSU9OKCcnLCgtMS4sMC4sMC4pKTsKIzM5MT1ESVJFQ1RJT04oJycsKDAuLC0xLiwwLikpOwojMzkyPUFYSVMyX1BMQUNFTUVOVF8zRCgnJywjMjY4LCMzOTAsIzM5MSk7CiMzOTM9UExBTkUoJycsIzM5Mik7CiMzOTQ9QURWQU5DRURfRkFDRSgnJywoIzM4OSksIzM5MywuVC4pOwojMzk1PUNMT1NFRF9TSEVMTCgnJywoIzMwNywjMzM0LCMzNTMsIzM2OCwjMzgzLCMzOTQpKTsKIzM5Nj1NQU5JRk9MRF9TT0xJRF9CUkVQKCdsZWFkLTInLCMzOTUpOwojMzk3PShMRU5HVEhfVU5JVCgpIE5BTUVEX1VOSVQoKikgU0lfVU5JVCguTUlMTEkuLC5NRVRSRS4pKTsKIzM5OD0oTkFNRURfVU5JVCgqKSBQTEFORV9BTkdMRV9VTklUKCkgU0lfVU5JVCgkLC5SQURJQU4uKSk7CiMzOTk9KE5BTUVEX1VOSVQoKikgU0lfVU5JVCgkLC5TVEVSQURJQU4uKSBTT0xJRF9BTkdMRV9VTklUKCkpOwojNDAwPVVOQ0VSVEFJTlRZX01FQVNVUkVfV0lUSF9VTklUKExFTkdUSF9NRUFTVVJFKDAuMDAwMDAxKSwjMzk3LCdkaXN0YW5jZV9hY2N1cmFjeV92YWx1ZScsJycpOwojNDAxPShHRU9NRVRSSUNfUkVQUkVTRU5UQVRJT05fQ09OVEVYVCgzKSBHTE9CQUxfVU5DRVJUQUlOVFlfQVNTSUdORURfQ09OVEVYVCgoIzQwMCkpIEdMT0JBTF9VTklUX0FTU0lHTkVEX0NPTlRFWFQoKCMzOTcsIzM5OCwjMzk5KSkgUkVQUkVTRU5UQVRJT05fQ09OVEVYVCgnJywnM0QnKSk7CiM0MDI9QVBQTElDQVRJT05fQ09OVEVYVCgnY29yZSBkYXRhIGZvciBhdXRvbW90aXZlIG1lY2hhbmljYWwgZGVzaWduIHByb2Nlc3NlcycpOwojNDAzPUFQUExJQ0FUSU9OX1BST1RPQ09MX0RFRklOSVRJT04oJ2ludGVybmF0aW9uYWwgc3RhbmRhcmQnLCdhdXRvbW90aXZlX2Rlc2lnbicsMjAxMCwjNDAyKTsKIzQwND1QUk9EVUNUX0NPTlRFWFQoJycsIzQwMiwnbWVjaGFuaWNhbCcpOwojNDA1PVBST0RVQ1QoJ2F4aWFsLTc2MicsJ2F4aWFsLTc2MicsJycsKCM0MDQpKTsKIzQwNj1QUk9EVUNUX1JFTEFURURfUFJPRFVDVF9DQVRFR09SWSgncGFydCcsJycsKCM0MDUpKTsKIzQwNz1QUk9EVUNUX0RFRklOSVRJT05fRk9STUFUSU9OX1dJVEhfU1BFQ0lGSUVEX1NPVVJDRSgnJywnJywjNDA1LC5OT1RfS05PV04uKTsKIzQwOD1QUk9EVUNUX0RFRklOSVRJT05fQ09OVEVYVCgncGFydCBkZWZpbml0aW9uJywjNDAyLCdkZXNpZ24nKTsKIzQwOT1QUk9EVUNUX0RFRklOSVRJT04oJ2Rlc2lnbicsJycsIzQwNywjNDA4KTsKIzQxMD1QUk9EVUNUX0RFRklOSVRJT05fU0hBUEUoJycsJycsIzQwOSk7CiM0MTE9QURWQU5DRURfQlJFUF9TSEFQRV9SRVBSRVNFTlRBVElPTignJywoIzEzMiwjMjY0LCMzOTYpLCM0MDEpOwojNDEyPVNIQVBFX0RFRklOSVRJT05fUkVQUkVTRU5UQVRJT04oIzQxMCwjNDExKTsKRU5EU0VDOwpFTkQtSVNPLTEwMzAzLTIxOwo=</DATA>
+    </MODELASSET>
+  </MODELASSETS>
+</TinyCADPCB>

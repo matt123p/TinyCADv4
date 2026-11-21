@@ -13,7 +13,7 @@ import type { CircuitComponent, CircuitSnapshot } from './circuitSnapshot';
 import { canonicalDeviceJson, deviceDigest } from './deviceLibrary';
 import type { DeviceRevision } from './deviceLibrary';
 import { stableHierarchyId } from './hierarchicalNetlist';
-import { validatePadMap } from './footprint';
+import { pairFootprintPads, validatePadMap } from './footprint';
 import type { PadAssignment } from './footprint';
 
 export type DeviceBindings = NonNullable<EmbeddedDevice['library']>['bindings'];
@@ -75,6 +75,68 @@ export function deviceMappingIssues(
   return errors;
 }
 
+export async function embedLibraryDevice(
+  boardId: string,
+  componentId: string,
+  revision: DeviceRevision,
+  signalIds: readonly string[],
+  bindings: DeviceBindings,
+) {
+  const { definition } = revision;
+  const slotSignals = new Map(
+    bindings.map(({ terminalId, signalId }) => [terminalId, signalId]),
+  );
+  const assignments: PadAssignment[] = definition.assignments.map(
+    (assignment) =>
+      assignment.kind === 'signal'
+        ? { ...assignment, signalId: slotSignals.get(assignment.signalId) }
+        : assignment,
+  );
+  const mapErrors = validatePadMap(
+    signalIds,
+    definition.footprint.pads,
+    assignments,
+  );
+  if (mapErrors.length) throw new Error(mapErrors.join(' '));
+  const footprint: EmbeddedFootprint = {
+    ...definition.footprint,
+    id: await stableHierarchyId(
+      'library-footprint',
+      definition.footprint.id,
+      definition.footprint.definitionDigest,
+    ),
+  };
+  const fields = {
+    id: await stableHierarchyId(
+      'reviewed-board-device',
+      boardId,
+      componentId,
+    ),
+    revision: definition.revision,
+    packageName: definition.packageNames[0],
+    packageSource: definition.source,
+    footprintId: footprint.id,
+    signalIds,
+    assignments,
+    library: {
+      id: definition.id,
+      digest: revision.digest,
+      footprintId: definition.footprint.id,
+      evidence: definition.review.evidence,
+      reviewer: definition.review.by,
+      license: definition.license,
+      bindings: [...bindings].sort((a, b) =>
+        a.terminalId.localeCompare(b.terminalId),
+      ),
+    },
+  };
+  const device: EmbeddedDevice = {
+    ...fields,
+    definitionDigest: await deviceDigest(fields),
+  };
+  return { device, footprint };
+}
+
 export async function previewDeviceReview(
   board: BoardDocument,
   circuit: CircuitSnapshot,
@@ -111,68 +173,36 @@ export async function previewDeviceReview(
     throw new Error(
       'The library revision has changed contents. Publish it under a new revision.',
     );
-  const slotSignals = new Map(
-    bindings.map(({ terminalId, signalId }) => [terminalId, signalId]),
+  const { device, footprint } = await embedLibraryDevice(
+    board.boardId,
+    componentId,
+    revision,
+    component.signals.map(({ id }) => id),
+    bindings,
   );
-  const assignments: PadAssignment[] = definition.assignments.map(
-    (assignment) =>
-      assignment.kind === 'signal'
-        ? { ...assignment, signalId: slotSignals.get(assignment.signalId) }
-        : assignment,
-  );
-  const signalIds = component.signals.map(({ id }) => id);
-  const mapErrors = validatePadMap(
-    signalIds,
-    definition.footprint.pads,
-    assignments,
-  );
-  if (mapErrors.length) throw new Error(mapErrors.join(' '));
-  const footprint: EmbeddedFootprint = {
-    ...definition.footprint,
-    id: await stableHierarchyId(
-      'library-footprint',
-      definition.footprint.id,
-      definition.footprint.definitionDigest,
-    ),
-  };
-  const fields = {
-    id: await stableHierarchyId(
-      'reviewed-board-device',
-      board.boardId,
-      componentId,
-    ),
-    revision: definition.revision,
-    packageName: definition.packageNames[0],
-    packageSource: definition.source,
-    footprintId: footprint.id,
-    signalIds,
-    assignments,
-    library: {
-      id: definition.id,
-      digest: revision.digest,
-      footprintId: definition.footprint.id,
-      evidence: definition.review.evidence,
-      reviewer: definition.review.by,
-      license: definition.license,
-      bindings: [...bindings].sort((a, b) =>
-        a.terminalId.localeCompare(b.terminalId),
-      ),
-    },
-  };
-  const device: EmbeddedDevice = {
-    ...fields,
-    definitionDigest: await deviceDigest(fields),
-  };
-  const before = new Map(previous.footprint?.pads.map((pad) => [pad.id, pad]));
-  const after = new Map(footprint.pads.map((pad) => [pad.id, pad]));
+  const assignments = device.assignments;
   const oldMap = new Map(
     previous.device?.assignments.map((item) => [item.padId, item]),
   );
   const newMap = new Map(assignments.map((item) => [item.padId, item]));
-  const padChanges = [...new Set([...before.keys(), ...after.keys()])].flatMap(
-    (id) => {
-      const oldPad = before.get(id);
-      const newPad = after.get(id);
+  const signals = new Map(component.signals.map(({ id, name, number }) =>
+    [id, number && number !== name ? number + ' · ' + name : name]));
+  const describe = (assignment?: PadAssignment) => {
+    switch (assignment?.kind) {
+      case 'signal': return signals.get(assignment.signalId) ?? assignment.signalId;
+      case 'mechanical': return 'Mechanical';
+      case 'nc': return 'No connect';
+      case 'reserved': return 'Reserved';
+      default: return 'None';
+    }
+  };
+  const padChanges = pairFootprintPads(previous.footprint?.pads ?? [], footprint.pads).flatMap(
+    ([oldPad, newPad]) => {
+      const oldAssignment = oldMap.get(oldPad?.id);
+      const newAssignment = newMap.get(newPad?.id);
+      const binding = (assignment?: PadAssignment) =>
+        assignment?.kind === 'signal' ? assignment.signalId : assignment?.kind;
+      const signalChanged = binding(oldAssignment) !== binding(newAssignment);
       const changes: string[] = [];
       if (!oldPad) changes.push('Added');
       else if (!newPad) changes.push('Removed');
@@ -183,19 +213,23 @@ export async function previewDeviceReview(
           canonicalDeviceJson(newPad.positionNm)
         )
           changes.push('Position');
-        if (
-          canonicalDeviceJson(oldPad.stack) !==
-          canonicalDeviceJson(newPad.stack)
-        )
-          changes.push('Padstack or drill');
-        if (
-          canonicalDeviceJson(oldMap.get(id)) !==
-          canonicalDeviceJson(newMap.get(id))
-        )
-          changes.push('Signal or pad role');
+        const { drill: oldDrill, ...oldSurfaces } = oldPad.stack ?? {};
+        const { drill: newDrill, ...newSurfaces } = newPad.stack ?? {};
+        if (canonicalDeviceJson(oldSurfaces) !== canonicalDeviceJson(newSurfaces))
+          changes.push('Pad surfaces');
+        if (canonicalDeviceJson(oldDrill) !== canonicalDeviceJson(newDrill))
+          changes.push('Drill');
+        if (signalChanged) changes.push('Signal or pad role');
       }
       return changes.length
-        ? [{ id, label: newPad?.label ?? oldPad?.label, changes }]
+        ? [{
+            id: newPad?.id ?? oldPad.id,
+            label: newPad?.label ?? oldPad?.label,
+            changes,
+            ...(oldPad ? { before: oldPad } : {}),
+            ...(newPad ? { after: newPad } : {}),
+            ...(signalChanged ? { beforeSignal: describe(oldAssignment), afterSignal: describe(newAssignment) } : {}),
+          }]
         : [];
     },
   );
@@ -214,6 +248,7 @@ export async function previewDeviceReview(
     logicalId: component.id,
     reference: component.reference,
     value: component.value,
+    ...(component.procurement ? { procurement: component.procurement } : {}),
     role: component.role as BoardComponent['role'],
     units: component.units,
     signals: component.signals.flatMap(({ id, terminals }) => {
@@ -265,7 +300,9 @@ export function applyDeviceReview(
 /** Add a reviewed device to a draft board before validating the whole transaction. */
 export function withReviewedDevice(
   board: BoardDocument,
-  review: DeviceReview,
+  review: Pick<DeviceReview, 'component' | 'device' | 'footprint' | 'models'> & {
+    previous: { device?: EmbeddedDevice; footprint?: EmbeddedFootprint };
+  },
 ): BoardDocument {
   const { component, device, footprint } = review;
   const components = [

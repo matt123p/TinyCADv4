@@ -9,10 +9,13 @@ import { BOARD_COORDINATE_LIMIT_NM, isBoardPoint } from './geometry';
 import { validatePadStack } from './padstack';
 import type { PadStack } from './padstack';
 import type { RouteRules } from './routing';
+import type { BoardNetClass, CopperClearanceRule, NetRoutingRules } from './boardRules';
 import { validateCircuitSnapshot } from './circuitSnapshot';
 import type { CircuitSnapshot, CircuitComponent } from './circuitSnapshot';
-import { validateFootprintDetails } from './footprintDetails';
-import type { FootprintGraphic, FootprintModel } from './footprintDetails';
+import { footprintAssemblyMarks, footprintAssemblyNotesLimit, validateFootprintDetails } from './footprintDetails';
+import type { FootprintAssembly, FootprintGraphic, FootprintModel } from './footprintDetails';
+import { validProcurement } from './procurement';
+import type { ComponentProcurement } from './procurement';
 
 export interface CircuitSource {
   readonly documentId: string;
@@ -46,6 +49,7 @@ export interface EmbeddedFootprint {
   readonly pads: readonly (FootprintPad & { readonly stack?: PadStack })[];
   readonly graphics?: readonly FootprintGraphic[];
   readonly models?: readonly FootprintModel[];
+  readonly assembly?: FootprintAssembly;
 }
 
 export interface EmbeddedDevice {
@@ -76,12 +80,15 @@ export interface BoardFootprint extends FootprintPlacement {
   readonly deviceId: string;
   readonly componentId: string;
   readonly locked: boolean;
+  readonly positionLocked?: boolean;
+  readonly rotationLocked?: boolean;
 }
 
 export interface BoardComponent {
   readonly id: string;
   readonly reference?: string;
   readonly value?: string;
+  readonly procurement?: ComponentProcurement;
   readonly logicalId?: string;
   readonly deviceId?: string;
   readonly role?: 'electrical' | 'dnp' | 'pcb-only' | 'net-tie';
@@ -96,6 +103,8 @@ export interface BoardNet {
   readonly id: string;
   readonly name: string;
   readonly aliases?: readonly string[];
+  readonly classId?: string;
+  readonly routingRules?: NetRoutingRules;
 }
 
 export interface BoardModelAsset {
@@ -111,6 +120,8 @@ export interface BoardAssets {
   readonly appliedCircuit?: CircuitSnapshot;
   readonly components?: readonly BoardComponent[];
   readonly nets?: readonly BoardNet[];
+  readonly netClasses?: readonly BoardNetClass[];
+  readonly clearanceRules?: readonly CopperClearanceRule[];
   readonly rules?: RouteRules;
   readonly modelAssets?: readonly BoardModelAsset[];
   readonly graphicLayers?: readonly GraphicLayer[];
@@ -199,28 +210,13 @@ export function validateBoardAssets(
     )
       throw new Error('Invalid board net names.');
   }
-  if (
-    board.rules !== undefined &&
-    ![
-      board.rules?.minWidthNm,
-      board.rules?.clearanceNm,
-      board.rules?.edgeClearanceNm,
-      board.rules?.minViaAnnulusNm,
-    ].every(
-      (dimension, index) =>
-        Number.isSafeInteger(dimension) &&
-        dimension >= (index === 0 ? 1 : 0) &&
-        dimension <= BOARD_COORDINATE_LIMIT_NM,
-    )
-  ) {
-    throw new Error('Invalid board routing rules.');
-  }
   const componentDefinitions = byId(board.components ?? [], 'component');
   for (const component of componentDefinitions.values()) {
     if (
       (component.reference !== undefined &&
         typeof component.reference !== 'string') ||
       (component.value !== undefined && typeof component.value !== 'string') ||
+      (component.procurement !== undefined && !validProcurement(component.procurement)) ||
       (component.logicalId !== undefined && !isEntityId(component.logicalId)) ||
       (component.deviceId !== undefined && !isEntityId(component.deviceId)) ||
       (component.role !== undefined &&
@@ -373,7 +369,11 @@ export function validateBoardAssets(
       instance.rotationMicrodegree < 0 ||
       instance.rotationMicrodegree >= 360_000_000 ||
       !['top', 'bottom'].includes(instance.side) ||
-      typeof instance.locked !== 'boolean'
+      typeof instance.locked !== 'boolean' ||
+      (instance.positionLocked !== undefined &&
+        typeof instance.positionLocked !== 'boolean') ||
+      (instance.rotationLocked !== undefined &&
+        typeof instance.rotationLocked !== 'boolean')
     ) {
       throw new Error('Invalid footprint placement or component binding.');
     }
@@ -433,10 +433,23 @@ export function validateEmbeddedFootprint(definition: EmbeddedFootprint): void {
     !isFootprintDatasheetUrl(definition.datasheetUrl)
   )
     throw new Error('Enter an absolute HTTP or HTTPS datasheet URL.');
-  for (const pad of byId(definition.pads, 'pad').values()) {
+  const pads = byId(definition.pads, 'pad');
+  for (const pad of pads.values()) {
     if (typeof pad.label !== 'string' || !isBoardPoint(pad.positionNm))
       throw new Error('Invalid footprint pad label or position.');
     if (pad.stack !== undefined) validatePadStack(pad.stack);
   }
+  const assembly = definition.assembly;
+  if (assembly !== undefined && (!assembly ||
+    (!assembly.marker && !assembly.notes) ||
+    (assembly.marker !== undefined && (!assembly.marker ||
+      !Object.hasOwn(footprintAssemblyMarks, assembly.marker.kind) ||
+      !isEntityId(assembly.marker.padId) ||
+      !pads.has(assembly.marker.padId.toLowerCase()))) ||
+    (assembly.notes !== undefined && (
+      typeof assembly.notes !== 'string' || !assembly.notes.trim() ||
+      assembly.notes.length > footprintAssemblyNotesLimit || /[\u0000-\u0009\u000b-\u001f\u007f]/.test(assembly.notes)
+    ))))
+    throw new Error('Invalid footprint assembly marker or notes. Choose an existing pad for the marker.');
   validateFootprintDetails(definition.graphics, definition.models);
 }

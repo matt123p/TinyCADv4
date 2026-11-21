@@ -274,6 +274,7 @@ export class updateDrawing {
     r: DrcError[],
     name: string,
     net: NetListNode[],
+    fallback?: NetListNode,
   ) {
     for (let i = 0; i < net.length; ++i) {
       let n = net[i];
@@ -296,8 +297,18 @@ export class updateDrawing {
             },
           } : {}),
         });
-        break;
+        return;
       }
+    }
+    if (fallback?.parent && fallback.a) {
+      r.push({
+        symbol: fallback.label,
+        text: name,
+        a: fallback.a.slice(),
+        id: fallback.parent._id,
+        sheet: fallback.sheet,
+        ...(fallback.source?.instancePath.length ? { source: fallback.source } : {}),
+      });
     }
   }
 
@@ -387,7 +398,12 @@ export class updateDrawing {
     // Now check each net for problems
     for (let net in netlist.nets) {
       if (netlist.nets.hasOwnProperty(net)) {
-        let eprop = netlist.eprops[net];
+        const nodes = netlist.nets[net];
+        const eprop = netlist.eprops[net];
+        const railMarkers = drc_options.Power && eprop.powers > 1
+          ? nodes.filter(({ eprop }) => eprop === 'power-marker')
+          : [];
+        const conflictingRail = railMarkers.find(({ label }) => label !== railMarkers[0].label);
 
         let total =
           eprop.input_outputs +
@@ -411,13 +427,8 @@ export class updateDrawing {
             'Mode than one item on a no-connect net',
             netlist.nets[net],
           );
-        } else if (drc_options.Power && eprop.powers > 1) {
-          this._addDrcError(
-            drawing,
-            r,
-            'Power connected to power',
-            netlist.nets[net],
-          );
+        } else if (conflictingRail) {
+          this._addDrcError(drawing, r, 'Power connected to power', nodes, conflictingRail);
         } else if (
           drc_options.PowerOutputConflict &&
           eprop.power_outputs > 1
@@ -443,8 +454,8 @@ export class updateDrawing {
           );
         } else if (
           drc_options.OutputPwr &&
-          (eprop.powers > 0 || eprop.power_inputs > 0) &&
-          (eprop.outputs > 0 || eprop.power_outputs > 0)
+          eprop.outputs > 0 &&
+          (eprop.powers > 0 || eprop.power_inputs > 0 || eprop.power_outputs > 0)
         ) {
           this._addDrcError(
             drawing,

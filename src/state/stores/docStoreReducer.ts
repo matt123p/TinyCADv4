@@ -350,11 +350,14 @@ export function DocStoreReducer(
 
     case DocActionTypes.RefreshChild:
       if (sheet === action.source && sheet.items.includes(action.placement) && isChildPlacement(action.placement)) {
-        const refreshed = refreshPlacement(action.placement, action.link, action.definition);
-        sheet = update_view.tidy_wires({
-          ...sheet, items: sheet.items.map(item => item === action.placement ? refreshed : item),
-          symbols: { ...sheet.symbols, [action.definition.id]: action.definition },
-        });
+        const { placement, link, definition } = action;
+        const refreshed = definition
+          ? refreshPlacement(placement, link, definition)
+          : { ...placement, hierarchy: link };
+        const items = sheet.items.map((item) => item === placement ? refreshed : item);
+        sheet = definition
+          ? update_view.tidy_wires({ ...sheet, items, symbols: { ...sheet.symbols, [definition.id]: definition } })
+          : { ...sheet, items };
       }
       break;
 

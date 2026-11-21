@@ -21,7 +21,7 @@ export function readGerber(source: string) {
   let fileFunction: string | undefined;
   let metric = false;
   let coordinateScale = 0;
-  let imagePositive = false;
+  let polarity: 'Positive' | 'Negative' | undefined;
   let apertureWidth = 0;
   let apertureSelected = false;
   let multiQuadrant = false;
@@ -50,8 +50,10 @@ export function readGerber(source: string) {
       coordinateScale = 10 ** (6 - Number(format[1]));
     else if (role && !fileFunction) fileFunction = role[1];
     else if (token === '%MOMM*%' && !metric) metric = true;
-    else if (token === '%TF.FilePolarity,Positive*%' && !imagePositive)
-      imagePositive = true;
+    else if (!polarity && token === '%TF.FilePolarity,Positive*%')
+      polarity = 'Positive';
+    else if (!polarity && token === '%TF.FilePolarity,Negative*%')
+      polarity = 'Negative';
     else if (aperture && !apertureWidth)
       apertureWidth = Math.round(Number(aperture[1]) * 1_000_000);
     else if (token === 'D10*' && apertureWidth) apertureSelected = true;
@@ -83,7 +85,7 @@ export function readGerber(source: string) {
         !metric ||
         !coordinateScale ||
         !fileFunction ||
-        !imagePositive ||
+        !polarity ||
         !apertureSelected
       )
         throw malformed();
@@ -126,11 +128,11 @@ export function readGerber(source: string) {
     !fileFunction ||
     !metric ||
     !coordinateScale ||
-    !imagePositive ||
+    !polarity ||
     !apertureSelected
   )
     throw malformed();
-  return { fileFunction, apertureWidth, contours, paints };
+  return { fileFunction, polarity, apertureWidth, contours, paints };
 }
 
 type DrillRecord = Omit<BoardDrill, 'id'>;
@@ -150,7 +152,7 @@ export function readXnc(source: string) {
   let tool = 0;
   let start: BoardPoint | undefined;
   const tools = new Map<number, number>();
-  const drills: DrillRecord[] = [];
+  const drills: (DrillRecord & { tool: number })[] = [];
   const decimal = /^([+-]?)(\d{1,6})(?:\.(\d{1,6}))?$/;
   const fileFunctionPrefix = '; #@! TF.FileFunction,';
   const nm = (part: string) => {
@@ -207,10 +209,10 @@ export function readXnc(source: string) {
         mode === 'down' &&
         !samePoint(point, start)
       ) {
-        drills.push({ start, end: point, widthNm, plated });
+        drills.push({ start, end: point, widthNm, plated, tool });
         mode = 'drawn';
       } else if (!action && mode === 'drill')
-        drills.push({ start: point, end: point, widthNm, plated });
+        drills.push({ start: point, end: point, widthNm, plated, tool });
       else throw malformed();
     }
   }
@@ -242,6 +244,28 @@ function drillKey(drill: DrillRecord): string {
     .join('>')}`;
 }
 
+export function gerberPaintRegions(
+  kernel: PolygonKernel,
+  paints: readonly Paint[],
+): PolygonRegion[] {
+  let regions: PolygonRegion[] = [];
+  let run: PolygonRegion[] = [];
+  let dark = true;
+  const flush = () => {
+    regions = kernel.boolean(dark ? 'union' : 'difference', regions, run);
+    run = [];
+  };
+  for (const paint of paints) {
+    if (dark !== paint.dark) {
+      if (run.length) flush();
+      dark = paint.dark;
+    }
+    run.push(paint.polygon);
+  }
+  if (run.length) flush();
+  return regions;
+}
+
 /** Reads exported bytes and compares geometry, file roles, drill tools and analytic edges. */
 export function verifyCamFiles(
   kernel: PolygonKernel,
@@ -268,42 +292,50 @@ export function verifyCamFiles(
     'plated.xnc',
     'non-plated.xnc',
     ...snapshot.layers.map(({ id }) => `copper-${id}.gbr`),
+    ...(snapshot.artwork ?? []).map(({ kind, side }) => `${kind}-${side}.gbr`),
   ]);
   for (const name of Object.keys(files))
     if (!expectedNames.has(name))
       issues.push(`${name}: unexpected manufacturing file.`);
-  snapshot.layers.forEach(({ id, copper }, index) => {
-    const name = `copper-${id}.gbr`;
+  function checkRegions(
+    name: string,
+    role: string,
+    polarity: 'Positive' | 'Negative',
+    expectedRegions: readonly PolygonRegion[],
+  ) {
     check(name, () => {
       const actual = readGerber(files[name]);
       if (
-        actual.fileFunction !==
-          `Copper,L${index + 1},${id === 'top' ? 'Top' : 'Bot'}` ||
+        actual.fileFunction !== role ||
+        actual.polarity !== polarity ||
         actual.contours.length
       )
         return false;
-      let regions: PolygonRegion[] = [];
-      let run: PolygonRegion[] = [];
-      let dark = true;
-      const flush = () => {
-        regions = kernel.boolean(dark ? 'union' : 'difference', regions, run);
-        run = [];
-      };
-      for (const paint of actual.paints) {
-        if (dark !== paint.dark) {
-          if (run.length) flush();
-          dark = paint.dark;
-        }
-        run.push(paint.polygon);
-      }
-      if (run.length) flush();
-      const expected = kernel.boolean('union', copper, []);
+      const regions = gerberPaintRegions(kernel, actual.paints);
+      const expected = kernel.boolean('union', expectedRegions, []);
       return (
         kernel.boolean('difference', expected, regions).length === 0 &&
         kernel.boolean('difference', regions, expected).length === 0
       );
     });
-  });
+  }
+  snapshot.layers.forEach(({ id, copper }, index) =>
+    checkRegions(
+      `copper-${id}.gbr`,
+      `Copper,L${index + 1},${id === 'top' ? 'Top' : 'Bot'}`,
+      'Positive',
+      copper,
+    ),
+  );
+  for (const { kind, side, regions } of snapshot.artwork ?? [])
+    checkRegions(
+      `${kind}-${side}.gbr`,
+      `${
+        kind === 'mask' ? 'Soldermask' : kind === 'paste' ? 'Paste' : 'Legend'
+      },${side === 'top' ? 'Top' : 'Bot'}`,
+      kind === 'mask' ? 'Negative' : 'Positive',
+      regions,
+    );
   check('profile.gbr', () => {
     const actual = readGerber(files['profile.gbr']);
     const expected = [snapshot.profile.outline, ...snapshot.profile.cutouts]
@@ -311,6 +343,7 @@ export function verifyCamFiles(
       .sort();
     return (
       actual.fileFunction === 'Profile,NP' &&
+      actual.polarity === 'Positive' &&
       actual.apertureWidth === 1_000 &&
       !actual.paints.length &&
       JSON.stringify(actual.contours.map(contourKey).sort()) ===

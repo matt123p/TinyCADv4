@@ -1,4 +1,6 @@
-import { drawingFileName, isCompressedDrawing, isDrawingFile, drawingMimeType } from '../../../shared/drawingFiles.js';
+import { digest } from '../../util/sha256';
+import { circuitOpened, showOpenedBoard } from '../boardWorkspaceEvents';
+import { boardFileName, isBoardFile, drawingFileName, isCompressedDrawing, isDrawingFile, drawingMimeType } from '../../../shared/drawingFiles.js';
 import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
 import { ActionCreators } from 'redux-undo';
@@ -84,7 +86,7 @@ export class FileSystemUserManager implements UserManager {
         {
           description: 'TinyCAD drawings',
           accept: {
-            'application/octet-stream': ['.dsn', '.dzn'],
+            'application/octet-stream': ['.dsn', '.dzn', '.dpn'],
           },
         },
         {
@@ -103,10 +105,16 @@ export class FileSystemUserManager implements UserManager {
       .then((files: FileSystemFileHandle[]) => {
         if (files.length > 0) {
           return files[0].getFile().then((file: File) => {
-            if (isDrawingFile(file.name)) {
+            if (isBoardFile(file.name)) {
+              return Promise.all([file.arrayBuffer(), import('../boardWorkspace')])
+                .then(async ([bytes, { openStandaloneBoard }]) => {
+                  showOpenedBoard(await openStandaloneBoard(bytes, { name: file.name, id: files[0] }));
+                });
+            } else if (isDrawingFile(file.name)) {
               return file.arrayBuffer().then(decodeDrawing).then((doc) => {
                 dispatch(actionSetDocument(doc, file.name, files[0], null));
                 dispatch(ActionCreators.clearHistory());
+                window.dispatchEvent(new Event(circuitOpened));
               });
             } else if (file.name.toLowerCase().indexOf('.tclib') !== -1) {
               this.loadLibrary(
@@ -142,20 +150,30 @@ export class FileSystemUserManager implements UserManager {
     return Promise.resolve(null);
   }
 
-  async saveFile(xml: string | Uint8Array, file: CurrentFile): Promise<any> {
-    const compressed = isCompressedDrawing(xml);
-    const name = drawingFileName(file.name, compressed);
+  async saveFile(xml: string | Uint8Array, file: CurrentFile, expectedVersion?: string): Promise<any> {
+    const pcb = isBoardFile(file.name);
+    const compressed = !pcb && isCompressedDrawing(xml);
+    const name = pcb ? boardFileName(file.name) : drawingFileName(file.name, compressed);
+    const extension = pcb ? '.dpn' : compressed ? '.dzn' : '.dsn';
     let handle = file.id as FileSystemFileHandle;
     // A file handle cannot be renamed portably. On a format change save a new
     // sibling through the picker, keeping the original file until save succeeds.
     if (!handle || handle.name !== name) {
       handle = await window.showSaveFilePicker({
-        types: [{description: compressed ? 'TinyCAD compressed drawings' : 'TinyCAD drawings',accept:{'application/octet-stream':[compressed ? '.dzn' : '.dsn']}}],
+        types: [{description: pcb ? 'TinyCAD PCB board' : compressed ? 'TinyCAD compressed drawings' : 'TinyCAD drawings',accept:{'application/octet-stream':[extension]}}],
         suggestedName:name,excludeAcceptAllOption:true,
       });
     }
     const writable = await handle.createWritable();
-    try { await writable.write(xml); await writable.close(); }
+    try {
+      if (pcb && expectedVersion && handle === file.id) {
+        const bytes = new Uint8Array(await (await handle.getFile()).arrayBuffer());
+        if (await digest(bytes) !== expectedVersion)
+          throw new Error('This PCB changed on disk. Reopen it or use Save As.');
+      }
+      await writable.write(xml);
+      await writable.close();
+    }
     catch(error) { await writable.abort().catch(()=>{}); throw error; }
     return {name:handle.name,id:handle,mimeType:drawingMimeType(xml)};
   }

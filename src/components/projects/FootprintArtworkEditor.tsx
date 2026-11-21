@@ -249,6 +249,10 @@ export default function FootprintArtworkEditor({
                   onChange={(e) => setDraft({ ...draft, text: e.target.value })}
                 />
               </label>{' '}
+              <p>
+                Use <code>{'$' + '{REFERENCE}'}</code> or{' '}
+                <code>{'$' + '{VALUE}'}</code> for text from the placed component.
+              </p>
               <label>
                 Text width (mm){' '}
                 <input

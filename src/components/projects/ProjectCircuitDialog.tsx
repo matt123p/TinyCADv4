@@ -14,7 +14,11 @@ import type {
   ProjectCircuitUndo,
 } from '../../io/projectCircuitEco';
 import type { ProjectDeviceReview } from '../../io/projectDevices';
+import type { BoardPoint } from '../../pcb/geometry';
+import { DevicePadChanges } from './DevicePadChanges';
 import ProjectDeviceDialog from './ProjectDeviceDialog';
+
+const mmPoint = ({ x, y }: BoardPoint) => '(' + x / 1e6 + ', ' + y / 1e6 + ') mm';
 
 export default function ProjectCircuitDialog({
   update,
@@ -24,7 +28,7 @@ export default function ProjectCircuitDialog({
 }: {
   update: ProjectCircuitEco;
   onClose: () => void;
-  onApplied: (undo: ProjectCircuitUndo) => void;
+  onApplied: (undo: ProjectCircuitUndo) => Promise<void>;
   onCreated: (boardId: string) => void;
 }) {
   const [replacement, setReplacement] = useState('');
@@ -44,6 +48,7 @@ export default function ProjectCircuitDialog({
     deviceChanges,
     affectedCopper,
     shorts,
+    opens,
   } = review;
   const hasBlockers =
     unresolved.length || conflicts.length || duplicateReferences.length;
@@ -56,6 +61,9 @@ export default function ProjectCircuitDialog({
   const netNames = new Map(
     review.candidate.nets.map(({ id, name }) => [id, name]),
   );
+  const previousNets = new Map(review.expected.nets?.map(({ id, name }) => [id, name]));
+  const previousTracks = new Map(review.expected.tracks?.map((track) => [track.id, track]));
+  const previousVias = new Map(review.expected.vias?.map((via) => [via.id, via]));
   const netChanges = netReview.nets
     .map((net, index) => ({
       ...net,
@@ -190,11 +198,8 @@ export default function ProjectCircuitDialog({
                         {!!affectedPreviousIds.length && (
                           <>
                             {' '}
-                            · Changes membership of {
-                              affectedPreviousIds.length
-                            }{' '}
-                            previous{' '}
-                            {affectedPreviousIds.length === 1 ? 'net' : 'nets'}
+                            · Changes membership of{' '}
+                            {affectedPreviousIds.map((netId) => previousNets.get(netId) ?? netId).join(', ')}
                           </>
                         )}
                       </li>
@@ -202,8 +207,7 @@ export default function ProjectCircuitDialog({
                     {netReview.removedIds.map((id) => (
                       <li key={id}>
                         Retire net{' '}
-                        {review.expected.nets?.find((net) => net.id === id)
-                          ?.name ?? id}
+                        {previousNets.get(id) ?? id}
                       </li>
                     ))}
                     {renamedNets.map(({ id, before, after }) => (
@@ -219,32 +223,39 @@ export default function ProjectCircuitDialog({
                       <li key={component.id}>
                         {component.reference} · {device.packageName} ·{' '}
                         {device.revision}
-                        {!!padChanges.length && (
-                          <ul>
-                            {padChanges.map(({ id, label, changes }) => (
-                              <li key={id}>
-                                {label} · {changes.join(', ')}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
+                        {!!padChanges.length && <DevicePadChanges pads={padChanges} />}
                       </li>
                     ))}
                   </ul>
                 )}
-                {!!(affectedCopper.length || shorts.length) && (
+                {!!(affectedCopper.length || shorts.length || opens.length) && (
                   <ul aria-label="Affected copper">
-                    {affectedCopper.map(({ id, unassigned }) => (
-                      <li key={id}>
-                        {id} ·{' '}
-                        {unassigned
-                          ? 'Net assignment needs review'
-                          : 'Copper needs review'}
-                      </li>
-                    ))}
+                    {affectedCopper.map(({ id, unassigned }) => {
+                      const track = previousTracks.get(id);
+                      const via = previousVias.get(id);
+                      const netId = (track ?? via)?.netId;
+                      const net = netNames.get(netId) ?? previousNets.get(netId) ?? 'Unassigned net';
+                      return (
+                        <li key={id} data-copper-id={id}>
+                          {track
+                            ? (track.layerId === 'top' ? 'Top' : 'Bottom') + ' track ' +
+                              mmPoint(track.start) + ' → ' + mmPoint(track.end)
+                            : via ? 'Via ' + mmPoint(via.positionNm) : id}
+                          {' · '}{net}{' · '}
+                          {unassigned ? 'Net assignment needs review' : 'Copper needs review'}
+                        </li>
+                      );
+                    })}
                     {shorts.map(({ netIds }, index) => (
                       <li key={index}>
-                        Short between intended nets {netIds.join(', ')}
+                        Short between intended nets{' '}
+                        {netIds.map((id) => netNames.get(id) ?? id).join(', ')}
+                      </li>
+                    ))}
+                    {opens.map(({ netId, terminalGroups }) => (
+                      <li key={netId}>
+                        Open net {netNames.get(netId) ?? netId}{' '}
+                        · {terminalGroups.length} disconnected terminal groups
                       </li>
                     ))}
                   </ul>
@@ -318,7 +329,7 @@ export default function ProjectCircuitDialog({
                 onClick={(): void => {
                   void run(async () => {
                     const undo = await update.apply(review);
-                    if (undo) onApplied(undo);
+                    if (undo) await onApplied(undo);
                     onClose();
                     if (creating) onCreated(update.boardId);
                   });

@@ -1,0 +1,18 @@
+(kicad_pcb
+  (version 20241229)
+  (generator "pcbnew")
+  (layers
+    (0 "F.Cu" signal)
+    (4 "In1.Cu" signal)
+    (6 "In2.Cu" signal)
+    (2 "B.Cu" signal)
+  )
+  (via (at 4 5) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu")
+    (net 0) (uuid "1e989e26-09bd-4ef3-b519-527ab3330001"))
+  (via blind (at 8 5) (size 0.60) (drill 0.30) (layers "F.Cu" "In1.Cu")
+    (tenting front) (net 0) (uuid "1e989e26-09bd-4ef3-b519-527ab3330002"))
+  (via blind (at 12 5) (size 0.6) (drill 0.3) (layers "In1.Cu" "In2.Cu")
+    (net 0) (uuid "1e989e26-09bd-4ef3-b519-527ab3330003"))
+  (via micro (at 16 5) (size 0.3) (drill 0.1) (layers "In2.Cu" "B.Cu")
+    (net 0) (uuid "1e989e26-09bd-4ef3-b519-527ab3330004"))
+)

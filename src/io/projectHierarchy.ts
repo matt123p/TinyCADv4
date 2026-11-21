@@ -21,6 +21,15 @@ import type { OpenProjectDrawing } from './projectStorage';
 type Project = Awaited<ReturnType<typeof readProject>>;
 type Location = Pick<OpenProjectDrawing, 'rootId' | 'documentPath'>;
 
+export function linkedBoardSource(project: Project, boardId: string) {
+  const board = project.settings.entries.find(({ kind, id }) => kind === 'board' && id === boardId);
+  const association = project.settings.associations?.find((item) => item.board === boardId);
+  const source = project.settings.entries.find(({ kind, id }) => kind === 'schematic' && id === association?.schematic);
+  if (!board || !source)
+    throw new Error('This board instance needs a registered PCB and source schematic.');
+  return { board, source };
+}
+
 async function readDrawingStructure(data: Uint8Array) {
   // Looking at another document's interface must not load its simulation
   // results into the active editor's result store.
@@ -33,11 +42,13 @@ async function readDrawingStructure(data: Uint8Array) {
 export async function readProjectSchematic(
   project: Project,
   link: ProjectLink,
+  observe?: (fileId: string, version: string, data: Uint8Array) => void,
 ) {
   const file = project.files.get(link.path);
   if (!file)
     throw new Error(`Missing or ambiguous project schematic: ${link.path}`);
-  const { data } = await projectRequest({ operation: 'read', id: file.id });
+  const { data, version } = await projectRequest({ operation: 'read', id: file.id });
+  observe?.(file.id, version, data);
   const drawing = await readDrawingStructure(data);
   if (drawing.documentId.toLowerCase() !== link.id)
     throw new Error(
@@ -50,7 +61,14 @@ export async function resolveChild(
   project: Project,
   location: Location,
   link: HierarchicalLink,
+  read = readProjectSchematic,
 ) {
+  if (link.boardInstance) {
+    const { source } = linkedBoardSource(project, link.boardInstance.boardId);
+    if (source.id !== link.documentId)
+      throw new Error('The PCB source association changed. Review the board instance.');
+    return { path: source.path, entry: source, drawing: await read(project, source) };
+  }
   const path = childPath(link, location.documentPath);
   const entry = project.settings.entries.find(
     (entry) =>
@@ -63,7 +81,7 @@ export async function resolveChild(
     return {
       path: entry.path,
       entry,
-      drawing: await readProjectSchematic(project, entry),
+      drawing: await read(project, entry),
     };
 
   const file = await findProjectPath(location.rootId, path);

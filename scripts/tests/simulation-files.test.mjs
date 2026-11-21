@@ -55,7 +55,7 @@ test('filesystem Save suggests .dzn on compression and preserves the original .d
   }
 });
 
-test('filesystem Open accepts both extensions and sends bytes to header detection', async () => {
+test('filesystem Open accepts schematic and PCB extensions and sends bytes to header detection', async () => {
   const decoded = [],
     actions = [];
   const { FileSystemUserManager } = loadComponent(
@@ -83,6 +83,7 @@ test('filesystem Open accepts both extensions and sends bytes to header detectio
       ['renamed.dzn', xml],
     ]) {
       globalThis.window = {
+        dispatchEvent: () => true,
         showOpenFilePicker: async (opts) => {
           options = opts;
           return [
@@ -101,6 +102,7 @@ test('filesystem Open accepts both extensions and sends bytes to header detectio
     assert.deepEqual(options.types[0].accept['application/octet-stream'], [
       '.dsn',
       '.dzn',
+      '.dpn',
     ]);
     assert.deepEqual(decoded, [zip, xml]);
     assert.equal(actions.filter((a) => a.type === 'loaded').length, 2);

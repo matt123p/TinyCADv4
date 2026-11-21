@@ -4,6 +4,8 @@ import { reviewCircuitNets } from './circuitNets';
 import type { CircuitNet, SchematicTerminal } from './circuitNets';
 import { validProjectName } from '../../shared/projectFiles';
 import type { SchematicSource } from '../io/netlists/netlistGenerator';
+import { validProcurement } from './procurement';
+import type { ComponentProcurement } from './procurement';
 
 export const componentRoles = [
   'electrical',
@@ -20,6 +22,7 @@ export interface CircuitComponent {
   readonly value: string;
   readonly role: (typeof componentRoles)[number];
   readonly packageHint?: string;
+  readonly procurement?: ComponentProcurement;
   readonly units: readonly { id: string; sheetId: string }[];
   readonly signals: readonly {
     id: string;
@@ -92,6 +95,7 @@ export function validateCircuitSnapshot(
       typeof component.value !== 'string' ||
       (component.packageHint !== undefined &&
         typeof component.packageHint !== 'string') ||
+      (component.procurement !== undefined && !validProcurement(component.procurement)) ||
       !componentRoles.includes(component.role) ||
       !Array.isArray(component.units) ||
       !Array.isArray(component.signals) ||

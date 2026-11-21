@@ -30,3 +30,13 @@ export function drawingMimeType(content) {
     ? COMPRESSED_DRAWING_MIME
     : 'application/xml';
 }
+
+/** @param {string} name */
+export function isBoardFile(name) {
+  return /\.dpn$/i.test(name);
+}
+
+/** @param {string} name */
+export function boardFileName(name) {
+  return isBoardFile(name) ? name : name + '.dpn';
+}

@@ -253,7 +253,13 @@ function readModel(node: SExprList): KicadModelReference {
   const offset = vector(legacy ? 'at' : 'offset', 0);
   const scale = vector('scale', 1);
   if (scale.some((n) => n <= 0)) throw new Error('A model scale must be positive on every axis.');
-  return { source, scale, offsetNm: offset.map((n) => Math.round(n * (legacy ? 25_400_000 : 1_000_000))) as [number, number, number], rotationMicrodegree: vector('rotate', 0).map(dimension) as [number, number, number] };
+  // KiCad stores clockwise model rotations. Native STEP transforms are right-handed.
+  return {
+    source,
+    scale,
+    offsetNm: offset.map((n) => Math.round(n * (legacy ? 25_400_000 : 1_000_000))) as [number, number, number],
+    rotationMicrodegree: vector('rotate', 0).map((angle) => dimension(-angle) || 0) as [number, number, number],
+  };
 }
 
 function readGraphic(node: SExprList, layer: FootprintGraphicLayer): FootprintGraphic {
@@ -287,8 +293,12 @@ function readGraphic(node: SExprList, layer: FootprintGraphicLayer): FootprintGr
       if (font?.children.some(({ tag }) => !['size', 'thickness'].includes(tag)) || font?.values.length) throw new Error('Unsupported text font override.');
       const size = child(font, 'size')?.values;
       const thickness = child(font, 'thickness');
-      const text = node.values[1];
-      if (typeof text !== 'string') throw new Error('Missing footprint text.');
+      const literal = node.values[1];
+      if (typeof literal !== 'string') throw new Error('Missing footprint text.');
+      const field = typeof node.values[0] === 'string' && node.values[0].toLowerCase();
+      const text = field === 'reference' || field === 'value'
+        ? '$' + '{' + field.toUpperCase() + '}'
+        : literal;
       const visible = ![node, effects].some((part) => part?.values.includes('hide') || child(part, 'hide')?.values[0] === 'yes');
       return { ...style, kind: 'text', text, at: point(at), sizeNm: { x: dimension(size?.[0]), y: dimension(size?.[1]) },
         strokeNm: thickness ? dimension(thickness.values[0]) : 0, rotationMicrodegree: typeof at[2] === 'number' ? dimension(at[2]) : 0,

@@ -61,6 +61,9 @@ const useStyles = makeStyles({
     cursor: 'pointer',
     display: 'inline-flex',
     alignItems: 'center',
+    border: 0,
+    backgroundColor: 'transparent',
+    padding: 0,
     color: tokens.colorNeutralForeground2,
     '&:hover': {
       color: tokens.colorNeutralForeground1,
@@ -259,9 +262,13 @@ const SheetTab: React.FC<SheetTabProps> = (props) => {
         {showMenu && (
           <Menu open={menuOpen} onOpenChange={(e, data) => setMenuOpen(data.open)}>
             <MenuTrigger disableButtonEnhancement>
-              <span className={styles.sheetHeadingIcon}>
+              <button
+                type="button"
+                className={styles.sheetHeadingIcon}
+                aria-label={t('toolbar.sheetbar.menu.actions', { defaultValue: 'Sheet actions' })}
+              >
                 <ChevronDownRegular />
-              </span>
+              </button>
             </MenuTrigger>
             <MenuPopover>
               <MenuList>

@@ -56,7 +56,7 @@ export interface SchematicSource {
 export interface NetListNode {
   a: Coordinate;
   sheet: string;
-  eprop: number;
+  eprop: number | 'power-marker';
   netlist: string;
   label?: string;
   symbol?: NetListSymbol;
@@ -64,7 +64,7 @@ export interface NetListNode {
   pin?: string;
   parent?: dsnPin | dsnPower | dsnWire | dsnLabel | dsnJunction | dsnNoConnect;
   hints: dsnSymbolHint[];
-  port?: { placementId: string; name: string };
+  port?: { placementId: string; name: string; pinId?: string };
   source?: SchematicSource;
   instanceUnitId?: string;
 }
@@ -189,23 +189,23 @@ export class NetlistGenerator implements NetlistData {
         case 6: // Not Connected
           this.eprops[netlist].not_connecteds++;
           break;
-        case 7: // Power
-          this.eprops[netlist].powers++;
-          break;
-        case 8: // Free
+        case 7: // Free
           this.eprops[netlist].free++;
           break;
-        case 9: // Unspecified
+        case 8: // Unspecified
           this.eprops[netlist].unspecified++;
           break;
-        case 10: // Power Input
+        case 9: // Power Input
           this.eprops[netlist].power_inputs++;
           break;
-        case 11: // Power Output
+        case 10: // Power Output
           this.eprops[netlist].power_outputs++;
           break;
-        case 12: // Open Emitter
+        case 11: // Open Emitter
           this.eprops[netlist].open_emitters++;
+          break;
+        case 'power-marker':
+          this.eprops[netlist].powers++;
           break;
       }
     }

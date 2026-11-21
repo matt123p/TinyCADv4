@@ -1,3 +1,4 @@
+import { editorZoomStep } from '../util/editorZoom';
 import type { HierarchicalLink } from '../model/dsnItem';
 import { dsnView, FindResult, WireMode } from '../model/dsnView';
 import { newSchematicEntityId } from '../model/schematicIdentity';
@@ -81,7 +82,6 @@ import i18n from '../i18n';
 
 const MIN_ZOOM = 10;
 const MAX_ZOOM = 400;
-const ZOOM_STEP = 1.25;
 
 function StyleSet<T>(original: T, value: T): T {
   if (original === undefined || original === value) {
@@ -1542,7 +1542,7 @@ export class updateView {
   command_zoom_in(view: dsnView, sheet: dsnSheet): viewResult {
     return {
       view: update(view, {
-        zoom: { $set: this.clampZoom(view.zoom * ZOOM_STEP) },
+        zoom: { $set: this.clampZoom(view.zoom * editorZoomStep) },
       }),
       sheet,
     };
@@ -1551,7 +1551,7 @@ export class updateView {
   command_zoom_out(view: dsnView, sheet: dsnSheet): viewResult {
     return {
       view: update(view, {
-        zoom: { $set: this.clampZoom(view.zoom / ZOOM_STEP) },
+        zoom: { $set: this.clampZoom(view.zoom / editorZoomStep) },
       }),
       sheet,
     };

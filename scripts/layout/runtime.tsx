@@ -27,12 +27,15 @@ export { wireBundles, wirePaths, wireSpans } from '../../src/layout/bundles';
 export { labelGroups } from '../../src/layout/labelGroups';
 export { blank } from '../../src/io/ioXml';
 export { decodeDrawing, encodeDrawing } from '../../src/io/dsnCodec';
+export { createSimulationSheet } from '../../src/simulation/document';
+export { defaultAnalysis } from '../../src/simulation/contracts';
 export { initialiseLayoutRuntime } from './headless';
 export { buildHierarchicalNetlist, HierarchyConnectivityError } from '../../src/pcb/hierarchicalNetlist';
 export { boardPadSources, buildHierarchicalCircuitSnapshot } from '../../src/pcb/hierarchicalSnapshot';
 export { childPath, childInterface, hierarchyDefinition, refreshPlacement, affectedPorts } from '../../src/io/hierarchyDrawing';
 export { ioXML } from '../../src/io/ioXml';
 export { XMLBuilder } from '../../src/util/xmlbuilder';
+export { updateDrawing } from '../../src/manipulators/updateDrawing';
 export { updateSymbol } from '../../src/manipulators/updateSymbol';
 export { updateView } from '../../src/manipulators/updateView';
 export { NetlistGenerator } from '../../src/io/netlists/netlistGenerator';
@@ -46,7 +49,16 @@ export { deviceDigest, readLibraryDevice, readLibraryDeviceCatalogue, searchLibr
 export { applyDeviceReview, previewDeviceReview } from '../../src/pcb/deviceReview';
 export { previewCircuitEco, applyCircuitEco } from '../../src/pcb/circuitEco';
 export { loadPolygonKernel } from '../../src/pcb/polygonKernel';
+export { routeBoard } from '../../src/pcb/routing';
+export { isCentrelineClear, manualRouteLeg } from '../../src/pcb/routing';
+export { prepareManualTrackClearance } from '../../src/pcb/manualBoardRouting';
+export { boardCopperGeometry } from '../../src/pcb/boardCopperGeometry';
+export { boardZoneGeometry } from '../../src/pcb/boardZoneGeometry';
+export { circleContour, repairProfileJunction, straightContour } from '../../src/pcb/boardProfiles';
+export { flattenContour, profileRegion } from '../../src/pcb/contours';
+export { analyseCopper } from '../../src/pcb/copper';
 export { createBoard } from '../../src/pcb/board';
+export { exportKicadBoard } from '../../src/pcb/kicadBoardExport';
 export { encodeBoard, decodeBoard, createBoardModelAsset, readBoardModelAsset } from '../../src/pcb/boardCodec';
 export { driveProjectFiles } from '../../src/io/projectStorage';
 export { compareProjectRevisions } from '../../src/pcb/projectRevisions';
@@ -127,3 +139,14 @@ export function renderFootprintAtActualSize(footprint: EmbeddedFootprint) {
 }
 
 export { readStarterFootprints, readStarterFootprint, readStarterDevices } from '../../src/pcb/starterCatalogue';
+export { prepareCamPreview } from '../../src/pcb/boardCam';
+export { boardAssembly } from '../../src/pcb/boardAssembly';
+export { boardArtwork } from '../../src/pcb/boardArtwork';
+export const loadModelPlacementMatrix = () => import('../../src/pcb/modelPlacementMatrix');
+export { mountingKeepouts } from '../../src/pcb/boardMechanical';
+export { placeFootprintPoint } from '../../src/pcb/footprint';
+export { commitManualRoute } from '../../src/pcb/manualBoardRouting';
+export { buildDeck } from '../../src/simulation/deck';
+export { checkSpiceComponents } from '../../src/simulation/diagnostics';
+export { deviceSignal, resolvedSignals } from '../../src/simulation/signals';
+export { vectorUnit } from '../../src/simulation/resultStore';

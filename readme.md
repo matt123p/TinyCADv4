@@ -83,6 +83,15 @@ and mechanical parts. See the [guide](docs/motors-motion.md) and
 The **Solar power and batteries** standard library includes 52 supplied symbols
 for conceptual home-energy planning, with whole-cable and logical-link connections.
 
+## Working on the editor
+
+Use the [TinyCAD v4.1.0 interface audit and design contract](docs/tinycad-ui-design.md)
+when changing Circuit Design, PCB Design or Simulation. Extend the shared toolbar,
+platform menus, panels, context menus, zoom and rulers. The
+[PCB editor recovery milestone](docs/TODO.md#editor-interface-redesign) comes before
+the remaining PCB work packages.
+The [development guidance](AGENTS.md) links to the shared and workspace-specific skills.
+
 ## Installation
 
 ### Preferred: App Stores

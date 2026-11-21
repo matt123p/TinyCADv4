@@ -29,6 +29,7 @@ interface RulerProps {
     scaleOrign?: number; // pixels per unit at 100% zoom. Default 5.
     zeroOffset: number; // pixels. Where the 0 mark starts.
     containerSize: number; // pixels. Width or Height of the ruler view.
+    direction?: 1 | -1; // Increasing drawing coordinates run backwards when -1.
     tickAlignment?: 'start' | 'end'; // start=Top/Left, end=Bottom/Right. Default 'end'.
 }
 
@@ -41,6 +42,7 @@ export const Ruler: React.FC<RulerProps> = (props) => {
     const scaleBase = props.scaleOrign || 5;
     const pixelsPerUnit = scaleBase * (props.zoom / 100);
     const align = props.tickAlignment || 'end';
+    const direction = props.direction ?? 1;
     
     // 5 px/mm -> every 1mm is 5px.
     // Major ticks every 10mm (50px).
@@ -122,29 +124,18 @@ export const Ruler: React.FC<RulerProps> = (props) => {
         // So P_screen = P_drawing_units * pixelsPerUnit + startPos
         const startPos = props.zeroOffset - props.scrollOffset;
 
-        // We want to iterate visible range.
-        // 0 to containerSize.
-        
-        // Find unit value at screen pixel 0:
-        // 0 = unit * ppu + startPos => unit = -startPos / ppu
-        const startUnit = Math.floor((-startPos) / pixelsPerUnit) - 1;
-        // Find unit value at screen pixel containerSize:
-        const endUnit = Math.ceil((props.containerSize - startPos) / pixelsPerUnit) + 1;
+        const firstUnit = -startPos / pixelsPerUnit * direction;
+        const lastUnit = (props.containerSize - startPos) / pixelsPerUnit * direction;
 
-        // Step size.
-        // If pixelsPerUnit is small, we need larger steps.
-        // Base step = 1 (mm).
-        let step = 1;
-        if (pixelsPerUnit < 4) step = 2;
-        if (pixelsPerUnit < 2) step = 5;
-        if (pixelsPerUnit < 1) step = 10;
-        if (pixelsPerUnit < 0.5) step = 20;
+        // Increase tick intervals at low zoom, keeping work proportional to pixels.
+        const step = [1, 2, 5, 10, 20].find((interval) => interval * pixelsPerUnit >= 4)
+            ?? 10 ** Math.ceil(Math.log10(4 / pixelsPerUnit));
+        const startUnit = Math.floor(Math.min(firstUnit, lastUnit) / step) * step;
+        const endUnit = Math.ceil(Math.max(firstUnit, lastUnit) / step) * step;
 
-        for (let u = startUnit; u <= endUnit; u++) {
-            if (u % step !== 0) continue;
+        for (let u = startUnit; u <= endUnit; u += step) {
+            const pos = Math.floor(u * pixelsPerUnit * direction + startPos) + 0.5;
 
-            const pos = Math.floor(u * pixelsPerUnit + startPos) + 0.5; // +0.5 for crisp lines
-            
             if (pos < -50 || pos > (props.orientation === 'horizontal' ? width : height) + 50) continue;
 
             let tickLength = 4;
@@ -198,7 +189,7 @@ export const Ruler: React.FC<RulerProps> = (props) => {
 
         // Draw Mouse Position Indicator
         if (props.mousePosition !== null) {
-            const screenPos = Math.floor(props.mousePosition * pixelsPerUnit + startPos) + 0.5;
+            const screenPos = Math.floor(props.mousePosition * pixelsPerUnit * direction + startPos) + 0.5;
             if (screenPos >= 0 && screenPos <= (props.orientation === 'horizontal' ? width : height)) {
                 ctx.strokeStyle = 'red';
                 ctx.beginPath();
@@ -213,7 +204,7 @@ export const Ruler: React.FC<RulerProps> = (props) => {
             }
         }
 
-    }, [props.zoom, props.scrollOffset, props.orientation, props.containerSize, props.scaleOrign, props.zeroOffset, props.mousePosition, props.tickAlignment, pixelsPerUnit, align, actualSize]);
+    }, [props.zoom, props.scrollOffset, props.orientation, props.containerSize, props.scaleOrign, props.zeroOffset, props.mousePosition, props.tickAlignment, pixelsPerUnit, align, direction, actualSize]);
 
 
     return (

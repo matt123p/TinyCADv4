@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TinyCADProject><SETTINGS version="1" projectId="b5550000-0000-4000-8000-000000000031" revisionId="b5550000-0000-4000-8000-000000000032" title="Timer and logic reference" primarySchematic="b5550000-0000-4000-8000-000000000001"/><FILE kind="board" id="b5550000-0000-4000-8000-000000000030" path="Timer.dpn"/><FILE kind="schematic" id="b5550000-0000-4000-8000-000000000001" path="Timer.dsn"/><ASSOCIATION schematic="b5550000-0000-4000-8000-000000000001" board="b5550000-0000-4000-8000-000000000030"/></TinyCADProject>

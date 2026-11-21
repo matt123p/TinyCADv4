@@ -14,7 +14,8 @@ import { DocItemTypes } from '../model/dsnItem';
 import type { dsnSymbol, HierarchicalLink } from '../model/dsnItem';
 import { instanceReferenceKey } from '../model/schematicReferences';
 import { isEntityId } from '../model/schematicIdentity';
-import { digest } from '../util/sha256';
+import { stableHierarchyId } from './stableHierarchyId';
+export { stableHierarchyId } from './stableHierarchyId';
 import {
   createSheetSnapshot,
   mergeSheetSnapshots,
@@ -35,20 +36,6 @@ export class HierarchyConnectivityError extends Error {
     super(`${source.documentPath} · ${message}`);
     this.name = 'HierarchyConnectivityError';
   }
-}
-
-/** The readable reference path can change without changing the physical identity. */
-export async function stableHierarchyId(
-  namespace: string,
-  ...ids: string[]
-): Promise<string> {
-  const hex = await digest(
-    new TextEncoder().encode(JSON.stringify([namespace, ...ids])),
-  );
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-8${hex.slice(
-    13,
-    16,
-  )}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
 }
 
 const referenceOf = (symbol: dsnSymbol) =>
@@ -130,6 +117,11 @@ export async function buildHierarchicalNetlist(
         const source = sourceOf(item);
         const reference = referenceOf(item);
         const child = isChildPlacement(item);
+        if (child && item.hierarchy.boardInstance)
+          throw new HierarchyConnectivityError(
+            'Board instances describe system connections. Compile the source schematic of the individual PCB.',
+            source,
+          );
         if (!reference || reference.includes('?') || !isEntityId(item.unitId))
           throw new HierarchyConnectivityError(
             'Unassigned reference or missing placement identity.',

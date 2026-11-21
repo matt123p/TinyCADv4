@@ -54,6 +54,7 @@ export function startEngine(
   }
   const worker = new Worker(new URL('./engine.worker.ts', import.meta.url), {
     type: 'module',
+    name: 'tinycad-simulation',
   });
   worker.onmessage = (event) => receive(event.data);
   worker.onerror = (event) =>

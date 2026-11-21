@@ -10,8 +10,25 @@ import {
 } from './geometry';
 import type { BoardPoint } from './geometry';
 import type { PolygonKernel } from './polygonKernel';
+import { bounds, near } from './regionDistances';
 
 type Side = CopperLayer['id'];
+export type RouteBend = 'straight-first' | 'diagonal-first';
+
+export function manualRouteLeg(from: BoardPoint, to: BoardPoint, bend: RouteBend): BoardPoint[] {
+  if (samePoint(from, to)) return [];
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  if (!dx || !dy || Math.abs(dx) === Math.abs(dy)) return [to];
+  const diagonal = Math.min(Math.abs(dx), Math.abs(dy));
+  const origin = bend === 'diagonal-first' ? from : to;
+  const direction = bend === 'diagonal-first' ? 1 : -1;
+  return [{
+    x: origin.x + direction * Math.sign(dx) * diagonal,
+    y: origin.y + direction * Math.sign(dy) * diagonal,
+  }, to];
+}
+
 interface LayerPoint {
   readonly position: BoardPoint;
   readonly layer: Side;
@@ -19,9 +36,18 @@ interface LayerPoint {
 
 export interface RouteRules {
   readonly minWidthNm: number;
+  readonly preferredWidthNm?: number;
+  readonly maxWidthNm?: number;
   readonly clearanceNm: number;
   readonly edgeClearanceNm: number;
   readonly minViaAnnulusNm: number;
+}
+
+export function trackWidthViolation(widthNm: number, rules: RouteRules) {
+  if (!Number.isSafeInteger(widthNm) || widthNm < rules.minWidthNm)
+    return { code: 'track-width', requiredNm: rules.minWidthNm, message: 'Track is narrower than the board minimum.' };
+  if (rules.maxWidthNm !== undefined && widthNm > rules.maxWidthNm)
+    return { code: 'track-width-maximum', requiredNm: rules.maxWidthNm, message: 'Track is wider than the board maximum.' };
 }
 
 export interface RouteRequest {
@@ -32,6 +58,8 @@ export interface RouteRequest {
   readonly profile: PolygonRegion;
   readonly layers: readonly Side[];
   readonly obstacles: readonly CopperFeature[];
+  readonly clearanceFor?: (feature: CopperFeature) => number;
+  readonly keepouts?: readonly { side: Side; copper: PolygonRegion }[];
   readonly drills: readonly BoardDrill[];
   readonly widthNm: number;
   readonly gridNm: number;
@@ -54,6 +82,7 @@ interface RouteResult {
   tracks: CopperFeature[];
   vias: CopperFeature[];
   drills: BoardDrill[];
+  path?: readonly LayerPoint[];
 }
 
 const directions = [
@@ -137,6 +166,123 @@ function take(queue: SearchNode[]): SearchNode {
   return node;
 }
 
+function expandRoutingObstacles(
+  kernel: PolygonKernel,
+  regions: readonly PolygonRegion[],
+  deltaNm: number,
+) {
+  // A route is blocked by any expanded obstacle. Keeping batches separate avoids
+  // a board-wide offset, with room for the extra vertices added by round joins.
+  const vertexBudget = 20_000;
+  const expanded: PolygonRegion[] = [];
+  let batch: PolygonRegion[] = [];
+  let vertices = 0;
+  for (const region of regions) {
+    const count = region.outer.length +
+      region.holes.reduce((total, hole) => total + hole.length, 0);
+    if (batch.length && vertices + count > vertexBudget) {
+      expanded.push(...kernel.offset(batch, deltaNm));
+      batch = [];
+      vertices = 0;
+    }
+    batch.push(region);
+    vertices += count;
+  }
+  if (batch.length) expanded.push(...kernel.offset(batch, deltaNm));
+  return expanded;
+}
+
+export function prepareCentrelineClearance(
+  kernel: PolygonKernel,
+  {
+    profile,
+    rules,
+    layers,
+    netId,
+    obstacles,
+    clearanceFor = () => rules.clearanceNm,
+    drills,
+    keepouts = [],
+  }: Pick<
+    RouteRequest,
+    'profile' | 'rules' | 'layers' | 'netId' | 'obstacles' | 'drills' | 'keepouts' | 'clearanceFor'
+  >,
+  radius: number,
+) {
+  const marginNm = 2 * TESSELLATION_TOLERANCE_NM;
+  const foreign = obstacles.filter((obstacle) => obstacle.netId !== netId);
+  const allDrills = drills.map(
+    (drill): PolygonRegion => ({
+      outer: capsulePolygon(drill.start, drill.end, drill.widthNm),
+      holes: [],
+    }),
+  );
+
+  const area = kernel.offset(
+    [profile],
+    -(radius + rules.edgeClearanceNm + marginNm),
+  );
+  const holes = expandRoutingObstacles(kernel, allDrills, radius + rules.clearanceNm + marginNm);
+  function expandedCopper(layer: Side) {
+    const groups = new Map<number, PolygonRegion[]>();
+    for (const feature of foreign) {
+      if (feature.layerId !== layer) continue;
+      const clearance = clearanceFor(feature);
+      const regions = groups.get(clearance) ?? [];
+      regions.push(feature.region);
+      groups.set(clearance, regions);
+    }
+    return [...groups].flatMap(([clearance, regions]) =>
+      expandRoutingObstacles(kernel, regions, radius + clearance + marginNm));
+  }
+  const byLayer = new Map(
+    layers.map((layer) => [
+      layer,
+      [
+        ...expandRoutingObstacles(
+          kernel,
+          keepouts.filter(({ side }) => side === layer).map(({ copper }) => copper),
+          radius + marginNm,
+        ),
+        ...expandedCopper(layer),
+      ],
+    ]),
+  );
+  const withBounds = (regions: readonly PolygonRegion[]) =>
+    regions.map((region) => ({ region, box: bounds(region) }));
+  return {
+    area,
+    holes: withBounds(holes),
+    byLayer: new Map([...byLayer].map(([layer, regions]) => [layer, withBounds(regions)])),
+  };
+}
+
+export function isCentrelineClear(
+  { area, holes, byLayer }: ReturnType<typeof prepareCentrelineClearance>,
+  a: BoardPoint,
+  b: BoardPoint,
+  layer: Side,
+): boolean {
+  const obstacles = byLayer.get(layer);
+  const box = { minX: Math.min(a.x, b.x), minY: Math.min(a.y, b.y),
+    maxX: Math.max(a.x, b.x), maxY: Math.max(a.y, b.y) };
+  const blocked = (item: (typeof holes)[number]) =>
+    near(box, item.box, 0) && hits(a, b, item.region);
+  return !!obstacles && area.some(
+    (region) => inside(a, region) && inside(b, region) && !alongBoundary(a, b, region),
+  ) && !holes.some(blocked) && !obstacles.some(blocked);
+}
+
+export function centrelineClearance(
+  kernel: PolygonKernel,
+  request: Parameters<typeof prepareCentrelineClearance>[1],
+  radius: number,
+) {
+  const geometry = prepareCentrelineClearance(kernel, request, radius);
+  return (a: BoardPoint, b: BoardPoint, layer: Side) =>
+    isCentrelineClear(geometry, a, b, layer);
+}
+
 /** Bounded H/V/45° grid search with explicit through-via transitions. */
 export function routeBoard(
   kernel: PolygonKernel,
@@ -183,7 +329,7 @@ export function routeBoard(
         Number.isSafeInteger(value) && value >= 0 && value <= 500_000_000,
     ) ||
     gridNm < 2 ||
-    widthNm < Math.max(2, rules.minWidthNm) ||
+    (widthNm < 2 || trackWidthViolation(widthNm, rules)) ||
     viaDrillNm < 2 ||
     viaDiameterNm < viaDrillNm + 2 * Math.max(1, rules.minViaAnnulusNm) ||
     (goal.position.x - start.position.x) % gridNm ||
@@ -199,46 +345,8 @@ export function routeBoard(
   ): RouteResult => ({ status, visited, tracks: [], vias: [], drills: [] });
   if (signal?.aborted) return empty('cancelled');
 
-  const marginNm = 2 * TESSELLATION_TOLERANCE_NM;
-  const foreign = request.obstacles.filter(
-    (obstacle) => obstacle.netId !== netId,
-  );
-  const allDrills = request.drills.map(
-    (drill): PolygonRegion => ({
-      outer: capsulePolygon(drill.start, drill.end, drill.widthNm),
-      holes: [],
-    }),
-  );
-  const prepare = (radius: number) => {
-    const area = kernel.offset(
-      [profile],
-      -(radius + rules.edgeClearanceNm + marginNm),
-    );
-    const holes = kernel.offset(
-      allDrills,
-      radius + rules.clearanceNm + marginNm,
-    );
-    const byLayer = new Map(
-      layers.map((layer) => [
-        layer,
-        kernel.offset(
-          foreign
-            .filter((obstacle) => obstacle.layerId === layer)
-            .map((obstacle) => obstacle.region),
-          radius + rules.clearanceNm + marginNm,
-        ),
-      ]),
-    );
-    return (a: BoardPoint, b: BoardPoint, layer: Side) =>
-      area.some(
-        (region) =>
-          inside(a, region) &&
-          inside(b, region) &&
-          !alongBoundary(a, b, region),
-      ) &&
-      !holes.some((region) => hits(a, b, region)) &&
-      !byLayer.get(layer).some((region) => hits(a, b, region));
-  };
+  const prepare = (radius: number) =>
+    centrelineClearance(kernel, request, radius);
   const clear = prepare(Math.ceil(widthNm / 2));
   const viaClear =
     layers.length === 2 ? prepare(Math.ceil(viaDiameterNm / 2)) : null;
@@ -342,7 +450,8 @@ export function routeBoard(
           begin = after;
         }
       }
-      return { status: 'routed', visited, tracks, vias, drills };
+      return { status: 'routed', visited, tracks, vias, drills,
+        path: path.map(({ position, layer }) => ({ position, layer })) };
     }
     for (const [dx, dy] of directions) {
       const position = {

@@ -1,3 +1,4 @@
+import { withoutResults } from '../simulation/document';
 import { validProjectName } from '../../shared/projectFiles';
 import { createBoard, validateBoard } from '../pcb/board';
 import {
@@ -28,6 +29,7 @@ import type { ProjectDeviceReview } from './projectDevices';
 export interface ProjectCircuitUndo {
   readonly boardId: string;
   readonly projectId: string;
+  readonly fileId: string;
   restore(): Promise<void>;
 }
 
@@ -120,7 +122,7 @@ export async function openProjectCircuitEco(
       circuit,
       (path, source) => {
         if (!sources.has(path))
-          sources.set(path, encodeDrawing(source, 'xml').then(digest));
+          sources.set(path, encodeDrawing(withoutResults(source), 'xml').then(digest));
       },
       openDrawing,
     );
@@ -290,6 +292,7 @@ export async function openProjectCircuitEco(
       return {
         boardId: board.boardId,
         projectId: location.id,
+        fileId: file.id,
         async restore() {
           const updatedProject = await readProject(
             location.id,

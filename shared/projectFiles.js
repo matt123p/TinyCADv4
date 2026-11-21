@@ -1,4 +1,5 @@
 export const PROJECT_FILE_EXTENSION = '.tcproject';
+export const MAX_PROJECT_SETTINGS_BYTES = 4 * 1024 * 1024;
 export const MAX_PROJECT_FILE_BYTES = 256 * 1024 * 1024;
 
 export function isProjectFile(name) {

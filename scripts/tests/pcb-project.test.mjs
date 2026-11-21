@@ -13,6 +13,7 @@ test('round trips native XML settings with relocatable paths and rejects invalid
     projectId: crypto.randomUUID(),
     revisionId: crypto.randomUUID(),
     title: 'Prototype & revision',
+    author: 'Alex & Jo "Lab"',
     requiredFeatures: [],
     primarySchematic: schematicId,
     primaryBoard: boardId,
@@ -22,6 +23,8 @@ test('round trips native XML settings with relocatable paths and rejects invalid
       { kind: 'board', id: boardId, path: 'Layouts/Board.dpn' },
     ],
   };
+  assert.throws(() => api.encodeProjectSettings({ ...settings, author: 'Invalid\nAuthor' }),
+    /Invalid project author/);
   const bytes = api.encodeProjectSettings(settings);
   assert.match(decoder.decode(bytes), /^<\?xml/);
   assert.deepEqual(api.decodeProjectSettings(bytes), settings);
@@ -57,6 +60,61 @@ test('round trips native XML settings with relocatable paths and rejects invalid
   assert.throws(
     () => api.decodeProjectSettings(encoder.encode(xml)),
     /Unsupported required project feature/,
+  );
+});
+
+test('validates board sources, sides and precision in saved output recipes', () => {
+  const board = crypto.randomUUID();
+  const recipe = {
+    kind: 'pcb',
+    id: crypto.randomUUID(),
+    board,
+    directory: 'outputs/pcb',
+    format: 'copper',
+    layer: 'bottom',
+    filename: 'copper-bottom.gbr',
+  };
+  const settings = {
+    projectId: crypto.randomUUID(),
+    revisionId: crypto.randomUUID(),
+    title: 'Board outputs',
+    requiredFeatures: [],
+    entries: [{ kind: 'board', id: board, path: 'Layouts/Board.dpn' }],
+    outputRecipes: [recipe],
+  };
+  const copper = api.encodeProjectSettings(settings);
+  assert.deepEqual(api.decodeProjectSettings(copper), settings);
+  const placement = {
+    ...recipe,
+    format: 'placement',
+    filename: 'position.csv',
+    layer: undefined,
+    decimals: 0,
+  };
+  const roundTrip = api.decodeProjectSettings(
+    api.encodeProjectSettings({ ...settings, outputRecipes: [placement] }),
+  ).outputRecipes[0];
+  assert.equal(roundTrip.decimals, 0);
+  assert.equal('layer' in roundTrip, false);
+  for (const invalid of [
+    { ...recipe, board: crypto.randomUUID() },
+    { ...recipe, layer: undefined },
+    { ...recipe, filename: 'copper-bottom.csv' },
+    { ...recipe, decimals: 3 },
+    { ...placement, decimals: 7 },
+    { ...placement, decimals: 2.5 },
+    { ...placement, layer: 'top' },
+  ]) {
+    assert.throws(
+      () => api.encodeProjectSettings({ ...settings, outputRecipes: [invalid] }),
+      /Invalid or duplicate project output recipe/,
+    );
+  }
+  assert.throws(
+    () => api.decodeProjectSettings(
+      encoder.encode(decoder.decode(copper).replace('layer="bottom"', 'layer="inner"')),
+    ),
+    /Unsupported PCB output recipe settings/,
   );
 });
 

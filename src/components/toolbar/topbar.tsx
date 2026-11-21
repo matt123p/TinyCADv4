@@ -1,3 +1,4 @@
+import { editorHeaderDocument } from '../../io/boardWorkspaceEvents';
 import { tinycadUrl } from '../../io/apiServer';
 import {
   BookOpenRegular,
@@ -43,6 +44,16 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [edit, setEdit] = useState(false);
   const [filename, setFilename] = useState(file.name);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [editorDocument, setEditorDocument] = useState<{ name: string; dirty: boolean }>();
+
+  useEffect(() => {
+    const update = (event: WindowEventMap[typeof editorHeaderDocument]) => {
+      setEditorDocument(event.detail);
+      setEdit(false);
+    };
+    window.addEventListener(editorHeaderDocument, update);
+    return () => window.removeEventListener(editorHeaderDocument, update);
+  }, []);
 
   useEffect(() => {
     setFilename(file.name);
@@ -123,9 +134,8 @@ export const Topbar: React.FC<TopbarProps> = ({
   if (user && file) {
     displayName = file.name;
   }
-  if (displayName && displayName.length > 0 && saveNeeded) {
-    displayName = displayName + '*';
-  }
+  if (editorDocument) displayName = editorDocument.name;
+  if (displayName && (editorDocument?.dirty ?? saveNeeded)) displayName += '*';
 
   return (
     <div>
@@ -156,7 +166,7 @@ export const Topbar: React.FC<TopbarProps> = ({
               ) : (
                 <span
                   onClick={() => {
-                    if (process.env.TARGET_SYSTEM === 'google' && !file.project) {
+                    if (process.env.TARGET_SYSTEM === 'google' && !file.project && !editorDocument) {
                       setEdit(true);
                     }
                   }}

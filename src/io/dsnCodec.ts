@@ -49,6 +49,7 @@ function toBase64(bytes: Uint8Array): string {
 export async function encodeDrawing(
   drawing: dsnDrawing,
   representation = drawingSaveFormat(drawing),
+  resultSource?: string | ReadonlyMap<string, ResultData>,
 ): Promise<Uint8Array> {
   const saved = {
     ...drawing,
@@ -74,7 +75,9 @@ export async function encodeDrawing(
     for (const run of sheet.simulation?.runs || []) {
       if (run.dataState !== 'available' || !sheet.simulation.retainResults)
         continue;
-      const data = getResult(run.id);
+      const data = typeof resultSource === 'object'
+        ? resultSource.get(run.id)
+        : getResult(run.id, resultSource);
       if (!data)
         throw new Error(
           'A retained run is missing its numerical data. Remove that run’s results before saving.',
@@ -127,6 +130,7 @@ export async function encodeDrawing(
 
 export async function decodeDrawing(
   input: ArrayBuffer | Uint8Array | string,
+  resultTarget?: Map<string, ResultData>,
 ): Promise<dsnDrawing> {
   const bytes =
     typeof input === 'string'
@@ -295,6 +299,6 @@ export async function decodeDrawing(
     }
   if (Object.keys(payloads).some((path) => !used.has(path)))
     throw new Error('Drawing contains unreferenced result data.');
-  restoreResults(restored, drawing.documentId);
+  restoreResults(restored, drawing.documentId, resultTarget);
   return drawing;
 }

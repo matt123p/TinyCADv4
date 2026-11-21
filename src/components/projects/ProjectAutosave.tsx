@@ -7,6 +7,8 @@ import {
   projectRecoveryKey,
   writeRecoveryDraft,
 } from '../../io/projectRecovery';
+import { linkedSchematicSnapshot, schematicTabDirty } from '../../state/schematicTabs';
+import type { SchematicSnapshot } from '../../state/schematicTabs';
 import type { docDrawing } from '../../state/undo/undo';
 
 export default function ProjectAutosave() {
@@ -25,6 +27,8 @@ export default function ProjectAutosave() {
   const saving = useSelector(
     (state: docDrawing) => state.altStore.saveInProgress,
   );
+  const inactive = useSelector((state: docDrawing) => state.schematicTabs?.inactive);
+  const recovered = useRef(new WeakSet<SchematicSnapshot>());
   const [status, setStatus] = useState<{ time?: number; failed?: boolean }>();
   const lastWritten = useRef<{ key: string; token: string; version: string }>();
   const dirty = drawingVersion !== savedVersion;
@@ -84,6 +88,32 @@ export default function ProjectAutosave() {
       window.clearTimeout(id);
     };
   }, [account, dirty, drawingVersion, file, saving, store]);
+
+  useEffect(() => {
+    if (saving) return;
+    const timers: number[] = [];
+    for (const [tabKey, tab] of Object.entries(inactive ?? {})) {
+      const location = tab.file.project;
+      if (!location || !schematicTabDirty(tab) || recovered.current.has(tab)) continue;
+      const key = projectRecoveryKey(account, location);
+      const time = Date.now();
+      timers.push(window.setTimeout(async () => {
+        try {
+          const data = await encodeDrawing(tab.history.present.drawing, undefined, tabKey);
+          const current = store.getState();
+          if (current.altStore.saveInProgress || current.schematicTabs?.inactive[tabKey] !== tab) return;
+          const token = crypto.randomUUID();
+          if (!await writeRecoveryDraft({ key, token, sourceVersion: location.version, time, data })) return;
+          recovered.current.add(tab);
+          const latest = linkedSchematicSnapshot(store.getState(), location.id, location.entryId);
+          if (!latest || !schematicTabDirty(latest)) await deleteRecoveryDraft(key, token);
+        } catch {
+          // Keep the in-memory edit available for a normal Save.
+        }
+      }, 750));
+    }
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [account, inactive, saving, store]);
 
   if (!dirty || saving) return null;
   return (

@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TinyCADProject><SETTINGS version="1" projectId="5ed00000-0000-4000-8000-000000000031" revisionId="5ed00000-0000-4000-8000-000000000033" title="LED classroom exercise" primarySchematic="5ed00000-0000-4000-8000-000000000001"/><FILE kind="board" id="5ed00000-0000-4000-8000-000000000030" path="LED.dpn"/><FILE kind="schematic" id="5ed00000-0000-4000-8000-000000000001" path="LED.dzn"/><ASSOCIATION schematic="5ed00000-0000-4000-8000-000000000001" board="5ed00000-0000-4000-8000-000000000030"/></TinyCADProject>

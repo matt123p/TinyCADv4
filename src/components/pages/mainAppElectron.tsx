@@ -1,3 +1,5 @@
+import { chooseProjectFolder, closeProjectMode, saveProjectTabs } from '../../io/projectMode';
+import { confirmBoardClose } from '../../io/boardWorkspaceEvents';
 import React, { FunctionComponent, useEffect } from 'react';
 import ContextmenuContainer from '../../state/containers/contextmenuContainer';
 import DialogueContainer from '../../state/containers/dialogueContainer';
@@ -6,7 +8,6 @@ import { Dispatch } from 'redux';
 import { tclib, tclibLibraryEntry } from '../../model/tclib';
 import { handleMenuCommand, handleMenuCommandWithData, initialise } from '../../io/files';
 import { BrowserSheetData } from '../../model/dsnView';
-import { CurrentFile } from '../../state/stores/altStoreReducer';
 import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
 
 export interface MainAppElectronProps {
@@ -18,7 +19,6 @@ export interface MainAppElectronProps {
   editLibrary: tclib;
   browserSheets: BrowserSheetData[];
   dispatch: Dispatch;
-  file: CurrentFile;
   saveNeeded: boolean;
 }
 
@@ -46,11 +46,28 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
 
   useEffect(() => {
     props.dispatch(initialise() as any);
-    if (new URLSearchParams(window.location.search).get('about') === '1') {
+    const params = new URLSearchParams(window.location.search);
+    const openProject = (chooseFolder = false) => {
+      void import('../../io/projects')
+        .then(({ openLaunchedProject, chooseDesktopProjectFolder }) =>
+          chooseFolder ? chooseDesktopProjectFolder() : openLaunchedProject(),
+        )
+        .catch((error) => props.dispatch(actionSelectDialog('io_failure', {
+          message: error instanceof Error ? error.message : String(error),
+        })));
+    };
+    const chooseFolder = () => openProject(true);
+    window.addEventListener(chooseProjectFolder, chooseFolder);
+    if (params.get('project') === '1') openProject();
+    if (params.get('about') === '1') {
       props.dispatch(actionSelectDialog('about', null));
     }
     const unsubscribe = window.electronAPI.onMenuCommand((command) => {
-      props.dispatch(handleMenuCommand(command) as any);
+      if (command === 'file-open-project-launch') openProject();
+      else if (command === 'file-open-project-folder') openProject(true);
+      else if (command === 'file-save-all') window.dispatchEvent(new Event(saveProjectTabs));
+      else if (command === 'file-close-project') window.dispatchEvent(new Event(closeProjectMode));
+      else props.dispatch(handleMenuCommand(command) as any);
     });
     const unsubscribeWithData = window.electronAPI.onMenuCommandWithData((command, data) => {
       props.dispatch(handleMenuCommandWithData(command, data) as any);
@@ -58,23 +75,17 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
     return () => {
       unsubscribe();
       unsubscribeWithData();
+      window.removeEventListener(chooseProjectFolder, chooseFolder);
     };
   }, []);
 
   useEffect(() => {
-    let name = '';
-    if (props.file) {
-      name = props.file.name;
-    }
-    if (name?.length > 0 && props.saveNeeded) {
-      name = name + '*';
-    }
-    window.electronAPI.setTitle(`TinyCAD - ${name}`);
-  }, [props.file, props.saveNeeded]);
-
-  useEffect(() => {
     if (window.electronAPI?.onAppClosing) {
       const unsubscribe = window.electronAPI.onAppClosing(() => {
+        if (!window.dispatchEvent(new Event(confirmBoardClose, { cancelable: true }))) {
+          window.electronAPI.sendAppClosingResponse(false);
+          return;
+        }
         if (props.saveNeeded) {
           props.dispatch(
             actionSelectDialog('unsaved_changes', {

@@ -40,9 +40,14 @@ export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 
       } },
     });
     const { bundleGraph } = await bundler.run();
-    const sourceAssets = new Set();
+    const sourceBundles = new Map();
     for (const bundle of bundleGraph.getBundles()) {
-      bundle.traverseAssets((asset) => { sourceAssets.add(asset.filePath); });
+      const file = path.relative(dist, bundle.filePath).split(path.sep).join('/');
+      bundle.traverseAssets((asset) => {
+        const files = sourceBundles.get(asset.filePath) ?? new Set();
+        files.add(file);
+        sourceBundles.set(asset.filePath, files);
+      });
     }
     const mime = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
       '.json': 'application/json', '.ttf': 'font/ttf', '.wasm': 'application/wasm' };
@@ -62,7 +67,8 @@ export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 
     });
     return {
       baseURL: `http://127.0.0.1:${server.address().port}/layout/`,
-      hasSourceAsset: (relative) => sourceAssets.has(path.join(root, relative)),
+      hasSourceAsset: (relative) => sourceBundles.has(path.join(root, relative)),
+      bundlesForSource: (relative) => [...(sourceBundles.get(path.join(root, relative)) ?? [])],
       close,
     };
   } catch (error) { await close(); throw error; }

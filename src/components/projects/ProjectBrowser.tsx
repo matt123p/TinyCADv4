@@ -1,4 +1,13 @@
-import type { ProjectBoardWorkspace } from '../../io/projectBoardWorkspace';
+import { isBoardFile } from '../../../shared/drawingFiles';
+import { projectDocumentKind } from '../../io/projectDocumentKind';
+import type { ProjectDocumentLocation } from '../../io/useProjectDocuments';
+import {
+  droppedProjectFiles,
+  pickedProjectFiles,
+} from '../../io/projectImport';
+import type { ImportSource } from '../../io/projectImport';
+import type { ProjectImportJob } from './ProjectFileImportDialog';
+import type { BoardWorkspaceDocument } from '../pcb/BoardWorkspace';
 import type { projectCircuitStatus } from '../../io/projectCircuitStatus';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -44,11 +53,13 @@ import {
   projectRootChanged,
   readProject,
   readProjectBoard,
+  refreshInactiveSchematics,
   savedProjectRevision,
   saveProjectDrawing,
 } from '../../io/projects';
 import { projectFileName } from '../../io/projectStorage';
 import type { ProjectItem, ProjectLocation } from '../../io/projectStorage';
+import { linkedSchematicSnapshot, schematicTabDirty } from '../../state/schematicTabs';
 import type { docDrawing } from '../../state/undo/undo';
 import { ProjectNameDialog } from './ProjectNameDialog';
 import { ProjectRevisionDialog } from './ProjectRevisionDialog';
@@ -60,6 +71,7 @@ import type {
   ProjectCircuitUndo,
 } from '../../io/projectCircuitEco';
 import type {
+  BoardPlacementGroup,
   BoardProbeMatch,
   BoardWorkspaceProbe,
 } from '../../io/projectPcbProbe';
@@ -78,7 +90,7 @@ interface ProjectContext {
 }
 
 import { childInterface, hierarchyDefinition } from '../../io/hierarchyDrawing';
-import { readProjectSchematic } from '../../io/projectHierarchy';
+import { linkedBoardSource, readProjectSchematic } from '../../io/projectHierarchy';
 import type { boardPadSources } from '../../pcb/hierarchicalSnapshot';
 import type { reviewProjectCircuit } from '../../io/netlists/activeNetlist';
 import { DocActionTypes } from '../../state/actions/docActions';
@@ -92,13 +104,31 @@ const ProjectReferenceDialog = React.lazy(
 const ProjectPcbProbeDialog = React.lazy(
   () => import('./ProjectPcbProbeDialog'),
 );
-const ProjectBoardWorkspaceDialog = React.lazy(
-  () => import('./ProjectBoardWorkspaceDialog'),
-);
 const FootprintEditorDialog = React.lazy(
   () => import('./FootprintEditorDialog'),
 );
 const ProjectDeviceDialog = React.lazy(() => import('./ProjectDeviceDialog'));
+
+const ProjectFileImportDialog = React.lazy(
+  () => import('./ProjectFileImportDialog'),
+);
+const ProjectOutputsDialog = React.lazy(() => import('./ProjectOutputsDialog'));
+
+function selectedSchematicUnits(present: docDrawing['docStore']['present']) {
+  const selection = present.view._selected_array;
+  if (!selection.length) return [];
+  const items = new Map(
+    activeSheet(present)?.items.map((item) => [item._id, item]),
+  );
+  return selection.flatMap((id) => {
+    const item = items.get(id);
+    return item?.NodeName === DocItemTypes.Symbol &&
+      !item.hierarchy &&
+      item.unitId
+      ? [item.unitId]
+      : [];
+  });
+}
 
 interface NamePrompt {
   title: string;
@@ -106,7 +136,27 @@ interface NamePrompt {
   submit: (name: string) => Promise<void>;
 }
 
-export default function ProjectBrowser() {
+export default function ProjectBrowser({
+  openedRoot,
+  onGitRoot,
+  onGitHistory,
+  onOpenBoard,
+  onRefreshBoard,
+  onOpenProjectDocument,
+  isProjectDocumentOpen,
+  openedDocumentIds,
+  onActivateCircuit,
+}: {
+  openedRoot?: ProjectLocation;
+  onGitRoot?(root?: ProjectLocation): void;
+  onGitHistory?(filename: string): void;
+  onOpenBoard(document: BoardWorkspaceDocument): void;
+  onRefreshBoard(fileId: string): Promise<void>;
+  onOpenProjectDocument(file: ProjectDocumentLocation): Promise<void>;
+  isProjectDocumentOpen(id: string): boolean;
+  openedDocumentIds: readonly string[];
+  onActivateCircuit(): void;
+}) {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const store = useStore<docDrawing>();
@@ -120,6 +170,7 @@ export default function ProjectBrowser() {
   const editingLibrary = useSelector(
     (state: docDrawing) => !!state.docStore.present.editLibrary,
   );
+  const [outputProject, setOutputProject] = useState<ProjectContext & { boardId?: string }>();
   const [trail, setTrail] = useState<ProjectLocation[]>([]);
   const [items, setItems] = useState<ProjectItem[]>([]);
   const [search, setSearch] = useState('');
@@ -146,22 +197,25 @@ export default function ProjectBrowser() {
     inventory: RevisionInventory;
   }>();
   const importSchematic = useRef<HTMLInputElement>(null);
+  const addFilesInput = useRef<HTMLInputElement>(null);
+  const [fileImport, setFileImport] = useState<ProjectImportJob>();
+  const [dropTarget, setDropTarget] = useState<string>();
+  const consumedOpenedRoot = useRef<ProjectLocation>();
   const [comparison, setComparison] = useState<ProjectRevisionComparison>();
-  const [boardWorkspace, setBoardWorkspace] = useState<ProjectBoardWorkspace>();
-  const [boardWorkspaceProbe, setBoardWorkspaceProbe] =
-    useState<BoardWorkspaceProbe>();
   const [footprintEditor, setFootprintEditor] = useState(false);
   const [pcbProbe, setPcbProbe] = useState<BoardProbeMatch[]>();
+  const [placementGroups, setPlacementGroups] =
+    useState<BoardPlacementGroup[]>();
   const selectedUnit = useSelector((state: docDrawing) => {
     const present = state.docStore.present;
-    if (present.view._selected_array.length !== 1) return undefined;
-    const item = activeSheet(present)?.items.find(
-      ({ _id }) => _id === present.view._selected_array[0],
-    );
-    if (item?.NodeName === DocItemTypes.Symbol && !item.hierarchy)
-      return item.unitId;
-    return undefined;
+    return present.view._selected_array.length === 1
+      ? selectedSchematicUnits(present)[0]
+      : undefined;
   });
+  const hasSchematicGroup = useSelector(
+    (state: docDrawing) =>
+      selectedSchematicUnits(state.docStore.present).length > 1,
+  );
   const [boardProbe, setBoardProbe] = useState<{
     name: string;
     targets: ReturnType<typeof boardPadSources>;
@@ -181,9 +235,9 @@ export default function ProjectBrowser() {
   const drive = process.env.TARGET_SYSTEM === 'google';
   const storageKey = `tinycad.driveProjectFolder.${userId || ''}`;
   const folder = trail[trail.length - 1];
-  const blocked = busy || saving;
+  const blocked = busy || saving || Boolean(fileImport);
   const atProjectRoot = !!context && context.root.id === folder?.id;
-  const treeMode = Boolean(context);
+  const treeMode = Boolean(context || openedRoot);
   const markerId = context?.marker.id;
   const projectRootId = context?.root.id;
   const relativePrefix = context
@@ -197,12 +251,27 @@ export default function ProjectBrowser() {
   const linkedPaths = context?.project.settings.entries || [];
   const reload = () => setRefresh((value) => value + 1);
 
+  const gitRoot = context?.root ?? openedRoot;
+  useEffect(() => {
+    onGitRoot?.(gitRoot);
+  }, [gitRoot, onGitRoot]);
+
   useEffect(() => {
     let current = true;
-    projectRequest({ operation: 'root' })
+    const requestedRoot =
+      openedRoot !== consumedOpenedRoot.current ? openedRoot : undefined;
+    const rootRequest = requestedRoot
+      ? Promise.resolve(requestedRoot)
+      : projectRequest({ operation: 'root' });
+    rootRequest
       .then((root) => {
         if (!current) return;
+        consumedOpenedRoot.current = openedRoot;
         setContext(undefined);
+        setSelected(undefined);
+        setItems([]);
+        setSearch('');
+        setError('');
         let home: ProjectLocation;
         if (drive) {
           try {
@@ -221,7 +290,7 @@ export default function ProjectBrowser() {
     return () => {
       current = false;
     };
-  }, [drive, rootRefresh, storageKey]);
+  }, [drive, openedRoot, rootRefresh, storageKey]);
 
   useEffect(() => {
     const resetRoot = () => {
@@ -254,7 +323,7 @@ export default function ProjectBrowser() {
           ),
         );
         setSelected((item) => result.find(({ id }) => id === item?.id));
-        if (treeMode && !atProjectRoot) {
+        if (markerId && !atProjectRoot) {
           const project = await readProject(markerId, projectRootId);
           if (current)
             setContext((value) =>
@@ -386,6 +455,7 @@ export default function ProjectBrowser() {
 
   const openDrawing = (project: ProjectContext, entryId: string) => {
     if (editingLibrary) return;
+    onActivateCircuit();
     dispatch(
       fileOpenProject({
         type: 'file-open-project',
@@ -404,34 +474,85 @@ export default function ProjectBrowser() {
     saveAs(new Blob([new Uint8Array(data).buffer]), name);
   };
 
+  async function linkedBoardDocument(
+    context: ProjectContext,
+    id: string,
+    probe?: BoardWorkspaceProbe,
+  ): Promise<BoardWorkspaceDocument> {
+    const { openProjectBoardWorkspace } = await import(
+      '../../io/projectBoardWorkspace'
+    );
+    const session = await openProjectBoardWorkspace(
+      { id: context.marker.id, rootId: context.root.id },
+      id,
+      userId ?? '',
+      (sourceId) => {
+        const tab = linkedSchematicSnapshot(store.getState(), context.marker.id, sourceId);
+        return tab && schematicTabDirty(tab) ? tab.history.present.drawing : undefined;
+      },
+    );
+    const status = sync.get(context.marker.id + ':' + id);
+    return {
+      session,
+      probe,
+      projectRootId: context.root.id,
+      fileId: context.project.files.get(session.path)?.id,
+      async reloadProjectBoard() {
+        const project = await readProject(context.marker.id, context.root.id);
+        return linkedBoardDocument({ ...context, project }, id);
+      },
+      syncStatus: status && t('projects.syncStatus.' + status.status),
+      onProbe: (source) =>
+        navigateFromBoardCanvas(context, session.circuit, source),
+      onUpdate: () =>
+        void run(() => openCircuitEco(context, { boardId: id }), false),
+      onEditReferences: () =>
+        void run(() => openReferenceDialog(context, id, 'edit'), false),
+      onBackAnnotate: () =>
+        void run(() => openReferenceDialog(context, id, 'annotate'), false),
+    };
+  }
+
   function openBoardWorkspace(
     context: ProjectContext,
     id: string,
     probe?: BoardWorkspaceProbe,
   ) {
-    setBoardWorkspaceProbe(probe);
-    void run(async () => {
-      const { openProjectBoardWorkspace } = await import(
-        '../../io/projectBoardWorkspace'
-      );
-      setBoardWorkspace(
-        await openProjectBoardWorkspace(
-          { id: context.marker.id, rootId: context.root.id },
-          id,
-        ),
-      );
-    }, false);
+    void run(
+      async () => onOpenBoard(await linkedBoardDocument(context, id, probe)),
+      false,
+    );
+  }
+
+  async function unlinkedBoardDocument(
+    file: { id: string; name: string; folder: string; path: string },
+    rootId: string,
+    ancestorIds: readonly string[],
+  ): Promise<BoardWorkspaceDocument> {
+    const { openProjectBoardFile } = await import(
+      '../../io/projectBoardWorkspace'
+    );
+    const session = await openProjectBoardFile(file, userId ?? '');
+    return {
+      session,
+      projectRootId: rootId,
+      fileId: file.id,
+      ancestorIds,
+      reloadProjectBoard: () =>
+        unlinkedBoardDocument(file, rootId, ancestorIds),
+    };
   }
 
   function navigateFromBoardCanvas(
+    context: ProjectContext,
+    circuit: BoardWorkspaceDocument['session']['circuit'],
     source: ReturnType<typeof boardPadSources>[number]['source'],
   ) {
-    if (!context || !boardWorkspace?.circuit) return;
+    if (!circuit) return;
     void run(async () => {
       const { navigateSchematicSource } = await import(
         '../../io/projectHierarchy'
       );
-      const { circuit } = boardWorkspace;
       const root = context.project.settings.entries.find(
         ({ id, kind }) => id === circuit.documentId && kind === 'schematic',
       );
@@ -447,13 +568,13 @@ export default function ProjectBrowser() {
         drawing,
         source,
       );
-      setBoardWorkspace(undefined);
-      dispatch(
+      await dispatch(
         fileOpenProject({
           type: 'file-open-project',
           location: destination,
         }) as any,
       );
+      onActivateCircuit();
     }, false);
   }
 
@@ -470,12 +591,8 @@ export default function ProjectBrowser() {
       { id: context.marker.id, rootId: context.root.id },
       destination,
       (sourceId) => {
-        const state = store.getState();
-        const location = state.altStore.file.project;
-        return location?.id === context.marker.id &&
-          location.entryId === sourceId
-          ? state.docStore.present.drawing
-          : undefined;
+        const tab = linkedSchematicSnapshot(store.getState(), context.marker.id, sourceId);
+        return tab && schematicTabDirty(tab) ? tab.history.present.drawing : undefined;
       },
     );
     setCircuitEco(next);
@@ -499,29 +616,26 @@ export default function ProjectBrowser() {
       location,
       boardId,
       (id) => {
-        const state = store.getState();
-        const current = state.altStore.file.project;
-        return (
-          current?.id === location.id &&
-          current.entryId === id &&
-          state.docStore.present.drawingVersion !== state.altStore.savedVersion
-        );
+        const tab = linkedSchematicSnapshot(store.getState(), location.id, id);
+        return !!tab && schematicTabDirty(tab);
       },
     );
     setReferenceDialog({ kind, operation });
   }
 
-  function reloadAnnotatedDrawing(undo: ProjectReferenceUndo) {
+  async function reloadAnnotatedDrawing(undo: ProjectReferenceUndo) {
+    const matches = (location: NonNullable<docDrawing['altStore']['file']['project']>) =>
+      location.id === undo.projectId &&
+      (location.entryId === undo.affectedEntry ||
+        location.hierarchyTrail?.[0]?.entryId === undo.affectedEntry);
     const current = store.getState().altStore.file.project;
-    if (
-      current?.id !== undo.projectId ||
-      (current.entryId !== undo.affectedEntry &&
-        current.hierarchyTrail?.[0]?.entryId !== undo.affectedEntry)
-    )
-      return;
-    dispatch(
-      fileOpenProject({ type: 'file-open-project', location: current }) as any,
-    );
+    const state = store.getState();
+    if (current && matches(current) && state.altStore.savedVersion === state.docStore.present.drawingVersion)
+      await dispatch(
+        fileOpenProject({ type: 'file-open-project', location: current, refresh: true }) as any,
+      );
+    const unavailable = await refreshInactiveSchematics(dispatch, store.getState, matches);
+    if (unavailable.length) throw new Error('Could not reload project files: ' + unavailable.join(', '));
   }
 
   async function locateReference(source: CircuitSchematicSource) {
@@ -631,12 +745,41 @@ export default function ProjectBrowser() {
         }, false);
       return;
     }
-    if (!context) return;
+    if (!treeMode) return;
     const link = linkedPaths.find(
       ({ path }) => path.toLowerCase() === relativePath(item).toLowerCase(),
     );
     if (link?.kind === 'schematic') openDrawing(context, link.id);
     else if (link?.kind === 'board') openBoardWorkspace(context, link.id);
+    else if (isBoardFile(item.name)) {
+      const rootId = context?.root.id ?? openedRoot?.id ?? folder.id;
+      const rootIndex = trail.findIndex(({ id }) => id === rootId);
+      const relative = [
+        ...trail.slice(rootIndex + 1).map(({ name }) => name),
+        item.name,
+      ].join('/');
+      const file = {
+        id: item.id,
+        name: item.name,
+        folder: folder.id,
+        path: relative,
+      };
+      const ancestors = trail.map(({ id }) => id);
+      void run(
+        async () =>
+          onOpenBoard(await unlinkedBoardDocument(file, rootId, ancestors)),
+        false,
+      );
+    } else if (projectDocumentKind(item.name))
+      void run(
+        () =>
+          onOpenProjectDocument({
+            ...item,
+            folder: folder.id,
+            ancestors: trail.map(({ id }) => id),
+          }),
+        false,
+      );
     else
       void run(async () => {
         const { data } = await projectRequest({
@@ -659,6 +802,7 @@ export default function ProjectBrowser() {
 
   const protectedItem = (item: ProjectItem) =>
     item.unsupported ||
+    isProjectDocumentOpen(item.id) ||
     context?.marker.id === item.id ||
     linkedPaths.some(
       ({ path }) =>
@@ -718,19 +862,22 @@ export default function ProjectBrowser() {
     ) &&
     !editingLibrary;
 
-  const placeChild = (link: (typeof linkedPaths)[number]) =>
+  const placeChild = (link: (typeof linkedPaths)[number], boardId?: string) =>
     run(async () => {
       const initial = store.getState();
       const sheet = activeSheet(initial.docStore.present);
       if (!sheet || sheet.hierarchicalSymbol || sheet.kind === 'simulation')
         throw new Error(t('hierarchy.circuitOnly'));
       const loaded = await readProject(context.marker.id, context.root.id);
-      const entry = loaded.settings.entries.find(
+      const boardLink = boardId ? linkedBoardSource(loaded, boardId) : undefined;
+      const entry = boardLink?.source ?? loaded.settings.entries.find(
         ({ kind, id }) => kind === 'schematic' && id === link.id,
       );
       if (!entry) throw new Error(t('hierarchy.noChild'));
       const drawing = await readProjectSchematic(loaded, entry);
-      const art = await childInterface(drawing, entry.path.split('/').pop());
+      const art = boardLink
+        ? await (await import('../../io/projectSystem')).boardInstanceArtwork(drawing, boardLink.board)
+        : await childInterface(drawing, entry.path.split('/').pop());
       const current = store.getState();
       if (
         current.altStore.file !== initial.altStore.file ||
@@ -741,16 +888,76 @@ export default function ProjectBrowser() {
         type: DocActionTypes.PlaceChild,
         source: sheet,
         definition: hierarchyDefinition(sheet, art),
-        link: { path: entry.path, documentId: entry.id, cached: true },
+        link: {
+          path: entry.path,
+          documentId: entry.id,
+          cached: true,
+          ...(boardId ? { boardInstance: { boardId, ports: [] } } : {}),
+        },
       });
     }, false);
+
+  function startFileImport(
+    destination: ProjectLocation,
+    sources: Promise<ImportSource[]>,
+  ) {
+    const protectedFiles = new Set(openedDocumentIds);
+    for (const item of items)
+      if (isProjectDocumentOpen(item.id)) protectedFiles.add(item.id);
+    if (context) {
+      protectedFiles.add(context.marker.id);
+      for (const file of context.project.files.values())
+        protectedFiles.add(file.id);
+    }
+    setFileImport({ destination, sources, protectedFiles });
+  }
+
+  function dropHandlers(destination: ProjectLocation) {
+    const externalFiles = (event: React.DragEvent) =>
+      Array.from(event.dataTransfer.types).includes('Files');
+    return {
+      onDragOver(event: React.DragEvent) {
+        if (!externalFiles(event)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.dataTransfer.dropEffect = blocked ? 'none' : 'copy';
+        if (!blocked) setDropTarget(destination.id);
+      },
+      onDragLeave(event: React.DragEvent) {
+        if (
+          event.relatedTarget instanceof Node &&
+          event.currentTarget.contains(event.relatedTarget)
+        )
+          return;
+        setDropTarget((target) =>
+          target === destination.id ? undefined : target,
+        );
+      },
+      onDrop(event: React.DragEvent) {
+        if (!externalFiles(event)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        setDropTarget(undefined);
+        if (!blocked)
+          startFileImport(destination, droppedProjectFiles(event.dataTransfer));
+      },
+    };
+  }
+
+  useEffect(() => {
+    setFileImport(undefined);
+    setDropTarget(undefined);
+  }, [openedRoot, rootRefresh]);
 
   const visibleItems = items.filter((item) =>
     item.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
   );
   return (
     <section
-      className="project-browser"
+      className={`project-browser${
+        folder && dropTarget === folder.id ? ' project-drop-target' : ''
+      }`}
+      {...(folder && treeMode ? dropHandlers(folder) : {})}
       aria-label={t('projects.title')}
       aria-busy={loading || busy}
     >
@@ -779,6 +986,56 @@ export default function ProjectBrowser() {
           </MenuTrigger>
           <MenuPopover>
             <MenuList>
+              <MenuItem
+                disabled={!folder || !treeMode || blocked}
+                onClick={() => addFilesInput.current.click()}
+              >
+                {t('projects.addFiles')}
+              </MenuItem>
+              <MenuItem
+                disabled={!folder || !treeMode}
+                onClick={() =>
+                  setPrompt({
+                    title: t('projects.newFile'),
+                    name: 'Notes.md',
+                    submit: async (name) => {
+                      const type = projectDocumentKind(name);
+                      if (!type || type.kind !== 'text')
+                        throw new Error(
+                          'Choose a .txt, .md, .csv, .tsv or .log filename.',
+                        );
+                      const names = await projectRequest({
+                        operation: 'list',
+                        folder: folder.id,
+                        tree: true,
+                      });
+                      if (
+                        names.some(
+                          (item) =>
+                            item.name.toLowerCase() === name.toLowerCase(),
+                        )
+                      )
+                        throw new Error(
+                          'A file or folder already has that name.',
+                        );
+                      const file = await projectRequest({
+                        operation: 'write',
+                        folder: folder.id,
+                        name,
+                        data: new Uint8Array(),
+                        mediaType: type.mime,
+                      });
+                      await onOpenProjectDocument({
+                        ...file,
+                        folder: folder.id,
+                        ancestors: trail.map(({ id }) => id),
+                      });
+                    },
+                  })
+                }
+              >
+                {t('projects.newFile')}
+              </MenuItem>
               <MenuItem disabled={!drive && !!activeProject} onClick={choose}>
                 {t(drive ? 'projects.driveRoot' : 'projects.chooseFolder')}
               </MenuItem>
@@ -815,12 +1072,16 @@ export default function ProjectBrowser() {
                 {t('projects.newFolder')}
               </MenuItem>
               <MenuItem
-                disabled={!folder || treeMode}
+                disabled={!folder || !!context}
                 onClick={() =>
                   setPrompt({
                     title: t('projects.newProject'),
                     submit: async (name) => {
-                      await createProjectFile(folder.id, name);
+                      await createProjectFile(
+                        folder.id,
+                        name,
+                        openedRoot?.id === folder.id,
+                      );
                     },
                   })
                 }
@@ -895,6 +1156,27 @@ export default function ProjectBrowser() {
         </Menu>
       </div>
       <input
+        ref={addFilesInput}
+        type="file"
+        multiple
+        hidden
+        aria-label={t('projects.addFiles')}
+        onChange={(event) => {
+          const sources = pickedProjectFiles(event.currentTarget.files ?? []);
+          event.currentTarget.value = '';
+          if (sources.length && folder && treeMode && !blocked)
+            startFileImport(folder, Promise.resolve(sources));
+        }}
+      />
+      {fileImport && (
+        <React.Suspense fallback={null}>
+          <ProjectFileImportDialog
+            job={fileImport}
+            onClose={() => setFileImport(undefined)}
+          />
+        </React.Suspense>
+      )}
+      <input
         ref={importSchematic}
         type="file"
         hidden
@@ -946,6 +1228,30 @@ export default function ProjectBrowser() {
           {t('projects.findInPcb')}
         </Button>
       )}
+      {context &&
+        activeProject?.id === context.marker.id &&
+        hasSchematicGroup && (
+          <Button
+            appearance="subtle"
+            size="small"
+            disabled={blocked}
+            onClick={() => {
+              const ids = selectedSchematicUnits(
+                store.getState().docStore.present,
+              );
+              void run(async () => {
+                const { locateSchematicPlacementGroups } = await import(
+                  '../../io/projectPcbProbe'
+                );
+                setPlacementGroups(
+                  await locateSchematicPlacementGroups(activeProject, ids),
+                );
+              }, false);
+            }}
+          >
+            Place selected schematic components…
+          </Button>
+        )}
       {error && (
         <div className="project-browser-status" role="alert">
           {error}
@@ -976,7 +1282,15 @@ export default function ProjectBrowser() {
                   )
                 : [];
             return (
-              <li key={item.id}>
+              <li
+                key={item.id}
+                className={
+                  dropTarget === item.id ? 'project-drop-target' : undefined
+                }
+                {...(treeMode && item.folder && !item.unsupported
+                  ? dropHandlers(item)
+                  : {})}
+              >
                 <Button
                   size="small"
                   className="project-file-label"
@@ -1014,6 +1328,11 @@ export default function ProjectBrowser() {
                       >
                         {t('projects.open')}
                       </MenuItem>
+                      {onGitHistory && !item.folder && !item.unsupported && (
+                        <MenuItem onClick={() => onGitHistory(item.id)}>
+                          {t('projects.gitFileHistory')}
+                        </MenuItem>
+                      )}
                       {!editingLibrary &&
                         associatedBoards.map((board) => (
                           <MenuItem
@@ -1037,6 +1356,20 @@ export default function ProjectBrowser() {
                       {link?.kind === 'schematic' && canPlace(link.id) && (
                         <MenuItem onClick={() => void placeChild(link)}>
                           {t('hierarchy.placeChild')}
+                        </MenuItem>
+                      )}
+                      {link?.kind === 'board' && activeProject &&
+                        !activeProject.documentPath.includes('/') &&
+                        context?.project.settings.associations?.some(
+                          ({ board, schematic }) => board === link.id && canPlace(schematic),
+                        ) && (
+                        <MenuItem onClick={() => void placeChild(link, link.id)}>
+                          Place board instance
+                        </MenuItem>
+                      )}
+                      {link?.kind === 'board' && context && (
+                        <MenuItem onClick={() => setOutputProject({ ...context, boardId: link.id })}>
+                          Configure PCB outputs…
                         </MenuItem>
                       )}
                       {link?.kind === 'board' && context && (
@@ -1306,6 +1639,32 @@ export default function ProjectBrowser() {
       {atProjectRoot && (
         <div className="project-browser-contents">
           <strong>{context.project.settings.title}</strong>
+          <Button
+            size="small"
+            appearance="subtle"
+            disabled={blocked}
+            onClick={(): void => {
+              void run(
+                () =>
+                  onOpenProjectDocument({
+                    ...context.marker,
+                    folder: context.root.id,
+                    ancestors: trail.map(({ id }) => id),
+                  }),
+                false,
+              );
+            }}
+          >
+            {t('projects.projectSettings')}
+          </Button>
+          <Button
+            size="small"
+            appearance="subtle"
+            disabled={blocked}
+            onClick={() => setOutputProject(context)}
+          >
+            Project outputs…
+          </Button>
           {context.project.missingSchematics.length > 0 && (
             <span role="status">
               {t('hierarchy.unread', {
@@ -1334,68 +1693,24 @@ export default function ProjectBrowser() {
             ))}
         </div>
       )}
+      {outputProject && (
+        <React.Suspense fallback={<Spinner />}>
+          <ProjectOutputsDialog
+            initialProject={outputProject.project}
+            boardId={outputProject.boardId}
+            location={{
+              id: outputProject.marker.id,
+              rootId: outputProject.root.id,
+            }}
+            onClose={() => setOutputProject(undefined)}
+          />
+        </React.Suspense>
+      )}
       {comparison && (
         <ProjectRevisionDialog
           comparison={comparison}
           onClose={() => setComparison(undefined)}
         />
-      )}
-      {boardWorkspace && (
-        <React.Suspense fallback={<Spinner />}>
-          <ProjectBoardWorkspaceDialog
-            session={boardWorkspace}
-            probe={boardWorkspaceProbe}
-            onProbe={navigateFromBoardCanvas}
-            onUpdate={() => {
-              setBoardWorkspace(undefined);
-              if (context)
-                void run(
-                  () =>
-                    openCircuitEco(context, {
-                      boardId: boardWorkspace.board.boardId,
-                    }),
-                  false,
-                );
-            }}
-            onEditReferences={() => {
-              setBoardWorkspace(undefined);
-              if (context)
-                void run(
-                  () =>
-                    openReferenceDialog(
-                      context,
-                      boardWorkspace.board.boardId,
-                      'edit',
-                    ),
-                  false,
-                );
-            }}
-            onBackAnnotate={() => {
-              setBoardWorkspace(undefined);
-              if (context)
-                void run(
-                  () =>
-                    openReferenceDialog(
-                      context,
-                      boardWorkspace.board.boardId,
-                      'annotate',
-                    ),
-                  false,
-                );
-            }}
-            syncStatus={
-              sync.get(context?.marker.id + ':' + boardWorkspace.board.boardId)
-                ? t(
-                    'projects.syncStatus.' +
-                      sync.get(
-                        context?.marker.id + ':' + boardWorkspace.board.boardId,
-                      ).status,
-                  )
-                : undefined
-            }
-            onClose={() => setBoardWorkspace(undefined)}
-          />
-        </React.Suspense>
       )}
       {footprintEditor && (
         <React.Suspense fallback={<Spinner />}>
@@ -1414,6 +1729,53 @@ export default function ProjectBrowser() {
           />
         </React.Suspense>
       )}
+      {placementGroups && (
+        <Dialog
+          open
+          onOpenChange={(_, data) =>
+            !data.open && setPlacementGroups(undefined)
+          }
+        >
+          <DialogSurface>
+            <DialogBody>
+              <DialogTitle>Place selected schematic components</DialogTitle>
+              <DialogContent>
+                {placementGroups.length ? (
+                  <ul aria-label="Linked boards">
+                    {placementGroups.map(({ boardId, path, componentIds }) => (
+                      <li key={boardId}>
+                        <Button
+                          onClick={() => {
+                            setPlacementGroups(undefined);
+                            if (context)
+                              openBoardWorkspace(context, boardId, {
+                                componentId: componentIds[0],
+                                placementQueue: componentIds,
+                              });
+                          }}
+                        >
+                          {path} · {componentIds.length}{' '}
+                          {componentIds.length === 1 ? 'package' : 'packages'}
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p role="status">
+                    The selected components have no unplaced packages with
+                    reviewed devices on linked boards.
+                  </p>
+                )}
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setPlacementGroups(undefined)}>
+                  Close
+                </Button>
+              </DialogActions>
+            </DialogBody>
+          </DialogSurface>
+        </Dialog>
+      )}
       {referenceDialog && (
         <React.Suspense fallback={<Spinner />}>
           <ProjectReferenceDialog
@@ -1421,7 +1783,7 @@ export default function ProjectBrowser() {
             onClose={() => setReferenceDialog(undefined)}
             onApplied={(undo) => {
               setReferenceUndo(undo);
-              reloadAnnotatedDrawing(undo);
+              void run(() => reloadAnnotatedDrawing(undo), false);
             }}
             onLocate={locateReference}
           />
@@ -1446,7 +1808,7 @@ export default function ProjectBrowser() {
                     void run(async () => {
                       try {
                         await referenceUndo.restore();
-                        reloadAnnotatedDrawing(referenceUndo);
+                        await reloadAnnotatedDrawing(referenceUndo);
                         setReferenceUndo(undefined);
                       } finally {
                         setConfirmReferenceUndo(false);
@@ -1471,7 +1833,10 @@ export default function ProjectBrowser() {
         <React.Suspense fallback={<Spinner />}>
           <ProjectCircuitDialog
             update={circuitEco}
-            onApplied={setCircuitUndo}
+            onApplied={async (undo) => {
+              setCircuitUndo(undo);
+              await onRefreshBoard(undo.fileId);
+            }}
             onCreated={(id) => {
               if (context) openBoardWorkspace(context, id);
             }}
@@ -1500,6 +1865,7 @@ export default function ProjectBrowser() {
                     void run(async () => {
                       try {
                         await circuitUndo.restore();
+                        await onRefreshBoard(circuitUndo.fileId);
                         setCircuitUndo(undefined);
                       } finally {
                         setConfirmCircuitUndo(false);

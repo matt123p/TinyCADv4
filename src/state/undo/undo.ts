@@ -8,6 +8,7 @@ import { MenuActionTypes } from '../actions/menuActions';
 import { altStore } from '../stores/altStoreReducer';
 import { SymbolActionTypes } from '../actions/symbolActions';
 import { LibraryActionTypes } from '../actions/libraryActions';
+import type { SchematicTabs } from '../schematicTabs';
 import { DocActionTypes } from '../actions/docActions';
 
 let lastEvent = new Date();
@@ -16,6 +17,7 @@ let needHistory = false;
 export interface docDrawing {
   docStore: StateWithHistory<docStore>;
   altStore: altStore;
+  schematicTabs?: SchematicTabs;
 }
 
 const reduceWithHistory = undoable(DocStoreReducer, {
@@ -31,7 +33,8 @@ const reduceWithHistory = undoable(DocStoreReducer, {
       needHistory ||
       currentState.drawing != previousHistory._latestUnfiltered?.drawing;
     let undoCheckpoint = now.getTime() - lastEvent.getTime() > 500;
-    if (action.type === MenuActionTypes.MenuSetStyle && action.style.image) undoCheckpoint = true;
+    if (action.type === MenuActionTypes.MenuSheetRename ||
+        (action.type === MenuActionTypes.MenuSetStyle && action.style.image)) undoCheckpoint = true;
     if (action.type.startsWith('simulation/') || action.type === MenuActionTypes.MenuCommand || action.type === DocActionTypes.ApplyAutoLayout || action.type === DocActionTypes.ApplyChatEdit || action.type === DocActionTypes.ApplyChatLibrary) {
       undoCheckpoint = true;
     }
@@ -79,7 +82,8 @@ export function DocStoreWithHistory(
   action: AppActionTypes,
 ): StateWithHistory<docStore> {
   if (state && (action.type === DocActionTypes.AddHierarchySheet ||
-      action.type === DocActionTypes.RefreshChild || action.type === DocActionTypes.PlaceChild)) {
+      action.type === DocActionTypes.RefreshChild || action.type === DocActionTypes.PlaceChild ||
+      action.type === MenuActionTypes.MenuSheetRename)) {
     state = { ...state, _latestUnfiltered: state.present };
   }
   if (state && action.type === MenuActionTypes.MenuSetStyle && action.style.image) {

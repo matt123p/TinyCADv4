@@ -1,3 +1,4 @@
+import { wheelPinchZoomFactor } from '../../util/editorZoom';
 import React, { Dispatch } from 'react';
 import { TDrawing } from './Drawing';
 import { OperatingPointOverlay } from '../simulation/OperatingPointOverlay';
@@ -1432,11 +1433,10 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
 
   onwheel(e: WheelEvent) {
     if (e.ctrlKey) {
-      const zoomFactor = Math.exp((-e.deltaY * Math.log(1.25)) / 100);
-      const clampedZoomFactor = Math.min(1.25, Math.max(1 / 1.25, zoomFactor));
+      const zoomFactor = wheelPinchZoomFactor(e.deltaY);
 
       this.setPendingZoomAnchor(e.clientX, e.clientY);
-      this.props.dispatch(actionCommand('zoom_scale', clampedZoomFactor));
+      this.props.dispatch(actionCommand('zoom_scale', zoomFactor));
       e.preventDefault();
       e.stopPropagation();
       return false;

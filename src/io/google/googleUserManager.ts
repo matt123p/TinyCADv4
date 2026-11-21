@@ -1,5 +1,9 @@
+import { showOpenedBoard } from '../boardWorkspaceEvents';
+import { isProjectFile } from '../../../shared/projectFiles';
+import { digest } from '../../util/sha256';
+import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
 import { normalizeUserConfig } from '../libraryConfig';
-import { drawingFileName, isCompressedDrawing, drawingMimeType } from '../../../shared/drawingFiles.js';
+import { drawingFileName, isBoardFile, isCompressedDrawing, drawingMimeType } from '../../../shared/drawingFiles.js';
 import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
 import { ActionCreators } from 'redux-undo';
@@ -173,13 +177,33 @@ export class GoogleUserManager implements UserManager {
                 });
                 dispatch(actionEditLibrary(lib, meta.title, meta.id, null));
               });
+            } else if (isProjectFile(meta.title)) {
+              const parent = meta.parents?.[0];
+              if (!parent?.id) throw new Error('The Drive project has no accessible containing folder.');
+              return Promise.all([
+                this.loadFileMetadata(parent.id),
+                import('../projects'),
+                import('../projectStorage'),
+              ]).then(async ([folder, { readProject }, { projectFolderOpened }]) => {
+                await readProject(meta.id, parent.id);
+                window.dispatchEvent(new CustomEvent(projectFolderOpened, {
+                  detail: { id: parent.id, name: folder.title || 'My Drive' },
+                }));
+              });
+            } else if (isBoardFile(meta.title)) {
+              return Promise.all([
+                this.projectFiles({ operation: 'read', id: meta.id }),
+                import('../boardWorkspace'),
+              ]).then(async ([{ data }, { openStandaloneBoard }]) => {
+                showOpenedBoard(await openStandaloneBoard(data, { name: meta.title, id: meta.id }));
+              });
             } else {
               return fetch(`https://www.googleapis.com/drive/v3/files/${state.ids[0]}?alt=media`, { headers: { Authorization: `Bearer ${this.getToken()}` } }).then(r => { if (!r.ok) throw new Error('Unable to load drawing.'); return r.arrayBuffer(); }).then(decodeDrawing).then((doc) => {
                 dispatch(actionSetDocument(doc, meta.title, meta.id, null));
                 dispatch(ActionCreators.clearHistory());
               });
             }
-          });
+          }).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
           return;
         case 'create':
           dispatch(actionSetFileData('tCad1.dsn', null, state.folderId, 0));
@@ -256,7 +280,19 @@ export class GoogleUserManager implements UserManager {
     );
   }
 
-  saveFile(xml: string | Uint8Array, file: CurrentFile): Promise<any> {
+  async saveFile(xml: string | Uint8Array, file: CurrentFile, expectedVersion?: string): Promise<any> {
+    if (isBoardFile(file.name)) {
+      if (expectedVersion && typeof file.id === 'string' && xml instanceof Uint8Array) {
+        const { data, version } = await this.projectFiles({ operation: 'read', id: file.id });
+        if (await digest(data) !== expectedVersion)
+          throw new Error('This PCB changed on Drive. Reopen it or use Save As.');
+        return this.projectFiles({
+          operation: 'write', folder: file.folderId ?? 'root',
+          id: file.id, name: file.name, data: xml, version,
+        });
+      }
+      return this.saveFileInternal(xml, file, 'application/xml');
+    }
     return this.saveFileInternal(xml, { ...file, name: drawingFileName(file.name, isCompressedDrawing(xml)) }, drawingMimeType(xml));
   }
 

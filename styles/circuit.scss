@@ -91,6 +91,75 @@
   overflow: hidden;
 }
 
+.project-file-tabs {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 8px;
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--colorNeutralStroke2);
+
+  > [role='tablist'] {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+  }
+}
+
+.project-document-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 8px;
+  overflow: auto;
+
+  > textarea {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    resize: none;
+    padding: 12px;
+    font: 14px/1.6 monospace;
+    color: var(--colorNeutralForeground1);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
+  }
+
+  &[hidden] { display: none; }
+}
+
+.project-metadata-fields {
+  display: grid;
+  gap: 12px;
+  max-width: 540px;
+  padding: 8px;
+
+  h2 { margin: 0; }
+  label { display: grid; gap: 4px; }
+  select { min-width: 0; }
+}
+
+.project-preview-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.project-asset-preview { text-align: center; }
+.project-asset-preview img, .project-asset-preview canvas {
+  display: block;
+  margin: 8px auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.project-markdown-preview { padding: 0 16px; overflow-wrap: anywhere; }
+.project-markdown-preview pre { overflow: auto; }
+.project-tab-error { padding: 0 8px; }
+
 .circuit-container {
   display: flex;
   flex-grow: 1;
@@ -143,17 +212,132 @@
   transition: none;
 }
 
-.left-panel-controls,
+.project-activity-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 42px;
+  padding: 4px;
+  border-right: 1px solid grey;
+}
+
+.git-activity-button {
+  position: relative;
+
+  > small {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    border-radius: 8px;
+    padding: 0 4px;
+    color: var(--colorNeutralForegroundOnBrand);
+    background: var(--colorBrandBackground);
+    pointer-events: none;
+  }
+}
+
+.project-source-control {
+  width: 100%;
+  min-width: 0;
+  overflow: auto;
+  padding: 8px;
+  overflow-wrap: anywhere;
+
+  h3 { margin: 12px 0 4px; }
+  ul { margin: 4px 0; padding: 0; list-style: none; }
+  li { padding: 4px 0; border-bottom: 1px solid var(--colorNeutralStroke2); }
+}
+
+.git-change, .git-history li { display: flex; flex-direction: column; align-items: flex-start; }
+.git-actions, .git-review-tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+.git-message { white-space: pre-wrap; }
+.git-merge-dialog {
+  max-width: min(1120px, calc(100vw - 32px));
+}
+
+.git-merge-versions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+
+  section {
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid var(--colorNeutralStroke2);
+  }
+
+  h3 { margin: 0 0 4px; }
+  pre {
+    max-height: 18vh;
+    overflow: auto;
+    margin: 8px 0 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}
+
+.git-merge-result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  textarea { min-height: 16vh; font-family: monospace; }
+}
+
+@media (max-width: 660px) {
+  .git-merge-versions { grid-template-columns: 1fr; }
+  .git-merge-versions pre { max-height: 10vh; }
+}
+
+.git-review-tabs { align-items: center; border-bottom: 1px solid var(--colorNeutralStroke2); }
+.git-diff-body { flex: 1; min-height: 0; overflow: auto; padding: 12px; }
+.git-diff-body pre { margin: 8px 0 20px; }
+.main-content-area[hidden] { display: none; }
+
+.project-design-pane {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.project-design-split {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 2px;
+  background: var(--colorNeutralStroke1);
+}
+
+.project-design-split > .project-design-pane {
+  border-block-start: 2px solid transparent;
+  background: var(--colorNeutralBackground1);
+}
+
+.project-design-split > [data-active-pane] {
+  border-block-start-color: var(--colorBrandStroke1);
+}
+
+@media (max-width: 900px) {
+  .project-design-split {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.side-panel-container[hidden] {
+  display: none;
+}
+
 .project-browser-toolbar,
 .project-browser-list li {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.left-panel-controls {
-  padding: 4px 8px;
-  border-bottom: 1px solid #d1d1d1;
 }
 
 .left-panel-section {
@@ -180,6 +364,12 @@
   min-width: 0;
   color: var(--colorNeutralForeground2);
   font-size: 11px;
+}
+
+.project-drop-target {
+  outline: 2px solid var(--colorBrandStroke1);
+  outline-offset: -2px;
+  background: var(--colorBrandBackground2);
 }
 
 .project-browser-toolbar > span,
@@ -324,4 +514,298 @@
   padding-left: 12px;
   overflow: auto;
   list-style: none;
+}
+
+.workspace-switcher {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid #d1d1d1;
+}
+
+.editor-toolbar {
+  position: relative;
+}
+
+.pcb-window-toolbar {
+  --pcb-toolbar-height: 42px;
+  padding-top: var(--pcb-toolbar-height);
+
+  .pcb-toolbar {
+    position: absolute;
+    inset: 0 0 auto;
+    height: var(--pcb-toolbar-height);
+    z-index: 2;
+
+    > .toolbar-container {
+      height: 100%;
+    }
+  }
+}
+
+.pcb-workspace {
+  min-width: 0;
+}
+
+.pcb-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+
+.pcb-document-status,
+.pcb-editor-message {
+  margin: 0;
+  padding: 0.25rem 0.75rem;
+}
+
+.pcb-editor-grid {
+  display: grid;
+  > p[role="alert"] { grid-area: 1 / 2 / 2 / 3; }
+  grid-template-rows: minmax(0, 1fr) auto;
+  flex: 1;
+  min-height: 11rem;
+}
+
+.pcb-editor-side {
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+}
+
+.pcb-footprints {
+  grid-area: 1 / 1 / 3 / 2;
+  border-right: 1px solid #d1d1d1;
+}
+
+.pcb-inspector {
+  grid-area: 1 / 3 / 3 / 4;
+  border-left: 1px solid #d1d1d1;
+}
+
+.pcb-panel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.5rem;
+}
+
+.pcb-properties {
+  grid-area: 2 / 2 / 3 / 3;
+  min-width: 0;
+}
+
+.pcb-properties-body {
+  display: grid;
+  grid-template-columns: minmax(100px, 27%) minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+
+  > :only-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.pcb-selection-properties {
+  border-left: 1px solid #d1d1d1;
+}
+
+.pcb-panel-heading,
+.pcb-footprints h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.875rem;
+}
+
+.pcb-inspector .fui-Button {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  min-height: 26px;
+  padding: 2px 8px;
+}
+
+.pcb-component-list {
+  margin: 0 0 0.4rem;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #d1d1d1;
+  border-radius: 4px;
+  background: white;
+
+  > li {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding-inline: 0.5rem;
+  }
+
+  > li + li {
+    border-top: 1px solid #e6e6e6;
+  }
+
+  button {
+    flex: 1;
+    justify-content: start;
+  }
+}
+
+.pcb-footprint-drag[draggable="true"] {
+  cursor: grab;
+}
+
+.pcb-library-choice {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.pcb-setup-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.pcb-editor-side[hidden],
+.pcb-properties[hidden] {
+  display: none;
+}
+
+.pcb-waypoint-entry {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+  margin-block: 0.4rem;
+
+  label {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+  }
+}
+
+.pcb-guide {
+  border-bottom: 1px solid var(--colorNeutralStroke2);
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.pcb-guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.pcb-profile-fields {
+  display: grid;
+  gap: 0.5rem;
+  label {
+    display: grid;
+    grid-template-columns: 12rem minmax(0, 1fr);
+    gap: 0.5rem;
+    align-items: center;
+  }
+}
+
+.pcb-profile-draft {
+  width: min(48rem, 92vw);
+  max-width: none;
+}
+
+.pcb-contour-preview {
+  display: block;
+  width: 100%;
+  height: min(16vh, 11rem);
+  background: #f4f5f3;
+  border: 1px solid #cfdbd7;
+}
+
+.pcb-contour-edges {
+  max-height: 36vh;
+  overflow: auto;
+}
+
+.pcb-profile-fields .pcb-contour-edge {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.8rem, 1fr));
+  align-items: end;
+  gap: 0.35rem 0.6rem;
+  min-width: 0;
+  margin: 0 0.1rem 0.45rem;
+  border: 1px solid #c9d5d0;
+
+  &[aria-invalid='true'] {
+    border-color: #b32623;
+  }
+
+  label {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
+
+  input, select {
+    min-width: 0;
+  }
+}
+
+.pcb-svg {
+  grid-area: 1 / 2 / 2 / 3;
+  min-height: 0;
+  overflow: hidden;
+  background: #f4f5f3;
+}
+
+.pcb-svg:focus-visible {
+  outline: 2px solid var(--colorBrandStroke1);
+  outline-offset: -2px;
+}
+
+.svg-viewport {
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+.svg-viewport-with-rulers {
+  grid-template: 20px minmax(0, 1fr) / minmax(0, 1fr) 20px;
+}
+
+.svg-viewport-drawing {
+  min-width: 0;
+  min-height: 0;
+
+  > svg {
+    display: block;
+  }
+}
+
+.svg-viewport-top-ruler,
+.svg-viewport-side-ruler {
+  overflow: hidden;
+}
+
+.svg-viewport-ruler-corner {
+  background: #e0e0e0;
+  border-bottom: 1px solid #999;
+  border-left: 1px solid #999;
+}
+
+.pcb-cam-preview {
+  height: min(40vh, 24rem);
+  margin-top: 0.5rem;
+}
+
+.pcb-3d-canvas {
+  height: min(55vh, 34rem);
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
 }

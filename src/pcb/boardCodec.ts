@@ -1,4 +1,5 @@
-import { digest } from '../util/sha256';
+import { readBoardModelAsset } from './boardModelAssets';
+export { createBoardModelAsset, readBoardModelAsset } from './boardModelAssets';
 import { boardFormat, validateBoard } from './board';
 import type { BoardDocument } from './board';
 import { circuitConnectivityDigest } from './circuitSnapshot';
@@ -17,14 +18,22 @@ import {
 import type { BoardProfile, ContourEdge } from './contours';
 import type { FootprintModel } from './footprintDetails';
 import type { PadStack } from './padstack';
+import { procurementFields } from './procurement';
 
 const maxBoardBytes = 128 * 1024 * 1024;
-const maxAssetBytes = 32 * 1024 * 1024;
 const maxTotalAssetBytes = 64 * 1024 * 1024;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true });
 
 const point = record({ x: 'integer', y: 'integer' });
+const routingRules = record({
+  minWidthNm: 'integer',
+  preferredWidthNm: 'integer',
+  maxWidthNm: 'integer',
+  clearanceNm: 'integer',
+  edgeClearanceNm: 'integer',
+  minViaAnnulusNm: 'integer',
+});
 const vector = record({ x: 'number', y: 'number', z: 'number' });
 const edge = record(
   { kind: 'string', clockwise: 'boolean' },
@@ -117,6 +126,10 @@ const footprint = record(
     ),
     graphics: list('GRAPHICS', 'GRAPHIC', graphic),
     models: list('MODELS', 'MODEL', model),
+    assembly: child('ASSEMBLY', record({}, {
+      marker: child('MARKER', record({ kind: 'string', padId: 'string' })),
+      notes: child('NOTES'),
+    })),
   },
 );
 const device = record(
@@ -157,6 +170,9 @@ const device = record(
     ),
   },
 );
+const procurement = child('PROCUREMENT', record(Object.fromEntries(
+  procurementFields.map(({ id }) => [id, 'string']),
+)));
 const component = record(
   {
     id: 'string',
@@ -167,6 +183,7 @@ const component = record(
     role: 'string',
   },
   {
+    procurement,
     units: list('UNITS', 'UNIT', record({ id: 'string', sheetId: 'string' })),
     signals: list(
       'SIGNALS',
@@ -182,6 +199,8 @@ const placement = record(
     componentId: 'string',
     side: 'string',
     locked: 'boolean',
+    positionLocked: 'boolean',
+    rotationLocked: 'boolean',
     rotationMicrodegree: ['integer', 'rotation'],
   },
   {
@@ -219,6 +238,7 @@ const appliedCircuit = record(
           packageHint: 'string',
         },
         {
+          procurement,
           units: list(
             'UNITS',
             'UNIT',
@@ -280,6 +300,8 @@ const boardXml = record(
       }),
     ),
     title: child('TITLE'),
+    releaseParent: child('RELEASEPARENT',
+      record({ id: 'string', revision: 'integer', boardSha256: 'string' })),
     requiredFeatures: list(
       'REQUIREDFEATURES',
       'REQUIREDFEATURE',
@@ -291,6 +313,16 @@ const boardXml = record(
       record({ id: 'string', order: 'integer' }),
     ),
     outline: list('OUTLINE', 'POINT', point),
+    annotations: child(
+      'ANNOTATIONS',
+      record({}, {
+        datum: child('DATUM', point),
+        dimensions: list('DIMENSIONS', 'DIMENSION', record(
+          { id: 'string', kind: 'string', offsetNm: 'integer', unit: 'string' },
+          { start: child('START', point), end: child('END', point), label: child('LABEL') },
+        )),
+      }),
+    ),
     profile: child(
       'PROFILE',
       record(
@@ -320,12 +352,23 @@ const boardXml = record(
       record({ id: 'string', role: 'string', side: 'string', name: 'string' }),
     ),
     components: list('COMPONENTDEFS', 'COMPONENTDEF', component),
+    netClasses: list('NETCLASSES', 'NETCLASS', record(
+      { id: 'string', name: 'string' },
+      { rules: child('CONSTRAINTS', routingRules) },
+    )),
+    clearanceRules: list('CLEARANCERULES', 'RULE', record({
+      id: 'string', name: 'string', clearanceNm: 'integer',
+      firstClass: 'string', firstKind: 'string', secondClass: 'string', secondKind: 'string',
+    })),
     nets: list(
       'NETS',
       'NET',
       record(
-        { id: 'string', name: 'string' },
-        { aliases: list('ALIASES', 'ALIAS') },
+        { id: 'string', name: 'string', classId: 'string' },
+        {
+          aliases: list('ALIASES', 'ALIAS'),
+          routingRules: child('CONSTRAINTS', routingRules),
+        },
       ),
     ),
     tracks: list(
@@ -338,6 +381,7 @@ const boardXml = record(
           layerId: 'string',
           widthNm: 'integer',
           reviewRequired: 'boolean',
+          locked: 'boolean',
         },
         { start: child('START', point), end: child('END', point) },
       ),
@@ -351,20 +395,111 @@ const boardXml = record(
           netId: 'string',
           diameterNm: 'integer',
           drillNm: 'integer',
+          tenting: 'string',
           reviewRequired: 'boolean',
+          locked: 'boolean',
         },
         { positionNm: child('POSITION', point) },
       ),
     ),
-    rules: child(
-      'RULES',
+    mechanicalHoles: list(
+      'MECHANICALHOLES',
+      'HOLE',
+      record(
+        {
+          id: 'string',
+          widthNm: 'integer',
+          plated: 'boolean',
+          landWidthNm: 'integer',
+          clearanceNm: 'integer',
+          screwHeadDiameterNm: 'integer',
+          screwHeadSide: 'string',
+          bodyClearanceNm: 'integer',
+        },
+        { start: child('START', point), end: child('END', point) },
+      ),
+    ),
+    zones: list(
+      'ZONES',
+      'ZONE',
+      record(
+        {
+          id: 'string',
+          netId: 'string',
+          layerId: 'string',
+          priority: 'integer',
+          clearanceNm: 'integer',
+          padConnection: 'string',
+          viaConnection: 'string',
+          spokeWidthNm: 'integer',
+          thermalGapNm: 'integer',
+          islands: 'string',
+        },
+        {
+          outline: list('OUTLINE', 'POINT', point),
+          cutouts: list(
+            'CUTOUTS',
+            'CUTOUT',
+            record({}, { outline: list('OUTLINE', 'POINT', point) }),
+          ),
+        },
+      ),
+    ),
+    jumpers: list(
+      'WIREJUMPERS',
+      'JUMPER',
+      record(
+        {
+          id: 'string',
+          reference: 'string',
+          netId: 'string',
+          fitted: 'boolean',
+          landWidthNm: 'integer',
+          drillNm: 'integer',
+        },
+        { start: child('START', point), end: child('END', point) },
+      ),
+    ),
+    placementAreas: list(
+      'PLACEMENTAREAS',
+      'AREA',
+      record(
+        { id: 'string', name: 'string', kind: 'string', side: 'string' },
+        { outline: list('OUTLINE', 'POINT', point) },
+      ),
+    ),
+    routingRegions: list('ROUTINGREGIONS', 'REGION', record(
+      { id: 'string', name: 'string', side: 'string', classId: 'string', minWidthNm: 'integer', maxWidthNm: 'integer',
+        clearanceNm: 'integer' },
+      { outline: list('OUTLINE', 'POINT', point), exclusions: list('EXCLUSIONS', 'KIND') },
+    )),
+    waivers: list(
+      'CHECKWAIVERS',
+      'WAIVER',
+      record(
+        { id: 'string', code: 'string', fingerprint: 'string' },
+        { reason: child('REASON') },
+      ),
+    ),
+    fabrication: child(
+      'FABRICATION',
       record({
-        minWidthNm: 'integer',
-        clearanceNm: 'integer',
-        edgeClearanceNm: 'integer',
-        minViaAnnulusNm: 'integer',
+        profileId: 'string', thicknessNm: 'integer',
+        thicknessToleranceNm: 'integer', outlineToleranceNm: 'integer',
+        platedOpeningToleranceNm: 'integer', nonPlatedOpeningToleranceNm: 'integer',
+      }, {
+        stackup: child('STACKUP', record({
+          dielectricThicknessNm: 'integer',
+          relativePermittivity: 'number',
+          lossTangent: 'number',
+          topCopperThicknessNm: 'integer',
+          bottomCopperThicknessNm: 'integer',
+        }, { substrateMaterial: child('MATERIAL') })),
+        surfaceFinish: child('SURFACEFINISH'),
+        notes: child('NOTES'),
       }),
     ),
+    rules: child('RULES', routingRules),
     padstacks: list('PADSTACKDEFS', 'PADSTACKDEF', stack),
     footprintDefinitions: list('FOOTPRINTDEFS', 'FOOTPRINTDEF', footprint),
     deviceDefinitions: list('DEVICEDEFS', 'DEVICEDEF', device),
@@ -397,53 +532,6 @@ async function validateStandalone(board: BoardDocument) {
     throw new Error(
       'Standalone PCB placements need embedded component definitions.',
     );
-}
-
-export async function createBoardModelAsset(
-  bytes: Uint8Array,
-  source: string,
-  license?: string,
-): Promise<BoardModelAsset> {
-  if (
-    !bytes.length ||
-    bytes.length > maxAssetBytes ||
-    !source?.trim() ||
-    (license !== undefined && !license.trim())
-  )
-    throw new Error('Invalid STEP asset size or provenance.');
-  const chunks: string[] = [];
-  for (let offset = 0; offset < bytes.length; offset += 24576)
-    chunks.push(
-      btoa(String.fromCharCode(...bytes.subarray(offset, offset + 24576))),
-    );
-  return {
-    id: await digest(bytes),
-    mediaType: 'model/step',
-    source,
-    ...(license === undefined ? {} : { license }),
-    base64: chunks.join(''),
-  };
-}
-
-export async function readBoardModelAsset(
-  asset: BoardModelAsset,
-): Promise<Uint8Array> {
-  const { base64 } = asset;
-  if (
-    typeof base64 !== 'string' ||
-    !base64.length ||
-    base64.length % 4 ||
-    base64.length > Math.ceil(maxAssetBytes / 3) * 4
-  )
-    throw new Error('Invalid STEP asset encoding or size.');
-  const raw = atob(base64);
-  if (raw.length > maxAssetBytes || btoa(raw) !== base64)
-    throw new Error('Invalid STEP asset encoding or size.');
-  const bytes = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-  if ((await digest(bytes)) !== asset.id)
-    throw new Error('STEP asset SHA-256 does not match its ID.');
-  return bytes;
 }
 
 async function verifyAssets(assets: readonly BoardModelAsset[] = []) {

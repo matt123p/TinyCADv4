@@ -7,6 +7,32 @@ export interface FootprintPad {
   readonly positionNm: BoardPoint;
 }
 
+/** Pair physical pad designators for review without transferring pad or signal identities. */
+export function pairFootprintPads<T extends FootprintPad>(before: readonly T[], after: readonly T[]) {
+  const uniqueLabels = (pads: readonly T[]) => {
+    const labels = new Map<string, T | null>();
+    for (const pad of pads) {
+      if (pad.label.trim()) labels.set(pad.label, labels.has(pad.label) ? null : pad);
+    }
+    return labels;
+  };
+  const oldLabels = uniqueLabels(before);
+  const newLabels = uniqueLabels(after);
+  const oldIds = new Set(before.map(({ id }) => id));
+  const newIds = new Map(after.map((pad) => [pad.id, pad]));
+  const paired = new Set<string>();
+  const rows: [T | undefined, T | undefined][] = before.map((old) => {
+    const candidate = oldLabels.get(old.label) && newLabels.get(old.label);
+    const next = newIds.get(old.id) ?? (candidate && !oldIds.has(candidate.id) ? candidate : undefined);
+    if (next) paired.add(next.id);
+    return [old, next];
+  });
+  for (const pad of after) {
+    if (!paired.has(pad.id)) rows.push([undefined, pad]);
+  }
+  return rows;
+}
+
 export type PadAssignment =
   | {
       readonly padId: string;

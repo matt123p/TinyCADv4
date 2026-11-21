@@ -1,5 +1,7 @@
 # Simulation reference
 
+Simulation follows the [shared TinyCAD editor design](tinycad-ui-design.md). Setup lives in the Simulation sheet, selected source and instrument properties appear in the bottom pane, and charts open in the resizable right pane.
+
 Choose **Simulation → Simulate** to add a Simulation sheet to the drawing. All schematic sheets form one circuit; each Simulation sheet owns its analysis, parameters, attached model text, signals, instructions and run history. Run/Stop are available from the sheet and the chart panel. Duplicate setup copies definitions without acquisitions.
 
 | Analysis | Use |

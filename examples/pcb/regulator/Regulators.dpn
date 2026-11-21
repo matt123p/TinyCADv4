@@ -1,0 +1,677 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TinyCADPCB version="1">
+  <DPNIDENTITY id="d4400000-0000-4000-8000-000000000001" revision="0"/>
+  <COORDINATES length_unit="nm" angle_unit="microdegree" frame="top-view-x-right-y-up-ccw"/>
+  <TITLE>Regulator copper reference</TITLE>
+  <REQUIREDFEATURES>
+    <REQUIREDFEATURE id="copper-zones"/>
+    <REQUIREDFEATURE id="embedded-devices"/>
+    <REQUIREDFEATURE id="fabrication-settings"/>
+    <REQUIREDFEATURE id="physical-padstacks"/>
+    <REQUIREDFEATURE id="routed-copper"/>
+    <REQUIREDFEATURE id="straight-outline"/>
+  </REQUIREDFEATURES>
+  <COPPERLAYERS>
+    <COPPERLAYER id="top" order="0"/>
+    <COPPERLAYER id="bottom" order="1"/>
+  </COPPERLAYERS>
+  <OUTLINE>
+    <POINT x="0" y="0"/>
+    <POINT x="40000000" y="0"/>
+    <POINT x="40000000" y="24000000"/>
+    <POINT x="0" y="24000000"/>
+  </OUTLINE>
+  <COMPONENTDEFS>
+    <COMPONENTDEF id="d4400000-0000-4000-8000-000000000112" ref="U1" value="AP2112K-3.3TRG1" device_id="16097705-05b0-836c-a082-e6ea1673b886" role="pcb-only">
+      <SIGNALS>
+        <BIND signal_id="4c76dd53-9d8b-8d4a-a032-c7a1a0d5c41f" net_id="d4400000-0000-4000-8000-000000000012"/>
+        <BIND signal_id="b356e777-2dfd-8648-accb-640e579acebe" net_id="d4400000-0000-4000-8000-000000000011"/>
+        <BIND signal_id="bbef8c70-a3ac-8243-a9e9-caec24272c86" net_id="d4400000-0000-4000-8000-000000000012"/>
+        <BIND signal_id="16166dee-7e22-88ec-a876-7c5ec793b8cc" net_id="d4400000-0000-4000-8000-000000000014"/>
+      </SIGNALS>
+    </COMPONENTDEF>
+    <COMPONENTDEF id="d4400000-0000-4000-8000-000000000132" ref="U2" value="TPS7A7002DDA" device_id="d33bf099-c525-8119-a382-ee3caa9ad5c8" role="pcb-only">
+      <SIGNALS>
+        <BIND signal_id="48c1cac9-b8b8-8d42-a132-5319a123f222" net_id="d4400000-0000-4000-8000-000000000013"/>
+        <BIND signal_id="fa98de14-fd53-8d05-a9c1-1bd1d4f91c6a" net_id="d4400000-0000-4000-8000-000000000013"/>
+        <BIND signal_id="9aa232cd-859f-8b1c-ac83-6db9d4bd9ef6" net_id="d4400000-0000-4000-8000-000000000015"/>
+        <BIND signal_id="b7bcbaa3-7dc9-81e3-aac2-6e9a75bf58bd" net_id="d4400000-0000-4000-8000-000000000016"/>
+        <BIND signal_id="eadbf62e-0e73-89d6-a1dd-0a62fedfac9f" net_id="d4400000-0000-4000-8000-000000000011"/>
+        <BIND signal_id="c4735f69-3d34-8200-a411-35a3aca137e2" net_id="d4400000-0000-4000-8000-000000000011"/>
+      </SIGNALS>
+    </COMPONENTDEF>
+  </COMPONENTDEFS>
+  <NETS>
+    <NET id="d4400000-0000-4000-8000-000000000011" name="GND"/>
+    <NET id="d4400000-0000-4000-8000-000000000012" name="AP2112 VIN"/>
+    <NET id="d4400000-0000-4000-8000-000000000013" name="TPS7A7002 IN"/>
+    <NET id="d4400000-0000-4000-8000-000000000014" name="AP2112 VOUT"/>
+    <NET id="d4400000-0000-4000-8000-000000000015" name="TPS7A7002 OUT"/>
+    <NET id="d4400000-0000-4000-8000-000000000016" name="TPS7A7002 FB"/>
+  </NETS>
+  <TRACKS>
+    <TRACK id="d4400000-0000-4000-8000-000000000030" net_id="d4400000-0000-4000-8000-000000000012" layer_id="top" width_nm="300000">
+      <START x="8800000" y="12950000"/>
+      <END x="4800000" y="12950000"/>
+    </TRACK>
+    <TRACK id="d4400000-0000-4000-8000-000000000031" net_id="d4400000-0000-4000-8000-000000000012" layer_id="top" width_nm="300000">
+      <START x="4800000" y="12950000"/>
+      <END x="4800000" y="11050000"/>
+    </TRACK>
+    <TRACK id="d4400000-0000-4000-8000-000000000032" net_id="d4400000-0000-4000-8000-000000000012" layer_id="top" width_nm="300000">
+      <START x="4800000" y="11050000"/>
+      <END x="8800000" y="11050000"/>
+    </TRACK>
+    <TRACK id="d4400000-0000-4000-8000-000000000033" net_id="d4400000-0000-4000-8000-000000000011" layer_id="top" width_nm="300000">
+      <START x="8800000" y="12000000"/>
+      <END x="6500000" y="12000000"/>
+    </TRACK>
+    <TRACK id="d4400000-0000-4000-8000-000000000034" net_id="d4400000-0000-4000-8000-000000000014" layer_id="top" width_nm="500000">
+      <START x="11200000" y="12950000"/>
+      <END x="15000000" y="12950000"/>
+    </TRACK>
+    <TRACK id="d4400000-0000-4000-8000-000000000035" net_id="d4400000-0000-4000-8000-000000000013" layer_id="top" width_nm="450000">
+      <START x="25300000" y="12635000"/>
+      <END x="22000000" y="12635000"/>
+    </TRACK>
+    <TRACK id="d4400000-0000-4000-8000-000000000036" net_id="d4400000-0000-4000-8000-000000000013" layer_id="top" width_nm="450000">
+      <START x="22000000" y="12635000"/>
+      <END x="22000000" y="11365000"/>
+    </TRACK>
+    <TRACK id="d4400000-0000-4000-8000-000000000037" net_id="d4400000-0000-4000-8000-000000000013" layer_id="top" width_nm="450000">
+      <START x="22000000" y="11365000"/>
+      <END x="25300000" y="11365000"/>
+    </TRACK>
+    <TRACK id="d4400000-0000-4000-8000-000000000038" net_id="d4400000-0000-4000-8000-000000000011" layer_id="top" width_nm="500000">
+      <START x="30700000" y="13905000"/>
+      <END x="34000000" y="13905000"/>
+    </TRACK>
+    <TRACK id="d4400000-0000-4000-8000-000000000039" net_id="d4400000-0000-4000-8000-000000000011" layer_id="top" width_nm="650000">
+      <START x="28000000" y="12000000"/>
+      <END x="28000000" y="8000000"/>
+    </TRACK>
+    <TRACK id="d4400000-0000-4000-8000-000000000040" net_id="d4400000-0000-4000-8000-000000000015" layer_id="top" width_nm="550000">
+      <START x="30700000" y="11365000"/>
+      <END x="35000000" y="11365000"/>
+    </TRACK>
+    <TRACK id="d4400000-0000-4000-8000-000000000041" net_id="d4400000-0000-4000-8000-000000000016" layer_id="top" width_nm="250000">
+      <START x="30700000" y="12635000"/>
+      <END x="33000000" y="12635000"/>
+    </TRACK>
+  </TRACKS>
+  <VIAS>
+    <VIA id="d4400000-0000-4000-8000-000000000021" net_id="d4400000-0000-4000-8000-000000000011" diameter_nm="1000000" drill_nm="300000">
+      <POSITION x="6500000" y="12000000"/>
+    </VIA>
+    <VIA id="d4400000-0000-4000-8000-000000000022" net_id="d4400000-0000-4000-8000-000000000011" diameter_nm="1000000" drill_nm="300000">
+      <POSITION x="34000000" y="13905000"/>
+    </VIA>
+    <VIA id="d4400000-0000-4000-8000-000000000023" net_id="d4400000-0000-4000-8000-000000000011" diameter_nm="1000000" drill_nm="300000">
+      <POSITION x="28000000" y="8000000"/>
+    </VIA>
+  </VIAS>
+  <ZONES>
+    <ZONE id="d4400000-0000-4000-8000-000000000020" net_id="d4400000-0000-4000-8000-000000000011" layer_id="bottom" priority="1" pad_connection="direct" via_connection="thermal" spoke_width_nm="300000" thermal_gap_nm="300000" islands="retain">
+      <OUTLINE>
+        <POINT x="2000000" y="2000000"/>
+        <POINT x="38000000" y="2000000"/>
+        <POINT x="38000000" y="22000000"/>
+        <POINT x="2000000" y="22000000"/>
+      </OUTLINE>
+      <CUTOUTS/>
+    </ZONE>
+  </ZONES>
+  <FABRICATION profile_id="classroom-v1" thickness_nm="1600000"/>
+  <PADSTACKDEFS>
+    <PADSTACKDEF id="1">
+      <COPPER>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="-400000" y="-225000"/>
+            <POINT x="-399635" y="-231027"/>
+            <POINT x="-398547" y="-236966"/>
+            <POINT x="-396751" y="-242730"/>
+            <POINT x="-394273" y="-248236"/>
+            <POINT x="-391149" y="-253403"/>
+            <POINT x="-387426" y="-258156"/>
+            <POINT x="-383156" y="-262426"/>
+            <POINT x="-378403" y="-266149"/>
+            <POINT x="-373236" y="-269273"/>
+            <POINT x="-367730" y="-271751"/>
+            <POINT x="-361966" y="-273547"/>
+            <POINT x="-356027" y="-274635"/>
+            <POINT x="-350000" y="-275000"/>
+            <POINT x="350000" y="-275000"/>
+            <POINT x="356027" y="-274635"/>
+            <POINT x="361966" y="-273547"/>
+            <POINT x="367730" y="-271751"/>
+            <POINT x="373236" y="-269273"/>
+            <POINT x="378403" y="-266149"/>
+            <POINT x="383156" y="-262426"/>
+            <POINT x="387426" y="-258156"/>
+            <POINT x="391149" y="-253403"/>
+            <POINT x="394273" y="-248236"/>
+            <POINT x="396751" y="-242730"/>
+            <POINT x="398547" y="-236966"/>
+            <POINT x="399635" y="-231027"/>
+            <POINT x="400000" y="-225000"/>
+            <POINT x="400000" y="225000"/>
+            <POINT x="399635" y="231027"/>
+            <POINT x="398547" y="236966"/>
+            <POINT x="396751" y="242730"/>
+            <POINT x="394273" y="248236"/>
+            <POINT x="391149" y="253403"/>
+            <POINT x="387426" y="258156"/>
+            <POINT x="383156" y="262426"/>
+            <POINT x="378403" y="266149"/>
+            <POINT x="373236" y="269273"/>
+            <POINT x="367730" y="271751"/>
+            <POINT x="361966" y="273547"/>
+            <POINT x="356027" y="274635"/>
+            <POINT x="350000" y="275000"/>
+            <POINT x="-350000" y="275000"/>
+            <POINT x="-356027" y="274635"/>
+            <POINT x="-361966" y="273547"/>
+            <POINT x="-367730" y="271751"/>
+            <POINT x="-373236" y="269273"/>
+            <POINT x="-378403" y="266149"/>
+            <POINT x="-383156" y="262426"/>
+            <POINT x="-387426" y="258156"/>
+            <POINT x="-391149" y="253403"/>
+            <POINT x="-394273" y="248236"/>
+            <POINT x="-396751" y="242730"/>
+            <POINT x="-398547" y="236966"/>
+            <POINT x="-399635" y="231027"/>
+            <POINT x="-400000" y="225000"/>
+          </VERTICES>
+        </TOP>
+      </COPPER>
+      <MASK>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="-400000" y="-225000"/>
+            <POINT x="-399635" y="-231027"/>
+            <POINT x="-398547" y="-236966"/>
+            <POINT x="-396751" y="-242730"/>
+            <POINT x="-394273" y="-248236"/>
+            <POINT x="-391149" y="-253403"/>
+            <POINT x="-387426" y="-258156"/>
+            <POINT x="-383156" y="-262426"/>
+            <POINT x="-378403" y="-266149"/>
+            <POINT x="-373236" y="-269273"/>
+            <POINT x="-367730" y="-271751"/>
+            <POINT x="-361966" y="-273547"/>
+            <POINT x="-356027" y="-274635"/>
+            <POINT x="-350000" y="-275000"/>
+            <POINT x="350000" y="-275000"/>
+            <POINT x="356027" y="-274635"/>
+            <POINT x="361966" y="-273547"/>
+            <POINT x="367730" y="-271751"/>
+            <POINT x="373236" y="-269273"/>
+            <POINT x="378403" y="-266149"/>
+            <POINT x="383156" y="-262426"/>
+            <POINT x="387426" y="-258156"/>
+            <POINT x="391149" y="-253403"/>
+            <POINT x="394273" y="-248236"/>
+            <POINT x="396751" y="-242730"/>
+            <POINT x="398547" y="-236966"/>
+            <POINT x="399635" y="-231027"/>
+            <POINT x="400000" y="-225000"/>
+            <POINT x="400000" y="225000"/>
+            <POINT x="399635" y="231027"/>
+            <POINT x="398547" y="236966"/>
+            <POINT x="396751" y="242730"/>
+            <POINT x="394273" y="248236"/>
+            <POINT x="391149" y="253403"/>
+            <POINT x="387426" y="258156"/>
+            <POINT x="383156" y="262426"/>
+            <POINT x="378403" y="266149"/>
+            <POINT x="373236" y="269273"/>
+            <POINT x="367730" y="271751"/>
+            <POINT x="361966" y="273547"/>
+            <POINT x="356027" y="274635"/>
+            <POINT x="350000" y="275000"/>
+            <POINT x="-350000" y="275000"/>
+            <POINT x="-356027" y="274635"/>
+            <POINT x="-361966" y="273547"/>
+            <POINT x="-367730" y="271751"/>
+            <POINT x="-373236" y="269273"/>
+            <POINT x="-378403" y="266149"/>
+            <POINT x="-383156" y="262426"/>
+            <POINT x="-387426" y="258156"/>
+            <POINT x="-391149" y="253403"/>
+            <POINT x="-394273" y="248236"/>
+            <POINT x="-396751" y="242730"/>
+            <POINT x="-398547" y="236966"/>
+            <POINT x="-399635" y="231027"/>
+            <POINT x="-400000" y="225000"/>
+          </VERTICES>
+        </TOP>
+      </MASK>
+      <PASTE>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="-400000" y="-225000"/>
+            <POINT x="-399635" y="-231027"/>
+            <POINT x="-398547" y="-236966"/>
+            <POINT x="-396751" y="-242730"/>
+            <POINT x="-394273" y="-248236"/>
+            <POINT x="-391149" y="-253403"/>
+            <POINT x="-387426" y="-258156"/>
+            <POINT x="-383156" y="-262426"/>
+            <POINT x="-378403" y="-266149"/>
+            <POINT x="-373236" y="-269273"/>
+            <POINT x="-367730" y="-271751"/>
+            <POINT x="-361966" y="-273547"/>
+            <POINT x="-356027" y="-274635"/>
+            <POINT x="-350000" y="-275000"/>
+            <POINT x="350000" y="-275000"/>
+            <POINT x="356027" y="-274635"/>
+            <POINT x="361966" y="-273547"/>
+            <POINT x="367730" y="-271751"/>
+            <POINT x="373236" y="-269273"/>
+            <POINT x="378403" y="-266149"/>
+            <POINT x="383156" y="-262426"/>
+            <POINT x="387426" y="-258156"/>
+            <POINT x="391149" y="-253403"/>
+            <POINT x="394273" y="-248236"/>
+            <POINT x="396751" y="-242730"/>
+            <POINT x="398547" y="-236966"/>
+            <POINT x="399635" y="-231027"/>
+            <POINT x="400000" y="-225000"/>
+            <POINT x="400000" y="225000"/>
+            <POINT x="399635" y="231027"/>
+            <POINT x="398547" y="236966"/>
+            <POINT x="396751" y="242730"/>
+            <POINT x="394273" y="248236"/>
+            <POINT x="391149" y="253403"/>
+            <POINT x="387426" y="258156"/>
+            <POINT x="383156" y="262426"/>
+            <POINT x="378403" y="266149"/>
+            <POINT x="373236" y="269273"/>
+            <POINT x="367730" y="271751"/>
+            <POINT x="361966" y="273547"/>
+            <POINT x="356027" y="274635"/>
+            <POINT x="350000" y="275000"/>
+            <POINT x="-350000" y="275000"/>
+            <POINT x="-356027" y="274635"/>
+            <POINT x="-361966" y="273547"/>
+            <POINT x="-367730" y="271751"/>
+            <POINT x="-373236" y="269273"/>
+            <POINT x="-378403" y="266149"/>
+            <POINT x="-383156" y="262426"/>
+            <POINT x="-387426" y="258156"/>
+            <POINT x="-391149" y="253403"/>
+            <POINT x="-394273" y="248236"/>
+            <POINT x="-396751" y="242730"/>
+            <POINT x="-398547" y="236966"/>
+            <POINT x="-399635" y="231027"/>
+            <POINT x="-400000" y="225000"/>
+          </VERTICES>
+        </TOP>
+      </PASTE>
+    </PADSTACKDEF>
+    <PADSTACKDEF id="2">
+      <COPPER>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="-775000" y="-250000"/>
+            <POINT x="-774635" y="-256027"/>
+            <POINT x="-773547" y="-261966"/>
+            <POINT x="-771751" y="-267730"/>
+            <POINT x="-769273" y="-273236"/>
+            <POINT x="-766149" y="-278403"/>
+            <POINT x="-762426" y="-283156"/>
+            <POINT x="-758156" y="-287426"/>
+            <POINT x="-753403" y="-291149"/>
+            <POINT x="-748236" y="-294273"/>
+            <POINT x="-742730" y="-296751"/>
+            <POINT x="-736966" y="-298547"/>
+            <POINT x="-731027" y="-299635"/>
+            <POINT x="-725000" y="-300000"/>
+            <POINT x="725000" y="-300000"/>
+            <POINT x="731027" y="-299635"/>
+            <POINT x="736966" y="-298547"/>
+            <POINT x="742730" y="-296751"/>
+            <POINT x="748236" y="-294273"/>
+            <POINT x="753403" y="-291149"/>
+            <POINT x="758156" y="-287426"/>
+            <POINT x="762426" y="-283156"/>
+            <POINT x="766149" y="-278403"/>
+            <POINT x="769273" y="-273236"/>
+            <POINT x="771751" y="-267730"/>
+            <POINT x="773547" y="-261966"/>
+            <POINT x="774635" y="-256027"/>
+            <POINT x="775000" y="-250000"/>
+            <POINT x="775000" y="250000"/>
+            <POINT x="774635" y="256027"/>
+            <POINT x="773547" y="261966"/>
+            <POINT x="771751" y="267730"/>
+            <POINT x="769273" y="273236"/>
+            <POINT x="766149" y="278403"/>
+            <POINT x="762426" y="283156"/>
+            <POINT x="758156" y="287426"/>
+            <POINT x="753403" y="291149"/>
+            <POINT x="748236" y="294273"/>
+            <POINT x="742730" y="296751"/>
+            <POINT x="736966" y="298547"/>
+            <POINT x="731027" y="299635"/>
+            <POINT x="725000" y="300000"/>
+            <POINT x="-725000" y="300000"/>
+            <POINT x="-731027" y="299635"/>
+            <POINT x="-736966" y="298547"/>
+            <POINT x="-742730" y="296751"/>
+            <POINT x="-748236" y="294273"/>
+            <POINT x="-753403" y="291149"/>
+            <POINT x="-758156" y="287426"/>
+            <POINT x="-762426" y="283156"/>
+            <POINT x="-766149" y="278403"/>
+            <POINT x="-769273" y="273236"/>
+            <POINT x="-771751" y="267730"/>
+            <POINT x="-773547" y="261966"/>
+            <POINT x="-774635" y="256027"/>
+            <POINT x="-775000" y="250000"/>
+          </VERTICES>
+        </TOP>
+      </COPPER>
+      <MASK>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="-775000" y="-250000"/>
+            <POINT x="-774635" y="-256027"/>
+            <POINT x="-773547" y="-261966"/>
+            <POINT x="-771751" y="-267730"/>
+            <POINT x="-769273" y="-273236"/>
+            <POINT x="-766149" y="-278403"/>
+            <POINT x="-762426" y="-283156"/>
+            <POINT x="-758156" y="-287426"/>
+            <POINT x="-753403" y="-291149"/>
+            <POINT x="-748236" y="-294273"/>
+            <POINT x="-742730" y="-296751"/>
+            <POINT x="-736966" y="-298547"/>
+            <POINT x="-731027" y="-299635"/>
+            <POINT x="-725000" y="-300000"/>
+            <POINT x="725000" y="-300000"/>
+            <POINT x="731027" y="-299635"/>
+            <POINT x="736966" y="-298547"/>
+            <POINT x="742730" y="-296751"/>
+            <POINT x="748236" y="-294273"/>
+            <POINT x="753403" y="-291149"/>
+            <POINT x="758156" y="-287426"/>
+            <POINT x="762426" y="-283156"/>
+            <POINT x="766149" y="-278403"/>
+            <POINT x="769273" y="-273236"/>
+            <POINT x="771751" y="-267730"/>
+            <POINT x="773547" y="-261966"/>
+            <POINT x="774635" y="-256027"/>
+            <POINT x="775000" y="-250000"/>
+            <POINT x="775000" y="250000"/>
+            <POINT x="774635" y="256027"/>
+            <POINT x="773547" y="261966"/>
+            <POINT x="771751" y="267730"/>
+            <POINT x="769273" y="273236"/>
+            <POINT x="766149" y="278403"/>
+            <POINT x="762426" y="283156"/>
+            <POINT x="758156" y="287426"/>
+            <POINT x="753403" y="291149"/>
+            <POINT x="748236" y="294273"/>
+            <POINT x="742730" y="296751"/>
+            <POINT x="736966" y="298547"/>
+            <POINT x="731027" y="299635"/>
+            <POINT x="725000" y="300000"/>
+            <POINT x="-725000" y="300000"/>
+            <POINT x="-731027" y="299635"/>
+            <POINT x="-736966" y="298547"/>
+            <POINT x="-742730" y="296751"/>
+            <POINT x="-748236" y="294273"/>
+            <POINT x="-753403" y="291149"/>
+            <POINT x="-758156" y="287426"/>
+            <POINT x="-762426" y="283156"/>
+            <POINT x="-766149" y="278403"/>
+            <POINT x="-769273" y="273236"/>
+            <POINT x="-771751" y="267730"/>
+            <POINT x="-773547" y="261966"/>
+            <POINT x="-774635" y="256027"/>
+            <POINT x="-775000" y="250000"/>
+          </VERTICES>
+        </TOP>
+      </MASK>
+      <PASTE>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="-775000" y="-250000"/>
+            <POINT x="-774635" y="-256027"/>
+            <POINT x="-773547" y="-261966"/>
+            <POINT x="-771751" y="-267730"/>
+            <POINT x="-769273" y="-273236"/>
+            <POINT x="-766149" y="-278403"/>
+            <POINT x="-762426" y="-283156"/>
+            <POINT x="-758156" y="-287426"/>
+            <POINT x="-753403" y="-291149"/>
+            <POINT x="-748236" y="-294273"/>
+            <POINT x="-742730" y="-296751"/>
+            <POINT x="-736966" y="-298547"/>
+            <POINT x="-731027" y="-299635"/>
+            <POINT x="-725000" y="-300000"/>
+            <POINT x="725000" y="-300000"/>
+            <POINT x="731027" y="-299635"/>
+            <POINT x="736966" y="-298547"/>
+            <POINT x="742730" y="-296751"/>
+            <POINT x="748236" y="-294273"/>
+            <POINT x="753403" y="-291149"/>
+            <POINT x="758156" y="-287426"/>
+            <POINT x="762426" y="-283156"/>
+            <POINT x="766149" y="-278403"/>
+            <POINT x="769273" y="-273236"/>
+            <POINT x="771751" y="-267730"/>
+            <POINT x="773547" y="-261966"/>
+            <POINT x="774635" y="-256027"/>
+            <POINT x="775000" y="-250000"/>
+            <POINT x="775000" y="250000"/>
+            <POINT x="774635" y="256027"/>
+            <POINT x="773547" y="261966"/>
+            <POINT x="771751" y="267730"/>
+            <POINT x="769273" y="273236"/>
+            <POINT x="766149" y="278403"/>
+            <POINT x="762426" y="283156"/>
+            <POINT x="758156" y="287426"/>
+            <POINT x="753403" y="291149"/>
+            <POINT x="748236" y="294273"/>
+            <POINT x="742730" y="296751"/>
+            <POINT x="736966" y="298547"/>
+            <POINT x="731027" y="299635"/>
+            <POINT x="725000" y="300000"/>
+            <POINT x="-725000" y="300000"/>
+            <POINT x="-731027" y="299635"/>
+            <POINT x="-736966" y="298547"/>
+            <POINT x="-742730" y="296751"/>
+            <POINT x="-748236" y="294273"/>
+            <POINT x="-753403" y="291149"/>
+            <POINT x="-758156" y="287426"/>
+            <POINT x="-762426" y="283156"/>
+            <POINT x="-766149" y="278403"/>
+            <POINT x="-769273" y="273236"/>
+            <POINT x="-771751" y="267730"/>
+            <POINT x="-773547" y="261966"/>
+            <POINT x="-774635" y="256027"/>
+            <POINT x="-775000" y="250000"/>
+          </VERTICES>
+        </TOP>
+      </PASTE>
+    </PADSTACKDEF>
+    <PADSTACKDEF id="3">
+      <COPPER>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="-1355000" y="-1700000"/>
+            <POINT x="1355000" y="-1700000"/>
+            <POINT x="1355000" y="1700000"/>
+            <POINT x="-1355000" y="1700000"/>
+          </VERTICES>
+        </TOP>
+      </COPPER>
+      <MASK>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="-1355000" y="-1700000"/>
+            <POINT x="1355000" y="-1700000"/>
+            <POINT x="1355000" y="1700000"/>
+            <POINT x="-1355000" y="1700000"/>
+          </VERTICES>
+        </TOP>
+      </MASK>
+      <PASTE>
+        <TOP kind="polygon">
+          <VERTICES>
+            <POINT x="-1355000" y="-1700000"/>
+            <POINT x="1355000" y="-1700000"/>
+            <POINT x="1355000" y="1700000"/>
+            <POINT x="-1355000" y="1700000"/>
+          </VERTICES>
+        </TOP>
+      </PASTE>
+    </PADSTACKDEF>
+  </PADSTACKDEFS>
+  <FOOTPRINTDEFS>
+    <FOOTPRINTDEF id="d4400000-0000-4000-8000-000000000100" revision="1" definition_digest="sha256:5933965375fadf71cc4f062ceb49b7b0d1fcf349fb31efe320d570422bc707d2" name="AP2112K · SOT25" datasheet="https://www.diodes.com/datasheet/download/AP2112.pdf">
+      <PADS>
+        <PAD id="d4400000-0000-4000-8000-000000000102" label="1" padstack_id="1">
+          <POSITION x="-1200000" y="950000"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000103" label="2" padstack_id="1">
+          <POSITION x="-1200000" y="0"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000104" label="3" padstack_id="1">
+          <POSITION x="-1200000" y="-950000"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000105" label="4" padstack_id="1">
+          <POSITION x="1200000" y="-950000"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000106" label="5" padstack_id="1">
+          <POSITION x="1200000" y="950000"/>
+        </PAD>
+      </PADS>
+      <GRAPHICS>
+        <GRAPHIC kind="polygon" layer="F.CrtYd" stroke_nm="50000" filled="false">
+          <POINTS>
+            <POINT x="-1900000" y="-1800000"/>
+            <POINT x="1900000" y="-1800000"/>
+            <POINT x="1900000" y="1800000"/>
+            <POINT x="-1900000" y="1800000"/>
+          </POINTS>
+        </GRAPHIC>
+      </GRAPHICS>
+      <ASSEMBLY>
+        <MARKER kind="pin-1" pad_id="d4400000-0000-4000-8000-000000000102"/>
+      </ASSEMBLY>
+    </FOOTPRINTDEF>
+    <FOOTPRINTDEF id="d4400000-0000-4000-8000-000000000120" revision="1" definition_digest="sha256:7b066fb86500fdeff935534e42737c130f749ee653440407f2fb0b8d0f789dbc" name="TPS7A7002 · DDA0008B" datasheet="https://www.ti.com/lit/ds/symlink/tps7a7002.pdf">
+      <PADS>
+        <PAD id="d4400000-0000-4000-8000-000000000122" label="1" padstack_id="2">
+          <POSITION x="-2700000" y="1905000"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000123" label="2" padstack_id="2">
+          <POSITION x="-2700000" y="635000"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000124" label="3" padstack_id="2">
+          <POSITION x="-2700000" y="-635000"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000125" label="4" padstack_id="2">
+          <POSITION x="-2700000" y="-1905000"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000126" label="5" padstack_id="2">
+          <POSITION x="2700000" y="-1905000"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000127" label="6" padstack_id="2">
+          <POSITION x="2700000" y="-635000"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000128" label="7" padstack_id="2">
+          <POSITION x="2700000" y="635000"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000129" label="8" padstack_id="2">
+          <POSITION x="2700000" y="1905000"/>
+        </PAD>
+        <PAD id="d4400000-0000-4000-8000-000000000130" label="9" padstack_id="3">
+          <POSITION x="0" y="0"/>
+        </PAD>
+      </PADS>
+      <GRAPHICS>
+        <GRAPHIC kind="polygon" layer="F.CrtYd" stroke_nm="50000" filled="false">
+          <POINTS>
+            <POINT x="-3800000" y="-2750000"/>
+            <POINT x="3800000" y="-2750000"/>
+            <POINT x="3800000" y="2750000"/>
+            <POINT x="-3800000" y="2750000"/>
+          </POINTS>
+        </GRAPHIC>
+      </GRAPHICS>
+      <ASSEMBLY>
+        <MARKER kind="pin-1" pad_id="d4400000-0000-4000-8000-000000000122"/>
+      </ASSEMBLY>
+    </FOOTPRINTDEF>
+  </FOOTPRINTDEFS>
+  <DEVICEDEFS>
+    <DEVICEDEF id="16097705-05b0-836c-a082-e6ea1673b886" revision="1" definition_digest="sha256:c2eb1aed3011acba176783d5c8c9557740359dfcfe2acdf65ea0b32d410d7b36" package_name="AP2112K · SOT25" package_source="Diodes Incorporated DS39724 Rev. 2-2, SOT25 suggested pad layout." footprint_id="d4400000-0000-4000-8000-000000000100">
+      <SIGNALS>
+        <SIGNAL>4c76dd53-9d8b-8d4a-a032-c7a1a0d5c41f</SIGNAL>
+        <SIGNAL>b356e777-2dfd-8648-accb-640e579acebe</SIGNAL>
+        <SIGNAL>bbef8c70-a3ac-8243-a9e9-caec24272c86</SIGNAL>
+        <SIGNAL>16166dee-7e22-88ec-a876-7c5ec793b8cc</SIGNAL>
+      </SIGNALS>
+      <ASSIGNMENTS>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000102" kind="signal" signal_id="4c76dd53-9d8b-8d4a-a032-c7a1a0d5c41f"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000103" kind="signal" signal_id="b356e777-2dfd-8648-accb-640e579acebe"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000104" kind="signal" signal_id="bbef8c70-a3ac-8243-a9e9-caec24272c86"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000105" kind="nc"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000106" kind="signal" signal_id="16166dee-7e22-88ec-a876-7c5ec793b8cc"/>
+      </ASSIGNMENTS>
+      <LIBRARYSOURCE id="16097705-05b0-836c-a082-e6ea1673b886" digest="sha256:e0d2069d5419673e6517d8671c09c4c9c836b202870f99b23233c7714d87628a" footprint_id="d4400000-0000-4000-8000-000000000100" evidence="SOT25 top view and pin table. Land sizes and 0.95 mm pitch follow page 14." reviewer="TinyCAD reference fixture" license="CC0-1.0">
+        <BINDINGS>
+          <BIND terminal_id="4c76dd53-9d8b-8d4a-a032-c7a1a0d5c41f" signal_id="4c76dd53-9d8b-8d4a-a032-c7a1a0d5c41f"/>
+          <BIND terminal_id="b356e777-2dfd-8648-accb-640e579acebe" signal_id="b356e777-2dfd-8648-accb-640e579acebe"/>
+          <BIND terminal_id="bbef8c70-a3ac-8243-a9e9-caec24272c86" signal_id="bbef8c70-a3ac-8243-a9e9-caec24272c86"/>
+          <BIND terminal_id="16166dee-7e22-88ec-a876-7c5ec793b8cc" signal_id="16166dee-7e22-88ec-a876-7c5ec793b8cc"/>
+        </BINDINGS>
+      </LIBRARYSOURCE>
+    </DEVICEDEF>
+    <DEVICEDEF id="d33bf099-c525-8119-a382-ee3caa9ad5c8" revision="1" definition_digest="sha256:9ef7c29895884faa5163d14e7977a5bf6f310882348896ad5b4f35018804f262" package_name="TPS7A7002 · DDA0008B" package_source="TI SBVS209D and DDA0008B package drawing 4214849/B, example PCB and stencil." footprint_id="d4400000-0000-4000-8000-000000000120">
+      <SIGNALS>
+        <SIGNAL>48c1cac9-b8b8-8d42-a132-5319a123f222</SIGNAL>
+        <SIGNAL>fa98de14-fd53-8d05-a9c1-1bd1d4f91c6a</SIGNAL>
+        <SIGNAL>9aa232cd-859f-8b1c-ac83-6db9d4bd9ef6</SIGNAL>
+        <SIGNAL>b7bcbaa3-7dc9-81e3-aac2-6e9a75bf58bd</SIGNAL>
+        <SIGNAL>eadbf62e-0e73-89d6-a1dd-0a62fedfac9f</SIGNAL>
+        <SIGNAL>c4735f69-3d34-8200-a411-35a3aca137e2</SIGNAL>
+      </SIGNALS>
+      <ASSIGNMENTS>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000122" kind="nc"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000123" kind="signal" signal_id="48c1cac9-b8b8-8d42-a132-5319a123f222"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000124" kind="signal" signal_id="fa98de14-fd53-8d05-a9c1-1bd1d4f91c6a"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000125" kind="nc"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000126" kind="nc"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000127" kind="signal" signal_id="9aa232cd-859f-8b1c-ac83-6db9d4bd9ef6"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000128" kind="signal" signal_id="b7bcbaa3-7dc9-81e3-aac2-6e9a75bf58bd"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000129" kind="signal" signal_id="eadbf62e-0e73-89d6-a1dd-0a62fedfac9f"/>
+        <ASSIGN pad_id="d4400000-0000-4000-8000-000000000130" kind="signal" signal_id="c4735f69-3d34-8200-a411-35a3aca137e2"/>
+      </ASSIGNMENTS>
+      <LIBRARYSOURCE id="d33bf099-c525-8119-a382-ee3caa9ad5c8" digest="sha256:492173cf41d68334c2b9c1d6f6d947e7afcaf5848ed11541313b2c443c32c41d" footprint_id="d4400000-0000-4000-8000-000000000120" evidence="DDA pin table and top view. Pad 9 PowerPAD has its own terminal and connects to ground." reviewer="TinyCAD reference fixture" license="CC0-1.0">
+        <BINDINGS>
+          <BIND terminal_id="48c1cac9-b8b8-8d42-a132-5319a123f222" signal_id="48c1cac9-b8b8-8d42-a132-5319a123f222"/>
+          <BIND terminal_id="fa98de14-fd53-8d05-a9c1-1bd1d4f91c6a" signal_id="fa98de14-fd53-8d05-a9c1-1bd1d4f91c6a"/>
+          <BIND terminal_id="9aa232cd-859f-8b1c-ac83-6db9d4bd9ef6" signal_id="9aa232cd-859f-8b1c-ac83-6db9d4bd9ef6"/>
+          <BIND terminal_id="b7bcbaa3-7dc9-81e3-aac2-6e9a75bf58bd" signal_id="b7bcbaa3-7dc9-81e3-aac2-6e9a75bf58bd"/>
+          <BIND terminal_id="eadbf62e-0e73-89d6-a1dd-0a62fedfac9f" signal_id="eadbf62e-0e73-89d6-a1dd-0a62fedfac9f"/>
+          <BIND terminal_id="c4735f69-3d34-8200-a411-35a3aca137e2" signal_id="c4735f69-3d34-8200-a411-35a3aca137e2"/>
+        </BINDINGS>
+      </LIBRARYSOURCE>
+    </DEVICEDEF>
+  </DEVICEDEFS>
+  <FOOTPRINTS>
+    <FOOTPRINT id="d4400000-0000-4000-8000-000000000113" device_id="16097705-05b0-836c-a082-e6ea1673b886" component_id="d4400000-0000-4000-8000-000000000112" side="top" locked="false" rotation="0">
+      <POSITION x="10000000" y="12000000"/>
+    </FOOTPRINT>
+    <FOOTPRINT id="d4400000-0000-4000-8000-000000000133" device_id="d33bf099-c525-8119-a382-ee3caa9ad5c8" component_id="d4400000-0000-4000-8000-000000000132" side="top" locked="false" rotation="0">
+      <POSITION x="28000000" y="12000000"/>
+    </FOOTPRINT>
+  </FOOTPRINTS>
+</TinyCADPCB>

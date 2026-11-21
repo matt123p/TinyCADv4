@@ -137,6 +137,7 @@ export function placeDevice(
     kind: 'mask' | 'paste';
     side: Side;
     polygon: Polygon;
+    landId?: string;
   }[] = [];
   for (const pad of device.pads) {
     if (!isBoardPoint(pad.positionNm) || !pad.id || pad.id.includes('/'))
@@ -172,11 +173,18 @@ export function placeDevice(
       const layer =
         placement.side === 'top' ? side : side === 'top' ? 'bottom' : 'top';
       const shape = pad.stack.copper[side];
-      if (shape && layerIds.includes(layer)) {
+      const landId = shape && layerIds.includes(layer) ? `${padId}:${layer}` : undefined;
+      if (landId) {
         const land: CopperFeature = {
-          id: `${padId}:${layer}`,
+          id: landId,
           layerId: layer,
           kind: 'pad',
+          anchor: shape.kind === 'capsule'
+            ? transform({
+                x: Math.round((shape.start.x + shape.end.x) / 2),
+                y: Math.round((shape.start.y + shape.end.y) / 2),
+              })
+            : transform({ x: 0, y: 0 }),
           region: { outer: flatten(shape), holes: [] },
         };
         copper.push(
@@ -194,6 +202,7 @@ export function placeDevice(
             kind,
             side: layer,
             polygon: flatten(aperture),
+            ...(landId ? { landId } : {}),
           });
       }
     }

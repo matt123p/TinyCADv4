@@ -1,3 +1,4 @@
+import type { GitRequest, GitResult } from './projectGit';
 import {
   MAX_PROJECT_FILE_BYTES,
   PROJECT_FILE_EXTENSION,
@@ -6,9 +7,19 @@ import {
   validProjectName,
 } from '../../shared/projectFiles';
 
+export const projectRootChanged = 'tinycad:project-root-changed';
+export const projectFilesChanged = 'tinycad:project-files-changed';
+export const projectFolderOpened = 'tinycad:project-folder-opened';
+
 export interface ProjectLocation {
   id: string;
   name: string;
+}
+
+declare global {
+  interface WindowEventMap {
+    'tinycad:project-folder-opened': CustomEvent<ProjectLocation>;
+  }
 }
 
 export interface ProjectItem extends ProjectLocation {
@@ -42,6 +53,12 @@ export interface OpenProjectDrawing extends ProjectFile {
 
 export type ProjectStorageRequest =
   | { operation: 'root' }
+  | { operation: 'git-clone'; source: string; name: string }
+  | { operation: 'git'; folder: string; request: GitRequest }
+  | { operation: 'choose-project-folder' }
+  | { operation: 'recent-project-folder' }
+  | { operation: 'open-launch' }
+  | { operation: 'activate-launch'; ticket: string }
   | { operation: 'choose'; containProject?: string }
   | { operation: 'list'; folder: string; tree?: boolean }
   | { operation: 'read' | 'fingerprint'; id: string }
@@ -61,12 +78,24 @@ export type ProjectStorageRequest =
       folder: string;
       name: string;
       data: Uint8Array;
+      mediaType?: string;
       id?: string;
       version?: string;
     };
 
 export interface ProjectStorageResult {
   root: ProjectLocation;
+  'git-clone': ProjectLocation | null;
+  git: GitResult[keyof GitResult];
+  'open-launch': {
+    ticket: string;
+    root: ProjectLocation;
+    marker: ProjectLocation;
+    data: Uint8Array;
+  } | null;
+  'activate-launch': ProjectLocation;
+  'choose-project-folder': ProjectLocation | null;
+  'recent-project-folder': ProjectLocation | null;
   choose: ProjectLocation | null;
   list: ProjectItem[];
   read: { data: Uint8Array; version: string };
@@ -244,8 +273,12 @@ export async function driveProjectFiles(
           );
       }
       const mimeType =
-        isProjectFile(request.name) || /\.dsn$/i.test(request.name)
+        isProjectFile(request.name) || /\.d[sp]n$/i.test(request.name)
           ? 'application/xml'
+          : /^(?:image|text)\/[\w.+-]+$|^application\/pdf$/i.test(
+              request.mediaType ?? '',
+            )
+          ? request.mediaType
           : 'application/octet-stream';
       const metadata = {
         name: request.name,

@@ -187,6 +187,7 @@ export async function previewCircuitEco(
   for (const [id, part] of physical) {
     const prior = oldComponents.get(id);
     const pcb = existing.get(id);
+    const { procurement: oldProcurement, ...previousBoardPart } = pcb ?? {};
     const { device } = boardComponentDevice(board, id);
     const version = [part.signals.map(({ id }) => id), device?.signalIds ?? []];
     if (
@@ -237,6 +238,8 @@ export async function previewCircuitEco(
             ? ['Reference designator']
             : []),
           ...(part.value !== (pcb.value ?? prior?.value) ? ['Value'] : []),
+          ...(canonicalDeviceJson(part.procurement) !== canonicalDeviceJson(oldProcurement)
+            ? ['Purchasing details'] : []),
           ...(part.role !== (pcb.role ?? prior?.role) ? ['Physical role'] : []),
           ...(part.packageHint !== prior?.packageHint ? ['Package hint'] : []),
           ...(canonicalDeviceJson(signals) !==
@@ -254,7 +257,7 @@ export async function previewCircuitEco(
         lostPads: [],
       });
     components.push({
-      ...pcb,
+      ...previousBoardPart,
       id:
         pcb?.id ??
         (boardOnlyIds.has(id)
@@ -263,6 +266,7 @@ export async function previewCircuitEco(
       logicalId: id,
       reference,
       value: part.value,
+      ...(part.procurement ? { procurement: part.procurement } : {}),
       role: part.role as BoardComponent['role'],
       units: part.units,
       signals,
@@ -348,6 +352,7 @@ export async function previewCircuitEco(
     candidate: copper.candidate,
     affectedCopper: copper.affected,
     shorts: copper.shorts,
+    opens: copper.opens,
     changes,
     netReview,
     renamedNets,

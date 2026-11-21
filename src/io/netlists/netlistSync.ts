@@ -6,7 +6,7 @@ import { docDrawing } from '../../state/undo/undo';
 import { wkrInitNetlist, wkrUpdateNetlistSheets } from '../../web-worker/worker';
 import { actionStampWireNetTypes } from '../../state/dispatcher/AppDispatcher';
 import { hasChildPlacements } from '../hierarchyDrawing';
-import { projectFilesChanged } from '../projects';
+import { projectFilesChanged } from '../projectStorage';
 import { generateActiveNetlist } from './activeNetlist';
 
 const netlistDebug = process.env.NODE_ENV === 'development';
@@ -278,7 +278,7 @@ export function initializeNetlistSync(store: Store) {
     requestSyncWhenIdle();
   });
 
-  window.addEventListener(projectFilesChanged, () => {
+  globalThis.addEventListener?.(projectFilesChanged, () => {
     projectRevision++;
     requestSyncWhenIdle();
   });

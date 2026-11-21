@@ -202,7 +202,7 @@ function writePCB(netlist: NetlistData) {
 
 
 
-export function downloadNetlist(
+export function serializeNetlist(
   filename: string,
   file_type: string,
   netlist: NetlistData,
@@ -243,6 +243,14 @@ export function downloadNetlist(
   txt = txt.replaceAll('\n', '\r\n');
   filename = filename.replace(/\.[^/.]+$/, '') + ext;
 
-  var blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
-  saveAs(blob, filename);
+  return { filename, text: txt };
+}
+
+export function downloadNetlist(
+  name: string,
+  format: string,
+  netlist: NetlistData,
+) {
+  const { filename, text } = serializeNetlist(name, format, netlist);
+  saveAs(new Blob([text], { type: 'text/plain;charset=utf-8' }), filename);
 }

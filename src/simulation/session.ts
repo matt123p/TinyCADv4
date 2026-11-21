@@ -1,3 +1,4 @@
+import { registerSimulationLifecycle } from './lifecycle';
 import { hasChildPlacements } from '../io/hierarchyDrawing';
 import { checkSpiceComponents, locateSpiceErrors } from './diagnostics';
 import { NetlistData } from '../io/netlists/netlistGenerator';
@@ -81,6 +82,11 @@ function publish() {
 export function stopSimulation() {
   active?.stop();
 }
+
+registerSimulationLifecycle({
+  invalidate: invalidateSimulationDocument,
+  stop: stopSimulation,
+});
 
 export async function runSimulation(
   drawing: dsnDrawing,

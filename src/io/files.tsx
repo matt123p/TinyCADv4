@@ -1,3 +1,5 @@
+import { bomCsv } from './bomCsv';
+import { boardHistoryCommand, boardZoomCommand, circuitOpened, saveActiveBoard } from './boardWorkspaceEvents';
 import { generateActiveBom, generateActiveNetlist } from './netlists/activeNetlist';
 import { apiServer, tinycadUrl } from './apiServer';
 import { withoutResults } from '../simulation/document';
@@ -58,7 +60,7 @@ export interface UserManager {
   projectFiles?(request: ProjectStorageRequest): Promise<unknown>;
   initialize(dispatch: Dispatch): Promise<void>;
   fileOpen(dispatch: Dispatch, file?: CurrentFile): void;
-  saveFile(xml: string | Uint8Array, file: CurrentFile): Promise<any>;
+  saveFile(xml: string | Uint8Array, file: CurrentFile, expectedVersion?: string): Promise<any>;
   login(): Promise<void>;
   renameFile(title: string, fileId: FileIdType): Promise<boolean>;
   loadLibrary(
@@ -115,6 +117,7 @@ export function performPendingAction(pendingAction: UnsavedAction) {
       case 'file-new':
         // Create a new blank drawing and reset file data
         dispatch(actionSetDocument(blank(), 'tCad1.dsn', null, null));
+        window.dispatchEvent(new Event(circuitOpened));
         dispatch(ActionCreators.clearHistory());
         break;
       case 'file-open':
@@ -135,8 +138,10 @@ export function performPendingAction(pendingAction: UnsavedAction) {
 export function fileOpenProject(pendingAction: OpenProjectAction) {
   return (dispatch: Dispatch, getState: () => docDrawing) => {
     if (getState().altStore.saveInProgress) return;
-    if (checkSaveNeeded(getState)) dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
-    else dispatch(performPendingAction(pendingAction) as any);
+    const state = getState();
+    if (checkSaveNeeded(getState) && !(state.schematicTabs?.enabled && state.altStore.file.project))
+      dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
+    else return dispatch(performPendingAction(pendingAction) as any);
   };
 }
 
@@ -171,10 +176,16 @@ export function fileOpen(file?: CurrentFile) {
 }
 
 export function fileSave(dispatch: Dispatch, getState: { (): docDrawing }) {
+  if (!window.dispatchEvent(new CustomEvent(saveActiveBoard, { cancelable: true, detail: false }))) return;
+  return internalfileSave(dispatch, getState, false);
+}
+
+export function saveSchematicFile(dispatch: Dispatch, getState: () => docDrawing) {
   return internalfileSave(dispatch, getState, false);
 }
 
 export function fileSaveAs(dispatch: Dispatch, getState: { (): docDrawing }) {
+  if (!window.dispatchEvent(new CustomEvent(saveActiveBoard, { cancelable: true, detail: true }))) return;
   return internalfileSave(dispatch, getState, true);
 }
 
@@ -224,7 +235,7 @@ function internalfileSave(
 
   dispatch(actionSetSaveInProgress(true, null));
 
-  wkrGenerateNetlist(drawing)
+  return wkrGenerateNetlist(drawing)
     .then((netlist) => {
       const io = new ioXML();
       const update_drawing = new updateDrawing();
@@ -329,13 +340,7 @@ export function downloadBom(dispatch: Dispatch, getState: { (): docDrawing }) {
   let filename = getState().altStore.file.name;
   filename = filename.replace(/\.[^/.]+$/, '') + '.csv';
 
-  let txt =
-    'Reference,Quantity,Name\r\n' +
-    bom
-      .map(
-        (be) => `\"${be.References.join(',')}\",${be.Quantity},\"${be.Name}\"`,
-      )
-      .join('\r\n');
+  const txt = bomCsv(bom);
 
   var blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
   saveAs(blob, filename);
@@ -947,10 +952,12 @@ export function handleMenuCommand(command: string) {
         break;
       // Edit
       case 'edit-undo':
-        dispatch(ActionCreators.undo());
+        if (window.dispatchEvent(new CustomEvent(boardHistoryCommand, { cancelable: true, detail: 'undo' })))
+          dispatch(ActionCreators.undo());
         break;
       case 'edit-redo':
-        dispatch(ActionCreators.redo());
+        if (window.dispatchEvent(new CustomEvent(boardHistoryCommand, { cancelable: true, detail: 'redo' })))
+          dispatch(ActionCreators.redo());
         break;
       case 'edit-rotate-left':
         dispatch(actionCommand('rotate_left'));
@@ -976,11 +983,12 @@ export function handleMenuCommand(command: string) {
         }
         break;
       case 'view-zoom-in':
-        dispatch(actionCommand('zoom_in'));
+      case 'view-zoom-out': {
+        const zoomIn = command === 'view-zoom-in';
+        const event = new CustomEvent(boardZoomCommand, { cancelable: true, detail: zoomIn ? 'in' : 'out' });
+        if (window.dispatchEvent(event)) dispatch(actionCommand(zoomIn ? 'zoom_in' : 'zoom_out'));
         break;
-      case 'view-zoom-out':
-        dispatch(actionCommand('zoom_out'));
-        break;
+      }
       // Tools
       case 'tools-auto-layout': {
         const present = state.docStore.present;

@@ -1,32 +1,8 @@
 import React from 'react';
 import type { FootprintGraphic } from '../../pcb/footprintDetails';
+import { footprintArc } from '../../pcb/footprintArc';
+import { footprintTextStrokes } from '../../pcb/footprintText';
 import type { BoardPoint } from '../../pcb/geometry';
-
-function arc(item: Extract<FootprintGraphic, { kind: 'arc' }>) {
-  const { start: a, mid: b, end: c } = item;
-  const bx = b.x - a.x;
-  const by = b.y - a.y;
-  const cx = c.x - a.x;
-  const cy = c.y - a.y;
-  const cross = bx * cy - by * cx;
-  if (cross === 0) return undefined;
-  const b2 = bx * bx + by * by;
-  const c2 = cx * cx + cy * cy;
-  const center = {
-    x: a.x + (b2 * cy - c2 * by) / (2 * cross),
-    y: a.y + (bx * c2 - cx * b2) / (2 * cross),
-  };
-  const angle = (p: BoardPoint) => Math.atan2(p.y - center.y, p.x - center.x);
-  const tau = Math.PI * 2;
-  const direction = cross > 0 ? 1 : -1;
-  const sweep = (direction * (angle(c) - angle(a)) + tau) % tau;
-  return {
-    center,
-    radius: Math.hypot(a.x - center.x, a.y - center.y),
-    large: sweep > Math.PI ? 1 : 0,
-    clockwise: direction < 0 ? 1 : 0,
-  };
-}
 
 export function artworkBounds(item: FootprintGraphic): readonly BoardPoint[] {
   switch (item.kind) {
@@ -35,8 +11,19 @@ export function artworkBounds(item: FootprintGraphic): readonly BoardPoint[] {
     case 'line':
     case 'rect':
       return [item.start, item.end];
-    case 'text':
-      return [item.at];
+    case 'text': {
+      try {
+        const half = item.strokeNm / 2;
+        return footprintTextStrokes(item).flatMap((stroke) =>
+          stroke.flatMap(({ x, y }) => [
+            { x: x - half, y: y - half },
+            { x: x + half, y: y + half },
+          ]),
+        );
+      } catch {
+        return [item.at];
+      }
+    }
     case 'circle': {
       const radius = Math.hypot(
         item.end.x - item.center.x,
@@ -48,7 +35,7 @@ export function artworkBounds(item: FootprintGraphic): readonly BoardPoint[] {
       ];
     }
     case 'arc': {
-      const shape = arc(item);
+      const shape = footprintArc(item);
       return shape
         ? [
             {
@@ -65,8 +52,10 @@ export function artworkBounds(item: FootprintGraphic): readonly BoardPoint[] {
   }
 }
 
-export function FootprintArtwork({ item }: { item: FootprintGraphic }) {
-  const color = item.layer.endsWith('CrtYd')
+export function FootprintArtwork({ item, highlighted }: { item: FootprintGraphic; highlighted?: boolean }) {
+  const color = highlighted
+    ? '#b34b27'
+    : item.layer.endsWith('CrtYd')
     ? '#8a3e8b'
     : item.layer.endsWith('Fab')
     ? '#686e75'
@@ -114,7 +103,7 @@ export function FootprintArtwork({ item }: { item: FootprintGraphic }) {
         />
       );
     case 'arc': {
-      const shape = arc(item);
+      const shape = footprintArc(item);
       const path = shape
         ? `M ${item.start.x} ${-item.start.y} A ${shape.radius} ${
             shape.radius
@@ -123,26 +112,37 @@ export function FootprintArtwork({ item }: { item: FootprintGraphic }) {
             .y} L ${item.end.x} ${-item.end.y}`;
       return <path d={path} {...style} fill="none" />;
     }
-    case 'text':
-      return item.visible ? (
-        <text
-          x={item.at.x}
-          y={-item.at.y}
-          fill={color}
-          fontSize={item.sizeNm.y}
-          textAnchor={
-            item.align.includes('left')
-              ? 'start'
-              : item.align.includes('right')
-              ? 'end'
-              : 'middle'
-          }
-          transform={`rotate(${-item.rotationMicrodegree / 1_000_000} ${
-            item.at.x
-          } ${-item.at.y})`}
-        >
-          {item.text}
-        </text>
-      ) : null;
+    case 'text': {
+      try {
+        const strokes = footprintTextStrokes(item);
+        if (!strokes.length) return null;
+        const path = strokes
+          .map(
+            (stroke) =>
+              'M ' + stroke.map(({ x, y }) => x + ',' + -y).join(' L '),
+          )
+          .join(' ');
+        return (
+          <path
+            d={path}
+            stroke={color}
+            strokeWidth={item.strokeNm}
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <title>{item.text}</title>
+          </path>
+        );
+      } catch (error) {
+        return (
+          <g>
+            <title>
+              {error instanceof Error ? error.message : String(error)}
+            </title>
+          </g>
+        );
+      }
+    }
   }
 }

@@ -870,6 +870,7 @@ export class ioXML {
           if (item.hierarchy) {
             a.file = item.hierarchy.path;
             if (item.hierarchy.documentId) a.child_uuid = item.hierarchy.documentId;
+            if (item.hierarchy.boardInstance) a.board_uuid = item.hierarchy.boardInstance.boardId;
             if (!item.hierarchy.cached) delete a.id;
           }
           o = root.appendChild(item.hierarchy ? 'HIERARCHICAL_SYMBOL' : 'SYMBOL', null, a);
@@ -887,6 +888,9 @@ export class ioXML {
               show: field.show ? 1 : 0,
             };
             o.appendChild('FIELD', null, a);
+          }
+          for (const { portId, componentId, signalId } of item.hierarchy?.boardInstance?.ports ?? []) {
+            o.appendChild('BOARDPORT', null, { port_uuid: portId, component_uuid: componentId, signal_uuid: signalId });
           }
           for (let j = 0; j < item.hints.length; ++j) {
             let hint = item.hints[j];
@@ -1394,11 +1398,25 @@ export class ioXML {
             const symbolId = node.getAttribute('id');
             const definition = !hierarchical || symbolId
               ? this.symboldef(root, newSheet, symbolId) : null;
+            const boardId = hierarchical && readSchematicEntityId(node.getAttribute('board_uuid'), false);
+            const ports = Array.from(node.getElementsByTagName('BOARDPORT') as HTMLCollectionOf<Element>, (port) => ({
+              portId: readSchematicEntityId(port.getAttribute('port_uuid'), false),
+              componentId: readSchematicEntityId(port.getAttribute('component_uuid'), false),
+              signalId: readSchematicEntityId(port.getAttribute('signal_uuid'), false),
+            }));
+            if (
+              (boardId && (!definition?.id || !node.getAttribute('child_uuid'))) ||
+              (ports.length && !boardId) ||
+              ports.some(({ portId, componentId, signalId }) => !portId || !componentId || !signalId) ||
+              new Set(ports.map(({ portId }) => portId)).size !== ports.length
+            )
+              throw new Error('Invalid board instance or port mapping.');
             const hierarchy = hierarchical ? {
               path: node.getAttribute('file') ?? '',
               ...(node.getAttribute('child_uuid')
                 ? { documentId: readSchematicEntityId(node.getAttribute('child_uuid'), false) } : {}),
               cached: definition?.id != null,
+              ...(boardId ? { boardInstance: { boardId, ports } } : {}),
             } : undefined;
             let rot = parseInt(node.getAttribute('rotate'), 10);
             // tslint:disable-next-line: no-bitwise
@@ -1437,6 +1455,8 @@ export class ioXML {
               _symbol: hierarchical && !hierarchy.cached ? this.unresolvedChildSymbol(hierarchy.path) : definition,
               ...(hierarchy ? { hierarchy } : {}),
               text: [],
+              textData: [],
+              _active_points: null,
               font_name: 'Arial',
               font_colour: '#FF0000',
               font_bold: false,

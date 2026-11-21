@@ -14,7 +14,9 @@ const mapStateToProps = (state: docDrawing) => {
     (present.view.add?.NodeName === DocItemTypes.Symbol ? present.view.add : null);
   return {
     hasExampleExplanation: !!state.altStore.exampleExplanation,
+    simulationPanelVisible: state.altStore.simulationPanelVisible,
     simulationPanelActivated: state.altStore.simulationPanelActivated,
+    firstSchematicSheet: present.drawing.sheets.findIndex(({ kind }) => kind !== 'simulation'),
     standardLibraryNavigation: state.altStore.standardLibraryNavigation,
     selectedSpiceControl: !!symbol && !!readControl(symbol),
     simulationSheet: !state.docStore.present.editSymbol && state.docStore.present.drawing.sheets[state.docStore.present.view.selected_sheet]?.kind === 'simulation',
@@ -23,6 +25,8 @@ const mapStateToProps = (state: docDrawing) => {
     selected_sheet: state.docStore.present.view.selected_sheet,
     editSymbol: state.docStore.present.editSymbol,
     editLibrary: !!present.editLibrary,
+    drawingName: state.altStore.file?.name,
+    drawingDirty: present.drawingVersion !== state.altStore.savedVersion,
     hasOpenProject: !!state.altStore.file.project,
     browserSheets: state.docStore.present.view.browserSheets,
   };

@@ -1,4 +1,8 @@
-import { validProjectName, isProjectFile } from '../../shared/projectFiles';
+import {
+  isProjectFile,
+  MAX_PROJECT_SETTINGS_BYTES,
+  validProjectName,
+} from '../../shared/projectFiles';
 import { isEntityId } from '../model/schematicIdentity';
 import { XMLBuilder } from '../util/xmlbuilder';
 export type ProjectEntryKind =
@@ -20,15 +24,136 @@ export interface ProjectLink {
   };
 }
 
+export const projectNetlistFormats = [
+  'PADS-PCB',
+  'PADS-PCB-WITH-VALUE',
+  'Eagle SCR',
+  'Protel',
+  'gEDA PCB',
+] as const;
+
+export type ProjectNetlistFormat = (typeof projectNetlistFormats)[number];
+
+type BoardOutputFormat = {
+  label: string;
+  stem: string;
+  extension: 'csv' | 'gbr' | 'xnc' | 'svg';
+  sided?: true;
+  precision?: true;
+};
+
+const boardOutputFormats = {
+  'board-bom': {
+    label: 'PCB bill of materials',
+    stem: 'bom',
+    extension: 'csv',
+  },
+  'fitted-bom': {
+    label: 'Fitted PCB bill of materials',
+    stem: 'bom-fitted',
+    extension: 'csv',
+  },
+  placement: {
+    label: 'Placement CSV',
+    stem: 'placement',
+    extension: 'csv',
+    precision: true,
+  },
+  assembly: {
+    label: 'Assembly CSV',
+    stem: 'assembly',
+    extension: 'csv',
+    precision: true,
+  },
+  copper: {
+    label: 'Copper Gerber',
+    stem: 'copper',
+    extension: 'gbr',
+    sided: true,
+  },
+  mask: {
+    label: 'Solder mask Gerber',
+    stem: 'mask',
+    extension: 'gbr',
+    sided: true,
+  },
+  paste: {
+    label: 'Solder paste Gerber',
+    stem: 'paste',
+    extension: 'gbr',
+    sided: true,
+  },
+  silk: { label: 'Legend Gerber', stem: 'silk', extension: 'gbr', sided: true },
+  profile: { label: 'Board outline Gerber', stem: 'profile', extension: 'gbr' },
+  plated: { label: 'Plated drill XNC', stem: 'plated', extension: 'xnc' },
+  'non-plated': {
+    label: 'Non-plated drill XNC',
+    stem: 'non-plated',
+    extension: 'xnc',
+  },
+  'assembly-drawing': {
+    label: 'Assembly drawing SVG',
+    stem: 'assembly',
+    extension: 'svg',
+    sided: true,
+  },
+} as const satisfies Record<string, BoardOutputFormat>;
+
+export type ProjectBoardOutputFormat = keyof typeof boardOutputFormats;
+export const projectBoardOutputFormats: Readonly<
+  Record<ProjectBoardOutputFormat, BoardOutputFormat>
+> = boardOutputFormats;
+
+type RecipeDestination = {
+  readonly id: string;
+  readonly directory: string;
+  readonly filename: string;
+};
+
+export type ProjectBoardOutputRecipe = RecipeDestination & {
+  readonly kind: 'pcb';
+  readonly board: string;
+  readonly format: ProjectBoardOutputFormat;
+  readonly layer?: 'top' | 'bottom';
+  readonly decimals?: number;
+  readonly csvText?: 'raw';
+};
+
+export type ProjectSchematicOutputRecipe = RecipeDestination & (
+  | { readonly schematic: string; readonly board?: undefined }
+  | { readonly board: string; readonly schematic?: undefined }
+) & (
+    | { readonly kind: 'bom'; readonly format?: never }
+    | { readonly kind: 'netlist'; readonly format: ProjectNetlistFormat }
+  );
+
+export type ProjectOutputRecipe =
+  | ProjectSchematicOutputRecipe
+  | ProjectBoardOutputRecipe;
+
+export function boardOutputFilename(
+  format: ProjectBoardOutputFormat,
+  layer?: ProjectBoardOutputRecipe['layer'],
+) {
+  const { stem, extension, sided } = projectBoardOutputFormats[format];
+  return stem + (sided && layer ? '-' + layer : '') + '.' + extension;
+}
+
+export function boardOutputDirectory(boardPath: string, pcb = false) {
+  return boardPath.slice(0, boardPath.lastIndexOf('/') + 1) + (pcb ? 'outputs/pcb' : 'outputs');
+}
+
 export interface ProjectSettings {
   projectId: string;
   revisionId: string;
   parentRevisionId?: string;
   title: string;
+  author?: string;
   requiredFeatures: readonly string[];
   entries: readonly ProjectLink[];
   primarySchematic?: string;
   primaryBoard?: string;
+  outputRecipes?: readonly ProjectOutputRecipe[];
   associations?: readonly { schematic: string; board: string }[];
 }
 
@@ -43,7 +168,6 @@ const extensions: Record<ProjectEntryKind, RegExp> = {
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true });
-const maxSettingsBytes = 4 * 1024 * 1024;
 const canonicalId = (id: string) => isEntityId(id) && id === id.toLowerCase();
 
 function validate(settings: ProjectSettings) {
@@ -57,12 +181,21 @@ function validate(settings: ProjectSettings) {
     title.length > 1024
   )
     throw new Error('Invalid project identity, title or revision lineage.');
+  if (
+    settings.author !== undefined &&
+    (typeof settings.author !== 'string' ||
+      !settings.author.trim() ||
+      settings.author.length > 1024 ||
+      /[\x00-\x1f\uFFFE\uFFFF]/.test(settings.author))
+  )
+    throw new Error('Invalid project author.');
   if (settings.requiredFeatures.length)
     throw new Error('Unsupported required project features.');
   if (entries.length > 10000) throw new Error('Too many project links.');
 
   const paths = new Set<string>();
   const identities = new Set<string>();
+  const boardFolders = new Set<string>();
   for (const { kind, id, path, asset } of entries) {
     const identity = `${kind}:${id}`;
     const foldedPath = path.toLowerCase();
@@ -87,6 +220,12 @@ function validate(settings: ProjectSettings) {
       throw new Error(`Invalid project asset metadata: ${path}`);
     paths.add(foldedPath);
     identities.add(identity);
+    if (kind === 'board') {
+      const folder = foldedPath.slice(0, foldedPath.lastIndexOf('/') + 1);
+      if (boardFolders.has(folder))
+        throw new Error(`Only one active PCB can be registered in each board folder: ${path}`);
+      boardFolders.add(folder);
+    }
   }
 
   for (const path of paths) {
@@ -107,6 +246,63 @@ function validate(settings: ProjectSettings) {
     (settings.primaryBoard !== undefined && !hasBoard(settings.primaryBoard))
   )
     throw new Error('Missing primary project document.');
+  const recipeIds = new Set<string>();
+  const sourceByBoard = new Map(settings.associations?.map(({ board, schematic }) => [board, schematic]));
+  const outputPaths = new Set<string>();
+  if ((settings.outputRecipes?.length ?? 0) > 1000)
+    throw new Error('Too many project output recipes.');
+  for (const recipe of settings.outputRecipes ?? []) {
+    const { id, directory, filename, kind, format } = recipe;
+    const output = `${directory}/${filename}`.toLowerCase();
+    const manifest = output + '.manifest.json';
+    let validSourceAndFormat: boolean;
+    if (kind === 'pcb') {
+      const spec = Object.hasOwn(projectBoardOutputFormats, format)
+        ? projectBoardOutputFormats[format]
+        : undefined;
+      validSourceAndFormat =
+        !!spec &&
+        hasBoard(recipe.board) &&
+        filename.toLowerCase().endsWith('.' + spec.extension) &&
+        (spec.sided
+          ? recipe.layer === 'top' || recipe.layer === 'bottom'
+          : recipe.layer === undefined) &&
+        (recipe.decimals === undefined ||
+          (!!spec.precision &&
+            Number.isInteger(recipe.decimals) &&
+            recipe.decimals >= 0 &&
+            recipe.decimals <= 6)) &&
+        (recipe.csvText === undefined || (spec.extension === 'csv' && recipe.csvText === 'raw'));
+    } else {
+      validSourceAndFormat =
+        (recipe.board !== undefined
+          ? recipe.schematic === undefined && hasBoard(recipe.board) && hasSchematic(sourceByBoard.get(recipe.board))
+          : hasSchematic(recipe.schematic)) &&
+        (kind === 'bom'
+          ? format === undefined && /\.csv$/i.test(filename)
+          : kind === 'netlist' &&
+            projectNetlistFormats.includes(format) &&
+            (format === 'Eagle SCR' ? /\.scr$/i : /\.net$/i).test(filename));
+    }
+    if (
+      !canonicalId(id) ||
+      recipeIds.has(id) ||
+      !validSourceAndFormat ||
+      !directory.split('/').every(validProjectName) ||
+      !validProjectName(filename) ||
+      !validProjectName(filename + '.manifest.json') ||
+      outputPaths.has(output) ||
+      outputPaths.has(manifest) ||
+      paths.has(output) ||
+      paths.has(manifest)
+    )
+      throw new Error(
+        `Invalid or duplicate project output recipe: ${filename}`,
+      );
+    recipeIds.add(id);
+    outputPaths.add(output);
+    outputPaths.add(manifest);
+  }
   const associatedBoards = new Set<string>();
   for (const { schematic, board } of settings.associations || []) {
     if (
@@ -128,6 +324,7 @@ export function encodeProjectSettings(settings: ProjectSettings): Uint8Array {
     revisionId,
     parentRevisionId,
     title,
+    author,
     primarySchematic,
     primaryBoard,
   } = settings;
@@ -136,6 +333,7 @@ export function encodeProjectSettings(settings: ProjectSettings): Uint8Array {
     projectId,
     revisionId,
     title,
+    ...(author !== undefined ? { author } : {}),
     ...(parentRevisionId ? { parentRevisionId } : {}),
     ...(primarySchematic ? { primarySchematic } : {}),
     ...(primaryBoard ? { primaryBoard } : {}),
@@ -146,11 +344,21 @@ export function encodeProjectSettings(settings: ProjectSettings): Uint8Array {
     xml.appendChild('FILE', undefined, { kind, id, path, ...asset });
   for (const association of settings.associations || [])
     xml.appendChild('ASSOCIATION', undefined, association);
+  for (const recipe of [...(settings.outputRecipes ?? [])].sort((a, b) =>
+    a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+  ))
+    xml.appendChild(
+      'OUTPUTRECIPE',
+      undefined,
+      Object.fromEntries(
+        Object.entries(recipe).filter(([, value]) => value !== undefined),
+      ),
+    );
   const text = xml.tostring().replace(/^<\?xml[^?]*\?>\s*/, '');
   const bytes = encoder.encode(
     '<?xml version="1.0" encoding="utf-8"?>\n' + text + '\n',
   );
-  if (bytes.length > maxSettingsBytes)
+  if (bytes.length > MAX_PROJECT_SETTINGS_BYTES)
     throw new Error('Project settings exceed their size limit.');
   return bytes;
 }
@@ -163,7 +371,7 @@ function attributes(node: Element, allowed: string[]) {
 }
 
 export function decodeProjectSettings(bytes: Uint8Array): ProjectSettings {
-  if (bytes.length > maxSettingsBytes)
+  if (bytes.length > MAX_PROJECT_SETTINGS_BYTES)
     throw new Error('Project settings exceed their size limit.');
   const text = decoder.decode(bytes);
   if (/<!DOCTYPE|<!ENTITY/i.test(text)) throw new Error('Invalid project XML.');
@@ -178,6 +386,7 @@ export function decodeProjectSettings(bytes: Uint8Array): ProjectSettings {
   attributes(root, []);
   const entries: ProjectLink[] = [];
   const associations: { schematic: string; board: string }[] = [];
+  const recipes: ProjectOutputRecipe[] = [];
   let settings: ProjectSettings;
   for (const node of Array.from(root.childNodes)) {
     if (
@@ -202,6 +411,7 @@ export function decodeProjectSettings(bytes: Uint8Array): ProjectSettings {
           'version',
           'projectId',
           'title',
+          'author',
           'revisionId',
           'parentRevisionId',
           'primarySchematic',
@@ -211,6 +421,7 @@ export function decodeProjectSettings(bytes: Uint8Array): ProjectSettings {
           projectId: get('projectId'),
           revisionId: get('revisionId'),
           title: get('title'),
+          ...(element.hasAttribute('author') ? { author: get('author') } : {}),
           ...(get('parentRevisionId')
             ? { parentRevisionId: get('parentRevisionId') }
             : {}),
@@ -249,6 +460,78 @@ export function decodeProjectSettings(bytes: Uint8Array): ProjectSettings {
         attributes(element, ['schematic', 'board']);
         associations.push({ schematic: get('schematic'), board: get('board') });
         break;
+      case 'OUTPUTRECIPE': {
+        const kind = get('kind');
+        const format = get('format');
+        const common = ['id', 'directory', 'filename', 'kind'];
+        const base = {
+          id: get('id'),
+          directory: get('directory'),
+          filename: get('filename'),
+        };
+        if (kind === 'pcb') {
+          attributes(element, [
+            ...common,
+            'board',
+            'format',
+            'layer',
+            'decimals',
+            'csvText',
+          ]);
+          const layer = get('layer');
+          const decimals = get('decimals');
+          const csvText = get('csvText');
+          if (
+            !Object.hasOwn(projectBoardOutputFormats, format) ||
+            (element.hasAttribute('layer') &&
+              layer !== 'top' &&
+              layer !== 'bottom') ||
+            (element.hasAttribute('decimals') && !/^[0-6]$/.test(decimals)) ||
+            (element.hasAttribute('csvText') && csvText !== 'raw')
+          )
+            throw new Error('Unsupported PCB output recipe settings.');
+          recipes.push({
+            ...base,
+            kind,
+            board: get('board'),
+            format: format as ProjectBoardOutputFormat,
+            ...(layer === 'top' || layer === 'bottom'
+              ? { layer: layer as 'top' | 'bottom' }
+              : {}),
+            ...(decimals === '' ? {} : { decimals: Number(decimals) }),
+            ...(csvText === 'raw' ? { csvText } : {}),
+          });
+        } else {
+          attributes(element, [
+            ...common,
+            'schematic',
+            'board',
+            ...(kind === 'netlist' ? ['format'] : []),
+          ]);
+          const source = element.hasAttribute('board') && !element.hasAttribute('schematic')
+            ? { board: get('board') }
+            : !element.hasAttribute('board') && element.hasAttribute('schematic')
+              ? { schematic: get('schematic') }
+              : undefined;
+          if (!source) throw new Error('Choose one source for the circuit output recipe.');
+          if (kind === 'bom') {
+            recipes.push({ ...base, kind, ...source });
+          } else if (
+            kind === 'netlist' &&
+            projectNetlistFormats.includes(format as ProjectNetlistFormat)
+          ) {
+            recipes.push({
+              ...base,
+              kind,
+              ...source,
+              format: format as ProjectNetlistFormat,
+            });
+          } else {
+            throw new Error('Unsupported project output recipe format.');
+          }
+        }
+        break;
+      }
       case 'REQUIRED':
         throw new Error(
           `Unsupported required project feature: ${get('feature')}`,
@@ -260,6 +543,7 @@ export function decodeProjectSettings(bytes: Uint8Array): ProjectSettings {
     }
   }
   if (!settings) throw new Error('Missing project settings.');
+  if (recipes.length) settings.outputRecipes = recipes;
   if (associations.length) settings.associations = associations;
   validate(settings);
   return settings;

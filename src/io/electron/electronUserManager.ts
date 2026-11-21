@@ -1,3 +1,5 @@
+import { isBoardFile } from '../../../shared/drawingFiles.js';
+import { circuitOpened, showOpenedBoard } from '../boardWorkspaceEvents';
 import { drawingMimeType } from '../../../shared/drawingFiles.js';
 import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
@@ -66,9 +68,18 @@ export class ElectronUserManager implements UserManager {
     this.unsubs.push(
       window.electronAPI.fileLoaded(async (data) => {
         try {
+          if (isBoardFile(data.name)) {
+            const { openStandaloneBoard } = await import('../boardWorkspace');
+            const content = typeof data.content === 'string' ? new TextEncoder().encode(data.content) : data.content;
+            showOpenedBoard(await openStandaloneBoard(content, {
+              name: data.name, id: data.id, folderId: data.id,
+            }));
+            return;
+          }
           const doc = await decodeDrawing(data.content);
           dispatch(actionSetDocument(doc, data.name, data.id, data.id));
           dispatch(ActionCreators.clearHistory());
+          window.dispatchEvent(new Event(circuitOpened));
         } catch (error) { dispatch(actionSelectDialog('io_failure',{message:String(error)})); }
       }),
     );
@@ -231,7 +242,7 @@ export class ElectronUserManager implements UserManager {
     return Promise.resolve(null);
   }
 
-  saveFile(xml: string | Uint8Array, file: CurrentFile): Promise<any> {
+  saveFile(xml: string | Uint8Array, file: CurrentFile, expectedVersion?: string): Promise<any> {
 
     return new Promise((resolve, reject) => {
 
@@ -250,7 +261,7 @@ export class ElectronUserManager implements UserManager {
             mimeType: drawingMimeType(xml),
           });
         } else {
-          reject();
+          reject(data.error ? new Error(data.error) : undefined);
         }
       });
 
@@ -259,6 +270,7 @@ export class ElectronUserManager implements UserManager {
         id: file.id,
         folderId: file.folderId,
         content: xml,
+        ...(expectedVersion ? { expectedVersion } : {}),
       });
     });
   }

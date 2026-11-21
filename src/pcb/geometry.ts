@@ -97,6 +97,42 @@ export function segmentsMeet(
   );
 }
 
+// Point for an issue marker after the integer intersection predicate succeeds.
+export function segmentIntersectionLocation(
+  a: BoardPoint,
+  b: BoardPoint,
+  c: BoardPoint,
+  d: BoardPoint,
+): BoardPoint {
+  for (const point of [a, b])
+    if (withinSegment(c, d, point) && orientation(c, d, point) === 0)
+      return point;
+  for (const point of [c, d])
+    if (withinSegment(a, b, point) && orientation(a, b, point) === 0)
+      return point;
+  const bx = BigInt(b.x - a.x);
+  const by = BigInt(b.y - a.y);
+  const dx = BigInt(d.x - c.x);
+  const dy = BigInt(d.y - c.y);
+  const numerator = BigInt(c.x - a.x) * dy - BigInt(c.y - a.y) * dx;
+  const ratio = Number(numerator) / Number(bx * dy - by * dx);
+  return {
+    x: Math.round(a.x + Number(bx) * ratio),
+    y: Math.round(a.y + Number(by) * ratio),
+  };
+}
+
+export class OutlineTopologyError extends Error {
+  constructor(
+    message: string,
+    readonly edgeIndex: number,
+    readonly location?: BoardPoint,
+    readonly otherEdgeIndex?: number,
+  ) {
+    super(message);
+  }
+}
+
 /** One straight-edge contour, with an implicit closing segment. */
 export function validateOutline(
   value: unknown,
@@ -116,10 +152,25 @@ export function validateOutline(
   }
   const vertices = value as readonly BoardPoint[];
   const count = vertices.length;
-  if (
-    vertices.some((point, i) => samePoint(point, vertices[(i + 1) % count]))
-  ) {
-    throw new Error('The outline has a zero-length edge.');
+  const seen = new Map<string, number>();
+  for (let i = 0; i < count; i++) {
+    const start = vertices[i];
+    const end = vertices[(i + 1) % count];
+    if (samePoint(start, end))
+      throw new OutlineTopologyError(
+        'The outline has a zero-length edge.',
+        i,
+        start,
+      );
+    const key = [start.x + ',' + start.y, end.x + ',' + end.y].sort().join('/');
+    if (seen.has(key))
+      throw new OutlineTopologyError(
+        'The outline has duplicate edges.',
+        i,
+        start,
+        seen.get(key),
+      );
+    seen.set(key, i);
   }
   for (let i = 0; i < count; i++) {
     const a = vertices[i];
@@ -129,7 +180,12 @@ export function validateOutline(
       orientation(a, b, next) === 0 &&
       (withinSegment(a, b, next) || withinSegment(b, next, a))
     ) {
-      throw new Error('Adjacent outline edges overlap.');
+      throw new OutlineTopologyError(
+        'Adjacent outline edges overlap.',
+        i,
+        b,
+        (i + 1) % count,
+      );
     }
   }
   const edges = vertices
@@ -145,7 +201,12 @@ export function validateOutline(
       const separation = Math.abs(first.i - second.i);
       if (separation === 1 || separation === count - 1) continue;
       if (segmentsMeet(first.a, first.b, second.a, second.b)) {
-        throw new Error('The outline intersects itself.');
+        throw new OutlineTopologyError(
+          'The outline intersects itself.',
+          first.i,
+          segmentIntersectionLocation(first.a, first.b, second.a, second.b),
+          second.i,
+        );
       }
     }
   }
