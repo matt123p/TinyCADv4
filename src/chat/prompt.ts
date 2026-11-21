@@ -11,8 +11,9 @@ ${resources['references/editor-common.md']}
 
 ${bundledLibraryInstructions(context.bundledLibraries)}
 
+Add, change or research SPICE models only when the user explicitly asks for SPICE or simulation support. For those requests, read references/spice-models.md and start model research with search_spice_models. Ordinary symbol and schematic work can preserve any existing SPICE defaults without spending time on model research.
+
 CURRENT EDITOR MODE: ${context.library ? 'LIBRARY' : 'DRAWING'}
-${context.library ? '' : 'For a request to find or attach a SPICE model, use search_spice_models scoped to the placed component, then inspect_spice_target with the returned model and pack IDs. Cite the verified model source link. Use attach_spice_model only when the user requests attachment, supplying the exact target and current drawing revision. Use the preverified mapping when available. Ask about ambiguous pin roles and obtain approval before replacing a custom template.'}
 ${
   resources[
     context.library

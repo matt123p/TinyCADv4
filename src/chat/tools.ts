@@ -9,8 +9,10 @@ import { XMLBuilder } from '../util/xmlbuilder';
 import { docDrawing } from '../state/undo/undo';
 import { DocActionTypes } from '../state/actions/docActions';
 import { DocItemTypes, type dsnSymbol } from '../model/dsnItem';
-import { BUNDLED_SPICE_SYMBOL, MODEL_BINDING, bundledSpiceIdentity, hasCustomSpiceTemplate, modelBinding, symbolField } from '../simulation/catalogBindings';
-import { changeSpiceModel, inspectSpiceModel, searchSpiceModels, spiceSymbolPins } from '../simulation/spiceModelCatalog';
+import { BUNDLED_SPICE_SYMBOL, MODEL_BINDING, SPICE_ALTERNATE, bundledSpiceIdentity, hasCustomSpiceTemplate, modelBinding, nativeSpiceTemplate, symbolField } from '../simulation/catalogBindings';
+import { bindSpiceModel, catalogModelPack, changeSpiceModel, inspectSpiceModel, searchSpiceModels, spiceSymbolPins } from '../simulation/spiceModelCatalog';
+import { spiceDefinitionText } from '../simulation/spiceModelDefinitions';
+import { validateSpiceText } from '../simulation/deck';
 import { toolSpecs, checkArguments } from './tool-specs';
 import { ToolExecutor, ToolResult } from './types';
 import { nativeCall } from './native-client';
@@ -27,6 +29,32 @@ export interface ChatArtifact {
   name: string;
   blob: Blob;
 }
+type ComponentAttributes = StoredComponent['attributes'];
+
+function withCustomSpice(attributes: ComponentAttributes = [], custom: {
+  template: string;
+  prologue?: string;
+  epilogue?: string;
+  replaceExisting?: boolean;
+}): ComponentAttributes {
+  if (!custom.template.trim()) throw new Error('Supply a SPICE instance template.');
+  const fields = [
+    { name: '$$SPICE', value: custom.template },
+    { name: '$$SPICE_PROLOG', value: custom.prologue },
+    { name: '$$SPICE_EPILOG', value: custom.epilogue },
+  ];
+  const replaced = new Set([...fields.map(({ name }) => name), MODEL_BINDING, SPICE_ALTERNATE]);
+  if (!custom.replaceExisting && attributes.some(({ name, value }) => replaced.has(name) && value))
+    throw new Error('Confirm replacement of the existing SPICE definition.');
+  for (const { value } of fields) {
+    if (!value) continue;
+    if (/^\s*\.(?:op|tran|ac|dc|noise|tf|pz|end)\b/im.test(value))
+      throw new Error('Put simulation commands in the Simulation sheet.');
+    validateSpiceText(value, {});
+  }
+  return [...attributes.filter(({ name }) => !replaced.has(name)), ...fields.filter(({ value }) => value)];
+}
+
 export function createEditorTools(
   store: Store,
   artifact: (file: ChatArtifact) => void,
@@ -229,6 +257,22 @@ export function createEditorTools(
       pins,
     };
   };
+  const componentTarget = (asset: StoredComponent) => ({
+    pins: compact(asset).pins,
+    text: (asset.attributes ?? []).map(({ name, value }) => ({
+      description: name, value, display: 2, show: false, position: [0, 0] as [number, number],
+    })),
+  });
+  const modelKey = (args: { modelId: string; packId: string; revision: string }) => ({
+    id: args.modelId, packId: args.packId, revision: args.revision,
+  });
+  const readSpiceTarget = async (args: any, signal: AbortSignal) => {
+    if (!args.componentId) return spiceTarget(args.reference, args.sheet);
+    if (args.reference || args.sheet !== undefined || args.selected)
+      throw new Error('Choose a retained component or a placed symbol.');
+    const asset = await resolveComponent(args.componentId, signal);
+    return { symbol: componentTarget(asset), componentId: asset.componentId };
+  };
   return async (name, input, signal) => {
     const spec = toolSpecs.find((t) => t.name === name);
     if (!spec) throw new Error(`Unknown tool ${name}.`);
@@ -236,22 +280,44 @@ export function createEditorTools(
     const args: any = { ...input };
     if (signal.aborted) throw new DOMException('Stopped', 'AbortError');
     if (name === 'search_spice_models') {
-      const target = args.reference || args.selected || args.sheet !== undefined ? spiceTarget(args.reference, args.sheet) : undefined;
+      const target = args.componentId || args.reference || args.selected || args.sheet !== undefined
+        ? await readSpiceTarget(args, signal)
+        : undefined;
       const models = searchSpiceModels(args.query || '', target?.symbol);
       return { data: { total: models.length, models: models.slice(0, args.limit ?? 10) } };
     }
-    if (name === 'inspect_spice_target' || name === 'attach_spice_model') {
+    if (name === 'inspect_spice_model') {
+      const pack = catalogModelPack(modelKey(args));
+      const model = searchSpiceModels(args.modelId).find((entry) =>
+        entry.id === args.modelId && entry.packId === args.packId && entry.revision === args.revision,
+      );
+      return { data: {
+        ...model,
+        license: pack.license,
+        template: nativeSpiceTemplate(pack, args.modelId)?.instance,
+        definition: spiceDefinitionText(pack, args.modelId),
+      } };
+    }
+    if (name === 'inspect_spice_target') {
+      const target = await readSpiceTarget(args, signal);
+      const { symbol } = target;
+      const binding = modelBinding(symbol);
+      const customTemplate = hasCustomSpiceTemplate(symbol);
+      return { data: {
+        ...('componentId' in target ? { componentId: target.componentId } :
+          { reference: target.reference, sheet: target.sheetNumber }),
+        revision: revision(), pins: 'pins' in symbol ? symbol.pins : spiceSymbolPins(symbol),
+        template: symbolField(symbol, '$$SPICE'), customTemplate,
+        ...(customTemplate ? { prologue: symbolField(symbol, '$$SPICE_PROLOG'),
+          epilogue: symbolField(symbol, '$$SPICE_EPILOG') } : {}),
+        attachment: binding && { modelId: binding.modelId, packId: binding.packId, revision: binding.revision,
+          source: binding.source, pins: binding.pins, parameters: binding.parameters },
+        ...(args.modelId || args.packId || args.revision ? { mapping: inspectSpiceModel(symbol, modelKey(args)) } : {}),
+      } };
+    }
+    if (name === 'attach_spice_model') {
       const target = spiceTarget(args.reference, args.sheet);
       const { symbol, sheet, sheetNumber, reference } = target;
-      if (name === 'inspect_spice_target') {
-        const binding = modelBinding(symbol);
-        return { data: {
-          reference, sheet: sheetNumber, revision: revision(), pins: spiceSymbolPins(symbol),
-          template: symbolField(symbol, '$$SPICE'), customTemplate: hasCustomSpiceTemplate(symbol),
-          attachment: binding && { modelId: binding.modelId, source: binding.source, pins: binding.pins, parameters: binding.parameters },
-          ...(args.modelId || args.packId || args.revision ? { mapping: inspectSpiceModel(symbol, { id: args.modelId, packId: args.packId, revision: args.revision }) } : {}),
-        } };
-      }
       const source = present().drawing;
       if (args.baseRevision !== revision()) throw new Error('The drawing changed. Inspect the target again before attaching the model.');
       const drawing = changeSpiceModel(source, sheet.id, symbol._id, {
@@ -265,7 +331,7 @@ export function createEditorTools(
       return { data: { reference, sheet: sheetNumber, revision: revision(), modelId: binding.modelId, source: binding.source, pins: binding.pins, parameters: binding.parameters } };
     }
     if (name === 'read_skill_reference') {
-      await bundledLibraries.initialize();
+      if (args.path === 'SKILL.md') await bundledLibraries.initialize();
       return {
         data: {
           path: args.path,
@@ -276,6 +342,8 @@ export function createEditorTools(
                 ) +
                 '\n' +
                 resources['references/editor-common.md'] +
+                '\n' +
+                resources['references/spice-models.md'] +
                 '\n' +
                 resources[
                   present().editLibrary
@@ -498,7 +566,21 @@ export function createEditorTools(
       const additions: StoredComponent[] = [];
       for (const item of args.components) {
         const asset = await resolveComponent(item.componentId, signal);
-        const component = { ...asset, ...item, name: item.name || asset.name };
+        const component = { ...asset, name: item.name || asset.name,
+          reference: item.reference || asset.reference, description: item.description ?? asset.description };
+        if (item.spiceModel && item.customSpice)
+          throw new Error('Choose one SPICE definition per component.');
+        if (item.spiceModel) {
+          const { symbol } = bindSpiceModel(componentTarget(component), {
+            ...item.spiceModel,
+            parameters: Object.fromEntries((item.spiceModel.parameters ?? []).map(
+              ({ name, value }: { name: string; value: string }) => [name, value],
+            )),
+          });
+          component.attributes = symbol.text.map(({ description, value }) => ({ name: description, value }));
+        }
+        if (item.customSpice)
+          component.attributes = withCustomSpice(component.attributes, item.customSpice);
         const validation = await native(
           'validate_component',
           {
@@ -577,19 +659,22 @@ export function createEditorTools(
         args.name ||= asset.name;
         args.description ||= asset.description;
         args.attributes ||= asset.attributes;
-        if (asset.source?.libraryId === 'spice') {
+        if (asset.source?.libraryId === 'spice' || args.customSpice) {
           const attributes = new Map((asset.attributes ?? []).map((field) => [field.name, field]));
           const protectedFields = new Set([BUNDLED_SPICE_SYMBOL, MODEL_BINDING,
-            '$$SPICE', '$$SPICE_PROLOG', '$$SPICE_EPILOG']);
+            SPICE_ALTERNATE, '$$SPICE', '$$SPICE_PROLOG', '$$SPICE_EPILOG']);
           for (const field of args.attributes ?? [])
             if (!protectedFields.has(field.name)) attributes.set(field.name, field);
-          attributes.set(BUNDLED_SPICE_SYMBOL, {
-            name: BUNDLED_SPICE_SYMBOL,
-            value: bundledSpiceIdentity(asset.source.nameId, asset.source.symbolId,
-              (field) => attributes.get(field)?.value),
-          });
+          if (asset.source?.libraryId === 'spice')
+            attributes.set(BUNDLED_SPICE_SYMBOL, {
+              name: BUNDLED_SPICE_SYMBOL,
+              value: bundledSpiceIdentity(asset.source.nameId, asset.source.symbolId,
+                (field) => attributes.get(field)?.value),
+            });
           args.attributes = [...attributes.values()];
         }
+        if (args.customSpice)
+          args.attributes = withCustomSpice(args.attributes, args.customSpice);
         if (!args.reference) {
           const prefix =
             (asset.reference || 'U?').replace(/[?*\d]+$/g, '') || 'U';

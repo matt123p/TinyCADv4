@@ -72,9 +72,12 @@ The Electron chatbot uses the same catalog, compatibility checks, template gener
 
 | Tool | What it does |
 | --- | --- |
-| `search_spice_models` | Returns model IDs, source links, descriptions, ordered terminal roles and parameter defaults. Scopes results to compatible models when given a tagged bundled symbol. |
-| `inspect_spice_target` | Resolves a placed symbol by selection or reference and sheet. Returns its pins, template or attachment, the drawing revision and mapping information for an optional model. |
+| `search_spice_models` | Returns model IDs, source links, descriptions, ordered terminal roles and parameter defaults. Scopes results when given a placed symbol or retained component. |
+| `inspect_spice_model` | Reads the exact model text and dependencies from the selected catalog revision. |
+| `inspect_spice_target` | Reads a placed symbol or retained component. Returns its pins, template or attachment, current editor revision and mapping information for an optional model. |
 | `attach_spice_model` | Applies an exact model and pack revision in one undoable edit. Uses a preverified mapping when available or validates a user-supplied terminal-to-pin mapping. |
+| `add_library_components` | Sets an optional linked or Custom definition on a new reusable library symbol. |
+| `place_component` | Preserves the library default and can set an explicitly requested Custom definition on the placed symbol. |
 
 ## Saving, simulation and export
 

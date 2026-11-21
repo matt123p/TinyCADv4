@@ -220,6 +220,9 @@ export function validateXml(
     v !== null && v.trim() !== '' && Number.isFinite(Number(v));
   for (const n of all) {
     const name = n.nodeName;
+    const nativeMetadata = drawing && ['SPICE_MODEL_PACKS', 'SimulationSheet'].includes(name);
+    const spiceField = drawing && name === 'FIELD' && n.getAttribute('show') === '0' &&
+      /^\$\$(?:SPICE(?:_PROLOG|_EPILOG|_ALTERNATE)?|CATALOG_MODEL)$/.test(n.getAttribute('description'));
     if (
       ['IMAGE', 'METAFILE', 'FONTS', 'STYLES', 'FILLS'].includes(name) ||
       (!drawing && ['SYMBOL', 'SYMBOLDEF', 'TinyCADSheets'].includes(name))
@@ -231,11 +234,11 @@ export function validateXml(
       );
     if (
       !children(n).length &&
-      n.textContent.length > (name === 'PIN' ? 128 : 1024)
+      n.textContent.length > (nativeMetadata ? 1048576 : name === 'PIN' ? 128 : 1024)
     )
       add('text_length', n, 'Text exceeds the input limit.');
     for (const a of Array.from(n.attributes || []) as any[]) {
-      if (a.value.length > (a.name === 'number' ? 32 : 1024))
+      if (a.value.length > (spiceField && a.name === 'value' ? 262144 : a.name === 'number' ? 32 : 1024))
         add('text_length', n, `Attribute ${a.name} is too long.`);
       if (['pos', 'a', 'b', 'control', 'control2'].includes(a.name)) {
         const pair = a.value.split(',');

@@ -4,7 +4,8 @@
 
 ### Added
 
-- Browse bundled SPICE models offline in the symbol editor and on placed components. The picker shows descriptions, source links and optional model text. The desktop AI assistant can search, inspect and attach models from the same catalog.
+- Browse bundled SPICE models offline in the symbol editor and on placed components. The picker shows descriptions, source links and optional model text.
+- When asked for SPICE support, the desktop AI assistant can search the bundled catalog offline for exact parts, drop-in candidates and generic models. It can inspect model text and pin mappings, attach a model to a placed component, and set a bundled or Custom definition on a new library symbol. Ordinary symbol and schematic requests preserve existing defaults and skip SPICE setup.
 - Import supported SPICE definitions from KiCad symbol libraries, including embedded models and external model files supplied with the import. TinyCAD preserves pin mappings and parameter overrides in editable Custom definitions.
 
 ### Changed

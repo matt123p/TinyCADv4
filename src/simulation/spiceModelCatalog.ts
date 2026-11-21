@@ -150,7 +150,7 @@ function catalogEntry(modelId: string, packId: string, revision: string) {
   return found;
 }
 
-export function catalogModelPack(model: SpiceCatalogModel) {
+export function catalogModelPack(model: Pick<SpiceCatalogModel, 'id' | 'packId' | 'revision'>) {
   return catalogEntry(model.id, model.packId, model.revision).pack;
 }
 
