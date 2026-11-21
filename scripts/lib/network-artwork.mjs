@@ -476,7 +476,7 @@ export function networkArtwork(recipe) {
           injector: 'POE',
         }[record.device.kind] || 'AP') + '?',
       ppp: 1,
-      ShowName: 1,
+      ShowName: 0,
       ShowRef: 1,
       DefRotate: 0,
       Description: description(record),

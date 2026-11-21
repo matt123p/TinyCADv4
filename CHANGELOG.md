@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Show the editable Name field by default on newly placed standard library symbols and remove duplicate name captions from their artwork.
+- Demonstrate Markdown formatting in the notes on bundled equipment and network drawings.
+
+
 ## v4.1.1 — 2026-11-20
 
 ### Fixed

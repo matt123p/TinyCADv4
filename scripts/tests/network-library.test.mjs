@@ -203,7 +203,10 @@ test('actual editor placement preserves rack anchors, socket wiring, rotations a
       const symbol = sheet.items.at(-1);
       symbols.push(symbol);
       symbol.text.find(t => t.description === 'Ref').value = 'N' + (i + 1);
-      assert.ok(symbol.text.every(t => !t.show), 'Metadata must not collide with stacked panels');
+      const name = symbol.text.find(t => t.description === 'Name');
+      assert.equal(name.show, true);
+      assert.ok(name.position[0] > 0, 'Name is placed to the right of the device');
+      assert.ok(symbol.text.every(t => t === name || !t.show));
       const updater = new updateSymbol(symbol), outline = updater.outline();
       assert.equal(updater.active_points().length, record.ports.length, record.id);
       if (record.rack) {

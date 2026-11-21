@@ -42,7 +42,7 @@
       "name": "1-bit full adder",
       "nameId": 2,
       "symbolId": 2,
-      "xmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "xmlSha256": "f1ee917638ba93f028393b06da32ace8c69327dab5de53fb06a115ba0b1b0563",
       "clockEdge": null
     },
     {
@@ -51,7 +51,7 @@
       "name": "2-to-4 decoder",
       "nameId": 3,
       "symbolId": 3,
-      "xmlSha256": "e8e726be0a12a38d9af54a38b38ce8786ab728fa11d1cab34018db3790e80486",
+      "xmlSha256": "b5f052aa952ecd24971a32298a1c4e807b823fb383af80927a7171d68838e01f",
       "clockEdge": null
     },
     {
@@ -60,7 +60,7 @@
       "name": "4-to-2 encoder",
       "nameId": 4,
       "symbolId": 4,
-      "xmlSha256": "1f91cdad5fae157e0dfb0042d616ebb6095cfdf1495803197e3d15d3546c1494",
+      "xmlSha256": "ca620bcac752f6aa4e10a27c52df2efad580f982de5334fa40d54e517cbc24f0",
       "clockEdge": null
     },
     {
@@ -69,7 +69,7 @@
       "name": "2-to-1 multiplexer",
       "nameId": 5,
       "symbolId": 5,
-      "xmlSha256": "669e59e8a09fb10fdf42a12bb7ace7e6264420de35177ac836d94cd2b42a3143",
+      "xmlSha256": "be71fa50e02c013f8182531a4fbf9607bdcb418c8251ac615f5f5b5eb051fb1b",
       "clockEdge": null
     },
     {
@@ -78,7 +78,7 @@
       "name": "BCD counter (rising edge)",
       "nameId": 6,
       "symbolId": 6,
-      "xmlSha256": "370a33e1aaa56893bd4968974d9c2961cca373a29849cafde6cecaac4586a5c7",
+      "xmlSha256": "077146b3b766dcb8ae0ff86d3d893b09dc07c51468a03155d257c5211764d459",
       "clockEdge": "rising"
     },
     {
@@ -87,7 +87,7 @@
       "name": "3-bit asynchronous binary counter (rising edge)",
       "nameId": 7,
       "symbolId": 7,
-      "xmlSha256": "355b1d494531bfe95acff131177f849ca0f15fec7129f051b96381f3ce393299",
+      "xmlSha256": "ec264a69afd8bb294f7b2d2d3a4b8fd26006f71a49d763d1902fdbac4be72bad",
       "clockEdge": "rising"
     },
     {
@@ -96,7 +96,7 @@
       "name": "3-bit synchronous binary counter (rising edge)",
       "nameId": 8,
       "symbolId": 8,
-      "xmlSha256": "0c59d62bdf2ed7722efdf973d8b0765ee8073170cb938b13615a1da28767b263",
+      "xmlSha256": "ec264a69afd8bb294f7b2d2d3a4b8fd26006f71a49d763d1902fdbac4be72bad",
       "clockEdge": "rising"
     },
     {
@@ -105,7 +105,7 @@
       "name": "Johnson counter, 4-stage (rising edge)",
       "nameId": 9,
       "symbolId": 9,
-      "xmlSha256": "a15ea6425ac2752c890a48cc6f25b1df40faa798d4b7bf2acff3148e78321c2a",
+      "xmlSha256": "a4213fd2cf62c842f32dd50033bfcd8f8ea50aea71213f34df45fee926fa7ec0",
       "clockEdge": "rising"
     },
     {
@@ -177,7 +177,7 @@
       "name": "3-stage shift register (rising edge)",
       "nameId": 17,
       "symbolId": 17,
-      "xmlSha256": "727b7f4a4ccd9d4977dbbd22a381769bbadc0d37923ade3361d7d3155f06883f",
+      "xmlSha256": "0e617a1dd97cff8b2fddc855ac567d4563979b331aa08bc37dc81a6f721a4736",
       "clockEdge": "rising"
     },
     {
@@ -186,7 +186,7 @@
       "name": "D flip-flop (rising edge)",
       "nameId": 18,
       "symbolId": 18,
-      "xmlSha256": "149097cb34d5cfcb922b5736244bf94ce938454db548485fc84770209f425482",
+      "xmlSha256": "9bf35005d0ec3554848f3b597694c0704bf6aab9b8e64d481c3689396dbc6cf6",
       "clockEdge": "rising"
     },
     {
@@ -195,7 +195,7 @@
       "name": "J-K flip-flop (rising edge)",
       "nameId": 19,
       "symbolId": 19,
-      "xmlSha256": "04a5c2650ec23fa00f2d1084b576555bc124ee751f0ff009dc09181ec0f3999b",
+      "xmlSha256": "ca34f590537fd14540bcced92691aaf2185611703ef6798d7c1afbc43de1b8f1",
       "clockEdge": "rising"
     },
     {
@@ -204,7 +204,7 @@
       "name": "D latch",
       "nameId": 20,
       "symbolId": 20,
-      "xmlSha256": "dec4a18ed622fd8457d75c501bebd19a70b04868cdf9be69e3a0627cc69341bd",
+      "xmlSha256": "109bc490e4ccce5c273d92f9c3eb01493d9b5362e09df1c2a1049eef5a462361",
       "clockEdge": null
     },
     {
@@ -213,7 +213,7 @@
       "name": "R-S latch",
       "nameId": 21,
       "symbolId": 21,
-      "xmlSha256": "05930aef555d778d28692c8c95778683129617651020e438dd189cf928cbe1a5",
+      "xmlSha256": "0c08aec0c17d61561f72d7ee3c21a8591271238a286ef52dd6aaf166c5e1d58c",
       "clockEdge": null
     },
     {
@@ -222,7 +222,7 @@
       "name": "BCD counter (falling edge)",
       "nameId": 22,
       "symbolId": 22,
-      "xmlSha256": "374614feda5e860b732b394d1454c3849f56e2532ecd038976a6eaa21f6fd062",
+      "xmlSha256": "078ef4023f01edac719f0ff868a565063ade58c600bc324d3eaa86ccc409c107",
       "clockEdge": "falling"
     },
     {
@@ -231,7 +231,7 @@
       "name": "3-bit asynchronous binary counter (falling edge)",
       "nameId": 23,
       "symbolId": 23,
-      "xmlSha256": "0617f473dc05a5a892945a892e67f32b06d8e34ad55c230be2c1b6b3e4fc953a",
+      "xmlSha256": "66a00f2d883d7aa226564c3b5f622ff2a968f32b6e242aa74cdb2623f529d3bb",
       "clockEdge": "falling"
     },
     {
@@ -240,7 +240,7 @@
       "name": "3-bit synchronous binary counter (falling edge)",
       "nameId": 24,
       "symbolId": 24,
-      "xmlSha256": "10d0c236240e0788a48396468a315ce6b82211d5c4ad307451e70f47380d355d",
+      "xmlSha256": "66a00f2d883d7aa226564c3b5f622ff2a968f32b6e242aa74cdb2623f529d3bb",
       "clockEdge": "falling"
     },
     {
@@ -249,7 +249,7 @@
       "name": "Johnson counter, 4-stage (falling edge)",
       "nameId": 25,
       "symbolId": 25,
-      "xmlSha256": "e65206bba632597b4ef10ac0ae2fb0090c8b894c9e59a37f7a482028e6283d1f",
+      "xmlSha256": "71d78df7c12c80043f56b546bbbf96a2f35e1c01dc03c6dc59e3240141daf4a2",
       "clockEdge": "falling"
     },
     {
@@ -258,7 +258,7 @@
       "name": "3-stage shift register (falling edge)",
       "nameId": 26,
       "symbolId": 26,
-      "xmlSha256": "c75090a736b063b1e5a40fe9be482661e3337fa83dae50822b1b6a6c94963fdd",
+      "xmlSha256": "45e8985dbe57edde19230f8f6fc70d8bed94d52010d179eb40443ba6eee51e53",
       "clockEdge": "falling"
     },
     {
@@ -267,7 +267,7 @@
       "name": "D flip-flop (falling edge)",
       "nameId": 27,
       "symbolId": 27,
-      "xmlSha256": "83a687931869098b2382891ee05981083005a35aab7da0beab058ed827e4b04c",
+      "xmlSha256": "9e919648babfbf2e2175e0ef8f50560e9499d4124d677412a7a97b3d15583702",
       "clockEdge": "falling"
     },
     {
@@ -276,7 +276,7 @@
       "name": "J-K flip-flop (falling edge)",
       "nameId": 28,
       "symbolId": 28,
-      "xmlSha256": "2132eb61ccde4ee4583e48160def7e07dcff206edfbc106f8d86422f78effda6",
+      "xmlSha256": "61f2371f5079780c60ebbf17b53a3a8a91f9a611b02daebba344e3b34e4ce2df",
       "clockEdge": "falling"
     }
   ],

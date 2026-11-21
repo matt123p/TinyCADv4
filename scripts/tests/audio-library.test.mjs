@@ -193,10 +193,12 @@ test('real editor places, rotates, saves and wires audio equipment through nativ
     import {initialiseLayoutRuntime} from './scripts/layout/headless';
     import {NetlistGenerator} from './src/io/netlists/netlistGenerator';
     import {makeNetForDrawing} from './src/web-worker/netlist';
+    import {renderCircuit} from './scripts/layout/runtime';
     initialiseLayoutRuntime();
     const library=${JSON.stringify(result.library)},records=${JSON.stringify(
     result.records.map((r) => ({
       id: r.device.id,
+      short: r.device.short,
       ports: r.ports,
       xml: r.xml,
     })),
@@ -207,6 +209,16 @@ test('real editor places, rotates, saves and wires audio equipment through nativ
       sheet=new updateView().handleSelectLibrarySymbol({},sheet,library.names[i],d.sheets.map(s=>s.items),[2000+i*2000,2000+i*3000]).sheet;
       const s=sheet.items.at(-1);s.text.find(t=>t.description==='Ref').value='A'+(i+1);
       const u=new updateSymbol(s),o=u.outline();assert.equal(u.active_points().length,r.ports.length,r.id);
+      const nameIndex=s.text.findIndex(t=>t.description==='Name'), name=s.text[nameIndex];
+      assert.equal(name.value,library.names[i].Name);
+      assert.equal(name.show,true,r.id);
+      assert.ok(!o.items.some(item=>item.NodeName==='text'&&item.text===r.short),r.id);
+      if(r.id==='mic-condenser'){
+        assert.equal(renderCircuit({...sheet,items:[s]}).split(name.value).length,2);
+        const hidden=u.showShow(nameIndex);
+        assert.ok(!renderCircuit({...sheet,items:[hidden]}).includes(name.value));
+        assert.ok(!renderCircuit({...sheet,items:[hidden]}).includes(r.short));
+      }
       for(const [px,py,p] of u.active_points()){
         const fact=r.ports.find(f=>f.number===p.number);assert.equal(p.name,fact.name);assert.equal(p.elec,4);
         assert.equal(px,s.point[0]+fact.x*5-o.ref_point[0]);assert.equal(py,s.point[1]+fact.y*5-o.ref_point[1]);

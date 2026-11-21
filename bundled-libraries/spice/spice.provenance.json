@@ -3,7 +3,7 @@
   "id": "spice",
   "name": "SPICE essentials",
   "sourceSha256": "3efbdf682121249aa4c2c8f8fdd1dc807025b26c5e46c369eb41c3f28a34d47e",
-  "recipeSha256": "ca85f91783e28be0246236338e8083bb97806f9aa16e3029f378cadec840f984",
+  "recipeSha256": "727eac869005ffc86300ae069ab2bac0ca3bb5c9451e8ce2cf13be4032ec836f",
   "contributors": [
     "onetransistor",
     "aryajur"

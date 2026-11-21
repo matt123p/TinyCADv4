@@ -352,7 +352,7 @@ export async function sensorArtworkSnapshot({
       Reference: r.reference_prefix + '?',
       ppp: 1,
       Description: c.names[0].description,
-      ShowName: 1,
+      ShowName: 0,
       ShowRef: 0,
       DefRotate: 0,
       Attributes: [{ AttName: 'Package', AttValue: '', ShowAtt: 1 }],

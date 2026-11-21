@@ -689,7 +689,7 @@ export function embeddedArtwork(recipe) {
       Name: r.device.name,
       Reference: r.device.kind === 'relay' ? 'K?' : 'U?',
       ppp: 1,
-      ShowName: 1,
+      ShowName: 0,
       ShowRef: 1,
       DefRotate: 0,
       Description: `${r.device.name}. ${r.device.notes} ${

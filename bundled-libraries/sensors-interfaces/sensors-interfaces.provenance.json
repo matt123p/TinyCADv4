@@ -4,7 +4,7 @@
   "name": "Sensors and interfaces",
   "styleReference": {
     "id": "derived:full_adder",
-    "xmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+    "xmlSha256": "f1ee917638ba93f028393b06da32ace8c69327dab5de53fb06a115ba0b1b0563"
   },
   "recipeSha256": "3de913d37a88de69bd41e2c1cc453f2ca188f5fa4583c406da6aff754859161b",
   "sources": {
@@ -26,7 +26,7 @@
       "symbolId": 1,
       "xmlSha256": "1cdbab74a7af3b61c3b1bca0f08742a25b3e8749cb6316dd0b4d1121ab4c3ee9",
       "baseCandidateId": "derived:full_adder",
-      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "baseXmlSha256": "f1ee917638ba93f028393b06da32ace8c69327dab5de53fb06a115ba0b1b0563",
       "convention": "A single native passive pin ending directly at an open circle."
     },
     {
@@ -36,7 +36,7 @@
       "symbolId": 2,
       "xmlSha256": "7dad8b931ca30ea1ffb26309b0508295fff08f6f9c00bb72259a1a8344bde40a",
       "baseCandidateId": "derived:full_adder",
-      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "baseXmlSha256": "f1ee917638ba93f028393b06da32ace8c69327dab5de53fb06a115ba0b1b0563",
       "convention": "Generic powered Hall sensor with H and an incoming B arrow; not a bare four-terminal Hall element."
     },
     {
@@ -66,7 +66,7 @@
       "symbolId": 5,
       "xmlSha256": "35f24a34a882ac42fb623d2e7616f82107e26d8f660c4af5e592da617f11279c",
       "baseCandidateId": "derived:full_adder",
-      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "baseXmlSha256": "f1ee917638ba93f028393b06da32ace8c69327dab5de53fb06a115ba0b1b0563",
       "convention": "Powered sensor block containing a diaphragm and incoming pressure arrow; generic conditioned voltage output."
     },
     {
@@ -76,7 +76,7 @@
       "symbolId": 6,
       "xmlSha256": "d8699292e20f92eb7a348a0cdd9d474b4692903b09e10c48adc21ebc9aea43ee",
       "baseCandidateId": "derived:full_adder",
-      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "baseXmlSha256": "f1ee917638ba93f028393b06da32ace8c69327dab5de53fb06a115ba0b1b0563",
       "convention": "Powered temperature-to-voltage interface with a thermometer motif; distinct from a thermistor."
     },
     {
@@ -86,7 +86,7 @@
       "symbolId": 7,
       "xmlSha256": "9578824a3ac237de22e40f3f8f48e95a8efc0ec1224884636117b6a3a9717098",
       "baseCandidateId": "derived:full_adder",
-      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "baseXmlSha256": "f1ee917638ba93f028393b06da32ace8c69327dab5de53fb06a115ba0b1b0563",
       "convention": "Two interleaved resistive electrodes and water-drop motif; no supply pin or invented digital interface."
     },
     {
@@ -96,7 +96,7 @@
       "symbolId": 8,
       "xmlSha256": "8580bb9ef3aa8f908a81388a6bd88952dd8782b89bd9d0be778e3cdd47500cef",
       "baseCandidateId": "derived:full_adder",
-      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "baseXmlSha256": "f1ee917638ba93f028393b06da32ace8c69327dab5de53fb06a115ba0b1b0563",
       "convention": "Two-terminal pH electrode interface drawn as a labelled source circle; signal and reference remain distinct."
     },
     {
@@ -106,7 +106,7 @@
       "symbolId": 9,
       "xmlSha256": "9b7758830ba1660197086ff7168b14202448267ab66ed6253328cd6e78b99fc8",
       "baseCandidateId": "derived:full_adder",
-      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "baseXmlSha256": "f1ee917638ba93f028393b06da32ace8c69327dab5de53fb06a115ba0b1b0563",
       "convention": "Open analogue switch contacts with a dashed actuation link and a separate differential control pair."
     },
     {
@@ -116,7 +116,7 @@
       "symbolId": 10,
       "xmlSha256": "a7799dae959e9f23965a709d0c5b0bc53ea89f51c7269144254ef92de98f0712",
       "baseCandidateId": "derived:full_adder",
-      "baseXmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a",
+      "baseXmlSha256": "f1ee917638ba93f028393b06da32ace8c69327dab5de53fb06a115ba0b1b0563",
       "convention": "Labelled AM functional block with multiplier motif and separate carrier/message differential inputs; carrier bias and modulation law require an explicit model."
     }
   ],

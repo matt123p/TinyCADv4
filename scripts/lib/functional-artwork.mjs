@@ -54,7 +54,6 @@ export function drawFunctionalBlock(
     ),
   );
   body(doc, 'block', width, height, 0);
-  label(doc, [width / 2 - title.length * 0.36, height / 2 + 0.9], title);
   for (const [side, pins] of Object.entries(groups)) {
     const horizontal = side === 'left' || side === 'right';
     pins.forEach((pin, i) => {
@@ -197,7 +196,7 @@ export async function functionalArtworkSnapshot({
       Reference: r.reference_prefix + '?',
       ppp: 1,
       Description: c.names[0].description,
-      ShowName: 1,
+      ShowName: 0,
       ShowRef: 0,
       DefRotate: 0,
       Attributes: [{ AttName: 'Package', AttValue: '', ShowAtt: 1 }],

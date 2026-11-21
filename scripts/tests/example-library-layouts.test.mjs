@@ -59,9 +59,16 @@ const sorted = (nets) =>
 
 // Compare rendered primitive properties, ignoring resource IDs, runtime caches,
 // invisible note borders and insignificant XML floating-point round trips.
-function artwork(items) {
+function artwork(items, legacyText = false) {
   return items.map((item) => {
     const invisible = item.NodeName === 'text' && !item.stroked && !item.filled;
+    if (legacyText && invisible) {
+      // Saved solar examples converted legacy TEXT to NOTE_TEXT. Compare the
+      // text anchor, since that conversion can change the measured box size.
+      const [left] = item.point;
+      const [, bottom] = item.point_b;
+      item = { ...item, point: [left, bottom], point_b: undefined };
+    }
     return JSON.parse(
       JSON.stringify(item, (key, value) => {
         if (
@@ -195,9 +202,12 @@ test('all five new library examples retain their source artwork, exact nets and 
       symbols.length,
     );
     assert.ok(
-      sheet.items.filter((i) => i.NodeName === 'text').length >=
-        symbols.length + 1,
-      'Native notes explain and identify the equipment',
+      sheet.items.filter((i) => i.NodeName === 'text').length >= 2,
+      'The drawings retain their title and explanatory notes',
+    );
+    assert.ok(
+      sheet.items.some((i) => i.NodeName === 'text' && /^### .+/m.test(i.text)),
+      'Each equipment drawing demonstrates Markdown headings in its notes',
     );
     for (const source of proof.sources) {
       if (!libs.has(source.libraryPath))
@@ -228,7 +238,10 @@ test('all five new library examples retain their source artwork, exact nets and 
         });
         sourceArt.set(
           key,
-          artwork(d.sheets[0].items[0]._symbol.outlines[0].items),
+          artwork(
+            d.sheets[0].items[0]._symbol.outlines[0].items,
+            source.library === 'solar',
+          ),
         );
       }
       const symbol = symbols.find(
@@ -239,8 +252,42 @@ test('all five new library examples retain their source artwork, exact nets and 
       assert.ok(symbol, source.reference);
       assert.equal(symbol.scale_x, 1);
       assert.equal(symbol.scale_y, 1);
+      const nameFields = symbol.text.filter((t) => t.description === 'Name');
+      assert.equal(nameFields.length, 1, source.reference);
+      assert.ok(nameFields[0].show && nameFields[0].value.trim());
+      assert.equal(nameFields[0].display, 0);
+      const ref = symbol.text.find((t) => t.description === 'Ref');
+      assert.ok(ref.show);
+      assert.equal(nameFields[0].position[1], ref.position[1]);
+      assert.ok(nameFields[0].position[0] > ref.position[0]);
+      const body = api.bodyRect(symbol);
+      const labels = api.texts(symbol);
+      assert.equal(labels.length, 2);
+      for (const text of labels) {
+        assert.ok(
+          text.x1 >= 0 && text.y1 >= 0 &&
+            text.x2 <= sheet.details.page_size[0] &&
+            text.y2 <= sheet.details.page_size[1],
+          source.reference + ' label fits on the sheet',
+        );
+        assert.ok(
+          text.y2 <= body.y1 || text.x1 >= body.x2,
+          source.reference + ' label sits outside its artwork',
+        );
+      }
+      const aboveGap = body.y1 - Math.max(...labels.map((t) => t.y2));
+      const rightGap = Math.min(...labels.map((t) => t.x1)) - body.x2;
+      assert.ok(
+        (aboveGap >= 0 && aboveGap <= 20) ||
+          (rightGap >= 0 && rightGap <= 20),
+        source.reference + ' labels sit close to the symbol',
+      );
+      const embedded = artwork(
+        symbol._symbol.outlines[0].items,
+        source.library === 'solar',
+      );
       assert.deepEqual(
-        artwork(symbol._symbol.outlines[0].items),
+        embedded,
         sourceArt.get(key),
         source.reference +
           ' preserves source geometry, labels, socket mapping and electrical types',

@@ -1848,6 +1848,6 @@
       "resistorStyle": "us"
     }
   ],
-  "showName": 1,
+  "showName": 0,
   "pinGrid": 1
 }

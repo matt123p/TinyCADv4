@@ -768,11 +768,9 @@ export function testMeasurementSymbol(device) {
       )}</PIN>`,
     );
   }
-  text(0, h + 5, device.short, 2);
   const width = Math.ceil(Math.max(w, textWidth(device.short, 8)) / 2) * 2;
   const height = Math.ceil((h + 8) / 2) * 2;
-  // A transparent native rectangle defines the full placement/preview envelope,
-  // including captions. Without it, narrow probes can crop their own captions.
+  // Preserve the placement envelope so port coordinates stay stable.
   c.resources.splice(
     c.resources.findIndex((r) => r.startsWith('<FILL')),
     0,
@@ -820,7 +818,7 @@ export function testMeasurementArtwork(recipe) {
       Name: r.device.name,
       Reference: 'T?',
       ppp: 1,
-      ShowName: 1,
+      ShowName: 0,
       ShowRef: 1,
       DefRotate: 0,
       Description: [r.device.name, r.device.notes, recipe.scope]
