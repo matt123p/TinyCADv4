@@ -116,8 +116,10 @@ export interface KiSymbol {
   power: boolean;
   extendsName?: string;
   subsymbols: KiSubSymbol[];
+  embeddedFiles?: ReadonlyMap<string, string>;
 }
 
 export interface KiCadLibrary {
   symbols: KiSymbol[];
+  embeddedFiles?: ReadonlyMap<string, string>;
 }

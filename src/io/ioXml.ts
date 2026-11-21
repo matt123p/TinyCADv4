@@ -1,5 +1,5 @@
 import { createSimulationSheet, validateSetup } from '../simulation/document';
-import { parseSpiceModelPacks } from '../simulation/catalogBindings';
+import { mergeDrawingModelPacks, parseSpiceModelPacks, referencedSpiceModelPacks } from '../simulation/catalogBindings';
 import { newIdentity } from '../simulation/contracts';
 import { XMLBuilder } from '../util/xmlbuilder';
 import {
@@ -243,8 +243,13 @@ export class ioXML {
     let dsn = new XMLBuilder();
     dsn.createDoc('TinyCADSheets');
     dsn.appendChild('DSNIDENTITY', null, { id: drawing.documentId || '' });
-    if (drawing.spiceModelPacks?.length)
-      dsn.appendChild('SPICE_MODEL_PACKS', JSON.stringify(drawing.spiceModelPacks), { version: '1' });
+    const catalogSymbols = drawing.sheets.flatMap(({ name, items }) => items.flatMap((item) =>
+      item.NodeName === DocItemTypes.Symbol ? [[name, item] as [string, dsnSymbol]] : [],
+    ));
+    const packs = mergeDrawingModelPacks(drawing.spiceModelPacks,
+      referencedSpiceModelPacks({ symbols: catalogSymbols }, drawing.spiceModelPacks, true));
+    if (packs.length)
+      dsn.appendChild('SPICE_MODEL_PACKS', JSON.stringify(packs), { version: '1' });
     for (var i = 0; i < drawing.sheets.length; ++i) {
       const sheet = drawing.sheets[i];
       if (sheet.kind === 'simulation') {

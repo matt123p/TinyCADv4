@@ -9,7 +9,7 @@ import { XMLBuilder } from '../util/xmlbuilder';
 import { docDrawing } from '../state/undo/undo';
 import { DocActionTypes } from '../state/actions/docActions';
 import { DocItemTypes, type dsnSymbol } from '../model/dsnItem';
-import { BUNDLED_SPICE_SYMBOL, bundledSpiceIdentity, hasCustomSpiceTemplate, modelBinding, symbolField } from '../simulation/catalogBindings';
+import { BUNDLED_SPICE_SYMBOL, MODEL_BINDING, bundledSpiceIdentity, hasCustomSpiceTemplate, modelBinding, symbolField } from '../simulation/catalogBindings';
 import { changeSpiceModel, inspectSpiceModel, searchSpiceModels, spiceSymbolPins } from '../simulation/spiceModelCatalog';
 import { toolSpecs, checkArguments } from './tool-specs';
 import { ToolExecutor, ToolResult } from './types';
@@ -577,11 +577,19 @@ export function createEditorTools(
         args.name ||= asset.name;
         args.description ||= asset.description;
         args.attributes ||= asset.attributes;
-        if (asset.source?.libraryId === 'spice') args.attributes = [
-          ...(args.attributes ?? []).filter((field: { name: string }) => field.name !== BUNDLED_SPICE_SYMBOL),
-          { name: BUNDLED_SPICE_SYMBOL, value: bundledSpiceIdentity(asset.source.nameId, asset.source.symbolId,
-            (field) => asset.attributes?.find((attribute) => attribute.name === field)?.value) },
-        ];
+        if (asset.source?.libraryId === 'spice') {
+          const attributes = new Map((asset.attributes ?? []).map((field) => [field.name, field]));
+          const protectedFields = new Set([BUNDLED_SPICE_SYMBOL, MODEL_BINDING,
+            '$$SPICE', '$$SPICE_PROLOG', '$$SPICE_EPILOG']);
+          for (const field of args.attributes ?? [])
+            if (!protectedFields.has(field.name)) attributes.set(field.name, field);
+          attributes.set(BUNDLED_SPICE_SYMBOL, {
+            name: BUNDLED_SPICE_SYMBOL,
+            value: bundledSpiceIdentity(asset.source.nameId, asset.source.symbolId,
+              (field) => attributes.get(field)?.value),
+          });
+          args.attributes = [...attributes.values()];
+        }
         if (!args.reference) {
           const prefix =
             (asset.reference || 'U?').replace(/[?*\d]+$/g, '') || 'U';

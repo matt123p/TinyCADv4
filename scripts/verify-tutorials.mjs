@@ -2,10 +2,14 @@
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { tutorialRuntime } from './tutorials/runtime.mjs';
+import { spiceLibrary, tutorialRuntime } from './tutorials/runtime.mjs';
 const api = await tutorialRuntime(),
   records = [],
   datasets = {};
+const stock = new Map((await spiceLibrary()).map(({ name }) => [
+  name.Name,
+  JSON.parse(name.Attributes.find(({ AttName }) => AttName === '$$CATALOG_MODEL').AttValue),
+]));
 let checks = 0;
 const check = (value, message) => {
   assert.ok(value, message);
@@ -25,7 +29,21 @@ for (const course of ['spice', 'xspice'])
       run.state === 'complete' && data?.vectors.length,
       id + ' retained complete acquisition',
     );
-    const deck = api.buildDeck(new api.NetlistWorkerState().init(drawing), sim),
+    const netlist = new api.NetlistWorkerState().init(drawing);
+    for (const [, symbol] of netlist.symbols) {
+      const name = symbol.text.find((field) => field.description === 'Name')?.value;
+      const expected = stock.get(name);
+      if (!expected) continue;
+      const binding = api.modelBinding(symbol);
+      assert.ok(binding, id + ' links ' + name + ' to its bundled model');
+      assert.ok(symbol.text.some(({ description }) => description === '$$BUNDLED_SPICE_SYMBOL'));
+      assert.equal(binding.packId, expected.packId);
+      assert.equal(binding.modelId, expected.modelId);
+      assert.deepEqual(binding.pins, expected.pins);
+      assert.equal(binding.embeddedPack, undefined);
+      assert.ok(!symbol.text.some(({ description }) => description === '$$SPICE_PROLOG'));
+    }
+    const deck = api.buildDeck(netlist, sim, [], drawing.spiceModelPacks),
       hash = createHash('sha256')
         .update(deck + JSON.stringify(sim.models))
         .digest('hex');

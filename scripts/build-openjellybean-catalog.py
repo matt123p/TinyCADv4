@@ -19,6 +19,7 @@ OUTPUT = LIBRARY.with_name("openjellybean.json")
 CIRCSIM_OUTPUT = LIBRARY.with_name("circsim.json")
 CIRCSIM_SOURCE = ROOT / "library-sources/circsim"
 ADDITIONAL_SOURCES = ROOT / "library-sources/spice-catalogs"
+BASIC_SOURCE = ROOT / "library-recipes/spice-basic-models.json"
 CIRCSIM_REVISION = "059858b15671c3edaf4c62f944ecb8c7420ae1d4"
 CIRCSIM_SHA256 = {
     "LICENSE": "0167f740b37ace1c64df1124214d97bb17330c99b21d3968d82600ef702df4af",
@@ -466,6 +467,89 @@ def build_additional_catalogs():
             }
 
 
+def build_basic_catalog(openjellybean):
+    raw = BASIC_SOURCE.read_text(encoding="utf-8")
+    revision = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    source = {"name": "TinyCAD Basic", "revision": revision,
+              "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"}
+    models, templates, defaults = [], {}, {}
+    with closing(sqlite3.connect(LIBRARY.as_uri() + "?mode=ro", uri=True)) as library:
+        symbols = {
+            name: (name_id, symbol_id, sorted({pin.attrib["number"] for pin in ET.fromstring(xml).iter("PIN")}, key=int))
+            for name_id, symbol_id, name, xml in library.execute(
+                "SELECT NameID, SymbolID, Name, Data FROM Name JOIN Symbol USING (SymbolID)")
+        }
+        for profile in json.loads(raw):
+            model_id = profile["id"]
+            pins = profile["pins"]
+            mappings = []
+            for name in profile["components"]:
+                name_id, symbol_id, layout = symbols[name]
+                if name in defaults or sorted(pins, key=int) != layout:
+                    raise ValueError(f"Invalid Basic model assignment for {name}")
+                mappings.append({"libraryId": "spice", "nameId": name_id, "symbolId": symbol_id,
+                                 "name": name, "pinLayout": layout, "pinsInModelOrder": pins})
+                defaults[name] = {
+                    "template": profile["instance"],
+                    "binding": {"packId": "basic", "revision": revision, "modelId": model_id,
+                                "label": profile["label"], "source": source, "pins": pins,
+                                "parameters": {}, "previous": []},
+                }
+            templates[model_id] = {key: profile[key] for key in ("instance", "prologue", "templatePins", "attributes")}
+            models.append({"id": model_id, "label": profile["label"], "kind": profile["kind"],
+                           "description": profile["description"], "aliases": profile["components"],
+                           "source": source, "designator": "", "parameterDefaults": {},
+                           "terminals": [{"role": role} for role in profile["terminals"]],
+                           "compatibleComponents": mappings})
+        for model_id in ("LM358_DUAL_OJ", "LM324_QUAD_OJ"):
+            model = next(entry for entry in openjellybean["models"] if entry["id"] == model_id)
+            for mapping in model["compatibleComponents"]:
+                pins = mapping["pinsInModelOrder"]
+                defaults[mapping["name"]] = {
+                    "template": "XTC_$(ref) " + " ".join(f"%({pin})" for pin in pins) + " " + model_id,
+                    "binding": {"packId": "openjellybean", "revision": REVISION, "modelId": model_id,
+                                "source": model["source"], "pins": pins, "parameters": {}, "previous": []},
+                }
+        if defaults.keys() != symbols.keys():
+            raise ValueError("Every SPICE essentials symbol needs a default catalog model")
+    spice = json.dumps(templates, ensure_ascii=False, separators=(",", ":"))
+    return {"schemaVersion": 1, "pack": {
+        "id": "basic", "version": revision[:12], "revision": revision, "filename": f"basic_{revision[:12]}.lib",
+        "format": "templates", "sha256": hashlib.sha256(spice.encode("utf-8")).hexdigest(),
+        "license": "GPL-3.0-only", "licenseText": "TinyCAD Basic SPICE templates are licensed under GNU GPL version 3.\nhttps://www.gnu.org/licenses/gpl-3.0.html",
+        "spice": spice,
+    }, "models": models, "defaults": defaults}
+
+
+def link_spice_library(defaults, check):
+    if check:
+        library = sqlite3.connect(LIBRARY.as_uri() + "?mode=ro", uri=True)
+    else:
+        library = sqlite3.connect(LIBRARY)
+    with closing(library), library:
+        changed = False
+        for name_id, name in library.execute("SELECT NameID, Name FROM Name"):
+            default = defaults[name]
+            fields = {"$$SPICE": default["template"],
+                      "$$CATALOG_MODEL": json.dumps(default["binding"], ensure_ascii=False, separators=(",", ":"))}
+            existing = dict(library.execute(
+                "SELECT AttName, AttValue FROM Attribute WHERE NameID=? AND AttName IN ('$$SPICE','$$CATALOG_MODEL','$$SPICE_PROLOG','$$SPICE_EPILOG')",
+                (name_id,)))
+            if existing == fields:
+                continue
+            if check:
+                raise ValueError(f"Bundled default link is out of date for {name}")
+            library.execute(
+                "DELETE FROM Attribute WHERE NameID=? AND AttName IN ('$$SPICE','$$CATALOG_MODEL','$$SPICE_PROLOG','$$SPICE_EPILOG')",
+                (name_id,))
+            library.executemany("INSERT INTO Attribute (NameID, AttName, AttValue, ShowAtt) VALUES (?, ?, ?, 2)",
+                                [(name_id, key, value) for key, value in fields.items()])
+            changed = True
+        if changed:
+            library.commit()
+            library.execute("VACUUM")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Check that the committed catalog is current")
@@ -490,13 +574,16 @@ def main():
         "models": list(models.values()),
         "uncoveredComponents": uncovered,
     }
-    for filename, source_catalog in ((OUTPUT, catalog), (CIRCSIM_OUTPUT, build_circsim()), *build_additional_catalogs()):
+    basic = build_basic_catalog(catalog)
+    for filename, source_catalog in ((OUTPUT, catalog), (CIRCSIM_OUTPUT, build_circsim()),
+                                     (LIBRARY.with_name("basic.json"), basic), *build_additional_catalogs()):
         output = json.dumps(source_catalog, ensure_ascii=False, indent=2) + "\n"
         if args.check:
             if not filename.is_file() or filename.read_text(encoding="utf-8") != output:
                 parser.exit(1, f"{filename.relative_to(ROOT)} is out of date. Regenerate the catalog.\n")
         else:
             filename.write_text(output, encoding="utf-8", newline="\n")
+    link_spice_library(basic["defaults"], args.check)
 
 
 if __name__ == "__main__":

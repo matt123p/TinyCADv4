@@ -87,7 +87,7 @@ declare global {
             savePdf: (data: { content: string, name: string }) => void;
             saveSvg: (data: { content: string, name: string }) => void;
             onPdfSaved: (callback: (data: { success: boolean, path?: string, error?: string, cancelled?: boolean }) => void) => () => void;
-            openKicadImport: () => Promise<{ fileName: string, content: string } | null>;
+            openKicadImport: () => Promise<import('./io/kicad/importer').SymbolImportFile | null>;
             openImageImport: () => Promise<{ fileName: string, mime: string, content: string } | null>;
 
             // Window management

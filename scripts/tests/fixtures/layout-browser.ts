@@ -3,6 +3,7 @@ import { activeSheet } from '../../../src/state/stores/docStoreReducer';
 import { actionEditLibrary, actionEditorEvent, actionSelectBottomPanel, actionSetDocument, actionSetLibraryList, BottomPanels } from '../../../src/state/dispatcher/AppDispatcher';
 import { bundledLibraries } from '../../../src/io/bundledLibraries';
 import { librarySymbolSelection } from '../../../src/io/librarySymbols';
+import { importSymbolsFromFile } from '../../../src/io/files';
 import { blank, ioXML } from '../../../src/io/ioXml';
 import { loadTcLibrary, saveTcLibrary } from '../../../src/io/tclib';
 import { XMLBuilder } from '../../../src/util/xmlbuilder';
@@ -10,6 +11,9 @@ import { XMLBuilder } from '../../../src/util/xmlbuilder';
 // This bridge is bundled only into the test entry point. UI interactions still
 // use the real toolbar, dialog, Redux reducers, fonts, and compiled worker.
 (window as any).layoutTest = {
+  importKiCadSymbols() {
+    void store.dispatch(importSymbolsFromFile() as any);
+  },
   installLibrary(library: any) {
     store.dispatch(actionSetLibraryList([library]));
   },

@@ -20,6 +20,12 @@ async function recipeResources(selection, directory) {
         ]),
     ),
   );
+  if (selection.linkedSpiceCatalog) {
+    const catalog = JSON.parse(await fs.readFile(
+      path.resolve(directory, selection.linkedSpiceCatalog), 'utf8',
+    ));
+    return { artwork, linkedSpice: catalog.defaults };
+  }
   const modelLibrary = selection.modelLibrary;
   if (!modelLibrary) return { artwork };
 

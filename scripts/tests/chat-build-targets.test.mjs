@@ -42,6 +42,7 @@ for (const [target, entry] of [
       assert.ok(assets.has('src/components/pages/designApp.tsx'), 'Must inspect the real editor build');
       assert.ok(assets.has('bundled-libraries/spice/openjellybean.json'));
       assert.ok(assets.has('bundled-libraries/spice/circsim.json'));
+      assert.ok(assets.has('bundled-libraries/spice/basic.json'));
       const chatAssets = [...assets].filter(name => /^src\/(?:chat|components\/chat)\//.test(name));
       if (target === 'electron') {
         for (const name of ['src/components/chat/ChatPanel.tsx', 'src/chat/tools.ts', 'src/chat/providers.ts']) {
@@ -72,6 +73,7 @@ for (const [target, entry] of [
       assert.match(await readNotice('ngspice'), /Ngspice Licensing[\s\S]*Kenneth S\. Kundert/);
       assert.match(await readNotice('OpenJellyBean'), /MIT License[\s\S]*openjellybean contributors/);
       assert.match(await readNotice('circsim'), /MIT License[\s\S]*circsim maintainers/);
+      assert.match(await readNotice('TinyCAD Basic'), /GNU GPL version 3/);
       assert.match(await readNotice('Spice_Files'), /MIT License[\s\S]*Spice_Files contributors/);
       assert.match(await readNotice('ngspice special models'), /BSD 3-Clause License[\s\S]*Holger Vogt/);
       for (const foundry of ['SkyWater SKY130', 'GlobalFoundries GF180MCU', 'IHP SG13G2']) {

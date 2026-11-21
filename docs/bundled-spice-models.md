@@ -1,13 +1,13 @@
 # Bundled SPICE models
 
-TinyCAD offers 77 SPICE models in the browser and 80 in the Electron desktop app. Search and attachment run locally once the picker has loaded. Each model links to its upstream definition or to the upstream archive and its member filename. TinyCAD records the revision or archive checksum and includes the notices with the bundled model packs.
+TinyCAD offers 97 SPICE models in the browser and 100 in the Electron desktop app. Search and attachment run locally once the picker has loaded. Each model links to its source definition or to the upstream archive and its member filename. TinyCAD records the revision or archive checksum and includes the notices with the bundled model packs.
 
 ## Choose a model
 
 1. Open the **SPICE** tab in the library symbol editor or on a placed symbol, then choose **Bundled → Find SPICE model…**.
 2. Search by part number, alias, model ID or device family. Exact model IDs rank first, followed by exact aliases and partial matches. Select a row to see its source link, terminal order and any adjustable parameters below the table. **View SPICE definition** expands the instance template, model text and required helper subcircuits.
 3. Review the pin mapping. For tagged **SPICE essentials** symbols, the picker only lists models with a preverified mapping for the current pin layout. Other symbols, including older placements without the library identity, can browse the models available in their edition and map terminals manually. TinyCAD suggests unambiguous pin matches and requires a distinct pin for each terminal. Hidden supply pins are included. A library symbol with multiple parts offers the pin numbers shared by those parts because its template applies to every part.
-4. Choose **Select SPICE model**. On a placed symbol, attachment is one undoable drawing edit. In the library editor, it sets the default for future placements from that saved library entry. If the symbol has no compatible catalog models, **Find SPICE model…** displays an inline error. **Remove attached model** restores the previous template.
+4. Choose **Select SPICE model**. On a placed symbol, attachment is one undoable drawing edit. In the library editor, it sets the default for future placements from that saved library entry. **Remove attached model** restores the previous template when one was saved.
 
 ## Edit a local copy
 
@@ -15,10 +15,17 @@ TinyCAD offers 77 SPICE models in the browser and 80 in the Electron desktop app
 
 Switching back to **Bundled** restores the linked model. Switching to **Custom** again restores your edits. Both settings survive save and reopen, and the selected mode determines which model runs. On a placed symbol, edits apply to that instance. In the library symbol editor, saving the edited symbol makes its active definition the default for future placements. The copy retains the upstream source link and licence in SPICE comments.
 
+## Import a model from KiCad
+
+Choose **File → Import → Import KiCad Symbols** and select a single `.kicad_sym` library. TinyCAD imports supported embedded SPICE models automatically. If the library refers to external SPICE files, select those files alongside the symbol library. Select any files the model references with `.include` as well.
+
+Imported model text appears under **SPICE → Custom → Prologue**. TinyCAD uses KiCad’s pin assignments and parameter overrides to generate the instance template. The picker reports missing or unsupported SPICE data beside the symbol, and the symbol artwork and properties are still available to import. Supported inputs include single-unit symbols with ordinary SPICE model cards or subcircuits, ideal R/L/C devices and DC sources. [KiCad simulation model fields](https://docs.kicad.org/10.0/en/eeschema/eeschema.html#assigning-models)
+
 ## Catalog sources
 
 | Source | Models in TinyCAD | Contents |
 | --- | ---: | --- |
+| TinyCAD Basic | 20 | Ideal passives and independent sources, plus generic transistor, diode, LED, 741 and resonator models. [Catalog](../bundled-libraries/spice/basic.json) · [Model templates](../library-recipes/spice-basic-models.json) |
 | OpenJellyBean 0.6.0 | 42 | BJTs, MOSFETs, JFETs, signal and Schottky diodes, zeners, LEDs, op-amp sections and complete packages, and a potentiometer. [Catalog](../bundled-libraries/spice/openjellybean.json) · [Pinned upstream library](https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib) |
 | circsim | 15 | LM741, yellow LED, LM393, LM339, NE5532, NE555, PC817, 4N35, LM317, TL431, 7805, IRLZ44N, IRF540N, IRF3205 and IRF9540N. [Catalog](../bundled-libraries/spice/circsim.json) · [Pinned upstream inventory](https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/index.json) |
 | Spice_Files | 14 | The three original MIT model files cover LEDs, zeners, a rectifier diode and bridge, optocouplers, a switch, a relay, a 16 MHz crystal and a 10:1 transformer. [Catalog](../bundled-libraries/spice/spice-files.json) · [Upstream licensing notice](https://raw.githubusercontent.com/BoredDog/Spice_Files/main/NOTICE.md) |
@@ -38,7 +45,7 @@ The ngspice engine uses a modified BSD licence with separate bundled notices. It
 
 ## Compatibility with SPICE essentials
 
-The catalogs have 34 preverified symbol-to-model pairings across 19 of the 29 **SPICE essentials** symbols. OpenJellyBean supplies 22 pairings, circsim supplies six and Spice_Files supplies six. The numbers below are TinyCAD pin numbers in SPICE terminal order. [SPICE essentials terminal contracts](libraries.md#spice-essentials)
+All 29 **SPICE essentials** symbols come with a bundled model selected and their pin mapping set. Twenty shared TinyCAD Basic models cover the 27 symbols with generic definitions. The LM358 and LM324 use OpenJellyBean’s complete package models by default. Basic models use the stock symbol fields, such as **Value**, **Wiper** and **Initial Voltage**, when generating the circuit. The numbers below give the pin order for the other compatible models shown in the picker. [SPICE essentials terminal contracts](libraries.md#spice-essentials)
 
 | Bundled symbol | Compatible catalog models | Pins in model order |
 | --- | --- | --- |
@@ -57,19 +64,7 @@ The catalogs have 34 preverified symbol-to-model pairings across 19 of the 29 **
 | LM358 | `LM358_DUAL_OJ` | 1–8 in package order |
 | LM324 | `LM324_QUAD_OJ` | 1–14 in package order |
 
-### Symbols that use their built-in templates
-
-The following 10 symbols have no compatible catalog entry. Their built-in SPICE templates are available under **Custom**.
-
-| Category | Symbols |
-| --- | --- |
-| Fixed resistors | Resistor, Resistor (US) |
-| Capacitors | Capacitor, Electrolytic capacitor, Trimmer capacitor |
-| Inductors | Inductor, Inductor with core |
-| Resonators | Ceramic resonator |
-| Sources | DC / AC voltage source, DC / AC current source |
-
-The yellow LED and 741 op-amp have no OpenJellyBean pairing. Their bundled alternatives come from circsim.
+Fixed resistors, capacitors, inductors, the ceramic resonator and the two independent sources use TinyCAD Basic. The yellow LED and 741 op-amp also have circsim alternatives.
 
 ## AI chatbot tools
 
@@ -83,14 +78,14 @@ The Electron chatbot uses the same catalog, compatibility checks, template gener
 
 ## Saving, simulation and export
 
-Drawings retain each attachment’s pinned revision, mapping and parameters through XML and ZIP saves. Drawing-level attachments share a pack at drawing level. A model inherited from a TCLib symbol can carry its pinned pack in the symbol’s hidden binding. [Drawing format](drawing-format.md)
+Each linked TCLib symbol stores a model ID, a pinned pack revision, the pin mapping and a short instance template. Shared prologues and model text live in the catalog. XML and ZIP drawing saves retain the links and save one copy of each referenced pack at drawing level. [Drawing format](drawing-format.md)
 
 TinyCAD generates the instance statement from the model’s SPICE designator and mapped pins. For example, the bundled NPN symbol with `2N3904_OJ` uses `QTC_$(ref) %(3) %(1) %(2) 2N3904_OJ`. TinyCAD resolves the macros to the schematic reference and connected nets when it builds the deck. [Netlist writer](../src/io/netlists/netlistSpice.ts)
 
-Each simulation stages one local include per referenced pack alongside any setup-local model files. TinyCAD detects model definition and filename conflicts before invoking the engine. Regular SPICE export embeds the referenced catalog model text and licence notices inline in the `.cir` file. [SPICE engine](spice-engine.md) · [Deck preparation](../src/simulation/deck.ts)
+TinyCAD expands Basic templates into the circuit deck and emits identical prologues once. For other catalog packs, simulation stages one local include per referenced pack alongside any setup-local model files. TinyCAD detects model definition and filename conflicts before invoking the engine. Regular SPICE export embeds the referenced catalog model text and licence notices inline in the `.cir` file. [SPICE engine](spice-engine.md) · [Deck preparation](../src/simulation/deck.ts)
 
 ## Maintaining the catalogs
 
-Run `python scripts/build-openjellybean-catalog.py` with Python 3.11 or newer to regenerate the JSON catalogs offline. Add `--check` to compare the checked-in catalogs with the generated output. The script reads the pinned source files and the shipped SQLite symbol library. Each JSON stores the pack text, checksum and licence, plus descriptions, aliases, terminal order, parameter defaults, compatibility mappings and source URLs for individual models. [Generator](../scripts/build-openjellybean-catalog.py) · [Additional source manifest](../library-sources/spice-catalogs/manifest.json)
+Run `python scripts/build-openjellybean-catalog.py` with Python 3.11 or newer to regenerate the JSON catalogs and update the default links in the shipped SPICE essentials SQLite library offline. Add `--check` to verify the generated output and the library links. Each JSON stores the pack text, checksum and licence, plus descriptions, aliases, terminal order, parameter defaults, compatibility mappings and source URLs for individual models. [Generator](../scripts/build-openjellybean-catalog.py) · [Additional source manifest](../library-sources/spice-catalogs/manifest.json)
 
 The [catalog regression tests](../scripts/tests/simulation-model-catalog.test.mjs) run in the simulation and chat suites. They cover pinned sources, compatibility, attachment, drawing round-trips and portable netlists. The [picker browser tests](../scripts/tests/layout-browser/spice-picker.spec.mjs) cover offline selection, TCLib persistence and Custom copies in browser and Electron renderer builds. The [engine qualification fixtures](../scripts/tests/qualify-engines.mjs) exercise bundled models on native and WebAssembly ngspice.

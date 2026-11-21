@@ -4,7 +4,9 @@ import { ioXML, blank } from '../../src/io/ioXml';
 import { XMLBuilder } from '../../src/util/xmlbuilder';
 import { updateView } from '../../src/manipulators/updateView';
 import { updateSymbol } from '../../src/manipulators/updateSymbol';
-import { writeSpice } from '../../src/io/netlists/netlistSpice';
+import { writeSpice, writeSpiceWithModels } from '../../src/io/netlists/netlistSpice';
+import { modelBinding } from '../../src/simulation/catalogBindings';
+import { changeSpiceTemplateMode, inspectSpiceModel, searchSpiceModels } from '../../src/simulation/spiceModelCatalog';
 import { librarySymbolSelection } from '../../src/io/librarySymbols';
 export function checkSpicePlacement(library, exportFile) {
   globalThis.document = {
@@ -45,6 +47,7 @@ export function checkSpicePlacement(library, exportFile) {
     const selection = librarySymbolSelection(
       {
         ...library,
+        fileId: 'bundled:spice',
         symbols: library.symbols.map((symbol) => ({
           ...symbol,
           SymbolId: symbol.SymbolID,
@@ -107,15 +110,39 @@ export function checkSpicePlacement(library, exportFile) {
       labels['n' + id] = id;
       nets[id] = [{ reference: ref, pin: id }];
     }
-    const out = writeSpice({ symbols: [['test', symbol]], nets, labels });
+    const netlist = { symbols: [['test', symbol]], nets, labels };
+    const out = writeSpice(netlist);
     assert.ok(
       !/NO_MODEL|<pin |<attr |\$\(|\?\(/.test(out),
       name.Name + ' unresolved: ' + out,
     );
     assert.ok(symbol.text.some((t) => t.description === '$$SPICE'));
+    const binding = modelBinding(symbol);
+    assert.ok(binding, name.Name + ' has a bundled model');
+    assert.equal(binding.embeddedPack, undefined);
+    assert.ok(!symbol.text.some((t) => t.description === '$$SPICE_PROLOG'));
+    assert.ok(binding.pins.every((pin) => pins.some((entry) => entry[2].number === pin)));
+    const selectedModel = searchSpiceModels('', symbol).find(({ id }) => id === binding.modelId);
+    assert.ok(selectedModel, name.Name + ' default is offered in the compatible picker');
+    assert.deepEqual(inspectSpiceModel(symbol, selectedModel).mapping, binding.pins);
+    if (name.Name === 'Diode') {
+      const custom = changeSpiceTemplateMode(symbol, 'custom');
+      const other = { ...symbol, text: symbol.text.map((field) =>
+        field.description === 'Ref' ? { ...field, value: 'D999' } : field) };
+      const mixed = writeSpice({
+        ...netlist,
+        symbols: [['test', custom], ['test', other]],
+      });
+      assert.match(mixed, new RegExp(`^\\.model TC_CUSTOM_TC_D_${ref} D\\(`, 'm'));
+      assert.match(mixed, /^\.model TC_D D\(/m);
+      assert.deepEqual(modelBinding(changeSpiceTemplateMode(custom, 'bundled')), binding);
+      const both = { ...placed.sheet, items: [symbol, other] };
+      const xml = io.to_dsn({ ...drawing, sheets: [both] }, true, true);
+      assert.equal(io.from_dsn(xml).spiceModelPacks.length, 1);
+    }
     if (name.Name === 'LM358' || name.Name === 'LM324') {
       const model =
-        name.Name === 'LM358' ? 'TC_LM358_DUAL_OJ' : 'TC_LM324_QUAD_OJ';
+        name.Name === 'LM358' ? 'LM358_DUAL_OJ' : 'LM324_QUAD_OJ';
       const terminalCount = name.Name === 'LM358' ? 8 : 14;
       assert.equal(pins.length, terminalCount);
       const orderedNets = Array.from(
@@ -123,7 +150,7 @@ export function checkSpicePlacement(library, exportFile) {
         (_, i) => `n${i + 1}`,
       );
       assert.ok(
-        out.split('\n').includes(`X${ref} ${orderedNets.join(' ')} ${model}`),
+        out.split('\n').includes(`XTC_${ref} ${orderedNets.join(' ')} ${model}`),
       );
       packageSymbols.push(['test', symbol]);
     }
@@ -137,12 +164,9 @@ export function checkSpicePlacement(library, exportFile) {
       .tostring();
     const xml2 = new XMLBuilder();
     xml2.fromText(xml);
-    const back = io.from_dsn(xml2).sheets[0].items.at(-1);
-    assert.equal(
-      back.text.find((t) => t.description === '$$SPICE_PROLOG')?.value,
-      symbol.text.find((t) => t.description === '$$SPICE_PROLOG')?.value,
-      name.Name + ' multiline SPICE survives save',
-    );
+    const reopened = io.from_dsn(xml2);
+    assert.deepEqual(modelBinding(reopened.sheets[0].items.at(-1)), binding);
+    assert.equal(reopened.spiceModelPacks.length, 1);
     const old = {
       ...symbol,
       text: symbol.text.map((t) => ({
@@ -181,17 +205,17 @@ export function checkSpicePlacement(library, exportFile) {
       name: name.Name,
       reference: ref,
       pins: pins.map((p) => ({ number: p[2].number, name: p[2].name })),
-      netlist: out,
+      netlist: writeSpiceWithModels(netlist),
     });
   }
   assert.equal(packageSymbols.length, 2);
-  const packageDeck = writeSpice({
+  const packageDeck = writeSpiceWithModels({
     symbols: packageSymbols,
     nets: {},
     labels: {},
   });
   assert.equal(
-    (packageDeck.match(/^\.subckt TC_OPAMP_OJ\b/gm) || []).length,
+    (packageDeck.match(/^\.subckt OPAMP_OJ\b/gm) || []).length,
     1,
   );
   writeFileSync(exportFile, JSON.stringify(results, null, 2));

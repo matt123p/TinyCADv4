@@ -88,7 +88,7 @@ test('catalog results, attachment, undo, simulation decks and drawing round-trip
         name: {
           ...row,
           Data: undefined,
-          Attributes: attributes.values.map(([AttName, AttValue, ShowAtt]) => ({
+          Attributes: attributes.values.filter(([name]) => name !== '$$CATALOG_MODEL').map(([AttName, AttValue, ShowAtt]) => ({
             AttName,
             AttValue,
             ShowAtt,
@@ -116,7 +116,7 @@ test('catalog results, attachment, undo, simulation decks and drawing round-trip
     import { createSimulationSheet } from './src/simulation/document';
     import { bindSpiceModel, catalogModelPack, changeSpiceModel, inspectSpiceModel, searchSpiceModels } from './src/simulation/spiceModelCatalog';
     import { customSpiceDefinition, spiceDefinitionText } from './src/simulation/spiceModelDefinitions';
-    import { modelBinding, symbolField } from './src/simulation/catalogBindings';
+    import { modelBinding, nativeSpiceTemplate, pinnedSpiceModelPack, symbolField } from './src/simulation/catalogBindings';
     import { writeSpiceWithModels } from './src/io/netlists/netlistSpice';
     import { DocStoreWithHistory } from './src/state/undo/undo';
     import { createEditorTools } from './src/chat/tools';
@@ -150,7 +150,7 @@ test('catalog results, attachment, undo, simulation decks and drawing round-trip
       const [diode, yellow, opamp, resistor, crystal, transformer] = sheet.items;
       const sheetId = sheet.id;
       drawing = { ...drawing, sheets: [sheet, createSimulationSheet(sheet, 'First'), createSimulationSheet(sheet, 'Second')] };
-      assert.equal(searchSpiceModels('').length, process.env.TARGET_SYSTEM === 'electron' ? 80 : 77);
+      assert.equal(searchSpiceModels('').length, process.env.TARGET_SYSTEM === 'electron' ? 100 : 97);
       assert.equal(searchSpiceModels('LTC1044HV').length, process.env.TARGET_SYSTEM === 'electron' ? 1 : 0);
       const bridge = searchSpiceModels('BRIDGE_GEN')[0];
       assert.match(spiceDefinitionText(catalogModelPack(bridge), bridge.id), /^\\.model DRECT_GEN/im);
@@ -158,10 +158,13 @@ test('catalog results, attachment, undo, simulation decks and drawing round-trip
         /^D1 ac1 pos TC_CUSTOM_DRECT_GEN_\\$\\(ref\\)/m);
       assert.deepEqual(inspectSpiceModel(crystal, searchSpiceModels('', crystal)[0]).mapping, ['1','2']);
       assert.deepEqual(inspectSpiceModel(transformer, searchSpiceModels('', transformer)[0]).mapping, ['1','2','3','4']);
-      for (const entry of searchSpiceModels(''))
-        assert.match(spiceDefinitionText(catalogModelPack(entry), entry.id), /^\\.(model|subckt) /im);
+      for (const entry of searchSpiceModels('')) {
+        const pack = catalogModelPack(entry);
+        if (pack.format === 'templates') assert.ok(nativeSpiceTemplate(pack, entry.id).instance);
+        else assert.match(spiceDefinitionText(pack, entry.id), /^\\.(model|subckt) /im);
+      }
       assert.equal(searchSpiceModels('LED_YELLOW', diode).length, 0);
-      assert.equal(searchSpiceModels('', resistor).length, 0);
+      assert.equal(searchSpiceModels('', resistor).length, 1);
       assert.equal(searchSpiceModels('MMBT3904')[0].id, '2N3904_OJ');
       const chosenDiode = searchSpiceModels('1N914', diode)[0];
       const chosenYellow = searchSpiceModels('', yellow)[0];
@@ -276,7 +279,8 @@ test('catalog results, attachment, undo, simulation decks and drawing round-trip
           const restoredCustom = changeSpiceModel(reloaded, reloaded.sheets[0].id, restoredAmp._id, 'custom');
           assert.equal(symbolField(restoredCustom.sheets[0].items[0], '$$SPICE_PROLOG'),
             symbolField(edited, '$$SPICE_PROLOG'));
-          const inherited = bindSpiceModel(bundledAmp, select(chosenOpamp), true).symbol;
+          const inherited = bindSpiceModel(bundledAmp, select(chosenOpamp)).symbol;
+          assert.equal(modelBinding(inherited).embeddedPack, undefined);
           const amps = [edited, otherAmp, inherited].map((item) => [sheet.name, item]);
           const terminals = (pin) => ['U1','U2','U3'].map((reference) => ({ reference, pin }));
           const ampNetlist = { symbols: amps, labels: { vin: 'in', vp: 'p', vn: 'n', out1:'1', out2:'2', out3:'3' },
@@ -285,7 +289,7 @@ test('catalog results, attachment, undo, simulation decks and drawing round-trip
                 [String(i+1), ['2','6'].map(pin => ({ reference, pin }))])) } };
           const ampDeck = writeSpiceWithModels(ampNetlist);
           assert.deepEqual(Object.keys(prepareSpiceDeck(ampNetlist, defaultSetup()).files), [
-            modelBinding(inherited).embeddedPack.filename,
+            pinnedSpiceModelPack(modelBinding(inherited)).filename,
           ]);
           assert.match(ampDeck, /\\.subckt TC_CUSTOM_LM741_U1/);
           assert.match(ampDeck, /\\.subckt TC_CUSTOM_LM741_U2/);

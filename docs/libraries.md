@@ -115,7 +115,7 @@ Use **Simulation → Components** for common parts; **More…** opens the full s
 
 The 741 behavioural model approximates 200,000 open-loop DC gain, 2 Megohm differential input resistance, 5 Hz dominant pole, 0.5 V/µs slew limit, 75 ohm output resistance and rail clipping with 2 V headroom. It omits bias/offset, common-mode validity, temperature, noise, short-circuit current and full stability effects. Generic diode/transistor/LED/resonator models are teaching approximations; LED colour is not calibrated brightness. Electrolytic polarity is graphical and is not enforced by its ideal capacitor model. Core inductors remain linear.
 
-The LM358 and LM324 include the typical-behaviour OpenJellyBean package models and their dependencies directly in the symbols. Both can simulate after placement with the supply and signal pins wired. The LM358 and LM324 models omit effects such as input common-mode limits, noise and offset drift. [LM358 datasheet](https://www.ti.com/lit/ds/symlink/lm358.pdf) · [LM324 pinout](https://www.ti.com/lit/ds/symlink/lm324-mil.pdf) · [OpenJellyBean definitions](https://github.com/xdylanm/openjellybean/blob/v0.6.0/jellybean.lib)
+The LM358 and LM324 link to the typical-behaviour OpenJellyBean package models in the bundled catalog. Both can simulate after placement with the supply and signal pins wired. The LM358 and LM324 models omit effects such as input common-mode limits, noise and offset drift. [LM358 datasheet](https://www.ti.com/lit/ds/symlink/lm358.pdf) · [LM324 pinout](https://www.ti.com/lit/ds/symlink/lm324-mil.pdf) · [OpenJellyBean definitions](https://github.com/xdylanm/openjellybean/blob/v0.6.0/jellybean.lib)
 
 ## Sources, recipes and provenance
 

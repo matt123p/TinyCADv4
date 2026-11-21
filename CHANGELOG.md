@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- Browse bundled SPICE models offline in the symbol editor and on placed components. The picker shows descriptions, source links and optional model text. The desktop AI assistant can search, inspect and attach models from the same catalog.
+- Import supported SPICE definitions from KiCad symbol libraries, including embedded models and external model files supplied with the import. TinyCAD preserves pin mappings and parameter overrides in editable Custom definitions.
+
+### Changed
+
+- All 29 SPICE essentials components start with a compatible bundled model and preset pin mapping. The catalog includes 20 TinyCAD Basic models, and the LM358 and LM324 default to OpenJellyBean package models.
+- Library symbols link to shared model definitions. Stock parts in the SPICE and XSPICE tutorials use those links and retain their original simulation results.
+
 ### Fixed
 
 - Show the editable Name field by default on newly placed standard library symbols and remove duplicate name captions from their artwork.

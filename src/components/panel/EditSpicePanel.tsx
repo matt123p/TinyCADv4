@@ -49,7 +49,7 @@ export class EditSpicePanel extends React.PureComponent<EditSpicePanelProps> {
   changeModel(symbol: SpiceModelTarget, selection?: SpiceModelChange) {
     const { editSymbol, dispatch } = this.props;
     const next = selection && typeof selection !== 'string'
-      ? bindSpiceModel(symbol, selection, true).symbol
+      ? bindSpiceModel(symbol, selection).symbol
       : changeSpiceTemplateMode(symbol, typeof selection === 'string' ? selection : undefined);
     if (next === symbol) return;
     const Attributes = next.text.slice(1).map(({ description, value, display }) => ({

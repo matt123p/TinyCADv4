@@ -218,9 +218,9 @@ function DefinitionPreview({ modelId, getPack, template }: {
     <details className={styles.definition} onToggle={(event) => setExpanded(event.currentTarget.open)}>
       <summary>View SPICE definition</summary>
       {error && <p role="alert">{error}</p>}
-      {definition && (
+      {(template || definition) && expanded && (
         <pre ref={code} tabIndex={0} className={styles.code}>
-          {template ? template + '\n\n' : ''}{definition}
+          {[template, definition].filter(Boolean).join('\n\n')}
         </pre>
       )}
     </details>
@@ -261,11 +261,6 @@ export function SpiceModelPicker({ symbol, packs, onChange, children }: Props) {
     }
   };
   const findModel = () => {
-    const available = searchSpiceModels('', symbol);
-    if (!available.length) {
-      setError('No bundled SPICE models are compatible with this symbol.');
-      return;
-    }
     const name = symbolField(symbol, 'Name') ?? '';
     setQuery(!bundled && name && searchSpiceModels(name, symbol).length ? name : '');
     setSelected(undefined);
@@ -300,7 +295,7 @@ export function SpiceModelPicker({ symbol, packs, onChange, children }: Props) {
       {currentMode === 'custom' ? children : binding ? (
         <div className={styles.attached}>
           <div>
-            <strong>{binding.modelId}</strong> ·{' '}
+            <strong>{binding.label ?? binding.modelId}</strong> ·{' '}
             <SourceLink name={binding.source?.archiveMember ?? binding.source?.name ?? binding.packId} url={binding.source?.url ?? ''} />
           </div>
           <DefinitionPreview
@@ -360,7 +355,7 @@ export function SpiceModelPicker({ symbol, packs, onChange, children }: Props) {
                                 button?.click();
                               }}
                             >
-                              {model.id}{active && <CheckmarkRegular aria-hidden="true" />}
+                              {model.label ?? model.id}{active && <CheckmarkRegular aria-hidden="true" />}
                             </button>
                           </td>
                           <td>{model.source.name}</td>
@@ -372,7 +367,7 @@ export function SpiceModelPicker({ symbol, packs, onChange, children }: Props) {
                 </table>
                 {!matches.length && (
                   <p className={styles.empty} role="status">
-                    {bundled ? 'No compatible model matches this search.' : 'No models match this search.'}
+                    No models match this search.
                   </p>
                 )}
               </div>
@@ -383,7 +378,7 @@ export function SpiceModelPicker({ symbol, packs, onChange, children }: Props) {
               >
                 {selected && inspection ? (
                   <div className={styles.details}>
-                    <h2 className={styles.heading}>{selected.id}</h2>
+                    <h2 className={styles.heading}>{selected.label ?? selected.id}</h2>
                     <p className={styles.metadata}>
                       <SourceLink name={selected.source.archiveMember ?? selected.source.name} url={selected.source.url} /> · Typical approximation
                     </p>
@@ -426,7 +421,7 @@ export function SpiceModelPicker({ symbol, packs, onChange, children }: Props) {
                     <DefinitionPreview
                       modelId={selected.id}
                       getPack={() => catalogModelPack(selected)}
-                      template={spiceInstanceTemplate(selected, pins, parameters)}
+                      template={spiceInstanceTemplate(selected, pins, parameters, symbol)}
                     />
                   </div>
                 ) : <p className={styles.empty}>Select a row to see model details and pin mapping.</p>}

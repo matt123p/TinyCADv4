@@ -6,6 +6,7 @@
   "output": "bundled-libraries/spice/spice.tclib",
   "requireSpice": true,
   "notes": "Curated onetransistor drawings with existing aryajur SPICE templates, plus original LM358 and LM324 package artwork. The LM358 and LM324 use OpenJellyBean models. See docs/libraries.md#spice-essentials for defaults, terminal mapping, and limitations.",
+  "linkedSpiceCatalog": "../bundled-libraries/spice/basic.json",
   "modelLibrary": {
     "file": "../library-sources/openjellybean/jellybean.lib.txt",
     "license": "../library-sources/openjellybean/LICENSE",
@@ -1868,7 +1869,6 @@
       "name": "LM358",
       "reference": "U?",
       "description": "Dual operational amplifier with all 8 package pins and a built-in OpenJellyBean SPICE model.",
-      "embedModelLibrary": true,
       "attributes": {
         "$$SPICE": {
           "value": "X$(ref) %(1) %(2) %(3) %(4) %(5) %(6) %(7) %(8) TC_LM358_DUAL_OJ",
@@ -1882,7 +1882,6 @@
       "name": "LM324",
       "reference": "U?",
       "description": "Quad operational amplifier with all 14 package pins and a built-in OpenJellyBean SPICE model.",
-      "embedModelLibrary": true,
       "attributes": {
         "$$SPICE": {
           "value": "X$(ref) %(1) %(2) %(3) %(4) %(5) %(6) %(7) %(8) %(9) %(10) %(11) %(12) %(13) %(14) TC_LM324_QUAD_OJ",

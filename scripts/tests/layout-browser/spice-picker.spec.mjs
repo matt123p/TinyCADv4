@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
+import { zstdCompressSync } from 'node:zlib';
 import { serveLayoutApp } from './serve-app.mjs';
 import { installElectronBridge } from '../chat-browser/electron-bridge.mjs';
 
@@ -14,6 +15,50 @@ for (const target of ['filesystem', 'electron'])
     });
     test.afterAll(async () => {
       await app?.close();
+    });
+
+    test('KiCad symbol import puts embedded SPICE in Custom', async ({ page }) => {
+      if (target === 'electron') await installElectronBridge(page);
+      const embedded = zstdCompressSync(Buffer.from(
+        '.include "scale.lib"\n.subckt gain a b params: factor=2\nX1 a b scale factor={factor}\n.ends gain',
+      )).toString('base64');
+      const companion = { fileName: 'scale.lib', content: '.subckt scale a b factor=1\nE1 b 0 a 0 {factor}\n.ends scale' };
+      const content = [
+        '(kicad_symbol_lib (version 20251024) (generator kicad_symbol_editor)',
+        '(symbol "GainTest" (property "Value" "GainTest")',
+        '(property "Sim.Library" "kicad-embed://gain.lib") (property "Sim.Name" "gain")',
+        '(property "Sim.Pins" "1=a 2=b") (property "Sim.Params" "factor=3")',
+        '(symbol "GainTest_1_1"',
+        '(pin passive line (at -2.54 0 0) (length 2.54) (name "input") (number "1"))',
+        '(pin passive line (at 2.54 0 180) (length 2.54) (name "output") (number "2")))',
+        '(embedded_files (file (name "gain.lib") (type other) (data |' + embedded + '|)))))',
+      ].join('\n');
+      await page.goto(app.baseURL);
+      if (target === 'electron') {
+        await page.evaluate(({ source, model }) => {
+          window.electronAPI.openKicadImport = async () => ({ fileName: 'gain.kicad_sym', content: source, modelFiles: [model] });
+          window.layoutTest.importKiCadSymbols();
+        }, { source: content, model: companion });
+      } else {
+        await page.getByRole('button', { name: 'File', exact: true }).click();
+        await page.getByRole('menuitem', { name: 'Import', exact: true }).click();
+        const chooser = page.waitForEvent('filechooser');
+        await page.getByRole('menuitem', { name: 'Import KiCad Symbols' }).click();
+        await (await chooser).setFiles([
+          { name: 'gain.kicad_sym', mimeType: 'text/plain', buffer: Buffer.from(content) },
+          { name: companion.fileName, mimeType: 'text/plain', buffer: Buffer.from(companion.content) },
+        ]);
+      }
+      const dialog = page.getByRole('dialog');
+      await dialog.getByText('GainTest', { exact: true }).waitFor();
+      await dialog.getByRole('button', { name: 'Insert', exact: true }).click();
+      await page.evaluate(() => window.layoutTest.selectSymbol('GainTest'));
+      await page.getByRole('tab', { name: 'SPICE', exact: true }).click();
+      await expect(page.getByRole('radio', { name: 'Custom' })).toBeChecked();
+      await expect(page.getByRole('textbox', { name: /prologue/i })).toHaveValue(/Xdevice p1 p2 gain factor=3/);
+      await page.evaluate(() => window.layoutTest.saveAndReopen());
+      await page.evaluate(() => window.layoutTest.selectSymbol('GainTest'));
+      await expect(page.getByRole('textbox', { name: /prologue/i })).toHaveValue(/\.subckt scale a b factor=1/);
     });
 
     test('bundled symbols use the offline picker and retain the linked model after reopening', async ({
@@ -37,21 +82,23 @@ for (const target of ['filesystem', 'electron'])
       await page.goto(app.baseURL);
       await page.evaluate(() => window.layoutTest.placeSpiceSymbol('Resistor'));
       await page.getByRole('tab', { name: 'SPICE', exact: true }).click();
-      await page.getByRole('radio', { name: 'Bundled' }).check();
+      await expect(page.getByRole('radio', { name: 'Bundled' })).toBeChecked();
+      await expect(page.getByRole('link', { name: 'TinyCAD Basic' })).toBeVisible();
       await page.getByRole('button', { name: 'Find SPICE model…' }).click();
-      await expect(page.getByText('No bundled SPICE models are compatible with this symbol.')).toBeVisible();
-      await expect(page.getByRole('dialog', { name: 'Find SPICE model' })).toBeHidden();
+      const dialog = page.getByRole('dialog', { name: 'Find SPICE model' });
+      await expect(dialog.getByRole('row')).toHaveCount(2);
+      await expect(dialog.getByRole('row', { name: /resistor/i })).toBeVisible();
+      await dialog.getByRole('button', { name: 'Cancel' }).click();
       await page.evaluate(() =>
         window.layoutTest.placeSpiceSymbol('LED (yellow)'),
       );
       const spiceTab = page.getByRole('tab', { name: 'SPICE', exact: true });
       await spiceTab.click();
-      await page.getByRole('radio', { name: 'Bundled' }).check();
+      await expect(page.getByRole('radio', { name: 'Bundled' })).toBeChecked();
       const findModel = page.getByRole('button', { name: 'Find SPICE model…' });
       await expect(findModel).toBeVisible();
       await context.setOffline(true);
       await findModel.click();
-      const dialog = page.getByRole('dialog', { name: 'Find SPICE model' });
       const size = () => dialog.evaluate(({ offsetWidth, offsetHeight }) => [offsetWidth, offsetHeight]);
       const search = dialog.getByRole('textbox', {
         name: 'Part number, alias or device family',
@@ -62,7 +109,7 @@ for (const target of ['filesystem', 'electron'])
       await expect(select).toBeDisabled();
       await search.fill('LED_RED_OJ');
       await expect(dialog.getByRole('status')).toHaveText(
-        'No compatible model matches this search.',
+        'No models match this search.',
       );
       expect(await size()).toEqual(initialSize);
       await search.fill('yellow');

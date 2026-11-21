@@ -575,19 +575,30 @@ function createWindow({ openAbout = false } = {}) {
       }
 
       const result = await dialog.showOpenDialog(mainWindow, {
-        filters: [{ name: 'KiCad Symbols', extensions: ['kicad_sym'] }],
-        properties: ['openFile'],
+        filters: [{ name: 'KiCad Symbols and SPICE files', extensions: [
+          'kicad_sym', 'lib', 'cir', 'sub', 'mod', 'model', 'spice', 'sp', 'spi', 'inc', 'txt',
+        ] }],
+        properties: ['openFile', 'multiSelections'],
       });
 
       if (result.canceled || result.filePaths.length === 0) {
         return null;
       }
 
-      const selectedPath = result.filePaths[0];
+      const libraries = result.filePaths.filter((file) => /\.kicad_sym$/i.test(file));
+      if (libraries.length !== 1)
+        throw new Error('Select one KiCad symbol library and any accompanying SPICE files.');
+      const [selectedPath] = libraries;
+      const modelFiles = await Promise.all(result.filePaths.filter((file) => file !== selectedPath).map(async (file) => {
+        if ((await fs.promises.stat(file)).size > 8 * 1024 * 1024)
+          throw new Error('An accompanying SPICE file exceeds 8 MiB.');
+        return { fileName: path.basename(file), content: await fs.promises.readFile(file, 'utf8') };
+      }));
       const content = await fs.promises.readFile(selectedPath, 'utf8');
       return {
         fileName: path.basename(selectedPath),
         content,
+        modelFiles,
       };
     });
 

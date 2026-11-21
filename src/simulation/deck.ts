@@ -116,6 +116,7 @@ export function buildDeck(
   netlist: NetlistData,
   setup: SimulationSetup,
   catalogFiles: readonly string[] = [],
+  packs?: SpiceModelPack[],
 ): string {
   if (!netlist.symbols.length)
     throw new Error('Place and connect a circuit on a schematic sheet first.');
@@ -130,7 +131,7 @@ export function buildDeck(
       );
     references.add(ref.toLowerCase());
   }
-  const body = writeSpice(netlist).replace(/^\* Schematics Netlist.*\n/, '');
+  const body = writeSpice(netlist, packs).replace(/^\* Schematics Netlist.*\n/, '');
   const missing = netlist.symbols
     .filter(
       ([, symbol]) =>
@@ -204,7 +205,7 @@ export function buildDeck(
 export function prepareSpiceDeck(netlist: NetlistData, setup: SimulationSetup, packs?: SpiceModelPack[]) {
   const active = activeSpiceModelPacks(netlist, packs);
   const files = mergeSpiceModelFiles(active, setup.models);
-  const deck = buildDeck(netlist, { ...setup, models: files }, active.map(({ filename }) => filename));
+  const deck = buildDeck(netlist, { ...setup, models: files }, active.map(({ filename }) => filename), packs);
   const custom = Object.entries(setup.models).filter(([name]) => !active.some(({ filename }) => filename === name));
   checkCatalogDefinitions(active, [deck, ...custom.map(([, text]) => text)]);
   return { deck, files, identity: deck + JSON.stringify(files) };

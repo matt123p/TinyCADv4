@@ -12,8 +12,9 @@ tutorial download is needed. Choose **Open Example** on the toolbar, select
 **SPICE tutorial** or **XSPICE and digital tutorial**, select the example named
 in the chapter, then choose **Open Drawing**. This opens an editable copy;
 use **Save As** to keep your experiments and open the embedded example again
-to start afresh. Drawings include embedded symbols, model definitions,
-analysis settings and a retained reference acquisition.
+to start afresh. Stock SPICE essentials parts open with their bundled models
+selected. The drawings include the shared model pack, any circuit-specific
+definitions, analysis settings and a retained reference acquisition.
 
 ## SPICE
 

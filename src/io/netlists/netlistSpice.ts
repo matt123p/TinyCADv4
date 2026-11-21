@@ -1,7 +1,7 @@
 import { NetlistData } from './netlistGenerator';
 import { updateSymbol } from '../../manipulators/updateSymbol';
 import { dsnSymbol } from '../../model/dsnItem';
-import { activeSpiceModelPacks, checkCatalogDefinitions, type SpiceModelPack } from '../../simulation/catalogBindings';
+import { activeSpiceModelPacks, checkCatalogDefinitions, nativeSpicePrologue, type SpiceModelPack } from '../../simulation/catalogBindings';
 
 function findSpiceAttribute(symbol: dsnSymbol, name: string) {
     // Legacy library templates use $(NAME) for the editor's Name property.
@@ -254,7 +254,7 @@ function expandSpice(
     return res;
 }
 
-export function writeSpice(netlist: NetlistData) {
+export function writeSpice(netlist: NetlistData, packs?: SpiceModelPack[]) {
     let txt = '';
     const now = new Date();
     txt += `* Schematics Netlist created on ${now.toISOString()} *\n`;
@@ -265,7 +265,8 @@ export function writeSpice(netlist: NetlistData) {
     
     netlist.symbols.forEach(symRef => {
         const symbol = symRef[1];
-        const prolog = symbol.text.find(t => t.description === '$$SPICE_PROLOG')?.value;
+        const prolog = symbol.text.find(t => t.description === '$$SPICE_PROLOG')?.value
+            ?? nativeSpicePrologue(symbol, packs);
         if (prolog) {
             // Get priority (default 5)
             let priority = 5;
@@ -340,7 +341,7 @@ export function writeSpice(netlist: NetlistData) {
 
 /** Export a standalone SPICE circuit with only the catalog packs it uses. */
 export function writeSpiceWithModels(netlist: NetlistData, packs?: SpiceModelPack[]) {
-    const netlistText = writeSpice(netlist);
+    const netlistText = writeSpice(netlist, packs);
     const embedded = activeSpiceModelPacks(netlist, packs);
     if (!embedded.length) return netlistText;
     checkCatalogDefinitions(embedded, [netlistText]);

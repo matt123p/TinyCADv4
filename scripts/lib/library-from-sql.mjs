@@ -371,7 +371,18 @@ export function buildLibraryModel(data, recipe, sourceHash, resources = {}) {
           (name.startsWith('$$') ? 2 : 1),
       });
     }
-    if (component.embedModelLibrary) {
+    if (resources.linkedSpice) {
+      const model = resources.linkedSpice[component.name];
+      if (!model) throw new Error(`Missing default SPICE model for ${component.name}`);
+      attributes.delete('$$SPICE_PROLOG');
+      attributes.delete('$$SPICE_EPILOG');
+      for (const [AttName, AttValue] of [
+        ['$$SPICE', model.template],
+        ['$$CATALOG_MODEL', JSON.stringify(model.binding)],
+      ]) {
+        attributes.set(AttName, { AttName, AttValue, ShowAtt: 2 });
+      }
+    } else if (component.embedModelLibrary) {
       if (!resources.prolog)
         throw new Error(`Missing SPICE model library for ${component.id}`);
       attributes.set('$$SPICE_PROLOG', {

@@ -1,11 +1,4 @@
-import openjellybean from '../../bundled-libraries/spice/openjellybean.json';
-import circsim from '../../bundled-libraries/spice/circsim.json';
-import spiceFiles from '../../bundled-libraries/spice/spice-files.json';
-import ngspiceSpecial from '../../bundled-libraries/spice/ngspice-special.json';
-import ngspiceXspice from '../../bundled-libraries/spice/ngspice-xspice.json';
-import sky130 from '../../bundled-libraries/spice/sky130.json';
-import gf180mcu from '../../bundled-libraries/spice/gf180mcu.json';
-import ihpSg13g2 from '../../bundled-libraries/spice/ihp-sg13g2.json';
+import { bundledSpiceCatalogs } from './spiceCatalogData';
 import type { dsnDrawing } from '../model/dsnDrawing';
 import { DocItemTypes, type dsnSymbol } from '../model/dsnItem';
 import { updateSymbol } from '../manipulators/updateSymbol';
@@ -16,7 +9,10 @@ import {
   hasCustomSpiceTemplate,
   mergeDrawingModelPacks,
   modelBinding,
+  nativeSpiceTemplate,
+  nativeSpicePrologue,
   pinnedSpiceModelPack,
+  renderNativeSpiceTemplate,
   SPICE_ALTERNATE,
   swapSpiceTemplate,
   symbolField,
@@ -38,6 +34,7 @@ interface BundledMapping {
 
 interface CatalogEntry {
   id: string;
+  label?: string;
   kind: string;
   description: string;
   aliases: string[];
@@ -46,7 +43,7 @@ interface CatalogEntry {
   terminals: { role: string; port?: string }[];
   parameterDefaults: Record<string, string>;
   compatibleComponents: BundledMapping[];
-  definition: string;
+  definition?: string;
 }
 
 export interface SpiceCatalogModel
@@ -55,16 +52,7 @@ export interface SpiceCatalogModel
   revision: string;
 }
 
-const catalogs: { pack: SpiceModelPack; models: CatalogEntry[]; requiresXspice?: boolean }[] = [
-  openjellybean,
-  circsim,
-  spiceFiles,
-  ngspiceSpecial,
-  ngspiceXspice,
-  sky130,
-  gf180mcu,
-  ihpSg13g2,
-];
+const catalogs: { pack: SpiceModelPack; models: CatalogEntry[]; requiresXspice?: boolean }[] = bundledSpiceCatalogs;
 const entries = catalogs
   .filter(({ requiresXspice }) => !requiresXspice || process.env.TARGET_SYSTEM === 'electron')
   .flatMap(({ pack, models }) => models.map((entry) => ({ pack, entry })));
@@ -132,6 +120,7 @@ export function searchSpiceModels(
               id,
               ...aliases,
               normalize(entry.kind),
+              normalize(entry.label ?? ''),
               normalize(entry.description),
             ].some((value) => value.includes(needle))
           ? 2
@@ -238,10 +227,14 @@ export interface SpiceModelSelection {
 export type SpiceModelChange = SpiceModelSelection | 'custom' | 'bundled';
 
 export function spiceInstanceTemplate(
-  model: Pick<SpiceCatalogModel, 'id' | 'designator' | 'parameterDefaults'>,
+  model: Pick<SpiceCatalogModel, 'id' | 'designator' | 'parameterDefaults' | 'packId' | 'revision'>,
   pins: string[],
   parameters: Record<string, string>,
+  symbol?: SpiceSymbolFields,
 ) {
+  const { pack } = catalogEntry(model.id, model.packId, model.revision);
+  const native = nativeSpiceTemplate(pack, model.id);
+  if (native) return renderNativeSpiceTemplate(native.instance, native, pins, symbol);
   const overrides = Object.entries(parameters).filter(
     ([name, value]) => value !== model.parameterDefaults[name],
   );
@@ -272,13 +265,14 @@ export function changeSpiceModel(
   let packs = drawing.spiceModelPacks ?? [];
   if (
     previousBinding &&
+    selection !== 'custom' &&
     !drawing.sheets.some(({ items }) =>
-      items.some(
-        (item) =>
-          item !== symbol &&
-          item.NodeName === DocItemTypes.Symbol &&
-          modelBinding(item)?.packId === previousBinding.packId,
-      ),
+      items.some((item) => {
+        if (item === symbol || item.NodeName !== DocItemTypes.Symbol) return false;
+        const alternate = alternateSpiceTemplate(item);
+        return modelBinding(item)?.packId === previousBinding.packId
+          || (alternate && modelBinding(alternate)?.packId === previousBinding.packId);
+      }),
     )
   )
     packs = packs.filter(({ id }) => id !== previousBinding.packId);
@@ -297,7 +291,8 @@ export function changeSpiceModel(
       items.flatMap((item) => {
         if (item === symbol || item.NodeName !== DocItemTypes.Symbol) return [];
         const binding = modelBinding(item);
-        return binding?.embeddedPack ? [binding.embeddedPack] : [];
+        const pack = binding && pinnedSpiceModelPack(binding, packs);
+        return pack ? [pack] : [];
       }),
     );
     mergeDrawingModelPacks(packs, [...remainingPacks, activePack]);
@@ -318,7 +313,6 @@ export function changeSpiceModel(
 export function bindSpiceModel<T extends SpiceModelTarget>(
   symbol: T,
   selection: SpiceModelSelection,
-  embedPack = false,
 ) {
   const { entry, pack } = catalogEntry(selection.modelId, selection.packId, selection.revision);
   const info = inspectSpiceModel(symbol, {
@@ -356,17 +350,17 @@ export function bindSpiceModel<T extends SpiceModelTarget>(
     )
       throw new Error(`Enter a valid SPICE quantity for ${key}.`);
   }
-  const template = spiceInstanceTemplate(entry, pins, parameters);
+  const template = spiceInstanceTemplate({ ...entry, packId: pack.id, revision: pack.revision }, pins, parameters, symbol);
   const changed = applyModelTemplate(
     symbol,
     {
       packId: pack.id,
       revision: pack.revision,
       modelId: entry.id,
+      ...(entry.label ? { label: entry.label } : {}),
       source: entry.source,
       pins,
       parameters,
-      ...(embedPack ? { embeddedPack: pack } : {}),
     },
     template,
   );
@@ -396,7 +390,7 @@ export function changeSpiceTemplateMode<T extends SpiceSymbolFields>(
   const pack = pinnedSpiceModelPack(binding, packs);
   if (!pack) throw new Error('The pinned SPICE model pack is missing.');
   const next = alternate && !alternateBinding ? alternate : copyBundledModelToCustom(symbol, binding, pack);
-  return swapSpiceTemplate(symbol, next, { ...binding, embeddedPack: pack });
+  return swapSpiceTemplate(symbol, next);
 }
 
 function copyBundledModelToCustom<T extends SpiceSymbolFields>(
@@ -405,6 +399,20 @@ function copyBundledModelToCustom<T extends SpiceSymbolFields>(
   pack: SpiceModelPack,
 ): T {
   const template = symbolField(symbol, '$$SPICE');
+  const native = nativeSpiceTemplate(pack, binding.modelId);
+  if (native) {
+    let instance = template ?? '';
+    let prologue = nativeSpicePrologue(symbol, [pack]) ?? '';
+    const name = /\.(?:model|subckt)\s+(\w+)/i.exec(prologue)?.[1];
+    if (name && !symbolField(symbol, 'Model File')) {
+      const rename = (text: string) => text.replace(new RegExp(`\\b${name}\\b`, 'gi'), localModelName(name));
+      instance = rename(instance.replace(/\$\((Model(?: Name)?)\)/g, (macro, attribute) =>
+        (symbolField(symbol, attribute) ?? native.attributes[attribute]) === name ? name : macro,
+      ));
+      prologue = rename(prologue);
+    }
+    return applyModelTemplate(symbol, undefined, instance, prologue);
+  }
   const prefix = template?.indexOf(` ${binding.modelId}`) ?? -1;
   if (prefix < 0) throw new Error('The bundled SPICE instance template is invalid.');
   const localTemplate = template.slice(0, prefix + 1) + localModelName(binding.modelId)

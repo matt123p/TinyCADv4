@@ -43,7 +43,7 @@ import { GoogleUserManager } from './google/googleUserManager';
 import { FileSystemUserManager } from './filesystem/filesystemUserManager';
 import { wkrGenerateNetlist } from '../web-worker/worker';
 import { downloadNetlist } from './netlists/netlistFiles';
-import { findImporter, ImportedSymbol } from './kicad/importer';
+import { findImporter, ImportedSymbol, type SymbolImportFile } from './kicad/importer';
 import { actionEditLibrarySymbol, actionSelectLibrarySymbol } from '../state/dispatcher/AppDispatcher';
 import { get_global_id } from '../util/global_id';
 import { openCurrentAppUrl, openExternalUrl } from '../util/navigation';
@@ -524,27 +524,35 @@ export function importSelectedSymbolsToCurrentLibrary(selectedSymbols: ImportedS
   };
 }
 
-function pickImportFile(): Promise<{ fileName: string; content: string } | null> {
+function pickImportFile(): Promise<SymbolImportFile | null> {
   if (process.env.TARGET_SYSTEM === 'electron' && window.electronAPI?.openKicadImport) {
     return window.electronAPI.openKicadImport();
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.kicad_sym';
-    input.onchange = () => {
-      const file = input.files?.[0];
-      if (!file) {
-        resolve(null);
-        return;
+    input.accept = '.kicad_sym,.lib,.cir,.sub,.mod,.model,.spice,.sp,.spi,.inc,.txt';
+    input.multiple = true;
+    input.oncancel = () => resolve(null);
+    input.onchange = async () => {
+      try {
+        const files = Array.from(input.files ?? []);
+        if (!files.length) return resolve(null);
+        const libraries = files.filter((file) => findImporter(file.name));
+        if (libraries.length !== 1)
+          throw new Error('Select one KiCad symbol library and any accompanying SPICE files.');
+        const [file] = libraries;
+        const companions = files.filter((entry) => entry !== file);
+        if (companions.some(({ size }) => size > 8 * 1024 * 1024))
+          throw new Error('An accompanying SPICE file exceeds 8 MiB.');
+        const modelFiles = await Promise.all(companions.map(async (entry) => ({
+          fileName: entry.name, content: await entry.text(),
+        })));
+        resolve({ fileName: file.name, content: await file.text(), modelFiles });
+      } catch (error) {
+        reject(error);
       }
-      file.text().then((content) => {
-        resolve({
-          fileName: file.name,
-          content,
-        });
-      });
     };
     input.click();
   });
@@ -571,6 +579,7 @@ export function importSymbolsFromFile() {
       const importedSymbols = await importer.importSymbols(
         picked.content,
         picked.fileName,
+        picked.modelFiles,
       );
 
       if (importedSymbols.length === 0) {

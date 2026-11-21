@@ -1,4 +1,5 @@
 import type { SpiceModelPack, SpiceModelSource } from './catalogBindings';
+import { nativeSpiceTemplate } from './catalogBindings';
 
 interface Definition {
   name: string;
@@ -56,6 +57,8 @@ function modelDefinitions(pack: SpiceModelPack, modelId: string) {
 }
 
 export function spiceDefinitionText(pack: SpiceModelPack, modelId: string) {
+  const native = nativeSpiceTemplate(pack, modelId);
+  if (native) return native.prologue;
   return modelDefinitions(pack, modelId).map(({ lines }) => lines.join('\n')).join('\n\n');
 }
 

@@ -279,6 +279,7 @@
     "electron-store": "^10.0.1",
     "file-saver": "^2.0.5",
     "fixed-data-table-2": "^1.2.2",
+    "fzstd": "0.1.1",
     "i18next": "^25.8.13",
     "i18next-resources-to-backend": "^1.2.1",
     "iconv-lite": "^0.7.2",

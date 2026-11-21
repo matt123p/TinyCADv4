@@ -1,5 +1,5 @@
 import { dsnView, FindResult, WireMode } from '../model/dsnView';
-import { activeSpiceModelPacks, mergeDrawingModelPacks, type SpiceModelPack } from '../simulation/catalogBindings';
+import { referencedSpiceModelPacks, mergeDrawingModelPacks, type SpiceModelPack } from '../simulation/catalogBindings';
 import {
   dsnRectangle,
   DocItemTypes,
@@ -2817,9 +2817,9 @@ export class updateView {
 
     let copy_doc = new XMLBuilder();
     copy_doc.createDoc('TinyCADSheets');
-    const embedded = activeSpiceModelPacks({ symbols: items.flatMap((item) =>
+    const embedded = referencedSpiceModelPacks({ symbols: items.flatMap((item) =>
       item.NodeName === DocItemTypes.Symbol ? [[sheet.name, item]] : [],
-    ) }, packs);
+    ) }, packs, true);
     if (embedded.length)
       copy_doc.appendChild('SPICE_MODEL_PACKS', JSON.stringify(embedded), { version: '1' });
     const io = new ioXML();

@@ -2,6 +2,7 @@ import type { dsnDrawing } from '../model/dsnDrawing';
 import type { dsnSymbol, SymbolTextItem } from '../model/dsnItem';
 import type { NetlistData } from '../io/netlists/netlistGenerator';
 import { TextDisplayMethod, type tclibLibraryEntry } from '../model/tclib';
+import { bundledSpicePacks } from './spiceCatalogData';
 
 export const BUNDLED_SPICE_SYMBOL = '$$BUNDLED_SPICE_SYMBOL';
 export const MODEL_BINDING = '$$CATALOG_MODEL';
@@ -27,21 +28,58 @@ export interface SpiceModelPack {
   license: string;
   licenseText: string;
   spice: string;
+  format?: 'templates';
 }
 
 export interface SpiceModelBinding {
   packId: string;
   revision: string;
   modelId: string;
+  label?: string;
   source: SpiceModelSource;
   pins: string[];
   parameters: Record<string, string>;
   previous: SymbolTextItem[];
-  /** Library symbols carry their pinned pack through TCLib and placement. */
+  /** Legacy TCLib bindings may contain the pinned pack. */
   embeddedPack?: SpiceModelPack;
 }
 
 export type SpiceSymbolFields = Pick<dsnSymbol, 'text'>;
+
+export interface NativeSpiceTemplate {
+  instance: string;
+  prologue: string;
+  templatePins: string[];
+  attributes: Record<string, string>;
+}
+
+const nativeTemplates = new WeakMap<SpiceModelPack, Record<string, NativeSpiceTemplate>>();
+
+export function nativeSpiceTemplate(pack: SpiceModelPack, modelId: string): NativeSpiceTemplate | undefined {
+  if (pack.format !== 'templates') return;
+  let templates = nativeTemplates.get(pack);
+  if (!templates) {
+    templates = JSON.parse(pack.spice);
+    nativeTemplates.set(pack, templates);
+  }
+  return Object.hasOwn(templates, modelId) ? templates[modelId] : undefined;
+}
+
+export function renderNativeSpiceTemplate(
+  text: string,
+  model: NativeSpiceTemplate,
+  pins: string[],
+  symbol?: SpiceSymbolFields,
+) {
+  const mapped = new Map(model.templatePins.map((pin, index) => [pin, pins[index]]));
+  return text.replace(/%\(([^)]+)\)/g, (macro, pin) =>
+    !mapped.has(pin) ? macro : mapped.get(pin) ? '%(' + mapped.get(pin) + ')' : '<pin>',
+  ).replace(/\$\(([^)]+)\)/g, (macro, attribute) =>
+    symbol && symbolField(symbol, attribute) === undefined && Object.hasOwn(model.attributes, attribute)
+      ? model.attributes[attribute]
+      : macro,
+  );
+}
 
 export function symbolField(
   symbol: SpiceSymbolFields,
@@ -155,13 +193,8 @@ export function alternateSpiceTemplate(symbol: SpiceSymbolFields): SpiceSymbolFi
 export function swapSpiceTemplate<T extends SpiceSymbolFields>(
   symbol: T,
   next: SpiceSymbolFields,
-  activeBinding?: SpiceModelBinding,
 ): T {
-  const saved = symbol.text.filter((field) => SWITCHED_FIELDS.has(field.description)).map((field) =>
-    field.description === MODEL_BINDING && activeBinding
-      ? hidden(MODEL_BINDING, JSON.stringify(activeBinding))
-      : field,
-  );
+  const saved = symbol.text.filter((field) => SWITCHED_FIELDS.has(field.description));
   return {
     ...symbol,
     text: [
@@ -225,6 +258,7 @@ export function parseSpiceModelPacks(text: string): SpiceModelPack[] {
       !/^[a-z0-9_-]+$/i.test(pack.id) ||
       !/^[a-f0-9]{64}$/i.test(pack.sha256) ||
       !/^[\w-]+\.lib$/i.test(pack.filename) ||
+      (pack.format !== undefined && pack.format !== 'templates') ||
       ids.has(pack.id)
     )
       throw new Error('Invalid or duplicate embedded SPICE model pack.');
@@ -241,36 +275,59 @@ export function pinnedSpiceModelPack(binding: SpiceModelBinding, packs: SpiceMod
     (pack) => pack.id === binding.packId && pack.revision === binding.revision,
   );
   const embedded = binding.embeddedPack;
-  if (!embedded) return stored;
+  if (!embedded) return stored ?? bundledSpicePacks.find(
+    (pack) => pack.id === binding.packId && pack.revision === binding.revision,
+  );
   if (embedded.id !== binding.packId || embedded.revision !== binding.revision)
     throw new Error('Invalid embedded SPICE pack for the selected symbol.');
   parseSpiceModelPacks(JSON.stringify([embedded]));
   return mergeDrawingModelPacks(stored ? [stored] : [], [embedded])[0];
 }
 
-export function activeSpiceModelPacks(
+export function referencedSpiceModelPacks(
   netlist: Pick<NetlistData, 'symbols'>,
   packs: dsnDrawing['spiceModelPacks'] = [],
+  includeInactive = false,
 ): SpiceModelPack[] {
   let used: SpiceModelPack[] = [];
   for (const [, symbol] of netlist.symbols) {
-    const binding = modelBinding(symbol);
-    if (!binding) continue;
-    const pack = pinnedSpiceModelPack(binding, packs);
-    if (!pack)
-      throw new Error(
-        `Missing ${binding.packId} model pack for ${
-          symbolField(symbol, 'Ref') ?? binding.modelId
-        }.`,
-      );
-    const existing = used.find((candidate) => candidate.filename.toLowerCase() === pack.filename.toLowerCase());
-    if (existing && existing.id !== pack.id)
-      throw new Error(`Conflicting SPICE model file ${pack.filename}.`);
-    used = mergeDrawingModelPacks(used, [pack]);
+    const alternate = includeInactive && alternateSpiceTemplate(symbol);
+    const inactive = alternate && modelBinding(alternate);
+    for (const binding of [modelBinding(symbol), inactive && !inactive.embeddedPack && inactive]) {
+      if (!binding) continue;
+      const pack = pinnedSpiceModelPack(binding, packs);
+      if (!pack) {
+        if (includeInactive) continue;
+        throw new Error(
+          `Missing ${binding.packId} model pack for ${symbolField(symbol, 'Ref') ?? binding.modelId}.`,
+        );
+      }
+      if (includeInactive && [...packs, ...used].some((stored) =>
+        stored.id === pack.id && stored.revision !== pack.revision,
+      )) continue;
+      const existing = used.find((candidate) => candidate.filename.toLowerCase() === pack.filename.toLowerCase());
+      if (existing && existing.id !== pack.id)
+        throw new Error(`Conflicting SPICE model file ${pack.filename}.`);
+      used = mergeDrawingModelPacks(used, [pack]);
+    }
   }
   return used.sort((a, b) =>
     a.filename.localeCompare(b.filename),
   );
+}
+
+export function activeSpiceModelPacks(
+  netlist: Pick<NetlistData, 'symbols'>,
+  packs: SpiceModelPack[] = [],
+) {
+  return referencedSpiceModelPacks(netlist, packs).filter((pack) => !pack.format);
+}
+
+export function nativeSpicePrologue(symbol: SpiceSymbolFields, packs?: SpiceModelPack[]) {
+  const binding = modelBinding(symbol);
+  const pack = binding && pinnedSpiceModelPack(binding, packs);
+  const template = pack && nativeSpiceTemplate(pack, binding.modelId);
+  return template && renderNativeSpiceTemplate(template.prologue, template, binding.pins, symbol);
 }
 
 export function mergeSpiceModelFiles(
