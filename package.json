@@ -69,6 +69,7 @@
     "test:teaching-tools": "node --test scripts/tests/teaching-native-tools.test.mjs",
     "libraries:all": "npm run libraries:digital && npm run libraries:functional && npm run libraries:sensors && npm run libraries:network && npm run libraries:embedded && npm run libraries:audio && npm run libraries:test-measurement && npm run libraries:motion && npm run libraries:package",
     "test:teaching": "node --test scripts/tests/teaching-library.test.mjs scripts/tests/teaching-models.test.mjs scripts/tests/teaching-native-tools.test.mjs",
+    "pretest:layout:browser": "npm run chat-bundle",
     "test:layout:browser": "playwright test --config scripts/tests/layout-browser/playwright.config.mjs",
     "test:layout:all": "npm run test:layout && npm run test:layout:browser",
     "libraries:embedded": "node scripts/build-embedded-library.mjs",
