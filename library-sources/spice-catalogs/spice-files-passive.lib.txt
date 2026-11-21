@@ -1,0 +1,55 @@
+* ==========================================================================
+* @part: ideal switch, 5 V relay, 16 MHz crystal, 10:1 transformer
+* @family: passive
+* @source: Repo
+* @url: (written for this repo)
+* @retrieved: 2026-09-24
+* @licence: MIT
+* @added-by: nav
+* ==========================================================================
+* ============================================================================
+* passive/generic_passive_repo.lib  --  flag: BOTH (native ngspice)  licence: MIT
+* ----------------------------------------------------------------------------
+* Written for this repository. Deliberately avoids the LTspice-only instance
+* parameters Rser/Rpar/Cpar/Lser so ngspice parses it natively; parasitics are
+* explicit R/L/C elements instead.
+* ============================================================================
+
+* Voltage-controlled ideal switch. SW (Vt/Vh/Ron/Roff) exists in both
+* simulators; keep Vh positive. On above Vt+Vh, off below Vt-Vh.
+.model SW_IDEAL SW(Ron=0.1 Roff=100Meg Vt=2.5 Vh=0.1)
+
+* 5 V SPST relay: coil 70 ohm / 50 mH, pull-in ~3.5 V, drop-out ~1.5 V
+* Pins: C+ C- COM NO
+.subckt RELAY_SPST_5V cp cn com no
+Lcoil cp n1 50m
+Rcoil n1 cn 70
+S1 com no cp cn SW_RLY
+.model SW_RLY SW(Ron=0.05 Roff=1G Vt=2.5 Vh=1)
+.ends RELAY_SPST_5V
+
+* 16 MHz fundamental crystal, Butterworth-Van Dyke equivalent:
+*   Lm=7mH, Cm=14.1fF, Rm=20 ohm, C0=5pF   -> series resonance ~16.0 MHz
+* Pins: 1 2
+.subckt XTAL_16M 1 2
+Lm 1 n1 7m
+Cm n1 n2 14.1f
+Rm n2 2 20
+C0 1 2 5p
+.ends XTAL_16M
+
+* 10:1 voltage-ratio transformer (Lp/Ls = 100), k=0.999.
+* Winding resistances are explicit resistors (not LTspice Rser=) so the file
+* stays native ngspice. They are also required by LTspice: an ideal inductor
+* driven directly by a voltage source is rejected as an over-defined matrix.
+* The 1G resistor gives the secondary a DC path to the primary side,
+* which ngspice needs when the secondary is otherwise floating.
+* Pins: P1 P2 S1 S2   (dots on P1 and S1)
+.subckt XFMR_10TO1 p1 p2 s1 s2
+Rwp p1 np 0.5
+Lp np p2 100m
+Rws s1 ns 5m
+Ls ns s2 1m
+K1 Lp Ls 0.999
+Rdc s2 p2 1G
+.ends XFMR_10TO1

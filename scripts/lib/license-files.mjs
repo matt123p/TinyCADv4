@@ -127,12 +127,12 @@ export async function writeLicenseFiles(root, destination, assets, target) {
   if ([...assets].some((file) => /^Liberation(?:Mono|Sans|Serif)-/.test(path.basename(file)))) {
     await addNotice('Liberation Fonts', '2.1.5', 'OFL-1.1', 'liberation-fonts.txt');
   }
-  for (const [id, name] of [['openjellybean', 'OpenJellyBean'], ['circsim', 'circsim']]) {
-    const catalog = path.join(root, 'bundled-libraries', 'spice', `${id}.json`);
-    if (assets.has(catalog)) {
-      const { pack } = JSON.parse(await fs.readFile(catalog, 'utf8'));
-      notices.push({ name, version: pack.version, license: pack.license, text: pack.licenseText.trim() });
-    }
+  const spiceAssets = path.join(root, 'bundled-libraries', 'spice');
+  for (const file of assets) {
+    if (path.dirname(file) !== spiceAssets || path.extname(file) !== '.json') continue;
+    const { pack, models } = JSON.parse(await fs.readFile(file, 'utf8'));
+    if (!pack || !models?.length) continue;
+    notices.push({ name: models[0].source.name, version: pack.version, license: pack.license, text: pack.licenseText.trim() });
   }
   if (notices.some(({ name }) => name === 'pdfkit')) {
     await addNotice('Adobe PDF Core 14 font metrics (PDFKit)', undefined, 'Adobe AFM redistribution terms', 'adobe-afm.txt');

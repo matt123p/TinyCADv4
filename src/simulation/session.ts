@@ -140,7 +140,8 @@ export async function runSimulation(
     }
     const prepared = prepareSpiceDeck(netlist, setup, drawing.spiceModelPacks);
     deck = prepared.deck;
-    if (process.env.TARGET_SYSTEM !== 'electron' && /^\s*A\S*\s/im.test(deck))
+    if (process.env.TARGET_SYSTEM !== 'electron' &&
+      [deck, ...Object.values(prepared.files)].some((text) => /^\s*A\S*\s/im.test(text)))
       throw new Error(
         'This circuit uses XSPICE code models. Run it in the Electron desktop app; the browser engine supports analogue models only.',
       );

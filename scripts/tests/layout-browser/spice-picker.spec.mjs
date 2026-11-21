@@ -112,6 +112,14 @@ for (const target of ['filesystem', 'electron'])
       const attach = async () => {
         await page.getByRole('radio', { name: 'Bundled' }).check();
         await page.getByRole('button', { name: 'Find SPICE model…' }).click();
+        await dialog.getByRole('textbox').fill('LTC1044HV');
+        if (target === 'electron') {
+          await dialog.getByRole('button', { name: 'LTC1044HV', exact: true }).click();
+          await expect(dialog.getByRole('link', { name: 'special_models/LTC1044.lib' }))
+            .toHaveAttribute('href', 'https://ngspice.sourceforge.io/model-parameters/special_models.zip');
+        } else {
+          await expect(dialog.getByRole('status')).toHaveText('No models match this search.');
+        }
         await dialog.getByRole('textbox').fill('LM741');
         await dialog.getByRole('button', { name: 'LM741', exact: true }).press('Enter');
         for (const [terminal, pin] of [

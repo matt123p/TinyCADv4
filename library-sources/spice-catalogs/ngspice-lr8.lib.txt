@@ -1,0 +1,57 @@
+* Voltage regulator
+* Author Holger Vogt, Public Domain
+* in out adj
+
+.subckt LR8ng in out adj
+
+* controlled resistor
+Rreg in outint R = {exp(V(vcrtl)+10)}
+
+* simple diode to prevent reverse current flow and limit the forward current
+* to 20 mA, forward voltage is 0 V.
+asidiode outint out ds1
+.model ds1 sidiode(Roff=10Meg Ron=1 Rrev=1 Vfwd=0
++ Vrev=1000 Revepsilon=0.02 Epsilon=0.02 Ilimit=20m Revilimit=20m)
+
+* internal 10uA current source to adj
+Iadj adj out 10u
+Radj adj dio 10k
+Dadj dio out adiode
+.model adiode D cj=2p Rs=10
+
+* error amplifier
+Rin ref refin 10k
+Rfb2 refin intc 22k
+Cfb2  intc vcrtl 10n
+Cfb refin vcrtl 470p
+Xopa adj refin vcc vee vcrtl kicad_builtin_opamp
+VCC vcc 0 10
+VEE vee 0 -10
+
+* reference voltage
+Vref ref 0 1.2
+
+.ends LR8ng
+
+* Simple generic model for a single-pole OpAmp
+* Parameters are pole frequency, gain, offset, output resistance.
+* The output is limited to the supply voltage.
+* Author Holger Vogt, Public Domain
+.subckt kicad_builtin_opamp in+ in- vcc vee out params: POLE=20 GAIN=1Meg VOFF=0 ROUT=10
+* add offset voltage
+  Voff in+ inoff dc {VOFF}
+* gain stage with RC pole
+  G10 0 int inoff in- 100u
+  R1 int 0 {GAIN/100u}
+  C1 int 0 {1/(6.28*(GAIN/100u)*POLE)}
+* output decoupling, output resistance
+  Eout 2 0 int 0 1
+  Rout 2 out {ROUT}
+* output limited to vee, vcc
+  Elow lee 0 vee 0 1
+  Ehigh lcc 0 vcc 0 1
+  Dlow lee int Dlimit
+  Dhigh int lcc Dlimit
+  .model Dlimit D N=0.01 Cj=1n Rs=10
+*
+.ends

@@ -16,6 +16,7 @@ export interface SpiceModelSource {
   name: string;
   revision: string;
   url: string;
+  archiveMember?: string;
 }
 
 export interface SpiceModelPack {

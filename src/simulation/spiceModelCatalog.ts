@@ -1,5 +1,11 @@
 import openjellybean from '../../bundled-libraries/spice/openjellybean.json';
 import circsim from '../../bundled-libraries/spice/circsim.json';
+import spiceFiles from '../../bundled-libraries/spice/spice-files.json';
+import ngspiceSpecial from '../../bundled-libraries/spice/ngspice-special.json';
+import ngspiceXspice from '../../bundled-libraries/spice/ngspice-xspice.json';
+import sky130 from '../../bundled-libraries/spice/sky130.json';
+import gf180mcu from '../../bundled-libraries/spice/gf180mcu.json';
+import ihpSg13g2 from '../../bundled-libraries/spice/ihp-sg13g2.json';
 import type { dsnDrawing } from '../model/dsnDrawing';
 import { DocItemTypes, type dsnSymbol } from '../model/dsnItem';
 import { updateSymbol } from '../manipulators/updateSymbol';
@@ -49,13 +55,19 @@ export interface SpiceCatalogModel
   revision: string;
 }
 
-const catalogs: { pack: SpiceModelPack; models: CatalogEntry[] }[] = [
+const catalogs: { pack: SpiceModelPack; models: CatalogEntry[]; requiresXspice?: boolean }[] = [
   openjellybean,
   circsim,
+  spiceFiles,
+  ngspiceSpecial,
+  ngspiceXspice,
+  sky130,
+  gf180mcu,
+  ihpSg13g2,
 ];
-const entries = catalogs.flatMap(({ pack, models }) =>
-  models.map((entry) => ({ pack, entry })),
-);
+const entries = catalogs
+  .filter(({ requiresXspice }) => !requiresXspice || process.env.TARGET_SYSTEM === 'electron')
+  .flatMap(({ pack, models }) => models.map((entry) => ({ pack, entry })));
 const normalize = (value: string) =>
   value.toLowerCase().replace(/[^a-z0-9]/g, '');
 const modelName = (id: string) => id.replace(/_OJ$/i, '');

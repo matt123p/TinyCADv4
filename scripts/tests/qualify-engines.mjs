@@ -6,13 +6,100 @@ import { spawnSync } from 'node:child_process';
 import { Worker } from 'node:worker_threads';
 import { pathToFileURL } from 'node:url';
 
-const catalogPacks = await Promise.all(['openjellybean', 'circsim'].map(async (name) =>
-  JSON.parse(await fs.readFile(new URL(`../../bundled-libraries/spice/${name}.json`, import.meta.url), 'utf8')).pack,
-));
+async function packsFor(...ids) {
+  return Promise.all(ids.map(async (name) =>
+    JSON.parse(await fs.readFile(new URL(`../../bundled-libraries/spice/${name}.json`, import.meta.url), 'utf8')).pack,
+  ));
+}
+const catalogPacks = await packsFor('openjellybean', 'circsim');
 const catalogIncludes = catalogPacks.map(({ filename }) => `.include ${filename}`).join('\n');
 const catalogFiles = Object.fromEntries(catalogPacks.map(({ filename, spice }) => [filename, spice]));
 
+async function catalogFixture(ids, name, circuit, check, { desktopOnly, adaptiveTimesteps } = {}) {
+  const packs = await packsFor(...ids);
+  return {
+    name, desktopOnly, adaptiveTimesteps,
+    files: Object.fromEntries(packs.map(({ filename, spice }) => [filename, spice])),
+    deck: packs.map(({ filename }) => '.include ' + filename).join('\n') + '\n' + circuit,
+    check,
+  };
+}
+
 const fixtures = [
+  await catalogFixture(['spice-files'], 'additional catalog discrete models',
+    [
+      'Vcc supply 0 5',
+      'Vhigh bias 0 30',
+      'Iled1 0 red 20m',
+      'Iled2 0 green 20m',
+      'Dred red 0 LED_RED_GEN',
+      'Dgreen green 0 LED_GREEN_GEN',
+      'Rz1 bias z1 510',
+      'Rz2 bias z2 850',
+      'Dz1 0 z1 1N4733A_GEN',
+      'Dz2 0 z2 1N4742A_GEN',
+      'Xbridge supply 0 pos neg BRIDGE_GEN',
+      'Rbridge pos neg 1k',
+      'Rbias neg 0 1meg',
+      'Xrelay supply 0 supply relay RELAY_SPST_5V',
+      'Rrelay relay 0 1k',
+      'S1 supply switch supply 0 SW_IDEAL',
+      'Rswitch switch 0 1k',
+      ...['OPTO_GEN', 'PC817_GEN', '4N35_GEN', 'CNY17_GEN'].flatMap((id, i) => [
+        'Iopto' + i + ' 0 led' + i + ' 1m',
+        'Xopto' + i + ' led' + i + ' 0 out' + i + ' 0 ' + id,
+        'Ropto' + i + ' supply out' + i + ' 1k',
+      ]),
+      '.save v(red) v(green) v(z1) v(z2) v(pos) v(neg) v(relay) v(switch) v(out0) v(out1) v(out2) v(out3)',
+      '.op',
+    ].join('\n'),
+    (names, rows) => {
+      const value = (name) => rows[0][names.indexOf(name)];
+      for (const node of ['red', 'green']) assert.ok(value(node) > 1 && value(node) < 3);
+      assert.ok(value('z1') > 4.8 && value('z1') < 5.4);
+      assert.ok(value('z2') > 11.5 && value('z2') < 12.5);
+      assert.ok(value('pos') - value('neg') > 3 && value('pos') - value('neg') < 4.8);
+      for (const node of ['relay', 'switch']) assert.ok(value(node) > 4.99);
+      for (let i = 0; i < 4; i++) assert.ok(value('out' + i) > 3.3 && value('out' + i) < 4.4);
+    }),
+  await catalogFixture(['spice-files'], 'additional catalog crystal and transformer',
+    'Vxtal a 0 AC 1\nVxfmr b 0 AC 1\nX1 a 0 XTAL_16M\nX2 b 0 sec 0 XFMR_10TO1\nR1 sec 0 10k\n.save i(Vxtal) v(sec)\n.ac lin 1 ' +
+      Array(2).fill(1 / (2 * Math.PI * Math.sqrt(7e-3 * 14.1e-15))).join(' '),
+    (names, rows, imaginary) => {
+      const amplitude = (name) => {
+        const index = names.indexOf(name);
+        return Math.hypot(rows[0][index], imaginary[0][index]);
+      };
+      assert.ok(amplitude('vxtal#branch') > 0.04 && amplitude('vxtal#branch') < 0.06, 'crystal at series resonance');
+      assert.ok(amplitude('sec') > 0.09 && amplitude('sec') < 0.11, 'transformer voltage ratio');
+    }),
+  await catalogFixture(['sky130','ihp-sg13g2'], 'additional catalog foundry PNP transistors',
+    'Ve e 0 1\nVb b 0 0.3\nR1 a 0 1k\nR2 c 0 1k\nX1 a b e 0 sky130_fd_pr__pnp_05v5_W0p68L0p68\nX2 c b e pnpMPA\n.save v(a) v(c)\n.op',
+    (names, rows) => {
+      assert.ok(Math.abs(rows[0][names.indexOf('a')] - 0.00019745) < 1e-6);
+      assert.ok(Math.abs(rows[0][names.indexOf('c')] - 0.00012578) < 1e-6);
+    }),
+  await catalogFixture(['gf180mcu'], 'additional catalog GF180MCU MIM capacitors',
+    'V1 a 0 AC 1\nV2 b 0 AC 1\nV3 c 0 AC 1\nX1 a 0 mim_1p0fF\nX2 b 0 mim_1p5fF\nX3 c 0 mim_2p0fF\n.save i(V1) i(V2) i(V3)\n.ac lin 1 1Meg 1Meg',
+    (names, rows, imaginary) => {
+      const currents = ['v1#branch','v2#branch','v3#branch'].map((name) => Math.abs(imaginary[0][names.indexOf(name)]));
+      assert.ok(currents[0] > 6e-7 && currents[2] < 1.6e-6);
+      assert.ok(currents[0] < currents[1] && currents[1] < currents[2]);
+    }),
+  await catalogFixture(['ngspice-special'], 'additional catalog ICL8038 oscillator',
+    'Vcc cc 0 12\nX1 adjust sine triangle p4 p5 cc fmb fmb square ct 0 adjust ICL8038\nR1 adjust 0 100k\nR2 square cc 1k\nR4 cc p4 10k\nR5 cc p5 10k\nCt ct 0 10n\n.save v(sine) v(triangle) v(square)\n.tran 1u 2m',
+    (names, rows) => {
+      for (const name of ['sine', 'triangle', 'square']) {
+        const values = rows.map((row) => row[names.indexOf(name)]);
+        assert.ok(Math.max(...values) - Math.min(...values) > 0.1, name);
+      }
+    }, { adaptiveTimesteps: true }),
+  await catalogFixture(['ngspice-xspice'], 'additional catalog LTC1044HV voltage inverter',
+    'Vcc cc 0 5\nX1 0 cpos 0 cneg neg 0 osc cc LTC1044HV\nC1 cpos cneg 10u\nC2 0 neg 100u\nR1 neg 0 10k\n.save v(neg)\n.tran 50u 100m',
+    (names, rows) => assert.ok(rows.at(-1)[names.indexOf('neg')] < -4.8), { desktopOnly: true }),
+  await catalogFixture(['ngspice-xspice'], 'additional catalog LR8 regulator',
+    'Vcc cc 0 48\nX1 cc out adj LR8ng\nR1 out adj 100k\nR2 adj 0 300k\nC1 out 0 1u\n.nodeset v(out)=4.8 v(adj)=1.2\n.save v(out)\n.op',
+    (names, rows) => assert.ok(Math.abs(rows[0][names.indexOf('out')] - 2.6) < 0.01), { desktopOnly: true }),
   {
     name: 'catalog analogue SPICE models',
     files: catalogFiles,
@@ -235,6 +322,8 @@ if (backend !== 'wasm')
     await fs.readFile(path.join(nativeDir, 'manifest.json'), 'utf8'),
   );
 for (const fixture of fixtures) {
+  if (process.argv[3] && !fixture.name.includes(process.argv[3])) continue;
+  if (backend === 'wasm' && fixture.desktopOnly) continue;
   const deck = fixture.completeDeck
     ? fixture.deck
     : `TinyCAD qualification ${fixture.name}\n${fixture.deck}\n.end\n`;
@@ -277,7 +366,7 @@ for (const fixture of fixtures) {
       await fs.rm(temp, { recursive: true, force: true });
     }
   }
-  if (backend !== 'native') {
+  if (backend !== 'native' && !fixture.desktopOnly) {
     const workerSource = `import {parentPort,workerData} from 'node:worker_threads';globalThis.ngspiceEmit=json=>parentPort.postMessage(JSON.parse(json)); const create=(await import(workerData.url)).default;const m=await create();for(const [name,text] of Object.entries(workerData.files))m.FS.writeFile(name,text);m.ccall('tc_run','number',['string'],[workerData.deck]);parentPort.close();`;
     const events = await new Promise((resolve, reject) => {
       const events = [];
@@ -303,6 +392,8 @@ for (const fixture of fixtures) {
   }
   if (nativeResult && wasmResult) {
     assert.deepEqual(nativeResult.names, wasmResult.names);
+  }
+  if (nativeResult && wasmResult && !fixture.adaptiveTimesteps) {
     assert.equal(nativeResult.rows.length, wasmResult.rows.length);
     nativeResult.rows.forEach((row, i) =>
       row.forEach((value, j) =>
@@ -314,5 +405,5 @@ for (const fixture of fixtures) {
       ),
     );
   }
-  console.log(`PASS ${fixture.name} (${backend})`);
+  console.log('PASS ' + fixture.name + ' (' + (fixture.desktopOnly ? 'native' : backend) + ')');
 }

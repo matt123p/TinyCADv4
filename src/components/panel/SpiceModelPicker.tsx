@@ -181,7 +181,7 @@ const useStyles = makeStyles({
 const optionKey = (model: SpiceCatalogModel) => model.packId + ':' + model.id;
 
 function SourceLink({ name, url }: { name: string; url: string }) {
-  if (!/^https:\/\/github\.com\//.test(url)) return <>{name}</>;
+  if (!/^https:\/\/(?:github\.com\/|ngspice\.sourceforge\.io\/model-parameters\/)/.test(url)) return <>{name}</>;
   return (
     <Link href={url} onClick={(event: React.MouseEvent) => {
       event.preventDefault();
@@ -301,7 +301,7 @@ export function SpiceModelPicker({ symbol, packs, onChange, children }: Props) {
         <div className={styles.attached}>
           <div>
             <strong>{binding.modelId}</strong> ·{' '}
-            <SourceLink name={binding.source?.name ?? binding.packId} url={binding.source?.url ?? ''} />
+            <SourceLink name={binding.source?.archiveMember ?? binding.source?.name ?? binding.packId} url={binding.source?.url ?? ''} />
           </div>
           <DefinitionPreview
             key={binding.packId + ':' + binding.revision + ':' + binding.modelId}
@@ -385,7 +385,7 @@ export function SpiceModelPicker({ symbol, packs, onChange, children }: Props) {
                   <div className={styles.details}>
                     <h2 className={styles.heading}>{selected.id}</h2>
                     <p className={styles.metadata}>
-                      <SourceLink name={selected.source.name} url={selected.source.url} /> · Typical approximation
+                      <SourceLink name={selected.source.archiveMember ?? selected.source.name} url={selected.source.url} /> · Typical approximation
                     </p>
                     <p className={styles.description}>{selected.description}</p>
                     <h3 className={styles.sectionHeading}>{inspection.preverified ? 'Verified pin mapping' : 'Pin mapping'}</h3>

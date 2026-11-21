@@ -72,6 +72,11 @@ for (const [target, entry] of [
       assert.match(await readNotice('ngspice'), /Ngspice Licensing[\s\S]*Kenneth S\. Kundert/);
       assert.match(await readNotice('OpenJellyBean'), /MIT License[\s\S]*openjellybean contributors/);
       assert.match(await readNotice('circsim'), /MIT License[\s\S]*circsim maintainers/);
+      assert.match(await readNotice('Spice_Files'), /MIT License[\s\S]*Spice_Files contributors/);
+      assert.match(await readNotice('ngspice special models'), /BSD 3-Clause License[\s\S]*Holger Vogt/);
+      for (const foundry of ['SkyWater SKY130', 'GlobalFoundries GF180MCU', 'IHP SG13G2']) {
+        assert.match(await readNotice(foundry), /Apache License[\s\S]*Version 2\.0/);
+      }
       assert.ok(index.some(({ name, license }) => name === 'Liberation Fonts' && license === 'OFL-1.1'));
       assert.ok(!index.some(({ name }) => ['tslib', 'parcel', 'type-fest'].includes(name)));
       assert.ok(!index.some(({ name }) => name.startsWith('@types/')));

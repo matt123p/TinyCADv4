@@ -18,6 +18,7 @@ LIBRARY = ROOT / "bundled-libraries/spice/spice.tclib"
 OUTPUT = LIBRARY.with_name("openjellybean.json")
 CIRCSIM_OUTPUT = LIBRARY.with_name("circsim.json")
 CIRCSIM_SOURCE = ROOT / "library-sources/circsim"
+ADDITIONAL_SOURCES = ROOT / "library-sources/spice-catalogs"
 CIRCSIM_REVISION = "059858b15671c3edaf4c62f944ecb8c7420ae1d4"
 CIRCSIM_SHA256 = {
     "LICENSE": "0167f740b37ace1c64df1124214d97bb17330c99b21d3968d82600ef702df4af",
@@ -382,6 +383,89 @@ def build_circsim():
     }, "models": models}
 
 
+def build_additional_catalogs():
+    manifest = json.loads((ADDITIONAL_SOURCES / "manifest.json").read_text(encoding="utf-8"))
+    with closing(sqlite3.connect(LIBRARY.as_uri() + "?mode=ro", uri=True)) as library:
+        for catalog in manifest:
+            native_only = catalog.get("requiresXspice", False)
+            models, pack_text = [], []
+            for source in catalog["sources"]:
+                path = ADDITIONAL_SOURCES / source["file"]
+                data = path.read_text(encoding="utf-8").encode("utf-8")
+                if hashlib.sha256(data).hexdigest() != source["sha256"]:
+                    raise ValueError(f"Unexpected model source bytes in {path}")
+                file_models = {name: (form, text, line) for name, form, text, line in definitions(data.decode("utf-8"))}
+                for name, metadata in source["models"].items():
+                    form, definition, line = file_models[name]
+                    if metadata.get("replaceModelType"):
+                        old, new = metadata["replaceModelType"]
+                        definition, count = re.subn(
+                            rf"^(\.model\s+\S+\s+){re.escape(old)}\b",
+                            rf"\g<1>{new}", definition, flags=re.M | re.I,
+                        )
+                        if count != 1:
+                            raise ValueError(f"Expected one {old} model card in {name}")
+                        definition = definition.replace("\n", f"\n* TinyCAD adaptation: {old} card uses {new}.\n", 1)
+                    if metadata.get("localParameters"):
+                        header, body = definition.split("\n", 1)
+                        for parameter, default in metadata.get("defaults", {}).items():
+                            header, count = re.subn(rf"\b{re.escape(parameter)}=\S+", f"{parameter}={default}", header)
+                            if count != 1:
+                                raise ValueError(f"Missing parameter {parameter} in {name}")
+                        values = " ".join(f"{key}={value}" for key, value in metadata["localParameters"].items())
+                        definition = (header + "\n* TinyCAD adaptation: local nominal process parameters and numeric defaults.\n"
+                                      + ".param " + values + "\n" + body)
+                    pin_roles = metadata["roles"]
+                    if form == "subckt":
+                        ports = re.split(r"\s+params:|\s+\w+\s*=", model_declaration(definition), maxsplit=1, flags=re.I)[0].split()
+                        if len(ports) != len(pin_roles):
+                            raise ValueError(f"Unexpected port count in {name}")
+                        terminals = [{"port": port, "role": role} for port, role in zip(ports, pin_roles)]
+                    else:
+                        terminals = [{"role": role} for role in pin_roles]
+                    mappings = []
+                    for label, mapping in metadata.get("compatible", {}).items():
+                        found = library.execute(
+                            "SELECT NameID, SymbolID, Data, ppp FROM Name JOIN Symbol USING (SymbolID) WHERE Name = ?",
+                            (label,),
+                        ).fetchone()
+                        if not found or found[3] != 1:
+                            raise ValueError(f"Missing bundled single-part symbol {label}")
+                        name_id, symbol_id, xml, _ = found
+                        pins = sorted((pin.attrib["number"] for pin in ET.fromstring(xml).iter("PIN")), key=int)
+                        if sorted(mapping, key=int) != pins or len(mapping) != len(terminals):
+                            raise ValueError(f"Pin contract changed for {label}")
+                        mappings.append({"libraryId": "spice", "nameId": name_id, "symbolId": symbol_id,
+                                         "name": label, "pinLayout": pins, "pinsInModelOrder": mapping})
+                    url = source["url"]
+                    if url.startswith("https://github.com/"):
+                        url += f"#L{line + source.get('lineOffset', 0)}"
+                    models.append({
+                        "id": name, "kind": metadata["kind"], "description": metadata["description"],
+                        "aliases": metadata.get("aliases", []),
+                        "source": {"name": catalog["name"], "revision": catalog["revision"], "url": url,
+                                   **({"archiveMember": source["archiveMember"]} if "archiveMember" in source else {})},
+                        "designator": "X" if form == "subckt" else metadata["designator"],
+                        "terminals": terminals, "parameterDefaults": metadata.get("defaults", {}),
+                        "definition": definition, "compatibleComponents": mappings,
+                    })
+                    pack_text.append(definition.rstrip())
+            revision = catalog["revision"]
+            spice = f"* TinyCAD selection from {catalog['name']}\n\n" + "\n\n".join(pack_text) + "\n"
+            yield LIBRARY.with_name(f"{catalog['id']}.json"), {
+                "schemaVersion": 1, **({"requiresXspice": True} if native_only else {}),
+                "pack": {
+                    "id": catalog["id"], "version": revision[:12], "revision": revision,
+                    "filename": f"{catalog['id']}_{revision[:12]}.lib",
+                    "sha256": hashlib.sha256(spice.encode("utf-8")).hexdigest(),
+                    "license": catalog["license"],
+                    "licenseText": (ADDITIONAL_SOURCES / catalog["notice"]).read_text(encoding="utf-8"),
+                    "spice": spice,
+                },
+                "models": models,
+            }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Check that the committed catalog is current")
@@ -406,7 +490,7 @@ def main():
         "models": list(models.values()),
         "uncoveredComponents": uncovered,
     }
-    for filename, source_catalog in ((OUTPUT, catalog), (CIRCSIM_OUTPUT, build_circsim())):
+    for filename, source_catalog in ((OUTPUT, catalog), (CIRCSIM_OUTPUT, build_circsim()), *build_additional_catalogs()):
         output = json.dumps(source_catalog, ensure_ascii=False, indent=2) + "\n"
         if args.check:
             if not filename.is_file() or filename.read_text(encoding="utf-8") != output:

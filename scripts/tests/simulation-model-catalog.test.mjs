@@ -39,6 +39,32 @@ test('both bundled packs expose a source link to each pinned model definition', 
   }
 });
 
+test('additional packs retain licence notices and pinned model provenance', async () => {
+  const manifest = JSON.parse(await readFile('library-sources/spice-catalogs/manifest.json', 'utf8'));
+  for (const { id, revision, license, notice, sources } of manifest) {
+    const { pack, models } = JSON.parse(await readFile('bundled-libraries/spice/' + id + '.json', 'utf8'));
+    assert.equal(pack.sha256, createHash('sha256').update(pack.spice).digest('hex'));
+    assert.equal(pack.license, license);
+    assert.equal(pack.licenseText, (await readFile('library-sources/spice-catalogs/' + notice, 'utf8')).replace(/\r\n/g, '\n'));
+    for (const { id: modelId, source, definition } of models) {
+      const upstream = sources.find(({ models }) => Object.hasOwn(models, modelId));
+      assert.equal(source.revision, revision);
+      assert.ok(pack.spice.includes(definition.trimEnd()));
+      if (upstream.archiveMember) {
+        assert.equal(source.url, upstream.url);
+        assert.equal(source.archiveMember, upstream.archiveMember);
+        assert.match(revision, /^[0-9a-f]{64}$/);
+      } else {
+        assert.ok(upstream.url.includes('/blob/' + revision + '/'));
+        const index = Number(new URL(source.url).hash.slice(2)) - 1 - upstream.lineOffset;
+        const text = await readFile('library-sources/spice-catalogs/' + upstream.file, 'utf8');
+        assert.equal(text.split(/\r?\n/)[index].split(/\s+/).slice(0, 2).join(' ').toLowerCase(),
+          definition.split('\n')[0].split(/\s+/).slice(0, 2).join(' ').toLowerCase());
+      }
+    }
+  }
+});
+
 test('catalog results, attachment, undo, simulation decks and drawing round-trips share both packs', async () => {
   const SQL = await librarySqlite();
   const db = new SQL.Database(
@@ -46,7 +72,7 @@ test('catalog results, attachment, undo, simulation decks and drawing round-trip
   );
   const entries = [];
   try {
-    for (const name of ['Diode', 'LED (yellow)', '741 op-amp', 'Resistor']) {
+    for (const name of ['Diode', 'LED (yellow)', '741 op-amp', 'Resistor', 'XTAL (quartz crystal)', 'Transformer']) {
       const rows = db.exec(
         'SELECT NameID, Name, Name.SymbolID, Reference, ppp, Description, ShowName, ShowRef, Data FROM Name JOIN Symbol USING (SymbolID) WHERE Name = ?',
         [name],
@@ -89,7 +115,7 @@ test('catalog results, attachment, undo, simulation decks and drawing round-trip
     import { prepareSpiceDeck } from './src/simulation/deck';
     import { createSimulationSheet } from './src/simulation/document';
     import { bindSpiceModel, catalogModelPack, changeSpiceModel, inspectSpiceModel, searchSpiceModels } from './src/simulation/spiceModelCatalog';
-    import { spiceDefinitionText } from './src/simulation/spiceModelDefinitions';
+    import { customSpiceDefinition, spiceDefinitionText } from './src/simulation/spiceModelDefinitions';
     import { modelBinding, symbolField } from './src/simulation/catalogBindings';
     import { writeSpiceWithModels } from './src/io/netlists/netlistSpice';
     import { DocStoreWithHistory } from './src/state/undo/undo';
@@ -119,12 +145,19 @@ test('catalog results, attachment, undo, simulation decks and drawing round-trip
         const library = { fileId: 'bundled:spice', symbols: [{ SymbolId: name.SymbolID, Data: definition }] };
         const selection = librarySymbolSelection(library, name);
         sheet = updater.handleSelectLibrarySymbol({}, sheet, selection.name, selection.symbolData, [100 + 80*i, 100]).sheet;
-        sheet.items.at(-1).text.find((field) => field.description === 'Ref').value = ['D1','D2','U1','R1'][i];
+        sheet.items.at(-1).text.find((field) => field.description === 'Ref').value = ['D1','D2','U1','R1','Y1','T1'][i];
       }
-      const [diode, yellow, opamp, resistor] = sheet.items;
+      const [diode, yellow, opamp, resistor, crystal, transformer] = sheet.items;
       const sheetId = sheet.id;
       drawing = { ...drawing, sheets: [sheet, createSimulationSheet(sheet, 'First'), createSimulationSheet(sheet, 'Second')] };
-      assert.equal(searchSpiceModels('').length, 57);
+      assert.equal(searchSpiceModels('').length, process.env.TARGET_SYSTEM === 'electron' ? 80 : 77);
+      assert.equal(searchSpiceModels('LTC1044HV').length, process.env.TARGET_SYSTEM === 'electron' ? 1 : 0);
+      const bridge = searchSpiceModels('BRIDGE_GEN')[0];
+      assert.match(spiceDefinitionText(catalogModelPack(bridge), bridge.id), /^\\.model DRECT_GEN/im);
+      assert.match(customSpiceDefinition(catalogModelPack(bridge), bridge.id, bridge.source),
+        /^D1 ac1 pos TC_CUSTOM_DRECT_GEN_\\$\\(ref\\)/m);
+      assert.deepEqual(inspectSpiceModel(crystal, searchSpiceModels('', crystal)[0]).mapping, ['1','2']);
+      assert.deepEqual(inspectSpiceModel(transformer, searchSpiceModels('', transformer)[0]).mapping, ['1','2','3','4']);
       for (const entry of searchSpiceModels(''))
         assert.match(spiceDefinitionText(catalogModelPack(entry), entry.id), /^\\.(model|subckt) /im);
       assert.equal(searchSpiceModels('LED_YELLOW', diode).length, 0);

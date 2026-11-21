@@ -27,10 +27,14 @@ function definitions(spice: string) {
 
 // Bundled subcircuits put the called subcircuit name after the nodes and
 // before any parameters. Continuation lines in these files supply parameters.
-function subcircuitCall(line: string) {
+function definitionReference(line: string) {
+  // A diode instance has two nodes, then the name of its model card.
+  const diode = /^\s*d\S*\s+\S+\s+\S+\s+(\S+)/i.exec(line);
+  if (diode) return { name: diode[1], index: diode[0].length - diode[1].length };
   if (!/^\s*x\S*\s/i.test(line)) return undefined;
   const args = line.split(/\s+[;$]|\s+params:|\s+\w+\s*=/i, 1)[0];
-  return /\S+\s*$/.exec(args);
+  const call = /\S+\s*$/.exec(args);
+  return call && { name: call[0].trimEnd(), index: call.index };
 }
 
 function modelDefinitions(pack: SpiceModelPack, modelId: string) {
@@ -42,8 +46,8 @@ function modelDefinitions(pack: SpiceModelPack, modelId: string) {
     if (!definition || used.has(key)) return;
     used.set(key, definition);
     for (const line of definition.lines) {
-      const call = subcircuitCall(line);
-      if (call) add(call[0].trimEnd());
+      const reference = definitionReference(line);
+      if (reference) add(reference.name);
     }
   }
   add(modelId);
@@ -70,11 +74,11 @@ export function customSpiceDefinition(
     const match = i === 0 || /^\s*\.ends\b/i.test(line)
       ? /^\s*\.\w+\s+(\S+)/.exec(line)
       : undefined;
-    const call = subcircuitCall(line);
-    const name = match?.[1] ?? call?.[0].trimEnd();
+    const reference = definitionReference(line);
+    const name = match?.[1] ?? reference?.name;
     const replacement = name && names.get(name.toLowerCase());
     if (!replacement) return escape(line);
-    const start = match ? match[0].length - name.length : call.index;
+    const start = match ? match[0].length - name.length : reference.index;
     return escape(line.slice(0, start)) + replacement + escape(line.slice(start + name.length));
   }).join('\n')).join('\n\n');
   return text + '\n\n' + notice;
