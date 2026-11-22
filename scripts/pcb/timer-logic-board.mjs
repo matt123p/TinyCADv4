@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { librarySqlite } from '../lib/library-from-sql.mjs';
 import { layoutRuntime } from '../lib/layout-runtime.mjs';
+import { useBundledPackageBody, useBundledPassives } from './reference-symbols.mjs';
 
 const [schematicPath, output, camFolder] = process.argv.slice(2);
 if (!schematicPath || !output)
@@ -14,8 +15,13 @@ const point = (x, y) => ({ x: Math.round(x * 1e6), y: Math.round(y * 1e6) });
 const box = (left, bottom, right, top) => [
   point(left, bottom), point(right, bottom), point(right, top), point(left, top),
 ];
-const schematic = await readFile(schematicPath);
-const drawing = await api.decodeDrawing(schematic);
+const drawing = await api.decodeDrawing(await readFile(schematicPath));
+await useBundledPackageBody(api, drawing, {
+  library: 'digital', name: 'NAND gate, 2-input', reference: 'U2',
+  transform: (x, y) => [220 + y, 220 - x * 0.75],
+});
+await useBundledPassives(api, drawing, { C1: 'Capacitor', C2: 'Capacitor', C3: 'Capacitor' });
+const schematic = await api.encodeDrawing(drawing, 'xml');
 const graph = await api.buildHierarchicalNetlist({ drawing, path: 'Timer.dsn' });
 const { snapshot } = await api.buildHierarchicalCircuitSnapshot(graph, {
   documentId: drawing.documentId, revision: 1,

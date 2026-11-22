@@ -29,14 +29,14 @@
           <UNIT id="5ed00000-0000-4000-8000-000000000005" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
         </UNITS>
         <SIGNALS>
-          <SIGNAL id="97204c27-d8d7-8793-a04c-d1ec54102b42" name="Cathode" number="1">
-            <TERMINALS>
-              <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000005" pin_id="5ed00000-0000-4000-8000-000000000690"/>
-            </TERMINALS>
-          </SIGNAL>
           <SIGNAL id="9c146a57-a250-8f6e-a523-3a0d50eb8b31" name="Anode" number="2">
             <TERMINALS>
               <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000005" pin_id="5ed00000-0000-4000-8000-000000000691"/>
+            </TERMINALS>
+          </SIGNAL>
+          <SIGNAL id="97204c27-d8d7-8793-a04c-d1ec54102b42" name="Cathode" number="1">
+            <TERMINALS>
+              <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000005" pin_id="5ed00000-0000-4000-8000-000000000690"/>
             </TERMINALS>
           </SIGNAL>
         </SIGNALS>
@@ -73,6 +73,23 @@
           <SIGNAL id="b8a99aca-cfa1-8621-a132-8c22d403bbc1" name="2" number="2">
             <TERMINALS>
               <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000004" pin_id="5ed00000-0000-4000-8000-000000000831"/>
+            </TERMINALS>
+          </SIGNAL>
+        </SIGNALS>
+      </COMPONENT>
+      <COMPONENT id="5ed00000-0000-4000-8000-000000000006" reference="V1" value="5V" role="virtual">
+        <UNITS>
+          <UNIT id="5ed00000-0000-4000-8000-000000000006" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
+        </UNITS>
+        <SIGNALS>
+          <SIGNAL id="20ecd862-10ab-8542-a11a-14e148c8bd9c" name="+" number="1">
+            <TERMINALS>
+              <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000006" pin_id="5ed00000-0000-4000-8000-000000000061"/>
+            </TERMINALS>
+          </SIGNAL>
+          <SIGNAL id="bad24c23-32af-8eb3-af8e-35563ba564bf" name="−" number="2">
+            <TERMINALS>
+              <TERMINAL unit_id="5ed00000-0000-4000-8000-000000000006" pin_id="5ed00000-0000-4000-8000-000000000062"/>
             </TERMINALS>
           </SIGNAL>
         </SIGNALS>
@@ -119,6 +136,9 @@
       <SOURCE instance_unit_id="5ed00000-0000-4000-8000-000000000005" document_id="5ed00000-0000-4000-8000-000000000001" document_path="LED.dzn" sheet_id="5ed00000-0000-4000-8000-000000000002" unit_id="5ed00000-0000-4000-8000-000000000005">
         <INSTANCEPATH/>
       </SOURCE>
+      <SOURCE instance_unit_id="5ed00000-0000-4000-8000-000000000006" document_id="5ed00000-0000-4000-8000-000000000001" document_path="LED.dzn" sheet_id="5ed00000-0000-4000-8000-000000000002" unit_id="5ed00000-0000-4000-8000-000000000006">
+        <INSTANCEPATH/>
+      </SOURCE>
     </SOURCES>
   </APPLIEDCIRCUIT>
   <COMPONENTDEFS>
@@ -128,8 +148,8 @@
         <UNIT id="5ed00000-0000-4000-8000-000000000005" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
       </UNITS>
       <SIGNALS>
-        <BIND signal_id="97204c27-d8d7-8793-a04c-d1ec54102b42" net_id="727f756d-c960-8a51-aa76-07e82a590b61"/>
         <BIND signal_id="9c146a57-a250-8f6e-a523-3a0d50eb8b31" net_id="84b5bcf1-270b-873f-a7da-d517e1c0baec"/>
+        <BIND signal_id="97204c27-d8d7-8793-a04c-d1ec54102b42" net_id="727f756d-c960-8a51-aa76-07e82a590b61"/>
       </SIGNALS>
     </COMPONENTDEF>
     <COMPONENTDEF id="5ed00000-0000-4000-8000-000000000003" ref="J1" value="5 V input" logical_id="5ed00000-0000-4000-8000-000000000003" device_id="24ffd027-7a4f-81f9-a769-7bec67ed5702" role="electrical">
@@ -494,10 +514,10 @@
     </FOOTPRINTDEF>
   </FOOTPRINTDEFS>
   <DEVICEDEFS>
-    <DEVICEDEF id="0a1e74f1-b93f-85d2-ad11-f58b921124ed" revision="2" definition_digest="sha256:60d20a41beb40c1048985dd0ff8f40d98deb124822fedc04f6665ea3036f69fa" package_name="led-radial-5" package_source="TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions." footprint_id="44fdb2dd-86fa-8cca-a80d-ac7b00c4e5b4">
+    <DEVICEDEF id="0a1e74f1-b93f-85d2-ad11-f58b921124ed" revision="2" definition_digest="sha256:2e2201449ca20079a2d2640d613d08a9871bbb28bd6205c123a7ec9a7b8f3de8" package_name="led-radial-5" package_source="TinyCAD generated envelope using the corresponding KiCad 9.0.0 copper and drill dimensions." footprint_id="44fdb2dd-86fa-8cca-a80d-ac7b00c4e5b4">
       <SIGNALS>
-        <SIGNAL>97204c27-d8d7-8793-a04c-d1ec54102b42</SIGNAL>
         <SIGNAL>9c146a57-a250-8f6e-a523-3a0d50eb8b31</SIGNAL>
+        <SIGNAL>97204c27-d8d7-8793-a04c-d1ec54102b42</SIGNAL>
       </SIGNALS>
       <ASSIGNMENTS>
         <ASSIGN pad_id="f6bfbeb7-516e-575f-aa4a-d1a19163c4c7" kind="signal" signal_id="97204c27-d8d7-8793-a04c-d1ec54102b42"/>

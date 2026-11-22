@@ -1,5 +1,7 @@
 # Wi-Fi temperature node
 
+The resistors and capacitors use the bundled SPICE essentials symbols. The ESP32-C3 module and TMP75 retain their package-specific definitions.
+
 Reference F exercises dense placement, routing regions, copper fills and reviewed footprint updates. The stand-alone schematic is [Sensor.dsn](Sensor.dsn) and its drawing preview is [Sensor.svg](Sensor.svg).
 
 Open [Sensor.tcproject](Sensor.tcproject) and then [Sensor.dpn](Sensor.dpn). PCB Design shows the MCU and boot straps, sensor and supply, and UART service placement areas. The two bottom ground zones and the antenna routing region are saved in the board. The board embeds the reviewed device maps, footprint geometry and supplied model assets so a copied project can open with the libraries offline.

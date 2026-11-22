@@ -7,6 +7,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { librarySqlite } from '../lib/library-from-sql.mjs';
 import { layoutRuntime } from '../lib/layout-runtime.mjs';
+import { useBundledPassives } from './reference-symbols.mjs';
 
 const output = process.argv[2];
 if (!output)
@@ -23,7 +24,7 @@ const parts = [
     procurement: { Manufacturer: 'JST', MPN: 'B2B-XH-A(LF)(SN)' },
     footprint: 'jst-xh-2-vertical',
     pins: ['+5 V', '0 V'],
-    at: [50, 66],
+    at: [45, 55],
   },
   {
     ref: 'R1',
@@ -35,7 +36,7 @@ const parts = [
     },
     footprint: 'axial-762',
     pins: ['1', '2'],
-    at: [115, 66],
+    at: [76, 55],
   },
   {
     ref: 'D1',
@@ -44,7 +45,7 @@ const parts = [
     procurement: { Manufacturer: 'Kingbright', MPN: 'WP7113ID' },
     footprint: 'led-radial-5',
     pins: ['Cathode', 'Anode'],
-    at: [186, 66],
+    at: [107, 55],
   },
 ];
 const netNames = ['5V', 'LED_A', 'GND'];
@@ -69,14 +70,14 @@ function symbolXml(part, index) {
   const pin = (index, x, y, direction) =>
     `<PIN pos="${x},${y}" direction="${direction}" number="${
       index + 1
-    }" length="12" number_pos="0" centre_name="0" which="0" elec="4" part="0" show="1" pin_uuid="${id(
+    }" length="20" number_pos="0" centre_name="0" which="0" elec="4" part="0" show="1" pin_uuid="${id(
       10 + index + Number(part.ref[0].charCodeAt(0)) * 10,
     )}">${part.pins[index]}</PIN>`;
   const pinXml = connector
-    ? pin(0, 14, 0, 3) + pin(1, 14, 16, 3)
+    ? pin(0, 10, 0, 2) + pin(1, 10, 10, 2)
     : diode
-    ? pin(0, 14, 0, 3) + pin(1, -14, 0, 2)
-    : pin(0, -14, 0, 2) + pin(1, 14, 0, 3);
+    ? pin(0, 4, 0, 3) + pin(1, -4, 0, 2)
+    : pin(0, -4, 0, 2) + pin(1, 4, 0, 3);
   const line = (a, b) => `<POLYGON polygon="0" pos="0,0" style="1" fill="0">
     <POINT pos="${a}" arc="0"/><POINT pos="${b}" arc="0"/></POLYGON>`;
   const outline = (points) =>
@@ -84,16 +85,7 @@ function symbolXml(part, index) {
       .slice(1)
       .map((b, i) => line(points[i], b))
       .join('');
-  const graphics = connector
-    ? outline(['-10,-6', '4,-6', '4,22', '-10,22', '-10,-6'])
-    : diode
-    ? outline(['-4,-6', '4,0', '-4,6', '-4,-6']) +
-      line('4,-6', '4,6') +
-      line('-2,-8', '2,-12') +
-      line('2,-8', '6,-12') +
-      line('2,-12', '-1,-12') +
-      line('6,-12', '3,-12')
-    : outline(['-7,-4', '7,-4', '7,4', '-7,4', '-7,-4']);
+  const graphics = connector ? outline(['-6,-4', '6,-4', '6,14', '-6,14', '-6,-4']) : '';
   const definition = `<SYMBOLDEF id="${index}"><NAME type="0">${
     part.value
   }</NAME>
@@ -104,7 +96,7 @@ function symbolXml(part, index) {
   const field = (name, value, y, show) =>
     `<FIELD pos="-8,${y}" value="${value}" description="${name}" type="1" show="${show}"/>`;
   const spiceTemplate = connector
-    ? 'V$(ref) %(1) %(2) DC 5'
+    ? '* J1 is the physical supply connector'
     : diode
     ? '$(ref) %(2) %(1) TeachingLED'
     : '$(ref) %(1) %(2) $(Value)';
@@ -112,17 +104,17 @@ function symbolXml(part, index) {
   const model = diode
     ? field('$$SPICE_PROLOG', '.model TeachingLED D(IS=1e-18 N=2)', 0, 0)
     : '';
-  const value = part.ref === 'R1' ? field('Value', '330', 11, 1) : '';
+  const value = part.ref === 'R1' ? field('Value', '330', 7, 1) : '';
   const procurement = Object.entries(part.procurement)
     .map(([name, text]) => field(name, text, 0, 0))
     .join('');
   const instance = `<SYMBOL id="${index}" pos="${
     part.at
   }" part="0" rotate="0" show_power="0" can_scale="0" scale_x="1" scale_y="1">
-    ${field('Ref', part.ref, -20, 1)}${field(
+    ${field('Ref', part.ref, -10, 1)}${field(
     'Name',
     part.ref === 'R1' ? 'Resistor' : part.value,
-    connector ? 27 : 11,
+    connector ? 17 : 7,
     part.ref === 'R1' ? 0 : 1,
   )}
     ${field('Package', part.footprint, 0, 0)}${spice}${model}${value}${procurement}</SYMBOL>`;
@@ -181,6 +173,21 @@ for (const [index, [left, right]] of wires.entries()) {
   }
 }
 
+await useBundledPassives(api, drawing, { R1: 'Resistor', D1: 'LED (red)' }, { ledCathodeFirst: true });
+
+const control = api.createControl('source', sheet, drawing);
+sheet.symbols = control.sheet.symbols;
+const source = { ...control.symbol, unitId: id(6), point: [150, 300], _active_points: null };
+const supplyPoints = new Map(new api.updateSymbol(source).active_points().map(([x, y, pin]) => {
+  pin.pinId = id(60 + Number(pin.number));
+  return [pin.number, [x, y]];
+}));
+sheet.items.push(source);
+const supplyTop = [supplyPoints.get('1')[0], supplyPoints.get('1')[1] - 25];
+const supplyBottom = [supplyPoints.get('2')[0], supplyPoints.get('2')[1] + 25];
+wire([supplyPoints.get('1'), supplyTop]);
+wire([supplyPoints.get('2'), supplyBottom]);
+
 const labelXml = wires
   .map(([left, right], index) => {
     const a = endpoints.get(left.join(':'));
@@ -191,7 +198,8 @@ const labelXml = wires
       netNames[index]
     }</LABEL>`;
   })
-  .join('');
+  .join('') + `<LABEL pos="${supplyTop.map((coordinate) => coordinate / 5)}" direction="3" font="1" style="0">5V</LABEL>
+    <POWER pos="${supplyBottom.map((coordinate) => coordinate / 5)}" direction="1" which="4">0</POWER>`;
 const returnY =
   Math.max(endpoints.get('J1:2')[1], endpoints.get('D1:1')[1]) + 125;
 const ground = `<POWER pos="${(endpoints.get('J1:2')[0] + 175) / 5},${
@@ -209,7 +217,7 @@ const simulation = api.createSimulationSheet(sheet, 'LED operating point');
 simulation.id = id(7);
 simulation.simulation.analysis.kind = 'op';
 const currentSignal = api.deviceSignal(sheet.id, 'R1', 'current');
-simulation.simulation.signals = ['led_a', currentSignal, 'vj1#branch'];
+simulation.simulation.signals = ['led_a', currentSignal, 'v1#branch'];
 simulation.simulation.measurements = [
   {
     id: 'forward-voltage',
@@ -225,7 +233,7 @@ simulation.simulation.measurements = [
   },
 ];
 simulation.simulation.instructions =
-  'Run Operating Point. The ideal 5 V supply is represented by the connector J1. Expect the teaching LED to read about 1.9 V and 9.4 mA with R1 at 330 ohms. Select the measurements to locate the contributing circuit elements. Change the Value field of R1 to 470 and run again to compare current. The diode model is illustrative.';
+  'Run Operating Point. The built-in DC Source V1 supplies 5 V for simulation. J1 is the physical input connector. Expect the teaching LED to read about 1.9 V and 9.4 mA with R1 at 330 ohms. Select the measurements to locate the contributing circuit elements. Change the Value field of R1 to 470 and run again to compare current. The diode model is illustrative.';
 
 drawing.sheets.push(simulation);
 const schematic = await api.encodeDrawing(drawing);
@@ -239,7 +247,7 @@ const simulationNet = new api.NetlistWorkerState().init({
 });
 assert.deepEqual(api.checkSpiceComponents(simulationNet, setup), []);
 const simulationDeck = api.buildDeck(simulationNet, setup);
-assert.match(simulationDeck, /^VJ1\s+5V\s+0\s+DC\s+5$/im);
+assert.match(simulationDeck, /^V1\s+5V\s+0\s+DC\s+5\b/im);
 assert.match(simulationDeck, /^R1\s+5V\s+LED_A\s+330$/im);
 assert.match(simulationDeck, /^D1\s+LED_A\s+0\s+TeachingLED$/im);
 
@@ -290,7 +298,7 @@ if (process.argv.includes('--verify-native')) {
       .real[0];
     const current = results.vectors.find(({ name }) => name === currentSignal)
       .real[0];
-    const supply = results.vectors.find(({ name }) => name === 'vj1#branch')
+    const supply = results.vectors.find(({ name }) => name === 'v1#branch')
       .real[0];
     assert.ok(voltage > 1.85 && voltage < 1.95, String(voltage));
     assert.ok(current > 0.009 && current < 0.01, String(current));
@@ -352,7 +360,8 @@ const db = new SQL.Database(
 const catalogue = await api.readStarterDevices(db);
 const drafts = api.readStarterFootprints(db);
 const selections = new Map();
-for (const component of snapshot.components) {
+assert.equal(snapshot.components.find(({ reference }) => reference === 'V1')?.role, 'virtual');
+for (const component of snapshot.components.filter(({ role }) => role !== 'virtual')) {
   const part = parts.find(({ ref }) => ref === component.reference);
   const entry = drafts.find(({ id }) => id === part.footprint);
   const draft = await api.readStarterFootprint(db, entry);

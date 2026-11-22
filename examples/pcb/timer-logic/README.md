@@ -11,7 +11,7 @@ Open `Timer.tcproject` in TinyCAD. The schematic and single-sided PCB contain si
 | C2, C3 | 100 nF, radial, 2.50 mm pitch | Decouple the two packages. |
 | JP1 | Fitted wire link | Joins the TIMER copper islands. The drill file identifies its two holes as non-plated. |
 
-The 555 is used as a Schmitt receiver. Its output and the two inputs of NAND gate A share the TIMER net. The fixture uses a 5 V supply and a common ground. [TLC555CP pinout and electrical specifications](https://www.ti.com/lit/ds/symlink/tlc555.pdf) · [SN74HC00N pinout and electrical specifications](https://www.ti.com/lit/ds/symlink/sn74hc00.pdf)
+The 555 is used as a Schmitt receiver. Its output and the two inputs of NAND gate A share the TIMER net. The fixture uses a 5 V supply and a common ground. Its capacitors come from the bundled SPICE essentials library. The bundled Digital logic NAND body retains the quad package’s physical pins and hidden power assignments. [TLC555CP pinout and electrical specifications](https://www.ti.com/lit/ds/symlink/tlc555.pdf) · [SN74HC00N pinout and electrical specifications](https://www.ti.com/lit/ds/symlink/sn74hc00.pdf)
 
 ## What to verify
 

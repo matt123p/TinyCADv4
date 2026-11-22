@@ -2068,8 +2068,9 @@ async function completeLedExercise(page, info, offset) {
     const tabs = page.getByRole('tablist', { name: 'Project files', exact: true });
     await openSample('Exercise');
     await projects.getByRole('button', { name: 'LED.dzn', exact: true }).click();
-    for (const name of ['5V', 'LED_A', 'GND'])
+    for (const name of ['LED_A', 'GND', 'V1'])
       await expect(page.locator('svg').getByText(name, { exact: true })).toBeVisible();
+    await expect(page.locator('svg').getByText('5V', { exact: true }).first()).toBeVisible();
     const schematicRulers = page.getByRole('button', { name: 'Toggle Rulers', exact: true });
     if (await schematicRulers.getAttribute('aria-pressed') !== 'true') await schematicRulers.click();
     const schematic = page.locator('.circuit-drawing svg');

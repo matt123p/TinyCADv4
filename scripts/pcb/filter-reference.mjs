@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { librarySqlite } from '../lib/library-from-sql.mjs';
 import { layoutRuntime } from '../lib/layout-runtime.mjs';
+import { useBundledPackageBody, useBundledPassives } from './reference-symbols.mjs';
 import { ngspiceAvailable, runNgspice } from '../tests/ngspice-runner.mjs';
 
 const [source, output] = process.argv.slice(2);
@@ -33,6 +34,11 @@ if (!drawing.sheets.some(({ kind }) => kind === 'simulation')) {
   drawing.sheets.push(simulation);
 }
 
+await useBundledPackageBody(api, drawing, {
+  library: 'spice', name: '741 op-amp', reference: 'U1',
+  transform: (x, y) => [135 + (x - 240) * 0.75, 105 - (y - 270)],
+});
+await useBundledPassives(api, drawing, { R1: 'Resistor', C1: 'Capacitor', C2: 'Capacitor', C3: 'Capacitor' });
 const bytes = await api.encodeDrawing(drawing);
 const final = await api.decodeDrawing(bytes);
 const graph = await api.buildHierarchicalNetlist({ drawing: final, path: 'Filter.dzn' });

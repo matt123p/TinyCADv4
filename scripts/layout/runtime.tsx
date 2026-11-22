@@ -27,6 +27,7 @@ export { wireBundles, wirePaths, wireSpans } from '../../src/layout/bundles';
 export { labelGroups } from '../../src/layout/labelGroups';
 export { blank } from '../../src/io/ioXml';
 export { decodeDrawing, encodeDrawing } from '../../src/io/dsnCodec';
+export { createControl } from '../../src/simulation/controlSymbols';
 export { createSimulationSheet } from '../../src/simulation/document';
 export { defaultAnalysis } from '../../src/simulation/contracts';
 export { initialiseLayoutRuntime } from './headless';

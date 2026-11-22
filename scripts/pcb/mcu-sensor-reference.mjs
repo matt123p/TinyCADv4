@@ -4,6 +4,7 @@ import path from 'node:path';
 import { TextReader, Uint8ArrayWriter, ZipWriter } from '@zip.js/zip.js';
 import { librarySqlite } from '../lib/library-from-sql.mjs';
 import { layoutRuntime } from '../lib/layout-runtime.mjs';
+import { useBundledPassives } from './reference-symbols.mjs';
 
 const [, , source, output, evidence] = process.argv;
 if (!source || !output) throw new Error('Pass the source schematic and output folder.');
@@ -19,8 +20,9 @@ const antenna = box(12, 36.55, 42, 37);
 const espressif = 'https://documentation.espressif.com/esp32-c3-wroom-02_datasheet_en.html';
 const ti = 'https://www.ti.com/lit/ds/symlink/tmp75.pdf';
 
-const sourceBytes = await readFile(source);
-const drawing = await api.decodeDrawing(sourceBytes);
+const drawing = await api.decodeDrawing(await readFile(source));
+await useBundledPassives(api, drawing, { R1: 'Resistor', R2: 'Resistor', R3: 'Resistor', R4: 'Resistor', R5: 'Resistor', R6: 'Resistor', R7: 'Resistor', C1: 'Capacitor', C2: 'Capacitor', C3: 'Capacitor', C4: 'Capacitor' });
+const sourceBytes = await api.encodeDrawing(drawing, 'xml');
 const graph = await api.buildHierarchicalNetlist({ path: 'Sensor.dsn', drawing });
 const { snapshot } = await api.buildHierarchicalCircuitSnapshot(graph, {
   documentId: drawing.documentId, revision: 1,
@@ -345,6 +347,7 @@ assert.ok(reopened.modelAssets.length);
 
 await mkdir(output, { recursive: true });
 await writeFile(path.join(output, 'Sensor.dsn'), sourceBytes);
+await writeFile(path.join(output, 'Sensor.svg'), api.renderCircuit(drawing.sheets[0]));
 await writeFile(path.join(output, 'Sensor.dpn'), native);
 await writeFile(path.join(output, 'Sensor.tcproject'), api.encodeProjectSettings({
   title: board.title, projectId: id(2), revisionId: id(5), requiredFeatures: [],

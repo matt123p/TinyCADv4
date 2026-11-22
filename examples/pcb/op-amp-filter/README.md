@@ -2,7 +2,7 @@
 
 Open [Filter.tcproject](Filter.tcproject) and select [Filter.dzn](Filter.dzn) or [Filter.dpn](Filter.dpn) in the project tree. The project associates one schematic with a 46 × 38 mm, two-layer PCB. [Schematic preview](Filter.svg)
 
-R1 (10 kΩ) and C1 (100 nF) make the low-pass node **RC**. The LM741CN buffers **RC** to **OUT** at unity gain. C2 and C3 are 100 nF bypass capacitors for the two supply rails. J1 pins 1 through 5 carry **IN**, **OUT**, **+12V**, **−12V**, and **0**, respectively. The schematic marks offset-null pins 1 and 5 and the NC pin 8 as intentionally unconnected. [TI LM741 PDIP pin table](https://www.ti.com/lit/ds/symlink/lm741.pdf#page=3)
+R1 (10 kΩ) and C1 (100 nF) make the low-pass node **RC**. The LM741CN buffers **RC** to **OUT** at unity gain. C2 and C3 are 100 nF bypass capacitors for the two supply rails. J1 pins 1 through 5 carry **IN**, **OUT**, **+12V**, **−12V**, and **0**, respectively. The schematic uses bundled SPICE essentials artwork for the passives and the 741 body. The LM741CN retains its eight physical pins, with offset-null pins 1 and 5 and NC pin 8 marked intentionally unconnected. [TI LM741 PDIP pin table](https://www.ti.com/lit/ds/symlink/lm741.pdf#page=3)
 
 ## Trace the signal
 
