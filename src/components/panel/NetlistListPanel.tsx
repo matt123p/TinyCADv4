@@ -28,7 +28,7 @@ import {
   actionUnfocus,
   actionUpdateNetlistTypes,
 } from '../../state/dispatcher/AppDispatcher';
-import { PersistentDataGrid } from '../controls/PersistentDataGrid';
+import { NetlistGrid } from './NetlistGrid';
 import { ListModeMenuButton } from './ListModeMenuButton';
 
 const useStyles = makeStyles({
@@ -552,7 +552,7 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
 
   return (
     <div className={styles.container}>
-      <PersistentDataGrid<NetItem>
+      <NetlistGrid<NetItem>
         items={items}
         columns={columns}
         stateKey="NetlistListPanel"
@@ -562,7 +562,6 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
         onRowMouseEnter={handleMouseEnter}
         onRowMouseLeave={handleMouseLeave}
         selectionMode={undefined}
-        defaultSortColumn="net"
       />
     </div>
   );

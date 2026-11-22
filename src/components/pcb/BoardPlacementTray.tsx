@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Button } from '@fluentui/react-components';
+import { Button, Checkbox, Input } from '@fluentui/react-components';
+import { LibraryDragPreview } from '../libraryPanel/LibraryDragPreview';
 import type {
   BoardComponent,
   EmbeddedDevice,
@@ -62,9 +63,10 @@ export default function BoardPlacementTray({
         <>
           <label>
             Search unplaced components{' '}
-            <input
+            <Input
               ref={searchInput}
               value={search}
+              size="small"
               onChange={(event) => setSearch(event.target.value)}
             />
           </label>
@@ -75,8 +77,7 @@ export default function BoardPlacementTray({
                 const definition = footprintFor(part);
                 return (
                   <li key={part.id}>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       aria-label={'Queue ' + label + ' for placement'}
                       checked={queued.includes(part.id)}
                       disabled={disabled || sequential || !definition}
@@ -121,13 +122,10 @@ export default function BoardPlacementTray({
           )}
           {footprint && (
             <>
-              <div className="pcb-footprint-drag" draggable={!disabled && !sequential}
-                onDragStart={(event) => {
-                  event.dataTransfer.setData(boardPlacementDragType, highlighted.id);
-                  event.dataTransfer.effectAllowed = 'copy';
-                }}>
+              <LibraryDragPreview enabled={!disabled && !sequential}
+                dataType={boardPlacementDragType} getData={() => highlighted.id} effectAllowed="copy">
                 <DeviceFootprintPreview footprint={footprint} selected="" />
-              </div>
+              </LibraryDragPreview>
               {!sequential && <Button disabled={disabled} onClick={() => onPlace(highlighted.id)}>
                 Place on board
               </Button>}

@@ -1,6 +1,10 @@
 import React, { useRef, useState } from 'react';
 import {
   Button,
+  Checkbox,
+  Input,
+  Select,
+  Textarea,
   Dialog,
   DialogActions,
   DialogBody,
@@ -363,10 +367,10 @@ export default function FootprintEditorDialog({
         if (!data.open && !busy) onClose();
       }}
     >
-      <DialogSurface style={{ maxWidth: 960 }}>
+      <DialogSurface className="pcb-dialog pcb-dialog-wide">
         <DialogBody>
           <DialogTitle>Footprint editor</DialogTitle>
-          <DialogContent style={{ maxHeight: '72vh', overflowY: 'auto' }}>
+          <DialogContent>
             <fieldset disabled={busy}>
               <legend>Footprint</legend>
               <p>
@@ -374,7 +378,7 @@ export default function FootprintEditorDialog({
                   <>
                     <label>
                       Starter footprint draft{' '}
-                      <select
+                      <Select
                         value={starterId}
                         onChange={(event) => setStarterId(event.target.value)}
                       >
@@ -384,7 +388,7 @@ export default function FootprintEditorDialog({
                             {footprint.definition.name}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </label>{' '}
                     <Button
                       disabled={!starterDraft}
@@ -484,7 +488,7 @@ export default function FootprintEditorDialog({
               <p>
                 <label>
                   Name{' '}
-                  <input
+                  <Input
                     value={definition.name}
                     onChange={(event) =>
                       updateDefinition({ name: event.target.value })
@@ -493,7 +497,7 @@ export default function FootprintEditorDialog({
                 </label>{' '}
                 <label>
                   Revision{' '}
-                  <input
+                  <Input
                     value={definition.revision}
                     onChange={(event) =>
                       updateDefinition({ revision: event.target.value })
@@ -504,7 +508,7 @@ export default function FootprintEditorDialog({
               <p>
                 <label>
                   Datasheet URL{' '}
-                  <input
+                  <Input
                     type="url"
                     value={definition.datasheetUrl ?? ''}
                     onChange={(event) =>
@@ -527,7 +531,7 @@ export default function FootprintEditorDialog({
                 <summary>Assembly drawing</summary>
                 <label>
                   Assembly marker{' '}
-                  <select
+                  <Select
                     disabled={!definition.pads.length}
                     value={definition.assembly?.marker?.kind ?? ''}
                     onChange={(event) => {
@@ -541,12 +545,12 @@ export default function FootprintEditorDialog({
                     <option value="">No marker</option>
                     {Object.entries(footprintAssemblyMarks).map(([kind, { name }]) =>
                       <option key={kind} value={kind}>{name}</option>)}
-                  </select>
+                  </Select>
                 </label>
                 {definition.assembly?.marker && (
                   <label>
                     Marked pad{' '}
-                    <select
+                    <Select
                       value={definition.assembly.marker.padId}
                       onChange={(event) => updateAssembly({ marker: {
                         ...definition.assembly.marker, padId: event.target.value,
@@ -554,12 +558,12 @@ export default function FootprintEditorDialog({
                     >
                       {definition.pads.map(({ id, label }, index) =>
                         <option key={id} value={id}>{label || 'Unlabelled'} · {index + 1}</option>)}
-                    </select>
+                    </Select>
                   </label>
                 )}
                 <label>
                   Assembly notes{' '}
-                  <textarea value={definition.assembly?.notes ?? ''} maxLength={footprintAssemblyNotesLimit}
+                  <Textarea value={definition.assembly?.notes ?? ''} maxLength={footprintAssemblyNotesLimit}
                     onChange={(event) => updateAssembly({ notes: event.target.value })}
                     onBlur={(event) => updateAssembly({ notes: event.target.value.trim() })}
                   />
@@ -598,7 +602,7 @@ export default function FootprintEditorDialog({
               {!!definition.pads.length && (
                 <label>
                   Pad{' '}
-                  <select
+                  <Select
                     value={selected}
                     onChange={(event) => setSelected(event.target.value)}
                   >
@@ -608,14 +612,14 @@ export default function FootprintEditorDialog({
                         {label || 'Unlabelled'} · {index + 1}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
               )}
               {pad && (
                 <p key={pad.id}>
                   <label>
                     Pad label{' '}
-                    <input
+                    <Input
                       value={pad.label}
                       onChange={(event) =>
                         updatePad({ label: event.target.value })
@@ -624,7 +628,7 @@ export default function FootprintEditorDialog({
                   </label>{' '}
                   <label>
                     Pad X (mm){' '}
-                    <input
+                    <Input
                       key={String(pad.id) + 'x' + pad.positionNm.x}
                       defaultValue={mm(pad.positionNm.x)}
                       onBlur={(event) => {
@@ -639,7 +643,7 @@ export default function FootprintEditorDialog({
                   </label>{' '}
                   <label>
                     Pad Y (mm){' '}
-                    <input
+                    <Input
                       key={String(pad.id) + 'y' + pad.positionNm.y}
                       defaultValue={mm(pad.positionNm.y)}
                       onBlur={(event) => {
@@ -706,7 +710,7 @@ export default function FootprintEditorDialog({
               <p>
                 <label>
                   New pad label{' '}
-                  <input
+                  <Input
                     value={padDraft.label}
                     onChange={(event) =>
                       setPadDraft({ ...padDraft, label: event.target.value })
@@ -715,7 +719,7 @@ export default function FootprintEditorDialog({
                 </label>{' '}
                 <label>
                   Shape{' '}
-                  <select
+                  <Select
                     aria-label="Pad shape"
                     value={padDraft.profile}
                     onChange={(event) =>
@@ -731,7 +735,7 @@ export default function FootprintEditorDialog({
                     <option value="roundrect">Rounded rectangle</option>
                     <option value="polygon">Polygon</option>
                     <option value="hole">Non-plated hole or slot</option>
-                  </select>
+                  </Select>
                 </label>
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -745,8 +749,8 @@ export default function FootprintEditorDialog({
                 }).map(([key, label]) => (
                   <label key={key}>
                     {label} (mm){' '}
-                    <input
-                      size={5}
+                    <Input
+                      size="small"
                       value={padDraft[key as keyof PadDraft] as string}
                       onChange={(event) =>
                         setPadDraft({ ...padDraft, [key]: event.target.value })
@@ -759,7 +763,7 @@ export default function FootprintEditorDialog({
                 <p>
                   <label>
                     Corner radius (mm){' '}
-                    <input
+                    <Input
                       value={padDraft.radius}
                       onChange={(event) =>
                         setPadDraft({ ...padDraft, radius: event.target.value })
@@ -773,7 +777,7 @@ export default function FootprintEditorDialog({
                   <label>
                     Local vertices (one X Y pair per line in mm)
                     <br />
-                    <textarea
+                    <Textarea
                       value={padDraft.polygon}
                       onChange={(event) =>
                         setPadDraft({
@@ -787,8 +791,7 @@ export default function FootprintEditorDialog({
               )}
               <p>
                 <label>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={padDraft.plated}
                     onChange={(event) =>
                       setPadDraft({ ...padDraft, plated: event.target.checked })
@@ -819,7 +822,7 @@ export default function FootprintEditorDialog({
                 <p>
                   <label>
                     Surface{' '}
-                    <select
+                    <Select
                       value={surface}
                       onChange={(event) =>
                         setSurface(event.target.value as typeof surface)
@@ -828,11 +831,11 @@ export default function FootprintEditorDialog({
                       <option value="copper">Copper</option>
                       <option value="mask">Mask</option>
                       <option value="paste">Paste</option>
-                    </select>
+                    </Select>
                   </label>{' '}
                   <label>
                     Face{' '}
-                    <select
+                    <Select
                       value={face}
                       onChange={(event) =>
                         setFace(event.target.value as typeof face)
@@ -840,7 +843,7 @@ export default function FootprintEditorDialog({
                     >
                       <option value="top">Top</option>
                       <option value="bottom">Bottom</option>
-                    </select>
+                    </Select>
                   </label>{' '}
                   <Button
                     size="small"
@@ -922,7 +925,7 @@ export default function FootprintEditorDialog({
                     <label>
                       {' '}
                       Model license{' '}
-                      <input
+                      <Input
                         value={
                           file.assets?.find(({ id }) => id === model.assetId)
                             ?.license ?? ''
@@ -974,9 +977,9 @@ export default function FootprintEditorDialog({
               <legend>Dimensions</legend>
               <label>
                 Minimum annular ring (mm){' '}
-                <input
+                <Input
                   value={minimumAnnulus}
-                  size={6}
+                  size="small"
                   onChange={(event) => {
                     setMinimumAnnulus(event.target.value);
                     setChecks(undefined);
@@ -1028,7 +1031,7 @@ export default function FootprintEditorDialog({
                   <p key={key}>
                     <label>
                       {label}{' '}
-                      <input
+                      <Input
                         value={device[key as keyof typeof device]}
                         onChange={(event) =>
                           setDevice({ ...device, [key]: event.target.value })
@@ -1043,7 +1046,7 @@ export default function FootprintEditorDialog({
                     return (
                       <li key={id}>
                         {label || 'Unlabelled'} · {index + 1}{' '}
-                        <select
+                        <Select
                           aria-label={`Assignment for pad ${label} (${
                             index + 1
                           })`}
@@ -1067,9 +1070,9 @@ export default function FootprintEditorDialog({
                           <option value="nc">No connect</option>
                           <option value="reserved">Reserved</option>
                           <option value="mechanical">Mechanical</option>
-                        </select>{' '}
+                        </Select>{' '}
                         {map?.kind === 'signal' && (
-                          <input
+                          <Input
                             aria-label={`Terminal for pad ${label} (${
                               index + 1
                             })`}
@@ -1113,6 +1116,7 @@ export default function FootprintEditorDialog({
             </Button>
             <Button
               disabled={busy || !definition.pads.length}
+              aria-expanded={publish}
               onClick={() => setPublish(!publish)}
             >
               {publish ? 'Hide device mapping' : 'Map as device'}

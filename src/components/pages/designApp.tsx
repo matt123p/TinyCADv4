@@ -18,7 +18,7 @@ import SidePanelContainer from '../../state/containers/sidePanelContainer';
 import BomContainer from '../../state/containers/bomContainer';
 import SheetbarContainer from '../../state/containers/sheetbarContainer';
 import BottomPanelContainer from '../../state/containers/bottomPanelContainer';
-import { ResizeHandle } from '../panel/ResizeHandle';
+import { EditorDrawingStack, EditorSidePanel } from '../panel/EditorLayout';
 import { stopActiveSimulation } from '../../simulation/lifecycle';
 import { actionSelectDialog, actionSheetSelect } from '../../state/dispatcher/AppDispatcher';
 import { Browser } from '../sheets/browser';
@@ -68,7 +68,6 @@ const ProjectAutosave = process.env.TARGET_SYSTEM === 'electron' || process.env.
 
 const SheetContainer = lazy(() => import('../../state/containers/sheetContainer'));
 const BoardWorkspace = lazy(() => import('../pcb/BoardWorkspace'));
-const BoardRecoveryDialog = lazy(() => import('../pcb/BoardRecoveryDialog'));
 
 const SimulationFailureDialog = lazy(() => import('../simulation/SimulationFailureDialog').then(
   (module) => ({ default: module.SimulationFailureDialog }),
@@ -202,7 +201,6 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const pcb = activeBoard?.document;
   const [boardToClose, setBoardToClose] = useState<string>();
   const [closingBoard, setClosingBoard] = useState(false);
-  const boardOpenRequest = React.useRef(0);
   const initialWorkspace = React.useRef(new URLSearchParams(window.location.search));
   const [activeWorkspace, setActiveWorkspace] = useState<'circuit' | 'pcb'>(() => {
     const params = initialWorkspace.current;
@@ -243,7 +241,6 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   }, [selectBoard, documents.select]);
 
   const openBoard = useCallback((document: BoardWorkspaceDocument) => {
-    const request = ++boardOpenRequest.current;
     const { tabs, activeId } = getBoards();
     const current = tabs.find(({ id }) => id === activeId);
     const key = document.session.key;
@@ -253,30 +250,21 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       const session = existing.document.session;
       if (session.savedVersion === document.session.savedVersion)
         replaceBoard(existing.id, { ...document, session });
-      else if (!session.dirty && !session.recovery)
+      else if (!session.dirty)
         replaceBoard(existing.id, document);
       else if (document.probe)
         replaceBoard(existing.id, { ...existing.document, probe: document.probe });
       activateBoard(existing.id);
       return;
     }
-    async function open() {
-      const previous = current?.document.session;
-      if (!projectMode && previous?.dirty && !previous.recovery) {
-        if (!window.confirm('Discard unsaved edits to the current PCB?')) return;
-        await previous.discardRecovery();
-      }
-      if (request !== boardOpenRequest.current) return;
-      activateBoard(addBoard(document, !projectMode));
-    }
-    void open().catch((error) =>
-      dispatch(actionSelectDialog('io_failure', { message: String(error) })),
-    );
-  }, [activateBoard, addBoard, dispatch, getBoards, projectMode, replaceBoard]);
+    if (!projectMode && current?.document.session.dirty &&
+      !window.confirm('Discard unsaved edits to the current PCB?')) return;
+    activateBoard(addBoard(document, !projectMode));
+  }, [activateBoard, addBoard, getBoards, projectMode, replaceBoard]);
 
   const refreshBoardTab = useCallback(async (id: string, document: BoardWorkspaceDocument) => {
     const { session, reloadProjectBoard } = document;
-    if (!reloadProjectBoard || session.dirty || session.recovery) return;
+    if (!reloadProjectBoard || session.dirty) return;
     const version = session.savedVersion;
     const updated = await reloadProjectBoard();
     if (!session.dirty && session.savedVersion === version && updated.session.savedVersion !== version)
@@ -304,8 +292,8 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     };
   }, [openBoard, activateCircuit]);
   const createBoard = () => {
-    void import('../../io/boardWorkspace').then(async ({ newStandaloneBoard }) =>
-      openBoard({ session: await newStandaloneBoard() }),
+    void import('../../io/boardWorkspace').then(({ newStandaloneBoard }) =>
+      openBoard({ session: newStandaloneBoard() }),
     ).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
   };
   useEffect(() => {
@@ -315,8 +303,8 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
         event.preventDefault();
         return;
       }
-      if (getBoards().tabs.some(({ document }) => document.session.dirty && !document.session.recovery) &&
-          !window.confirm('Close with unsaved PCB edits? TinyCAD keeps any saved recovery copies.')) event.preventDefault();
+      if (getBoards().tabs.some(({ document }) => document.session.dirty) &&
+          !window.confirm('Close with unsaved PCB edits?')) event.preventDefault();
     };
     const beforeUnload = (event: BeforeUnloadEvent) => {
       if (getBoards().tabs.some(({ document }) => document.session.dirty) || documents.hasDirty() ||
@@ -342,13 +330,12 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     if (workspace === 'simulation') {
       dispatch({ type: 'simulation/panel', visible: true });
     } else if (workspace === 'pcb' && !params.has('file')) {
-      void import('../../io/boardWorkspace').then(async ({ newStandaloneBoard }) =>
-        openBoard({ session: await newStandaloneBoard() }),
+      void import('../../io/boardWorkspace').then(({ newStandaloneBoard }) =>
+        openBoard({ session: newStandaloneBoard() }),
       ).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
     }
   }, [dispatch, openBoard]);
   const closeBoard = useCallback((id: string) => {
-    boardOpenRequest.current++;
     removeBoards([id]);
     if (!getBoards().activeId) setActiveWorkspace('circuit');
   }, [getBoards, removeBoards]);
@@ -357,7 +344,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     if (savingTabBatch) return;
     const tab = getBoards().tabs.find((tab) => tab.id === id);
     if (!tab) return;
-    if (projectMode && tab.document.session.dirty && !tab.document.session.recovery) {
+    if (projectMode && tab.document.session.dirty) {
       setTabError('');
       setBoardToClose(id);
     } else closeBoard(id);
@@ -383,7 +370,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     [schematicRegistry, currentSchematic, schematicVersion, schematicSavedVersion, store]);
   const selectedSchematic = schematicTabKey(currentSchematic);
   const canSplit = projectMode && !!selectedSchematic && !!pcb?.projectRootId &&
-    currentSchematic.rootId === pcb.projectRootId && !pcb.session.recovery &&
+    currentSchematic.rootId === pcb.projectRootId &&
     props.selected_sheet >= 0 && !props.simulationSheet && !props.editLibrary && !props.editSymbol;
   useEffect(() => {
     if (!canSplit) setSideBySide(false);
@@ -504,11 +491,10 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       if (linkedDrawing || closingBoards.length || Object.keys(state.schematicTabs?.inactive ?? {}).length) {
         const { closeLinkedSchematic, saveProjectDrawing, closeProjectSchematicTab, saveInactiveSchematic } = await loadProjectServices();
         for (const { document: { session } } of closingBoards) {
-          if (!session.dirty || session.recovery) continue;
-          if (save) {
+          if (save && session.dirty) {
             await session.save();
             if (session.dirty) throw new Error(t('projects.pcbStillUnsaved'));
-          } else await session.discardRecovery();
+          }
         }
         if (save && dirtyDrawing) {
           await saveProjectDrawing(dispatch, store.getState);
@@ -634,7 +620,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
         }
       }
       for (const { document: { session } } of getBoards().tabs) {
-        if (!session.dirty || session.recovery) continue;
+        if (!session.dirty) continue;
         await saveNative(session.path, async () => {
           await session.save();
           if (session.dirty) throw new Error(t('projects.pcbStillUnsaved'));
@@ -680,7 +666,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       if (save) {
         await session.save();
         if (session.dirty) throw new Error(t('projects.pcbStillUnsaved'));
-      } else await session.discardRecovery();
+      }
       closeBoard(id);
       setBoardToClose(undefined);
     } catch (error) {
@@ -785,7 +771,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
 
   const splitVisible = sideBySide && canSplit && !gitReview && !activeProjectFile;
   const boardOnly = pcbActive && !splitVisible && !gitReview && !activeProjectFile;
-  const boardToolbarAtTop = boardOnly && !!pcb && !pcb.session.recovery;
+  const boardToolbarAtTop = boardOnly && !!pcb;
   const panelsVisible = sidePanelVisible && (projectMode
     ? showProjects || (showLibraries && !boardOnly) || showSourceControl
     : !boardOnly);
@@ -979,18 +965,14 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               aria-label={t('projects.closeProject')} onClick={() => window.dispatchEvent(new Event(closeProjectMode))} />
           </div>
         )}
-        <div
-          className={`side-panel-container${!panelsVisible ? ' side-panel-collapsed' : ''}${sidePanelResizing ? ' side-panel-resizing' : ''}`}
-          style={panelsVisible ? { width: sidePanelWidth } : undefined}
+        <EditorSidePanel
+          width={panelsVisible ? sidePanelWidth : undefined}
+          collapsed={!panelsVisible}
+          resizing={sidePanelResizing}
+          onResize={panelsVisible ? handleSidePanelResize : undefined}
+          onDragStateChange={setSidePanelResizing}
           hidden={!panelsVisible && (projectMode || boardOnly)}
         >
-          {panelsVisible && (
-            <ResizeHandle
-              direction="horizontal"
-              onResize={handleSidePanelResize}
-              onDragStateChange={setSidePanelResizing}
-            />
-          )}
           {!panelsVisible && !projectMode && (
             <Button
               className={styles.toggleButton}
@@ -1033,7 +1015,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               )}
             </>
           ) : <SidePanelContainer toggleSidePanel={toggleSidePanel} />}
-        </div>
+        </EditorSidePanel>
         <div className="main-content-area">
           {projectMode && (documents.files.length > 0 || props.hasOpenProject || boards.tabs.length > 0) && (
             <div className="project-file-tabs">
@@ -1135,11 +1117,8 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
             onFocusCapture={splitVisible ? () => setActiveWorkspace('circuit') : undefined}
             onPointerDownCapture={splitVisible ? () => setActiveWorkspace('circuit') : undefined}>
           {splitVisible && schematicToolbar}
-          <div
-            className={
-              props.editSymbol ? 'circuit-container-es' : 'circuit-container'
-            }
-          >
+          <EditorDrawingStack symbolEditor={!!props.editSymbol} bottomHeight={bottomPanelHeight}
+            onBottomResize={handleBottomPanelResize} drawing={<>
             {props.selected_sheet >= 0 ? (
               props.simulationSheet ? (
                 <Suspense fallback={null}>
@@ -1157,17 +1136,9 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
             ) : null}
             {HierarchyPanel && <Suspense fallback={null}><HierarchyPanel /></Suspense>}
             <SheetbarContainer />
-          </div>
-          <div
-            className="bottom-panel-wrapper"
-            style={{ height: bottomPanelHeight }}
-          >
-            <ResizeHandle
-              direction="vertical"
-              onResize={handleBottomPanelResize}
-            />
+          </>}>
             <BottomPanelContainer />
-          </div>
+          </EditorDrawingStack>
           </div>
           )}
           {(pcbActive || splitVisible) && !gitReview && !activeProjectFile && (
@@ -1177,16 +1148,10 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               onFocusCapture={splitVisible ? () => setActiveWorkspace('pcb') : undefined}
               onPointerDownCapture={splitVisible ? () => setActiveWorkspace('pcb') : undefined}>
               <Suspense fallback={<div role="status">Loading PCB Design…</div>}>
-                {pcb?.session.recovery ? (
-                  <BoardRecoveryDialog
-                    key={activeBoard.id + ':' + activeBoard.mount}
-                    session={pcb.session}
-                    onClose={() => closeBoard(activeBoard.id)}
-                    onSelect={(session) => replaceBoard(activeBoard.id, session.detached ? { session } : { ...pcb, session }, pcb)}
-                  />
-                ) : pcb ? (
+                {pcb ? (
                   <BoardWorkspace key={activeBoard.id + ':' + activeBoard.mount} {...pcb}
                     footprintsVisible={showFootprints} onToggleFootprints={setShowFootprints}
+                    bottomPanelHeight={bottomPanelHeight} onBottomPanelResize={handleBottomPanelResize}
                     onOpen={() => dispatch(fileOpen() as any)}
                     onNew={createBoard}
                     onProjectFolder={DriveProjectFolderDialog ? () => window.dispatchEvent(new Event(chooseProjectFolder)) : undefined}

@@ -1,5 +1,5 @@
 import { chooseProjectFolder, closeProjectMode, saveProjectTabs } from '../../io/projectMode';
-import { confirmBoardClose } from '../../io/boardWorkspaceEvents';
+import { boardMenuCommand, confirmBoardClose } from '../../io/boardWorkspaceEvents';
 import React, { FunctionComponent, useEffect } from 'react';
 import ContextmenuContainer from '../../state/containers/contextmenuContainer';
 import DialogueContainer from '../../state/containers/dialogueContainer';
@@ -67,6 +67,9 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
       else if (command === 'file-open-project-folder') openProject(true);
       else if (command === 'file-save-all') window.dispatchEvent(new Event(saveProjectTabs));
       else if (command === 'file-close-project') window.dispatchEvent(new Event(closeProjectMode));
+      else if (command.startsWith('pcb-menu:')) window.dispatchEvent(
+        new CustomEvent(boardMenuCommand, { detail: command.slice('pcb-menu:'.length) }),
+      );
       else props.dispatch(handleMenuCommand(command) as any);
     });
     const unsubscribeWithData = window.electronAPI.onMenuCommandWithData((command, data) => {

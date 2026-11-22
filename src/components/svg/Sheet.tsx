@@ -44,6 +44,8 @@ import {
 } from '../../io/files';
 import { SelectSymbol } from '../libraryPanel/Search';
 import { Ruler } from '../controls/Ruler';
+import { SelectionMarquee } from './SelectionMarquee';
+import { DrawingViewportFrame } from './DrawingViewportFrame';
 import { actionSetMousePosition } from '../../state/actions/viewActions';
 import { subscribeNetlist } from '../../io/netlists/netlistSync';
 import { NetlistData } from '../../io/netlists/netlistGenerator';
@@ -1510,17 +1512,11 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       : null;
 
     let selectrect = this.props._in_select_rect ? (
-      <rect
+      <SelectionMarquee
         x={selectRectBounds.a[0]}
         y={selectRectBounds.a[1]}
         width={selectRectBounds.b[0] - selectRectBounds.a[0]}
         height={selectRectBounds.b[1] - selectRectBounds.a[1]}
-        style={{
-          fill: 'blue',
-          fillOpacity: 0.25,
-          stroke: 'black',
-          strokeWidth: 1,
-        }}
       />
     ) : null;
 
@@ -1616,380 +1612,178 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     // Ruler zero offset in screen pixels relative to the scroll container's content start
     const zeroOffset = border * scale;
     
-    // Only engage the grid layout if rulers are visible
-    if (this.props.showRulers) {
-        return (
-          <div style={{ position: 'relative', display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 0, overflow: 'hidden' }}>
-            <div style={{
-                 display: 'grid', 
-                 gridTemplateColumns: 'minmax(0, 1fr) 20px', 
-                 gridTemplateRows: '20px minmax(0, 1fr)', 
-                 flexGrow: 1, 
-                 flexShrink: 1, 
-                 flexBasis: 0, 
-                 overflow: 'hidden',
-                 minHeight: 0,
-                 width: '100%',
-                 height: '100%'
-            }}>
-                <div style={{overflow: 'hidden'}}>
-                  <Ruler 
-                      orientation="horizontal" 
-                      unit="mm" 
-                      zoom={this.props.zoom} 
-                      scrollOffset={this.state.scrollX}
-                      mousePosition={this.state.mouseX !== null ? this.state.mouseX / PIXELS_PER_MM : null}
-                      containerSize={this.state.width}
-                      zeroOffset={zeroOffset}
-                      scaleOrign={PIXELS_PER_MM}
-                  />
-                </div>
-                <div style={{backgroundColor: '#e0e0e0', borderBottom: '1px solid #999', borderLeft: '1px solid #999'}} />
-                
-            <div
-              className="circuit-drawing"
-              style={{gridColumn: '1', gridRow: '2'}}
-              onScroll={(e) => this.onscroll(e)}
-              ref={(div) => {
-                this._div = div;
-              }}
-              tabIndex={-1}
-              onKeyDown={this.onkeydown}
-              onKeyPress={this.onkeypress}
-              onFocus={this.onfocus}
-              onBlur={this.onblur}
-            >
-             {/* SVG content */}
-              <svg
-                id="svg-drawing"
-                onMouseMove={(e) => this.onmouseevent(e, this._div)}
-                onMouseDown={(e) => this.onmouseevent(e, this._div)}
-                onMouseUp={(e) => this.onmouseevent(e, this._div)}
-                onContextMenu={(e) => this.oncontextmenu(e)}
-                onDragOver={(e) => this.ondragover(e)}
-                onDrop={(e) => this.ondrop(e)}
-                className="circuit-svg"
-                width={(this.props.page_size[0] + border * 2) * scale}
-                height={(this.props.page_size[1] + border * 2) * scale}
-                cursor={this.props.cursor}
-              >
-                <TSvgDefs images={this.props.images} hatches={this.props.hatches} />
-                <defs>
-                  <pattern
-                    id="grid-pattern"
-                    x={-this.props.details.grid / 2}
-                    y={-this.props.details.grid / 2}
-                    width={this.props.details.grid}
-                    height={this.props.details.grid}
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <rect
-                      x={(this.props.details.grid - gridPointSize) / 2}
-                      y={(this.props.details.grid - gridPointSize) / 2}
-                      width={gridPointSize}
-                      height={gridPointSize}
-                      shapeRendering="crispEdges"
-                      fill="#a0a0a0"
-                    />
-                  </pattern>
-                </defs>
-      
-                <g id={"sheet-content-" + this.props.sheet_name.replace(/\s+/g, '-')}>
-                  <rect
-                    x="0"
-                    y="0"
-                    width={(this.props.page_size[0] + border * 2) * scale}
-                    height={border * scale}
-                    className="offPageArea"
-                  />
-                  <rect
-                    x="0"
-                    y={border * scale}
-                    width={border * scale}
-                    height={(this.props.page_size[1] + border) * scale}
-                    className="offPageArea"
-                  />
-                  <rect
-                    x={(this.props.page_size[0] + border) * scale}
-                    y={border * scale}
-                    width={border * scale}
-                    height={(this.props.page_size[1] + border) * scale}
-                    className="offPageArea"
-                  />
-                  <rect
-                    x="0"
-                    y={(this.props.page_size[1] + border) * scale}
-                    width={(this.props.page_size[0] + border * 2) * scale}
-                    height={border * scale}
-                    className="offPageArea"
-                  />
-                  <rect
-                    x={border * scale}
-                    y={border * scale}
-                    width={this.props.page_size[0] * scale}
-                    height={this.props.page_size[1] * scale}
-                    className="pageRectangle"
-                    style={{ fill: this.props.options.color_background }}
-                  />
-        
-                  <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
-                    {this.props.options.show_grid && this.props.zoom > 125 ? (
-                      <rect
-                        x="0"
-                        y="0"
-                        width={this.props.page_size[0]}
-                        height={this.props.page_size[1]}
-                        fill="url(#grid-pattern)"
-                        pointerEvents="none"
-                      />
-                    ) : null}
-                    {this.props.details.show_details ? (
-                      <TDesignDetails
-                        details={this.props.details}
-                        page_size={this.props.page_size}
-                      />
-                    ) : null}
-                    {this.props.details.show_guides ? (
-                      <TDesignGuides
-                        details={this.props.details}
-                        page_size={this.props.page_size}
-                      />
-                    ) : null}
-                    <TDrawing
-                      dx={0}
-                      dy={0}
-                      dr={0}
-                      items={this.props.items}
-                      instanceReferencesByUnit={this.props.instanceReferencesByUnit}
-                      hover_obj={this.props.hover_obj}
-                      hover_ids={this.props.hover_ids}
-                      hover_pins={this.props.hover_pins}
-                      selection={this.props._selected_array}
-                      selected_handle={this.props._selected_handle}
-                      options={this.props.options}
-                      add={add}
-                      hover={false}
-                      parent={null}
-                      part={this.props.part}
-                      selected={false}
-                      show_power={this.props.show_power}
-                      editLibrary={this.props.editingLibrary}
-                      heterogeneous={this.props.heterogeneous}
-                      scale_x={1.0}
-                      scale_y={1.0}
-                      sheetName={this.props.sheet_name}
-                      netlist={this.state.netlist}
-                      netlistTypes={this.props.netlistTypes}
-                      netTypeAssignments={this.props.netTypeAssignments}
-                    />
-                    <OperatingPointOverlay sheetName={this.props.sheet_name}/>
-                    {markers}
-                    {selectrect}
-                    {handles}
-                  </g>
-                </g>
-                {this.state.touchActive && this.state.touchSvgX !== null && this.state.touchSvgY !== null && (
-                  <TouchLoupe
-                    touchSvgX={this.state.touchSvgX}
-                    touchSvgY={this.state.touchSvgY}
-                    scrollX={this.scroll[0]}
-                    scrollY={this.scroll[1]}
-                    sheetName={this.props.sheet_name}
-                    canvasWidth={this.state.width}
-                    canvasHeight={this.state.height}
-                    onClose={this.handleVirtualClose}
-                    onLeftClick={this.handleVirtualClick}
-                    onRightClick={this.handleVirtualRightClick}
-                    onDragToggle={this.handleVirtualDragToggle}
-                    isDragging={this.state.touchDragActive}
-                  />
-                )}
-                {this.renderTouchIndicator()}
-              </svg>
-            </div>
-      
-              <div style={{overflow: 'hidden'}}>
-                   <Ruler 
-                      orientation="vertical" 
-                      unit="mm" 
-                      zoom={this.props.zoom} 
-                      scrollOffset={this.state.scrollY}
-                      mousePosition={this.state.mouseY !== null ? this.state.mouseY / PIXELS_PER_MM : null}
-                      containerSize={this.state.height}
-                      zeroOffset={zeroOffset}
-                      scaleOrign={PIXELS_PER_MM}
-                      tickAlignment="start"
-                  />
-              </div>
-            </div>
-            {this.renderLoupeToggleButton()}
-          </div>
-        );
-    }
-
-    // Default layout (without rulers)
     return (
-      <div style={{ position: 'relative', display: 'flex', flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 0, overflow: 'hidden' }}>
-        <div
-          className="circuit-drawing"
-          onScroll={(e) => this.onscroll(e)}
-          ref={(div) => {
-            this._div = div;
-          }}
-          tabIndex={-1}
-          onKeyDown={this.onkeydown}
-          onKeyPress={this.onkeypress}
-          onFocus={this.onfocus}
-          onBlur={this.onblur}
-          style={{ width: '100%', height: '100%' }}
-        >
-          <svg
-            id="svg-drawing"
-            onMouseMove={(e) => this.onmouseevent(e, this._div)}
-            onMouseDown={(e) => this.onmouseevent(e, this._div)}
-            onMouseUp={(e) => this.onmouseevent(e, this._div)}
-            onContextMenu={(e) => this.oncontextmenu(e)}
-            onDragOver={(e) => this.ondragover(e)}
-            onDrop={(e) => this.ondrop(e)}
-            className="circuit-svg"
-            width={(this.props.page_size[0] + border * 2) * scale}
-            height={(this.props.page_size[1] + border * 2) * scale}
-            cursor={this.props.cursor}
+      <div className="sheet-viewport">
+        <DrawingViewportFrame rulers={this.props.showRulers && {
+          horizontal: <Ruler orientation="horizontal" unit="mm" zoom={this.props.zoom}
+            scrollOffset={this.state.scrollX} containerSize={this.state.width}
+            mousePosition={this.state.mouseX !== null ? this.state.mouseX / PIXELS_PER_MM : null}
+            zeroOffset={zeroOffset} scaleOrign={PIXELS_PER_MM} />,
+          vertical: <Ruler orientation="vertical" unit="mm" zoom={this.props.zoom}
+            scrollOffset={this.state.scrollY} containerSize={this.state.height}
+            mousePosition={this.state.mouseY !== null ? this.state.mouseY / PIXELS_PER_MM : null}
+            zeroOffset={zeroOffset} scaleOrign={PIXELS_PER_MM} tickAlignment="start" />,
+        }}>
+          <div
+            className="circuit-drawing"
+            onScroll={(e) => this.onscroll(e)}
+            ref={(div) => {
+              this._div = div;
+            }}
+            tabIndex={-1}
+            onKeyDown={this.onkeydown}
+            onKeyPress={this.onkeypress}
+            onFocus={this.onfocus}
+            onBlur={this.onblur}
           >
-            <TSvgDefs images={this.props.images} hatches={this.props.hatches} />
-            <defs>
-              <pattern
-                id="grid-pattern"
-                x={-this.props.details.grid / 2}
-                y={-this.props.details.grid / 2}
-                width={this.props.details.grid}
-                height={this.props.details.grid}
-                patternUnits="userSpaceOnUse"
-              >
-                <rect
-                  x={(this.props.details.grid - gridPointSize) / 2}
-                  y={(this.props.details.grid - gridPointSize) / 2}
-                  width={gridPointSize}
-                  height={gridPointSize}
-                  shapeRendering="crispEdges"
-                  fill="#a0a0a0"
-                />
-              </pattern>
-            </defs>
-
-            <g id={"sheet-content-" + this.props.sheet_name.replace(/\s+/g, '-')}>
-              <rect
-                x="0"
-                y="0"
-                width={(this.props.page_size[0] + border * 2) * scale}
-                height={border * scale}
-                className="offPageArea"
-              />
-              <rect
-                x="0"
-                y={border * scale}
-                width={border * scale}
-                height={(this.props.page_size[1] + border) * scale}
-                className="offPageArea"
-              />
-              <rect
-                x={(this.props.page_size[0] + border) * scale}
-                y={border * scale}
-                width={border * scale}
-                height={(this.props.page_size[1] + border) * scale}
-                className="offPageArea"
-              />
-              <rect
-                x="0"
-                y={(this.props.page_size[1] + border) * scale}
-                width={(this.props.page_size[0] + border * 2) * scale}
-                height={border * scale}
-                className="offPageArea"
-              />
-              <rect
-                x={border * scale}
-                y={border * scale}
-                width={this.props.page_size[0] * scale}
-                height={this.props.page_size[1] * scale}
-                className="pageRectangle"
-                style={{ fill: this.props.options.color_background }}
-              />
-
-              <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
-                {this.props.options.show_grid && this.props.zoom > 125 ? (
+            <svg
+              id="svg-drawing"
+              onMouseMove={(e) => this.onmouseevent(e, this._div)}
+              onMouseDown={(e) => this.onmouseevent(e, this._div)}
+              onMouseUp={(e) => this.onmouseevent(e, this._div)}
+              onContextMenu={(e) => this.oncontextmenu(e)}
+              onDragOver={(e) => this.ondragover(e)}
+              onDrop={(e) => this.ondrop(e)}
+              className="circuit-svg"
+              width={(this.props.page_size[0] + border * 2) * scale}
+              height={(this.props.page_size[1] + border * 2) * scale}
+              cursor={this.props.cursor}
+            >
+              <TSvgDefs images={this.props.images} hatches={this.props.hatches} />
+              <defs>
+                <pattern
+                  id="grid-pattern"
+                  x={-this.props.details.grid / 2}
+                  y={-this.props.details.grid / 2}
+                  width={this.props.details.grid}
+                  height={this.props.details.grid}
+                  patternUnits="userSpaceOnUse"
+                >
                   <rect
-                    x="0"
-                    y="0"
-                    width={this.props.page_size[0]}
-                    height={this.props.page_size[1]}
-                    fill="url(#grid-pattern)"
-                    pointerEvents="none"
+                    x={(this.props.details.grid - gridPointSize) / 2}
+                    y={(this.props.details.grid - gridPointSize) / 2}
+                    width={gridPointSize}
+                    height={gridPointSize}
+                    shapeRendering="crispEdges"
+                    fill="#a0a0a0"
                   />
-                ) : null}
-                {this.props.details.show_details ? (
-                  <TDesignDetails
-                    details={this.props.details}
-                    page_size={this.props.page_size}
-                  />
-                ) : null}
-                {this.props.details.show_guides ? (
-                  <TDesignGuides
-                    details={this.props.details}
-                    page_size={this.props.page_size}
-                  />
-                ) : null}
-                <TDrawing
-                  dx={0}
-                  dy={0}
-                  dr={0}
-                  items={this.props.items}
-                      instanceReferencesByUnit={this.props.instanceReferencesByUnit}
-                  hover_obj={this.props.hover_obj}
-                  hover_ids={this.props.hover_ids}
-                  hover_pins={this.props.hover_pins}
-                  selection={this.props._selected_array}
-                  selected_handle={this.props._selected_handle}
-                  options={this.props.options}
-                  add={add}
-                  hover={false}
-                  parent={null}
-                  part={this.props.part}
-                  selected={false}
-                  show_power={this.props.show_power}
-                  editLibrary={this.props.editingLibrary}
-                  heterogeneous={this.props.heterogeneous}
-                  scale_x={1.0}
-                  scale_y={1.0}
-                  sheetName={this.props.sheet_name}
-                  netlist={this.state.netlist}
-                  netlistTypes={this.props.netlistTypes}
-                  netTypeAssignments={this.props.netTypeAssignments}
+                </pattern>
+              </defs>
+
+              <g id={"sheet-content-" + this.props.sheet_name.replace(/\s+/g, '-')}>
+                <rect
+                  x="0"
+                  y="0"
+                  width={(this.props.page_size[0] + border * 2) * scale}
+                  height={border * scale}
+                  className="offPageArea"
                 />
-                <OperatingPointOverlay sheetName={this.props.sheet_name}/>
-                {markers}
-                {selectrect}
-                {handles}
+                <rect
+                  x="0"
+                  y={border * scale}
+                  width={border * scale}
+                  height={(this.props.page_size[1] + border) * scale}
+                  className="offPageArea"
+                />
+                <rect
+                  x={(this.props.page_size[0] + border) * scale}
+                  y={border * scale}
+                  width={border * scale}
+                  height={(this.props.page_size[1] + border) * scale}
+                  className="offPageArea"
+                />
+                <rect
+                  x="0"
+                  y={(this.props.page_size[1] + border) * scale}
+                  width={(this.props.page_size[0] + border * 2) * scale}
+                  height={border * scale}
+                  className="offPageArea"
+                />
+                <rect
+                  x={border * scale}
+                  y={border * scale}
+                  width={this.props.page_size[0] * scale}
+                  height={this.props.page_size[1] * scale}
+                  className="pageRectangle"
+                  style={{ fill: this.props.options.color_background }}
+                />
+
+                <g transform={`matrix(${scale} 0 0 ${scale} ${offset} ${offset})`}>
+                  {this.props.options.show_grid && this.props.zoom > 125 ? (
+                    <rect
+                      x="0"
+                      y="0"
+                      width={this.props.page_size[0]}
+                      height={this.props.page_size[1]}
+                      fill="url(#grid-pattern)"
+                      pointerEvents="none"
+                    />
+                  ) : null}
+                  {this.props.details.show_details ? (
+                    <TDesignDetails
+                      details={this.props.details}
+                      page_size={this.props.page_size}
+                    />
+                  ) : null}
+                  {this.props.details.show_guides ? (
+                    <TDesignGuides
+                      details={this.props.details}
+                      page_size={this.props.page_size}
+                    />
+                  ) : null}
+                  <TDrawing
+                    dx={0}
+                    dy={0}
+                    dr={0}
+                    items={this.props.items}
+                        instanceReferencesByUnit={this.props.instanceReferencesByUnit}
+                    hover_obj={this.props.hover_obj}
+                    hover_ids={this.props.hover_ids}
+                    hover_pins={this.props.hover_pins}
+                    selection={this.props._selected_array}
+                    selected_handle={this.props._selected_handle}
+                    options={this.props.options}
+                    add={add}
+                    hover={false}
+                    parent={null}
+                    part={this.props.part}
+                    selected={false}
+                    show_power={this.props.show_power}
+                    editLibrary={this.props.editingLibrary}
+                    heterogeneous={this.props.heterogeneous}
+                    scale_x={1.0}
+                    scale_y={1.0}
+                    sheetName={this.props.sheet_name}
+                    netlist={this.state.netlist}
+                    netlistTypes={this.props.netlistTypes}
+                    netTypeAssignments={this.props.netTypeAssignments}
+                  />
+                  <OperatingPointOverlay sheetName={this.props.sheet_name}/>
+                  {markers}
+                  {selectrect}
+                  {handles}
+                </g>
               </g>
-            </g>
-            {this.state.touchActive && this.state.touchSvgX !== null && this.state.touchSvgY !== null && (
-              <TouchLoupe
-                touchSvgX={this.state.touchSvgX}
-                touchSvgY={this.state.touchSvgY}
-                scrollX={this.scroll[0]}
-                scrollY={this.scroll[1]}
-                sheetName={this.props.sheet_name}
-                canvasWidth={this.state.width}
-                canvasHeight={this.state.height}
-                onClose={this.handleVirtualClose}
-                onLeftClick={this.handleVirtualClick}
-                onRightClick={this.handleVirtualRightClick}
-                onDragToggle={this.handleVirtualDragToggle}
-                isDragging={this.state.touchDragActive}
-              />
-            )}
-            {this.renderTouchIndicator()}
-          </svg>
-        </div>
+              {this.state.touchActive && this.state.touchSvgX !== null && this.state.touchSvgY !== null && (
+                <TouchLoupe
+                  touchSvgX={this.state.touchSvgX}
+                  touchSvgY={this.state.touchSvgY}
+                  scrollX={this.scroll[0]}
+                  scrollY={this.scroll[1]}
+                  sheetName={this.props.sheet_name}
+                  canvasWidth={this.state.width}
+                  canvasHeight={this.state.height}
+                  onClose={this.handleVirtualClose}
+                  onLeftClick={this.handleVirtualClick}
+                  onRightClick={this.handleVirtualRightClick}
+                  onDragToggle={this.handleVirtualDragToggle}
+                  isDragging={this.state.touchDragActive}
+                />
+              )}
+              {this.renderTouchIndicator()}
+            </svg>
+          </div>
+        </DrawingViewportFrame>
         {this.renderLoupeToggleButton()}
       </div>
     );

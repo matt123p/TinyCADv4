@@ -1,3 +1,4 @@
+import { Input, Select, Textarea } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import {
   Button,
@@ -41,7 +42,7 @@ export default function PlacementAreaDialog({
 
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <form onSubmit={submit}>
           <DialogBody>
             <DialogTitle>
@@ -50,7 +51,7 @@ export default function PlacementAreaDialog({
             <DialogContent className="pcb-profile-fields">
               <label>
                 Name
-                <input
+                <Input
                   name="name"
                   required
                   maxLength={128}
@@ -59,18 +60,18 @@ export default function PlacementAreaDialog({
               </label>
               <label>
                 Rule
-                <select
+                <Select
                   name="kind"
                   aria-label="Rule"
                   defaultValue={area?.kind ?? 'keep-out'}
                 >
                   <option value="keep-out">Keep out</option>
                   <option value="keep-in">Keep in</option>
-                </select>
+                </Select>
               </label>
               <label>
                 Assembly side
-                <select
+                <Select
                   name="side"
                   aria-label="Assembly side"
                   defaultValue={area?.side ?? 'both'}
@@ -78,11 +79,11 @@ export default function PlacementAreaDialog({
                   <option value="both">Both sides</option>
                   <option value="top">Top</option>
                   <option value="bottom">Bottom</option>
-                </select>
+                </Select>
               </label>
               <label>
                 Outline (X, Y in mm)
-                <textarea
+                <Textarea
                   name="outline"
                   rows={5}
                   required

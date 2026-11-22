@@ -1,3 +1,4 @@
+import { Input, Select } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle } from '@fluentui/react-components';
 import type { BoardDocument } from '../../pcb/board';
@@ -51,7 +52,7 @@ export default function BoardConnectionsDialog({ board, selected, onCommit, onCl
 
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && !busy && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <DialogBody>
           <DialogTitle>PCB connections</DialogTitle>
           <DialogContent className="pcb-profile-fields">
@@ -63,7 +64,7 @@ export default function BoardConnectionsDialog({ board, selected, onCommit, onCl
                 setFeedback({ error: false, message: 'Board net added.' });
               });
             }}>
-              <label>Net name<input required value={netName} disabled={busy} onChange={(event) => setNetName(event.target.value)} /></label>
+              <label>Net name<Input required value={netName} disabled={busy} onChange={(event) => setNetName(event.target.value)} /></label>
               <Button type="submit" disabled={busy || !netName.trim()}>Add net</Button>
             </form>
             <form className="pcb-profile-fields" onSubmit={(event) => {
@@ -72,7 +73,7 @@ export default function BoardConnectionsDialog({ board, selected, onCommit, onCl
             }}>
               <label>
                 Component
-                <select aria-label="Component" value={componentId} disabled={busy} onChange={(event) => {
+                <Select aria-label="Component" value={componentId} disabled={busy} onChange={(event) => {
                   setComponentId(event.target.value);
                   setPadId('');
                   setNetId('');
@@ -81,24 +82,24 @@ export default function BoardConnectionsDialog({ board, selected, onCommit, onCl
                   {board.components?.map(({ id, reference: label }) =>
                     <option key={id} value={id}>{label || id}</option>,
                   )}
-                </select>
+                </Select>
               </label>
               <label>
                 Electrical pads
-                <select aria-label="Electrical pads" value={padId} disabled={busy || !signals.length} onChange={(event) => {
+                <Select aria-label="Electrical pads" value={padId} disabled={busy || !signals.length} onChange={(event) => {
                   setPadId(event.target.value);
                   setNetId(signals.find(({ id }) => id === event.target.value)?.netId ?? '');
                 }}>
                   <option value="">Choose pads</option>
                   {signals.map(({ id, pads }) => <option key={id} value={id}>{pads.join(', ')}</option>)}
-                </select>
+                </Select>
               </label>
               <label>
                 Assign to net
-                <select aria-label="Assign to net" value={netId} disabled={busy || !signal} onChange={(event) => setNetId(event.target.value)}>
+                <Select aria-label="Assign to net" value={netId} disabled={busy || !signal} onChange={(event) => setNetId(event.target.value)}>
                   <option value="">Unassigned</option>
                   {board.nets?.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
-                </select>
+                </Select>
               </label>
               <Button type="submit" disabled={busy || !signal || signal.netId === netId}>Apply pad assignment</Button>
             </form>
@@ -117,7 +118,7 @@ export default function BoardConnectionsDialog({ board, selected, onCommit, onCl
               });
             }}>
               <label>Reviewed device file<input type="file" required disabled={busy} accept=".tcdevice.json" onChange={(event) => setFile(event.target.files?.[0])} /></label>
-              <label>Component reference<input required value={reference} disabled={busy} onChange={(event) => setReference(event.target.value)} /></label>
+              <label>Component reference<Input required value={reference} disabled={busy} onChange={(event) => setReference(event.target.value)} /></label>
               <Button type="submit" disabled={busy || !file || !reference.trim()}>Add device</Button>
             </form>
             {feedback && <p role={feedback.error ? 'alert' : 'status'}>{feedback.message}</p>}

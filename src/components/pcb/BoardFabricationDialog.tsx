@@ -1,3 +1,4 @@
+import { Input, Select, Textarea } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import {
   Button,
@@ -143,14 +144,14 @@ export default function BoardFabricationDialog({
   }
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <form onSubmit={submit}>
           <DialogBody>
             <DialogTitle>Fabrication settings</DialogTitle>
             <DialogContent className="pcb-profile-fields">
               <label>
                 Fabrication profile
-                <select
+                <Select
                   value={profileId}
                   onChange={(event) =>
                     setProfileId(event.target.value as typeof profileId)
@@ -162,11 +163,11 @@ export default function BoardFabricationDialog({
                       {option.title}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label>
                 Board thickness (mm)
-                <input
+                <Input
                   name="thickness"
                   required
                   defaultValue={mm(board.fabrication?.thicknessNm ?? 1_600_000)}
@@ -178,21 +179,21 @@ export default function BoardFabricationDialog({
                   <p>Leave unknown values blank.</p>
                   <label>
                     Substrate material
-                    <input name="substrateMaterial" maxLength={stackupMaterialLimit}
+                    <Input name="substrateMaterial" maxLength={stackupMaterialLimit}
                       defaultValue={savedStackup?.substrateMaterial} />
                   </label>
                   {stackupThicknessFields.map(([id, label]) =>
                     (id !== 'bottomCopperThicknessNm' || board.copperLayers.length === 2) && (
                       <label key={id}>
                         {label} (mm)
-                        <input name={id} inputMode="decimal"
+                        <Input name={id} inputMode="decimal"
                           defaultValue={savedStackup?.[id] === undefined ? '' : mm(savedStackup[id])} />
                       </label>
                     ))}
                   {dielectricProperties.map(([id, label]) => (
                     <label key={id}>
                       {label}
-                      <input name={id} inputMode="decimal" defaultValue={savedStackup?.[id]} />
+                      <Input name={id} inputMode="decimal" defaultValue={String(savedStackup?.[id] ?? '')} />
                     </label>
                   ))}
                 </details>
@@ -201,25 +202,25 @@ export default function BoardFabricationDialog({
                 <summary>Fabrication drawing details</summary>
                 <label>
                   Surface finish
-                  <input name="surfaceFinish" maxLength={fabricationFinishLimit}
+                  <Input name="surfaceFinish" maxLength={fabricationFinishLimit}
                     defaultValue={board.fabrication?.surfaceFinish} />
                 </label>
                 {fabricationToleranceFields.map(([id, name]) => (
                   <label key={id}>
                     {name} (± mm)
-                    <input name={id} defaultValue={board.fabrication?.[id] === undefined ? '' : mm(board.fabrication[id])} />
+                    <Input name={id} defaultValue={board.fabrication?.[id] === undefined ? '' : mm(board.fabrication[id])} />
                   </label>
                 ))}
                 <label>
                   Fabrication notes
-                  <textarea name="notes" maxLength={fabricationNotesLimit} defaultValue={board.fabrication?.notes} />
+                  <Textarea name="notes" maxLength={fabricationNotesLimit} defaultValue={board.fabrication?.notes} />
                 </label>
               </details>
               {advanced &&
                 dimensions.map(([id, name]) => (
                   <label key={id}>
                     {name} (mm)
-                    <input
+                    <Input
                       name={id}
                       required
                       defaultValue={mm(stored[id])}
@@ -238,7 +239,7 @@ export default function BoardFabricationDialog({
               {advanced && optionalWidths.map(([id, name]) => (
                 <label key={id}>
                   {name} (mm)
-                  <input name={id} defaultValue={stored[id] === undefined ? '' : mm(stored[id])} />
+                  <Input name={id} defaultValue={stored[id] === undefined ? '' : mm(stored[id])} />
                 </label>
               ))}
               {profile && (

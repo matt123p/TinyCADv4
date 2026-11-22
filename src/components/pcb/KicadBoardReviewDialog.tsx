@@ -35,7 +35,7 @@ export default function KicadBoardReviewDialog({ onClose }: { onClose(): void })
 
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <DialogBody>
           <DialogTitle>Review KiCad board</DialogTitle>
           <DialogContent className="pcb-profile-fields">

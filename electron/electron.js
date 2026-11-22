@@ -46,6 +46,7 @@ function takeProjectOpen() {
 }
 let isLibraryMode = false;
 let viewMenuState = { hasExampleExplanation: false, exampleExplanationVisible: false, simulationPanelVisible: false };
+let boardMenus = [];
 let menuTranslations = {};
 let refreshMenu = () => {};
 let ipcHandlersRegistered = false;
@@ -209,6 +210,14 @@ function createWindow({ openAbout = false } = {}) {
         submenu: drawingViewMenu(getMenuLabel, viewMenuState, isLibraryMode,
           command => mainWindow.webContents.send('menu-command', command))
       },
+      ...(!isLibraryMode ? boardMenus.map(({ title, items }) => ({
+        label: title,
+        submenu: items.map((item) => item ? {
+          label: item.label,
+          enabled: !item.disabled,
+          click: () => mainWindow.webContents.send('menu-command', 'pcb-menu:' + item.id),
+        } : { type: 'separator' }),
+      })) : []),
       ...(isLibraryMode ? [] : [{
         label: getMenuLabel('tools', 'Tools'),
         submenu: [
@@ -568,6 +577,16 @@ function createWindow({ openAbout = false } = {}) {
         viewMenuState = next;
         refreshMenu();
       }
+    });
+
+    ipcMain.on('set-board-menus', (event, menus) => {
+      if (!mainWindow || event.sender !== mainWindow.webContents || !Array.isArray(menus) || menus.length > 4) return;
+      if (!menus.every((menu) => typeof menu?.title === 'string' && Array.isArray(menu.items) &&
+        menu.items.length <= 32 && menu.items.every((item) => item === null ||
+          (typeof item?.id === 'string' && typeof item.label === 'string')))) return;
+      if (JSON.stringify(boardMenus) === JSON.stringify(menus)) return;
+      boardMenus = menus;
+      refreshMenu();
     });
 
     ipcMain.on('set-menu-translations', (event, translations) => {

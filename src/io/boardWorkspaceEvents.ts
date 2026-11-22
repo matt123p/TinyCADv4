@@ -19,11 +19,24 @@ declare global {
 
 export const boardZoomCommand = 'tinycad:board-zoom';
 export const boardHistoryCommand = 'tinycad:board-history';
+export const boardMenuCommand = 'tinycad:board-menu';
 export const confirmBoardClose = 'tinycad:confirm-board-close';
+
+export interface BoardMenuItemState {
+  id: string;
+  label: string;
+  disabled?: boolean;
+}
+
+export interface BoardMenuState {
+  title: string;
+  items: (BoardMenuItemState | null)[];
+}
 
 declare global {
   interface WindowEventMap {
     'tinycad:board-zoom': CustomEvent<'in' | 'out'>;
     'tinycad:board-history': CustomEvent<'undo' | 'redo'>;
+    'tinycad:board-menu': CustomEvent<string>;
   }
 }

@@ -358,7 +358,7 @@ export default function BoardInspectionDialog({
 
   return (
     <Dialog open onOpenChange={(_, state) => !state.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog pcb-dialog-wide">
         <DialogBody>
           <DialogTitle>3D board inspection</DialogTitle>
           <DialogContent>

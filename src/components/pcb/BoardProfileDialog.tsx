@@ -1,3 +1,4 @@
+import { Input, Select, Textarea } from '@fluentui/react-components';
 import React, { useMemo, useState } from 'react';
 import {
   Button,
@@ -153,9 +154,7 @@ export default function BoardProfileDialog({
         if (!data.open) onClose();
       }}
     >
-      <DialogSurface
-        className={shape === 'custom' ? 'pcb-profile-draft' : undefined}
-      >
+      <DialogSurface className="pcb-dialog pcb-dialog-wide">
         <form onSubmit={submit} onChange={() => setError(undefined)}>
           <DialogBody>
             <DialogTitle>
@@ -168,7 +167,7 @@ export default function BoardProfileDialog({
             <DialogContent className="pcb-profile-fields">
               <label>
                 Shape
-                <select
+                <Select
                   aria-label="Shape"
                   value={shape}
                   onChange={(event) => setShape(event.target.value as Shape)}
@@ -178,7 +177,7 @@ export default function BoardProfileDialog({
                   <option value="circle">Circle</option>
                   <option value="polygon">Polygon</option>
                   <option value="custom">Custom lines and arcs</option>
-                </select>
+                </Select>
               </label>
               {shape === 'custom' ? (
                 <BoardContourEditor
@@ -193,7 +192,7 @@ export default function BoardProfileDialog({
               ) : shape === 'polygon' ? (
                 <label>
                   Vertices in millimetres, one X and Y pair per line
-                  <textarea
+                  <Textarea
                     rows={5}
                     value={vertices}
                     onChange={(event) => setVertices(event.target.value)}
@@ -203,14 +202,14 @@ export default function BoardProfileDialog({
                 <>
                   <label>
                     {shape === 'circle' ? 'Centre X (mm)' : 'Origin X (mm)'}
-                    <input
+                    <Input
                       value={x}
                       onChange={(event) => setX(event.target.value)}
                     />
                   </label>
                   <label>
                     {shape === 'circle' ? 'Centre Y (mm)' : 'Origin Y (mm)'}
-                    <input
+                    <Input
                       value={y}
                       onChange={(event) => setY(event.target.value)}
                     />
@@ -219,14 +218,14 @@ export default function BoardProfileDialog({
                     <>
                       <label>
                         Width (mm)
-                        <input
+                        <Input
                           value={width}
                           onChange={(e) => setWidth(e.target.value)}
                         />
                       </label>
                       <label>
                         Height (mm)
-                        <input
+                        <Input
                           value={height}
                           onChange={(e) => setHeight(e.target.value)}
                         />
@@ -236,7 +235,7 @@ export default function BoardProfileDialog({
                   {shape !== 'rectangle' && (
                     <label>
                       Radius (mm)
-                      <input
+                      <Input
                         value={radius}
                         onChange={(event) => setRadius(event.target.value)}
                       />

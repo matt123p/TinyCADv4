@@ -1,3 +1,4 @@
+import { selectPcbNet, clickPcbCommand, pcbMenuName } from './pcb-controls.mjs';
 import { build } from 'esbuild';
 import { TextWriter, Uint8ArrayReader, ZipReader } from '@zip.js/zip.js';
 import { expect, test } from '@playwright/test';
@@ -238,6 +239,9 @@ for (const target of ['filesystem', 'electron']) {
       }
 
       const editor = page.getByRole('region', { name: 'PCB layout' });
+      const runPcbCommand = (label) => electron
+        ? nativeCommand(pcbMenuName(label), label)
+        : clickPcbCommand(editor, label);
       await expect(editor.getByRole('img', { name: 'Board layout' })).toBeVisible();
       await expect(page.getByRole('group', { name: 'Project activity bar' })).toHaveCount(0);
       await expect(editor.locator('[data-track]')).toHaveCount(3);
@@ -254,7 +258,7 @@ for (const target of ['filesystem', 'electron']) {
         await expect(canvas).toHaveAttribute('data-view-box', fit);
       }
       await editor.getByRole('button', { name: 'Save As…' }).click();
-      await expect(editor.getByText('Saved.dpn', { exact: true })).toBeVisible();
+      await expect(page).toHaveTitle('TinyCAD - Saved.dpn');
       expect(await readFile(destination)).toEqual(bytes);
       const copied = await api.decodeBoard(await readFile(destination));
       expect(copied.modelAssets).toHaveLength(1);
@@ -263,14 +267,14 @@ for (const target of ['filesystem', 'electron']) {
       expect(copied.footprints.map(({ deviceId }) => deviceId)).toEqual(board.footprints.map(({ deviceId }) => deviceId));
       if (app) {
         await editor.getByRole('button', { name: 'Route track', exact: true }).click();
-        await editor.getByLabel('Board net', { exact: true }).selectOption({ label: 'Signal' });
+        await selectPcbNet(editor, { label: 'Signal' });
         await expect.poll(() => page.evaluate(() => window.pcbModelRequests)).toEqual(expect.arrayContaining([
           ['geometry', 0], ['route-clearance', 0],
         ]));
         await editor.getByRole('button', { name: 'Cancel route', exact: true }).click();
       }
 
-      await editor.getByRole('button', { name: 'Run design checks…' }).click();
+      await runPcbCommand('Run design checks…');
       const checks = page.getByRole('dialog', { name: 'PCB design checks' });
       await expect(checks.getByText('Physical connectivity · checked', { exact: true })).toBeVisible();
       const report = JSON.parse(await download(
@@ -281,7 +285,7 @@ for (const target of ['filesystem', 'electron']) {
       expect(report.inputDigest).toBe(createHash('sha256').update(JSON.stringify(copied)).digest('hex'));
       await checks.getByRole('button', { name: 'Close', exact: true }).click();
 
-      await editor.getByRole('button', { name: 'Inspect in 3D…' }).click();
+      await runPcbCommand('Inspect in 3D…');
       const viewer = page.getByRole('dialog', { name: '3D board inspection' });
       await expect(viewer.getByRole('img', { name: 'Interactive 3D PCB' })).toBeVisible();
       const models = viewer.getByRole('list', { name: '3D components' });
@@ -294,7 +298,7 @@ for (const target of ['filesystem', 'electron']) {
         ['check', 1], ['inspect', 1],
       ]));
 
-      await editor.getByRole('button', { name: 'CAM read-back preview…' }).click();
+      await runPcbCommand('CAM read-back preview…');
       const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
       await expect(cam.getByRole('img', { name: 'CAM read-back' })).toBeVisible();
       await expect(cam.locator('[data-plating="plated"]')).toHaveCount(16);
@@ -309,12 +313,12 @@ for (const target of ['filesystem', 'electron']) {
       for (const reference of ['U1', 'U2']) expect(placement).toContain(reference);
       await cam.getByRole('button', { name: 'Close', exact: true }).click();
 
-      await editor.getByRole('button', { name: 'Fabrication settings…' }).click();
+      await runPcbCommand('Fabrication settings…');
       const fabrication = page.getByRole('dialog', { name: 'Fabrication settings' });
       await fabrication.getByLabel('Board thickness (mm)').fill('1.2');
       await fabrication.getByRole('button', { name: 'Apply', exact: true }).click();
       await expect(fabrication).toBeHidden();
-      await editor.getByRole('button', { name: 'Hole or slot…' }).click();
+      await runPcbCommand('Hole or slot…');
       const drill = page.getByRole('dialog', { name: 'Add hole or slot' });
       await drill.getByLabel('Screw-head diameter (mm)').fill('2');
       await drill.getByRole('button', { name: 'Add', exact: true }).click();
@@ -327,7 +331,7 @@ for (const target of ['filesystem', 'electron']) {
       await expect(editor.locator('[data-hole]')).toHaveCount(1);
       await expect(editor.locator('[data-screw-head="bottom"]')).toHaveCount(1);
       const beforeInspection = await readFile(destination);
-      await editor.getByRole('button', { name: 'Inspect board rules…' }).click();
+      await runPcbCommand('Inspect board rules…');
       const inspector = page.getByRole('dialog', { name: 'Inspect PCB rules' });
       await inspector.getByRole('tab', { name: 'Openings', exact: true }).click();
       const opening = inspector.getByLabel('Opening', { exact: true });
@@ -342,9 +346,7 @@ for (const target of ['filesystem', 'electron']) {
       await editor.getByRole('button', { name: 'Redo', exact: true }).click();
       await expect(editor.locator('[data-hole]')).toHaveCount(1);
       await editor.getByRole('button', { name: 'Save', exact: true }).click();
-      await expect.poll(async () =>
-        (await api.decodeBoard(await readFile(destination))).fabrication.thicknessNm
-      ).toBe(1.2e6);
+      await expect(page).toHaveTitle('TinyCAD - Saved.dpn');
       const edited = await api.decodeBoard(await readFile(destination));
       expect(edited.fabrication.thicknessNm).toBe(1.2e6);
       expect(edited.mechanicalHoles).toHaveLength(1);
@@ -364,7 +366,7 @@ for (const target of ['filesystem', 'electron']) {
       const device = await api.writeLibraryDevice(starter.definition);
       const canvas = editor.getByRole('img', { name: 'Board layout' });
       async function placeDevice(reference, x, y) {
-        await editor.getByRole('button', { name: 'Board connections…' }).click();
+        await runPcbCommand('Board connections…');
         await connections.getByLabel('Reviewed device file').setInputFiles({
           name: 'test.tcdevice.json', mimeType: 'application/json', buffer: Buffer.from(device),
         });
@@ -412,7 +414,7 @@ for (const target of ['filesystem', 'electron']) {
       expect(saved.footprints.find(({ componentId }) => componentId === component.id).positionNm)
         .toEqual({ x: 34_000_000, y: 6_000_000 });
 
-      await editor.getByRole('button', { name: 'Board connections…' }).click();
+      await runPcbCommand('Board connections…');
       await connections.getByLabel('Net name').fill('Test point');
       await connections.getByRole('button', { name: 'Add net' }).click();
       await expect(connections.getByRole('status')).toHaveText('Board net added.');
@@ -443,7 +445,8 @@ for (const target of ['filesystem', 'electron']) {
           dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filePath] });
         }, untitled);
         await editor.getByRole('button', { name: 'New PCB', exact: true }).click();
-        await expect(editor.getByText('Untitled.dpn · Unsaved', { exact: true })).toBeVisible();
+        await expect(page).toHaveTitle('TinyCAD - Untitled.dpn*');
+        await runPcbCommand('View board tools');
         await editor.getByLabel('Grid (mm)', { exact: true }).fill('1');
         await placeDevice('J1', 34_000_000, 14_000_000);
         await expect(canvas.locator('[data-component]')).toHaveCount(1);
@@ -452,7 +455,7 @@ for (const target of ['filesystem', 'electron']) {
         await expect(readFile(untitled)).rejects.toMatchObject({ code: 'ENOENT' });
         await nativeCommand('File', 'Save');
         await expect.poll(() => electron.evaluate(() => globalThis.portableTestPickers)).toBe(pickers + 1);
-        await expect(editor.getByText('New PCB.dpn', { exact: true })).toBeVisible();
+        await expect(page).toHaveTitle('TinyCAD - New PCB.dpn');
         await editor.getByRole('button', { name: 'Close', exact: true }).click();
         await expect(editor).toBeHidden();
         await nativeCommand('File', 'Open');

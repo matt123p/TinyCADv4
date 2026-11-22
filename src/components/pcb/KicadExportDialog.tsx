@@ -87,7 +87,7 @@ export default function KicadExportDialog({
 
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <DialogBody>
           <DialogTitle>Export KiCad board</DialogTitle>
           <DialogContent>

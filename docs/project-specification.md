@@ -153,14 +153,14 @@ A top-down partitioner for an existing monolithic schematic is a separate future
 
 **Save As** for a project copies the entire folder tree. Give the copy a distinct revision identity and record its source revision while retaining document identities and internal links. Compare revisions using their saved project settings and file contents, and report differences by relative path. Saving a schematic updates its linked native file and preserves its `.dsn` or `.dzn` representation. Saving project settings updates `.tcproject`.
 
-Debounce autosave within two seconds of committed edits for M1. The last acknowledged autosave must be recoverable. Check for changes to the saved document before restoring an autosave.
+For linked schematic edits, debounce autosave within two seconds of committed edits for M1. The last acknowledged autosave must be recoverable. Check for changes to the saved schematic before restoring an autosave.
 
 - Write project saves atomically where the platform permits. Keep the last valid save and a bounded recovery journal.
 - Use browser persistence for recovery alongside explicit portable file saves. Show failures and storage-quota exhaustion.
 - Detect another writable tab or process for the same local document. Protect it with a single-writer lease or an explicit conflict or fork workflow.
-- Show which committed state was saved. Recovery of unfinished route previews is optional.
+- Show which committed schematic state was saved.
 
-TinyCAD journals committed PCB edits locally and shows the recovery revision when it becomes durable. Reopening a standalone or linked PCB offers the recovery copy. If the saved board has changed, open the recovery as a separate board and save it under a new name. Discarding the recovery leaves the saved board intact.
+Standalone and linked PCB edits stay in memory until an explicit Save, Save As or Save All. Reopening loads the saved board. The title-bar asterisk indicates edits waiting to be saved, and explicit writes still check for intervening file changes. The autosave requirements above apply to schematic recovery.
 
 Authoritative data comprises circuit intent, physical objects, resolved library definitions, constraints and output configuration. Meshes, spatial indexes, filled-zone polygons and DRC reports are caches unless part of a frozen release record. Rebuild them when their dependency hash changes.
 
@@ -287,7 +287,7 @@ Assign each device terminal to a schematic signal. Inspect the highlighted footp
 | PRJ-01 | Use a project folder tree with a root `.tcproject` settings file, native schematic and board files, resolved assets, rules and output recipes | Copy the folder tree to a clean machine and regenerate a supported board and its outputs without fetching libraries | M1 |
 | PRJ-02 | Persist stable entity UUIDs independently of names and list order | Rename/reorder and reload without losing any relationship | G0 |
 | PRJ-03 | Use atomic, undoable commands for geometry and logical edits | Undo restores geometry, mappings and connectivity hashes | G0 |
-| PRJ-04 | Autosave committed edits with crash recovery | Forced process termination recovers to the last acknowledged autosave | M1 |
+| PRJ-04 | Autosave linked schematic edits with crash recovery | Forced process termination recovers to the last acknowledged schematic autosave | M1 |
 | PRJ-05 | Version the XML settings file and declare required features | A copied folder opens with its document links intact. Missing links and unsupported required features are reported | M1 |
 | PRJ-06 | Save As copies the project folder tree and records revision lineage. Compare revisions using settings and project files | Copy has a distinct revision identity and traceable origin. Changes are reported by relative file path | M1 |
 | PRJ-07 | Allow multiple alternative boards for one circuit revision | Each board retains independent layout/rules and visible sync status | M2 |
@@ -298,7 +298,7 @@ Assign each device terminal to a schematic signal. Inspect the highlighted footp
 
 | Test ID | Scenario | Pass criterion | Main requirement groups |
 |---|---|---|---|
-| AT-21 | Force a crash after acknowledged autosave | Recovery restores that committed revision and identifies unsaved later work | PRJ |
+| AT-21 | Force a crash after an acknowledged linked schematic autosave | Recovery restores that committed revision and identifies unsaved later work | PRJ |
 | AT-29 | Copy a project folder with a `.tcproject`, nested schematic and board files, and generated outputs | Open at the new location via the settings file, resolve document links and regenerate BOM, netlist and PCB files in the configured subfolders. Saving a schematic updates its native file. The copied tree retains supporting files | PRJ-01, PRJ-06, PRJ-09, OUT-07 |
 | AT-30 | Open a v3 hierarchy with a repeated multi-sheet child and a nested grandchild, then copy the project and rename an instance | Named ports and instance-local nets match the expected graph and v3 output. The project reopens after the copy. The rename preserves PCB IDs and cross-probes target the correct instance. Missing children, cycles and ambiguous bindings produce located diagnostics | SYN-01, SYN-11, PRJ |
 | AT-31 | Rename PCB capacitor `C7` to `C12`, back-annotate, then rename it in the schematic and forward-annotate | Each preview locates the same component. Each applied rename updates cross-probing and regenerated references. Save and reopen preserve the result, and a second update is empty. Component, pad and net IDs, position, copper and connectivity digest are unchanged | SYN-02, SYN-07, SYN-09 |

@@ -32,7 +32,7 @@ Geometry, validation, undo, document tabs and fabrication tests are evidence abo
 
 The board and Circuit Design share the scrollable toolbar, File menu trigger, Save and history controls, view buttons, and [anchored context-menu renderer](../src/components/controls/AnchoredContextMenu.tsx). Browser File commands open from the toolbar. Electron dispatches from its native menus to the active editor. The browser header and tab title and the Electron window title identify the active board and mark unsaved changes. Side-by-side mode keeps each editor’s controls with its drawing and routes native commands by active pane.
 
-The left footprint panel has **Unplaced** and **Library** tabs. Project mode keeps the project tree and source control in the shell’s left rail. The bottom panel lists placed components and shows their properties. The right panel holds board setup, routing options and advanced commands. All three use the shared resize handle. PCB trackpad scroll pans, Shift-wheel zooms in steps and Ctrl-wheel handles pointer-centred zoom. The board uses the shared ruler with positive Y running upward. [Milestone and verification](TODO.md#editor-interface-redesign).
+The left footprint panel has **Unplaced** and **Library** tabs. Project mode keeps the project tree and source control in the shell’s left rail. PCB and Circuit Design share the [sidebar and drawing stack](../src/components/panel/EditorLayout.tsx), including the resize handles and bottom-panel height. The bottom panel uses the same [list-mode dropdown](../src/components/panel/ListModeMenuButton.tsx) as Circuit Design in the right side of the compact grid header. It switches between Components and Netlist. Selecting a footprint opens its editor in the same panel. The Board menu opens Board tools. Board, Copper and Fabrication commands use the browser dropdowns and Electron native menus. Schematic and PCB share the [viewport frame](../src/components/svg/DrawingViewportFrame.tsx) and ruler placement. Both PCB scrollbars and trackpad pan follow the drawing camera. Shift-wheel zooms in steps, Ctrl-wheel zooms around the pointer and the board ruler uses positive Y upward. [Milestone and verification](TODO.md#editor-interface-redesign).
 
 ## Shared editor contract
 
@@ -50,7 +50,7 @@ The left footprint panel has **Unplaced** and **Library** tabs. Project mode kee
 | Left | Browse project files and library content. Search, preview and start adding an item. Reuse the shell's collapse, resize and tab behavior. | Projects in Project mode, footprint library, and the project's unplaced components with draggable footprint previews. In Single File mode, keep the footprint tools available. |
 | Centre | Give the drawing the available space. Use the existing drawing area, rulers, viewport controls and file/sheet navigation. | Expose the board, active placement or route preview and selection marks. |
 | Bottom | Navigate the circuit or object list when idle. Show direct properties and editing controls for the current selection. Keep the shared vertical resize handle. | Navigate components and nets, edit selected components or copper and locate design-check findings. |
-| Right | Open advanced tools when needed. Reuse the panel frame and resize handle. Use compact tabs when multiple related tools need a shared region. | Layers and rules, detailed diagnostics, 3D inspection and manufacturing workflows in the appropriate panel or dialogue. |
+| Right | Open auxiliary tools that need to remain visible alongside the drawing, such as simulation charts. | Keep the drawing full width. Launch focused analysis and manufacturing workflows from menus. |
 
 Keep ordinary selection and placement on the drawing. Move advanced settings out of the main editing path. Use the established panel sizes, styles, borders, and density as the starting point. Review the actual rendered window at regular and narrow sizes.
 
@@ -59,7 +59,7 @@ Keep ordinary selection and placement on the drawing. Move advanced settings out
 1. Select a component or footprint in the left panel and drag its picture onto the drawing. Reuse the preview drag and sheet drop pattern. Provide a keyboard entry into the same placement tool.
 2. The active placement tool shows one snapped preview. Click on the board to commit immediately as one undoable document edit. The committed footprint appears at that position, leaves the unplaced list and becomes selected. Movement of the pointer after commit follows the normal selection tool. An explicit placement queue may arm only the next unplaced component.
 3. Escape or right click cancels the pending preview or move. Keep previous committed edits and undo history. An invalid point leaves the placement tool ready for another point and gives a reason.
-4. Moving, rotating, flipping, group operations and numeric property edits use the same in-memory document history. Normal recovery may journal drafts through its existing service. Use Save, Save As and Save All for writing the document. An untitled browser document opens a picker only when the user requests a save.
+4. Moving, rotating, flipping, group operations and numeric property edits use the same in-memory document history. Use Save, Save As and Save All to persist PCB edits. An untitled browser document opens a picker only when the user requests a save. The asterisk in the window title identifies a dirty board.
 
 ### Drawing interaction
 
@@ -67,6 +67,9 @@ Keep ordinary selection and placement on the drawing. Move advanced settings out
 - Mount the existing `Ruler` on both drawing edges in PCB Design. Feed it the viewport origin, scale, scroll or pan offset, and current pointer position. Convert PCB nanometres to the displayed units at the adapter. Verify the PCB Y direction as well as X, including pointer indicators after pan, zoom, resize, unit changes and toggling the rulers.
 - Share the anchored context-menu renderer. Each workspace supplies applicable actions for the current object or empty drawing. Common actions use the same labels, icons and command IDs. Right click during a tool operation follows that tool's cancel behavior. Support keyboard invocation from the focused drawing.
 - Share viewport transforms, snapping integration, selection feedback and overlay infrastructure where the behavior is equivalent. Workspace adapters provide the board or schematic geometry, units and editing constraints. Extend an existing shared component when it needs a capability. Keep separate renderers only for domain-specific geometry or tools, with common controls above them.
+- Use the same hit test for pointer preselection and click selection. Draw a dashed outline around the hover target and a solid outline for selected PCB objects. Drag on empty drawing to select objects enclosed by the shared schematic marquee. Shift adds to the selection. Drag a placed footprint to preview its snapped destination, then release to commit one undoable move.
+- Clicking empty drawing clears the selection and net highlight. The current navigation list stays open.
+- Give each multi-step PCB dialog a stable, viewport-bounded Fluent surface. Keep its title and action footer fixed while the content scrolls. Align labels and fields in the body at normal sizes and stack them when space is limited. Use checkboxes for persistent flags such as position, rotation and routing locks.
 - Use the existing SVG unit conversion when drawing nanometre geometry with native SVG shapes. Check a board on both sides of the drawing origin to verify that rendering, rulers and pointer actions agree at large coordinates. [Large-coordinate PCB rendering](pcb-performance.md#large-coordinate-pcb-rendering)
 
 ## Acceptance evidence
@@ -80,7 +83,7 @@ at 1440 × 900 and checked the PCB layout at 900 × 700. The [browser editor
 cases](../scripts/tests/layout-browser/pcb-workspace.spec.mjs) cover placement,
 undo, explicit save, wheel pan and zoom, the pointer rails, panel resizing and
 keyboard context menus. The [classroom and workspace cases](../scripts/tests/layout-browser/project-hierarchy.spec.mjs)
-cover focus-based commands in side-by-side view, independent tabs, recovery,
+cover focus-based commands in side-by-side view, independent tabs, explicit saving,
 drawing-to-board transfer and the classroom export.
 
 The [portable board case](../scripts/tests/layout-browser/portable-pcb.spec.mjs)

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { loadLibraries, saveLibraryConfig } from '../../io/files';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../../model/tclib';
 import SymbolView from './SymbolView';
+import { LibraryBrowserHeader, LibrarySourceTabs } from './LibrarySourceTabs';
 import {
   actionSelectDialog,
 } from '../../state/dispatcher/AppDispatcher';
@@ -17,8 +18,6 @@ import {
   makeStyles,
   mergeClasses,
   tokens,
-  Tab,
-  TabList,
 } from '@fluentui/react-components';
 import {
   SearchRegular,
@@ -66,11 +65,6 @@ const useStyles = makeStyles({
     height: '100%',
     backgroundColor: tokens.colorNeutralBackground2,
   },
-  header: {
-    padding: '12px',
-    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
-    backgroundColor: tokens.colorNeutralBackground1,
-  },
   searchContainer: {
     position: 'relative',
     display: 'flex',
@@ -90,23 +84,6 @@ const useStyles = makeStyles({
     width: '100%',
     '& input': {
       paddingLeft: '32px',
-    },
-  },
-  sourceTabs: {
-    display: 'flex',
-    backgroundColor: tokens.colorNeutralBackground3,
-    borderRadius: '6px',
-  },
-  sourceTab: {
-    flex: 1,
-    minWidth: 0,
-    padding: '6px 4px',
-    '& .fui-Tab__content': {
-      whiteSpace: 'normal',
-      overflowWrap: 'anywhere',
-      textAlign: 'center',
-      fontSize: '12px',
-      lineHeight: '16px',
     },
   },
   content: {
@@ -926,7 +903,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
 
   return (
     <div className={styles.container} ref={props.inputRef}>
-      <div className={styles.header}>
+      <LibraryBrowserHeader>
         <div className={styles.searchContainer}>
           <div style={{ flex: 1, position: 'relative' }}>
             <SearchRegular className={styles.searchIcon} />
@@ -946,24 +923,16 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
             />
           )}
         </div>
-        <TabList className={styles.sourceTabs} size="small" appearance="subtle"
-          selectTabOnFocus
-          aria-label={t('library.libraries')} selectedValue={state.source}
-          onTabSelect={(_, data) => handleSourceChange(data.value as LibrarySource)}>
-          <Tab className={styles.sourceTab} icon={<LibraryRegular />} value="standard" id={`${sourceTabsId}-standard`}
-            aria-controls={`${sourceTabsId}-panel`}>
-            {t('library.bundledTab')}
-          </Tab>
-          <Tab className={styles.sourceTab} icon={<GlobeRegular />} value="online" id={`${sourceTabsId}-online`}
-            aria-controls={`${sourceTabsId}-panel`}>
-            {t('library.online')}
-          </Tab>
-          <Tab className={styles.sourceTab} icon={<FolderRegular />} value="personal" id={`${sourceTabsId}-personal`}
-            aria-controls={`${sourceTabsId}-panel`}>
-            {t('library.myLibraries')}
-          </Tab>
-        </TabList>
-      </div>
+        <LibrarySourceTabs label={t('library.libraries')} selected={state.source} onSelect={handleSourceChange}
+          sources={[
+            { value: 'standard', id: sourceTabsId + '-standard', panelId: sourceTabsId + '-panel',
+              label: t('library.bundledTab'), icon: <LibraryRegular /> },
+            { value: 'online', id: sourceTabsId + '-online', panelId: sourceTabsId + '-panel',
+              label: t('library.online'), icon: <GlobeRegular /> },
+            { value: 'personal', id: sourceTabsId + '-personal', panelId: sourceTabsId + '-panel',
+              label: t('library.myLibraries'), icon: <FolderRegular /> },
+          ]} />
+      </LibraryBrowserHeader>
 
       <div className={styles.content} role="tabpanel" id={`${sourceTabsId}-panel`}
         aria-labelledby={`${sourceTabsId}-${state.source}`}>

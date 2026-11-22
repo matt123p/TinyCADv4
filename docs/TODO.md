@@ -7,18 +7,20 @@ The [PCB layout specification](TinyCAD_PCB_Layout_Complete_Specification.md), [p
 **WP3 first · PCB editor recovery.** This checklist gates every remaining WP3–WP6 work item. Complete open fixes and rerun the affected acceptance tests before resuming those items. Reopen the affected checks if shared controls, command routing, placement or saving regress. Use the v4.1.0 [audit and shared contract](tinycad-ui-design.md).
 
 - [x] Extend the existing window-top toolbar and command routing for PCB Design. Reuse icons and controls for Open, Save, Undo, Redo, Text, Zoom and Rulers where applicable. Verify browser dropdowns, Electron native menus, the active document name and dirty state, keyboard actions and focus in side-by-side view.
-- [x] Use the existing resizable and collapsible panel structure. Put footprint browsing and Projects on the left, navigation and object/component edits below the drawing, and advanced panels on the right. Use shared tabs and dialogue components. Compare the rendered layout with v4.1.0 at normal and narrow window sizes.
+- [x] Verify the shared editor layout with footprint browsing and Projects on the left and the Circuit Design list-mode dropdown switching between Components and Netlist in the bottom grid header. Check that selection properties replace the list, including at narrow window sizes. [Browser editor checks](../scripts/tests/layout-browser/pcb-workspace.spec.mjs)
+- [x] Verify horizontal and vertical drawing scrollbars, hover and selection outlines, rectangular multi-selection, and direct footprint drag with snapping, Escape and one Undo entry. [Browser interaction checks](../scripts/tests/layout-browser/pcb-workspace.spec.mjs)
+- [ ] Verify relocated Board, Copper and Fabrication commands in browser and Electron. Check stable Fluent dialogue bounds, body scrolling and action placement while changing steps or options.
 - [x] Restore the library preview drag and placement flow. Drag the footprint image onto the board, click once to commit a snapped position, then return to normal selection. Verify placed appearance and pointer movement, keyboard placement, Escape, right-click cancellation and sequential placement.
 - [x] Separate placement, movement and group edits from saving. Commit each as one undoable change and mark the file dirty. Verify zero document writes and picker calls during edits and a correct explicit save/reopen in browser and Electron.
 - [x] Extend the common context-menu renderer and shared zoom commands for boards. Verify object and empty-board actions, keyboard invocation and pointer-anchored zoom/pan.
 - [x] Share the wheel zoom policy between Circuit Design, Simulation and PCB Design. Verify ordinary wheel pan, Shift-wheel steps, Ctrl-wheel pointer anchoring, and that horizontal Shift-wheel input leaves zoom unchanged. Preserve the wheel behavior of manufacturing and footprint previews.
 - [x] Mount the existing `Ruler` component on the PCB drawing edges. Verify both pointer indicators and the coordinate conversion after pan, zoom, resize and ruler toggles.
 - [x] Preserve the v4.1.0 Single File startup with project controls hidden. Verify explicit entry into Project mode and standalone PCB open and save in the shared editor. [Single File and Project modes](project-specification.md#single-file-and-project-modes)
-- [x] Repeat the affected classroom, reference board, tab and recovery workflows through the redesigned editor. Retain separate evidence for native files, connectivity and manufacturing read-back.
+- [x] Repeat the affected classroom, reference board and tab workflows through the redesigned editor. Retain separate evidence for native files, connectivity and manufacturing read-back.
 
 The recovery rerun covers the standalone PCB, placement queue, group edits,
 portable board, classroom LED exercise, connector reference, embedded starter
-devices, independent PCB tabs and linked-board recovery. Gerbonara 1.6.3 read
+devices and independent PCB tabs. Gerbonara 1.6.3 read
 back the fresh LED release and connector preview. [Browser and native Electron evidence](tinycad-ui-design.md#acceptance-evidence)
 
 ## WP0 · Repository audit and schema
@@ -285,7 +287,7 @@ Start with the [WP3 editor recovery checklist](#editor-interface-redesign). Carr
   - [x] Edit the project name, author and primary documents in a version-guarded settings tab. Verify that Save All preserves links, associations and recipes, and that Electron and Drive persist metadata.
   - [x] Keep separate PCB tabs for linked and unlinked boards. Verify dirty indicators, independent undo, versioned saves for unlinked boards, Save All on inactive tabs, and saving an inactive board when closing the project.
   - [x] Keep separate tabs for linked schematics. Verify independent undo and redo, inactive-tab recovery and Save All with retained simulation results, and branch refresh for clean schematic tabs.
-  - [x] Crash the Chromium renderer after the linked PCB acknowledges durable recovery. Reopen and restore that board revision, then verify that recovery offers a separate copy when the saved board has changed (AT-21). [Crash recovery acceptance](../scripts/tests/layout-browser/project-hierarchy.spec.mjs)
+  - [x] Verify that standalone and linked PCBs persist edits only after an explicit save. Reopen a linked board after a renderer crash and verify that it loads the last saved revision. [Standalone](../scripts/tests/layout-browser/pcb-workspace.spec.mjs) and [linked board](../scripts/tests/layout-browser/project-hierarchy.spec.mjs) browser cases.
 - [x] Preserve the TinyCAD v4.1.0 [Single File workflow](project-specification.md#single-file-and-project-modes). Add the startup preference and in-window transition to Project mode.
   - [x] Verify the default Single File layout, reopening an explicitly selected folder, direct project settings opens, and save and close for linked board and schematic edits in Electron and Drive. Check that the standalone filesystem build keeps PCB and project code out of the schematic startup requests.
 - [x] Add the vertical [sidebar activity bar](project-specification.md#sidebar-activity-bar) in Project mode and desktop and Drive [drag-and-drop import](project-specification.md#drag-and-drop-into-the-project).

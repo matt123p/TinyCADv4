@@ -1,4 +1,4 @@
-import React, { useImperativeHandle, useMemo, useRef } from 'react';
+import React, { useImperativeHandle, useMemo, useRef, useState } from 'react';
 import type { BoardAirwire } from '../../pcb/boardAirwires';
 import type { CopperFeature } from '../../pcb/copper';
 import type { EmbeddedFootprint } from '../../pcb/boardAssets';
@@ -27,6 +27,8 @@ import type { RouteSnap } from '../../pcb/routingSnap';
 import { FootprintPreviewDrawing } from '../projects/DeviceFootprintPreview';
 import { FootprintArtwork, PadShapeDrawing } from '../projects/FootprintArtwork';
 import { resolveFootprintText } from '../../pcb/footprintText';
+import { padShapePoints } from '../../pcb/padstack';
+import { SelectionMarquee } from '../svg/SelectionMarquee';
 
 const point = ({ x, y }: BoardPoint) => `${x},${-y}`;
 const ring = (points: readonly BoardPoint[]) =>
@@ -83,6 +85,42 @@ function boundsOf(points: readonly BoardPoint[], area?: { left: number; top: num
     bounds.bottom = Math.max(bounds.bottom, -y);
   }
   return bounds;
+}
+
+type CanvasBounds = ReturnType<typeof boundsOf>;
+type SelectionTarget = { componentId?: string; padId?: string; routeId?: string };
+type SelectionGesture = {
+  pointer: number;
+  clientX: number;
+  clientY: number;
+  start: BoardPoint;
+  componentId?: string;
+  append: boolean;
+};
+
+function selectionTarget(element: Element): SelectionTarget {
+  const hit = element.closest('[data-component], [data-track], [data-via]');
+  return {
+    componentId: hit?.getAttribute('data-component') ?? undefined,
+    padId: element.closest('[data-board-pad]')?.getAttribute('data-board-pad') ?? undefined,
+    routeId: hit?.getAttribute('data-track') ?? hit?.getAttribute('data-via') ?? undefined,
+  };
+}
+
+function SelectionOutline({ bounds, preview }: { bounds: CanvasBounds; preview: boolean }) {
+  const { left, top, right, bottom } = bounds;
+  const x = svgLength(left);
+  const y = svgLength(top);
+  const width = svgLength(right - left);
+  const height = svgLength(bottom - top);
+  return <g transform={svgLengthTransform} pointerEvents="none"
+    data-selection-outline={preview ? 'hover' : 'selected'}>
+    <rect x={x} y={y} width={width} height={height}
+      fill="none" stroke="white" strokeWidth={4} vectorEffect="non-scaling-stroke" />
+    <rect x={x} y={y} width={width} height={height}
+      fill="none" stroke={preview ? '#18578d' : '#17365d'} strokeWidth={2}
+      strokeDasharray={preview ? '4 3' : undefined} vectorEffect="non-scaling-stroke" />
+  </g>;
 }
 
 const RoutedCopper = React.memo(function RoutedCopper({
@@ -276,6 +314,7 @@ export default function BoardCanvas({
   group,
   selectedPad,
   selectedNet,
+  selectedRoutes,
   route,
   airwires,
   zoneFills,
@@ -297,6 +336,9 @@ export default function BoardCanvas({
   onComponent,
   onGroupComponent,
   onPad,
+  selectionEnabled,
+  onSelectArea,
+  onMoveComponent,
 }: {
   board: BoardDocument;
   geometry: ReturnType<typeof boardPlacementView>;
@@ -307,6 +349,7 @@ export default function BoardCanvas({
   group: ReadonlySet<string>;
   selectedPad?: string;
   selectedNet: string;
+  selectedRoutes: ReadonlySet<string>;
   route: ManualRoute['path'];
   airwires?: readonly BoardAirwire[];
   zoneFills?: readonly CopperFeature[];
@@ -337,6 +380,9 @@ export default function BoardCanvas({
   onRouteObject(id: string, netId?: string, picked?: BoardPoint): void;
   onComponent(componentId: string): void;
   onGroupComponent?(componentId: string): void;
+  selectionEnabled: boolean;
+  onSelectArea(componentIds: string[], routeIds: string[], append: boolean): void;
+  onMoveComponent?(componentId: string, delta: BoardPoint, commit: boolean): BoardPoint | undefined;
   onPad(
     componentId: string,
     padId: string,
@@ -345,6 +391,10 @@ export default function BoardCanvas({
 }) {
   const drawing = useRef<HTMLDivElement>(null);
   const viewport = useRef<SvgViewportHandle>(null);
+  const gesture = useRef<SelectionGesture>();
+  const suppressClick = useRef(false);
+  const [dragPreview, setDragPreview] = useState<{ point: BoardPoint; offset?: BoardPoint }>();
+  const [hover, setHover] = useState<SelectionTarget>();
   const profileBounds = boundsOf(geometry.profile.outer);
   const margin = Math.max(profileBounds.right - profileBounds.left, profileBounds.bottom - profileBounds.top) * 0.06;
   const datum = board.annotations?.datum;
@@ -376,6 +426,37 @@ export default function BoardCanvas({
   }), [margin]);
   const visible = (layer: CopperLayer['id']) =>
     visibleCopper === 'all' || visibleCopper === layer;
+  const selectionBounds = useMemo(() => {
+    const padding = margin * 0.12;
+    const components = new Map<string, CanvasBounds>();
+    const pads = new Map<string, CanvasBounds>();
+    const routes = new Map<string, CanvasBounds>();
+    const around = ({ x, y }: BoardPoint, radius: number) =>
+      [{ x: x - radius, y: y - radius }, { x: x + radius, y: y + radius }];
+    for (const feature of geometry.features) {
+      const lands = feature.copper.filter(({ layerId }) => visibleCopper === 'all' || layerId === visibleCopper);
+      const points = lands.flatMap(({ shape }) => padShapePoints(shape));
+      if (!feature.copper.length && (visibleCopper === 'all' || feature.placement.side === visibleCopper)) {
+        points.push(...feature.pads.flatMap(({ position }) => around(position, margin * 0.085)));
+      }
+      const origin = feature.placement.positionNm;
+      points.push(...around(origin, margin * 0.16), { x: origin.x + feature.label.length * margin * 0.16, y: origin.y + margin * 0.43 });
+      components.set(feature.id, boundsOf(points));
+      for (const pad of feature.pads) {
+        const shapes = lands.filter(({ padId }) => padId === pad.id);
+        if (shapes.length || !feature.copper.length)
+          pads.set(feature.id + ':' + pad.id, boundsOf(shapes.length
+            ? shapes.flatMap(({ shape }) => padShapePoints(shape)) : around(pad.position, padding)));
+      }
+    }
+    for (const track of board.tracks ?? []) {
+      if (visibleCopper === 'all' || track.layerId === visibleCopper)
+        routes.set(track.id, boundsOf([...around(track.start, track.widthNm / 2), ...around(track.end, track.widthNm / 2)]));
+    }
+    for (const via of board.vias ?? [])
+      routes.set(via.id, boundsOf(around(via.positionNm, via.diameterNm / 2)));
+    return { components, pads, routes };
+  }, [geometry, board.tracks, board.vias, visibleCopper, margin]);
   const picking = !!onPick;
   const pickingAttributes = picking ? (target: BoardPickTarget) => ({
     'data-board-pick': JSON.stringify(target),
@@ -528,25 +609,131 @@ export default function BoardCanvas({
     );
   }
 
-  function pointerOnCanvas(event: React.MouseEvent<HTMLDivElement>) {
+  function pointerOnCanvas(event: React.MouseEvent<HTMLDivElement>, captured = false) {
     const svg = event.currentTarget.querySelector('svg');
     const inverse = svgDrawingMatrix(svg)?.inverse();
-    if (inverse && svg.contains(event.target as Node))
+    if (inverse && (captured || svg.contains(event.target as Node)))
       return new DOMPoint(event.clientX, event.clientY).matrixTransform(inverse);
   }
 
+  function cancelGesture() {
+    const current = gesture.current;
+    gesture.current = undefined;
+    setDragPreview(undefined);
+    if (current && drawing.current?.hasPointerCapture(current.pointer))
+      drawing.current.releasePointerCapture(current.pointer);
+  }
+
+  function marqueeBounds(start: BoardPoint, end: BoardPoint) {
+    return boundsOf([start, end]);
+  }
+
+  const movingId = dragPreview?.offset ? gesture.current?.componentId : undefined;
+  const marquee = dragPreview && gesture.current && !gesture.current.componentId
+    ? marqueeBounds(gesture.current.start, dragPreview.point) : undefined;
+  const hoverBounds = selectionEnabled && !dragPreview && hover && (
+    hover.componentId ? (hover.padId && selectionBounds.pads.get(hover.componentId + ':' + hover.padId)) ||
+      selectionBounds.components.get(hover.componentId) : selectionBounds.routes.get(hover.routeId)
+  );
+  const selectedOutlines = [
+    ...[...group, selected].filter(Boolean).map((id) => ({
+      id,
+      bounds: id === selected && selectedPad ? selectionBounds.pads.get(id + ':' + selectedPad) ??
+        selectionBounds.components.get(id) : selectionBounds.components.get(id),
+    })),
+    ...[...selectedRoutes].map((id) => ({ id, bounds: selectionBounds.routes.get(id) })),
+  ];
+
   return (
     <div ref={drawing} className="circuit-drawing pcb-svg"
-      onClickCapture={placementActive ? (event) => {
+      onPointerDown={(event) => {
+        if (event.button !== 0) return;
+        suppressClick.current = false;
+        if (!selectionEnabled || event.pointerType === 'touch') return;
+        const location = pointerOnCanvas(event);
+        if (!location) return;
+        const { componentId, routeId } = selectionTarget(event.target as Element);
+        if (routeId || (componentId && (event.shiftKey || !onMoveComponent))) return;
+        if (componentId && geometry.features.some(({ id, placement }) =>
+          id === componentId && (placement.locked || placement.positionLocked))) return;
+        gesture.current = {
+          pointer: event.pointerId, clientX: event.clientX, clientY: event.clientY,
+          start: { x: location.x, y: -location.y }, componentId, append: event.shiftKey,
+        };
+      }}
+      onPointerMove={(event) => {
+        const current = gesture.current;
+        if (current?.pointer === event.pointerId && selectionEnabled) {
+          if (!(event.buttons & 1)) {
+            cancelGesture();
+            return;
+          }
+          if (!suppressClick.current && Math.hypot(event.clientX - current.clientX, event.clientY - current.clientY) < 4)
+            return;
+          const location = pointerOnCanvas(event, true);
+          if (!location) return;
+          if (!suppressClick.current) {
+            event.currentTarget.setPointerCapture(event.pointerId);
+            event.currentTarget.focus({ preventScroll: true });
+            suppressClick.current = true;
+          }
+          const point = { x: location.x, y: -location.y };
+          const offset = current.componentId && onMoveComponent?.(current.componentId,
+            { x: point.x - current.start.x, y: point.y - current.start.y }, false);
+          setDragPreview({ point, offset: offset || undefined });
+          return;
+        }
+        const next = event.buttons === 0 && selectionEnabled && pointerOnCanvas(event)
+          ? selectionTarget(event.target as Element) : undefined;
+        setHover((previous) => previous?.componentId === next?.componentId &&
+          previous?.padId === next?.padId && previous?.routeId === next?.routeId ? previous : next);
+      }}
+      onPointerUp={(event) => {
+        const current = gesture.current;
+        if (current?.pointer !== event.pointerId || event.button !== 0) return;
+        const location = suppressClick.current && selectionEnabled && pointerOnCanvas(event, true);
+        cancelGesture();
+        if (!location) return;
+        const point = { x: location.x, y: -location.y };
+        if (current.componentId) {
+          onMoveComponent?.(current.componentId,
+            { x: point.x - current.start.x, y: point.y - current.start.y }, true);
+        } else {
+          const box = marqueeBounds(current.start, point);
+          const inside = ([, bounds]: [string, CanvasBounds]) => bounds.left >= box.left &&
+            bounds.right <= box.right && bounds.top >= box.top && bounds.bottom <= box.bottom;
+          onSelectArea([...selectionBounds.components].filter(inside).map(([id]) => id),
+            [...selectionBounds.routes].filter(inside).map(([id]) => id), current.append);
+        }
+      }}
+      onPointerCancel={cancelGesture}
+      onLostPointerCapture={cancelGesture}
+      onPointerLeave={() => setHover(undefined)}
+      onClickCapture={(event) => {
+        if (suppressClick.current) {
+          suppressClick.current = false;
+          event.stopPropagation();
+          return;
+        }
+        if (picking) {
+          pickAt(event);
+          return;
+        }
+        if (!placementActive) return;
         if (event.button !== 0 || event.shiftKey) return;
         const location = pointerOnCanvas(event);
         if (!location) return;
         event.stopPropagation();
         onLocation(location.x, location.y);
-      } : picking ? pickAt : undefined}
+      }}
       tabIndex={0}
       aria-label="Board drawing"
       onKeyDown={(event) => {
+        if (event.key === 'Escape' && gesture.current) {
+          cancelGesture();
+          event.preventDefault();
+          return;
+        }
         if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
         event.preventDefault();
         const rect = event.currentTarget.getBoundingClientRect();
@@ -556,6 +743,10 @@ export default function BoardCanvas({
         if (event.detail === 0 && !event.clientX && !event.clientY) return;
         event.preventDefault();
         event.stopPropagation();
+        if (gesture.current) {
+          cancelGesture();
+          return;
+        }
         const hit = (event.target as Element).closest('[data-component], [data-track], [data-via]');
         onContextCommand({ x: event.clientX, y: event.clientY }, {
           componentId: hit?.getAttribute('data-component') ?? undefined,
@@ -578,6 +769,7 @@ export default function BoardCanvas({
       <SvgViewport
         label="Board layout"
         editorWheel
+        scrollbars
         rulerUnits={showRulers ? { unitsPerMillimeter: 1_000_000, yUp: true } : undefined}
         viewportRef={viewport}
         fit={[
@@ -816,16 +1008,20 @@ export default function BoardCanvas({
             const lands = feature.copper.length ? feature.copper : feature.pads;
             const highlightedNet = selectedNet && lands.some(({ netId }) => netId === selectedNet)
               ? selectedNet : '';
-            return <PlacedFootprint key={feature.id} feature={feature} margin={margin}
+            const footprint = <PlacedFootprint key={feature.id} feature={feature} margin={margin}
               selected={feature.id === selected} inGroup={group.has(feature.id)}
               selectedPad={feature.id === selected ? selectedPad : undefined}
               selectedNet={highlightedNet} visibleCopper={visibleCopper} picking={picking} />;
+            return feature.id === movingId ? <g key={feature.id} opacity={0.7} data-footprint-move-preview=""
+              transform={svgTranslation(dragPreview.offset.x, -dragPreview.offset.y)}>{footprint}</g> : footprint;
           })}
         </g>
         {silk.filter(({ target }) => visible(target.layer)).map(({ target, placement, graphic }) => (
           <g key={target.id} {...pickingAttributes?.(target)}
             data-picked-silk={selectedSilk === target.id || undefined}
-            transform={placementTransform(placement.positionNm, placement.rotationMicrodegree, placement.side)}
+            transform={placementTransform(target.componentId === movingId ? {
+              x: placement.positionNm.x + dragPreview.offset.x, y: placement.positionNm.y + dragPreview.offset.y,
+            } : placement.positionNm, placement.rotationMicrodegree, placement.side)}
             pointerEvents={picking ? 'visiblePainted' : 'none'}>
             <FootprintArtwork item={graphic} highlighted={selectedSilk === target.id} />
           </g>
@@ -911,6 +1107,13 @@ export default function BoardCanvas({
             pointerEvents="none"
           />
         )}
+        {!movingId && selectedOutlines.map(({ id, bounds }) => bounds &&
+          <SelectionOutline key={id} bounds={bounds} preview={false} />)}
+        {hoverBounds && <SelectionOutline bounds={hoverBounds} preview />}
+        {marquee && <g transform={svgLengthTransform}>
+          <SelectionMarquee x={svgLength(marquee.left)} y={svgLength(marquee.top)}
+            width={svgLength(marquee.right - marquee.left)} height={svgLength(marquee.bottom - marquee.top)} />
+        </g>}
       </SvgViewport>
     </div>
   );

@@ -1,3 +1,4 @@
+import { Textarea } from '@fluentui/react-components';
 import React, { useEffect, useId, useRef, useState } from 'react';
 import {
   Button,
@@ -95,7 +96,7 @@ export default function BoardChecksDialog({
     : 0;
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog pcb-dialog-wide">
         <DialogBody>
           <DialogTitle>{t('pcbChecks.title')}</DialogTitle>
           <DialogContent>
@@ -188,7 +189,7 @@ export default function BoardChecksDialog({
                     >
                       <label>
                         {t('pcbChecks.reason')}
-                        <textarea
+                        <Textarea
                           required
                           autoFocus
                           maxLength={2048}

@@ -532,7 +532,6 @@ export default function ProjectBrowser({
         return tab && schematicTabDirty(tab) ? tab.history.present.drawing : undefined;
       },
     );
-    const status = sync.get(context.marker.id + ':' + id);
     return {
       session,
       probe,
@@ -542,7 +541,6 @@ export default function ProjectBrowser({
         const project = await readProject(context.marker.id, context.root.id);
         return linkedBoardDocument({ ...context, project }, id);
       },
-      syncStatus: status && t('projects.syncStatus.' + status.status),
       onProbe: (source) =>
         navigateFromBoardCanvas(context, session.circuit, source),
       onUpdate: () =>

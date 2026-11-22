@@ -1,3 +1,4 @@
+import { Select } from '@fluentui/react-components';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, Tab, TabList } from '@fluentui/react-components';
 import type { BoardDocument, CopperLayer } from '../../pcb/board';
@@ -103,21 +104,21 @@ export default function BoardRuleInspectionDialog({
       <div className="pcb-profile-fields">
         <label>
           Copper object
-          <select aria-label="Copper object" value={firstIndex} onChange={(event) => {
+          <Select aria-label="Copper object" value={firstIndex} onChange={(event) => {
             const next = Number(event.target.value);
             setFirstIndex(next);
             if (next === secondIndex) setSecondIndex(-1);
           }}>
             {labels.map((label, index) => <option key={index} value={index}>{label}</option>)}
-          </select>
+          </Select>
         </label>
         <label>
           Compare with
-          <select aria-label="Compare with" value={secondIndex} onChange={(event) => setSecondIndex(Number(event.target.value))}>
+          <Select aria-label="Compare with" value={secondIndex} onChange={(event) => setSecondIndex(Number(event.target.value))}>
             <option value={-1}>No comparison</option>
             {labels.map((label, index) => index !== firstIndex &&
               <option key={index} value={index}>{label}</option>)}
-          </select>
+          </Select>
         </label>
         <p>
           Board defaults.
@@ -156,7 +157,7 @@ export default function BoardRuleInspectionDialog({
 
   return (
     <Dialog open onOpenChange={(_, detail) => { if (!detail.open) onClose(); }}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog pcb-dialog-wide">
         <DialogBody>
           <DialogTitle>Inspect PCB rules</DialogTitle>
           <DialogContent>

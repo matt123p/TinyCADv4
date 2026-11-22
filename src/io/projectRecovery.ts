@@ -193,17 +193,3 @@ export async function writeProjectFileJournal(journal: ProjectFileJournal) {
 export async function deleteProjectFileJournal(key: string) {
   await projectJournalRequest(relocationStore, 'readwrite', (store) => store.delete(key));
 }
-
-/** PCB recovery uses compare-and-swap so a second editor cannot take over a draft. */
-export function replaceBoardRecoveryDraft(
-  draft: ProjectRecoveryDraft,
-  expectedToken: string | undefined,
-): Promise<boolean> {
-  if (draft.data.byteLength > MAX_PROJECT_FILE_BYTES)
-    return Promise.reject(new Error('The PCB exceeds the recovery size limit.'));
-  return withDraft(draft.key, true, (store, existing) => {
-    if (existing?.token !== expectedToken) return false;
-    store.put(draft);
-    return true;
-  });
-}

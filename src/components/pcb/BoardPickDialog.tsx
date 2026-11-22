@@ -1,3 +1,4 @@
+import { Checkbox, Select } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import {
   Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle,
@@ -18,29 +19,29 @@ export default function BoardPickDialog({ pick, onSelect, onClose }: {
     (includeLocked || !target.locked));
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <DialogBody>
           <DialogTitle>Pick overlapping objects</DialogTitle>
           <DialogContent className="pcb-profile-fields">
             <label htmlFor="pcb-pick-type">
               Object type
-              <select id="pcb-pick-type" value={kind}
+              <Select id="pcb-pick-type" value={kind}
                 onChange={(event) => setKind(event.target.value as typeof kind)}>
                 <option value="all">All types</option>
                 {Object.entries(boardPickKinds).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
-              </select>
+              </Select>
             </label>
             <label htmlFor="pcb-pick-layer">
               Selectable layer
-              <select id="pcb-pick-layer" value={layer}
+              <Select id="pcb-pick-layer" value={layer}
                 onChange={(event) => setLayer(event.target.value as typeof layer)}>
                 <option value="all">All visible layers</option>
                 <option value="top">Top</option>
                 <option value="bottom">Bottom</option>
-              </select>
+              </Select>
             </label>
             <label>
-              <input type="checkbox" checked={includeLocked} onChange={(event) => setIncludeLocked(event.target.checked)} />
+              <Checkbox  checked={includeLocked} onChange={(event) => setIncludeLocked(event.target.checked)} />
               Include locked objects
             </label>
             <p role="status">{matches.length} matching objects</p>

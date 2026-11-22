@@ -1,3 +1,4 @@
+import { Input, Select, Textarea } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import {
   Button,
@@ -76,7 +77,7 @@ export default function BoardZoneDialog({
   );
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <form onSubmit={submit}>
           <DialogBody>
             <DialogTitle>
@@ -85,7 +86,7 @@ export default function BoardZoneDialog({
             <DialogContent className="pcb-profile-fields">
               <label>
                 Net
-                <select aria-label="Net" name="net" required defaultValue={netId}>
+                <Select aria-label="Net" name="net" required defaultValue={netId}>
                   {!board.nets?.some(({ id }) => id === netId) && (
                     <option value="">Choose a current board net</option>
                   )}
@@ -94,30 +95,30 @@ export default function BoardZoneDialog({
                       {name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label>
                 Layer
-                <select aria-label="Layer" name="layer" defaultValue={zone?.layerId ?? 'top'}>
+                <Select aria-label="Layer" name="layer" defaultValue={zone?.layerId ?? 'top'}>
                   {board.copperLayers.map(({ id }) => (
                     <option key={id} value={id}>
                       {id === 'top' ? 'Top' : 'Bottom'}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label>
                 Priority{' '}
-                <input
+                <Input
                   type="number"
                   name="priority"
-                  defaultValue={zone?.priority ?? 0}
+                  defaultValue={String(zone?.priority ?? 0)}
                   required
                 />
               </label>
               <label>
                 Outline (X, Y in mm)
-                <textarea
+                <Textarea
                   aria-label="Outline (X, Y in mm)"
                   name="outline"
                   rows={4}
@@ -127,7 +128,7 @@ export default function BoardZoneDialog({
               </label>
               <label>
                 Cutouts (X, Y in mm, blank line between cutouts)
-                <textarea
+                <Textarea
                   name="cutouts"
                   rows={3}
                   defaultValue={zone?.cutouts
@@ -137,7 +138,7 @@ export default function BoardZoneDialog({
               </label>
               <label>
                 Clearance override (mm)
-                <input
+                <Input
                   name="clearance"
                   defaultValue={
                     zone?.clearanceNm === undefined ? '' : mm(zone.clearanceNm)
@@ -146,27 +147,27 @@ export default function BoardZoneDialog({
               </label>
               <label>
                 Pads{' '}
-                <select
+                <Select
                   aria-label="Pads"
                   name="pads"
                   defaultValue={zone?.padConnection ?? 'direct'}
                 >
                   {connections}
-                </select>
+                </Select>
               </label>
               <label>
                 Vias{' '}
-                <select
+                <Select
                   aria-label="Vias"
                   name="vias"
                   defaultValue={zone?.viaConnection ?? 'direct'}
                 >
                   {connections}
-                </select>
+                </Select>
               </label>
               <label>
                 Thermal spoke width (mm){' '}
-                <input
+                <Input
                   name="spokes"
                   defaultValue={mm(zone?.spokeWidthNm ?? 250_000)}
                   required
@@ -174,7 +175,7 @@ export default function BoardZoneDialog({
               </label>
               <label>
                 Thermal gap (mm){' '}
-                <input
+                <Input
                   name="gap"
                   defaultValue={mm(zone?.thermalGapNm ?? 250_000)}
                   required
@@ -182,7 +183,7 @@ export default function BoardZoneDialog({
               </label>
               <label>
                 Disconnected copper
-                <select
+                <Select
                   aria-label="Disconnected copper"
                   name="islands"
                   defaultValue={zone?.islands ?? 'remove'}
@@ -190,7 +191,7 @@ export default function BoardZoneDialog({
                   <option value="remove">Remove islands</option>
                   <option value="retain">Retain islands</option>
                   <option value="flag">Retain and flag islands</option>
-                </select>
+                </Select>
               </label>
               {error && <p role="alert">{error}</p>}
             </DialogContent>

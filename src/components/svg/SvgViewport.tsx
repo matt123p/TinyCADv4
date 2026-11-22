@@ -1,6 +1,7 @@
 import React, { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { wheelZoomFactor, zoomStepFactor } from '../../util/editorZoom';
 import { Ruler } from '../controls/Ruler';
+import { DrawingViewportFrame } from './DrawingViewportFrame';
 
 export type SvgViewBox = readonly [number, number, number, number];
 export interface SvgViewportHandle {
@@ -24,6 +25,7 @@ export function SvgViewport({
   height = '100%',
   rulerUnits,
   editorWheel = false,
+  scrollbars = false,
   viewportRef,
   children,
   onLocation,
@@ -33,6 +35,7 @@ export function SvgViewport({
   fit: SvgViewBox;
   height?: string | number;
   editorWheel?: boolean;
+  scrollbars?: boolean;
   rulerUnits?: { unitsPerMillimeter: number; yUp: boolean };
   viewportRef?: React.Ref<SvgViewportHandle>;
   children: React.ReactNode;
@@ -54,6 +57,33 @@ export function SvgViewport({
   const zeroY = (size.height - viewHeight * scale) / 2 - y * scale;
   const pixelsPerMillimeter = scale * (rulerUnits?.unitsPerMillimeter ?? 1);
   const yDirection = rulerUnits?.yUp ? -1 : 1;
+  const horizontalScroll = useRef<HTMLDivElement>(null);
+  const verticalScroll = useRef<HTMLDivElement>(null);
+  // Keep a navigable margin around the fitted board at every zoom level.
+  // Include the current viewport so fit-to-selection and wheel pan can land outside it.
+  const scrollRange = (origin: number, visiblePixels: number, fittedOrigin: number, fittedSpan: number) => {
+    const minimum = Math.min(fittedOrigin - fittedSpan, origin);
+    const maximum = Math.max(fittedOrigin + 2 * fittedSpan, origin + visiblePixels / scale);
+    return { minimum, extent: Math.ceil((maximum - minimum) * scale), offset: (origin - minimum) * scale };
+  };
+  const horizontal = scrollbars && scale > 0 ? scrollRange(-zeroX / scale, size.width, fitX, fitWidth) : undefined;
+  const vertical = scrollbars && scale > 0 ? scrollRange(-zeroY / scale, size.height, fitY, fitHeight) : undefined;
+
+  useLayoutEffect(() => {
+    if (horizontal && horizontalScroll.current)
+      horizontalScroll.current.scrollLeft = horizontal.offset;
+    if (vertical && verticalScroll.current)
+      verticalScroll.current.scrollTop = vertical.offset;
+  }, [horizontal?.offset, horizontal?.extent, vertical?.offset, vertical?.extent]);
+
+  function scrollCamera(axis: 'x' | 'y', position: number) {
+    const range = axis === 'x' ? horizontal : vertical;
+    if (!range || Math.abs(position - range.offset) <= 1) return;
+    const delta = (position - range.offset) / scale;
+    setPointer(undefined);
+    setView(([x, y, width, height] = current) =>
+      [axis === 'x' ? x + delta : x, axis === 'y' ? y + delta : y, width, height]);
+  }
 
   useLayoutEffect(() => {
     const element = svg.current;
@@ -206,25 +236,26 @@ export function SvgViewport({
   );
 
   return (
-    <div className={rulerUnits ? 'svg-viewport svg-viewport-with-rulers' : 'svg-viewport'} style={{ height }}>
-      {rulerUnits && (
-        <div className="svg-viewport-top-ruler">
-          {scale > 0 && <Ruler orientation="horizontal" unit="mm" zoom={100}
-            scaleOrign={pixelsPerMillimeter} scrollOffset={0} zeroOffset={zeroX}
-            containerSize={size.width}
-            mousePosition={rulerPointer ? (rulerPointer.x - zeroX) / pixelsPerMillimeter : null} />}
+    <DrawingViewportFrame height={height} rulers={rulerUnits && {
+      horizontal: scale > 0 && <Ruler orientation="horizontal" unit="mm" zoom={100}
+        scaleOrign={pixelsPerMillimeter} scrollOffset={0} zeroOffset={zeroX}
+        containerSize={size.width}
+        mousePosition={rulerPointer ? (rulerPointer.x - zeroX) / pixelsPerMillimeter : null} />,
+      vertical: scale > 0 && <Ruler orientation="vertical" unit="mm" zoom={100}
+        scaleOrign={pixelsPerMillimeter} scrollOffset={0} zeroOffset={zeroY}
+        direction={yDirection} tickAlignment="start" containerSize={size.height}
+        mousePosition={rulerPointer ? (rulerPointer.y - zeroY) / (yDirection * pixelsPerMillimeter) : null} />,
+    }} scrollbars={scrollbars && <>
+        <div className="svg-viewport-scroll-x" ref={horizontalScroll} tabIndex={0}
+          aria-label={label + ' horizontal scroll'} onScroll={(event) => scrollCamera('x', event.currentTarget.scrollLeft)}>
+          <div style={{ width: horizontal?.extent }} />
         </div>
-      )}
-      {rulerUnits && <div className="svg-viewport-ruler-corner" />}
-      <div className="svg-viewport-drawing">{drawing}</div>
-      {rulerUnits && (
-        <div className="svg-viewport-side-ruler">
-          {scale > 0 && <Ruler orientation="vertical" unit="mm" zoom={100}
-            scaleOrign={pixelsPerMillimeter} scrollOffset={0} zeroOffset={zeroY}
-            direction={yDirection} tickAlignment="start" containerSize={size.height}
-            mousePosition={rulerPointer ? (rulerPointer.y - zeroY) / (yDirection * pixelsPerMillimeter) : null} />}
+        <div className="svg-viewport-scroll-y" ref={verticalScroll} tabIndex={0}
+          aria-label={label + ' vertical scroll'} onScroll={(event) => scrollCamera('y', event.currentTarget.scrollTop)}>
+          <div style={{ height: vertical?.extent }} />
         </div>
-      )}
-    </div>
+      </>}>
+      {drawing}
+    </DrawingViewportFrame>
   );
 }

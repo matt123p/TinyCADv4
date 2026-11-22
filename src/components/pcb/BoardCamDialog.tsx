@@ -1,3 +1,4 @@
+import { Checkbox, Select } from '@fluentui/react-components';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -262,7 +263,7 @@ export default function BoardCamDialog({
 
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog pcb-dialog-wide">
         <DialogBody>
           <DialogTitle>CAM read-back preview</DialogTitle>
           <DialogContent>
@@ -291,7 +292,7 @@ export default function BoardCamDialog({
                 )}
                 <label>
                   CAM layer{' '}
-                  <select
+                  <Select
                     value={selectedLayer.key}
                     onChange={(event) => setLayer(event.target.value)}
                   >
@@ -300,7 +301,7 @@ export default function BoardCamDialog({
                         {name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
                 <div className="pcb-svg pcb-cam-preview">
                   <SvgViewport
@@ -354,7 +355,7 @@ export default function BoardCamDialog({
                       </p>
                       <label>
                         Print orientation{' '}
-                        <select
+                        <Select
                           aria-label="Print orientation"
                           value={etchOrientation}
                           onChange={(event) =>
@@ -369,7 +370,7 @@ export default function BoardCamDialog({
                           <option value="mirrored">
                             Mirrored (X reflected)
                           </option>
-                        </select>
+                        </Select>
                       </label>{' '}
                       <Button onClick={() => downloadHomeEtch('copper')}>
                         Download copper artwork
@@ -421,8 +422,7 @@ export default function BoardCamDialog({
                     <p>{unreviewed.length} Gerber or drill files still need review.</p>
                   )}
                   <label>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={reviewedFiles.includes(selectedFile)}
                       onChange={(event) =>
                         setReviewed([selectedFile], event.target.checked)
@@ -431,8 +431,7 @@ export default function BoardCamDialog({
                     {selectedLayer.name} reviewed
                   </label>
                   <label>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={reviewedHoles}
                       onChange={(event) =>
                         setReviewed(holeFiles, event.target.checked)
@@ -441,8 +440,7 @@ export default function BoardCamDialog({
                     Outline and both drill files reviewed
                   </label>
                   <label>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={deterministic}
                       onChange={(event) =>
                         setDeterministic(event.target.checked)

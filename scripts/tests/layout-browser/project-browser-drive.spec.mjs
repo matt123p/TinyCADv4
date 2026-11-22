@@ -1,3 +1,4 @@
+import { clickPcbCommand } from './pcb-controls.mjs';
 import { readFile } from 'node:fs/promises';
 import { librarySqlite } from '../../lib/library-from-sql.mjs';
 import { expect, test } from '@playwright/test';
@@ -264,7 +265,7 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   const layout = page.getByRole('region', { name: 'PCB layout', exact: true });
   await sidebar.getByRole('button', { name: 'Board.dpn', exact: true }).click();
   await expect(layout.getByRole('img', { name: 'Board layout' })).toBeVisible();
-  await layout.getByRole('button', { name: 'Run design checks…' }).click();
+  await clickPcbCommand(layout, 'Run design checks…');
   const checks = page.getByRole('dialog', { name: 'PCB design checks' });
   await expect(checks.getByRole('table', { name: 'PCB findings' })).toContainText(
     'The associated schematic has not been applied to this board.',

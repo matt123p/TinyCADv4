@@ -1,3 +1,4 @@
+import { Input, Select } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import {
   Button,
@@ -76,7 +77,7 @@ export default function BoardAnnotationDialog({
 
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <form onSubmit={submit}>
           <DialogBody>
             <DialogTitle>
@@ -91,7 +92,7 @@ export default function BoardAnnotationDialog({
               </p>
               <label>
                 {dimension ? 'Start X' : 'Datum X'}
-                <input
+                <Input
                   required
                   value={x}
                   onChange={(event) => setX(event.target.value)}
@@ -99,7 +100,7 @@ export default function BoardAnnotationDialog({
               </label>
               <label>
                 {dimension ? 'Start Y' : 'Datum Y'}
-                <input
+                <Input
                   required
                   value={y}
                   onChange={(event) => setY(event.target.value)}
@@ -109,7 +110,7 @@ export default function BoardAnnotationDialog({
                 <>
                   <label>
                     End X
-                    <input
+                    <Input
                       required
                       value={endX}
                       onChange={(event) => setEndX(event.target.value)}
@@ -117,7 +118,7 @@ export default function BoardAnnotationDialog({
                   </label>
                   <label>
                     End Y
-                    <input
+                    <Input
                       required
                       value={endY}
                       onChange={(event) => setEndY(event.target.value)}
@@ -125,7 +126,7 @@ export default function BoardAnnotationDialog({
                   </label>
                   <label>
                     Dimension direction
-                    <select
+                    <Select
                       value={kind}
                       onChange={(event) =>
                         setKind(event.target.value as BoardDimension['kind'])
@@ -134,11 +135,11 @@ export default function BoardAnnotationDialog({
                       <option value="aligned">Aligned</option>
                       <option value="horizontal">Horizontal</option>
                       <option value="vertical">Vertical</option>
-                    </select>
+                    </Select>
                   </label>
                   <label>
                     Line offset
-                    <input
+                    <Input
                       required
                       value={offset}
                       onChange={(event) => setOffset(event.target.value)}
@@ -146,7 +147,7 @@ export default function BoardAnnotationDialog({
                   </label>
                   <label>
                     Display unit
-                    <select
+                    <Select
                       value={unit}
                       onChange={(event) =>
                         setUnit(event.target.value as BoardDimension['unit'])
@@ -154,11 +155,11 @@ export default function BoardAnnotationDialog({
                     >
                       <option value="mm">Millimetres</option>
                       <option value="mil">Mils</option>
-                    </select>
+                    </Select>
                   </label>
                   <label>
                     Dimension label
-                    <input
+                    <Input
                       maxLength={120}
                       value={label}
                       onChange={(event) => setLabel(event.target.value)}

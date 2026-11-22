@@ -1,4 +1,5 @@
 import React from 'react';
+import { LibraryDragPreview } from './LibraryDragPreview';
 import { useTranslation } from 'react-i18next';
 import { tclibLibraryEntry, tclibSymbol } from '../../model/tclib';
 import { ioXML } from '../../io/ioXml';
@@ -193,18 +194,13 @@ const SymbolView: React.FunctionComponent<SymbolViewProps> = (
     const dy = y1 + (y2 - y1 - props.height / scale) / 2;
 
     return (
-      <div
+      <LibraryDragPreview
         className="symbol-svg"
-        draggable
-        onDragStart={(ev) => {
-          ev.dataTransfer.setData(
-            'application/json',
-            JSON.stringify({
-              name: props.name,
-              symbolData: doc.sheets.map((i) => i.items),
-            }),
-          );
-        }}
+        dataType="application/json"
+        getData={() => JSON.stringify({
+          name: props.name,
+          symbolData: doc.sheets.map((i) => i.items),
+        })}
         onTouchStart={(e) => handleTouchStart(e, {
           name: props.name,
           symbolData: doc.sheets.map((i) => i.items),
@@ -238,7 +234,7 @@ const SymbolView: React.FunctionComponent<SymbolViewProps> = (
             add={null}
           />
         </svg>
-      </div>
+      </LibraryDragPreview>
     );
   }
 

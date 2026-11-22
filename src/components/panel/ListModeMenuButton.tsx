@@ -13,6 +13,7 @@ import { ChevronDownRegular } from '@fluentui/react-icons';
 interface ListModeMenuButtonProps {
   listMode: 'symbols' | 'netlist';
   onListModeChange: (mode: 'symbols' | 'netlist') => void;
+  symbolsLabel?: string;
   className?: string;
   stopPropagation?: boolean;
 }
@@ -20,13 +21,15 @@ interface ListModeMenuButtonProps {
 export const ListModeMenuButton: React.FC<ListModeMenuButtonProps> = ({
   listMode,
   onListModeChange,
+  symbolsLabel,
   className,
   stopPropagation = false,
 }) => {
   const { t } = useTranslation();
+  const objectListLabel = symbolsLabel ?? t('panel.listMode.symbols');
   const listModeLabel =
     listMode === 'symbols'
-      ? t('panel.listMode.symbols')
+      ? objectListLabel
       : t('panel.listMode.netlist');
 
   const handleMouseEvent = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -55,7 +58,7 @@ export const ListModeMenuButton: React.FC<ListModeMenuButtonProps> = ({
         <MenuList>
           <MenuItem onClick={() => onListModeChange('symbols')}>
             {listMode === 'symbols' ? '✓ ' : ''}
-            {t('panel.listMode.symbols')}
+            {objectListLabel}
           </MenuItem>
           <MenuItem onClick={() => onListModeChange('netlist')}>
             {listMode === 'netlist' ? '✓ ' : ''}

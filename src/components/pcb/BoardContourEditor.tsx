@@ -1,3 +1,4 @@
+import { Input, Select } from '@fluentui/react-components';
 import React from 'react';
 import { Button } from '@fluentui/react-components';
 import type { ContourEdge } from '../../pcb/contours';
@@ -240,7 +241,7 @@ export default function BoardContourEditor({
               <legend>Edge {index + 1}</legend>
               <label>
                 Type
-                <select
+                <Select
                   aria-label="Type"
                   value={row.kind}
                   onChange={(e) =>
@@ -249,14 +250,14 @@ export default function BoardContourEditor({
                 >
                   <option value="line">Line</option>
                   <option value="arc">Circular arc</option>
-                </select>
+                </Select>
               </label>
               {fields.map((field) =>
                 (['x', 'y'] as const).map((axis) => (
                   <label key={field + axis}>
                     {field[0].toUpperCase() + field.slice(1)}{' '}
                     {axis.toUpperCase()}
-                    <input
+                    <Input
                       value={row[field][axis]}
                       onChange={(e) =>
                         patch(index, {
@@ -270,7 +271,7 @@ export default function BoardContourEditor({
               {row.kind === 'arc' && (
                 <label>
                   Direction
-                  <select
+                  <Select
                     value={row.clockwise ? 'clockwise' : 'counterclockwise'}
                     onChange={(e) =>
                       patch(index, {
@@ -280,7 +281,7 @@ export default function BoardContourEditor({
                   >
                     <option value="counterclockwise">Counterclockwise</option>
                     <option value="clockwise">Clockwise</option>
-                  </select>
+                  </Select>
                 </label>
               )}
               <Button

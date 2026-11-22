@@ -66,7 +66,7 @@ export default function BoardRevisionDialog({ board, session, onCreated, onClose
 
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <DialogBody>
           <DialogTitle>Manufacturing revisions</DialogTitle>
           <DialogContent>

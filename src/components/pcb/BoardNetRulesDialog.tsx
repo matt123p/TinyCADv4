@@ -1,3 +1,4 @@
+import { Input, Select } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle } from '@fluentui/react-components';
 import type { BoardDocument, BoardOperation } from '../../pcb/board';
@@ -85,18 +86,18 @@ export default function BoardNetRulesDialog({ board, selectedNet, onApply, onClo
         <legend>{label} copper object</legend>
         <label>
           {label} net class
-          <select aria-label={label + ' net class'} name={classField} defaultValue={pairRule?.[classField] ?? ''}>
+          <Select aria-label={label + ' net class'} name={classField} defaultValue={pairRule?.[classField] ?? ''}>
             <option value="">Any class</option>
             <option value="default">No assigned class</option>
             {board.netClasses?.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
-          </select>
+          </Select>
         </label>
         <label>
           {label} object type
-          <select aria-label={label + ' object type'} name={kindField} defaultValue={pairRule?.[kindField] ?? ''}>
+          <Select aria-label={label + ' object type'} name={kindField} defaultValue={pairRule?.[kindField] ?? ''}>
             <option value="">Any type</option>
             {clearanceKinds.map((kind) => <option key={kind} value={kind}>{kind}</option>)}
-          </select>
+          </Select>
         </label>
       </fieldset>
     );
@@ -104,14 +105,14 @@ export default function BoardNetRulesDialog({ board, selectedNet, onApply, onClo
 
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <form onSubmit={submit}>
           <DialogBody>
             <DialogTitle>PCB net rules</DialogTitle>
             <DialogContent className="pcb-profile-fields">
               <label>
                 Edit rules for
-                <select aria-label="Edit rules for" value={selection} onChange={(event) => {
+                <Select aria-label="Edit rules for" value={selection} onChange={(event) => {
                   setSelection(event.target.value);
                   setError('');
                 }}>
@@ -126,14 +127,14 @@ export default function BoardNetRulesDialog({ board, selectedNet, onApply, onClo
                   <optgroup label="Clearance rules">
                     {board.clearanceRules?.map(({ id, name }) => <option key={id} value={'clearance:' + id}>{name}</option>)}
                   </optgroup>
-                </select>
+                </Select>
               </label>
               {editingClearance ? (
                 <React.Fragment key={selection}>
-                  <label>Rule name<input name="name" required defaultValue={pairRule?.name ?? ''} /></label>
+                  <label>Rule name<Input name="name" required defaultValue={pairRule?.name ?? ''} /></label>
                   <label>
                     Minimum clearance (mm)
-                    <input name="clearanceNm" required defaultValue={pairRule ? String(pairRule.clearanceNm / 1e6) : ''} />
+                    <Input name="clearanceNm" required defaultValue={pairRule ? String(pairRule.clearanceNm / 1e6) : ''} />
                   </label>
                   {clearanceSelector('first', 'First')}
                   {clearanceSelector('second', 'Second')}
@@ -142,19 +143,19 @@ export default function BoardNetRulesDialog({ board, selectedNet, onApply, onClo
                 {net ? (
                   <label>
                     Net class
-                    <select aria-label="Net class" name="classId" defaultValue={net.classId ?? ''}>
+                    <Select aria-label="Net class" name="classId" defaultValue={net.classId ?? ''}>
                       <option value="">Board defaults</option>
                       {board.netClasses?.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
-                    </select>
+                    </Select>
                   </label>
                 ) : (
-                  <label>Class name<input name="name" required defaultValue={netClass?.name ?? ''} /></label>
+                  <label>Class name<Input name="name" required defaultValue={netClass?.name ?? ''} /></label>
                 )}
                 <p>Leave a field blank to inherit it.</p>
                 {fields.map(([id, label]) => (
                   <label key={id}>
                     {label} (mm)
-                    <input name={id} defaultValue={stored?.[id] === undefined ? '' : String(stored[id] / 1e6)} />
+                    <Input name={id} defaultValue={stored?.[id] === undefined ? '' : String(stored[id] / 1e6)} />
                     {effective && (effective[id] !== undefined || id === 'preferredWidthNm') && (
                       <span>Saved effective value {formatMm(
                         id === 'preferredWidthNm' ? preferredTrackWidth(effective, 250_000) : effective[id],

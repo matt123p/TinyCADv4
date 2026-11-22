@@ -1,3 +1,4 @@
+import { Input, Select } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import {
   Button,
@@ -80,35 +81,35 @@ export default function BoardHoleDialog({
         if (!data.open) onClose();
       }}
     >
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <form onSubmit={submit}>
           <DialogBody>
             <DialogTitle>Add hole or slot</DialogTitle>
             <DialogContent className="pcb-profile-fields">
               <label>
                 Centre X (mm)
-                <input
+                <Input
                   value={positionX}
                   onChange={(e) => setPositionX(e.target.value)}
                 />
               </label>
               <label>
                 Centre Y (mm)
-                <input
+                <Input
                   value={positionY}
                   onChange={(e) => setPositionY(e.target.value)}
                 />
               </label>
               <label>
                 Hole width (mm)
-                <input
+                <Input
                   value={width}
                   onChange={(e) => setWidth(e.target.value)}
                 />
               </label>
               <label>
                 Slot length (mm)
-                <input
+                <Input
                   value={length}
                   placeholder="Round hole"
                   onChange={(e) => setLength(e.target.value)}
@@ -117,13 +118,13 @@ export default function BoardHoleDialog({
               {!!length && (
                 <label>
                   Slot direction
-                  <select
+                  <Select
                     value={direction}
                     onChange={(e) => setDirection(e.target.value)}
                   >
                     <option value="horizontal">Horizontal</option>
                     <option value="vertical">Vertical</option>
-                  </select>
+                  </Select>
                 </label>
               )}
               <Checkbox
@@ -134,7 +135,7 @@ export default function BoardHoleDialog({
               {plated && (
                 <label>
                   Copper land width (mm)
-                  <input
+                  <Input
                     value={land}
                     onChange={(e) => setLand(e.target.value)}
                   />
@@ -142,14 +143,14 @@ export default function BoardHoleDialog({
               )}
               <label>
                 Extra routing clearance (mm)
-                <input
+                <Input
                   value={clearance}
                   onChange={(e) => setClearance(e.target.value)}
                 />
               </label>
               <label>
                 Screw-head diameter (mm)
-                <input
+                <Input
                   value={headDiameter}
                   onChange={(e) => setHeadDiameter(e.target.value)}
                 />
@@ -158,18 +159,18 @@ export default function BoardHoleDialog({
                 <>
                   <label>
                     Screw-head side
-                    <select
+                    <Select
                       value={headSide}
                       onChange={(e) => setHeadSide(e.target.value as BoardMechanicalHole['screwHeadSide'])}
                     >
                       <option value="top">Top</option>
                       <option value="bottom">Bottom</option>
                       <option value="both">Both</option>
-                    </select>
+                    </Select>
                   </label>
                   <label>
                     Extra component clearance (mm)
-                    <input
+                    <Input
                       value={bodyClearance}
                       onChange={(e) => setBodyClearance(e.target.value)}
                     />

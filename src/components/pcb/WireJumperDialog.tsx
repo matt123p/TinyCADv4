@@ -1,3 +1,4 @@
+import { Checkbox, Input, Select } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import {
   Button,
@@ -61,9 +62,9 @@ export default function WireJumperDialog({
     return (['x', 'y'] as const).map((axis) => (
       <label key={label + axis}>
         {label.toUpperCase()} {axis.toUpperCase()} (mm)
-        <input
+        <Input
           name={label + axis}
-          defaultValue={position ? position[axis] / 1e6 : ''}
+          defaultValue={position ? String(position[axis] / 1e6) : ''}
           required
         />
       </label>
@@ -72,7 +73,7 @@ export default function WireJumperDialog({
 
   return (
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface>
+      <DialogSurface className="pcb-dialog">
         <form onSubmit={submit}>
           <DialogBody>
             <DialogTitle>
@@ -85,7 +86,7 @@ export default function WireJumperDialog({
               </p>
               <label>
                 Reference
-                <input
+                <Input
                   name="reference"
                   defaultValue={jumper?.reference ?? 'JP' + index}
                   maxLength={64}
@@ -94,7 +95,7 @@ export default function WireJumperDialog({
               </label>
               <label>
                 Net
-                <select
+                <Select
                   name="net"
                   aria-label="Jumper net"
                   defaultValue={jumper?.netId ?? ''}
@@ -106,34 +107,27 @@ export default function WireJumperDialog({
                       {name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               {coordinates('a', jumper?.start)}
               {coordinates('b', jumper?.end)}
               <label>
                 Land diameter (mm)
-                <input
+                <Input
                   name="land"
-                  defaultValue={(jumper?.landWidthNm ?? 2e6) / 1e6}
+                  defaultValue={String((jumper?.landWidthNm ?? 2e6) / 1e6)}
                   required
                 />
               </label>
               <label>
                 Drill diameter (mm)
-                <input
+                <Input
                   name="drill"
-                  defaultValue={(jumper?.drillNm ?? 800_000) / 1e6}
+                  defaultValue={String((jumper?.drillNm ?? 800_000) / 1e6)}
                   required
                 />
               </label>
-              <label>
-                Fit jumper
-                <input
-                  type="checkbox"
-                  name="fitted"
-                  defaultChecked={jumper?.fitted ?? true}
-                />
-              </label>
+              <Checkbox label="Fit jumper" name="fitted" defaultChecked={jumper?.fitted ?? true} />
               {error && <p role="alert">{error}</p>}
             </DialogContent>
             <DialogActions>

@@ -189,12 +189,12 @@ export async function measureClassroom(page, openFixture, name, checkpoint, meas
     };
     if (phase === 'selection') {
       const layout = svg.closest('section[aria-label="PCB layout"]');
-      const controls = [...layout.querySelectorAll('ul[aria-label="Placed components"] button')].slice(0, 2);
+      const controls = [...svg.querySelectorAll('[data-component] text')].slice(0, 2);
       const selectionMs = [];
       for (let i = 0; i < 12; i++) {
         const control = controls[i % 2];
         const before = performance.now();
-        control.click();
+        control.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         await framesUntil(() => [...layout.querySelectorAll('legend')]
           .some((legend) => legend.textContent.trim() === 'Position ' + control.textContent));
         selectionMs.push(performance.now() - before);

@@ -62,6 +62,7 @@ declare global {
                 libraryFolders: { id: string, name: string }[];
             }) => void;
             setViewMenuState: (state: { hasExampleExplanation: boolean; exampleExplanationVisible: boolean; simulationPanelVisible: boolean }) => void;
+            setBoardMenus: (menus: import('./io/boardWorkspaceEvents').BoardMenuState[]) => void;
             projectFiles: (request: import('./io/projectStorage').ProjectStorageRequest) => Promise<any>;
             setMenuMode: (mode: boolean) => void;
             setMenuTranslations: (translations: Record<string, string>) => void;

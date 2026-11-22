@@ -1,9 +1,15 @@
 import React, { useMemo, useState } from 'react';
-import { Button, MenuItem, MenuDivider, Tab, TabList, ToolbarDivider } from '@fluentui/react-components';
+import { Button, Checkbox, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle,
+  Input, Menu, MenuItem, MenuDivider, MenuList, MenuPopover, Select,
+  MenuTrigger, ToolbarButton, ToolbarDivider } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
 import { AnchoredContextMenu } from '../controls/AnchoredContextMenu';
-import { DocumentAddRegular, FolderOpenRegular, SaveRegular, SaveCopyRegular, PanelLeftExpandRegular, PanelRightExpandRegular, PanelBottomExpandRegular } from '@fluentui/react-icons';
-import { ResizeHandle } from '../panel/ResizeHandle';
+import { DocumentAddRegular, FolderOpenRegular, SaveRegular, SaveCopyRegular, PanelLeftExpandRegular, PanelBottomExpandRegular } from '@fluentui/react-icons';
+import { BoardNetlistPanel } from './BoardNetlistPanel';
+import { PersistentDataGrid } from '../controls/PersistentDataGrid';
+import { ListModeMenuButton } from '../panel/ListModeMenuButton';
+import { LibraryBrowserHeader, LibrarySourceTabs } from '../libraryPanel/LibrarySourceTabs';
+import { EditorDrawingStack, EditorSidePanel } from '../panel/EditorLayout';
 import { EditorToolbar } from '../toolbar/EditorToolbar';
 import { EditorFileMenu, EditorHistoryControls, EditorSaveButton } from '../toolbar/FileToolbarControls';
 import { ViewToolbarControls } from '../toolbar/ViewToolbarControls';
@@ -69,13 +75,14 @@ import { isBoardPoint, samePoint } from '../../pcb/geometry';
 import { boardInputLength, canonicalBoardDecimal } from './boardNumberInput';
 import type { FootprintPlacement } from '../../pcb/footprint';
 import type { BoardPoint } from '../../pcb/geometry';
-import type { BoardRecoveryStatus } from '../../io/boardRecovery';
 import type { BoardWorkspaceSession } from '../../io/boardWorkspace';
 import {
   boardHistoryCommand,
+  boardMenuCommand,
   boardZoomCommand,
   saveActiveBoard,
 } from '../../io/boardWorkspaceEvents';
+import type { BoardMenuItemState } from '../../io/boardWorkspaceEvents';
 import type { BoardWorkspaceProbe } from '../../io/projectPcbProbe';
 
 const BoardRuleInspectionDialog = React.lazy(() => import('./BoardRuleInspectionDialog'));
@@ -117,7 +124,6 @@ export interface BoardWorkspaceDocument {
   fileId?: string;
   ancestorIds?: readonly string[];
   reloadProjectBoard?(): Promise<BoardWorkspaceDocument>;
-  syncStatus?: string;
   probe?: BoardWorkspaceProbe;
   onProbe?: (
     source: ReturnType<typeof boardPadSources>[number]['source'],
@@ -135,9 +141,10 @@ export default function BoardWorkspace({
   onProjectFolder,
   footprintsVisible,
   onToggleFootprints,
+  bottomPanelHeight,
+  onBottomPanelResize,
   manageClose,
   activeCommands = true,
-  syncStatus,
   probe,
   onProbe,
   onUpdate,
@@ -150,19 +157,19 @@ export default function BoardWorkspace({
   onProjectFolder?(): void;
   footprintsVisible: boolean;
   onToggleFootprints(visible: boolean): void;
+  bottomPanelHeight: number;
+  onBottomPanelResize(delta: number): void;
   manageClose?: boolean;
   activeCommands?: boolean;
 }) {
   const [board, setBoard] = useState(session.board);
-  const [recoveryStatus, setRecoveryStatus] = useState<BoardRecoveryStatus>({
-    kind: 'idle',
-  });
-  React.useEffect(
-    () => session.subscribeRecovery(setRecoveryStatus),
-    [session],
-  );
   const [selected, setSelected] = useState(probe?.componentId ?? '');
   const [group, setGroup] = useState<string[]>([]);
+  const [routeGroup, setRouteGroup] = useState<string[]>([]);
+  const [bottomView, setBottomView] = useState<'components' | 'netlist' | 'selection' | 'tools'>(
+    probe?.componentId ? 'selection' : probe?.netId ? 'netlist' : 'components',
+  );
+  const [idleBottomView, setIdleBottomView] = useState<'components' | 'netlist'>(probe?.netId ? 'netlist' : 'components');
   const [groupMode, setGroupMode] = useState('translate');
   const [groupX, setGroupX] = useState('0');
   const [groupY, setGroupY] = useState('0');
@@ -174,6 +181,7 @@ export default function BoardWorkspace({
   const [showPlacementEstimates, setShowPlacementEstimates] = useState(false);
   const [selectedPad, setSelectedPad] = useState(probe?.padId);
   const [selectedNet, setSelectedNet] = useState(probe?.netId ?? '');
+  const [hoveredNet, setHoveredNet] = useState('');
   const [x, setX] = useState('10');
   const [y, setY] = useState('10');
   const [rotation, setRotation] = useState('0');
@@ -273,11 +281,9 @@ export default function BoardWorkspace({
   const [libraryFootprintId, setLibraryFootprintId] = useState('');
   const libraryFootprint = board.footprintDefinitions?.find(({ id }) => id === libraryFootprintId);
   const [showRulers, setShowRulers] = useState(true);
-  const [showInspector, setShowInspector] = useState(true);
   const [showProperties, setShowProperties] = useState(true);
-  const [footprintsWidth, setFootprintsWidth] = useState(240);
-  const [inspectorWidth, setInspectorWidth] = useState(248);
-  const [propertiesHeight, setPropertiesHeight] = useState(164);
+  const [footprintsWidth, setFootprintsWidth] = useState(288);
+  const [footprintsResizing, setFootprintsResizing] = useState(false);
   const [snapGrid, setSnapGrid] = useState('0.25');
   const [boardView, setBoardView] = useState(savedBoardView);
   const beginner = boardView === 'beginner';
@@ -287,6 +293,7 @@ export default function BoardWorkspace({
   const placementSearch = React.useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   React.useEffect(() => {
     if (!probe) return;
     if (probe.placementQueue?.length) {
@@ -296,6 +303,9 @@ export default function BoardWorkspace({
     setSequentialPlacement(false);
     setSelected(probe.componentId ?? '');
     setGroup([]);
+    setRouteGroup([]);
+    setBottomView(probe.componentId ? 'selection' : probe.netId ? 'netlist' : 'components');
+    setShowProperties(true);
     setSelectedPad(probe.padId);
     setSelectedNet(probe.netId ?? '');
     setSelectedRouteId('');
@@ -330,7 +340,7 @@ export default function BoardWorkspace({
   const groupMembers = group.filter((id) =>
     geometry?.features.some((feature) => feature.id === id),
   );
-  const groupSelection = new Set(beginner ? [] : groupMembers);
+  const groupSelection = new Set(groupMembers);
   const selectedFeatures = geometry?.features.filter(({ id }) =>
     groupSelection.size ? groupSelection.has(id) : id === selected) ?? [];
   const groupAnchor = geometry?.features.find(
@@ -462,7 +472,10 @@ export default function BoardWorkspace({
 
   function changeBoardView(view: BoardView) {
     setBoardView(view);
-    if (view === 'beginner') setGuideOpen(true);
+    if (view === 'beginner') {
+      setGuideOpen(true);
+      openBoardTools();
+    }
     try {
       window.localStorage.setItem(boardViewStorageKey, view);
     } catch {
@@ -472,7 +485,10 @@ export default function BoardWorkspace({
 
   function setRoutingMode(active: boolean) {
     if (!active) cancelCopperJob();
-    else cancelPlacement();
+    else {
+      cancelPlacement();
+      openBoardTools();
+    }
     setError('');
     setCleanupDraft(undefined);
     setTrackEditDraft(undefined);
@@ -737,9 +753,12 @@ export default function BoardWorkspace({
   }
 
   function selectComponent(componentId: string, padId?: string) {
+    setBottomView('selection');
+    setShowProperties(true);
     setPlacementTool(undefined);
     setSequentialPlacement(false);
     setGroup([]);
+    setRouteGroup([]);
     setSelected(componentId);
     setSelectedPad(padId);
     setSelectedRouteId('');
@@ -756,6 +775,46 @@ export default function BoardWorkspace({
     setSelectedNet('');
   }
 
+  function selectArea(componentIds: string[], routeIds: string[], append: boolean) {
+    setHoveredNet('');
+    const components = append ? [...new Set([...groupMembers, ...selectedFeatures.map(({ id }) => id), ...componentIds])] : componentIds;
+    const routes = append ? [...new Set([...routeGroup, ...(selectedRouteId ? [selectedRouteId] : []), ...routeIds])] : routeIds;
+    if (components.length === 1 && !routes.length) {
+      selectComponent(components[0]);
+      return;
+    }
+    if (components.length || routes.length) setBottomView('selection');
+    else if (bottomView === 'selection') setBottomView(idleBottomView);
+    if (components.length || routes.length) setShowProperties(true);
+    setGroup(components);
+    setRouteGroup(routes);
+    setSelected('');
+    setSelectedPad(undefined);
+    setSelectedNet('');
+    setSelectedRouteId('');
+    setSelectedSilk(undefined);
+  }
+
+  function moveComponentOnCanvas(componentId: string, delta: BoardPoint, commit: boolean) {
+    const placement = board.footprints?.find((item) => item.componentId === componentId);
+    if (!placement || placement.locked || placement.positionLocked || busy) return;
+    const origin = placement.positionNm;
+    const positionNm = canvasPosition(origin.x + delta.x, -origin.y - delta.y);
+    if (commit) {
+      selectComponent(componentId);
+      setBusy(true);
+      setError('');
+      void session.place(componentId, { ...placement, positionNm }).then((next) => {
+        setBoard(next);
+        setX(mm(positionNm.x));
+        setY(mm(positionNm.y));
+      }).catch((failure) => {
+        setError(failure instanceof Error ? failure.message : String(failure));
+      }).finally(() => setBusy(false));
+    }
+    return { x: positionNm.x - origin.x, y: positionNm.y - origin.y };
+  }
+
   function selectPickedObject(target: BoardPickTarget) {
     const location = objectPick.point;
     setObjectPick(undefined);
@@ -767,6 +826,7 @@ export default function BoardWorkspace({
     if (target.kind === 'track' || target.kind === 'via') {
       const route = (target.kind === 'track' ? board.tracks : board.vias)?.find(({ id }) => id === target.id);
       if (route) {
+        selectComponent('');
         pickedRoute.current = { id: route.id, point: location };
         setSelectedRouteId(route.id);
         setSelectedNet(route.netId ?? '');
@@ -785,19 +845,27 @@ export default function BoardWorkspace({
       boardCanvas.current?.fit([...around(start, widthNm / 2), ...around(end, widthNm / 2)]);
     } else if (selectedVia) {
       boardCanvas.current?.fit(around(selectedVia.positionNm, selectedVia.diameterNm / 2));
-    } else {
+    } else if (routeGroup.length || selectedFeatures.length) {
       const points = selectedFeatures.flatMap(({ placement, pads, copper }) => {
         const selectedLand = selectedPad && pads.find(({ id }) => id === selectedPad);
         const lands = selectedLand ? copper.filter(({ padId }) => padId === selectedLand.id) : copper;
         if (lands.length) return lands.flatMap(({ shape }) => padShapePoints(shape));
         return selectedLand ? [selectedLand.position] : [placement.positionNm, ...pads.map(({ position }) => position)];
       });
+      for (const track of board.tracks ?? []) {
+        if (routeGroup.includes(track.id)) points.push(...around(track.start, track.widthNm / 2), ...around(track.end, track.widthNm / 2));
+      }
+      for (const via of board.vias ?? []) {
+        if (routeGroup.includes(via.id)) points.push(...around(via.positionNm, via.diameterNm / 2));
+      }
       if (points.length) boardCanvas.current?.fit(points);
     }
   }
 
   function toggleGroupComponent(componentId: string, extendSelection = false) {
     if (busy || routing || measuring) return;
+    setBottomView('selection');
+    setRouteGroup([]);
     setSequentialPlacement(false);
     setGroup((previous) => {
       const selection =
@@ -812,6 +880,18 @@ export default function BoardWorkspace({
     setSelectedPad(undefined);
     setSelectedNet('');
     setSelectedRouteId('');
+  }
+
+  function openBoardTools() {
+    setBottomView('tools');
+    setShowProperties(true);
+  }
+
+  function openBoardList(view: 'components' | 'netlist') {
+    setHoveredNet('');
+    setIdleBottomView(view);
+    setBottomView(view);
+    setShowProperties(true);
   }
 
   async function moveGroup() {
@@ -1142,6 +1222,109 @@ export default function BoardWorkspace({
     }
   }
 
+  type MenuAction = BoardMenuItemState & { run(): void };
+  const boardCommands: { title: string; items: (MenuAction | null | false)[] }[] = [
+    {
+      title: 'Board',
+      items: [
+        { id: 'outline', label: 'Board outline…', disabled: busy, run: () => {
+          openBoardTools();
+          setProfileDialog('outline');
+        } },
+        !beginner && { id: 'cutout', label: 'Add cutout…', disabled: busy, run: () => {
+          openBoardTools();
+          setProfileDialog('cutout');
+        } },
+        !beginner && { id: 'hole', label: 'Hole or slot…', disabled: busy, run: () => {
+          openBoardTools();
+          setHoleDialog(true);
+        } },
+        !beginner && { id: 'dimension', label: 'Add dimension…', disabled: busy || routing, run: () => {
+          openBoardTools();
+          addDimension();
+        } },
+        !beginner && { id: 'datum', label: 'Set measurement datum…', disabled: busy || routing,
+          run: () => {
+            openBoardTools();
+            setAnnotationDraft({ type: 'datum', point: datum ?? { x: 0, y: 0 } });
+          } },
+        !beginner && { id: 'pick', label: 'Pick overlapping objects', disabled: !canPickObjects, run: () => {
+          setPickingObjects(true);
+          openBoardTools();
+          requestAnimationFrame(() => boardCanvas.current?.focus());
+        } },
+        null,
+        !!onUpdate && { id: 'update', label: 'Update PCB from Schematic…', disabled: busy || session.dirty, run: onUpdate },
+        !beginner && !!onEditReferences && { id: 'references', label: 'Edit PCB references…',
+          disabled: busy || session.dirty || !board.components?.length, run: onEditReferences },
+        !beginner && !!onBackAnnotate && { id: 'back-annotate', label: 'Update Schematic from PCB…',
+          disabled: busy || session.dirty || !session.circuit, run: onBackAnnotate },
+        !board.sourceCircuit && !session.circuit && { id: 'connections', label: 'Board connections…',
+          disabled: busy || routing || !!deletionDraft || !!cleanup, run: () => setConnectionsOpen(true) },
+        { id: 'components', label: 'View components', run: () => openBoardList('components') },
+        { id: 'netlist', label: 'View netlist', run: () => openBoardList('netlist') },
+        { id: 'tools', label: 'View board tools', run: openBoardTools },
+      ],
+    },
+    {
+      title: 'Copper',
+      items: [
+        !beginner && { id: 'net-rules', label: 'Net rules…', disabled: busy || routing, run: () => setNetRulesOpen(true) },
+        !beginner && { id: 'inspect-rules', label: 'Inspect board rules…',
+          disabled: busy || routing || !geometry, run: () => setRuleInspectionOpen(true) },
+        { id: 'checks', label: t('pcbChecks.run'), disabled: busy || routing || !geometry, run: () => setChecksOpen(true) },
+        null,
+        !beginner && { id: 'area', label: 'Add placement area…', disabled: busy, run: () => {
+          openBoardTools();
+          setPlacementAreaDialog('new');
+        } },
+        !beginner && { id: 'region', label: 'Add routing region…', disabled: busy || routing,
+          run: () => {
+            openBoardTools();
+            setRoutingRegionDialog('new');
+          } },
+        { id: 'zone', label: 'Add copper zone…', disabled: busy || routing || !geometry || !board.nets?.length,
+          run: () => { openBoardTools(); setZoneDialog('new'); } },
+        board.copperLayers.length === 1 && { id: 'jumper', label: 'Add wire jumper…',
+          disabled: busy || routing || !board.nets?.length,
+          run: () => { openBoardTools(); setJumperDialog('new'); } },
+      ],
+    },
+    {
+      title: 'Fabrication',
+      items: [
+        { id: 'fabrication-settings', label: 'Fabrication settings…', disabled: busy || routing, run: () => setFabricationOpen(true) },
+        { id: 'cam', label: 'CAM read-back preview…', disabled: busy || routing || !geometry, run: () => setCamOpen(true) },
+        { id: '3d', label: 'Inspect in 3D…', disabled: busy || routing || !geometry, run: () => setInspectionOpen(true) },
+        !beginner && { id: 'revisions', label: 'Manufacturing revisions…', disabled: busy || routing, run: () => setRevisionOpen(true) },
+        !beginner && { id: 'review-kicad', label: 'Review KiCad board…', disabled: busy || routing, run: () => setKicadReviewOpen(true) },
+        !beginner && { id: 'export-kicad', label: 'Export KiCad board…', disabled: busy || routing, run: () => setKicadOpen(true) },
+      ],
+    },
+  ];
+  const nativeMenuSignature = React.useRef('');
+  const nativeBoardMenus = process.env.TARGET_SYSTEM === 'electron' && !!window.electronAPI?.setBoardMenus;
+  React.useEffect(() => {
+    if (!nativeBoardMenus || !activeCommands) return;
+    const menus = boardCommands.map(({ title, items }) => ({
+      title,
+      items: items.filter((item) => item !== false).map((item) =>
+        item ? { id: item.id, label: item.label, disabled: item.disabled } : null),
+    }));
+    const signature = JSON.stringify(menus);
+    if (signature !== nativeMenuSignature.current) {
+      nativeMenuSignature.current = signature;
+      window.electronAPI?.setBoardMenus?.(menus);
+    }
+  });
+  React.useEffect(() => {
+    if (!nativeBoardMenus || !activeCommands) return;
+    return () => {
+      nativeMenuSignature.current = '';
+      window.electronAPI?.setBoardMenus?.([]);
+    };
+  }, [activeCommands, nativeBoardMenus]);
+
   React.useEffect(() => {
     if (!activeCommands) return;
     const onSave = (event: CustomEvent<boolean>) => {
@@ -1156,10 +1339,16 @@ export default function BoardWorkspace({
       event.preventDefault();
       boardCanvas.current?.zoom(event.detail);
     };
+    const onBoardMenu = (event: CustomEvent<string>) => {
+      const item = boardCommands.flatMap(({ items }) => items).find((item) => item && item.id === event.detail);
+      if (item && !item.disabled) item.run();
+    };
+    window.addEventListener(boardMenuCommand, onBoardMenu);
     window.addEventListener(boardZoomCommand, onZoom);
     window.addEventListener(saveActiveBoard, onSave);
     window.addEventListener(boardHistoryCommand, onHistory);
     return () => {
+      window.removeEventListener(boardMenuCommand, onBoardMenu);
       window.removeEventListener(boardZoomCommand, onZoom);
       window.removeEventListener(saveActiveBoard, onSave);
       window.removeEventListener(boardHistoryCommand, onHistory);
@@ -1201,6 +1390,13 @@ export default function BoardWorkspace({
   const boardMenuFootprint = boardMenu?.componentId
     ? board.footprints?.find(({ componentId }) => componentId === boardMenu.componentId)
     : undefined;
+  const listModeMenu = <ListModeMenuButton
+    listMode={bottomView === 'netlist' ? 'netlist' : 'symbols'}
+    symbolsLabel="Components"
+    onListModeChange={(mode) => openBoardList(mode === 'netlist' ? mode : 'components')}
+    className="pcb-list-mode"
+    stopPropagation
+  />;
   const boardMenuItems: ContextMenuItem[] = [
     { key: 'undo', text: t('toolbar.contextMenu.undo'), disabled: !session.canUndo },
     { key: 'redo', text: t('toolbar.contextMenu.redo'), disabled: !session.canRedo },
@@ -1295,6 +1491,21 @@ export default function BoardWorkspace({
           <Button appearance="subtle" icon={<DocumentAddRegular />} aria-label="New PCB"
             title="New PCB" onClick={onNew} />
         )}
+        {!nativeBoardMenus && boardCommands.map(({ title, items }) => (
+          <Menu key={title}>
+            <MenuTrigger disableButtonEnhancement>
+              <ToolbarButton appearance="subtle">{title}</ToolbarButton>
+            </MenuTrigger>
+            <MenuPopover>
+              <MenuList>
+                {items.map((item, index) => item === null ? <MenuDivider key={index} /> :
+                  item && <MenuItem key={item.id} disabled={item.disabled} onClick={item.run}>
+                    {item.label}
+                  </MenuItem>)}
+              </MenuList>
+            </MenuPopover>
+          </Menu>
+        ))}
         <EditorSaveButton disabled={busy} onClick={() => { void save(); }} />
         {session.canSaveAs && <EditorSaveButton saveAs label="Save As…" disabled={busy}
           onClick={() => { void save(true); }} />}
@@ -1304,7 +1515,7 @@ export default function BoardWorkspace({
         <ToolbarDivider />
         <label>
           PCB view{' '}
-          <select
+          <Select
             aria-label="PCB view"
             value={boardView}
             disabled={busy || routing}
@@ -1314,19 +1525,25 @@ export default function BoardWorkspace({
           >
             <option value="engineering">Engineering</option>
             <option value="beginner">Beginner</option>
-          </select>
+          </Select>
         </label>
         <Button
           ref={guideToggle}
           aria-expanded={guideOpen}
-          onClick={() => setGuideOpen(!guideOpen)}
+          onClick={() => {
+            if (bottomView === 'tools' && guideOpen && showProperties) setGuideOpen(false);
+            else {
+              setGuideOpen(true);
+              openBoardTools();
+            }
+          }}
         >
           First board guide
         </Button>
         <Button disabled={!geometry} onClick={() => boardCanvas.current?.fit()}>
           Fit board
         </Button>
-        <Button disabled={!geometry || (!routeSelection && !selectedFeatures.length)} onClick={fitSelection}>
+        <Button disabled={!geometry || (!routeSelection && !selectedFeatures.length && !routeGroup.length)} onClick={fitSelection}>
           Fit selection
         </Button>
         <ViewToolbarControls
@@ -1338,8 +1555,6 @@ export default function BoardWorkspace({
         />
         <Button appearance="subtle" icon={<PanelLeftExpandRegular />} aria-label="Toggle footprint browser"
           title="Toggle footprint browser" aria-pressed={footprintsVisible} onClick={() => onToggleFootprints(!footprintsVisible)} />
-        <Button appearance="subtle" icon={<PanelRightExpandRegular />} aria-label="Toggle board tools"
-          title="Toggle board tools" aria-pressed={showInspector} onClick={() => setShowInspector(!showInspector)} />
         <Button appearance="subtle" icon={<PanelBottomExpandRegular />} aria-label="Toggle board properties"
           title="Toggle board properties" aria-pressed={showProperties} onClick={() => setShowProperties(!showProperties)} />
         <Button
@@ -1358,6 +1573,7 @@ export default function BoardWorkspace({
               setTrackEditDraft(undefined);
               setMeasuring(!measuring);
               setMeasurement([]);
+              if (!measuring) openBoardTools();
             }}
           >
             {measuring ? 'End measurement' : 'Measure distance'}
@@ -1366,7 +1582,7 @@ export default function BoardWorkspace({
 
         <label>
           Show copper{' '}
-          <select
+          <Select
             value={
               visibleCopper === 'bottom' && board.copperLayers.length === 1
                 ? 'all'
@@ -1382,25 +1598,31 @@ export default function BoardWorkspace({
                 {id === 'top' ? 'Top' : 'Bottom'}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <Button
           disabled={busy}
           onClick={() => {
             if (manageClose || !session.dirty) {
               onClose();
-            } else if (window.confirm('Discard unsaved PCB edits?')) {
-              setBusy(true);
-              void session.discardRecovery().then(onClose, (error: Error) => {
-                setError(error.message);
-                setBusy(false);
-              });
-            }
+            } else setConfirmDiscard(true);
           }}
         >
           Close
         </Button>
       </EditorToolbar>
+      <Dialog open={confirmDiscard} onOpenChange={(_, { open }) => setConfirmDiscard(open)}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Discard unsaved PCB edits?</DialogTitle>
+            <DialogContent>Edits made since the last save will be lost.</DialogContent>
+            <DialogActions>
+              <Button autoFocus onClick={() => setConfirmDiscard(false)}>Cancel</Button>
+              <Button appearance="primary" onClick={onClose}>Discard edits</Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
       {footprintEditor && (
         <React.Suspense fallback={null}>
           <FootprintEditorDialog onClose={() => setFootprintEditor(false)} />
@@ -1633,35 +1855,18 @@ export default function BoardWorkspace({
         />
       )}
       <div className="pcb-content">
-        <p className="pcb-document-status">
-          {filename}
-          {session.dirty ? ' · Unsaved' : ''}
-          {syncStatus ? ' · ' + syncStatus : ''}
-        </p>
-        {recoveryStatus.kind !== 'idle' && (
-          <p role="status" className="pcb-document-status">
-            {recoveryStatus.kind === 'pending'
-              ? 'Saving PCB recovery…'
-              : recoveryStatus.kind === 'saved'
-              ? `Recovery saved for PCB revision ${recoveryStatus.revision}.`
-              : 'PCB recovery unavailable. ' + recoveryStatus.message}
-          </p>
-        )}
-        <div className="pcb-editor-grid" style={{
-          gridTemplateColumns: [
-            footprintsVisible ? `minmax(0, min(${footprintsWidth}px, 27%))` : '0',
-            'minmax(0, 1fr)',
-            showInspector ? `minmax(0, min(${inspectorWidth}px, 28%))` : '0',
-          ].join(' '),
-        }}>
-          <aside className="pcb-editor-side pcb-footprints" aria-label="Footprints" hidden={!footprintsVisible}>
-            <ResizeHandle direction="horizontal" label="Resize footprint browser"
-              onResize={(delta) => setFootprintsWidth((width) => Math.max(128, Math.min(440, width + delta)))} />
-            <TabList size="small" selectedValue={footprintTab} aria-label="Footprints"
-              onTabSelect={(_, { value }) => setFootprintTab(value === 'library' ? 'library' : 'unplaced')}>
-              <Tab id={footprintTabId + '-unplaced-tab'} aria-controls={footprintTabId + '-unplaced'} value="unplaced">Unplaced</Tab>
-              <Tab id={footprintTabId + '-library-tab'} aria-controls={footprintTabId + '-library'} value="library">Library</Tab>
-            </TabList>
+        <div className="mid-container">
+          <EditorSidePanel label="Footprints" resizeLabel="Resize footprint browser" hidden={!footprintsVisible}
+            width={`min(${footprintsWidth}px, 27%)`} resizing={footprintsResizing}
+            onDragStateChange={setFootprintsResizing}
+            onResize={(delta) => setFootprintsWidth((width) => Math.max(128, Math.min(440, width + delta)))}>
+            <LibraryBrowserHeader>
+              <LibrarySourceTabs label="Footprints" selected={footprintTab} onSelect={setFootprintTab}
+                sources={[
+                  { value: 'unplaced', id: footprintTabId + '-unplaced-tab', panelId: footprintTabId + '-unplaced', label: 'Unplaced' },
+                  { value: 'library', id: footprintTabId + '-library-tab', panelId: footprintTabId + '-library', label: 'Library' },
+                ]} />
+            </LibraryBrowserHeader>
             <div role="tabpanel" id={footprintTabId + '-unplaced'} aria-labelledby={footprintTabId + '-unplaced-tab'}
               className="pcb-panel-scroll" hidden={footprintTab !== 'unplaced'}>
               <BoardPlacementTray
@@ -1692,16 +1897,19 @@ export default function BoardWorkspace({
               {!!board.footprintDefinitions?.length && (
                 <label className="pcb-library-choice">
                   Board footprints
-                  <select value={libraryFootprintId} onChange={(event) => setLibraryFootprintId(event.target.value)}>
+                  <Select value={libraryFootprintId} onChange={(event) => setLibraryFootprintId(event.target.value)}>
                     <option value="">Choose a footprint</option>
                     {board.footprintDefinitions.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
-                  </select>
+                  </Select>
                 </label>
               )}
               {libraryFootprint && <DeviceFootprintPreview footprint={libraryFootprint} selected="" />}
             </div>
-          </aside>
-          {geometry ? (
+          </EditorSidePanel>
+          <div className="main-content-area">
+          <EditorDrawingStack bottomHeight={bottomPanelHeight} onBottomResize={onBottomPanelResize}
+            bottomHidden={!showProperties} bottomLabel="Board properties" resizeLabel="Resize board properties"
+            drawing={geometry ? (
             <BoardCanvas
               board={board}
               geometry={geometry}
@@ -1712,7 +1920,8 @@ export default function BoardWorkspace({
               selected={selected}
               group={groupSelection}
               selectedPad={selectedPad}
-              selectedNet={selectedNet}
+              selectedNet={hoveredNet || selectedNet}
+              selectedRoutes={new Set([...routeGroup, ...(selectedRouteId ? [selectedRouteId] : [])])}
               route={route}
               airwires={derivedResult?.airwires}
               zoneFills={derivedResult?.zones.fills}
@@ -1731,6 +1940,10 @@ export default function BoardWorkspace({
               }}
               onMeasure={measuring && !busy ? measureAt : undefined}
               showRulers={showRulers}
+              selectionEnabled={!busy && !routing && !measuring && !trackEdit && !deletionDraft &&
+                !cleanup && !placementTool && !pickingObjects}
+              onSelectArea={selectArea}
+              onMoveComponent={moveComponentOnCanvas}
               placementActive={!busy && !routing && !measuring && !!placementTool && placementTool === target?.id}
               placementPreview={currentPlacementPreview()}
               onDropComponent={!busy && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup
@@ -1754,6 +1967,7 @@ export default function BoardWorkspace({
                 else if (routing) void routePoint(location);
                 else if (measuring) measureAt(location);
                 else if (placementTool && placementTool === target?.id) void place(location);
+                else if (!pickingObjects) selectArea([], [], false);
               }}
               routingSnap={routing ? {
                 layer,
@@ -1763,7 +1977,7 @@ export default function BoardWorkspace({
               } : undefined}
               onComponent={(id) => { if (!deletionDraft && !cleanup) selectComponent(id); }}
               onGroupComponent={
-                beginner || routing || measuring || deletionDraft || cleanup
+                routing || measuring || deletionDraft || cleanup
                   ? undefined
                   : (id) => toggleGroupComponent(id, true)
               }
@@ -1775,6 +1989,12 @@ export default function BoardWorkspace({
               }}
               onRouteObject={(id, netId, point) => {
                 if (routing || trackEdit || deletionDraft || cleanup) return;
+                setBottomView('selection');
+                setShowProperties(true);
+                setSelected('');
+                setSelectedPad(undefined);
+                setGroup([]);
+                setRouteGroup([]);
                 pickedRoute.current = point ? { id, point } : undefined;
                 setSelectedRouteId(id);
                 setSelectedNet(netId ?? '');
@@ -1783,28 +2003,37 @@ export default function BoardWorkspace({
             />
           ) : (
             <p role="alert">{layout.error}</p>
-          )}
-          <aside className="pcb-editor-side pcb-inspector" aria-label="Board tools" hidden={!showInspector}>
-            <ResizeHandle direction="horizontal" edge="start" label="Resize board tools"
-              onResize={(delta) => setInspectorWidth((width) => Math.max(128, Math.min(440, width - delta)))} />
-            <div className="pcb-panel-scroll">
-            <h3 className="pcb-panel-heading">Board tools</h3>
-            <div className="pcb-setup-controls">
-              {!beginner && <Button disabled={!canPickObjects}
-                aria-pressed={pickingObjects} onClick={() => setPickingObjects(!pickingObjects)}>
-                Pick overlapping objects
-              </Button>}
-              <Button disabled={busy} onClick={() => setProfileDialog('outline')}>
-                Board outline…
-              </Button>
-              {!beginner && (
-                <Button disabled={busy} onClick={() => setProfileDialog('cutout')}>
-                  Add cutout…
-                </Button>
+          )}>
+            <>
+              {bottomView === 'netlist' && (
+                <BoardNetlistPanel board={board} selectedNet={selectedNet} listModeMenu={listModeMenu}
+                  onSelect={route.length || deletionDraft || cleanup ? undefined : (id) => {
+                    setHoveredNet('');
+                    setSelectedNet(id);
+                    if (routing) openBoardTools();
+                  }}
+                  onHover={routing || deletionDraft || cleanup ? undefined : setHoveredNet}>
+                  {netSources.length > 0 && <details open key={selectedNet}>
+                    <summary>Schematic net terminals</summary>
+                    <ul aria-label="Schematic net terminals">
+                      {netSources.map(({ id, reference, signal, number, source }) => (
+                        <li key={id}><Button size="small" onClick={() => onProbe?.(source)}>
+                          {reference} / {signal}{number ? ' / ' + number : ''}
+                        </Button></li>
+                      ))}
+                    </ul>
+                  </details>}
+                </BoardNetlistPanel>
               )}
+              {(bottomView === 'tools' || (bottomView === 'selection' && routeSelection)) && (
+                <div className="pcb-panel-scroll pcb-board-tools" aria-label={bottomView === 'tools' ? 'Board tools' : 'Selected copper'}>
+              {bottomView === 'tools' && <Button size="small" appearance="subtle" onClick={() => openBoardList(idleBottomView)}>
+                {idleBottomView === 'components' ? 'Back to Components' : 'Back to Netlist'}
+              </Button>}
+              {bottomView === 'tools' && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && <div className="pcb-panel-actions">
               <label>
                 Copper layers{' '}
-                <select
+                <Select
                   value={board.copperLayers.length}
                   disabled={busy}
                   onChange={(event) => {
@@ -1814,38 +2043,21 @@ export default function BoardWorkspace({
                 >
                   <option value="1">One</option>
                   <option value="2">Two</option>
-                </select>
+                </Select>
               </label>
               {!beginner && (
-                <Button disabled={busy} onClick={() => setHoleDialog(true)}>
-                  Hole or slot…
-                </Button>
+                <label>
+                  Grid (mm)
+                  <Input size="small" value={snapGrid}
+                    onChange={(event) => setSnapGrid(event.target.value)} />
+                </label>
               )}
-              {onUpdate && (
-                <Button disabled={busy || session.dirty} onClick={onUpdate}>
-                  Update PCB from Schematic…
-                </Button>
-              )}
-              {!beginner && onEditReferences && (
-                <Button
-                  disabled={busy || session.dirty || !board.components?.length}
-                  onClick={onEditReferences}
-                >
-                  Edit PCB references…
-                </Button>
-              )}
-              {!beginner && onBackAnnotate && (
-                <Button
-                  disabled={busy || session.dirty || !session.circuit}
-                  onClick={onBackAnnotate}
-                >
-                  Update Schematic from PCB…
-                </Button>
-              )}
-            </div>
+              </div>}
             {pickingObjects && <p role="status">Click the board to list objects under the pointer.</p>}
-            {selectedSilk && <p>Selected silkscreen · {selectedSilk.label} · {selectedSilk.layer}</p>}
-            {guideOpen && (
+            {checkedRevision !== undefined && checkedRevision !== board.revision && (
+              <p role="status">Design checks are stale.</p>
+            )}
+            {guideOpen && bottomView === 'tools' && (
               <FirstBoardGuide
                 step={guideStep}
                 onStepChange={setGuideStep}
@@ -1876,16 +2088,6 @@ export default function BoardWorkspace({
               />
             )}
 
-            {!beginner && (
-              <label>
-                Grid (mm)
-                <input
-                  size={5}
-                  value={snapGrid}
-                  onChange={(event) => setSnapGrid(event.target.value)}
-                />
-              </label>
-            )}
             {measuring && (
               <div>
                 <p role="status">
@@ -1909,14 +2111,9 @@ export default function BoardWorkspace({
                 )}
               </div>
             )}
-            {!beginner && !routing && (
+            {bottomView === 'tools' && !beginner && !routing && (datum || dimensions.length > 0) && (
               <details>
                 <summary>Dimensions and datum</summary>
-                <Button size="small" disabled={busy} onClick={() => addDimension()}>Add dimension…</Button>
-                <Button size="small" disabled={busy}
-                  onClick={() => setAnnotationDraft({ type: 'datum', point: datum ?? { x: 0, y: 0 } })}>
-                  Set measurement datum…
-                </Button>
                 {datum && (
                   <p>
                     Datum at X {mm(datum.x)} mm, Y {mm(datum.y)} mm{' '}
@@ -1970,11 +2167,11 @@ export default function BoardWorkspace({
                   <form className="pcb-waypoint-entry" onSubmit={enterRoutePoint}>
                     <label>
                       Waypoint X (mm)
-                      <input name="x" size={7} inputMode="decimal" required />
+                      <Input name="x" size="small" inputMode="decimal" required />
                     </label>
                     <label>
                       Waypoint Y (mm)
-                      <input name="y" size={7} inputMode="decimal" required />
+                      <Input name="y" size="small" inputMode="decimal" required />
                     </label>
                     <Button type="submit" disabled={!selectedNet}>
                       Add waypoint
@@ -1990,15 +2187,15 @@ export default function BoardWorkspace({
                 {!beginner && (
                   <label>
                     Route bend
-                    <select value={routeBend} onChange={(event) => setRouteBend(event.target.value as RouteBend)}>
+                    <Select value={routeBend} onChange={(event) => setRouteBend(event.target.value as RouteBend)}>
                       <option value="straight-first">Straight first</option>
                       <option value="diagonal-first">Diagonal first</option>
-                    </select>
+                    </Select>
                   </label>
                 )}
                 <label>
                   Route layer
-                  <select
+                  <Select
                     ref={routeLayerControl}
                     value={layer}
                     onChange={(event) =>
@@ -2010,7 +2207,7 @@ export default function BoardWorkspace({
                         {id}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
                 {beginner ? (
                   <p>
@@ -2027,25 +2224,25 @@ export default function BoardWorkspace({
                   <>
                     <label>
                       Track width preset
-                      <select value={widthPreset} onChange={(event) => {
+                      <Select value={widthPreset} onChange={(event) => {
                         setTrackWidth(routeWidth);
                         setWidthPreset(event.target.value as WidthPreset);
                       }}>
                         <option value="minimum">Minimum ({mm(routeRules.minWidthNm)} mm)</option>
                         <option value="preferred">Preferred ({mm(preferredWidth)} mm)</option>
                         <option value="custom">Custom</option>
-                      </select>
+                      </Select>
                     </label>
                     {widthPreset === 'custom' && <label>
                       Track width (mm)
-                      <input size={6} value={trackWidth} onChange={(event) => setTrackWidth(event.target.value)} />
+                      <Input size="small" value={trackWidth} onChange={(event) => setTrackWidth(event.target.value)} />
                     </label>}
                     {routeRules.maxWidthNm !== undefined && <p>Maximum track width {mm(routeRules.maxWidthNm)} mm</p>}
                     {board.copperLayers.length === 2 && (
                       <>
                         <label>
                           Through-via style
-                          <select value={viaStyle} onChange={(event) => {
+                          <Select value={viaStyle} onChange={(event) => {
                             if (viaStyle !== 'custom') {
                               setViaDiameter(mm(viaPresets[viaStyle].viaDiameterNm));
                               setViaDrill(mm(viaPresets[viaStyle].viaDrillNm));
@@ -2055,17 +2252,17 @@ export default function BoardWorkspace({
                             <option value="compact">Compact ({mm(viaPresets.compact.viaDiameterNm)} mm diameter, {mm(viaPresets.compact.viaDrillNm)} mm drill)</option>
                             <option value="preferred">Preferred ({mm(viaPresets.preferred.viaDiameterNm)} mm diameter, {mm(viaPresets.preferred.viaDrillNm)} mm drill)</option>
                             <option value="custom">Custom</option>
-                          </select>
+                          </Select>
                         </label>
                         {viaStyle === 'custom' && (
                           <>
                             <label>
                               Via diameter (mm)
-                              <input size={6} value={viaDiameter} onChange={(event) => setViaDiameter(event.target.value)} />
+                              <Input size="small" value={viaDiameter} onChange={(event) => setViaDiameter(event.target.value)} />
                             </label>
                             <label>
                               Via drill (mm)
-                              <input size={6} value={viaDrill} onChange={(event) => setViaDrill(event.target.value)} />
+                              <Input size="small" value={viaDrill} onChange={(event) => setViaDrill(event.target.value)} />
                             </label>
                           </>
                         )}
@@ -2092,12 +2289,12 @@ export default function BoardWorkspace({
                 <p>Drag the handle on the board or enter coordinates.</p>
                 <label>
                   Handle X (mm)
-                  <input size={6} value={trackEdit.x} disabled={busy}
+                  <Input size="small" value={trackEdit.x} disabled={busy}
                     onChange={(event) => setTrackEditDraft({ ...trackEdit, x: event.target.value })} />
                 </label>
                 <label>
                   Handle Y (mm)
-                  <input size={6} value={trackEdit.y} disabled={busy}
+                  <Input size="small" value={trackEdit.y} disabled={busy}
                     onChange={(event) => setTrackEditDraft({ ...trackEdit, y: event.target.value })} />
                 </label>
                 <Button onClick={cancelTrackEdit}>Cancel track edit</Button>
@@ -2117,7 +2314,7 @@ export default function BoardWorkspace({
                 {selectedVia && !beginner && (
                   <label>
                     Via solder mask
-                    <select
+                    <Select
                       value={selectedVia.tenting ?? 'both'}
                       disabled={selectedVia.locked}
                       onChange={(event) => setViaTenting(event.target.value as ViaTenting)}
@@ -2126,7 +2323,7 @@ export default function BoardWorkspace({
                       <option value="top">Tent top only</option>
                       <option value="bottom">Tent bottom only</option>
                       <option value="none">Expose both sides</option>
-                    </select>
+                    </Select>
                   </label>
                 )}
                 {!beginner && selectedTrack && (
@@ -2149,9 +2346,8 @@ export default function BoardWorkspace({
                   </>
                 )}
                 {!beginner && (
-                  <Button onClick={toggleRoutingLock}>
-                    {routeSelection.locked ? 'Unlock' : 'Lock'} {selectedTrack ? 'track' : 'via'}
-                  </Button>
+                  <Checkbox label={selectedTrack ? 'Lock track' : 'Lock via'}
+                    checked={!!routeSelection.locked} onChange={toggleRoutingLock} />
                 )}
                 <Button disabled={routeSelection.locked} onClick={() => previewDeletion({ kind: 'item', id: selectedRouteId })}>
                   Delete selected copper…
@@ -2213,6 +2409,7 @@ export default function BoardWorkspace({
                 onConfirm={deleteSelectedRoute}
               />
             )}
+            {bottomView === 'tools' && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && <>
             {!beginner && !!board.mechanicalHoles?.length && (
               <>
                 <h3>Holes and slots</h3>
@@ -2277,125 +2474,9 @@ export default function BoardWorkspace({
                 </ol>
               </>
             )}
-            {!board.sourceCircuit && !session.circuit && (
-              <Button
-                disabled={busy || routing || !!deletionDraft || !!cleanup}
-                onClick={() => setConnectionsOpen(true)}
-              >
-                Board connections…
-              </Button>
-            )}
-            {!!board.nets?.length && (
-              <label>
-                Board net{' '}
-                <select
-                  aria-label="Board net"
-                  style={{ maxWidth: '100%' }}
-                  value={selectedNet}
-                  disabled={route.length > 0 || !!deletionDraft || !!cleanup}
-                  onChange={(event) => setSelectedNet(event.target.value)}
-                >
-                  <option value="">Choose a net</option>
-                  {board.nets.map(({ id, name }) => (
-                    <option key={id} value={id}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            {selectedNet &&
-              (netSources.length ? (
-                <>
-                  <h3>Schematic net terminals</h3>
-                  <ul aria-label="Schematic net terminals">
-                    {netSources.map(
-                      ({ id, reference, signal, number, source }) => (
-                        <li key={id}>
-                          <Button
-                            size="small"
-                            onClick={() => onProbe?.(source)}
-                          >
-                            {reference} · {signal}
-                            {number ? ' · ' + number : ''}
-                          </Button>
-                        </li>
-                      ),
-                    )}
-                  </ul>
-                </>
-              ) : (
-                <p role="status">
-                  No schematic terminals are linked to this board net.
-                </p>
-              ))}
-            {!beginner && (
-              <Button disabled={busy || routing || !geometry} onClick={() => setRuleInspectionOpen(true)}>
-                Inspect board rules…
-              </Button>
-            )}
-            <Button
-              disabled={busy || routing || !geometry}
-              onClick={() => setChecksOpen(true)}
-            >
-              {t('pcbChecks.run')}
-            </Button>
-            {checkedRevision !== undefined && checkedRevision !== board.revision && (
-              <p role="status">Design checks are stale.</p>
-            )}
-            <Button
-              disabled={busy || routing}
-              onClick={() => setFabricationOpen(true)}
-            >
-              Fabrication settings…
-            </Button>
-            {!beginner && (
-              <Button disabled={busy || routing} onClick={() => setNetRulesOpen(true)}>
-                Net rules…
-              </Button>
-            )}
-            <Button
-              disabled={busy || routing || !geometry}
-              onClick={() => setCamOpen(true)}
-            >
-              CAM read-back preview…
-            </Button>
-            {!beginner && (
-              <Button disabled={busy || routing} onClick={() => setRevisionOpen(true)}>
-                Manufacturing revisions…
-              </Button>
-            )}
-            <Button
-              disabled={busy || routing || !geometry}
-              onClick={() => setInspectionOpen(true)}
-            >
-              Inspect in 3D…
-            </Button>
-            {!beginner && (
-              <Button
-                disabled={busy || routing}
-                onClick={() => setKicadReviewOpen(true)}
-              >
-                Review KiCad board…
-              </Button>
-            )}
-            {!beginner && (
-              <Button
-                disabled={busy || routing}
-                onClick={() => setKicadOpen(true)}
-              >
-                Export KiCad board…
-              </Button>
-            )}
-            {board.copperLayers.length === 1 && (
+            {!!board.jumpers?.length && (
               <section aria-label="Wire jumpers">
                 <h3>Wire jumpers</h3>
-                <Button
-                  disabled={busy || routing || !board.nets?.length}
-                  onClick={() => setJumperDialog('new')}
-                >
-                  Add wire jumper…
-                </Button>
                 {!!board.jumpers?.length && (
                   <ul aria-label="Board wire jumpers">
                     {board.jumpers.map((jumper) => (
@@ -2427,15 +2508,9 @@ export default function BoardWorkspace({
                 )}
               </section>
             )}
-            {!beginner && (
+            {!beginner && !!board.placementAreas?.length && (
               <>
                 <h3>Placement areas</h3>
-                <Button
-                  disabled={busy}
-                  onClick={() => setPlacementAreaDialog('new')}
-                >
-                  Add placement area…
-                </Button>
                 {!!board.placementAreas?.length && (
                   <ul aria-label="Placement areas">
                     {board.placementAreas.map((area) => (
@@ -2469,12 +2544,9 @@ export default function BoardWorkspace({
                 )}
               </>
             )}
-            {!beginner && (
+            {!beginner && !!board.routingRegions?.length && (
               <>
                 <h3>Routing regions</h3>
-                <Button disabled={busy || routing} onClick={() => setRoutingRegionDialog('new')}>
-                  Add routing region…
-                </Button>
                 {!!board.routingRegions?.length && (
                   <ul aria-label="Routing regions">
                     {board.routingRegions.map((region) => (
@@ -2494,12 +2566,6 @@ export default function BoardWorkspace({
               </>
             )}
             <h3>Copper zones</h3>
-            <Button
-              disabled={busy || routing || !geometry || !board.nets?.length}
-              onClick={() => setZoneDialog('new')}
-            >
-              Add copper zone…
-            </Button>
             {!!board.zones?.length && (
               <>
                 <ul>
@@ -2570,43 +2636,40 @@ export default function BoardWorkspace({
                 )}
               </>
             )}
-            </div>
-          </aside>
-          <div className="bottom-panel-wrapper pcb-properties" role="region" aria-label="Board properties"
-            style={{ height: propertiesHeight }} hidden={!showProperties}>
-            <ResizeHandle direction="vertical" label="Resize board properties"
-              onResize={(delta) => setPropertiesHeight((height) => Math.max(100, Math.min(440, height - delta)))} />
-            <div className="pcb-properties-body">
-              {!!geometry?.features.length && <div className="pcb-panel-scroll">
-                    <h3 className="pcb-panel-heading">Placed components</h3>
-                    <ul className="pcb-component-list" aria-label="Placed components">
-                      {geometry.features.map(({ id, label }) => (
-                        <li key={id}>
-                          {!beginner && (
-                            <input
-                              type="checkbox"
-                              aria-label={
-                                'Include ' + label + ' in placement group'
-                              }
-                              checked={groupSelection.has(id)}
-                              disabled={busy || routing || measuring}
-                              onChange={() => toggleGroupComponent(id)}
-                            />
-                          )}
-                          <Button
-                            size="small"
-                            appearance={id === selected ? 'primary' : 'subtle'}
-                            onClick={() => selectComponent(id)}
-                          >
-                            {label}
-                          </Button>
-                        </li>
-                      ))}
-                    </ul>
-                </div>}
-              {(target || groupMembers.length > 0 || sourcePads.length > 0) && (
+            </>}
+                </div>
+              )}
+              {bottomView === 'selection' && routeGroup.length > 0 && (
+                <p className="pcb-editor-message">{routeGroup.length} copper objects selected</p>
+              )}
+              {bottomView === 'components' && <div className="pcb-navigation-grid">
+                <PersistentDataGrid
+                  ariaLabel="Placed components"
+                  stateKey="BoardComponentListPanel"
+                  items={geometry?.features ?? []}
+                  defaultSortColumn="reference"
+                  columns={[{
+                    columnId: 'reference',
+                    compare: (a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }),
+                    renderHeaderCell: () => <div className="pcb-list-header">
+                      <span>Reference</span>
+                      {listModeMenu}
+                    </div>,
+                    renderCell: ({ id, label }) => (
+                      <Button size="small" appearance="subtle"
+                        onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                          if (event.shiftKey) toggleGroupComponent(id, true);
+                          else selectComponent(id);
+                        }}>
+                        {label}
+                      </Button>
+                    ),
+                  }]}
+                />
+              </div>}
+              {bottomView === 'selection' && (target || groupMembers.length > 0 || sourcePads.length > 0) && (
                 <div className="pcb-panel-scroll pcb-selection-properties">
-                  {!beginner && groupMembers.length > 0 && (
+                  {groupMembers.length > 0 && (
                     <fieldset disabled={busy || routing || measuring}>
                       <legend>Placement group</legend>
                       <p>
@@ -2614,7 +2677,7 @@ export default function BoardWorkspace({
                       </p>
                       <label>
                         Group operation{' '}
-                        <select
+                        <Select
                           value={groupMode}
                           onChange={(event) => setGroupMode(event.target.value)}
                         >
@@ -2624,22 +2687,22 @@ export default function BoardWorkspace({
                           <option value="align-y">Align Y to anchor</option>
                           <option value="distribute-x">Distribute along X</option>
                           <option value="distribute-y">Distribute along Y</option>
-                        </select>
+                        </Select>
                       </label>{' '}
                       {groupMode === 'translate' && (
                         <>
                           <label>
                             Group X offset (mm){' '}
-                            <input
-                              size={6}
+                            <Input
+                              size="small"
                               value={groupX}
                               onChange={(event) => setGroupX(event.target.value)}
                             />
                           </label>{' '}
                           <label>
                             Group Y offset (mm){' '}
-                            <input
-                              size={6}
+                            <Input
+                              size="small"
                               value={groupY}
                               onChange={(event) => setGroupY(event.target.value)}
                             />
@@ -2649,8 +2712,8 @@ export default function BoardWorkspace({
                       {groupMode === 'rotate' && (
                         <label>
                           Group rotation (°){' '}
-                          <input
-                            size={6}
+                          <Input
+                            size="small"
                             value={groupAngle}
                             onChange={(event) => setGroupAngle(event.target.value)}
                           />
@@ -2668,7 +2731,7 @@ export default function BoardWorkspace({
                       >
                         Apply group placement
                       </Button>
-                      <Button onClick={() => setGroup([])}>Clear group</Button>
+                      <Button onClick={() => selectArea([], [], false)}>Clear group</Button>
                     </fieldset>
                   )}
                   {target && (
@@ -2679,29 +2742,12 @@ export default function BoardWorkspace({
                       </legend>
                       {!beginner && selectedPlacement && (
                         <>
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={!!selectedPlacement.positionLocked}
-                              disabled={selectedPlacement.locked}
-                              onChange={() => togglePlacementLock('positionLocked')}
-                            />
-                            Lock position
-                          </label>{' '}
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={!!selectedPlacement.rotationLocked}
-                              disabled={selectedPlacement.locked}
-                              onChange={() => togglePlacementLock('rotationLocked')}
-                            />
-                            Lock rotation
-                          </label>{' '}
-                          <Button onClick={() => togglePlacementLock('locked')}>
-                            {selectedPlacement.locked
-                              ? 'Unlock component'
-                              : 'Lock component'}
-                          </Button>
+                          <Checkbox label="Lock component" checked={!!selectedPlacement.locked}
+                            onChange={() => togglePlacementLock('locked')} />
+                          <Checkbox label="Lock position" checked={!!selectedPlacement.positionLocked}
+                            disabled={selectedPlacement.locked} onChange={() => togglePlacementLock('positionLocked')} />
+                          <Checkbox label="Lock rotation" checked={!!selectedPlacement.rotationLocked}
+                            disabled={selectedPlacement.locked} onChange={() => togglePlacementLock('rotationLocked')} />
                         </>
                       )}
                       {beginner && (positionLocked || rotationLocked) && (
@@ -2712,8 +2758,8 @@ export default function BoardWorkspace({
                       )}
                       <label>
                         X (mm){' '}
-                        <input
-                          size={6}
+                        <Input
+                          size="small"
                           value={positionLocked ? mm(selectedPlacement.positionNm.x) : x}
                           disabled={positionLocked}
                           onChange={(e) => {
@@ -2724,8 +2770,8 @@ export default function BoardWorkspace({
                       </label>{' '}
                       <label>
                         Y (mm){' '}
-                        <input
-                          size={6}
+                        <Input
+                          size="small"
                           value={positionLocked ? mm(selectedPlacement.positionNm.y) : y}
                           disabled={positionLocked}
                           onChange={(e) => {
@@ -2736,8 +2782,8 @@ export default function BoardWorkspace({
                       </label>{' '}
                       <label>
                         Rotation (°){' '}
-                        <input
-                          size={6}
+                        <Input
+                          size="small"
                           value={
                             rotationLocked
                               ? mm(selectedPlacement.rotationMicrodegree)
@@ -2749,7 +2795,7 @@ export default function BoardWorkspace({
                       </label>{' '}
                       <label>
                         Board side{' '}
-                        <select
+                        <Select
                           aria-label="Board side"
                           value={
                             selectedPlacement?.locked ? selectedPlacement.side : side
@@ -2762,19 +2808,11 @@ export default function BoardWorkspace({
                               {id === 'top' ? 'Top' : 'Bottom'}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </label>{' '}
                       {!beginner && (
-                        <label>
-                          <input
-                            type="checkbox"
-                            checked={showPlacementEstimates}
-                            onChange={(event) =>
-                              setShowPlacementEstimates(event.target.checked)
-                            }
-                          />
-                          Show straight-line estimates
-                        </label>
+                        <Checkbox label="Show straight-line estimates" checked={showPlacementEstimates}
+                          onChange={(_, { checked }) => setShowPlacementEstimates(checked === true)} />
                       )}
                       <Button
                         appearance="primary"
@@ -2794,6 +2832,7 @@ export default function BoardWorkspace({
                       </Button>}
                     </fieldset>
                   )}
+                  {selectedSilk && <p>Selected silkscreen · {selectedSilk.label} · {selectedSilk.layer}</p>}
                   {!!sourcePads.length && (
                     <>
                       <h3 className="pcb-panel-heading">Schematic connections</h3>
@@ -2816,7 +2855,8 @@ export default function BoardWorkspace({
                   )}
                 </div>
               )}
-            </div>
+            </>
+          </EditorDrawingStack>
           </div>
         </div>
         {error && <p role="alert" className="pcb-editor-message">{error}</p>}

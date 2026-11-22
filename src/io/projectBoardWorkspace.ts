@@ -1,8 +1,7 @@
-import { digest } from '../util/sha256';
 import type { dsnDrawing } from '../model/dsnDrawing';
 import type { BoardDocument } from '../pcb/board';
 import { decodeBoard, encodeBoard } from '../pcb/boardCodec';
-import { openRecoverableBoard } from './boardWorkspace';
+import { editableBoardWorkspace } from './boardWorkspace';
 import type { BoardWorkspaceSession } from './boardWorkspace';
 import {
   findProjectPath,
@@ -14,25 +13,23 @@ import {
 
 type BoardFile = { id: string; name: string; folder: string; path: string };
 
-async function openTrackedBoard(
+function openTrackedBoard(
   board: BoardDocument,
-  saved: { data: Uint8Array; version: string },
+  version: string,
   file: BoardFile,
   key: string,
   options: Pick<
     BoardWorkspaceSession,
     'projectId' | 'circuit' | 'readProjectCircuit'
   > = {},
-): Promise<BoardWorkspaceSession> {
-  let version = saved.version;
-  return openRecoverableBoard(
+): BoardWorkspaceSession {
+  return editableBoardWorkspace(
     board,
     {
       ...options,
       key,
       path: () => file.path,
       version: () => version,
-      recoverySource: () => ({ key, version }),
       saved: true,
       async write(candidate) {
         const data = await encodeBoard(candidate);
@@ -48,7 +45,6 @@ async function openTrackedBoard(
         window.dispatchEvent(new Event(projectFilesChanged));
       },
     },
-    await digest(saved.data),
   );
 }
 
@@ -57,7 +53,7 @@ export async function openProjectBoardFile(file: BoardFile, account: string) {
   const board = await decodeBoard(saved.data);
   return openTrackedBoard(
     board,
-    saved,
+    saved.version,
     file,
     JSON.stringify(['pcb-project-file', account, file.id, board.boardId]),
   );
@@ -83,7 +79,7 @@ export async function openProjectBoardWorkspace(
   const saved = await readProjectBoard(project, boardId);
   return openTrackedBoard(
     saved.board,
-    saved,
+    saved.version,
     { ...file, folder, path: entry.path },
     JSON.stringify(['pcb-project', account, location.id, file.id, boardId]),
     {

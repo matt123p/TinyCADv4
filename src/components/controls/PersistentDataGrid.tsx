@@ -53,6 +53,8 @@ interface PersistentDataGridProps<T> {
   onSelectionChange?: (item: T) => void;
   selectionMode?: DataGridProps['selectionMode'];
   className?: string;
+  ariaLabel?: string;
+  columnSizingOptions?: DataGridProps['columnSizingOptions'];
   onRowClick?: (item: T) => void;
   onRowMouseEnter?: (item: T) => void;
   onRowMouseLeave?: (item: T) => void;
@@ -69,6 +71,8 @@ export function PersistentDataGrid<T>({
   onSelectionChange,
   selectionMode,
   className,
+  ariaLabel,
+  columnSizingOptions,
   onRowClick,
   onRowMouseEnter,
   onRowMouseLeave,
@@ -90,9 +94,15 @@ export function PersistentDataGrid<T>({
   const initialState = stateCache[stateKey];
 
   const [sortState, setSortState] = useState(initialState.sortState);
-  const [columnSizingOptions, setColumnSizingOptions] = useState<Record<string, number>>(
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(
     initialState.columnWidths
   );
+  const sizing = useMemo(() => ({
+    ...columnSizingOptions,
+    ...Object.fromEntries(Object.entries(columnWidths).map(([id, width]) => [
+      id, { ...columnSizingOptions?.[id], defaultWidth: width, idealWidth: width },
+    ])),
+  }), [columnSizingOptions, columnWidths]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -119,10 +129,10 @@ export function PersistentDataGrid<T>({
     data: { columnId: TableColumnId; width: number }
   ) => {
     const newWidths = {
-      ...columnSizingOptions,
+      ...columnWidths,
       [data.columnId as string]: data.width,
     };
-    setColumnSizingOptions(newWidths);
+    setColumnWidths(newWidths);
     stateCache[stateKey].columnWidths = newWidths;
   };
 
@@ -183,13 +193,14 @@ export function PersistentDataGrid<T>({
       onScroll={handleScroll}
     >
       <DataGrid
+        aria-label={ariaLabel}
         items={sortedItems}
         columns={columns}
         sortable
         sortState={sortState}
         onSortChange={handleSortChange}
         resizableColumns
-        columnSizingOptions={columnSizingOptions as any}
+        columnSizingOptions={sizing}
         onColumnResize={handleColumnResize}
         selectionMode={selectionMode}
         getRowId={getRowId}
@@ -207,6 +218,7 @@ export function PersistentDataGrid<T>({
             <DataGridRow<T>
               key={rowId}
               data-rowid={String(rowId)}
+              aria-current={focusedRowId != null && String(rowId) === String(focusedRowId) ? true : undefined}
               selectionCell={{ style: { display: 'none' } }}
               style={
                 focusedRowId !== null && focusedRowId !== undefined &&
@@ -218,6 +230,11 @@ export function PersistentDataGrid<T>({
                   : undefined
               }
               onClick={onRowClick ? () => onRowClick(item) : undefined}
+              onKeyDown={onRowClick ? (event: React.KeyboardEvent) => {
+                if (event.key !== 'Enter' || (event.target as Element).closest('button, input, textarea, select, [contenteditable]')) return;
+                event.preventDefault();
+                onRowClick(item);
+              } : undefined}
               onMouseEnter={
                 onRowMouseEnter ? () => onRowMouseEnter(item) : undefined
               }
