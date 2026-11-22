@@ -26,7 +26,11 @@ test('carries schematic purchasing attributes through the ECO into native PCB BO
     'Supplier SKU': 'A-330', 'Rated Voltage': '75 V', 'Power Rating': '0.25 W', Tolerance: '1%' };
   const addField = (description, value) =>
     resistor.text.push({ ...resistor.text[0], description, value, type: 2 });
-  for (const [name, value] of Object.entries(fields)) addField(name, value);
+  for (const [name, value] of Object.entries(fields)) {
+    const existing = resistor.text.find(({ description }) => description.toLowerCase() === name.toLowerCase());
+    if (existing) existing.value = value;
+    else addField(name, value);
+  }
   async function compile(drawing) {
     const graph = await api.buildHierarchicalNetlist({ drawing, path: 'LED.dzn' });
     return (await api.buildHierarchicalCircuitSnapshot(graph, {

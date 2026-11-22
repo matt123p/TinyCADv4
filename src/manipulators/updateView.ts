@@ -1,4 +1,4 @@
-import { editorZoomStep } from '../util/editorZoom';
+import { clampSchematicZoom, schematicZoomLimits, zoomStepFactor } from '../util/editorZoom';
 import type { HierarchicalLink } from '../model/dsnItem';
 import { dsnView, FindResult, WireMode } from '../model/dsnView';
 import { newSchematicEntityId } from '../model/schematicIdentity';
@@ -79,9 +79,6 @@ import {
   actionSelectDialog,
 } from '../state/dispatcher/AppDispatcher';
 import i18n from '../i18n';
-
-const MIN_ZOOM = 10;
-const MAX_ZOOM = 400;
 
 function StyleSet<T>(original: T, value: T): T {
   if (original === undefined || original === value) {
@@ -348,15 +345,11 @@ export class updateView {
 
   // Zoom
   can_zoom_in(view: dsnView, sheet: dsnSheet) {
-    return view.zoom < MAX_ZOOM;
+    return view.zoom < schematicZoomLimits.max;
   }
 
   can_zoom_out(view: dsnView, sheet: dsnSheet) {
-    return view.zoom > MIN_ZOOM;
-  }
-
-  clampZoom(zoom: number) {
-    return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
+    return view.zoom > schematicZoomLimits.min;
   }
 
   // Clipboard operations
@@ -1542,7 +1535,7 @@ export class updateView {
   command_zoom_in(view: dsnView, sheet: dsnSheet): viewResult {
     return {
       view: update(view, {
-        zoom: { $set: this.clampZoom(view.zoom * editorZoomStep) },
+        zoom: { $set: clampSchematicZoom(view.zoom * zoomStepFactor('in')) },
       }),
       sheet,
     };
@@ -1551,14 +1544,14 @@ export class updateView {
   command_zoom_out(view: dsnView, sheet: dsnSheet): viewResult {
     return {
       view: update(view, {
-        zoom: { $set: this.clampZoom(view.zoom / editorZoomStep) },
+        zoom: { $set: clampSchematicZoom(view.zoom * zoomStepFactor('out')) },
       }),
       sheet,
     };
   }
 
   command_zoom_scale(view: dsnView, sheet: dsnSheet, factor?: number): viewResult {
-    const nextZoom = this.clampZoom(view.zoom * (factor && factor > 0 ? factor : 1));
+    const nextZoom = clampSchematicZoom(view.zoom * (factor && factor > 0 ? factor : 1));
 
     return {
       view: update(view, {
@@ -1571,7 +1564,7 @@ export class updateView {
   command_zoom_100(view: dsnView, sheet: dsnSheet): viewResult {
     return {
       view: update(view, {
-        zoom: { $set: this.clampZoom(100) },
+        zoom: { $set: clampSchematicZoom(100) },
       }),
       sheet: sheet,
     };

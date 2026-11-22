@@ -1,9 +1,10 @@
 import { isEntityId } from '../model/schematicIdentity';
-import { capsulePolygon } from './contours';
+import { capsulePolygon, validateCapsule } from './contours';
 import type { BoardDocument, CopperLayer } from './board';
 import type { BoardDrill, CopperFeature } from './copper';
 import type { BoardPoint } from './geometry';
 import { samePoint } from './geometry';
+import type { RouteCleanupChange } from './routeCleanup';
 
 interface RouteAssignment {
   readonly id: string;
@@ -26,6 +27,45 @@ export interface BoardVia extends RouteAssignment {
   readonly diameterNm: number;
   readonly drillNm: number;
   readonly tenting?: ViaTenting;
+}
+
+export type BoardRoutingEdit = {
+  readonly removedTrackIds: readonly string[];
+  readonly addedTracks: readonly BoardTrack[];
+} & (
+  | { readonly kind: 'route'; readonly addedVias: readonly BoardVia[] }
+  | { readonly kind: 'track-edit' }
+);
+
+/** Assemble the candidate for the normal board validation and revision checks. */
+export function applyBoardRoutingEdit(board: BoardDocument, edit: BoardRoutingEdit): BoardDocument {
+  const surviving = edit.removedTrackIds.length
+    ? (board.tracks ?? []).filter(({ id }) => !edit.removedTrackIds.includes(id))
+    : board.tracks ?? [];
+  const tracks = edit.addedTracks.length ? [...surviving, ...edit.addedTracks] : surviving;
+  if (edit.kind === 'track-edit') return { ...board, tracks };
+  const vias = edit.addedVias.length ? [...(board.vias ?? []), ...edit.addedVias] : board.vias ?? [];
+  return {
+    ...board,
+    requiredFeatures: [...new Set([...board.requiredFeatures, 'routed-copper' as const])],
+    tracks,
+    vias,
+  };
+}
+
+/** Keep the original order and share everything a cleanup did not change. */
+export function applyRouteCleanupChange(
+  board: BoardDocument,
+  { removedTrackIds, replacements }: Pick<RouteCleanupChange, 'removedTrackIds' | 'replacements'>,
+): BoardDocument {
+  if (!removedTrackIds.length && !replacements.length) return board;
+  const removed = new Set(removedTrackIds);
+  const updated = new Map(replacements.map((track) => [track.id, track]));
+  const tracks: BoardTrack[] = [];
+  for (const track of board.tracks ?? []) {
+    if (!removed.has(track.id)) tracks.push(updated.get(track.id) ?? track);
+  }
+  return { ...board, tracks };
 }
 
 export function viaIsTented({ tenting = 'both' }: BoardVia, side: CopperLayer['id']): boolean {
@@ -64,15 +104,15 @@ export function validateBoardRouting(board: BoardDocument) {
       throw new Error('A PCB track needs a physical copper layer.');
     if (samePoint(start, end))
       throw new Error('A PCB track needs distinct endpoints.');
-    capsulePolygon(start, end, widthNm);
+    validateCapsule(start, end, widthNm);
   }
   for (const { positionNm, diameterNm, drillNm, tenting } of vias ?? []) {
     if (layers.size !== 2 || drillNm >= diameterNm)
       throw new Error(
         'A through via needs two copper layers and a positive annular ring.',
       );
-    capsulePolygon(positionNm, positionNm, diameterNm);
-    capsulePolygon(positionNm, positionNm, drillNm);
+    validateCapsule(positionNm, positionNm, diameterNm);
+    validateCapsule(positionNm, positionNm, drillNm);
     if (tenting !== undefined && !['both', 'top', 'bottom', 'none'].includes(tenting))
       throw new Error('Invalid through-via solder mask tenting.');
   }

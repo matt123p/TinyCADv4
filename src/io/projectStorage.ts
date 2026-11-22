@@ -61,7 +61,7 @@ export type ProjectStorageRequest =
   | { operation: 'activate-launch'; ticket: string }
   | { operation: 'choose'; containProject?: string }
   | { operation: 'list'; folder: string; tree?: boolean }
-  | { operation: 'read' | 'fingerprint'; id: string }
+  | { operation: 'read' | 'fingerprint' | 'folder-identity'; id: string }
   | { operation: 'copy'; id: string; folder: string; name: string }
   | { operation: 'mkdir'; folder: string; name: string }
   | { operation: 'trash'; id: string; directory: boolean }
@@ -102,6 +102,7 @@ export interface ProjectStorageResult {
   mkdir: ProjectLocation;
   copy: void;
   fingerprint: string;
+  'folder-identity': string;
   trash: void;
   rename: ProjectLocation;
   move: ProjectLocation;
@@ -228,6 +229,8 @@ export async function driveProjectFiles(
         }),
       );
       return;
+    case 'folder-identity':
+      return request.id;
     case 'fingerprint': {
       const meta = await (
         await drive(
@@ -246,20 +249,24 @@ export async function driveProjectFiles(
     case 'rename':
     case 'move': {
       const query = new URLSearchParams({ fields: 'id,name' });
+      const patch = json('PATCH', { name: request.name });
+      let etag: string | null = null;
       if (request.operation === 'move' && request.from !== request.folder) {
+        const previous = request.from === 'root'
+          ? (await (await drive('/files/root?fields=id')).json()).id
+          : request.from;
+        const response = await drive(`${file(request.id)}?fields=parents`);
+        const { parents } = await response.json();
+        if (!parents?.includes(previous))
+          throw new Error('The file moved on Drive. Refresh the project and try again.');
         query.set('addParents', request.folder);
-        const meta = await (
-          await drive(`${file(request.id)}?fields=parents`)
-        ).json();
-        if (meta.parents?.length)
-          query.set('removeParents', meta.parents.join(','));
+        query.set('removeParents', previous);
+        etag = response.headers.get('ETag');
       }
-      return (
-        await drive(
-          `${file(request.id)}?${query}`,
-          json('PATCH', { name: request.name }),
-        )
-      ).json();
+      return (await drive(`${file(request.id)}?${query}`, {
+        ...patch,
+        headers: { ...patch.headers, ...(etag ? { 'If-Match': etag } : {}) },
+      })).json();
     }
     case 'write': {
       let etag: string;

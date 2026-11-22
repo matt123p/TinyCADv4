@@ -1,3 +1,4 @@
+import { findingBlocksRelease } from './boardFindings';
 import { canonicalJson } from '../util/canonicalJson';
 import { digest } from '../util/sha256';
 import type { BoardDocument } from './board';
@@ -254,11 +255,10 @@ export function manufacturingReadiness(
   board: BoardDocument,
   { report, layers }: Pick<BoardCamPreview, 'report' | 'layers'>,
 ) {
+  const profile = fabricationProfileFor(board);
   const blockers = report.issues
-    .filter(
-      ({ code, advisory }) => code !== 'bare-open-bridged' && !advisory?.waiver,
-    )
-    .map(({ code, message, objects }) => ({ code, detail: message, objects }));
+    .filter(findingBlocksRelease)
+    .map(({ code, message, objects, severity }) => ({ code, detail: message, objects, severity }));
 
   for (const { check, status, detail } of report.coverage) {
     const withoutSchematic =
@@ -266,28 +266,34 @@ export function manufacturingReadiness(
       !board.sourceCircuit &&
       !board.components?.some(({ role }) => role !== 'pcb-only') &&
       (!report.schematic || report.schematic.state === 'unlinked');
-    if ((status === 'limited' || status === 'unavailable') && !withoutSchematic)
+    const waitingForProfile = !profile && (check === 'Fabrication profile applicability' ||
+      check === 'Routed outline and cutouts');
+    if ((status === 'limited' || status === 'unavailable') && !withoutSchematic && !waitingForProfile)
       blockers.push({
         code: 'check-coverage',
+        severity: 'unknown',
         detail: check + (detail ? ' · ' + detail : ''),
         objects: [],
       });
   }
-  if (!fabricationProfileFor(board))
+  if (!profile)
     blockers.push({
       code: 'profile-required',
+      severity: 'blocker',
       detail: 'Select a fabrication profile and board thickness.',
       objects: [],
     });
   if (board.sourceCircuit && report.schematic?.state !== 'current')
     blockers.push({
       code: 'schematic-not-current',
+      severity: 'blocker',
       detail: 'Verify the linked schematic against the current PCB revision.',
       objects: [board.sourceCircuit.documentId],
     });
   if (!layers.some(({ copper }) => copper.length))
     blockers.push({
       code: 'copper-empty',
+      severity: 'blocker',
       detail: 'The fabrication output contains no copper.',
       objects: [],
     });

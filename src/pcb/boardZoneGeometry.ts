@@ -2,15 +2,15 @@ import type { BoardDocument } from './board';
 import { boardCopperGeometry } from './boardCopperGeometry';
 import { boardRuleResolver } from './boardRules';
 import { mountingKeepouts } from './boardMechanical';
-import { capsulePolygon, profileRegion } from './contours';
+import { profileRegion } from './contours';
 import type { PolygonRegion } from './contours';
-import { analyseCopper, regionsTouch } from './copper';
+import { connectedCopperIslands, openingRegion, regionsTouch } from './copper';
 import type { CopperFeature } from './copper';
 import { pointInPolygon } from './geometry';
 import type { PolygonKernel } from './polygonKernel';
 import { fillZone } from './zoneFill';
 import { measureThermalSpoke } from './thermalSpokeChecks';
-import { measureZoneWidth } from './zoneWidthChecks';
+import { measureRegionWidth } from './zoneWidthChecks';
 import { routingRegionKeepouts } from './routingRegions';
 import { regionalClearance } from './regionalClearance';
 import { bounds, near } from './regionDistances';
@@ -46,7 +46,7 @@ export interface BoardZoneGeometry {
 export function boardZoneGeometry(
   board: BoardDocument,
   kernel: PolygonKernel,
-  geometry = boardCopperGeometry(board),
+  geometry = boardCopperGeometry(board, { includeApertures: false }),
   measureIntegrity = false,
 ): BoardZoneGeometry {
   const fills: CopperFeature[] = [];
@@ -194,13 +194,10 @@ export function boardZoneGeometry(
         ({ netId, layerId }) =>
           netId === zone.netId && layerId === zone.layerId,
       );
-      const topology = analyseCopper(kernel, [...anchors, ...regions], drills);
-      const featureByFragment = new Map(
-        topology.copper.map(({ id, feature }) => [id, feature]),
-      );
+      const islands = connectedCopperIslands(kernel, [...anchors, ...regions], drills);
       const zoneIds = new Set(regions.map(({ id }) => id));
-      for (const island of topology.connectedSets) {
-        const features = island.map((id) => featureByFragment.get(id));
+      for (const island of islands) {
+        const features = island.map(({ feature }) => feature);
         const isZone = ({ id }: CopperFeature) => zoneIds.has(id);
         const zoneFeatures = features.filter(isZone);
         if (!zoneFeatures.length) continue;
@@ -261,8 +258,8 @@ export function boardZoneGeometry(
   if (widthChecks.length) {
     const copper = [...geometry.features, ...fills].map((feature) =>
       ({ feature, box: bounds(feature.region) }));
-    const voids = drills.map(({ start, end, widthNm }) => {
-      const region: PolygonRegion = { outer: capsulePolygon(start, end, widthNm), holes: [] };
+    const voids = drills.map((drill) => {
+      const region = openingRegion(drill);
       return { region, box: bounds(region) };
     });
     for (const { zoneId, fill, requiredNm, thermalHalos } of widthChecks) {
@@ -282,7 +279,7 @@ export function boardZoneGeometry(
           });
         }
         for (const region of regions) {
-          const narrow = measureZoneWidth(kernel, region, requiredNm, thermalHalos, fill.region);
+          const narrow = measureRegionWidth(kernel, region, requiredNm, { thermalHalos, filledZone: fill.region });
           if (narrow) issues.push({
             zoneId, code: 'zone-minimum-width', objectId: fill.id, requiredNm, ...narrow,
           });

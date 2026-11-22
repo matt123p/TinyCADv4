@@ -24,6 +24,7 @@
   <APPLIEDCIRCUIT schema_version="1" document_id="5ed00000-0000-4000-8000-000000000001" revision="1" snapshot_id="38c9ada5-4023-86cd-ad7d-31325269c7cb">
     <COMPONENTS>
       <COMPONENT id="5ed00000-0000-4000-8000-000000000005" reference="D1" value="Red LED" role="electrical" package_hint="led-radial-5">
+        <PROCUREMENT manufacturer="Kingbright" mpn="WP7113ID"/>
         <UNITS>
           <UNIT id="5ed00000-0000-4000-8000-000000000005" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
         </UNITS>
@@ -41,6 +42,7 @@
         </SIGNALS>
       </COMPONENT>
       <COMPONENT id="5ed00000-0000-4000-8000-000000000003" reference="J1" value="5 V input" role="electrical" package_hint="jst-xh-2-vertical">
+        <PROCUREMENT manufacturer="JST" mpn="B2B-XH-A(LF)(SN)"/>
         <UNITS>
           <UNIT id="5ed00000-0000-4000-8000-000000000003" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
         </UNITS>
@@ -58,6 +60,7 @@
         </SIGNALS>
       </COMPONENT>
       <COMPONENT id="5ed00000-0000-4000-8000-000000000004" reference="R1" value="330" role="electrical" package_hint="axial-762">
+        <PROCUREMENT manufacturer="YAGEO" mpn="MFR-12FTF52-330R" power_rating="1/6 W" tolerance="±1%"/>
         <UNITS>
           <UNIT id="5ed00000-0000-4000-8000-000000000004" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
         </UNITS>
@@ -120,6 +123,7 @@
   </APPLIEDCIRCUIT>
   <COMPONENTDEFS>
     <COMPONENTDEF id="5ed00000-0000-4000-8000-000000000005" ref="D1" value="Red LED" logical_id="5ed00000-0000-4000-8000-000000000005" device_id="0a1e74f1-b93f-85d2-ad11-f58b921124ed" role="electrical">
+      <PROCUREMENT manufacturer="Kingbright" mpn="WP7113ID"/>
       <UNITS>
         <UNIT id="5ed00000-0000-4000-8000-000000000005" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
       </UNITS>
@@ -129,6 +133,7 @@
       </SIGNALS>
     </COMPONENTDEF>
     <COMPONENTDEF id="5ed00000-0000-4000-8000-000000000003" ref="J1" value="5 V input" logical_id="5ed00000-0000-4000-8000-000000000003" device_id="24ffd027-7a4f-81f9-a769-7bec67ed5702" role="electrical">
+      <PROCUREMENT manufacturer="JST" mpn="B2B-XH-A(LF)(SN)"/>
       <UNITS>
         <UNIT id="5ed00000-0000-4000-8000-000000000003" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
       </UNITS>
@@ -138,6 +143,7 @@
       </SIGNALS>
     </COMPONENTDEF>
     <COMPONENTDEF id="5ed00000-0000-4000-8000-000000000004" ref="R1" value="330" logical_id="5ed00000-0000-4000-8000-000000000004" device_id="87bd3123-48d1-8ac8-a6b6-e9c138eb9b6f" role="electrical">
+      <PROCUREMENT manufacturer="YAGEO" mpn="MFR-12FTF52-330R" power_rating="1/6 W" tolerance="±1%"/>
       <UNITS>
         <UNIT id="5ed00000-0000-4000-8000-000000000004" sheet_id="5ed00000-0000-4000-8000-000000000002"/>
       </UNITS>

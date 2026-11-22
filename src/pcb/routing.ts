@@ -10,7 +10,7 @@ import {
 } from './geometry';
 import type { BoardPoint } from './geometry';
 import type { PolygonKernel } from './polygonKernel';
-import { bounds, near } from './regionDistances';
+import { bounds, near, segmentDistanceNm } from './regionDistances';
 
 type Side = CopperLayer['id'];
 export type RouteBend = 'straight-first' | 'diagonal-first';
@@ -58,6 +58,7 @@ export interface RouteRequest {
   readonly profile: PolygonRegion;
   readonly layers: readonly Side[];
   readonly obstacles: readonly CopperFeature[];
+  readonly straightTrackObstacles?: readonly StraightTrackObstacle[];
   readonly clearanceFor?: (feature: CopperFeature) => number;
   readonly keepouts?: readonly { side: Side; copper: PolygonRegion }[];
   readonly drills: readonly BoardDrill[];
@@ -68,6 +69,19 @@ export interface RouteRequest {
   readonly rules: RouteRules;
   readonly maxVisits?: number;
   readonly signal?: AbortSignal;
+}
+
+interface StraightTrackObstacle {
+  readonly layerId: Side;
+  readonly start: BoardPoint;
+  readonly end: BoardPoint;
+  readonly widthNm: number;
+  readonly clearanceNm: number;
+}
+
+function segmentBounds(a: BoardPoint, b: BoardPoint) {
+  return { minX: Math.min(a.x, b.x), minY: Math.min(a.y, b.y),
+    maxX: Math.max(a.x, b.x), maxY: Math.max(a.y, b.y) };
 }
 
 interface SearchNode extends LayerPoint {
@@ -200,12 +214,13 @@ export function prepareCentrelineClearance(
     layers,
     netId,
     obstacles,
+    straightTrackObstacles = [],
     clearanceFor = () => rules.clearanceNm,
     drills,
     keepouts = [],
   }: Pick<
     RouteRequest,
-    'profile' | 'rules' | 'layers' | 'netId' | 'obstacles' | 'drills' | 'keepouts' | 'clearanceFor'
+    'profile' | 'rules' | 'layers' | 'netId' | 'obstacles' | 'straightTrackObstacles' | 'drills' | 'keepouts' | 'clearanceFor'
   >,
   radius: number,
 ) {
@@ -250,27 +265,36 @@ export function prepareCentrelineClearance(
   );
   const withBounds = (regions: readonly PolygonRegion[]) =>
     regions.map((region) => ({ region, box: bounds(region) }));
+  const straightTracksByLayer = new Map(layers.map((layer) => [layer,
+    straightTrackObstacles.filter(({ layerId }) => layerId === layer)
+      .map(({ start, end, widthNm, clearanceNm }) => ({
+        start, end, box: segmentBounds(start, end),
+        distanceNm: radius + widthNm / 2 + clearanceNm + marginNm,
+      })),
+  ]));
   return {
     area,
     holes: withBounds(holes),
+    straightTracksByLayer,
     byLayer: new Map([...byLayer].map(([layer, regions]) => [layer, withBounds(regions)])),
   };
 }
 
 export function isCentrelineClear(
-  { area, holes, byLayer }: ReturnType<typeof prepareCentrelineClearance>,
+  { area, holes, byLayer, straightTracksByLayer }: ReturnType<typeof prepareCentrelineClearance>,
   a: BoardPoint,
   b: BoardPoint,
   layer: Side,
 ): boolean {
   const obstacles = byLayer.get(layer);
-  const box = { minX: Math.min(a.x, b.x), minY: Math.min(a.y, b.y),
-    maxX: Math.max(a.x, b.x), maxY: Math.max(a.y, b.y) };
+  const box = segmentBounds(a, b);
   const blocked = (item: (typeof holes)[number]) =>
     near(box, item.box, 0) && hits(a, b, item.region);
   return !!obstacles && area.some(
     (region) => inside(a, region) && inside(b, region) && !alongBoundary(a, b, region),
-  ) && !holes.some(blocked) && !obstacles.some(blocked);
+  ) && !holes.some(blocked) && !obstacles.some(blocked) &&
+    !straightTracksByLayer.get(layer)?.some(({ start, end, box: trackBox, distanceNm }) =>
+      near(box, trackBox, distanceNm) && segmentDistanceNm(a, b, start, end) <= distanceNm);
 }
 
 export function centrelineClearance(

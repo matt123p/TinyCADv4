@@ -16,7 +16,9 @@ import {
   rectangleContour,
   straightContour,
 } from '../../pcb/boardProfiles';
-import { lengthInNanometres, OutlineTopologyError } from '../../pcb/geometry';
+import { OutlineTopologyError } from '../../pcb/geometry';
+import { boardInputLength } from './boardNumberInput';
+import { outlineVertices } from './boardOutlineInput';
 import { ProfileTopologyError, profileRegion } from '../../pcb/contours';
 import BoardContourEditor, {
   contourRow,
@@ -25,7 +27,7 @@ import BoardContourEditor, {
 } from './BoardContourEditor';
 
 type Shape = 'rectangle' | 'rounded' | 'circle' | 'polygon' | 'custom';
-const nm = (value: string) => lengthInNanometres(value, 'mm');
+const nm = (value: string) => boardInputLength(value, 'mm');
 const mm = (value: number) => String(value / 1_000_000);
 
 export default function BoardProfileDialog({
@@ -127,17 +129,7 @@ export default function BoardProfileDialog({
           : shape === 'circle'
           ? circleContour({ x: nm(x), y: nm(y) }, nm(radius))
           : shape === 'polygon'
-          ? straightContour(
-              vertices
-                .trim()
-                .split(/\r?\n/)
-                .map((row) => {
-                  const values = row.trim().split(/\s*,\s*|\s+/);
-                  if (values.length !== 2)
-                    throw new Error('Enter one X and Y pair per line.');
-                  return { x: nm(values[0]), y: nm(values[1]) };
-                }),
-            )
+          ? straightContour(outlineVertices(vertices))
           : rectangleContour(
               { x: nm(x), y: nm(y) },
               nm(width),

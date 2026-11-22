@@ -96,22 +96,32 @@ export async function openLaunchedProject() {
 }
 
 export async function readProject(id: string, rootId: string) {
-  const { data, version } = await projectRequest({ operation: 'read', id });
-  const settings = decodeProjectSettings(data);
-  const markers = (
-    await projectRequest({ operation: 'list', folder: rootId, tree: true })
-  ).filter((item) => !item.folder && isProjectFile(item.name));
-  if (markers.length !== 1 || markers[0].id !== id || markers[0].unsupported)
-    throw new Error('A project folder needs exactly one root settings file.');
-  const { recoverProjectReferenceUpdate } = await import(
-    './projectReferenceTransaction'
-  );
-  await recoverProjectReferenceUpdate(id);
-  const files = await resolveProjectLinks(rootId, settings, true);
-  const missingSchematics = settings.entries.filter(
-    ({ kind, path }) => kind === 'schematic' && !files.has(path),
-  );
-  return { settings, files, marker: markers[0], version, missingSchematics };
+  const { inProjectTransaction, recoverProjectReferenceUpdate } =
+    await import('./projectReferenceTransaction');
+  return inProjectTransaction(id, async () => {
+    await recoverProjectReferenceUpdate(id);
+    const { readProjectFileJournal } = await import('./projectRecovery');
+    const journal = await readProjectFileJournal(id).catch((): undefined => undefined);
+    if (journal?.kind === 'trash') {
+      const { recoverProjectTrash } = await import('./projectTrash');
+      await recoverProjectTrash(journal);
+    } else if (journal) {
+      const { recoverProjectRelocation } = await import('./projectRelocation');
+      await recoverProjectRelocation(journal);
+    }
+    const { data, version } = await projectRequest({ operation: 'read', id });
+    const settings = decodeProjectSettings(data);
+    const markers = (
+      await projectRequest({ operation: 'list', folder: rootId, tree: true })
+    ).filter((item) => !item.folder && isProjectFile(item.name));
+    if (markers.length !== 1 || markers[0].id !== id || markers[0].unsupported)
+      throw new Error('A project folder needs exactly one root settings file.');
+    const files = await resolveProjectLinks(rootId, settings, true);
+    const missingSchematics = settings.entries.filter(
+      ({ kind, path }) => kind === 'schematic' && !files.has(path),
+    );
+    return { settings, files, marker: markers[0], version, missingSchematics };
+  });
 }
 
 export type ProjectMetadata = {

@@ -49,7 +49,7 @@ import { ResultData, SimulationSetup } from '../../simulation/contracts';
 import { hasSimulation } from '../../io/drawingSaveFormat';
 import { buildDeck } from '../../simulation/deck';
 import { digest } from '../../io/dsnContainer';
-import { Waveform, WaveformPreferences } from './Waveform';
+import { Waveform, WaveformPreferences } from './LazyWaveform';
 import { MeasurementResults } from './MeasurementResults';
 import { ChartPopup, ChartPopupPortal, openChartPopup } from './ChartPopup';
 import { ResizeHandle } from '../panel/ResizeHandle';

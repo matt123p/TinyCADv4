@@ -2,6 +2,7 @@ import React from 'react';
 import { routeDeletionBounds } from '../../pcb/routeDeletion';
 import type { BoardTrack, BoardVia } from '../../pcb/boardRouting';
 import type { BoardPoint } from '../../pcb/geometry';
+import { svgCircle, svgLength, svgLengthTransform } from '../svg/nanometreSvg';
 
 export default function RouteDeletionOverlay({
   tracks,
@@ -18,10 +19,11 @@ export default function RouteDeletionOverlay({
       {region && (
         <rect
           data-deletion-region=""
-          x={region.minX}
-          y={-region.maxY}
-          width={region.maxX - region.minX}
-          height={region.maxY - region.minY}
+          transform={svgLengthTransform}
+          x={svgLength(region.minX)}
+          y={svgLength(-region.maxY)}
+          width={svgLength(region.maxX - region.minX)}
+          height={svgLength(region.maxY - region.minY)}
           fill="#9a3754"
           fillOpacity={0.08}
           stroke="#9a3754"
@@ -46,9 +48,7 @@ export default function RouteDeletionOverlay({
         <circle
           key={id}
           data-deletion-via={id}
-          cx={positionNm.x}
-          cy={-positionNm.y}
-          r={diameterNm / 2}
+          {...svgCircle(positionNm.x, -positionNm.y, diameterNm / 2)}
           fill="#bf2d38"
           fillOpacity={0.45}
           stroke="#bf2d38"

@@ -1,3 +1,4 @@
+import { canonicalBoardDecimal } from '../pcb/boardNumberInput';
 import { openExternalUrl } from '../../util/navigation';
 import React, { useEffect, useState } from 'react';
 import {
@@ -73,9 +74,9 @@ export default function ProjectDeviceDialog({
       packageHint: part?.packageHint,
       query,
       mount: mount || undefined,
-      maxWidthNm: width ? Number(width) * 1_000_000 : undefined,
-      maxHeightNm: height ? Number(height) * 1_000_000 : undefined,
-      pitchNm: pitch ? Math.round(Number(pitch) * 1_000_000) : undefined,
+      maxWidthNm: width ? Number(canonicalBoardDecimal(width)) * 1_000_000 : undefined,
+      maxHeightNm: height ? Number(canonicalBoardDecimal(height)) * 1_000_000 : undefined,
+      pitchNm: pitch ? Math.round(Number(canonicalBoardDecimal(pitch)) * 1_000_000) : undefined,
       padCount: padCount ? Number(padCount) : undefined,
     },
   );

@@ -27,7 +27,7 @@ import type {
   FootprintDeviceMapping,
   FootprintLibrary,
 } from '../../pcb/footprintLibrary';
-import { lengthInNanometres } from '../../pcb/geometry';
+import { boardCoordinateFields, boardInputLength } from '../pcb/boardNumberInput';
 import type { starterFootprints } from '../../io/starterFootprints';
 import type { PadStack } from '../../pcb/padstack';
 import { footprintAssemblyMarks, footprintAssemblyNotesLimit } from '../../pcb/footprintDetails';
@@ -78,7 +78,7 @@ const emptyFootprint = (): FootprintLibrary => ({
   },
 });
 const mm = (length: number) => String(length / 1_000_000);
-const nm = (text: string) => lengthInNanometres(text, 'mm');
+const nm = (text: string) => boardInputLength(text, 'mm');
 
 export default function FootprintEditorDialog({
   onClose,
@@ -206,10 +206,8 @@ export default function FootprintEditorDialog({
               .trim()
               .split(/\n+/)
               .map((line) => {
-                const point = line.split(',');
-                if (point.length !== 2)
-                  throw new Error('Enter one x,y pair per line.');
-                return { x: nm(point[0]), y: nm(point[1]) };
+                const [x, y] = boardCoordinateFields(line, 2);
+                return { x: nm(x), y: nm(y) };
               }),
           }
         : {}),
@@ -342,6 +340,9 @@ export default function FootprintEditorDialog({
     const print = preview.cloneNode(true) as SVGSVGElement;
     print.setAttribute('viewBox', view);
     print.removeAttribute('data-fit-view-box');
+    print.removeAttribute('data-view-box');
+    const scene = print.querySelector(':scope > [data-svg-drawing]');
+    if (scene) scene.replaceWith(...scene.childNodes);
     print.setAttribute('width', mm(width) + 'mm');
     print.setAttribute('height', mm(height) + 'mm');
     const drawing = new XMLSerializer().serializeToString(print);
@@ -770,7 +771,7 @@ export default function FootprintEditorDialog({
               {padDraft.profile === 'polygon' && (
                 <p>
                   <label>
-                    Local vertices (one x,y pair per line in mm)
+                    Local vertices (one X Y pair per line in mm)
                     <br />
                     <textarea
                       value={padDraft.polygon}

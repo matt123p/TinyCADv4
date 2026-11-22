@@ -9,6 +9,7 @@ import {
   validateOutline,
 } from './geometry';
 import type { BoardPoint } from './geometry';
+import { bounds, indexBounds, near, polygonSegments, someNearby } from './regionDistances';
 
 export type Polygon = readonly BoardPoint[];
 
@@ -38,11 +39,20 @@ export interface BoardProfile {
 
 export const TESSELLATION_TOLERANCE_NM = 100;
 export const MAX_CONTOUR_VERTICES = 8_192;
+const MAX_CAPSULE_WIDTH_NM = 1_000_000_000;
 
 function squaredRadius(centre: BoardPoint, point: BoardPoint): bigint {
   const dx = BigInt(point.x - centre.x);
   const dy = BigInt(point.y - centre.y);
   return dx * dx + dy * dy;
+}
+
+function arcStepCount(radius: number, sweep: number, toleranceNm: number) {
+  const maxStep = Math.min(
+    Math.PI / 2,
+    4 * Math.asin(Math.sqrt(Math.min(1, (toleranceNm - 1) / (2 * radius)))),
+  );
+  return Math.ceil(Math.abs(sweep) / maxStep);
 }
 
 /** Coordinates are rounded only after reserving 1 nm for the rounding error. */
@@ -53,6 +63,20 @@ export function arcVertices(
   sweep: number,
   toleranceNm: number,
 ): BoardPoint[] {
+  const points: BoardPoint[] = [];
+  appendArcVertices(points, centre, radius, start, sweep, toleranceNm);
+  return points;
+}
+
+function appendArcVertices(
+  points: BoardPoint[],
+  centre: BoardPoint,
+  radius: number,
+  start: number,
+  sweep: number,
+  toleranceNm: number,
+  includeEnd = true,
+) {
   if (
     !Number.isInteger(toleranceNm) ||
     toleranceNm < 2 ||
@@ -60,20 +84,17 @@ export function arcVertices(
   ) {
     throw new Error('Curve tolerance must be an integer between 2 and 100 nm.');
   }
-  const maxStep = Math.min(
-    Math.PI / 2,
-    4 * Math.asin(Math.sqrt(Math.min(1, (toleranceNm - 1) / (2 * radius)))),
-  );
-  const steps = Math.ceil(Math.abs(sweep) / maxStep);
+  const steps = arcStepCount(radius, sweep, toleranceNm);
   if (steps > MAX_CONTOUR_VERTICES)
     throw new Error('Curve exceeds the tessellation vertex budget.');
-  return Array.from({ length: steps + 1 }, (_, i) => {
+  const count = includeEnd ? steps + 1 : steps;
+  for (let i = 0; i < count; i++) {
     const angle = start + (i * sweep) / steps;
-    return {
+    points.push({
       x: Math.round(centre.x + radius * Math.cos(angle)),
       y: Math.round(centre.y + radius * Math.sin(angle)),
-    };
-  });
+    });
+  }
 }
 
 export function circlePolygon(
@@ -95,62 +116,59 @@ export function circlePolygon(
   ) {
     throw new Error('Circle exceeds the board coordinate range.');
   }
-  const points = arcVertices(
-    centre,
-    radiusNm,
-    0,
-    2 * Math.PI,
-    toleranceNm,
-  ).slice(0, -1);
+  const points: BoardPoint[] = [];
+  appendArcVertices(points, centre, radiusNm, 0, 2 * Math.PI, toleranceNm, false);
   if (!points.every(isBoardPoint))
     throw new Error('Circle exceeds the board coordinate range.');
   return points;
 }
 
-export function capsulePolygon(
+function capsuleRadius(
   start: BoardPoint,
   end: BoardPoint,
   widthNm: number,
-): Polygon {
+) {
   if (
     !isBoardPoint(start) ||
     !isBoardPoint(end) ||
     !Number.isSafeInteger(widthNm) ||
     widthNm < 2 ||
-    widthNm > 1_000_000_000
+    widthNm > MAX_CAPSULE_WIDTH_NM
   ) {
     throw new Error('Invalid capsule endpoints or width.');
   }
-  const radius = widthNm / 2;
+  return widthNm / 2;
+}
+
+const capsuleFitsVertexBudget = arcStepCount(
+  MAX_CAPSULE_WIDTH_NM / 2, 2 * Math.PI, TESSELLATION_TOLERANCE_NM,
+) <= MAX_CONTOUR_VERTICES;
+
+export function validateCapsule(start: BoardPoint, end: BoardPoint, widthNm: number): void {
+  const radius = capsuleRadius(start, end, widthNm);
+  const farthestCoordinate = Math.max(
+    Math.abs(start.x), Math.abs(start.y), Math.abs(end.x), Math.abs(end.y),
+  );
+  // A full circle with the largest allowed radius bounds the step count of each arc.
+  // Near the coordinate limit, check the actual rounded vertices.
+  if (capsuleFitsVertexBudget && farthestCoordinate + Math.ceil(radius) <= BOARD_COORDINATE_LIMIT_NM)
+    return;
+  tessellateCapsule(start, end, radius);
+}
+
+export function capsulePolygon(start: BoardPoint, end: BoardPoint, widthNm: number): Polygon {
+  return tessellateCapsule(start, end, capsuleRadius(start, end, widthNm));
+}
+
+function tessellateCapsule(start: BoardPoint, end: BoardPoint, radius: number): Polygon {
+  const points: BoardPoint[] = [];
   if (samePoint(start, end)) {
-    const points = arcVertices(
-      start,
-      radius,
-      0,
-      Math.PI * 2,
-      TESSELLATION_TOLERANCE_NM,
-    ).slice(0, -1);
-    if (!points.every(isBoardPoint))
-      throw new Error('Capsule exceeds the board coordinate range.');
-    return points;
+    appendArcVertices(points, start, radius, 0, 2 * Math.PI, TESSELLATION_TOLERANCE_NM, false);
+  } else {
+    const angle = Math.atan2(end.y - start.y, end.x - start.x);
+    appendArcVertices(points, end, radius, angle - Math.PI / 2, Math.PI, TESSELLATION_TOLERANCE_NM);
+    appendArcVertices(points, start, radius, angle + Math.PI / 2, Math.PI, TESSELLATION_TOLERANCE_NM);
   }
-  const angle = Math.atan2(end.y - start.y, end.x - start.x);
-  const points = [
-    ...arcVertices(
-      end,
-      radius,
-      angle - Math.PI / 2,
-      Math.PI,
-      TESSELLATION_TOLERANCE_NM,
-    ),
-    ...arcVertices(
-      start,
-      radius,
-      angle + Math.PI / 2,
-      Math.PI,
-      TESSELLATION_TOLERANCE_NM,
-    ),
-  ];
   if (!points.every(isBoardPoint))
     throw new Error('Capsule exceeds the board coordinate range.');
   return points;
@@ -323,13 +341,16 @@ function boundaryContact(
   a: Polygon,
   b: Polygon,
   marginNm: number,
+  locateIntersection: boolean,
 ): BoardPoint | undefined {
-  for (const [i, start] of a.entries()) {
+  for (let i = 0; i < a.length; i++) {
+    const start = a[i];
     const end = a[(i + 1) % a.length];
-    for (const [j, other] of b.entries()) {
+    for (let j = 0; j < b.length; j++) {
+      const other = b[j];
       const otherEnd = b[(j + 1) % b.length];
       if (segmentsMeet(start, end, other, otherEnd))
-        return segmentIntersectionLocation(start, end, other, otherEnd);
+        return locateIntersection ? segmentIntersectionLocation(start, end, other, otherEnd) : start;
       if (
         !marginNm ||
         Math.max(start.x, end.x) + marginNm < Math.min(other.x, otherEnd.x) ||
@@ -352,7 +373,15 @@ export function polygonBoundariesMeet(
   b: Polygon,
   marginNm = 0,
 ): boolean {
-  return boundaryContact(a, b, marginNm) !== undefined;
+  if (marginNm || a.length * b.length <= 1024)
+    return boundaryContact(a, b, marginNm, false) !== undefined;
+  if (!near(bounds({ outer: a, holes: [] }), bounds({ outer: b, holes: [] }), 0))
+    return false;
+  const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a];
+  const edges = indexBounds(polygonSegments(shorter));
+  return polygonSegments(longer).some(({ start, end, box }) =>
+    someNearby(edges, box, 0, (other) => segmentsMeet(start, end, other.start, other.end)),
+  );
 }
 
 export function profileRegion(profile: BoardProfile): PolygonRegion {
@@ -389,7 +418,7 @@ export function profileRegion(profile: BoardProfile): PolygonRegion {
     const outside = pointInPolygon(hole[0], outer) !== 'inside';
     const contact = outside
       ? hole[0]
-      : boundaryContact(outer, hole, margin(outerArc, arc));
+      : boundaryContact(outer, hole, margin(outerArc, arc), true);
     if (contact) {
       throw new ProfileTopologyError(
         'A cutout must sit strictly inside the outer profile with a gap greater than the curve uncertainty.',
@@ -401,7 +430,7 @@ export function profileRegion(profile: BoardProfile): PolygonRegion {
     }
     for (const other of holes) {
       const conflict =
-        boundaryContact(other.polygon, hole, margin(other.arc, arc)) ??
+        boundaryContact(other.polygon, hole, margin(other.arc, arc), true) ??
         (pointInPolygon(other.polygon[0], hole) !== 'outside'
           ? other.polygon[0]
           : undefined) ??

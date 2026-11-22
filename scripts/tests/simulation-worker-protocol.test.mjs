@@ -36,6 +36,7 @@ test('initial netlist publication does not repeatedly initialize a version-zero 
   const originalSetTimeout = globalThis.setTimeout;
   const originalClearTimeout = globalThis.clearTimeout;
   const scheduled = new Map();
+  const retained = [];
   let timerId = 0, initializeCount = 0, notify;
   const drawing = { documentId: 'first', sheets: [{ name: 'Sheet 1', items: [] }] };
   let present = { drawing, drawingVersion: 0 };
@@ -45,9 +46,10 @@ test('initial netlist publication does not repeatedly initialize a version-zero 
   };
   globalThis.clearTimeout = id => scheduled.delete(id);
   try {
-    const { initializeNetlistSync } = loadComponent('src/io/netlists/netlistSync.ts', {
+    const { initializeNetlistSync, subscribeNetlist } = loadComponent('src/io/netlists/netlistSync.ts', {
       '../../model/dsnItem': { DocItemTypes: {} },
       '../../web-worker/worker': {
+        retainSchematicNetlist: (active) => retained.push(active),
         wkrInitNetlist: async () => { initializeCount++; return {}; },
       },
       '../../state/dispatcher/AppDispatcher': {
@@ -67,6 +69,10 @@ test('initial netlist publication does not repeatedly initialize a version-zero 
       for (let i = 0; i < 5; i++) await Promise.resolve();
     };
     await flush();
+    assert.equal(initializeCount, 0, 'an editor with no subscriber does not compile a netlist');
+    const unsubscribe = subscribeNetlist(() => {});
+    assert.deepEqual(retained, [false, true]);
+    await flush();
     await flush();
     assert.equal(initializeCount, 1);
     assert.equal(scheduled.size, 0, 'internal publication must settle');
@@ -75,6 +81,8 @@ test('initial netlist publication does not repeatedly initialize a version-zero 
     await flush();
     await flush();
     assert.equal(initializeCount, 2, 'a new version-zero document still initializes');
+    unsubscribe();
+    assert.deepEqual(retained, [false, true, false]);
   } finally {
     globalThis.setTimeout = originalSetTimeout;
     globalThis.clearTimeout = originalClearTimeout;

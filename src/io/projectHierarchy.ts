@@ -75,7 +75,9 @@ export async function resolveChild(
       entry.kind === 'schematic' &&
       entry.path.toLowerCase() === path.toLowerCase(),
   );
-  if (link.documentId && entry?.id !== link.documentId)
+  if (link.documentId && !entry)
+    throw new Error(`Missing or ambiguous child schematic: ${path}`);
+  if (link.documentId && entry.id !== link.documentId)
     throw new Error(`The child identity and project path disagree: ${path}`);
   if (entry)
     return {

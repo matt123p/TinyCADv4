@@ -44,7 +44,7 @@ import {
 } from '../../simulation/exploration';
 import { getSession } from '../../simulation/session';
 import { download } from '../../simulation/export';
-import { Waveform } from './Waveform';
+import { Waveform } from './LazyWaveform';
 import { AdvancedAnalysis } from './AdvancedAnalysis';
 import { MeasurementDiagram } from './MeasurementDiagram';
 import { evaluateMeasurements } from '../../simulation/measurementResults';

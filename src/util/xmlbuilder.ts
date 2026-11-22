@@ -8,7 +8,7 @@ function preserveAttributeWhitespace(xml: string): string {
   return xml.replace(
     /<!\[CDATA\[[\s\S]*?\]\]>|<!--[\s\S]*?-->|<(?:(?:"[^"]*")|(?:'[^']*')|[^'">])*>/g,
     (markup) =>
-      markup.startsWith('<!')
+      markup.startsWith('<!') || !/[\t\r\n]/.test(markup)
         ? markup
         : markup.replace(/"[^"]*"|'[^']*'/g, (attribute) =>
             attribute.replace(/[\t\r\n]/g, (c) => `&#${c.charCodeAt(0)};`),

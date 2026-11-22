@@ -1,4 +1,5 @@
 import React from 'react';
+import { svgTranslation } from './nanometreSvg';
 
 interface ScaledSvgTextProps extends Omit<React.SVGProps<SVGTextElement>, 'x' | 'y' | 'fontSize' | 'strokeWidth'> {
   x?: number;
@@ -12,7 +13,7 @@ interface ScaledSvgTextProps extends Omit<React.SVGProps<SVGTextElement>, 'x' | 
 export function ScaledSvgText({ x = 0, y = 0, fontSize, strokeWidth, ...props }: ScaledSvgTextProps) {
   const scale = 10_000;
   return (
-    <g transform={`translate(${x} ${y}) scale(${scale})`}>
+    <g transform={svgTranslation(x, y, scale)}>
       <text {...props} fontSize={fontSize / scale}
         strokeWidth={strokeWidth === undefined ? undefined : strokeWidth / scale} />
     </g>

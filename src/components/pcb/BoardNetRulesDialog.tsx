@@ -3,7 +3,7 @@ import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface
 import type { BoardDocument, BoardOperation } from '../../pcb/board';
 import { boardRuleResolver, clearanceKinds, preferredTrackWidth } from '../../pcb/boardRules';
 import type { CopperClearanceRule } from '../../pcb/boardRules';
-import { lengthInNanometres } from '../../pcb/geometry';
+import { boardInputLength } from './boardNumberInput';
 
 const fields = [
   ['minWidthNm', 'Minimum track width'],
@@ -54,7 +54,7 @@ export default function BoardNetRulesDialog({ board, selectedNet, onApply, onClo
           rule: {
             id: pairRule?.id ?? crypto.randomUUID(),
             name: value('name'),
-            clearanceNm: lengthInNanometres(value('clearanceNm'), 'mm'),
+            clearanceNm: boardInputLength(value('clearanceNm'), 'mm'),
             ...(firstClass ? { firstClass } : {}),
             ...(secondClass ? { secondClass } : {}),
             ...(firstKind ? { firstKind } : {}),
@@ -65,7 +65,7 @@ export default function BoardNetRulesDialog({ board, selectedNet, onApply, onClo
       }
       const rules = Object.fromEntries(fields.flatMap(([id]) => {
         const text = value(id);
-        return text ? [[id, lengthInNanometres(text, 'mm')]] : [];
+        return text ? [[id, boardInputLength(text, 'mm')]] : [];
       }));
       if (net) apply({ type: 'setNetRouting', id: net.id, classId: String(form.get('classId')) || undefined, rules });
       else apply({

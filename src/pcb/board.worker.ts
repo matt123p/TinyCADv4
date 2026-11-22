@@ -1,6 +1,6 @@
 import type { BoardWorkerRequest, BoardWorkerResponse } from './boardWorker';
-import { commitManualRoute, editManualTracks, prepareManualTrackClearance } from './manualBoardRouting';
-import { prepareRouteCleanup } from './routeCleanup';
+import { prepareManualRoute, prepareManualTrackEdit, prepareManualTrackClearance } from './manualBoardRouting';
+import { prepareRouteCleanupChange } from './routeCleanup';
 import { boardAirwires } from './boardAirwires';
 import { inspectBoard } from './boardInspectionJob';
 import { checkBoard } from './boardChecks';
@@ -8,6 +8,7 @@ import { prepareCamPreview } from './boardCam';
 import { exportKicadBoard } from './kicadBoardExport';
 import { boardCopperGeometry } from './boardCopperGeometry';
 import { boardZoneGeometry } from './boardZoneGeometry';
+import { packRouteClearance } from './routeClearanceTransfer';
 import { projectPcbKernel } from '../io/projectPcbKernel';
 
 self.addEventListener(
@@ -28,23 +29,28 @@ self.addEventListener(
       if (data.kind === 'route') {
         reply = {
           id: data.id,
-          kind: 'route',
-          board: commitManualRoute(data.board, data.route, kernel),
+          kind: 'routing-edit',
+          change: prepareManualRoute(data.board, data.route, kernel).change,
         };
       } else if (data.kind === 'route-clearance') {
-        reply = {
+        const { geometry, transfer } = packRouteClearance(
+          prepareManualTrackClearance(data.board, data.route, kernel),
+        );
+        const reply: BoardWorkerResponse = {
           id: data.id,
           kind: 'route-clearance',
-          geometry: prepareManualTrackClearance(data.board, data.route, kernel),
+          geometry,
         };
+        self.postMessage(reply, { transfer });
+        return;
       } else if (data.kind === 'track-edit') {
         reply = {
           id: data.id,
-          kind: 'track-edit',
-          board: editManualTracks(data.board, data.edit, kernel),
+          kind: 'routing-edit',
+          change: prepareManualTrackEdit(data.board, data.edit, kernel).change,
         };
       } else if (data.kind === 'cleanup') {
-        reply = { id: data.id, kind: 'cleanup', result: prepareRouteCleanup(data.board, data.netId, kernel) };
+        reply = { id: data.id, kind: 'cleanup', change: prepareRouteCleanupChange(data.board, data.netId, kernel) };
       } else if (data.kind === 'check') {
         reply = {
           id: data.id,
@@ -52,6 +58,7 @@ self.addEventListener(
           report: await checkBoard(data.board, kernel, {
             projectCircuit: data.projectCircuit,
           }),
+          ...(data.measureMemory ? { wasmMemoryBytes: kernel.memoryBytes() } : {}),
         };
       } else if (data.kind === 'cam') {
         reply = {
@@ -80,7 +87,7 @@ self.addEventListener(
         self.postMessage(reply, { transfer });
         return;
       } else {
-        const geometry = boardCopperGeometry(data.board);
+        const geometry = boardCopperGeometry(data.board, { includeApertures: false });
         const zones = boardZoneGeometry(data.board, kernel, geometry);
         reply = {
           id: data.id,

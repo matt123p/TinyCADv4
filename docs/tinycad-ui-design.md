@@ -63,10 +63,11 @@ Keep ordinary selection and placement on the drawing. Move advanced settings out
 
 ### Drawing interaction
 
-- Use the same named Zoom In, Zoom Out and Ruler actions across the drawing editors. Reuse the available wheel, pinch and pan behavior from the released sheet. Board-fit and selection-fit commands use the same viewport service. Changes to viewport, layer display and ruler visibility are display state.
+- Use the same named Zoom In, Zoom Out and Ruler actions across the drawing editors. Use the [shared wheel zoom policy](../src/util/editorZoom.ts) for the schematic, simulation drawing and PCB. Ordinary wheel input pans the editors. Shift-wheel uses the toolbar zoom steps and Ctrl-wheel zooms around the pointer. Horizontal Shift-wheel input leaves the zoom unchanged. Footprint and CAM previews retain wheel zoom without a modifier. Board-fit and selection-fit commands use the same viewport service. Changes to viewport, layer display and ruler visibility are display state.
 - Mount the existing `Ruler` on both drawing edges in PCB Design. Feed it the viewport origin, scale, scroll or pan offset, and current pointer position. Convert PCB nanometres to the displayed units at the adapter. Verify the PCB Y direction as well as X, including pointer indicators after pan, zoom, resize, unit changes and toggling the rulers.
 - Share the anchored context-menu renderer. Each workspace supplies applicable actions for the current object or empty drawing. Common actions use the same labels, icons and command IDs. Right click during a tool operation follows that tool's cancel behavior. Support keyboard invocation from the focused drawing.
 - Share viewport transforms, snapping integration, selection feedback and overlay infrastructure where the behavior is equivalent. Workspace adapters provide the board or schematic geometry, units and editing constraints. Extend an existing shared component when it needs a capability. Keep separate renderers only for domain-specific geometry or tools, with common controls above them.
+- Use the existing SVG unit conversion when drawing nanometre geometry with native SVG shapes. Check a board on both sides of the drawing origin to verify that rendering, rulers and pointer actions agree at large coordinates. [Large-coordinate PCB rendering](pcb-performance.md#large-coordinate-pcb-rendering)
 
 ## Acceptance evidence
 
@@ -83,8 +84,16 @@ cover focus-based commands in side-by-side view, independent tabs, recovery,
 drawing-to-board transfer and the classroom export.
 
 The [portable board case](../scripts/tests/layout-browser/portable-pcb.spec.mjs)
-runs in Chromium and in the packaged Electron app. It confirms native menu
-Zoom In, Save and Open in Electron. It compares the saved file before and after
-placement, undo and redo, counts picker calls and reopens the board saved from
-an untitled document. The LED release and asymmetric connector preview were
-read independently with [the Gerbonara checker](../scripts/pcb/check-cam-preview.py).
+runs in Chromium and against the production Electron renderer. It drags a
+footprint preview onto the drawing and verifies that one click commits it, the
+placed footprint stays fixed after pointer movement, and the board remains
+unwritten through placement, undo and redo. In Electron it also verifies native
+menu Zoom In, Save and Open, counts picker calls and reopens a board explicitly
+saved from an untitled document. The LED release and asymmetric connector preview
+were read independently with [the Gerbonara checker](../scripts/pcb/check-cam-preview.py).
+
+The shared wheel policy was checked in the classroom schematic and standalone
+PCB. The tests compare Ctrl-wheel zoom and its pointer anchor in both editors,
+and verify that horizontal Shift-wheel input keeps the zoom level. The
+footprint editor and connector CAM preview test ordinary wheel zoom. The native
+Electron portable-board test also passed after the change.

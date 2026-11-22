@@ -1,10 +1,12 @@
 import type { CopperLayer } from './board';
 import { capsulePolygon, TESSELLATION_TOLERANCE_NM } from './contours';
 import type { PolygonRegion } from './contours';
+import { openingRegion } from './copper';
 import type { BoardDrill, CopperFeature } from './copper';
-import { isBoardPoint, pointInPolygon } from './geometry';
+import { BOARD_COORDINATE_LIMIT_NM, isBoardPoint, pointInPolygon } from './geometry';
 import type { BoardPoint } from './geometry';
 import type { PolygonKernel } from './polygonKernel';
+import { bounds, near } from './regionDistances';
 
 export interface ThermalConnection {
   readonly padId: string;
@@ -74,6 +76,14 @@ export function fillZone(
     [boundary],
     kernel.offset([profile], -edgeClearanceNm - padding),
   );
+  const fillBounds = available.map(bounds);
+  function canReachFill(region: PolygonRegion, distance: number) {
+    if (!Number.isSafeInteger(distance) || distance > BOARD_COORDINATE_LIMIT_NM)
+      return true;
+    const box = bounds(region);
+    // The round offset stays within this conservative allowance for joins and grid rounding.
+    return fillBounds.some((fill) => near(fill, box, 2 * distance + 1));
+  }
   const onLayer = request.copper.filter(
     (feature) => feature.layerId === layerId,
   );
@@ -85,6 +95,7 @@ export function fillZone(
       clearanceNm,
       request.featureClearances?.get(feature.id) ?? 0,
     );
+    if (!canReachFill(feature.region, required + padding)) continue;
     const regions = byClearance.get(required) ?? [];
     regions.push(feature.region);
     byClearance.set(required, regions);
@@ -92,22 +103,16 @@ export function fillZone(
   const foreign = [...byClearance].flatMap(([distance, regions]) =>
     kernel.offset(regions, distance + padding),
   );
-  const voids = request.drills.flatMap((drill) =>
-    kernel.offset(
-      [
-        {
-          outer: capsulePolygon(drill.start, drill.end, drill.widthNm),
-          holes: [],
-        },
-      ],
-      padding +
-        Math.max(
-          drill.plated ? 0 : clearanceNm,
-          request.drillClearances?.get(drill.id) ?? 0,
-        ),
-    ),
-  );
-  const keepouts = kernel.offset(request.keepouts ?? [], padding);
+  const voids = request.drills.flatMap((drill) => {
+    const region = openingRegion(drill);
+    const distance = padding + Math.max(
+      drill.plated ? 0 : clearanceNm,
+      request.drillClearances?.get(drill.id) ?? 0,
+    );
+    return canReachFill(region, distance) ? kernel.offset([region], distance) : [];
+  });
+  const nearbyKeepouts = (request.keepouts ?? []).filter((region) => canReachFill(region, padding));
+  const keepouts = kernel.offset(nearbyKeepouts, padding);
   const base = kernel.boolean('difference', available, [...foreign, ...voids, ...keepouts]);
   const reliefs: {
     thermal: ThermalConnection;

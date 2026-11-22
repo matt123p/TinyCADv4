@@ -19,6 +19,7 @@ export interface BoardArtworkRegion {
   componentId: string;
   side: CopperLayer['id'];
   strokeNm?: number;
+  textHeightNm?: number;
   regions: PolygonRegion[];
 }
 
@@ -205,6 +206,7 @@ export function boardArtwork(board: BoardDocument, kernel: PolygonKernel) {
           componentId,
           side: physicalSide(graphic.layer),
           strokeNm: graphic.strokeNm,
+          ...(graphic.kind === 'text' ? { textHeightNm: graphic.sizeNm.y } : {}),
           regions,
         });
       } catch (error) {

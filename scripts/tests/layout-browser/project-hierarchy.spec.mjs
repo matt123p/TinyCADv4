@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { TextWriter, Uint8ArrayReader, ZipReader } from '@zip.js/zip.js';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { registerProjectFiles } from '../../../electron/projectFiles.js';
 import { installElectronBridge } from '../chat-browser/electron-bridge.mjs';
@@ -19,7 +19,7 @@ test.afterAll(async () => {
   await app?.close();
 });
 
-async function installProjectBridge(page, documents, beforeRequest, takeProjectOpen, dialog) {
+async function installProjectBridge(page, documents, beforeRequest, takeProjectOpen, dialog, shell) {
   const senderFrame = {};
   const sender = { mainFrame: senderFrame };
   let handler;
@@ -38,6 +38,7 @@ async function installProjectBridge(page, documents, beforeRequest, takeProjectO
     documents,
     takeProjectOpen,
     dialog,
+    shell,
   });
   const browser = page.context();
   await installElectronBridge(browser);
@@ -1006,7 +1007,7 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
       await expect(checkDialog.getByText(/Schematic parity · checked/)).toBeVisible();
     }
     await openLeafChecks();
-    await expect(checkDialog.getByRole('list', { name: 'PCB findings' }))
+    await expect(checkDialog.getByRole('table', { name: 'PCB findings' }))
       .not.toContainText('The project schematic changed');
     await checkDialog.getByRole('button', { name: 'Close', exact: true }).click();
     await pcbLayout
@@ -1066,7 +1067,7 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     await expect(leafRow).toContainText('Schematic changes pending');
     await projects.getByRole('button', { name: 'Leaf.dpn', exact: true }).click();
     await openLeafChecks();
-    const findings = checkDialog.getByRole('list', { name: 'PCB findings' });
+    const findings = checkDialog.getByRole('table', { name: 'PCB findings' });
     await expect(findings).toContainText('The project schematic changed since the last PCB update.');
     await expect(findings).toContainText('Board and schematic references differ for R10.');
     const drcDownload = page.waitForEvent('download');
@@ -1771,7 +1772,8 @@ test('imports a KiCad symbol and footprint with a portable STEP model', async ({
       ...modelFile, name: 'Direct.step',
     });
     await expect(editor.getByText('Direct.step · Embedded')).toBeVisible();
-    await editor.getByLabel('Pad X (mm)', { exact: true }).fill('1.5');
+    await page.evaluate(() => localStorage.setItem('tinycad.language', 'de'));
+    await editor.getByLabel('Pad X (mm)', { exact: true }).fill('1,5');
     await editor.getByLabel('Pad Y (mm)', { exact: true }).focus();
     await editor
       .getByRole('button', { name: 'Check footprint dimensions' })
@@ -1828,7 +1830,7 @@ test('imports a KiCad symbol and footprint with a portable STEP model', async ({
     await editor.getByLabel('Layer', { exact: true }).selectOption('F.CrtYd');
     await editor
       .getByLabel('Graphic points', { exact: false })
-      .fill('-3,-2\n4,2');
+      .fill('-3,0 -2,0\n4,0; 2,0');
     await editor
       .getByRole('button', { name: 'Add graphic', exact: true })
       .click();
@@ -1836,12 +1838,10 @@ test('imports a KiCad symbol and footprint with a portable STEP model', async ({
       editor.getByLabel('Graphic', { exact: true }).locator('option:checked'),
     ).toHaveText(/F.CrtYd/);
 
-    const fittedView = await footprintView.getAttribute('viewBox');
+    const fittedView = await footprintView.getAttribute('data-view-box');
     await footprintView.hover();
-    await page.keyboard.down('Shift');
     await page.mouse.wheel(0, -150);
-    await page.keyboard.up('Shift');
-    await expect(footprintView).not.toHaveAttribute('viewBox', fittedView);
+    await expect(footprintView).not.toHaveAttribute('data-view-box', fittedView);
     const dimensionDownload = page.waitForEvent('download');
     await editor.getByRole('button', { name: 'Export 1:1 SVG' }).click();
     const drawing = await readFile(
@@ -1849,8 +1849,9 @@ test('imports a KiCad symbol and footprint with a portable STEP model', async ({
       'utf8',
     );
     expect(drawing.match(/\bviewBox="([^"]+)"/)[1]).toBe(fittedView);
+    expect(drawing).not.toContain('data-svg-drawing');
     await editor.getByRole('button', { name: 'Fit footprint', exact: true }).click();
-    await expect(footprintView).toHaveAttribute('viewBox', fittedView);
+    await expect(footprintView).toHaveAttribute('data-view-box', fittedView);
     const printedWidth = Number(
       drawing.match(/<svg[^>]*\bwidth="([\d.]+)mm"/)[1],
     );
@@ -1986,6 +1987,7 @@ test('imports a KiCad symbol and footprint with a portable STEP model', async ({
       if (url.startsWith(app.baseURL) && !/\.tplib($|\?)/.test(url)) return route.continue();
       return route.abort();
     });
+    await page.evaluate(() => localStorage.removeItem('tinycad.language'));
     await page.reload();
     await page.getByRole('button', { name: 'Projects', exact: true }).click();
     await projects.getByRole('button', { name: 'Copied', exact: true }).click();
@@ -2033,7 +2035,7 @@ async function reviewEveryCamLayer(cam) {
   await expect(release).toBeEnabled();
 }
 
-test('completes the classroom LED exercise offline in the shared schematic and PCB shell', async ({ page }, info) => {
+async function completeLedExercise(page, info, offset) {
   test.setTimeout(90_000);
   await mkdir(info.project.outputDir, { recursive: true });
   const directory = await mkdtemp(path.join(info.project.outputDir, 'led-classroom-'));
@@ -2042,7 +2044,13 @@ test('completes the classroom LED exercise offline in the shared schematic and P
     await cp(new URL(name, sample), path.join(directory, name), { recursive: true });
   await installProjectBridge(page, directory);
   const api = await layoutRuntime();
-  const reference = await api.decodeBoard(await readFile(path.join(directory, 'Reference', 'LED.dpn')));
+  const source = await api.decodeBoard(await readFile(path.join(directory, 'Reference', 'LED.dpn')));
+  const shift = ({ x, y }) => ({ x: x + offset.x, y: y + offset.y });
+  const reference = {
+    ...source,
+    footprints: source.footprints.map((item) => ({ ...item, positionNm: shift(item.positionNm) })),
+    tracks: source.tracks.map((item) => ({ ...item, start: shift(item.start), end: shift(item.end) })),
+  };
   try {
     await page.route('**/*', (route) => {
       const url = route.request().url();
@@ -2062,6 +2070,39 @@ test('completes the classroom LED exercise offline in the shared schematic and P
     await projects.getByRole('button', { name: 'LED.dzn', exact: true }).click();
     for (const name of ['5V', 'LED_A', 'GND'])
       await expect(page.locator('svg').getByText(name, { exact: true })).toBeVisible();
+    const schematicRulers = page.getByRole('button', { name: 'Toggle Rulers', exact: true });
+    if (await schematicRulers.getAttribute('aria-pressed') !== 'true') await schematicRulers.click();
+    const schematic = page.locator('.circuit-drawing svg');
+    const markers = page.locator('[data-ruler-pointer]');
+    await schematic.hover({ position: { x: 200, y: 130 } });
+    await expect(markers).toHaveCount(2);
+    const offsets = () => markers.evaluateAll((rails) => rails.map((marker, i) => {
+      const line = marker.getBoundingClientRect();
+      const ruler = marker.parentElement.getBoundingClientRect();
+      return i === 0 ? line.left - ruler.left : line.top - ruler.top;
+    }));
+    const firstOffsets = await offsets();
+    await schematic.hover({ position: { x: 240, y: 160 } });
+    await expect.poll(async () => (await offsets()).map((offset, i) =>
+      Math.abs(offset - firstOffsets[i] - (i === 0 ? 40 : 30)) <= 1,
+    )).toEqual([true, true]);
+
+    const schematicWidth = await schematic.getAttribute('width');
+    await schematic.dispatchEvent('wheel', { shiftKey: true, deltaX: 30, deltaY: 0 });
+    await expect(schematic).toHaveAttribute('width', schematicWidth);
+    const schematicBounds = await schematic.boundingBox();
+    const schematicAnchor = { x: schematicBounds.x + 240, y: schematicBounds.y + 160 };
+    await page.mouse.move(schematicAnchor.x, schematicAnchor.y);
+    await page.keyboard.down('Control');
+    await page.mouse.wheel(0, -50);
+    await page.keyboard.up('Control');
+    await expect.poll(async () => Number(await schematic.getAttribute('width')) / Number(schematicWidth))
+      .toBeCloseTo(Math.sqrt(1.25), 5);
+    const zoomedSchematicBounds = await schematic.boundingBox();
+    const scale = Number(await schematic.getAttribute('width')) / Number(schematicWidth);
+    expect(Math.abs((schematicAnchor.x - zoomedSchematicBounds.x) / scale - 240)).toBeLessThan(2);
+    expect(Math.abs((schematicAnchor.y - zoomedSchematicBounds.y) / scale - 160)).toBeLessThan(2);
+
     const selectedSheet = page.locator('.sheet-heading-on');
     const originalSheetName = await selectedSheet.innerText();
     const operatingPoint = page.locator('.sheet-heading').filter({ hasText: 'LED operating point' });
@@ -2158,9 +2199,11 @@ test('completes the classroom LED exercise offline in the shared schematic and P
       await layout.getByRole('button', { name: 'Place at coordinates', exact: true }).click();
       await expect(placed.getByRole('button', { name: component.reference, exact: true })).toBeVisible();
     }
+    await expect(canvas.locator('circle[data-board-pad]').first()).toBeVisible();
+    await expect(canvas.locator('line[data-board-pad]').first()).toHaveAttribute('stroke-linecap', 'round');
     const clickBoardPoint = async ({ x, y }) => {
       const screen = await canvas.evaluate((svg, [x, y]) => {
-        const point = new DOMPoint(x, -y).matrixTransform(svg.getScreenCTM());
+        const point = new DOMPoint(x, -y).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
         return [point.x, point.y];
       }, [x, y]);
       await page.mouse.click(...screen);
@@ -2176,7 +2219,9 @@ test('completes the classroom LED exercise offline in the shared schematic and P
     }
     await layout.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(tabs.getByRole('tab', { name: 'LED.dpn', exact: true })).toBeVisible();
-    const completed = await api.decodeBoard(await readFile(path.join(directory, 'Exercise', 'LED.dpn')));
+    const completedBytes = await readFile(path.join(directory, 'Exercise', 'LED.dpn'));
+    const completed = await api.decodeBoard(completedBytes);
+    await writeFile(info.outputPath('led-saved-before-release.dpn'), completedBytes);
     expect(completed.footprints.map(({ positionNm }) => positionNm)).toEqual(reference.footprints.map(({ positionNm }) => positionNm));
     expect(new Set(completed.tracks.map(({ netId }) => netId))).toEqual(new Set(reference.tracks.map(({ netId }) => netId)));
     await layout.getByRole('button', { name: 'Run design checks…' }).click();
@@ -2232,6 +2277,7 @@ test('completes the classroom LED exercise offline in the shared schematic and P
       expect(manifest.revision).toBe(completed.revision);
       expect(manifest.checks.readiness).toEqual([]);
       expect(manifest.schematic.state).toBe('current');
+      expect(Buffer.from(await text('board.dpn'))).toEqual(completedBytes);
       const names = manifest.outputs.map(({ filename }) => filename);
       expect(entries.map(({ filename }) => filename).sort()).toEqual([...names, 'manifest.json'].sort());
       expect(manifest.cam.reviewedFiles).toEqual(names.filter((name) => /\.(gbr|xnc)$/.test(name)).sort());
@@ -2307,6 +2353,14 @@ test('completes the classroom LED exercise offline in the shared schematic and P
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+}
+
+test('completes the classroom LED exercise offline in the shared schematic and PCB shell', async ({ page }, info) => {
+  await completeLedExercise(page, info, { x: 0, y: 0 });
+});
+
+test('releases the same LED circuit after translating its placement and routes', async ({ page }, info) => {
+  await completeLedExercise(page, info, { x: 2e6, y: 1e6 });
 });
 
 test('reviews moved pads and changed drills without changing unrelated routes', async ({ page }, info) => {
@@ -2407,9 +2461,15 @@ test('reviews moved pads and changed drills without changing unrelated routes', 
       .toEqual(expectedRoutes);
     await layout.getByRole('button', { name: 'Run design checks…' }).click();
     const checks = page.getByRole('dialog', { name: 'PCB design checks' });
-    await expect(checks.getByRole('list', { name: 'PCB findings' }))
-      .toContainText('Required terminals remain in separate copper islands.');
-    await checks.getByRole('button', { name: 'Close', exact: true }).click();
+    const open = checks.getByRole('table', { name: 'PCB findings' })
+      .getByRole('row').filter({ hasText: 'Required terminals remain in separate copper islands.' });
+    await expect(open.getByText('Error', { exact: true })).toBeVisible();
+    await open.getByText('Finding details', { exact: true }).click();
+    await open.getByRole('button', { name: /^Show schematic pin D1 ·/ }).click();
+    await expect(checks).toBeHidden();
+    await expect(layout).toBeHidden();
+    await expect(page.locator('svg').getByText('D1', { exact: true })).toBeVisible();
+    await projects.getByRole('button', { name: 'LED.dpn', exact: true }).click();
     await layout.getByRole('button', { name: 'CAM read-back preview…' }).click();
     const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
     await cam.getByText(/Manufacturing review · [1-9][0-9]* release blockers/).click();
@@ -2446,7 +2506,7 @@ test('checks and exports the adversarial geometry reference offline', async ({ p
     await expect(canvas.locator('[data-zone-fill]')).toHaveCount(1);
     await layout.getByRole('button', { name: 'Run design checks…' }).click();
     const checks = page.getByRole('dialog', { name: 'PCB design checks' });
-    const findings = checks.getByRole('list', { name: 'PCB findings' }).getByRole('listitem');
+    const findings = checks.getByRole('table', { name: 'PCB findings' }).locator('tbody > tr');
     await expect(findings.filter({ hasText: 'A physical copper island joins distinct nets.' })).toHaveCount(2);
     await expect(findings.filter({ hasText: 'Copper on the same net meets only at isolated points.' }))
       .toHaveCount(1);
@@ -2591,7 +2651,12 @@ test('checks both regulator packages and exports bottom thermal changes offline'
     await layout.getByRole('button', { name: 'Run design checks…' }).click();
     await expect(checks.getByRole('status')).toContainText('found no issues');
     await checks.getByRole('button', { name: 'Close', exact: true }).click();
-    await downloadPreview('regulator-baseline.zip');
+    await downloadPreview('regulator-baseline.zip', async () => {
+      await reviewEveryCamLayer(cam);
+      const release = page.waitForEvent('download');
+      await cam.getByRole('button', { name: 'Release and download…' }).click();
+      await (await release).saveAs(info.outputPath('regulator-manufacturing-release.zip'));
+    });
 
     await layout.getByRole('button', { name: 'Edit zone…' }).click();
     const zone = page.getByRole('dialog', { name: 'Edit copper zone' });
@@ -2602,8 +2667,8 @@ test('checks both regulator packages and exports bottom thermal changes offline'
     await zone.getByRole('button', { name: 'Apply', exact: true }).click();
     await expect(layout.getByText('Zones filled.', { exact: true })).toBeVisible();
     await layout.getByRole('button', { name: 'Run design checks…' }).click();
-    const findings = checks.getByRole('list', { name: 'PCB findings' });
-    await expect(findings.getByRole('listitem')).toHaveCount(2);
+    const findings = checks.getByRole('table', { name: 'PCB findings' });
+    await expect(findings.locator('tbody > tr')).toHaveCount(2);
     await expect(findings).toContainText('North · Thermal spoke does not bridge the land and pour.');
     await expect(findings).toContainText('East · Filled thermal spoke is below the required bridge width.');
     await checks.getByRole('button', { name: 'Close', exact: true }).click();
@@ -2668,7 +2733,7 @@ test('checks the copied MCU and sensor schematic, board, and antenna keepout off
     await region.getByRole('button', { name: 'Apply', exact: true }).click();
     await expect(region).toBeHidden();
     await openChecks();
-    await expect(checks.getByRole('list', { name: 'PCB findings' }))
+    await expect(checks.getByRole('table', { name: 'PCB findings' }))
       .toContainText('The routing region excludes this track.', { timeout: 30_000 });
     await closeChecks();
     await layout.getByRole('button', { name: 'Undo', exact: true }).click();
@@ -2856,14 +2921,14 @@ test('keeps DNP pads in copper checks and excludes the part from fitted exports'
     const track = dnp.tracks.find(({ netId }) => netId === ledNet.id);
     const canvas = layout.getByRole('img', { name: 'Board layout' });
     const midpoint = await canvas.evaluate((svg, [a, b]) => {
-      const point = new DOMPoint((a.x + b.x) / 2, -(a.y + b.y) / 2).matrixTransform(svg.getScreenCTM());
+      const point = new DOMPoint((a.x + b.x) / 2, -(a.y + b.y) / 2).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
       return [point.x, point.y];
     }, [track.start, track.end]);
     await page.mouse.click(...midpoint);
     await layout.getByRole('button', { name: 'Delete selected copper…' }).click();
     await layout.getByRole('button', { name: 'Confirm deletion', exact: true }).click();
     await layout.getByRole('button', { name: 'Run design checks…' }).click();
-    await expect(page.getByRole('dialog', { name: 'PCB design checks' }).getByRole('list', { name: 'PCB findings' }))
+    await expect(page.getByRole('dialog', { name: 'PCB design checks' }).getByRole('table', { name: 'PCB findings' }))
       .toContainText('Required terminals remain in separate copper islands.');
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -2906,10 +2971,17 @@ test('opens and edits the single-sided timer and logic reference offline', async
     await expect(canvas.locator('[data-wire-jumper]')).toHaveCount(1);
     await board.getByRole('button', { name: 'Run design checks…' }).click();
     const checks = page.getByRole('dialog', { name: 'PCB design checks' });
-    const findings = checks.getByRole('list', { name: 'PCB findings' }).getByRole('listitem');
+    const findings = checks.getByRole('table', { name: 'PCB findings' }).locator('tbody > tr');
     await expect(findings).toHaveCount(1, { timeout: 30_000 });
     await expect(findings).toContainText('Separate bare copper islands require fitted wire jumpers');
     await checks.getByRole('button', { name: 'Close', exact: true }).click();
+    await board.getByRole('button', { name: 'CAM read-back preview…' }).click();
+    const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+    await expect(cam.getByRole('img', { name: 'CAM read-back' })).toBeVisible({ timeout: 55_000 });
+    const download = page.waitForEvent('download');
+    await cam.getByRole('button', { name: 'Download preview bundle…' }).click();
+    await (await download).saveAs(info.outputPath('timer-cam-preview.zip'));
+    await cam.getByRole('button', { name: 'Close', exact: true }).click();
     await board.getByRole('button', { name: 'Edit JP1…', exact: true }).click();
     const jumper = page.getByRole('dialog', { name: 'Edit wire jumper' });
     await jumper.getByLabel('Fit jumper').uncheck();
@@ -3047,6 +3119,11 @@ test('restores linked PCB edits without overwriting an externally edited project
     await open(page);
     await board(page).getByLabel('Copper layers').selectOption('1');
     await expect(board(page).getByText('Recovery saved for PCB revision 1.')).toBeVisible();
+    const renderer = await context.newCDPSession(page);
+    const crashed = page.waitForEvent('crash');
+    // Chromium may close the protocol request when it terminates the renderer.
+    void renderer.send('Page.crash').catch(() => {});
+    await crashed;
     await page.close();
     const restored = await context.newPage();
     await open(restored);
@@ -3190,10 +3267,12 @@ test('opens a desktop project at its containing folder without replacing the dra
   const second = path.join(area, 'Second');
   const invalid = path.join(area, 'Invalid');
   const unmarked = path.join(area, 'Unmarked');
+  const trash = path.join(area, 'Trash');
+  const trashed = [];
   let chosenFolder;
   let queued = path.join(first, 'Startup.tcproject');
   try {
-    await Promise.all([documents, first, second, invalid, unmarked].map((folder) => mkdir(folder)));
+    await Promise.all([documents, first, second, invalid, unmarked, trash].map((folder) => mkdir(folder)));
     const api = await layoutRuntime();
     for (const [folder, marker, title] of [
       [first, 'Startup.tcproject', 'Startup settings'],
@@ -3222,6 +3301,9 @@ test('opens a desktop project at its containing folder without replacing the dra
     await writeFile(path.join(documents, 'Unrelated.tcproject'), 'unrelated');
     await writeFile(path.join(invalid, 'Broken.tcproject'), 'invalid XML');
     await writeFile(path.join(unmarked, 'Build notes.txt'), 'Existing file');
+    await writeFile(path.join(unmarked, 'Move me.txt'), 'Portable notes');
+    await mkdir(path.join(unmarked, 'Datasheets', 'Connectors'), { recursive: true });
+    await writeFile(path.join(unmarked, 'Datasheets', 'Connectors', 'Pinout.txt'), 'Tip, ring and sleeve');
     await installProjectBridge(page, documents, undefined, () => {
       const value = queued;
       queued = undefined;
@@ -3230,6 +3312,11 @@ test('opens a desktop project at its containing folder without replacing the dra
       showOpenDialog: async () => chosenFolder
         ? { canceled: false, filePaths: [chosenFolder] }
         : { canceled: true, filePaths: [] },
+    }, {
+      async trashItem(filename) {
+        await rename(filename, path.join(trash, path.basename(filename)));
+        trashed.push(filename);
+      },
     });
     await page.goto(app.baseURL);
     await expect(page.getByRole('group', { name: 'Project activity bar' })).toHaveCount(0);
@@ -3258,7 +3345,68 @@ test('opens a desktop project at its containing folder without replacing the dra
     chosenFolder = unmarked;
     await page.evaluate(() => window.hierarchyTestMenu('file-open-project-folder'));
     await expect(projects.getByText('Unmarked', { exact: true })).toBeVisible();
-    await expect(projects.getByRole('button', { name: 'Build notes.txt', exact: true })).toBeVisible();
+    const treeButton = (name) => projects.getByRole('button', { name, exact: true });
+    async function chooseItemAction(item, action) {
+      await treeButton('Actions for ' + item).click();
+      await page.getByRole('menuitem', { name: action, exact: true }).click();
+    }
+    async function chooseFolderAction(action) {
+      await treeButton('Project folder actions').click();
+      await page.getByRole('menuitem', { name: action, exact: true }).click();
+    }
+    async function submitName(name) {
+      const dialog = page.getByRole('dialog');
+      await dialog.getByRole('textbox', { name: 'Name' }).fill(name);
+      await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+    }
+
+    await expect(treeButton('Build notes.txt')).toBeVisible();
+    const sheetFolder = treeButton('Datasheets');
+    await expect(sheetFolder).toHaveAttribute('aria-expanded', 'false');
+    await sheetFolder.focus();
+    await page.keyboard.press('Enter');
+    await expect(sheetFolder).toHaveAttribute('aria-expanded', 'true');
+    await expect(treeButton('Build notes.txt')).toBeVisible();
+    const connectors = treeButton('Connectors');
+    await connectors.click();
+    const pinout = treeButton('Pinout.txt');
+    await expect(pinout).toBeVisible();
+    const outer = await sheetFolder.boundingBox();
+    const nested = await pinout.boundingBox();
+    expect(nested.x).toBeGreaterThan(outer.x);
+    await page.setViewportSize({ width: 900, height: 700 });
+    await expect(pinout).toBeVisible();
+
+    await chooseItemAction('Move me.txt', 'Cut for move');
+    await chooseFolderAction('Paste moved item');
+    await expect(treeButton('Move me.txt')).toBeVisible();
+    const moved = path.join(unmarked, 'Datasheets', 'Connectors', 'Move me.txt');
+    await expect.poll(() => readFile(moved, 'utf8').catch(() => null)).toBe('Portable notes');
+    await expect(readFile(path.join(unmarked, 'Move me.txt'))).rejects.toMatchObject({ code: 'ENOENT' });
+
+    await chooseFolderAction('New folder…');
+    await submitName('To rename');
+    await expect(treeButton('To rename')).toBeVisible();
+    await chooseItemAction('To rename', 'Rename');
+    await submitName('Empty folder');
+    await expect(treeButton('Empty folder')).toBeVisible();
+
+    await chooseItemAction('Move me.txt', 'Move to trash');
+    await page.getByRole('dialog', { name: 'Move to trash' }).getByRole('button', { name: 'Move to trash' }).click();
+    await expect(treeButton('Move me.txt')).toHaveCount(0);
+    await chooseItemAction('Empty folder', 'Move to trash');
+    await page.getByRole('dialog', { name: 'Move to trash' }).getByRole('button', { name: 'Move to trash' }).click();
+    await expect(treeButton('Empty folder')).toHaveCount(0);
+    expect(trashed).toEqual([
+      path.join(unmarked, 'Datasheets', 'Connectors', 'Move me.txt'),
+      path.join(unmarked, 'Datasheets', 'Connectors', 'Empty folder'),
+    ]);
+    expect(await readFile(path.join(trash, 'Move me.txt'), 'utf8')).toBe('Portable notes');
+
+    await sheetFolder.click();
+    await expect(sheetFolder).toHaveAttribute('aria-expanded', 'false');
+    await expect(connectors).toHaveCount(0);
+    await expect(treeButton('Build notes.txt')).toBeVisible();
     await projects.getByRole('button', { name: 'Project folder actions' }).click();
     await page.getByRole('menuitem', { name: 'New project…' }).click();
     const name = page.getByRole('dialog');
@@ -3300,6 +3448,260 @@ test('opens a desktop project at its containing folder without replacing the dra
     expect((await api.decodeBoard(await readFile(boardPath))).copperLayers).toHaveLength(1);
   } finally {
     await rm(area, { recursive: true, force: true });
+  }
+});
+
+test('relocates linked board folders and recovers interrupted file operations', async ({ page }, info) => {
+  test.setTimeout(90000);
+  const root = await mkdtemp(path.join(info.project.outputDir, 'linked-move-'));
+  const marker = path.join(root, 'Example.tcproject');
+  const recycleBin = await mkdtemp(path.join(info.project.outputDir, 'linked-trash-'));
+  const api = await layoutRuntime();
+  let failCommit = false;
+  let failRollback = false;
+  let failTrash = false;
+  let failTrashRollback = false;
+  const trashed = [];
+  await installProjectBridge(page, root, async (request) => {
+    if (failCommit && request.operation === 'write' && request.id === marker) {
+      failCommit = false;
+      const settings = api.decodeProjectSettings(await readFile(marker));
+      await writeFile(marker, api.encodeProjectSettings({ ...settings, author: 'Concurrent edit' }));
+      throw new Error('Simulated settings write failure');
+    }
+    if (failRollback && request.operation === 'move' && request.folder === root) {
+      failRollback = false;
+      throw new Error('Simulated interruption during rollback');
+    }
+    if (failTrashRollback && !failTrash && request.operation === 'write' && request.id === marker) {
+      failTrashRollback = false;
+      throw new Error('Simulated interruption restoring trash settings');
+    }
+  }, undefined, undefined, {
+    async trashItem(filename) {
+      if (failTrash) {
+        failTrash = false;
+        throw new Error('Simulated trash provider failure');
+      }
+      await rename(filename, path.join(recycleBin, path.basename(filename)));
+      trashed.push(filename);
+    },
+  });
+  try {
+    await Promise.all(['Modules', 'Archive', 'Occupied', 'Outside'].map((name) => mkdir(path.join(root, name))));
+    const top = crypto.randomUUID();
+    const child = crypto.randomUUID();
+    const leaf = crypto.randomUUID();
+    const placement = crypto.randomUUID();
+    const xml = (id, name, items = '') =>
+      `<TinyCADSheets><DSNIDENTITY id="${id}"/><TinyCAD id="${crypto.randomUUID()}"><NAME>${name}</NAME>${items}</TinyCAD></TinyCADSheets>`;
+    const instance = (file, id, unit) =>
+      `<HIERARCHICAL_SYMBOL pos="60,70" rotate="0" file="${file}" child_uuid="${id}" unit_uuid="${unit}"><FIELD type="0" description="Ref" value="H1" show="1" pos="0,12"/></HIERARCHICAL_SYMBOL>`;
+    const system = await api.decodeDrawing(xml(top, 'System', instance('Modules/Child.dsn', child, placement)));
+    await writeFile(path.join(root, 'System.dzn'), await api.encodeDrawing(system, 'zip-v1'));
+    const legacy = '<HIERACHICAL_SYMBOL pos="60,70" rotate="0" file="../Outside/Leaf.dsn"/>';
+    const childFile = path.join(root, 'Modules', 'Child.dsn');
+    await writeFile(childFile, xml(child, 'Module', legacy));
+    await writeFile(path.join(root, 'Outside', 'Leaf.dsn'), xml(leaf, 'Leaf'));
+
+    const outline = [{ x: 0, y: 0 }, { x: 2e6, y: 0 }, { x: 2e6, y: 2e6 }, { x: 0, y: 2e6 }];
+    const board = api.createBoard('Module PCB', 1, outline);
+    const existing = api.createBoard('Occupied PCB', 1, outline);
+    const boardBytes = Buffer.from(await api.encodeBoard(board));
+    await writeFile(path.join(root, 'Modules', 'Main.dpn'), boardBytes);
+    await writeFile(path.join(root, 'Occupied', 'Other.dpn'), await api.encodeBoard(existing));
+    const association = { schematic: child, board: board.boardId };
+    await writeFile(marker, api.encodeProjectSettings({
+      projectId: crypto.randomUUID(),
+      revisionId: crypto.randomUUID(),
+      title: 'Linked moves',
+      requiredFeatures: [],
+      primarySchematic: top,
+      primaryBoard: board.boardId,
+      entries: [
+        { kind: 'schematic', id: top, path: 'System.dzn' },
+        { kind: 'schematic', id: child, path: 'Modules/Child.dsn' },
+        { kind: 'board', id: board.boardId, path: 'Modules/Main.dpn' },
+        { kind: 'board', id: existing.boardId, path: 'Occupied/Other.dpn' },
+      ],
+      associations: [association],
+      outputRecipes: [
+        {
+          id: crypto.randomUUID(), kind: 'netlist', schematic: child, format: 'PADS-PCB',
+          directory: 'Modules/outputs', filename: 'Module.net',
+        },
+        {
+          id: crypto.randomUUID(), kind: 'bom', board: board.boardId,
+          directory: 'Modules/outputs', filename: 'Module.csv',
+        },
+        {
+          id: crypto.randomUUID(), kind: 'pcb', board: board.boardId, format: 'placement',
+          directory: 'Modules/outputs', filename: 'Placement.csv',
+        },
+      ],
+    }));
+
+    const sidebar = page.getByRole('region', { name: 'Projects', exact: true });
+    const item = (name) => sidebar.getByRole('button', { name, exact: true });
+    const menu = (name) => page.getByRole('menuitem', { name, exact: true });
+    async function showProject() {
+      await page.goto(app.baseURL);
+      await page.getByRole('button', { name: 'Projects', exact: true }).click();
+      await expect(item('Open schematic')).toBeVisible();
+    }
+    async function action(name, command) {
+      await item('Actions for ' + name).click();
+      await menu(command).click();
+    }
+    async function paste() {
+      await item('Project folder actions').click();
+      await menu('Paste moved item').click();
+    }
+    const settings = async () => api.decodeProjectSettings(await readFile(marker));
+
+    await showProject();
+    await item('Modules').click();
+    await action('Main.dpn', 'Rename');
+    const renameDialog = page.getByRole('dialog', { name: 'Rename' });
+    await renameDialog.getByRole('textbox', { name: 'Name' }).fill('Module.dpn');
+    await renameDialog.getByRole('button', { name: 'OK' }).click();
+    await expect(item('Module.dpn')).toBeVisible();
+    expect(await readFile(path.join(root, 'Modules', 'Module.dpn'))).toEqual(boardBytes);
+
+    await action('Module.dpn', 'Cut for move');
+    await item('Occupied').click();
+    await paste();
+    await expect(sidebar.getByRole('alert')).toContainText('Only one active PCB');
+    expect(await readFile(path.join(root, 'Modules', 'Module.dpn'))).toEqual(boardBytes);
+    const originalSystem = await readFile(path.join(root, 'System.dzn'));
+    const originalChild = await readFile(childFile);
+    const originalSettings = await settings();
+
+    await action('Modules', 'Cut for move');
+    await item('Archive').click();
+    failCommit = true;
+    failRollback = true;
+    await paste();
+    await expect(sidebar.getByRole('alert')).toContainText('Simulated interruption');
+    expect(await readFile(path.join(root, 'Archive', 'Modules', 'Module.dpn'))).toEqual(boardBytes);
+    expect(await settings()).toEqual({ ...originalSettings, author: 'Concurrent edit' });
+
+    await showProject();
+    expect(await readFile(path.join(root, 'Modules', 'Module.dpn'))).toEqual(boardBytes);
+    expect(await readFile(path.join(root, 'System.dzn'))).toEqual(originalSystem);
+    expect(await readFile(childFile)).toEqual(originalChild);
+    expect(await settings()).toEqual({ ...originalSettings, author: 'Concurrent edit' });
+
+    await action('Modules', 'Cut for move');
+    await item('Archive').click();
+    await paste();
+    await expect.poll(async () => (await settings()).entries.find(({ id }) => id === board.boardId).path)
+      .toBe('Archive/Modules/Module.dpn');
+    const moved = await settings();
+    expect(moved.associations).toEqual([association]);
+    expect(moved.outputRecipes.map(({ directory }) => directory))
+      .toEqual(Array(3).fill('Archive/Modules/outputs'));
+    expect(moved.entries.find(({ id }) => id === child).path).toBe('Archive/Modules/Child.dsn');
+    const updatedSystem = await api.decodeDrawing(await readFile(path.join(root, 'System.dzn')));
+    const childInstance = updatedSystem.sheets[0].items.find(({ hierarchy }) => hierarchy);
+    expect(childInstance.unitId).toBe(placement);
+    expect(childInstance.hierarchy).toMatchObject({ documentId: child, path: 'Archive/Modules/Child.dsn' });
+    expect(await readFile(path.join(root, 'Archive', 'Modules', 'Child.dsn'), 'utf8'))
+      .toContain('file="../../Outside/Leaf.dsn"');
+    expect(await readFile(path.join(root, 'Archive', 'Modules', 'Module.dpn'))).toEqual(boardBytes);
+
+    await showProject();
+    await item('System.dzn').click();
+    await expect.poll(() => page.evaluate(() => window.layoutTest.snapshot().drawing.documentId)).toBe(top);
+    await item('Archive').click();
+    await item('Modules').click();
+    await item('Module.dpn').click();
+    const layout = page.getByRole('region', { name: 'PCB layout' });
+    await expect(layout.getByRole('img', { name: 'Board layout' })).toBeVisible();
+    await item('Actions for Module.dpn').click();
+    await expect(menu('Move to trash')).toBeDisabled();
+
+    const trash = page.getByRole('dialog', { name: 'Move to trash' });
+    async function openModule() {
+      await showProject();
+      await item('Archive').click();
+      await item('Modules').click();
+    }
+    async function previewChildTrash() {
+      await action('Child.dsn', 'Move to trash');
+      await expect(trash.getByText('Archive/Modules/Child.dsn', { exact: true })).toBeVisible();
+      await expect(trash.getByText('Archive/Modules/Child.dsn → Archive/Modules/Module.dpn')).toBeVisible();
+      await expect(trash.getByText('Archive/Modules/outputs/Module.net', { exact: true })).toBeVisible();
+      await expect(trash.getByText('Archive/Modules/outputs/Module.csv', { exact: true })).toBeVisible();
+      await expect(trash.getByText('Archive/Modules/outputs/Placement.csv', { exact: true })).toHaveCount(0);
+    }
+    const confirmTrash = () => trash.getByRole('button', { name: 'Move to trash', exact: true }).click();
+    const survivorPath = path.join(root, 'System.dzn');
+    const survivor = await readFile(survivorPath);
+    const movedChild = path.join(root, 'Archive', 'Modules', 'Child.dsn');
+    const movedChildBytes = await readFile(movedChild);
+
+    await openModule();
+    await previewChildTrash();
+    await trash.getByRole('button', { name: 'Cancel', exact: true }).click();
+    expect(trashed).toEqual([]);
+    expect(await settings()).toEqual(moved);
+
+    await previewChildTrash();
+    const concurrent = { ...moved, author: 'New author' };
+    await writeFile(marker, api.encodeProjectSettings(concurrent));
+    await confirmTrash();
+    await expect(sidebar.getByRole('alert')).toContainText('Open a fresh trash preview');
+    expect(trashed).toEqual([]);
+    expect(await readFile(movedChild)).toEqual(movedChildBytes);
+
+    await previewChildTrash();
+    failTrash = true;
+    failTrashRollback = true;
+    await confirmTrash();
+    await expect(sidebar.getByRole('alert')).toContainText('Simulated interruption restoring trash settings');
+    expect((await settings()).entries.some(({ id }) => id === child)).toBe(false);
+    expect(trashed).toEqual([]);
+    await openModule();
+    expect(await settings()).toEqual(concurrent);
+
+    await previewChildTrash();
+    await confirmTrash();
+    await expect.poll(() => trashed.includes(movedChild)).toBe(true);
+    await expect(item('Child.dsn')).toHaveCount(0);
+    expect(await readFile(path.join(recycleBin, 'Child.dsn'))).toEqual(movedChildBytes);
+    expect(await readFile(survivorPath)).toEqual(survivor);
+    const detached = await settings();
+    expect(detached.entries.some(({ id }) => id === child)).toBe(false);
+    expect(detached.associations ?? []).toEqual([]);
+    expect(detached.outputRecipes.map(({ filename }) => filename)).toEqual(['Placement.csv']);
+
+    await item('System.dzn').click();
+    await expect.poll(() => page.evaluate(() => window.layoutTest.snapshot().drawing.documentId)).toBe(top);
+    await page.evaluate(() => {
+      const instance = window.layoutTest.snapshot().drawing.sheets[0].items.find(({ hierarchy }) => hierarchy);
+      window.layoutTest.selectItem(instance._id);
+    });
+    await expect(page.getByRole('region', { name: 'Schematic hierarchy' }).getByRole('status'))
+      .toContainText(/Missing or ambiguous child|child identity and project path disagree/i);
+    await item('Module.dpn').click();
+    await expect(layout.getByRole('img', { name: 'Board layout' })).toBeVisible();
+
+    await openModule();
+    await action('Modules', 'Move to trash');
+    await expect(trash.getByText('Archive/Modules/Module.dpn', { exact: true })).toBeVisible();
+    await expect(trash.getByText('Archive/Modules/outputs/Placement.csv', { exact: true })).toBeVisible();
+    await confirmTrash();
+    await expect.poll(() => trashed.includes(path.join(root, 'Archive', 'Modules'))).toBe(true);
+    await expect(item('Modules')).toHaveCount(0);
+    expect(await readFile(path.join(recycleBin, 'Modules', 'Module.dpn'))).toEqual(boardBytes);
+    const remaining = await settings();
+    expect(remaining.primaryBoard).toBeUndefined();
+    expect(remaining.primarySchematic).toBe(top);
+    expect(remaining.entries.map(({ id }) => id).sort()).toEqual([existing.boardId, top].sort());
+    expect(remaining.outputRecipes ?? []).toEqual([]);
+  } finally {
+    await Promise.all([root, recycleBin].map((directory) => rm(directory, { recursive: true, force: true })));
   }
 });
 
@@ -3395,7 +3797,8 @@ test('imports dropped project files, nested folders, and retries a failed copy',
       { name: 'Datasheet.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-fixture') },
     ]);
     await expect(dialog.getByRole('status')).toHaveText('2 files imported. 0 items skipped.');
-    await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(dialog.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
+    await page.keyboard.press('Enter');
     await expect(sidebar.getByRole('button', { name: 'Guide.md', exact: true })).toBeVisible();
     await expect(sidebar.getByRole('button', { name: 'Datasheet.pdf', exact: true })).toBeVisible();
     expect(await readFile(path.join(root, 'Guide.md'), 'utf8')).toBe('Project guide');
@@ -3411,11 +3814,14 @@ test('imports dropped project files, nested folders, and retries a failed copy',
 test('reviews and commits project changes in the real Git index', async ({ page }, info) => {
   test.setTimeout(90000);
   await mkdir(info.project.outputDir, { recursive: true });
-  const repo = await mkdtemp(path.join(info.project.outputDir, 'project-git-'));
+  const fixture = await mkdtemp(path.join(info.project.outputDir, 'project-git-'));
+  const repo = path.join(fixture, 'working');
+  const remote = path.join(fixture, 'origin.git');
   const root = path.join(repo, 'Design');
   const git = (...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
   try {
-    await mkdir(root);
+    await mkdir(root, { recursive: true });
+    git('init', '--bare', '-q', '-b', 'main', remote);
     git('init', '-q', '-b', 'main');
     git('config', 'user.email', 'tinycad@example.test');
     git('config', 'user.name', 'TinyCAD Tests');
@@ -3431,6 +3837,8 @@ test('reviews and commits project changes in the real Git index', async ({ page 
     await writeFile(path.join(repo, 'Outside.txt'), 'initial');
     git('add', '--all');
     git('commit', '-qm', 'Initial project');
+    git('remote', 'add', 'origin', remote);
+    git('push', '-qu', 'origin', 'main');
     await writeFile(note, original.replace('Line 2\n', 'First edit\n').replace('Line 18\n', 'Second edit\n'));
     await writeFile(path.join(repo, 'Outside.txt'), 'outside draft');
     await installProjectBridge(page, repo);
@@ -3475,13 +3883,21 @@ test('reviews and commits project changes in the real Git index', async ({ page 
     await expect(review.getByRole('tabpanel')).toContainText('+First edit');
     await expect(review.getByRole('tabpanel')).not.toContainText('outside draft');
     await review.getByRole('button', { name: 'Close Git review' }).click();
+    await expect(source.getByRole('button', { name: '1 outgoing' })).toBeEnabled();
+    await source.getByRole('button', { name: 'Push', exact: true }).click();
+    await expect(source.getByRole('button', { name: '0 outgoing' })).toBeDisabled();
+    expect(git('--git-dir=' + remote, 'rev-parse', 'refs/heads/main')).toBe(git('rev-parse', 'HEAD'));
+    expect(git('--git-dir=' + remote, 'show', 'main:Design/Notes.md'))
+      .toBe(original.replace('Line 2\n', 'First edit\n'));
+    expect(await readFile(note, 'utf8')).toContain('Second edit');
+
     await activity.getByRole('button', { name: 'Projects', exact: true }).click();
     await explorer.getByRole('button', { name: 'Actions for Example.tcproject', exact: true }).click();
     await page.getByRole('menuitem', { name: 'Git file history', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'History · Design/Example.tcproject' }))
       .toContainText('Initial project');
   } finally {
-    await rm(repo, { recursive: true, force: true });
+    await rm(fixture, { recursive: true, force: true });
   }
 });
 
@@ -4049,6 +4465,96 @@ test('maps system wires and generates separate outputs for boards sharing a sour
     }
   } finally {
     await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test('updates a daughterboard from its own source without changing the motherboard', async ({ page }, info) => {
+  test.setTimeout(90000);
+  await mkdir(info.project.outputDir, { recursive: true });
+  const root = await mkdtemp(path.join(info.project.outputDir, 'separate-board-sources-'));
+  try {
+    const api = await layoutRuntime();
+    const examples = new URL('../../../examples/pcb/', import.meta.url);
+    for (const [folder, fixture, name] of [
+      ['Main', 'led-classroom/Reference', 'LED'],
+      ['Sensor', 'op-amp-filter', 'Filter'],
+    ]) {
+      await mkdir(path.join(root, folder));
+      for (const extension of ['.dpn', '.dzn']) {
+        const filename = name + extension;
+        await cp(new URL(fixture + '/' + filename, examples), path.join(root, folder, filename));
+      }
+    }
+    const mainPath = path.join(root, 'Main/LED.dpn');
+    const sensorPath = path.join(root, 'Sensor/Filter.dpn');
+    const sourcePath = path.join(root, 'Sensor/Filter.dzn');
+    const mainBytes = await readFile(mainPath);
+    const main = await api.decodeBoard(mainBytes);
+    const sensor = await api.decodeBoard(await readFile(sensorPath));
+    const mainSource = await api.decodeDrawing(await readFile(path.join(root, 'Main/LED.dzn')));
+    const sensorSource = await api.decodeDrawing(await readFile(sourcePath));
+    const resistor = sensorSource.sheets.flatMap(({ items }) => items).find((item) =>
+      item.NodeName === 'symbol' && item.text.some(({ description, value }) => description === 'Ref' && value === 'R1'),
+    );
+    resistor.text.find(({ description }) => description === 'Value').value = '12k';
+    await writeFile(sourcePath, await api.encodeDrawing(sensorSource, 'zip-v1'));
+
+    const marker = path.join(root, 'Two boards.tcproject');
+    await writeFile(marker, api.encodeProjectSettings({
+      title: 'Two boards', projectId: crypto.randomUUID(), revisionId: crypto.randomUUID(), requiredFeatures: [],
+      entries: [
+        { kind: 'schematic', id: mainSource.documentId, path: 'Main/LED.dzn' },
+        { kind: 'board', id: main.boardId, path: 'Main/LED.dpn' },
+        { kind: 'schematic', id: sensorSource.documentId, path: 'Sensor/Filter.dzn' },
+        { kind: 'board', id: sensor.boardId, path: 'Sensor/Filter.dpn' },
+      ],
+      associations: [
+        { schematic: mainSource.documentId, board: main.boardId },
+        { schematic: sensorSource.documentId, board: sensor.boardId },
+      ],
+    }));
+    let pending = marker;
+    await installProjectBridge(page, root, undefined, () => {
+      const opened = pending;
+      pending = undefined;
+      return opened;
+    });
+    await page.goto(app.baseURL + '?project=1');
+    const explorer = page.getByRole('region', { name: 'Projects', exact: true });
+    await explorer.getByRole('button', { name: 'Sensor', exact: true }).click();
+    await explorer.getByRole('button', { name: 'Actions for Filter.dzn', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Update PCB from Schematic…', exact: true }).click();
+
+    const eco = page.getByRole('dialog', { name: 'Update PCB from Schematic' });
+    await expect(eco).toContainText('Sensor/Filter.dzn → Sensor/Filter.dpn');
+    await eco.getByRole('button', { name: 'Apply circuit update' }).click();
+    await expect(eco).toBeHidden();
+    const updated = await api.decodeBoard(await readFile(sensorPath));
+    expect(updated.components.find(({ reference }) => reference === 'R1').value).toBe('12k');
+    expect(updated.tracks).toEqual(sensor.tracks);
+    expect(updated.footprints).toEqual(sensor.footprints);
+    expect(await readFile(mainPath)).toEqual(mainBytes);
+
+    const outputDialog = page.getByRole('dialog', { name: 'Project outputs' });
+    for (const [folder, name] of [['Sensor', 'Filter'], ['Main', 'LED']]) {
+      if (folder === 'Main') {
+        await explorer.getByRole('button', { name: 'Parent folder', exact: true }).click();
+        await explorer.getByRole('button', { name: folder, exact: true }).click();
+      }
+      await explorer.getByRole('button', { name: 'Actions for ' + name + '.dpn', exact: true }).click();
+      await page.getByRole('menuitem', { name: 'Configure PCB outputs…' }).click();
+      await outputDialog.getByRole('button', { name: 'Add netlist recipe' }).click();
+      await outputDialog.getByRole('button', { name: 'Save recipe' }).click();
+      const target = folder + '/outputs/circuit.net';
+      await outputDialog.getByRole('listitem').filter({ hasText: target })
+        .getByRole('button', { name: 'Run', exact: true }).click();
+      await expect(outputDialog.getByRole('status')).toHaveText('Generated ' + target);
+      const manifest = JSON.parse(await readFile(path.join(root, target + '.manifest.json'), 'utf8'));
+      expect(Object.keys(manifest.sources)).toEqual([folder + '/' + name + '.dzn']);
+      await outputDialog.getByRole('button', { name: 'Close', exact: true }).click();
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });
 

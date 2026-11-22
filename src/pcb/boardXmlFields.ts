@@ -75,7 +75,7 @@ export function writeBoardXml(root: XmlElement): string {
 }
 
 function elementFromDom(node: Element, depth = 0): XmlElement {
-  if (depth > 48) throw new Error('PCB XML is nested too deeply.');
+  checkDepth(depth);
   const children: XmlElement['children'] = [];
   for (const child of Array.from(node.childNodes)) {
     if (child.nodeType === 1)
@@ -93,7 +93,7 @@ function elementFromDom(node: Element, depth = 0): XmlElement {
   };
 }
 
-export function readBoardXml(text: string): XmlElement {
+export function readBoardXml(text: string): Element {
   if (invalidXmlCharacter.test(text) || /<!DOCTYPE|<!ENTITY/i.test(text))
     throw new Error('Invalid PCB XML.');
   const xml = new XMLBuilder();
@@ -114,7 +114,7 @@ export function readBoardXml(text: string): XmlElement {
     )
   )
     throw new Error('Expected a TinyCADPCB XML document.');
-  return elementFromDom(document.documentElement);
+  return document.documentElement;
 }
 
 function attributeNames(fields: Attributes) {
@@ -146,24 +146,38 @@ function parseAttribute(text: string, type: Scalar) {
   throw new Error(`Invalid PCB XML ${type} value: ${text.slice(0, 80)}`);
 }
 
-function objects(element: XmlElement) {
-  const result: XmlElement[] = [];
-  for (const child of element.children) {
-    if (typeof child !== 'string') result.push(child);
-    else if (child.trim())
-      throw new Error(`Unexpected text in PCB XML ${element.name}.`);
-  }
-  return result;
+function checkDepth(depth: number) {
+  if (depth > 48) throw new Error('PCB XML is nested too deeply.');
 }
 
-function textOf(element: XmlElement): string {
-  return element.children
-    .map((child) => {
-      if (typeof child !== 'string')
-        throw new Error(`Unexpected element in PCB XML ${element.name}.`);
-      return child;
-    })
-    .join('');
+function* objectNodes(element: Element, depth: number): Generator<Element> {
+  checkDepth(depth);
+  for (let node = element.firstChild; node; node = node.nextSibling) {
+    if (node.nodeType === 1) yield node as Element;
+    else if (node.nodeType === 3 || node.nodeType === 4) {
+      if (node.nodeValue.trim())
+        throw new Error(`Unexpected text in PCB XML ${element.nodeName}.`);
+    } else if (node.nodeType !== 8) throw new Error('Unsupported PCB XML node.');
+  }
+}
+
+function textOf(element: Element, depth: number): string {
+  checkDepth(depth);
+  let text = '';
+  for (let node = element.firstChild; node; node = node.nextSibling) {
+    if (node.nodeType === 3 || node.nodeType === 4) text += node.nodeValue;
+    else if (node.nodeType === 1)
+      throw new Error(`Unexpected element in PCB XML ${element.nodeName}.`);
+    else if (node.nodeType !== 8) throw new Error('Unsupported PCB XML node.');
+  }
+  return text;
+}
+
+function readField(element: Element, codec: RecordCodec | undefined, depth: number) {
+  if (codec) return codec.read(element, depth);
+  if (element.attributes.length)
+    throw new Error(`Unexpected PCB XML attributes on ${element.nodeName}.`);
+  return textOf(element, depth);
 }
 
 function textElement(name: string, value: string): XmlElement {
@@ -174,7 +188,7 @@ function textElement(name: string, value: string): XmlElement {
 
 export interface RecordCodec {
   write(name: string, data: object): XmlElement;
-  read(element: XmlElement): Values;
+  read(element: Element, depth?: number): Values;
 }
 
 export function child(name: string, codec?: RecordCodec): Field {
@@ -274,73 +288,67 @@ export function record(
       }
       return element;
     },
-    read(element) {
+    read(element, depth = 0) {
       const data: Values = Object.create(null);
       for (const { key, name, type } of attributesByKey) {
-        if (Object.hasOwn(element.attributes, name))
-          data[key] = parseAttribute(element.attributes[name], type);
+        if (element.hasAttribute(name))
+          data[key] = parseAttribute(element.getAttribute(name), type);
       }
-      const extensions: XmlExtensions = {
-        attributes: Object.fromEntries(
-          Object.entries(element.attributes).filter(
-            ([name]) => !knownAttributes.has(name),
-          ),
-        ),
-        elements: [],
-      };
-      for (const node of objects(element)) {
-        const field = fieldsByName.get(node.name);
+      let extensions: XmlExtensions | undefined;
+      function unknownFields() {
+        return extensions ??= { attributes: {}, elements: [] };
+      }
+      for (let i = 0; i < element.attributes.length; i++) {
+        const { name, value } = element.attributes.item(i);
+        if (!knownAttributes.has(name))
+          Object.defineProperty(unknownFields().attributes, name, { value, enumerable: true });
+      }
+      for (const node of objectNodes(element, depth)) {
+        const { nodeName } = node;
+        const field = fieldsByName.get(nodeName);
         if (!field) {
-          if (node.name === propertiesTag) {
-            const key = node.attributes.name;
+          if (nodeName === propertiesTag) {
+            const key = node.getAttribute('name');
             if (
-              key === undefined ||
-              Object.keys(node.attributes).length !== 1 ||
+              !node.hasAttribute('name') ||
+              node.attributes.length !== 1 ||
               key === extensionKey ||
               Object.hasOwn(fields, key) ||
               Object.hasOwn(attributes, key) ||
               Object.hasOwn(data, key)
             )
               throw new Error('Invalid or duplicate PCB XML property.');
-            data[key] = JSON.parse(textOf(node));
+            data[key] = JSON.parse(textOf(node, depth + 1));
           } else {
             if (
-              node.name === 'REQUIREDFEATURE' ||
-              node.attributes.required === 'true'
+              nodeName === 'REQUIREDFEATURE' ||
+              node.getAttribute('required') === 'true'
             )
               throw new Error(
-                `Unsupported required PCB XML element: ${node.name}`,
+                `Unsupported required PCB XML element: ${nodeName}`,
               );
-            extensions.elements.push(node);
+            unknownFields().elements.push(elementFromDom(node, depth + 1));
           }
           continue;
         }
         const { key, itemName, codec } = field;
         if (Object.hasOwn(data, key))
-          throw new Error(`Duplicate PCB XML element: ${node.name}`);
-        const read = (item: XmlElement) => {
-          if (codec) return codec.read(item);
-          if (Object.keys(item.attributes).length)
-            throw new Error(`Unexpected PCB XML attributes on ${item.name}.`);
-          return textOf(item);
-        };
+          throw new Error(`Duplicate PCB XML element: ${nodeName}`);
         if (itemName) {
-          if (Object.keys(node.attributes).length)
-            throw new Error(`Unexpected PCB XML attributes on ${node.name}.`);
-          data[key] = objects(node).map((item) => {
-            if (item.name !== itemName)
+          if (node.attributes.length)
+            throw new Error(`Unexpected PCB XML attributes on ${nodeName}.`);
+          const items: (string | Values)[] = [];
+          for (const item of objectNodes(node, depth + 1)) {
+            if (item.nodeName !== itemName)
               throw new Error(
-                `Unexpected PCB XML element in ${node.name}: ${item.name}`,
+                `Unexpected PCB XML element in ${nodeName}: ${item.nodeName}`,
               );
-            return read(item);
-          });
-        } else data[key] = read(node);
+            items.push(readField(item, codec, depth + 2));
+          }
+          data[key] = items;
+        } else data[key] = readField(node, codec, depth + 1);
       }
-      if (
-        Object.keys(extensions.attributes).length ||
-        extensions.elements.length
-      )
-        data[extensionKey] = extensions;
+      if (extensions) data[extensionKey] = extensions;
       return data;
     },
   };

@@ -131,10 +131,14 @@ export function createBoard(
   });
 }
 
+// Track only snapshots that this validator has checked and recursively frozen.
+const validatedBoards = new WeakSet<BoardDocument>();
+
 export function validateBoard(value: unknown): BoardDocument {
   if (!value || typeof value !== 'object')
     throw new Error('Expected a TinyCAD PCB document.');
   const board = value as BoardDocument;
+  if (validatedBoards.has(board)) return board;
   if (
     board.format !== boardFormat.format ||
     board.schemaVersion !== boardFormat.schemaVersion ||
@@ -213,13 +217,18 @@ export function validateBoard(value: unknown): BoardDocument {
   validateBoardFabrication(board);
   validateBoardRules(board);
   validateRoutingRegions(board);
-  return freezeJson({
+  const snapshot = freezeJson({
     ...board,
     requiredFeatures: [...board.requiredFeatures].sort(),
   }) as BoardDocument;
+  validatedBoards.add(snapshot);
+  return snapshot;
 }
 
-// Preserve optional fields at every nesting level and keep snapshots independent of caller objects.
+const frozenJsonDepth = new WeakMap<object, number>();
+
+// Only reuse objects frozen here. A subtree moved deeper must pass the depth
+// check again, including its optional fields.
 function freezeJson(value: unknown, depth = 0): unknown {
   if (depth > 48)
     throw new Error('PCB document exceeds supported nesting depth.');
@@ -230,25 +239,31 @@ function freezeJson(value: unknown, depth = 0): unknown {
     (typeof value === 'number' && Number.isFinite(value))
   )
     return value;
-  if (Array.isArray(value))
-    return Object.freeze(
-      Array.from(value, (item) => freezeJson(item, depth + 1)),
-    );
-  if (
-    value &&
-    typeof value === 'object' &&
-    [Object.prototype, null].includes(Object.getPrototypeOf(value))
-  ) {
+  if (typeof value !== 'object')
+    throw new Error('PCB document contains a non-JSON value.');
+  const knownDepth = frozenJsonDepth.get(value);
+  if (knownDepth !== undefined && depth <= knownDepth) return value;
+
+  let snapshot: object;
+  if (Array.isArray(value)) {
+    snapshot = Array.from(value, (item) => freezeJson(item, depth + 1));
+  } else {
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null)
+      throw new Error('PCB document contains a non-JSON value.');
     const record = value as Record<string, unknown>;
-    return Object.freeze(
-      Object.fromEntries(
-        Object.keys(value)
-          .sort()
-          .map((key) => [key, freezeJson(record[key], depth + 1)]),
-      ),
-    );
+    const fields: Record<string, unknown> = {};
+    for (const key of Object.keys(record).sort()) {
+      const field = freezeJson(record[key], depth + 1);
+      if (key === '__proto__')
+        Object.defineProperty(fields, key, { value: field, enumerable: true });
+      else fields[key] = field;
+    }
+    snapshot = fields;
   }
-  throw new Error('PCB document contains a non-JSON value.');
+  Object.freeze(snapshot);
+  frozenJsonDepth.set(snapshot, depth);
+  return snapshot;
 }
 
 export type BoardOperation =

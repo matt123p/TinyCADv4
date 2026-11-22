@@ -40,11 +40,23 @@ export async function readBoardModelAsset(
     base64.length > Math.ceil(maxAssetBytes / 3) * 4
   )
     throw new Error('Invalid STEP asset encoding or size.');
-  const raw = atob(base64);
-  if (raw.length > maxAssetBytes || btoa(raw) !== base64)
+  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+  const decodedLength = (base64.length / 4) * 3 - padding;
+  if (decodedLength > maxAssetBytes)
     throw new Error('Invalid STEP asset encoding or size.');
-  const bytes = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+
+  const bytes = new Uint8Array(decodedLength);
+  const chunkSize = 32_768;
+  for (let offset = 0; offset < base64.length; offset += chunkSize) {
+    const chunk = base64.slice(offset, offset + chunkSize);
+    const start = (offset / 4) * 3;
+    const expected = Math.min((chunk.length / 4) * 3, decodedLength - start);
+    const raw = atob(chunk);
+    // Only the last chunk may have padding. Re-encoding also rejects noncanonical pad bits.
+    if (raw.length !== expected || btoa(raw) !== chunk)
+      throw new Error('Invalid STEP asset encoding or size.');
+    for (let i = 0; i < raw.length; i++) bytes[start + i] = raw.charCodeAt(i);
+  }
   if ((await digest(bytes)) !== asset.id)
     throw new Error('STEP asset SHA-256 does not match its ID.');
   return bytes;

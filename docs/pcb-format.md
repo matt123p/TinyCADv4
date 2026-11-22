@@ -88,13 +88,37 @@ In **Hole or slot…**, an optional screw-head diameter on a round hole reserves
 
 The `copper-zones` feature adds `ZONES`. Each `ZONE` has a stable ID, net, layer, polygon outline and optional polygon cutouts. It records priority, clearance, separate pad and via connection modes, thermal spoke width and gap, and what to do with islands. Higher priorities fill first. Equal priorities use ascending UUID order. A lower-priority zone on another net honours the greater of the two clearances. Zones whose nets have been retired keep their definitions and require reassignment before they fill.
 
+In **Edit copper zone**, set **Pads** and **Vias** independently. **Direct** joins
+same-net lands to the fill. **Thermal relief** uses the configured gap and spoke
+width. **No connection** clears the selected kind of same-net land by the
+zone clearance, including any larger zone override. The pad or via stays on its
+net and retains its copper and drill geometry. The saved setting is used when
+the editor and CAM rebuild the zone.
+
 **Cancel zone fill** clears the displayed fill and preserves the zone definitions and unsaved board edits. Choose **Refill zones** to compute the current PCB revision or **Retry zone fill** after a worker error. The manufacturing preview computes its own fill from the current board.
 
 Design checks compare zone copper to the effective minimum width for its net. They locate narrow webs between opposing boundaries and report joins that disappear when the filled copper is inset by half the required width. The check considers adjoining same-net copper on the same layer and subtracts drill openings. Thermal spokes have separate checks. If the geometry check exceeds its comparison budget, the diagnostic CAM remains available and manufacturing release is blocked.
 
 Design checks measure each generated east, north, west and south thermal spoke against the greater of the zone’s configured spoke width and the board’s effective minimum copper width. A directional finding distinguishes a missing bridge from a narrowed bridge and includes the measured and required widths. The measurement tests a continuous path across the filled gap with a 0.2 µm geometry tolerance. Manufacturing review inherits the same findings. Measuring a spoke leaves the generated copper unchanged.
 
-`FABRICATION` stores board thickness in nanometres and an optional versioned fabrication profile. **Fabrication settings** edits the base routing rules and displays the selected profile limits. Routing and DRC take the higher minimum where both define a limit. The profile also checks finished drill and slot sizes, opening spacing, pad rings, mask webs, paste apertures and legend strokes and clearances. The 3D renderer uses the saved thickness. The generic profiles provide design starting points for FR-4 with one-ounce outer copper and green solder mask. Confirm process limits with the selected fabricator. [Fabrication capability reference](https://jlcpcb.com/capabilities/pcb-capabilities)
+`FABRICATION` stores board thickness in nanometres and an optional versioned fabrication profile. **Fabrication settings** edits the base routing rules and displays the selected profile limits. Routing and DRC take the higher minimum where both define a limit. The profile also checks finished drill and slot sizes, opening spacing, pad rings, mask webs, paste apertures, and legend strokes, text height and clearances. The 3D renderer uses the saved thickness. The generic profiles provide design starting points for FR-4 with one-ounce outer copper and green solder mask. Confirm process limits with the selected fabricator. [Fabrication capability reference](https://jlcpcb.com/capabilities/pcb-capabilities)
+
+The generic fabrication profiles require 1 mm nominal
+silkscreen text height. Design checks use the placed text's authored cap height,
+so rotating it or placing it on the back preserves the measured value. The artwork
+inspector shows the same limit. The height check leaves the rendered artwork and
+Gerber unchanged. [Fabrication capability reference](https://jlcpcb.com/capabilities/Capabilities#legend)
+
+The generic FR-4 profiles check for at least 1 mm of routed opening width
+in closed cutouts and between opposing walls of open notches, and at least
+1 mm of retained material across webs and bridges. The retained material
+limit is a TinyCAD screening rule. Width checks use the profile geometry and
+a 0.2 µm comparison tolerance for tessellated curves. They leave corner
+treatment and tooling selection to the process review. The **Outline** tab
+under **Inspect board rules…** shows the applicable limits and width
+findings. Select a finding in design checks to locate it on the board. A diagnostic CAM archive preserves the authored profile. A width
+failure or an unverified outline blocks production release.
+[Fabrication capability reference](https://jlcpcb.com/capabilities/Capabilities)
 
 The generic profiles allow a 1:1 solder mask opening. When a pad defines a mask opening on a copper layer, the opening must expose the whole land. A paste opening must have a matching copper land, meet the minimum stencil aperture size and cover at least 50% of its land area. TinyCAD measures the actual overlap on the mounted side, so offset paste that extends beyond the land gets credit only for the overlap. The 50% threshold is a TinyCAD screening limit. Stencil design and paste targets for a specific package depend on the assembly process. Omitted openings remain valid for tented pads and pads without stencil paste. [Fabrication capability reference](https://jlcpcb.com/capabilities/pcb-capabilities) [Stencil opening reference](https://jlcpcb.com/help/article/opening-process-standard-of-stencil)
 
@@ -115,6 +139,10 @@ In the footprint editor, select pads directly in the preview or use the Pad sele
 **Board outline…** and **Add cutout…** offer rectangle, rounded rectangle, circle and polygon templates. Choose **Custom lines and arcs** to edit individual start and end points. Circular arcs also specify a centre and direction as viewed from the top. Edit a saved cutout from the inspector. The draft preview locates gaps, duplicate edges, intersections and invalid cutout placement before the profile is saved.
 
 Saved contours require coincident endpoints at every junction. **Close small gap** moves an adjoining straight endpoint by at most 1 µm to reach its neighbour. Adjust larger gaps and arc-to-arc junctions in the coordinate fields. The profile uses analytic arcs in the native file and Gerber. The 2D geometry checks and read-back preview approximate arcs within the curve tolerance.
+
+## Decimal entry
+
+PCB and footprint fields accept the decimal separator of the selected TinyCAD language, or the browser locale when no preference is set. A decimal point also works. When entering coordinate pairs or vectors with decimal commas, separate coordinates with spaces or semicolons, as in `2,5; 1,25`. Use ungrouped numbers. Measurement fields that accept unit suffixes convert lengths exactly to nanometres. Native project files and fabrication exports use canonical numbers.
 
 ## Dimensions and measurement datum
 
@@ -154,6 +182,28 @@ Use **Add placement area…** to name a polygon, choose **Keep in** or **Keep ou
 
 The native `.dpn` stores the regions in `PLACEMENTAREAS`. These are assembly placement rules. KiCad export lists them in its omission report.
 
+## Design-check findings
+
+Use **Run design checks…** to validate the board revision. Activate a finding to
+locate the affected board geometry. Expand **Finding details** to see applicable
+layers, board coordinates, and rule IDs. When the project provides a source pin,
+**Show schematic pin** opens the associated sheet and highlights that pin.
+
+The saved `.drc.json`, CAM `checks.json` and manufacturing review use the
+same finding records. Each preserves its stable code, board UUID and revision,
+severity and result, and affected object IDs. Findings include geometry
+bounds, schematic pin locators, measurements in nanometres or parts per
+thousand, and waiver evidence where applicable. Check coverage records both
+what the checker could inspect and its result. Limited coverage stays visible
+even when the available checks also find a failure.
+
+A short or outdated applied schematic blocks release. Unknown findings and
+missing required coverage also block release. A fitted jumper may produce a
+warning about disconnected bare copper while satisfying the assembled net.
+A valid geometry waiver stays visible with its reason and ceases to apply
+when the affected evidence changes. Diagnostic CAM remains available on
+unfinished boards and is marked **NOT RELEASED**.
+
 ## Schematic parity in design checks
 
 The circuit update review keeps the net ID when only its name changes. A membership change lists the previous and proposed nets by name, identifies affected tracks and vias, and reports shorts between the proposed nets and new groups of disconnected terminals. The preview compares filled copper and fitted jumpers before and after the update. Routes whose former net has retired keep their geometry and are marked for reassignment. Run full design checks after reviewing and repairing the affected copper.
@@ -181,6 +231,34 @@ Select an unlocked through-via in Engineering view and use **Via solder mask** t
 In **Net rules**, create a class, then select each PCB net to assign the class or set individual limits. Blank fields inherit their values. Hard limits combine with the board and fabrication limits. The highest minimum and lowest maximum apply, and a net preference takes precedence over its class preference. Spacing between two different nets uses the higher clearance of the pair in both directions. Routing, zone fills and design checks use these rules. The native board saves class definitions in `NETCLASSES` and assignments and overrides in `NETS`. The manufacturing review manifest records the configured and effective net rules.
 
 Choose **New clearance rule** to set a minimum spacing between two net classes, copper object types, or a combination of both. Each side can match pads, tracks, vias or zones. The order of the two sides has no effect. The largest applicable clearance wins, and design-check findings list the matching rules. The board stores the rules in `CLEARANCERULES` and includes them in manufacturing review.
+
+### Inspecting board rules
+
+In Engineering view, open **Inspect board rules…** from **Board tools**. On **Copper**, choose
+an object to see its edge clearance and the applicable fabrication profile,
+net class, overrides and routing regions. Tracks show the effective width
+limits and their measured width. Vias show the required and measured annulus.
+
+Choose a second object to measure copper clearance between objects on the same
+layer with different or unassigned nets. The dialog shows the effective minimum
+and the matched rule IDs. A regional measurement covers the portion of either
+object that lies inside the matching routing region. Refill zones before
+selecting generated zone copper. Use design checks to validate the whole board.
+
+On **Openings**, select a drill or slot to see its width, board-edge
+containment and applicable fabrication limits. Plated slots show the finished
+length. Plated pad drills show annulus on each copper layer. Compare two
+openings to see edge-to-edge spacing, or select copper to check its clearance
+from the opening. The inspector distinguishes via spacing from general drill
+spacing and uses the same copper clearance and same-net exceptions as design
+checks.
+
+On **Artwork**, select a solder-mask opening, paste aperture, legend item or
+courtyard. The inspector shows mask expansion and web, paste overlap with its
+associated copper land and minimum aperture fit, legend stroke, text height
+and mask clearance, and same-side courtyard overlap. These measurements use the
+placed shapes and the active fabrication profile. Inspection leaves the
+board revision and saved file untouched.
 
 ### Routing regions
 

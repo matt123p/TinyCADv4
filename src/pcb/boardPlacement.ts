@@ -6,13 +6,14 @@ import type {
   EmbeddedDevice,
   EmbeddedFootprint,
 } from './boardAssets';
-import { profileRegion } from './contours';
+import { profileRegion, validateCapsule } from './contours';
 import { placeFootprintPoint } from './footprint';
 import type { FootprintPlacement } from './footprint';
-import { isBoardPoint, pointInPolygon, samePoint } from './geometry';
+import { isBoardPoint, pointInPolygon, samePoint, validateOutline } from './geometry';
 import type { BoardPoint } from './geometry';
 import { stableHierarchyId } from './stableHierarchyId';
-import { placeEmbeddedDevice } from './padstack';
+import { padLayer, padPointTransform } from './padstack';
+import type { PadShape } from './padstack';
 
 export async function placeUnplacedComponent(
   board: BoardDocument,
@@ -251,25 +252,36 @@ export function boardPlacementView(board: BoardDocument) {
     const device = devices.get(placement.deviceId);
     const definition = definitions.get(device?.footprintId);
     if (!definition || !component || !device) return [];
-    const bindings = new Map(
-      component.signals?.map(({ signalId, netId }) => [signalId, netId]),
-    );
     const pads = placementPadTemplates(component, device, definition).map(
       (pad) => ({
         ...pad,
         position: placeFootprintPoint(pad.position, placement),
       }),
     );
+    // The drawing can use the pad's native SVG shape. Polygon tessellation
+    // of rounded copper remains in the rule, connectivity and CAM jobs.
     const copper = definition.pads.every(({ stack }) => !!stack)
-      ? placeEmbeddedDevice(
-          board,
-          placement.id,
-          device.signalIds.map((signalId) => ({
-            signalId,
-            netId: bindings.get(signalId),
-            terminalId: component.id + ':' + signalId,
-          })),
-        ).copper
+      ? definition.pads.flatMap(({ positionNm, stack }, index) => {
+          const transform = padPointTransform(positionNm, placement);
+          if (stack.drill)
+            validateCapsule(transform(stack.drill.start), transform(stack.drill.end), stack.drill.widthNm);
+          return (['top', 'bottom'] as const).flatMap((side) => {
+            const layerId = padLayer(side, placement);
+            const shape = stack.copper[side];
+            if (!shape || !board.copperLayers.some(({ id }) => id === layerId)) return [];
+            let land: PadShape;
+            if (shape.kind === 'capsule') {
+              land = { ...shape, start: transform(shape.start), end: transform(shape.end) };
+              validateCapsule(land.start, land.end, land.widthNm);
+            } else {
+              const vertices = shape.vertices.map(transform);
+              validateOutline(vertices);
+              land = { kind: 'polygon', vertices };
+            }
+            const { id: padId, label, netId } = pads[index];
+            return [{ padId, label, netId, layerId, shape: land }];
+          });
+        })
       : [];
     return [
       {

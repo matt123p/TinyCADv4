@@ -31,14 +31,17 @@ import { deviceSignal } from '../../simulation/signals';
 import { symbolReference } from '../../simulation/bindings';
 import { download } from '../../simulation/export';
 import { MeasurementDefinition } from '../../simulation/explorerTypes';
-import { Waveform } from './Waveform';
-import { StudyHistogram } from './StudyHistogram';
+import { Waveform } from './LazyWaveform';
 import {
   actionSelectPanel,
   Panels,
 } from '../../state/dispatcher/AppDispatcher';
 import { validateSetup } from '../../simulation/document';
 import { readControl } from '../../simulation/controls';
+
+const StudyHistogram = React.lazy(() =>
+  import('./StudyHistogram').then(({ StudyHistogram }) => ({ default: StudyHistogram })),
+);
 
 const row: React.CSSProperties = {
   display: 'flex',
@@ -1071,14 +1074,16 @@ export function AdvancedAnalysis({
                 assurance.
               </p>
               {stats.values.length > 0 && (
-                <StudyHistogram
-                  values={stats.values}
-                  unit={
-                    firstRun?.explorer?.measurements.find(
-                      (m) => m.id === selectedMetric?.id,
-                    )?.unit || ''
-                  }
-                />
+                <React.Suspense fallback={<p role="status">Loading histogram…</p>}>
+                  <StudyHistogram
+                    values={stats.values}
+                    unit={
+                      firstRun?.explorer?.measurements.find(
+                        (m) => m.id === selectedMetric?.id,
+                      )?.unit || ''
+                    }
+                  />
+                </React.Suspense>
               )}
               <div style={{ overflowX: 'auto' }}>
                 <table>

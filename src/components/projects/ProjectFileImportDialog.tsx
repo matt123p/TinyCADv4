@@ -43,8 +43,15 @@ export default function ProjectFileImportDialog({
   const [result, setResult] = useState<Result>();
   const [error, setError] = useState('');
   const abort = useRef<AbortController>();
+  const primaryAction = useRef<HTMLButtonElement>(null);
   const pendingChoice = useRef<(choice: ImportChoice) => void>();
   const running = !result && !error;
+
+  useEffect(() => {
+    // The file picker and the menu can return focus outside the dialog while
+    // the import is running. Focus the next action when it becomes available.
+    primaryAction.current?.focus();
+  }, [conflict, running]);
 
   function decide(choice: ImportChoice) {
     const respond = pendingChoice.current;
@@ -175,7 +182,7 @@ export default function ProjectFileImportDialog({
           <DialogActions>
             {conflict && (
               <>
-                <Button appearance="primary" onClick={() => decide('keep')}>
+                <Button ref={primaryAction} appearance="primary" onClick={() => decide('keep')}>
                   {t('projects.keepBoth')}
                 </Button>
                 <Button
@@ -194,7 +201,7 @@ export default function ProjectFileImportDialog({
                 {result?.failed.some(({ source }) => !source.error) && (
                   <Button onClick={retry}>{t('projects.retryFiles')}</Button>
                 )}
-                <Button appearance="primary" onClick={onClose}>
+                <Button ref={primaryAction} appearance="primary" onClick={onClose}>
                   {t('common.close')}
                 </Button>
               </>

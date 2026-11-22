@@ -138,6 +138,7 @@ export function checkAppliedCircuit(
         issues.push({
           code: 'net-divergence',
           objects: [part.id, signalId, ...nets],
+          signalIds: [signalId],
           message:
             expected.reference +
             ' ' +

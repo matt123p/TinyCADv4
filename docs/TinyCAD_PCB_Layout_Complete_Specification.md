@@ -603,6 +603,15 @@ If aggregated minimum exceeds maximum, mark the constraint unsatisfiable. Do not
 | Electrical spacing | User-defined voltage/region clearance; separately qualified surface-creepage checks with material/environment assumptions | Clearance: M1; creepage: M3/R |
 | Advanced processes | Via-in-pad process, blind/buried spans, sequential lamination and flex rules | M3/R |
 
+For the generic routed FR-4 profiles, apply the non-plated slot minimum
+to closed cutouts and channels between opposing outline edges. Apply a
+separate screening limit to narrow retained board material, including webs
+between cutouts and the board edge. Report clearance checks on copper
+separately. A width violation or incomplete outline check blocks production
+release. Diagnostic output retains the authored contour. The routed opening
+limit follows the published non-plated slot width. The material web limit is
+a TinyCAD screening rule. [Fabrication capability reference](https://jlcpcb.com/capabilities/Capabilities)
+
 ### 17.3 Requirements and profiles
 
 | ID | Requirement | Acceptance condition | Release |
@@ -615,7 +624,7 @@ If aggregated minimum exceeds maximum, mark the constraint unsatisfiable. Do not
 | RUL-06 | Show overrides and out-of-profile decisions in release reports | Changing profile exposes newly failing constraints without mutating copper | M1 |
 | RUL-07 | Separate minimum process limits from recommended teaching/assembly defaults | Beginner width preference cannot disguise a fabrication minimum failure | M1 |
 
-Profiles must be conditional on layer count, copper thickness, board material, thickness, mask colour where relevant, assembly process and special options. Manufacturer capability pages demonstrate that limits vary by process [S46]. Store authoritative links and the reviewed date. Never silently update a project's profile when a website changes.
+Profiles must be conditional on layer count, copper thickness, board material, thickness, mask colour where relevant, assembly process and special options. Manufacturer capability pages demonstrate that limits vary by process [S46]. Store authoritative links and the reviewed date. Never silently update a project's profile when a website changes. Once shipped, preserve the limits of each stored profile ID and assign a new ID to revised limits.
 
 Electrical clearance and creepage are distinct constraints. A normal copper-to-copper spacing check does not evaluate a surface path around slots or account for material, environment and insulation requirements. Store explicit user requirements where supplied and report creepage coverage as unknown until an appropriate model is implemented; do not infer an applicable safety-standard spacing from voltage alone.
 
@@ -1229,15 +1238,17 @@ Observe a small group of novice learners and experienced users completing the sa
 
 ### 29.1 Dependency order
 
+Complete the [WP3 PCB editor recovery checklist](TODO.md#editor-interface-redesign) before continuing work on the remaining WP3–WP6 milestones. Use the v4.1.0 [editor design contract](tinycad-ui-design.md) for shared controls and interaction. Verify rule and finding interactions in WP4, manufacturing and 3D access in WP5, and the offline classroom, project browser and workspace workflows in WP6 through the restored editor.
+
 | Work package | Deliverables | Exit gate |
 |---|---|---|
 | WP0: Audit and schema | Existing TinyCAD graph/undo/persistence audit; stable IDs; terminology; exact capability matrix | Can explain how every existing pin/package attribute migrates |
 | WP1: G0 engine spike | Geometry, mapping, connectivity, simple router/fill, export/read-back prototypes | Seeded short/open and output-corruption tests pass in browser/desktop |
 | WP2: Project, hierarchy and libraries | Native XML board codec, [project lifecycle and hierarchy](project-specification.md), instance-aware connectivity, embedded assets, device resolver, KiCad symbol and footprint import, footprint editor, and Python-generated starter footprint/STEP bundles | Board codec and project folder round trips pass offline. Hierarchical connectivity, native imports and the starter catalogue pass their component tests |
-| WP3: Board editing | Outline/layers, placement, selection, snapping, manual routing/vias, undo, XML board open/save and project browser integration within the existing TinyCAD shell (UX-11, WEB-01) | Fixtures A/B/E are editable in the shared shell. Each supported workspace loads its required modules and assets |
-| WP4: Zones and validation | Zone engine, rule resolver, physical graph, batch/local checks, coverage and waivers | M1 geometry/connectivity acceptance suite passes |
-| WP5: Manufacturing and 3D | Writers, output-derived preview, [project output folders and recipes](project-specification.md#generated-project-files), BOM/netlist/placement, manifest, diagnostic export, KiCad subset export, and 3D inspection with generated and imported KiCad STEP models | Independent read-back passes. Recipes reproduce project outputs and models pass datum and placement checks |
-| WP6: M1 productisation | Guided workflow, accessibility, recovery, documentation, reference-board and physical qualification, offline project and hierarchy acceptance, and performance qualification | All M1 release conditions below met, including the §28 and [project acceptance cases](project-specification.md#project-acceptance-cases) and browser workspace memory and switch tests |
+| WP3: Board editing | Outline/layers, placement, selection, snapping, manual routing/vias, undo, XML board open/save and project browser integration within the existing TinyCAD shell (UX-11, WEB-01) | Fixtures A/B/E are editable in the shared shell. The [editor recovery checklist](TODO.md#editor-interface-redesign) passes in browser and Electron. Each supported workspace loads its required modules and assets |
+| WP4: Zones and validation | Zone engine, rule resolver, physical graph, batch/local checks, coverage and waivers | M1 geometry/connectivity acceptance suite passes. Routing, design checks, finding location and waivers pass in the restored editor |
+| WP5: Manufacturing and 3D | Writers, output-derived preview, [project output folders and recipes](project-specification.md#generated-project-files), BOM/netlist/placement, manifest, diagnostic export, KiCad subset export, and 3D inspection with generated and imported KiCad STEP models | Manufacturing review and 3D inspection open from the restored editor and return to an editable board. Independent read-back passes. Recipes reproduce project outputs and models pass datum and placement checks |
+| WP6: M1 productisation | Guided workflow, accessibility, recovery, documentation, reference-board and physical qualification, offline project and hierarchy acceptance, and performance qualification | All M1 release conditions below met, including the §28 and [project acceptance cases](project-specification.md#project-acceptance-cases) and browser workspace memory and switch tests. Offline classroom, project tabs and recovery pass in the restored editor |
 | WP7: M2 advanced workflows | Walk-around/shove, connected drag, qualified multilayer, block reuse, manual model alignment, STEP/STL/DXF exchange, expanded generated libraries, KiCad board import, assembly aids, IPC-D-356A and router exchange | Stress corpus, multilayer and mechanical exchange acceptance pass. Supported KiCad boards round-trip in native files |
 | WP8: M3 assistance | Pair/length tools, engineering calculations, variants, panelisation, reviewed AI | Each capability qualified separately with declared coverage |
 

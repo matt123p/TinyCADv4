@@ -9,6 +9,7 @@ export interface FabricationLimits extends RouteRules {
   readonly minNonPlatedDrillNm: number;
   readonly minPlatedSlotNm: number;
   readonly minNonPlatedSlotNm: number;
+  readonly minOutlineWebNm: number;
   readonly minPlatedSlotRatio: number;
   readonly minViaGapNm: number;
   readonly minHoleGapNm: number;
@@ -18,6 +19,7 @@ export interface FabricationLimits extends RouteRules {
   readonly minPasteApertureNm: number;
   readonly minPasteLandCoveragePermille: number;
   readonly minSilkStrokeNm: number;
+  readonly minSilkTextHeightNm: number;
   readonly minSilkMaskGapNm: number;
   readonly minSilkEdgeGapNm: number;
 }
@@ -43,6 +45,7 @@ const classroom: FabricationLimits = {
   minNonPlatedDrillNm: 600_000,
   minPlatedSlotNm: 600_000,
   minNonPlatedSlotNm: 1_000_000,
+  minOutlineWebNm: 1_000_000,
   minPlatedSlotRatio: 2,
   minViaGapNm: 250_000,
   minHoleGapNm: 450_000,
@@ -52,14 +55,16 @@ const classroom: FabricationLimits = {
   minPasteApertureNm: 250_000,
   minPasteLandCoveragePermille: 500,
   minSilkStrokeNm: 150_000,
+  minSilkTextHeightNm: 1_000_000,
   minSilkMaskGapNm: 150_000,
   minSilkEdgeGapNm: 200_000,
 };
 
+// Once shipped, assign a new profile ID when its limits change. Boards save this key.
 export const fabricationProfiles = {
   'classroom-v1': {
     title: 'Generic classroom prototype',
-    revision: '2',
+    revision: '4',
     process: 'One or two layers · FR-4 · 1 oz outer copper · green mask',
     source: 'https://jlcpcb.com/capabilities/Capabilities',
     reviewed: '2026-11-21',
@@ -69,7 +74,7 @@ export const fabricationProfiles = {
   },
   'two-layer-smt-v1': {
     title: 'Generic two-layer SMT',
-    revision: '2',
+    revision: '4',
     process: 'Two layers · FR-4 · 1 oz outer copper · green mask',
     source: 'https://jlcpcb.com/capabilities/Capabilities',
     reviewed: '2026-11-21',
@@ -201,13 +206,13 @@ export function fabricationProfileFor(
     : undefined;
 }
 
-export function drillWidthMinimum(
-  limits: FabricationLimits,
-  drill: BoardDrill,
-  via: boolean,
-) {
+export function drillWidthLimit(drill: BoardDrill, via: boolean) {
   if (!samePoint(drill.start, drill.end))
-    return drill.plated ? limits.minPlatedSlotNm : limits.minNonPlatedSlotNm;
-  if (via) return limits.minViaDrillNm;
-  return drill.plated ? limits.minPlatedDrillNm : limits.minNonPlatedDrillNm;
+    return drill.plated ? 'minPlatedSlotNm' : 'minNonPlatedSlotNm';
+  if (via) return 'minViaDrillNm';
+  return drill.plated ? 'minPlatedDrillNm' : 'minNonPlatedDrillNm';
+}
+
+export function drillWidthMinimum(limits: FabricationLimits, drill: BoardDrill, via: boolean) {
+  return limits[drillWidthLimit(drill, via)];
 }

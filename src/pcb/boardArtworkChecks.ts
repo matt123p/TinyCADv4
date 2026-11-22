@@ -2,10 +2,10 @@ import type { BoardIssue } from './boardChecks';
 import type { boardArtwork } from './boardArtwork';
 import type { boardCopperGeometry } from './boardCopperGeometry';
 import type { PolygonRegion } from './contours';
-import { regionsTouch } from './copper';
+import { artworkGap } from './fabricationArtwork';
 import type { FabricationLimits } from './fabricationProfiles';
 import type { PolygonKernel } from './polygonKernel';
-import { boundaryDistance, bounds, near } from './regionDistances';
+import { bounds, near } from './regionDistances';
 
 export function checkBoardArtwork(
   kernel: PolygonKernel,
@@ -50,7 +50,7 @@ export function checkBoardArtwork(
         continue;
       issues.push({
         code: 'courtyard-overlap',
-        objects: [a.item.componentId, b.item.componentId],
+        objects: [a.item.componentId, b.item.componentId, a.item.id, b.item.id],
         location: a.region.outer[0],
         message: 'Footprint courtyards overlap on the same assembly side.',
       });
@@ -67,6 +67,17 @@ export function checkBoardArtwork(
       return { id, side, region, box: bounds(region) };
     });
   for (const print of artwork.silk) {
+    if (limits && print.textHeightNm !== undefined && print.textHeightNm < limits.minSilkTextHeightNm) {
+      issues.push({
+        code: 'silk-text-height',
+        ruleIds: ['minSilkTextHeightNm'],
+        objects: [print.componentId, print.id],
+        location: print.regions[0].outer[0],
+        measuredNm: print.textHeightNm,
+        requiredNm: limits.minSilkTextHeightNm,
+        message: 'Silkscreen text is shorter than the fabrication minimum.',
+      });
+    }
     if (
       limits &&
       print.strokeNm > 0 &&
@@ -74,6 +85,7 @@ export function checkBoardArtwork(
     ) {
       issues.push({
         code: 'silk-stroke',
+        ruleIds: ['minSilkStrokeNm'],
         objects: [print.componentId, print.id],
         location: print.regions[0].outer[0],
         measuredNm: print.strokeNm,
@@ -84,6 +96,7 @@ export function checkBoardArtwork(
     if (kernel.boolean('difference', print.regions, interior).length) {
       issues.push({
         code: 'silk-edge',
+        ruleIds: ['minSilkEdgeGapNm'],
         objects: [print.componentId, print.id],
         location: print.regions[0].outer[0],
         requiredNm: edgeGap,
@@ -98,11 +111,11 @@ export function checkBoardArtwork(
           !near(box, hole.box, minimumSilkMaskGap)
         )
           continue;
-        const touching = regionsTouch(region, hole.region);
-        const gap = touching ? 0 : boundaryDistance(region, hole.region);
+        const { touching, measuredNm: gap } = artworkGap(region, hole.region);
         if (touching || gap < minimumSilkMaskGap) {
           issues.push({
             code: 'silk-mask',
+            ruleIds: ['minSilkMaskGapNm'],
             objects: [print.componentId, print.id, hole.id],
             location: region.outer[0],
             measuredNm: gap,

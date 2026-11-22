@@ -13,7 +13,7 @@ import {
   scopeVoltageSteps,
 } from '../../simulation/scopeControls';
 import { measure } from '../../simulation/metrics';
-import { Waveform } from './Waveform';
+import { Waveform } from './LazyWaveform';
 
 const colors = { A: '#f2cc4d', B: '#5bd5f4' };
 const flex: React.CSSProperties = {

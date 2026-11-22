@@ -26,7 +26,7 @@ On the four-core, 8 GiB reference laptop, set the primary display to 1920 × 108
 }
 ```
 
-Run `npm run qualify:pcb-g0 -- --reference-host hardware.json` from the repository root. The runner checks the reported hardware fields, the running host's usable memory and primary display, and the Electron sandbox setting. It uses the installed stable browser channel selected in the file (`chrome` or `msedge`) and records the observed browser and Electron versions. Keep the resulting `qualification.json` with the reference measurements and compare its route, cancellation and worker memory data with the development-host evidence below. The laptop model, physical core count, installed RAM and GPU model come from the hardware record.
+Run `npm run qualify:pcb-g0 -- --reference-host hardware.json` from the repository root. The runner opens the chosen stable browser and Electron visibly, checks the display and WebGL 2 in both, and records their graphics evidence and versions. It also checks the reported hardware fields, the running host’s usable memory and the Electron sandbox setting. Keep the resulting `qualification.json` with the reference measurements and compare its route, cancellation and worker memory data with the development-host evidence below. Compare the observed graphics device with the integrated GPU declared in the hardware record.
 
 ## Measured development-host results
 

@@ -31,6 +31,10 @@ Show files and folders recursively under the root. Expand and collapse each fold
 
 Show ordinary files whether or not they have a tracked association in `.tcproject`. Apply the same rename, move and delete operations to native and supporting files.
 
+Renaming or moving a registered file within the project updates its location in `.tcproject` and any affected hierarchy locators. Moving a folder also updates its configured output recipe directories. The document and board identities stay the same. Close affected editor tabs before moving linked files. If the move is interrupted, TinyCAD checks the saved state on reopen and restores the previous file locations and hierarchy links when the settings update did not commit.
+
+Before moving a linked file or folder to trash, review the project entries, schematic and PCB associations, and recipes that will be removed. Close affected editor tabs first. TinyCAD clears a primary document setting only when that document is removed. Surviving drawings and boards keep their saved contents. Resolve any missing child links in the hierarchy editor. Recipes with surviving sources can regenerate their output files. If trash fails and the item remains, reopening the project can restore its registration.
+
 | File type | Project browser behaviour |
 |---|---|
 | Supported native TinyCAD files, including `.dsn`, `.dzn` and `.dpn` | Create and open in the appropriate TinyCAD editor. |
@@ -312,4 +316,4 @@ Assign each device terminal to a schematic signal. Inspect the highlighted footp
 
 ## Implementation status
 
-The [implementation checklist](TODO.md) records completed milestones and the remaining project browser work.
+The [WP3 editor recovery checklist](TODO.md#editor-interface-redesign) tracks the shared editor and its Single File behavior. The [WP6 project browser checklist](TODO.md#wp6--project-browser-acceptance) tracks end-to-end project acceptance.

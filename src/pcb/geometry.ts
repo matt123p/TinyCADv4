@@ -38,11 +38,8 @@ export function lengthInNanometres(value: string, unit: LengthUnit): number {
 export function isBoardPoint(value: unknown): value is BoardPoint {
   if (typeof value !== 'object' || value === null) return false;
   const { x, y } = value as BoardPoint;
-  return [x, y].every(
-    (coordinate) =>
-      Number.isInteger(coordinate) &&
-      Math.abs(coordinate) <= BOARD_COORDINATE_LIMIT_NM,
-  );
+  return Number.isInteger(x) && Math.abs(x) <= BOARD_COORDINATE_LIMIT_NM &&
+    Number.isInteger(y) && Math.abs(y) <= BOARD_COORDINATE_LIMIT_NM;
 }
 
 export function samePoint(a: BoardPoint, b: BoardPoint): boolean {
@@ -54,12 +51,20 @@ export function orientation(
   b: BoardPoint,
   c: BoardPoint,
 ): number {
-  const cross =
-    BigInt(b.x - a.x) * BigInt(c.y - a.y) -
-    BigInt(b.y - a.y) * BigInt(c.x - a.x);
-  const zero = BigInt(0);
-  if (cross === zero) return 0;
-  return cross < zero ? -1 : 1;
+  const bx = b.x - a.x;
+  const by = b.y - a.y;
+  const cx = c.x - a.x;
+  const cy = c.y - a.y;
+  const left = bx * cy;
+  const right = by * cx;
+  // Comparing two exact products avoids rounding their difference.
+  if (Number.isSafeInteger(left) && Number.isSafeInteger(right) &&
+      Number.isInteger(bx) && Number.isInteger(by) &&
+      Number.isInteger(cx) && Number.isInteger(cy))
+    return left === right ? 0 : left < right ? -1 : 1;
+  const exactLeft = BigInt(bx) * BigInt(cy);
+  const exactRight = BigInt(by) * BigInt(cx);
+  return exactLeft === exactRight ? 0 : exactLeft < exactRight ? -1 : 1;
 }
 
 function withinSegment(a: BoardPoint, b: BoardPoint, p: BoardPoint): boolean {
@@ -222,7 +227,8 @@ export function pointInPolygon(
   for (let i = 0; i < polygon.length; i++) {
     const a = polygon[i];
     const b = polygon[(i + 1) % polygon.length];
-    if (point.y < Math.min(a.y, b.y) || point.y > Math.max(a.y, b.y)) continue;
+    if (point.y < Math.min(a.y, b.y) || point.y > Math.max(a.y, b.y) ||
+        point.x > Math.max(a.x, b.x)) continue;
     const side = orientation(a, b, point);
     if (side === 0 && withinSegment(a, b, point)) return 'boundary';
     if (a.y > point.y !== b.y > point.y && side > 0 === b.y > a.y) {
@@ -233,6 +239,36 @@ export function pointInPolygon(
 }
 
 export function signedDoubleArea(polygon: readonly BoardPoint[]): bigint {
+  if (polygon.length === 0) return BigInt(0);
+  const { x: originX, y: originY } = polygon[0];
+  if (!Number.isSafeInteger(originX) || !Number.isSafeInteger(originY))
+    return signedDoubleAreaBigInt(polygon);
+  let area = 0;
+  let previousX = 0;
+  let previousY = 0;
+  // Translating the origin to the first vertex keeps small rings exact even
+  // near the board's limits. The first and closing edges contribute zero.
+  for (let i = 1; i < polygon.length; i++) {
+    const { x, y } = polygon[i];
+    const dx = x - originX;
+    const dy = y - originY;
+    const left = previousX * dy;
+    const right = previousY * dx;
+    const term = left - right;
+    const next = area + term;
+    if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y) ||
+        !Number.isSafeInteger(dx) || !Number.isSafeInteger(dy) ||
+        !Number.isSafeInteger(left) || !Number.isSafeInteger(right) ||
+        !Number.isSafeInteger(term) || !Number.isSafeInteger(next))
+      return signedDoubleAreaBigInt(polygon);
+    area = next;
+    previousX = dx;
+    previousY = dy;
+  }
+  return BigInt(area);
+}
+
+function signedDoubleAreaBigInt(polygon: readonly BoardPoint[]): bigint {
   let area = BigInt(0);
   for (let i = 0; i < polygon.length; i++) {
     const a = polygon[i];

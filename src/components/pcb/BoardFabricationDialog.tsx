@@ -15,7 +15,7 @@ import {
   stackupMaterialLimit, stackupThicknessFields,
 } from '../../pcb/fabricationProfiles';
 import type { BoardStackup, FabricationProfileId } from '../../pcb/fabricationProfiles';
-import { lengthInNanometres } from '../../pcb/geometry';
+import { boardInputLength } from './boardNumberInput';
 
 const mm = (nm: number) => String(nm / 1e6);
 const dimensions = [
@@ -40,7 +40,7 @@ function readStackup(form: FormData, previous?: BoardStackup): BoardStackup | un
     substrateMaterial: String(form.get('substrateMaterial') ?? '').trim() || undefined,
     ...Object.fromEntries(stackupThicknessFields.map(([id]) => {
       const value = optional(id);
-      return [id, value ? lengthInNanometres(value, 'mm') : undefined];
+      return [id, value ? boardInputLength(value, 'mm') : undefined];
     })),
     ...Object.fromEntries(dielectricProperties.map(([id, label]) => {
       const value = optional(id);
@@ -57,7 +57,8 @@ const advancedLimits = [
   ['minPlatedDrillNm', 'Plated hole'],
   ['minNonPlatedDrillNm', 'Non-plated hole'],
   ['minPlatedSlotNm', 'Plated slot'],
-  ['minNonPlatedSlotNm', 'Non-plated slot'],
+  ['minNonPlatedSlotNm', 'Non-plated slot and routed opening'],
+  ['minOutlineWebNm', 'Board material web'],
   ['minViaGapNm', 'Via-to-via gap'],
   ['minHoleGapNm', 'Other drill gap'],
   ['minPadAnnulusNm', 'Plated pad ring'],
@@ -65,6 +66,7 @@ const advancedLimits = [
   ['minMaskWebNm', 'Solder-mask web'],
   ['minPasteApertureNm', 'Paste aperture'],
   ['minSilkStrokeNm', 'Silkscreen stroke'],
+  ['minSilkTextHeightNm', 'Silkscreen text height'],
   ['minSilkMaskGapNm', 'Silkscreen to mask opening'],
   ['minSilkEdgeGapNm', 'Silkscreen to board edge'],
 ] as const;
@@ -98,7 +100,7 @@ export default function BoardFabricationDialog({
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const measure = (name: string) =>
-      lengthInNanometres(String(form.get(name)), 'mm');
+      boardInputLength(String(form.get(name)), 'mm');
     try {
       const surfaceFinish = String(form.get('surfaceFinish') ?? '').trim();
       const notes = String(form.get('notes') ?? '').replace(/\r\n?/g, '\n').replace(/\t/g, ' ').trim();

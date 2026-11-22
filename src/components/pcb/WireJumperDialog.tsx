@@ -11,7 +11,7 @@ import {
 import type { BoardDocument } from '../../pcb/board';
 import type { BoardWireJumper } from '../../pcb/boardJumpers';
 import type { BoardPoint } from '../../pcb/geometry';
-import { lengthInNanometres } from '../../pcb/geometry';
+import { boardInputLength } from './boardNumberInput';
 
 export default function WireJumperDialog({
   board,
@@ -39,7 +39,7 @@ export default function WireJumperDialog({
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const read = (name: string) =>
-      lengthInNanometres(String(form.get(name)), 'mm');
+      boardInputLength(String(form.get(name)), 'mm');
     try {
       onApply({
         id: jumper?.id ?? crypto.randomUUID(),

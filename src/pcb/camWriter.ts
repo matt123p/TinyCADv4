@@ -1,10 +1,11 @@
 import type { CopperLayer } from './board';
-import type { BoardProfile, Polygon, PolygonRegion } from './contours';
-import { capsulePolygon, profileRegion } from './contours';
+import type { BoardProfile, PolygonRegion } from './contours';
+import { profileRegion, validateCapsule } from './contours';
 import type { BoardDrill } from './copper';
 import type { BoardPoint } from './geometry';
 import { pointInPolygon, samePoint } from './geometry';
 import type { PolygonKernel } from './polygonKernel';
+import { bounds, near } from './regionDistances';
 
 export interface CamArtwork {
   readonly kind: 'mask' | 'paste' | 'silk';
@@ -48,18 +49,19 @@ function regionGerber(
   const rings = merged.flatMap(({ outer, holes }) => [
     { polygon: outer, polarity: 'D' },
     ...holes.map((polygon) => ({ polygon, polarity: 'C' })),
-  ]);
+  ]).map((ring) => ({ ...ring, box: bounds({ outer: ring.polygon, holes: [] }) }));
   // Emit each enclosing ring before its descendants so that clear holes preserve dark islands.
-  const depth = (polygon: Polygon) =>
-    rings.filter(
-      (ring) =>
-        ring.polygon !== polygon &&
-        polygon.some(
-          (point) => pointInPolygon(point, ring.polygon) === 'inside',
-        ),
-    ).length;
   const ordered = rings
-    .map((ring) => ({ ...ring, depth: depth(ring.polygon) }))
+    .map((ring) => {
+      const depth = rings.filter((candidate) => candidate !== ring &&
+        near(ring.box, candidate.box, 0) &&
+        ring.polygon.some((point) =>
+          point.x > candidate.box.minX && point.x < candidate.box.maxX &&
+          point.y > candidate.box.minY && point.y < candidate.box.maxY &&
+          pointInPolygon(point, candidate.polygon) === 'inside',
+        )).length;
+      return { ...ring, depth };
+    })
     .sort((a, b) => a.depth - b.depth);
   for (const { polygon, polarity } of ordered) {
     const first = polygon[0];
@@ -126,7 +128,7 @@ function drillFile(
     ...selected
       .filter(({ widthNm }) => widthNm === width)
       .flatMap(({ start, end, widthNm }) => {
-        capsulePolygon(start, end, widthNm);
+        validateCapsule(start, end, widthNm);
         return samePoint(start, end)
           ? [coord(start)]
           : [`G00${coord(start)}`, 'M15', `G01${coord(end)}`, 'M16', 'G05'];

@@ -242,6 +242,11 @@ def check_classroom_led(bundle, dnp=False):
     expect(len(nonplated.objects), 0, "Non-plated holes")
 
     drill_centres = [(x, y) for x, y, _ in drills]
+    for side in ("top", "bottom"):
+        name = f"mask-{side}.gbr"
+        mask = GerberFile.from_string(read(name), filename=name)
+        expect([has_copper(mask, centre) for centre in drill_centres + [(2, 2)]],
+               [True] * 6 + [False], name + " pad openings and covered background")
     expected_top = [{(7, 7.75), (14.19, 7.75)}, {(21.81, 7.75), (28.73, 7.75)}, {(7, 10.25), (31.27, 7.75)}]
     for side, layer_index, face, expected in (
         ("top", "L1", "Top", expected_top),
@@ -277,6 +282,136 @@ def check_classroom_led(bundle, dnp=False):
         "platedDrillsMm": drills,
         "topCopperIslands": 3,
         "bottomCopperIslands": 6,
+    }
+
+
+def classroom_pad_centres(board):
+    definitions = {
+        item.get("id"): item for item in board.findall("./FOOTPRINTDEFS/FOOTPRINTDEF")
+    }
+    devices = {item.get("id"): item for item in board.findall("./DEVICEDEFS/DEVICEDEF")}
+    components = {item.get("id"): item for item in board.findall("./COMPONENTDEFS/COMPONENTDEF")}
+    pads = {}
+    for footprint in board.findall("./FOOTPRINTS/FOOTPRINT"):
+        ref = components[footprint.get("component_id")].get("ref")
+        definition = definitions[devices[footprint.get("device_id")].get("footprint_id")]
+        position = footprint.find("POSITION")
+        angle = math.radians(int(footprint.get("rotation")) / 1e6)
+        cosine, sine = math.cos(angle), math.sin(angle)
+        for pad in definition.findall("./PADS/PAD"):
+            pin = f"{ref}.{pad.get('label')}"
+            if pin in pads:
+                raise ValueError(f"Repeated classroom terminal {pin}.")
+            local = pad.find("POSITION")
+            x, y = int(local.get("x")), int(local.get("y"))
+            if footprint.get("side") == "bottom":
+                x = -x
+            pads[pin] = (
+                (int(position.get("x")) + x * cosine - y * sine) / 1e6,
+                (int(position.get("y")) + x * sine + y * cosine) / 1e6,
+            )
+    return pads
+
+
+def classroom_copper_partition(bundle, pads):
+    names = [name for name in ("copper-top.gbr", "copper-bottom.gbr") if name in bundle.namelist()]
+    layers = [GerberFile.from_string(bundle.read(name).decode(), filename=name) for name in names]
+    plated = ExcellonFile.from_string(bundle.read("plated.xnc").decode(), filename="plated.xnc")
+    parent = {}
+
+    def root(island):
+        while island in parent:
+            island = parent[island]
+        return island
+
+    def locate(plot, point):
+        for index in range(len(plot.objects) - 1, -1, -1):
+            region = plot.objects[index]
+            if region_contains(region, point):
+                return index if region.polarity_dark else None
+        return None
+
+    expect(all(isinstance(region, Region) for layer in layers for region in layer.objects),
+           True, "Classroom copper region format")
+    terminal_islands = {}
+    for hole in plated.objects:
+        expect(type(hole), Flash, "Round classroom drill")
+        # Sample the annular land just outside the clear drill bore.
+        radius = hole.aperture.diameter / 2 + .001
+        around = [
+            (hole.x + radius * math.cos(angle), hole.y + radius * math.sin(angle))
+            for angle in (i * math.tau / 16 for i in range(16))
+        ]
+        islands = []
+        for layer, plot in enumerate(layers):
+            matches = {locate(plot, point) for point in around}
+            if None in matches or len(matches) != 1:
+                raise ValueError(f"Missing or divided plated land at ({hole.x}, {hole.y}) on {names[layer]}.")
+            islands.append((layer, matches.pop()))
+        for island in islands[1:]:
+            if root(island) != root(islands[0]):
+                parent[root(island)] = root(islands[0])
+        for pin, (x, y) in pads.items():
+            if math.hypot(hole.x - x, hole.y - y) <= 0.000002:
+                if pin in terminal_islands:
+                    raise ValueError(f"Repeated plated drill for {pin}.")
+                diameter = {"J1": 1.0, "R1": 0.8, "D1": 0.9}[pin.split(".")[0]]
+                dimensions((hole.aperture.diameter,), (diameter,), f"{pin} drill diameter")
+                terminal_islands[pin] = islands[0]
+    expect(set(terminal_islands), set(pads), "Plated holes at the six classroom terminals")
+    groups = {}
+    for pin, island in terminal_islands.items():
+        groups.setdefault(root(island), []).append(pin)
+    return sorted(sorted(group) for group in groups.values())
+
+
+def check_classroom_session(bundle, saved_board):
+    def read_json(name):
+        return json.loads(bundle.read(name))
+
+    manifest = read_json("manifest.json")
+    expect(manifest["kind"], "tinycad-manufacturing-release", "Classroom release kind")
+    expect(manifest["status"], "RELEASED", "Classroom release status")
+    expect(manifest["checks"]["readiness"], [], "Classroom release blockers")
+    expect(manifest["cam"]["geometryVerified"], True, "CAM read-back status")
+    expect(manifest["schematic"]["state"], "current", "Classroom schematic parity")
+    outputs = {item["filename"]: item for item in manifest["outputs"]}
+    expect(sorted(bundle.namelist()), sorted([*outputs, "manifest.json"]), "Release entries")
+    for name, item in outputs.items():
+        payload = bundle.read(name)
+        expect(len(payload), item["bytes"], name + " length")
+        expect(hashlib.sha256(payload).hexdigest(), item["sha256"], name + " SHA-256")
+    expect(set(manifest["cam"]["reviewedFiles"]),
+           {name for name in outputs if name.endswith((".gbr", ".xnc"))}, "Reviewed fabrication files")
+    native = saved_board.read_bytes()
+    expect(hashlib.sha256(native).hexdigest(), manifest["nativeBoardSha256"], "Saved PCB SHA-256")
+    expect(native == bundle.read("board.dpn"), True, "Saved PCB matches the released file")
+    board = ET.fromstring(native)
+    identity = board.find("./DPNIDENTITY")
+    expect((identity.get("id"), int(identity.get("revision"))),
+           (manifest["boardId"], manifest["revision"]), "Saved board revision")
+    report = read_json("checks.json")
+    expect((report["boardId"], report["revision"]), (manifest["boardId"], manifest["revision"]),
+           "Design-check board revision")
+    expect(report["issues"], manifest["checks"]["issues"], "Classroom design-check findings")
+    expect(report["coverage"], manifest["checks"]["coverage"], "Classroom design-check coverage")
+    expect(report["schematic"], manifest["schematic"], "Classroom schematic evidence")
+    for check in ("Physical connectivity", "Schematic parity"):
+        coverage = next((item for item in report["coverage"] if item["check"] == check), {})
+        expect(coverage.get("status"), "checked", check)
+    fitted = list(csv.DictReader(io.StringIO(bundle.read("bom-fitted.csv").decode())))
+    expect(sorted((row["References"], row["Quantity"]) for row in fitted),
+           [("D1", "1"), ("J1", "1"), ("R1", "1")], "Fitted classroom components")
+    expected = [["D1.1", "J1.2"], ["D1.2", "R1.2"], ["J1.1", "R1.1"]]
+    pads = classroom_pad_centres(board)
+    expect(set(pads), {pin for group in expected for pin in group}, "Classroom terminal labels")
+    plots = check_plot_layers(bundle)
+    connected = classroom_copper_partition(bundle, pads)
+    expect(connected, expected, "Independent CAM connectivity of the six classroom terminals")
+    return {
+        "gerbonara": __version__, "boardId": manifest["boardId"], "revision": manifest["revision"],
+        "savedBoardSha256": manifest["nativeBoardSha256"], "terminalGroups": connected,
+        "findings": report["issues"], "plots": plots,
     }
 
 
@@ -366,6 +501,12 @@ def check_connector(bundle):
             polarities = [obj.polarity_dark for obj in copper.objects
                           if isinstance(obj, Region) and region_contains(obj, centre)]
             expect(polarities, [True, False], f"{side} land and clear slot at {centre}")
+    slot_centres = [((x1 + x2) / 2, (y1 + y2) / 2) for (x1, y1), (x2, y2), _ in slots]
+    for side in ("top", "bottom"):
+        name = f"mask-{side}.gbr"
+        mask = GerberFile.from_string(read(name), filename=name)
+        expect([has_copper(mask, centre) for centre in slot_centres + [(2, 2)]],
+               [True] * 3 + [False], name + " slot openings and covered background")
     expect("silk-top.gbr" in bundle.namelist(), False, "Empty top legend omitted")
     silk = GerberFile.from_string(read("silk-bottom.gbr"), filename="silk-bottom.gbr")
     expect(silk.file_attrs.get(".FileFunction"), ("Legend", "Bot"), "Bottom legend role")
@@ -447,6 +588,53 @@ def has_copper(layer, point):
     return bool(polarity and polarity[-1])
 
 
+def check_narrow_cutout(bundle):
+    manifest = json.loads(bundle.read("manifest.json"))
+    expect(manifest["status"], "NOT RELEASED", "Diagnostic status")
+    for name, sha256 in manifest["files"].items():
+        expect(hashlib.sha256(bundle.read(name)).hexdigest(), sha256, name + " hash")
+    profile = GerberFile.from_string(bundle.read("profile.gbr").decode("utf-8"), filename="profile.gbr")
+    expect([type(obj) for obj in profile.objects], [Line] * 8, "Four outline and four cutout edges")
+    cutout = [obj for obj in profile.objects if 4 < obj.x1 < 13 and 4 < obj.y1 < 7]
+    expect(len(cutout), 4, "Cutout edge count")
+    xs = [coord for edge in cutout for coord in (edge.x1, edge.x2)]
+    ys = [coord for edge in cutout for coord in (edge.y1, edge.y2)]
+    dimensions((min(xs), min(ys), max(xs), max(ys)), (5, 5, 12, 5.8), "Original cutout (mm)")
+    report = json.loads(bundle.read("checks.json"))
+    findings = [issue for issue in report["issues"] if issue["code"] == "fabrication-outline-width"]
+    expect([(item["measuredNm"], item["requiredNm"]) for item in findings],
+           [(800_000, 1_000_000)], "Measured and required cutout widths (nm)")
+    return {"gerbonara": __version__, "cutoutWidthMm": 0.8, "minimumMm": 1}
+
+
+def check_zone_no_connect(bundle):
+    manifest = json.loads(bundle.read("manifest.json"))
+    expect(manifest["status"], "NOT RELEASED", "Diagnostic status")
+    for name, sha256 in manifest["files"].items():
+        expect(hashlib.sha256(bundle.read(name)).hexdigest(), sha256, name + " hash")
+
+    def copper(name):
+        return GerberFile.from_string(bundle.read(name).decode("utf-8"), filename=name)
+
+    top = copper("copper-top.gbr")
+    bottom = copper("copper-bottom.gbr")
+    expect(top.file_attrs.get(".FileFunction"), ("Copper", "L1", "Top"), "Top copper role")
+    expect(bottom.file_attrs.get(".FileFunction"), ("Copper", "L2", "Bot"), "Bottom copper role")
+    probes = [(10, 10), (10.4, 10), (10.626, 10), (20, 10),
+              (20.35, 10), (20.7, 10), (20.901, 10)]
+    expect([has_copper(top, point) for point in probes],
+           [True, False, True, False, True, False, True], "Top pad and via, clearances and zone")
+    expect([has_copper(bottom, point) for point in probes],
+           [False, False, False, False, True, False, False], "Bottom via without a zone")
+    drill = ExcellonFile.from_string(bundle.read("plated.xnc").decode("utf-8"), filename="plated.xnc")
+    expect(len(drill.objects), 1, "One plated via")
+    hole = drill.objects[0]
+    expect(type(hole), Flash, "Round via")
+    dimensions((hole.x, hole.y, hole.aperture.diameter), (20, 10, 0.4), "Plated via (mm)")
+    return {"gerbonara": __version__, "revision": manifest["revision"],
+            "verifiedZoneClearanceMm": 0.4, "platedViaDiameterMm": 0.4}
+
+
 def check_regulators(baseline, clipped):
     before, after = (json.loads(bundle.read("manifest.json")) for bundle in (baseline, clipped))
     expect(before["boardId"], after["boardId"], "Same regulator board")
@@ -509,6 +697,55 @@ def check_regulators(baseline, clipped):
     return {"gerbonara": __version__, "boardId": after["boardId"],
             "pasteApertures": len(expected_pads), "platedVias": len(openings),
             "missingSpoke": "North", "narrowSpoke": "East"}
+
+
+def check_regulator_release(baseline, release):
+    before = json.loads(baseline.read("manifest.json"))
+    after = json.loads(release.read("manifest.json"))
+    expect(before["status"], "NOT RELEASED", "Baseline is a CAM preview")
+    expect(after["kind"], "tinycad-manufacturing-release", "Release kind")
+    expect(after["status"], "RELEASED", "Manufacturing release status")
+    expect(after["source"], None, "PCB-only coupon source")
+    expect(after["schematic"], {"state": "unlinked"}, "PCB-only parity evidence")
+    expect(after["checks"]["readiness"], [], "Release blockers")
+    expect(after["checks"]["issues"], [], "Release findings")
+    expect(after["boardId"], before["boardId"], "Same board")
+    expect(after["revision"], before["revision"], "Same revision")
+    expect(after["fabrication"]["profileId"], "classroom-v1", "Fabrication profile")
+    expect(after["cam"]["geometryVerified"], True, "CAM geometry verified")
+
+    outputs = {item["filename"]: item for item in after["outputs"]}
+    expect(len(outputs), len(after["outputs"]), "Unique release outputs")
+    expect(sorted(release.namelist()), sorted([*outputs, "manifest.json"]), "Release entries")
+    expect(sorted(baseline.namelist()), sorted([*before["files"], "manifest.json"]), "Preview entries")
+    expected_additions = {"board.dpn", "fabrication.svg", "drill-tools.csv", "drill-openings.csv"}
+    expect(set(outputs), set(before["files"]) | expected_additions, "Frozen outputs")
+    reviewed = sorted(name for name in outputs if name.endswith((".gbr", ".xnc")))
+    expect(after["cam"]["reviewedFiles"], reviewed, "All fabrication files reviewed")
+
+    for name, item in outputs.items():
+        payload = release.read(name)
+        expect(len(payload), item["bytes"], name + " length")
+        expect(hashlib.sha256(payload).hexdigest(), item["sha256"], name + " SHA-256")
+        if name in before["files"]:
+            preview_payload = baseline.read(name)
+            expect(hashlib.sha256(preview_payload).hexdigest(), before["files"][name], name + " preview hash")
+            if name != "checks.json":
+                expect(payload == preview_payload, True, name + " unchanged from preview")
+
+    report = json.loads(release.read("checks.json"))
+    preview_report = json.loads(baseline.read("checks.json"))
+    report.pop("generatedAt")
+    preview_report.pop("generatedAt")
+    expect(report, preview_report, "Same check and coverage evidence")
+    expect(after["checks"]["coverage"], report["coverage"], "Frozen coverage")
+    identity = ET.fromstring(release.read("board.dpn")).find("DPNIDENTITY").attrib
+    expect(identity["id"], after["boardId"], "Frozen board ID")
+    expect(int(identity["revision"]), after["revision"], "Frozen board revision")
+    expect(after["nativeBoardSha256"], outputs["board.dpn"]["sha256"], "Frozen board hash")
+    return {"gerbonara": __version__, "boardId": after["boardId"],
+            "revision": after["revision"], "releaseId": after["reviewId"],
+            "checkedFabricationFiles": reviewed}
 
 
 def check_filter(bundle):
@@ -581,6 +818,8 @@ def check_mcu_sensor(bundle):
 def check_adversarial(bundle):
     manifest = json.loads(bundle.read("manifest.json"))
     expect(manifest["status"], "NOT RELEASED", "Diagnostic status")
+    expect(set(bundle.namelist()).intersection({"mask-top.gbr", "mask-bottom.gbr"}), set(),
+           "No mask drawings on the geometry-only fixture")
     expect(sorted(bundle.namelist()), sorted(set(manifest["files"]) | {"manifest.json"}), "ZIP entries")
     for name, sha256 in manifest["files"].items():
         expect(hashlib.sha256(bundle.read(name)).hexdigest(), sha256, name + " hash")
@@ -633,14 +872,56 @@ def check_adversarial(bundle):
             "zoneWebNm": 1000, "zoneVertices": len(outline.outline), "shorts": 2}
 
 
+def check_plot_layers(bundle, require_mask=True):
+    roles = {"profile.gbr": ("Profile", "NP")}
+    for layer, name, face in ((1, "top", "Top"), (2, "bottom", "Bot")):
+        roles[f"copper-{name}.gbr"] = ("Copper", f"L{layer}", face)
+        for file, role in (("mask", "Soldermask"), ("paste", "Paste"), ("silk", "Legend")):
+            roles[f"{file}-{name}.gbr"] = (role, face)
+
+    names = set(bundle.namelist())
+    required = {"profile.gbr", "copper-top.gbr", "plated.xnc", "non-plated.xnc"}
+    if require_mask:
+        required.update({"mask-top.gbr", "mask-bottom.gbr"})
+    if required - names:
+        raise ValueError(f"Missing fabrication plots: {', '.join(sorted(required - names))}.")
+    plots = {}
+    for name in sorted(names):
+        if name.endswith(".gbr"):
+            plot = GerberFile.from_string(bundle.read(name).decode(), filename=name)
+            role = roles[name]
+            expect(plot.file_attrs.get(".FileFunction"), role, name + " layer role")
+            polarity = "Negative" if role[0] == "Soldermask" else "Positive"
+            expect(plot.file_attrs.get(".FilePolarity"), (polarity,), name + " polarity")
+            attributes = {"fileFunction": role, "polarity": polarity}
+        elif name in ("plated.xnc", "non-plated.xnc"):
+            plot = ExcellonFile.from_string(bundle.read(name).decode(), filename=name)
+            layers = 2 if "copper-bottom.gbr" in names else 1
+            plating, hole_type = ("Plated", "PTH") if name == "plated.xnc" else ("NonPlated", "NPTH")
+            file_function = (plating, "1", str(layers), hole_type)
+            comment = "#@! TF.FileFunction," + ",".join(file_function)
+            expect(plot.comments.count(comment), 1, name + " plating role")
+            attributes = {"fileFunction": file_function}
+        else:
+            continue
+        plots[name] = {
+            **attributes,
+            "objects": len(plot.objects),
+            "boundsMm": plot.bounding_box(MM),
+        }
+    return plots
+
+
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archive", type=Path)
+    parser.add_argument("--all-layers", action="store_true", help="Inventory each fabrication plot and verify its layer role.")
     fixture = parser.add_mutually_exclusive_group()
     fixture.add_argument("--legend-text", action="store_true")
     fixture.add_argument("--classroom-led", action="store_true")
+    fixture.add_argument("--classroom-session-board", type=Path, metavar="SAVED_DPN")
     fixture.add_argument("--classroom-led-dnp", action="store_true")
     fixture.add_argument("--classroom-led-replacement", action="store_true")
     fixture.add_argument("--timer-logic", action="store_true")
@@ -649,7 +930,10 @@ if __name__ == "__main__":
     fixture.add_argument("--filter", action="store_true")
     fixture.add_argument("--mcu-sensor", action="store_true")
     fixture.add_argument("--regulator-baseline", type=Path)
+    fixture.add_argument("--regulator-release", type=Path, metavar="BASELINE_PREVIEW")
     fixture.add_argument("--zone-baseline", type=Path)
+    fixture.add_argument("--zone-no-connect", action="store_true")
+    fixture.add_argument("--narrow-cutout", action="store_true")
     args = parser.parse_args()
     expect(__version__, "1.6.3", "Qualification reader version")
     with ZipFile(args.archive) as bundle:
@@ -658,9 +942,16 @@ if __name__ == "__main__":
         elif args.regulator_baseline:
             with ZipFile(args.regulator_baseline) as before:
                 result = check_regulators(before, bundle)
+        elif args.regulator_release:
+            with ZipFile(args.regulator_release) as before:
+                result = check_regulator_release(before, bundle)
         elif args.zone_baseline:
             with ZipFile(args.zone_baseline) as before:
                 result = check_zone_rebuild(before, bundle)
+        elif args.narrow_cutout:
+            result = check_narrow_cutout(bundle)
+        elif args.zone_no_connect:
+            result = check_zone_no_connect(bundle)
         elif args.classroom_led_replacement:
             result = check_replaced_led_drill(bundle)
         elif args.connector:
@@ -671,8 +962,13 @@ if __name__ == "__main__":
             result = check_mcu_sensor(bundle)
         elif args.timer_logic:
             result = check_timer_logic(bundle)
+        elif args.classroom_session_board:
+            result = check_classroom_session(bundle, args.classroom_session_board)
+            result["releaseSha256"] = hashlib.sha256(args.archive.read_bytes()).hexdigest()
         elif args.classroom_led or args.classroom_led_dnp:
             result = check_classroom_led(bundle, args.classroom_led_dnp)
         else:
             result = check(bundle, args.legend_text)
+        if args.all_layers and "plots" not in result:
+            result["plots"] = check_plot_layers(bundle, require_mask=not args.adversarial)
         print(json.dumps(result, indent=2))

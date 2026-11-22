@@ -3,7 +3,7 @@ import { dsnDrawing, dsnSheet } from '../../model/dsnDrawing';
 import { DocItem, DocItemTypes, dsnWire } from '../../model/dsnItem';
 import { NetlistData } from './netlistGenerator';
 import { docDrawing } from '../../state/undo/undo';
-import { wkrInitNetlist, wkrUpdateNetlistSheets } from '../../web-worker/worker';
+import { retainSchematicNetlist, wkrInitNetlist, wkrUpdateNetlistSheets } from '../../web-worker/worker';
 import { actionStampWireNetTypes } from '../../state/dispatcher/AppDispatcher';
 import { hasChildPlacements } from '../hierarchyDrawing';
 import { projectFilesChanged } from '../projectStorage';
@@ -128,6 +128,7 @@ type NetlistListener = (netlist: NetlistData | null) => void;
 
 let currentNetlist: NetlistData | null = null;
 const listeners = new Set<NetlistListener>();
+let onNetlistDemandChanged: (() => void) | undefined;
 
 function publishNetlist(netlist: NetlistData | null) {
   currentNetlist = netlist;
@@ -139,8 +140,9 @@ function publishNetlist(netlist: NetlistData | null) {
 export function subscribeNetlist(listener: NetlistListener) {
   listeners.add(listener);
   listener(currentNetlist);
+  if (listeners.size === 1) onNetlistDemandChanged?.();
   return () => {
-    listeners.delete(listener);
+    if (listeners.delete(listener) && listeners.size === 0) onNetlistDemandChanged?.();
   };
 }
 
@@ -154,8 +156,12 @@ export function initializeNetlistSync(store: Store) {
   let running = false;
   let resyncRequested = false;
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
+  let observerGeneration = 0;
 
   const sync = async () => {
+    if (!listeners.size) return;
+    const generation = observerGeneration;
+    const observing = () => generation === observerGeneration && listeners.size > 0;
     const state = store.getState() as docDrawing;
     const present = state.docStore.present;
 
@@ -190,7 +196,7 @@ export function initializeNetlistSync(store: Store) {
       try {
         const netlist = await generateActiveNetlist(state);
         const current = store.getState() as docDrawing;
-        if (current.docStore.present.drawing === drawing && current.altStore.file === file &&
+        if (observing() && current.docStore.present.drawing === drawing && current.altStore.file === file &&
             projectRevision === revision && !current.docStore.present.editSymbol)
           publishNetlist(netlist);
       } catch (error) {
@@ -212,6 +218,7 @@ export function initializeNetlistSync(store: Store) {
         sheets: drawing.sheets.map((s) => s.name),
       });
       const netlist = await wkrInitNetlist(drawing);
+      if (!observing()) return;
       publishNetlist(netlist);
       store.dispatch(actionStampWireNetTypes(netlist));
       previousDrawing = drawing;
@@ -234,6 +241,7 @@ export function initializeNetlistSync(store: Store) {
         delta.changedSheets,
         delta.removedSheets,
       );
+      if (!observing()) return;
       publishNetlist(netlist);
       store.dispatch(actionStampWireNetTypes(netlist));
     } else {
@@ -264,6 +272,7 @@ export function initializeNetlistSync(store: Store) {
   };
 
   const requestSyncWhenIdle = () => {
+    if (!listeners.size) return;
     if (idleTimer) {
       clearTimeout(idleTimer);
     }
@@ -274,13 +283,27 @@ export function initializeNetlistSync(store: Store) {
     }, netlistIdleDelayMs);
   };
 
-  store.subscribe(() => {
-    requestSyncWhenIdle();
-  });
+  onNetlistDemandChanged = () => {
+    retainSchematicNetlist(listeners.size > 0);
+    if (listeners.size) {
+      requestSyncWhenIdle();
+      return;
+    }
+    observerGeneration++;
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = null;
+    previousDrawing = null;
+    previousFile = null;
+    previousVersion = -1;
+    previousProjectRevision = -1;
+    currentNetlist = null;
+  };
+
+  store.subscribe(requestSyncWhenIdle);
 
   globalThis.addEventListener?.(projectFilesChanged, () => {
     projectRevision++;
     requestSyncWhenIdle();
   });
-  requestSyncWhenIdle();
+  onNetlistDemandChanged();
 }

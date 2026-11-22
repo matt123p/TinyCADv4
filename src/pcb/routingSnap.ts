@@ -1,7 +1,8 @@
 import type { BoardDocument, CopperLayer } from './board';
 import { boardCopperGeometry } from './boardCopperGeometry';
+import type { BoardTrack } from './boardRouting';
 import { capsulePolygon } from './contours';
-import type { Polygon } from './contours';
+import type { Polygon, PolygonRegion } from './contours';
 import { isBoardPoint, pointInPolygon } from './geometry';
 import type { BoardPoint } from './geometry';
 import { bounds, closestSegmentPoint, near, pointSegmentDistance } from './regionDistances';
@@ -35,29 +36,59 @@ export interface RouteSnap {
 }
 
 export function routingSnapTargets(board: BoardDocument) {
-  const { features, drills } = boardCopperGeometry(board);
+  const { features, drills } = boardCopperGeometry({ ...board, tracks: [] }, { includeApertures: false });
   const voids = drills.map(({ id, start, end, widthNm }) => {
     const outer = capsulePolygon(start, end, widthNm);
     return { id, outer, box: bounds({ outer, holes: [] }) };
   });
   const voidById = new Map(voids.map(({ id, outer }) => [id, outer]));
-  const tracks = new Map(board.tracks?.map((track) => [track.id, track]));
-  return features.filter(({ netId }) => !!netId).sort((a, b) =>
-    a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
-  ).map(({ id, layerId, netId, region, anchor }) => {
+  function describe(id: string, region: PolygonRegion, anchor?: BoardPoint) {
     const box = bounds(region);
     const holes = [...region.holes, ...voids.filter((item) => near(box, item.box, 0)).map(({ outer }) => outer)];
     const contains = (point: BoardPoint) =>
       isBoardPoint(point) &&
       pointInPolygon(point, region.outer) === 'inside' &&
       holes.every((hole) => pointInPolygon(point, hole) === 'outside');
-    const track = tracks.get(id);
     const centre = rounded({ x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 });
     const fixed = [anchor, centre].find((point) => point && contains(point));
     const fallback = fixed ? [] : edgeAnchors(region.outer).filter(contains);
     const drill = voidById.get(id.slice(0, id.lastIndexOf(':')));
-    return { layerId, netId, box, region, holes, drill, contains, track, fixed, fallback };
-  });
+    return { box, region, holes, drill, contains, fixed, fallback };
+  }
+  function target(
+    id: string,
+    layerId: CopperLayer['id'],
+    netId: string,
+    box: ReturnType<typeof bounds>,
+    outline: () => PolygonRegion,
+    anchor?: BoardPoint,
+    track?: BoardTrack,
+  ) {
+    let details: ReturnType<typeof describe> | undefined;
+    return {
+      id, layerId, netId, box, track,
+      get details() {
+        return details ??= describe(id, outline(), anchor);
+      },
+    };
+  }
+  const targets = features.filter(({ netId }) => !!netId).map(({ id, layerId, netId, region, anchor }) =>
+    target(id, layerId, netId, bounds(region), () => region, anchor),
+  );
+  const netIds = new Set(board.nets?.map(({ id }) => id));
+  for (const track of board.tracks ?? []) {
+    const { id, start, end, layerId, netId, widthNm } = track;
+    if (!netIds.has(netId)) continue;
+    const radius = Math.ceil(widthNm / 2);
+    // Enclose the rounded capsule until its exact outline is needed.
+    const box = {
+      minX: Math.min(start.x, end.x) - radius, minY: Math.min(start.y, end.y) - radius,
+      maxX: Math.max(start.x, end.x) + radius, maxY: Math.max(start.y, end.y) + radius,
+    };
+    targets.push(target(id, layerId, netId, box,
+      () => ({ outer: capsulePolygon(start, end, widthNm), holes: [] }), undefined, track));
+  }
+  return targets.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 
 /** Screen tolerance only controls acquisition. A selected endpoint is in board coordinates. */
@@ -74,7 +105,9 @@ export function snapRoutePoint(
   let best: { snap: RouteSnap; gap: number; distance: number };
   for (const target of targets) {
     if (target.layerId !== layerId || !near(target.box, box, radius)) continue;
-    const { region, holes, drill, netId, track, contains, fixed, fallback } = target;
+    const { box: outlineBox, region, holes, drill, contains, fixed, fallback } = target.details;
+    if (!near(outlineBox, box, radius)) continue;
+    const { netId, track } = target;
     const inside = pointInPolygon(point, region.outer) !== 'outside';
     const gap = inside
       ? Math.max(0, ...holes.filter((hole) => pointInPolygon(point, hole) === 'inside')

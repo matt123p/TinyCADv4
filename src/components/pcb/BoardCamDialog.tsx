@@ -12,6 +12,8 @@ import { saveAs } from 'file-saver';
 import type { BoardDocument } from '../../pcb/board';
 import type { BoardWorkspaceSession } from '../../io/boardWorkspace';
 import type { BoardCamPreview } from '../../pcb/boardCam';
+import { findingBlocksRelease } from '../../pcb/boardFindings';
+import { BoardFindingDetails, FindingSeverityLabel } from './BoardFindingDetails';
 import {
   archiveBoardReleaseReview,
   manufacturingReadiness,
@@ -36,12 +38,14 @@ export default function BoardCamDialog({
   board,
   projectId,
   readProjectCircuit,
+  waitForRefill,
   onChecked,
   onClose,
 }: {
   board: BoardDocument;
   projectId?: string;
   readProjectCircuit?: BoardWorkspaceSession['readProjectCircuit'];
+  waitForRefill(): Promise<void>;
   onChecked(revision: number): void;
   onClose(): void;
 }) {
@@ -63,6 +67,8 @@ export default function BoardCamDialog({
     let active = true;
     let worker: ReturnType<typeof createBoardWorker>;
     const run = async () => {
+      await waitForRefill();
+      if (!active) return;
       const projectCircuit = await readProjectCircuit?.(board);
       if (!active) return;
       worker = createBoardWorker();
@@ -87,7 +93,7 @@ export default function BoardCamDialog({
       releaseWorker.current?.dispose();
       releaseWorker.current = undefined;
     };
-  }, [board, readProjectCircuit, onChecked]);
+  }, [board, readProjectCircuit, onChecked, waitForRefill]);
 
   const current =
     preview?.manifest.boardId === board.boardId &&
@@ -241,6 +247,8 @@ export default function BoardCamDialog({
   const selectedLayer = layers?.find(({ key }) => key === layer) ?? layers?.[0];
   const selectedFile = selectedLayer && selectedLayer.key + '.gbr';
   const blockers = current ? manufacturingReadiness(board, preview) : [];
+  const blockingFindings = current ? preview.report.issues.filter(findingBlocksRelease) : [];
+  const otherFindings = current ? preview.report.issues.filter((finding) => !findingBlocksRelease(finding)) : [];
   const unreviewed = current ? unreviewedCamFiles(preview, reviewedFiles) : [];
   const holeFiles = ['profile.gbr', 'plated.xnc', 'non-plated.xnc'];
   const reviewedHoles = holeFiles.every((name) => reviewedFiles.includes(name));
@@ -386,8 +394,26 @@ export default function BoardCamDialog({
                   </Button>
                   {blockers.length > 0 && (
                     <ul aria-label="Release blockers">
-                      {blockers.map(({ detail }, index) => (
-                        <li key={index}>{detail}</li>
+                      {blockingFindings.map((finding, index) => (
+                        <li key={index}>
+                          <strong><FindingSeverityLabel severity={finding.severity} /></strong> {finding.message}
+                          <BoardFindingDetails finding={finding} />
+                        </li>
+                      ))}
+                      {blockers.slice(blockingFindings.length).map(({ detail, severity }, index) => (
+                        <li key={index}>
+                          <strong><FindingSeverityLabel severity={severity} /></strong> {detail}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {otherFindings.length > 0 && (
+                    <ul aria-label="Other design-check findings">
+                      {otherFindings.map((finding, index) => (
+                        <li key={index}>
+                          <strong><FindingSeverityLabel severity={finding.severity} /></strong> {finding.message}
+                          <BoardFindingDetails finding={finding} />
+                        </li>
                       ))}
                     </ul>
                   )}

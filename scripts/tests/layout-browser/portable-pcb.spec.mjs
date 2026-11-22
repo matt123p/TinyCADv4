@@ -2,6 +2,7 @@ import { build } from 'esbuild';
 import { TextWriter, Uint8ArrayReader, ZipReader } from '@zip.js/zip.js';
 import { expect, test } from '@playwright/test';
 import { _electron } from 'playwright';
+import { createHash } from 'node:crypto';
 import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -196,6 +197,16 @@ for (const target of ['filesystem', 'electron']) {
         return local && !/\.(tplib|tclib)(\?|$)/i.test(url) ? route.continue() : route.abort();
       });
       if (app) {
+        await page.addInitScript(() => {
+          window.pcbModelRequests = [];
+          window.Worker = class extends Worker {
+            postMessage(data, ...options) {
+              if (data?.board)
+                window.pcbModelRequests.push([data.kind, data.board?.modelAssets?.length ?? 0]);
+              return super.postMessage(data, ...options);
+            }
+          };
+        });
         const url = new URL(app.baseURL);
         if (target === 'electron') url.searchParams.set('file', source);
         await page.goto(url.href);
@@ -230,16 +241,17 @@ for (const target of ['filesystem', 'electron']) {
       await expect(editor.getByRole('img', { name: 'Board layout' })).toBeVisible();
       await expect(page.getByRole('group', { name: 'Project activity bar' })).toHaveCount(0);
       await expect(editor.locator('[data-track]')).toHaveCount(3);
+      const fileMenu = editor.getByRole('button', { name: 'File', exact: true });
+      if (target === 'filesystem') await expect(fileMenu).toBeVisible();
+      else await expect(fileMenu).toHaveCount(0);
+
       if (electron) {
         const canvas = editor.getByRole('img', { name: 'Board layout' });
-        const fit = await canvas.getAttribute('viewBox');
+        const fit = await canvas.getAttribute('data-view-box');
         await nativeCommand('View', 'Zoom In');
-        await expect(canvas).not.toHaveAttribute('viewBox', fit);
+        await expect(canvas).not.toHaveAttribute('data-view-box', fit);
         await editor.getByRole('button', { name: 'Fit board' }).click();
-        await expect(canvas).toHaveAttribute('viewBox', fit);
-        await expect(editor.getByRole('button', { name: 'File', exact: true })).toHaveCount(0);
-      } else {
-        await expect(editor.getByRole('button', { name: 'File', exact: true })).toBeVisible();
+        await expect(canvas).toHaveAttribute('data-view-box', fit);
       }
       await editor.getByRole('button', { name: 'Save As…' }).click();
       await expect(editor.getByText('Saved.dpn', { exact: true })).toBeVisible();
@@ -249,6 +261,14 @@ for (const target of ['filesystem', 'electron']) {
       expect(copied.deviceDefinitions).toHaveLength(1);
       expect(copied.footprintDefinitions).toHaveLength(1);
       expect(copied.footprints.map(({ deviceId }) => deviceId)).toEqual(board.footprints.map(({ deviceId }) => deviceId));
+      if (app) {
+        await editor.getByRole('button', { name: 'Route track', exact: true }).click();
+        await editor.getByLabel('Board net', { exact: true }).selectOption({ label: 'Signal' });
+        await expect.poll(() => page.evaluate(() => window.pcbModelRequests)).toEqual(expect.arrayContaining([
+          ['geometry', 0], ['route-clearance', 0],
+        ]));
+        await editor.getByRole('button', { name: 'Cancel route', exact: true }).click();
+      }
 
       await editor.getByRole('button', { name: 'Run design checks…' }).click();
       const checks = page.getByRole('dialog', { name: 'PCB design checks' });
@@ -258,6 +278,7 @@ for (const target of ['filesystem', 'electron']) {
       ));
       expect(report.issues.filter(({ code }) => ['open', 'short', 'floating-copper', 'missing-terminal'].includes(code))).toEqual([]);
       expect(report.fabrication).toMatchObject({ profileId: 'classroom-v1', thicknessNm: 1.6e6 });
+      expect(report.inputDigest).toBe(createHash('sha256').update(JSON.stringify(copied)).digest('hex'));
       await checks.getByRole('button', { name: 'Close', exact: true }).click();
 
       await editor.getByRole('button', { name: 'Inspect in 3D…' }).click();
@@ -269,6 +290,9 @@ for (const target of ['filesystem', 'electron']) {
       }
       await expect(models.getByText('Generated STEP envelope', { exact: false })).toHaveCount(2);
       await viewer.getByRole('button', { name: 'Close', exact: true }).click();
+      if (app) expect(await page.evaluate(() => window.pcbModelRequests)).toEqual(expect.arrayContaining([
+        ['check', 1], ['inspect', 1],
+      ]));
 
       await editor.getByRole('button', { name: 'CAM read-back preview…' }).click();
       const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
@@ -302,6 +326,17 @@ for (const target of ['filesystem', 'electron']) {
       await expect(drill).toBeHidden();
       await expect(editor.locator('[data-hole]')).toHaveCount(1);
       await expect(editor.locator('[data-screw-head="bottom"]')).toHaveCount(1);
+      const beforeInspection = await readFile(destination);
+      await editor.getByRole('button', { name: 'Inspect board rules…' }).click();
+      const inspector = page.getByRole('dialog', { name: 'Inspect PCB rules' });
+      await inspector.getByRole('tab', { name: 'Openings', exact: true }).click();
+      const opening = inspector.getByLabel('Opening', { exact: true });
+      const mountingHole = opening.getByRole('option', { name: /^Non-plated hole / });
+      await opening.selectOption(await mountingHole.getAttribute('value'));
+      await expect(inspector).toContainText('required 0.6 mm (minNonPlatedDrillNm)');
+      await expect(inspector).toContainText('Opening is contained.');
+      await inspector.getByRole('button', { name: 'Close', exact: true }).click();
+      expect(await readFile(destination)).toEqual(beforeInspection);
       await editor.getByRole('button', { name: 'Undo', exact: true }).click();
       await expect(editor.locator('[data-hole]')).toHaveCount(0);
       await editor.getByRole('button', { name: 'Redo', exact: true }).click();
@@ -338,10 +373,11 @@ for (const target of ['filesystem', 'electron']) {
         await expect(connections.getByRole('status')).toHaveText('Device added to unplaced components.');
         await connections.getByRole('button', { name: 'Done', exact: true }).click();
         await editor.getByRole('list', { name: 'Unplaced components' }).getByRole('button', { name: new RegExp('^' + reference) }).click();
-        await editor.getByRole('button', { name: 'Place on board' }).click();
+        await editor.getByRole('img', { name: 'Footprint pad preview' }).dragTo(canvas);
+        await expect(canvas.locator('[data-placement-preview]')).toHaveCount(1);
         await canvas.evaluate((svg) => svg.scrollIntoView());
         const point = await canvas.evaluate((svg, [x, y]) => {
-          const screen = new DOMPoint(x, -y).matrixTransform(svg.getScreenCTM());
+          const screen = new DOMPoint(x, -y).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
           return { x: screen.x, y: screen.y };
         }, [x, y]);
         await page.mouse.click(point.x, point.y);
@@ -349,8 +385,12 @@ for (const target of ['filesystem', 'electron']) {
       }
       const point = await placeDevice('J99', 34_000_000, 6_000_000);
       await expect(canvas.locator('[data-component]')).toHaveCount(3);
+      const placed = canvas.getByText('J99', { exact: true });
+      await expect(placed).toBeVisible();
+      const placedBounds = await placed.boundingBox();
       await page.mouse.move(point.x + 10, point.y + 10);
       await expect(canvas.locator('[data-placement-preview]')).toHaveCount(0);
+      expect(await placed.boundingBox()).toEqual(placedBounds);
       expect(await readFile(destination)).toEqual(unchangedOnDisk);
       await editor.getByRole('button', { name: 'Undo', exact: true }).click();
       await expect(canvas.locator('[data-component]')).toHaveCount(2);

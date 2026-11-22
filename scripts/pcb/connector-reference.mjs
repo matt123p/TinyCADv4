@@ -64,7 +64,11 @@ const board = await api.decodeBoard(await api.encodeBoard({
   requiredFeatures: ['straight-outline', 'embedded-devices', 'physical-padstacks',
     'mechanical-holes', 'fabrication-settings'],
   fabrication: { thicknessNm: 1_600_000 },
-  components: [{ id: placement.componentId, reference: 'J1', deviceId: device.id, role: 'pcb-only', signals }],
+  components: [{
+    id: placement.componentId, reference: 'J1', deviceId: device.id,
+    procurement: { manufacturer: 'Same Sky', mpn: 'PJ-102A' },
+    role: 'pcb-only', signals,
+  }],
   footprintDefinitions: [footprint],
   deviceDefinitions: [{ ...device, definitionDigest: await api.deviceDigest(device) }],
   modelAssets: definition.models,

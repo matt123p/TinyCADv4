@@ -18,6 +18,7 @@ import { writeCamFiles } from './camWriter';
 import type { CamArtwork, CamSnapshot } from './camWriter';
 import { capsulePolygon, profileRegion } from './contours';
 import type { PolygonRegion } from './contours';
+import { openingRegion } from './copper';
 import type { PolygonKernel } from './polygonKernel';
 import { digest } from '../util/sha256';
 
@@ -35,12 +36,7 @@ export async function prepareCamPreview(
     artwork: artworkGeometry,
     projectCircuit,
   });
-  const voids = geometry.drills.map(
-    ({ start, end, widthNm }): PolygonRegion => ({
-      outer: capsulePolygon(start, end, widthNm),
-      holes: [],
-    }),
-  );
+  const voids = geometry.drills.map(openingRegion);
   const features = [...geometry.features, ...zones.fills];
   const snapshot: CamSnapshot = {
     profile: editableProfile(board),

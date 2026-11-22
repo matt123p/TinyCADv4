@@ -322,6 +322,16 @@ test('copies and freezes source geometry', () => {
   assert.throws(() => {
     board.outline[0].x = 200;
   }, TypeError);
+
+  assert.equal(validateBoard(board), board);
+  assert.equal(new BoardHistory(board).board, board);
+  assert.throws(() => validateBoard(Object.freeze({ ...board, title: '' })), /Invalid board identity/);
+  const metadata = JSON.parse('{"z":2,"__proto__":{"label":"keep me"},"a":1}');
+  const withMetadata = validateBoard({ ...board, metadata });
+  assert.equal(Object.getPrototypeOf(withMetadata.metadata), Object.prototype);
+  assert.equal(JSON.stringify(withMetadata.metadata), '{"__proto__":{"label":"keep me"},"a":1,"z":2}');
+  metadata.__proto__.label = 'changed';
+  assert.equal(withMetadata.metadata.__proto__.label, 'keep me');
 });
 
 test('assigns duplicate numbered lands individually and preserves string labels', () => {

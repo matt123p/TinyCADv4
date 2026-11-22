@@ -23,6 +23,7 @@
   </OUTLINE>
   <COMPONENTDEFS>
     <COMPONENTDEF id="d4400000-0000-4000-8000-000000000112" ref="U1" value="AP2112K-3.3TRG1" device_id="16097705-05b0-836c-a082-e6ea1673b886" role="pcb-only">
+      <PROCUREMENT manufacturer="Diodes Incorporated" mpn="AP2112K-3.3TRG1"/>
       <SIGNALS>
         <BIND signal_id="4c76dd53-9d8b-8d4a-a032-c7a1a0d5c41f" net_id="d4400000-0000-4000-8000-000000000012"/>
         <BIND signal_id="b356e777-2dfd-8648-accb-640e579acebe" net_id="d4400000-0000-4000-8000-000000000011"/>
@@ -31,6 +32,7 @@
       </SIGNALS>
     </COMPONENTDEF>
     <COMPONENTDEF id="d4400000-0000-4000-8000-000000000132" ref="U2" value="TPS7A7002DDA" device_id="d33bf099-c525-8119-a382-ee3caa9ad5c8" role="pcb-only">
+      <PROCUREMENT manufacturer="Texas Instruments" mpn="TPS7A7002DDA"/>
       <SIGNALS>
         <BIND signal_id="48c1cac9-b8b8-8d42-a132-5319a123f222" net_id="d4400000-0000-4000-8000-000000000013"/>
         <BIND signal_id="fa98de14-fd53-8d05-a9c1-1bd1d4f91c6a" net_id="d4400000-0000-4000-8000-000000000013"/>

@@ -228,3 +228,30 @@ test('checks Drive revision tokens around reads and before overwriting a project
     '5',
   );
 });
+
+
+test('guards Drive moves against a changed source parent', async () => {
+  const moves = [];
+  let parents = ['drive-root'];
+  const drive = async (resource, options) => {
+    const url = new URL(resource, 'https://example.test');
+    if (url.pathname === '/files/root') return Response.json({ id: 'drive-root' });
+    if (url.searchParams.get('fields') === 'parents')
+      return Response.json({ parents }, { headers: { ETag: '"before"' } });
+    assert.equal(url.pathname, '/files/board');
+    assert.equal(options.method, 'PATCH');
+    assert.equal(options.headers['If-Match'], '"before"');
+    moves.push([...url.searchParams]);
+    return Response.json({ id: 'board', name: 'Board.dpn' });
+  };
+  const request = {
+    operation: 'move', id: 'board', from: 'root', folder: 'layouts',
+    name: 'Board.dpn', directory: false,
+  };
+  assert.deepEqual(await api.driveProjectFiles(request, drive), { id: 'board', name: 'Board.dpn' });
+  parents = ['another-folder'];
+  await assert.rejects(api.driveProjectFiles(request, drive), /moved on Drive/);
+  assert.deepEqual(moves, [[
+    ['fields', 'id,name'], ['addParents', 'layouts'], ['removeParents', 'drive-root'],
+  ]]);
+});

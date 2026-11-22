@@ -17,7 +17,7 @@ import {
   readControl,
   sourcePreview,
 } from '../../simulation/controls';
-import { Waveform } from '../simulation/Waveform';
+import { Waveform } from '../simulation/LazyWaveform';
 import { useInstrumentAcquisition } from '../simulation/useInstrumentAcquisition';
 
 import { parseQuantity } from '../../simulation/numbers';

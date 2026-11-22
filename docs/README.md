@@ -14,7 +14,7 @@ These documents describe TinyCAD's current implementation and the contracts usef
 | [Teaching models](teaching-simulation-models.md) | Configurable digital, functional and sensor model behaviour and limitations. |
 | [Editor tools](editor-tools.md) | Layout API, connectivity constraints and Markdown drawing notes. |
 
-For editor development, use the [repository skills](../AGENTS.md) and the [PCB interface redesign checklist](TODO.md#editor-interface-redesign).
+For editor development, follow the [repository skills](../AGENTS.md). Start the PCB milestones with the [WP3 editor recovery checklist](TODO.md#editor-interface-redesign) and use its results in the [M1 milestone acceptance checks](TODO.md#wp2wp6--m1-manufacturing-release).
 
 The [symbol inventory](symbol-libraries/README.md) explains the machine-readable data used by library generators. Implementation details that change frequently belong in the linked source, recipes, schemas and tests.
 

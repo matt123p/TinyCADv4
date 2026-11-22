@@ -1,10 +1,9 @@
 import wasmUrl from 'url:clipper2-wasm/dist/es/clipper2z.wasm';
 import { loadPolygonKernel } from '../pcb/polygonKernel';
-import type { PolygonKernel } from '../pcb/polygonKernel';
 
-let kernel: Promise<PolygonKernel> | undefined;
+let kernel: ReturnType<typeof loadPolygonKernel> | undefined;
 
-export function projectPcbKernel(): Promise<PolygonKernel> {
+export function projectPcbKernel(): ReturnType<typeof loadPolygonKernel> {
   kernel ??= fetch(wasmUrl)
     .then((response) => {
       if (!response.ok)

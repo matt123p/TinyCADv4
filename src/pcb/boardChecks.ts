@@ -12,35 +12,65 @@ import { regionalClearance } from './regionalClearance';
 import { checkFabrication } from './boardFabricationChecks';
 import { fabricationProfileFor } from './fabricationProfiles';
 import type { BoardStackup } from './fabricationProfiles';
-import { boundaryDistance, bounds, near } from './regionDistances';
+import { openingCopperClearance } from './fabricationOpenings';
+import { inspectFabricationOutline } from './fabricationOutline';
+import { boundaryDistance, bounds, indexBounds, near, someNearby } from './regionDistances';
 import { checkAppliedCircuit, checkProjectCircuit } from './boardParity';
 import type {
   ProjectCircuitInput,
   SchematicCheckEvidence,
 } from './boardParity';
 import { boardZoneGeometry } from './boardZoneGeometry';
-import {
-  capsulePolygon,
-  profileRegion,
-  TESSELLATION_TOLERANCE_NM,
-} from './contours';
+import { profileRegion, TESSELLATION_TOLERANCE_NM } from './contours';
 import type { PolygonRegion } from './contours';
-import { analyseCopper, regionsTouch } from './copper';
+import { analyseCopper, openingRegion, regionsTouch } from './copper';
 import type { BoardPoint } from './geometry';
 import type { PolygonKernel } from './polygonKernel';
 import { digest } from '../util/sha256';
+import { boardFindings } from './boardFindings';
+import type { BoardFinding } from './boardFindings';
+import { checkCoverageResults } from './boardCheckCoverage';
+import type { CheckCoverage } from './boardCheckCoverage';
 
-const checkEngine = 'tinycad-board-checks/15';
+const checkEngine = 'tinycad-board-checks/18';
 // Keep existing geometry waivers tied to the same unchanged evidence.
 const waiverFingerprintVersion = 'tinycad-board-checks/2';
 const encoder = new TextEncoder();
 const uncertaintyNm = 2 * TESSELLATION_TOLERANCE_NM;
+
+function rectangleBounds(regions: readonly PolygonRegion[]) {
+  if (regions.length !== 1) return;
+  const [region] = regions;
+  if (region.holes.length || region.outer.length !== 4) return;
+  const box = bounds(region);
+  // Require axis-aligned sides as well as corners on the bounding rectangle.
+  if (region.outer.every((point, index) => {
+    const next = region.outer[(index + 1) % 4];
+    return (point.x === box.minX || point.x === box.maxX) &&
+      (point.y === box.minY || point.y === box.maxY) &&
+      (point.x === next.x) !== (point.y === next.y);
+  })) return box;
+}
+
+function outsideInterior(
+  kernel: PolygonKernel, region: PolygonRegion, box: ReturnType<typeof bounds>,
+  interior: { regions: readonly PolygonRegion[]; rectangle?: ReturnType<typeof bounds> },
+) {
+  const { rectangle, regions } = interior;
+  if (rectangle && box.minX >= rectangle.minX && box.maxX <= rectangle.maxX &&
+      box.minY >= rectangle.minY && box.maxY <= rectangle.maxY) return false;
+  return kernel.boolean('difference', [region], regions).length !== 0;
+}
 
 export interface BoardIssue {
   readonly code: string;
   readonly objects: readonly string[];
   readonly message: string;
   readonly location?: BoardPoint;
+  readonly layers?: readonly string[];
+  readonly signalIds?: readonly string[];
+  readonly ruleIds?: readonly string[];
+  readonly measurement?: BoardFinding['measurement'];
   readonly requiredNm?: number;
   readonly measuredNm?: number;
   readonly clearanceRules?: readonly { id: string; name: string; clearanceNm: number }[];
@@ -51,12 +81,6 @@ export interface BoardIssue {
   };
 }
 
-interface CheckCoverage {
-  readonly check: string;
-  readonly status: 'checked' | 'limited' | 'unavailable' | 'not applicable';
-  readonly detail?: string;
-}
-
 export interface BoardCheckReport {
   readonly boardId: string;
   readonly revision: number;
@@ -64,12 +88,12 @@ export interface BoardCheckReport {
   readonly engine: string;
   readonly generatedAt: string;
   readonly schematic?: SchematicCheckEvidence;
-  readonly issues: readonly BoardIssue[];
+  readonly issues: readonly BoardFinding[];
   readonly jumperConnectivity?: {
     readonly bareOpenNets: readonly string[];
     readonly assembledOpenNets: readonly string[];
   };
-  readonly coverage: readonly CheckCoverage[];
+  readonly coverage: Readonly<ReturnType<typeof checkCoverageResults>>;
   readonly fabrication: {
     profileId?: string;
     revision?: string;
@@ -158,7 +182,32 @@ export async function checkBoard(
   const missingCourtyards = (board.footprints ?? []).filter(({ componentId, side }) =>
     !courtyardComponents.has(componentId + ':' + side),
   ).length;
+  const outlineChecks = fabrication ? inspectFabricationOutline(kernel, profile, fabrication.limits) : [];
+  for (const check of outlineChecks) {
+    if (check.result === 'passed') continue;
+    issues.push({
+      code: check.result === 'failed' ? 'fabrication-outline-width' : 'fabrication-outline-unverified',
+      objects: [board.boardId],
+      location: check.location,
+      measuredNm: check.measuredNm,
+      requiredNm: check.requiredNm,
+      layers: ['profile'],
+      ruleIds: [check.rule],
+      message: check.result === 'failed'
+        ? check.name + ' has a feature narrower than the fabrication minimum.'
+        : check.name + ' could not be verified. ' + check.detail,
+    });
+  }
+  const outlineStatus = !fabrication ? 'unavailable'
+    : outlineChecks.some(({ result }) => result === 'unverified') ? 'limited' : 'checked';
   const coverage: CheckCoverage[] = [
+    {
+      check: 'Routed outline and cutouts',
+      status: outlineStatus,
+      detail: fabrication
+        ? 'Checks board material webs, open notches and cutouts against the profile width limits.'
+        : 'Select a fabrication profile to check routed outline features.',
+    },
     {
       check: 'Copper clearance, edges, track width and via ring',
       status: 'checked',
@@ -199,9 +248,9 @@ export async function checkBoard(
       detail: !board.footprints?.length
         ? 'The board has no placed footprints.'
         : [
-            'Checks vector legend geometry, clearance to mask and board edges, and closed courtyards for overlap and containment.',
+            'Checks legend stroke and text height, clearance to mask and board edges, and closed courtyards for overlap and containment.',
             missingCourtyards ? `${missingCourtyards} placed footprints lack a closed courtyard on their mounted side.` : '',
-            !fabrication && artwork.silk.length ? 'Select a fabrication profile to check minimum legend stroke and clearances.' : '',
+            !fabrication && artwork.silk.length ? 'Select a fabrication profile to check minimum legend stroke, text height and clearances.' : '',
           ].filter(Boolean).join(' '),
     },
   ];
@@ -250,6 +299,7 @@ export async function checkBoard(
       issues.push({
         code: 'unmapped-signals',
         objects: [id, ...missing.map(({ signalId }) => signalId)],
+        signalIds: missing.map(({ signalId }) => signalId),
         message: (reference ?? id) + ' has unmapped circuit signals.',
       });
   }
@@ -287,17 +337,15 @@ export async function checkBoard(
       });
   }
 
+  const drillInterior = { regions: [profile], rectangle: rectangleBounds([profile]) };
   const holes = geometry.drills.map((drill) => {
-    const region: PolygonRegion = {
-      outer: capsulePolygon(drill.start, drill.end, drill.widthNm),
-      holes: [],
-    };
+    const region = openingRegion(drill);
     return { drill, region, box: bounds(region) };
   });
   let intersects = false;
   for (let i = 0; i < holes.length; i++) {
     const { drill, region, box } = holes[i];
-    if (kernel.boolean('difference', [region], [profile]).length)
+    if (outsideInterior(kernel, region, box, drillInterior))
       issues.push({
         code: 'drill-outside',
         objects: [drill.id],
@@ -343,31 +391,18 @@ export async function checkBoard(
     });
   }
   const features = [...geometry.features, ...(zones?.fills ?? [])];
+  const copper = features.map((feature, index) => ({ feature, box: bounds(feature.region), index }));
   const mountingClearance = new Map(
     board.mechanicalHoles?.map(({ id, clearanceNm }) => [id, clearanceNm ?? 0]),
   );
   for (const { drill, region, box } of holes) {
     if (drill.plated && !mountingClearance.get(drill.id)) continue;
-    const ownVia = board.vias?.find(({ id }) => id === drill.id);
-    const allowedNet =
-      ownVia?.netId ??
-      geometry.features.find(
-        ({ id, terminalId }) =>
-          terminalId && id.slice(0, id.lastIndexOf(':')) === drill.id,
-      )?.netId;
-    for (const feature of features) {
-      const required = Math.max(
-        drill.plated ? 0 : resolver.clearance(feature.netId, allowedNet),
-        mountingClearance.get(drill.id) ?? 0,
-      );
-      const isOwnLand =
-        feature.id.slice(0, feature.id.lastIndexOf(':')) === drill.id;
-      if (
-        !required || isOwnLand ||
-        (allowedNet && allowedNet === feature.netId) ||
-        !near(box, bounds(feature.region), required + uncertaintyNm)
-      )
-        continue;
+    const clearance = openingCopperClearance(
+      board, drill, geometry.features, mountingClearance.get(drill.id) ?? 0, resolver.clearance,
+    );
+    for (const { feature, box: featureBox } of copper) {
+      const required = clearance(feature);
+      if (!required || !near(box, featureBox, required + uncertaintyNm)) continue;
       const measured = regionsTouch(feature.region, region)
         ? 0
         : boundaryDistance(feature.region, region);
@@ -384,14 +419,14 @@ export async function checkBoard(
   }
 
   const headKeepouts = mountingKeepouts(board);
-  for (const { id, side, location, copper } of headKeepouts) {
-    const headBounds = bounds(copper);
-    for (const feature of features) {
+  for (const { id, side, location, copper: keepout } of headKeepouts) {
+    const headBounds = bounds(keepout);
+    for (const { feature, box } of copper) {
       if (
         feature.layerId !== side ||
         feature.id.slice(0, feature.id.lastIndexOf(':')) === id ||
-        !near(headBounds, bounds(feature.region), 0) ||
-        !regionsTouch(copper, feature.region)
+        !near(headBounds, box, 0) ||
+        !regionsTouch(keepout, feature.region)
       ) continue;
       issues.push({
         code: 'mounting-screw-copper',
@@ -402,11 +437,13 @@ export async function checkBoard(
     }
   }
 
-  const edgeInteriors = new Map<number, PolygonRegion[]>();
-  const copper = features.map((feature) => ({
-    feature,
-    box: bounds(feature.region),
-  }));
+  const edgeInteriors = new Map<number, { regions: PolygonRegion[]; rectangle?: ReturnType<typeof bounds> }>();
+  const widestClearance = Math.max(
+    copper.reduce((maximum, { feature }) => Math.max(maximum, resolver.net(feature.netId).clearanceNm), 0),
+    (board.clearanceRules ?? []).reduce((maximum, rule) => Math.max(maximum, rule.clearanceNm), 0),
+    (board.routingRegions ?? []).reduce((maximum, region) => Math.max(maximum, region.clearanceNm ?? 0), 0),
+    [...(zones?.clearanceByFill?.values() ?? [])].reduce((maximum, value) => Math.max(maximum, value), 0),
+  ) + uncertaintyNm;
   const regionGeometry = (board.routingRegions ?? []).map((region) => {
     const polygon = routingRegionPolygon(region);
     return { region, polygon, box: bounds(polygon) };
@@ -414,6 +451,11 @@ export async function checkBoard(
   const classByNet = new Map(board.nets?.map(({ id, classId }) => [id, classId]));
   const tracksById = new Map(board.tracks?.map((track) => [track.id, track]));
   const regional = regionalClearance(board, kernel);
+  const clearanceIndex = {
+    top: indexBounds(copper.filter(({ feature }) => feature.layerId === 'top')),
+    bottom: indexBounds(copper.filter(({ feature }) => feature.layerId === 'bottom')),
+  };
+  const candidates: typeof copper = [];
   for (let i = 0; i < copper.length; i++) {
     const { feature, box } = copper[i];
     if (feature.kind === 'track' || feature.kind === 'via' || feature.kind === 'zone') {
@@ -436,10 +478,11 @@ export async function checkBoard(
     const { edgeClearanceNm } = resolver.net(feature.netId);
     let edgeInterior = edgeInteriors.get(edgeClearanceNm);
     if (!edgeInterior) {
-      edgeInterior = kernel.offset([profile], -edgeClearanceNm);
+      const regions = kernel.offset([profile], -edgeClearanceNm);
+      edgeInterior = { regions, rectangle: rectangleBounds(regions) };
       edgeInteriors.set(edgeClearanceNm, edgeInterior);
     }
-    if (kernel.boolean('difference', [feature.region], edgeInterior).length)
+    if (outsideInterior(kernel, feature.region, box, edgeInterior))
       issues.push({
         code: 'copper-edge',
         objects: [feature.id],
@@ -447,10 +490,15 @@ export async function checkBoard(
         requiredNm: edgeClearanceNm,
         message: 'Copper crosses the required board edge clearance.',
       });
-    for (let j = i + 1; j < copper.length; j++) {
-      const other = copper[j];
-      if (feature.layerId !== other.feature.layerId ||
-        (feature.netId && feature.netId === other.feature.netId)) continue;
+    candidates.length = 0;
+    someNearby(clearanceIndex[feature.layerId], box, widestClearance, (other) => {
+      if (other.index > i && (!feature.netId || feature.netId !== other.feature.netId))
+        candidates.push(other);
+      return false;
+    });
+    // Keep findings in board order, independent of the spatial index traversal.
+    candidates.sort((a, b) => a.index - b.index);
+    for (const other of candidates) {
       const required = Math.max(
         resolver.copperClearance(feature, other.feature),
         zones?.clearanceByFill?.get(feature.id) ?? 0,
@@ -535,6 +583,7 @@ export async function checkBoard(
   }
 
   let jumperConnectivity: BoardCheckReport['jumperConnectivity'];
+  let fragments: Map<string, ReturnType<typeof analyseCopper>['copper'][number]> | undefined;
   const activeNets = new Set(board.nets?.map(({ id }) => id));
   for (const jumper of board.jumpers ?? []) {
     const annulus = (jumper.landWidthNm - jumper.drillNm) / 2;
@@ -619,9 +668,9 @@ export async function checkBoard(
         objects: [terminal],
         message: 'A required terminal has no remaining copper.',
       });
-    const fragments = new Map(
-      topology.copper.map((fragment) => [fragment.id, fragment]),
-    );
+    if (issues.length || topology.floatingFragments.length) {
+      fragments = new Map(topology.copper.map((fragment) => [fragment.id, fragment]));
+    }
     const floating = new Set(topology.floatingFragments);
     for (const island of topology.connectedSets) {
       const objects = island.filter(
@@ -648,6 +697,9 @@ export async function checkBoard(
     });
   }
 
+  const source = projectCircuit?.state === 'resolved'
+    ? projectCircuit.snapshot : board.appliedCircuit;
+  const findings = boardFindings(board, issues, geometry, features, artwork, fragments, source);
   return {
     boardId: board.boardId,
     revision: board.revision,
@@ -655,9 +707,9 @@ export async function checkBoard(
     generatedAt: new Date().toISOString(),
     ...(parity ? { schematic: parity.evidence } : {}),
     engine: checkEngine,
-    issues,
+    issues: findings,
     ...(jumperConnectivity ? { jumperConnectivity } : {}),
-    coverage,
+    coverage: checkCoverageResults(coverage, findings, !!fabrication),
     fabrication: {
       ...(board.fabrication?.profileId
         ? {

@@ -37,7 +37,7 @@ import {
   subscribeSession,
 } from '../../simulation/session';
 import { useInstrumentAcquisition } from '../simulation/useInstrumentAcquisition';
-import { Waveform } from '../simulation/Waveform';
+import { Waveform } from '../simulation/LazyWaveform';
 import { openInstrumentWindow } from '../simulation/instrumentWindowState';
 import { Oscilloscope } from '../simulation/Oscilloscope';
 import { symbolReference } from '../../simulation/bindings';

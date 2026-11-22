@@ -296,7 +296,8 @@ export function registerProjectFiles({
     }
     if (operation === 'trash') {
       const target = await resolve(id, request.directory === true);
-      if (allowedRoots.has(target) || pendingWrites.has(target))
+      if (allowedRoots.has(target) || pendingWrites.has(target) ||
+          (request.directory && [...pendingWrites].some((file) => within(target, file))))
         throw new Error('This location is in use.');
       await shell.trashItem(target);
       return;
@@ -309,6 +310,10 @@ export function registerProjectFiles({
         constants.COPYFILE_EXCL,
       );
       return;
+    }
+    if (operation === 'folder-identity') {
+      const stat = await fs.stat(await resolve(id, true), { bigint: true });
+      return `${stat.dev}:${stat.ino}`;
     }
     if (operation === 'fingerprint') {
       const source = await resolve(id, false);

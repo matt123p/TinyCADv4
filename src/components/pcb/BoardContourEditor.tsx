@@ -4,12 +4,13 @@ import type { ContourEdge } from '../../pcb/contours';
 import { repairProfileJunction } from '../../pcb/boardProfiles';
 import {
   isBoardPoint,
-  lengthInNanometres,
-  OutlineTopologyError,
+    OutlineTopologyError,
 } from '../../pcb/geometry';
+import { boardInputLength, canonicalBoardDecimal } from './boardNumberInput';
 import type { BoardPoint } from '../../pcb/geometry';
+import { svgCircle } from '../svg/nanometreSvg';
 
-const nm = (value: string) => lengthInNanometres(value, 'mm');
+const nm = (value: string) => boardInputLength(value, 'mm');
 const mm = (value: number) => String(value / 1_000_000);
 const pair = ({ x, y }: BoardPoint) => ({ x: mm(x), y: mm(y) });
 
@@ -169,9 +170,7 @@ export function ProfilePreview({
       {issue?.location && (
         <circle
           data-profile-issue
-          cx={issue.location.x}
-          cy={-issue.location.y}
-          r={margin / 4}
+          {...svgCircle(issue.location.x, -issue.location.y, margin / 4)}
           stroke="#b32623"
           strokeWidth={2}
           vectorEffect="non-scaling-stroke"
@@ -208,8 +207,8 @@ export default function BoardContourEditor({
     const start = rows.at(-1)?.end ?? { x: '0', y: '0' };
     const end = rows[0]?.start ?? { x: '10', y: '0' };
     const centre = {
-      x: String((Number(start.x) + Number(end.x)) / 2),
-      y: String((Number(start.y) + Number(end.y)) / 2),
+      x: String((Number(canonicalBoardDecimal(start.x)) + Number(canonicalBoardDecimal(end.x))) / 2),
+      y: String((Number(canonicalBoardDecimal(start.y)) + Number(canonicalBoardDecimal(end.y))) / 2),
     };
     onChange([...rows, { kind, start, end, centre, clockwise: false }]);
   }

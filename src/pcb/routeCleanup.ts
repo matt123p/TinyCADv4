@@ -190,7 +190,7 @@ function cycleRuns(
 }
 
 function readTopology(board: BoardDocument, kernel: PolygonKernel) {
-  const geometry = boardCopperGeometry(board);
+  const geometry = boardCopperGeometry(board, { includeApertures: false });
   const { fills } = boardZoneGeometry(board, kernel, geometry);
   return analyseCopper(
     kernel,
@@ -279,7 +279,7 @@ export interface RouteCleanupResult {
   readonly loops: readonly BoardTrack[];
 }
 
-export function prepareRouteCleanup(
+function cleanupCandidate(
   board: BoardDocument,
   netId: string,
   kernel: PolygonKernel,
@@ -343,7 +343,7 @@ export function prepareRouteCleanup(
   );
   if (cleaned)
     return {
-      board: validateBoard(cleaned),
+      board: cleaned,
       merged: merged.merged,
       duplicates: unique.duplicates,
       loops: proposed,
@@ -368,12 +368,43 @@ export function prepareRouteCleanup(
     }
   }
   return {
-    board:
-      removed.length || merged.merged || unique.duplicates
-        ? validateBoard(candidate)
-        : board,
+    board: removed.length || merged.merged || unique.duplicates ? candidate : board,
     merged: merged.merged,
     duplicates: unique.duplicates,
     loops: removed,
   };
+}
+
+export interface RouteCleanupChange {
+  readonly removedTrackIds: readonly string[];
+  readonly replacements: readonly BoardTrack[];
+  readonly loops: readonly BoardTrack[];
+  readonly merged: number;
+  readonly duplicates: number;
+}
+
+export function prepareRouteCleanupChange(
+  board: BoardDocument,
+  netId: string,
+  kernel: PolygonKernel,
+): RouteCleanupChange {
+  const result = cleanupCandidate(board, netId, kernel);
+  const original = new Map(board.tracks?.map((track) => [track.id, track]));
+  const remaining = new Set(result.board.tracks?.map(({ id }) => id));
+  return {
+    removedTrackIds: [...original.keys()].filter((id) => !remaining.has(id)),
+    replacements: (result.board.tracks ?? []).filter((track) => original.get(track.id) !== track),
+    loops: result.loops,
+    merged: result.merged,
+    duplicates: result.duplicates,
+  };
+}
+
+export function prepareRouteCleanup(
+  board: BoardDocument,
+  netId: string,
+  kernel: PolygonKernel,
+): RouteCleanupResult {
+  const result = cleanupCandidate(board, netId, kernel);
+  return result.board === board ? result : { ...result, board: validateBoard(result.board) };
 }

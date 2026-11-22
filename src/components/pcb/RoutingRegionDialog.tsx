@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle } from '@fluentui/react-components';
 import type { BoardDocument } from '../../pcb/board';
-import { lengthInNanometres } from '../../pcb/geometry';
+import { boardInputLength } from './boardNumberInput';
 import { routingRegionKinds } from '../../pcb/routingRegions';
 import type { RoutingRegion } from '../../pcb/routingRegions';
 import { outlineText, outlineVertices } from './boardOutlineInput';
@@ -30,9 +30,9 @@ export default function RoutingRegionDialog({ board, region, onApply, onClose }:
         ...(classId ? { classId } : {}),
         outline: outlineVertices(value('outline')),
         exclusions: routingRegionKinds.filter((kind) => form.has(kind)),
-        ...(minWidth ? { minWidthNm: lengthInNanometres(minWidth, 'mm') } : {}),
-        ...(maxWidth ? { maxWidthNm: lengthInNanometres(maxWidth, 'mm') } : {}),
-        ...(clearance ? { clearanceNm: lengthInNanometres(clearance, 'mm') } : {}),
+        ...(minWidth ? { minWidthNm: boardInputLength(minWidth, 'mm') } : {}),
+        ...(maxWidth ? { maxWidthNm: boardInputLength(maxWidth, 'mm') } : {}),
+        ...(clearance ? { clearanceNm: boardInputLength(clearance, 'mm') } : {}),
       });
       onClose();
     } catch (failure) {

@@ -17,7 +17,7 @@ export type ReferenceFile = {
 
 const projectLocks = new Map<string, Promise<unknown>>();
 
-function inReferenceTransaction<T>(
+export function inProjectTransaction<T>(
   key: string,
   run: () => Promise<T>,
 ): Promise<T> {
@@ -101,13 +101,12 @@ async function recover(journal: ReferenceRecoveryJournal) {
   };
 }
 
+/** Called while holding the project lock. */
 export async function recoverProjectReferenceUpdate(key: string) {
-  await inReferenceTransaction(key, async () => {
-    const journal = await readReferenceJournal(key).catch(
-      (): undefined => undefined,
-    );
-    if (journal) await recover(journal);
-  });
+  const journal = await readReferenceJournal(key).catch(
+    (): undefined => undefined,
+  );
+  if (journal) await recover(journal);
 }
 
 export async function replaceReferencePair(
@@ -117,7 +116,7 @@ export async function replaceReferencePair(
   board: ReferenceFile,
   boardData: Uint8Array,
 ) {
-  return inReferenceTransaction(key, async () => {
+  return inProjectTransaction(key, async () => {
     const pending = await readReferenceJournal(key);
     if (pending) await recover(pending);
     await checkReferenceVersions([source, board]);

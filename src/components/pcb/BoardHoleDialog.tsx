@@ -10,9 +10,9 @@ import {
   DialogTitle,
 } from '@fluentui/react-components';
 import type { BoardMechanicalHole } from '../../pcb/boardMechanical';
-import { lengthInNanometres } from '../../pcb/geometry';
+import { boardInputLength } from './boardNumberInput';
 
-const nm = (value: string) => lengthInNanometres(value, 'mm');
+const nm = (value: string) => boardInputLength(value, 'mm');
 
 export default function BoardHoleDialog({
   x,

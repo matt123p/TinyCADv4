@@ -17,7 +17,7 @@ await build({
     import { createRoot } from 'react-dom/client';
     import { Chart } from 'chart.js';
     import { openChartPopup, ChartPopupPortal } from './src/components/simulation/ChartPopup';
-    import { Waveform } from './src/components/simulation/Waveform';
+    import { Waveform } from './src/components/simulation/LazyWaveform';
     import { FluentProvider, webLightTheme } from '@fluentui/react-components';
     import { SpiceControlPanel } from './src/components/panel/SpiceControlPanel';
     import { createControl, updateControl } from './src/simulation/controlSymbols';
@@ -243,7 +243,7 @@ await build({
       const beforePop=chartSections().length;
       const nativeOpenChart=window.open;let chartChild;
       window.open=(...args)=>(chartChild=nativeOpenChart.apply(window,args));
-      added.querySelector('button[aria-label="Open chart in a new window"]').click();
+      added.querySelector('button[aria-label="Pop out chart"]').click();
       await waitFor(()=>!!chartChild?.document.querySelector('section[aria-label="Chart"] canvas'));
       assert(chartSections().length===beforePop-1,'Popped out charts must leave no panel card');
       const popupSection=chartChild.document.querySelector('section[aria-label="Chart"]');

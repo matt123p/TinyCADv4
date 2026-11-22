@@ -102,7 +102,7 @@ function connectionDeletion(
     return edge;
   }
 
-  const geometry = boardCopperGeometry(board);
+  const geometry = boardCopperGeometry(board, { includeApertures: false });
   const anchors = geometry.features.filter(
     (feature) =>
       feature.netId === seed.netId && !geometry.owners.has(feature.id),

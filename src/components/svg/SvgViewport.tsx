@@ -1,5 +1,5 @@
-import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { editorZoomStep, wheelPinchZoomFactor } from '../../util/editorZoom';
+import React, { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
+import { wheelZoomFactor, zoomStepFactor } from '../../util/editorZoom';
 import { Ruler } from '../controls/Ruler';
 
 export type SvgViewBox = readonly [number, number, number, number];
@@ -8,8 +8,12 @@ export interface SvgViewportHandle {
   zoom(direction: 'in' | 'out', point?: { x: number; y: number }): void;
 }
 
-function localPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
-  const matrix = svg.getScreenCTM()?.inverse();
+export function svgDrawingMatrix(svg?: SVGSVGElement | null) {
+  return svg?.querySelector<SVGGElement>(':scope > [data-svg-drawing]')?.getScreenCTM();
+}
+
+function localPoint(scene: SVGGElement | null, clientX: number, clientY: number) {
+  const matrix = scene?.getScreenCTM()?.inverse();
   return matrix && new DOMPoint(clientX, clientY).matrixTransform(matrix);
 }
 
@@ -36,6 +40,7 @@ export function SvgViewport({
   renderLocationPreview?(position?: readonly [number, number, number]): React.ReactNode;
 }) {
   const svg = useRef<SVGSVGElement>(null);
+  const scene = useRef<SVGGElement>(null);
   const drag = useRef<{ x: number; y: number; pointer: number }>();
   const [view, setView] = useState<SvgViewBox>();
   const [pointer, setPointer] = useState<readonly [number, number, number]>();
@@ -50,18 +55,19 @@ export function SvgViewport({
   const pixelsPerMillimeter = scale * (rulerUnits?.unitsPerMillimeter ?? 1);
   const yDirection = rulerUnits?.yUp ? -1 : 1;
 
-  useEffect(() => {
-    if (!rulerUnits) return;
+  useLayoutEffect(() => {
+    const element = svg.current;
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
-      setSize({ width, height });
+      setSize((size) => size.width === width && size.height === height
+        ? size : { width, height });
     });
-    observer.observe(svg.current);
+    observer.observe(element);
     return () => observer.disconnect();
-  }, [!!rulerUnits]);
+  }, []);
 
   function zoomBy(factor: number, point?: { x: number; y: number }) {
-    const anchor = point && localPoint(svg.current, point.x, point.y);
+    const anchor = point && localPoint(scene.current, point.x, point.y);
     setPointer(undefined);
     setView((last) => {
       const [x, y, width, height] = last ?? [fitX, fitY, fitWidth, fitHeight];
@@ -84,24 +90,24 @@ export function SvgViewport({
       setView(next);
     },
     zoom(direction, point) {
-      zoomBy(direction === 'in' ? editorZoomStep : 1 / editorZoomStep, point);
+      zoomBy(zoomStepFactor(direction), point);
     },
   }));
 
   useEffect(() => {
     const element = svg.current;
     function wheel(event: WheelEvent) {
-      if (!event.deltaX && !event.deltaY) return;
-      event.preventDefault();
-      if (!editorWheel || event.shiftKey || event.ctrlKey) {
-        if (!event.deltaY) return;
-        const factor = event.ctrlKey ? wheelPinchZoomFactor(event.deltaY)
-          : event.deltaY < 0 ? editorZoomStep : 1 / editorZoomStep;
+      const factor = wheelZoomFactor(event, !editorWheel);
+      if (factor !== undefined) {
+        event.preventDefault();
+        event.stopPropagation();
         zoomBy(factor, { x: event.clientX, y: event.clientY });
         return;
       }
-      const matrix = element.getScreenCTM();
-      if (!matrix) return;
+      if (!editorWheel || event.ctrlKey || event.shiftKey || (!event.deltaX && !event.deltaY)) return;
+      event.preventDefault();
+      const matrix = scene.current?.getScreenCTM();
+      if (!matrix || !matrix.a && !matrix.b) return;
       const deltaScale = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16
         : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? element.clientHeight : 1;
       const drawingDelta = deltaScale / Math.hypot(matrix.a, matrix.b);
@@ -124,7 +130,9 @@ export function SvgViewport({
       aria-label={label}
       width="100%"
       height="100%"
-      viewBox={current.join(' ')}
+      viewBox={`0 0 ${size.width || 1} ${size.height || 1}`}
+      preserveAspectRatio="none"
+      data-view-box={current.join(' ')}
       data-fit-view-box={fit.join(' ')}
       onDoubleClick={(event) => {
         if (event.shiftKey) setView(undefined);
@@ -149,17 +157,17 @@ export function SvgViewport({
         if (previous?.pointer !== event.pointerId) {
           if (renderLocationPreview && event.pointerType !== 'touch') {
             const p = localPoint(
-              event.currentTarget,
+              scene.current,
               event.clientX,
               event.clientY,
             );
-            const matrix = event.currentTarget.getScreenCTM();
+            const matrix = scene.current?.getScreenCTM();
             if (p && matrix) setPointer([p.x, p.y, 1 / Math.hypot(matrix.a, matrix.b)]);
           }
           return;
         }
-        const a = localPoint(event.currentTarget, previous.x, previous.y);
-        const b = localPoint(event.currentTarget, event.clientX, event.clientY);
+        const a = localPoint(scene.current, previous.x, previous.y);
+        const b = localPoint(scene.current, event.clientX, event.clientY);
         drag.current = {
           x: event.clientX,
           y: event.clientY,
@@ -182,14 +190,18 @@ export function SvgViewport({
       }}
       onClick={(event) => {
         if (event.button !== 0 || event.shiftKey) return;
-        const p = localPoint(event.currentTarget, event.clientX, event.clientY);
+        const p = localPoint(scene.current, event.clientX, event.clientY);
         if (!p || !onLocation) return;
-        const matrix = event.currentTarget.getScreenCTM();
+        const matrix = scene.current?.getScreenCTM();
         onLocation(p.x, p.y, matrix ? 1 / Math.hypot(matrix.a, matrix.b) : 0);
       }}
     >
-      {children}
-      {renderLocationPreview?.(pointer)}
+      {/* The root maps display pixels. The drawing group owns the camera transform. */}
+      <g ref={scene} data-svg-drawing="" visibility={scale > 0 ? undefined : 'hidden'}
+        transform={`matrix(${scale} 0 0 ${scale} ${zeroX} ${zeroY})`}>
+        {children}
+        {renderLocationPreview?.(pointer)}
+      </g>
     </svg>
   );
 

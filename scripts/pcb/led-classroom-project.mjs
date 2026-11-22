@@ -20,6 +20,7 @@ const parts = [
     ref: 'J1',
     value: '5 V input',
     shape: 'connector',
+    procurement: { Manufacturer: 'JST', MPN: 'B2B-XH-A(LF)(SN)' },
     footprint: 'jst-xh-2-vertical',
     pins: ['+5 V', '0 V'],
     at: [50, 66],
@@ -28,6 +29,10 @@ const parts = [
     ref: 'R1',
     value: '330 Ω',
     shape: 'resistor',
+    procurement: {
+      Manufacturer: 'YAGEO', MPN: 'MFR-12FTF52-330R',
+      'Power rating': '1/6 W', Tolerance: '±1%',
+    },
     footprint: 'axial-762',
     pins: ['1', '2'],
     at: [115, 66],
@@ -36,6 +41,7 @@ const parts = [
     ref: 'D1',
     value: 'Red LED',
     shape: 'led',
+    procurement: { Manufacturer: 'Kingbright', MPN: 'WP7113ID' },
     footprint: 'led-radial-5',
     pins: ['Cathode', 'Anode'],
     at: [186, 66],
@@ -107,6 +113,9 @@ function symbolXml(part, index) {
     ? field('$$SPICE_PROLOG', '.model TeachingLED D(IS=1e-18 N=2)', 0, 0)
     : '';
   const value = part.ref === 'R1' ? field('Value', '330', 11, 1) : '';
+  const procurement = Object.entries(part.procurement)
+    .map(([name, text]) => field(name, text, 0, 0))
+    .join('');
   const instance = `<SYMBOL id="${index}" pos="${
     part.at
   }" part="0" rotate="0" show_power="0" can_scale="0" scale_x="1" scale_y="1">
@@ -116,7 +125,7 @@ function symbolXml(part, index) {
     connector ? 27 : 11,
     part.ref === 'R1' ? 0 : 1,
   )}
-    ${field('Package', part.footprint, 0, 0)}${spice}${model}${value}</SYMBOL>`;
+    ${field('Package', part.footprint, 0, 0)}${spice}${model}${value}${procurement}</SYMBOL>`;
   return { definition, instance };
 }
 
@@ -304,6 +313,11 @@ const { snapshot } = await api.buildHierarchicalCircuitSnapshot(graph, {
   documentId: restored.documentId,
   revision: 1,
 });
+for (const { ref, procurement } of parts) {
+  const component = snapshot.components.find(({ reference }) => reference === ref);
+  assert.equal(component?.procurement?.manufacturer, procurement.Manufacturer, ref);
+  assert.equal(component?.procurement?.mpn, procurement.MPN, ref);
+}
 const labels = new Map(
   snapshot.components.flatMap((component) =>
     component.signals.flatMap((signal) =>

@@ -5,7 +5,7 @@ import { pointInPolygon, samePoint, segmentsMeet } from './geometry';
 import type { BoardPoint } from './geometry';
 import { orientedPolygonRings } from './polygonKernel';
 import type { PolygonKernel } from './polygonKernel';
-import { near } from './regionDistances';
+import { indexBounds, someNearby } from './regionDistances';
 
 const widthToleranceNm = 2 * TESSELLATION_TOLERANCE_NM;
 const maxEdgeComparisons = 250_000;
@@ -23,41 +23,17 @@ function segmentBounds(a: BoardPoint, b: BoardPoint) {
   };
 }
 
-function boundaryEdges(region: PolygonRegion) {
+function boundaryEdges(region: PolygonRegion, outside: boolean) {
   return orientedPolygonRings([region]).flatMap((ring) =>
     ring.map((a, index) => {
-      const b = ring[(index + 1) % ring.length];
+      const b = ring[(index + (outside ? ring.length - 1 : 1)) % ring.length];
       return { a, b, dx: b.x - a.x, dy: b.y - a.y, ...segmentBounds(a, b) };
     }),
   );
 }
 
 type Edge = ReturnType<typeof boundaryEdges>[number];
-type Bounds = ReturnType<typeof segmentBounds>;
-
-type IndexedEdge = { edge: Edge; index: number };
-type EdgeNode = { bounds: Bounds } & (
-  { edges: IndexedEdge[] } | { children: [EdgeNode, EdgeNode] }
-);
-
-// The bounds prune pairs and crossing checks before exact segment tests.
-function indexEdges(edges: IndexedEdge[]): EdgeNode {
-  const bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
-  for (const { edge } of edges) {
-    bounds.minX = Math.min(bounds.minX, edge.minX);
-    bounds.maxX = Math.max(bounds.maxX, edge.maxX);
-    bounds.minY = Math.min(bounds.minY, edge.minY);
-    bounds.maxY = Math.max(bounds.maxY, edge.maxY);
-  }
-  if (edges.length <= 8) return { bounds, edges };
-  const horizontal = bounds.maxX - bounds.minX >= bounds.maxY - bounds.minY;
-  const center = (edge: Edge) => horizontal ? edge.minX + edge.maxX : edge.minY + edge.maxY;
-  edges.sort((a, b) => center(a.edge) - center(b.edge));
-  const middle = Math.floor(edges.length / 2);
-  return {
-    bounds, children: [indexEdges(edges.slice(0, middle)), indexEdges(edges.slice(middle))],
-  };
-}
+type IndexedEdge = { edge: Edge; index: number; box: Edge };
 
 function sections(first: Edge, second: Edge) {
   if (samePoint(first.b, second.a) || samePoint(first.a, second.b)) return [];
@@ -98,20 +74,29 @@ function sections(first: Edge, second: Edge) {
   });
 }
 
-export function measureZoneWidth(
+export function measureRegionWidth(
   kernel: PolygonKernel,
   region: PolygonRegion,
   requiredNm: number,
-  thermalHalos: readonly PolygonRegion[] = [],
-  filledZone: PolygonRegion = region,
+  {
+    thermalHalos = [],
+    filledZone = region,
+    outside = false,
+  }: {
+    thermalHalos?: readonly PolygonRegion[];
+    filledZone?: PolygonRegion;
+    outside?: boolean;
+  } = {},
 ) {
   const limit = requiredNm - widthToleranceNm;
   const radius = Math.floor(limit / 2);
   if (radius < 1) return undefined;
   const insideThermal = (point: BoardPoint) =>
     thermalHalos.some((halo) => containsCopper(point, halo));
-  const inScope = (point: BoardPoint) => !insideThermal(point) && containsCopper(point, filledZone);
-  const edges = boundaryEdges(region);
+  const inScope = (point: BoardPoint) => outside
+    ? pointInPolygon(point, region.outer) === 'outside'
+    : !insideThermal(point) && containsCopper(point, filledZone);
+  const edges = boundaryEdges(region, outside);
   function sweepLoad(start: 'minX' | 'minY', end: 'maxX' | 'maxY') {
     let low = Infinity;
     let high = -Infinity;
@@ -129,47 +114,43 @@ export function measureZoneWidth(
       : ['minY', 'minX'] as const;
   // Keep equal-width findings deterministic regardless of how the index splits.
   edges.sort((a, b) => a[start] - b[start] || a[otherStart] - b[otherStart]);
-  const boundary = indexEdges(edges.map((edge, index) => ({ edge, index })));
+  const boundary = indexBounds(edges.map((edge, index) => ({ edge, index, box: edge })));
   let comparisons = 0;
   let indexVisits = 0;
   function count() {
     if (++comparisons > maxEdgeComparisons)
-      throw new Error('Zone width checking exceeds the boundary comparison budget.');
+      throw new Error('Geometry width checking exceeds the boundary comparison budget.');
   }
-  function anyNearby(
-    node: EdgeNode, box: Bounds, margin: number, predicate: (entry: IndexedEdge) => boolean,
-  ): boolean {
+  function countIndexVisit() {
     if (++indexVisits > maxIndexVisits)
-      throw new Error('Zone width checking exceeds the boundary search budget.');
-    if (!near(node.bounds, box, margin)) return false;
-    if ('children' in node)
-      return node.children.some((child) => anyNearby(child, box, margin, predicate));
-    return node.edges.some((entry) => near(entry.edge, box, margin) && predicate(entry));
+      throw new Error('Geometry width checking exceeds the boundary search budget.');
   }
   let narrowest: { measuredNm: number; location: BoardPoint } | undefined;
-  for (const [index, first] of edges.entries()) {
-    const candidates: IndexedEdge[] = [];
-    anyNearby(boundary, first, limit, (entry) => {
+  const candidates: IndexedEdge[] = [];
+  for (let index = 0; index < edges.length; index++) {
+    const first = edges[index];
+    candidates.length = 0;
+    someNearby(boundary, first, limit, (entry) => {
       if (entry.index > index) candidates.push(entry);
       return false;
-    });
+    }, countIndexVisit);
     candidates.sort((a, b) => a.index - b.index);
     for (const { edge: second } of candidates) {
       count();
       for (const { startPoint, endPoint, width, location } of sections(first, second)) {
         if (width >= (narrowest?.measuredNm ?? limit)) continue;
-        const crossesBoundary = anyNearby(boundary, segmentBounds(startPoint, endPoint), 0, ({ edge }) => {
+        const crossesBoundary = someNearby(boundary, segmentBounds(startPoint, endPoint), 0, ({ edge }) => {
           if (edge === first || edge === second) return false;
           count();
           return segmentsMeet(startPoint, endPoint, edge.a, edge.b);
-        });
+        }, countIndexVisit);
         if (!crossesBoundary && inScope(location) &&
             (filledZone === region || containsCopper(location, region)))
           narrowest = { measuredNm: Math.round(width), location };
       }
     }
   }
-  if (narrowest) return narrowest;
+  if (narrowest || outside) return narrowest;
 
   // An inset removes sub-width connectors even if their edges are not parallel.
   // The spoke test owns copper inside thermal reliefs.

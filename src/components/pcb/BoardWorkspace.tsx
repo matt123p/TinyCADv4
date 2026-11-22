@@ -64,7 +64,9 @@ import {
   placementPadTemplates,
 } from '../../pcb/boardPlacement';
 import type { PlacementGroupOperation } from '../../pcb/boardPlacement';
-import { isBoardPoint, lengthInNanometres, samePoint } from '../../pcb/geometry';
+import { padShapePoints } from '../../pcb/padstack';
+import { isBoardPoint, samePoint } from '../../pcb/geometry';
+import { boardInputLength, canonicalBoardDecimal } from './boardNumberInput';
 import type { FootprintPlacement } from '../../pcb/footprint';
 import type { BoardPoint } from '../../pcb/geometry';
 import type { BoardRecoveryStatus } from '../../io/boardRecovery';
@@ -76,6 +78,7 @@ import {
 } from '../../io/boardWorkspaceEvents';
 import type { BoardWorkspaceProbe } from '../../io/projectPcbProbe';
 
+const BoardRuleInspectionDialog = React.lazy(() => import('./BoardRuleInspectionDialog'));
 const FootprintEditorDialog = React.lazy(() => import('../projects/FootprintEditorDialog'));
 const BoardInspectionDialog = React.lazy(
   () => import('./BoardInspectionDialog'),
@@ -86,7 +89,7 @@ const KicadExportDialog = React.lazy(() => import('./KicadExportDialog'));
 const KicadBoardReviewDialog = React.lazy(() => import('./KicadBoardReviewDialog'));
 
 const mm = (value: number) => String(value / 1_000_000);
-const nm = (value: string) => lengthInNanometres(value, 'mm');
+const nm = (value: string) => boardInputLength(value, 'mm');
 type BoardView = 'engineering' | 'beginner';
 type WidthPreset = 'minimum' | 'preferred' | 'custom';
 type ViaStyle = keyof ReturnType<typeof routeViaPresets> | 'custom';
@@ -212,6 +215,7 @@ export default function BoardWorkspace({
   const [kicadReviewOpen, setKicadReviewOpen] = useState(false);
   const [checksOpen, setChecksOpen] = useState(false);
   const [fabricationOpen, setFabricationOpen] = useState(false);
+  const [ruleInspectionOpen, setRuleInspectionOpen] = useState(false);
   const [netRulesOpen, setNetRulesOpen] = useState(false);
   const [checkMarker, setCheckMarker] = useState<{
     board: typeof board;
@@ -224,7 +228,6 @@ export default function BoardWorkspace({
   >();
   const [routingRegionDialog, setRoutingRegionDialog] = useState<RoutingRegion | 'new'>();
   const [derive, setDerive] = useState(true);
-  const [zoneRetry, setZoneRetry] = useState(0);
   const [derived, setDerived] = useState<{
     board: typeof board;
     result?: Awaited<
@@ -236,7 +239,15 @@ export default function BoardWorkspace({
     derive && derived?.board === board ? derived.result : undefined;
   const deriveError =
     derive && derived?.board === board ? derived.error : undefined;
-  const needsDerived = Boolean(
+  const refillWorker = React.useRef<{
+    job: ReturnType<typeof createBoardWorker>;
+    finished: Promise<void>;
+  }>();
+  const waitForRefill = React.useCallback(async () => {
+    await refillWorker.current?.finished;
+  }, []);
+  const fillPaused = checksOpen || camOpen;
+  const fillPending = derive && derived?.board !== board && Boolean(
     board.zones?.length ||
       board.jumpers?.length ||
       (board.footprints?.length &&
@@ -389,8 +400,8 @@ export default function BoardWorkspace({
     return session.apply([{ type: 'setAnnotations', annotations }]);
   }
 
+  const grid = Math.max(1, Math.round(Number(canonicalBoardDecimal(snapGrid)) * 1_000_000) || 1);
   function canvasPosition(x: number, y: number) {
-    const grid = Math.max(1, Math.round(Number(snapGrid) * 1_000_000) || 1);
     return { x: Math.round(x / grid) * grid, y: Math.round(-y / grid) * grid };
   }
 
@@ -509,12 +520,10 @@ export default function BoardWorkspace({
   function enterRoutePoint(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const values = new FormData(event.currentTarget);
-    const separator = new Intl.NumberFormat(navigator.language).formatToParts(1.1)
-      .find(({ type }) => type === 'decimal')?.value ?? '.';
     try {
       const position = {
-        x: nm(String(values.get('x')).replace(separator, '.')),
-        y: nm(String(values.get('y')).replace(separator, '.')),
+        x: nm(String(values.get('x'))),
+        y: nm(String(values.get('y'))),
       };
       if (!isBoardPoint(position)) throw new Error('Waypoint coordinates are out of range.');
       void routePoint(position);
@@ -567,23 +576,33 @@ export default function BoardWorkspace({
     clearanceRequest.current = entry;
     void result.then(() => {
       entry.pending = false;
+      releaseIdleCopperWorker();
     }, () => {
       if (clearanceRequest.current === entry) clearanceRequest.current = undefined;
+      releaseIdleCopperWorker();
     });
     return result;
   }
 
   function cancelCopperJob() {
     const active = activeCopperJob.current;
-    if (!active && !clearanceRequest.current?.pending) return;
     activeCopperJob.current = undefined;
     stopCopperWorker();
     if (active) setBusy(false);
   }
 
-  function stopCopperWorker() {
+  function disposeCopperWorker() {
     worker.current?.dispose();
     worker.current = undefined;
+  }
+
+  function releaseIdleCopperWorker() {
+    if (!activeCopperJob.current && !clearanceRequest.current?.pending)
+      disposeCopperWorker();
+  }
+
+  function stopCopperWorker() {
+    disposeCopperWorker();
     clearanceRequest.current = undefined;
   }
 
@@ -613,6 +632,7 @@ export default function BoardWorkspace({
     } finally {
       if (activeCopperJob.current === job) {
         activeCopperJob.current = undefined;
+        releaseIdleCopperWorker();
         setBusy(false);
       }
     }
@@ -663,39 +683,27 @@ export default function BoardWorkspace({
     },
     [],
   );
-  const geometryWorker = React.useRef<ReturnType<typeof createBoardWorker>>();
-  React.useEffect(
-    () => () => {
-      geometryWorker.current?.dispose();
-      geometryWorker.current = undefined;
-    },
-    [],
-  );
+  React.useEffect(() => () => {
+    const inProgress = refillWorker.current;
+    refillWorker.current = undefined;
+    inProgress?.job.dispose();
+  }, [board, derive]);
   React.useEffect(() => {
-    if (!derive || !needsDerived) return;
-    let pending = true;
-    const job = (geometryWorker.current ??= createBoardWorker());
-    void job.geometry(board).then(
+    if (fillPaused || !fillPending || refillWorker.current) return;
+    const job = createBoardWorker();
+    const finished = job.geometry(board).then(
       (result) => {
-        if (!pending) return;
-        pending = false;
-        setDerived({ board, result });
+        if (refillWorker.current?.job === job) setDerived({ board, result });
       },
       (failure: Error) => {
-        if (!pending) return;
-        pending = false;
-        job.dispose();
-        geometryWorker.current = undefined;
-        setDerived({ board, error: failure.message });
+        if (refillWorker.current?.job === job) setDerived({ board, error: failure.message });
       },
-    );
-    return () => {
-      if (!pending) return;
-      pending = false;
+    ).finally(() => {
       job.dispose();
-      geometryWorker.current = undefined;
-    };
-  }, [board, derive, needsDerived, zoneRetry]);
+      if (refillWorker.current?.job === job) refillWorker.current = undefined;
+    });
+    refillWorker.current = { job, finished };
+  }, [board, fillPending, fillPaused]);
 
   async function finishRoute() {
     await runCopperJob(async (job) => {
@@ -721,6 +729,7 @@ export default function BoardWorkspace({
       });
     }, (candidate) => {
       setBoard(session.commit(candidate));
+      stopCopperWorker();
       setRoute([]);
       setRouting(false);
       setReroute('');
@@ -779,10 +788,8 @@ export default function BoardWorkspace({
     } else {
       const points = selectedFeatures.flatMap(({ placement, pads, copper }) => {
         const selectedLand = selectedPad && pads.find(({ id }) => id === selectedPad);
-        const lands = selectedLand
-          ? copper.filter(({ id }) => id.startsWith(placement.id + ':' + selectedLand.id + ':'))
-          : copper;
-        if (lands.length) return lands.flatMap(({ region }) => region.outer);
+        const lands = selectedLand ? copper.filter(({ padId }) => padId === selectedLand.id) : copper;
+        if (lands.length) return lands.flatMap(({ shape }) => padShapePoints(shape));
         return selectedLand ? [selectedLand.position] : [placement.positionNm, ...pads.map(({ position }) => position)];
       });
       if (points.length) boardCanvas.current?.fit(points);
@@ -1407,6 +1414,15 @@ export default function BoardWorkspace({
           onApply={(operations) => setBoard(session.apply(operations))}
         />
       )}
+      {ruleInspectionOpen && (
+        <React.Suspense fallback={null}>
+          <BoardRuleInspectionDialog board={board} zones={derivedResult?.zones}
+            selectedCopperId={selectedRouteId || (selectedPad && selectedPlacement
+              ? selectedPlacement.id + ':' + selectedPad : undefined)}
+            selectedLayer={visibleCopper === 'all' ? undefined : visibleCopper}
+            onClose={() => setRuleInspectionOpen(false)} />
+        </React.Suspense>
+      )}
       {netRulesOpen && (
         <BoardNetRulesDialog
           board={board}
@@ -1442,6 +1458,7 @@ export default function BoardWorkspace({
             board={board}
             projectId={session.projectId}
             readProjectCircuit={session.readProjectCircuit}
+            waitForRefill={waitForRefill}
             onChecked={setCheckedRevision}
             onClose={() => setCamOpen(false)}
           />
@@ -1478,6 +1495,7 @@ export default function BoardWorkspace({
         <BoardChecksDialog
           board={board}
           readProjectCircuit={session.readProjectCircuit}
+          waitForRefill={waitForRefill}
           filename={filename}
           onChecked={setCheckedRevision}
           onClose={() => setChecksOpen(false)}
@@ -1487,6 +1505,10 @@ export default function BoardWorkspace({
           onRemoveWaiver={(id) =>
             edit(() => session.apply([{ type: 'removeWaiver', id }]))
           }
+          onProbe={onProbe && ((source) => {
+            setChecksOpen(false);
+            onProbe(source);
+          })}
           onInspect={({ objects, location }) => {
             setChecksOpen(false);
             setVisibleCopper('all');
@@ -1506,8 +1528,11 @@ export default function BoardWorkspace({
                 keys.has(id) ||
                 objects.some((source) => source.startsWith(id + ':')),
             );
-            if (component || placement)
-              selectComponent(component?.id ?? placement.componentId);
+            if (component || placement) {
+              const padId = placement && objects
+                .find((id) => id.startsWith(placement.id + ':'))?.split(':')[1];
+              selectComponent(component?.id ?? placement.componentId, padId);
+            }
             if (track || via) {
               setSelectedRouteId(track?.id ?? via.id);
               setSelectedNet(track?.netId ?? via?.netId ?? '');
@@ -1521,6 +1546,7 @@ export default function BoardWorkspace({
             setCheckMarker({ board, location: issueLocation });
             if (issueLocation) boardCanvas.current?.fit([issueLocation]);
             else if (zone) boardCanvas.current?.fit(zone.outline);
+            requestAnimationFrame(() => boardCanvas.current?.focus());
           }}
         />
       )}
@@ -1718,7 +1744,7 @@ export default function BoardWorkspace({
                   ? 'all'
                   : visibleCopper
               }
-              trackWidth={routeWidth}
+              trackWidthNm={Number(canonicalBoardDecimal(routeWidth)) * 1_000_000 || 0}
               onLocation={(x, y) => {
                 if (busy) return;
                 const location = canvasPosition(x, y);
@@ -2055,6 +2081,9 @@ export default function BoardWorkspace({
                 >
                   Finish route
                 </Button>
+                <div role="status" data-copper-edit-pending={busy || undefined}>
+                  {busy ? t('pcbChecks.checkingCopper') : ''}
+                </div>
               </fieldset>
             )}
             {trackEdit && (
@@ -2075,6 +2104,9 @@ export default function BoardWorkspace({
                 <Button disabled={busy || !trackEditPreview?.action} onClick={() => { void applyTrackEdit(); }}>
                   Apply track edit
                 </Button>
+                <div role="status" data-copper-edit-pending={busy || undefined}>
+                  {busy ? t('pcbChecks.checkingCopper') : ''}
+                </div>
               </fieldset>
             )}
             {!routing && !trackEdit && !deletionDraft && !cleanup && routeSelection && (
@@ -2297,11 +2329,16 @@ export default function BoardWorkspace({
                   No schematic terminals are linked to this board net.
                 </p>
               ))}
+            {!beginner && (
+              <Button disabled={busy || routing || !geometry} onClick={() => setRuleInspectionOpen(true)}>
+                Inspect board rules…
+              </Button>
+            )}
             <Button
               disabled={busy || routing || !geometry}
               onClick={() => setChecksOpen(true)}
             >
-              Run design checks…
+              {t('pcbChecks.run')}
             </Button>
             {checkedRevision !== undefined && checkedRevision !== board.revision && (
               <p role="status">Design checks are stale.</p>
@@ -2500,13 +2537,14 @@ export default function BoardWorkspace({
                     ? 'Zones filled.'
                     : deriveError
                     ? 'Zone fill failed.'
+                    : fillPaused && !refillWorker.current
+                    ? 'Zone fill paused for board analysis.'
                     : 'Filling zones…'}
                 </div>
                 <Button
                   onClick={() => {
                     setDerived(undefined);
-                    if (deriveError) setZoneRetry((attempt) => attempt + 1);
-                    else setDerive(!derive);
+                    if (!deriveError) setDerive(!derive);
                   }}
                 >
                   {deriveError ? 'Retry zone fill' : derive ? 'Cancel zone fill' : 'Refill zones'}

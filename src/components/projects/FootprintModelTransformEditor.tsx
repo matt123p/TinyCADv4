@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@fluentui/react-components';
 import type { FootprintModel } from '../../pcb/footprintDetails';
 import { validateFootprintDetails } from '../../pcb/footprintDetails';
-import { lengthInNanometres } from '../../pcb/geometry';
+import { boardCoordinateFields, boardInputLength, canonicalBoardDecimal } from '../pcb/boardNumberInput';
 
 export default function FootprintModelTransformEditor({
   model,
@@ -25,10 +25,8 @@ export default function FootprintModelTransformEditor({
     text: string,
     parse: (value: string) => number,
   ): [number, number, number] {
-    const parts = text.split(',').map((part) => part.trim());
-    if (parts.length !== 3 || parts.some((part) => !part))
-      throw new Error('Enter three comma-separated coordinates.');
-    return [parse(parts[0]), parse(parts[1]), parse(parts[2])];
+    const [x, y, z] = boardCoordinateFields(text, 3);
+    return [parse(x), parse(y), parse(z)];
   }
   return (
     <div>
@@ -63,12 +61,12 @@ export default function FootprintModelTransformEditor({
             onClick={(): void => {
               void run(() => {
                 const dimension = (value: string) =>
-                  lengthInNanometres(value, 'mm');
+                  boardInputLength(value, 'mm');
                 const next = {
                   ...model,
                   offsetNm: vector(offset, dimension),
                   rotationMicrodegree: vector(rotation, dimension),
-                  scale: vector(scale, Number),
+                  scale: vector(scale, (value) => Number(canonicalBoardDecimal(value))),
                 };
                 validateFootprintDetails([], [next]);
                 onChange(next);

@@ -4,6 +4,7 @@ import { MAX_PROJECT_FILE_BYTES } from '../../shared/projectFiles';
 const databaseName = 'tinycad-project-recovery';
 const storeName = 'drawings';
 const referenceStore = 'reference-transactions';
+const relocationStore = 'project-relocations';
 
 export function projectRecoveryKey(
   account: string,
@@ -25,12 +26,14 @@ let connection: Promise<IDBDatabase>;
 function openRecoveryDatabase(): Promise<IDBDatabase> {
   if (connection) return connection;
   connection = new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open(databaseName, 2);
+    const request = indexedDB.open(databaseName, 3);
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(storeName))
         request.result.createObjectStore(storeName, { keyPath: 'key' });
       if (!request.result.objectStoreNames.contains(referenceStore))
         request.result.createObjectStore(referenceStore, { keyPath: 'key' });
+      if (!request.result.objectStoreNames.contains(relocationStore))
+        request.result.createObjectStore(relocationStore, { keyPath: 'key' });
     };
     request.onerror = () => reject(request.error);
     request.onsuccess = () => {
@@ -109,26 +112,27 @@ export interface ReferenceRecoveryJournal {
   board: { id: string; before: string; after: string };
 }
 
-async function referenceJournalRequest<T>(
+async function projectJournalRequest<T>(
+  storeName: string,
   mode: IDBTransactionMode,
   operation: (store: IDBObjectStore) => IDBRequest<T>,
 ): Promise<T> {
   const db = await openRecoveryDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(referenceStore, mode, { durability: 'strict' });
-    const request = operation(tx.objectStore(referenceStore));
+    const tx = db.transaction(storeName, mode, { durability: 'strict' });
+    const request = operation(tx.objectStore(storeName));
     tx.oncomplete = () => resolve(request.result);
     tx.onabort = () =>
       reject(
         tx.error ||
-          new Error('The reference recovery transaction was aborted.'),
+          new Error('The project recovery transaction was aborted.'),
       );
   });
 }
 
 export function readReferenceJournal(key: string) {
-  return referenceJournalRequest<ReferenceRecoveryJournal>(
-    'readonly',
+  return projectJournalRequest<ReferenceRecoveryJournal>(
+    referenceStore, 'readonly',
     (store) => store.get(key),
   );
 }
@@ -136,11 +140,58 @@ export function readReferenceJournal(key: string) {
 export async function writeReferenceJournal(
   journal: ReferenceRecoveryJournal,
 ): Promise<void> {
-  await referenceJournalRequest('readwrite', (store) => store.add(journal));
+  await projectJournalRequest(referenceStore, 'readwrite', (store) => store.add(journal));
 }
 
 export async function deleteReferenceJournal(key: string): Promise<void> {
-  await referenceJournalRequest('readwrite', (store) => store.delete(key));
+  await projectJournalRequest(referenceStore, 'readwrite', (store) => store.delete(key));
+}
+
+export interface ProjectRelocationJournal {
+  kind?: 'move';
+  key: string;
+  root: string;
+  source: { path: string; folder: string; name: string };
+  destination: { path: string; folder: string; name: string };
+  directory: boolean;
+  identity: string;
+  markerBefore: string;
+  markerAfter?: string;
+  pathsBefore: string;
+  pathsAfter?: string;
+  rewrites: readonly {
+    path: string;
+    data: Uint8Array;
+    before: string;
+    after: string;
+  }[];
+}
+
+export interface ProjectTrashJournal {
+  kind: 'trash';
+  key: string;
+  root: string;
+  markerName: string;
+  source: { id: string; path: string; folder: string; name: string; directory: boolean };
+  identity: string;
+  before: Uint8Array;
+  after: Uint8Array;
+}
+
+type ProjectFileJournal = ProjectRelocationJournal | ProjectTrashJournal;
+
+export function readProjectFileJournal(key: string) {
+  return projectJournalRequest<ProjectFileJournal>(
+    relocationStore, 'readonly', (store) => store.get(key),
+  );
+}
+
+export async function writeProjectFileJournal(journal: ProjectFileJournal) {
+  await projectJournalRequest(relocationStore, 'readwrite', (store) => store.add(journal));
+}
+
+export async function deleteProjectFileJournal(key: string) {
+  await projectJournalRequest(relocationStore, 'readwrite', (store) => store.delete(key));
 }
 
 /** PCB recovery uses compare-and-swap so a second editor cannot take over a draft. */

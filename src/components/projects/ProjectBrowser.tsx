@@ -30,6 +30,8 @@ import {
 import {
   ArrowDownloadRegular,
   ArrowUpRegular,
+  ChevronDownRegular,
+  ChevronRightRegular,
   DocumentRegular,
   FolderOpenRegular,
   FolderRegular,
@@ -46,6 +48,7 @@ import {
 import { fileOpenProject } from '../../io/files';
 import {
   addProjectSchematic,
+  chooseDesktopProjectFolder,
   createProjectFile,
   duplicateProject,
   projectFilesChanged,
@@ -59,7 +62,8 @@ import {
 } from '../../io/projects';
 import { projectFileName } from '../../io/projectStorage';
 import type { ProjectItem, ProjectLocation } from '../../io/projectStorage';
-import { linkedSchematicSnapshot, schematicTabDirty } from '../../state/schematicTabs';
+import type { ProjectTrashPreview } from '../../io/projectTrash';
+import { linkedSchematicSnapshot, openSchematicTabs, schematicTabDirty } from '../../state/schematicTabs';
 import type { docDrawing } from '../../state/undo/undo';
 import { ProjectNameDialog } from './ProjectNameDialog';
 import { ProjectRevisionDialog } from './ProjectRevisionDialog';
@@ -130,6 +134,19 @@ function selectedSchematicUnits(present: docDrawing['docStore']['present']) {
   });
 }
 
+interface FolderListing {
+  items: ProjectItem[];
+  refresh: number;
+  tree: boolean;
+  error?: string;
+}
+
+interface ProjectTreeRow {
+  item: ProjectItem;
+  parentTrail: ProjectLocation[];
+  depth: number;
+}
+
 interface NamePrompt {
   title: string;
   name?: string;
@@ -172,7 +189,9 @@ export default function ProjectBrowser({
   );
   const [outputProject, setOutputProject] = useState<ProjectContext & { boardId?: string }>();
   const [trail, setTrail] = useState<ProjectLocation[]>([]);
-  const [items, setItems] = useState<ProjectItem[]>([]);
+  const [listings, setListings] = useState(new Map<string, FolderListing>());
+  const [expanded, setExpanded] = useState(new Set<string>());
+  const [chosenRoot, setChosenRoot] = useState<ProjectLocation>();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<ProjectItem>();
   const [context, setContext] = useState<ProjectContext>();
@@ -186,12 +205,11 @@ export default function ProjectBrowser({
   const [sync, setSync] = useState<
     ReadonlyMap<string, Awaited<ReturnType<typeof projectCircuitStatus>>>
   >(new Map());
-  const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [prompt, setPrompt] = useState<NamePrompt>();
-  const [trash, setTrash] = useState<ProjectItem>();
-  const [cut, setCut] = useState<{ item: ProjectItem; from: string }>();
+  const [trash, setTrash] = useState<{ item: ProjectItem; preview?: ProjectTrashPreview }>();
+  const [cut, setCut] = useState<{ item: ProjectItem; parentTrail: ProjectLocation[]; project?: string }>();
   const [revisionBase, setRevisionBase] = useState<{
     name: string;
     inventory: RevisionInventory;
@@ -237,21 +255,27 @@ export default function ProjectBrowser({
   const folder = trail[trail.length - 1];
   const blocked = busy || saving || Boolean(fileImport);
   const atProjectRoot = !!context && context.root.id === folder?.id;
-  const treeMode = Boolean(context || openedRoot);
+  const explicitRoot = chosenRoot ?? openedRoot;
+  const treeMode = Boolean(context || explicitRoot);
   const markerId = context?.marker.id;
   const projectRootId = context?.root.id;
-  const relativePrefix = context
-    ? trail
-        .slice(trail.findIndex(({ id }) => id === context.root.id) + 1)
-        .map(({ name }) => name)
-        .join('/')
-    : '';
-  const relativePath = (item: ProjectItem) =>
-    relativePrefix ? relativePrefix + '/' + item.name : item.name;
+  const projectRootIndex = trail.findIndex(({ id }) => id === projectRootId);
+  const treeRootIndex = explicitRoot ? 0 : projectRootIndex;
+  const treeRoot = treeMode && trail[treeRootIndex];
+  const activeListing = listings.get(folder?.id);
+  const loading = Boolean(folder &&
+    (activeListing?.tree !== treeMode || activeListing.refresh !== refresh),
+  );
+  const pathWithinProject = (parentTrail: ProjectLocation[], name: string) => {
+    if (!projectRootId) return;
+    const index = parentTrail.findIndex(({ id }) => id === projectRootId);
+    if (index < 0) return;
+    return [...parentTrail.slice(index + 1).map(({ name }) => name), name].join('/');
+  };
   const linkedPaths = context?.project.settings.entries || [];
   const reload = () => setRefresh((value) => value + 1);
 
-  const gitRoot = context?.root ?? openedRoot;
+  const gitRoot = context?.root ?? explicitRoot;
   useEffect(() => {
     onGitRoot?.(gitRoot);
   }, [gitRoot, onGitRoot]);
@@ -269,7 +293,9 @@ export default function ProjectBrowser({
         consumedOpenedRoot.current = openedRoot;
         setContext(undefined);
         setSelected(undefined);
-        setItems([]);
+        setListings(new Map());
+        setExpanded(new Set());
+        setCut(undefined);
         setSearch('');
         setError('');
         let home: ProjectLocation;
@@ -282,7 +308,8 @@ export default function ProjectBrowser({
             /* The default root works with storage disabled. */
           }
         }
-        setTrail([home || root]);
+        setChosenRoot(requestedRoot ? undefined : home);
+        setTrail([requestedRoot ?? home ?? root]);
       })
       .catch((reason) => {
         if (current) setError(String(reason));
@@ -295,7 +322,9 @@ export default function ProjectBrowser({
   useEffect(() => {
     const resetRoot = () => {
       setSelected(undefined);
-      setItems([]);
+      setListings(new Map());
+      setExpanded(new Set());
+      setCut(undefined);
       setError('');
       setSearch('');
       setRootRefresh((value) => value + 1);
@@ -310,73 +339,77 @@ export default function ProjectBrowser({
 
   useEffect(() => {
     if (!folder) return;
+    const ids = new Set([folder.id]);
+    if (treeRoot) {
+      ids.add(treeRoot.id);
+      for (const id of expanded) ids.add(id);
+    }
+    const stale = [...ids].filter((id) => {
+      const listing = listings.get(id);
+      return listing?.tree !== treeMode || listing.refresh !== refresh;
+    });
+    if (!stale.length) return;
     let current = true;
-    setLoading(true);
-    projectRequest({ operation: 'list', folder: folder.id, tree: treeMode })
-      .then(async (result) => {
-        if (!current) return;
-        setItems(
-          result.sort(
-            (a, b) =>
-              Number(b.folder) - Number(a.folder) ||
-              a.name.localeCompare(b.name, undefined, { numeric: true }),
-          ),
+    void Promise.all(stale.map(async (id): Promise<[string, FolderListing]> => {
+      try {
+        const items = await projectRequest({ operation: 'list', folder: id, tree: treeMode });
+        items.sort(
+          (a, b) => Number(b.folder) - Number(a.folder) ||
+            a.name.localeCompare(b.name, undefined, { numeric: true }),
         );
-        setSelected((item) => result.find(({ id }) => id === item?.id));
-        if (markerId && !atProjectRoot) {
-          const project = await readProject(markerId, projectRootId);
-          if (current)
-            setContext((value) =>
-              value?.marker.id === markerId && value.root.id === projectRootId
-                ? { ...value, project }
-                : value,
-            );
-          return;
-        }
-        const markers = result.filter(
-          (item) =>
-            !item.folder && !item.unsupported && isProjectFile(item.name),
+        return [id, { items, refresh, tree: treeMode }];
+      } catch (reason) {
+        return [id, { items: [], refresh, tree: treeMode, error: String(reason) }];
+      }
+    })).then((results) => {
+      if (current)
+        setListings((before) => {
+          const next = new Map(before);
+          for (const [id, listing] of results) next.set(id, listing);
+          return next;
+        });
+    });
+    return () => { current = false; };
+  }, [folder, treeRoot, expanded, listings, refresh, treeMode]);
+
+  useEffect(() => {
+    if (!folder || !activeListing || loading) return;
+    if (activeListing.error) {
+      setError(activeListing.error);
+      return;
+    }
+    const markers = activeListing.items.filter(
+      (item) => !item.folder && !item.unsupported && isProjectFile(item.name),
+    );
+    const [marker] = markers;
+    const readingWithinProject = Boolean(markerId && !atProjectRoot);
+    if (!readingWithinProject && markers.length !== 1) {
+      if (atProjectRoot) setContext(undefined);
+      if (markers.length > 1) setError(t('projects.ambiguousSettings'));
+      return;
+    }
+    let current = true;
+    readProject(
+      readingWithinProject ? markerId : marker.id,
+      readingWithinProject ? projectRootId : folder.id,
+    ).then((project) => {
+      if (!current) return;
+      if (readingWithinProject) {
+        setContext((value) =>
+          value?.marker.id === markerId && value.root.id === projectRootId
+            ? { ...value, project }
+            : value,
         );
-        if (markers.length !== 1) {
-          if (atProjectRoot) setContext(undefined);
-          if (markers.length > 1) setError(t('projects.ambiguousSettings'));
-          return;
-        }
-        const [marker] = markers;
-        try {
-          const project = await readProject(marker.id, folder.id);
-          if (!current) return;
-          setContext({ marker, root: folder, parent: trail.at(-2), project });
-        } catch (reason) {
-          if (current) {
-            setContext(undefined);
-            setError(String(reason));
-          }
-        }
-      })
-      .catch((reason) => {
-        if (current) {
-          setItems([]);
-          setSelected(undefined);
-          setError(String(reason));
-        }
-      })
-      .finally(() => {
-        if (current) setLoading(false);
-      });
-    return () => {
-      current = false;
-    };
-  }, [
-    folder,
-    refresh,
-    treeMode,
-    atProjectRoot,
-    markerId,
-    projectRootId,
-    trail,
-    t,
-  ]);
+      } else {
+        setContext({ marker, root: folder, parent: trail.at(-2), project });
+      }
+    }).catch((reason) => {
+      if (!current) return;
+      if (!readingWithinProject) setContext(undefined);
+      setError(String(reason));
+    });
+    return () => { current = false; };
+  }, [folder, activeListing, loading, atProjectRoot, markerId, projectRootId, trail, t]);
 
   useEffect(() => {
     if (!context || !folder || saving) return;
@@ -445,9 +478,17 @@ export default function ProjectBrowser({
   }
 
   function navigate(next: ProjectLocation[]) {
-    setItems([]);
+    const nextFolder = next.at(-1);
+    setListings((before) => {
+      const listing = before.get(nextFolder?.id);
+      if (!listing) return before;
+      return new Map(before).set(nextFolder.id, { ...listing, refresh: -1 });
+    });
     setSelected(undefined);
-    if (!next.some(({ id }) => id === context?.root.id)) setContext(undefined);
+    if (context && !next.some(({ id }) => id === context.root.id)) {
+      setContext(undefined);
+      if (!explicitRoot) setExpanded(new Set());
+    }
     setSearch('');
     setError('');
     setTrail(next);
@@ -725,46 +766,48 @@ export default function ProjectBrowser({
       });
     }, false);
 
-  const open = (item: ProjectItem) => {
+  const open = (item: ProjectItem, parentTrail: ProjectLocation[]) => {
+    const parent = parentTrail.at(-1);
     setError('');
     if (item.folder) {
-      navigate([...trail, item]);
+      if (treeMode) setExpanded((before) => new Set(before).add(item.id));
+      navigate([...parentTrail, item]);
       return;
     }
     setSelected(item);
     if (isProjectFile(item.name)) {
       if (context?.marker.id !== item.id)
         void run(async () => {
-          const project = await readProject(item.id, folder.id);
+          const project = await readProject(item.id, parent.id);
+          if (parent.id !== folder.id) navigate(parentTrail);
           setContext({
             marker: item,
-            root: folder,
-            parent: trail.at(-2),
+            root: parent,
+            parent: parentTrail.at(-2),
             project,
           });
         }, false);
       return;
     }
     if (!treeMode) return;
-    const link = linkedPaths.find(
-      ({ path }) => path.toLowerCase() === relativePath(item).toLowerCase(),
-    );
+    const linkedPath = pathWithinProject(parentTrail, item.name)?.toLowerCase();
+    const link = linkedPaths.find(({ path }) => path.toLowerCase() === linkedPath);
     if (link?.kind === 'schematic') openDrawing(context, link.id);
     else if (link?.kind === 'board') openBoardWorkspace(context, link.id);
     else if (isBoardFile(item.name)) {
-      const rootId = context?.root.id ?? openedRoot?.id ?? folder.id;
-      const rootIndex = trail.findIndex(({ id }) => id === rootId);
+      const rootId = (linkedPath && context.root.id) || explicitRoot?.id || parent.id;
+      const rootIndex = parentTrail.findIndex(({ id }) => id === rootId);
       const relative = [
-        ...trail.slice(rootIndex + 1).map(({ name }) => name),
+        ...parentTrail.slice(rootIndex + 1).map(({ name }) => name),
         item.name,
       ].join('/');
       const file = {
         id: item.id,
         name: item.name,
-        folder: folder.id,
+        folder: parent.id,
         path: relative,
       };
-      const ancestors = trail.map(({ id }) => id);
+      const ancestors = parentTrail.map(({ id }) => id);
       void run(
         async () =>
           onOpenBoard(await unlinkedBoardDocument(file, rootId, ancestors)),
@@ -775,8 +818,8 @@ export default function ProjectBrowser({
         () =>
           onOpenProjectDocument({
             ...item,
-            folder: folder.id,
-            ancestors: trail.map(({ id }) => id),
+            folder: parent.id,
+            ancestors: parentTrail.map(({ id }) => id),
           }),
         false,
       );
@@ -792,62 +835,131 @@ export default function ProjectBrowser({
 
   const choose = () =>
     run(async () => {
-      const root = await projectRequest({
-        operation: 'choose',
-      });
+      if (!drive) {
+        await chooseDesktopProjectFolder();
+        return;
+      }
+      const root = await projectRequest({ operation: 'choose' });
       if (!root) return;
-      if (drive) window.localStorage.removeItem(storageKey);
+      window.localStorage.removeItem(storageKey);
+      setChosenRoot(root);
+      setExpanded(new Set());
+      setCut(undefined);
       navigate([root]);
     }, false);
 
-  const protectedItem = (item: ProjectItem) =>
+  const hasProjectLinks = (item: ProjectItem, parentTrail: ProjectLocation[]) => {
+    const relative = pathWithinProject(parentTrail, item.name)?.toLowerCase();
+    return relative && linkedPaths.some(({ path }) =>
+      path.toLowerCase() === relative ||
+      (item.folder && path.toLowerCase().startsWith(relative + '/')),
+    );
+  };
+
+  const protectedItem = (item: ProjectItem, parentTrail: ProjectLocation[]) =>
     item.unsupported ||
     isProjectDocumentOpen(item.id) ||
     context?.marker.id === item.id ||
-    linkedPaths.some(
-      ({ path }) =>
-        path === relativePath(item) ||
-        (item.folder && path.startsWith(relativePath(item) + '/')),
+    (item.folder && projectRootIndex >= 0 &&
+      trail.slice(0, projectRootIndex + 1).some(({ id }) => id === item.id)
     ) ||
     activeProject?.id === item.id ||
     (item.folder &&
       (activeProject?.rootId === item.id ||
         activeProject?.folderId === item.id ||
         (!drive && activeProject?.id.startsWith(`${item.id}\\`)) ||
-        (!drive && activeProject?.id.startsWith(`${item.id}/`))));
+        (!drive && activeProject?.id.startsWith(item.id + '/'))));
 
-  const changeLocation = (
+  const isEditorOpen = (id: string) => {
+    if (isProjectDocumentOpen(id)) return true;
+    const state = store.getState();
+    const linked = (project: typeof activeProject) => Boolean(
+      project && project.id === context?.marker.id && context.project.files.get(project.documentPath)?.id === id,
+    );
+    return linked(state.altStore.file.project) ||
+      openSchematicTabs(state).some(({ tab }) => linked(tab.file.project));
+  };
+
+  const requestTrash = (item: ProjectItem, parentTrail: ProjectLocation[]) => {
+    const path = pathWithinProject(parentTrail, item.name);
+    if (!path) {
+      setTrash({ item });
+      return;
+    }
+    void run(async () => {
+      const { previewProjectTrash } = await import('../../io/projectTrash');
+      const preview = await previewProjectTrash(context.marker.id, context.root.id, {
+        id: item.id, path, name: item.name, folder: parentTrail.at(-1).id, directory: item.folder,
+      });
+      setTrash({ item, preview });
+    }, false);
+  };
+
+  const confirmTrash = ({ item, preview }: NonNullable<typeof trash>) =>
+    run(async () => {
+      if (preview) {
+        if (context?.marker.id !== preview.key)
+          throw new Error('The active project changed. Open a fresh trash preview.');
+        const { trashProjectPath } = await import('../../io/projectTrash');
+        await trashProjectPath(preview, isEditorOpen);
+      } else {
+        if (isEditorOpen(item.id))
+          throw new Error('Close the affected project documents before moving them to trash.');
+        await projectRequest({ operation: 'trash', id: item.id, directory: item.folder });
+      }
+      if (item.folder) collapseFolder(item.id);
+    });
+
+  const changeLocation = async (
     item: ProjectItem,
     name: string,
-    from = folder.id,
+    sourceTrail: ProjectLocation[],
+    destinationTrail = sourceTrail,
   ) => {
     if (treeMode && !item.folder && isProjectFile(item.name))
       throw new Error(t('projects.noNestedProject'));
-    return projectRequest({
-      operation: from === folder.id ? 'rename' : 'move',
-      id: item.id,
-      from,
-      folder: folder.id,
-      name,
-      directory: item.folder,
-    });
+    const from = sourceTrail.at(-1).id;
+    const destination = destinationTrail.at(-1).id;
+    const sourcePath = pathWithinProject(sourceTrail, item.name);
+    const destinationPath = pathWithinProject(destinationTrail, name);
+    if (hasProjectLinks(item, sourceTrail) && !destinationPath)
+      throw new Error('Choose a destination inside this project for linked files.');
+    if (sourcePath && destinationPath) {
+      const { relocateProjectPath } = await import('../../io/projectRelocation');
+      const marker = context.marker.id;
+      const root = context.root.id;
+      await relocateProjectPath(
+        marker, root, item,
+        { path: sourcePath, folder: from, name: item.name },
+        { path: destinationPath, folder: destination, name },
+        isEditorOpen,
+      );
+    } else {
+      await projectRequest({
+        operation: from === destination ? 'rename' : 'move',
+        id: item.id,
+        from,
+        folder: destination,
+        name,
+        directory: item.folder,
+      });
+    }
+    if (item.folder && (from !== destination || name !== item.name)) collapseFolder(item.id);
   };
-
-  const schematicPath = (name: string) =>
-    (relativePrefix ? relativePrefix + '/' : '') +
-    (/\.d[sz]n$/i.test(name) ? name : name + '.dsn');
 
   const addSchematic = async (
     name: string,
     file?: File,
     useExisting = false,
+    parentTrail = trail,
   ) => {
     const { marker, root } = context;
     if (file && file.size > MAX_PROJECT_FILE_BYTES)
       throw new Error(t('hierarchy.fileTooLarge'));
+    const filename = /\.d[sz]n$/i.test(name) ? name : name + '.dsn';
     await addProjectSchematic(
       { id: marker.id, rootId: root.id },
-      schematicPath(name),
+      pathWithinProject(parentTrail, filename) ?? filename,
       file ? new Uint8Array(await file.arrayBuffer()) : undefined,
       useExisting,
     );
@@ -902,8 +1014,9 @@ export default function ProjectBrowser({
     sources: Promise<ImportSource[]>,
   ) {
     const protectedFiles = new Set(openedDocumentIds);
-    for (const item of items)
-      if (isProjectDocumentOpen(item.id)) protectedFiles.add(item.id);
+    for (const { items } of listings.values())
+      for (const item of items)
+        if (isProjectDocumentOpen(item.id)) protectedFiles.add(item.id);
     if (context) {
       protectedFiles.add(context.marker.id);
       for (const file of context.project.files.values())
@@ -949,15 +1062,49 @@ export default function ProjectBrowser({
     setDropTarget(undefined);
   }, [openedRoot, rootRefresh]);
 
-  const visibleItems = items.filter((item) =>
-    item.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
-  );
+  const filter = search.trim().toLocaleLowerCase();
+  function visibleRows(parentTrail: ProjectLocation[], depth = 0): ProjectTreeRow[] {
+    const listing = listings.get(parentTrail.at(-1)?.id);
+    if (listing?.tree !== treeMode) return [];
+    return listing.items.flatMap((item) => {
+      const children = treeMode && item.folder && expanded.has(item.id)
+        ? visibleRows([...parentTrail, item], depth + 1)
+        : [];
+      return children.length || item.name.toLocaleLowerCase().includes(filter)
+        ? [{ item, parentTrail, depth }, ...children]
+        : [];
+    });
+  }
+  const rows = folder
+    ? visibleRows(treeRoot ? trail.slice(0, treeRootIndex + 1) : trail)
+    : [];
+  const dropRoot = treeRoot || folder;
+  function collapseFolder(id: string) {
+    const closed = new Set([id]);
+    for (const folderId of closed) {
+      for (const item of listings.get(folderId)?.items ?? [])
+        if (item.folder) closed.add(item.id);
+    }
+    setExpanded((before) => new Set([...before].filter((id) => !closed.has(id))));
+    setListings((before) => {
+      const next = new Map(before);
+      for (const id of closed) next.delete(id);
+      return next;
+    });
+    const index = trail.findIndex((folder) => folder.id === id);
+    if (index > 0) navigate(trail.slice(0, index));
+  }
+
+  function toggleFolder(item: ProjectItem, parentTrail: ProjectLocation[]) {
+    if (treeMode && expanded.has(item.id)) collapseFolder(item.id);
+    else open(item, parentTrail);
+  }
   return (
     <section
       className={`project-browser${
-        folder && dropTarget === folder.id ? ' project-drop-target' : ''
+        dropRoot && dropTarget === dropRoot.id ? ' project-drop-target' : ''
       }`}
-      {...(folder && treeMode ? dropHandlers(folder) : {})}
+      {...(dropRoot && treeMode ? dropHandlers(dropRoot) : {})}
       aria-label={t('projects.title')}
       aria-busy={loading || busy}
     >
@@ -969,10 +1116,14 @@ export default function ProjectBrowser({
           title={t('projects.up')}
           aria-label={t('projects.up')}
           disabled={blocked || trail.length < 2}
-          onClick={() => navigate(trail.slice(0, -1))}
+          onClick={() => {
+            if (treeMode && expanded.has(folder.id))
+              collapseFolder(folder.id);
+            else navigate(trail.slice(0, -1));
+          }}
         />
         <span title={trail.map(({ name }) => name).join(' / ')}>
-          {folder?.name}
+          {dropRoot?.name}
         </span>
         <Menu>
           <MenuTrigger disableButtonEnhancement>
@@ -1047,6 +1198,9 @@ export default function ProjectBrowser({
                         storageKey,
                         JSON.stringify(folder),
                       );
+                      setChosenRoot(folder);
+                      setExpanded(new Set());
+                      setCut(undefined);
                       navigate([folder]);
                     }, false)
                   }
@@ -1080,7 +1234,7 @@ export default function ProjectBrowser({
                       await createProjectFile(
                         folder.id,
                         name,
-                        openedRoot?.id === folder.id,
+                        explicitRoot?.id === folder.id,
                       );
                     },
                   })
@@ -1124,12 +1278,16 @@ export default function ProjectBrowser({
                 disabled={
                   !folder ||
                   !cut ||
-                  cut.from === folder.id ||
-                  protectedItem(cut.item)
+                  cut.parentTrail.at(-1)?.id === folder.id ||
+                  trail.some(({ id }) => id === cut.item.id) ||
+                  protectedItem(cut.item, cut.parentTrail) ||
+                  (cut.project !== undefined && (cut.project !== markerId || !pathWithinProject(trail, cut.item.name)))
                 }
                 onClick={() =>
                   run(async () => {
-                    await changeLocation(cut.item, cut.item.name, cut.from);
+                    await changeLocation(
+                      cut.item, cut.item.name, cut.parentTrail, trail,
+                    );
                     setCut(undefined);
                   })
                 }
@@ -1257,15 +1415,17 @@ export default function ProjectBrowser({
           {error}
         </div>
       )}
-      {loading ? (
-        <Spinner size="tiny" label={t('projects.loading')} />
-      ) : (
+      {loading && <Spinner size="tiny" label={t('projects.loading')} />}
+      {(!loading || rows.length > 0) && (
         <ul className="project-browser-list">
-          {visibleItems.map((item) => {
-            const link = linkedPaths.find(
-              ({ path }) =>
-                path.toLowerCase() === relativePath(item).toLowerCase(),
-            );
+          {rows.map(({ item, parentTrail, depth }) => {
+            const parent = parentTrail.at(-1);
+            const relative = pathWithinProject(parentTrail, item.name)?.toLowerCase();
+            const link = linkedPaths.find(({ path }) => path.toLowerCase() === relative);
+            const expandable = treeMode && item.folder && !item.unsupported;
+            const isExpanded = expandable && expanded.has(item.id);
+            const selectedRow = selected?.id === item.id || (expandable && folder.id === item.id);
+            const inSettingsFolder = parent.id === projectRootId;
             const status =
               link?.kind === 'board' && context
                 ? sync.get(context.marker.id + ':' + link.id)
@@ -1284,6 +1444,7 @@ export default function ProjectBrowser({
             return (
               <li
                 key={item.id}
+                style={depth ? { paddingInlineStart: Math.min(depth * 12, 96) } : undefined}
                 className={
                   dropTarget === item.id ? 'project-drop-target' : undefined
                 }
@@ -1295,10 +1456,13 @@ export default function ProjectBrowser({
                   size="small"
                   className="project-file-label"
                   title={item.name}
-                  appearance={selected?.id === item.id ? 'primary' : 'subtle'}
-                  icon={item.folder ? <FolderRegular /> : <DocumentRegular />}
+                  appearance={selectedRow ? 'primary' : 'subtle'}
+                  icon={expandable
+                    ? isExpanded ? <ChevronDownRegular /> : <ChevronRightRegular />
+                    : item.folder ? <FolderRegular /> : <DocumentRegular />}
+                  aria-expanded={expandable ? isExpanded : undefined}
                   disabled={blocked || item.unsupported}
-                  onClick={() => open(item)}
+                  onClick={() => item.folder ? toggleFolder(item, parentTrail) : open(item, parentTrail)}
                 >
                   {item.name}
                 </Button>
@@ -1324,7 +1488,7 @@ export default function ProjectBrowser({
                       <MenuItem
                         icon={<FolderOpenRegular />}
                         disabled={item.unsupported}
-                        onClick={() => open(item)}
+                        onClick={() => open(item, parentTrail)}
                       >
                         {t('projects.open')}
                       </MenuItem>
@@ -1497,7 +1661,7 @@ export default function ProjectBrowser({
                             {t('projects.createBoardCircuit')}
                           </MenuItem>
                         )}
-                      {context &&
+                      {relative &&
                         !link &&
                         !item.folder &&
                         !item.unsupported &&
@@ -1505,7 +1669,7 @@ export default function ProjectBrowser({
                           <MenuItem
                             onClick={() =>
                               void run(() =>
-                                addSchematic(item.name, undefined, true),
+                                addSchematic(item.name, undefined, true, parentTrail),
                               )
                             }
                           >
@@ -1513,7 +1677,7 @@ export default function ProjectBrowser({
                           </MenuItem>
                         )}
                       <MenuItem
-                        disabled={protectedItem(item)}
+                        disabled={protectedItem(item, parentTrail)}
                         onClick={() =>
                           setPrompt({
                             title: t('common.rename'),
@@ -1524,6 +1688,7 @@ export default function ProjectBrowser({
                                 !item.folder && isProjectFile(item.name)
                                   ? projectFileName(name)
                                   : name,
+                                parentTrail,
                               );
                             },
                           })
@@ -1532,25 +1697,28 @@ export default function ProjectBrowser({
                         {t('common.rename')}
                       </MenuItem>
                       <MenuItem
-                        disabled={protectedItem(item)}
-                        onClick={() => setCut({ item, from: folder.id })}
+                        disabled={protectedItem(item, parentTrail)}
+                        onClick={() => setCut({
+                          item, parentTrail,
+                          project: hasProjectLinks(item, parentTrail) ? markerId : undefined,
+                        })}
                       >
                         {t('projects.cut')}
                       </MenuItem>
                       {!item.folder && isProjectFile(item.name) && (
                         <MenuItem
-                          disabled={atProjectRoot && !context.parent && !drive}
+                          disabled={inSettingsFolder && !context.parent && !drive}
                           onClick={() =>
                             setPrompt({
                               title: t('projects.duplicate'),
                               name: projectFileTitle(item.name) + '-copy',
                               submit: async (name) => {
                                 await duplicateProject(
-                                  atProjectRoot
+                                  inSettingsFolder
                                     ? context.parent?.id ?? 'root'
-                                    : folder.id,
+                                    : parent.id,
                                   name,
-                                  { id: item.id, rootId: folder.id },
+                                  { id: item.id, rootId: parent.id },
                                 );
                               },
                             })
@@ -1581,7 +1749,7 @@ export default function ProjectBrowser({
                             run(async () => {
                               const inventory = await savedProjectRevision(
                                 item.id,
-                                folder.id,
+                                parent.id,
                               );
                               setRevisionBase({ name: item.name, inventory });
                             }, false)
@@ -1599,7 +1767,7 @@ export default function ProjectBrowser({
                                 const before = revisionBase.inventory;
                                 const after = await savedProjectRevision(
                                   item.id,
-                                  folder.id,
+                                  parent.id,
                                 );
                                 setComparison({
                                   before,
@@ -1618,8 +1786,8 @@ export default function ProjectBrowser({
                           </MenuItem>
                         )}
                       <MenuItem
-                        disabled={protectedItem(item)}
-                        onClick={() => setTrash(item)}
+                        disabled={protectedItem(item, parentTrail)}
+                        onClick={() => requestTrash(item, parentTrail)}
                       >
                         {t('projects.trash')}
                       </MenuItem>
@@ -1629,7 +1797,7 @@ export default function ProjectBrowser({
               </li>
             );
           })}
-          {!visibleItems.length && folder && !error && (
+          {!rows.length && folder && !loading && !error && (
             <li className="project-browser-status">
               {t(search ? 'projects.noMatches' : 'projects.empty')}
             </li>
@@ -1991,7 +2159,30 @@ export default function ProjectBrowser({
             <DialogBody>
               <DialogTitle>{t('projects.trash')}</DialogTitle>
               <DialogContent>
-                {t('projects.confirmTrash', { name: trash.name })}
+                <p>{t('projects.confirmTrash', { name: trash.item.name })}</p>
+                {Boolean(trash.preview?.removedPaths.length) && (
+                  <>
+                    <strong>{t('projects.trashLinks')}</strong>
+                    <ul>{trash.preview.removedPaths.map((path) => <li key={path}>{path}</li>)}</ul>
+                  </>
+                )}
+                {Boolean(trash.preview?.removedAssociations.length) && (
+                  <>
+                    <strong>{t('projects.trashAssociations')}</strong>
+                    <ul>{trash.preview.removedAssociations.map(({ schematic, board }) =>
+                      <li key={board}>{schematic} → {board}</li>,
+                    )}</ul>
+                  </>
+                )}
+                {Boolean(trash.preview?.removedRecipes.length) && (
+                  <>
+                    <strong>{t('projects.trashRecipes')}</strong>
+                    <ul>{trash.preview.removedRecipes.map((path) => <li key={path}>{path}</li>)}</ul>
+                  </>
+                )}
+                {trash.preview?.removesNativeDesigns && (
+                  <p>{t('projects.trashHierarchy')}</p>
+                )}
               </DialogContent>
               <DialogActions>
                 <Button onClick={() => setTrash(undefined)}>
@@ -2001,13 +2192,7 @@ export default function ProjectBrowser({
                   appearance="primary"
                   onClick={() => {
                     setTrash(undefined);
-                    void run(() =>
-                      projectRequest({
-                        operation: 'trash',
-                        id: trash.id,
-                        directory: trash.folder,
-                      }),
-                    );
+                    void confirmTrash(trash);
                   }}
                 >
                   {t('projects.trash')}

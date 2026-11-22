@@ -1,7 +1,7 @@
 import type { CopperLayer } from './board';
-import { capsulePolygon, polygonBoundariesMeet } from './contours';
-import type { PolygonRegion } from './contours';
-import { orientation, pointInPolygon, segmentIntersectionLocation, segmentsMeet } from './geometry';
+import { capsulePolygon, MAX_CONTOUR_VERTICES, polygonBoundariesMeet } from './contours';
+import type { Polygon, PolygonRegion } from './contours';
+import { isBoardPoint, orientation, pointInPolygon, segmentIntersectionLocation, segmentsMeet } from './geometry';
 import type { BoardPoint } from './geometry';
 import type { PolygonKernel } from './polygonKernel';
 
@@ -23,6 +23,30 @@ export interface BoardDrill {
   readonly end: BoardPoint;
   readonly widthNm: number;
   readonly plated: boolean;
+}
+
+// Share tessellation while the originating geometry still owns the drill.
+const openingOutlines = new WeakMap<BoardDrill, {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  widthNm: number;
+  region: PolygonRegion;
+}>();
+
+export function openingRegion(drill: BoardDrill): PolygonRegion {
+  const { start, end, widthNm } = drill;
+  const cached = openingOutlines.get(drill);
+  if (cached && cached.widthNm === widthNm &&
+      Object.is(cached.startX, start?.x) && Object.is(cached.startY, start?.y) &&
+      Object.is(cached.endX, end?.x) && Object.is(cached.endY, end?.y))
+    return cached.region;
+  const region: PolygonRegion = { outer: capsulePolygon(start, end, widthNm), holes: [] };
+  openingOutlines.set(drill, {
+    startX: start.x, startY: start.y, endX: end.x, endY: end.y, widthNm, region,
+  });
+  return region;
 }
 
 export interface AssemblyLink {
@@ -55,16 +79,17 @@ function locate(point: BoardPoint, region: PolygonRegion) {
   return 'inside';
 }
 
-function boundsOf(region: PolygonRegion): Fragment['bounds'] {
+function boundsOf({ outer }: PolygonRegion): Fragment['bounds'] {
   let left = Infinity,
     bottom = Infinity,
     right = -Infinity,
     top = -Infinity;
-  for (const point of region.outer) {
-    left = Math.min(left, point.x);
-    bottom = Math.min(bottom, point.y);
-    right = Math.max(right, point.x);
-    top = Math.max(top, point.y);
+  for (let i = 0; i < outer.length; i++) {
+    const { x, y } = outer[i];
+    left = Math.min(left, x);
+    bottom = Math.min(bottom, y);
+    right = Math.max(right, x);
+    top = Math.max(top, y);
   }
   return [left, bottom, right, top];
 }
@@ -81,21 +106,23 @@ function boundariesMeet(a: PolygonRegion, b: PolygonRegion): boolean {
 }
 
 export function regionsTouch(a: PolygonRegion, b: PolygonRegion): boolean {
-  return (
-    boundsMeet(boundsOf(a), boundsOf(b)) &&
-    (locate(a.outer[0], b) !== 'outside' ||
-      locate(b.outer[0], a) !== 'outside' ||
-      boundariesMeet(a, b))
-  );
+  return boundsMeet(boundsOf(a), boundsOf(b)) && regionsTouchWithinBounds(a, b);
+}
+
+function regionsTouchWithinBounds(a: PolygonRegion, b: PolygonRegion): boolean {
+  return locate(a.outer[0], b) !== 'outside' ||
+    locate(b.outer[0], a) !== 'outside' || boundariesMeet(a, b);
 }
 
 function isolatedBoundaryContact(a: PolygonRegion, b: PolygonRegion): BoardPoint | undefined {
   let point: BoardPoint | undefined;
   for (const first of [a.outer, ...a.holes]) {
     for (const second of [b.outer, ...b.holes]) {
-      for (const [i, start] of first.entries()) {
+      for (let i = 0; i < first.length; i++) {
+        const start = first[i];
         const end = first[(i + 1) % first.length];
-        for (const [j, other] of second.entries()) {
+        for (let j = 0; j < second.length; j++) {
+          const other = second[j];
           const otherEnd = second[(j + 1) % second.length];
           if (!segmentsMeet(start, end, other, otherEnd)) continue;
           if (orientation(start, end, other) === 0 &&
@@ -148,13 +175,36 @@ function reportIslands(fragments: readonly Fragment[], sets: CopperSets) {
   return [...islands.values()];
 }
 
-/** Uses the same clipped copper regions for contact, plated barrels and diagnosis. */
-export function analyseCopper(
+// A convex ring has two monotone chains along a lexicographic sweep.
+function isConvexRing(ring: Polygon): boolean {
+  if (ring.length < 3 || ring.length > MAX_CONTOUR_VERTICES ||
+      !ring.every(isBoardPoint)) return false;
+  let turn = 0;
+  let chainEnds = 0;
+  for (let i = 0; i < ring.length; i++) {
+    const a = ring[i];
+    const b = ring[(i + 1) % ring.length];
+    const c = ring[(i + 2) % ring.length];
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    // Let the kernel handle its small-triangle cleanup near coincident vertices.
+    if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return false;
+    const ab = dx || dy;
+    const bc = c.x - b.x || c.y - b.y;
+    if ((ab > 0) !== (bc > 0)) chainEnds++;
+    const side = orientation(a, b, c);
+    if (!side) continue;
+    if (turn && side !== turn) return false;
+    turn = side;
+  }
+  return turn !== 0 && chainEnds === 2;
+}
+
+function extractCopper(
   kernel: PolygonKernel,
   features: readonly CopperFeature[],
   drills: readonly BoardDrill[],
-  assemblyLinks: readonly AssemblyLink[] = [],
-  ties: readonly CopperNetTie[] = [],
+  collectContactDetails: boolean,
 ) {
   if (features.length > 4_096 || drills.length > 512)
     throw new Error('Copper extraction exceeds the board job limits.');
@@ -167,10 +217,7 @@ export function analyseCopper(
     );
   }
   const holes = drills.map((drill) => {
-    const region: PolygonRegion = {
-      outer: capsulePolygon(drill.start, drill.end, drill.widthNm),
-      holes: [],
-    };
+    const region = openingRegion(drill);
     return { drill, region, bounds: boundsOf(region) };
   });
   if (
@@ -180,39 +227,45 @@ export function analyseCopper(
     throw new Error('Drill IDs and plating must be explicit.');
   }
   for (let i = 0; i < holes.length; i++) {
-    if (
-      holes
-        .slice(i + 1)
-        .some(
-          ({ region, bounds }) =>
-            boundsMeet(holes[i].bounds, bounds) &&
-            regionsTouch(holes[i].region, region),
-        )
-    ) {
+    const first = holes[i];
+    for (let j = i + 1; j < holes.length; j++) {
+      const second = holes[j];
+      if (!boundsMeet(first.bounds, second.bounds) ||
+          !regionsTouchWithinBounds(first.region, second.region)) continue;
       throw new Error(
         'Intersecting drill or slot voids are outside the G0 extraction subset.',
       );
     }
   }
   const fragments: Fragment[] = [];
+  const noCutters: readonly PolygonRegion[] = [];
   for (const feature of [...features].sort((a, b) =>
     a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
   )) {
     if (feature.terminalId && (feature.kind !== 'pad' || !feature.netId))
       throw new Error('A terminal needs a pad and intended net.');
     const bounds = boundsOf(feature.region);
-    const cutters = holes
-      .filter(({ bounds: outer }) => boundsMeet(bounds, outer))
-      .map(({ region }) => region);
-    const copper = kernel.boolean('difference', [feature.region], cutters);
-    copper.forEach((region, index) =>
-      fragments.push({
-        feature,
-        id: `${feature.id}/${index}`,
-        region,
-        bounds: boundsOf(region),
-      }),
-    );
+    let cutters: PolygonRegion[] | undefined;
+    for (let index = 0; index < holes.length; index++) {
+      const hole = holes[index];
+      if (boundsMeet(bounds, hole.bounds)) (cutters ??= []).push(hole.region);
+    }
+    if (!collectContactDetails && !cutters &&
+        !feature.region.holes.length && isConvexRing(feature.region.outer)) {
+      fragments.push({ feature, id: `${feature.id}/0`, region: feature.region, bounds });
+    } else {
+      const copper = (collectContactDetails && !cutters
+        ? kernel.normaliseUncut?.(feature.region)
+        : undefined) ?? kernel.boolean('difference', [feature.region], cutters ?? noCutters);
+      copper.forEach((region, index) =>
+        fragments.push({
+          feature,
+          id: `${feature.id}/${index}`,
+          region,
+          bounds: boundsOf(region),
+        }),
+      );
+    }
     if (fragments.length > 8_192)
       throw new Error('Copper extraction exceeds the fragment limit.');
   }
@@ -226,6 +279,7 @@ export function analyseCopper(
       throw new Error('Conflicting terminal nets.');
     netByTerminal.set(terminalId, netId);
   }
+  const physical = new CopperSets(fragments.length);
   const pairs: Pair[] = [];
   const boundaryOnlyContacts: [string, string][] = [];
   const pointContacts = new Map<Pair, {
@@ -236,13 +290,12 @@ export function analyseCopper(
   const platedTies = new Set<string>();
   let candidates = 0;
   for (const layer of ['top', 'bottom']) {
-    const ordered = fragments
-      .map((fragment, index) => ({ fragment, index }))
-      .filter(({ fragment }) => fragment.feature.layerId === layer)
-      .sort(
-        (a, b) =>
-          a.fragment.bounds[0] - b.fragment.bounds[0] || a.index - b.index,
-      );
+    const ordered: { fragment: Fragment; index: number }[] = [];
+    for (let index = 0; index < fragments.length; index++) {
+      const fragment = fragments[index];
+      if (fragment.feature.layerId === layer) ordered.push({ fragment, index });
+    }
+    ordered.sort((a, b) => a.fragment.bounds[0] - b.fragment.bounds[0] || a.index - b.index);
     for (let i = 0; i < ordered.length; i++) {
       const { fragment: a, index: ai } = ordered[i];
       for (let j = i + 1; j < ordered.length; j++) {
@@ -254,11 +307,16 @@ export function analyseCopper(
           throw new Error(
             'Copper extraction exceeds the contact candidate budget.',
           );
-        if (!regionsTouch(a.region, b.region)) continue;
-        const [first, second] = ai < bi ? [ai, bi] : [bi, ai];
+        if (!regionsTouchWithinBounds(a.region, b.region)) continue;
+        physical.join(ai, bi);
+        if (!collectContactDetails) continue;
+        const first = Math.min(ai, bi);
+        const second = Math.max(ai, bi);
         const pair: Pair = [first, second];
         pairs.push(pair);
-        if (!kernel.boolean('intersection', [a.region], [b.region]).length) {
+        const hasArea = kernel.intersectionHasArea?.([a.region], [b.region]) ??
+          (kernel.boolean('intersection', [a.region], [b.region]).length > 0);
+        if (!hasArea) {
           const contact: [string, string] = [fragments[first].id, fragments[second].id];
           boundaryOnlyContacts.push(contact);
           const { netId } = a.feature;
@@ -270,45 +328,69 @@ export function analyseCopper(
       }
     }
   }
-  pairs.sort(([a, b], [c, d]) => a - c || b - d);
-  boundaryOnlyContacts.sort(([a, b], [c, d]) =>
-    a < c ? -1 : a > c ? 1 : b < d ? -1 : b > d ? 1 : 0,
+  pairs.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  boundaryOnlyContacts.sort((a, b) =>
+    a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0,
   );
+  const touching: number[] = [];
   for (const { drill, region, bounds: drillBounds } of holes) {
     if (!drill.plated) continue;
-    const touching = fragments.flatMap(({ region: copper, bounds }, index) =>
-      boundsMeet(bounds, drillBounds) && boundariesMeet(copper, region)
-        ? [index]
-        : [],
-    );
-    const ordinary = touching.filter(
-      (index) => fragments[index].feature.kind !== 'tie',
-    );
-    const anchor = ordinary[0] ?? touching[0];
+    touching.length = 0;
+    let ordinary: number | undefined;
+    for (let index = 0; index < fragments.length; index++) {
+      const fragment = fragments[index];
+      if (!boundsMeet(fragment.bounds, drillBounds) || !boundariesMeet(fragment.region, region)) continue;
+      touching.push(index);
+      if (fragment.feature.kind !== 'tie') ordinary ??= index;
+    }
+    const anchor = ordinary ?? touching[0];
     for (const index of touching) {
-      if (fragments[index].feature.kind === 'tie')
+      if (collectContactDetails && fragments[index].feature.kind === 'tie')
         platedTies.add(fragments[index].feature.id);
-      if (index !== anchor) pairs.push([anchor, index]);
+      if (index === anchor) continue;
+      physical.join(anchor, index);
+      if (collectContactDetails) pairs.push([anchor, index]);
     }
   }
+  return { fragments, netByTerminal, physical, pairs, boundaryOnlyContacts, pointContacts, platedTies };
+}
 
-  const physical = new CopperSets(fragments.length);
-  const withoutTies = new CopperSets(fragments.length);
-  const assembled = new CopperSets(fragments.length);
+/** Physical islands for consumers that only need to know which copper is joined. */
+export function connectedCopperIslands(
+  kernel: PolygonKernel,
+  features: readonly CopperFeature[],
+  drills: readonly BoardDrill[],
+) {
+  const { fragments, physical } = extractCopper(kernel, features, drills, false);
+  return reportIslands(fragments, physical);
+}
+
+/** Uses the same clipped copper regions for contact, plated barrels and diagnosis. */
+export function analyseCopper(
+  kernel: PolygonKernel,
+  features: readonly CopperFeature[],
+  drills: readonly BoardDrill[],
+  assemblyLinks: readonly AssemblyLink[] = [],
+  ties: readonly CopperNetTie[] = [],
+) {
+  const { fragments, netByTerminal, physical, pairs, boundaryOnlyContacts, pointContacts, platedTies } =
+    extractCopper(kernel, features, drills, true);
+  const hasTies = features.some(({ kind }) => kind === 'tie');
+  // Only a physical net tie can make the bare-copper graph differ here.
+  const withoutTies = hasTies ? new CopperSets(fragments.length) : physical;
+  const assembled = assemblyLinks.some(({ fitted }) => fitted) ? new CopperSets(fragments.length) : undefined;
   const withoutPointContacts = pointContacts.size ? new CopperSets(fragments.length) : undefined;
   const tiePairs: Pair[] = [];
-  for (const pair of pairs) {
-    const [a, b] = pair;
-    physical.join(a, b);
-    if (
-      fragments[a].feature.kind === 'tie' ||
-      fragments[b].feature.kind === 'tie'
-    ) {
-      tiePairs.push([a, b]);
-    } else {
-      withoutTies.join(a, b);
-      assembled.join(a, b);
-      if (!pointContacts.has(pair)) withoutPointContacts?.join(a, b);
+  if (hasTies || assembled || withoutPointContacts) {
+    for (const pair of pairs) {
+      const [a, b] = pair;
+      if (fragments[a].feature.kind === 'tie' || fragments[b].feature.kind === 'tie') {
+        tiePairs.push(pair);
+      } else {
+        if (hasTies) withoutTies.join(a, b);
+        assembled?.join(a, b);
+        if (withoutPointContacts && !pointContacts.has(pair)) withoutPointContacts.join(a, b);
+      }
     }
   }
 
@@ -317,13 +399,13 @@ export function analyseCopper(
   const netsByRoot = new Map<number, Set<string>>();
   fragments.forEach(({ feature }, index) => {
     const { terminalId, netId } = feature;
-    if (terminalId)
-      fragmentsByTerminal.set(terminalId, [
-        ...(fragmentsByTerminal.get(terminalId) ?? []),
-        index,
-      ]);
-    const root = withoutTies.root(index);
-    if (netId) {
+    if (terminalId) {
+      const indices = fragmentsByTerminal.get(terminalId);
+      if (indices) indices.push(index);
+      else fragmentsByTerminal.set(terminalId, [index]);
+    }
+    if (hasTies && netId) {
+      const root = withoutTies.root(index);
       const nets = netsByRoot.get(root) ?? new Set<string>();
       nets.add(netId);
       netsByRoot.set(root, nets);
@@ -393,7 +475,7 @@ export function analyseCopper(
         'An assembly link needs reviewed, distinct terminals on the same intended net.',
       );
     }
-    if (!link.fitted) continue;
+    if (!link.fitted || !assembled) continue;
     const anchors = [
       ...(fragmentsByTerminal.get(a) ?? []),
       ...(fragmentsByTerminal.get(b) ?? []),
@@ -409,7 +491,9 @@ export function analyseCopper(
       if (!indices.length) missing.add(terminal);
       const roots = nets.get(net) ?? new Map<number, string[]>();
       for (const root of new Set(indices.map((index) => sets.root(index)))) {
-        roots.set(root, [...(roots.get(root) ?? []), terminal]);
+        const terminals = roots.get(root);
+        if (terminals) terminals.push(terminal);
+        else roots.set(root, [terminal]);
       }
       nets.set(net, roots);
     }
@@ -420,9 +504,16 @@ export function analyseCopper(
       missingTerminals: [...missing].sort(),
     };
   };
+  const bareOpens = opens(withoutTies);
+  const assembledOpens = assembled ? opens(assembled) : {
+    nets: bareOpens.nets.map(({ netId, terminalGroups }) => ({
+      netId, terminalGroups: terminalGroups.map((group) => [...group]),
+    })),
+    missingTerminals: [...bareOpens.missingTerminals],
+  };
   return {
     copper: fragments,
-    connectedSets: reportIslands(fragments, physical).map((island) =>
+    connectedSets: (hasTies ? reportIslands(fragments, physical) : islands).map((island) =>
       island.map(({ id }) => id),
     ),
     shorts: islands.flatMap((island) => {
@@ -437,8 +528,8 @@ export function analyseCopper(
         ? [{ netIds, fragments: island.map(({ id }) => id) }]
         : [];
     }),
-    bareOpens: opens(withoutTies),
-    assembledOpens: opens(assembled),
+    bareOpens,
+    assembledOpens,
     floatingFragments: islands.flatMap((island) =>
       island.some(({ feature }) => feature.terminalId)
         ? []

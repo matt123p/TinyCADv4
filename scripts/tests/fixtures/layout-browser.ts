@@ -4,6 +4,7 @@ import { actionCommand, actionEditorEvent, actionSetDocument, actionSetLibraryLi
 import { ioXML } from '../../../src/io/ioXml';
 import { XMLBuilder } from '../../../src/util/xmlbuilder';
 import { projectRecoveryKey, readRecoveryDraft } from '../../../src/io/projectRecovery';
+import { wkrGetNetlist, wkrGenerateNetlist } from '../../../src/web-worker/worker';
 
 // This bridge is bundled only into the test entry point. UI interactions still
 // use the real toolbar, dialog, Redux reducers, fonts, and compiled worker.
@@ -20,6 +21,12 @@ import { projectRecoveryKey, readRecoveryDraft } from '../../../src/io/projectRe
     return !!await readRecoveryDraft(projectRecoveryKey(user?.id ?? '', {
       id: file.project.id, entryId,
     }));
+  },
+  async netlistLabels(compile: boolean) {
+    const netlist = compile
+      ? await wkrGenerateNetlist(store.getState().docStore.present.drawing)
+      : await wkrGetNetlist();
+    return Object.keys(netlist.labels);
   },
   snapshot() {
     const current = store.getState().docStore.present;

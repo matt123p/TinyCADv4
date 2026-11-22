@@ -11,6 +11,7 @@ import { layoutRuntime } from '../lib/layout-runtime.mjs';
 import { classroomBoard } from '../pcb/classroom-fixture.mjs';
 import { thermalFixture } from './pcb-thermal-fixture.mjs';
 import { placementFixture } from './pcb-placement-fixture.mjs';
+import { zoneConnectionFixture } from './pcb-zone-connection-fixture.mjs';
 
 const require = createRequire(import.meta.url);
 const packageRoot = path.dirname(require.resolve('clipper2-wasm/package.json'));
@@ -19,15 +20,18 @@ const compiled = await build({
     contents: `
       export * from './src/pcb/contours';
       export * from './src/pcb/geometry';
+      export * from './src/components/pcb/boardNumberInput';
       export * from './src/pcb/polygonKernel';
       export * from './src/pcb/copper';
       export * from './src/pcb/padstack';
       export * from './src/pcb/routing';
+      export * from './src/pcb/routeClearanceTransfer';
       export * from './src/pcb/routingRegions';
       export * from './src/pcb/boardProfiles';
       export * from './src/pcb/boardAnnotations';
       export * from './src/pcb/boardPlacement';
       export * from './src/pcb/manualBoardRouting';
+      export * from './src/pcb/boardRouting';
       export * from './src/pcb/boardCopperGeometry';
       export * from './src/pcb/routingSnap';
       export * from './src/pcb/trackEdits';
@@ -113,6 +117,23 @@ const area = (regions) =>
     0,
   );
 
+test('accepts local PCB decimals while keeping native lengths exact', () => {
+  const { boardInputLength: length, boardCoordinateFields: fields } = api;
+  assert.equal(length('-0,000001', 'mm', 'de'), -1);
+  assert.equal(length('12,5', 'mil', 'fr'), 317_500);
+  assert.equal(length('12.5', 'mil', 'fr'), 317_500);
+  assert.equal(length('0.000001', 'mm', 'en'), 1);
+  for (const value of ['1.000,25', '1,234,56', '1 000', '0,0000001'])
+    assert.throws(() => length(value, 'mm', 'de'));
+  assert.throws(() => length('12,5', 'mm', 'en'));
+  assert.throws(() => api.lengthInNanometres('12,5', 'mm'));
+  assert.deepEqual(fields('1,2', 2), ['1', '2']);
+  assert.deepEqual(fields('1 ,2', 2), ['1', '2']);
+  assert.deepEqual(fields('1,2 -3,4', 2), ['1,2', '-3,4']);
+  assert.deepEqual(fields('1,2; -3,4; 5,6', 3), ['1,2', '-3,4', '5,6']);
+  assert.throws(() => fields('1,2,3,4', 2));
+});
+
 test('lays out silkscreen strokes with defined alignment, rotation and field substitution', () => {
   const item = {
     kind: 'text', layer: 'F.SilkS', visible: true, strokeNm: 150_000, filled: false,
@@ -190,6 +211,47 @@ test('preserves an analytic outline and rejects invalid cutout topology', async 
   assert.deepEqual(history.undo(1).outline, board.outline);
 });
 
+test('shares opening outlines while their drill geometry is unchanged', () => {
+  const start = point(-10_000, 30_000);
+  const end = point(50_000, 30_000);
+  const drill = { id: 'slot', start, end, widthNm: 20_000, plated: true };
+  const first = api.openingRegion(drill);
+  assert.equal(api.openingRegion(drill), first);
+  assert.deepEqual(first, region(api.capsulePolygon(start, end, drill.widthNm)));
+  start.x -= 1_000;
+  const moved = api.openingRegion(drill);
+  assert.notEqual(moved, first);
+  assert.deepEqual(moved, region(api.capsulePolygon(start, end, drill.widthNm)));
+  drill.widthNm += 1;
+  assert.notEqual(api.openingRegion(drill), moved);
+  assert.notEqual(api.openingRegion({ ...drill }), api.openingRegion(drill));
+});
+
+test('validates rounded tracks and drills exactly at the coordinate limit', () => {
+  const limit = api.BOARD_COORDINATE_LIMIT_NM;
+  const origin = point(0, 0);
+  assert.doesNotThrow(() => api.validateCapsule(origin, origin, 2 * limit));
+  assert.doesNotThrow(() => api.validateCapsule(point(-limit + 500, 0), point(-limit + 500, 1000), 1001));
+  assert.throws(
+    () => api.validateCapsule(point(limit - 500, 0), point(limit - 500, 1000), 1001),
+    /Capsule exceeds the board coordinate range/,
+  );
+  assert.throws(() => api.validateCapsule(origin, point(1.5, 0), 1000), /Invalid capsule endpoints or width/);
+  assert.throws(() => api.validateCapsule(origin, origin, 2 * limit + 1), /Invalid capsule endpoints or width/);
+});
+
+test('keeps signed polygon area exact across translated, cancelling and oversized products', () => {
+  const limit = api.BOARD_COORDINATE_LIMIT_NM;
+  const narrow = polygon(limit - 20, limit - 13, limit, limit);
+  assert.equal(api.signedDoubleArea(narrow), BigInt(520));
+  assert.equal(api.signedDoubleArea([...narrow].reverse()), BigInt(-520));
+  const wide = polygon(-limit, -limit, limit, limit);
+  assert.equal(api.signedDoubleArea(wide), BigInt(2) * BigInt(2 * limit) ** BigInt(2));
+  const cancelling = [point(0, 0), point(limit, limit - 1), point(limit - 1, limit - 2)];
+  assert.equal(api.signedDoubleArea(cancelling), BigInt(-1));
+  assert.equal(api.signedDoubleArea([]), BigInt(0));
+});
+
 test('uses exact winding topology at an edge and within one nanometre of it', () => {
   const shape = polygon(499_000_000, 499_000_000, 500_000_000, 500_000_000);
   assert.equal(
@@ -208,6 +270,14 @@ test('uses exact winding topology at an edge and within one nanometre of it', ()
     api.pointInPolygon(point(499_000_000, 499_000_000), [...shape].reverse()),
     'boundary',
   );
+  const nearDiagonal = [
+    point(-500_000_000, -500_000_000),
+    point(499_999_999, 499_999_998),
+    point(499_999_999, -500_000_000),
+  ];
+  // The two determinant products round to the same double, but differ by one.
+  assert.equal(api.pointInPolygon(point(499_999_998, 499_999_997), nearDiagonal), 'inside');
+  assert.equal(api.pointInPolygon(point(499_999_998, 499_999_997), [...nearDiagonal].reverse()), 'inside');
 });
 
 test('clips and offsets copper using integer paths and preserves nested islands', () => {
@@ -239,6 +309,58 @@ const feature = (id, layerId, kind, outer, netId, terminalId) => ({
   region: region(outer),
   netId,
   terminalId,
+});
+
+test('validates signed Clipper coordinates and shrinks reused input paths', () => {
+  const limit = api.BOARD_COORDINATE_LIMIT_NM;
+  const outer = polygon(-limit, -limit, limit, limit);
+  const hole = polygon(-1000, -2000, 3000, 4000);
+  const [full] = kernel.boolean('union', [region(outer, [hole])], []);
+  assert.deepEqual(new Set(full.outer), new Set(outer));
+  assert.deepEqual(new Set(full.holes[0]), new Set(hole));
+  assert.deepEqual(kernel.boolean('union', [region([...outer].reverse(), [[...hole].reverse()])], []), [full]);
+  const invalid = region(polygon(limit, 0, limit + 1, 1));
+  assert.throws(() => kernel.boolean('union', [region(outer), invalid], []), /supported coordinate or vertex limits/);
+  assert.throws(
+    () => kernel.offset([region(outer)], 1000),
+    /Polygon result is outside the board coordinate range/,
+  );
+  const triangle = [point(-limit, -limit), point(-limit + 7, -limit), point(-limit, -limit + 9)];
+  const [small] = kernel.boolean('union', [region(triangle)], []);
+  assert.deepEqual(new Set(small.outer), new Set(triangle));
+  assert.deepEqual(small.holes, []);
+});
+
+test('shares uncut track vertices while preserving kernel contour ordering', () => {
+  const outline = api.capsulePolygon(point(-2e6, -1e6), point(4e6, 3e6), 500_001);
+  const track = region(outline);
+  const [normalised] = kernel.normaliseUncut(track);
+  assert.deepEqual([normalised], kernel.boolean('difference', [track], []));
+  assert.ok(normalised.outer.every((vertex) => outline.includes(vertex)));
+  const reversed = region([...outline].reverse());
+  assert.deepEqual(kernel.normaliseUncut(reversed), kernel.boolean('difference', [reversed], []));
+  const withHole = region(polygon(-10, -10, 10, 10), [polygon(-5, -5, 5, 5)]);
+  assert.deepEqual(kernel.normaliseUncut(withHole), kernel.boolean('difference', [withHole], []));
+});
+
+test('tests exact positive intersection area without requiring result polygons', () => {
+  const base = region(polygon(0, 0, 10_000, 10_000));
+  const holed = region(base.outer, [polygon(2_000, 2_000, 8_000, 8_000)]);
+  const limit = api.BOARD_COORDINATE_LIMIT_NM;
+  for (const [subject, clip, expected] of [
+    [base, region(polygon(5_000, 5_000, 15_000, 15_000)), true],
+    [base, region(polygon(10_000, 5_000, 15_000, 8_000)), false],
+    [base, region(polygon(10_000, 10_000, 15_000, 15_000)), false],
+    [holed, region(polygon(3_000, 3_000, 4_000, 4_000)), false],
+    [holed, base, true],
+    [region(polygon(-limit, -limit, limit, limit)),
+      region(polygon(-limit, -limit, limit - 10, limit - 10)), true],
+    [region(polygon(limit - 10, limit - 10, limit, limit)),
+      region(polygon(limit - 1, limit - 1, limit, limit)), true],
+  ]) {
+    assert.equal(kernel.intersectionHasArea([subject], [clip]), expected);
+    assert.equal(kernel.boolean('intersection', [subject], [clip]).length > 0, expected);
+  }
 });
 
 test('imports a bounded KiCad pad subset and blocks unsupported electrical geometry', () => {
@@ -390,6 +512,10 @@ test('extracts drilled annuli and plated slots with real voids and independent l
   );
   const plated = api.analyseCopper(kernel, [a, b, insideSlot], [drill]);
   assert.deepEqual(plated.connectedSets, [['a/0', 'b/0']]);
+  const islands = (drills) => api.connectedCopperIslands(kernel, [a, b, insideSlot], drills)
+    .map((island) => island.map(({ id }) => id));
+  assert.deepEqual(islands([drill]), plated.connectedSets);
+  assert.deepEqual(islands([{ ...drill, plated: false }]), [['a/0'], ['b/0']]);
   assert.deepEqual(plated.bareOpens, { nets: [], missingTerminals: ['B1'] });
   assert.equal(plated.copper[0].region.holes.length, 1);
   assert.equal(plated.copper[1].region.holes.length, 1);
@@ -420,6 +546,18 @@ test('identifies reliance on isolated point contacts and accepts shared edges or
   const b = feature('b', 'top', 'pad', polygon(1000, 1000, 2000, 2000), 'N', 'B');
   const pointContact = api.analyseCopper(kernel, [a, b], []);
   assert.deepEqual(pointContact.bareOpens.nets, []);
+  const connectivityKernel = {
+    ...kernel,
+    boolean(operation, subjects, clips) {
+      assert.notEqual(operation, 'intersection');
+      return kernel.boolean(operation, subjects, clips);
+    },
+  };
+  assert.deepEqual(
+    api.connectedCopperIslands(connectivityKernel, [a, b], [])
+      .map((island) => island.map(({ id }) => id)),
+    pointContact.connectedSets,
+  );
   assert.deepEqual(pointContact.fragileContacts, [{
     fragments: ['a/0', 'b/0'], netId: 'N', location: point(1000, 1000),
   }]);
@@ -427,6 +565,72 @@ test('identifies reliance on isolated point contacts and accepts shared edges or
   assert.deepEqual(api.analyseCopper(kernel, [a, sharedEdge], []).fragileContacts, []);
   const bridge = feature('bridge', 'top', 'track', polygon(500, 500, 1500, 1500), 'N');
   assert.deepEqual(api.analyseCopper(kernel, [a, b, bridge], []).fragileContacts, []);
+});
+
+test('indexed copper boundaries preserve a 1 nm gap and contact inside a cutout', () => {
+  function denseRectangle(left, bottom, right, top) {
+    const corners = polygon(left, bottom, right, top);
+    return corners.flatMap((start, index) => {
+      const end = corners[(index + 1) % corners.length];
+      return Array.from({ length: 10 }, (_, step) => point(
+        start.x + (end.x - start.x) * step / 10,
+        start.y + (end.y - start.y) * step / 10,
+      ));
+    });
+  }
+  const outline = denseRectangle(0, 0, 3000, 3000);
+  const hole = denseRectangle(1000, 1000, 2000, 2000);
+  const plane = { outer: outline, holes: [hole] };
+  const island = (offset) => region(denseRectangle(1000 + offset, 1100, 1800 + offset, 1900));
+
+  assert.equal(api.polygonBoundariesMeet(hole, island(1).outer), false);
+  assert.equal(api.regionsTouch(plane, island(1)), false);
+  assert.equal(api.boundaryDistance(plane, island(1)), 1);
+  assert.equal(api.boundaryDistance(island(1), plane), 1);
+  assert.equal(api.polygonBoundariesMeet(hole, island(0).outer), true);
+  assert.equal(api.regionsTouch(plane, island(0)), true);
+  assert.equal(api.boundaryDistance(plane, island(0)), 0);
+  assert.equal(api.polygonBoundariesMeet(hole, island(-1).outer), true);
+  assert.equal(api.regionsTouch(plane, island(-1)), true);
+});
+
+test('reuses unclipped convex copper for physical islands and clips drilled or complex features', () => {
+  const track = feature('track', 'top', 'track', [
+    point(0, 0), point(5_000, 0), point(10_000, 0),
+    point(10_000, 2_000), point(0, 2_000),
+  ], 'N');
+  const reversed = { ...track, region: region([...track.region.outer].reverse()) };
+  const pad = { ...track, kind: 'pad', terminalId: 'P1' };
+  const cutout = { ...pad, region: region(pad.region.outer, [polygon(1_000, 500, 2_000, 1_500)]) };
+  const thinTriangle = { ...pad, region: region([point(0, 0), point(1, 1), point(90, 0)]) };
+  const star = feature('star', 'top', 'track', [
+    point(0, 5_000), point(3_000, -4_000), point(-5_000, 1_000),
+    point(5_000, 1_000), point(-3_000, -4_000),
+  ], 'N');
+  const slot = {
+    id: 'slot', start: point(5_000, 500), end: point(5_000, 1_500),
+    widthNm: 2_000, plated: false,
+  };
+  let differences = 0;
+  const observedKernel = {
+    ...kernel,
+    boolean(operation, subjects, clips) {
+      if (operation === 'difference') differences++;
+      return kernel.boolean(operation, subjects, clips);
+    },
+  };
+  for (const [feature, drills, usesKernel] of [
+    [track, [], false], [reversed, [], false], [pad, [], false],
+    [star, [], true], [cutout, [], true], [pad, [slot], true], [thinTriangle, [], true],
+  ]) {
+    differences = 0;
+    const actual = api.connectedCopperIslands(observedKernel, [feature], drills);
+    assert.equal(differences, Number(usesKernel));
+    assert.deepEqual(
+      actual.map((island) => island.map(({ id }) => id)),
+      api.analyseCopper(kernel, [feature], drills).connectedSets,
+    );
+  }
 });
 
 test('uses clipped copper islands and separates fitted jumpers and reviewed ties', () => {
@@ -479,11 +683,11 @@ test('uses clipped copper islands and separates fitted jumpers and reviewed ties
       api.analyseCopper(kernel, [a, { ...b, netId: 'OTHER' }], [], [internal]),
     /same intended net/,
   );
-  assert.equal(
-    api.analyseCopper(kernel, [a, b], [], [{ ...jumper, fitted: false }])
-      .assembledOpens.nets.length,
-    1,
-  );
+  const unfitted = api.analyseCopper(kernel, [a, b], [], [{ ...jumper, fitted: false }]);
+  assert.equal(unfitted.bareOpens.nets.length, 1);
+  assert.deepEqual(unfitted.assembledOpens, unfitted.bareOpens);
+  assert.notStrictEqual(unfitted.assembledOpens.nets[0].terminalGroups[0],
+    unfitted.bareOpens.nets[0].terminalGroups[0]);
   const different = { ...b, netId: 'OTHER' };
   const tie = { ...track, kind: 'tie', netId: undefined };
   const declaration = { featureId: tie.id, terminals: ['a', 'b'] };
@@ -497,6 +701,18 @@ test('uses clipped copper islands and separates fitted jumpers and reviewed ties
   assert.deepEqual(tied.invalidTies, []);
   assert.deepEqual(tied.shorts, []);
   assert.equal(tied.connectedSets.length, 1);
+
+  const barrelLand = feature('via-land', 'bottom', 'pad', polygon(4_800, 300, 5_200, 700));
+  const plated = api.analyseCopper(
+    kernel,
+    [a, different, tie, barrelLand],
+    [{ ...drill, widthNm: 120, plated: true }],
+    [],
+    [declaration],
+  );
+  assert.equal(plated.copper.filter(({ feature }) => feature.id === tie.id).length, 1);
+  assert.deepEqual(plated.invalidTies, [tie.id]);
+
   const bypass = feature(
     'bypass',
     'top',
@@ -515,11 +731,49 @@ test('uses clipped copper islands and separates fitted jumpers and reviewed ties
   assert.equal(failed.shorts.length, 1);
 });
 
-test('previews and commits a legal classroom route across the obstacle batches', async () => {
+test('shares equal pad outlines and omits apertures for copper-only geometry', async () => {
+  const board = await api.decodeBoard(await classroomBoard());
+  const { apertures, ...physical } = api.boardCopperGeometry(board);
+  const pad = physical.features.find(({ kind }) => kind === 'pad');
+  const openings = apertures.filter(({ landId }) => landId === pad.id);
+  assert.deepEqual(openings.map(({ kind }) => kind), ['mask', 'paste']);
+  for (const opening of openings) assert.equal(opening.polygon, pad.region.outer);
+  assert.deepEqual(api.boardCopperGeometry(board, { includeApertures: false }), {
+    ...physical, apertures: [],
+  });
+});
+
+test('transfers route clearance while preserving signed coordinates, holes and layer isolation', () => {
+  const outer = polygon(-90, -90, 90, 90);
+  const ring = region(polygon(-30, -30, 30, 30), [polygon(-20, -20, 20, 20)]);
+  const drill = region(polygon(45, -10, 50, 0));
+  const clearance = {
+    area: [region(outer)],
+    holes: [{ region: drill, box: api.bounds(drill) }],
+    byLayer: new Map([
+      ['top', [{ region: ring, box: api.bounds(ring) }]],
+      ['bottom', []],
+    ]),
+    straightTracksByLayer: new Map(),
+  };
+  const { geometry, transfer } = api.packRouteClearance(clearance);
+  const received = api.unpackRouteClearance(structuredClone(geometry, { transfer }));
+  assert.equal(geometry.holes.coordinates.byteLength, 0);
+  assert.equal(api.isCentrelineClear(received, point(-10, 0), point(10, 0), 'top'), true);
+  assert.equal(api.isCentrelineClear(received, point(-10, 0), point(21, 0), 'top'), false);
+  assert.equal(api.isCentrelineClear(received, point(-10, 0), point(21, 0), 'bottom'), true);
+  assert.equal(api.isCentrelineClear(received, point(44, -5), point(51, -5), 'bottom'), false);
+  assert.deepEqual(received, clearance);
+});
+
+test('previews and commits a legal classroom route across straight and polygon obstacles', async () => {
   const board = await api.decodeBoard(await classroomBoard());
   const netId = board.nets.find(({ name }) => name === 'U1-1').id;
   const widthNm = 250_000;
-  const prepared = api.prepareManualTrackClearance(board, { netId, widthNm }, kernel);
+  const { geometry, transfer } = api.packRouteClearance(
+    api.prepareManualTrackClearance(board, { netId, widthNm }, kernel),
+  );
+  const prepared = api.unpackRouteClearance(structuredClone(geometry, { transfer }));
   const start = point(5e6, 8e6);
   const end = point(8e6, 8e6);
   assert.equal(api.isCentrelineClear(prepared, start, end, 'top'), true);
@@ -532,6 +786,41 @@ test('previews and commits a legal classroom route across the obstacle batches',
   assert.equal(next.tracks.length, 2001);
   assert.deepEqual(next.tracks.slice(0, -1), board.tracks);
   assert.deepEqual(next.tracks.at(-1).end, end);
+});
+
+test('checks straight-track edges and round ends consistently in preview and commit', () => {
+  const base = api.createBoard('Straight clearances', 2, polygon(0, 0, 25e6, 20e6));
+  const signal = crypto.randomUUID();
+  const foreign = crypto.randomUUID();
+  const track = {
+    id: crypto.randomUUID(), netId: foreign, layerId: 'top',
+    start: point(8e6, 8e6), end: point(16e6, 8e6), widthNm: 400_000,
+  };
+  const board = {
+    ...base, requiredFeatures: [...base.requiredFeatures, 'routed-copper'],
+    nets: [{ id: signal, name: 'Signal' }, { id: foreign, name: 'Foreign' }], tracks: [track],
+  };
+  const widthNm = 400_000;
+  const gap = widthNm + api.resolveBoardRules(board).clearanceNm + 2 * api.TESSELLATION_TOLERANCE_NM;
+  const preview = api.prepareManualTrackClearance(board, { netId: signal, widthNm }, kernel);
+  const route = (a, b, layer) => api.commitManualRoute(board, {
+    netId: signal, widthNm, viaDiameterNm: 700_000, viaDrillNm: 300_000,
+    path: [a, b].map((position) => ({ position, layer })),
+  }, kernel);
+  const cases = [
+    [point(9e6, 8e6 + gap), point(15e6, 8e6 + gap), 'top', false],
+    [point(9e6, 8e6 + gap + 1), point(15e6, 8e6 + gap + 1), 'top', true],
+    [point(8e6 - gap, 6e6), point(8e6 - gap, 10e6), 'top', false],
+    [point(8e6 - gap - 1, 6e6), point(8e6 - gap - 1, 10e6), 'top', true],
+    [point(11e6, 6e6), point(11e6, 10e6), 'bottom', true],
+  ];
+  for (const [start, end, layer, expected] of cases) {
+    assert.equal(api.isCentrelineClear(preview, start, end, layer), expected);
+    if (expected) assert.doesNotThrow(() => route(start, end, layer));
+    else assert.throws(() => route(start, end, layer), /Track blocked/);
+  }
+  const sameNet = api.prepareManualTrackClearance(board, { netId: foreign, widthNm }, kernel);
+  assert.equal(api.isCentrelineClear(sameNet, track.start, track.end, 'top'), true);
 });
 
 test('routes round an obstacle with a legal via and leaves the input intact', () => {
@@ -603,6 +892,34 @@ test('routes round an obstacle with a legal via and leaves the input intact', ()
   );
 });
 
+test('clips a zone against nearby off-zone copper and skips a distant obstacle', () => {
+  const nearTrack = feature(
+    'near', 'top', 'track', polygon(8_100_000, 4_000_000, 8_500_000, 5_000_000), 'foreign',
+  );
+  const farTrack = feature(
+    'far', 'top', 'track', polygon(15_000_000, 4_000_000, 16_000_000, 5_000_000), 'foreign',
+  );
+  const offsetRegions = new Set();
+  const observedKernel = {
+    ...kernel,
+    offset(regions, distance) {
+      for (const region of regions) offsetRegions.add(region);
+      return kernel.offset(regions, distance);
+    },
+  };
+  const [fill] = api.fillZone(observedKernel, {
+    id: 'zone', layerId: 'top', netId: 'GND',
+    boundary: region(polygon(2_000_000, 2_000_000, 8_000_000, 8_000_000)),
+    profile: region(polygon(0, 0, 20_000_000, 20_000_000)),
+    copper: [nearTrack, farTrack], drills: [], thermals: [],
+    clearanceNm: 250_000, edgeClearanceNm: 250_000,
+  });
+  assert.ok(offsetRegions.has(nearTrack.region));
+  assert.ok(!offsetRegions.has(farTrack.region));
+  assert.equal(api.pointInPolygon(point(7_950_000, 4_500_000), fill.region.outer), 'outside');
+  assert.equal(api.pointInPolygon(point(7_800_000, 4_500_000), fill.region.outer), 'inside');
+});
+
 test('places an asymmetric mixed device and fills a slotted thermal around an arbitrary polygon pad', () => {
   const local = point(0, 0);
   const slotEnd = point(800_000, 0);
@@ -624,7 +941,7 @@ test('places an asymmetric mixed device and fills a slotted thermal around an ar
         label: '01',
         positionNm: local,
         stack: {
-          copper: { top: slotLand, bottom: slotLand },
+          copper: { top: slotLand, bottom: { ...slotLand } },
           drill: { start: local, end: slotEnd, widthNm: 500_000, plated: true },
         },
       },
@@ -656,6 +973,10 @@ test('places an asymmetric mixed device and fills a slotted thermal around an ar
     ],
   );
   assert.deepEqual(placed.drills[0].end, point(4_307_180, 3_600_000));
+  const platedLands = placed.copper.filter(({ id }) => id.startsWith('J1:A1:'));
+  assert.deepEqual(platedLands.map(({ layerId }) => layerId), ['bottom', 'top']);
+  assert.equal(platedLands[0].region, platedLands[1].region);
+  assert.equal(platedLands[0].anchor, platedLands[1].anchor);
   assert(placed.copper.some(({ id }) => id === 'J1:EP:bottom'));
   assert.deepEqual(
     placed.apertures.map(({ kind, side }) => [kind, side]),
@@ -871,6 +1192,27 @@ test('authored footprint lands and slot dimensions survive placement and CAM rea
   assert.deepEqual(hole.end, hole.start);
   assert.equal(hole.widthNm, 1_200_000);
   assert.equal(hole.plated, false);
+});
+
+test('decodes and verifies canonical STEP data across base64 chunk boundaries', async () => {
+  const bytes = Uint8Array.from({ length: 24_576 + 1 }, (_, index) => index % 251);
+  const asset = await api.createBoardModelAsset(bytes, 'Chunk boundary fixture');
+  assert.deepEqual(await api.readBoardModelAsset(asset), bytes);
+
+  const interiorPadding = asset.base64.slice(0, 32764) + 'AA==' + asset.base64.slice(32768);
+  await assert.rejects(
+    api.readBoardModelAsset({ ...asset, base64: interiorPadding }),
+    /Invalid STEP asset encoding/,
+  );
+  const oneByte = await api.createBoardModelAsset(Uint8Array.of(0), 'Canonical pad bits');
+  await assert.rejects(
+    api.readBoardModelAsset({ ...oneByte, base64: 'AB==' }),
+    /Invalid STEP asset encoding/,
+  );
+  await assert.rejects(
+    api.readBoardModelAsset({ ...asset, id: oneByte.id }),
+    /SHA-256 does not match/,
+  );
 });
 
 test('reopens a copied XML board offline with shared definitions, connectivity and STEP data', async (t) => {
@@ -1108,6 +1450,19 @@ test('reopens a copied XML board offline with shared definitions, connectivity a
   assert.match(preview.files['silk-bottom.gbr'], /TF.FileFunction,Legend,Bot/);
   assert.ok(preview.report.issues.some(({ code }) => code === 'silk-mask'));
   assert.ok(!preview.report.issues.some(({ code }) => code === 'silk-text'));
+  const profiledBoard = {
+    ...boardCopy,
+    requiredFeatures: [...boardCopy.requiredFeatures, 'fabrication-settings'],
+    fabrication: { profileId: 'two-layer-smt-v1', thicknessNm: 1_600_000 },
+  };
+  const profiled = await api.prepareCamPreview(profiledBoard, kernel);
+  const smallText = profiled.report.issues.filter(({ code }) => code === 'silk-text-height');
+  assert.deepEqual(smallText.flatMap(({ layers }) => layers).sort(), ['silk-bottom', 'silk-top']);
+  assert.ok(smallText.every(({ measuredNm, requiredNm, ruleIds }) =>
+    measuredNm === 500_000 && requiredNm === 1_000_000 && ruleIds.includes('minSilkTextHeightNm')));
+  assert.equal(api.manufacturingReadiness(profiledBoard, profiled)
+    .filter(({ code }) => code === 'silk-text-height').length, 2);
+  assert.equal(profiled.files['silk-bottom.gbr'], preview.files['silk-bottom.gbr']);
   assert.equal(preview.report.issues.filter(({ code }) => code === 'silk-geometry').length, 2);
   const [definition] = boardCopy.footprintDefinitions;
   const [text] = definition.graphics.filter(({ kind }) => kind === 'text');
@@ -1196,6 +1551,36 @@ test('reopens a copied XML board offline with shared definitions, connectivity a
   await assert.rejects(parse(xml.replace(deviceId, id())), /component binding/);
 });
 
+test('shares validated subtrees across PCB edits and enforces the depth limit on moved data', () => {
+  const board = api.createBoard('Snapshot', 2, polygon(0, 0, 4_000_000, 3_000_000));
+  const supplied = { label: 'original' };
+  const options = Object.freeze({ z: [supplied], a: 'first' });
+  const initial = api.validateBoard({ ...board, options });
+  supplied.label = 'changed outside the board';
+  assert.notEqual(initial.options, options);
+  assert.equal(initial.options.z[0].label, 'original');
+  assert(Object.isFrozen(initial.options.z[0]));
+  assert.deepEqual(Object.keys(initial.options), ['a', 'z']);
+
+  const history = new api.BoardHistory(initial);
+  const renamed = history.apply({
+    apiVersion: 1,
+    boardId: initial.boardId,
+    expectedRevision: initial.revision,
+    operations: [{ type: 'rename', title: 'Updated' }],
+  });
+  assert.equal(renamed.outline, initial.outline);
+  assert.equal(renamed.options, initial.options);
+  assert.equal(history.undo(renamed.revision).options, initial.options);
+  assert.equal(history.redo(history.board.revision).outline, initial.outline);
+
+  const shallow = api.validateBoard({ ...initial, options: initial.options.z[0] });
+  assert.equal(shallow.options, initial.options.z[0]);
+  let nested = initial.options;
+  for (let i = 0; i < 47; i++) nested = [nested];
+  assert.throws(() => api.validateBoard({ ...initial, options: nested }), /nesting depth/);
+});
+
 test('preserves optional XML records through a board edit and rejects unsupported requirements', async () => {
   const encode = (text) => new TextEncoder().encode(text);
   const text = (bytes) => new TextDecoder().decode(bytes);
@@ -1269,6 +1654,15 @@ test('preserves optional XML records through a board edit and rejects unsupporte
     api.decodeBoard(encode(xml.replace('x="4000000"', 'x="4.5"'))),
     /integer value/,
   );
+  await assert.rejects(
+    api.decodeBoard(encode(xml.replace('</TinyCADPCB>', '<?vendor extension?></TinyCADPCB>'))),
+    /Unsupported PCB XML node/,
+  );
+  const nested = '<VENDOR>'.repeat(49) + '</VENDOR>'.repeat(49);
+  await assert.rejects(
+    api.decodeBoard(encode(xml.replace('</TinyCADPCB>', nested + '</TinyCADPCB>'))),
+    /nested too deeply/,
+  );
 });
 
 test('manual routing validates drills, foreign copper and through-vias before committing', async () => {
@@ -1313,7 +1707,7 @@ test('manual routing validates drills, foreign copper and through-vias before co
   });
   const at = (x, y, layer = 'top') => ({ position: point(x, y), layer });
   const route = (path) =>
-    api.commitManualRoute(
+    api.prepareManualRoute(
       fixture,
       {
         netId: signal,
@@ -1336,14 +1730,20 @@ test('manual routing validates drills, foreign copper and through-vias before co
     ...fixture, tracks: [...fixture.tracks, crossing],
   }));
   const report = await api.checkBoard(imported, kernel);
-  assert.ok(report.issues.some(({ code, objects }) =>
-    code === 'short' && [fixture.tracks[0], crossing].every(({ id }) => objects.includes(id + '/0')),
-  ));
+  const short = report.issues.find(({ code, objects }) =>
+    code === 'short' && [fixture.tracks[0], crossing].every(({ id }) => objects.includes(id + '/0')));
+  assert.equal(short.severity, 'blocker');
+  assert.equal(short.result, 'failed');
+  assert.equal(short.boardId, imported.boardId);
+  assert.equal(short.revision, imported.revision);
+  assert.deepEqual(short.layers, ['copper-top']);
+  assert.ok(short.boundsNm.minX <= short.location.x && short.location.x <= short.boundsNm.maxX);
+  assert.equal(report.coverage.find(({ check }) => check === 'Physical connectivity').result, 'failed');
   assert.throws(
     () => route([at(6_000_000, 3_500_000), at(8_000_000, 3_500_000)]),
     /Track blocked/,
   );
-  const candidate = route([
+  const { board: candidate, change } = route([
     at(1_000_000, 2_000_000),
     at(2_000_000, 2_000_000),
     at(2_000_000, 2_000_000, 'bottom'),
@@ -1351,11 +1751,29 @@ test('manual routing validates drills, foreign copper and through-vias before co
   ]);
   assert.equal(candidate.tracks.length, 3);
   assert.equal(candidate.vias.length, 1);
+  assert.equal(change.addedTracks.length, 2);
+  assert.equal(change.addedVias.length, 1);
+  const received = api.applyBoardRoutingEdit(fixture, structuredClone(change));
+  assert.deepEqual(await api.encodeBoard(received), await api.encodeBoard(candidate));
   const history = new api.BoardHistory(fixture);
-  const edited = history.commit(candidate);
+  const edited = history.commit(received);
+  assert.equal(edited.tracks[0], fixture.tracks[0]);
   const reopened = await api.decodeBoard(await api.encodeBoard(edited));
   assert.deepEqual(reopened, edited);
   assert.equal(history.undo(edited.revision).tracks.length, 1);
+
+  const last = candidate.tracks.at(-1);
+  const reroute = api.prepareManualRoute(candidate, {
+    netId: signal, widthNm: last.widthNm, replaceTrack: last.id,
+    path: [last.start, point(3_000_000, 2_800_000), last.end]
+      .map((position) => ({ position, layer: 'bottom' })),
+  }, kernel);
+  assert.deepEqual(reroute.change.removedTrackIds, [last.id]);
+  assert.equal(reroute.change.addedTracks[0].id, last.id);
+  const rerouted = api.applyBoardRoutingEdit(candidate, structuredClone(reroute.change));
+  assert.equal(rerouted.vias, candidate.vias);
+  assert.equal(rerouted.tracks.filter(({ id }) => id === last.id).length, 1);
+  assert.deepEqual(await api.encodeBoard(rerouted), await api.encodeBoard(reroute.board));
 });
 
 test('moves, rotates, aligns and distributes placed components atomically', async () => {
@@ -1487,7 +1905,7 @@ test('models wire jumpers as drilled lands and explicit assembly bridges', async
   assert.deepEqual(preview.report.jumperConnectivity, {
     bareOpenNets: [netId], assembledOpenNets: [],
   });
-  assert.ok(preview.report.issues.some(({ code }) => code === 'bare-open-bridged'));
+  assert.equal(preview.report.issues.find(({ code }) => code === 'bare-open-bridged').severity, 'warning');
   assert.ok(!preview.report.issues.some(({ code }) => code === 'open' || code === 'short'));
   assert.ok(!api.manufacturingReadiness(decoded, preview).some(({ code }) => code === 'bare-open-bridged'));
   assert.deepEqual(preview.drills.map(({ plated }) => plated), [false, false]);
@@ -1497,6 +1915,7 @@ test('models wire jumpers as drilled lands and explicit assembly bridges', async
   assert.doesNotMatch(preview.files['placement.csv'], /JP1/);
   const review = await api.prepareBoardReleaseReview(decoded, preview, { reviewedFiles: [] });
   assert.ok(review.files['jumpers.csv']);
+  assert.equal(review.manifest.checks.issues.find(({ code }) => code === 'bare-open-bridged').severity, 'warning');
   assert.match(preview.files['assembly-bottom.svg'], /JP1 \(wire\)/);
   const dnp = update({ ...jumper, fitted: false });
   const dnpPreview = await api.prepareCamPreview(dnp, kernel);
@@ -1598,6 +2017,50 @@ test('checks placed courtyards against same-side keep-outs and the union of keep
   assert.equal(history.undo(withAreas.revision).placementAreas, undefined);
 });
 
+test('keeps same-net pads and vias independently clear in no-connect zones and CAM', async () => {
+  const fixture = zoneConnectionFixture(api);
+  const [zone] = fixture.zones;
+  const pad = fixture.footprints[0].positionNm;
+  const via = fixture.vias[0].positionNm;
+  const probes = [point(pad.x + 400_000, pad.y), point(via.x + 700_000, via.y)];
+  const inside = (point, regions) => regions.some(({ outer, holes }) =>
+    api.pointInPolygon(point, outer) !== 'outside' &&
+    holes.every((hole) => api.pointInPolygon(point, hole) === 'outside'));
+  for (const padConnection of ['direct', 'none']) {
+    for (const viaConnection of ['direct', 'none']) {
+      const history = new api.BoardHistory(fixture);
+      const changed = history.apply({
+        apiVersion: 1, boardId: fixture.boardId, expectedRevision: fixture.revision,
+        operations: [{ type: 'setZone', zone: { ...zone, padConnection, viaConnection } }],
+      });
+      const board = await api.decodeBoard(await api.encodeBoard(changed));
+      assert.equal(board.zones[0].padConnection, padConnection);
+      assert.equal(board.zones[0].viaConnection, viaConnection);
+      const geometry = api.boardCopperGeometry(board);
+      const fills = api.boardZoneGeometry(board, kernel, geometry, true).fills;
+      const topLands = geometry.features.filter(({ layerId }) => layerId === 'top');
+      const expected = [padConnection, viaConnection].map((mode) => mode === 'direct');
+      for (const land of topLands) {
+        const direct = land.kind === 'pad' ? expected[0] : expected[1];
+        assert.equal(fills.some(({ region }) => api.regionsTouch(land.region, region)), direct);
+        if (!direct) {
+          const gap = Math.min(...fills.map(({ region }) => api.boundaryDistance(land.region, region)));
+          assert.ok(gap >= zone.clearanceNm && gap <= zone.clearanceNm + 500, land.kind + ' gap ' + gap);
+        }
+      }
+      const preview = await api.prepareCamPreview(board, kernel);
+      const top = api.gerberPaintRegions(kernel, api.readGerber(preview.files['copper-top.gbr']).paints);
+      const bottom = api.gerberPaintRegions(kernel, api.readGerber(preview.files['copper-bottom.gbr']).paints);
+      assert.deepEqual(probes.map((probe) => inside(probe, top)), expected);
+      assert.deepEqual(probes.map((probe) => inside(probe, bottom)), [false, false]);
+      assert.equal(inside(pad, top), true, 'The isolated pad remains in the CAM output');
+      assert.equal(inside(point(via.x + 350_000, via.y), top), true, 'The isolated via land remains');
+      assert.equal(inside(via, top), false, 'The plated bore stays open');
+      assert.ok(!preview.report.issues.some(({ code }) => code.startsWith('thermal')));
+    }
+  }
+});
+
 test('measures a clipped thermal spoke and identifies a missing spoke on connected copper', async () => {
   const { board, clipped } = thermalFixture(api);
   const clean = await api.checkBoard(board, kernel);
@@ -1684,14 +2147,14 @@ test('checks zone webs against the effective net width and the copper covering t
 
 test('keeps minimum-width boundaries and detects nonparallel necks', () => {
   const limit = 180_000;
-  assert.equal(api.measureZoneWidth(kernel, region(polygon(0, 0, 8e6, limit)), limit), undefined);
+  assert.equal(api.measureRegionWidth(kernel, region(polygon(0, 0, 8e6, limit)), limit), undefined);
   const angled = region([
     point(0, 0), point(2e6, 0), point(4e6, 2e6), point(6e6, 0), point(8e6, 0),
     point(8e6, 4e6), point(6e6, 4e6), point(4e6, 2.07e6), point(2e6, 4e6), point(0, 4e6),
   ]);
-  assert.ok(api.measureZoneWidth(kernel, angled, limit)?.location);
+  assert.ok(api.measureRegionWidth(kernel, angled, limit)?.location);
   const rotated = region(angled.outer.map(({ x, y }) => point(y, -x)));
-  assert.ok(api.measureZoneWidth(kernel, rotated, limit)?.location);
+  assert.ok(api.measureRegionWidth(kernel, rotated, limit)?.location);
 });
 
 test('stores zone source geometry and deterministically rebuilds clearances and cutouts', async () => {
@@ -1884,11 +2347,15 @@ test('ties a waiver to the affected geometry and rules through save and reload',
   });
   const reopened = await api.decodeBoard(await api.encodeBoard(annotated));
   const report = await api.checkBoard({ ...reopened, title: 'Renamed' }, kernel);
-  assert.equal(report.issues.find(({ code }) => code === finding.code).advisory.waiver.reason, waiver.reason);
+  const waived = report.issues.find(({ code }) => code === finding.code);
+  assert.equal(waived.advisory.waiver.reason, waiver.reason);
+  assert.equal(waived.result, 'waived');
+  assert.equal(report.coverage.find(({ check }) => check === 'Physical connectivity').result, 'waived');
   assert.deepEqual(report.inactiveWaivers, []);
   const moved = { ...reopened, tracks: [{ ...track, end: point(5e6, 3e6) }] };
   const updated = await api.checkBoard(moved, kernel);
   assert.equal(updated.issues.find(({ code }) => code === finding.code).advisory.waiver, undefined);
+  assert.equal(updated.issues.find(({ code }) => code === finding.code).result, 'failed');
   assert.equal(updated.inactiveWaivers[0].id, waiver.id);
 });
 
@@ -2033,7 +2500,7 @@ test('keeps via tenting consistent across native saves, CAM, inspection and KiCa
     [closeVias.map(({ id }) => id + ':mask:bottom')]);
 });
 
-test('reports component and signal divergence from the embedded circuit', () => {
+test('reports component and signal divergence with the exact embedded schematic pin', async () => {
   const id = () => crypto.randomUUID();
   const base = api.createBoard('Parity', 1, polygon(0, 0, 20e6, 15e6));
   const partId = id();
@@ -2041,22 +2508,31 @@ test('reports component and signal divergence from the embedded circuit', () => 
   const signalId = id();
   const netId = id();
   const terminal = { unitId: id(), pinId: id() };
+  const sheetId = id();
+  const secondUnitId = id();
   const circuit = {
     schemaVersion: 1, snapshotId: id(), documentId: id(), revision: 1,
     noConnects: [],
     nets: [{ id: netId, names: ['Signal'], terminals: [terminal] }],
     components: [
       { id: partId, reference: 'R1', value: '1k', role: 'electrical',
-        units: [{ id: terminal.unitId, sheetId: id() }],
+        units: [{ id: terminal.unitId, sheetId }],
         signals: [{ id: signalId, name: 'Pin 1', terminals: [terminal] }],
       },
       { id: missingId, reference: 'R2', value: '1k', role: 'electrical',
-        units: [{ id: id(), sheetId: id() }], signals: [],
+        units: [{ id: secondUnitId, sheetId }], signals: [],
       },
     ],
   };
+  const source = {
+    unitId: terminal.unitId, sheetId, documentId: circuit.documentId,
+    documentPath: 'Source.dsn', instancePath: [], itemId: 3,
+  };
   const actual = {
-    ...base, appliedCircuit: circuit,
+    ...base, appliedCircuit: { ...circuit, sources: {
+      [terminal.unitId]: source,
+      [secondUnitId]: { ...source, unitId: secondUnitId, itemId: 4 },
+    } },
     components: [
       { id: id(), logicalId: partId, reference: 'R3', value: '10k', role: 'electrical',
         signals: [{ signalId, netId: id() }],
@@ -2068,6 +2544,10 @@ test('reports component and signal divergence from the embedded circuit', () => 
   assert.deepEqual(codes, [
     'reference-divergence', 'component-divergence', 'net-divergence', 'missing-component',
   ]);
+  const report = await api.checkBoard(actual, kernel);
+  const signal = report.issues.find(({ code }) => code === 'net-divergence');
+  assert.deepEqual(signal.sourcePins, [{ ...source, pinId: terminal.pinId, label: 'R1 · Pin 1' }]);
+
 });
 
 
@@ -2112,17 +2592,44 @@ test('compares standalone and project revisions and carries schematic evidence i
   assert.equal(pending.schematic.state, 'pending');
   assert.notEqual(pending.schematic.digest, current.schematic.digest);
   assert.equal(pending.inputDigest, current.inputDigest);
-  assert.ok(pending.issues.some(({ code }) => code === 'schematic-update-pending'));
+  assert.equal(pending.issues.find(({ code }) => code === 'schematic-update-pending').result, 'stale');
+  assert.equal(pending.coverage.find(({ check }) => check === 'Schematic parity').result, 'stale');
   assert.ok(pending.issues.some(({ code }) => code === 'reference-divergence'));
   const missing = await api.checkBoard(board, kernel, {
     projectCircuit: { state: 'unavailable', detail: 'Source schematic is missing.' },
   });
   assert.equal(missing.schematic.state, 'unavailable');
   assert.equal(missing.coverage.find(({ check }) => check === 'Schematic parity').status, 'limited');
-  assert.ok(missing.issues.some(({ code }) => code === 'schematic-unavailable'));
+  assert.equal(missing.issues.find(({ code }) => code === 'schematic-unavailable').severity, 'unknown');
+  assert.equal(missing.coverage.find(({ check }) => check === 'Schematic parity').result, 'not-run');
   const preview = await api.prepareCamPreview(board, kernel, proposal);
   assert.deepEqual(preview.manifest.schematic, pending.schematic);
   assert.deepEqual(JSON.parse(preview.files['checks.json']).schematic, pending.schematic);
+});
+
+test('snaps to the exact rounded track end and ignores tracks on retired nets', () => {
+  const base = api.createBoard('Track snapping', 2, polygon(-20e6, -15e6, 20e6, 15e6));
+  const netId = crypto.randomUUID();
+  const track = {
+    id: crypto.randomUUID(), netId, layerId: 'top', widthNm: 400_001,
+    start: point(-8e6, -2e6), end: point(8e6, -2e6),
+  };
+  const targets = api.routingSnapTargets({
+    ...base,
+    nets: [{ id: netId, name: 'Signal' }],
+    tracks: [
+      track,
+      { ...track, id: crypto.randomUUID(), netId: crypto.randomUUID(),
+        start: point(-8e6, 4e6), end: point(8e6, 4e6) },
+    ],
+  });
+  const pointer = point(-8_150_000, -2e6);
+  assert.deepEqual(api.snapRoutePoint(targets, pointer, 10_000, 'top'), {
+    position: track.start, layerId: 'top', netId,
+  });
+  assert.equal(api.snapRoutePoint(targets, pointer, 10_000, 'bottom'), undefined);
+  assert.equal(api.snapRoutePoint(targets, point(-8_205_000, -2_100_000), 10_000, 'top'), undefined);
+  assert.equal(api.snapRoutePoint(targets, point(0, 4e6), 10_000, 'top'), undefined);
 });
 
 test('snaps to an existing via annulus and changes layers through its plated barrel', () => {
@@ -2588,6 +3095,274 @@ test('applies saved fabrication profile limits to routing, drills, mask and insp
   assert.equal(report.issues.find(({ code }) => code === 'fabrication-mask-web').measuredNm, 80_000);
   assert.ok(report.issues.some(({ code }) => code === 'fabrication-paste-aperture'));
   assert.ok(report.issues.some(({ code }) => code === 'fabrication-applicability'));
+
+  const smt = history.apply({
+    apiVersion: 1, boardId: board.boardId, expectedRevision: board.revision,
+    operations: [{ type: 'setFabrication', fabrication: { ...board.fabrication, profileId: 'two-layer-smt-v1' } }],
+  });
+  const routed = api.commitManualRoute(smt, { ...route, path: [first, second] }, kernel);
+  const routedHistory = new api.BoardHistory(routed);
+  const classroom = routedHistory.apply({
+    apiVersion: 1, boardId: routed.boardId, expectedRevision: routed.revision,
+    operations: [{ type: 'setFabrication', fabrication: { ...routed.fabrication, profileId: 'classroom-v1' } }],
+  });
+  assert.deepEqual(classroom.tracks, routed.tracks);
+  assert.deepEqual(classroom.mechanicalHoles, routed.mechanicalHoles);
+  for (const [variant, minWidth, widthFails] of [[routed, 180_000, false], [classroom, 250_000, true]]) {
+    const preview = await api.prepareCamPreview(variant, kernel);
+    const { manifest } = await api.prepareBoardReleaseReview(variant, preview, {
+      deterministic: true, reviewedFiles: [],
+    });
+    assert.equal(manifest.fabrication.profileId, variant.fabrication.profileId);
+    assert.ok(manifest.profile.revision && manifest.profile.source && manifest.profile.reviewed);
+    assert.equal(manifest.rules.configured.minWidthNm, 180_000);
+    assert.equal(manifest.rules.effective.minWidthNm, minWidth);
+    assert.equal(manifest.checks.issues.some(({ code }) => code === 'track-width'), widthFails);
+  }
+});
+
+test('checks manufacturing geometry on each side of the fabrication limit', async (t) => {
+  const base = api.createBoard('DRC fabrication boundaries', 2, polygon(0, 0, 40e6, 40e6));
+  const board = {
+    ...base,
+    requiredFeatures: [...base.requiredFeatures, 'fabrication-settings'],
+    fabrication: { profileId: 'two-layer-smt-v1', thicknessNm: 1_600_000 },
+  };
+  const x = 10e6;
+  const y = 10e6;
+  const rectangle = (left, bottom, right, top) => region(polygon(left, bottom, right, top));
+  const land = (id, box, netId = id) => ({ id, kind: 'pad', layerId: 'top', netId, region: box });
+  const opening = (id, widthNm, { left = x, length = 0, plated = false } = {}) => ({
+    id, start: point(left, y), end: point(left + length, y), widthNm, plated,
+  });
+  const aperture = (id, box, kind = 'mask', landId) => ({ id, kind, side: 'top', polygon: box.outer, landId });
+  const graphic = (id, box, strokeNm) => ({
+    id, componentId: id, side: 'top', regions: [box], strokeNm,
+  });
+  const via = (id, drillNm, left = x, annulus = 250_000) => ({
+    id, netId: id, positionNm: point(left, y), diameterNm: drillNm + 2 * annulus, drillNm,
+  });
+  // Each case places the feature on the accepted side, at the limit, then on the rejected side.
+  // An opening may trigger other independent checks, such as annulus on a bare plated slot.
+  const cases = [
+    ['plated drill width', 'fabrication-drill-width', (d) => ({
+      drills: [opening('first', 500_000 + d, { plated: true })],
+    })],
+    ['non-plated drill width', 'fabrication-drill-width', (d) => ({
+      drills: [opening('first', 500_000 + d)],
+    })],
+    ['plated slot width', 'fabrication-drill-width', (d) => ({
+      drills: [opening('first', 500_000 + d, { length: 1e6, plated: true })],
+    })],
+    ['non-plated slot width', 'fabrication-drill-width', (d) => ({
+      drills: [opening('first', 1e6 + d, { length: 2e6 })],
+    })],
+    ['via drill width', 'fabrication-drill-width', (d) => ({
+      vias: [via('first', 250_000 + d)], drills: [opening('first', 250_000 + d, { plated: true })],
+    })],
+    ['finished plated slot length', 'fabrication-slot-length', (d) => ({
+      drills: [opening('first', 600_000, { length: 600_000 + d, plated: true })],
+    })],
+    ['hole spacing', 'fabrication-hole-spacing', (d) => ({
+      drills: [opening('first', 500_000), opening('second', 500_000, { left: x + 950_000 + d })],
+    })],
+    ['via spacing', 'fabrication-hole-spacing', (d) => {
+      const second = x + 450_000 + d;
+      return {
+        vias: [via('first', 250_000), via('second', 250_000, second)],
+        drills: [opening('first', 250_000, { plated: true }),
+          opening('second', 250_000, { left: second, plated: true })],
+      };
+    }],
+    ['drill containment', 'drill-outside', (d) => ({
+      drills: [opening('first', 500_000, { left: 250_000 + d })],
+    })],
+    ['opening overlap', 'drill-overlap', (d) => ({
+      drills: [opening('first', 500_000), opening('second', 500_000, { left: x + 500_000 + d })],
+    }), true],
+    ['drill-to-copper clearance', 'drill-clearance', (d) => ({
+      drills: [opening('bore', 500_000)],
+      features: [land('first', rectangle(x + 450_000 + d, y - 1e6, x + 2e6, y + 1e6))],
+    })],
+    ['finished pad annulus', 'fabrication-pad-annulus', (d) => {
+      const box = rectangle(x - 430_000 - d, y - 1e6, x + 1e6, y + 1e6);
+      return {
+        drills: [opening('bore', 500_000, { plated: true })],
+        features: [land('bore:top', box), { ...land('bore:bottom', box), layerId: 'bottom' }],
+      };
+    }],
+    ['via annulus', 'via-ring', (d) => ({
+      vias: [via('first', 250_000, x, 130_000 + d)],
+    })],
+    ['track minimum width', 'track-width', (d) => ({
+      tracks: [{ id: 'first', netId: 'signal', layerId: 'top',
+        start: point(x, y), end: point(x + 1e6, y), widthNm: 180_000 + d }],
+    })],
+    ['track maximum width', 'track-width-maximum', (d) => ({
+      rules: { ...api.resolveBoardRules(board), maxWidthNm: 800_000 },
+      tracks: [{ id: 'first', netId: 'signal', layerId: 'top',
+        start: point(x, y), end: point(x + 1e6, y), widthNm: 800_000 - d }],
+    })],
+    ['copper spacing', 'copper-clearance', (d) => ({
+      features: [
+        land('first', rectangle(x - 1e6, y - 1e6, x, y + 1e6)),
+        land('second', rectangle(x + 200_000 + d, y - 1e6, x + 1e6, y + 1e6)),
+      ],
+    })],
+    ['copper edge clearance', 'copper-edge', (d) => ({
+      features: [land('first', rectangle(250_000 + d, y - 1e6, 2e6, y + 1e6))],
+    })],
+    ['minimum solder-mask expansion', 'fabrication-mask-expansion', (d) => ({
+      features: [land('first', rectangle(x, y, x + 1e6, y + 1e6))],
+      apertures: [aperture('opening', rectangle(x - d, y, x + 1e6, y + 1e6), 'mask', 'first')],
+    })],
+    ['mask web', 'fabrication-mask-web', (d) => ({
+      apertures: [
+        aperture('first', rectangle(x - 1e6, y, x, y + 1e6)),
+        aperture('second', rectangle(x + 100_000 + d, y, x + 1e6, y + 1e6)),
+      ],
+    })],
+    ['paste aperture size', 'fabrication-paste-aperture', (d) => ({
+      apertures: [aperture('first', rectangle(x, y, x + 250_000 + d, y + 1e6), 'paste')],
+    })],
+    ['paste coverage of copper', 'fabrication-paste-coverage', (d) => ({
+      features: [land('first', rectangle(x, y, x + 1e6, y + 1e6))],
+      apertures: [aperture('opening', rectangle(x, y, x + 500_000 + d, y + 1e6), 'paste', 'first')],
+    })],
+    ['mask or paste at the board edge', 'fabrication-aperture-edge', (d) => ({
+      apertures: [aperture('first', rectangle(d, y, 1e6, y + 1e6))],
+    })],
+    ['legend stroke width', 'silk-stroke', (d) => ({
+      silk: [graphic('first', rectangle(x, y, x + 1e6, y + 150_000 + d), 150_000 + d)],
+    })],
+    ['legend text height', 'silk-text-height', (d) => ({
+      silk: [{ ...graphic('first', rectangle(x, y, x + 1e6, y + 1e6), 150_000), textHeightNm: 1e6 + d }],
+    })],
+    ['legend clearance to mask', 'silk-mask', (d) => ({
+      apertures: [aperture('mask', rectangle(x - 1e6, y, x, y + 1e6))],
+      silk: [graphic('first', rectangle(x + 150_000 + d, y, x + 1e6, y + 1e6), 160_000)],
+    })],
+    ['legend edge clearance', 'silk-edge', (d) => ({
+      silk: [graphic('first', rectangle(200_000 + d, y, 1e6, y + 1e6), 160_000)],
+    })],
+    ['courtyard edge containment', 'courtyard-edge', (d) => ({
+      courtyards: [graphic('first', rectangle(d, y, 1e6, y + 1e6))],
+    })],
+    ['same-side courtyard overlap', 'courtyard-overlap', (d) => ({
+      courtyards: [
+        graphic('first', rectangle(x - 1e6, y, x, y + 1e6)),
+        graphic('second', rectangle(x + d, y, x + 1e6, y + 1e6)),
+      ],
+    })],
+  ];
+  for (const [name, code, build, boundaryFails = false] of cases) {
+    await t.test(name, async () => {
+      for (const delta of [1_000, 0, -1_000]) {
+        const {
+          vias = [], tracks = [], rules, drills = [], apertures = [], features = [], silk = [], courtyards = [],
+        } = build(delta);
+        const report = await api.checkBoard({ ...board, vias, tracks, rules }, kernel, {
+          geometry: { ...api.boardCopperGeometry(board), features, drills, apertures },
+          artwork: { silk, courtyards, issues: [] },
+        });
+        assert.equal(report.issues.some((issue) => issue.code === code),
+          delta < 0 || (delta === 0 && boundaryFails), name + ' at offset ' + delta + ' nm');
+      }
+    });
+  }
+});
+
+test('checks routed cutouts, open notches and board material at their fabrication width', async (t) => {
+  const base = api.createBoard('Routed feature checks', 2, polygon(0, 0, 30e6, 20e6));
+  const fullOutline = edges(base.outline);
+  const limit = 1_000_000;
+  const cases = [
+    ['straight cutout', 'Cutout 1', 'minNonPlatedSlotNm', (width) => ({
+      outline: fullOutline, cutouts: [edges(polygon(5e6, 5e6, 12e6, 5e6 + width))],
+    })],
+    ['round cutout', 'Cutout 1', 'minNonPlatedSlotNm', (width) => ({
+      outline: fullOutline, cutouts: [api.circleContour(point(5e6, 5e6), width / 2)],
+    })],
+    ['open notch', 'Open notches', 'minNonPlatedSlotNm', (width) => ({
+      outline: edges([
+        point(0, 0), point(12e6, 0), point(12e6, 5e6), point(12e6 + width, 5e6),
+        point(12e6 + width, 0), point(30e6, 0), point(30e6, 20e6), point(0, 20e6),
+      ]),
+      cutouts: [],
+    })],
+    ['material by cutout', 'Board material', 'minOutlineWebNm', (width) => ({
+      outline: fullOutline, cutouts: [edges(polygon(5e6, width, 12e6, 6e6))],
+    })],
+    ['material bridge', 'Board material', 'minOutlineWebNm', (width) => ({
+      outline: edges([
+        point(0, 0), point(8e6, 0), point(8e6, 4e6), point(12e6, 4e6),
+        point(12e6, 0), point(20e6, 0), point(20e6, 10e6), point(12e6, 10e6),
+        point(12e6, 4e6 + width), point(8e6, 4e6 + width), point(8e6, 10e6), point(0, 10e6),
+      ]),
+      cutouts: [],
+    })],
+  ];
+  for (const [name, check, rule, profile] of cases) {
+    await t.test(name, async () => {
+      for (const width of [limit + 2_000, limit, limit - 2_000]) {
+        const history = new api.BoardHistory(base);
+        const updated = history.apply({
+          apiVersion: 1, boardId: base.boardId, expectedRevision: base.revision,
+          operations: [
+            { type: 'replaceProfile', profile: profile(width) },
+            { type: 'setFabrication', fabrication: { profileId: 'two-layer-smt-v1', thicknessNm: 1_600_000 } },
+          ],
+        });
+        const board = await api.decodeBoard(await api.encodeBoard(updated));
+        const report = await api.checkBoard(board, kernel);
+        const findings = report.issues.filter(({ code }) => code === 'fabrication-outline-width');
+        if (width >= limit) {
+          assert.deepEqual(findings, []);
+          assert.equal(report.coverage.find(({ check }) => check === 'Routed outline and cutouts').result, 'passed');
+          continue;
+        }
+        assert.equal(findings.length, 1);
+        const [finding] = findings;
+        assert.ok(finding.message.startsWith(check));
+        assert.deepEqual(finding.layers, ['profile']);
+        assert.ok(finding.ruleIds.includes(rule));
+        assert.ok(finding.location);
+        assert.equal(finding.requiredNm, limit);
+        if (name !== 'round cutout') assert.equal(finding.measuredNm, width);
+        const preview = await api.prepareCamPreview(board, kernel);
+        assert.deepEqual(preview.report.issues.filter(({ code }) => code === finding.code), findings);
+        assert.ok(api.manufacturingReadiness(board, preview).some(({ code }) => code === finding.code));
+        const { contours } = api.readGerber(preview.files['profile.gbr']);
+        assert.equal(contours.length, 1 + board.profile.cutouts.length);
+        if (name === 'round cutout') assert.ok(contours[1].every(({ kind }) => kind === 'arc'));
+      }
+    });
+  }
+});
+
+test('reports an unverified outline and keeps the diagnostic profile available', async () => {
+  const base = api.createBoard('Unavailable outline inspection', 2, polygon(0, 0, 30e6, 20e6));
+  const board = {
+    ...base, requiredFeatures: [...base.requiredFeatures, 'fabrication-settings'],
+    fabrication: { profileId: 'two-layer-smt-v1', thicknessNm: 1_600_000 },
+  };
+  const limitedKernel = {
+    ...kernel,
+    offset(regions, distance) {
+      if (distance < -400_000 && distance > -600_000)
+        throw new Error('Outline width search limit');
+      return kernel.offset(regions, distance);
+    },
+  };
+  const preview = await api.prepareCamPreview(board, limitedKernel);
+  assert.equal(api.readGerber(preview.files['profile.gbr']).contours.length, 1);
+  const coverage = preview.report.coverage.find(({ check }) => check === 'Routed outline and cutouts');
+  assert.equal(coverage.status, 'limited');
+  assert.equal(coverage.result, 'not-run');
+  const finding = preview.report.issues.find(({ code }) => code === 'fabrication-outline-unverified');
+  assert.equal(finding.severity, 'unknown');
+  assert.match(finding.message, /Outline width search limit/);
+  assert.ok(api.manufacturingReadiness(board, preview).some(({ code }) => code === finding.code));
 });
 
 test('checks the actual mask and paste against their land after an asymmetric bottom placement', async () => {
@@ -2621,6 +3396,11 @@ test('checks the actual mask and paste against their land after an asymmetric bo
   assert.deepEqual(findings[0].objects, [suffix + ':mask:bottom', suffix + ':bottom']);
   assert.deepEqual(findings[1].objects, [suffix + ':paste:bottom', suffix + ':bottom']);
   assert.match(findings[1].message, /covers 30%.*requires at least 50%/);
+  assert.deepEqual(findings[1].measurement, { unit: 'permille', measured: 300, required: 500 });
+  assert.deepEqual(findings[1].layers, ['copper-bottom', 'paste-bottom']);
+  assert.ok(findings[1].ruleIds.includes('minPasteLandCoveragePermille'));
+  assert.equal(accepted.coverage.find(({ check }) => check === 'Mask and paste').result, 'passed');
+  assert.equal(preview.report.coverage.find(({ check }) => check === 'Mask and paste').result, 'failed');
   assert.deepEqual(api.manufacturingReadiness(invalid, preview).filter(related).map(({ code }) => code),
     findings.map(({ code }) => code));
   assert.equal(preview.artwork.find(({ kind }) => kind === 'mask').side, 'bottom');
@@ -2859,7 +3639,8 @@ test('moves tracks and corners transactionally while protecting physical branch 
     tracks: [a, b, branch, obstacle],
   };
   const drag = (target) => ({ kind: 'drag', trackId: a.id, target });
-  const moved = api.editManualTracks(board, drag(point(12.5e6, 8e6)), kernel);
+  const { board: moved, change } = api.prepareManualTrackEdit(board, drag(point(12.5e6, 8e6)), kernel);
+  assert.deepEqual(change.removedTrackIds, [a.id]);
   assert.equal(moved.revision, board.revision);
   assert.deepEqual(moved.tracks.find(({ id }) => id === a.id),
     { ...a, start: point(5e6, 8e6), end: point(20e6, 8e6) });
@@ -2893,7 +3674,11 @@ test('moves tracks and corners transactionally while protecting physical branch 
   assert.deepEqual(api.trackBranchPoint(a), branch.start);
   assert.deepEqual(api.trackBranchPoint(track(point(0, 0), point(1, 2))), point(0, 0));
   const history = new api.BoardHistory(board);
-  const applied = history.commit(moved);
+  const untouched = history.board.tracks.find(({ id }) => id === obstacle.id);
+  const received = api.applyBoardRoutingEdit(history.board, structuredClone(change));
+  assert.deepEqual(await api.encodeBoard(received), await api.encodeBoard(moved));
+  const applied = history.commit(received);
+  assert.equal(applied.tracks.find(({ id }) => id === obstacle.id), untouched);
   assert.deepEqual((await api.decodeBoard(await api.encodeBoard(applied))).tracks, applied.tracks);
   assert.deepEqual(history.undo(applied.revision).tracks, board.tracks);
 });
@@ -3002,6 +3787,15 @@ test('cleans redundant routing while retaining locked tracks, pad contacts and u
   assert.deepEqual(result.board.vias, [lockedVia]);
   assert.equal(board.tracks.length, 9);
   assert.equal(api.prepareRouteCleanup(result.board, signal, kernel).board, result.board);
+  const change = api.prepareRouteCleanupChange(board, signal, kernel);
+  const candidate = api.applyRouteCleanupChange(board, change);
+  assert.deepEqual(candidate.tracks, result.board.tracks);
+  assert.deepEqual(change.loops, result.loops);
+  assert.equal(candidate.tracks.at(-1), unrelated);
+  assert.equal(candidate.vias, board.vias);
+  assert.equal(api.applyRouteCleanupChange(
+    result.board, api.prepareRouteCleanupChange(result.board, signal, kernel),
+  ), result.board);
   assert.deepEqual(api.planRouteDeletion(board, { kind: 'net', netId: signal }).vias, []);
   assert.ok(!api.planRouteDeletion(board, { kind: 'net', netId: signal }).tracks.some(({ locked }) => locked));
   assert.throws(() => api.editManualTracks(board, { kind: 'drag', trackId: left.id, target: point(3.5e6, 8e6) }, kernel), /Unlock this track/);

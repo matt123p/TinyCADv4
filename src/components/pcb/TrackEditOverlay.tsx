@@ -1,3 +1,5 @@
+import { svgDrawingMatrix } from '../svg/SvgViewport';
+import { svgCircle } from '../svg/nanometreSvg';
 import React, { useRef } from 'react';
 import type { BoardPoint } from '../../pcb/geometry';
 
@@ -36,9 +38,7 @@ export default function TrackEditOverlay({
       ))}
       <circle
         data-track-edit-handle=""
-        cx={handle.x}
-        cy={-handle.y}
-        r={radius}
+        {...svgCircle(handle.x, -handle.y, radius)}
         fill="#f4f5ff"
         stroke="#335c9c"
         strokeWidth={2}
@@ -52,9 +52,7 @@ export default function TrackEditOverlay({
         }}
         onPointerMove={(event) => {
           if (dragging.current !== event.pointerId) return;
-          const matrix = event.currentTarget.ownerSVGElement
-            ?.getScreenCTM()
-            ?.inverse();
+          const matrix = svgDrawingMatrix(event.currentTarget.ownerSVGElement)?.inverse();
           if (!matrix) return;
           const point = new DOMPoint(
             event.clientX,

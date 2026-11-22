@@ -36,10 +36,32 @@ let localRunnerWarningShown = false;
 let lastDrawingSnapshot: dsnDrawing | null = null;
 let localState: NetlistWorkerState | null = null;
 let localNetlistInitialized = false;
+let retainNetlistState = false;
+let releaseTimer: ReturnType<typeof setTimeout> | undefined;
 const pending = new Map<
   number,
   { resolve: (value: any) => void; reject: (error: Error) => void }
 >();
+
+function releaseNetlistWhenIdle() {
+  if (retainNetlistState || pending.size || releaseTimer !== undefined) return;
+  // Let the request consumer finish publishing its netlist before clearing the cache.
+  releaseTimer = setTimeout(() => {
+    releaseTimer = undefined;
+    if (retainNetlistState || pending.size) return;
+    myWorker?.terminate();
+    myWorker = null;
+    netlistInitialized = false;
+    lastDrawingSnapshot = null;
+    localState = null;
+    localNetlistInitialized = false;
+  }, 0);
+}
+
+export function retainSchematicNetlist(retain: boolean) {
+  retainNetlistState = retain;
+  if (!retain) releaseNetlistWhenIdle();
+}
 
 function cloneDrawingSnapshot(drawing: dsnDrawing): dsnDrawing {
   return {
@@ -176,17 +198,18 @@ function getWorker(): Worker {
 
 function runWorker(command: WorkerCommand, payload?: any) {
   if (preferLocalRunner) {
-    return runLocal(command, payload);
+    return Promise.resolve().then(() => runLocal(command, payload)).finally(releaseNetlistWhenIdle);
   }
 
   return new Promise<any>((resolve, reject) => {
+    const id = requestId++;
     try {
-      const id = requestId++;
       const worker = getWorker();
       pending.set(id, { resolve, reject });
       const request: WorkerRequest = { id, command, payload };
       worker.postMessage(request);
     } catch (error) {
+      pending.delete(id);
       reject(
         error instanceof WorkerTransportError
           ? error
@@ -204,7 +227,7 @@ function runWorker(command: WorkerCommand, payload?: any) {
 
     activateLocalRunner(error);
     return runLocal(command, payload);
-  });
+  }).finally(releaseNetlistWhenIdle);
 }
 
 export async function wkrInitNetlist(drawing: dsnDrawing): Promise<NetlistData> {
@@ -233,7 +256,10 @@ export async function wkrGetNetlist(): Promise<NetlistData> {
 }
 
 export function wkrGenerateNetlist(drawing: dsnDrawing): Promise<NetlistData> {
-  if (!netlistInitialized) {
+  const cachedSheets = lastDrawingSnapshot?.sheets;
+  if (!retainNetlistState || !netlistInitialized ||
+      cachedSheets?.length !== drawing.sheets.length ||
+      drawing.sheets.some((sheet, index) => sheet !== cachedSheets[index])) {
     return wkrInitNetlist(drawing);
   }
   return wkrGetNetlist();

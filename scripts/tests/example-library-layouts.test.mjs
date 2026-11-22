@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import * as XML from 'common-xml-features';
 import { layoutRuntime } from '../lib/layout-runtime.mjs';
 import { recordDrawing } from '../lib/layout-proof-page.mjs';
 import { librarySqlite } from '../lib/library-from-sql.mjs';
@@ -57,16 +58,39 @@ const sorted = (nets) =>
     .map((n) => [...n].sort())
     .sort((a, b) => a.join().localeCompare(b.join()));
 
-// Compare rendered primitive properties, ignoring resource IDs, runtime caches,
-// invisible note borders and insignificant XML floating-point round trips.
-function artwork(items) {
+// Legacy TEXT stores an anchor rather than a box. Different renderer versions
+// derive different Markdown padding and font widths when they import it.
+const round = (value) => Math.round(value * 1e6) / 1e6;
+const textAnchor = (text, point, rotation) =>
+  JSON.stringify([text, point.map(round), rotation]);
+
+function legacyTextAnchors(xml) {
+  const doc = new XML.DOMParser().parseFromString(xml, 'text/xml');
+  return new Set(Array.from(doc.getElementsByTagName('TEXT'), (node) => {
+    const point = node.getAttribute('pos')
+      .split(',')
+      .map((coordinate) => Number(coordinate) * 5);
+    const rotation = { 0: 3, 1: 1, 2: 2, 3: 0 }[node.getAttribute('direction')] ?? 0;
+    return textAnchor(node.textContent, point, rotation);
+  }));
+}
+
+function artwork(items, legacyAnchors) {
   return items.map((item) => {
     const invisible = item.NodeName === 'text' && !item.stroked && !item.filled;
+    if (invisible && legacyAnchors) {
+      const point = item.rotation % 2 ? item.point_b : [item.point[0], item.point_b[1]];
+      if (legacyAnchors.has(textAnchor(item.text, point, item.rotation))) {
+        item = { ...item, point, point_b: undefined };
+      }
+    }
     return JSON.parse(
       JSON.stringify(item, (key, value) => {
         if (
           key.startsWith('_') ||
-          ['style_id', 'fill_id', 'font_id', 'textData'].includes(key)
+          ['style_id', 'fill_id', 'font_id', 'textData'].includes(key) ||
+          // Independent legacy loads can assign different IDs to the same source pin.
+          (legacyAnchors && key === 'pinId')
         )
           return undefined;
         if (
@@ -81,9 +105,7 @@ function artwork(items) {
           ].includes(key)
         )
           return undefined;
-        return typeof value === 'number'
-          ? Math.round(value * 1e6) / 1e6
-          : value;
+        return typeof value === 'number' ? round(value) : value;
       }),
     );
   });
@@ -219,17 +241,19 @@ test('all five new library examples retain their source artwork, exact nets and 
         assert.equal(row[0], source.name);
         assert.equal(row[1], source.symbolId);
         assert.equal(sha(row[2]), source.xmlSha256);
+        const xml = new TextDecoder().decode(row[2]);
+        const legacyAnchors = legacyTextAnchors(xml);
         const d = await recordDrawing(api, {
-          xml: new TextDecoder().decode(row[2]),
+          xml,
           device: { id: key, name: source.name },
           width: 0,
           height: 0,
           autoReference: true,
         });
-        sourceArt.set(
-          key,
-          artwork(d.sheets[0].items[0]._symbol.outlines[0].items),
-        );
+        sourceArt.set(key, {
+          items: artwork(d.sheets[0].items[0]._symbol.outlines[0].items, legacyAnchors),
+          legacyAnchors,
+        });
       }
       const symbol = symbols.find(
         (s) =>
@@ -239,9 +263,10 @@ test('all five new library examples retain their source artwork, exact nets and 
       assert.ok(symbol, source.reference);
       assert.equal(symbol.scale_x, 1);
       assert.equal(symbol.scale_y, 1);
+      const art = sourceArt.get(key);
       assert.deepEqual(
-        artwork(symbol._symbol.outlines[0].items),
-        sourceArt.get(key),
+        artwork(symbol._symbol.outlines[0].items, art.legacyAnchors),
+        art.items,
         source.reference +
           ' preserves source geometry, labels, socket mapping and electrical types',
       );
@@ -284,6 +309,14 @@ test('all five new library examples retain their source artwork, exact nets and 
     );
     const reopened = await api.decodeDrawing(
       await api.encodeDrawing(drawing, 'xml'),
+    );
+    const symbolArtwork = (sheet) => sheet.items
+      .filter((item) => item.NodeName === 'symbol')
+      .map(({ _symbol }) => artwork(_symbol.outlines[0].items));
+    assert.deepEqual(
+      symbolArtwork(reopened.sheets[0]),
+      symbolArtwork(sheet),
+      'Save/reopen preserves embedded artwork geometry and pin IDs',
     );
     assert.deepEqual(
       connections(reopened),

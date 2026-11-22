@@ -10,6 +10,7 @@ import {
 } from '@fluentui/react-components';
 import { annotationLengthNm } from '../../pcb/boardAnnotations';
 import type { BoardDimension } from '../../pcb/boardAnnotations';
+import { canonicalBoardDecimal } from './boardNumberInput';
 import type { BoardPoint } from '../../pcb/geometry';
 
 export type AnnotationDraft =
@@ -45,8 +46,8 @@ export default function BoardAnnotationDialog({
 
   function at(x: string, y: string) {
     return {
-      x: base.x + annotationLengthNm(x),
-      y: base.y + annotationLengthNm(y),
+      x: base.x + annotationLengthNm(canonicalBoardDecimal(x)),
+      y: base.y + annotationLengthNm(canonicalBoardDecimal(y)),
     };
   }
 
@@ -61,7 +62,7 @@ export default function BoardAnnotationDialog({
             start: at(x, y),
             end: at(endX, endY),
             kind,
-            offsetNm: annotationLengthNm(offset),
+            offsetNm: annotationLengthNm(canonicalBoardDecimal(offset)),
             unit,
             ...(label.trim() && { label: label.trim() }),
           },

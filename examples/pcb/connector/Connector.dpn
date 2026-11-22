@@ -22,6 +22,7 @@
   </OUTLINE>
   <COMPONENTDEFS>
     <COMPONENTDEF id="e5550000-0000-4000-8000-000000000002" ref="J1" device_id="e5550000-0000-4000-8000-000000000021" role="pcb-only">
+      <PROCUREMENT manufacturer="Same Sky" mpn="PJ-102A"/>
       <SIGNALS>
         <BIND signal_id="8484f83c-baa0-8610-a4df-3bdd7e40b70d" net_id="e5550000-0000-4000-8000-000000000010"/>
         <BIND signal_id="9756c02a-bd87-8803-a56f-38fb5bd79808" net_id="e5550000-0000-4000-8000-000000000011"/>

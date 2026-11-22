@@ -7,15 +7,26 @@ import type { BoardInspection } from './boardInspection';
 import type { BoardAirwire } from './boardAirwires';
 import type { BoardZoneGeometry } from './boardZoneGeometry';
 import type { ManualTrackEdit } from './trackEdits';
-import type { RouteCleanupResult } from './routeCleanup';
-import type { ManualRoute, prepareManualTrackClearance } from './manualBoardRouting';
+import type { RouteCleanupChange, RouteCleanupResult } from './routeCleanup';
+import type { ManualRoute } from './manualBoardRouting';
+import { applyBoardRoutingEdit, applyRouteCleanupChange } from './boardRouting';
+import type { BoardRoutingEdit } from './boardRouting';
+import { unpackRouteClearance } from './routeClearanceTransfer';
+import type { RouteClearanceTransfer } from './routeClearanceTransfer';
+
+type BoardGeometryInput = Omit<BoardDocument, 'modelAssets'> & { modelAssets?: never };
+
+function withoutModels(board: BoardDocument): BoardGeometryInput {
+  const { modelAssets: _modelAssets, ...geometry } = board;
+  return geometry;
+}
 
 type BoardWorkerInput =
   | { kind: 'route'; board: BoardDocument; route: ManualRoute }
-  | { kind: 'route-clearance'; board: BoardDocument; route: Pick<ManualRoute, 'netId' | 'widthNm' | 'replaceTrack'> }
+  | { kind: 'route-clearance'; board: BoardGeometryInput; route: Pick<ManualRoute, 'netId' | 'widthNm' | 'replaceTrack'> }
   | { kind: 'track-edit'; board: BoardDocument; edit: ManualTrackEdit }
   | { kind: 'cleanup'; board: BoardDocument; netId: string }
-  | { kind: 'geometry'; board: BoardDocument }
+  | { kind: 'geometry'; board: BoardGeometryInput }
   | { kind: 'inspect' | 'kicad'; board: BoardDocument }
   | {
       kind: 'check' | 'cam';
@@ -23,19 +34,19 @@ type BoardWorkerInput =
       projectCircuit?: ProjectCircuitInput;
     };
 
-type BoardWorkerRequest = BoardWorkerInput & { id: number };
+type BoardWorkerRequest = BoardWorkerInput & { id: number; measureMemory?: boolean };
 
 type BoardWorkerResponse =
-  | { id: number; kind: 'route' | 'track-edit'; board: BoardDocument }
-  | { id: number; kind: 'route-clearance'; geometry: ReturnType<typeof prepareManualTrackClearance> }
-  | { id: number; kind: 'cleanup'; result: RouteCleanupResult }
+  | { id: number; kind: 'routing-edit'; change: BoardRoutingEdit }
+  | { id: number; kind: 'route-clearance'; geometry: RouteClearanceTransfer }
+  | { id: number; kind: 'cleanup'; change: RouteCleanupChange }
   | {
       id: number;
       kind: 'geometry';
       airwires: BoardAirwire[];
       zones: BoardZoneGeometry;
     }
-  | { id: number; kind: 'check'; report: BoardCheckReport }
+  | { id: number; kind: 'check'; report: BoardCheckReport; wasmMemoryBytes?: number }
   | { id: number; kind: 'cam'; preview: BoardCamPreview }
   | { id: number; kind: 'inspect'; inspection: BoardInspection }
   | {
@@ -99,32 +110,34 @@ export function createBoardWorker() {
   return {
     get closed() { return closed; },
     async routeClearance(board: BoardDocument, route: Pick<ManualRoute, 'netId' | 'widthNm' | 'replaceTrack'>) {
-      const result = await request({ kind: 'route-clearance', board, route });
+      const result = await request({ kind: 'route-clearance', board: withoutModels(board), route });
       if (result.kind !== 'route-clearance')
         throw new Error('Unexpected response to PCB route clearance.');
-      return result.geometry;
+      return unpackRouteClearance(result.geometry);
     },
     async route(
       board: BoardDocument,
       route: ManualRoute,
     ): Promise<BoardDocument> {
       const result = await request({ kind: 'route', board, route });
-      if (result.kind !== 'route')
+      if (result.kind !== 'routing-edit' || result.change.kind !== 'route')
         throw new Error('Unexpected response to PCB route.');
-      return result.board;
+      return applyBoardRoutingEdit(board, result.change);
     },
     async editTrack(board: BoardDocument, edit: ManualTrackEdit): Promise<BoardDocument> {
       const result = await request({ kind: 'track-edit', board, edit });
-      if (result.kind !== 'track-edit') throw new Error('Unexpected response to PCB track edit.');
-      return result.board;
+      if (result.kind !== 'routing-edit' || result.change.kind !== 'track-edit')
+        throw new Error('Unexpected response to PCB track edit.');
+      return applyBoardRoutingEdit(board, result.change);
     },
-    async cleanup(board: BoardDocument, netId: string) {
+    async cleanup(board: BoardDocument, netId: string): Promise<RouteCleanupResult> {
       const result = await request({ kind: 'cleanup', board, netId });
       if (result.kind !== 'cleanup') throw new Error('Unexpected response to PCB route cleanup.');
-      return result.result;
+      const { merged, duplicates, loops } = result.change;
+      return { board: applyRouteCleanupChange(board, result.change), merged, duplicates, loops };
     },
     async geometry(board: BoardDocument) {
-      const result = await request({ kind: 'geometry', board });
+      const result = await request({ kind: 'geometry', board: withoutModels(board) });
       if (result.kind !== 'geometry')
         throw new Error('Unexpected response to PCB geometry request.');
       return result;

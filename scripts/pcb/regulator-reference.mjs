@@ -67,6 +67,7 @@ async function makePart(spec) {
   };
   const component = {
     id: id(spec.key + 12), reference: spec.reference, value: spec.model, deviceId: device.id,
+    procurement: { manufacturer: spec.manufacturer, mpn: spec.model },
     role: 'pcb-only', signals,
   };
   return {
@@ -81,6 +82,7 @@ async function makePart(spec) {
 
 const a = await makePart({
   key: 100, reference: 'U1', model: 'AP2112K-3.3TRG1', package: 'AP2112K · SOT25',
+  manufacturer: 'Diodes Incorporated',
   datasheet: datasheets.ap2112, body: [1.6, 3], courtyard: [1.9, 1.8], position: pt(10, 12),
   source: 'Diodes Incorporated DS39724 Rev. 2-2, SOT25 suggested pad layout.',
   review: 'SOT25 top view and pin table. Land sizes and 0.95 mm pitch follow page 14.',
@@ -94,6 +96,7 @@ const a = await makePart({
 });
 const b = await makePart({
   key: 120, reference: 'U2', model: 'TPS7A7002DDA', package: 'TPS7A7002 · DDA0008B',
+  manufacturer: 'Texas Instruments',
   datasheet: datasheets.tps7a7002, body: [3.9, 4.9], courtyard: [3.8, 2.75], position: pt(28, 12),
   source: 'TI SBVS209D and DDA0008B package drawing 4214849/B, example PCB and stencil.',
   review: 'DDA pin table and top view. Pad 9 PowerPAD has its own terminal and connects to ground.',

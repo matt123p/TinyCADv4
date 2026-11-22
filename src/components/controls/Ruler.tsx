@@ -18,6 +18,25 @@ const useStyles = makeStyles({
         height: '100%',
         borderLeft: '1px solid #999',
     },
+    pointer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        backgroundColor: 'red',
+        pointerEvents: 'none',
+        '@media (forced-colors: active)': {
+            backgroundColor: 'Highlight',
+            forcedColorAdjust: 'none',
+        },
+    },
+    horizontalPointer: {
+        height: '20px',
+        width: '1px',
+    },
+    verticalPointer: {
+        width: '20px',
+        height: '1px',
+    },
 });
 
 interface RulerProps {
@@ -43,6 +62,14 @@ export const Ruler: React.FC<RulerProps> = (props) => {
     const pixelsPerUnit = scaleBase * (props.zoom / 100);
     const align = props.tickAlignment || 'end';
     const direction = props.direction ?? 1;
+    const horizontal = props.orientation === 'horizontal';
+    const surfaceWidth = horizontal ? Math.floor(Math.max(actualSize.width, props.containerSize, 1)) : 20;
+    const surfaceHeight = horizontal ? 20 : Math.floor(Math.max(actualSize.height, props.containerSize, 1));
+    const startPos = props.zeroOffset - props.scrollOffset;
+    const marker = props.mousePosition === null
+        ? undefined
+        : Math.floor(props.mousePosition * pixelsPerUnit * direction + startPos);
+    const markerVisible = marker !== undefined && marker >= 0 && marker < (horizontal ? surfaceWidth : surfaceHeight);
     
     // 5 px/mm -> every 1mm is 5px.
     // Major ticks every 10mm (50px).
@@ -82,20 +109,9 @@ export const Ruler: React.FC<RulerProps> = (props) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         
-        // Get actual container dimensions from state (set by ResizeObserver)
-        const containerWidth = props.orientation === 'horizontal' 
-            ? Math.max(actualSize.width, props.containerSize, 1) 
-            : 20;
-        const containerHeight = props.orientation === 'horizontal' 
-            ? 20 
-            : Math.max(actualSize.height, props.containerSize, 1);
-        
-        // Don't draw if size is too small
-        if (containerWidth < 10 && containerHeight < 10) return;
-        
-        // Set the canvas drawing surface size
-        canvas.width = containerWidth;
-        canvas.height = containerHeight;
+        // Changing either dimension resets the drawing surface.
+        if (canvas.width !== surfaceWidth) canvas.width = surfaceWidth;
+        if (canvas.height !== surfaceHeight) canvas.height = surfaceHeight;
 
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
@@ -122,7 +138,6 @@ export const Ruler: React.FC<RulerProps> = (props) => {
         // P_drawing_pixels = P_drawing_units * pixelsPerUnit
         
         // So P_screen = P_drawing_units * pixelsPerUnit + startPos
-        const startPos = props.zeroOffset - props.scrollOffset;
 
         const firstUnit = -startPos / pixelsPerUnit * direction;
         const lastUnit = (props.containerSize - startPos) / pixelsPerUnit * direction;
@@ -133,6 +148,8 @@ export const Ruler: React.FC<RulerProps> = (props) => {
         const startUnit = Math.floor(Math.min(firstUnit, lastUnit) / step) * step;
         const endUnit = Math.ceil(Math.max(firstUnit, lastUnit) / step) * step;
 
+        // All ticks use the same pen, so paint them in one canvas operation.
+        ctx.beginPath();
         for (let u = startUnit; u <= endUnit; u += step) {
             const pos = Math.floor(u * pixelsPerUnit * direction + startPos) + 0.5;
 
@@ -152,10 +169,8 @@ export const Ruler: React.FC<RulerProps> = (props) => {
                 const yBase = align === 'end' ? height - 1 : 0;
                 const dir = align === 'end' ? -1 : 1;
 
-                ctx.beginPath();
                 ctx.moveTo(pos, yBase);
                 ctx.lineTo(pos, yBase + tickLength * dir);
-                ctx.stroke();
                 
                 if (showLabel) {
                    // Place text at top if align end (ticks bottom), else bottom
@@ -165,10 +180,8 @@ export const Ruler: React.FC<RulerProps> = (props) => {
                 const xBase = align === 'end' ? width - 1 : 0;
                 const dir = align === 'end' ? -1 : 1;
 
-                ctx.beginPath();
                 ctx.moveTo(xBase, pos);
                 ctx.lineTo(xBase + tickLength * dir, pos);
-                ctx.stroke();
 
                 if (showLabel) {
                     // Vertical text
@@ -186,25 +199,9 @@ export const Ruler: React.FC<RulerProps> = (props) => {
                 }
             }
         }
+        ctx.stroke();
 
-        // Draw Mouse Position Indicator
-        if (props.mousePosition !== null) {
-            const screenPos = Math.floor(props.mousePosition * pixelsPerUnit * direction + startPos) + 0.5;
-            if (screenPos >= 0 && screenPos <= (props.orientation === 'horizontal' ? width : height)) {
-                ctx.strokeStyle = 'red';
-                ctx.beginPath();
-                if (props.orientation === 'horizontal') {
-                    ctx.moveTo(screenPos, 0);
-                    ctx.lineTo(screenPos, height);
-                } else {
-                    ctx.moveTo(0, screenPos);
-                    ctx.lineTo(width, screenPos);
-                }
-                ctx.stroke();
-            }
-        }
-
-    }, [props.zoom, props.scrollOffset, props.orientation, props.containerSize, props.scaleOrign, props.zeroOffset, props.mousePosition, props.tickAlignment, pixelsPerUnit, align, direction, actualSize]);
+    }, [props.orientation, props.containerSize, surfaceWidth, surfaceHeight, startPos, pixelsPerUnit, align, direction]);
 
 
     return (
@@ -212,9 +209,15 @@ export const Ruler: React.FC<RulerProps> = (props) => {
             ref={containerRef}
             className={`${styles.rulerContainer} ${props.orientation === 'horizontal' ? styles.horizontal : styles.vertical}`}
         >
-            <canvas 
-                ref={canvasRef} 
-            />
+            <canvas ref={canvasRef} />
+            {markerVisible && (
+                <span
+                    aria-hidden="true"
+                    data-ruler-pointer=""
+                    className={`${styles.pointer} ${horizontal ? styles.horizontalPointer : styles.verticalPointer}`}
+                    style={{ transform: horizontal ? `translateX(${marker}px)` : `translateY(${marker}px)` }}
+                />
+            )}
         </div>
     );
 };

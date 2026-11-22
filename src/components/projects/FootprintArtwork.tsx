@@ -3,6 +3,25 @@ import type { FootprintGraphic } from '../../pcb/footprintDetails';
 import { footprintArc } from '../../pcb/footprintArc';
 import { footprintTextStrokes } from '../../pcb/footprintText';
 import type { BoardPoint } from '../../pcb/geometry';
+import { samePoint } from '../../pcb/geometry';
+import type { PadShape } from '../../pcb/padstack';
+import { svgCircle, svgLength, svgLengthTransform } from '../svg/nanometreSvg';
+
+export function PadShapeDrawing({ shape, colour, attributes }: {
+  shape: PadShape;
+  colour: string;
+  attributes?: Record<`data-${string}`, string | boolean | undefined>;
+}) {
+  if (shape.kind === 'polygon')
+    return <polygon {...attributes} points={shape.vertices.map(({ x, y }) => `${x},${-y}`).join(' ')}
+      fill={colour} fillRule="evenodd" />;
+  const { start, end, widthNm } = shape;
+  if (samePoint(start, end))
+    return <circle {...attributes} {...svgCircle(start.x, -start.y, widthNm / 2)} fill={colour} />;
+  return <line {...attributes} transform={svgLengthTransform}
+    x1={svgLength(start.x)} y1={svgLength(-start.y)} x2={svgLength(end.x)} y2={svgLength(-end.y)}
+    stroke={colour} strokeWidth={svgLength(widthNm)} strokeLinecap="round" />;
+}
 
 export function artworkBounds(item: FootprintGraphic): readonly BoardPoint[] {
   switch (item.kind) {
@@ -69,30 +88,33 @@ export function FootprintArtwork({ item, highlighted }: { item: FootprintGraphic
     case 'line':
       return (
         <line
-          x1={item.start.x}
-          y1={-item.start.y}
-          x2={item.end.x}
-          y2={-item.end.y}
+          transform={svgLengthTransform}
+          x1={svgLength(item.start.x)}
+          y1={svgLength(-item.start.y)}
+          x2={svgLength(item.end.x)}
+          y2={svgLength(-item.end.y)}
           {...style}
+          strokeWidth={svgLength(style.strokeWidth)}
         />
       );
     case 'rect':
       return (
         <rect
-          x={Math.min(item.start.x, item.end.x)}
-          y={-Math.max(item.start.y, item.end.y)}
-          width={Math.abs(item.start.x - item.end.x)}
-          height={Math.abs(item.start.y - item.end.y)}
+          transform={svgLengthTransform}
+          x={svgLength(Math.min(item.start.x, item.end.x))}
+          y={svgLength(-Math.max(item.start.y, item.end.y))}
+          width={svgLength(Math.abs(item.start.x - item.end.x))}
+          height={svgLength(Math.abs(item.start.y - item.end.y))}
           {...style}
+          strokeWidth={svgLength(style.strokeWidth)}
         />
       );
     case 'circle':
       return (
         <circle
-          cx={item.center.x}
-          cy={-item.center.y}
-          r={Math.hypot(item.end.x - item.center.x, item.end.y - item.center.y)}
+          {...svgCircle(item.center.x, -item.center.y, Math.hypot(item.end.x - item.center.x, item.end.y - item.center.y))}
           {...style}
+          strokeWidth={svgLength(style.strokeWidth)}
         />
       );
     case 'polygon':

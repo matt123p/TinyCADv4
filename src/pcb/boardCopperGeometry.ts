@@ -7,22 +7,27 @@ import { placeEmbeddedDevice } from './padstack';
 
 export function boardCopperGeometry(
   board: BoardDocument,
-  availableNets: ReadonlySet<string> = new Set(board.nets?.map(({ id }) => id)),
+  {
+    availableNets = new Set(board.nets?.map(({ id }) => id)),
+    includeApertures = true,
+  }: { availableNets?: ReadonlySet<string>; includeApertures?: boolean } = {},
 ) {
   const routing = routeGeometry(board);
   const { features, drills, owners } = routing;
   const apertures: ReturnType<typeof placeEmbeddedDevice>['apertures'] = [];
-  const maskExpansionNm = fabricationProfileFor(board)?.limits.minMaskExpansionNm ?? 0;
-  for (const via of board.vias ?? []) {
-    for (const { id: side } of board.copperLayers) {
-      if (viaIsTented(via, side)) continue;
-      apertures.push({
-        id: `${via.id}:mask:${side}`,
-        kind: 'mask',
-        side,
-        landId: `${via.id}:${side}`,
-        polygon: capsulePolygon(via.positionNm, via.positionNm, via.diameterNm + 2 * maskExpansionNm),
-      });
+  if (includeApertures) {
+    const maskExpansionNm = fabricationProfileFor(board)?.limits.minMaskExpansionNm ?? 0;
+    for (const via of board.vias ?? []) {
+      for (const { id: side } of board.copperLayers) {
+        if (viaIsTented(via, side)) continue;
+        apertures.push({
+          id: `${via.id}:mask:${side}`,
+          kind: 'mask',
+          side,
+          landId: `${via.id}:${side}`,
+          polygon: capsulePolygon(via.positionNm, via.positionNm, via.diameterNm + 2 * maskExpansionNm),
+        });
+      }
     }
   }
   const devices = new Map(
@@ -44,6 +49,7 @@ export function boardCopperGeometry(
         terminalId: `${footprint.componentId}:${signalId}`,
         netId: signals.get(signalId),
       })),
+      { includeApertures },
     );
     features.push(...placed.copper);
     drills.push(...placed.drills);

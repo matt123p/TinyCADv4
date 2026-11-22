@@ -8,7 +8,8 @@ import type {
   FootprintGraphic,
   FootprintGraphicLayer,
 } from '../../pcb/footprintDetails';
-import { lengthInNanometres, orientation, samePoint } from '../../pcb/geometry';
+import { orientation, samePoint } from '../../pcb/geometry';
+import { boardCoordinateFields, boardInputLength } from '../pcb/boardNumberInput';
 
 type Kind = FootprintGraphic['kind'];
 const initial = {
@@ -24,7 +25,7 @@ const initial = {
   visible: true,
   align: [] as readonly string[],
 };
-const nm = (text: string) => lengthInNanometres(text, 'mm');
+const nm = (text: string) => boardInputLength(text, 'mm');
 const mm = (value: number) => String(value / 1_000_000);
 const kindLabels: Record<Kind, string> = {
   line: 'Line',
@@ -89,9 +90,7 @@ export default function FootprintArtworkEditor({
       .trim()
       .split(/\n+/)
       .map((line) => {
-        const [x, y, extra] = line.split(',');
-        if (y === undefined || extra !== undefined)
-          throw new Error('Enter one x,y pair per line.');
+        const [x, y] = boardCoordinateFields(line, 2);
         return { x: nm(x), y: nm(y) };
       });
     const [start, second, end] = points;
@@ -232,7 +231,7 @@ export default function FootprintArtworkEditor({
           </p>
           <p>
             <label>
-              Graphic points (one x,y pair per line in mm)
+              Graphic points (one X Y pair per line in mm)
               <br />
               <textarea
                 value={draft.points}

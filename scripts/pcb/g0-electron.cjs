@@ -8,7 +8,7 @@ app.commandLine.appendSwitch(
 );
 app.whenReady().then(async () => {
   const window = new BrowserWindow({
-    show: false,
+    show: process.env.TINYCAD_PCB_G0_REFERENCE === '1',
     webPreferences: { contextIsolation: true, sandbox: true },
   });
   await window.loadURL(process.env.TINYCAD_PCB_G0_URL);

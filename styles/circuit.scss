@@ -767,6 +767,59 @@
   outline-offset: -2px;
 }
 
+@media (forced-colors: active) {
+  .pcb-svg {
+    background: Canvas;
+
+    &:focus-visible {
+      outline-color: Highlight;
+    }
+
+    .svg-viewport-drawing svg {
+      :where([fill]:not([fill='none'])) {
+        fill: CanvasText;
+      }
+
+      :where([stroke]:not([stroke='none'])) {
+        stroke: CanvasText;
+      }
+
+      [data-board-profile],
+      [data-board-opening]:is(circle),
+      [data-route-blocked-marker] circle {
+        fill: Canvas;
+      }
+
+      path[data-board-opening],
+      [data-dimension] text,
+      [data-placement-preview] text {
+        stroke: Canvas;
+      }
+
+      [data-component-selected] [data-board-pad],
+      [data-placement-group] [data-board-pad],
+      [data-net-highlighted]:not([fill='none']) {
+        fill: Highlight;
+      }
+
+      [data-component-selected] [data-board-pad][stroke],
+      [data-placement-group] [data-board-pad][stroke],
+      [data-board-pad][stroke][data-net-highlighted],
+      [data-track][data-net-highlighted],
+      [data-picked-silk] :where([stroke]:not([stroke='none'])),
+      [data-route-preview='clear'],
+      [data-route-snap],
+      [data-check-marker] {
+        stroke: Highlight;
+      }
+
+      [data-route-preview] {
+        opacity: 1;
+      }
+    }
+  }
+}
+
 .svg-viewport {
   display: grid;
   grid-template: minmax(0, 1fr) / minmax(0, 1fr);

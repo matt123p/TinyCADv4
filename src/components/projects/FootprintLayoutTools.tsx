@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@fluentui/react-components';
 import { footprintPadArray } from '../../pcb/footprintLibrary';
-import { lengthInNanometres } from '../../pcb/geometry';
+import { boardInputLength } from '../pcb/boardNumberInput';
 import type { EmbeddedFootprint } from '../../pcb/boardAssets';
 
 const mm = (nm: number) => (nm / 1_000_000).toFixed(4).replace(/\.?0+$/, '');
@@ -64,8 +64,8 @@ export default function FootprintLayoutTools({
           onClick={(): void => {
             void run(() => {
               const array = footprintPadArray(seed, Number(copies), {
-                x: lengthInNanometres(x, 'mm'),
-                y: lengthInNanometres(y, 'mm'),
+                x: boardInputLength(x, 'mm'),
+                y: boardInputLength(y, 'mm'),
               });
               if (array.length + pads.length > 10000)
                 throw new Error('Too many footprint pads.');

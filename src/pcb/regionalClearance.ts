@@ -46,11 +46,15 @@ export function regionalClearance(board: BoardDocument, kernel: PolygonKernel) {
     });
   }
 
-  function violations(first: CopperFeature, firstBox: Box, second: CopperFeature, secondBox: Box, baseClearanceNm: number) {
-    if (baseClearanceNm >= maximumClearanceNm || !near(firstBox, secondBox, maximumClearanceNm)) return [];
+  function measurements(
+    first: CopperFeature, firstBox: Box, second: CopperFeature, secondBox: Box, minimumViolationBase?: number,
+  ) {
+    if (minimumViolationBase !== undefined &&
+      (minimumViolationBase >= maximumClearanceNm || !near(firstBox, secondBox, maximumClearanceNm))) return [];
     return areas.flatMap((area) => {
       const requiredNm = area.rule.clearanceNm;
-      if (requiredNm <= baseClearanceNm || !near(firstBox, secondBox, requiredNm)) return [];
+      if (minimumViolationBase !== undefined &&
+        (requiredNm <= minimumViolationBase || !near(firstBox, secondBox, requiredNm))) return [];
       const candidates = [
         ...clip(area, first, firstBox).map((part) => ({ part, other: second.region })),
         ...clip(area, second, secondBox).map((part) => ({ part, other: first.region })),
@@ -58,12 +62,19 @@ export function regionalClearance(board: BoardDocument, kernel: PolygonKernel) {
       let closest: { measuredNm: number; location: PolygonRegion['outer'][number] };
       for (const { part, other } of candidates) {
         const measuredNm = regionsTouch(part, other) ? 0 : boundaryDistance(part, other);
-        if (measuredNm < requiredNm && (!closest || measuredNm < closest.measuredNm))
+        if (!closest || measuredNm < closest.measuredNm)
           closest = { measuredNm, location: part.outer[0] };
       }
-      return closest ? [{ rule: area.rule, requiredNm, ...closest }] : [];
+      if (!closest || (minimumViolationBase !== undefined && closest.measuredNm >= requiredNm)) return [];
+      return [{ rule: area.rule, requiredNm, ...closest }];
     });
   }
 
-  return { obstaclesFor, violations, hasRules: areas.length > 0 };
+  return {
+    obstaclesFor,
+    measurements,
+    violations: (first: CopperFeature, firstBox: Box, second: CopperFeature, secondBox: Box, baseClearanceNm: number) =>
+      measurements(first, firstBox, second, secondBox, baseClearanceNm),
+    hasRules: areas.length > 0,
+  };
 }

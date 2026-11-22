@@ -32,4 +32,20 @@ python3 scripts/pcb/check-cam-preview.py \
   build/qualification/regulator/clipped.zip
 ```
 
-The browser acceptance test saves `regulator-baseline.zip` and `regulator-clipped.zip` from the offline editor. The same checker accepts those two downloads. [Browser acceptance test](../../../scripts/tests/layout-browser/project-hierarchy.spec.mjs)
+The browser acceptance test saves the same two previews from the offline
+editor. It reviews every CAM layer and exports
+`regulator-manufacturing-release.zip` from the baseline. The clipped
+revision still fails the release rules. The coupon uses the PCB-only
+release path and records its unlinked schematic state.
+
+After checking the two previews with `--regulator-baseline`, verify the
+release against that checked baseline.
+
+```sh
+python3 scripts/pcb/check-cam-preview.py --regulator-release regulator-baseline.zip regulator-manufacturing-release.zip
+```
+
+The checker verifies the release manifest, all payload hashes, the native
+board identity and revision, and byte-identical fabrication files.
+Physical fabrication and unpowered bench qualification are separate
+steps. [Browser acceptance test](../../../scripts/tests/layout-browser/project-hierarchy.spec.mjs)

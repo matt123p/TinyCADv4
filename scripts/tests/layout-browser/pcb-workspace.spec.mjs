@@ -5,6 +5,8 @@ import { layoutRuntime } from '../../lib/layout-runtime.mjs';
 import { serveLayoutApp } from './serve-app.mjs';
 import { thermalFixture } from '../pcb-thermal-fixture.mjs';
 import { placementFixture } from '../pcb-placement-fixture.mjs';
+import { zoneConnectionFixture } from '../pcb-zone-connection-fixture.mjs';
+import { classroomBoard } from '../../pcb/classroom-fixture.mjs';
 
 let app;
 test.beforeAll(async () => {
@@ -13,12 +15,35 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => app?.close());
 
+async function expectTrackEndpoints(track, coordinates) {
+  await expect.poll(() => track.evaluate((line) => {
+    const drawing = line.closest('[data-svg-drawing]');
+    const matrix = drawing.getScreenCTM().inverse().multiply(line.getScreenCTM());
+    return [[line.x1, line.y1], [line.x2, line.y2]].flatMap(([x, y]) => {
+      const point = new DOMPoint(x.baseVal.value, y.baseVal.value).matrixTransform(matrix);
+      return [Math.round(point.x), Math.round(point.y)];
+    });
+  })).toEqual(coordinates);
+}
+
+const drawingCentre = (locator) => locator.evaluate((shape) => {
+  const box = shape.getBBox();
+  const drawing = shape.closest('[data-svg-drawing]') ?? shape.ownerSVGElement;
+  const matrix = drawing.getScreenCTM().inverse().multiply(shape.getScreenCTM());
+  const point = new DOMPoint(box.x + box.width / 2, box.y + box.height / 2).matrixTransform(matrix);
+  return [Math.round(point.x), Math.round(point.y)];
+});
+
 async function holdPcbWorkerReplies(page) {
   await page.addInitScript(() => {
     const pending = [];
+    const requests = [];
+    const overlaps = [];
     window.pcbReplies = {
       hold: undefined,
       count: () => pending.length,
+      requests: (kind) => requests.filter((item) => item.kind === kind).length,
+      overlaps: () => overlaps,
       cancelled: () => pending.every(({ worker }) => worker.terminated),
       release(error, repeat = false) {
         const { worker, data } = pending.shift();
@@ -30,6 +55,18 @@ async function holdPcbWorkerReplies(page) {
       },
     };
     window.Worker = class extends Worker {
+      postMessage(data, ...options) {
+        const { kind } = data;
+        const analysis = ['check', 'cam'].includes(kind);
+        if (analysis || kind === 'geometry') {
+          const conflicting = requests.find((item) => !item.worker.terminated &&
+            (analysis ? item.kind === 'geometry' : ['check', 'cam'].includes(item.kind)));
+          if (conflicting) overlaps.push([conflicting.kind, kind]);
+          requests.push({ kind, worker: this });
+        }
+        return super.postMessage(data, ...options);
+      }
+
       terminate() {
         this.terminated = true;
         super.terminate();
@@ -38,7 +75,9 @@ async function holdPcbWorkerReplies(page) {
       constructor(...args) {
         super(...args);
         this.addEventListener('message', (event) => {
-          if (!window.pcbReplies.hold || event.data.kind !== window.pcbReplies.hold) return;
+          const { kind, change } = event.data;
+          const replyKind = kind === 'routing-edit' ? change.kind : kind;
+          if (!window.pcbReplies.hold || replyKind !== window.pcbReplies.hold) return;
           event.stopImmediatePropagation();
           pending.push({ worker: this, data: event.data });
           window.pcbReplies.hold = undefined;
@@ -47,6 +86,51 @@ async function holdPcbWorkerReplies(page) {
     };
   });
 }
+
+test('releases the idle schematic worker in PCB Design and rebuilds on return', async ({ page }) => {
+  test.setTimeout(45_000);
+  const workers = [];
+  page.on('worker', (worker) => {
+    const record = { worker, closed: false };
+    workers.push(record);
+    worker.on('close', () => { record.closed = true; });
+  });
+  const loadSchematic = (label) => page.evaluate((name) => {
+    window.layoutTest.reopenXml('<TinyCADSheets><TinyCAD><NAME>Main</NAME>' +
+      '<WIRE a="10,20" b="40,20" />' +
+      '<LABEL pos="10,20" font="1" color="208000" direction="3" style="0">' +
+      name + '</LABEL></TinyCAD></TinyCADSheets>');
+  }, label);
+  const labels = (compile = false) => page.evaluate((fresh) => window.layoutTest.netlistLabels(fresh), compile);
+  const schematicWorkers = async () => {
+    const names = await Promise.all(workers.map(async (record) => {
+      if (!record.name && !record.closed)
+        record.name = await record.worker.evaluate(() => self.name).catch(() => '');
+      return record;
+    }));
+    return names.filter(({ name }) => name === 'tinycad-schematic-netlist');
+  };
+
+  await page.goto(app.baseURL);
+  await loadSchematic('ACTIVE_BEFORE_PCB');
+  await expect.poll(async () => (await schematicWorkers()).filter(({ closed }) => !closed).length).toBe(1);
+  await expect.poll(() => labels()).toContain('ACTIVE_BEFORE_PCB');
+  const [first] = await schematicWorkers();
+  await page.getByRole('button', { name: 'PCB Design', exact: true }).click();
+  const pcb = page.getByRole('region', { name: 'PCB layout' });
+  await expect(pcb).toBeVisible();
+  await expect.poll(() => first.closed).toBe(true);
+
+  await loadSchematic('COMPILED_WHILE_IN_PCB');
+  expect(await labels(true)).toEqual(['COMPILED_WHILE_IN_PCB']);
+  await expect.poll(() => page.workers().length).toBe(0);
+  await expect(pcb).toBeVisible();
+
+  await page.getByRole('button', { name: 'Circuit Design', exact: true }).click();
+  await expect(pcb).toBeHidden();
+  await expect.poll(async () => (await schematicWorkers()).filter(({ closed }) => !closed).length).toBe(1);
+  await expect.poll(() => labels()).toEqual(['COMPILED_WHILE_IN_PCB']);
+});
 
 test('opens and edits a standalone PCB in the shared shell', async ({
   page,
@@ -108,22 +192,50 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   const rulers = board.locator('.svg-viewport-with-rulers canvas');
   const toggleRulers = board.getByRole('button', { name: 'Toggle rulers' });
   const initialSize = page.viewportSize();
-  async function expectRulerIndicators() {
+  async function expectRulerIndicators(fraction = 0.4) {
     const bounds = await canvas.boundingBox();
-    const x = Math.round(bounds.width * 0.4);
-    const y = Math.round(bounds.height * 0.4);
+    const x = Math.round(bounds.width * fraction);
+    const y = Math.round(bounds.height * fraction);
     await canvas.hover({ position: { x, y } });
     await expect.poll(() => rulers.evaluateAll((rails, [x, y]) => {
       return rails.map((rail, i) => {
-        const at = i === 0 ? x : y;
-        const pixels = rail.getContext('2d').getImageData(i === 0 ? at - 2 : 0, i === 0 ? 0 : at - 2,
-          i === 0 ? 5 : 20, i === 0 ? 20 : 5).data;
-        return pixels.some((red, channel) => channel % 4 === 0 && red > 240 && pixels[channel + 1] < 30);
+        const marker = rail.parentElement.querySelector('[data-ruler-pointer]');
+        if (!marker || getComputedStyle(marker).backgroundColor !== 'rgb(255, 0, 0)') return false;
+        const edge = rail.getBoundingClientRect();
+        const line = marker.getBoundingClientRect();
+        return Math.abs(i === 0 ? line.left - edge.left - x : line.top - edge.top - y) <= 2;
       });
     }, [x, y])).toEqual([true, true]);
   }
   await expect(rulers).toHaveCount(2);
   await expectRulerIndicators();
+  await rulers.evaluateAll((rails) => {
+    window.rulerSizeChanges = 0;
+    window.rulerRepaints = 0;
+    window.rulerStrokes = 0;
+    window.rulerSizeObserver = new MutationObserver((records) => {
+      window.rulerSizeChanges += records.length;
+    });
+    for (const rail of rails) {
+      window.rulerSizeObserver.observe(rail, { attributeFilter: ['width', 'height'] });
+      const context = rail.getContext('2d');
+      const fill = context.fillRect.bind(context);
+      context.fillRect = (...args) => {
+        window.rulerRepaints++;
+        return fill(...args);
+      };
+      const stroke = context.stroke.bind(context);
+      context.stroke = (...args) => {
+        window.rulerStrokes++;
+        return stroke(...args);
+      };
+    }
+  });
+  await expectRulerIndicators(0.55);
+  expect(await page.evaluate(() => {
+    window.rulerSizeObserver.disconnect();
+    return [window.rulerSizeChanges, window.rulerRepaints];
+  })).toEqual([0, 0]);
   const boardTools = board.getByRole('complementary', { name: 'Board tools' });
   const initialTools = await boardTools.boundingBox();
   await board.getByRole('separator', { name: 'Resize board tools' }).focus();
@@ -138,22 +250,39 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   const bounds = await canvas.boundingBox();
   const anchor = { x: Math.round(bounds.x + bounds.width * 0.4), y: Math.round(bounds.y + bounds.height * 0.4) };
   const worldAtAnchor = () => canvas.evaluate((svg, { x, y }) => {
-    const point = new DOMPoint(x, y).matrixTransform(svg.getScreenCTM().inverse());
+    const point = new DOMPoint(x, y).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM().inverse());
     return [Math.round(point.x), Math.round(point.y)];
   }, anchor);
   const original = await worldAtAnchor();
-  const initialView = await canvas.getAttribute('viewBox');
+  const initialView = await canvas.getAttribute('data-view-box');
+  const displayViewport = await canvas.getAttribute('viewBox');
   await page.mouse.move(anchor.x, anchor.y);
   await page.keyboard.down('Shift');
   await page.mouse.wheel(0, -200);
   await page.keyboard.up('Shift');
-  await expect(canvas).not.toHaveAttribute('viewBox', initialView);
+  await expect(canvas).not.toHaveAttribute('data-view-box', initialView);
+  await expect(canvas).toHaveAttribute('viewBox', displayViewport);
   const anchored = await worldAtAnchor();
   expect(Math.hypot(anchored[0] - original[0], anchored[1] - original[1])).toBeLessThan(5);
+  const steppedView = await canvas.getAttribute('data-view-box');
+  await canvas.dispatchEvent('wheel', { shiftKey: true, deltaX: 30, deltaY: 0 });
+  await expect(canvas).toHaveAttribute('data-view-box', steppedView);
+  await page.keyboard.down('Control');
+  await page.mouse.wheel(0, -50);
+  await page.keyboard.up('Control');
+  await expect(canvas).not.toHaveAttribute('data-view-box', steppedView);
+  const widthOf = (view) => Number(view.split(' ')[2]);
+  const pinchedView = await canvas.getAttribute('data-view-box');
+  expect(widthOf(steppedView) / widthOf(pinchedView)).toBeCloseTo(Math.sqrt(1.25), 5);
+  const pinched = await worldAtAnchor();
+  expect(Math.hypot(pinched[0] - original[0], pinched[1] - original[1])).toBeLessThan(5);
   await page.mouse.down({ button: 'middle' });
   await page.mouse.move(anchor.x + 35, anchor.y + 30);
   await page.mouse.up({ button: 'middle' });
   expect(await worldAtAnchor()).not.toEqual(original);
+  const [rulerRepaints, rulerStrokes] = await page.evaluate(() => [window.rulerRepaints, window.rulerStrokes]);
+  expect(rulerRepaints).toBeGreaterThan(0);
+  expect(rulerStrokes).toBe(rulerRepaints);
   await expectRulerIndicators();
   await page.setViewportSize({ width: initialSize.width - 100, height: initialSize.height - 100 });
   await expectRulerIndicators();
@@ -169,16 +298,18 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   await expect(boardMenu.getByRole('menuitem', { name: 'Move on board' })).toHaveCount(0);
   await boardMenu.getByRole('menuitem', { name: 'Zoom In', exact: true }).click();
   await expect(boardMenu).toBeHidden();
-  await expect(canvas).not.toHaveAttribute('viewBox', initialView);
+  await expect(canvas).not.toHaveAttribute('data-view-box', initialView);
   await board.getByLabel('Board drawing', { exact: true }).focus();
   await page.keyboard.press('Shift+F10');
   await boardMenu.getByRole('menuitem', { name: 'Fit board', exact: true }).click();
-  await expect(canvas).toHaveAttribute('viewBox', initialView);
-  const beforePan = (await canvas.getAttribute('viewBox')).split(' ');
+  await expect(canvas).toHaveAttribute('data-view-box', initialView);
+  const beforePan = (await canvas.getAttribute('data-view-box')).split(' ');
+  const viewportBeforePan = await canvas.getAttribute('viewBox');
   await canvas.hover();
   await page.mouse.wheel(15, 30);
-  await expect(canvas).not.toHaveAttribute('viewBox', initialView);
-  expect((await canvas.getAttribute('viewBox')).split(' ').slice(2)).toEqual(beforePan.slice(2));
+  await expect(canvas).not.toHaveAttribute('data-view-box', initialView);
+  expect((await canvas.getAttribute('data-view-box')).split(' ').slice(2)).toEqual(beforePan.slice(2));
+  await expect(canvas).toHaveAttribute('viewBox', viewportBeforePan);
   await board.getByRole('button', { name: 'Fit board', exact: true }).click();
   const toolbar = await board.getByRole('toolbar', { name: 'PCB commands' }).boundingBox();
   const workspaces = await page.getByRole('group', { name: 'Design workspaces' }).boundingBox();
@@ -221,7 +352,7 @@ test('opens and edits a standalone PCB in the shared shell', async ({
       .evaluate(
         (svg, [x, y]) => {
           const position = new DOMPoint(x, -y).matrixTransform(
-            svg.getScreenCTM(),
+            svg.querySelector('[data-svg-drawing]').getScreenCTM(),
           );
           return { x: position.x, y: position.y };
         },
@@ -252,9 +383,10 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   await expect(board.getByLabel('Copper layers')).toHaveValue('1');
   await board.getByRole('button', { name: 'Redo', exact: true }).click();
   await page.evaluate(() => { window.pcbReplies.hold = 'geometry'; });
+  await page.evaluate(() => localStorage.setItem('tinycad.language', 'de'));
   await board.getByRole('button', { name: 'Add copper zone…' }).click();
   const zone = page.getByRole('dialog', { name: 'Add copper zone' });
-  await zone.getByLabel('Outline (X, Y in mm)', { exact: true }).fill('2, 2\n35, 2\n35, 18\n2, 18');
+  await zone.getByLabel('Outline (X, Y in mm)', { exact: true }).fill('2,0 2,0\n35,0; 2,0\n35,0 18,0\n2,0; 18,0');
   await zone.getByLabel('Disconnected copper').selectOption('retain');
   await zone.getByRole('button', { name: 'Apply', exact: true }).click();
   await expect(zone).toBeHidden();
@@ -286,12 +418,20 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   await guide.getByLabel('Guide step').selectOption({ label: 'Check the board' });
   await guide.getByRole('button', { name: 'Check this revision…' }).click();
   const checks = page.getByRole('dialog', { name: 'PCB design checks' });
-  await expect(checks.getByRole('list', { name: 'PCB findings' })).toContainText('Copper is disconnected from every required terminal.');
+  await expect(checks.getByRole('table', { name: 'PCB findings' })).toContainText('Copper is disconnected from every required terminal.');
   await expect(checks.getByText(/Silkscreen and courtyard · not applicable/)).toBeVisible();
-  await expect(checks.getByRole('list', { name: 'PCB findings' })).toContainText('outside the selected fabrication profile');
-  await checks.getByRole('button', { name: 'Waive finding…' }).click();
-  await checks.getByRole('textbox', { name: 'Reason for waiver' }).fill('Intentional fixture test land');
-  await checks.getByRole('button', { name: 'Save waiver' }).click();
+  await expect(checks.getByRole('table', { name: 'PCB findings' })).toContainText('outside the selected fabrication profile');
+  const waiveFinding = checks.getByRole('button', { name: 'Waive finding…' });
+  const waiverReason = checks.getByRole('textbox', { name: 'Reason for waiver' });
+  await waiveFinding.press('Enter');
+  await expect(waiverReason).toBeFocused();
+  await checks.getByRole('button', { name: 'Cancel waiver' }).press('Enter');
+  await expect(waiveFinding).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(waiverReason).toBeFocused();
+  await waiverReason.fill('Intentional fixture test land');
+  await checks.getByRole('button', { name: 'Save waiver' }).press('Enter');
+  await expect(checks.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
   await expect(checks.getByText('Waived. Intentional fixture test land')).toBeVisible();
   await checks.getByRole('button', { name: 'Close', exact: true }).click();
   await guide.getByRole('button', { name: 'Next step' }).click();
@@ -354,6 +494,59 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   expect(errors).toEqual([]);
 });
 
+
+test('draws and picks copper on both sides of the large PCB coordinate range', async ({ page }) => {
+  const api = await layoutRuntime();
+  const source = await api.decodeBoard(await classroomBoard());
+  const shift = ({ x, y }) => ({ x: x - 47_000_000, y: y - 46_000_000 });
+  const board = {
+    ...source,
+    outline: source.outline.map(shift),
+    tracks: source.tracks.map((track) => ({ ...track, start: shift(track.start), end: shift(track.end) })),
+    vias: source.vias.map((via) => ({ ...via, positionNm: shift(via.positionNm) })),
+    footprints: source.footprints.map((part) => ({ ...part, positionNm: shift(part.positionNm) })),
+    zones: source.zones.map((zone) => ({ ...zone, outline: zone.outline.map(shift) })),
+  };
+  await page.addInitScript((bytes) => {
+    window.showOpenFilePicker = async () => [{
+      name: 'Large classroom.dpn',
+      getFile: async () => new File([new Uint8Array(bytes)], 'Large classroom.dpn'),
+    }];
+  }, [...await api.encodeBoard(board)]);
+  await page.goto(app.baseURL);
+  await page.getByRole('button', { name: 'File', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
+  const layout = page.getByRole('region', { name: 'PCB layout' });
+  const drawing = layout.getByRole('img', { name: 'Board layout' });
+  await expect(layout.getByText('Zones filled.', { exact: true })).toBeVisible();
+
+  for (const index of [0, -1]) {
+    const track = board.tracks.at(index);
+    await expectTrackEndpoints(drawing.locator(`[data-track="${track.id}"]`),
+      [track.start.x, -track.start.y, track.end.x, -track.end.y]);
+    const via = board.vias.at(index);
+    const part = board.footprints.at(index);
+    const placement = drawing.locator(`[data-component="${part.componentId}"]`);
+    await expect.poll(() => drawingCentre(drawing.locator(`[data-via="${via.id}"] [data-board-opening]`)))
+      .toEqual([via.positionNm.x, -via.positionNm.y]);
+    await expect.poll(() => drawingCentre(placement.locator('[data-board-pad]').first()))
+      .toEqual([part.positionNm.x, -part.positionNm.y]);
+    const textX = await placement.locator('text').evaluate((text) => {
+      const inverse = text.closest('[data-svg-drawing]').getScreenCTM().inverse();
+      return Math.round(inverse.multiply(text.getScreenCTM()).e);
+    });
+    expect(textX).toBe(part.positionNm.x);
+  }
+
+  const last = board.tracks.at(-1);
+  const pointer = await drawing.evaluate((svg, { start, end }) => {
+    const matrix = svg.querySelector('[data-svg-drawing]').getScreenCTM();
+    const p = new DOMPoint((start.x + end.x) / 2, -(start.y + end.y) / 2).matrixTransform(matrix);
+    return [p.x, p.y];
+  }, last);
+  await page.mouse.click(...pointer);
+  await expect(layout.getByRole('group', { name: 'Selected track', exact: true })).toBeVisible();
+});
 
 test('reviews unsupported KiCad via spans and downloads their source records', async ({ page }) => {
   const api = await layoutRuntime();
@@ -457,7 +650,7 @@ test('uses Beginner routing defaults without weakening board rules or checks', a
   const canvas = workspace.getByRole('img', { name: 'Board layout' });
   for (const x of [5e6, 15e6]) {
     const where = await canvas.evaluate((svg, x) => {
-      const point = new DOMPoint(x, -6e6).matrixTransform(svg.getScreenCTM());
+      const point = new DOMPoint(x, -6e6).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
       return { x: point.x, y: point.y };
     }, x);
     await page.mouse.click(where.x, where.y);
@@ -501,7 +694,7 @@ test('moves selected footprints together and undoes them as one edit', async ({ 
   await workspace.getByRole('list', { name: 'Placed components', exact: true })
     .getByRole('button', { name: 'U1', exact: true }).click();
   const canvas = workspace.getByRole('img', { name: 'Board layout' });
-  const secondPad = canvas.locator('[data-component="' + source.components[1].id + '"] path').first();
+  const secondPad = canvas.locator('[data-component="' + source.components[1].id + '"] [data-board-pad]').first();
   await secondPad.click({ modifiers: ['Shift'] });
   await expect(canvas.locator('[data-placement-group="true"]')).toHaveCount(2);
   await workspace.getByLabel('Include U2 in placement group').uncheck();
@@ -686,10 +879,11 @@ test('builds and reopens a manually connected standalone PCB', async ({ page }) 
   }
   await workspace.getByRole('button', { name: 'Route track', exact: true }).click();
   await workspace.getByLabel('Board net').selectOption({ label: 'Supply' });
+  await page.evaluate(() => localStorage.setItem('tinycad.language', 'de'));
   await workspace.getByText('Enter route coordinates', { exact: true }).click();
   for (const x of ['10', '20']) {
-    await workspace.getByLabel('Waypoint X (mm)').fill(x);
-    await workspace.getByLabel('Waypoint Y (mm)').fill('10');
+    await workspace.getByLabel('Waypoint X (mm)').fill(x + ',0');
+    await workspace.getByLabel('Waypoint Y (mm)').fill('10,0');
     await workspace.getByRole('button', { name: 'Add waypoint' }).click();
     await expect(workspace.getByLabel('Route waypoints')).toContainText('X ' + x + ' mm');
   }
@@ -878,7 +1072,7 @@ test('previews transformed placement airwires without editing the board', async 
   await expect(preview.getByText('8.60 mm')).toBeVisible();
 
   const pointer = await canvas.evaluate((svg) => {
-    const point = new DOMPoint(24_000_000, -23_000_000).matrixTransform(svg.getScreenCTM());
+    const point = new DOMPoint(24_000_000, -23_000_000).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
     return { x: point.x, y: point.y };
   });
   await page.mouse.move(pointer.x, pointer.y);
@@ -959,7 +1153,7 @@ test('adds a wire jumper and keeps bare-copper connectivity separate', async ({ 
   await land.click();
   await expect(workspace.getByLabel('Board net')).toHaveValue(netId);
   const second = await canvas.evaluate((svg) => {
-    const p = new DOMPoint(5e6, -6e6).matrixTransform(svg.getScreenCTM());
+    const p = new DOMPoint(5e6, -6e6).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
     return { x: p.x, y: p.y };
   });
   await page.mouse.click(second.x, second.y);
@@ -969,7 +1163,7 @@ test('adds a wire jumper and keeps bare-copper connectivity separate', async ({ 
   const checks = page.getByRole('dialog', { name: 'PCB design checks' });
   const runChecks = async (expected) => {
     await workspace.getByRole('button', { name: 'Run design checks…' }).click();
-    await expect(checks.getByRole('list', { name: 'PCB findings' })).toContainText(expected);
+    await expect(checks.getByRole('table', { name: 'PCB findings' })).toContainText(expected);
     await checks.getByRole('button', { name: 'Close', exact: true }).click();
   };
   await runChecks('Separate bare copper islands require fitted wire jumpers');
@@ -990,6 +1184,167 @@ test('adds a wire jumper and keeps bare-copper connectivity separate', async ({ 
   expect(saved.tracks.at(-1).end).toEqual({ x: 5e6, y: 6e6 });
 });
 
+test('inspects drilled openings with the same limits as design checks', async ({ page }) => {
+  const api = await layoutRuntime();
+  const point = (x, y) => ({ x: x * 1e6, y: y * 1e6 });
+  const base = api.createBoard('Fabrication rules', 2, [point(0, 0), point(24, 0), point(24, 16), point(0, 16)]);
+  const holes = [6, 7].map((x) => ({
+    id: crypto.randomUUID(), start: point(x, 2), end: point(x, 2), widthNm: 600_000, plated: false,
+  }));
+  const slot = {
+    id: crypto.randomUUID(), start: point(12, 8), end: point(12.6, 8),
+    widthNm: 800_000, landWidthNm: 1_400_000, plated: true,
+  };
+  const netId = crypto.randomUUID();
+  const board = {
+    ...base,
+    requiredFeatures: [...base.requiredFeatures, 'mechanical-holes', 'fabrication-settings', 'routed-copper'],
+    nets: [{ id: netId, name: 'Signal' }],
+    tracks: [{ id: crypto.randomUUID(), netId, layerId: 'top', widthNm: 200_000,
+      start: point(5.5, 2.49), end: point(6.5, 2.49) }],
+    mechanicalHoles: [...holes, slot],
+    fabrication: { profileId: 'classroom-v1', thicknessNm: 1_600_000 },
+  };
+  await page.addInitScript((bytes) => {
+    window.showOpenFilePicker = async () => [{
+      name: 'Openings.dpn',
+      getFile: async () => new File([new Uint8Array(bytes)], 'Openings.dpn'),
+      createWritable: async () => {
+        window.openingsWriteAttempted = true;
+        throw new Error('Inspection should be read-only.');
+      },
+    }];
+  }, [...await api.encodeBoard(board)]);
+  await page.goto(app.baseURL);
+  await page.getByRole('button', { name: 'File', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
+  const workspace = page.getByRole('region', { name: 'PCB layout' });
+  await workspace.getByRole('button', { name: 'Inspect board rules…' }).click();
+  const inspector = page.getByRole('dialog', { name: 'Inspect PCB rules' });
+  await inspector.getByRole('tab', { name: 'Openings', exact: true }).click();
+  const opening = inspector.getByLabel('Opening', { exact: true });
+  const compare = inspector.getByLabel('Compare openings', { exact: true });
+  await opening.selectOption({ label: 'Plated slot 3 · X 12 mm, Y 8 mm' });
+  await expect(inspector).toContainText('Opening width measured 0.8 mm, required 0.6 mm (minPlatedSlotNm).');
+  await expect(inspector).toContainText('Finished slot length measured 1.4 mm, required 1.6 mm (minPlatedSlotRatio).');
+  await expect(inspector.getByRole('list', { name: 'Plated pad annulus' })).toContainText('Passes.');
+  await opening.selectOption({ label: 'Non-plated hole 1 · X 6 mm, Y 2 mm' });
+  await compare.selectOption({ label: 'Non-plated hole 2 · X 7 mm, Y 2 mm' });
+  const spacing = 'Opening spacing measured 0.4 mm, required 0.45 mm (minHoleGapNm).';
+  await expect(inspector).toContainText(spacing);
+  await opening.selectOption({ label: 'Non-plated hole 2 · X 7 mm, Y 2 mm' });
+  await compare.selectOption({ label: 'Non-plated hole 1 · X 6 mm, Y 2 mm' });
+  await expect(inspector).toContainText(spacing);
+  await opening.selectOption({ label: 'Non-plated hole 1 · X 6 mm, Y 2 mm' });
+  await compare.selectOption({ label: 'track 1 · Signal · top' });
+  const copperClearance = inspector.getByText(/^Opening to copper clearance measured/);
+  await expect(copperClearance).toContainText('Required 0.25 mm (drill-clearance).');
+  const measured = (await copperClearance.textContent()).match(/measured (0\.0\d+ mm)/)?.[1];
+  expect(measured).toBeDefined();
+  await inspector.getByRole('button', { name: 'Close', exact: true }).click();
+
+  await workspace.getByRole('button', { name: 'Run design checks…' }).click();
+  const findings = page.getByRole('table', { name: 'PCB findings' });
+  await expect(findings.locator('tbody > tr').filter({ hasText: 'Plated slot is too short' }))
+    .toContainText('Measured 1.4 mm. Required 1.6 mm.');
+  await expect(findings.locator('tbody > tr').filter({ hasText: 'Spacing between drill or slot edges' }))
+    .toContainText('Measured 0.4 mm. Required 0.45 mm.');
+  await expect(findings.locator('tbody > tr').filter({ hasText: 'Copper violates drill or slot clearance' }).first())
+    .toContainText('Measured ' + measured + '. Required 0.25 mm.');
+  expect(await page.evaluate(() => window.openingsWriteAttempted)).toBeUndefined();
+});
+
+test('inspects mask, paste and legend with the same limits as design checks', async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 700 });
+  const api = await layoutRuntime();
+  const fixture = placementFixture(api);
+  const [definition] = fixture.footprintDefinitions;
+  const [pad] = definition.pads;
+  const point = (x, y) => ({ x, y });
+  const face = (left, right) => ({
+    kind: 'polygon',
+    vertices: [point(left, -200_000), point(right, -200_000), point(right, 200_000), point(left, 200_000)],
+  });
+  const land = face(-300_000, 300_000);
+  const board = {
+    ...fixture,
+    requiredFeatures: [...fixture.requiredFeatures, 'fabrication-settings'],
+    fabrication: { profileId: 'classroom-v1', thicknessNm: 1_600_000 },
+    footprintDefinitions: [{
+      ...definition,
+      pads: [{
+        ...pad,
+        stack: { copper: { top: land }, mask: { top: land }, paste: { top: face(-300_000, -100_000) } },
+      }],
+      graphics: [{
+        kind: 'line', layer: 'F.SilkS', strokeNm: 100_000, filled: false,
+        start: point(-250_000, 0), end: point(250_000, 0),
+      }, {
+        kind: 'text', layer: 'F.SilkS', strokeNm: 160_000, filled: false,
+        at: point(0, 2e6), sizeNm: point(600_000, 900_000),
+        text: 'R1', visible: true, rotationMicrodegree: 90_000_000, align: ['left'],
+      }, {
+        kind: 'rect', layer: 'F.CrtYd', strokeNm: 50_000, filled: false,
+        start: point(-500_000, -500_000), end: point(500_000, 500_000),
+      }],
+    }],
+    footprints: fixture.footprints.map((footprint, index) => index === 1 ? {
+      ...footprint, positionNm: point(10_680_000, 10_000_000), side: 'top', rotationMicrodegree: 0,
+    } : footprint),
+  };
+  await page.addInitScript((bytes) => {
+    window.showOpenFilePicker = async () => [{
+      name: 'Artwork.dpn',
+      getFile: async () => new File([new Uint8Array(bytes)], 'Artwork.dpn'),
+    }];
+  }, [...await api.encodeBoard(board)]);
+  await page.goto(app.baseURL);
+  await page.getByRole('button', { name: 'File', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
+  const workspace = page.getByRole('region', { name: 'PCB layout' });
+  await workspace.getByRole('button', { name: 'Inspect board rules…' }).click();
+  const inspector = page.getByRole('dialog', { name: 'Inspect PCB rules' });
+  await inspector.getByRole('tab', { name: 'Artwork', exact: true }).click();
+  const object = inspector.getByLabel('Artwork object', { exact: true });
+  const compare = inspector.getByLabel('Compare artwork', { exact: true });
+  await object.selectOption({ label: 'Mask opening 1 · top' });
+  await compare.selectOption({ label: 'Mask opening 3 · top' });
+  await expect(inspector).toContainText('Mask web measured 0.08 mm, required 0.13 mm (minMaskWebNm).');
+  await expect(inspector).toContainText('The aperture contains the land and required margin.');
+  await object.selectOption({ label: 'Paste aperture 2 · top' });
+  await expect(inspector).toContainText('Paste land coverage measured 33.3%, required 50% (minPasteLandCoveragePermille).');
+  await expect(inspector).toContainText('The minimum opening does not fit.');
+  const legend = object.getByRole('option', { name: /^Legend .* · top$/ }).first();
+  await object.selectOption(await legend.getAttribute('value'));
+  await compare.selectOption({ label: 'Mask opening 1 · top' });
+  await expect(inspector).toContainText('Legend stroke measured 0.1 mm, required 0.15 mm (minSilkStrokeNm).');
+  await expect(inspector).toContainText('Legend to mask clearance measured 0 mm, required 0.15 mm (minSilkMaskGapNm).');
+  const text = object.getByRole('option', { name: /^Legend .* · top$/ }).nth(1);
+  await object.selectOption(await text.getAttribute('value'));
+  await expect(inspector).toContainText('Legend text height measured 0.9 mm, required 1 mm (minSilkTextHeightNm).');
+  const courtyard = object.getByRole('option', { name: /^Courtyard .* · top$/ }).first();
+  await object.selectOption(await courtyard.getAttribute('value'));
+  const nextCourtyard = compare.getByRole('option', { name: /^Courtyard .* · top$/ }).first();
+  await compare.selectOption(await nextCourtyard.getAttribute('value'));
+  await expect(inspector).toContainText('Courtyards overlap.');
+  await inspector.getByRole('button', { name: 'Close', exact: true }).click();
+
+  await workspace.getByRole('button', { name: 'Run design checks…' }).click();
+  const findings = page.getByRole('table', { name: 'PCB findings' });
+  await expect(findings.locator('tbody > tr').filter({ hasText: 'Solder-mask web is narrower' }))
+    .toContainText('Measured 0.08 mm. Required 0.13 mm.');
+  const pasteFinding = findings.locator('tbody > tr').filter({ hasText: 'Paste aperture covers 33.3%' }).first();
+  await expect(pasteFinding).toContainText('Measured 33.3%. Required 50%.');
+  await expect(pasteFinding.getByText('Error', { exact: true })).toBeVisible();
+  await pasteFinding.getByText('Finding details', { exact: true }).click();
+  await expect(pasteFinding).toContainText('Layers · copper-top, paste-top');
+  await expect(pasteFinding).toContainText('minPasteLandCoveragePermille');
+  await expect(findings).toContainText('Silkscreen stroke is thinner than the fabrication minimum.');
+  const textFinding = findings.locator('tbody > tr').filter({ hasText: 'Silkscreen text is shorter' }).first();
+  await expect(textFinding).toContainText('Measured 0.9 mm. Required 1 mm.');
+  await expect(findings).toContainText('Footprint courtyards overlap on the same assembly side.');
+});
+
 test('edits a net class and per-net rules used by the route inspector', async ({ page }) => {
   const api = await layoutRuntime();
   const signal = crypto.randomUUID();
@@ -999,7 +1354,11 @@ test('edits a net class and per-net rules used by the route inspector', async ({
   ]);
   const board = {
     ...base,
-    requiredFeatures: [...base.requiredFeatures, 'routed-copper'],
+    requiredFeatures: [...base.requiredFeatures, 'routed-copper', 'routing-regions'],
+    routingRegions: [{
+      id: crypto.randomUUID(), name: 'Supply corridor', side: 'top', exclusions: [], clearanceNm: 300_000,
+      outline: [{ x: 5e6, y: 6e6 }, { x: 15e6, y: 6e6 }, { x: 15e6, y: 10e6 }, { x: 5e6, y: 10e6 }],
+    }],
     nets: [{ id: signal, name: 'Supply' }, { id: other, name: 'Signal' }],
     tracks: [{
       id: crypto.randomUUID(), netId: other, layerId: 'top', widthNm: 250_000,
@@ -1055,6 +1414,22 @@ test('edits a net class and per-net rules used by the route inspector', async ({
   await expect(widths.getByRole('option', { name: 'Minimum (0.35 mm)' })).toHaveCount(1);
   await expect(widths.getByRole('option', { name: 'Preferred (0.45 mm)' })).toHaveCount(1);
   await workspace.getByRole('button', { name: 'Cancel route', exact: true }).click();
+  await workspace.getByRole('button', { name: 'Inspect board rules…' }).click();
+  const inspect = page.getByRole('dialog', { name: 'Inspect PCB rules' });
+  const object = inspect.getByLabel('Copper object', { exact: true });
+  const comparison = inspect.getByLabel('Compare with', { exact: true });
+  await object.selectOption({ label: 'via 2 · Supply · top' });
+  await expect(inspect).toContainText('Via annulus required 0.13 mm, measured 0.2 mm.');
+  await comparison.selectOption({ label: 'track 1 · Signal · top' });
+  await expect(inspect).toContainText('Copper clearance required 0.8 mm, measured 0.375098 mm.');
+  await expect(inspect.getByRole('list', { name: 'Matched clearance rules' })).toContainText('Power via spacing');
+  await expect(inspect.getByRole('list', { name: 'Regional clearance measurements' })).toContainText('Required 0.3 mm, measured 0.375098 mm');
+  await object.selectOption({ label: 'track 1 · Signal · top' });
+  await expect(inspect).toContainText('Track width required 0.18 mm minimum, measured 0.25 mm.');
+  await comparison.selectOption({ label: 'via 2 · Supply · top' });
+  await expect(inspect).toContainText('Copper clearance required 0.8 mm, measured 0.375098 mm.');
+  await inspect.getByRole('button', { name: 'Close', exact: true }).click();
+  expect(await page.evaluate(() => window.netRulesSaved)).toBeUndefined();
   await workspace.getByRole('button', { name: 'Run design checks…' }).click();
   const checks = page.getByRole('dialog', { name: 'PCB design checks' });
   await expect(checks.getByRole('list', { name: 'Matched clearance rules' })).toContainText('Power via spacing · 0.8 mm');
@@ -1116,7 +1491,7 @@ test('applies board track-width, through-via presets and solder mask tenting to 
   const canvas = workspace.getByRole('img', { name: 'Board layout' });
   const pick = async (x, y) => {
     const position = await canvas.evaluate((svg, p) => {
-      const cursor = new DOMPoint(p.x, -p.y).matrixTransform(svg.getScreenCTM());
+      const cursor = new DOMPoint(p.x, -p.y).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
       return [cursor.x, cursor.y];
     }, point(x, y));
     await page.mouse.click(...position);
@@ -1193,7 +1568,7 @@ test('creates a routing region and enforces its width and clearance in the route
   const canvas = workspace.getByRole('img', { name: 'Board layout' });
   await expect(canvas.locator('[data-routing-region]')).toBeVisible();
   const screen = (x, y) => canvas.evaluate((svg, p) => {
-    const cursor = new DOMPoint(p.x, -p.y).matrixTransform(svg.getScreenCTM());
+    const cursor = new DOMPoint(p.x, -p.y).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
     return [cursor.x, cursor.y];
   }, point(x, y));
   await workspace.getByRole('button', { name: 'Route track', exact: true }).click();
@@ -1201,13 +1576,40 @@ test('creates a routing region and enforces its width and clearance in the route
   await page.mouse.click(...await screen(4, 7));
   await page.mouse.move(...await screen(16, 7));
   const preview = canvas.locator('[data-route-preview]');
+  const blockedMarker = canvas.locator('[data-route-blocked-marker]');
   await expect(preview).toHaveAttribute('data-route-preview', 'blocked');
+  await expect(preview).not.toHaveCSS('stroke-dasharray', 'none');
+  await expect(blockedMarker).toBeVisible();
+  await page.emulateMedia({ forcedColors: 'active' });
+  const palette = await page.evaluate(() => {
+    const token = document.createElement('span');
+    token.style.forcedColorAdjust = 'none';
+    token.style.backgroundColor = 'Canvas';
+    token.style.color = 'Highlight';
+    token.style.borderColor = 'CanvasText';
+    document.body.append(token);
+    const style = getComputedStyle(token);
+    const colors = { canvas: style.backgroundColor, ink: style.borderTopColor, highlight: style.color };
+    token.remove();
+    return colors;
+  });
+  const outline = canvas.locator('[data-board-profile]');
+  await expect(outline).toHaveCSS('fill', palette.canvas);
+  await expect(outline).toHaveCSS('stroke', palette.ink);
+  await expect(canvas.locator('[data-track]')).toHaveCSS('stroke', palette.ink);
+  await expect(preview).toHaveCSS('stroke', palette.ink);
+  await expect(blockedMarker.locator('circle')).toHaveCSS('fill', palette.canvas);
   await page.mouse.click(...await screen(16, 7));
   await expect(workspace.getByRole('alert')).toContainText('routing region');
+  await page.evaluate(() => localStorage.setItem('tinycad.language', 'de'));
   await workspace.getByLabel('Track width preset').selectOption('custom');
-  await workspace.getByLabel('Track width (mm)').fill('0.45');
+  await workspace.getByLabel('Track width (mm)').fill('0,45');
   await page.mouse.move(...await screen(15, 7));
   await expect(preview).toHaveAttribute('data-route-preview', 'clear');
+  await expect(preview).toHaveAttribute('stroke-width', '450000');
+  await expect(preview).toHaveCSS('stroke', palette.highlight);
+  await expect(preview).toHaveCSS('stroke-dasharray', 'none');
+  await expect(blockedMarker).toHaveCount(0);
   await page.mouse.click(...await screen(16, 7));
   await workspace.getByRole('button', { name: 'Finish route' }).click();
   await expect(canvas.locator('[data-track]')).toHaveCount(2);
@@ -1263,7 +1665,7 @@ decimalCommaBrowser('stops a manual route at foreign copper and saves horizontal
   const workspace = page.getByRole('region', { name: 'PCB layout' });
   const canvas = workspace.getByRole('img', { name: 'Board layout' });
   const screen = (x, y) => canvas.evaluate((svg, { x, y }) => {
-    const cursor = new DOMPoint(x, -y).matrixTransform(svg.getScreenCTM());
+    const cursor = new DOMPoint(x, -y).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
     return [cursor.x, cursor.y];
   }, point(x, y));
   const finish = workspace.getByRole('button', { name: 'Finish route', exact: true });
@@ -1304,7 +1706,9 @@ decimalCommaBrowser('stops a manual route at foreign copper and saves horizontal
   await finish.click();
   await expect.poll(() => page.evaluate(() => window.pcbReplies.count())).toBe(1);
   await expect(finish).toBeDisabled();
+  await expect(workspace.getByText('Checking copper edit…', { exact: true })).toBeVisible();
   await workspace.getByRole('button', { name: 'Cancel route', exact: true }).click();
+  await expect(workspace.getByText('Checking copper edit…', { exact: true })).toHaveCount(0);
   await expect(canvas.locator('[data-track]')).toHaveCount(1);
   await expect(workspace.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled();
   await workspace.getByLabel('Copper layers').selectOption('2');
@@ -1422,32 +1826,33 @@ test('snaps a rotated off-grid pad and an existing track at different zoom level
   await expect(findings.getByText('Required terminals remain in separate copper islands.', { exact: true })).toBeVisible();
   await findings.getByRole('button', { name: 'Close', exact: true }).click();
   const viewPosition = (position) => canvas.evaluate((svg, { x, y }) => {
-    const p = new DOMPoint(x, -y).matrixTransform(svg.getScreenCTM());
+    const p = new DOMPoint(x, -y).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
     return [p.x, p.y];
   }, position);
   const marker = canvas.locator('[data-route-snap]');
   const checkPadSnap = async () => {
     await page.mouse.move(...await viewPosition(padPosition));
-    await expect(marker).toHaveAttribute('cx', String(padPosition.x));
-    await expect(marker).toHaveAttribute('cy', String(-padPosition.y));
+    await expect.poll(() => drawingCentre(marker)).toEqual([padPosition.x, -padPosition.y]);
   };
   await workspace.getByRole('button', { name: 'Route track', exact: true }).click();
   await workspace.getByLabel('Route layer').selectOption('bottom');
   await checkPadSnap();
-  const initialView = await canvas.getAttribute('viewBox');
+  const initialView = await canvas.getAttribute('data-view-box');
   await page.keyboard.down('Shift');
   await page.mouse.wheel(0, -240);
   await page.keyboard.up('Shift');
-  await expect(canvas).not.toHaveAttribute('viewBox', initialView);
+  await expect(canvas).not.toHaveAttribute('data-view-box', initialView);
   await page.mouse.move(...await viewPosition({ x: padPosition.x + 400_000, y: padPosition.y }));
   await checkPadSnap();
   await page.mouse.click(...await viewPosition(padPosition));
   await expect(workspace.getByLabel('Board net')).toHaveValue(netId);
   const trackPick = { x: 24_300_000, y: padPosition.y };
   await page.mouse.move(...await viewPosition(trackPick));
-  await expect(marker).toHaveAttribute('cy', String(-padPosition.y));
-  const snappedTrackX = Number(await marker.getAttribute('cx'));
-  expect(Math.abs(snappedTrackX - trackPick.x)).toBeLessThan(150_000);
+  await expect.poll(async () => {
+    const [x, y] = await drawingCentre(marker);
+    return y === -padPosition.y && Math.abs(x - trackPick.x) < 150_000;
+  }).toBe(true);
+  const [snappedTrackX] = await drawingCentre(marker);
   await page.mouse.click(...await viewPosition(trackPick));
   await workspace.getByRole('button', { name: 'Finish route' }).click();
   await expect(canvas.locator('[data-track]')).toHaveCount(2);
@@ -1493,7 +1898,7 @@ test('authors placement areas and locates their design check findings', async ({
   await expect(dialog).toBeHidden();
   const canvas = workspace.getByRole('img', { name: 'Board layout' });
   await expect(canvas.locator('[data-placement-area]')).toHaveCount(1);
-  const readView = async () => (await canvas.getAttribute('viewBox')).split(' ').map(Number);
+  const readView = async () => (await canvas.getAttribute('data-view-box')).split(' ').map(Number);
   const fitBoard = workspace.getByRole('button', { name: 'Fit board', exact: true });
   const fitSelection = workspace.getByRole('button', { name: 'Fit selection', exact: true });
   const fullBoard = await readView();
@@ -1507,7 +1912,7 @@ test('authors placement areas and locates their design check findings', async ({
   await expect.poll(readView).not.toEqual(fullBoard);
   await workspace.getByRole('button', { name: 'Run design checks…' }).click();
   const checks = page.getByRole('dialog', { name: 'PCB design checks' });
-  const finding = checks.getByRole('list', { name: 'PCB findings' }).getByRole('listitem')
+  const finding = checks.getByRole('table', { name: 'PCB findings' }).locator('tbody > tr')
     .filter({ hasText: 'U1 origin intersects top keep-out' });
   await expect(finding).toContainText('Antenna clearance');
   await expect(checks.getByText(/Placement keep-in and keep-out areas · limited/)).toBeVisible();
@@ -1537,6 +1942,132 @@ test('authors placement areas and locates their design check findings', async ({
   await expect(canvas.locator('[data-placement-area]')).toHaveCount(1);
 });
 
+test('finishes pending zone fills before design checks and CAM review', async ({ page }) => {
+  const api = await layoutRuntime();
+  const fixture = zoneConnectionFixture(api);
+  await holdPcbWorkerReplies(page);
+  await page.addInitScript((source) => {
+    window.showOpenFilePicker = async () => [{
+      name: 'Zone clearances.dpn',
+      getFile: async () => new File([Uint8Array.from(source)], 'Zone clearances.dpn'),
+    }];
+  }, [...await api.encodeBoard(fixture)]);
+  await page.goto(app.baseURL);
+  const workspace = page.getByRole('region', { name: 'PCB layout' });
+  const holdFill = () => page.evaluate(() => { window.pcbReplies.hold = 'geometry'; });
+  const fillRequests = () => page.evaluate(() => window.pcbReplies.requests('geometry'));
+  const pending = () => page.evaluate(() => window.pcbReplies.count());
+  const checksButton = workspace.getByRole('button', { name: 'Run design checks…' });
+  await holdFill();
+  await page.getByRole('button', { name: 'File', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
+  for (const [operation, dialogName, kind] of [
+    [checksButton, 'PCB design checks', 'check'],
+    [workspace.getByRole('button', { name: 'CAM read-back preview…' }), 'CAM read-back preview', 'cam'],
+  ]) {
+    await expect.poll(pending).toBe(1);
+    const previousRequests = await fillRequests();
+    const analysisRequests = () => page.evaluate((type) => window.pcbReplies.requests(type), kind);
+    await operation.click();
+    const dialog = page.getByRole('dialog', { name: dialogName, exact: true });
+    await expect(dialog).toBeVisible();
+    await expect(page.getByText('Filling zones…', { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => window.pcbReplies.cancelled())).toBe(false);
+    expect(await analysisRequests()).toBe(0);
+    if (kind === 'check') {
+      await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(dialog).toBeHidden();
+      expect(await analysisRequests()).toBe(0);
+      expect(await fillRequests()).toBe(previousRequests);
+      await operation.click();
+    }
+    await page.evaluate(() => window.pcbReplies.release());
+    const ready = kind === 'check' ? 'Save report…' : 'Download preview bundle…';
+    await expect(dialog.getByRole('button', { name: ready })).toBeEnabled();
+    expect(await analysisRequests()).toBe(1);
+    await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(workspace.getByText('Zones filled.', { exact: true })).toBeVisible();
+    expect(await fillRequests()).toBe(previousRequests);
+    if (operation === checksButton) {
+      await workspace.getByRole('button', { name: 'Cancel zone fill' }).click();
+      await holdFill();
+      await workspace.getByRole('button', { name: 'Refill zones' }).click();
+    }
+  }
+
+  const completedRequests = await fillRequests();
+  const fill = await workspace.locator('[data-zone-fill]').getAttribute('d');
+  await checksButton.click();
+  const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+  await expect(checks.getByRole('button', { name: 'Save report…' })).toBeEnabled();
+  await checks.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(workspace.locator('[data-zone-fill]')).toHaveAttribute('d', fill);
+  expect(await fillRequests()).toBe(completedRequests);
+  expect(await page.evaluate(() => window.pcbReplies.overlaps())).toEqual([]);
+});
+
+test('saves independent zone no-connect settings and exports the refilled copper', async ({ page }, info) => {
+  const api = await layoutRuntime();
+  const fixture = zoneConnectionFixture(api);
+  await page.addInitScript((source) => {
+    const handle = {
+      name: 'Zone clearances.dpn',
+      getFile: async () => new File([
+        Uint8Array.from(JSON.parse(sessionStorage.getItem('zoneConnectionSaved') ?? 'null') ?? source),
+      ], 'Zone clearances.dpn'),
+      createWritable: async () => ({
+        write: async (bytes) => {
+          sessionStorage.setItem('zoneConnectionWrites',
+            String(Number(sessionStorage.getItem('zoneConnectionWrites')) + 1));
+          sessionStorage.setItem('zoneConnectionSaved', JSON.stringify([...bytes]));
+        },
+        close: async () => {},
+      }),
+    };
+    window.showOpenFilePicker = async () => [handle];
+  }, [...await api.encodeBoard(fixture)]);
+  const workspace = page.getByRole('region', { name: 'PCB layout' });
+  const open = async () => {
+    await page.getByRole('button', { name: 'File', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
+    await expect(workspace.getByText('Zones filled.', { exact: true })).toBeVisible();
+  };
+  await page.goto(app.baseURL);
+  await open();
+  const initialPath = await workspace.locator('[data-zone-fill]').getAttribute('d');
+  await workspace.getByRole('button', { name: 'Edit zone…' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Edit copper zone' });
+  await dialog.getByLabel('Pads', { exact: true }).selectOption('none');
+  await dialog.getByLabel('Vias', { exact: true }).selectOption('none');
+  await dialog.getByRole('button', { name: 'Apply', exact: true }).click();
+  await expect(dialog).toBeHidden();
+  await expect(workspace.getByText('Zones filled.', { exact: true })).toBeVisible();
+  const isolatedPath = await workspace.locator('[data-zone-fill]').getAttribute('d');
+  expect(isolatedPath).not.toEqual(initialPath);
+  expect(await page.evaluate(() => Number(sessionStorage.getItem('zoneConnectionWrites')))).toBe(0);
+  await workspace.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => Number(sessionStorage.getItem('zoneConnectionWrites')))).toBe(1);
+  const bytes = Uint8Array.from(await page.evaluate(() => JSON.parse(sessionStorage.getItem('zoneConnectionSaved'))));
+  const saved = await api.decodeBoard(bytes);
+  expect(saved.zones[0]).toMatchObject({ padConnection: 'none', viaConnection: 'none', clearanceNm: 400_000 });
+  expect(saved.footprints).toEqual(fixture.footprints);
+  expect(saved.vias).toEqual(fixture.vias);
+  await page.reload();
+  await open();
+  await expect(workspace.locator('[data-zone-fill]')).toHaveAttribute('d', isolatedPath);
+  await workspace.getByRole('button', { name: 'Edit zone…' }).click();
+  await expect(dialog.getByLabel('Pads', { exact: true })).toHaveValue('none');
+  await expect(dialog.getByLabel('Vias', { exact: true })).toHaveValue('none');
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await workspace.getByRole('button', { name: 'CAM read-back preview…' }).click();
+  const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+  await expect(cam.getByRole('img', { name: 'CAM read-back' })).toBeVisible();
+  const download = page.waitForEvent('download');
+  await cam.getByRole('button', { name: 'Download preview bundle…' }).click();
+  await (await download).saveAs(info.outputPath('zone-no-connect-cam-preview.zip'));
+  expect(await page.evaluate(() => Number(sessionStorage.getItem('zoneConnectionWrites')))).toBe(1);
+});
+
 test('shows a clipped thermal in design checks and the manufacturing review', async ({ page }) => {
   const api = await layoutRuntime();
   const { clipped } = thermalFixture(api);
@@ -1552,8 +2083,8 @@ test('shows a clipped thermal in design checks and the manufacturing review', as
   const workspace = page.getByRole('region', { name: 'PCB layout' });
   await workspace.getByRole('button', { name: 'Run design checks…' }).click();
   const checks = page.getByRole('dialog', { name: 'PCB design checks' });
-  const findings = checks.getByRole('list', { name: 'PCB findings' });
-  await expect(findings.getByRole('listitem').filter({ hasText: /^East/ }))
+  const findings = checks.getByRole('table', { name: 'PCB findings' });
+  await expect(findings.getByRole('row').filter({ has: page.getByRole('button', { name: /^East/ }) }))
     .toContainText(/Measured 0\.179\d+ mm\. Required 0\.3 mm/);
   await expect(findings).toContainText('North · Thermal spoke does not bridge the land and pour.');
   await checks.getByRole('button', { name: 'Close', exact: true }).click();
@@ -1591,9 +2122,9 @@ test('moves and flips the asymmetric connector reference and exports the final d
     .getByRole('button', { name: 'J1', exact: true });
   await part.click();
   const position = workspace.getByRole('group', { name: 'Position J1' });
-  const centres = () => canvas.locator('[data-component] > path[fill-rule="evenodd"]').evaluateAll((paths) =>
-    [...new Set(paths.map((path) => {
-      const { x, y, width, height } = path.getBBox();
+  const centres = () => canvas.locator('[data-component] > [data-board-pad]').evaluateAll((lands) =>
+    [...new Set(lands.map((land) => {
+      const { x, y, width, height } = land.getBBox();
       return [(x + width / 2) / 1e6, -(y + height / 2) / 1e6].join(',');
     }))].sort());
   async function move(x, y, angle, side) {
@@ -1604,6 +2135,7 @@ test('moves and flips the asymmetric connector reference and exports the final d
     await position.getByRole('button', { name: 'Apply position' }).click();
   }
   await expect.poll(centres).toEqual(['26,10.5', '26,16.5', '30.7,13.5']);
+  await expect(canvas.locator('polygon[data-board-pad]')).toHaveCount(6);
   await move('16', '16', '0', 'top');
   await expect.poll(centres).toEqual(['16.5,16', '19.5,11.3', '22.5,16']);
   await move('26', '17', '90', 'bottom');
@@ -1628,6 +2160,7 @@ test('moves and flips the asymmetric connector reference and exports the final d
   await parts.getByRole('button', { name: 'J1', exact: true }).click();
   await viewer.getByRole('button', { name: 'Show on 2D board' }).click();
   await expect(viewer).toBeHidden();
+  await page.evaluate(() => localStorage.setItem('tinycad.language', 'de'));
   const fabricationButton = workspace.getByRole('button', { name: 'Fabrication settings…' });
   await fabricationButton.click();
   const settings = page.getByRole('dialog', { name: 'Fabrication settings' });
@@ -1635,20 +2168,20 @@ test('moves and flips the asymmetric connector reference and exports the final d
   await settings.getByText('Board stackup', { exact: true }).click();
   await settings.getByLabel('Substrate material', { exact: true }).fill('FR-4');
   await settings.getByLabel('Dielectric thickness (mm)', { exact: true }).fill('1.5');
-  await settings.getByLabel('Top copper thickness (mm)', { exact: true }).fill('0.035');
-  await settings.getByLabel('Bottom copper thickness (mm)', { exact: true }).fill('0.028');
+  await settings.getByLabel('Top copper thickness (mm)', { exact: true }).fill('0,035');
+  await settings.getByLabel('Bottom copper thickness (mm)', { exact: true }).fill('0,028');
   await settings.getByLabel('Relative permittivity', { exact: true }).fill('4,35');
   await settings.getByText('Fabrication drawing details', { exact: true }).click();
   await settings.getByLabel('Surface finish', { exact: true }).fill('Lead-free HASL');
   const thicknessTolerance = settings.getByLabel('Board thickness tolerance (± mm)', { exact: true });
-  await thicknessTolerance.fill('1.6');
-  await settings.getByLabel('Outline and cutout tolerance (± mm)', { exact: true }).fill('0.15');
-  await settings.getByLabel('Finished plated hole and slot tolerance (± mm)', { exact: true }).fill('0.08');
-  await settings.getByLabel('Finished non-plated hole and slot tolerance (± mm)', { exact: true }).fill('0.05');
+  await thicknessTolerance.fill('1,6');
+  await settings.getByLabel('Outline and cutout tolerance (± mm)', { exact: true }).fill('0,15');
+  await settings.getByLabel('Finished plated hole and slot tolerance (± mm)', { exact: true }).fill('0,08');
+  await settings.getByLabel('Finished non-plated hole and slot tolerance (± mm)', { exact: true }).fill('0,05');
   await settings.getByLabel('Fabrication notes', { exact: true }).fill(notes);
   await settings.getByRole('button', { name: 'Apply', exact: true }).click();
   await expect(settings.getByRole('alert')).toContainText('thickness tolerance smaller than board thickness');
-  await thicknessTolerance.fill('0.10');
+  await thicknessTolerance.fill('0,10');
   await settings.getByRole('button', { name: 'Apply', exact: true }).click();
   await expect(settings).toBeHidden();
   await workspace.getByRole('button', { name: 'Save', exact: true }).click();
@@ -1670,10 +2203,18 @@ test('moves and flips the asymmetric connector reference and exports the final d
   const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
   await expect(cam.locator('[data-plating="plated"]')).toHaveCount(3);
   await expect(cam.locator('[data-plating="non-plated"]')).toHaveCount(2);
+  const camDrawing = cam.getByRole('img', { name: 'CAM read-back' });
+  const fittedCam = await camDrawing.getAttribute('data-view-box');
+  await camDrawing.hover();
+  await page.mouse.wheel(0, -100);
+  await expect(camDrawing).not.toHaveAttribute('data-view-box', fittedCam);
   const download = page.waitForEvent('download');
   await cam.getByRole('button', { name: 'Download preview bundle…' }).click();
   await (await download).saveAs(info.outputPath('connector-cam-preview.zip'));
   await cam.getByText(/Manufacturing review · .* release blockers/).click();
+  await expect(cam.getByRole('list', { name: 'Release blockers' }))
+    .toContainText('Select a fabrication profile and board thickness.');
+  await expect(cam.getByRole('button', { name: 'Release and download…' })).toBeDisabled();
   const pdfDownload = page.waitForEvent('download');
   await cam.getByRole('button', { name: 'Download 1:1 fabrication PDF…' }).click();
   const pdfPath = info.outputPath('connector-fabrication.pdf');
@@ -1928,7 +2469,7 @@ test('snaps measurements and saves PCB dimensions independently of the outline',
   }
   await page.goto(app.baseURL);
   await open();
-  const profile = canvas.locator(':scope > path').first();
+  const profile = canvas.locator('[data-svg-drawing] > path').first();
   const outlinePath = await profile.getAttribute('d');
 
   await editor.getByText('Dimensions and datum', { exact: true }).click();
@@ -1943,7 +2484,7 @@ test('snaps measurements and saves PCB dimensions independently of the outline',
   await editor.getByRole('button', { name: 'Measure distance', exact: true }).click();
   for (const point of [a, b]) {
     const client = await canvas.evaluate((svg, { x, y }) => {
-      const p = new DOMPoint(x, -y).matrixTransform(svg.getScreenCTM());
+      const p = new DOMPoint(x, -y).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
       return { x: p.x + 4, y: p.y - 3 };
     }, point);
     await page.mouse.click(client.x, client.y);
@@ -1989,6 +2530,105 @@ test('snaps measurements and saves PCB dimensions independently of the outline',
   await expect(profile).toHaveAttribute('d', outlinePath);
 });
 
+test('inspects and locates a routed cutout that blocks manufacturing release', async ({ page }, info) => {
+  test.setTimeout(60_000);
+  await page.setViewportSize({ width: 900, height: 700 });
+  const api = await layoutRuntime();
+  const point = (x, y) => ({ x, y });
+  const edges = (ring) => ring.map((start, index) => ({
+    kind: 'line', start, end: ring[(index + 1) % ring.length],
+  }));
+  const outer = [point(0, 0), point(30e6, 0), point(30e6, 20e6), point(0, 20e6)];
+  const cutout = [point(5e6, 5e6), point(12e6, 5e6), point(12e6, 5.8e6), point(5e6, 5.8e6)];
+  const { outline: originalOutline, ...base } = api.createBoard('Routed feature fixture', 2, outer);
+  const board = {
+    ...base,
+    requiredFeatures: [...base.requiredFeatures.filter((feature) => feature !== 'straight-outline'),
+      'analytic-profile', 'fabrication-settings'],
+    fabrication: { profileId: 'two-layer-smt-v1', thicknessNm: 1_600_000 },
+    profile: { outline: edges(originalOutline), cutouts: [edges(cutout)] },
+  };
+  await page.addInitScript((source) => {
+    window.showOpenFilePicker = async () => [{
+      name: 'Narrow cutout.dpn',
+      getFile: async () => new File([Uint8Array.from(source)], 'Narrow cutout.dpn'),
+      createWritable: async () => {
+        window.cutoutWriteAttempted = true;
+        throw new Error('Inspection must not write files.');
+      },
+    }];
+  }, [...await api.encodeBoard(board)]);
+  await page.goto(app.baseURL);
+  await page.getByRole('button', { name: 'File', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
+  const editor = page.getByRole('region', { name: 'PCB layout' });
+  await editor.getByRole('button', { name: 'Inspect board rules…' }).click();
+  const inspector = page.getByRole('dialog', { name: 'Inspect PCB rules' });
+  await inspector.getByRole('tab', { name: 'Outline', exact: true }).click();
+  const outlineChecks = inspector.getByRole('list', { name: 'Routed outline checks' });
+  await expect(outlineChecks.getByRole('listitem').filter({ hasText: 'Cutout 1' }))
+    .toContainText('minimum 1 mm (minNonPlatedSlotNm). Measured 0.8 mm. Feature below minimum.');
+  await expect(outlineChecks.getByRole('listitem').filter({ hasText: 'Board material' })).toContainText('Passed.');
+  await inspector.getByRole('button', { name: 'Close', exact: true }).click();
+
+  await editor.getByRole('button', { name: 'Run design checks…' }).focus();
+  await page.keyboard.press('Enter');
+  const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+  const locate = checks.getByRole('button', { name: 'Cutout 1 has a feature narrower than the fabrication minimum.' });
+  const findings = checks.getByRole('table', { name: 'PCB findings' });
+  await expect(findings.getByRole('columnheader')).toHaveText(['Severity', 'Finding']);
+  const cutoutFinding = findings.getByRole('row').filter({ hasText: 'Cutout 1 has a feature narrower' });
+  await expect(cutoutFinding).toContainText('Measured 0.8 mm. Required 1 mm.');
+  await expect(locate).toHaveAccessibleDescription('Error');
+  await expect(checks.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(locate).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(cutoutFinding.getByText('Finding details', { exact: true })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(cutoutFinding.getByText(/Board position/)).toBeVisible();
+  await page.keyboard.press('Shift+Tab');
+  await expect(locate).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(checks).toBeHidden();
+  await expect(editor.getByLabel('Board drawing', { exact: true })).toBeFocused();
+  await expect(editor.locator('[data-check-marker]')).toBeVisible();
+  await editor.getByRole('button', { name: 'CAM read-back preview…' }).click();
+  const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+  await cam.getByText(/Manufacturing review · [1-9][0-9]* release blockers/).click();
+  await expect(cam.getByRole('list', { name: 'Release blockers' })).toContainText('Cutout 1 has a feature narrower');
+  await expect(cam.getByRole('button', { name: 'Release and download…' })).toBeDisabled();
+  const download = page.waitForEvent('download');
+  await cam.getByRole('button', { name: 'Download preview bundle…' }).click();
+  await (await download).saveAs(info.outputPath('narrow-cutout-cam-preview.zip'));
+  expect(await page.evaluate(() => window.cutoutWriteAttempted)).toBeUndefined();
+
+  await page.evaluate(() => localStorage.setItem('tinycad.language', 'de'));
+  await page.goto(app.baseURL);
+  await page.getByRole('button', { name: 'Datei', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Öffnen', exact: true }).click();
+  await editor.getByRole('button', { name: 'Leiterplatte prüfen…' }).click();
+  const translated = page.getByRole('dialog', { name: 'Leiterplattenprüfung' });
+  const translatedFindings = translated.getByRole('table', { name: 'Leiterplattenbefunde' });
+  await expect(translatedFindings.getByRole('columnheader')).toHaveText(['Schweregrad', 'Befund']);
+  const translatedFinding = translatedFindings.getByRole('button', {
+    name: 'Cutout 1 has a feature narrower than the fabrication minimum.',
+  });
+  await expect(translatedFinding).toHaveAccessibleDescription('Fehler');
+  await expect(translatedFindings).toContainText('Gemessen 0,8 mm. Erforderlich 1 mm.');
+  await expect(translated.getByText('Prüfumfang', { exact: true })).toBeVisible();
+  await expect(translated.getByRole('listitem').filter({ hasText: 'Routed outline and cutouts' }))
+    .toContainText('Routed outline and cutouts · geprüft · fehlgeschlagen');
+  const reportDownload = page.waitForEvent('download');
+  await translated.getByRole('button', { name: 'Bericht speichern…' }).click();
+  const saved = JSON.parse(await readFile(await (await reportDownload).path(), 'utf8'));
+  expect(saved.issues.find(({ code }) => code === 'fabrication-outline-width')).toMatchObject({
+    severity: 'error',
+    message: 'Cutout 1 has a feature narrower than the fabrication minimum.',
+    measurement: { measured: 800_000, required: 1_000_000, unit: 'nm' },
+  });
+});
+
 test('edits custom line and arc profiles with located topology errors and explicit gap repair', async ({ page }) => {
   test.setTimeout(90_000);
   const api = await layoutRuntime();
@@ -2015,7 +2655,7 @@ test('edits custom line and arc profiles with located topology errors and explic
   const editor = page.getByRole('region', { name: 'PCB layout' });
   const canvas = page.locator('svg[aria-label="Board layout"]');
   await expect(canvas).toBeVisible();
-  const outline = canvas.locator(':scope > path').first();
+  const outline = canvas.locator('[data-svg-drawing] > path').first();
   const originalPath = await outline.getAttribute('d');
   await editor.getByRole('button', { name: 'Board outline…', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Set board outline' });
@@ -2028,7 +2668,8 @@ test('edits custom line and arc profiles with located topology errors and explic
   await first.getByLabel('End X').fill('39.99');
   await dialog.getByRole('button', { name: 'Apply', exact: true }).click();
   await expect(dialog.getByRole('alert')).toContainText('Edge 1 and edge 2');
-  await expect(dialog.locator('[data-profile-issue]')).toHaveAttribute('cx', '39990000');
+  await expect.poll(async () => (await drawingCentre(dialog.locator('[data-profile-issue]')))[0])
+    .toBe(39_990_000);
   await expect(first.getByRole('button', { name: 'Close small gap after edge 1' })).toHaveCount(0);
   await expect(outline).toHaveAttribute('d', originalPath);
 
@@ -2120,10 +2761,10 @@ test('drags a segment and edits a corner with clearance checks, then routes a br
   const canvas = layout.getByRole('img', { name: 'Board layout' });
   const selected = layout.getByRole('group', { name: 'Selected track', exact: true });
   const trackA = canvas.locator(`[data-track="${a.id}"]`);
-  const pathA = 'M5000000,-5000000 L20000000,-5000000';
-  await expect(trackA).toHaveAttribute('d', pathA);
+  const endpointsA = [5e6, -5e6, 20e6, -5e6];
+  await expectTrackEndpoints(trackA, endpointsA);
   const client = (x, y) => canvas.evaluate((svg, [x, y]) => {
-    const point = new DOMPoint(x * 1e6, -y * 1e6).matrixTransform(svg.getScreenCTM());
+    const point = new DOMPoint(x * 1e6, -y * 1e6).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
     return { x: point.x, y: point.y };
   }, [x, y]);
   const pick = async (x, y) => {
@@ -2143,24 +2784,25 @@ test('drags a segment and edits a corner with clearance checks, then routes a br
   await page.mouse.up();
   await expect(drag.getByLabel('Handle Y (mm)')).toHaveValue('8');
   await expect(canvas.locator('[data-track-edit-piece]')).toHaveCount(3);
-  await expect(trackA).toHaveAttribute('d', pathA);
+  await expectTrackEndpoints(trackA, endpointsA);
   await page.evaluate(() => { window.pcbReplies.hold = 'track-edit'; });
   await drag.getByRole('button', { name: 'Apply track edit', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.pcbReplies.count())).toBe(1);
+  await expect(drag.getByRole('status')).toHaveText('Checking copper edit…');
   await drag.getByRole('button', { name: 'Cancel track edit', exact: true }).press('Escape');
   await expect(drag).toBeHidden();
   await page.evaluate(() => window.pcbReplies.release());
-  await expect(trackA).toHaveAttribute('d', pathA);
+  await expectTrackEndpoints(trackA, endpointsA);
   await expect(layout.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled();
   await selected.getByRole('button', { name: 'Drag segment', exact: true }).click();
   await drag.getByLabel('Handle Y (mm)').fill('8');
   await drag.getByRole('button', { name: 'Apply track edit', exact: true }).click();
   await expect(drag).toBeHidden();
-  await expect(trackA).toHaveAttribute('d', 'M5000000,-8000000 L20000000,-8000000');
+  await expectTrackEndpoints(trackA, [5e6, -8e6, 20e6, -8e6]);
   await expect(canvas.locator('[data-track]')).toHaveCount(5);
 
   await layout.getByRole('button', { name: 'Undo', exact: true }).click();
-  await expect(trackA).toHaveAttribute('d', pathA);
+  await expectTrackEndpoints(trackA, endpointsA);
   await expect(canvas.locator('[data-track]')).toHaveCount(3);
   await selected.getByRole('button', { name: 'Move end corner', exact: true }).click();
   const corner = layout.getByRole('group', { name: 'Move corner', exact: true });
@@ -2168,12 +2810,12 @@ test('drags a segment and edits a corner with clearance checks, then routes a br
   await corner.getByLabel('Handle Y (mm)').fill('12');
   await corner.getByRole('button', { name: 'Apply track edit', exact: true }).click();
   await expect(layout.getByRole('alert')).toContainText('Track blocked');
-  await expect(trackA).toHaveAttribute('d', pathA);
+  await expectTrackEndpoints(trackA, endpointsA);
   await corner.getByLabel('Handle X (mm)').fill('16');
   await corner.getByLabel('Handle Y (mm)').fill('7');
   await corner.getByRole('button', { name: 'Apply track edit', exact: true }).click();
   await expect(corner).toBeHidden();
-  await expect(trackA).toHaveAttribute('d', 'M5000000,-5000000 L16000000,-7000000');
+  await expectTrackEndpoints(trackA, [5e6, -5e6, 16e6, -7e6]);
 
   await selected.getByRole('button', { name: 'Branch from track', exact: true }).click();
   await pick(10.5, 11);
@@ -2233,11 +2875,11 @@ test('previews copper deletion by connection, net and region before committing',
   const preview = layout.getByRole('group', { name: 'Copper deletion preview', exact: true });
   const selectedTracks = canvas.locator('[data-deletion-track]');
   const selectedVias = canvas.locator('[data-deletion-via]');
-  const spinePath = canvas.locator(`[data-track="${spine.id}"]`);
+  const spineTrack = canvas.locator(`[data-track="${spine.id}"]`);
   await expect(canvas.locator('[data-track]')).toHaveCount(6);
   const pick = async (x, y) => {
     const at = await canvas.evaluate((svg, [x, y]) => {
-      const p = new DOMPoint(x * 1e6, -y * 1e6).matrixTransform(svg.getScreenCTM());
+      const p = new DOMPoint(x * 1e6, -y * 1e6).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
       return { x: p.x, y: p.y };
     }, [x, y]);
     await page.mouse.click(at.x, at.y);
@@ -2249,7 +2891,7 @@ test('previews copper deletion by connection, net and region before committing',
   await layout.getByRole('button', { name: 'Delete connection…', exact: true }).click();
   await expect(selectedTracks).toHaveCount(1);
   await expect(selectedTracks).toHaveAttribute('d', 'M2000000,-5000000 L12000000,-5000000');
-  await expect(spinePath).toHaveAttribute('d', 'M2000000,-5000000 L22000000,-5000000');
+  await expectTrackEndpoints(spineTrack, [2e6, -5e6, 22e6, -5e6]);
   await cancel();
 
   await pick(18, 5);
@@ -2259,7 +2901,7 @@ test('previews copper deletion by connection, net and region before committing',
   await confirm.click();
   await expect(preview).toBeHidden();
   await expect(canvas.locator('[data-track]')).toHaveCount(4);
-  await expect(spinePath).toHaveAttribute('d', 'M2000000,-5000000 L12000000,-5000000');
+  await expectTrackEndpoints(spineTrack, [2e6, -5e6, 12e6, -5e6]);
   await layout.getByRole('button', { name: 'Undo', exact: true }).click();
   await expect(canvas.locator('[data-track]')).toHaveCount(6);
 
@@ -2278,7 +2920,10 @@ test('previews copper deletion by connection, net and region before committing',
   await pick(11, 3);
   await expect(confirm).toBeDisabled();
   await pick(26, 14);
-  await expect(canvas.locator('[data-deletion-region]')).toHaveAttribute('width', '15000000');
+  await expect.poll(() => canvas.locator('[data-deletion-region]').evaluate((rect) => {
+    const matrix = rect.closest('[data-svg-drawing]').getScreenCTM().inverse().multiply(rect.getScreenCTM());
+    return Math.round(rect.getBBox().width * matrix.a);
+  })).toBe(15_000_000);
   await expect(selectedTracks).toHaveCount(4);
   await preview.getByLabel('Copper selection layer', { exact: true }).selectOption('top');
   await expect(selectedTracks).toHaveCount(3);
@@ -2311,11 +2956,27 @@ test('previews route cleanup and saves locked copper through an undoable cleanup
   const down = track(climb.end, b.end);
   const right = track(b.end, p(20, 5), { locked: true });
   const via = { id: crypto.randomUUID(), netId: net, positionNm: right.end, diameterNm: 800_000, drillNm: 400_000 };
+  const modelBoard = await api.decodeBoard(await readFile(
+    new URL('../../../examples/pcb/connector/Connector.dpn', import.meta.url),
+  ));
+  const { deviceDefinitions, footprintDefinitions, modelAssets } = modelBoard;
   const board = {
-    ...base, requiredFeatures: [...base.requiredFeatures, 'routed-copper'],
+    ...base,
+    requiredFeatures: [...base.requiredFeatures, 'routed-copper', 'embedded-devices', 'physical-padstacks'],
+    deviceDefinitions, footprintDefinitions, modelAssets, footprints: [],
     nets: [{ id: net, name: 'Signal' }], tracks: [left, a, b, duplicate, climb, down, right], vias: [via],
   };
   await page.addInitScript((data) => {
+    window.cleanupReplies = [];
+    const NativeWorker = window.Worker;
+    window.Worker = class extends NativeWorker {
+      constructor(...args) {
+        super(...args);
+        this.addEventListener('message', ({ data }) => {
+          if (data.kind === 'cleanup') window.cleanupReplies.push(data);
+        });
+      }
+    };
     window.showOpenFilePicker = async () => [{
       name: 'Cleanup.dpn', getFile: async () => new File([Uint8Array.from(data)], 'Cleanup.dpn'),
     }];
@@ -2337,7 +2998,7 @@ test('previews route cleanup and saves locked copper through an undoable cleanup
   await expect(tracks).toHaveCount(7);
   const clickBoard = async (x, y) => {
     const point = await canvas.evaluate((svg, [x, y]) => {
-      const pos = new DOMPoint(x * 1e6, -y * 1e6).matrixTransform(svg.getScreenCTM());
+      const pos = new DOMPoint(x * 1e6, -y * 1e6).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
       return { x: pos.x, y: pos.y };
     }, [x, y]);
     await page.mouse.click(point.x, point.y);
@@ -2355,6 +3016,18 @@ test('previews route cleanup and saves locked copper through an undoable cleanup
   const preview = layout.getByRole('group', { name: 'Routing cleanup preview', exact: true });
   await expect(preview.getByRole('status')).toContainText('Merge 1 collinear join, remove 1 duplicate and 2 redundant loop segments');
   await expect(canvas.locator('[data-deletion-track]')).toHaveCount(2);
+  const [reply] = await page.evaluate(() => window.cleanupReplies);
+  expect(reply).toEqual({
+    id: expect.any(Number),
+    kind: 'cleanup',
+    change: {
+      removedTrackIds: [b.id, duplicate.id, climb.id, down.id],
+      replacements: [{ ...a, end: b.end }],
+      loops: expect.arrayContaining([climb, down]),
+      merged: 1,
+      duplicates: 1,
+    },
+  });
   await expect(tracks).toHaveCount(7);
   await preview.getByRole('button', { name: 'Cancel cleanup', exact: true }).click();
   await expect(canvas.locator('[data-deletion-track]')).toHaveCount(0);
@@ -2373,4 +3046,6 @@ test('previews route cleanup and saves locked copper through an undoable cleanup
   const saved = await api.decodeBoard(Uint8Array.from(await page.evaluate(() => window.savedCleanup)));
   expect(saved.tracks).toEqual([{ ...left, locked: true }, { ...a, end: b.end }, right]);
   expect(saved.vias).toEqual([{ ...via, locked: true }]);
+  expect(saved.modelAssets).toEqual(modelAssets);
+  expect(saved.footprintDefinitions).toEqual(footprintDefinitions);
 });

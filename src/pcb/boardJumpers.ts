@@ -4,6 +4,7 @@ import {
   capsulePolygon,
   polygonBoundariesMeet,
   profileRegion,
+  validateCapsule,
 } from './contours';
 import type { AssemblyLink, BoardDrill, CopperFeature } from './copper';
 import { pointInPolygon, samePoint } from './geometry';
@@ -60,8 +61,8 @@ export function validateBoardJumpers(board: BoardDocument) {
       );
     ids.add(jumper.id.toLowerCase());
     references.add(jumper.reference.trim().toLowerCase());
-    capsulePolygon(jumper.start, jumper.start, jumper.drillNm);
-    capsulePolygon(jumper.end, jumper.end, jumper.drillNm);
+    validateCapsule(jumper.start, jumper.start, jumper.drillNm);
+    validateCapsule(jumper.end, jumper.end, jumper.drillNm);
     if (
       samePoint(jumper.start, jumper.end) ||
       Math.hypot(

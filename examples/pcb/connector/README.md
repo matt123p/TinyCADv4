@@ -13,6 +13,11 @@ J1 is on the bottom at (26, 17) mm with a 90° rotation in TinyCAD board coordin
 
 The fixture uses a 1.6 mm board and preserves the manufacturer’s slot sizes. The generic classroom fabrication profile requires these slots to be at least 2.00 mm long. The fixture leaves the fabrication profile unset and is for digital read-back. Fabrication and fit testing still require a process that supports the specified slots and a physical jack.
 
+For process review, use the source revision’s manufacturing review and
+its cover sheet in the WP6 packet. They give the supplier the exact
+post-plating slot dimensions, axes, and archive hash. The short slots
+require acceptance for the actual files. [Qualification packet procedure](../../../docs/pcb-qualification.md#reproduce-the-digital-packet)
+
 ## Reproduce the digital checks
 
 Run the generator from the repo root. It checks slot endpoints, courtyard bounds, mounting keep-outs, the embedded STEP body and lead positions, and the expected profile findings.

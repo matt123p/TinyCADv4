@@ -79,6 +79,7 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   const importedFolders = [];
   let version = 1;
   let settingsVersion = 1;
+  let boardParent = 'shared';
   await page.route('https://**/*', (route) => route.abort());
   await page.route('https://www.googleapis.com/drive/v3/**', async (route) => {
     const url = new URL(route.request().url());
@@ -109,7 +110,6 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
             name: 'Shared.tcproject',
             mimeType: 'application/xml',
           },
-          { id: 'board', name: 'Board.dpn', mimeType: 'application/xml' },
           {
             id: 'source',
             name: 'src',
@@ -128,8 +128,28 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
       const folder = url.searchParams.get('q').split("'")[1];
       return route.fulfill({ json: { files: [
         ...(files[folder] ?? []),
+        ...(folder === boardParent ? [{ id: 'board', name: 'Board.dpn', mimeType: 'application/xml' }] : []),
         ...[...importedFolders, ...uploads].filter(({ parent }) => parent === folder).map(({ item }) => item),
       ] } });
+    }
+    if (url.pathname.endsWith('/board')) {
+      if (url.searchParams.get('fields') === 'parents')
+        return route.fulfill({
+          json: { parents: [boardParent] },
+          headers: { ETag: '"board-parent"', 'Access-Control-Expose-Headers': 'ETag' },
+        });
+      if (route.request().method() === 'PATCH' && route.request().postDataJSON()?.trashed) {
+        boardParent = undefined;
+        // The provider applied the change but its response was lost.
+        return route.fulfill({ status: 503, json: { error: 'Simulated lost trash response' } });
+      }
+      if (route.request().method() === 'PATCH') {
+        expect(url.searchParams.get('removeParents')).toBe(boardParent);
+        expect(url.searchParams.get('addParents')).toBe('source');
+        expect((await route.request().allHeaders())['if-match']).toBe('"board-parent"');
+        boardParent = 'source';
+        return route.fulfill({ json: { id: 'board', name: 'Board.dpn' } });
+      }
     }
     if (url.searchParams.get('alt') === 'media') {
       const file = url.pathname.split('/').at(-1);
@@ -246,7 +266,7 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   await expect(layout.getByRole('img', { name: 'Board layout' })).toBeVisible();
   await layout.getByRole('button', { name: 'Run design checks…' }).click();
   const checks = page.getByRole('dialog', { name: 'PCB design checks' });
-  await expect(checks.getByRole('list', { name: 'PCB findings' })).toContainText(
+  await expect(checks.getByRole('table', { name: 'PCB findings' })).toContainText(
     'The associated schematic has not been applied to this board.',
   );
   await checks.getByRole('button', { name: 'Close', exact: true }).click();
@@ -468,4 +488,37 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   expect(savedSettings.author).toBe('Drive editor');
   expect(savedSettings.associations).toEqual([{ schematic: drawing.documentId, board: board.boardId }]);
 
+  await page.goto(linked.href);
+  await sidebar.getByRole('button', { name: 'Actions for Board.dpn', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Cut for move', exact: true }).click();
+  await sidebar.getByRole('button', { name: 'src', exact: true }).click();
+  await sidebar.getByRole('button', { name: 'Project folder actions' }).click();
+  await page.getByRole('menuitem', { name: 'Paste moved item', exact: true }).click();
+  await expect.poll(() => settingsVersion).toBe(3);
+  const movedSettings = api.decodeProjectSettings(settings);
+  expect(boardParent).toBe('source');
+  expect(movedSettings.entries.find(({ id }) => id === board.boardId).path).toBe('src/Board.dpn');
+  expect(movedSettings.associations).toEqual(savedSettings.associations);
+  expect(movedSettings.author).toBe('Drive editor');
+
+  await page.goto(linked.href);
+  await sidebar.getByRole('button', { name: 'src', exact: true }).click();
+  await sidebar.getByRole('button', { name: 'Board.dpn', exact: true }).click();
+  await expect(layout.getByRole('img', { name: 'Board layout' })).toBeVisible();
+
+  await page.goto(linked.href);
+  await sidebar.getByRole('button', { name: 'src', exact: true }).click();
+  await sidebar.getByRole('button', { name: 'Actions for Board.dpn', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Move to trash', exact: true }).click();
+  const trash = page.getByRole('dialog', { name: 'Move to trash' });
+  await expect(trash.getByText('src/Board.dpn', { exact: true })).toBeVisible();
+  await trash.getByRole('button', { name: 'Move to trash', exact: true }).click();
+  await expect(sidebar.getByRole('button', { name: 'Board.dpn', exact: true })).toHaveCount(0);
+  await expect.poll(() => boardParent).toBeUndefined();
+  expect(settingsVersion).toBe(4);
+  const pruned = api.decodeProjectSettings(settings);
+  expect(pruned.primaryBoard).toBeUndefined();
+  expect(pruned.entries.map(({ id }) => id).sort()).toEqual([drawing.documentId, child.documentId].sort());
+  expect(pruned.associations ?? []).toEqual([]);
+  await expect(sidebar.getByRole('alert')).toHaveCount(0);
 });

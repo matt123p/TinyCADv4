@@ -678,7 +678,7 @@ export async function decodeBoard(bytes: Uint8Array): Promise<BoardDocument> {
   if (!bytes.length || bytes.length > maxBoardBytes)
     throw new Error('Invalid PCB XML size.');
   const xml = readBoardXml(decoder.decode(bytes));
-  if (xml.attributes.version !== String(boardFormat.schemaVersion))
+  if (xml.getAttribute('version') !== String(boardFormat.schemaVersion))
     throw new Error('Unsupported TinyCAD PCB XML version.');
   const {
     version,

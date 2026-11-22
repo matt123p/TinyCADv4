@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -7,35 +7,51 @@ import {
   DialogContent,
   DialogSurface,
   DialogTitle,
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
 } from '@fluentui/react-components';
 import { saveAs } from 'file-saver';
+import { useTranslation } from 'react-i18next';
 import type { BoardDocument } from '../../pcb/board';
 import type { BoardWorkspaceSession } from '../../io/boardWorkspace';
 import type { BoardWaiver } from '../../pcb/boardWaivers';
 import type { BoardCheckReport, BoardIssue } from '../../pcb/boardChecks';
 import { createBoardWorker } from '../../pcb/boardWorker';
 
-const mm = (value: number) => (value / 1_000_000).toString() + ' mm';
+import { BoardFindingDetails, FindingSeverityLabel } from './BoardFindingDetails';
+import type { BoardFinding } from '../../pcb/boardFindings';
 
 export default function BoardChecksDialog({
   board,
   readProjectCircuit,
+  waitForRefill,
   filename,
   onClose,
   onChecked,
   onInspect,
+  onProbe,
   onWaive,
   onRemoveWaiver,
 }: {
   board: BoardDocument;
   readProjectCircuit?: BoardWorkspaceSession['readProjectCircuit'];
+  waitForRefill(): Promise<void>;
   filename: string;
   onClose(): void;
   onChecked(revision: number): void;
-  onInspect(issue: BoardIssue): void;
+  onInspect(issue: BoardFinding): void;
+  onProbe?: (pin: BoardFinding['sourcePins'][number]) => void;
   onWaive(waiver: BoardWaiver): void;
   onRemoveWaiver(id: string): void;
 }) {
+  const { t } = useTranslation();
+  const findingsId = useId();
+  const waiverButton = useRef<HTMLButtonElement>(null);
+  const closeButton = useRef<HTMLButtonElement>(null);
   const [report, setReport] = useState<BoardCheckReport>();
   const [selected, setSelected] = useState<BoardIssue['advisory']>();
   const [reason, setReason] = useState('');
@@ -46,6 +62,8 @@ export default function BoardChecksDialog({
     let active = true;
     let worker: ReturnType<typeof createBoardWorker>;
     const run = async () => {
+      await waitForRefill();
+      if (!active) return;
       const projectCircuit = await readProjectCircuit?.(board);
       if (!active) return;
       worker = createBoardWorker();
@@ -68,7 +86,7 @@ export default function BoardChecksDialog({
       active = false;
       worker?.dispose();
     };
-  }, [board, readProjectCircuit, onChecked]);
+  }, [board, readProjectCircuit, onChecked, waitForRefill]);
 
   const current =
     report?.revision === board.revision && report.boardId === board.boardId;
@@ -79,72 +97,75 @@ export default function BoardChecksDialog({
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
       <DialogSurface>
         <DialogBody>
-          <DialogTitle>PCB design checks</DialogTitle>
+          <DialogTitle>{t('pcbChecks.title')}</DialogTitle>
           <DialogContent>
             {error && <p role="alert">{error}</p>}
             {!current && !error && (
               <p role="status">
                 {readProjectCircuit
-                  ? 'Comparing the project schematic and checking PCB geometry…'
-                  : 'Checking PCB geometry…'}
+                  ? t('pcbChecks.checkingProject')
+                  : t('pcbChecks.checking')}
               </p>
             )}
             {current && (
               <>
                 <p role="status">
                   {report.issues.length
-                    ? `${report.issues.length} findings for revision ${report.revision}.`
-                    : `The implemented checks found no issues for revision ${report.revision}.`}
-                  {acknowledged > 0 && ` ${acknowledged} waived.`}
+                    ? t('pcbChecks.findings', { total: report.issues.length, revision: report.revision })
+                    : t('pcbChecks.noFindings', { revision: report.revision })}
+                  {acknowledged > 0 && ' ' + t('pcbChecks.waivedCount', { total: acknowledged })}
                 </p>
-                <ol aria-label="PCB findings">
-                  {report.issues.map((issue, i) => (
-                    <li key={i}>
-                      <Button
-                        appearance="subtle"
-                        onClick={() => onInspect(issue)}
-                      >
-                        {issue.message}
-                      </Button>
-                      {issue.measuredNm !== undefined &&
-                        ' Measured ' + mm(issue.measuredNm) + '.'}
-                      {issue.requiredNm !== undefined &&
-                        ' Required ' + mm(issue.requiredNm) + '.'}
-                      {issue.clearanceRules?.length > 0 && (
-                        <ul aria-label="Matched clearance rules">
-                          {issue.clearanceRules.map(({ id, name, clearanceNm }) => (
-                            <li key={id}>{name} · {mm(clearanceNm)}</li>
-                          ))}
-                        </ul>
-                      )}
-                      {issue.advisory?.waiver ? (
-                        <>
-                          <p>Waived. {issue.advisory.waiver.reason}</p>
+                <Table aria-label={t('pcbChecks.table')} size="small">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHeaderCell scope="col" style={{ width: '6rem' }}>{t('pcbChecks.severityHeading')}</TableHeaderCell>
+                      <TableHeaderCell scope="col">{t('pcbChecks.findingHeading')}</TableHeaderCell>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {report.issues.map((issue, i) => (
+                      <TableRow key={i}>
+                        <TableCell id={findingsId + '-severity-' + i}>
+                          <FindingSeverityLabel severity={issue.severity} />
+                        </TableCell>
+                        <TableCell>
                           <Button
-                            size="small"
-                            onClick={() =>
-                              onRemoveWaiver(issue.advisory.waiver.id)
-                            }
+                            appearance="subtle"
+                            aria-describedby={findingsId + '-severity-' + i}
+                            onClick={() => onInspect(issue)}
                           >
-                            Remove waiver
-                          </Button>
-                        </>
-                      ) : (
-                        issue.advisory && (
-                          <Button
-                            size="small"
-                            onClick={() => {
-                              setSelected(issue.advisory);
-                              setReason('');
-                            }}
-                          >
-                            Waive finding…
-                          </Button>
-                        )
-                      )}
-                    </li>
-                  ))}
-                </ol>
+                            {issue.message}
+                          </Button>{' '}
+                          <BoardFindingDetails finding={issue} onProbe={onProbe} />
+                          {issue.advisory?.waiver ? (
+                            <Button
+                              size="small"
+                              onClick={() => {
+                                closeButton.current?.focus();
+                                onRemoveWaiver(issue.advisory.waiver.id);
+                              }}
+                            >
+                              {t('pcbChecks.removeWaiver')}
+                            </Button>
+                          ) : (
+                            issue.advisory && (
+                              <Button
+                                size="small"
+                                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                                  waiverButton.current = event.currentTarget;
+                                  setSelected(issue.advisory);
+                                  setReason('');
+                                }}
+                              >
+                                {t('pcbChecks.waive')}
+                              </Button>
+                            )
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
                 {selected &&
                   report.issues.some(
                     ({ advisory }) =>
@@ -155,6 +176,7 @@ export default function BoardChecksDialog({
                       onSubmit={(event) => {
                         event.preventDefault();
                         if (!reason.trim()) return;
+                        closeButton.current?.focus();
                         onWaive({
                           id: crypto.randomUUID(),
                           code: selected.code,
@@ -165,25 +187,29 @@ export default function BoardChecksDialog({
                       }}
                     >
                       <label>
-                        Reason for waiver
+                        {t('pcbChecks.reason')}
                         <textarea
                           required
+                          autoFocus
                           maxLength={2048}
                           value={reason}
                           onChange={(event) => setReason(event.target.value)}
                         />
                       </label>
                       <Button type="submit" disabled={!reason.trim()}>
-                        Save waiver
+                        {t('pcbChecks.saveWaiver')}
                       </Button>
-                      <Button onClick={() => setSelected(undefined)}>
-                        Cancel waiver
+                      <Button onClick={() => {
+                        waiverButton.current?.focus();
+                        setSelected(undefined);
+                      }}>
+                        {t('pcbChecks.cancelWaiver')}
                       </Button>
                     </form>
                   )}
                 {!!report.inactiveWaivers.length && (
                   <>
-                    <h3>Inactive waivers</h3>
+                    <h3>{t('pcbChecks.inactiveWaivers')}</h3>
                     <ul>
                       {report.inactiveWaivers.map(({ id, reason }) => (
                         <li key={id}>
@@ -192,7 +218,7 @@ export default function BoardChecksDialog({
                             size="small"
                             onClick={() => onRemoveWaiver(id)}
                           >
-                            Remove waiver
+                            {t('pcbChecks.removeWaiver')}
                           </Button>
                         </li>
                       ))}
@@ -204,11 +230,11 @@ export default function BoardChecksDialog({
                     ({ status }) => status === 'limited' || status === 'unavailable',
                   )}
                 >
-                  <summary>Check coverage</summary>
+                  <summary>{t('pcbChecks.coverage')}</summary>
                   <ul>
-                    {report.coverage.map(({ check, status, detail }) => (
+                    {report.coverage.map(({ check, status, detail, result }) => (
                       <li key={check}>
-                        {check} · {status}
+                        <span>{check} · {t(`pcbChecks.coverageStatus.${status}`)}</span> · {t(`pcbChecks.result.${result}`)}
                         {detail && ' · ' + detail}
                       </li>
                     ))}
@@ -229,11 +255,11 @@ export default function BoardChecksDialog({
                   )
                 }
               >
-                Save report…
+                {t('pcbChecks.saveReport')}
               </Button>
             )}
-            <Button appearance="primary" onClick={onClose}>
-              Close
+            <Button ref={closeButton} appearance="primary" onClick={onClose}>
+              {t('pcbChecks.close')}
             </Button>
           </DialogActions>
         </DialogBody>

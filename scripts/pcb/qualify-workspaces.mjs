@@ -3,18 +3,53 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
-import { measureClassroom, stats } from './classroom-performance.mjs';
+import { measureCheckDuringRefill, measureClassroom, measureClassroomLocalEdit, measureDesignCheck, stats } from './classroom-performance.mjs';
+import { measureClassroomPresentation } from './classroom-presentation.mjs';
+import { createWorkingSetSampler, observedMemory, sampleProcessTask } from './g0-resource-monitor.mjs';
+import { readReferenceHardware, referenceBrowserEvidence } from './reference-hardware.mjs';
+import { installClassroomWorkerMemoryProbe, measureClassroomWorkerMemory } from './classroom-worker-memory.mjs';
 
 const args = process.argv.slice(2);
 const mockDrive = args.includes('--mock-drive');
+const measureMemory = args.includes('--measure-memory');
+const checkDuringRefill = args.includes('--check-during-refill');
+const tracePresentation = args.includes('--classroom-presentation');
+const localEditFeedback = args.includes('--classroom-local-edit');
+const traceRetention = args.includes('--classroom-retention');
+const traceWorkerMemory = args.includes('--classroom-worker-memory');
 const fixtureArgument = (flag) =>
   args.find((arg) => arg.startsWith(flag + '='))?.slice(flag.length + 1);
-const channel = fixtureArgument('--channel');
-const headless = !args.includes('--headed');
+const referenceIndex = args.indexOf('--reference-host');
+const referenceFile = referenceIndex < 0
+  ? fixtureArgument('--reference-host')
+  : args.splice(referenceIndex, 2)[1];
+if (referenceIndex >= 0 && (!referenceFile || referenceFile.startsWith('--')))
+  throw new Error('Provide the hardware JSON file with --reference-host.');
+const referenceHost = referenceFile === undefined ? undefined : await readReferenceHardware(referenceFile);
+const requestedChannel = fixtureArgument('--channel');
+if (referenceHost && requestedChannel !== undefined && requestedChannel !== referenceHost.stableBrowser)
+  throw new Error('Use the stable browser channel recorded in the reference hardware file.');
+const channel = referenceHost?.stableBrowser ?? requestedChannel;
+const headless = !referenceHost && !args.includes('--headed');
+const locale = 'en-US';
 if (channel !== undefined && !['chrome', 'msedge', 'chromium'].includes(channel))
   throw new Error('Use --channel=chrome, --channel=msedge or --channel=chromium.');
 const stepBoard = fixtureArgument('--step-board');
 const classroomBoard = fixtureArgument('--classroom-board');
+if (tracePresentation && !classroomBoard)
+  throw new Error('Use --classroom-presentation with --classroom-board.');
+if (localEditFeedback && !classroomBoard)
+  throw new Error('Use --classroom-local-edit with --classroom-board.');
+if (traceRetention && (!classroomBoard || !measureMemory))
+  throw new Error('Use --classroom-retention with --classroom-board and --measure-memory.');
+if (traceWorkerMemory && !classroomBoard)
+  throw new Error('Use --classroom-worker-memory with --classroom-board.');
+const classroomEntry = fixtureArgument('--classroom-entry');
+if (classroomEntry !== undefined &&
+    (!['direct', 'switched', 'inspected'].includes(classroomEntry) || !classroomBoard || !measureMemory))
+  throw new Error('Use --classroom-entry=direct, switched or inspected with --classroom-board and --measure-memory.');
+if (checkDuringRefill && (!measureMemory || !classroomBoard))
+  throw new Error('Use --check-during-refill with --measure-memory and --classroom-board.');
 const classroomSamples = Number(fixtureArgument('--classroom-samples') ?? 1);
 const coldSamples = Number(fixtureArgument('--cold-samples') ?? 1);
 if (!Number.isSafeInteger(classroomSamples) || classroomSamples < 1 || classroomSamples > 20 ||
@@ -31,6 +66,8 @@ if (releaseReview && !camBoard)
   );
 const kicadBoard = fixtureArgument('--kicad-board');
 const kicadBundle = fixtureArgument('--kicad-bundle');
+if (classroomEntry && (stepBoard || camBoard || kicadBoard))
+  throw new Error('The dedicated classroom memory run uses only the classroom board.');
 if (Boolean(kicadBoard) !== Boolean(kicadBundle))
   throw new Error('Use --kicad-board and --kicad-bundle together.');
 if (Boolean(camBoard) !== Boolean(camBundle))
@@ -113,26 +150,48 @@ const pcbAssets =
 const simulationAssets =
   /\/(?:SimulationSheet|ChartWorkspace|engine\.worker|ngspice[^/]*|SpiceControlPanel)\./i;
 
+const chartAssets = /\/(?:Waveform|StudyHistogram)\./i;
+
+async function waitForBoardJob(dialog, ready, job) {
+  const alert = dialog.getByRole('alert').first();
+  await ready.or(alert).first().waitFor();
+  if (await alert.isVisible())
+    throw new Error(job + ' failed. ' + await alert.innerText());
+}
+
 let browser;
+let memorySampler;
 const runs = [];
 try {
   browser = await chromium.launch({ channel, headless });
   const browserSession = await browser.newBrowserCDPSession();
-  const { gpu } = await browserSession.send('SystemInfo.getInfo');
-  await browserSession.detach();
+  const reference = referenceHost ? await referenceBrowserEvidence(browser, browserSession) : undefined;
+  const graphics = reference
+    ? reference.renderer
+    : (await browserSession.send('SystemInfo.getInfo')).gpu.auxAttributes?.glRenderer ?? null;
+  if (measureMemory) memorySampler = createWorkingSetSampler();
+  async function workingSets(includeProportionalBacking = false) {
+    const { processInfo } = await browserSession.send('SystemInfo.getProcessInfo');
+    return memorySampler.sample(processInfo, includeProportionalBacking);
+  }
+  const entryWorkspaces = classroomEntry ? ['pcb'] : Object.keys(workspaceNames);
   const entries = Array.from({ length: coldSamples }, (_, index) =>
-    Object.keys(workspaceNames).map((workspace) => ({ workspace, trial: index + 1 }))).flat();
+    entryWorkspaces.map((workspace) => ({ workspace, trial: index + 1 }))).flat();
   for (const { workspace, trial } of entries) {
     const context = await browser.newContext({
       viewport: { width: 1920, height: 1080 },
+      locale,
     });
     const resources = [];
     const workers = [];
     const workerRecords = new Map();
     const errors = [];
+    const classroomRetention = traceRetention && classroomFixture && workspace === 'pcb' ? [] : undefined;
     let stage = 'cold';
     let page;
     try {
+      if (traceWorkerMemory && workspace === 'pcb' && trial === 1)
+        await context.addInitScript(installClassroomWorkerMemoryProbe);
       if (mockDrive) {
         await context.route('https://**/*', (route) => route.abort());
         await context.route(
@@ -224,7 +283,7 @@ try {
         });
       });
       page.on('pageerror', (error) => errors.push(error.message));
-      const snapshot = async (name) => {
+      const snapshot = async (name, includeProportionalBacking = false) => {
         const heap = await cdp.send('Runtime.getHeapUsage');
         const runningWorkers = await Promise.all(page.workers().map(async (worker) => {
           const record = workerRecords.get(worker);
@@ -238,6 +297,7 @@ try {
         return {
           name,
           heap,
+          ...(measureMemory ? { processes: await workingSets(includeProportionalBacking) } : {}),
           ...(await page.evaluate(() => ({
             nodes: document.getElementsByTagName('*').length,
             resources: performance.getEntriesByType('resource').length,
@@ -246,6 +306,10 @@ try {
           workerUrls: runningWorkers.map(({ url }) => url),
           runningWorkers,
         };
+      };
+      const retainedSnapshot = async (name) => {
+        await cdp.send('HeapProfiler.collectGarbage');
+        return { ...await snapshot(name, traceRetention), dom: await cdp.send('Memory.getDOMCounters') };
       };
       const workspaceButton = (name) =>
         page.getByRole('button', {
@@ -276,6 +340,7 @@ try {
       const unexpected = coldResources.filter(
         ({ url }) =>
           inspectionAssets.test(url) ||
+          chartAssets.test(url) ||
           kicadDialogAsset.test(url) ||
           (workspace !== 'pcb' && pcbAssets.test(url)) ||
           (workspace !== 'simulation' && simulationAssets.test(url)),
@@ -283,52 +348,62 @@ try {
       if (trial > 1) {
         runs.push({
           workspace, trial, entry, readyMs, measurements, workers, resources,
+          ...(measureMemory ? { observedMemory: observedMemory(measurements) } : {}),
           unexpectedColdResources: unexpected.map(({ url }) => url), errors,
         });
         continue;
       }
 
-      stage = 'switches';
-      for (let loop = 0; loop < 3; loop++) {
-        for (const next of ['pcb', 'simulation', 'circuit']) {
-          await workspaceButton(next).click();
-          await ready(next);
-          measurements.push(await snapshot(`loop ${loop + 1} ${next}`));
+      if (classroomEntry !== 'direct') {
+        stage = 'switches';
+        for (let loop = 0; loop < 3; loop++) {
+          for (const next of ['pcb', 'simulation', 'circuit']) {
+            await workspaceButton(next).click();
+            await ready(next);
+            measurements.push(await snapshot(`loop ${loop + 1} ${next}`));
+          }
         }
+
+        stage = 'pcb checks';
+        await workspaceButton('pcb').click();
+        await ready('pcb');
+        await page.getByRole('button', { name: 'Run design checks…' }).click();
+        const dialog = page.getByRole('dialog', { name: 'PCB design checks' });
+        const result = dialog.getByRole('table', { name: 'PCB findings' });
+        await waitForBoardJob(dialog, result, 'PCB design checks');
+        const findings = await result.locator('tbody > tr').allTextContents();
+        if (findings.length) throw new Error('Empty PCB reported findings. ' + findings.join(' '));
+        const checkedBoard = await snapshot('PCB checks ready');
+        if (checkedBoard.runningWorkers.some(({ name }) => name === 'tinycad-schematic-netlist'))
+          throw new Error('The schematic netlist worker remained active in PCB Design.');
+        measurements.push(checkedBoard);
+        await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+      }
+      const inspection = page.getByRole('dialog', { name: '3D board inspection' });
+      if (!classroomEntry || classroomEntry === 'inspected') {
+        stage = '3D inspection';
+        await page.getByRole('button', { name: 'Inspect in 3D…' }).click();
+        await waitForBoardJob(inspection, inspection.getByText(/Assumed board thickness/), '3D inspection');
+        measurements.push(await snapshot('3D inspection ready'));
+        await inspection
+          .getByRole('button', { name: 'Close', exact: true })
+          .click();
+        if (
+          workers.some(
+            ({ stage: started, closedDuring, url }) =>
+              started === '3D inspection' &&
+              /\/board\.worker\./.test(url) &&
+              !closedDuring,
+          )
+        )
+          errors.push('A 3D worker remained open after closing inspection.');
       }
 
-      stage = 'pcb checks';
-      await workspaceButton('pcb').click();
-      await ready('pcb');
-      await page.getByRole('button', { name: 'Run design checks…' }).click();
-      const dialog = page.getByRole('dialog', { name: 'PCB design checks' });
-      await dialog.getByText(/checks found no issues/).waitFor();
-      measurements.push(await snapshot('PCB checks ready'));
-      await dialog.getByRole('button', { name: 'Close', exact: true }).click();
-
-      stage = '3D inspection';
-      await page.getByRole('button', { name: 'Inspect in 3D…' }).click();
-      const inspection = page.getByRole('dialog', {
-        name: '3D board inspection',
-      });
-      await inspection.getByText(/Assumed board thickness/).waitFor();
-      measurements.push(await snapshot('3D inspection ready'));
-      await inspection
-        .getByRole('button', { name: 'Close', exact: true })
-        .click();
-      if (
-        workers.some(
-          ({ stage: started, closedDuring, url }) =>
-            started === '3D inspection' &&
-            /\/board\.worker\./.test(url) &&
-            !closedDuring,
-        )
-      )
-        errors.push('A 3D worker remained open after closing inspection.');
-
       async function openFixture(name) {
-        await workspaceButton('circuit').click();
-        await ready('circuit');
+        if (!classroomEntry) {
+          await workspaceButton('circuit').click();
+          await ready('circuit');
+        }
         await page.evaluate((name) => {
           window.qualificationBoardName = name;
         }, name);
@@ -338,20 +413,46 @@ try {
             return dialog.accept();
           return dialog.dismiss();
         };
+        const open = page.getByRole('menuitem', { name: 'Open', exact: true });
+        const timing = await open.evaluateHandle((item, basename) => {
+          let frame;
+          const expectedTitle = 'TinyCAD - ' + basename;
+          const result = {
+            openMs: undefined,
+            dispose() {
+              item.removeEventListener('click', begin, true);
+              cancelAnimationFrame(frame);
+            },
+          };
+          function begin() {
+            const startedAt = performance.now();
+            function check() {
+              const drawing = document.querySelector(
+                'section[aria-label="PCB layout"] svg[aria-label="Board layout"] [data-svg-drawing]:not([visibility="hidden"])',
+              );
+              if (document.title === expectedTitle && drawing)
+                result.openMs = performance.now() - startedAt;
+              else frame = requestAnimationFrame(check);
+            }
+            frame = requestAnimationFrame(check);
+          }
+          item.addEventListener('click', begin, { capture: true, once: true });
+          return result;
+        }, name);
         page.on('dialog', replaceCurrent);
-        const start = performance.now();
+        const startedAt = performance.now();
         try {
-          await page
-            .getByRole('menuitem', { name: 'Open', exact: true })
-            .click();
-          await page
-            .getByText(name, { exact: true })
-            .last()
-            .waitFor({ timeout: 30_000 });
+          await open.click();
+          await page.waitForFunction((probe) => probe.openMs !== undefined, timing, { timeout: 30_000 });
+          return {
+            openMs: await timing.evaluate((probe) => probe.openMs),
+            openHarnessMs: performance.now() - startedAt,
+          };
         } finally {
           page.off('dialog', replaceCurrent);
+          await timing.evaluate((probe) => probe.dispose()).catch(() => {});
+          await timing.dispose();
         }
-        return performance.now() - start;
       }
 
       if (stepFixture && workspace === 'pcb') {
@@ -368,10 +469,8 @@ try {
           await openFixture('Inspection.dpn');
         }
         await page.getByRole('button', { name: 'Inspect in 3D…' }).click();
-        await inspection
-          .getByText(/Generated STEP envelope|Imported STEP/)
-          .first()
-          .waitFor();
+        const model = inspection.getByText(/Generated STEP envelope|Imported STEP/).first();
+        await waitForBoardJob(inspection, model, 'Embedded STEP inspection');
         measurements.push(await snapshot('embedded STEP displayed'));
         await inspection
           .getByRole('button', { name: 'Close', exact: true })
@@ -387,10 +486,13 @@ try {
         const preview = page.getByRole('dialog', {
           name: 'CAM read-back preview',
         });
-        await preview
-          .getByText(/Gerber and drill read-back matched revision/)
-          .waitFor();
-        await preview.getByLabel('CAM layer').selectOption('silk-bottom');
+        const ready = preview.getByText(/Gerber and drill read-back matched revision/);
+        await waitForBoardJob(preview, ready, 'CAM preview');
+        const layerPicker = preview.getByLabel('CAM layer');
+        const layers = await layerPicker.locator('option').evaluateAll((options) =>
+          options.map(({ value, label }) => ({ value, label })),
+        );
+        if (!layers.length) throw new Error('CAM preview has no artwork layers.');
         const download = page.waitForEvent('download');
         await preview
           .getByRole('button', { name: 'Download preview bundle…' })
@@ -401,9 +503,11 @@ try {
           await preview
             .getByText(/Manufacturing review · .* release blockers/)
             .click();
-          await preview
-            .getByLabel('Bottom silkscreen reviewed', { exact: true })
-            .check();
+          for (const { value, label } of layers) {
+            await layerPicker.selectOption(value);
+            await preview.getByRole('img', { name: 'CAM read-back' }).waitFor();
+            await preview.getByLabel(label + ' reviewed', { exact: true }).check();
+          }
           await preview
             .getByLabel('Outline and both drill files reviewed', {
               exact: true,
@@ -415,9 +519,7 @@ try {
               { exact: true },
             )
             .check();
-          await preview
-            .getByRole('list', { name: 'Release blockers' })
-            .waitFor();
+
           const archive = page.waitForEvent('download');
           await preview
             .getByRole('button', { name: 'Download release review…' })
@@ -437,14 +539,10 @@ try {
         const preview = page.getByRole('dialog', {
           name: 'Export KiCad board',
         });
-        await preview
-          .getByRole('list', { name: 'KiCad export notes' })
-          .getByText(/zone.*could not be mapped/i)
-          .waitFor();
+        const downloadButton = preview.getByRole('button', { name: 'Download KiCad bundle…' });
+        await waitForBoardJob(preview, downloadButton, 'KiCad export');
         const download = page.waitForEvent('download');
-        await preview
-          .getByRole('button', { name: 'Download KiCad bundle…' })
-          .click();
+        await downloadButton.click();
         await (await download).saveAs(kicadBundle);
         measurements.push(await snapshot('KiCad export downloaded'));
         await preview
@@ -454,41 +552,142 @@ try {
 
       let classroom;
       if (classroomFixture && workspace === 'pcb') {
+        stage = 'before classroom open';
+        if (classroomEntry && resources.some(({ url }) => chartAssets.test(url)))
+          errors.push('The empty-workspace probes loaded a simulation chart renderer.');
+        if (measureMemory) measurements.push(await snapshot(stage));
+        if (classroomRetention) classroomRetention.push(await retainedSnapshot(stage));
         const samples = [];
+        const phaseMemory = { routing: [], refill: [], check: [] };
+        const measurePhase = measureMemory ? async (phase, task) => {
+          const { result, memory } = await sampleProcessTask(workingSets, task, 100);
+          phaseMemory[phase].push(memory);
+          return result;
+        } : undefined;
         for (const [index, name] of classroomFiles.entries()) {
           stage = 'classroom board ' + (index + 1);
-          samples.push(await measureClassroom(page, openFixture, name));
+          const checkpoint = measureMemory ? async (phase) => {
+            measurements.push(await snapshot(stage + ' ' + phase));
+          } : undefined;
+          samples.push(await measureClassroom(page, openFixture, name, checkpoint, measurePhase));
           measurements.push(await snapshot(stage + ' checked'));
+          if (classroomRetention) classroomRetention.push(await retainedSnapshot(stage + ' checked'));
         }
         const metrics = [
-          'openMs', 'refillAfterOpenMs', 'explicitRefillMs', 'checksMs', 'cancelFillMs',
-          'selectionMs', 'routeReadyMs', 'routePreviewMs', 'routeLongTaskMs', 'zoomFrameMs',
+          'openMs', 'openHarnessMs', 'refillAfterOpenMs', 'explicitRefillMs', 'checksMs', 'cancelFillMs',
+          'selectionMs', 'routeReadyMs', 'routePreviewMs', 'routeLongTaskMs', 'checkLongTaskMs', 'zoomFrameMs',
+          'panFrameMs', 'cancelWorkerCloseMs', 'routePreparationWorkerCloseMs',
         ];
         classroom = {
           samples,
+          ...(measureMemory ? {
+            routingMemory: phaseMemory.routing,
+            refillMemory: phaseMemory.refill,
+            checkMemory: phaseMemory.check,
+          } : {}),
           statistics: Object.fromEntries(metrics.map((metric) =>
             [metric, stats(samples.flatMap((sample) => sample[metric]))])),
         };
       }
 
+      let classroomMemory;
+      if (measureMemory && classroomFixture && workspace === 'pcb') {
+        stage = 'classroom memory';
+        const { result, memory } = await sampleProcessTask(
+          workingSets, () => measureDesignCheck(page), 100,
+        );
+        classroomMemory = { ...memory, checksMs: result.checksMs, findings: result.findings };
+      }
+
+      let refillCheck;
+      if (checkDuringRefill && workspace === 'pcb') {
+        stage = 'design check during refill';
+        const { result, memory } = await sampleProcessTask(
+          workingSets, () => measureCheckDuringRefill(page), 100,
+        );
+        refillCheck = { ...result, memory };
+      }
+
+      let classroomPresentation;
+      if (tracePresentation && workspace === 'pcb') {
+        stage = 'classroom compositor presentation';
+        classroomPresentation = await measureClassroomPresentation(page, cdp);
+      }
+      let classroomLocalEdit;
+      if (localEditFeedback && workspace === 'pcb') {
+        stage = 'classroom edit feedback';
+        classroomLocalEdit = await measureClassroomLocalEdit(page);
+      }
+
+      let classroomWorkerMemory;
+      if (traceWorkerMemory && workspace === 'pcb') {
+        stage = 'classroom worker memory';
+        classroomWorkerMemory = await measureClassroomWorkerMemory(page, browserSession);
+      }
+
       stage = 'retained';
       await workspaceButton('circuit').click();
       await ready('circuit');
-      await cdp.send('HeapProfiler.collectGarbage');
-      const retained = await snapshot('circuit after forced GC');
+      const retained = await retainedSnapshot('circuit after forced GC');
       measurements.push(retained);
       const retainedWorkspaceWorker = retained.runningWorkers.find(({ name, url }) =>
         name === 'tinycad-pcb' || name === 'tinycad-simulation' ||
         /\/(?:board|engine)\.worker\./.test(url));
       if (retainedWorkspaceWorker)
         errors.push('A workspace worker remained open after returning to Circuit Design: ' + retainedWorkspaceWorker.url);
+      if (classroomRetention) {
+        classroomRetention.push(retained);
+        stage = 'return to the classroom board';
+        await workspaceButton('pcb').click();
+        await ready('pcb');
+        const board = page.getByRole('region', { name: 'PCB layout' });
+        await board.getByText('Zones filled.', { exact: true }).waitFor();
+        const currentCount = await board.locator('[data-track]').count();
+        const title = (await page.title()).replace(/\*$/, '');
+        if (title !== 'TinyCAD - ' + classroomFiles.at(-1) ||
+          currentCount !== classroom.samples.at(-1).counts.tracks)
+          errors.push('The last classroom PCB did not reopen with its tracks when switching workspaces.');
+        classroomRetention.push(await retainedSnapshot(stage));
+
+        stage = 'after closing the classroom board';
+        const discard = (dialog) => dialog.message() === 'Discard unsaved PCB edits?'
+          ? dialog.accept() : dialog.dismiss();
+        page.on('dialog', discard);
+        try {
+          await board.getByRole('button', { name: 'Close', exact: true }).click();
+          await board.waitFor({ state: 'hidden' });
+        } finally {
+          page.off('dialog', discard);
+        }
+        await ready('circuit');
+        const closed = await retainedSnapshot(stage);
+        classroomRetention.push(closed);
+        if (closed.runningWorkers.some(({ name }) => name === 'tinycad-pcb'))
+          errors.push('A PCB worker remained open after closing the classroom board.');
+      }
+      const memoryTasks = [
+        ['route preview', classroom?.routingMemory],
+        ['zone refill', classroom?.refillMemory],
+        ['design check', classroom?.checkMemory],
+      ].flatMap(([name, samples]) => (samples ?? []).map((sample, index) => [
+        'classroom board ' + (index + 1) + ' ' + name, sample,
+      ]));
+      if (classroomMemory) memoryTasks.push(['classroom repeat design check', classroomMemory]);
+      if (refillCheck) memoryTasks.push(['design check during refill', refillCheck.memory]);
       runs.push({
         workspace,
         trial,
         entry,
         readyMs,
         classroom,
+        classroomMemory,
+        classroomPresentation,
+        classroomLocalEdit,
+        classroomRetention,
+        classroomWorkerMemory,
+        refillCheck,
         measurements,
+        ...(measureMemory ? { observedMemory: observedMemory(measurements, memoryTasks) } : {}),
         workers,
         resources,
         unexpectedColdResources: unexpected.map(({ url }) => url),
@@ -501,6 +700,7 @@ try {
         stage,
         error: String(error),
         errors,
+        classroomRetention,
         workers,
         resources,
         alerts: await page
@@ -525,12 +725,19 @@ try {
       memoryBytes: os.totalmem(),
       viewport: { width: 1920, height: 1080 },
       headless,
-      channel: channel ?? 'Playwright bundled Chromium',
-      graphics: gpu.auxAttributes?.glRenderer ?? null,
+      locale,
+      channel: channel ?? (headless ? 'Playwright Chromium headless shell' : 'Playwright bundled Chromium'),
+      graphics,
+      ...(referenceHost ? {
+        referenceLaptop: referenceHost, referenceDisplay: reference.display,
+        graphicsDevices: reference.devices, graphicsFeatures: reference.features,
+        webGLRenderer: reference.webGLRenderer,
+      } : {}),
     },
     dist,
     stepBoard: stepBoard ?? null,
     classroomBoard: classroomBoard ?? null,
+    classroomEntry: classroomEntry ?? null,
     camBoard: camBoard ?? null,
     camBundle: camBundle ?? null,
     releaseReview: releaseReview ?? null,
@@ -543,11 +750,32 @@ try {
     coverage: [
       'One new browser context per cold entry within one Chromium process.',
       'Heap samples cover the renderer V8 target. They do not measure process RSS, worker heaps or GPU memory.',
-      'Repeated empty-workspace switches, a PCB check and 3D inspection of the bare board.',
+      ...(classroomEntry ? [
+        'Dedicated classroom run starts in PCB Design in a fresh Chromium process.',
+        ...(classroomEntry === 'direct' ? [] : ['Three empty-workspace cycles and an empty PCB check before classroom file open.']),
+        ...(classroomEntry === 'inspected' ? ['3D inspection of the empty board before classroom file open.'] : []),
+      ] : ['Repeated empty-workspace switches, a PCB check and 3D inspection of the bare board.']),
+      ...(measureMemory ? [
+        'Process working sets come from the isolated Chromium instance. Renderer memory includes workers hosted by that process. Summing working sets can count shared pages more than once. The GPU process working set excludes dedicated GPU memory. On Linux, proportional set size apportions shared pages across the processes that map them when procfs permits the read.',
+        'Process memory is sampled separately during routing, refill, the first check after refill and a repeat check. Each task records a pre-task snapshot and the start and completion of each sample. Peaks use samples that finished before the task did. A missing peak means no eligible sample was captured.',
+        'The observed memory summary reports the highest completed task sample or workspace snapshot for each metric, with its phase. Presentation and local edit feedback are timed separately.',
+      ] : []),
       ...(classroomFixture ? [
-        'Classroom file opens and full checks use warmed application dependencies in a single browser context. The distinct filenames each load the same board bytes.',
-        'Selection, route and zoom delays measure event dispatch through observable SVG or inspector updates. Zoom delays are per interaction rather than a continuous presentation frame-rate measurement.',
-        'Cancellation acknowledges its changed UI state. It does not time worker termination.',
+        'Classroom file opens and full checks use warmed application dependencies in a single browser context. The distinct filenames each load the same board bytes. Open time is measured in the page from the Open command click to the first animation frame with the named board drawing visible. Harness time also includes automation overhead.',
+        'Selection, route and zoom delays measure event dispatch through observable SVG or inspector updates. Pan records consecutive animation-frame intervals while processing 60 SVG position changes. These are browser callback intervals, not compositor presentation times.',
+        'Cancellation records UI acknowledgement and the geometry worker close event observed through Playwright, including IPC latency.',
+      ] : []),
+      ...(tracePresentation ? [
+        'Compositor measurements use Chromium PipelineReporter presentation feedback during separate pan and zoom input windows. Unavailable feedback is recorded explicitly.',
+      ] : []),
+      ...(localEditFeedback ? [
+        'Local edit feedback measures five route continuations from the Finish route command to the first pending message or committed track, and separately to the committed track.',
+      ] : []),
+      ...(traceRetention ? [
+        'Classroom retention snapshots use forced garbage collection and record renderer heap, live DOM counters, workers and process memory. The final samples switch away from an open PCB, return to it, then explicitly close it. These diagnostic samples are separate from task peak reporting.',
+      ] : []),
+      ...(traceWorkerMemory ? [
+        'The worker memory diagnostic repeats a design check after timing. It records the completed PCB worker’s V8 heap and Clipper’s WASM capacity before stopping that worker. This is a completion sample.',
       ] : []),
     ],
     runs,
@@ -563,6 +791,7 @@ try {
   )
     process.exitCode = 1;
 } finally {
+  memorySampler?.close();
   await browser?.close();
   server.closeAllConnections();
   await new Promise((resolve) => server.close(resolve));

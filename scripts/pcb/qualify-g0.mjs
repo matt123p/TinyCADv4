@@ -13,6 +13,10 @@ import path from 'node:path';
 import { build } from 'esbuild';
 import { chromium, _electron } from 'playwright';
 import { monitorRuntime } from './g0-resource-monitor.mjs';
+import {
+  assertReferenceDisplay, assertReferenceGraphics, readReferenceHardware,
+  referenceBrowserEvidence, referenceWindowEvidence,
+} from './reference-hardware.mjs';
 
 const resourceMonitoring = process.argv
   .slice(2)
@@ -29,63 +33,12 @@ if (args.length) {
       'Usage: npm run qualify:pcb-g0 -- [--reference-host <hardware.json>] [--monitor-resources]',
     );
   }
-  const reported = JSON.parse(await readFile(args[1], 'utf8'));
-  assert.equal(
-    typeof reported.model,
-    'string',
-    'Record the exact reference laptop model.',
-  );
-  assert(reported.model.trim(), 'Record the exact reference laptop model.');
-  assert.equal(
-    reported.physicalCores,
-    4,
-    'The reference laptop requires four physical CPU cores.',
-  );
-  assert.equal(
-    reported.installedRamGiB,
-    8,
-    'The reference laptop requires 8 GiB of installed RAM.',
-  );
-  assert.equal(
-    typeof reported.integratedGpu,
-    'string',
-    'Record the exact integrated GPU model.',
-  );
-  assert(
-    reported.integratedGpu.trim(),
-    'Record the exact integrated GPU model.',
-  );
-  assert(
-    ['chrome', 'msedge'].includes(reported.stableBrowser),
-    'Choose the installed stable Chrome or Edge channel.',
-  );
-  assert(
-    os.cpus().length >= 4,
-    'The running host reports fewer than four logical cores.',
-  );
-  assert(
-    os.totalmem() <= 8 * 1024 ** 3,
-    'The running host reports more usable memory than the 8 GiB reference laptop.',
-  );
+  referenceHost = await readReferenceHardware(args[1]);
   assert.notEqual(
     process.env.TINYCAD_PCB_G0_NO_ELECTRON_SANDBOX,
     '1',
     'Keep the Electron sandbox enabled for the reference run.',
   );
-  const {
-    model,
-    physicalCores,
-    installedRamGiB,
-    integratedGpu,
-    stableBrowser,
-  } = reported;
-  referenceHost = {
-    model,
-    physicalCores,
-    installedRamGiB,
-    integratedGpu,
-    stableBrowser,
-  };
 }
 
 const require = createRequire(import.meta.url);
@@ -299,6 +252,7 @@ let browser;
 let desktop;
 const versions = {};
 const resourceUsage = {};
+const referenceGraphics = {};
 async function qualifyRuntime(page, platform, readPids) {
   if (!resourceMonitoring) return qualify(page, platform);
   const { result, resources } = await monitorRuntime(readPids, () =>
@@ -309,16 +263,18 @@ async function qualifyRuntime(page, platform, readPids) {
 }
 try {
   browser = await chromium.launch({
-    ...(referenceHost ? { channel: referenceHost.stableBrowser } : {}),
+    ...(referenceHost ? { channel: referenceHost.stableBrowser, headless: false } : {}),
     args: [
       '--enable-precise-memory-info',
       '--enable-blink-features=ForceEagerMeasureMemory',
     ],
   });
   versions.chromium = browser.version();
-  const browserProcesses = resourceMonitoring
+  const browserProcesses = resourceMonitoring || referenceHost
     ? await browser.newBrowserCDPSession()
     : undefined;
+  if (referenceHost)
+    referenceGraphics.browser = await referenceBrowserEvidence(browser, browserProcesses);
   observations.browser = await qualifyRuntime(
     await browser.newPage(
       referenceHost ? { viewport: { width: 1920, height: 1080 } } : {},
@@ -335,6 +291,7 @@ try {
     ...process.env,
     TINYCAD_PCB_G0_PROFILE: path.join(output, 'electron-profile'),
     TINYCAD_PCB_G0_URL: url,
+    TINYCAD_PCB_G0_REFERENCE: referenceHost ? '1' : '0',
   };
   delete env.ELECTRON_RUN_AS_NODE;
   const disableElectronSandbox = env.TINYCAD_PCB_G0_NO_ELECTRON_SANDBOX === '1';
@@ -359,20 +316,23 @@ try {
       scaleFactor,
     };
   });
+  const desktopPage = await desktop.firstWindow();
   if (referenceHost) {
-    assert.equal(
-      display.widthPx,
-      1920,
-      'Set the primary display to 1920 × 1080 for the reference run.',
-    );
-    assert.equal(
-      display.heightPx,
-      1080,
-      'Set the primary display to 1920 × 1080 for the reference run.',
-    );
+    assertReferenceDisplay(display);
+    const windowEvidence = await referenceWindowEvidence(desktopPage);
+    const graphics = await desktop.evaluate(async ({ app }) => {
+      const gpu = await app.getGPUInfo('complete');
+      return {
+        renderer: gpu.auxAttributes?.glRenderer,
+        devices: gpu.gpuDevice ?? gpu.devices ?? [],
+        features: app.getGPUFeatureStatus(),
+      };
+    });
+    assertReferenceGraphics(windowEvidence, graphics);
+    referenceGraphics.desktop = { ...graphics, webGLRenderer: windowEvidence.renderer };
   }
   observations.desktop = await qualifyRuntime(
-    await desktop.firstWindow(),
+    desktopPage,
     'desktop',
     () =>
       desktop.evaluate(({ app }) => app.getAppMetrics().map(({ pid }) => pid)),
@@ -381,7 +341,7 @@ try {
   desktop = undefined;
   const report = {
     host: {
-      ...(referenceHost ? { referenceLaptop: referenceHost } : {}),
+      ...(referenceHost ? { referenceLaptop: referenceHost, referenceGraphics } : {}),
       os: process.platform,
       arch: process.arch,
       cpu: os.cpus()[0]?.model,

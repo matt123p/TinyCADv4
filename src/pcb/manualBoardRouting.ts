@@ -1,7 +1,8 @@
 import { validateBoard } from './board';
 import type { BoardDocument, CopperLayer } from './board';
 import { boardCopperGeometry } from './boardCopperGeometry';
-import type { BoardTrack, BoardVia } from './boardRouting';
+import { applyBoardRoutingEdit } from './boardRouting';
+import type { BoardRoutingEdit, BoardTrack, BoardVia } from './boardRouting';
 import { capsulePolygon, profileRegion } from './contours';
 import type { PolygonRegion } from './contours';
 import type { BoardPoint } from './geometry';
@@ -79,7 +80,12 @@ function routeClearance(
   const profile = board.profile
     ? profileRegion(board.profile)
     : { outer: board.outline, holes: [] };
-  const existing = boardCopperGeometry(board);
+  const regional = regionalClearance(board, kernel);
+  // Spatial clearance rules still use the copper polygons for region clipping.
+  const existing = boardCopperGeometry(
+    regional.hasRules ? board : { ...board, tracks: [] },
+    { includeApertures: false },
+  );
   const resolver = boardRuleResolver(board);
   const sameNetDrills = new Set(
     existing.features
@@ -94,23 +100,32 @@ function routeClearance(
     widthNm: drill.widthNm + 2 * (mountingClearance.get(drill.id) ?? 0),
   }));
   const mounting = mountingKeepouts(board);
-  const regional = regionalClearance(board, kernel);
   const spacing = board.copperLayers.flatMap(({ id }) =>
     regional.obstaclesFor(id, netId, existing.features).map((copper) => ({ side: id, copper })),
+  );
+  const otherTracks = (board.tracks ?? []).filter((track) => track.netId !== netId);
+  const straightTrackObstacles = (kind: 'track' | 'via') => otherTracks.map(
+    ({ start, end, layerId, widthNm, netId: otherNet }) => ({
+      start, end, layerId, widthNm,
+      clearanceNm: resolver.copperClearance({ netId, kind }, { netId: otherNet, kind: 'track' }),
+    }),
   );
   const clearance = {
     profile,
     rules: resolver.net(netId),
     layers: board.copperLayers.map(({ id }) => id),
     netId,
-    obstacles: existing.features,
+    obstacles: existing.features.filter(({ kind }) => kind !== 'track'),
+    straightTrackObstacles: straightTrackObstacles('via'),
     clearanceFor: (feature: (typeof existing.features)[number]) =>
       resolver.copperClearance({ netId, kind: 'via' }, feature),
     keepouts: [...mounting, ...spacing, ...routingRegionKeepouts(board, 'via', netId)],
     drills,
   };
+  const trackObstacles = straightTrackObstacles('track');
   const trackContext = (widthNm: number) => ({
     ...clearance,
+    straightTrackObstacles: trackObstacles,
     keepouts: [...mounting, ...spacing, ...routingRegionKeepouts(board, 'track', netId, widthNm)],
     clearanceFor: (feature: (typeof existing.features)[number]) =>
       resolver.copperClearance({ netId, kind: 'track' }, feature),
@@ -154,7 +169,7 @@ function preserveRouteContacts(
   const featureId = (fragment: string) =>
     fragment.slice(0, fragment.lastIndexOf('/'));
   const topology = (board: BoardDocument) => {
-    const geometry = boardCopperGeometry(board);
+    const geometry = boardCopperGeometry(board, { includeApertures: false });
     const { fills } = boardZoneGeometry(board, kernel, geometry);
     const copper = [...geometry.features, ...fills].filter(
       (feature) => feature.netId === netId,
@@ -202,6 +217,14 @@ export function editManualTracks(
   edit: ManualTrackEdit,
   kernel: PolygonKernel,
 ): BoardDocument {
+  return prepareManualTrackEdit(board, edit, kernel).board;
+}
+
+export function prepareManualTrackEdit(
+  board: BoardDocument,
+  edit: ManualTrackEdit,
+  kernel: PolygonKernel,
+) {
   const { replace, pieces, netId } = planTrackEdit(board, edit);
   const oldIds = new Set(replace.map(({ id }) => id));
   const tracks = board.tracks.filter(({ id }) => !oldIds.has(id));
@@ -224,12 +247,12 @@ export function editManualTracks(
     ...piece,
     id: piece.id ?? crypto.randomUUID(),
   }));
-  const candidate = validateBoard({
-    ...board,
-    tracks: [...tracks, ...replacements],
-  });
+  const change: BoardRoutingEdit = {
+    kind: 'track-edit', removedTrackIds: [...oldIds], addedTracks: replacements,
+  };
+  const candidate = validateBoard(applyBoardRoutingEdit(board, change));
   preserveRouteContacts(board, candidate, netId, replace, replacements, kernel);
-  return candidate;
+  return { board: candidate, change };
 }
 
 export function commitManualRoute(
@@ -237,6 +260,14 @@ export function commitManualRoute(
   route: ManualRoute,
   kernel: PolygonKernel,
 ): BoardDocument {
+  return prepareManualRoute(board, route, kernel).board;
+}
+
+export function prepareManualRoute(
+  board: BoardDocument,
+  route: ManualRoute,
+  kernel: PolygonKernel,
+) {
   const rules = boardRuleResolver(board).net(route.netId);
   const process = fabricationProfileFor(board)?.limits;
   const oldVias = new Set(board.vias?.map(({ id }) => id));
@@ -268,18 +299,15 @@ export function commitManualRoute(
       );
   }
 
-  const existingTracks = (board.tracks ?? []).filter(
-    ({ id }) => id !== oldTrack?.id,
-  );
   const { existing, clearance, trackClearance } = routeClearance(
-    oldTrack ? { ...board, tracks: existingTracks } : board,
+    oldTrack ? { ...board, tracks: board.tracks.filter(({ id }) => id !== oldTrack.id) } : board,
     route.netId,
     kernel,
   );
   const trackClear = trackClearance(route.widthNm);
 
-  const tracks: BoardTrack[] = [...existingTracks];
-  const vias: BoardVia[] = [...(board.vias ?? [])];
+  const addedTracks: BoardTrack[] = [];
+  const addedVias: BoardVia[] = [];
   const routeVias = new Map<string, BoardPoint>();
   let viaClear: ReturnType<typeof centrelineClearance>;
   const path = simplifyRoutePath(route.path);
@@ -294,11 +322,8 @@ export function commitManualRoute(
         throw new Error(
           'Track blocked by the board edge, a drill, copper clearance or a routing region.',
         );
-      tracks.push({
-        id:
-          tracks.length === existingTracks.length && oldTrack
-            ? oldTrack.id
-            : crypto.randomUUID(),
+      addedTracks.push({
+        id: addedTracks.length === 0 && oldTrack ? oldTrack.id : crypto.randomUUID(),
         layerId: to.layer,
         netId: route.netId,
         start: from.position,
@@ -365,7 +390,7 @@ export function commitManualRoute(
     )
       throw new Error('Via is too close to another via on this route.');
     routeVias.set(key, position);
-    vias.push({
+    addedVias.push({
       id: crypto.randomUUID(),
       netId: route.netId,
       positionNm: position,
@@ -373,27 +398,20 @@ export function commitManualRoute(
       drillNm: route.viaDrillNm,
     });
   }
-  if (
-    tracks.length === existingTracks.length &&
-    vias.length === (board.vias?.length ?? 0)
-  )
+  if (!addedTracks.length && !addedVias.length)
     throw new Error('The route does not add any copper.');
-  const candidate = validateBoard({
-    ...board,
-    requiredFeatures: [
-      ...new Set([...board.requiredFeatures, 'routed-copper' as const]),
-    ],
-    tracks,
-    vias,
-  });
+  const change: BoardRoutingEdit = {
+    kind: 'route', removedTrackIds: oldTrack ? [oldTrack.id] : [], addedTracks, addedVias,
+  };
+  const candidate = validateBoard(applyBoardRoutingEdit(board, change));
   if (oldTrack)
     preserveRouteContacts(
       board,
       candidate,
       route.netId,
       [oldTrack],
-      tracks.slice(existingTracks.length),
+      addedTracks,
       kernel,
     );
-  return candidate;
+  return { board: candidate, change };
 }

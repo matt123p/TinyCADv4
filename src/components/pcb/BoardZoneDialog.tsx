@@ -15,11 +15,11 @@ import type {
   ZoneIslands,
 } from '../../pcb/boardZones';
 import type { Polygon } from '../../pcb/contours';
-import { lengthInNanometres } from '../../pcb/geometry';
+import { boardInputLength } from './boardNumberInput';
 import { outlineText, outlineVertices } from './boardOutlineInput';
 
 const mm = (value: number) => String(value / 1_000_000);
-const nm = (value: string) => lengthInNanometres(value, 'mm');
+const nm = (value: string) => boardInputLength(value, 'mm');
 export default function BoardZoneDialog({
   board,
   zone,
@@ -147,6 +147,7 @@ export default function BoardZoneDialog({
               <label>
                 Pads{' '}
                 <select
+                  aria-label="Pads"
                   name="pads"
                   defaultValue={zone?.padConnection ?? 'direct'}
                 >
@@ -156,6 +157,7 @@ export default function BoardZoneDialog({
               <label>
                 Vias{' '}
                 <select
+                  aria-label="Vias"
                   name="vias"
                   defaultValue={zone?.viaConnection ?? 'direct'}
                 >

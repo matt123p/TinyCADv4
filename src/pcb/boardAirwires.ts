@@ -1,6 +1,6 @@
 import type { BoardDocument } from './board';
 import { boardCopperGeometry } from './boardCopperGeometry';
-import { analyseCopper } from './copper';
+import { connectedCopperIslands } from './copper';
 import type { CopperFeature } from './copper';
 import type { BoardPoint } from './geometry';
 import type { PolygonKernel } from './polygonKernel';
@@ -15,19 +15,15 @@ export function boardAirwires(
   board: BoardDocument,
   kernel: PolygonKernel,
   fills: readonly CopperFeature[] = [],
-  geometry = boardCopperGeometry(board),
+  geometry = boardCopperGeometry(board, { includeApertures: false }),
 ): BoardAirwire[] {
   const { features, drills } = geometry;
-  const topology = analyseCopper(kernel, [...features, ...fills], drills);
-  const fragments = new Map(
-    topology.copper.map((fragment) => [fragment.id, fragment.feature]),
-  );
+  const islands = connectedCopperIslands(kernel, [...features, ...fills], drills);
   const islandsByNet = new Map<string, BoardPoint[][]>();
-  for (const island of topology.connectedSets) {
+  for (const island of islands) {
     const pointsByNet = new Map<string, BoardPoint[]>();
-    for (const fragment of island) {
-      const feature = fragments.get(fragment);
-      if (!feature?.terminalId) continue;
+    for (const { feature } of island) {
+      if (!feature.terminalId) continue;
       const position = feature.anchor;
       if (!position) continue;
       const group = pointsByNet.get(feature.netId) ?? [];

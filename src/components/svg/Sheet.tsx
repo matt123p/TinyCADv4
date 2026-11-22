@@ -1,4 +1,4 @@
-import { wheelPinchZoomFactor } from '../../util/editorZoom';
+import { clampPinchZoomFactor, clampSchematicZoom, wheelZoomFactor } from '../../util/editorZoom';
 import React, { Dispatch } from 'react';
 import { TDrawing } from './Drawing';
 import { OperatingPointOverlay } from '../simulation/OperatingPointOverlay';
@@ -328,7 +328,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     this.pendingZoomAnchor = null;
   }
 
-  private setPendingZoomAnchor(clientX: number, clientY: number) {
+  private zoomAtPointer(clientX: number, clientY: number, factor: number) {
+    if (clampSchematicZoom(this.props.zoom * factor) === this.props.zoom) return;
+
     const [worldX, worldY] = this.getEventLocationFromClient(clientX, clientY);
 
     this.pendingZoomAnchor = {
@@ -337,6 +339,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       worldX,
       worldY,
     };
+    this.props.dispatch(actionCommand('zoom_scale', factor));
   }
 
   componentWillUnmount() {
@@ -985,10 +988,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
 
         if (this._lastTouchDistance && Math.abs(dist - this._lastTouchDistance) > 2) {
           const factor = dist / this._lastTouchDistance;
-          const clampedFactor = Math.min(1.25, Math.max(1 / 1.25, factor));
+          const clampedFactor = clampPinchZoomFactor(factor);
 
-          this.setPendingZoomAnchor(cx, cy);
-          this.props.dispatch(actionCommand('zoom_scale', clampedFactor));
+          this.zoomAtPointer(cx, cy, clampedFactor);
         }
 
         this._lastTouchDistance = dist;
@@ -1059,10 +1061,9 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
       // Handle Zooming
       if (this._lastTouchDistance && Math.abs(dist - this._lastTouchDistance) > 2) {
         const factor = dist / this._lastTouchDistance;
-        const clampedFactor = Math.min(1.25, Math.max(1 / 1.25, factor));
+        const clampedFactor = clampPinchZoomFactor(factor);
 
-        this.setPendingZoomAnchor(cx, cy);
-        this.props.dispatch(actionCommand('zoom_scale', clampedFactor));
+        this.zoomAtPointer(cx, cy, clampedFactor);
       }
 
       this._lastTouchDistance = dist;
@@ -1432,29 +1433,12 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   }
 
   onwheel(e: WheelEvent) {
-    if (e.ctrlKey) {
-      const zoomFactor = wheelPinchZoomFactor(e.deltaY);
+    const factor = wheelZoomFactor(e);
+    if (factor === undefined) return;
 
-      this.setPendingZoomAnchor(e.clientX, e.clientY);
-      this.props.dispatch(actionCommand('zoom_scale', zoomFactor));
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-
-    if (e.shiftKey) {
-      this.setPendingZoomAnchor(e.clientX, e.clientY);
-      if (e.deltaY < 0) {
-        this.props.dispatch(actionCommand('zoom_in'));
-      } else {
-        this.props.dispatch(actionCommand('zoom_out'));
-      }
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-    // Two-finger scroll on touchpad (no modifiers) - let the browser handle
-    // native scrolling/panning, which is the default behavior
+    this.zoomAtPointer(e.clientX, e.clientY, factor);
+    e.preventDefault();
+    e.stopPropagation();
   }
 
   getEventLocation(e: React.MouseEvent | React.DragEvent) {

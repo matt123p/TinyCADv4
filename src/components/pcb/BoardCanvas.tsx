@@ -14,7 +14,8 @@ import BoardPlacementPreview from './BoardPlacementPreview';
 import type { BoardPoint } from '../../pcb/geometry';
 import type { ManualRoute } from '../../pcb/manualBoardRouting';
 import { ScaledSvgText } from '../svg/ScaledSvgText';
-import { SvgViewport } from '../svg/SvgViewport';
+import { svgCircle, svgLength, svgLengthTransform, svgTranslation } from '../svg/nanometreSvg';
+import { SvgViewport, svgDrawingMatrix } from '../svg/SvgViewport';
 import type { SvgViewportHandle } from '../svg/SvgViewport';
 import TrackEditOverlay from './TrackEditOverlay';
 import RouteDeletionOverlay from './RouteDeletionOverlay';
@@ -24,7 +25,7 @@ import { dimensionGeometry, dimensionText, snapMeasurementPoint } from '../../pc
 import { routingSnapTargets, snapRoutePoint } from '../../pcb/routingSnap';
 import type { RouteSnap } from '../../pcb/routingSnap';
 import { FootprintPreviewDrawing } from '../projects/DeviceFootprintPreview';
-import { FootprintArtwork } from '../projects/FootprintArtwork';
+import { FootprintArtwork, PadShapeDrawing } from '../projects/FootprintArtwork';
 import { resolveFootprintText } from '../../pcb/footprintText';
 
 const point = ({ x, y }: BoardPoint) => `${x},${-y}`;
@@ -70,7 +71,7 @@ export interface BoardPick {
 
 function placementTransform(position: BoardPoint, rotationMicrodegree: number, side: 'top' | 'bottom') {
   const mirror = side === 'bottom' ? ' scale(-1 1)' : '';
-  return `translate(${position.x} ${-position.y}) rotate(${-rotationMicrodegree / 1e6})${mirror}`;
+  return `${svgTranslation(position.x, -position.y)} rotate(${-rotationMicrodegree / 1e6})${mirror}`;
 }
 
 function boundsOf(points: readonly BoardPoint[], area?: { left: number; top: number; right: number; bottom: number }) {
@@ -83,6 +84,187 @@ function boundsOf(points: readonly BoardPoint[], area?: { left: number; top: num
   }
   return bounds;
 }
+
+const RoutedCopper = React.memo(function RoutedCopper({
+  tracks, vias, nets, visibleCopper, selectedNet, picking,
+}: {
+  tracks: BoardDocument['tracks'];
+  vias: BoardDocument['vias'];
+  nets: BoardDocument['nets'];
+  visibleCopper: CopperLayer['id'] | 'all';
+  selectedNet: string;
+  picking: boolean;
+}) {
+  const netNames = useMemo(() => new Map(nets?.map(({ id, name }) => [id, name])), [nets]);
+  const pickingAttributes = useMemo(() => picking ? (target: BoardPickTarget) => ({
+    'data-board-pick': JSON.stringify(target),
+  }) : undefined, [picking]);
+  const shapesByTrack = useMemo(() => new WeakMap<BoardTrack, {
+    netId: BoardTrack['netId']; shape: React.ReactElement;
+  }>(),
+    [pickingAttributes, netNames]);
+  const trackShapes = useMemo(() => (tracks ?? [])
+    .filter(({ layerId }) => visibleCopper === 'all' || layerId === visibleCopper)
+    .map((track) => {
+      const previous = shapesByTrack.get(track);
+      if (previous) return previous;
+      const { id, start, end, widthNm, layerId, reviewRequired, netId, locked } = track;
+      const entry = {
+        netId,
+        shape: <line
+          key={id}
+          data-track={id}
+          {...pickingAttributes?.({
+            kind: 'track', id, layer: layerId, locked,
+            label: netNames.get(netId) ?? 'Unassigned',
+          })}
+          data-route-locked={locked || undefined}
+          x1={svgLength(start.x)}
+          y1={svgLength(-start.y)}
+          x2={svgLength(end.x)}
+          y2={svgLength(-end.y)}
+          strokeLinecap="round"
+          stroke={reviewRequired ? '#a52c24' : layerId === 'top' ? '#b17a2d' : '#397188'}
+          strokeWidth={svgLength(widthNm)}
+        />,
+      };
+      shapesByTrack.set(track, entry);
+      return entry;
+    }), [tracks, visibleCopper, pickingAttributes, netNames, shapesByTrack]);
+  return (
+    <g transform={svgLengthTransform}>
+      {trackShapes.map(({ netId, shape }) => netId && netId === selectedNet
+        ? React.cloneElement(shape, { stroke: netHighlight, 'data-net-highlighted': true })
+        : shape)}
+      {(vias ?? []).map(
+        ({ id, positionNm, diameterNm, drillNm, reviewRequired, netId, locked }) => (
+          <g
+            key={id}
+            data-via={id}
+            {...pickingAttributes?.({
+              kind: 'via', id, layer: 'both', locked,
+              label: netNames.get(netId) ?? 'Unassigned',
+            })}
+            data-route-locked={locked || undefined}
+          >
+            <circle
+              cx={svgLength(positionNm.x)}
+              cy={svgLength(-positionNm.y)}
+              r={svgLength(diameterNm / 2)}
+              fill={
+                netId && netId === selectedNet
+                  ? netHighlight
+                  : reviewRequired
+                  ? '#a52c24'
+                  : '#79644e'
+              }
+              data-net-highlighted={
+                (!!netId && netId === selectedNet) || undefined
+              }
+            />
+            <circle
+              data-board-opening=""
+              cx={svgLength(positionNm.x)}
+              cy={svgLength(-positionNm.y)}
+              r={svgLength(drillNm / 2)}
+              fill="#fff"
+            />
+          </g>
+        ),
+      )}
+    </g>
+  );
+});
+
+const ZoneCopper = React.memo(function ZoneCopper({
+  fills, visibleCopper, selectedNet,
+}: {
+  fills: readonly CopperFeature[] | undefined;
+  visibleCopper: CopperLayer['id'] | 'all';
+  selectedNet: string;
+}) {
+  const paths = useMemo(() => fills?.map(({ id, region, netId, layerId }) => ({
+    id, netId, layerId, outline: [region.outer, ...region.holes].map(ring).join(' '),
+  })), [fills]);
+  return paths?.filter(({ layerId }) => visibleCopper === 'all' || visibleCopper === layerId)
+    .map(({ id, outline, netId, layerId }) => (
+      <path
+        key={id}
+        data-zone-fill={id}
+        data-net-highlighted={netId === selectedNet || undefined}
+        d={outline}
+        fillRule="evenodd"
+        fill={netId === selectedNet ? netHighlight : layerId === 'top' ? '#bf562f' : '#477cae'}
+        opacity={0.32}
+        pointerEvents="none"
+      />
+    ));
+});
+
+const PlacedFootprint = React.memo(function PlacedFootprint({
+  feature, margin, selected, inGroup, selectedPad, selectedNet, visibleCopper, picking,
+}: {
+  feature: ReturnType<typeof boardPlacementView>['features'][number];
+  margin: number;
+  selected: boolean;
+  inGroup: boolean;
+  selectedPad?: string;
+  selectedNet: string;
+  visibleCopper: CopperLayer['id'] | 'all';
+  picking: boolean;
+}) {
+  const { id, label, placement, pads, copper } = feature;
+  const position = placement.positionNm;
+  const fill = selected || inGroup ? '#b34b27' : '#226a59';
+  const visible = (layerId: CopperLayer['id']) => visibleCopper === 'all' || layerId === visibleCopper;
+  const pickingAttributes = (padId: string, layer: CopperLayer['id'], padLabel: string) =>
+    picking ? {
+      'data-board-pick': JSON.stringify({
+        kind: 'pad', id: padId, layer, componentId: id, label: label + ' · ' + padLabel,
+        locked: placement.locked || placement.positionLocked || placement.rotationLocked,
+      } satisfies BoardPickTarget),
+    } : undefined;
+  const padFill = (padId: string, highlighted: boolean) => highlighted
+    ? netHighlight : selected && padId === selectedPad ? '#af242e' : fill;
+
+  return (
+    <g data-component={id} data-component-selected={selected || undefined}
+      data-placement-group={inGroup || undefined}>
+      {copper.filter(({ layerId }) => visible(layerId)).map(({ layerId, netId, padId, label, shape }) => {
+        const highlighted = !!netId && netId === selectedNet;
+        return (
+          <PadShapeDrawing
+            key={padId + ':' + layerId}
+            shape={shape}
+            colour={padFill(padId, highlighted)}
+            attributes={{
+              'data-board-pad': padId,
+              ...pickingAttributes(padId, layerId, label),
+              'data-net-highlighted': highlighted || undefined,
+            }}
+          />
+        );
+      })}
+      {!copper.length && visible(placement.side) && pads.map(({ id: padId, position, netId, label }) => {
+        const highlighted = !!netId && netId === selectedNet;
+        return (
+          <circle
+            key={padId}
+            data-board-pad={padId}
+            {...pickingAttributes(padId, placement.side, label)}
+            {...svgCircle(position.x, -position.y, margin * 0.085)}
+            fill={padFill(padId, highlighted)}
+            data-net-highlighted={highlighted || undefined}
+          />
+        );
+      })}
+      <ScaledSvgText x={position.x} y={-position.y - margin * 0.14} fill="#192b22"
+        fontSize={margin * 0.29}>
+        {label}
+      </ScaledSvgText>
+    </g>
+  );
+});
 
 export default function BoardCanvas({
   board,
@@ -107,7 +289,7 @@ export default function BoardCanvas({
   showRulers,
   onDropComponent,
   onContextCommand,
-  trackWidth,
+  trackWidthNm,
   onLocation,
   onMeasure,
   routingSnap,
@@ -143,7 +325,7 @@ export default function BoardCanvas({
   showRulers: boolean;
   onDropComponent?(id: string, x: number, y: number): void;
   onContextCommand(point: { x: number; y: number }, object?: { componentId?: string; routeId?: string }): void;
-  trackWidth: string;
+  trackWidthNm: number;
   onLocation(x: number, y: number): void;
   onMeasure?(point: BoardPoint): void;
   routingSnap?: {
@@ -200,7 +382,7 @@ export default function BoardCanvas({
   }) : undefined;
   function pickAt(event: React.MouseEvent<HTMLDivElement>) {
     const svg = event.currentTarget.querySelector('svg');
-    const inverse = svg?.getScreenCTM()?.inverse();
+    const inverse = svgDrawingMatrix(svg)?.inverse();
     if (!onPick || event.button !== 0 || !inverse || !svg.contains(event.target as Node)) return;
     event.stopPropagation();
     const { clientX, clientY } = event;
@@ -250,13 +432,40 @@ export default function BoardCanvas({
       );
   }
 
-  function selectRoute(event: React.MouseEvent<SVGElement>, id: string, netId?: string) {
+  function selectRoute(event: React.MouseEvent<SVGGElement>) {
     if (routing || onMeasure || deletion?.pickingRegion) return;
+    const routeElement = (event.target as Element).closest('[data-track], [data-via]');
+    if (!routeElement) return;
+    const trackId = routeElement.getAttribute('data-track');
+    const viaId = routeElement.getAttribute('data-via');
+    const selected = trackId
+      ? board.tracks?.find(({ id }) => id === trackId)
+      : board.vias?.find(({ id }) => id === viaId);
+    if (!selected) return;
+    const { id, netId } = selected;
     event.stopPropagation();
-    const matrix = event.currentTarget.ownerSVGElement?.getScreenCTM()?.inverse();
+    const matrix = svgDrawingMatrix(event.currentTarget.ownerSVGElement)?.inverse();
     const picked = matrix && new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix);
     onRouteObject(id, netId, picked && { x: Math.round(picked.x), y: Math.round(-picked.y) });
   }
+  function selectPlacement(event: React.MouseEvent<SVGGElement>) {
+    if (routing || deletion?.pickingRegion) return;
+    const target = event.target as Element;
+    const componentId = target.closest('[data-component]')?.getAttribute('data-component');
+    const padId = target.closest('[data-board-pad]')?.getAttribute('data-board-pad');
+    if (!componentId || (!padId && onMeasure)) return;
+    event.stopPropagation();
+    if (event.shiftKey && onGroupComponent) {
+      onGroupComponent(componentId);
+    } else if (padId) {
+      const feature = geometry.features.find(({ id }) => id === componentId);
+      const pad = feature?.pads.find(({ id }) => id === padId);
+      if (pad) onPad(componentId, padId, pad.position);
+    } else {
+      onComponent(componentId);
+    }
+  }
+
   const { netAnchors, otherAnchors } = useMemo(() => {
     const netAnchors = new Map<string, BoardPoint[]>();
     const otherAnchors = new Map<string, BoardPoint[]>();
@@ -321,7 +530,7 @@ export default function BoardCanvas({
 
   function pointerOnCanvas(event: React.MouseEvent<HTMLDivElement>) {
     const svg = event.currentTarget.querySelector('svg');
-    const inverse = svg?.getScreenCTM()?.inverse();
+    const inverse = svgDrawingMatrix(svg)?.inverse();
     if (inverse && svg.contains(event.target as Node))
       return new DOMPoint(event.clientX, event.clientY).matrixTransform(inverse);
   }
@@ -410,31 +619,40 @@ export default function BoardCanvas({
           if (!pointer) return;
           const snap = routeSnapAt(...pointer);
           const leg = routingSnap.preview(pointer[0], pointer[1], snap?.position);
+          const width = Math.max(180_000, trackWidthNm);
+          const blockedEnd = leg?.blocked ? leg.points.at(-1) : undefined;
+          const markerSize = 3 * pointer[2];
           return <g pointerEvents="none">
             {leg && <path
               data-route-preview={leg.blocked ? 'blocked' : 'clear'}
               d={'M' + leg.points.map(point).join(' L')}
               fill="none"
               stroke={leg.blocked ? '#b72525' : '#1765db'}
-              strokeWidth={Math.max(180_000, Number(trackWidth) * 1_000_000 || 0)}
+              strokeWidth={width}
+              strokeDasharray={leg.blocked ? `${3 * width} ${2 * width}` : undefined}
               strokeLinecap="round"
               strokeLinejoin="round"
               opacity="0.8"
             />}
             {snap && <circle
               data-route-snap=""
-              cx={snap.position.x}
-              cy={-snap.position.y}
-              r={5 * pointer[2]}
+              {...svgCircle(snap.position.x, -snap.position.y, 5 * pointer[2])}
               fill="none"
               stroke="#163f92"
               strokeWidth="2"
               vectorEffect="non-scaling-stroke"
             />}
+            {blockedEnd && <g data-route-blocked-marker="" aria-hidden="true"
+              transform={svgTranslation(blockedEnd.x, -blockedEnd.y)}>
+              <circle {...svgCircle(0, 0, markerSize * 1.8)} fill="white" />
+              <path d={`M${-markerSize},${-markerSize} L${markerSize},${markerSize} M${markerSize},${-markerSize} L${-markerSize},${markerSize}`}
+                fill="none" stroke="#b72525" strokeWidth={2}
+                strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            </g>}
           </g>;
         } : offsets && ((pointer) => previewAt(pointer && [pointer[0], pointer[1]]))}
       >
-        <path
+        <path data-board-profile=""
           d={[geometry.profile.outer, ...geometry.profile.holes]
             .map(ring)
             .join(' ')}
@@ -475,25 +693,7 @@ export default function BoardCanvas({
               pointerEvents="none"
             />
           ))}
-        {zoneFills
-          ?.filter(({ layerId }) => visible(layerId))
-          .map(({ id, region, netId, layerId }) => (
-            <path
-              key={id}
-              data-zone-fill={id}
-              d={[region.outer, ...region.holes].map(ring).join(' ')}
-              fillRule="evenodd"
-              fill={
-                netId === selectedNet
-                  ? netHighlight
-                  : layerId === 'top'
-                  ? '#bf562f'
-                  : '#477cae'
-              }
-              opacity={0.32}
-              pointerEvents="none"
-            />
-          ))}
+        <ZoneCopper fills={zoneFills} visibleCopper={visibleCopper} selectedNet={selectedNet} />
         {picking && board.zones?.filter(({ layerId }) => visible(layerId)).map((zone) => (
           <path key={zone.id}
             {...pickingAttributes?.({
@@ -513,17 +713,13 @@ export default function BoardCanvas({
                   <g fill="none" stroke="#9e6813" strokeDasharray="4 3">
                     <circle
                       data-screw-head={screwHeadSide}
-                      cx={start.x}
-                      cy={-start.y}
-                      r={screwHeadDiameterNm / 2}
+                      {...svgCircle(start.x, -start.y, screwHeadDiameterNm / 2)}
                       vectorEffect="non-scaling-stroke"
                     />
                     {!!bodyClearanceNm && (
                       <circle
                         data-screw-body-clearance={screwHeadSide}
-                        cx={start.x}
-                        cy={-start.y}
-                        r={screwHeadDiameterNm / 2 + bodyClearanceNm}
+                        {...svgCircle(start.x, -start.y, screwHeadDiameterNm / 2 + bodyClearanceNm)}
                         vectorEffect="non-scaling-stroke"
                       />
                     )}
@@ -538,6 +734,7 @@ export default function BoardCanvas({
                 />
               )}
               <path
+                data-board-opening=""
                 d={`M${point(start)} L${point(end)}`}
                 stroke="#fff"
                 strokeLinecap="round"
@@ -571,15 +768,12 @@ export default function BoardCanvas({
                   <g key={index}>
                     <circle
                       data-jumper-end={index === 0 ? 'A' : 'B'}
-                      cx={position.x}
-                      cy={-position.y}
-                      r={landWidthNm / 2}
+                      {...svgCircle(position.x, -position.y, landWidthNm / 2)}
                       fill={netId === selectedNet ? netHighlight : '#b17a2d'}
                     />
                     <circle
-                      cx={position.x}
-                      cy={-position.y}
-                      r={drillNm / 2}
+                      data-board-opening=""
+                      {...svgCircle(position.x, -position.y, drillNm / 2)}
                       fill="white"
                       pointerEvents="none"
                     />
@@ -597,74 +791,10 @@ export default function BoardCanvas({
               </g>
             ),
           )}
-        {(board.tracks ?? [])
-          .filter(({ layerId }) => visible(layerId))
-          .map(
-            ({ id, start, end, widthNm, layerId, reviewRequired, netId, locked }) => (
-              <path
-                key={id}
-                data-track={id}
-                {...pickingAttributes?.({
-                  kind: 'track', id, layer: layerId, locked,
-                  label: board.nets?.find(({ id }) => id === netId)?.name ?? 'Unassigned',
-                })}
-                data-route-locked={locked || undefined}
-                d={'M' + point(start) + ' L' + point(end)}
-                fill="none"
-                strokeLinecap="round"
-                stroke={
-                  netId && netId === selectedNet
-                    ? netHighlight
-                    : reviewRequired
-                    ? '#a52c24'
-                    : layerId === 'top'
-                    ? '#b17a2d'
-                    : '#397188'
-                }
-                strokeWidth={widthNm}
-                data-net-highlighted={
-                  (!!netId && netId === selectedNet) || undefined
-                }
-                onClick={(event) => selectRoute(event, id, netId)}
-              />
-            ),
-          )}
-        {(board.vias ?? []).map(
-          ({ id, positionNm, diameterNm, drillNm, reviewRequired, netId, locked }) => (
-            <g
-              key={id}
-              data-via={id}
-              {...pickingAttributes?.({
-                kind: 'via', id, layer: 'both', locked,
-                label: board.nets?.find(({ id }) => id === netId)?.name ?? 'Unassigned',
-              })}
-              data-route-locked={locked || undefined}
-              onClick={(event) => selectRoute(event, id, netId)}
-            >
-              <circle
-                cx={positionNm.x}
-                cy={-positionNm.y}
-                r={diameterNm / 2}
-                fill={
-                  netId && netId === selectedNet
-                    ? netHighlight
-                    : reviewRequired
-                    ? '#a52c24'
-                    : '#79644e'
-                }
-                data-net-highlighted={
-                  (!!netId && netId === selectedNet) || undefined
-                }
-              />
-              <circle
-                cx={positionNm.x}
-                cy={-positionNm.y}
-                r={drillNm / 2}
-                fill="#fff"
-              />
-            </g>
-          ),
-        )}
+        <g onClick={selectRoute}>
+          <RoutedCopper tracks={board.tracks} vias={board.vias} nets={board.nets}
+            visibleCopper={visibleCopper} selectedNet={selectedNet} picking={picking} />
+        </g>
         {(
           airwires ??
           [...netAnchors].flatMap(([netId, [start, ...anchors]]) =>
@@ -681,103 +811,17 @@ export default function BoardCanvas({
             pointerEvents="none"
           />
         ))}
-        {geometry.features.map((feature) => {
-          const position = feature.placement.positionNm;
-          const inGroup = group.has(feature.id);
-          const fill =
-            feature.id === selected || inGroup ? '#b34b27' : '#226a59';
-          return (
-            <g
-              key={feature.id}
-              data-component={feature.id}
-              data-placement-group={inGroup || undefined}
-              onClick={(event) => {
-                if (routing || onMeasure || deletion?.pickingRegion) return;
-                event.stopPropagation();
-                if (event.shiftKey && onGroupComponent)
-                  onGroupComponent(feature.id);
-                else onComponent(feature.id);
-              }}
-            >
-              {feature.copper
-                .filter(({ layerId }) => visible(layerId))
-                .map(({ id, region, netId, layerId }) => {
-                  const padId = id.split(':')[1];
-                  const highlighted = !!netId && netId === selectedNet;
-                  return (
-                    <path
-                      key={id}
-                      {...pickingAttributes?.({
-                        kind: 'pad', id: padId, layer: layerId, componentId: feature.id,
-                        label: feature.label + ' · ' + (feature.pads.find(({ id }) => id === padId)?.label ?? padId),
-                        locked: feature.placement.locked || feature.placement.positionLocked || feature.placement.rotationLocked,
-                      })}
-                      d={[region.outer, ...region.holes].map(ring).join(' ')}
-                      fill={
-                        highlighted
-                          ? netHighlight
-                          : feature.id === selected && padId === selectedPad
-                          ? '#af242e'
-                          : fill
-                      }
-                      fillRule="evenodd"
-                      data-net-highlighted={highlighted || undefined}
-                      onClick={(event) => {
-                        if (routing || deletion?.pickingRegion) return;
-                        event.stopPropagation();
-                        if (event.shiftKey && onGroupComponent) {
-                          onGroupComponent(feature.id);
-                          return;
-                        }
-                        const pad = feature.pads.find(({ id }) => id === padId);
-                        if (pad)
-                          onPad(feature.id, padId, pad.position);
-                      }}
-                    />
-                  );
-                })}
-              {!feature.copper.length &&
-                visible(feature.placement.side) && feature.pads.map(({ id, position, netId, label }) => (
-                  <circle
-                    key={id}
-                    {...pickingAttributes?.({
-                      kind: 'pad', id, layer: feature.placement.side, componentId: feature.id,
-                      label: feature.label + ' · ' + label,
-                      locked: feature.placement.locked || feature.placement.positionLocked || feature.placement.rotationLocked,
-                    })}
-                    cx={position.x}
-                    cy={-position.y}
-                    fill={
-                      netId && netId === selectedNet
-                        ? netHighlight
-                        : feature.id === selected && id === selectedPad
-                        ? '#af242e'
-                        : fill
-                    }
-                    r={margin * 0.085}
-                    data-net-highlighted={
-                      (!!netId && netId === selectedNet) || undefined
-                    }
-                    onClick={(event) => {
-                      if (routing || deletion?.pickingRegion) return;
-                      event.stopPropagation();
-                      if (event.shiftKey && onGroupComponent)
-                        onGroupComponent(feature.id);
-                      else onPad(feature.id, id, position);
-                    }}
-                  />
-                ))}
-              <ScaledSvgText
-                x={position.x}
-                y={-position.y - margin * 0.14}
-                fill="#192b22"
-                fontSize={margin * 0.29}
-              >
-                {feature.label}
-              </ScaledSvgText>
-            </g>
-          );
-        })}
+        <g onClick={selectPlacement}>
+          {geometry.features.map((feature) => {
+            const lands = feature.copper.length ? feature.copper : feature.pads;
+            const highlightedNet = selectedNet && lands.some(({ netId }) => netId === selectedNet)
+              ? selectedNet : '';
+            return <PlacedFootprint key={feature.id} feature={feature} margin={margin}
+              selected={feature.id === selected} inGroup={group.has(feature.id)}
+              selectedPad={feature.id === selected ? selectedPad : undefined}
+              selectedNet={highlightedNet} visibleCopper={visibleCopper} picking={picking} />;
+          })}
+        </g>
         {silk.filter(({ target }) => visible(target.layer)).map(({ target, placement, graphic }) => (
           <g key={target.id} {...pickingAttributes?.(target)}
             data-picked-silk={selectedSilk === target.id || undefined}
@@ -818,7 +862,7 @@ export default function BoardCanvas({
           );
         })}
         {datum && (
-          <g data-measurement-datum pointerEvents="none" transform={`translate(${point(datum)})`}>
+          <g data-measurement-datum pointerEvents="none" transform={svgTranslation(datum.x, -datum.y)}>
             <path
               d={`M${-margin * 0.13},0 H${margin * 0.13} M0,${-margin * 0.13} V${margin * 0.13}`}
               stroke="#455c73"
@@ -845,7 +889,7 @@ export default function BoardCanvas({
                 stroke={layer === 'top' ? '#b17a2d' : '#397188'}
                 strokeWidth={Math.max(
                   180_000,
-                  Number(trackWidth) * 1_000_000 || 0,
+                  trackWidthNm,
                 )}
                 strokeLinecap="round"
                 strokeDasharray="250000 120000"
@@ -859,9 +903,7 @@ export default function BoardCanvas({
         {checkMarker && (
           <circle
             data-check-marker=""
-            cx={checkMarker.x}
-            cy={-checkMarker.y}
-            r={margin / 3}
+            {...svgCircle(checkMarker.x, -checkMarker.y, margin / 3)}
             stroke="#bd2222"
             vectorEffect="non-scaling-stroke"
             strokeWidth={2}

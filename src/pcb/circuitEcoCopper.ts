@@ -59,8 +59,8 @@ export async function reviewCircuitCopper(
   const afterNets = new Set(after.nets?.map(({ id }) => id));
   const retired = routes.filter(({ netId }) => netId && !afterNets.has(netId));
   const retiredZones = before.zones?.some(({ netId }) => !afterNets.has(netId));
-  const oldGeometry = boardCopperGeometry(before, beforeNets);
-  const newGeometry = boardCopperGeometry(after, afterNets);
+  const oldGeometry = boardCopperGeometry(before, { availableNets: beforeNets, includeApertures: false });
+  const newGeometry = boardCopperGeometry(after, { availableNets: afterNets, includeApertures: false });
   const priorFeatures = new Map(
     oldGeometry.features
       .filter(({ kind }) => kind === 'pad')

@@ -1,5 +1,5 @@
 import type { BoardDocument, CopperLayer } from './board';
-import { capsulePolygon } from './contours';
+import { capsulePolygon, validateCapsule } from './contours';
 import type { Polygon } from './contours';
 import type { BoardDrill, CopperFeature } from './copper';
 import { placeFootprintPoint, validatePadMap } from './footprint';
@@ -8,7 +8,7 @@ import type {
   FootprintPlacement,
   PadAssignment,
 } from './footprint';
-import { isBoardPoint, validateOutline } from './geometry';
+import { isBoardPoint, samePoint, validateOutline } from './geometry';
 import type { BoardPoint } from './geometry';
 
 type Side = CopperLayer['id'];
@@ -45,6 +45,24 @@ export interface TerminalBinding {
   readonly netId?: string;
 }
 
+export function padLayer(side: Side, placement: FootprintPlacement): Side {
+  return placement.side === 'top' ? side : side === 'top' ? 'bottom' : 'top';
+}
+
+export function padPointTransform(position: BoardPoint, placement: FootprintPlacement) {
+  return ({ x, y }: BoardPoint) => placeFootprintPoint(
+    { x: x + position.x, y: y + position.y }, placement,
+  );
+}
+
+export function padShapePoints(shape: PadShape): readonly BoardPoint[] {
+  if (shape.kind === 'polygon') return shape.vertices;
+  const radius = shape.widthNm / 2;
+  return [shape.start, shape.end].flatMap(({ x, y }) => [
+    { x: x - radius, y: y - radius }, { x: x + radius, y: y + radius },
+  ]);
+}
+
 export function validatePadStack(stack: PadStack): void {
   if (!stack || !stack.copper)
     throw new Error('A padstack needs a copper layer map.');
@@ -56,21 +74,32 @@ export function validatePadStack(stack: PadStack): void {
         throw new Error('Invalid padstack surface.');
       if (shape.kind === 'polygon') validateOutline(shape.vertices);
       else if (shape.kind === 'capsule')
-        capsulePolygon(shape.start, shape.end, shape.widthNm);
+        validateCapsule(shape.start, shape.end, shape.widthNm);
       else throw new Error('Unsupported padstack shape.');
     }
   }
   if (stack.drill !== undefined) {
     if (!stack.drill || typeof stack.drill.plated !== 'boolean')
       throw new Error('A drill must declare its plating.');
-    capsulePolygon(stack.drill.start, stack.drill.end, stack.drill.widthNm);
+    validateCapsule(stack.drill.start, stack.drill.end, stack.drill.widthNm);
   }
+}
+
+function samePadShape(first: PadShape, second: PadShape): boolean {
+  if (first === second) return true;
+  if (first.kind === 'capsule' && second.kind === 'capsule')
+    return first.widthNm === second.widthNm &&
+      samePoint(first.start, second.start) && samePoint(first.end, second.end);
+  return first.kind === 'polygon' && second.kind === 'polygon' &&
+    first.vertices.length === second.vertices.length &&
+    first.vertices.every((vertex, index) => samePoint(vertex, second.vertices[index]));
 }
 
 export function placeEmbeddedDevice(
   board: BoardDocument,
   instanceId: string,
   bindings: readonly TerminalBinding[],
+  { includeApertures = true }: { includeApertures?: boolean } = {},
 ) {
   const instance = board.footprints?.find(
     ({ id }) => id.toLowerCase() === instanceId.toLowerCase(),
@@ -97,6 +126,7 @@ export function placeEmbeddedDevice(
     instance,
     board.copperLayers.map(({ id }) => id),
     bindings,
+    { includeApertures },
   );
 }
 
@@ -106,6 +136,7 @@ export function placeDevice(
   placement: FootprintPlacement,
   layerIds: readonly Side[],
   bindings: readonly TerminalBinding[],
+  { includeApertures = true }: { includeApertures?: boolean } = {},
 ) {
   if (
     !instanceId ||
@@ -148,14 +179,7 @@ export function placeDevice(
         ? signals.get(assignment.signalId)
         : undefined;
     const padId = `${instanceId}:${pad.id}`;
-    const transform = (point: BoardPoint) =>
-      placeFootprintPoint(
-        {
-          x: point.x + pad.positionNm.x,
-          y: point.y + pad.positionNm.y,
-        },
-        placement,
-      );
+    const transform = padPointTransform(pad.positionNm, placement);
     const flatten = (shape: PadShape): Polygon => {
       const polygon =
         shape.kind === 'capsule'
@@ -169,23 +193,33 @@ export function placeDevice(
       return polygon;
     };
     let lands = 0;
+    let previousLand: { shape: PadShape; anchor: BoardPoint; region: CopperFeature['region'] } | undefined;
     for (const side of ['top', 'bottom'] as const) {
-      const layer =
-        placement.side === 'top' ? side : side === 'top' ? 'bottom' : 'top';
+      const layer = padLayer(side, placement);
       const shape = pad.stack.copper[side];
       const landId = shape && layerIds.includes(layer) ? `${padId}:${layer}` : undefined;
+      let landPolygon: Polygon | undefined;
       if (landId) {
+        if (!previousLand || !samePadShape(previousLand.shape, shape)) {
+          previousLand = {
+            shape,
+            region: { outer: flatten(shape), holes: [] },
+            anchor: shape.kind === 'capsule'
+              ? transform({
+                  x: Math.round((shape.start.x + shape.end.x) / 2),
+                  y: Math.round((shape.start.y + shape.end.y) / 2),
+                })
+              : transform({ x: 0, y: 0 }),
+          };
+        }
+        const { anchor, region } = previousLand;
+        landPolygon = region.outer;
         const land: CopperFeature = {
           id: landId,
           layerId: layer,
           kind: 'pad',
-          anchor: shape.kind === 'capsule'
-            ? transform({
-                x: Math.round((shape.start.x + shape.end.x) / 2),
-                y: Math.round((shape.start.y + shape.end.y) / 2),
-              })
-            : transform({ x: 0, y: 0 }),
-          region: { outer: flatten(shape), holes: [] },
+          anchor,
+          region,
         };
         copper.push(
           binding?.netId
@@ -194,16 +228,25 @@ export function placeDevice(
         );
         lands++;
       }
+      if (!includeApertures) continue;
+      const mask = pad.stack.mask?.[side];
+      let maskPolygon: Polygon | undefined;
       for (const kind of ['mask', 'paste'] as const) {
         const aperture = pad.stack[kind]?.[side];
-        if (aperture)
-          apertures.push({
-            id: `${padId}:${kind}:${layer}`,
-            kind,
-            side: layer,
-            polygon: flatten(aperture),
-            ...(landId ? { landId } : {}),
-          });
+        if (!aperture) continue;
+        const polygon = landPolygon && samePadShape(shape, aperture)
+          ? landPolygon
+          : maskPolygon && samePadShape(mask, aperture)
+          ? maskPolygon
+          : flatten(aperture);
+        if (kind === 'mask') maskPolygon = polygon;
+        apertures.push({
+          id: `${padId}:${kind}:${layer}`,
+          kind,
+          side: layer,
+          polygon,
+          ...(landId ? { landId } : {}),
+        });
       }
     }
     if (binding && !lands)
@@ -214,7 +257,7 @@ export function placeDevice(
     if (drill) {
       const start = transform(drill.start);
       const end = transform(drill.end);
-      capsulePolygon(start, end, drill.widthNm);
+      validateCapsule(start, end, drill.widthNm);
       drills.push({ ...drill, id: padId, start, end });
     }
   }
