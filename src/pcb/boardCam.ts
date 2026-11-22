@@ -41,14 +41,14 @@ export async function prepareCamPreview(
   const snapshot: CamSnapshot = {
     profile: editableProfile(board),
     drills: geometry.drills,
-    artwork: (['mask', 'paste', 'silk'] as const).flatMap((kind) =>
+    artwork: (['mask', 'paste', 'silk', 'adhesive'] as const).flatMap((kind) =>
       (['top', 'bottom'] as const).flatMap((side): CamArtwork[] => {
         const regions =
           kind === 'silk'
             ? artworkGeometry.silk
                 .filter((art) => art.side === side)
                 .flatMap(({ regions }) => regions)
-            : geometry.apertures
+            : [...geometry.apertures
                 .filter(
                   (aperture) =>
                     aperture.side === side && aperture.kind === kind,
@@ -56,7 +56,8 @@ export async function prepareCamPreview(
                 .map(({ polygon }) => ({
                   outer: polygon,
                   holes: [] as PolygonRegion['holes'],
-                }));
+                })), ...artworkGeometry.apertures.filter((item) => item.kind === kind && item.side === side)
+                  .flatMap(({ regions }) => regions)];
         return regions.length || (kind === 'mask' && board.vias?.length)
           ? [{ kind, side, regions }]
           : [];

@@ -6,6 +6,39 @@ import { layoutRuntime } from '../lib/layout-runtime.mjs';
 const api = await layoutRuntime();
 const id = () => crypto.randomUUID();
 
+test('applies a standalone Protel netlist and retains identity on reimport', async () => {
+  const netlist = (name) => new File([
+    `[\nR1\nRES\n1k\n]\n[\nJ1\nCON\nHeader\n]\n(\n${name}\nR1-01\nJ1-1\n)\n`,
+  ], 'circuit.net');
+  const board = api.createBoard('Standalone circuit', 2, [
+    { x: 0, y: 0 }, { x: 20e6, y: 0 }, { x: 20e6, y: 10e6 }, { x: 0, y: 10e6 },
+  ]);
+  const snapshot = await api.readBoardCircuitSource(netlist('Power'));
+  const review = await api.previewCircuitEco(board, undefined, snapshot);
+  const candidate = api.applyCircuitEco(board, review, { allowUnassigned: true });
+  const reopened = await api.decodeBoard(await api.encodeBoard(candidate));
+  assert.equal(reopened.components.length, 2);
+  assert.equal(reopened.nets[0].name, 'Power');
+  assert.equal(reopened.appliedCircuit.components[0].signals[0].number, '01');
+
+  const updatedSnapshot = await api.readBoardCircuitSource(netlist('Supply'), reopened.appliedCircuit);
+  const update = await api.previewCircuitEco(reopened, reopened.appliedCircuit, updatedSnapshot);
+  const updated = api.applyCircuitEco(reopened, update, { allowUnassigned: true });
+  assert.equal(updated.nets[0].id, reopened.nets[0].id);
+  assert.equal(updated.nets[0].name, 'Supply');
+});
+
+test('compiles TinyCAD schematics selected as standalone circuit sources', async () => {
+  for (const path of ['timer-logic/Timer.dsn', 'led-classroom/Exercise/LED.dzn']) {
+    const bytes = await readFile(new URL('../../examples/pcb/' + path, import.meta.url));
+    const drawing = new File([bytes], path.split('/').at(-1));
+    const snapshot = await api.readBoardCircuitSource(drawing);
+    assert.ok(snapshot.components.length > 0);
+    assert.ok(snapshot.nets.length > 0);
+    assert.equal((await api.readBoardCircuitSource(drawing, snapshot)).documentId, snapshot.documentId);
+  }
+});
+
 test('previews and atomically applies a forward reference and value update', async () => {
   const documentId = id();
   const sheetId = id();

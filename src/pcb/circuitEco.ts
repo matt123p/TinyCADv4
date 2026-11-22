@@ -370,6 +370,7 @@ export type CircuitEco = Awaited<ReturnType<typeof previewCircuitEco>>;
 export function applyCircuitEco(
   board: BoardDocument,
   review: CircuitEco,
+  { allowUnassigned = false } = {},
 ): BoardDocument {
   if (
     board.boardId !== review.expected.boardId ||
@@ -382,7 +383,8 @@ export function applyCircuitEco(
       'Resolve reference designator conflicts before applying the circuit update.',
     );
   if (review.unchanged) return board;
-  if (review.unresolved.length)
+  if (review.unresolved.some(({ id }) => !allowUnassigned ||
+    review.candidate.components?.some((part) => part.logicalId === id && part.deviceId)))
     throw new Error(
       'Resolve device mappings before applying the circuit update.',
     );

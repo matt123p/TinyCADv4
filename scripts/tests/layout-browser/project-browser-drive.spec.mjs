@@ -266,7 +266,7 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   await sidebar.getByRole('button', { name: 'Board.dpn', exact: true }).click();
   await expect(layout.getByRole('img', { name: 'Board layout' })).toBeVisible();
   await clickPcbCommand(layout, 'Run design checks…');
-  const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+  const checks = page.getByRole('region', { name: 'PCB design checks' });
   await expect(checks.getByRole('table', { name: 'PCB findings' })).toContainText(
     'The associated schematic has not been applied to this board.',
   );

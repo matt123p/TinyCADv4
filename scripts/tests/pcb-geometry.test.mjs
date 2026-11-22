@@ -2979,7 +2979,7 @@ test('preserves board width limits in PCB rules, design checks and KiCad export'
     nets: [{ id: netId, name: 'Signal' }],
     tracks: [track],
   }));
-  assert.equal(api.beginnerRouteDefaults(board).widthNm, 400_000);
+  assert.equal(api.preferredTrackWidth(api.resolveBoardRules(board), 500_000), 400_000);
   const report = await api.checkBoard(board, kernel);
   const issue = report.issues.find(({ code }) => code === 'track-width-maximum');
   assert.deepEqual(issue.objects, [track.id]);
@@ -3045,13 +3045,13 @@ test('saves partial stackups and rejects layer dimensions that conflict with the
 
 test('applies saved fabrication profile limits to routing, drills, mask and inspection', async () => {
   const base = api.createBoard('Fabrication', 2, polygon(0, 0, 20e6, 15e6));
-  assert.deepEqual(api.beginnerRouteDefaults(base), {
-    widthNm: 500_000, viaDrillNm: 400_000, viaDiameterNm: 800_000,
+  assert.deepEqual(api.routeViaPresets(base).preferred, {
+    viaDrillNm: 400_000, viaDiameterNm: 800_000,
   });
-  assert.deepEqual(api.beginnerRouteDefaults({
+  assert.deepEqual(api.routeViaPresets({
     ...base,
     rules: { ...api.resolveBoardRules(base), minWidthNm: 650_000, minViaAnnulusNm: 275_000 },
-  }), { widthNm: 650_000, viaDrillNm: 400_000, viaDiameterNm: 950_000 });
+  }).preferred, { viaDrillNm: 400_000, viaDiameterNm: 950_000 });
   const netId = crypto.randomUUID();
   const history = new api.BoardHistory({
     ...base, nets: [{ id: netId, name: 'Ground' }],

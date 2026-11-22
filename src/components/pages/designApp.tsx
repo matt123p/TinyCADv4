@@ -423,6 +423,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const [openedProjectRoot, setOpenedProjectRoot] = useState<ProjectLocation>();
   const [showFootprints, setShowFootprints] = useState(true);
   const [footprintsHost, setFootprintsHost] = useState<HTMLDivElement>(null);
+  const [pcbRightPanelHost, setPcbRightPanelHost] = useState<HTMLElement>(null);
   const [sidePanelWidth, setSidePanelWidth] = useState(loadSidePanelWidth);
   const [sidePanelResizing, setSidePanelResizing] = useState(false);
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200);
@@ -916,6 +917,9 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     showSaveAll={projectMode && (!splitVisible || !pcbActive)}
     saveAllDisabled={savingTabBatch}
   />;
+  const showPcbRightPanel = (pcbActive || splitVisible) && pcb && !gitReview && !activeProjectFile;
+  const showCircuitRightPanel = !splitVisible && !pcbActive && !props.editSymbol &&
+    (simulationActive || props.hasExampleExplanation);
 
   return (
     <div
@@ -1221,6 +1225,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               <Suspense fallback={<div role="status">Loading PCB Design…</div>}>
                 {pcb ? (
                   <BoardWorkspace key={activeBoard.id + ':' + activeBoard.mount} {...pcb}
+                    rightPanelHost={pcbRightPanelHost}
                     footprintsHost={projectMode ? footprintsHost : undefined}
                     footprintsVisible={projectMode ? projectFootprintsVisible : showFootprints}
                     onToggleFootprints={projectMode ? (visible) => {
@@ -1238,15 +1243,16 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           )}
         </div>
         </div>
-        {!splitVisible && !pcbActive && !props.editSymbol && (simulationActive || props.hasExampleExplanation) && (
+        {(showPcbRightPanel || showCircuitRightPanel) && (
           <div className={styles.rightPanels}>
-            {simulationActive && (
+            {showPcbRightPanel && <aside className="pcb-right-panel" aria-label="PCB panels" ref={setPcbRightPanelHost} />}
+            {showCircuitRightPanel && simulationActive && (
               <Suspense fallback={null}>
                 <ChartWorkspace />
                 <InstrumentWindowHost />
               </Suspense>
             )}
-            {props.hasExampleExplanation && (
+            {showCircuitRightPanel && props.hasExampleExplanation && (
               <Suspense fallback={null}>
                 <ExampleExplanationPanel />
               </Suspense>

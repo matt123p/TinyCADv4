@@ -17,6 +17,7 @@ export function checkBoardArtwork(
   const messages = {
     'silk-text': 'Silkscreen text could not be plotted.',
     'silk-geometry': 'Silkscreen geometry could not be plotted.',
+    'layer-artwork': 'Manufacturing layer artwork could not be plotted.',
     'courtyard-open':
       'Footprint courtyard has an open or unsupported boundary.',
   };
@@ -60,12 +61,15 @@ export function checkBoardArtwork(
   const minimumSilkMaskGap = limits?.minSilkMaskGapNm ?? 0;
   const edgeGap = limits?.minSilkEdgeGapNm ?? 0;
   const interior = edgeGap ? kernel.offset([profile], -edgeGap) : [profile];
-  const mask = geometry.apertures
+  const padMask = geometry.apertures
     .filter(({ kind }) => kind === 'mask')
     .map(({ polygon, side, id }) => {
       const region: PolygonRegion = { outer: polygon, holes: [] };
       return { id, side, region, box: bounds(region) };
     });
+  const mask = [...padMask, ...(artwork.apertures ?? []).filter(({ kind }) => kind === 'mask').flatMap(
+    ({ id, side, regions }) => regions.map((region) => ({ id, side, region, box: bounds(region) })),
+  )];
   for (const print of artwork.silk) {
     if (limits && print.textHeightNm !== undefined && print.textHeightNm < limits.minSilkTextHeightNm) {
       issues.push({

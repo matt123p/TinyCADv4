@@ -35,11 +35,11 @@ export interface ProjectCircuitUndo {
 
 export async function openProjectCircuitEco(
   location: Pick<OpenProjectAction['location'], 'id' | 'rootId'>,
-  destination: { boardId: string } | { sourceId: string; path: string },
+  destination: { boardId: string; sourceId?: string } | { sourceId: string; path: string },
   activeDrawing: (sourceId: string) => dsnDrawing | undefined,
 ) {
   const project = await readProject(location.id, location.rootId);
-  const creating = 'sourceId' in destination;
+  const creating = 'path' in destination;
   const link = creating
     ? undefined
     : project.settings.entries.find(
@@ -65,7 +65,9 @@ export async function openProjectCircuitEco(
     project.settings.associations?.find(({ board }) => board === link.id);
   const sourceId = creating
     ? destination.sourceId
-    : association?.schematic ?? circuit?.documentId;
+    : association?.schematic ?? circuit?.documentId ?? destination.sourceId;
+  if (!creating && destination.sourceId && destination.sourceId !== sourceId)
+    throw new Error('The PCB already has a different source schematic.');
   const entry = project.settings.entries.find(
     ({ kind, id }) => kind === 'schematic' && id === sourceId,
   );

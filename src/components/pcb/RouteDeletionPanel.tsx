@@ -15,7 +15,7 @@ export interface RouteRegionDraft {
 }
 
 export type RouteDeletionDraft =
-  | Exclude<RouteDeletionScope, { kind: 'region' }>
+  | Exclude<RouteDeletionScope, { kind: 'region' | 'items' }>
   | RouteRegionDraft;
 
 const instructions: Record<RouteDeletionDraft['kind'], string> = {
@@ -49,8 +49,8 @@ export default function RouteDeletionPanel({
   const tracks = plan?.tracks.length ?? 0;
   const vias = plan?.vias.length ?? 0;
   return (
-    <fieldset aria-label="Copper deletion preview" disabled={busy}>
-      <legend>Copper deletion preview</legend>
+    <fieldset aria-label="Delete copper in region" disabled={busy}>
+      <legend>Delete copper in region</legend>
       <p>
         {draft.kind === 'net' && netName
           ? 'Delete unlocked tracks and vias on ' + netName + '.'
@@ -142,7 +142,7 @@ export default function RouteDeletionPanel({
         disabled={!tracks && !vias}
         onClick={onConfirm}
       >
-        Confirm deletion
+        Delete copper
       </Button>
     </fieldset>
   );

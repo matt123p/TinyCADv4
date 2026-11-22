@@ -34,7 +34,12 @@ import {
   trackMidpoint,
 } from '../../pcb/trackEdits';
 import type { ManualTrackEdit } from '../../pcb/trackEdits';
-import { applyRouteDeletion, planRouteDeletion } from '../../pcb/routeDeletion';
+import { applyRouteDeletion, connectedRouteIds, planRouteDeletion } from '../../pcb/routeDeletion';
+import { boardLayers } from '../../pcb/boardLayers';
+import type { BoardLayerId, VisibleCopper } from '../../pcb/boardLayers';
+import type { FootprintGraphic } from '../../pcb/footprintDetails';
+import FootprintArtworkEditor from '../projects/FootprintArtworkEditor';
+import BoardCircuitSourceDialog from './BoardCircuitSourceDialog';
 import type { RouteDeletionPlan } from '../../pcb/routeDeletion';
 import type { RouteCleanupResult } from '../../pcb/routeCleanup';
 import RouteDeletionPanel from './RouteDeletionPanel';
@@ -54,7 +59,7 @@ import { DeviceFootprintPreview } from '../projects/DeviceFootprintPreview';
 import BoardFabricationDialog from './BoardFabricationDialog';
 import BoardNetRulesDialog from './BoardNetRulesDialog';
 import BoardConnectionsDialog from './BoardConnectionsDialog';
-import BoardChecksDialog from './BoardChecksDialog';
+import BoardChecksPanel from './BoardChecksPanel';
 import BoardHoleDialog from './BoardHoleDialog';
 import BoardProfileDialog from './BoardProfileDialog';
 import BoardZoneDialog from './BoardZoneDialog';
@@ -64,7 +69,7 @@ import PlacementAreaDialog from './PlacementAreaDialog';
 import type { PlacementArea } from '../../pcb/placementAreas';
 import RoutingRegionDialog from './RoutingRegionDialog';
 import type { RoutingRegion } from '../../pcb/routingRegions';
-import { beginnerRouteDefaults, boardRuleResolver, preferredTrackWidth, routeViaPresets } from '../../pcb/boardRules';
+import { boardRuleResolver, preferredTrackWidth, routeViaPresets } from '../../pcb/boardRules';
 import { editableProfile } from '../../pcb/boardProfiles';
 import {
   boardPlacementView,
@@ -98,7 +103,6 @@ const KicadBoardReviewDialog = React.lazy(() => import('./KicadBoardReviewDialog
 
 const mm = (value: number) => String(value / 1_000_000);
 const nm = (value: string) => boardInputLength(value, 'mm');
-type BoardView = 'engineering' | 'beginner';
 type WidthPreset = 'minimum' | 'preferred' | 'custom';
 type ViaStyle = keyof ReturnType<typeof routeViaPresets> | 'custom';
 type TrackEditDraft = {
@@ -107,18 +111,6 @@ type TrackEditDraft = {
   x: string;
   y: string;
 };
-const boardViewStorageKey = 'tinycad-pcb-view';
-
-function savedBoardView(): BoardView {
-  try {
-    return window.localStorage.getItem(boardViewStorageKey) === 'beginner'
-      ? 'beginner'
-      : 'engineering';
-  } catch {
-    return 'engineering';
-  }
-}
-
 export interface BoardWorkspaceDocument {
   session: BoardWorkspaceSession;
   projectRootId?: string;
@@ -140,6 +132,7 @@ export default function BoardWorkspace({
   onOpen,
   onProjectFolder,
   footprintsHost,
+  rightPanelHost,
   footprintsVisible,
   onToggleFootprints,
   bottomPanelHeight,
@@ -157,6 +150,7 @@ export default function BoardWorkspace({
   onOpen(): void;
   onProjectFolder?(): void;
   footprintsHost?: HTMLDivElement | null;
+  rightPanelHost?: HTMLElement | null;
   footprintsVisible: boolean;
   onToggleFootprints(visible: boolean): void;
   bottomPanelHeight: number;
@@ -169,7 +163,7 @@ export default function BoardWorkspace({
   const [selected, setSelected] = useState(probe?.componentId ?? '');
   const [group, setGroup] = useState<string[]>([]);
   const [routeGroup, setRouteGroup] = useState<string[]>([]);
-  const [bottomView, setBottomView] = useState<'components' | 'netlist' | 'selection' | 'tools'>(
+  const [bottomView, setBottomView] = useState<'components' | 'netlist' | 'selection' | 'checks'>(
     probe?.componentId ? 'selection' : probe?.netId ? 'netlist' : 'components',
   );
   const [idleBottomView, setIdleBottomView] = useState<'components' | 'netlist'>(probe?.netId ? 'netlist' : 'components');
@@ -192,9 +186,22 @@ export default function BoardWorkspace({
   const [filename, setFilename] = useState(session.path);
   const [profileDialog, setProfileDialog] = useState<'outline' | 'cutout' | number>();
   const [holeDialog, setHoleDialog] = useState(false);
-  const [visibleCopper, setVisibleCopper] = useState<'all' | CopperLayer['id']>(
-    'all',
+  const [artworkOpen, setArtworkOpen] = useState(false);
+  const [hiddenLayers, setHiddenLayers] = useState<ReadonlySet<BoardLayerId>>(
+    () => new Set(['F.Mask', 'B.Mask', 'F.Paste', 'B.Paste', 'F.Fab', 'B.Fab', 'F.CrtYd', 'B.CrtYd']),
   );
+  const topVisible = !hiddenLayers.has('F.Cu');
+  const bottomVisible = board.copperLayers.length > 1 && !hiddenLayers.has('B.Cu');
+  const visibleCopper: VisibleCopper = topVisible ? (bottomVisible ? 'all' : 'top') :
+    bottomVisible ? 'bottom' : 'none';
+  function setLayerVisible(id: BoardLayerId, visible: boolean) {
+    setHiddenLayers((hidden) => {
+      const next = new Set(hidden);
+      if (visible) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
   const [measuring, setMeasuring] = useState(false);
   const [measurement, setMeasurement] = useState<BoardPoint[]>([]);
   const [annotationDraft, setAnnotationDraft] = useState<AnnotationDraft>();
@@ -219,12 +226,14 @@ export default function BoardWorkspace({
   const pickedRoute = React.useRef<{ id: string; point: BoardPoint }>();
   const [inspectionOpen, setInspectionOpen] = useState(false);
   const [connectionsOpen, setConnectionsOpen] = useState(false);
+  const [circuitSourceOpen, setCircuitSourceOpen] = useState(false);
   const [camOpen, setCamOpen] = useState(false);
   const [checkedRevision, setCheckedRevision] = useState<number>();
   const [revisionOpen, setRevisionOpen] = useState(false);
   const [kicadOpen, setKicadOpen] = useState(false);
   const [kicadReviewOpen, setKicadReviewOpen] = useState(false);
-  const [checksOpen, setChecksOpen] = useState(false);
+  const [boardToolsOpen, setBoardToolsOpen] = useState(false);
+  const [checksRun, setChecksRun] = useState(0);
   const [fabricationOpen, setFabricationOpen] = useState(false);
   const [ruleInspectionOpen, setRuleInspectionOpen] = useState(false);
   const [netRulesOpen, setNetRulesOpen] = useState(false);
@@ -257,7 +266,7 @@ export default function BoardWorkspace({
   const waitForRefill = React.useCallback(async () => {
     await refillWorker.current?.finished;
   }, []);
-  const fillPaused = checksOpen || camOpen;
+  const fillPaused = bottomView === 'checks' || camOpen;
   const fillPending = derive && derived?.board !== board && Boolean(
     board.zones?.length ||
       board.jumpers?.length ||
@@ -287,9 +296,7 @@ export default function BoardWorkspace({
   const [footprintsWidth, setFootprintsWidth] = useState(288);
   const [footprintsResizing, setFootprintsResizing] = useState(false);
   const [snapGrid, setSnapGrid] = useState('0.25');
-  const [boardView, setBoardView] = useState(savedBoardView);
-  const beginner = boardView === 'beginner';
-  const [guideOpen, setGuideOpen] = useState(beginner);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
   const guideToggle = React.useRef<HTMLButtonElement>(null);
   const placementSearch = React.useRef<HTMLInputElement>(null);
@@ -335,7 +342,7 @@ export default function BoardWorkspace({
     }
   }, [board]);
   const { geometry } = layout;
-  const canPickObjects = !!geometry && !beginner && !busy && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && !placementTool;
+  const canPickObjects = !!geometry && !busy && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && !placementTool;
   React.useEffect(() => {
     if (!canPickObjects) setPickingObjects(false);
   }, [canPickObjects]);
@@ -364,18 +371,19 @@ export default function BoardWorkspace({
     selectedPlacement?.locked || selectedPlacement?.positionLocked;
   const rotationLocked =
     selectedPlacement?.locked || selectedPlacement?.rotationLocked;
+  const appliedCircuit = board.appliedCircuit ?? session.circuit;
   const sourcePads =
-    session.circuit && selectedPlacement
-      ? boardPadSources(board, session.circuit).filter(
+    appliedCircuit && selectedPlacement
+      ? boardPadSources(board, appliedCircuit).filter(
           ({ footprintId }) => footprintId === selectedPlacement.id,
         )
       : [];
   const netSources = useMemo(
     () =>
-      session.circuit && selectedNet
-        ? boardNetSources(session.circuit, selectedNet)
+      appliedCircuit && selectedNet
+        ? boardNetSources(appliedCircuit, selectedNet)
         : [],
-    [session.circuit, selectedNet],
+    [appliedCircuit, selectedNet],
   );
 
   function measureAt(point: BoardPoint) {
@@ -402,11 +410,13 @@ export default function BoardWorkspace({
     });
   }
 
-  function changeAnnotations(nextDatum: BoardPoint | undefined, nextDimensions: readonly BoardDimension[]) {
-    const annotations = nextDatum || nextDimensions.length
+  function changeAnnotations(nextDatum: BoardPoint | undefined, nextDimensions: readonly BoardDimension[],
+    graphics: readonly FootprintGraphic[] = board.annotations?.graphics ?? []) {
+    const annotations = nextDatum || nextDimensions.length || graphics.length
       ? {
           ...(nextDatum && { datum: nextDatum }),
           ...(nextDimensions.length && { dimensions: nextDimensions }),
+          ...(graphics.length && { graphics }),
         }
       : undefined;
     return session.apply([{ type: 'setAnnotations', annotations }]);
@@ -452,7 +462,7 @@ export default function BoardWorkspace({
         pads: placementPadTemplates(target, device, footprint),
         footprint,
         showDraft: !sequentialPlacement || queuePositionSet,
-        estimates: !beginner && showPlacementEstimates,
+        estimates: showPlacementEstimates,
         snap: positionLocked
           ? () => selectedPlacement.positionNm
           : canvasPosition,
@@ -465,31 +475,18 @@ export default function BoardWorkspace({
 
   const ruleResolver = useMemo(() => boardRuleResolver(board), [board]);
   const routeRules = ruleResolver.net(selectedNet);
-  const teachingRoute = beginnerRouteDefaults(board, routeRules);
   const preferredWidth = preferredTrackWidth(routeRules, 250_000);
-  const routeWidth = beginner ? mm(teachingRoute.widthNm)
-    : widthPreset === 'custom' ? trackWidth
+  const routeWidth = widthPreset === 'custom' ? trackWidth
     : mm(widthPreset === 'minimum' ? routeRules.minWidthNm : preferredWidth);
   const viaPresets = routeViaPresets(board, routeRules);
-
-  function changeBoardView(view: BoardView) {
-    setBoardView(view);
-    if (view === 'beginner') {
-      setGuideOpen(true);
-      openBoardTools();
-    }
-    try {
-      window.localStorage.setItem(boardViewStorageKey, view);
-    } catch {
-      // The current editor can still use the selected view.
-    }
-  }
 
   function setRoutingMode(active: boolean) {
     if (!active) cancelCopperJob();
     else {
       cancelPlacement();
       openBoardTools();
+      setLayerVisible(layer === 'top' ? 'F.Cu' : 'B.Cu', true);
+      requestAnimationFrame(() => boardCanvas.current?.focus());
     }
     setError('');
     setCleanupDraft(undefined);
@@ -521,18 +518,22 @@ export default function BoardWorkspace({
     }
     const points = manualRouteLeg(last.position, position, routeBend);
     if (!points.length) return;
+    let completed: typeof route | undefined;
     function addPoints(geometry: RouteClearance) {
       if (!clearRouteLeg(geometry, last.position, points, layer)) {
         setError('Track blocked by the board edge, a drill, copper clearance or a routing region.');
         return;
       }
-      setRoute([...route, ...points.map((position) => ({ position, layer }))]);
+      const next = [...route, ...points.map((position) => ({ position, layer }))];
+      setRoute(next);
+      if (!reroute && targetNet && targetNet === selectedNet) completed = next;
     }
     if (routeClearance) addPoints(routeClearance);
     else await runCopperJob(() => loadRouteClearance(), (geometry) => {
       setClearanceDraft({ input: clearanceInput, geometry });
       addPoints(geometry);
     });
+    if (completed) await finishRoute(completed);
   }
 
   function enterRoutePoint(event: React.FormEvent<HTMLFormElement>) {
@@ -555,6 +556,7 @@ export default function BoardWorkspace({
     const last = route[route.length - 1];
     if (last) setRoute([...route, { ...last, layer: next }]);
     setLayer(next);
+    setLayerVisible(next === 'top' ? 'F.Cu' : 'B.Cu', true);
   }
 
   const worker = React.useRef<ReturnType<typeof createBoardWorker>>();
@@ -723,19 +725,18 @@ export default function BoardWorkspace({
     refillWorker.current = { job, finished };
   }, [board, fillPending, fillPaused]);
 
-  async function finishRoute() {
+  async function finishRoute(waypoints = route) {
     await runCopperJob(async (job) => {
       const path = reroute && selectedTrack
         ? [
-            ...route,
+            ...waypoints,
             ...(layer === selectedTrack.layerId
-              ? manualRouteLeg(route.at(-1).position, selectedTrack.end, routeBend)
+              ? manualRouteLeg(waypoints.at(-1).position, selectedTrack.end, routeBend)
               : [selectedTrack.end]).map((position) => ({ position, layer: selectedTrack.layerId })),
           ]
-        : route;
+        : waypoints;
       const crossesLayers = path.some((point, index) => index > 0 && point.layer !== path[index - 1].layer);
-      const via = beginner ? viaPresets.preferred
-        : viaStyle !== 'custom' ? viaPresets[viaStyle]
+      const via = viaStyle !== 'custom' ? viaPresets[viaStyle]
         : crossesLayers ? { viaDiameterNm: nm(viaDiameter), viaDrillNm: nm(viaDrill) }
         : viaPresets.compact;
       return job.route(board, {
@@ -885,8 +886,13 @@ export default function BoardWorkspace({
   }
 
   function openBoardTools() {
-    setBottomView('tools');
+    setBoardToolsOpen(true);
+  }
+
+  function showBoardChecks() {
+    setBottomView('checks');
     setShowProperties(true);
+    setChecksRun((value) => value + 1);
   }
 
   function openBoardList(view: 'components' | 'netlist') {
@@ -1030,25 +1036,50 @@ export default function BoardWorkspace({
     setError('');
     setMeasuring(false);
     setMeasurement([]);
-    setDeleteRoute({ source: board, draft });
+    if (draft.kind === 'region') setDeleteRoute({ source: board, draft });
+    else commitDeletion(planRouteDeletion(board, draft));
   }
 
   function chooseRegionPoint(point: BoardPoint) {
     if (deletionDraft?.kind !== 'region' || !deletionDraft.picking) return;
     const draft = deletionDraft;
+    if (draft.picking === 'end') {
+      let plan: RouteDeletionPlan;
+      try {
+        plan = planRouteDeletion(board, {
+          kind: 'region', start: { x: nm(draft.start.x), y: nm(draft.start.y) }, end: point, layer: draft.layer,
+        });
+      } catch (failure) {
+        setError(failure instanceof Error ? failure.message : String(failure));
+        return;
+      }
+      if (!plan.tracks.length && !plan.vias.length) {
+        setError('The region contains no unlocked routed copper.');
+        return;
+      }
+      commitDeletion(plan);
+      return;
+    }
+    setError('');
     setDeleteRoute({
       source: board,
       draft: { ...draft, [draft.picking]: { x: mm(point.x), y: mm(point.y) },
-        picking: draft.picking === 'start' ? 'end' : undefined },
+        picking: 'end' },
     });
   }
 
   function deleteSelectedRoute() {
     if (!deletion?.plan || busy) return;
+    commitDeletion(deletion.plan);
+  }
+
+  function commitDeletion(plan: RouteDeletionPlan) {
+    if (busy || (!plan.tracks.length && !plan.vias.length)) return;
     edit(() => {
-      const next = session.commit(applyRouteDeletion(session.board, deletion.plan));
+      const next = session.commit(applyRouteDeletion(session.board, plan));
       setDeleteRoute(undefined);
       setSelectedRouteId('');
+      setRouteGroup([]);
       return next;
     });
   }
@@ -1229,58 +1260,58 @@ export default function BoardWorkspace({
     {
       title: 'Board',
       items: [
-        { id: 'outline', label: 'Board outline…', disabled: busy, run: () => {
+        { id: 'outline', label: 'PCB Size & Shape…', disabled: busy, run: () => {
           openBoardTools();
           setProfileDialog('outline');
         } },
-        !beginner && { id: 'cutout', label: 'Add cutout…', disabled: busy, run: () => {
+        { id: 'cutout', label: 'Add cutout…', disabled: busy, run: () => {
           openBoardTools();
           setProfileDialog('cutout');
         } },
-        !beginner && { id: 'hole', label: 'Hole or slot…', disabled: busy, run: () => {
+        { id: 'hole', label: 'Hole or slot…', disabled: busy, run: () => {
           openBoardTools();
           setHoleDialog(true);
         } },
-        !beginner && { id: 'dimension', label: 'Add dimension…', disabled: busy || routing, run: () => {
+        { id: 'dimension', label: 'Add dimension…', disabled: busy || routing, run: () => {
           openBoardTools();
           addDimension();
         } },
-        !beginner && { id: 'datum', label: 'Set measurement datum…', disabled: busy || routing,
+        { id: 'datum', label: 'Set measurement datum…', disabled: busy || routing,
           run: () => {
             openBoardTools();
             setAnnotationDraft({ type: 'datum', point: datum ?? { x: 0, y: 0 } });
           } },
-        !beginner && { id: 'pick', label: 'Pick overlapping objects', disabled: !canPickObjects, run: () => {
+        { id: 'pick', label: 'Pick overlapping objects', disabled: !canPickObjects, run: () => {
           setPickingObjects(true);
           openBoardTools();
           requestAnimationFrame(() => boardCanvas.current?.focus());
         } },
         null,
         !!onUpdate && { id: 'update', label: 'Update PCB from Schematic…', disabled: busy || session.dirty, run: onUpdate },
-        !beginner && !!onEditReferences && { id: 'references', label: 'Edit PCB references…',
+        !!onEditReferences && { id: 'references', label: 'Edit PCB references…',
           disabled: busy || session.dirty || !board.components?.length, run: onEditReferences },
-        !beginner && !!onBackAnnotate && { id: 'back-annotate', label: 'Update Schematic from PCB…',
+        !!onBackAnnotate && { id: 'back-annotate', label: 'Update Schematic from PCB…',
           disabled: busy || session.dirty || !session.circuit, run: onBackAnnotate },
         !board.sourceCircuit && !session.circuit && { id: 'connections', label: 'Board connections…',
           disabled: busy || routing || !!deletionDraft || !!cleanup, run: () => setConnectionsOpen(true) },
-        { id: 'components', label: 'View components', run: () => openBoardList('components') },
-        { id: 'netlist', label: 'View netlist', run: () => openBoardList('netlist') },
+        !onUpdate && { id: 'circuit-source', label: 'Import schematic or netlist…',
+          disabled: busy || routing, run: () => setCircuitSourceOpen(true) },
         { id: 'tools', label: 'View board tools', run: openBoardTools },
       ],
     },
     {
       title: 'Copper',
       items: [
-        !beginner && { id: 'net-rules', label: 'Net rules…', disabled: busy || routing, run: () => setNetRulesOpen(true) },
-        !beginner && { id: 'inspect-rules', label: 'Inspect board rules…',
+        { id: 'net-rules', label: 'Net rules…', disabled: busy || routing, run: () => setNetRulesOpen(true) },
+        { id: 'inspect-rules', label: 'Inspect board rules…',
           disabled: busy || routing || !geometry, run: () => setRuleInspectionOpen(true) },
-        { id: 'checks', label: t('pcbChecks.run'), disabled: busy || routing || !geometry, run: () => setChecksOpen(true) },
+        { id: 'checks', label: t('pcbChecks.run'), disabled: busy || routing || !geometry, run: showBoardChecks },
         null,
-        !beginner && { id: 'area', label: 'Add placement area…', disabled: busy, run: () => {
+        { id: 'area', label: 'Add placement area…', disabled: busy, run: () => {
           openBoardTools();
           setPlacementAreaDialog('new');
         } },
-        !beginner && { id: 'region', label: 'Add routing region…', disabled: busy || routing,
+        { id: 'region', label: 'Add routing region…', disabled: busy || routing,
           run: () => {
             openBoardTools();
             setRoutingRegionDialog('new');
@@ -1298,9 +1329,9 @@ export default function BoardWorkspace({
         { id: 'fabrication-settings', label: 'Fabrication settings…', disabled: busy || routing, run: () => setFabricationOpen(true) },
         { id: 'cam', label: 'CAM read-back preview…', disabled: busy || routing || !geometry, run: () => setCamOpen(true) },
         { id: '3d', label: 'Inspect in 3D…', disabled: busy || routing || !geometry, run: () => setInspectionOpen(true) },
-        !beginner && { id: 'revisions', label: 'Manufacturing revisions…', disabled: busy || routing, run: () => setRevisionOpen(true) },
-        !beginner && { id: 'review-kicad', label: 'Review KiCad board…', disabled: busy || routing, run: () => setKicadReviewOpen(true) },
-        !beginner && { id: 'export-kicad', label: 'Export KiCad board…', disabled: busy || routing, run: () => setKicadOpen(true) },
+        { id: 'revisions', label: 'Manufacturing revisions…', disabled: busy || routing, run: () => setRevisionOpen(true) },
+        { id: 'review-kicad', label: 'Review KiCad board…', disabled: busy || routing, run: () => setKicadReviewOpen(true) },
+        { id: 'export-kicad', label: 'Export KiCad board…', disabled: busy || routing, run: () => setKicadOpen(true) },
       ],
     },
   ];
@@ -1408,8 +1439,6 @@ export default function BoardWorkspace({
     { key: 'zoom_fit', text: 'Fit board' },
   ];
   if (boardMenuFootprint || boardMenu?.routeId) boardMenuItems.push({ key: 'fit_selection', text: 'Fit selection' });
-  if (boardMenuFootprint && !boardMenuFootprint.locked && !boardMenuFootprint.positionLocked)
-    boardMenuItems.unshift({ key: 'move_footprint', text: 'Move on board' });
 
   const footprintPanel = <>
     <LibraryBrowserHeader>
@@ -1459,579 +1488,20 @@ export default function BoardWorkspace({
     </div>
   </>;
 
-  return (
-    <section
-      className="circuit-container pcb-workspace"
-      aria-label="PCB layout"
-      onKeyDown={(event) => {
-        if (event.defaultPrevented || !event.currentTarget.contains(event.target as Node)) return;
-        if ((event.ctrlKey || event.metaKey) && !event.altKey) {
-          const key = event.key.toLowerCase();
-          const editingText = (event.target as Element).closest('input, textarea, [contenteditable="true"]');
-          if (key === 's') {
-            event.preventDefault();
-            if (!busy) void save(event.shiftKey);
-            return;
-          }
-          if (!editingText && (key === 'y' || key === 'z')) {
-            event.preventDefault();
-            if (!busy) edit(key === 'y' || event.shiftKey ? session.redo : session.undo);
-            return;
-          }
-        }
-        if (event.key === '+' || event.key === '-' || event.key === '=') {
-          if ((event.target as Element).closest('.pcb-svg')) {
-            event.preventDefault();
-            boardCanvas.current?.zoom(event.key === '-' ? 'out' : 'in');
-            return;
-          }
-        }
-        if (event.key !== 'Escape') return;
-        if (placementTool && !busy && !routing && !measuring) {
-          cancelPlacement();
-        } else if (pickingObjects) {
-          setPickingObjects(false);
-          event.preventDefault();
-        } else if (routing) {
-          setRoutingMode(false);
-          routeToggle.current?.focus();
-        }
-        else if (trackEdit) cancelTrackEdit();
-        else if (cleanup) setCleanupDraft(undefined);
-        else return;
-        event.preventDefault();
-      }}
-    >
-      {boardMenu && (
-        <AnchoredContextMenu hidden={false} target={boardMenu.point} items={boardMenuItems}
-          onDismiss={() => setBoardMenu(undefined)}
-          onItemClick={(command) => {
-            setBoardMenu(undefined);
-            requestAnimationFrame(() => boardCanvas.current?.focus());
-            switch (command) {
-              case 'undo': edit(session.undo); break;
-              case 'redo': edit(session.redo); break;
-              case 'zoom_in': boardCanvas.current?.zoom('in', boardMenu.point); break;
-              case 'zoom_out': boardCanvas.current?.zoom('out', boardMenu.point); break;
-              case 'zoom_fit': boardCanvas.current?.fit(); break;
-              case 'fit_selection': fitSelection(); break;
-              case 'move_footprint': armPlacement(boardMenu.componentId); break;
-            }
-          }} />
-      )}
-      <EditorToolbar className="pcb-toolbar" label="PCB commands">
-        {process.env.TARGET_SYSTEM !== 'electron' && (
-          <EditorFileMenu>
-            <EditorNewMenu submenu />
-            {process.env.TARGET_SYSTEM === 'filesystem' && (
-              <MenuItem icon={<FolderOpenRegular />} onClick={onOpen}>{t('toolbar.open')}</MenuItem>
-            )}
-            {onProjectFolder && <MenuItem icon={<FolderOpenRegular />} onClick={onProjectFolder}>
-              {t('projects.openFolder')}
-            </MenuItem>}
-            <MenuDivider />
-            <MenuItem icon={<SaveRegular />} disabled={busy} onClick={() => { void save(); }}>
-              {t('toolbar.save')}
-            </MenuItem>
-            {session.canSaveAs && <MenuItem icon={<SaveCopyRegular />} disabled={busy}
-              onClick={() => { void save(true); }}>Save As…</MenuItem>}
-          </EditorFileMenu>
-        )}
-        {process.env.TARGET_SYSTEM === 'electron' && <EditorNewMenu />}
-        {!nativeBoardMenus && boardCommands.map(({ title, items }) => (
-          <Menu key={title}>
-            <MenuTrigger disableButtonEnhancement>
-              <ToolbarButton appearance="subtle">{title}</ToolbarButton>
-            </MenuTrigger>
-            <MenuPopover>
-              <MenuList>
-                {items.map((item, index) => item === null ? <MenuDivider key={index} /> :
-                  item && <MenuItem key={item.id} disabled={item.disabled} onClick={item.run}>
-                    {item.label}
-                  </MenuItem>)}
-              </MenuList>
-            </MenuPopover>
-          </Menu>
-        ))}
-        <EditorSaveButton disabled={busy} onClick={() => { void save(); }} />
-        {manageClose && activeCommands && <EditorSaveAllButton disabled={busy || saveAllDisabled} />}
-        {session.canSaveAs && <EditorSaveButton saveAs label="Save As…" disabled={busy}
-          onClick={() => { void save(true); }} />}
-        <ToolbarDivider />
-        <EditorHistoryControls compactLabels canUndo={!busy && session.canUndo} canRedo={!busy && session.canRedo}
-          onUndo={() => edit(session.undo)} onRedo={() => edit(session.redo)} />
-        <ToolbarDivider />
-        <label>
-          PCB view{' '}
-          <Select
-            aria-label="PCB view"
-            value={boardView}
-            disabled={busy || routing}
-            onChange={(event) =>
-              changeBoardView(event.target.value as BoardView)
-            }
-          >
-            <option value="engineering">Engineering</option>
-            <option value="beginner">Beginner</option>
-          </Select>
-        </label>
-        <Button
-          ref={guideToggle}
-          aria-expanded={guideOpen}
-          onClick={() => {
-            if (bottomView === 'tools' && guideOpen && showProperties) setGuideOpen(false);
-            else {
-              setGuideOpen(true);
-              openBoardTools();
-            }
-          }}
-        >
-          First board guide
-        </Button>
-        <Button disabled={!geometry} onClick={() => boardCanvas.current?.fit()}>
-          Fit board
-        </Button>
-        <Button disabled={!geometry || (!routeSelection && !selectedFeatures.length && !routeGroup.length)} onClick={fitSelection}>
-          Fit selection
-        </Button>
-        <ViewToolbarControls
-          canZoomIn={!!geometry}
-          canZoomOut={!!geometry}
-          showRulers={showRulers}
-          onZoom={(direction) => boardCanvas.current?.zoom(direction)}
-          onToggleRulers={() => setShowRulers(!showRulers)}
-        />
-        <Button appearance="subtle" icon={<PanelLeftExpandRegular />} aria-label="Toggle footprint browser"
-          title="Toggle footprint browser" aria-pressed={footprintsVisible} onClick={() => onToggleFootprints(!footprintsVisible)} />
-        <Button appearance="subtle" icon={<PanelBottomExpandRegular />} aria-label="Toggle board properties"
-          title="Toggle board properties" aria-pressed={showProperties} onClick={() => setShowProperties(!showProperties)} />
-        <Button
-          ref={routeToggle}
-          disabled={!routing && (busy || !board.nets?.length)}
-          onClick={() => setRoutingMode(!routing)}
-        >
-          {routing ? 'Cancel route' : 'Route track'}
-        </Button>
-        {(!beginner || measuring) && (
-          <Button
-            disabled={busy || routing}
-            onClick={() => {
-              setDeleteRoute(undefined);
-              setCleanupDraft(undefined);
-              setTrackEditDraft(undefined);
-              setMeasuring(!measuring);
-              setMeasurement([]);
-              if (!measuring) openBoardTools();
-            }}
-          >
-            {measuring ? 'End measurement' : 'Measure distance'}
-          </Button>
-        )}
-
-        <label>
-          Show copper{' '}
-          <Select
-            value={
-              visibleCopper === 'bottom' && board.copperLayers.length === 1
-                ? 'all'
-                : visibleCopper
-            }
-            onChange={(event) =>
-              setVisibleCopper(event.target.value as typeof visibleCopper)
-            }
-          >
-            <option value="all">All layers</option>
-            {board.copperLayers.map(({ id }) => (
-              <option key={id} value={id}>
-                {id === 'top' ? 'Top' : 'Bottom'}
-              </option>
-            ))}
-          </Select>
-        </label>
-        {!manageClose && <Button
-          disabled={busy}
-          onClick={() => {
-            if (!session.dirty) {
-              onClose();
-            } else setConfirmDiscard(true);
-          }}
-        >
-          Close
-        </Button>}
-      </EditorToolbar>
-      <Dialog open={confirmDiscard} onOpenChange={(_, { open }) => setConfirmDiscard(open)}>
-        <DialogSurface>
-          <DialogBody>
-            <DialogTitle>Discard unsaved PCB edits?</DialogTitle>
-            <DialogContent>Edits made since the last save will be lost.</DialogContent>
-            <DialogActions>
-              <Button autoFocus onClick={() => setConfirmDiscard(false)}>Cancel</Button>
-              <Button appearance="primary" onClick={onClose}>Discard edits</Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
-      {fabricationOpen && (
-        <BoardFabricationDialog
-          board={board}
-          advanced={!beginner}
-          onClose={() => setFabricationOpen(false)}
-          onApply={(operations) => setBoard(session.apply(operations))}
-        />
-      )}
-      {ruleInspectionOpen && (
-        <React.Suspense fallback={null}>
-          <BoardRuleInspectionDialog board={board} zones={derivedResult?.zones}
-            selectedCopperId={selectedRouteId || (selectedPad && selectedPlacement
-              ? selectedPlacement.id + ':' + selectedPad : undefined)}
-            selectedLayer={visibleCopper === 'all' ? undefined : visibleCopper}
-            onClose={() => setRuleInspectionOpen(false)} />
-        </React.Suspense>
-      )}
-      {netRulesOpen && (
-        <BoardNetRulesDialog
-          board={board}
-          selectedNet={selectedNet}
-          onClose={() => setNetRulesOpen(false)}
-          onApply={(operation) => setBoard(session.apply([operation]))}
-        />
-      )}
-      {connectionsOpen && !board.sourceCircuit && !session.circuit && (
-        <BoardConnectionsDialog
-          board={board}
-          selected={selected}
-          onCommit={(candidate) => setBoard(session.commit(candidate))}
-          onClose={() => setConnectionsOpen(false)}
-        />
-      )}
-      {inspectionOpen && (
-        <React.Suspense fallback={<p role="status">Loading 3D viewer…</p>}>
-          <BoardInspectionDialog
-            board={board}
-            selected={selected}
-            onClose={() => setInspectionOpen(false)}
-            onInspect={(id) => {
-              selectComponent(id);
-              setInspectionOpen(false);
-            }}
-          />
-        </React.Suspense>
-      )}
-      {camOpen && (
-        <React.Suspense fallback={<p role="status">Loading CAM preview…</p>}>
-          <BoardCamDialog
-            board={board}
-            projectId={session.projectId}
-            readProjectCircuit={session.readProjectCircuit}
-            waitForRefill={waitForRefill}
-            onChecked={setCheckedRevision}
-            onClose={() => setCamOpen(false)}
-          />
-        </React.Suspense>
-      )}
-      {kicadOpen && (
-        <React.Suspense fallback={<p role="status">Loading KiCad export…</p>}>
-          <KicadExportDialog
-            board={board}
-            filename={filename}
-            onClose={() => setKicadOpen(false)}
-          />
-        </React.Suspense>
-      )}
-      {kicadReviewOpen && (
-        <React.Suspense fallback={<p role="status">Loading KiCad board review…</p>}>
-          <KicadBoardReviewDialog onClose={() => setKicadReviewOpen(false)} />
-        </React.Suspense>
-      )}
-      {revisionOpen && (
-        <React.Suspense fallback={<p role="status">Loading manufacturing revisions…</p>}>
-          <BoardRevisionDialog
-            board={board}
-            session={session}
-            onCreated={(next) => {
-              setBoard(next);
-              setRevisionOpen(false);
-            }}
-            onClose={() => setRevisionOpen(false)}
-          />
-        </React.Suspense>
-      )}
-      {checksOpen && (
-        <BoardChecksDialog
-          board={board}
-          readProjectCircuit={session.readProjectCircuit}
-          waitForRefill={waitForRefill}
-          filename={filename}
-          onChecked={setCheckedRevision}
-          onClose={() => setChecksOpen(false)}
-          onWaive={(waiver) =>
-            edit(() => session.apply([{ type: 'addWaiver', waiver }]))
-          }
-          onRemoveWaiver={(id) =>
-            edit(() => session.apply([{ type: 'removeWaiver', id }]))
-          }
-          onProbe={onProbe && ((source) => {
-            setChecksOpen(false);
-            onProbe(source);
-          })}
-          onInspect={({ objects, location }) => {
-            setChecksOpen(false);
-            setVisibleCopper('all');
-            const keys = new Set(objects.map((id) => id.split('/')[0]));
-            const component = board.components?.find(
-              ({ id }) =>
-                keys.has(id) ||
-                objects.some((source) => source.startsWith(id + ':')),
-            );
-            const placement = board.footprints?.find(({ id, componentId }) =>
-              component?.id === componentId || keys.has(id) ||
-              objects.some((source) => source.startsWith(id + ':')),
-            );
-            const track = board.tracks?.find(({ id }) => keys.has(id));
-            const via = board.vias?.find(
-              ({ id }) =>
-                keys.has(id) ||
-                objects.some((source) => source.startsWith(id + ':')),
-            );
-            if (component || placement) {
-              const padId = placement && objects
-                .find((id) => id.startsWith(placement.id + ':'))?.split(':')[1];
-              selectComponent(component?.id ?? placement.componentId, padId);
-            }
-            if (track || via) {
-              setSelectedRouteId(track?.id ?? via.id);
-              setSelectedNet(track?.netId ?? via?.netId ?? '');
-            }
-            const hole = board.mechanicalHoles?.find(({ id }) => keys.has(id));
-            const jumper = board.jumpers?.find(({ id }) =>
-              keys.has(id) || objects.some((source) => source.startsWith(id + ':')));
-            const zone = board.zones?.find(({ id }) => keys.has(id));
-            const issueLocation = location ?? track?.start ?? via?.positionNm ??
-              placement?.positionNm ?? hole?.start ?? jumper?.start;
-            setCheckMarker({ board, location: issueLocation });
-            if (issueLocation) boardCanvas.current?.fit([issueLocation]);
-            else if (zone) boardCanvas.current?.fit(zone.outline);
-            requestAnimationFrame(() => boardCanvas.current?.focus());
-          }}
-        />
-      )}
-      {jumperDialog && (
-        <WireJumperDialog
-          board={board}
-          jumper={jumperDialog === 'new' ? undefined : jumperDialog}
-          onApply={(jumper) =>
-            setBoard(session.apply([{ type: 'setWireJumper', jumper }]))
-          }
-          onClose={() => setJumperDialog(undefined)}
-        />
-      )}
-      {zoneDialog && geometry && (
-        <BoardZoneDialog
-          board={board}
-          zone={zoneDialog === 'new' ? undefined : zoneDialog}
-          defaultOutline={geometry.profile.outer}
-          selectedNet={selectedNet}
-          onClose={() => setZoneDialog(undefined)}
-          onApply={(zone) =>
-            setBoard(session.apply([{ type: 'setZone', zone }]))
-          }
-        />
-      )}
-      {objectPick && <BoardPickDialog pick={objectPick}
-        onSelect={selectPickedObject} onClose={() => setObjectPick(undefined)} />}
-      {placementAreaDialog && (
-        <PlacementAreaDialog
-          area={placementAreaDialog === 'new' ? undefined : placementAreaDialog}
-          onApply={(area) =>
-            setBoard(session.apply([{ type: 'setPlacementArea', area }]))
-          }
-          onClose={() => setPlacementAreaDialog(undefined)}
-        />
-      )}
-      {routingRegionDialog && (
-        <RoutingRegionDialog
-          board={board}
-          region={routingRegionDialog === 'new' ? undefined : routingRegionDialog}
-          onApply={(region) => setBoard(session.apply([{ type: 'setRoutingRegion', region }]))}
-          onClose={() => setRoutingRegionDialog(undefined)}
-        />
-      )}
-      {annotationDraft && (
-        <BoardAnnotationDialog
-          draft={annotationDraft}
-          datum={datum}
-          onClose={() => setAnnotationDraft(undefined)}
-          onApply={(annotation) => {
-            if (annotation.type === 'datum') {
-              setBoard(changeAnnotations(annotation.point, dimensions));
-              return;
-            }
-            const dimension = annotation.dimension;
-            const next = dimensions.some(({ id }) => id === dimension.id)
-              ? dimensions.map((item) => item.id === dimension.id ? dimension : item)
-              : [...dimensions, dimension];
-            setBoard(changeAnnotations(datum, next));
-            setMeasuring(false);
-            setMeasurement([]);
-          }}
-        />
-      )}
-      {holeDialog && (
-        <BoardHoleDialog
-          x={x}
-          y={y}
-          onClose={() => setHoleDialog(false)}
-          onApply={(hole) =>
-            setBoard(session.apply([{ type: 'addMechanicalHole', hole }]))
-          }
-        />
-      )}
-      {profileDialog !== undefined && (
-        <BoardProfileDialog
-          board={board}
-          cutout={profileDialog !== 'outline'}
-          cutoutIndex={typeof profileDialog === 'number' ? profileDialog : undefined}
-          onClose={() => setProfileDialog(undefined)}
-          onApply={(profile) =>
-            setBoard(session.apply([{ type: 'replaceProfile', profile }]))
-          }
-        />
-      )}
-      <div className="pcb-content">
-        <div className="mid-container">
-          {footprintsHost === undefined ? (
-            <EditorSidePanel label="Footprints" resizeLabel="Resize footprint browser" hidden={!footprintsVisible}
-              width={`min(${footprintsWidth}px, 27%)`} resizing={footprintsResizing}
-              onDragStateChange={setFootprintsResizing}
-              onResize={(delta) => setFootprintsWidth((width) => Math.max(128, Math.min(440, width + delta)))}>
-              {footprintPanel}
-            </EditorSidePanel>
-          ) : footprintsHost && createPortal(footprintPanel, footprintsHost)}
-          <div className="main-content-area">
-          <EditorDrawingStack bottomHeight={bottomPanelHeight} onBottomResize={onBottomPanelResize}
-            bottomHidden={!showProperties} bottomLabel="Board properties" resizeLabel="Resize board properties"
-            drawing={geometry ? (
-            <BoardCanvas
-              board={board}
-              geometry={geometry}
-              canvasRef={boardCanvas}
-              onPick={pickingObjects && canPickObjects
-                ? (pick) => { setPickingObjects(false); setObjectPick(pick); } : undefined}
-              selectedSilk={selectedSilk?.id}
-              selected={selected}
-              group={groupSelection}
-              selectedPad={selectedPad}
-              selectedNet={hoveredNet || selectedNet}
-              selectedRoutes={new Set([...routeGroup, ...(selectedRouteId ? [selectedRouteId] : [])])}
-              route={route}
-              airwires={derivedResult?.airwires}
-              zoneFills={derivedResult?.zones.fills}
-              checkMarker={
-                checkMarker?.board === board ? checkMarker.location : undefined
-              }
-              measurement={measurement}
-              trackEdit={trackEditPreview && {
-                handle: trackEditPreview.handle,
-                pieces: trackEditPreview.pieces,
-                move: (x, y) => { if (!busy) moveTrackHandle(canvasPosition(x, y)); },
-              }}
-              deletion={cleanup ? { tracks: cleanup.loops, pickingRegion: false } : deletion && {
-                tracks: deletion.plan?.tracks, vias: deletion.plan?.vias, corners: deletion.corners,
-                pickingRegion: !!regionPicking,
-              }}
-              onMeasure={measuring && !busy ? measureAt : undefined}
-              showRulers={showRulers}
-              selectionEnabled={!busy && !routing && !measuring && !trackEdit && !deletionDraft &&
-                !cleanup && !placementTool && !pickingObjects}
-              onSelectArea={selectArea}
-              onMoveComponent={moveComponentOnCanvas}
-              placementActive={!busy && !routing && !measuring && !!placementTool && placementTool === target?.id}
-              placementPreview={currentPlacementPreview()}
-              onDropComponent={!busy && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup
-                ? (id, x, y) => armPlacement(id, canvasPosition(x, y)) : undefined}
-              onContextCommand={openBoardMenu}
-              visibleCopper={
-                routing
-                  ? layer
-                  : visibleCopper === 'bottom' &&
-                    board.copperLayers.length === 1
-                  ? 'all'
-                  : visibleCopper
-              }
-              trackWidthNm={Number(canonicalBoardDecimal(routeWidth)) * 1_000_000 || 0}
-              onLocation={(x, y) => {
-                if (busy) return;
-                const location = canvasPosition(x, y);
-                if (regionPicking) chooseRegionPoint(location);
-                else if (deletionDraft || cleanup) return;
-                else if (trackEdit) moveTrackHandle(location);
-                else if (routing) void routePoint(location);
-                else if (measuring) measureAt(location);
-                else if (placementTool && placementTool === target?.id) void place(location);
-                else if (!pickingObjects) selectArea([], [], false);
-              }}
-              routingSnap={routing ? {
-                layer,
-                activeNet: route.length ? selectedNet : undefined,
-                connect: ({ position, netId }) => { void routePoint(position, netId); },
-                preview: (x, y, target) => previewRouteLeg(target ?? canvasPosition(x, y)),
-              } : undefined}
-              onComponent={(id) => { if (!deletionDraft && !cleanup) selectComponent(id); }}
-              onGroupComponent={
-                routing || measuring || deletionDraft || cleanup
-                  ? undefined
-                  : (id) => toggleGroupComponent(id, true)
-              }
-              onPad={(componentId, id, position) => {
-                if (deletionDraft || cleanup) return;
-                if (measuring) measureAt(position);
-                else if (trackEdit) moveTrackHandle(position);
-                else selectComponent(componentId, id);
-              }}
-              onRouteObject={(id, netId, point) => {
-                if (routing || trackEdit || deletionDraft || cleanup) return;
-                setBottomView('selection');
-                setShowProperties(true);
-                setSelected('');
-                setSelectedPad(undefined);
-                setGroup([]);
-                setRouteGroup([]);
-                pickedRoute.current = point ? { id, point } : undefined;
-                setSelectedRouteId(id);
-                setSelectedNet(netId ?? '');
-                setSelectedSilk(undefined);
-              }}
-            />
-          ) : (
-            <p role="alert">{layout.error}</p>
-          )}>
-            <>
-              {bottomView === 'netlist' && (
-                <BoardNetlistPanel board={board} selectedNet={selectedNet} listModeMenu={listModeMenu}
-                  onSelect={route.length || deletionDraft || cleanup ? undefined : (id) => {
-                    setHoveredNet('');
-                    setSelectedNet(id);
-                    if (routing) openBoardTools();
-                  }}
-                  onHover={routing || deletionDraft || cleanup ? undefined : setHoveredNet}>
-                  {netSources.length > 0 && <details open key={selectedNet}>
-                    <summary>Schematic net terminals</summary>
-                    <ul aria-label="Schematic net terminals">
-                      {netSources.map(({ id, reference, signal, number, source }) => (
-                        <li key={id}><Button size="small" onClick={() => onProbe?.(source)}>
-                          {reference} / {signal}{number ? ' / ' + number : ''}
-                        </Button></li>
-                      ))}
-                    </ul>
-                  </details>}
-                </BoardNetlistPanel>
-              )}
-              {(bottomView === 'tools' || (bottomView === 'selection' && routeSelection)) && (
-                <div className="pcb-panel-scroll pcb-board-tools" aria-label={bottomView === 'tools' ? 'Board tools' : 'Selected copper'}>
-              {bottomView === 'tools' && <Button size="small" appearance="subtle" onClick={() => openBoardList(idleBottomView)}>
-                {idleBottomView === 'components' ? 'Back to Components' : 'Back to Netlist'}
-              </Button>}
-              {bottomView === 'tools' && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && <div className="pcb-panel-actions">
+  const boardTools = (boardToolsOpen || (bottomView === 'selection' && (routeSelection || routeGroup.length > 0))) && (
+    <section className="pcb-board-tools" aria-label="Board tools">
+      <div className="pcb-right-heading"><strong>Board tools</strong><Button size="small" appearance="subtle" aria-label="Close board tools" onClick={() => {
+        setBoardToolsOpen(false);
+        if (routing) setRoutingMode(false);
+        if (trackEdit) cancelTrackEdit();
+        setMeasuring(false);
+        setMeasurement([]);
+        setDeleteRoute(undefined);
+        setCleanupDraft(undefined);
+        setSelectedRouteId('');
+        setRouteGroup([]);
+      }}>Close</Button></div>
+              {boardToolsOpen && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && <div className="pcb-panel-actions">
               <label>
                 Copper layers{' '}
                 <Select
@@ -2046,7 +1516,7 @@ export default function BoardWorkspace({
                   <option value="2">Two</option>
                 </Select>
               </label>
-              {!beginner && (
+              {(
                 <label>
                   Grid (mm)
                   <Input size="small" value={snapGrid}
@@ -2058,7 +1528,7 @@ export default function BoardWorkspace({
             {checkedRevision !== undefined && checkedRevision !== board.revision && (
               <p role="status">Design checks are stale.</p>
             )}
-            {guideOpen && bottomView === 'tools' && (
+            {guideOpen && boardToolsOpen && (
               <FirstBoardGuide
                 step={guideStep}
                 onStepChange={setGuideStep}
@@ -2075,7 +1545,7 @@ export default function BoardWorkspace({
                   requestAnimationFrame(() => placementSearch.current?.focus());
                 }}
                 onRouting={() => setRoutingMode(true)}
-                onChecks={() => setChecksOpen(true)}
+                onChecks={showBoardChecks}
                 onPreview={() => setCamOpen(true)}
                 components={board.components?.length ?? 0}
                 unplaced={unplaced.length}
@@ -2112,7 +1582,7 @@ export default function BoardWorkspace({
                 )}
               </div>
             )}
-            {bottomView === 'tools' && !beginner && !routing && (datum || dimensions.length > 0) && (
+            {boardToolsOpen && !routing && (datum || dimensions.length > 0) && (
               <details>
                 <summary>Dimensions and datum</summary>
                 {datum && (
@@ -2185,7 +1655,7 @@ export default function BoardWorkspace({
                       : 'Choose a starting point.'}
                   </p>
                 </details>
-                {!beginner && (
+                {(
                   <label>
                     Route bend
                     <Select value={routeBend} onChange={(event) => setRouteBend(event.target.value as RouteBend)}>
@@ -2205,24 +1675,12 @@ export default function BoardWorkspace({
                   >
                     {board.copperLayers.map(({ id }) => (
                       <option key={id} value={id}>
-                        {id}
+                        {id === 'top' ? 'Top' : 'Bottom'}
                       </option>
                     ))}
                   </Select>
                 </label>
-                {beginner ? (
-                  <p>
-                    Track width {routeWidth} mm
-                    {board.copperLayers.length === 2 && (
-                      <>
-                        {' '}
-                        · Via diameter {mm(teachingRoute.viaDiameterNm)} mm ·
-                        Drill {mm(teachingRoute.viaDrillNm)} mm
-                      </>
-                    )}
-                  </p>
-                ) : (
-                  <>
+                <>
                     <label>
                       Track width preset
                       <Select value={widthPreset} onChange={(event) => {
@@ -2269,10 +1727,10 @@ export default function BoardWorkspace({
                         )}
                       </>
                     )}
-                  </>
-                )}
+                </>
                 <Button
-                  disabled={route.length < 2}
+                  disabled={route.length < 2 && !reroute}
+                  title="Finish route (End)"
                   onClick={(): void => {
                     void finishRoute();
                   }}
@@ -2312,7 +1770,7 @@ export default function BoardWorkspace({
                 <legend>
                   {selectedTrack ? 'Selected track' : 'Selected via'}
                 </legend>
-                {selectedVia && !beginner && (
+                {selectedVia && (
                   <label>
                     Via solder mask
                     <Select
@@ -2327,7 +1785,7 @@ export default function BoardWorkspace({
                     </Select>
                   </label>
                 )}
-                {!beginner && selectedTrack && (
+                {selectedTrack && (
                   <>
                     <Button disabled={selectedTrack.locked} onClick={splitTrack}>Split track</Button>
                     <Button disabled={!selectedTrack.netId} onClick={beginBranch}>Branch from track</Button>
@@ -2346,23 +1804,27 @@ export default function BoardWorkspace({
                     </Button>
                   </>
                 )}
-                {!beginner && (
+                {(
                   <Checkbox label={selectedTrack ? 'Lock track' : 'Lock via'}
                     checked={!!routeSelection.locked} onChange={toggleRoutingLock} />
                 )}
                 <Button disabled={routeSelection.locked} onClick={() => previewDeletion({ kind: 'item', id: selectedRouteId })}>
-                  Delete selected copper…
+                  Delete selected copper
                 </Button>
-                {!beginner && selectedTrack?.netId && !selectedTrack.locked && (
+                {selectedTrack?.netId && !selectedTrack.locked && (
                   <Button onClick={() => previewDeletion({
                     kind: 'connection', trackId: selectedTrack.id,
                     picked: pickedRoute.current?.id === selectedTrack.id ? pickedRoute.current.point : undefined,
-                  })}>Delete connection…</Button>
+                  })}>Delete connection</Button>
                 )}
               </fieldset>
             )}
-            {!beginner &&
-              !routing &&
+            {!routing && !trackEdit && !deletionDraft && !cleanup && routeGroup.length > 0 && (
+              <Button disabled={busy} onClick={() => commitDeletion(planRouteDeletion(board, { kind: 'items', ids: routeGroup }))}>
+                Delete selected copper
+              </Button>
+            )}
+            {!routing &&
               !trackEdit &&
               !deletionDraft &&
               !cleanup &&
@@ -2371,18 +1833,18 @@ export default function BoardWorkspace({
                 ({ netId }) => netId === selectedNet,
               ) && (
                 <Button disabled={busy} onClick={() => previewDeletion({ kind: 'net', netId: selectedNet })}>
-                  Delete routed net…
+                  Delete routed net
                 </Button>
               )}
-            {!beginner && !routing && !trackEdit && !deletionDraft && !cleanup &&
+            {!routing && !trackEdit && !deletionDraft && !cleanup &&
               (!!board.tracks?.length || !!board.vias?.length) && (
                 <Button disabled={busy} onClick={() => previewDeletion({
                   kind: 'region', start: { x: '', y: '' }, end: { x: '', y: '' },
-                  layer: board.copperLayers.length === 1 ? 'top' : visibleCopper,
+                  layer: visibleCopper === 'none' ? 'all' : visibleCopper,
                   picking: 'start',
                 })}>Delete region…</Button>
               )}
-            {!beginner && !routing && !trackEdit && !deletionDraft && !cleanup &&
+            {!routing && !trackEdit && !deletionDraft && !cleanup &&
               selectedNet && board.tracks?.some(({ netId, locked, reviewRequired }) =>
                 netId === selectedNet && !locked && !reviewRequired) && (
                 <Button disabled={busy} onClick={() => { void previewCleanup(); }}>Clean up routed net…</Button>
@@ -2410,8 +1872,8 @@ export default function BoardWorkspace({
                 onConfirm={deleteSelectedRoute}
               />
             )}
-            {bottomView === 'tools' && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && <>
-            {!beginner && !!board.mechanicalHoles?.length && (
+            {boardToolsOpen && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && <>
+            {!!board.mechanicalHoles?.length && (
               <>
                 <h3>Holes and slots</h3>
                 <ol>
@@ -2435,7 +1897,7 @@ export default function BoardWorkspace({
                 </ol>
               </>
             )}
-            {!beginner && !!board.profile?.cutouts.length && (
+            {!!board.profile?.cutouts.length && (
               <>
                 <h3>Board cutouts</h3>
                 <ol>
@@ -2509,7 +1971,7 @@ export default function BoardWorkspace({
                 )}
               </section>
             )}
-            {!beginner && !!board.placementAreas?.length && (
+            {!!board.placementAreas?.length && (
               <>
                 <h3>Placement areas</h3>
                 {!!board.placementAreas?.length && (
@@ -2545,7 +2007,7 @@ export default function BoardWorkspace({
                 )}
               </>
             )}
-            {!beginner && !!board.routingRegions?.length && (
+            {!!board.routingRegions?.length && (
               <>
                 <h3>Routing regions</h3>
                 {!!board.routingRegions?.length && (
@@ -2638,8 +2100,591 @@ export default function BoardWorkspace({
               </>
             )}
             </>}
-                </div>
+    </section>
+  );
+
+  return (
+    <section
+      className="circuit-container pcb-workspace"
+      aria-label="PCB layout"
+      onKeyDown={(event) => {
+        if (event.defaultPrevented || !event.currentTarget.contains(event.target as Node)) return;
+        if (event.key === 'End' && routing && (route.length > 1 || reroute) &&
+            (event.target as Element).closest('.pcb-svg')) {
+          event.preventDefault();
+          void finishRoute();
+          return;
+        }
+        if (event.key === 'Delete' && !routing && !trackEdit &&
+            (event.target as Element).closest('.pcb-svg') && (routeGroup.length || selectedRouteId)) {
+          event.preventDefault();
+          commitDeletion(planRouteDeletion(board, { kind: 'items', ids: routeGroup.length ? routeGroup : [selectedRouteId] }));
+          return;
+        }
+        if ((event.ctrlKey || event.metaKey) && !event.altKey) {
+          const key = event.key.toLowerCase();
+          const editingText = (event.target as Element).closest('input, textarea, [contenteditable="true"]');
+          if (key === 's') {
+            event.preventDefault();
+            if (!busy) void save(event.shiftKey);
+            return;
+          }
+          if (!editingText && (key === 'y' || key === 'z')) {
+            event.preventDefault();
+            if (!busy) edit(key === 'y' || event.shiftKey ? session.redo : session.undo);
+            return;
+          }
+        }
+        if (event.key === '+' || event.key === '-' || event.key === '=') {
+          if ((event.target as Element).closest('.pcb-svg')) {
+            event.preventDefault();
+            boardCanvas.current?.zoom(event.key === '-' ? 'out' : 'in');
+            return;
+          }
+        }
+        if (event.key !== 'Escape') return;
+        if (placementTool && !busy && !routing && !measuring) {
+          cancelPlacement();
+        } else if (pickingObjects) {
+          setPickingObjects(false);
+          event.preventDefault();
+        } else if (routing) {
+          setRoutingMode(false);
+          routeToggle.current?.focus();
+        }
+        else if (trackEdit) cancelTrackEdit();
+        else if (cleanup) setCleanupDraft(undefined);
+        else return;
+        event.preventDefault();
+      }}
+    >
+      {boardMenu && (
+        <AnchoredContextMenu hidden={false} target={boardMenu.point} items={boardMenuItems}
+          onDismiss={() => setBoardMenu(undefined)}
+          onItemClick={(command) => {
+            setBoardMenu(undefined);
+            requestAnimationFrame(() => boardCanvas.current?.focus());
+            switch (command) {
+              case 'undo': edit(session.undo); break;
+              case 'redo': edit(session.redo); break;
+              case 'zoom_in': boardCanvas.current?.zoom('in', boardMenu.point); break;
+              case 'zoom_out': boardCanvas.current?.zoom('out', boardMenu.point); break;
+              case 'zoom_fit': boardCanvas.current?.fit(); break;
+              case 'fit_selection': fitSelection(); break;
+
+            }
+          }} />
+      )}
+      <EditorToolbar className="pcb-toolbar" label="PCB commands">
+        {process.env.TARGET_SYSTEM !== 'electron' && (
+          <EditorFileMenu>
+            <EditorNewMenu submenu />
+            {process.env.TARGET_SYSTEM === 'filesystem' && (
+              <MenuItem icon={<FolderOpenRegular />} onClick={onOpen}>{t('toolbar.open')}</MenuItem>
+            )}
+            {onProjectFolder && <MenuItem icon={<FolderOpenRegular />} onClick={onProjectFolder}>
+              {t('projects.openFolder')}
+            </MenuItem>}
+            <MenuDivider />
+            <MenuItem icon={<SaveRegular />} disabled={busy} onClick={() => { void save(); }}>
+              {t('toolbar.save')}
+            </MenuItem>
+            {session.canSaveAs && <MenuItem icon={<SaveCopyRegular />} disabled={busy}
+              onClick={() => { void save(true); }}>Save As…</MenuItem>}
+          </EditorFileMenu>
+        )}
+        {process.env.TARGET_SYSTEM === 'electron' && <EditorNewMenu />}
+        {!nativeBoardMenus && boardCommands.map(({ title, items }) => (
+          <Menu key={title}>
+            <MenuTrigger disableButtonEnhancement>
+              <ToolbarButton appearance="subtle">{title}</ToolbarButton>
+            </MenuTrigger>
+            <MenuPopover>
+              <MenuList>
+                {items.map((item, index) => item === null ? <MenuDivider key={index} /> :
+                  item && <MenuItem key={item.id} disabled={item.disabled} onClick={item.run}>
+                    {item.label}
+                  </MenuItem>)}
+              </MenuList>
+            </MenuPopover>
+          </Menu>
+        ))}
+        <EditorSaveButton disabled={busy} onClick={() => { void save(); }} />
+        {manageClose && activeCommands && <EditorSaveAllButton disabled={busy || saveAllDisabled} />}
+        {session.canSaveAs && <EditorSaveButton saveAs label="Save As…" disabled={busy}
+          onClick={() => { void save(true); }} />}
+        <ToolbarDivider />
+        <EditorHistoryControls compactLabels canUndo={!busy && session.canUndo} canRedo={!busy && session.canRedo}
+          onUndo={() => edit(session.undo)} onRedo={() => edit(session.redo)} />
+        <ToolbarDivider />
+        <Button
+          ref={guideToggle}
+          aria-expanded={guideOpen}
+          onClick={() => {
+            if (boardToolsOpen && guideOpen) setGuideOpen(false);
+            else {
+              setGuideOpen(true);
+              openBoardTools();
+            }
+          }}
+        >
+          First board guide
+        </Button>
+        <Button disabled={!geometry} onClick={() => boardCanvas.current?.fit()}>
+          Fit board
+        </Button>
+        <Button disabled={!geometry || (!routeSelection && !selectedFeatures.length && !routeGroup.length)} onClick={fitSelection}>
+          Fit selection
+        </Button>
+        <ViewToolbarControls
+          canZoomIn={!!geometry}
+          canZoomOut={!!geometry}
+          showRulers={showRulers}
+          onZoom={(direction) => boardCanvas.current?.zoom(direction)}
+          onToggleRulers={() => setShowRulers(!showRulers)}
+        />
+        <Button appearance="subtle" icon={<PanelLeftExpandRegular />} aria-label="Toggle footprint browser"
+          title="Toggle footprint browser" aria-pressed={footprintsVisible} onClick={() => onToggleFootprints(!footprintsVisible)} />
+        <Button appearance="subtle" icon={<PanelBottomExpandRegular />} aria-label="Toggle board properties"
+          title="Toggle board properties" aria-pressed={showProperties} onClick={() => setShowProperties(!showProperties)} />
+        <Button
+          ref={routeToggle}
+          disabled={!routing && (busy || !board.nets?.length)}
+          onClick={() => setRoutingMode(!routing)}
+        >
+          {routing ? 'Cancel route' : 'Route track'}
+        </Button>
+        {(
+          <Button
+            disabled={busy || routing}
+            onClick={() => {
+              setDeleteRoute(undefined);
+              setCleanupDraft(undefined);
+              setTrackEditDraft(undefined);
+              setMeasuring(!measuring);
+              setMeasurement([]);
+              if (!measuring) openBoardTools();
+            }}
+          >
+            {measuring ? 'End measurement' : 'Measure distance'}
+          </Button>
+        )}
+
+        {!manageClose && <Button
+          disabled={busy}
+          onClick={() => {
+            if (!session.dirty) {
+              onClose();
+            } else setConfirmDiscard(true);
+          }}
+        >
+          Close
+        </Button>}
+      </EditorToolbar>
+      <Dialog open={confirmDiscard} onOpenChange={(_, { open }) => setConfirmDiscard(open)}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Discard unsaved PCB edits?</DialogTitle>
+            <DialogContent>Edits made since the last save will be lost.</DialogContent>
+            <DialogActions>
+              <Button autoFocus onClick={() => setConfirmDiscard(false)}>Cancel</Button>
+              <Button appearance="primary" onClick={onClose}>Discard edits</Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
+      {fabricationOpen && (
+        <BoardFabricationDialog
+          board={board}
+          advanced
+          onClose={() => setFabricationOpen(false)}
+          onApply={(operations) => setBoard(session.apply(operations))}
+        />
+      )}
+      {ruleInspectionOpen && (
+        <React.Suspense fallback={null}>
+          <BoardRuleInspectionDialog board={board} zones={derivedResult?.zones}
+            selectedCopperId={selectedRouteId || (selectedPad && selectedPlacement
+              ? selectedPlacement.id + ':' + selectedPad : undefined)}
+            selectedLayer={visibleCopper === 'top' || visibleCopper === 'bottom' ? visibleCopper : undefined}
+            onClose={() => setRuleInspectionOpen(false)} />
+        </React.Suspense>
+      )}
+      {netRulesOpen && (
+        <BoardNetRulesDialog
+          board={board}
+          selectedNet={selectedNet}
+          onClose={() => setNetRulesOpen(false)}
+          onApply={(operation) => setBoard(session.apply([operation]))}
+        />
+      )}
+      {circuitSourceOpen && <BoardCircuitSourceDialog board={board}
+        onApply={(candidate) => {
+          setBoard(session.commit({ ...candidate, revision: board.revision }));
+          openBoardList('netlist');
+        }}
+        onClose={() => setCircuitSourceOpen(false)} />}
+      {connectionsOpen && !board.sourceCircuit && !session.circuit && (
+        <BoardConnectionsDialog
+          board={board}
+          selected={selected}
+          onCommit={(candidate) => setBoard(session.commit(candidate))}
+          onClose={() => setConnectionsOpen(false)}
+        />
+      )}
+      {inspectionOpen && (
+        <React.Suspense fallback={<p role="status">Loading 3D viewer…</p>}>
+          <BoardInspectionDialog
+            board={board}
+            selected={selected}
+            onClose={() => setInspectionOpen(false)}
+            onInspect={(id) => {
+              selectComponent(id);
+              setInspectionOpen(false);
+            }}
+          />
+        </React.Suspense>
+      )}
+      {camOpen && (
+        <React.Suspense fallback={<p role="status">Loading CAM preview…</p>}>
+          <BoardCamDialog
+            board={board}
+            projectId={session.projectId}
+            readProjectCircuit={session.readProjectCircuit}
+            waitForRefill={waitForRefill}
+            onChecked={setCheckedRevision}
+            onClose={() => setCamOpen(false)}
+          />
+        </React.Suspense>
+      )}
+      {kicadOpen && (
+        <React.Suspense fallback={<p role="status">Loading KiCad export…</p>}>
+          <KicadExportDialog
+            board={board}
+            filename={filename}
+            onClose={() => setKicadOpen(false)}
+          />
+        </React.Suspense>
+      )}
+      {kicadReviewOpen && (
+        <React.Suspense fallback={<p role="status">Loading KiCad board review…</p>}>
+          <KicadBoardReviewDialog onClose={() => setKicadReviewOpen(false)} />
+        </React.Suspense>
+      )}
+      {revisionOpen && (
+        <React.Suspense fallback={<p role="status">Loading manufacturing revisions…</p>}>
+          <BoardRevisionDialog
+            board={board}
+            session={session}
+            onCreated={(next) => {
+              setBoard(next);
+              setRevisionOpen(false);
+            }}
+            onClose={() => setRevisionOpen(false)}
+          />
+        </React.Suspense>
+      )}
+      {jumperDialog && (
+        <WireJumperDialog
+          board={board}
+          jumper={jumperDialog === 'new' ? undefined : jumperDialog}
+          onApply={(jumper) =>
+            setBoard(session.apply([{ type: 'setWireJumper', jumper }]))
+          }
+          onClose={() => setJumperDialog(undefined)}
+        />
+      )}
+      {zoneDialog && geometry && (
+        <BoardZoneDialog
+          board={board}
+          zone={zoneDialog === 'new' ? undefined : zoneDialog}
+          defaultOutline={geometry.profile.outer}
+          selectedNet={selectedNet}
+          onClose={() => setZoneDialog(undefined)}
+          onApply={(zone) =>
+            setBoard(session.apply([{ type: 'setZone', zone }]))
+          }
+        />
+      )}
+      {objectPick && <BoardPickDialog pick={objectPick}
+        onSelect={selectPickedObject} onClose={() => setObjectPick(undefined)} />}
+      {placementAreaDialog && (
+        <PlacementAreaDialog
+          area={placementAreaDialog === 'new' ? undefined : placementAreaDialog}
+          onApply={(area) =>
+            setBoard(session.apply([{ type: 'setPlacementArea', area }]))
+          }
+          onClose={() => setPlacementAreaDialog(undefined)}
+        />
+      )}
+      {routingRegionDialog && (
+        <RoutingRegionDialog
+          board={board}
+          region={routingRegionDialog === 'new' ? undefined : routingRegionDialog}
+          onApply={(region) => setBoard(session.apply([{ type: 'setRoutingRegion', region }]))}
+          onClose={() => setRoutingRegionDialog(undefined)}
+        />
+      )}
+      {annotationDraft && (
+        <BoardAnnotationDialog
+          draft={annotationDraft}
+          datum={datum}
+          onClose={() => setAnnotationDraft(undefined)}
+          onApply={(annotation) => {
+            if (annotation.type === 'datum') {
+              setBoard(changeAnnotations(annotation.point, dimensions));
+              return;
+            }
+            const dimension = annotation.dimension;
+            const next = dimensions.some(({ id }) => id === dimension.id)
+              ? dimensions.map((item) => item.id === dimension.id ? dimension : item)
+              : [...dimensions, dimension];
+            setBoard(changeAnnotations(datum, next));
+            setMeasuring(false);
+            setMeasurement([]);
+          }}
+        />
+      )}
+      {holeDialog && (
+        <BoardHoleDialog
+          x={x}
+          y={y}
+          onClose={() => setHoleDialog(false)}
+          onApply={(hole) =>
+            setBoard(session.apply([{ type: 'addMechanicalHole', hole }]))
+          }
+        />
+      )}
+      {profileDialog !== undefined && (
+        <BoardProfileDialog
+          board={board}
+          cutout={profileDialog !== 'outline'}
+          cutoutIndex={typeof profileDialog === 'number' ? profileDialog : undefined}
+          onClose={() => setProfileDialog(undefined)}
+          onApply={(profile) =>
+            setBoard(session.apply([{ type: 'replaceProfile', profile }]))
+          }
+        />
+      )}
+      {rightPanelHost && createPortal(<>
+        <section className="pcb-layers-panel" aria-label="Layers">
+          <h2>Layers</h2>
+          <div className="pcb-layer-list">
+            {boardLayers.filter(({ id }) => id !== 'B.Cu' || board.copperLayers.length > 1)
+              .map(({ id, label, color }) => (
+                <Checkbox key={id} checked={!hiddenLayers.has(id)}
+                  onChange={(_, data) => setLayerVisible(id, data.checked === true)}
+                  label={<><span className="pcb-layer-swatch" style={{ backgroundColor: color }} />{label}</>} />
+              ))}
+          </div>
+          <Button size="small" disabled={busy || routing} onClick={() => setArtworkOpen(true)}>Edit board artwork…</Button>
+        </section>
+        {boardTools}
+      </>, rightPanelHost)}
+      <Dialog open={artworkOpen} onOpenChange={(_, { open }) => setArtworkOpen(open)}>
+        <DialogSurface className="pcb-dialog pcb-dialog-wide">
+          <DialogBody>
+            <DialogTitle>Board artwork</DialogTitle>
+            <DialogContent>
+              <FootprintArtworkEditor graphics={board.annotations?.graphics ?? []} busy={busy}
+                legend="Layer graphics" initiallyExpanded
+                run={async (task) => {
+                  try { task(); }
+                  catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)); }
+                }}
+                onChange={(items) => {
+                  setBoard(changeAnnotations(datum, dimensions, items));
+                  setError('');
+                }} />
+              {error && <p role="alert">{error}</p>}
+            </DialogContent>
+            <DialogActions><Button onClick={() => setArtworkOpen(false)}>Done</Button></DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
+      <div className="pcb-content">
+        <div className="mid-container">
+          {footprintsHost === undefined ? (
+            <EditorSidePanel label="Footprints" resizeLabel="Resize footprint browser" hidden={!footprintsVisible}
+              width={`min(${footprintsWidth}px, 27%)`} resizing={footprintsResizing}
+              onDragStateChange={setFootprintsResizing}
+              onResize={(delta) => setFootprintsWidth((width) => Math.max(128, Math.min(440, width + delta)))}>
+              {footprintPanel}
+            </EditorSidePanel>
+          ) : footprintsHost && createPortal(footprintPanel, footprintsHost)}
+          <div className="main-content-area">
+          <EditorDrawingStack bottomHeight={bottomPanelHeight} onBottomResize={onBottomPanelResize}
+            bottomHidden={!showProperties} bottomLabel="Board properties" resizeLabel="Resize board properties"
+            drawing={geometry ? (
+            <BoardCanvas
+              board={board}
+              geometry={geometry}
+              canvasRef={boardCanvas}
+              onPick={pickingObjects && canPickObjects
+                ? (pick) => { setPickingObjects(false); setObjectPick(pick); } : undefined}
+              selectedSilk={selectedSilk?.id}
+              selected={selected}
+              group={groupSelection}
+              selectedPad={selectedPad}
+              selectedNet={hoveredNet || selectedNet}
+              selectedRoutes={new Set([...routeGroup, ...(selectedRouteId ? [selectedRouteId] : [])])}
+              route={route}
+              airwires={derivedResult?.airwires}
+              zoneFills={derivedResult?.zones.fills}
+              checkMarker={
+                checkMarker?.board === board ? checkMarker.location : undefined
+              }
+              measurement={measurement}
+              trackEdit={trackEditPreview && {
+                handle: trackEditPreview.handle,
+                pieces: trackEditPreview.pieces,
+                move: (x, y) => { if (!busy) moveTrackHandle(canvasPosition(x, y)); },
+              }}
+              deletion={cleanup ? { tracks: cleanup.loops, pickingRegion: false } : deletion && {
+                tracks: deletion.plan?.tracks, vias: deletion.plan?.vias, corners: deletion.corners,
+                pickingRegion: !!regionPicking,
+              }}
+              onMeasure={measuring && !busy ? measureAt : undefined}
+              showRulers={showRulers}
+              selectionEnabled={!busy && !routing && !measuring && !trackEdit && !deletionDraft &&
+                !cleanup && !placementTool && !pickingObjects}
+              onSelectArea={selectArea}
+              onMoveComponent={moveComponentOnCanvas}
+              placementActive={!busy && !routing && !measuring && !!placementTool && placementTool === target?.id}
+              placementPreview={currentPlacementPreview()}
+              onDropComponent={!busy && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup
+                ? (id, x, y) => armPlacement(id, canvasPosition(x, y)) : undefined}
+              onContextCommand={openBoardMenu}
+              visibleCopper={visibleCopper}
+              hiddenLayers={hiddenLayers}
+              trackWidthNm={Number(canonicalBoardDecimal(routeWidth)) * 1_000_000 || 0}
+              onLocation={(x, y) => {
+                if (busy) return;
+                const location = canvasPosition(x, y);
+                if (regionPicking) chooseRegionPoint(location);
+                else if (deletionDraft || cleanup) return;
+                else if (trackEdit) moveTrackHandle(location);
+                else if (routing) void routePoint(location);
+                else if (measuring) measureAt(location);
+                else if (placementTool && placementTool === target?.id) void place(location);
+                else if (!pickingObjects) selectArea([], [], false);
+              }}
+              routingSnap={routing ? {
+                layer,
+                activeNet: route.length ? selectedNet : undefined,
+                connect: ({ position, netId }) => { void routePoint(position, netId); },
+                preview: (x, y, target) => previewRouteLeg(target ?? canvasPosition(x, y)),
+              } : undefined}
+              onComponent={(id) => { if (!deletionDraft && !cleanup) selectComponent(id); }}
+              onGroupComponent={
+                routing || measuring || deletionDraft || cleanup
+                  ? undefined
+                  : (id) => toggleGroupComponent(id, true)
+              }
+              onPad={(componentId, id, position) => {
+                if (deletionDraft || cleanup) return;
+                if (measuring) measureAt(position);
+                else if (trackEdit) moveTrackHandle(position);
+                else selectComponent(componentId, id);
+              }}
+              onRouteObject={(id, netId, point, wholeRoute) => {
+                if (routing || trackEdit || deletionDraft || cleanup) return;
+                setBottomView('selection');
+                setShowProperties(true);
+                setSelected('');
+                setSelectedPad(undefined);
+                setGroup([]);
+                setRouteGroup(wholeRoute ? connectedRouteIds(board, id, point) : []);
+                pickedRoute.current = point ? { id, point } : undefined;
+                setSelectedRouteId(wholeRoute ? '' : id);
+                setSelectedNet(netId ?? '');
+                setSelectedSilk(undefined);
+                boardCanvas.current?.focus();
+              }}
+            />
+          ) : (
+            <p role="alert">{layout.error}</p>
+          )}>
+            <>
+              {bottomView === 'netlist' && (
+                <BoardNetlistPanel board={board} selectedNet={selectedNet} listModeMenu={listModeMenu}
+                  onSelect={route.length || deletionDraft || cleanup ? undefined : (id) => {
+                    setHoveredNet('');
+                    setSelectedNet(id);
+                    if (routing) openBoardTools();
+                  }}
+                  onHover={routing || deletionDraft || cleanup ? undefined : setHoveredNet}>
+                  {netSources.length > 0 && <details open key={selectedNet}>
+                    <summary>Schematic net terminals</summary>
+                    <ul aria-label="Schematic net terminals">
+                      {netSources.map(({ id, reference, signal, number, source }) => (
+                        <li key={id}><Button size="small" onClick={() => onProbe?.(source)}>
+                          {reference} / {signal}{number ? ' / ' + number : ''}
+                        </Button></li>
+                      ))}
+                    </ul>
+                  </details>}
+                </BoardNetlistPanel>
               )}
+      {bottomView === 'checks' && (
+        <BoardChecksPanel key={checksRun}
+          board={board}
+          readProjectCircuit={session.readProjectCircuit}
+          waitForRefill={waitForRefill}
+          filename={filename}
+          onChecked={setCheckedRevision}
+          onClose={() => openBoardList(idleBottomView)}
+          onWaive={(waiver) =>
+            edit(() => session.apply([{ type: 'addWaiver', waiver }]))
+          }
+          onRemoveWaiver={(id) =>
+            edit(() => session.apply([{ type: 'removeWaiver', id }]))
+          }
+          onProbe={onProbe && ((source) => {
+            onProbe(source);
+          })}
+          onInspect={({ objects, location }) => {
+            setLayerVisible('F.Cu', true);
+            setLayerVisible('B.Cu', true);
+            const keys = new Set(objects.map((id) => id.split('/')[0]));
+            const component = board.components?.find(
+              ({ id }) =>
+                keys.has(id) ||
+                objects.some((source) => source.startsWith(id + ':')),
+            );
+            const placement = board.footprints?.find(({ id, componentId }) =>
+              component?.id === componentId || keys.has(id) ||
+              objects.some((source) => source.startsWith(id + ':')),
+            );
+            const track = board.tracks?.find(({ id }) => keys.has(id));
+            const via = board.vias?.find(
+              ({ id }) =>
+                keys.has(id) ||
+                objects.some((source) => source.startsWith(id + ':')),
+            );
+            if (component || placement) {
+              const padId = placement && objects
+                .find((id) => id.startsWith(placement.id + ':'))?.split(':')[1];
+              selectComponent(component?.id ?? placement.componentId, padId);
+            }
+            setBottomView('checks');
+            if (track || via) {
+              setSelectedRouteId(track?.id ?? via.id);
+              setSelectedNet(track?.netId ?? via?.netId ?? '');
+            }
+            const hole = board.mechanicalHoles?.find(({ id }) => keys.has(id));
+            const jumper = board.jumpers?.find(({ id }) =>
+              keys.has(id) || objects.some((source) => source.startsWith(id + ':')));
+            const zone = board.zones?.find(({ id }) => keys.has(id));
+            const issueLocation = location ?? track?.start ?? via?.positionNm ??
+              placement?.positionNm ?? hole?.start ?? jumper?.start;
+            setCheckMarker({ board, location: issueLocation });
+            if (issueLocation) boardCanvas.current?.fit([issueLocation]);
+            else if (zone) boardCanvas.current?.fit(zone.outline);
+            requestAnimationFrame(() => boardCanvas.current?.focus());
+          }}
+        />
+      )}
               {bottomView === 'selection' && routeGroup.length > 0 && (
                 <p className="pcb-editor-message">
                   {routeGroup.length} {routeGroup.length === 1 ? 'copper object' : 'copper objects'} selected
@@ -2742,7 +2787,7 @@ export default function BoardWorkspace({
                         {selectedPlacement ? 'Position' : 'Place'}{' '}
                         {target.reference ?? 'component'}
                       </legend>
-                      {!beginner && selectedPlacement && (
+                      {selectedPlacement && (
                         <>
                           <Checkbox label="Lock component" checked={!!selectedPlacement.locked}
                             onChange={() => togglePlacementLock('locked')} />
@@ -2751,12 +2796,6 @@ export default function BoardWorkspace({
                           <Checkbox label="Lock rotation" checked={!!selectedPlacement.rotationLocked}
                             disabled={selectedPlacement.locked} onChange={() => togglePlacementLock('rotationLocked')} />
                         </>
-                      )}
-                      {beginner && (positionLocked || rotationLocked) && (
-                        <p>Use Engineering view to change the footprint locks.</p>
-                      )}
-                      {placementTool === target.id && (
-                        <p>Click the board to place the footprint, or enter its coordinates.</p>
                       )}
                       <label>
                         X (mm){' '}
@@ -2796,9 +2835,9 @@ export default function BoardWorkspace({
                         />
                       </label>{' '}
                       <label>
-                        Board side{' '}
+                        Layer{' '}
                         <Select
-                          aria-label="Board side"
+                          aria-label="Layer"
                           value={
                             selectedPlacement?.locked ? selectedPlacement.side : side
                           }
@@ -2812,7 +2851,7 @@ export default function BoardWorkspace({
                           ))}
                         </Select>
                       </label>{' '}
-                      {!beginner && (
+                      {(
                         <Checkbox label="Show straight-line estimates" checked={showPlacementEstimates}
                           onChange={(_, { checked }) => setShowPlacementEstimates(checked === true)} />
                       )}
@@ -2828,10 +2867,6 @@ export default function BoardWorkspace({
                       >
                         {selectedPlacement ? 'Apply position' : 'Place at coordinates'}
                       </Button>
-                      {selectedPlacement && !positionLocked && <Button disabled={busy}
-                        onClick={() => armPlacement(target.id)}>
-                        Move on board
-                      </Button>}
                     </fieldset>
                   )}
                   {selectedSilk && <p>Selected silkscreen · {selectedSilk.label} · {selectedSilk.layer}</p>}

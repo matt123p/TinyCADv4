@@ -8,7 +8,7 @@ import type { PolygonKernel } from './polygonKernel';
 import { bounds, near } from './regionDistances';
 
 export interface CamArtwork {
-  readonly kind: 'mask' | 'paste' | 'silk';
+  readonly kind: 'mask' | 'paste' | 'silk' | 'adhesive';
   readonly side: CopperLayer['id'];
   readonly regions: readonly PolygonRegion[];
 }
@@ -172,7 +172,7 @@ export function writeCamFiles(
               ? 'Soldermask'
               : kind === 'paste'
               ? 'Paste'
-              : 'Legend'
+              : kind === 'adhesive' ? 'Glue' : 'Legend'
           },${side === 'top' ? 'Top' : 'Bot'}`,
           kind === 'mask' ? 'Negative' : 'Positive',
         ),

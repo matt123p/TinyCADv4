@@ -79,6 +79,8 @@ test('Electron View items lead the menu and follow explanation/chart availabilit
   const library = drawingViewMenu(label, off, true, () => {});
   assert.equal(library[0].enabled, false);
   assert.equal(library[1].enabled, false);
+  const pcb = drawingViewMenu(label, off, false, () => {}, true);
+  assert.deepEqual(pcb.map(({ label }) => label), ['Zoom In', 'Zoom Out']);
 });
 
 test('native View commands toggle current Redux panel state and ignore unavailable explanations', () => {

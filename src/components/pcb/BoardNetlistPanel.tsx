@@ -79,12 +79,15 @@ export function BoardNetlistPanel({ board, selectedNet, listModeMenu, onSelect, 
       return [device.id, labelsBySignal] as const;
     }));
     const terminals = new Map<string, string[]>();
+    const schematicSignals = new Map(board.appliedCircuit?.components.flatMap((component) =>
+      component.signals.map((signal) => [signal.id, signal.number || signal.name] as const)));
     for (const component of board.components ?? []) {
       for (const { netId, signalId } of component.signals ?? []) {
         if (!terminals.has(netId)) terminals.set(netId, []);
         const reference = component.reference ?? component.id;
         const pads = padLabelsByDevice.get(component.deviceId)?.get(signalId);
-        terminals.get(netId).push(pads?.length ? reference + '.' + pads.join('/') : reference);
+        const labels = pads?.length ? pads.join('/') : schematicSignals.get(signalId);
+        terminals.get(netId).push(labels ? reference + '.' + labels : reference);
       }
     }
     return (board.nets ?? []).map(({ id, name, aliases, classId }) => ({
@@ -94,7 +97,7 @@ export function BoardNetlistPanel({ board, selectedNet, listModeMenu, onSelect, 
       terminals: terminals.get(id)?.join(', ') ?? '',
     })).filter((row) => [row.name, row.aliases, row.netClass, row.terminals].some((value) =>
       value.toLowerCase().includes(filter)));
-  }, [board.components, board.deviceDefinitions, board.footprintDefinitions, board.netClasses, board.nets, query]);
+  }, [board.appliedCircuit, board.components, board.deviceDefinitions, board.footprintDefinitions, board.netClasses, board.nets, query]);
 
   const netlistColumns = columns.map((column) => column.columnId === 'symbols' ? {
     ...column,

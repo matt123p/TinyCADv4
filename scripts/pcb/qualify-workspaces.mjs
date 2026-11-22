@@ -368,7 +368,7 @@ try {
         await workspaceButton('pcb').click();
         await ready('pcb');
         await page.getByRole('button', { name: 'Run design checks…' }).click();
-        const dialog = page.getByRole('dialog', { name: 'PCB design checks' });
+        const dialog = page.getByRole('region', { name: 'PCB design checks' });
         const result = dialog.getByRole('table', { name: 'PCB findings' });
         await waitForBoardJob(dialog, result, 'PCB design checks');
         const findings = await result.locator('tbody > tr').allTextContents();

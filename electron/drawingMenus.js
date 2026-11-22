@@ -21,33 +21,36 @@ export function drawingOpenMenu(getLabel, recentMenu, send) {
 }
 
 export function boardWorkspaceMenus(menus, send) {
+  const literalLabel = (label) => process.platform === 'darwin' ? label : label.replaceAll('&', '&&');
   return menus.map(({ title, items }) => ({
-    label: title,
+    label: literalLabel(title),
     submenu: items.map((item) => item ? {
-      label: item.label,
+      label: literalLabel(item.label),
       enabled: !item.disabled,
       click: () => send('pcb-menu:' + item.id),
     } : { type: 'separator' }),
   }));
 }
 
-export function drawingViewMenu(getLabel, state, libraryMode, send) {
+export function drawingViewMenu(getLabel, state, libraryMode, send, pcbMode = false) {
   return [
-    {
-      label: getLabel('viewExplanation', 'View Explanation'),
-      type: 'checkbox',
-      enabled: !libraryMode && state.hasExampleExplanation,
-      checked: state.hasExampleExplanation && state.exampleExplanationVisible,
-      click: () => send('view-explanation'),
-    },
-    {
-      label: getLabel('showCharts', 'Show Charts'),
-      type: 'checkbox',
-      enabled: !libraryMode,
-      checked: state.simulationPanelVisible,
-      click: () => send('view-show-charts'),
-    },
-    { type: 'separator' },
+    ...(!pcbMode ? [
+      {
+        label: getLabel('viewExplanation', 'View Explanation'),
+        type: 'checkbox',
+        enabled: !libraryMode && state.hasExampleExplanation,
+        checked: state.hasExampleExplanation && state.exampleExplanationVisible,
+        click: () => send('view-explanation'),
+      },
+      {
+        label: getLabel('showCharts', 'Show Charts'),
+        type: 'checkbox',
+        enabled: !libraryMode,
+        checked: state.simulationPanelVisible,
+        click: () => send('view-show-charts'),
+      },
+      { type: 'separator' },
+    ] : []),
     {
       label: getLabel('zoomIn', 'Zoom In'),
       accelerator: 'CmdOrCtrl+Plus',

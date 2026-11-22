@@ -24,10 +24,11 @@ test('imports KiCad 9 closed graphics and through-hole pads with all copper laye
     'kicad9.kicad_mod',
   );
   assert.equal(footprint.definition.graphics[0].points.length, 3);
+  assert.equal(footprint.definition.graphics[1].layer, 'Cmts.User');
   assert.ok(footprint.definition.pads[0].stack.copper.bottom);
   assert.deepEqual(
     issues.map(({ severity }) => severity),
-    ['warning'],
+    [],
   );
   const blocked = await api.importFootprintLibrary(
     source.replace('remove_unused_layers no', 'remove_unused_layers yes'),
@@ -40,6 +41,39 @@ test('imports KiCad 9 closed graphics and through-hole pads with all copper laye
         severity === 'blocker' && message.includes('unused copper layers'),
     ),
   );
+});
+
+test('round-trips board artwork and plots physical layers without plotting user comments', async () => {
+  const board = api.createBoard('Layer artwork', 2, [
+    { x: 0, y: 0 }, { x: 20e6, y: 0 }, { x: 20e6, y: 10e6 }, { x: 0, y: 10e6 },
+  ]);
+  const graphic = {
+    kind: 'rect', start: { x: 5e6, y: 5e6 }, end: { x: 6e6, y: 6e6 },
+    strokeNm: 150_000, filled: true,
+  };
+  const graphics = ['F.Adhes', 'B.Mask', 'F.Paste', 'F.SilkS', 'Cmts.User'].map(
+    (layer, index) => ({
+      ...graphic, layer,
+      start: { x: graphic.start.x + index * 2e6, y: graphic.start.y },
+      end: { x: graphic.end.x + index * 2e6, y: graphic.end.y },
+    }),
+  );
+  const fixture = {
+    ...board, requiredFeatures: [...board.requiredFeatures, 'board-annotations', 'board-artwork'],
+    annotations: { graphics },
+  };
+  const reopened = await api.decodeBoard(await api.encodeBoard(fixture));
+  assert.deepEqual(reopened.annotations.graphics, graphics);
+  const binary = await readFile(new URL('../../node_modules/clipper2-wasm/dist/umd/clipper2z.wasm', import.meta.url));
+  const kernel = await api.loadPolygonKernel(binary);
+  const cam = await api.prepareCamPreview(reopened, kernel);
+  assert.match(cam.files['adhesive-top.gbr'], /FileFunction,Glue,Top/);
+  assert.match(cam.files['mask-bottom.gbr'], /FileFunction,Soldermask,Bot/);
+  assert.match(cam.files['paste-top.gbr'], /FileFunction,Paste,Top/);
+  assert.match(cam.files['silk-top.gbr'], /FileFunction,Legend,Top/);
+  assert.equal(cam.artwork.length, 4);
+  const { pcb } = await api.exportKicadBoard(reopened);
+  assert.match(pcb, /\(gr_rect .*\(layer "Cmts.User"\)\)/);
 });
 
 test('imports KiCad geometry, preserves native draft and enforces resolved reviewed device dependencies', async () => {

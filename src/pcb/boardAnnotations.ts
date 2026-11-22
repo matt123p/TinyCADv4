@@ -2,6 +2,8 @@ import { isEntityId } from '../model/schematicIdentity';
 import type { BoardDocument } from './board';
 import { isBoardPoint, lengthInNanometres } from './geometry';
 import type { BoardPoint } from './geometry';
+import { validateFootprintDetails } from './footprintDetails';
+import type { FootprintGraphic } from './footprintDetails';
 
 export interface BoardDimension {
   readonly id: string;
@@ -16,6 +18,7 @@ export interface BoardDimension {
 export interface BoardAnnotations {
   readonly datum?: BoardPoint;
   readonly dimensions?: readonly BoardDimension[];
+  readonly graphics?: readonly FootprintGraphic[];
 }
 
 export function dimensionGeometry(dimension: BoardDimension) {
@@ -88,15 +91,18 @@ export function validateBoardAnnotations(board: BoardDocument) {
     throw new Error(
       'PCB annotations must declare the board-annotations feature.',
     );
+  if (!!annotations?.graphics?.length !== board.requiredFeatures.includes('board-artwork'))
+    throw new Error('PCB layer graphics must declare the board-artwork feature.');
   if (annotations === undefined) return;
   if (
     !annotations ||
     (annotations.datum !== undefined && !isBoardPoint(annotations.datum)) ||
     (annotations.dimensions !== undefined &&
       !Array.isArray(annotations.dimensions)) ||
-    (!annotations.datum && !annotations.dimensions?.length)
+    (!annotations.datum && !annotations.dimensions?.length && !annotations.graphics?.length)
   )
     throw new Error('Invalid PCB measurement datum or dimension collection.');
+  validateFootprintDetails(annotations.graphics);
 
   const ids = new Set<string>();
   for (const dimension of annotations.dimensions ?? []) {

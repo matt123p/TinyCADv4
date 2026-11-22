@@ -2,6 +2,7 @@ import { canonicalJson } from '../util/canonicalJson';
 import { digest } from '../util/sha256';
 import type { BoardDocument, CopperLayer } from './board';
 import { validateBoard } from './board';
+import { boardLayers, placedBoardLayer } from './boardLayers';
 import type {
   BoardComponent,
   BoardFootprint,
@@ -28,21 +29,6 @@ import type { PadShape } from './padstack';
 
 const fileVersion = 20241229;
 const KiCadVersion = '9.0';
-const layers: readonly [number, string][] = [
-  [0, 'F.Cu'],
-  [2, 'B.Cu'],
-  [1, 'F.Mask'],
-  [3, 'B.Mask'],
-  [5, 'F.SilkS'],
-  [7, 'B.SilkS'],
-  [13, 'F.Paste'],
-  [15, 'B.Paste'],
-  [25, 'Edge.Cuts'],
-  [31, 'F.CrtYd'],
-  [29, 'B.CrtYd'],
-  [35, 'F.Fab'],
-  [33, 'B.Fab'],
-];
 const copper = (side: CopperLayer['id']) => (side === 'top' ? 'F.Cu' : 'B.Cu');
 const layerSide = (side: CopperLayer['id']) => (side === 'top' ? 'F.' : 'B.');
 const otherSide = (side: CopperLayer['id']) =>
@@ -98,11 +84,10 @@ function graphic(
   project: (point: BoardPoint) => BoardPoint,
   side: CopperLayer['id'],
   rotation: number,
+  scope: 'fp' | 'gr' = 'fp',
 ) {
   const back = side === 'bottom';
-  const layer = back
-    ? (item.layer.startsWith('F.') ? 'B.' : 'F.') + item.layer.slice(2)
-    : item.layer;
+  const layer = placedBoardLayer(item.layer, side);
   const p = (tag: string, point: BoardPoint) => form(tag, xy(project(point)));
   if (item.kind === 'text') {
     const turn =
@@ -116,8 +101,8 @@ function graphic(
       form('thickness', mm(item.strokeNm)),
     );
     return form(
-      'fp_text',
-      'user',
+      scope + '_text',
+      scope === 'fp' ? 'user' : undefined,
       q(item.text),
       at(project(item.at), turn),
       itemLayer(layer),
@@ -144,7 +129,7 @@ function graphic(
     ? form('fill', item.filled ? 'solid' : 'none')
     : undefined;
   return form(
-    'fp_' + command,
+    scope + '_' + command,
     ...geometry,
     stroke(item.strokeNm),
     fill,
@@ -720,8 +705,9 @@ export async function exportKicadBoard(board: BoardDocument) {
     form('title_block', form('title', q(board.title))),
     form(
       'layers',
-      ...layers.map(([id, name]) =>
-        form(id, q(name), name.endsWith('.Cu') ? 'signal' : 'user'),
+      ...boardLayers.map((layer) =>
+        form(layer.kicadId, q(layer.id), layer.id.endsWith('.Cu') ? 'signal' : 'user',
+          'kicadName' in layer ? q(layer.kicadName) : undefined),
       ),
     ),
     '(setup (pad_to_mask_clearance 0) (tenting front back))',
@@ -731,6 +717,8 @@ export async function exportKicadBoard(board: BoardDocument) {
     ...mounted.map(({ text }) => text),
     ...mechanical,
     ...edges,
+    ...(board.annotations?.graphics ?? []).filter((item) => item.kind !== 'text' || item.visible)
+      .map((item) => graphic(item, (point) => point, 'top', 0, 'gr')),
     ...tracks,
     ...vias,
     ...zones,

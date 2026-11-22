@@ -25,6 +25,7 @@ import {
   MenuList,
   MenuPopover,
   MenuTrigger,
+  Select,
   Spinner,
 } from '@fluentui/react-components';
 import {
@@ -262,6 +263,12 @@ export default function ProjectBrowser({
   const [circuitUndo, setCircuitUndo] = useState<ProjectCircuitUndo>();
   const [confirmCircuitUndo, setConfirmCircuitUndo] = useState(false);
   const [circuitEco, setCircuitEco] = useState<ProjectCircuitEco>();
+  const [circuitSourceChoice, setCircuitSourceChoice] = useState<{
+    context: ProjectContext;
+    boardId: string;
+    sourceId: string;
+    schematics: readonly { id: string; path: string }[];
+  }>();
   const [deviceReview, setDeviceReview] = useState<ProjectDeviceReview>();
   const [boardReview, setBoardReview] =
     useState<Awaited<ReturnType<typeof reviewProjectCircuit>>['review']>();
@@ -651,6 +658,19 @@ export default function ProjectBrowser({
       typeof import('../../io/projectCircuitEco').openProjectCircuitEco
     >[1],
   ) {
+    if ('boardId' in destination && !destination.sourceId) {
+      const project = await readProject(context.marker.id, context.root.id);
+      const saved = await readProjectBoard(project, destination.boardId);
+      const associated = project.settings.associations?.some(({ board }) => board === destination.boardId);
+      if (!associated && !saved.board.sourceCircuit) {
+        const schematics = project.settings.entries.filter(({ kind }) => kind === 'schematic');
+        if (!schematics.length) throw new Error('Register a schematic in this project before linking it to the PCB.');
+        setCircuitSourceChoice({
+          context, boardId: destination.boardId, schematics, sourceId: schematics[0].id,
+        });
+        return;
+      }
+    }
     const { openProjectCircuitEco } = await import(
       '../../io/projectCircuitEco'
     );
@@ -1996,6 +2016,32 @@ export default function ProjectBrowser({
                 >
                   {t('common.cancel')}
                 </Button>
+              </DialogActions>
+            </DialogBody>
+          </DialogSurface>
+        </Dialog>
+      )}
+      {circuitSourceChoice && (
+        <Dialog open onOpenChange={(_, { open }) => { if (!open && !blocked) setCircuitSourceChoice(undefined); }}>
+          <DialogSurface>
+            <DialogBody>
+              <DialogTitle>Choose source schematic</DialogTitle>
+              <DialogContent>
+                <label>
+                  Project schematic
+                  <Select value={circuitSourceChoice.sourceId} disabled={blocked}
+                    onChange={(event) => setCircuitSourceChoice({ ...circuitSourceChoice, sourceId: event.target.value })}>
+                    {circuitSourceChoice.schematics.map(({ id, path }) => <option key={id} value={id}>{path}</option>)}
+                  </Select>
+                </label>
+              </DialogContent>
+              <DialogActions>
+                <Button disabled={blocked} onClick={() => setCircuitSourceChoice(undefined)}>{t('common.cancel')}</Button>
+                <Button appearance="primary" disabled={blocked} onClick={() => {
+                  const { context, boardId, sourceId } = circuitSourceChoice;
+                  setCircuitSourceChoice(undefined);
+                  void run(() => openCircuitEco(context, { boardId, sourceId }), false);
+                }}>Review circuit</Button>
               </DialogActions>
             </DialogBody>
           </DialogSurface>

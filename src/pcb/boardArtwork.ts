@@ -26,7 +26,7 @@ export interface BoardArtworkRegion {
 type ArtworkIssue = {
   id: string;
   componentId: string;
-  code: 'silk-text' | 'silk-geometry' | 'courtyard-open';
+  code: 'silk-text' | 'silk-geometry' | 'courtyard-open' | 'layer-artwork';
   detail?: string;
 };
 
@@ -52,7 +52,7 @@ function closedPolygon(item: FootprintGraphic): Polygon | undefined {
   }
 }
 
-function finishedSilk(item: FootprintGraphic, text?: string): PolygonRegion[] {
+function finishedArtwork(item: FootprintGraphic, text?: string): PolygonRegion[] {
   if (item.kind === 'text')
     return footprintTextStrokes(item, text).flatMap((stroke) =>
       stroke
@@ -152,6 +152,7 @@ function courtyardPolygons(graphics: readonly FootprintGraphic[]): Polygon[] {
 
 export function boardArtwork(board: BoardDocument, kernel: PolygonKernel) {
   const silk: BoardArtworkRegion[] = [];
+  const apertures: (BoardArtworkRegion & { kind: 'mask' | 'paste' | 'adhesive' })[] = [];
   const courtyards: BoardArtworkRegion[] = [];
   const issues: ArtworkIssue[] = [];
   const components = new Map(board.components?.map((part) => [part.id, part]));
@@ -164,6 +165,40 @@ export function boardArtwork(board: BoardDocument, kernel: PolygonKernel) {
       definition,
     ]),
   );
+  function addArtwork(
+    graphic: FootprintGraphic,
+    id: string,
+    componentId: string,
+    side: CopperLayer['id'],
+    transform: (polygon: Polygon) => Polygon,
+    text?: string,
+  ) {
+    const kind = graphic.layer.endsWith('SilkS') ? 'silk' :
+      graphic.layer.endsWith('.Mask') ? 'mask' : graphic.layer.endsWith('.Paste') ? 'paste' :
+      graphic.layer.endsWith('.Adhes') ? 'adhesive' : undefined;
+    if (!kind || (graphic.kind === 'text' && (!graphic.visible || !text?.trim()))) return;
+    try {
+      const regions = kernel.boolean('union', finishedArtwork(graphic, text).map(({ outer, holes }) => ({
+        outer: transform(outer), holes: holes.map(transform),
+      })), []);
+      if (!regions.length) throw new Error('Artwork has no printable geometry.');
+      const item = { id, componentId, side, strokeNm: graphic.strokeNm,
+        ...(graphic.kind === 'text' ? { textHeightNm: graphic.sizeNm.y } : {}), regions };
+      if (kind === 'silk') silk.push(item);
+      else apertures.push({ ...item, kind });
+    } catch (error) {
+      issues.push({
+        id, componentId,
+        code: kind === 'silk' ? (graphic.kind === 'text' ? 'silk-text' : 'silk-geometry') : 'layer-artwork',
+        detail: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  for (const [index, graphic] of (board.annotations?.graphics ?? []).entries()) {
+    addArtwork(graphic, board.boardId + ':artwork:' + index, board.boardId,
+      graphic.layer.startsWith('B.') ? 'bottom' : 'top', (polygon) => polygon,
+      graphic.kind === 'text' ? graphic.text : undefined);
+  }
   for (const placement of board.footprints ?? []) {
     const graphics =
       definitions.get(devices.get(placement.deviceId)?.footprintId)?.graphics ??
@@ -177,48 +212,10 @@ export function boardArtwork(board: BoardDocument, kernel: PolygonKernel) {
       layer.startsWith('F.') === (placement.side === 'top') ? 'top' : 'bottom';
     const { componentId } = placement;
     for (const [i, graphic] of graphics.entries()) {
-      if (!graphic.layer.endsWith('SilkS')) continue;
-      const id = placement.id + ':silk:' + i;
-      if (graphic.kind === 'text' && !graphic.visible) continue;
-      try {
-        const text =
-          graphic.kind === 'text'
-            ? resolveFootprintText(
-                graphic.text,
-                components.get(componentId) ?? {},
-              )
-            : undefined;
-        if (text !== undefined && !text.trim()) continue;
-        const regions = kernel.boolean(
-          'union',
-          finishedSilk(graphic, text).map(({ outer, holes }) => ({
-            outer: transform(outer),
-            holes: holes.map(transform),
-          })),
-          [],
-        );
-        if (!regions.length) {
-          issues.push({ id, componentId, code: 'silk-geometry' });
-          continue;
-        }
-        silk.push({
-          id,
-          componentId,
-          side: physicalSide(graphic.layer),
-          strokeNm: graphic.strokeNm,
-          ...(graphic.kind === 'text' ? { textHeightNm: graphic.sizeNm.y } : {}),
-          regions,
-        });
-      } catch (error) {
-        if (graphic.kind === 'text')
-          issues.push({
-            id,
-            componentId,
-            code: 'silk-text',
-            detail: error instanceof Error ? error.message : String(error),
-          });
-        else issues.push({ id, componentId, code: 'silk-geometry' });
-      }
+      const text = graphic.kind === 'text'
+        ? resolveFootprintText(graphic.text, components.get(componentId) ?? {}) : undefined;
+      const id = placement.id + (graphic.layer.endsWith('SilkS') ? ':silk:' : ':artwork:') + i;
+      addArtwork(graphic, id, componentId, physicalSide(graphic.layer), transform, text);
     }
     for (const side of ['top', 'bottom'] as const) {
       const outlines = graphics.filter(
@@ -236,5 +233,5 @@ export function boardArtwork(board: BoardDocument, kernel: PolygonKernel) {
       }
     }
   }
-  return { silk, courtyards, issues };
+  return { silk, courtyards, apertures, issues };
 }

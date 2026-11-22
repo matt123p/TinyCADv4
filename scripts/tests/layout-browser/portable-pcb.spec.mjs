@@ -243,7 +243,7 @@ for (const target of ['filesystem', 'electron']) {
           const command = labels.reduce((menu, label, index) => {
             const items = index === 0 ? menu.items : menu?.submenu?.items;
             return items?.find((item) => {
-              const name = item.label.replaceAll('&', '');
+              const name = item.label.replace(/&&|&(?=\S)/g, (mark) => mark === '&&' ? '&' : '');
               return index === labels.length - 1 ? name.startsWith(label) : name === label;
             });
           }, Menu.getApplicationMenu());
@@ -291,8 +291,8 @@ for (const target of ['filesystem', 'electron']) {
         await editor.getByRole('button', { name: 'Fit board' }).click();
         await expect(canvas).toHaveAttribute('data-view-box', fit);
       }
-      await runPcbCommand('Board outline…');
-      const outline = page.getByRole('dialog', { name: 'Set board outline' });
+      await runPcbCommand('PCB Size & Shape…');
+      const outline = page.getByRole('dialog', { name: 'PCB Size & Shape' });
       await expect(outline).toHaveClass(/\bfui-DialogSurface\b/);
       const outlineGeometry = await dialogGeometry(outline);
       await outline.getByLabel('Shape', { exact: true }).selectOption('custom');
@@ -314,11 +314,12 @@ for (const target of ['filesystem', 'electron']) {
         await expect.poll(() => page.evaluate(() => window.pcbModelRequests)).toEqual(expect.arrayContaining([
           ['geometry', 0], ['route-clearance', 0],
         ]));
-        await editor.getByRole('button', { name: 'Cancel route', exact: true }).click();
+        await page.getByRole('region', { name: 'Board tools', exact: true })
+          .getByRole('button', { name: 'Cancel route', exact: true }).click();
       }
 
       await runPcbCommand('Run design checks…');
-      const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+      const checks = page.getByRole('region', { name: 'PCB design checks' });
       await expect(checks.getByText('Physical connectivity · checked', { exact: true })).toBeVisible();
       const report = JSON.parse(await download(
         checks.getByRole('button', { name: 'Save report…' }), 'Saved.drc.json',

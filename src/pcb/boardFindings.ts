@@ -30,7 +30,7 @@ export interface BoardFinding extends BoardIssue {
 
 const blockers = new Set([
   'short', 'unmapped-signals', 'duplicate-reference', 'duplicate-component',
-  'schematic-update-pending', 'fabrication-applicability', 'silk-geometry',
+  'schematic-update-pending', 'fabrication-applicability', 'silk-geometry', 'layer-artwork',
   'silk-text', 'drill-overlap',
 ]);
 const unknowns = new Set(['schematic-unavailable', 'zone-width-unverified', 'fabrication-outline-unverified']);

@@ -49,6 +49,7 @@ export { circuitConnectivityDigest } from '../../src/pcb/circuitSnapshot';
 export { deviceDigest, readLibraryDevice, readLibraryDeviceCatalogue, searchLibraryDevices, writeLibraryDevice } from '../../src/pcb/deviceLibrary';
 export { applyDeviceReview, previewDeviceReview } from '../../src/pcb/deviceReview';
 export { previewCircuitEco, applyCircuitEco } from '../../src/pcb/circuitEco';
+export { readBoardCircuitSource } from '../../src/io/boardCircuitSource';
 export { loadPolygonKernel } from '../../src/pcb/polygonKernel';
 export { routeBoard } from '../../src/pcb/routing';
 export { isCentrelineClear, manualRouteLeg } from '../../src/pcb/routing';

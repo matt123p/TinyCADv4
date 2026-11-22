@@ -162,7 +162,7 @@ export default function BoardProfileDialog({
                 ? 'Edit board cutout'
                 : cutout
                 ? 'Add board cutout'
-                : 'Set board outline'}
+                : 'PCB Size & Shape'}
             </DialogTitle>
             <DialogContent className="pcb-profile-fields">
               <label>

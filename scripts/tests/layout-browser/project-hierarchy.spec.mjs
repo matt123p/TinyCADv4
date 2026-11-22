@@ -1086,7 +1086,7 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     await expect(pcbLayout.getByRole('button', { name: 'Place at coordinates' })).toBeDisabled();
     await tray.getByRole('button', { name: 'Stop sequential placement' }).click();
     await page.getByRole('group', { name: 'Project activity bar' }).getByRole('button', { name: 'Projects', exact: true }).click();
-    const checkDialog = page.getByRole('dialog', { name: 'PCB design checks' });
+    const checkDialog = page.getByRole('region', { name: 'PCB design checks' });
     async function openLeafChecks() {
       await clickPcbCommand(pcbLayout, 'Run design checks…');
       await expect(checkDialog.getByText(/Schematic parity · checked/)).toBeVisible();
@@ -1646,7 +1646,7 @@ test('places bundled SMT and through-hole packages and reopens their embedded ST
       const place = editor.getByRole('group', { name: 'Place ' + reference, exact: true });
       await place.getByLabel('X (mm)', { exact: true }).fill(x);
       await place.getByLabel('Rotation (°)', { exact: true }).fill(rotation);
-      await place.getByLabel('Board side', { exact: true }).selectOption(side);
+      await place.getByLabel('Layer', { exact: true }).selectOption(side);
       await place.getByRole('button', { name: 'Place at coordinates' }).click();
       await expect(placed).toContainText(reference);
     }
@@ -2090,7 +2090,7 @@ test('imports a KiCad symbol and footprint with a portable STEP model', async ({
     await inspect('Top');
     await layout.getByRole('grid', { name: 'Placed components', exact: true })
       .getByRole('button', { name: 'R1', exact: true }).click();
-    await layout.getByLabel('Board side', { exact: true }).selectOption('bottom');
+    await layout.getByLabel('Layer', { exact: true }).selectOption('bottom');
     await layout.getByLabel('Rotation (°)', { exact: true }).fill('90');
     await layout.getByRole('button', { name: 'Apply position' }).click();
     await layout.getByRole('button', { name: 'Save', exact: true }).click();
@@ -2272,8 +2272,8 @@ async function completeLedExercise(page, info, offset) {
     await expect(unplaced.getByRole('listitem')).toHaveCount(3);
     await unplaced.getByRole('button', { name: /^D1/ }).click();
     await expect(layout.getByRole('img', { name: 'Footprint pad preview' })).toBeVisible();
-    await layout.getByLabel('PCB view').selectOption('beginner');
-    await expect(layout.getByRole('region', { name: 'First board guide' })).toBeVisible();
+    await layout.getByRole('button', { name: 'First board guide', exact: true }).click();
+    await expect(page.getByRole('region', { name: 'First board guide' })).toBeVisible();
     const placed = layout.getByRole('grid', { name: 'Placed components', exact: true });
     for (const footprint of reference.footprints) {
       const component = reference.components.find(({ id }) => id === footprint.componentId);
@@ -2312,7 +2312,7 @@ async function completeLedExercise(page, info, offset) {
     expect(completed.footprints.map(({ positionNm }) => positionNm)).toEqual(reference.footprints.map(({ positionNm }) => positionNm));
     expect(new Set(completed.tracks.map(({ netId }) => netId))).toEqual(new Set(reference.tracks.map(({ netId }) => netId)));
     await clickPcbCommand(layout, 'Run design checks…');
-    const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+    const checks = page.getByRole('region', { name: 'PCB design checks' });
     await expect(checks.getByRole('status')).toContainText('found no issues');
     await checks.getByText('Check coverage', { exact: true }).click();
     await expect(checks.getByText(/Schematic parity · checked/)).toBeVisible();
@@ -2374,7 +2374,6 @@ async function completeLedExercise(page, info, offset) {
       await frozen.close();
     }
     await cam.getByRole('button', { name: 'Close', exact: true }).click();
-    await layout.getByLabel('PCB view').selectOption('engineering');
     await layout.getByRole('button', { name: 'Undo', exact: true }).click();
     await clickPcbCommand(layout, 'Manufacturing revisions…');
     const revisions = page.getByRole('dialog', { name: 'Manufacturing revisions' });
@@ -2547,7 +2546,7 @@ test('reviews moved pads and changed drills without changing unrelated routes', 
     expect(completed.tracks.filter(({ reviewRequired }) => reviewRequired).map(({ id }) => id))
       .toEqual(expectedRoutes);
     await clickPcbCommand(layout, 'Run design checks…');
-    const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+    const checks = page.getByRole('region', { name: 'PCB design checks' });
     const open = checks.getByRole('table', { name: 'PCB findings' })
       .getByRole('row').filter({ hasText: 'Required terminals remain in separate copper islands.' });
     await expect(open.getByText('Error', { exact: true })).toBeVisible();
@@ -2592,7 +2591,7 @@ test('checks and exports the adversarial geometry reference offline', async ({ p
     await expect(layout.getByText('Zones filled.', { exact: true })).toBeVisible();
     await expect(canvas.locator('[data-zone-fill]')).toHaveCount(1);
     await clickPcbCommand(layout, 'Run design checks…');
-    const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+    const checks = page.getByRole('region', { name: 'PCB design checks' });
     const findings = checks.getByRole('table', { name: 'PCB findings' }).locator('tbody > tr');
     await expect(findings.filter({ hasText: 'A physical copper island joins distinct nets.' })).toHaveCount(2);
     await expect(findings.filter({ hasText: 'Copper on the same net meets only at isolated points.' }))
@@ -2688,7 +2687,7 @@ test('cross-probes the simulated RC node on the offline filter reference', async
     await expect(schematicPane).toBeVisible();
     await split.click();
     await clickPcbCommand(layout, 'Run design checks…');
-    const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+    const checks = page.getByRole('region', { name: 'PCB design checks' });
     await expect(checks.getByRole('status')).toContainText('found no issues');
     await checks.getByText('Check coverage', { exact: true }).click();
     await expect(checks.getByText(/Schematic parity · checked/)).toBeVisible();
@@ -2724,7 +2723,7 @@ test('checks both regulator packages and exports bottom thermal changes offline'
     const layout = page.getByRole('region', { name: 'PCB layout', exact: true });
     await expect(layout.getByRole('grid', { name: 'Placed components' })).toContainText('U1');
     await expect(layout.getByRole('grid', { name: 'Placed components' })).toContainText('U2');
-    const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+    const checks = page.getByRole('region', { name: 'PCB design checks' });
     const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
     async function downloadPreview(name, review) {
       await clickPcbCommand(layout, 'CAM read-back preview…');
@@ -2800,7 +2799,7 @@ test('checks the copied MCU and sensor schematic, board, and antenna keepout off
     await expect(canvas.locator('[data-placement-area]')).toHaveCount(4);
     await expect(canvas.locator('[data-routing-region]')).toHaveCount(1);
     await expect(layout.getByText('Zones filled.', { exact: true })).toBeVisible({ timeout: 30_000 });
-    const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+    const checks = page.getByRole('region', { name: 'PCB design checks' });
     const openChecks = () => clickPcbCommand(layout, 'Run design checks…');
     const closeChecks = () => checks.getByRole('button', { name: 'Close', exact: true }).click();
     await openChecks();
@@ -2882,8 +2881,8 @@ test('rebuilds zone copper for release after clearance and outline edits', async
     const fabrication = page.getByRole('dialog', { name: 'Fabrication settings' });
     await fabrication.getByRole('textbox', { name: /^Copper clearance \(mm\)/ }).fill('0.65');
     await fabrication.getByRole('button', { name: 'Apply', exact: true }).click();
-    await clickPcbCommand(layout, 'Board outline…');
-    const outline = page.getByRole('dialog', { name: 'Set board outline' });
+    await clickPcbCommand(layout, 'PCB Size & Shape…');
+    const outline = page.getByRole('dialog', { name: 'PCB Size & Shape' });
     await outline.getByLabel('Width (mm)', { exact: true }).fill('38');
     await outline.getByRole('button', { name: 'Apply', exact: true }).click();
     await expect(layout.getByText('Zone fill is stale.', { exact: true })).toBeVisible();
@@ -3015,7 +3014,7 @@ test('keeps DNP pads in copper checks and excludes the part from fitted exports'
     await layout.getByRole('button', { name: 'Delete selected copper…' }).click();
     await layout.getByRole('button', { name: 'Confirm deletion', exact: true }).click();
     await clickPcbCommand(layout, 'Run design checks…');
-    await expect(page.getByRole('dialog', { name: 'PCB design checks' }).getByRole('table', { name: 'PCB findings' }))
+    await expect(page.getByRole('region', { name: 'PCB design checks' }).getByRole('table', { name: 'PCB findings' }))
       .toContainText('Required terminals remain in separate copper islands.');
   } finally {
     await rm(directory, { recursive: true, force: true });
@@ -3057,7 +3056,7 @@ test('opens and edits the single-sided timer and logic reference offline', async
     const canvas = board.getByRole('img', { name: 'Board layout' });
     await expect(canvas.locator('[data-wire-jumper]')).toHaveCount(1);
     await clickPcbCommand(board, 'Run design checks…');
-    const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+    const checks = page.getByRole('region', { name: 'PCB design checks' });
     const findings = checks.getByRole('table', { name: 'PCB findings' }).locator('tbody > tr');
     await expect(findings).toHaveCount(1, { timeout: 30_000 });
     await expect(findings).toContainText('Separate bare copper islands require fitted wire jumpers');
@@ -3286,7 +3285,7 @@ test('regenerates saved PCB recipes offline after copying a project', async ({ p
       await dialog.getByRole('button', { name: 'Add PCB output recipe' }).click();
       await expect(dialog.getByLabel('Source PCB').locator('option:checked')).toHaveText('LED.dpn');
       await dialog.getByLabel('PCB output format').selectOption(format);
-      if (layer) await dialog.getByLabel('Board side').selectOption(layer);
+      if (layer) await dialog.getByLabel('Layer').selectOption(layer);
       if (decimals !== undefined)
         await dialog.getByLabel('Decimal places').selectOption(String(decimals));
       if (csvText) await dialog.getByLabel('CSV text').selectOption(csvText);
@@ -3317,7 +3316,7 @@ test('regenerates saved PCB recipes offline after copying a project', async ({ p
     await expect(dialog.getByLabel('Decimal places')).toHaveValue('2');
     await dialog.getByRole('button', { name: 'Cancel edit' }).click();
     await recipeRow('solder-side.gbr').getByRole('button', { name: 'Edit', exact: true }).click();
-    await expect(dialog.getByLabel('Board side')).toHaveValue('bottom');
+    await expect(dialog.getByLabel('Layer')).toHaveValue('bottom');
     await dialog.getByRole('button', { name: 'Cancel edit' }).click();
     const boardDigest = createHash('sha256')
       .update(await readFile(path.join(copy, 'LED.dpn')))

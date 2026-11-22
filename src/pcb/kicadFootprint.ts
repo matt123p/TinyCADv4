@@ -372,10 +372,6 @@ export function importKicadFootprint(source: string): {
     )
       continue;
     const graphicLayer = child(node, 'layer')?.values[0];
-    if (graphicLayer === 'Cmts.User' && (node.tag.startsWith('fp_') || node.tag === 'property')) {
-      issues.push({ severity: 'warning', location: node.tag, message: 'Comment-layer annotation was omitted.' });
-      continue;
-    }
     if (node.tag === 'property' && graphicLayer === undefined && !child(node, 'at')) continue;
     if (node.tag === 'embedded_fonts' && node.values[0] === 'no') continue;
     if (node.tag === 'model' || footprintGraphicLayers.includes(graphicLayer as FootprintGraphicLayer)) {

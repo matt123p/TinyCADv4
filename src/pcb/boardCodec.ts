@@ -317,6 +317,7 @@ const boardXml = record(
       'ANNOTATIONS',
       record({}, {
         datum: child('DATUM', point),
+        graphics: list('GRAPHICS', 'GRAPHIC', graphic),
         dimensions: list('DIMENSIONS', 'DIMENSION', record(
           { id: 'string', kind: 'string', offsetNm: 'integer', unit: 'string' },
           { start: child('START', point), end: child('END', point), label: child('LABEL') },

@@ -50,8 +50,8 @@ The left footprint panel has **Unplaced** and **Library** tabs. Project mode kee
 | --- | --- | --- |
 | Left | Browse project files and library content. Search, preview and start adding an item. Reuse the shell's collapse, resize and tab behavior. | Projects in Project mode, footprint library, and the project's unplaced components with draggable footprint previews. In Single File mode, keep the footprint tools available. |
 | Centre | Give the drawing the available space. Use the existing drawing area, rulers, viewport controls and file/sheet navigation. | Expose the board, active placement or route preview and selection marks. |
-| Bottom | Navigate the circuit or object list when idle. Show direct properties and editing controls for the current selection. Keep the shared vertical resize handle. | Navigate components and nets, edit selected components or copper and locate design-check findings. |
-| Right | Open auxiliary tools that need to remain visible alongside the drawing, such as simulation charts. | Keep the drawing full width. Launch focused analysis and manufacturing workflows from menus. |
+| Bottom | Navigate the circuit or object list when idle. Show direct properties and editing controls for the current selection. Keep the shared vertical resize handle. | Navigate components and nets, edit selected components, and locate design-check findings from the results pane. |
+| Right | Open auxiliary tools that need to remain visible alongside the drawing, such as simulation charts. | Show Layers and open Board Tools in the shared right-side container. Launch analysis and manufacturing workflows from menus. |
 
 Keep ordinary selection and placement on the drawing. Move advanced settings out of the main editing path. Use the established panel sizes, styles, borders, and density as the starting point. Review the actual rendered window at regular and narrow sizes.
 

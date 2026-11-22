@@ -826,7 +826,7 @@ Gerber artwork lacks sufficient complete logical intent to promise exact schemat
 | EDU-06 | Export an assessment/evidence report | Connectivity, rule results and revision evidence are reproducible without chat history | M2 |
 | EDU-07 | Support home-etch output as a separate process | Mirror state, scale and limitations are printed clearly; wire jumpers are explicit | M1 |
 
-A **Beginner** workspace reduces visible controls and chooses comprehensible defaults. An **Engineering** workspace exposes detailed rules and measurements. Both use the same board representation and validation. Never hide a manufacturing failure because the learner is in beginner mode.
+PCB Design uses one workspace with detailed rules, measurements, and an optional first-board guide. Recommended dimensions and manufacturing limits use the same board rules.
 
 Home-etch workflows need larger process-specific feature assumptions, drill templates, mirrored/unmirrored labels, 1:1 scale marks and explicit single-layer jumpers. Do not describe printed artwork as equivalent to plated-via factory fabrication. Stripboard/breadboard design can be a future separate document type; it is not required for PCB release.
 

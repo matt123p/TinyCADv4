@@ -1,9 +1,9 @@
 const menus = {
   Board: [
-    'Board outline…', 'Add cutout…', 'Hole or slot…', 'Add dimension…',
+    'PCB Size & Shape…', 'Add cutout…', 'Hole or slot…', 'Add dimension…',
     'Set measurement datum…', 'Pick overlapping objects', 'Update PCB from Schematic…',
     'Edit PCB references…', 'Update Schematic from PCB…', 'Board connections…',
-    'View components', 'View netlist', 'View board tools',
+    'Import schematic or netlist…', 'View board tools',
   ],
   Copper: [
     'Net rules…', 'Inspect board rules…', 'Run design checks…', 'Add placement area…',
@@ -27,6 +27,19 @@ export async function pcbMenuItem(workspace, label) {
 }
 
 export async function clickPcbCommand(workspace, label) {
+  if (label === 'View components' || label === 'View netlist') {
+    const target = label === 'View components' ? 'Components' : 'Netlist';
+    const current = target === 'Components' ? 'Netlist' : 'Components';
+    const back = workspace.getByRole('button', { name: /^Back to (Components|Netlist)$/ });
+    if (await back.isVisible()) await back.click();
+    const panel = workspace.getByRole('region', { name: 'Board properties' });
+    const switcher = panel.getByRole('button', { name: current, exact: true });
+    if (await switcher.isVisible()) {
+      await switcher.click();
+      await workspace.page().getByRole('menuitem', { name: target, exact: true }).click();
+    }
+    return;
+  }
   await (await pcbMenuItem(workspace, label)).click();
 }
 

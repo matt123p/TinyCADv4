@@ -28,6 +28,8 @@ export const manufacturingOutputRoles: Readonly<Record<string, string>> = {
   'paste-bottom.gbr': 'bottom-paste',
   'silk-top.gbr': 'top-silkscreen',
   'silk-bottom.gbr': 'bottom-silkscreen',
+  'adhesive-top.gbr': 'top-adhesive',
+  'adhesive-bottom.gbr': 'bottom-adhesive',
   'bom.csv': 'board-bom',
   'bom-fitted.csv': 'fitted-bom',
   'placement.csv': 'fitted-placement',

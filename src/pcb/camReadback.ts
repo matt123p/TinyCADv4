@@ -331,7 +331,7 @@ export function verifyCamFiles(
     checkRegions(
       `${kind}-${side}.gbr`,
       `${
-        kind === 'mask' ? 'Soldermask' : kind === 'paste' ? 'Paste' : 'Legend'
+        kind === 'mask' ? 'Soldermask' : kind === 'paste' ? 'Paste' : kind === 'adhesive' ? 'Glue' : 'Legend'
       },${side === 'top' ? 'Top' : 'Bot'}`,
       kind === 'mask' ? 'Negative' : 'Positive',
       regions,

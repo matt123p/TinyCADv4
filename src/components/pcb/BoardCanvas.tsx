@@ -3,6 +3,9 @@ import type { BoardAirwire } from '../../pcb/boardAirwires';
 import type { CopperFeature } from '../../pcb/copper';
 import type { EmbeddedFootprint } from '../../pcb/boardAssets';
 import type { BoardDocument, CopperLayer } from '../../pcb/board';
+import { boardLayerById, placedBoardLayer } from '../../pcb/boardLayers';
+import type { BoardLayerId, VisibleCopper } from '../../pcb/boardLayers';
+import { boardCopperGeometry } from '../../pcb/boardCopperGeometry';
 import type {
   boardPlacementView,
   placementPadTemplates,
@@ -129,7 +132,7 @@ const RoutedCopper = React.memo(function RoutedCopper({
   tracks: BoardDocument['tracks'];
   vias: BoardDocument['vias'];
   nets: BoardDocument['nets'];
-  visibleCopper: CopperLayer['id'] | 'all';
+  visibleCopper: VisibleCopper;
   selectedNet: string;
   picking: boolean;
 }) {
@@ -174,7 +177,7 @@ const RoutedCopper = React.memo(function RoutedCopper({
       {trackShapes.map(({ netId, shape }) => netId && netId === selectedNet
         ? React.cloneElement(shape, { stroke: netHighlight, 'data-net-highlighted': true })
         : shape)}
-      {(vias ?? []).map(
+      {visibleCopper !== 'none' && (vias ?? []).map(
         ({ id, positionNm, diameterNm, drillNm, reviewRequired, netId, locked }) => (
           <g
             key={id}
@@ -218,7 +221,7 @@ const ZoneCopper = React.memo(function ZoneCopper({
   fills, visibleCopper, selectedNet,
 }: {
   fills: readonly CopperFeature[] | undefined;
-  visibleCopper: CopperLayer['id'] | 'all';
+  visibleCopper: VisibleCopper;
   selectedNet: string;
 }) {
   const paths = useMemo(() => fills?.map(({ id, region, netId, layerId }) => ({
@@ -248,7 +251,7 @@ const PlacedFootprint = React.memo(function PlacedFootprint({
   inGroup: boolean;
   selectedPad?: string;
   selectedNet: string;
-  visibleCopper: CopperLayer['id'] | 'all';
+  visibleCopper: VisibleCopper;
   picking: boolean;
 }) {
   const { id, label, placement, pads, copper } = feature;
@@ -320,6 +323,7 @@ export default function BoardCanvas({
   zoneFills,
   checkMarker,
   visibleCopper,
+  hiddenLayers,
   measurement,
   trackEdit,
   deletion,
@@ -354,7 +358,8 @@ export default function BoardCanvas({
   airwires?: readonly BoardAirwire[];
   zoneFills?: readonly CopperFeature[];
   checkMarker?: BoardPoint;
-  visibleCopper: CopperLayer['id'] | 'all';
+  visibleCopper: VisibleCopper;
+  hiddenLayers: ReadonlySet<BoardLayerId>;
   measurement: readonly BoardPoint[];
   trackEdit?: Omit<TrackEditPreview, 'radius'>;
   deletion?: {
@@ -377,7 +382,7 @@ export default function BoardCanvas({
     connect(snap: RouteSnap): void;
     preview(x: number, y: number, target?: BoardPoint): { points: readonly BoardPoint[]; blocked: boolean } | undefined;
   };
-  onRouteObject(id: string, netId?: string, picked?: BoardPoint): void;
+  onRouteObject(id: string, netId?: string, picked?: BoardPoint, wholeRoute?: boolean): void;
   onComponent(componentId: string): void;
   onGroupComponent?(componentId: string): void;
   selectionEnabled: boolean;
@@ -453,7 +458,7 @@ export default function BoardCanvas({
       if (visibleCopper === 'all' || track.layerId === visibleCopper)
         routes.set(track.id, boundsOf([...around(track.start, track.widthNm / 2), ...around(track.end, track.widthNm / 2)]));
     }
-    for (const via of board.vias ?? [])
+    for (const via of visibleCopper === 'none' ? [] : board.vias ?? [])
       routes.set(via.id, boundsOf(around(via.positionNm, via.diameterNm / 2)));
     return { components, pads, routes };
   }, [geometry, board.tracks, board.vias, visibleCopper, margin]);
@@ -478,7 +483,11 @@ export default function BoardCanvas({
       targets: [...hits].map((hit) => JSON.parse(hit) as BoardPickTarget),
     });
   }
-  const silk = useMemo(() => {
+  const showApertures = (['F.Mask', 'B.Mask', 'F.Paste', 'B.Paste'] as const)
+    .some((layer) => !hiddenLayers.has(layer));
+  const apertures = useMemo(() => showApertures ? boardCopperGeometry(board).apertures : [],
+    [board, showApertures]);
+  const artwork = useMemo(() => {
     const devices = new Map(board.deviceDefinitions?.map((device) => [device.id, device]));
     const definitions = new Map(board.footprintDefinitions?.map((definition) => [definition.id, definition]));
     const parts = new Map(board.components?.map((part) => [part.id, part]));
@@ -486,11 +495,11 @@ export default function BoardCanvas({
       const graphics = definitions.get(devices.get(placement.deviceId)?.footprintId)?.graphics ?? [];
       return graphics.flatMap((graphic, index) => {
         const idForGraphic = placement.id + ':' + index;
-        if (!graphic.layer.endsWith('SilkS') ||
-          (graphic.kind === 'text' && !graphic.visible)) return [];
-        const layer: CopperLayer['id'] =
-          graphic.layer.startsWith('F.') === (placement.side === 'top') ? 'top' : 'bottom';
+        if (graphic.kind === 'text' && !graphic.visible) return [];
+        const artworkLayer = placedBoardLayer(graphic.layer, placement.side);
+        const layer: CopperLayer['id'] = artworkLayer.startsWith('B.') ? 'bottom' : 'top';
         return [{
+          artworkLayer,
           target: {
             kind: 'silk' as const, id: idForGraphic, componentId: id,
             label: label + ' · ' + graphic.kind + ' ' + (index + 1), layer,
@@ -527,7 +536,7 @@ export default function BoardCanvas({
     event.stopPropagation();
     const matrix = svgDrawingMatrix(event.currentTarget.ownerSVGElement)?.inverse();
     const picked = matrix && new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix);
-    onRouteObject(id, netId, picked && { x: Math.round(picked.x), y: Math.round(-picked.y) });
+    onRouteObject(id, netId, picked && { x: Math.round(picked.x), y: Math.round(-picked.y) }, event.detail > 1);
   }
   function selectPlacement(event: React.MouseEvent<SVGGElement>) {
     if (routing || deletion?.pickingRegion) return;
@@ -850,7 +859,7 @@ export default function BoardCanvas({
             .join(' ')}
           fill="#e8f0e9"
           fillRule="evenodd"
-          stroke="#465b52"
+          stroke={hiddenLayers.has('Edge.Cuts') ? 'none' : '#465b52'}
           strokeWidth={margin * 0.065}
         />
         {board.placementAreas
@@ -1016,17 +1025,33 @@ export default function BoardCanvas({
               transform={svgTranslation(dragPreview.offset.x, -dragPreview.offset.y)}>{footprint}</g> : footprint;
           })}
         </g>
-        {silk.filter(({ target }) => visible(target.layer)).map(({ target, placement, graphic }) => (
-          <g key={target.id} {...pickingAttributes?.(target)}
+        {apertures.map(({ id, kind, side, polygon }) => {
+          const layerId = (side === 'top' ? 'F.' : 'B.') + (kind === 'mask' ? 'Mask' : 'Paste') as BoardLayerId;
+          if (hiddenLayers.has(layerId)) return null;
+          const color = boardLayerById.get(layerId).color;
+          return <path key={id} data-pcb-layer={layerId} d={ring(polygon)}
+            fill={color} fillOpacity={0.25} stroke={color} strokeWidth={1.1}
+            vectorEffect="non-scaling-stroke" pointerEvents="none" />;
+        })}
+        {artwork.filter(({ artworkLayer }) => !hiddenLayers.has(artworkLayer)).map(({ target, placement, graphic, artworkLayer }) => (
+          <g key={target.id} data-pcb-layer={artworkLayer}
+            {...(artworkLayer.endsWith('SilkS') ? pickingAttributes?.(target) : {})}
             data-picked-silk={selectedSilk === target.id || undefined}
             transform={placementTransform(target.componentId === movingId ? {
               x: placement.positionNm.x + dragPreview.offset.x, y: placement.positionNm.y + dragPreview.offset.y,
             } : placement.positionNm, placement.rotationMicrodegree, placement.side)}
             pointerEvents={picking ? 'visiblePainted' : 'none'}>
-            <FootprintArtwork item={graphic} highlighted={selectedSilk === target.id} />
+            <FootprintArtwork item={graphic} highlighted={selectedSilk === target.id}
+              layerColor={boardLayerById.get(artworkLayer).color} />
           </g>
         ))}
-        {dimensions.map(({ dimension, line }) => {
+        {board.annotations?.graphics?.map((item, index) =>
+          !hiddenLayers.has(item.layer) && (item.kind !== 'text' || item.visible) && (
+            <g key={index} data-pcb-layer={item.layer} pointerEvents="none">
+              <FootprintArtwork item={item} layerColor={boardLayerById.get(item.layer).color} />
+            </g>
+          ))}
+        {!hiddenLayers.has('Dwgs.User') && dimensions.map(({ dimension, line }) => {
           const tick = margin * 0.08;
           const dx = line.end.x - line.start.x;
           const dy = line.end.y - line.start.y;
@@ -1057,7 +1082,7 @@ export default function BoardCanvas({
             </g>
           );
         })}
-        {datum && (
+        {datum && !hiddenLayers.has('Dwgs.User') && (
           <g data-measurement-datum pointerEvents="none" transform={svgTranslation(datum.x, -datum.y)}>
             <path
               d={`M${-margin * 0.13},0 H${margin * 0.13} M0,${-margin * 0.13} V${margin * 0.13}`}

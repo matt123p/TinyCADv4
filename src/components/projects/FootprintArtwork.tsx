@@ -71,14 +71,18 @@ export function artworkBounds(item: FootprintGraphic): readonly BoardPoint[] {
   }
 }
 
-export function FootprintArtwork({ item, highlighted }: { item: FootprintGraphic; highlighted?: boolean }) {
+export function FootprintArtwork({ item, highlighted, layerColor }: {
+  item: FootprintGraphic;
+  highlighted?: boolean;
+  layerColor?: string;
+}) {
   const color = highlighted
     ? '#b34b27'
-    : item.layer.endsWith('CrtYd')
+    : layerColor ?? (item.layer.endsWith('CrtYd')
     ? '#8a3e8b'
     : item.layer.endsWith('Fab')
     ? '#686e75'
-    : '#236c65';
+    : '#236c65');
   const style = {
     stroke: color,
     strokeWidth: item.strokeNm || 80_000,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@fluentui/react-components';
+import { boardLayerById } from '../../pcb/boardLayers';
 import {
   footprintGraphicLayers,
   validateFootprintDetails,
@@ -41,15 +42,19 @@ export default function FootprintArtworkEditor({
   onChange,
   run,
   busy,
+  legend = 'Footprint artwork',
+  initiallyExpanded = false,
 }: {
   graphics: readonly FootprintGraphic[];
   onChange(items: readonly FootprintGraphic[]): void;
   run(task: () => void): Promise<void>;
   busy: boolean;
+  legend?: string;
+  initiallyExpanded?: boolean;
 }) {
   const [index, setIndex] = useState<number>();
   const [draft, setDraft] = useState(initial);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(initiallyExpanded);
 
   function select(i: number) {
     setIndex(i);
@@ -149,10 +154,10 @@ export default function FootprintArtworkEditor({
 
   return (
     <fieldset disabled={busy}>
-      <legend>Footprint artwork</legend>
-      <Button size="small" onClick={() => setExpanded(!expanded)}>
+      <legend>{legend}</legend>
+      {!initiallyExpanded && <Button size="small" onClick={() => setExpanded(!expanded)}>
         {expanded ? 'Hide artwork tools' : 'Edit artwork'}
-      </Button>
+      </Button>}
       {expanded && (
         <>
           <p>
@@ -206,7 +211,7 @@ export default function FootprintArtworkEditor({
                 }
               >
                 {footprintGraphicLayers.map((layer) => (
-                  <option key={layer}>{layer}</option>
+                  <option key={layer} value={layer}>{boardLayerById.get(layer).label}</option>
                 ))}
               </select>
             </label>{' '}

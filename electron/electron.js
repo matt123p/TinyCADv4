@@ -128,6 +128,7 @@ function createWindow({ openAbout = false } = {}) {
   });
 
   function updateMenu() {
+    const pcbMode = boardMenus.length > 0;
     const recentFiles = store.get('recentFiles') || [];
     const recentMenu = recentFiles.map(file => ({
       label: path.basename(file),
@@ -163,6 +164,7 @@ function createWindow({ openAbout = false } = {}) {
           { label: getMenuLabel('save', 'Save'), accelerator: 'CmdOrCtrl+S', click: () => mainWindow.webContents.send('menu-command', 'file-save') },
           { label: getMenuLabel('saveAll', 'Save All'), click: () => mainWindow.webContents.send('menu-command', 'file-save-all') },
           { label: getMenuLabel('saveAs', 'Save As...'), accelerator: 'CmdOrCtrl+Shift+S', click: () => mainWindow.webContents.send('menu-command', 'file-save-as') },
+          ...(!pcbMode ? [
           { label: getMenuLabel('saveWithoutResults', 'Save without results...'), click: () => mainWindow.webContents.send('menu-command', 'file-save-without-results') },
           { type: 'separator' },
           {
@@ -181,6 +183,7 @@ function createWindow({ openAbout = false } = {}) {
           },
           { type: 'separator' },
           { label: getMenuLabel('print', 'Print'), accelerator: 'CmdOrCtrl+P', click: () => mainWindow.webContents.send('menu-command', 'file-print') },
+          ] : []),
           { type: 'separator' },
           isMac ? { role: 'close' } : { role: 'quit' }
         ]
@@ -196,21 +199,23 @@ function createWindow({ openAbout = false } = {}) {
           { role: 'paste' },
           { role: 'delete' },
           { role: 'selectAll' },
+          ...(!pcbMode ? [
           { type: 'separator' },
           { label: getMenuLabel('rotateLeft', 'Rotate Left'), click: () => mainWindow.webContents.send('menu-command', 'edit-rotate-left') },
           { label: getMenuLabel('rotateRight', 'Rotate Right'), click: () => mainWindow.webContents.send('menu-command', 'edit-rotate-right') },
           { label: getMenuLabel('flipHorizontal', 'Flip Horizontal'), click: () => mainWindow.webContents.send('menu-command', 'edit-flip-h') },
           { label: getMenuLabel('flipVertical', 'Flip Vertical'), click: () => mainWindow.webContents.send('menu-command', 'edit-flip-v') }
+          ] : [])
         ]
       },
       {
         label: getMenuLabel('view', 'View'),
         submenu: drawingViewMenu(getMenuLabel, viewMenuState, isLibraryMode,
-          command => mainWindow.webContents.send('menu-command', command))
+          command => mainWindow.webContents.send('menu-command', command), pcbMode)
       },
       ...(!isLibraryMode ? boardWorkspaceMenus(boardMenus,
         (command) => mainWindow.webContents.send('menu-command', command)) : []),
-      ...(isLibraryMode ? [] : [{
+      ...(isLibraryMode || pcbMode ? [] : [{
         label: getMenuLabel('tools', 'Tools'),
         submenu: [
           { label: getMenuLabel('autoLayout', 'Auto-layout'), click: () => mainWindow.webContents.send('menu-command', 'tools-auto-layout') },
@@ -224,7 +229,7 @@ function createWindow({ openAbout = false } = {}) {
           { label: getMenuLabel('createVhdlFile', 'Create VHDL file'), click: () => mainWindow.webContents.send('menu-command', 'tools-vhdl') },
         ]
       }]),
-      ...(isLibraryMode ? [] : [{
+      ...(isLibraryMode || pcbMode ? [] : [{
         label: getMenuLabel('settings', 'Settings'),
         submenu: [
           { label: getMenuLabel('designDetails', 'Design Details...'), click: () => mainWindow.webContents.send('menu-command', 'settings-design-details') },

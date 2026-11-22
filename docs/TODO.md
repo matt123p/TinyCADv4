@@ -19,6 +19,8 @@ The [PCB layout specification](TinyCAD_PCB_Layout_Complete_Specification.md), [p
 - [x] Mount the existing `Ruler` component on the PCB drawing edges. Verify both pointer indicators and the coordinate conversion after pan, zoom, resize and ruler toggles.
 - [x] Preserve the v4.1.0 Single File startup with project controls hidden. Verify explicit entry into Project mode and standalone PCB open and save in the shared editor. [Single File and Project modes](project-specification.md#single-file-and-project-modes)
 - [x] Repeat the affected classroom, reference board and tab workflows through the redesigned editor. Retain separate evidence for native files, connectivity and manufacturing read-back.
+- [x] Verify the browser workflow for Layers, Board Tools, clickable bottom-panel DRC findings, Protel import, and PCB route completion, selection and deletion.
+- [ ] Requalify the PCB-only menus and relocated panels in the native desktop editor.
 
 The recovery rerun covers the standalone PCB, placement queue, group edits,
 portable board, classroom LED exercise, connector reference, embedded starter
@@ -205,7 +207,7 @@ Start with the [WP3 editor recovery checklist](#editor-interface-redesign). Carr
   - [x] Run schematic ERC in the copied Reference F project. Verify that repeated same-name rail markers pass, distinct wired rails and conflicting power output pins are flagged, and the schematic still matches the applied board circuit.
   - [x] Repeat independent Gerbonara read-back for references A–F and J. Use a bounded spatial search to complete copper-width checks on the timer and filter, and locally clear both pours where the checks located undersized copper. Verify the reliefs in the output Gerbers and retain the expected jumper warning on the timer and the 1 µm web finding on the adversarial board.
   - [x] Run the LED exercise as an operating-point simulation on its linked schematic. Verify 1.903 V forward voltage and 9.39 mA through R1 with native ngspice, and recheck parity and manufacturing output from the same drawing.
-  - [x] Provide Beginner and Engineering PCB views. Verify the simplified view applies teaching route presets above the effective design minimum and preserves manufacturing findings and saved rules (RUL-07, §23.1).
+  - [x] Provide optional first-board guidance and keep recommended routing dimensions separate from manufacturing limits (RUL-07, §23.1).
   - [x] Restore committed PCB edits after losing a standalone or linked editor. Keep conflicting recovery copies separate and reject saves over a newer on-disk board.
 - [ ] WP6 · Verify WEB-01 in the production browser builds. Trace modules, workers and asset requests for all three cold starts, exercise file opens and direct links, and record idle, peak and retained memory across repeated workspace switches.
   - [x] Verify that the packaged workspace runner reports PCB worker errors during both empty-board and classroom checks. Run the production browser and offline Electron smoke tests. [Worker qualification](pcb-performance.md#packaged-pcb-worker-jobs)

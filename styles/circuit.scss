@@ -361,6 +361,49 @@ $scrollbar-size: 9px;
   min-height: 0;
 }
 
+.pcb-right-panel {
+  width: min(290px, 28vw);
+  min-width: 0;
+  overflow: auto;
+  padding: 8px;
+  border-inline-start: 1px solid var(--colorNeutralStroke2);
+  background: var(--colorNeutralBackground1);
+}
+
+.pcb-layers-panel {
+    padding: 8px 12px;
+    border-bottom: 1px solid #d8d8d8;
+}
+
+.pcb-layers-panel h2 {
+    margin: 0 0 4px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.pcb-layer-list {
+    display: grid;
+    max-height: min(34vh, 280px);
+    overflow-y: auto;
+}
+
+.pcb-layer-swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 7px;
+    border-radius: 2px;
+}
+
+.pcb-right-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.pcb-drc-panel { padding: 4px 8px; }
+
 .project-browser {
   display: flex;
   flex-direction: column;

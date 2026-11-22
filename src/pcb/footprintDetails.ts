@@ -2,7 +2,11 @@ import { isBoardPoint, validateOutline } from './geometry';
 import type { BoardPoint } from './geometry';
 
 type Vector3 = readonly [number, number, number];
-export const footprintGraphicLayers = ['F.SilkS', 'B.SilkS', 'F.Fab', 'B.Fab', 'F.CrtYd', 'B.CrtYd'] as const;
+export const footprintGraphicLayers = [
+  'F.SilkS', 'B.SilkS', 'F.Fab', 'B.Fab', 'F.CrtYd', 'B.CrtYd',
+  'F.Adhes', 'B.Adhes', 'F.Paste', 'B.Paste', 'F.Mask', 'B.Mask',
+  'Dwgs.User', 'Cmts.User', 'Eco1.User', 'Eco2.User', 'Margin',
+] as const;
 export type FootprintGraphicLayer = (typeof footprintGraphicLayers)[number];
 type GraphicShape =
   | { kind: 'line' | 'rect'; start: BoardPoint; end: BoardPoint }

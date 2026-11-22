@@ -9,6 +9,7 @@ import type { BoardPoint } from './geometry';
 
 export type RouteDeletionScope =
   | { readonly kind: 'item'; readonly id: string }
+  | { readonly kind: 'items'; readonly ids: readonly string[] }
   | { readonly kind: 'net'; readonly netId: string }
   | {
       readonly kind: 'connection';
@@ -75,10 +76,11 @@ function trackRegion(
 function connectionDeletion(
   board: BoardDocument,
   scope: Extract<RouteDeletionScope, { kind: 'connection' }>,
+  includeLocked = false,
 ): RouteDeletionPlan {
   const seed = board.tracks?.find(({ id }) => id === scope.trackId);
   if (!seed?.netId) throw new Error('Choose a track assigned to a PCB net.');
-  if (seed.locked) throw new Error('Unlock this track before deleting it.');
+  if (seed.locked && !includeLocked) throw new Error('Unlock this track before deleting it.');
   const sameNet = (item: { netId?: string }) => item.netId === seed.netId;
   const tracks = board.tracks.filter(sameNet);
   const vias = (board.vias ?? []).filter(sameNet);
@@ -242,7 +244,7 @@ function connectionDeletion(
     for (const node of [edge.from, edge.to]) {
       if (node.stop || node.edges.length !== 2) continue;
       const next = node.edges.find((entry) => entry !== edge);
-      if (visited.has(next) || (next.kind === 'via' ? next.via.locked : next.track.locked)) continue;
+      if (visited.has(next) || (!includeLocked && (next.kind === 'via' ? next.via.locked : next.track.locked))) continue;
       if (
         next.kind === 'via' &&
         [next.from, next.to].some(
@@ -282,6 +284,21 @@ function connectionDeletion(
   };
 }
 
+export function connectedRouteIds(board: BoardDocument, id: string, picked?: BoardPoint): string[] {
+  const track = board.tracks?.find((track) => track.id === id);
+  const via = board.vias?.find((via) => via.id === id);
+  const seeds = track ? [track] : via?.netId
+    ? board.tracks?.filter((track) => track.netId === via.netId && onTrack(via.positionNm, track)) ?? []
+    : [];
+  const selected = new Set([id]);
+  for (const seed of seeds) {
+    if (!seed.netId) continue;
+    const route = connectionDeletion(board, { kind: 'connection', trackId: seed.id, picked }, true);
+    for (const item of [...route.tracks, ...route.vias]) selected.add(item.id);
+  }
+  return [...selected];
+}
+
 export function planRouteDeletion(
   board: BoardDocument,
   scope: RouteDeletionScope,
@@ -317,7 +334,8 @@ export function planRouteDeletion(
     );
   } else {
     const matches = (item: { id: string; netId?: string }) =>
-      scope.kind === 'item' ? scope.id === item.id : scope.netId === item.netId;
+      scope.kind === 'item' ? scope.id === item.id :
+        scope.kind === 'items' ? scope.ids.includes(item.id) : scope.netId === item.netId;
     tracks = (board.tracks ?? []).filter(matches);
     vias = (board.vias ?? []).filter(matches);
   }

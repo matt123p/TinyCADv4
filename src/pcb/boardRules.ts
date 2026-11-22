@@ -209,13 +209,6 @@ export function routeViaPresets(board: BoardDocument, rules = resolveBoardRules(
   };
 }
 
-export function beginnerRouteDefaults(board: BoardDocument, rules = resolveBoardRules(board)) {
-  return {
-    widthNm: preferredTrackWidth(rules, 500_000),
-    ...routeViaPresets(board, rules).preferred,
-  };
-}
-
 export function preferredTrackWidth(rules: RouteRules, fallbackNm: number) {
   return Math.min(
     rules.maxWidthNm ?? Infinity,

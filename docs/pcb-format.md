@@ -154,7 +154,9 @@ Save aligned, horizontal or vertical annotations with a line offset, an optional
 
 Open **First board guide** from the PCB toolbar to keep the steps beside the board while you work. Review schematic parts and their device mappings, set the outline and fabrication profile, place footprints, route by following the airwires, and run design checks. The guide opens the regular editing commands and CAM read-back preview. Select a step to return to it while checking a finding or preparing a manufacturing review.
 
-Choose **Beginner** under **PCB view** to open the guide and show the placement, routing, zone and review commands. The teaching route starts at 0.50 mm track width, 0.40 mm via drill and 0.80 mm via diameter. TinyCAD increases these dimensions when the board rules or selected fabrication profile require it. Choose **Engineering** for manual route dimensions, detailed fabrication rules, measurements and advanced editing. The view is remembered in the app. Both views use the same board data, design checks and release review.
+Open **First board guide** for help with placement, routing and fabrication. Board Tools exposes the route dimensions and opens beside the drawing. TinyCAD derives recommended widths and via sizes from the board rules and selected fabrication profile.
+
+For a standalone PCB, choose **Board → Import schematic or netlist** to review and apply a `.dsn`, `.dzn`, or TinyCAD Protel `.net` file. Import the same source again to review subsequent changes. For schematics with linked sheets, use **Update PCB from Schematic** in the project. Use the right-hand **Layers** panel to toggle visibility or edit board artwork. Mask, paste, silkscreen, and adhesive artwork participate in CAM export. User drawings, comments, Eco layers, fabrication drawings, and courtyard artwork are available in the editor and KiCad export.
 
 The [classroom LED exercise](../examples/pcb/led-classroom/README.md) includes an unplaced practice board and a routed reference. Both project folders open offline with their native schematics, reviewed mappings and embedded assets.
 

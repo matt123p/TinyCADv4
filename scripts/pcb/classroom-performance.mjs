@@ -111,7 +111,7 @@ export async function measureDesignCheck(page) {
     const startTime = performance.now();
     button.click();
   }), undefined, { timeout: 95_000 });
-  const check = page.getByRole('dialog', { name: 'PCB design checks' });
+  const check = page.getByRole('region', { name: 'PCB design checks' });
   await check.getByText('Physical connectivity · checked', { exact: true }).waitFor();
   const findings = await check.getByRole('table', { name: 'PCB findings' }).locator('tbody > tr').count();
   await check.getByRole('button', { name: 'Close', exact: true }).click();
@@ -136,7 +136,7 @@ export async function measureCheckDuringRefill(page) {
     await reset.click();
     await refill;
     await page.getByRole('button', { name: 'Run design checks…' }).click();
-    const checks = page.getByRole('dialog', { name: 'PCB design checks' });
+    const checks = page.getByRole('region', { name: 'PCB design checks' });
     await checks.getByText('Physical connectivity · checked', { exact: true }).waitFor();
     await checks.getByRole('button', { name: 'Close', exact: true }).click();
     await page.getByText('Zones filled.', { exact: true }).waitFor();

@@ -57,6 +57,7 @@ type BoardFeature =
   | 'routing-regions'
   | 'wire-jumpers'
   | 'board-annotations'
+  | 'board-artwork'
   | 'release-parent';
 
 export interface BoardReleaseParent {
@@ -106,6 +107,7 @@ const supportedFeatures: readonly BoardFeature[] = [
   'routing-regions',
   'wire-jumpers',
   'board-annotations',
+  'board-artwork',
   'release-parent',
 ];
 const copperStack = Object.freeze([
@@ -527,20 +529,19 @@ export class BoardHistory {
           break;
         }
         case 'setAnnotations': {
-          const { annotations: previous, ...rest } = candidate;
+          const { annotations: _previous, ...rest } = candidate;
           const annotations = operation.annotations;
+          const requiredFeatures = rest.requiredFeatures.filter(
+            (feature) => feature !== 'board-annotations' && feature !== 'board-artwork',
+          );
           candidate = annotations
             ? {
                 ...rest,
                 annotations,
-                requiredFeatures: previous
-                  ? rest.requiredFeatures
-                  : [...rest.requiredFeatures, 'board-annotations'],
+                requiredFeatures: [...requiredFeatures, 'board-annotations',
+                  ...(annotations.graphics?.length ? ['board-artwork' as const] : [])],
               }
-            : {
-                ...rest,
-                requiredFeatures: rest.requiredFeatures.filter((feature) => feature !== 'board-annotations'),
-              };
+            : { ...rest, requiredFeatures };
           break;
         }
         case 'setPlacementArea': {
