@@ -20,12 +20,12 @@ import SheetbarContainer from '../../state/containers/sheetbarContainer';
 import BottomPanelContainer from '../../state/containers/bottomPanelContainer';
 import { EditorDrawingStack, EditorSidePanel } from '../panel/EditorLayout';
 import { stopActiveSimulation } from '../../simulation/lifecycle';
-import { actionSelectDialog, actionSheetSelect } from '../../state/dispatcher/AppDispatcher';
+import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
 import { Browser } from '../sheets/browser';
 import { tclibLibraryEntry } from '../../model/tclib';
 import { isBoardFile } from '../../../shared/drawingFiles';
 import { BrowserSheetData } from '../../model/dsnView';
-import { boardOpened, circuitOpened, confirmBoardClose, saveActiveBoard, boardHistoryCommand, editorHeaderDocument } from '../../io/boardWorkspaceEvents';
+import { boardOpened, circuitOpened, confirmBoardClose, confirmCircuitOpen, editFootprintLibrary, saveActiveBoard, boardHistoryCommand, editorHeaderDocument } from '../../io/boardWorkspaceEvents';
 import { projectFilesChanged, projectFolderOpened } from '../../io/projectStorage';
 import { chooseProjectFolder, closeProjectMode, saveProjectTabs, startupMode } from '../../io/projectMode';
 import type { docDrawing } from '../../state/undo/undo';
@@ -33,7 +33,7 @@ import type { ProjectLocation } from '../../io/projectStorage';
 import { activateSchematicTab, enableSchematicTabs, openSchematicTabs, schematicTabDirty, schematicTabKey } from '../../state/schematicTabs';
 import { useOpenBoards } from '../../io/useOpenBoards';
 import { dirtyProjectDocument, useProjectDocuments } from '../../io/useProjectDocuments';
-import { fileOpen, saveSchematicFile } from '../../io/files';
+import { fileOpen, handleMenuCommand, saveSchematicFile } from '../../io/files';
 import type { SaveSummary } from '../../io/useProjectDocuments';
 import type { GitReview } from '../projects/ProjectSourceControl';
 import type { BoardWorkspaceDocument } from '../pcb/BoardWorkspace';
@@ -68,6 +68,7 @@ const ProjectAutosave = process.env.TARGET_SYSTEM === 'electron' || process.env.
 
 const SheetContainer = lazy(() => import('../../state/containers/sheetContainer'));
 const BoardWorkspace = lazy(() => import('../pcb/BoardWorkspace'));
+const FootprintEditorDialog = lazy(() => import('../projects/FootprintEditorDialog'));
 
 const SimulationFailureDialog = lazy(() => import('../simulation/SimulationFailureDialog').then(
   (module) => ({ default: module.SimulationFailureDialog }),
@@ -119,7 +120,6 @@ export interface DesignAppProps {
   standardLibraryNavigation?: StandardLibraryNavigation;
   simulationPanelVisible?: boolean;
   simulationPanelActivated?: boolean;
-  firstSchematicSheet: number;
   selectedSpiceControl?: boolean;
   simulationSheet: boolean;
   editSymbol: tclibLibraryEntry;
@@ -177,6 +177,12 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const editorStore = useStore<docDrawing>();
 
   const [simulationSuppressed, setSimulationSuppressed] = useState(false);
+  const [footprintEditorOpen, setFootprintEditorOpen] = useState(false);
+  useEffect(() => {
+    const open = () => setFootprintEditorOpen(true);
+    window.addEventListener(editFootprintLibrary, open);
+    return () => window.removeEventListener(editFootprintLibrary, open);
+  }, []);
   useEffect(() => {
     const show = () => {
       setSimulationSuppressed(false);
@@ -215,19 +221,6 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     documents.select();
     setActiveWorkspace('circuit');
   }, [documents.select]);
-  const showCircuitDesign = () => {
-    activateCircuit();
-    setSimulationSuppressed(true);
-    if (props.simulationSheet && props.firstSchematicSheet >= 0)
-      dispatch(actionSheetSelect(props.firstSchematicSheet));
-    dispatch({ type: 'simulation/panel', visible: false });
-  };
-  const showSimulation = () => {
-    setSideBySide(false);
-    activateCircuit();
-    setSimulationSuppressed(false);
-    dispatch({ type: 'simulation/panel', visible: true });
-  };
   useEffect(() => {
     if (props.simulationPanelVisible) setSimulationSuppressed(false);
   }, [props.simulationPanelVisible]);
@@ -284,18 +277,23 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   useEffect(() => {
     const open = (event: CustomEvent<BoardWorkspaceDocument['session']>) =>
       openBoard({ session: event.detail });
+    const confirm = (event: Event) => {
+      if (!projectMode && pcbActive && activeBoard?.document.session.dirty &&
+        !window.confirm('Discard unsaved edits to the current PCB?')) event.preventDefault();
+    };
+    const openCircuit = () => {
+      if (!projectMode && pcbActive && activeBoard) removeBoards([activeBoard.id]);
+      activateCircuit();
+    };
     window.addEventListener(boardOpened, open);
-    window.addEventListener(circuitOpened, activateCircuit);
+    window.addEventListener(confirmCircuitOpen, confirm);
+    window.addEventListener(circuitOpened, openCircuit);
     return () => {
       window.removeEventListener(boardOpened, open);
-      window.removeEventListener(circuitOpened, activateCircuit);
+      window.removeEventListener(confirmCircuitOpen, confirm);
+      window.removeEventListener(circuitOpened, openCircuit);
     };
-  }, [openBoard, activateCircuit]);
-  const createBoard = () => {
-    void import('../../io/boardWorkspace').then(({ newStandaloneBoard }) =>
-      openBoard({ session: newStandaloneBoard() }),
-    ).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
-  };
+  }, [openBoard, activateCircuit, activeBoard, pcbActive, projectMode, removeBoards]);
   useEffect(() => {
     const confirmClose = (event: Event) => {
       if ((documents.hasDirty() || Object.values(editorStore.getState().schematicTabs?.inactive ?? {}).some(schematicTabDirty)) &&
@@ -330,11 +328,9 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     if (workspace === 'simulation') {
       dispatch({ type: 'simulation/panel', visible: true });
     } else if (workspace === 'pcb' && !params.has('file')) {
-      void import('../../io/boardWorkspace').then(({ newStandaloneBoard }) =>
-        openBoard({ session: newStandaloneBoard() }),
-      ).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+      dispatch(handleMenuCommand('file-new-pcb') as any);
     }
-  }, [dispatch, openBoard]);
+  }, [dispatch]);
   const closeBoard = useCallback((id: string) => {
     removeBoards([id]);
     if (!getBoards().activeId) setActiveWorkspace('circuit');
@@ -808,17 +804,11 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     >
       {simulationActive && <Suspense fallback={null}><SimulationFailureDialog /></Suspense>}
       {!pcbActive && !activeProjectFile && !splitVisible && schematicToolbar}
-      {!props.editLibrary && <div className="workspace-switcher" role="group" aria-label="Design workspaces">
-        <ToggleButton size="small" checked={!pcbActive && !simulationActive} onClick={showCircuitDesign}>Circuit Design</ToggleButton>
-        <ToggleButton size="small" checked={pcbActive} onClick={activeBoard ? () => activateBoard(activeBoard.id) : createBoard}>PCB Design</ToggleButton>
-        <ToggleButton size="small" checked={!!simulationActive} onClick={showSimulation}>Circuit Design + Simulation</ToggleButton>
-        {pcbActive && DriveProjectFolderDialog && !projectMode && (
-          <Button size="small" icon={<FolderOpenRegular />}
-            onClick={() => window.dispatchEvent(new Event(chooseProjectFolder))}>
-            {t('projects.openFolder')}
-          </Button>
-        )}
-      </div>}
+      {footprintEditorOpen && (
+        <Suspense fallback={null}>
+          <FootprintEditorDialog onClose={() => setFootprintEditorOpen(false)} />
+        </Suspense>
+      )}
       {ProjectAutosave && (props.hasOpenProject || schematicTabs.length > 0) && (
         <Suspense fallback={null}><ProjectAutosave /></Suspense>
       )}
@@ -1153,7 +1143,6 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
                     footprintsVisible={showFootprints} onToggleFootprints={setShowFootprints}
                     bottomPanelHeight={bottomPanelHeight} onBottomPanelResize={handleBottomPanelResize}
                     onOpen={() => dispatch(fileOpen() as any)}
-                    onNew={createBoard}
                     onProjectFolder={DriveProjectFolderDialog ? () => window.dispatchEvent(new Event(chooseProjectFolder)) : undefined}
                     activeCommands={pcbActive} manageClose={projectMode} onClose={() => requestBoardClose(activeBoard.id)} />
                 ) : <div role="status">Loading PCB Design…</div>}

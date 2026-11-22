@@ -20,6 +20,17 @@ export function drawingOpenMenu(getLabel, recentMenu, send) {
   ];
 }
 
+export function boardWorkspaceMenus(menus, send) {
+  return menus.map(({ title, items }) => ({
+    label: title,
+    submenu: items.map((item) => item ? {
+      label: item.label,
+      enabled: !item.disabled,
+      click: () => send('pcb-menu:' + item.id),
+    } : { type: 'separator' }),
+  }));
+}
+
 export function drawingViewMenu(getLabel, state, libraryMode, send) {
   return [
     {
@@ -47,5 +58,19 @@ export function drawingViewMenu(getLabel, state, libraryMode, send) {
       accelerator: 'CmdOrCtrl+-',
       click: () => send('view-zoom-out'),
     },
+  ];
+}
+
+export function drawingNewMenu(getLabel, send) {
+  return [
+    {
+      label: getLabel('newDesign', 'New Design'),
+      accelerator: 'CmdOrCtrl+N',
+      click: () => send('file-new'),
+    },
+    { label: getLabel('newSymbolLibrary', 'New Custom Symbol Library'), click: () => send('tools-new-lib') },
+    { type: 'separator' },
+    { label: getLabel('newPcb', 'New PCB'), click: () => send('file-new-pcb') },
+    { label: getLabel('newPcbFootprintLibrary', 'New PCB Footprint Library'), click: () => send('file-new-footprint-library') },
   ];
 }

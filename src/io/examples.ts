@@ -22,6 +22,7 @@ import {
 } from '../state/dispatcher/AppDispatcher';
 import { ioXML } from './ioXml';
 import { decodeDrawing } from './dsnCodec';
+import { canOpenCircuit, circuitOpened } from './boardWorkspaceEvents';
 import { XMLBuilder } from '../util/xmlbuilder';
 
 interface ExampleSource {
@@ -161,12 +162,14 @@ export interface PreparedExample {
 }
 
 export function commitExample(dispatch: Dispatch, example: PreparedExample) {
+  if (!canOpenCircuit()) return;
   dispatch(actionCancelDialog());
   // No source path/handle is attached: Save always creates the user's own copy.
   dispatch(actionSetDocument(example.document, example.filename, null, null));
   dispatch(actionSetFileData(example.filename, null, null, 0));
   dispatch({ type: 'example/loaded', item: example.content });
   dispatch(ActionCreators.clearHistory());
+  window.dispatchEvent(new Event(circuitOpened));
 }
 
 export function openExample(

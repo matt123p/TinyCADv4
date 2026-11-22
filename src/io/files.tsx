@@ -1,5 +1,5 @@
 import { bomCsv } from './bomCsv';
-import { boardHistoryCommand, boardZoomCommand, circuitOpened, saveActiveBoard } from './boardWorkspaceEvents';
+import { boardHistoryCommand, boardZoomCommand, canOpenCircuit, circuitOpened, editFootprintLibrary, saveActiveBoard, showOpenedBoard } from './boardWorkspaceEvents';
 import { generateActiveBom, generateActiveNetlist } from './netlists/activeNetlist';
 import { apiServer, tinycadUrl } from './apiServer';
 import { withoutResults } from '../simulation/document';
@@ -115,6 +115,7 @@ export function performPendingAction(pendingAction: UnsavedAction) {
         commitExample(dispatch, pendingAction);
         break;
       case 'file-new':
+        if (!canOpenCircuit()) break;
         // Create a new blank drawing and reset file data
         dispatch(actionSetDocument(blank(), 'tCad1.dsn', null, null));
         window.dispatchEvent(new Event(circuitOpened));
@@ -920,6 +921,18 @@ export function handleMenuCommand(command: string) {
         break;
       case 'file-open-example':
         dispatch(actionSelectDialog('open_example', null));
+        break;
+      case 'file-new-pcb':
+        if (editLibrary) {
+          openCurrentAppUrl(new URLSearchParams({ workspace: 'pcb' }));
+        } else {
+          void import('./boardWorkspace').then(({ newStandaloneBoard }) =>
+            showOpenedBoard(newStandaloneBoard()),
+          ).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+        }
+        break;
+      case 'file-new-footprint-library':
+        window.dispatchEvent(new Event(editFootprintLibrary));
         break;
       case 'file-open':
         dispatch(fileOpen() as any);

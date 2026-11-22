@@ -520,13 +520,6 @@ $scrollbar-size: 9px;
   list-style: none;
 }
 
-.workspace-switcher {
-  display: flex;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-bottom: 1px solid #d1d1d1;
-}
-
 .editor-toolbar {
   position: relative;
 }
@@ -759,6 +752,15 @@ $scrollbar-size: 9px;
     grid-template-columns: minmax(0, 1fr);
     > span[id] { grid-column: 1; }
   }
+}
+
+.pcb-connection-form {
+  display: grid;
+  gap: 0.25rem;
+  padding-block: 0.5rem;
+
+  > .fui-Button { justify-self: end; }
+  + .pcb-connection-form { border-top: 1px solid var(--colorNeutralStroke2); }
 }
 
 .pcb-contour-preview {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@fluentui/react-components';
+import { Button, Select } from '@fluentui/react-components';
 
 const steps = [
   'Review parts',
@@ -195,7 +195,7 @@ export default function FirstBoardGuide({
         </>
       )}
       <div className="pcb-guide-actions">
-        <select
+        <Select
           aria-label="Guide step"
           value={step}
           onChange={(event) => onStepChange(Number(event.target.value))}
@@ -205,7 +205,7 @@ export default function FirstBoardGuide({
               {title}
             </option>
           ))}
-        </select>
+        </Select>
         <Button disabled={step === 0} onClick={() => onStepChange(step - 1)}>
           Previous step
         </Button>

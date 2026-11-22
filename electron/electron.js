@@ -1,7 +1,7 @@
 import { isBoardFile, isDrawingFile } from '../shared/drawingFiles.js';
 import { registerSimulation } from './simulation.js';
 import { chartWindowOptions, configureChartWindow } from './chartWindows.js';
-import { drawingOpenMenu, drawingViewMenu } from './drawingMenus.js';
+import { boardWorkspaceMenus, drawingNewMenu, drawingOpenMenu, drawingViewMenu } from './drawingMenus.js';
 import { registerChatGPTHandlers } from '../chatgpt/bridge.js';
 import { registerChatSecretHandlers } from './chat-secrets.js';
 import { fileURLToPath } from 'url';
@@ -153,10 +153,7 @@ function createWindow({ openAbout = false } = {}) {
         submenu: [
           {
             label: getMenuLabel('new', 'New'),
-            submenu: [
-              { label: getMenuLabel('newDesign', 'New Design'), accelerator: 'CmdOrCtrl+N', click: () => mainWindow.webContents.send('menu-command', 'file-new') },
-              { label: getMenuLabel('newLibrary', 'New Library'), click: () => mainWindow.webContents.send('menu-command', 'tools-new-lib') }
-            ]
+            submenu: drawingNewMenu(getMenuLabel, command => mainWindow.webContents.send('menu-command', command)),
           },
           { label: getMenuLabel('open', 'Open'), accelerator: 'CmdOrCtrl+O', click: () => mainWindow.webContents.send('menu-command', 'file-open') },
           { label: getMenuLabel('openProjectFolder', 'Open Project Folder…'), click: () => mainWindow.webContents.send('menu-command', 'file-open-project-folder') },
@@ -210,14 +207,8 @@ function createWindow({ openAbout = false } = {}) {
         submenu: drawingViewMenu(getMenuLabel, viewMenuState, isLibraryMode,
           command => mainWindow.webContents.send('menu-command', command))
       },
-      ...(!isLibraryMode ? boardMenus.map(({ title, items }) => ({
-        label: title,
-        submenu: items.map((item) => item ? {
-          label: item.label,
-          enabled: !item.disabled,
-          click: () => mainWindow.webContents.send('menu-command', 'pcb-menu:' + item.id),
-        } : { type: 'separator' }),
-      })) : []),
+      ...(!isLibraryMode ? boardWorkspaceMenus(boardMenus,
+        (command) => mainWindow.webContents.send('menu-command', command)) : []),
       ...(isLibraryMode ? [] : [{
         label: getMenuLabel('tools', 'Tools'),
         submenu: [
@@ -311,6 +302,8 @@ function createWindow({ openAbout = false } = {}) {
   for (const arg of process.argv) {
     if (arg === '--new-library') {
       qp.set('action', 'new-library');
+    } else if (arg === '--new-pcb') {
+      qp.set('workspace', 'pcb');
     } else if (isProjectFile(arg)) {
       projectToOpen = path.resolve(arg);
     } else if (arg.toLowerCase().endsWith('.tclib')) {

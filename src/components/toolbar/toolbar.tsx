@@ -2,7 +2,7 @@ import { generateActiveBom } from '../../io/netlists/activeNetlist';
 import { chooseProjectFolder, closeProjectMode, saveProjectTabs } from '../../io/projectMode';
 import React, { Dispatch } from 'react';
 import { EditorToolbar } from './EditorToolbar';
-import { EditorFileMenu, EditorHistoryControls, EditorSaveButton } from './FileToolbarControls';
+import { EditorFileMenu, EditorHistoryControls, EditorNewMenu, EditorSaveButton } from './FileToolbarControls';
 import { ViewToolbarControls } from './ViewToolbarControls';
 import { useTranslation } from 'react-i18next';
 import {
@@ -37,7 +37,6 @@ import {
   DismissRegular,
   ArrowDownloadRegular,
   ChevronDownRegular,
-  DocumentAddRegular,
   DocumentRegular,
   ImageRegular,
   SettingsRegular,
@@ -68,7 +67,6 @@ import {
   downloadBom,
   fileSave,
   librarySave,
-  fileNew,
   fileOpen,
   fileSaveAs,
   fileSaveWithoutResults,
@@ -89,7 +87,7 @@ import {
   persistLanguagePreference,
   SUPPORTED_LANGUAGES,
 } from '../../i18n/languages';
-import { openCurrentAppUrl, openExternalUrl } from '../../util/navigation';
+import { openExternalUrl } from '../../util/navigation';
 
 
 // Images (ES module imports)
@@ -434,6 +432,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         {/* File Menu */}
         {process.env.TARGET_SYSTEM !== 'electron' && (
          <EditorFileMenu>
+              <EditorNewMenu submenu />
               { process.env.TARGET_SYSTEM === 'filesystem' && (
                   <MenuItem icon={<FolderOpenRegular />} onClick={() => props.dispatch(fileOpen())}>
                     {t('toolbar.open')}
@@ -485,31 +484,10 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
               <MenuItem icon={<ShareRegular />} onClick={() => props.dispatch(handleMenuCommand('tools-spice'))}>
                 {t('toolbar.generateSpiceNetlist')}
               </MenuItem>
-              <MenuDivider />
-              {/* New Custom Library */}
-               <MenuItem icon={<LibraryRegular />} onClick={() => {
-                  const qp = new URLSearchParams();
-                  qp.set('action', 'new-library');
-                openCurrentAppUrl(qp);
-               }}>
-               {t('toolbar.newCustomLibrary')}
-              </MenuItem>
          </EditorFileMenu>
         )}
 
-        { !props.editLibrary && process.env.TARGET_SYSTEM !== 'electron' && <ToolbarButton
-          aria-label={t('toolbar.newDesign')}
-          title={t('toolbar.newDesign')}
-          icon={<DocumentAddRegular />}
-          onClick={() => props.dispatch(fileNew())}
-        />} 
-        
-        { !props.editLibrary && process.env.TARGET_SYSTEM === 'electron' && <ToolbarButton
-          aria-label={t('toolbar.newDesign')}
-          title={t('toolbar.newDesign')}
-          icon={<DocumentAddRegular />}
-          onClick={() => props.dispatch(fileNew())}
-        />} 
+        {!props.editLibrary && <EditorNewMenu />}
 
 
 

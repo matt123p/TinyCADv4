@@ -1,5 +1,5 @@
 import { isBoardFile } from '../../../shared/drawingFiles.js';
-import { circuitOpened, showOpenedBoard } from '../boardWorkspaceEvents';
+import { canOpenCircuit, circuitOpened, showOpenedBoard } from '../boardWorkspaceEvents';
 import { drawingMimeType } from '../../../shared/drawingFiles.js';
 import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
@@ -77,6 +77,7 @@ export class ElectronUserManager implements UserManager {
             return;
           }
           const doc = await decodeDrawing(data.content);
+          if (!canOpenCircuit()) return;
           dispatch(actionSetDocument(doc, data.name, data.id, data.id));
           dispatch(ActionCreators.clearHistory());
           window.dispatchEvent(new Event(circuitOpened));

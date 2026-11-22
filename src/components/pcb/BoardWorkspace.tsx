@@ -4,14 +4,14 @@ import { Button, Checkbox, Dialog, DialogActions, DialogBody, DialogContent, Dia
   MenuTrigger, ToolbarButton, ToolbarDivider } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
 import { AnchoredContextMenu } from '../controls/AnchoredContextMenu';
-import { DocumentAddRegular, FolderOpenRegular, SaveRegular, SaveCopyRegular, PanelLeftExpandRegular, PanelBottomExpandRegular } from '@fluentui/react-icons';
+import { FolderOpenRegular, SaveRegular, SaveCopyRegular, PanelLeftExpandRegular, PanelBottomExpandRegular } from '@fluentui/react-icons';
 import { BoardNetlistPanel } from './BoardNetlistPanel';
 import { PersistentDataGrid } from '../controls/PersistentDataGrid';
 import { ListModeMenuButton } from '../panel/ListModeMenuButton';
 import { LibraryBrowserHeader, LibrarySourceTabs } from '../libraryPanel/LibrarySourceTabs';
 import { EditorDrawingStack, EditorSidePanel } from '../panel/EditorLayout';
 import { EditorToolbar } from '../toolbar/EditorToolbar';
-import { EditorFileMenu, EditorHistoryControls, EditorSaveButton } from '../toolbar/FileToolbarControls';
+import { EditorFileMenu, EditorHistoryControls, EditorNewMenu, EditorSaveButton } from '../toolbar/FileToolbarControls';
 import { ViewToolbarControls } from '../toolbar/ViewToolbarControls';
 import { ContextualMenuItemType } from '../../manipulators/updateInterfaces';
 import type { ContextMenuItem } from '../../manipulators/updateInterfaces';
@@ -80,13 +80,13 @@ import {
   boardHistoryCommand,
   boardMenuCommand,
   boardZoomCommand,
+  editFootprintLibrary,
   saveActiveBoard,
 } from '../../io/boardWorkspaceEvents';
 import type { BoardMenuItemState } from '../../io/boardWorkspaceEvents';
 import type { BoardWorkspaceProbe } from '../../io/projectPcbProbe';
 
 const BoardRuleInspectionDialog = React.lazy(() => import('./BoardRuleInspectionDialog'));
-const FootprintEditorDialog = React.lazy(() => import('../projects/FootprintEditorDialog'));
 const BoardInspectionDialog = React.lazy(
   () => import('./BoardInspectionDialog'),
 );
@@ -137,7 +137,6 @@ export default function BoardWorkspace({
   session,
   onClose,
   onOpen,
-  onNew,
   onProjectFolder,
   footprintsVisible,
   onToggleFootprints,
@@ -153,7 +152,6 @@ export default function BoardWorkspace({
 }: BoardWorkspaceDocument & {
   onClose(): void;
   onOpen(): void;
-  onNew(): void;
   onProjectFolder?(): void;
   footprintsVisible: boolean;
   onToggleFootprints(visible: boolean): void;
@@ -277,7 +275,6 @@ export default function BoardWorkspace({
   }>();
   const footprintTabId = React.useId();
   const [footprintTab, setFootprintTab] = useState<'unplaced' | 'library'>('unplaced');
-  const [footprintEditor, setFootprintEditor] = useState(false);
   const [libraryFootprintId, setLibraryFootprintId] = useState('');
   const libraryFootprint = board.footprintDefinitions?.find(({ id }) => id === libraryFootprintId);
   const [showRulers, setShowRulers] = useState(true);
@@ -1472,7 +1469,7 @@ export default function BoardWorkspace({
       <EditorToolbar className="pcb-toolbar" label="PCB commands">
         {process.env.TARGET_SYSTEM !== 'electron' && (
           <EditorFileMenu>
-            <MenuItem icon={<DocumentAddRegular />} onClick={onNew}>New PCB</MenuItem>
+            <EditorNewMenu submenu />
             {process.env.TARGET_SYSTEM === 'filesystem' && (
               <MenuItem icon={<FolderOpenRegular />} onClick={onOpen}>{t('toolbar.open')}</MenuItem>
             )}
@@ -1487,10 +1484,7 @@ export default function BoardWorkspace({
               onClick={() => { void save(true); }}>Save As…</MenuItem>}
           </EditorFileMenu>
         )}
-        {process.env.TARGET_SYSTEM === 'electron' && (
-          <Button appearance="subtle" icon={<DocumentAddRegular />} aria-label="New PCB"
-            title="New PCB" onClick={onNew} />
-        )}
+        {process.env.TARGET_SYSTEM === 'electron' && <EditorNewMenu />}
         {!nativeBoardMenus && boardCommands.map(({ title, items }) => (
           <Menu key={title}>
             <MenuTrigger disableButtonEnhancement>
@@ -1623,11 +1617,6 @@ export default function BoardWorkspace({
           </DialogBody>
         </DialogSurface>
       </Dialog>
-      {footprintEditor && (
-        <React.Suspense fallback={null}>
-          <FootprintEditorDialog onClose={() => setFootprintEditor(false)} />
-        </React.Suspense>
-      )}
       {fabricationOpen && (
         <BoardFabricationDialog
           board={board}
@@ -1893,7 +1882,7 @@ export default function BoardWorkspace({
             </div>
             <div role="tabpanel" id={footprintTabId + '-library'} aria-labelledby={footprintTabId + '-library-tab'}
               className="pcb-panel-scroll" hidden={footprintTab !== 'library'}>
-              <Button size="small" onClick={() => setFootprintEditor(true)}>Footprint editor…</Button>
+              <Button size="small" onClick={() => window.dispatchEvent(new Event(editFootprintLibrary))}>Footprint editor…</Button>
               {!!board.footprintDefinitions?.length && (
                 <label className="pcb-library-choice">
                   Board footprints
@@ -2640,7 +2629,9 @@ export default function BoardWorkspace({
                 </div>
               )}
               {bottomView === 'selection' && routeGroup.length > 0 && (
-                <p className="pcb-editor-message">{routeGroup.length} copper objects selected</p>
+                <p className="pcb-editor-message">
+                  {routeGroup.length} {routeGroup.length === 1 ? 'copper object' : 'copper objects'} selected
+                </p>
               )}
               {bottomView === 'components' && <div className="pcb-navigation-grid">
                 <PersistentDataGrid
@@ -2731,7 +2722,6 @@ export default function BoardWorkspace({
                       >
                         Apply group placement
                       </Button>
-                      <Button onClick={() => selectArea([], [], false)}>Clear group</Button>
                     </fieldset>
                   )}
                   {target && (

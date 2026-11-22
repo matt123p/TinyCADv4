@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Select } from '@fluentui/react-components';
 import type { BoardDocument } from '../../pcb/board';
 import type { boardCopperGeometry } from '../../pcb/boardCopperGeometry';
 import { boardRuleResolver } from '../../pcb/boardRules';
@@ -59,7 +60,7 @@ export default function BoardOpeningRuleInspection({ board, geometry, copper, co
     <div className="pcb-profile-fields">
       <label>
         Opening
-        <select aria-label="Opening" value={index} onChange={(event) => {
+        <Select aria-label="Opening" value={index} onChange={(event) => {
           const next = Number(event.target.value);
           setIndex(next);
           if (comparison === 'opening:' + next) setComparison('');
@@ -67,11 +68,11 @@ export default function BoardOpeningRuleInspection({ board, geometry, copper, co
           {geometry.drills.map((item, i) => <option key={item.id} value={i}>
             {openingLabel(item, vias.has(item.id), i)}
           </option>)}
-        </select>
+        </Select>
       </label>
       <label>
         Compare with
-        <select aria-label="Compare openings" value={comparison}
+        <Select aria-label="Compare openings" value={comparison}
           onChange={(event) => setComparison(event.target.value)}>
           <option value="">No comparison</option>
           <optgroup label="Openings">
@@ -82,7 +83,7 @@ export default function BoardOpeningRuleInspection({ board, geometry, copper, co
           {copper.length > 0 && <optgroup label="Copper">
             {copperLabels.map((label, i) => <option key={copper[i].id} value={'copper:' + i}>{label}</option>)}
           </optgroup>}
-        </select>
+        </Select>
       </label>
       {profile ? (
         <p>Fabrication profile {profile.title} <code>{board.fabrication.profileId}</code>, revision {profile.revision}.</p>

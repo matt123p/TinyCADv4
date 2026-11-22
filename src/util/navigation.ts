@@ -37,6 +37,10 @@ function openElectronAppWindow(searchParams?: URLSearchParams): boolean {
     window.electronAPI.openNewWindow('new');
     return true;
   }
+  if (searchParams?.get('workspace') === 'pcb') {
+    window.electronAPI.openNewWindow('--new-pcb');
+    return true;
+  }
 
   const libraryPath = searchParams?.get('library');
   if (libraryPath) {

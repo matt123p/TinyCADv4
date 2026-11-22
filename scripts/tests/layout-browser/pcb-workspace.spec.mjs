@@ -118,7 +118,22 @@ test('releases the idle schematic worker in PCB Design and rebuilds on return', 
   await expect.poll(async () => (await schematicWorkers()).filter(({ closed }) => !closed).length).toBe(1);
   await expect.poll(() => labels()).toContain('ACTIVE_BEFORE_PCB');
   const [first] = await schematicWorkers();
-  await page.getByRole('button', { name: 'PCB Design', exact: true }).click();
+  await expect(page.getByRole('group', { name: 'Design workspaces' })).toHaveCount(0);
+  const openNewMenu = async () => {
+    await page.getByRole('button', { name: 'File', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'New', exact: true }).click();
+    return page.getByRole('menu').filter({ has: page.getByRole('menuitem', { name: 'New PCB', exact: true }) });
+  };
+  const newMenu = await openNewMenu();
+  await expect(newMenu.getByRole('menuitem')).toHaveText([
+    'New Design', 'New Custom Symbol Library', 'New PCB', 'New PCB Footprint Library',
+  ]);
+  await expect(newMenu.locator('.fui-MenuDivider')).toHaveCount(1);
+  await newMenu.getByRole('menuitem', { name: 'New PCB Footprint Library' }).click();
+  const footprintEditor = page.getByRole('dialog', { name: 'Footprint editor' });
+  await expect(footprintEditor).toBeVisible();
+  await footprintEditor.getByRole('button', { name: 'Close', exact: true }).click();
+  await (await openNewMenu()).getByRole('menuitem', { name: 'New PCB', exact: true }).click();
   const pcb = page.getByRole('region', { name: 'PCB layout' });
   await expect(pcb).toBeVisible();
   await expect.poll(() => first.closed).toBe(true);
@@ -128,7 +143,16 @@ test('releases the idle schematic worker in PCB Design and rebuilds on return', 
   await expect.poll(() => page.workers().length).toBe(0);
   await expect(pcb).toBeVisible();
 
-  await page.getByRole('button', { name: 'Circuit Design', exact: true }).click();
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toBe('Discard unsaved edits to the current PCB?');
+    await dialog.dismiss();
+  });
+  await (await openNewMenu()).getByRole('menuitem', { name: 'New Design', exact: true }).click();
+  await expect(pcb).toBeVisible();
+
+  await pcb.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Discard unsaved PCB edits?' })
+    .getByRole('button', { name: 'Discard edits' }).click();
   await expect(pcb).toBeHidden();
   await expect.poll(async () => (await schematicWorkers()).filter(({ closed }) => !closed).length).toBe(1);
   await expect.poll(() => labels()).toEqual(['COMPILED_WHILE_IN_PCB']);
@@ -185,10 +209,8 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   await expect(board.getByRole('img', { name: 'Board layout' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(
-    (await page.evaluate(() => window.openTypes)).flatMap(({ accept }) =>
-      Object.values(accept).flat(),
-    ),
-  ).toContain('.dpn');
+    (await page.evaluate(() => window.openTypes)).map(({ accept }) => Object.values(accept).flat()),
+  ).toContainEqual(['.dsn', '.dzn', '.dpn']);
 
   const canvas = board.getByRole('img', { name: 'Board layout' });
   const rulers = board.locator('.svg-viewport-with-rulers canvas');
@@ -313,8 +335,8 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   await expect(canvas).toHaveAttribute('viewBox', viewportBeforePan);
   await board.getByRole('button', { name: 'Fit board', exact: true }).click();
   const toolbar = await board.getByRole('toolbar', { name: 'PCB commands' }).boundingBox();
-  const workspaces = await page.getByRole('group', { name: 'Design workspaces' }).boundingBox();
-  expect(toolbar.y).toBeLessThan(workspaces.y);
+  await expect(page.getByRole('group', { name: 'Design workspaces' })).toHaveCount(0);
+  expect(toolbar.y).toBeLessThan((await canvas.boundingBox()).y);
   await expect(page).toHaveTitle('TinyCAD - Copied.dpn');
   await expect(page.locator('.top-bar-left')).toContainText('Copied.dpn');
 
@@ -322,6 +344,10 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   await openGuide.focus();
   await page.keyboard.press('Enter');
   const guide = board.getByRole('region', { name: 'First board guide' });
+  const ensureGuide = async () => {
+    if (!(await guide.isVisible())) await openGuide.click();
+    await expect(guide).toBeVisible();
+  };
   await expect(guide.getByRole('status')).toHaveText('Step 1 of 6 · Review parts');
   await expect(guide).toContainText('Create PCB from Schematic…');
   await guide.getByRole('button', { name: 'Next step' }).click();
@@ -344,6 +370,7 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   await expect(drill).toBeHidden();
   await expect(board.locator('[data-hole]')).toHaveCount(1);
   await board.getByLabel('Copper layers').selectOption('1');
+  await ensureGuide();
   await guide.getByLabel('Guide step').selectOption({ label: 'Route connections' });
   await guide.getByRole('button', { name: 'Start routing' }).click();
   await selectPcbNet(board, signal);
@@ -370,11 +397,6 @@ test('opens and edits a standalone PCB in the shared shell', async ({
     board.getByRole('button', { name: 'Route track' }),
   ).toBeVisible();
 
-  await page
-    .getByRole('button', { name: 'Circuit Design', exact: true })
-    .click();
-  await expect(board).toBeHidden();
-  await page.getByRole('button', { name: 'PCB Design', exact: true }).click();
   await clickPcbCommand(board, 'View board tools');
   await expect(board.getByLabel('Copper layers')).toHaveValue('1');
   await board.getByRole('button', { name: 'Undo', exact: true }).click();
@@ -409,7 +431,7 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   await expect(board.getByText('Zone fill failed.')).toBeVisible();
   await board.getByRole('button', { name: 'Retry zone fill' }).click();
   await expect(board.locator('[data-zone-fill]')).toHaveCount(1);
-  await openGuide.click();
+  await ensureGuide();
   await guide.getByLabel('Guide step').selectOption({ label: 'Set up the board' });
   await guide.getByRole('button', { name: 'Choose fabrication settings…' }).click();
   const fabrication = page.getByRole('dialog', { name: 'Fabrication settings' });
@@ -520,6 +542,7 @@ test('draws and picks copper on both sides of the large PCB coordinate range', a
   await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
   const layout = page.getByRole('region', { name: 'PCB layout' });
   const drawing = layout.getByRole('img', { name: 'Board layout' });
+  await clickPcbCommand(layout, 'View board tools');
   await expect(layout.getByText('Zones filled.', { exact: true })).toBeVisible();
 
   for (const index of [0, -1]) {
@@ -627,7 +650,7 @@ test('uses Beginner routing defaults without weakening board rules or checks', a
   const inspection = page.getByRole('dialog', { name: 'PCB design checks' });
   const readFinding = async () => {
     await clickPcbCommand(workspace, 'Run design checks…');
-    const issue = inspection.getByRole('listitem').filter({ hasText: 'Track is narrower than the board minimum.' });
+    const issue = inspection.getByRole('row').filter({ hasText: 'Track is narrower than the board minimum.' });
     await expect(issue).toContainText('Measured 0.3 mm. Required 0.62 mm.');
     const text = await issue.innerText();
     await inspection.getByRole('button', { name: 'Close', exact: true }).click();
@@ -665,8 +688,10 @@ test('uses Beginner routing defaults without weakening board rules or checks', a
   const saved = await api.decodeBoard(Uint8Array.from(await page.evaluate(() => window.teachingSaved)));
   expect(saved.rules).toEqual(source.rules);
   expect(saved.tracks[1].widthNm).toBe(source.rules.minWidthNm);
-  await page.getByRole('button', { name: 'Circuit Design', exact: true }).click();
-  await page.getByRole('button', { name: 'PCB Design', exact: true }).click();
+  await workspace.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(workspace).toBeHidden();
+  await page.getByRole('button', { name: 'File', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
   await expect(mode).toHaveValue('beginner');
   await mode.selectOption('engineering');
   await expect(workspace.getByRole('button', { name: 'Measure distance' })).toBeVisible();
@@ -791,6 +816,23 @@ test('uses the Circuit Design panel switcher, PCB scrollbars and drawing selecti
   await expect(canvas.locator('[data-selection-outline="selected"]')).toHaveCount(0);
   await expect(netlistGrid).toBeVisible();
   await expect(components).toHaveCount(0);
+
+  const [corner, opposite] = await drawing.evaluate((element) => {
+    const matrix = element.getScreenCTM();
+    return [[20_000_000, -31_000_000], [32_000_000, -14_000_000]].map(([x, y]) => {
+      const point = new DOMPoint(x, y).matrixTransform(matrix);
+      return [point.x, point.y];
+    });
+  });
+  await page.mouse.move(...corner);
+  await page.mouse.down();
+  await page.mouse.move(...opposite, { steps: 5 });
+  await page.mouse.up();
+  await expect(canvas.locator('[data-placement-group="true"]')).toHaveCount(1);
+  await expect(canvas.locator('[data-selection-outline="selected"]')).toHaveCount(2);
+  await expect(properties.getByText('1 copper object selected')).toBeVisible();
+  await canvas.click({ position: { x: 8, y: 8 } });
+  await expect(netlistGrid).toBeVisible();
 
   await page.setViewportSize({ width: 900, height: 700 });
   const netlistBounds = await netlistGrid.boundingBox();
@@ -1250,7 +1292,7 @@ test('previews transformed placement airwires without editing the board', async 
   });
   expect(saved.tracks ?? []).toEqual([]);
   const placedFootprint = canvas.locator('[data-component="' + source.components[1].id + '"]');
-  await placedFootprint.locator('path').first().click({ button: 'right' });
+  await placedFootprint.locator('[data-board-pad]').first().click({ button: 'right' });
   const moveCommand = page.getByRole('menuitem', { name: 'Move on board', exact: true });
   await expect(moveCommand).toBeVisible();
   await moveCommand.click();
@@ -1875,11 +1917,14 @@ decimalCommaBrowser('stops a manual route at foreign copper and saves horizontal
   });
   await expect(workspace.getByRole('alert')).toHaveCount(0);
   await routeToggle.press('Enter');
+  await selectPcbNet(workspace, signal);
   await expect(clearance).toHaveText('');
   await workspace.getByText('Enter route coordinates', { exact: true }).press('Enter');
   const waypoints = workspace.getByRole('status', { name: 'Route waypoints' });
   const x = workspace.getByLabel('Waypoint X (mm)', { exact: true });
   const y = workspace.getByLabel('Waypoint Y (mm)', { exact: true });
+  // Keep the already translated UI in English and exercise the browser locale for input.
+  await page.evaluate(() => localStorage.removeItem('tinycad.language'));
   async function enterPoint(a, b) {
     await x.fill(String(a));
     await y.fill(String(b));
@@ -2084,6 +2129,7 @@ test('authors placement areas and locates their design check findings', async ({
   expect(saved.placementAreas[0]).toMatchObject({ name: 'Antenna clearance', kind: 'keep-out', side: 'top' });
   expect(saved.footprints).toEqual(source.footprints);
   expect(saved.outline).toEqual(source.outline);
+  await clickPcbCommand(workspace, 'View board tools');
   await workspace.getByRole('button', { name: 'Remove Antenna clearance' }).click();
   await expect(canvas.locator('[data-placement-area]')).toHaveCount(0);
   await workspace.getByRole('button', { name: 'Undo', exact: true }).click();
@@ -2178,6 +2224,7 @@ test('saves independent zone no-connect settings and exports the refilled copper
   const open = async () => {
     await page.getByRole('button', { name: 'File', exact: true }).click();
     await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
+    await clickPcbCommand(workspace, 'View board tools');
     await expect(workspace.getByText('Zones filled.', { exact: true })).toBeVisible();
   };
   await page.goto(app.baseURL);
@@ -2604,14 +2651,16 @@ test('snaps measurements and saves PCB dimensions independently of the outline',
   const profile = canvas.locator('[data-svg-drawing] > path').first();
   const outlinePath = await profile.getAttribute('d');
 
-  await editor.getByText('Dimensions and datum', { exact: true }).click();
   await clickPcbCommand(editor, 'Set measurement datum…');
   const datum = page.getByRole('dialog', { name: 'Measurement datum' });
   await datum.getByLabel('Datum X').fill('10 mil');
   await datum.getByLabel('Datum Y').fill('10 mil');
   await datum.getByRole('button', { name: 'Apply', exact: true }).click();
   await expect(datum).toBeHidden();
-  await expect(canvas.locator('[data-measurement-datum]')).toHaveAttribute('transform', 'translate(254000,-254000)');
+  await expect.poll(() => canvas.locator('[data-measurement-datum]').evaluate((marker) => {
+    const { e, f } = marker.transform.baseVal.getItem(0).matrix;
+    return [e, f];
+  })).toEqual([254000, -254000]);
 
   await editor.getByRole('button', { name: 'Measure distance', exact: true }).click();
   for (const point of [a, b]) {
@@ -2636,6 +2685,7 @@ test('snaps measurements and saves PCB dimensions independently of the outline',
   const annotation = canvas.locator('[data-dimension]');
   await expect(annotation).toContainText('Mounting span · 400 mil');
 
+  await editor.getByText('Dimensions and datum', { exact: true }).click();
   await editor.getByRole('button', { name: 'Edit Mounting span · 400 mil…' }).click();
   await dialog.getByLabel('Dimension label').fill('Board width');
   await dialog.getByRole('button', { name: 'Apply', exact: true }).click();
@@ -3141,7 +3191,7 @@ test('previews route cleanup and saves locked copper through an undoable cleanup
   await expect(layout.getByRole('button', { name: 'Delete selected copper…', exact: true })).toBeDisabled();
   await expect(canvas.locator(`[data-track="${left.id}"]`)).toHaveAttribute('data-route-locked', 'true');
   await clickBoard(20, 5);
-  await layout.getByRole('button', { name: 'Lock via', exact: true }).click();
+  await layout.getByRole('checkbox', { name: 'Lock via', exact: true }).check();
   await expect(canvas.locator(`[data-via="${via.id}"]`)).toHaveAttribute('data-route-locked', 'true');
 
   await layout.getByRole('button', { name: 'Clean up routed net…', exact: true }).click();

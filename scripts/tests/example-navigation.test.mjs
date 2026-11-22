@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
 import {
+  drawingNewMenu,
   drawingOpenMenu,
   drawingViewMenu,
 } from '../../electron/drawingMenus.js';
@@ -17,6 +18,17 @@ const off = {
   exampleExplanationVisible: false,
   simulationPanelVisible: false,
 };
+
+test('Electron New groups circuit and PCB creation commands', () => {
+  const sent = [];
+  const items = drawingNewMenu(label, (command) => sent.push(command));
+  assert.deepEqual(items.map((item) => item.label ?? item.type), [
+    'New Design', 'New Custom Symbol Library', 'separator', 'New PCB', 'New PCB Footprint Library',
+  ]);
+  assert.equal(items[0].accelerator, 'CmdOrCtrl+N');
+  items.forEach((item) => item.click?.());
+  assert.deepEqual(sent, ['file-new', 'tools-new-lib', 'file-new-pcb', 'file-new-footprint-library']);
+});
 
 test('Electron places Open Recent, separator, Open Example, separator before Save', () => {
   const sent = [],

@@ -1,5 +1,5 @@
 import { digest } from '../../util/sha256';
-import { circuitOpened, showOpenedBoard } from '../boardWorkspaceEvents';
+import { canOpenCircuit, circuitOpened, showOpenedBoard } from '../boardWorkspaceEvents';
 import { boardFileName, isBoardFile, drawingFileName, isCompressedDrawing, isDrawingFile, drawingMimeType } from '../../../shared/drawingFiles.js';
 import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
@@ -112,6 +112,7 @@ export class FileSystemUserManager implements UserManager {
                 });
             } else if (isDrawingFile(file.name)) {
               return file.arrayBuffer().then(decodeDrawing).then((doc) => {
+                if (!canOpenCircuit()) return;
                 dispatch(actionSetDocument(doc, file.name, files[0], null));
                 dispatch(ActionCreators.clearHistory());
                 window.dispatchEvent(new Event(circuitOpened));

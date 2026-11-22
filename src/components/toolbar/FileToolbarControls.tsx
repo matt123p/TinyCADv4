@@ -1,7 +1,33 @@
 import React from 'react';
-import { Menu, MenuList, MenuPopover, MenuTrigger, ToolbarButton } from '@fluentui/react-components';
-import { ArrowRedoRegular, ArrowUndoRegular, DocumentRegular, SaveCopyRegular, SaveRegular } from '@fluentui/react-icons';
+import { Menu, MenuDivider, MenuItem, MenuList, MenuPopover, MenuTrigger, ToolbarButton } from '@fluentui/react-components';
+import { ArrowRedoRegular, ArrowUndoRegular, DocumentAddRegular, DocumentRegular, LibraryRegular, SaveCopyRegular, SaveRegular } from '@fluentui/react-icons';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
+import { handleMenuCommand } from '../../io/files';
+
+export function EditorNewMenu({ submenu }: { submenu?: boolean }) {
+  const { t } = useTranslation();
+  const dispatch = useDispatch();
+  const run = (command: string) => () => dispatch(handleMenuCommand(command) as any);
+  const label = t('toolbar.new');
+  return (
+    <Menu>
+      <MenuTrigger disableButtonEnhancement>
+        {submenu ? <MenuItem icon={<DocumentAddRegular />}>{label}</MenuItem> :
+          <ToolbarButton icon={<DocumentAddRegular />} aria-label={label} title={label} />}
+      </MenuTrigger>
+      <MenuPopover>
+        <MenuList>
+          <MenuItem icon={<DocumentAddRegular />} onClick={run('file-new')}>{t('toolbar.newDesign')}</MenuItem>
+          <MenuItem icon={<LibraryRegular />} onClick={run('tools-new-lib')}>{t('toolbar.newCustomSymbolLibrary')}</MenuItem>
+          <MenuDivider />
+          <MenuItem icon={<DocumentAddRegular />} onClick={run('file-new-pcb')}>{t('toolbar.newPcb')}</MenuItem>
+          <MenuItem icon={<LibraryRegular />} onClick={run('file-new-footprint-library')}>{t('toolbar.newPcbFootprintLibrary')}</MenuItem>
+        </MenuList>
+      </MenuPopover>
+    </Menu>
+  );
+}
 
 export function EditorFileMenu({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();

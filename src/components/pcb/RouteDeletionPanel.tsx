@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@fluentui/react-components';
+import { Button, Input, Select } from '@fluentui/react-components';
 import type { CopperLayer } from '../../pcb/board';
 import type {
   RouteDeletionPlan,
@@ -60,7 +60,7 @@ export default function RouteDeletionPanel({
         <>
           <label>
             Copper selection layer
-            <select
+            <Select
               aria-label="Copper selection layer"
               value={draft.layer}
               onChange={(event) =>
@@ -76,7 +76,7 @@ export default function RouteDeletionPanel({
                   {id === 'top' ? 'Top' : 'Bottom'}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           {(['start', 'end'] as const).map((corner) => (
             <fieldset key={corner}>
@@ -87,8 +87,8 @@ export default function RouteDeletionPanel({
                 <label key={axis}>
                   {corner === 'start' ? 'First' : 'Opposite'}{' '}
                   {axis.toUpperCase()} (mm)
-                  <input
-                    size={7}
+                  <Input
+                    size="small"
                     value={draft[corner][axis]}
                     onChange={(event) =>
                       onRegion({

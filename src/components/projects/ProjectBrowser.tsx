@@ -100,6 +100,7 @@ import type { reviewProjectCircuit } from '../../io/netlists/activeNetlist';
 import { DocActionTypes } from '../../state/actions/docActions';
 import { DocItemTypes } from '../../model/dsnItem';
 import { activeSheet } from '../../state/stores/docStoreReducer';
+import { editFootprintLibrary } from '../../io/boardWorkspaceEvents';
 
 const ProjectCircuitDialog = React.lazy(() => import('./ProjectCircuitDialog'));
 const ProjectReferenceDialog = React.lazy(
@@ -107,9 +108,6 @@ const ProjectReferenceDialog = React.lazy(
 );
 const ProjectPcbProbeDialog = React.lazy(
   () => import('./ProjectPcbProbeDialog'),
-);
-const FootprintEditorDialog = React.lazy(
-  () => import('./FootprintEditorDialog'),
 );
 const ProjectDeviceDialog = React.lazy(() => import('./ProjectDeviceDialog'));
 
@@ -220,7 +218,6 @@ export default function ProjectBrowser({
   const [dropTarget, setDropTarget] = useState<string>();
   const consumedOpenedRoot = useRef<ProjectLocation>();
   const [comparison, setComparison] = useState<ProjectRevisionComparison>();
-  const [footprintEditor, setFootprintEditor] = useState(false);
   const [pcbProbe, setPcbProbe] = useState<BoardProbeMatch[]>();
   const [placementGroups, setPlacementGroups] =
     useState<BoardPlacementGroup[]>();
@@ -1294,7 +1291,7 @@ export default function ProjectBrowser({
               </MenuItem>
               <MenuItem
                 disabled={blocked}
-                onClick={() => setFootprintEditor(true)}
+                onClick={() => window.dispatchEvent(new Event(editFootprintLibrary))}
               >
                 {t('projects.footprintEditor')}
               </MenuItem>
@@ -1877,11 +1874,6 @@ export default function ProjectBrowser({
           comparison={comparison}
           onClose={() => setComparison(undefined)}
         />
-      )}
-      {footprintEditor && (
-        <React.Suspense fallback={<Spinner />}>
-          <FootprintEditorDialog onClose={() => setFootprintEditor(false)} />
-        </React.Suspense>
       )}
       {pcbProbe && (
         <React.Suspense fallback={<Spinner />}>

@@ -41,6 +41,7 @@ The left footprint panel has **Unplaced** and **Library** tabs. Project mode kee
 - Keep the toolbar at the top of the window. Extend the existing toolbar system with the current workspace's tools. Use its icon buttons, dividers, tooltips, translations, split buttons, disabled states and compact grouping. Reuse the actual Open, Save, Save As, Undo, Redo, Text, Zoom and Ruler controls wherever the action exists.
 - Register shared commands once. The active document and selection determine the handler and enabled state. The browser toolbar dropdowns, Electron native application menu, context menu and shortcuts invoke those commands. Workspace-specific tools supply their own actions to the same system. In side-by-side mode, editor focus selects the command target.
 - Show the active document name and its unsaved state in the common window header and tabs.
+- Open the editor that matches the document being created or opened. Group schematic and symbol-library creation separately from PCB and footprint-library creation in **File → New**. Show `.dsn`, `.dzn` and `.dpn` together in the design file picker. Use project document tabs for open files and schematic sheets or **View → Show Charts** for simulation.
 - Use the existing Fluent dialogue components and focus behavior for properties, confirmations or workflows that need a dialogue. Keep frequently edited selection properties in the bottom pane.
 
 ### Shared panel layout
@@ -94,6 +95,13 @@ unwritten through placement, undo and redo. In Electron it also verifies native
 menu Zoom In, Save and Open, counts picker calls and reopens a board explicitly
 saved from an untitled document. The LED release and asymmetric connector preview
 were read independently with [the Gerbonara checker](../scripts/pcb/check-cam-preview.py).
+
+The portable board cases also exercise Board, Copper and Fabrication commands
+through browser dropdowns, the desktop renderer bridge and the native Electron
+application menu. They check the Fluent surface and footer bounds as outline
+parameters, fabrication details and rule-inspection tabs change. The native
+case also moves a placed footprint directly on the board, then uses Undo to
+verify that it returns to the original position without a file write.
 
 The shared wheel policy was checked in the classroom schematic and standalone
 PCB. The tests compare Ctrl-wheel zoom and its pointer anchor in both editors,

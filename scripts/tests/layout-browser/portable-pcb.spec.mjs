@@ -11,6 +11,7 @@ import { layoutRuntime } from '../../lib/layout-runtime.mjs';
 import { librarySqlite } from '../../lib/library-from-sql.mjs';
 import { installElectronBridge } from '../chat-browser/electron-bridge.mjs';
 import { serveLayoutApp } from './serve-app.mjs';
+import { boardWorkspaceMenus } from '../../../electron/drawingMenus.js';
 
 const starterLibrary = new URL('../../../bundled-footprints/starter-v1.tplib', import.meta.url);
 
@@ -104,10 +105,29 @@ async function desktopFiles(page, source, destination) {
   });
   await page.exposeFunction('savePortableBoard', ({ content, ...request }) =>
     receive('file-saved', (window) => saveFile(window, { ...request, content: Uint8Array.from(content) })));
+  await page.exposeFunction('portableBoardMenuCommand', (menus, menuName, label) => {
+    let command;
+    const menu = boardWorkspaceMenus(menus, (value) => { command = value; })
+      .find((item) => item.label === menuName);
+    const item = menu?.submenu.find((entry) => entry.label === label);
+    if (!item?.enabled) throw new Error('PCB menu command unavailable: ' + label);
+    item.click();
+    return command;
+  });
   await page.addInitScript(() => {
     const api = window.electronAPI;
     let loaded;
     let saved;
+    let menuCommand;
+    window.portableBoardMenus = [];
+    api.setBoardMenus = (menus) => { window.portableBoardMenus = menus; };
+    api.onMenuCommand = (callback) => {
+      menuCommand = callback;
+      return () => { menuCommand = undefined; };
+    };
+    window.invokePortableBoardMenu = async (menuName, label) => {
+      menuCommand(await window.portableBoardMenuCommand(window.portableBoardMenus, menuName, label));
+    };
     api.fileLoaded = (callback) => { loaded = callback; return () => { loaded = undefined; }; };
     api.fileSaved = (callback) => { saved = callback; return () => { saved = undefined; }; };
     api.loadFile = async ({ id }) => {
@@ -163,7 +183,8 @@ for (const target of ['filesystem', 'electron']) {
         delete env.ELECTRON_RUN_AS_NODE;
         electron = await _electron.launch({
           executablePath,
-          args: [fileURLToPath(new URL('../../../', import.meta.url)), source,
+          timeout: 30_000,
+          args: [path.resolve(fileURLToPath(new URL('../../../', import.meta.url))), source,
             '--user-data-dir=' + path.join(root, 'profile'),
             '--host-resolver-rules=MAP * ~NOTFOUND',
             '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
@@ -217,13 +238,18 @@ for (const target of ['filesystem', 'electron']) {
         await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
       }
 
-      async function nativeCommand(menuName, label) {
-        return electron.evaluate(({ Menu, BrowserWindow }, { menuName, label }) => {
-          const menu = Menu.getApplicationMenu().items.find((item) => item.label.replaceAll('&', '') === menuName);
-          const command = menu?.submenu.items.find((item) => item.label.replaceAll('&', '').startsWith(label));
-          if (!command?.enabled) throw new Error('Native menu command unavailable: ' + label);
+      async function nativeCommand(...labels) {
+        return electron.evaluate(({ Menu, BrowserWindow }, labels) => {
+          const command = labels.reduce((menu, label, index) => {
+            const items = index === 0 ? menu.items : menu?.submenu?.items;
+            return items?.find((item) => {
+              const name = item.label.replaceAll('&', '');
+              return index === labels.length - 1 ? name.startsWith(label) : name === label;
+            });
+          }, Menu.getApplicationMenu());
+          if (!command?.enabled) throw new Error('Native menu command unavailable: ' + labels.join(' > '));
           command.click(command, BrowserWindow.getAllWindows()[0], {});
-        }, { menuName, label });
+        }, labels);
       }
 
       async function download(button, filename) {
@@ -239,9 +265,17 @@ for (const target of ['filesystem', 'electron']) {
       }
 
       const editor = page.getByRole('region', { name: 'PCB layout' });
-      const runPcbCommand = (label) => electron
-        ? nativeCommand(pcbMenuName(label), label)
-        : clickPcbCommand(editor, label);
+      async function runPcbCommand(label) {
+        if (electron) return nativeCommand(pcbMenuName(label), label);
+        if (target === 'filesystem') return clickPcbCommand(editor, label);
+        await expect.poll(() => page.evaluate(() => window.portableBoardMenus.map(({ title }) => title)))
+          .toEqual(['Board', 'Copper', 'Fabrication']);
+        return page.evaluate(([menu, label]) => window.invokePortableBoardMenu(menu, label), [pcbMenuName(label), label]);
+      }
+      const dialogGeometry = (dialog) => dialog.evaluate((surface) => {
+        const footer = surface.querySelector('.fui-DialogActions');
+        return [surface.offsetWidth, surface.offsetHeight, footer.offsetTop, footer.offsetHeight];
+      });
       await expect(editor.getByRole('img', { name: 'Board layout' })).toBeVisible();
       await expect(page.getByRole('group', { name: 'Project activity bar' })).toHaveCount(0);
       await expect(editor.locator('[data-track]')).toHaveCount(3);
@@ -257,6 +291,15 @@ for (const target of ['filesystem', 'electron']) {
         await editor.getByRole('button', { name: 'Fit board' }).click();
         await expect(canvas).toHaveAttribute('data-view-box', fit);
       }
+      await runPcbCommand('Board outline…');
+      const outline = page.getByRole('dialog', { name: 'Set board outline' });
+      await expect(outline).toHaveClass(/\bfui-DialogSurface\b/);
+      const outlineGeometry = await dialogGeometry(outline);
+      await outline.getByLabel('Shape', { exact: true }).selectOption('custom');
+      await expect(outline.getByRole('button', { name: 'Apply', exact: true })).toBeInViewport();
+      expect(await dialogGeometry(outline)).toEqual(outlineGeometry);
+      await outline.getByRole('button', { name: 'Cancel', exact: true }).click();
+
       await editor.getByRole('button', { name: 'Save As…' }).click();
       await expect(page).toHaveTitle('TinyCAD - Saved.dpn');
       expect(await readFile(destination)).toEqual(bytes);
@@ -315,6 +358,18 @@ for (const target of ['filesystem', 'electron']) {
 
       await runPcbCommand('Fabrication settings…');
       const fabrication = page.getByRole('dialog', { name: 'Fabrication settings' });
+      await expect(fabrication).toHaveClass(/\bfui-DialogSurface\b/);
+      const fabricationGeometry = await dialogGeometry(fabrication);
+      await fabrication.getByText('Board stackup', { exact: true }).click();
+      await fabrication.getByLabel('Substrate material').scrollIntoViewIfNeeded();
+      const body = fabrication.locator('.fui-DialogContent');
+      const scrollTop = await body.evaluate((content) => {
+        content.scrollTop = content.scrollHeight;
+        return content.scrollTop;
+      });
+      expect(scrollTop).toBeGreaterThan(0);
+      expect(await dialogGeometry(fabrication)).toEqual(fabricationGeometry);
+      await expect(fabrication.getByRole('button', { name: 'Apply', exact: true })).toBeInViewport();
       await fabrication.getByLabel('Board thickness (mm)').fill('1.2');
       await fabrication.getByRole('button', { name: 'Apply', exact: true }).click();
       await expect(fabrication).toBeHidden();
@@ -333,12 +388,15 @@ for (const target of ['filesystem', 'electron']) {
       const beforeInspection = await readFile(destination);
       await runPcbCommand('Inspect board rules…');
       const inspector = page.getByRole('dialog', { name: 'Inspect PCB rules' });
+      await expect(inspector).toHaveClass(/\bfui-DialogSurface\b/);
+      const inspectorGeometry = await dialogGeometry(inspector);
       await inspector.getByRole('tab', { name: 'Openings', exact: true }).click();
       const opening = inspector.getByLabel('Opening', { exact: true });
       const mountingHole = opening.getByRole('option', { name: /^Non-plated hole / });
       await opening.selectOption(await mountingHole.getAttribute('value'));
       await expect(inspector).toContainText('required 0.6 mm (minNonPlatedDrillNm)');
       await expect(inspector).toContainText('Opening is contained.');
+      expect(await dialogGeometry(inspector)).toEqual(inspectorGeometry);
       await inspector.getByRole('button', { name: 'Close', exact: true }).click();
       expect(await readFile(destination)).toEqual(beforeInspection);
       await editor.getByRole('button', { name: 'Undo', exact: true }).click();
@@ -394,6 +452,23 @@ for (const target of ['filesystem', 'electron']) {
       await expect(canvas.locator('[data-placement-preview]')).toHaveCount(0);
       expect(await placed.boundingBox()).toEqual(placedBounds);
       expect(await readFile(destination)).toEqual(unchangedOnDisk);
+      if (target === 'electron') {
+        const pad = placed.locator('xpath=ancestor::*[@data-component]').locator('[data-board-pad]').first();
+        const bounds = await pad.boundingBox();
+        const scale = await canvas.locator('[data-svg-drawing]').evaluate((drawing) => drawing.getScreenCTM().a);
+        const x = bounds.x + bounds.width / 2;
+        const y = bounds.y + bounds.height / 2;
+        await page.mouse.move(x, y);
+        await expect(canvas.locator('[data-selection-outline="hover"]')).toBeVisible();
+        await page.mouse.down();
+        await page.mouse.move(x - 2_000_000 * scale, y, { steps: 5 });
+        await expect(canvas.locator('[data-footprint-move-preview]')).toHaveCount(1);
+        await page.mouse.up();
+        await expect.poll(async () => (await placed.boundingBox()).x).toBeLessThan(placedBounds.x - scale * 1_000_000);
+        await editor.getByRole('button', { name: 'Undo', exact: true }).click();
+        await expect.poll(() => placed.boundingBox()).toEqual(placedBounds);
+        expect(await readFile(destination)).toEqual(unchangedOnDisk);
+      }
       await editor.getByRole('button', { name: 'Undo', exact: true }).click();
       await expect(canvas.locator('[data-component]')).toHaveCount(2);
       expect(await readFile(destination)).toEqual(unchangedOnDisk);
@@ -408,8 +483,9 @@ for (const target of ['filesystem', 'electron']) {
       } else {
         await editor.getByRole('button', { name: 'Save', exact: true }).click();
       }
-      await expect.poll(async () => (await api.decodeBoard(await readFile(destination))).footprints.length).toBe(3);
+      await expect(page).toHaveTitle('TinyCAD - Saved.dpn');
       const saved = await api.decodeBoard(await readFile(destination));
+      expect(saved.footprints).toHaveLength(3);
       const component = saved.components.find(({ reference }) => reference === 'J99');
       expect(saved.footprints.find(({ componentId }) => componentId === component.id).positionNm)
         .toEqual({ x: 34_000_000, y: 6_000_000 });
@@ -425,10 +501,9 @@ for (const target of ['filesystem', 'electron']) {
       await expect(connections.getByRole('status')).toContainText('Run design checks');
       await connections.getByRole('button', { name: 'Done' }).click();
       await editor.getByRole('button', { name: 'Save', exact: true }).click();
-      await expect.poll(async () =>
-        (await api.decodeBoard(await readFile(destination))).nets.length
-      ).toBe(2);
+      await expect(page).toHaveTitle('TinyCAD - Saved.dpn');
       const updated = await api.decodeBoard(await readFile(destination));
+      expect(updated.nets).toHaveLength(2);
       const addedNet = updated.nets.find(({ name }) => name === 'Test point');
       expect(updated.components.find(({ reference }) => reference === 'U2').signals[0].netId).toBe(addedNet.id);
       expect(updated.tracks.map(({ start, end }) => ({ start, end }))).toEqual(
@@ -436,15 +511,22 @@ for (const target of ['filesystem', 'electron']) {
       );
       expect(updated.tracks.some(({ reviewRequired }) => reviewRequired)).toBe(true);
       if (electron) {
+        await nativeCommand('File', 'New', 'New PCB Footprint Library');
+        const footprintEditor = page.getByRole('dialog', { name: 'Footprint editor' });
+        await expect(footprintEditor).toBeVisible();
+        await footprintEditor.getByRole('button', { name: 'Close', exact: true }).click();
         const untitled = path.join(root, 'New PCB.dpn');
         await electron.evaluate(({ dialog }, filePath) => {
           dialog.showSaveDialog = async () => {
             globalThis.portableTestPickers += 1;
             return { canceled: false, filePath };
           };
-          dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [filePath] });
+          dialog.showOpenDialog = async ({ filters }) => {
+            globalThis.portableTestOpenFilters = filters;
+            return { canceled: false, filePaths: [filePath] };
+          };
         }, untitled);
-        await editor.getByRole('button', { name: 'New PCB', exact: true }).click();
+        await nativeCommand('File', 'New', 'New PCB');
         await expect(page).toHaveTitle('TinyCAD - Untitled.dpn*');
         await runPcbCommand('View board tools');
         await editor.getByLabel('Grid (mm)', { exact: true }).fill('1');
@@ -459,9 +541,15 @@ for (const target of ['filesystem', 'electron']) {
         await editor.getByRole('button', { name: 'Close', exact: true }).click();
         await expect(editor).toBeHidden();
         await nativeCommand('File', 'Open');
+        await expect.poll(() => electron.evaluate(() => globalThis.portableTestOpenFilters))
+          .toContainEqual({ name: 'TinyCAD Design Files', extensions: ['dsn', 'dzn', 'dpn'] });
         await expect(canvas.locator('[data-component]')).toHaveCount(1);
         expect((await api.decodeBoard(await readFile(untitled))).footprints[0].positionNm)
           .toEqual({ x: 34_000_000, y: 14_000_000 });
+      } else if (target === 'electron') {
+        await editor.getByRole('button', { name: 'Close', exact: true }).click();
+        await expect(editor).toBeHidden();
+        await expect.poll(() => page.evaluate(() => window.portableBoardMenus)).toEqual([]);
       }
       expect(await readFile(source)).toEqual(bytes);
     } finally {

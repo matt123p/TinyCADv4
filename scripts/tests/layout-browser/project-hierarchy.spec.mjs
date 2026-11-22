@@ -3964,8 +3964,9 @@ test('switches branches with clean linked editors and retains unsaved drawing ed
     await page.getByRole('tab', { name: 'Circuit.dzn', exact: true }).click();
     await explorer.getByRole('button', { name: 'Board.dpn', exact: true }).click();
     const layout = page.getByRole('region', { name: 'PCB layout' });
+    await clickPcbCommand(layout, 'View board tools');
     await expect(layout.getByLabel('Copper layers')).toHaveValue('2');
-    await page.getByRole('button', { name: 'Circuit Design', exact: true }).click();
+    await page.getByRole('tab', { name: 'Circuit.dzn', exact: true }).click();
 
     await explorer.getByRole('button', { name: 'Project Settings…', exact: true }).click();
     const author = page.getByRole('textbox', { name: 'Author', exact: true });
@@ -3983,9 +3984,10 @@ test('switches branches with clean linked editors and retains unsaved drawing ed
     await page.getByRole('tab', { name: 'Auxiliary.dsn', exact: true }).click();
     await expect.poll(sheetName).toBe('Revision auxiliary');
     await page.getByRole('tab', { name: 'Circuit.dzn', exact: true }).click();
-    await page.getByRole('button', { name: 'PCB Design', exact: true }).click();
+    await page.getByRole('tab', { name: 'Board.dpn', exact: true }).click();
+    await clickPcbCommand(layout, 'View board tools');
     await expect(layout.getByLabel('Copper layers')).toHaveValue('1');
-    await page.getByRole('button', { name: 'Circuit Design', exact: true }).click();
+    await page.getByRole('tab', { name: 'Circuit.dzn', exact: true }).click();
 
     await page.evaluate(() => window.layoutTest.renameCurrentSheet('Retained edit'));
     await page.getByRole('tab', { name: 'Checkout.tcproject', exact: true }).click();

@@ -56,7 +56,7 @@ export default function BoardConnectionsDialog({ board, selected, onCommit, onCl
         <DialogBody>
           <DialogTitle>PCB connections</DialogTitle>
           <DialogContent className="pcb-profile-fields">
-            <form className="pcb-profile-fields" onSubmit={(event) => {
+            <form className="pcb-connection-form" aria-label="Create a board net" onSubmit={(event) => {
               event.preventDefault();
               void run(() => {
                 onCommit(addStandaloneNet(board, netName));
@@ -67,7 +67,7 @@ export default function BoardConnectionsDialog({ board, selected, onCommit, onCl
               <label>Net name<Input required value={netName} disabled={busy} onChange={(event) => setNetName(event.target.value)} /></label>
               <Button type="submit" disabled={busy || !netName.trim()}>Add net</Button>
             </form>
-            <form className="pcb-profile-fields" onSubmit={(event) => {
+            <form className="pcb-connection-form" aria-label="Assign component pads" onSubmit={(event) => {
               event.preventDefault();
               void run(assign);
             }}>
@@ -103,7 +103,7 @@ export default function BoardConnectionsDialog({ board, selected, onCommit, onCl
               </label>
               <Button type="submit" disabled={busy || !signal || signal.netId === netId}>Apply pad assignment</Button>
             </form>
-            <form className="pcb-profile-fields" onSubmit={(event) => {
+            <form className="pcb-connection-form" aria-label="Import a reviewed device" onSubmit={(event) => {
               event.preventDefault();
               const form = event.currentTarget;
               if (!file) return;

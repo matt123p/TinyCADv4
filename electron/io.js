@@ -19,8 +19,7 @@ export function loadFile(mainWindow, file, isLibraryMode, openNewWindow, openPro
     else {
         dialog.showOpenDialog({
             filters: [
-                { name: 'TinyCAD Drawings', extensions: ['dsn', 'dzn'] },
-                { name: 'TinyCAD PCB boards', extensions: ['dpn'] },
+                { name: 'TinyCAD Design Files', extensions: ['dsn', 'dzn', 'dpn'] },
                 { name: 'TinyCAD projects', extensions: ['tcproject'] },
                 { name: 'TinyCAD Libraries', extensions: ['tclib'] }
             ],

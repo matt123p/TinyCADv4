@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Select } from '@fluentui/react-components';
 import type { BoardDocument, CopperLayer } from '../../pcb/board';
 import { boardArtwork } from '../../pcb/boardArtwork';
 import type { boardCopperGeometry } from '../../pcb/boardCopperGeometry';
@@ -95,21 +96,21 @@ export default function BoardArtworkRuleInspection({ board, geometry, kernel, ke
       {selected ? <>
         <label>
           Artwork object
-          <select aria-label="Artwork object" value={selected.id} onChange={(event) => {
+          <Select aria-label="Artwork object" value={selected.id} onChange={(event) => {
             setSelectedId(event.target.value);
             setCompareId('');
           }}>
             {objects.map((item, index) => <option key={item.id} value={item.id}>{label(item, index)}</option>)}
-          </select>
+          </Select>
         </label>
         {selected.kind !== 'paste' && (
           <label>
             Compare artwork
-            <select aria-label="Compare artwork" value={other?.id ?? ''} onChange={(event) => setCompareId(event.target.value)}>
+            <Select aria-label="Compare artwork" value={other?.id ?? ''} onChange={(event) => setCompareId(event.target.value)}>
               <option value="">No comparison</option>
               {objects.map((item, index) => compatible(selected, item) &&
                 <option key={item.id} value={item.id}>{label(item, index)}</option>)}
-            </select>
+            </Select>
           </label>
         )}
         {profile ? <p>Fabrication profile {profile.title} <code>{board.fabrication.profileId}</code>, revision {profile.revision}.</p>

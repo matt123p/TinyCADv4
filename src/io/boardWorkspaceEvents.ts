@@ -1,12 +1,18 @@
 import type { BoardWorkspaceSession } from './boardWorkspace';
 
 export const boardOpened = 'tinycad:board-opened';
+export const editFootprintLibrary = 'tinycad:edit-footprint-library';
 export const circuitOpened = 'tinycad:circuit-opened';
+export const confirmCircuitOpen = 'tinycad:confirm-circuit-open';
 export const editorHeaderDocument = 'tinycad:editor-header-document';
 export const saveActiveBoard = 'tinycad:save-active-board';
 
 export function showOpenedBoard(session: BoardWorkspaceSession) {
   window.dispatchEvent(new CustomEvent(boardOpened, { detail: session }));
+}
+
+export function canOpenCircuit() {
+  return window.dispatchEvent(new Event(confirmCircuitOpen, { cancelable: true }));
 }
 
 declare global {

@@ -16,7 +16,6 @@ const mapStateToProps = (state: docDrawing) => {
     hasExampleExplanation: !!state.altStore.exampleExplanation,
     simulationPanelVisible: state.altStore.simulationPanelVisible,
     simulationPanelActivated: state.altStore.simulationPanelActivated,
-    firstSchematicSheet: present.drawing.sheets.findIndex(({ kind }) => kind !== 'simulation'),
     standardLibraryNavigation: state.altStore.standardLibraryNavigation,
     selectedSpiceControl: !!symbol && !!readControl(symbol),
     simulationSheet: !state.docStore.present.editSymbol && state.docStore.present.drawing.sheets[state.docStore.present.view.selected_sheet]?.kind === 'simulation',

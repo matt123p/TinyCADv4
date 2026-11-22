@@ -108,7 +108,7 @@ const common = {
     generateNetlist: 'Generuj netlistę',
     generateSpiceNetlist: 'Generuj netlistę Spice',
     createVhdlFile: 'Utwórz plik VHDL',
-    newCustomLibrary: 'Nowa biblioteka użytkownika',
+    newCustomSymbolLibrary: 'Nowa biblioteka symboli użytkownika',
     newDesign: 'Nowy projekt',
     saveDesign: 'Zapisz projekt',
     pin: 'Pin',
