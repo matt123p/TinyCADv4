@@ -59,6 +59,7 @@ export type ProjectStorageRequest =
   | { operation: 'git'; folder: string; request: GitRequest }
   | { operation: 'choose-project-folder' }
   | { operation: 'recent-project-folder' }
+  | { operation: 'open-recent-project-folder'; id: string }
   | { operation: 'open-launch' }
   | { operation: 'activate-launch'; ticket: string }
   | { operation: 'choose'; containProject?: string }
@@ -99,6 +100,7 @@ export interface ProjectStorageResult {
   'activate-launch': ProjectLocation;
   'choose-project-folder': ProjectLocation | null;
   'recent-project-folder': ProjectLocation | null;
+  'open-recent-project-folder': ProjectLocation;
   choose: ProjectLocation | null;
   list: ProjectItem[];
   'watch-folders': void;
@@ -175,6 +177,12 @@ export async function driveProjectFiles(
     case 'root':
     case 'choose':
       return { id: 'root', name: 'My Drive' };
+    case 'open-recent-project-folder': {
+      const folder = await (await drive(`${file(request.id)}?fields=id,name,mimeType,trashed`)).json();
+      if (!folder.id || !folder.name || folder.mimeType !== folderMime || folder.trashed)
+        throw new Error('This project folder is unavailable on Drive.');
+      return { id: request.id, name: folder.name };
+    }
     case 'list': {
       const escaped = request.folder
         .replace(/\\/g, '\\\\')

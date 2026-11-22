@@ -2,7 +2,48 @@ import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
-import { registerProjectFiles } from '../../electron/projectFiles.js';
+import { recentProjectFolders, registerProjectFiles } from '../../electron/projectFiles.js';
+
+test('reopens recent project folders in order without granting access to arbitrary folders', async (t) => {
+  const parent = path.resolve('.tmp');
+  await mkdir(parent, { recursive: true });
+  const area = await mkdtemp(path.join(parent, 'project-recent-'));
+  t.after(() => rm(area, { recursive: true, force: true }));
+  const documents = path.join(area, 'Documents');
+  const first = path.join(area, 'First');
+  const second = path.join(area, 'Second');
+  await Promise.all([documents, first, second].map((folder) => mkdir(folder)));
+  const preferences = new Map([['recentProjectFolder', first]]);
+  const store = {
+    get: (key, fallback) => preferences.get(key) ?? fallback,
+    set: (key, value) => preferences.set(key, value),
+  };
+  const mainFrame = {};
+  const webContents = { mainFrame };
+  let handler;
+  registerProjectFiles({
+    ipcMain: { handle: (_, callback) => { handler = callback; } },
+    getWindow: () => ({ webContents }),
+    dialog: { showOpenDialog: async () => ({ canceled: false, filePaths: [second] }) },
+    store,
+    documents,
+  });
+  const request = (payload) => handler({ sender: webContents, senderFrame: mainFrame }, payload);
+
+  assert.deepEqual(recentProjectFolders(store), [first]);
+  await request({ operation: 'choose-project-folder' });
+  assert.deepEqual(recentProjectFolders(store), [second, first]);
+  await assert.rejects(request({ operation: 'open-recent-project-folder', id: area }), /unavailable/);
+  assert.deepEqual(await request({ operation: 'open-recent-project-folder', id: first }), {
+    id: first, name: 'First',
+  });
+  assert.deepEqual(recentProjectFolders(store), [first, second]);
+  await rm(first, { recursive: true });
+  await assert.rejects(request({ operation: 'open-recent-project-folder', id: first }), /Cannot open project folder/);
+  assert.deepEqual(await request({ operation: 'recent-project-folder' }), {
+    id: second, name: 'Second',
+  });
+});
 
 test('Electron project storage preserves existing files and rejects writes based on a stale revision', async (t) => {
   const parent = path.resolve('.tmp');

@@ -1,28 +1,34 @@
-import React from 'react';
+import React, { useId } from 'react';
+import { Button } from '@fluentui/react-components';
+import { PanelLeftContractRegular, PanelLeftExpandRegular } from '@fluentui/react-icons';
+import { useTranslation } from 'react-i18next';
 import { ResizeHandle } from './ResizeHandle';
 
-export function EditorSidePanel({ children, label, resizeLabel, width, hidden, collapsed, resizing, onResize, onDragStateChange }: {
+export function EditorSidePanel({ children, resizeLabel, width, collapsed, resizing, onToggle, onResize, onDragStateChange }: {
   children: React.ReactNode;
-  label?: string;
   resizeLabel?: string;
   width?: number | string;
-  hidden?: boolean;
   collapsed?: boolean;
   resizing?: boolean;
+  onToggle(): void;
   onResize?: (delta: number) => void;
   onDragStateChange?: (dragging: boolean) => void;
 }) {
-  const Panel = label ? 'aside' : 'div';
-  return <Panel
+  const { t } = useTranslation();
+  const contentId = useId();
+  const toggleLabel = t(collapsed ? 'designApp.showSidePanel' : 'library.hideSidePanel');
+  return <div
     className={'side-panel-container' + (collapsed ? ' side-panel-collapsed' : '') +
       (resizing ? ' side-panel-resizing' : '')}
-    aria-label={label}
-    style={{ width }}
-    hidden={hidden}>
+    style={{ width }}>
+    <Button className="editor-side-panel-toggle" appearance="subtle"
+      icon={collapsed ? <PanelLeftExpandRegular /> : <PanelLeftContractRegular />}
+      title={toggleLabel} aria-label={toggleLabel} aria-expanded={!collapsed}
+      aria-controls={contentId} onClick={onToggle} />
     {onResize && <ResizeHandle direction="horizontal" onResize={onResize}
       onDragStateChange={onDragStateChange} label={resizeLabel} />}
-    {children}
-  </Panel>;
+    <div id={contentId} className="editor-side-panel-content" hidden={collapsed}>{children}</div>
+  </div>;
 }
 
 export function EditorDrawingStack({ drawing, children, symbolEditor, bottomHeight, bottomHidden, bottomLabel,

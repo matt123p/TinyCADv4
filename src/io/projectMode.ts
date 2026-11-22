@@ -1,3 +1,5 @@
+import type { ProjectLocation } from './projectStorage';
+
 export type StartupMode = 'single' | 'project';
 
 const startupKey = 'tinycad.startupMode';
@@ -25,5 +27,28 @@ export function saveStartupMode(mode: StartupMode) {
     localStorage.setItem(startupKey, mode);
   } catch {
     // Editing still works when browser preferences cannot be stored.
+  }
+}
+
+export function recentDriveProjectFolders(account: string): ProjectLocation[] {
+  try {
+    const history = localStorage.getItem(`tinycad.recentDriveProjects.${account}`);
+    const folders: unknown = history === null
+      ? [JSON.parse(localStorage.getItem(`tinycad.driveProjectFolder.${account}`))]
+      : JSON.parse(history);
+    if (!Array.isArray(folders)) return [];
+    return folders.filter((folder): folder is ProjectLocation =>
+      typeof folder?.id === 'string' && typeof folder.name === 'string').slice(0, 10);
+  } catch {
+    return [];
+  }
+}
+
+export function rememberDriveProjectFolder(account: string, folder: ProjectLocation) {
+  try {
+    const history = recentDriveProjectFolders(account).filter(({ id }) => id !== folder.id);
+    localStorage.setItem(`tinycad.recentDriveProjects.${account}`, JSON.stringify([folder, ...history].slice(0, 10)));
+  } catch {
+    // The current folder remains available for this session.
   }
 }

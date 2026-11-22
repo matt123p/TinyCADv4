@@ -85,6 +85,8 @@ const common = {
     registerAndOpen: 'Add child to project and open',
   },
   projects: {
+    recentProjects: 'Recent Projects',
+    noRecentProjects: 'No Recent Projects',
     title: 'Projects',
     openIn: 'Open in…',
     singleFile: 'Single File',

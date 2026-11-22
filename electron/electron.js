@@ -11,7 +11,7 @@ import { registerBundledLibraries } from './bundledLibraries.js';
 import { registerBundledExamples } from './bundledExamples.js';
 import { registerOnlineLibrary } from './onlineLibrary.js';
 import { registerLicenseHandlers } from './licenses.js';
-import { registerProjectFiles } from './projectFiles.js';
+import { recentProjectFolders, registerProjectFiles } from './projectFiles.js';
 import { isProjectFile } from '../shared/projectFiles.js';
 import fs from 'fs';
 import { spawn } from 'child_process';
@@ -134,6 +134,10 @@ function createWindow({ openAbout = false } = {}) {
       label: path.basename(file),
       click: () => mainWindow.webContents.send('menu-command-with-data', 'file-open-recent', { name: path.basename(file), id: file })
     }));
+    const recentProjects = recentProjectFolders(store).map(id => ({
+      label: isMac ? id : id.replaceAll('&', '&&'),
+      click: () => mainWindow.webContents.send('menu-command-with-data', 'file-open-recent-project', { id }),
+    }));
 
     const menuTemplate = [
       ...(isMac ? [{
@@ -159,6 +163,12 @@ function createWindow({ openAbout = false } = {}) {
           },
           { label: getMenuLabel('open', 'Open'), accelerator: 'CmdOrCtrl+O', click: () => mainWindow.webContents.send('menu-command', 'file-open') },
           { label: getMenuLabel('openProjectFolder', 'Open Project Folder…'), click: () => mainWindow.webContents.send('menu-command', 'file-open-project-folder') },
+          {
+            label: getMenuLabel('recentProjects', 'Recent Projects'),
+            submenu: recentProjects.length ? recentProjects : [
+              { label: getMenuLabel('noRecentProjects', 'No Recent Projects'), enabled: false },
+            ],
+          },
           { label: getMenuLabel('closeProject', 'Close Project'), click: () => mainWindow.webContents.send('menu-command', 'file-close-project') },
           ...drawingOpenMenu(getMenuLabel, recentMenu, command => mainWindow.webContents.send('menu-command', command)),
           { label: getMenuLabel('save', 'Save'), accelerator: 'CmdOrCtrl+S', click: () => mainWindow.webContents.send('menu-command', 'file-save') },
@@ -258,8 +268,10 @@ function createWindow({ openAbout = false } = {}) {
   refreshMenu = updateMenu;
   updateMenu();
   const unsubscribe = store.onDidChange('recentFiles', () => refreshMenu());
+  const unsubscribeProjects = store.onDidChange('recentProjectFolders', () => refreshMenu());
   mainWindow.on('closed', () => {
     unsubscribe();
+    unsubscribeProjects();
     if (mainWindow && mainWindow.isDestroyed()) {
       mainWindow = null;
     }

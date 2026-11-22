@@ -338,7 +338,7 @@ export const EditLibraryView: React.FunctionComponent<EditLibraryViewProps> = (
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
-      <div className={styles.libraryHeader}>
+      <div className={styles.libraryHeader + ' editor-side-panel-header'}>
         <span className={styles.libraryTitle}>{library?.name || (typeof library?.fileId === 'string' ? library.fileId : library?.fileId?.name)}</span>
         <div className={styles.headerActions}>
           <Button

@@ -84,6 +84,8 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   await page.route('https://**/*', (route) => route.abort());
   await page.route('https://www.googleapis.com/drive/v3/**', async (route) => {
     const url = new URL(route.request().url());
+    if (url.pathname.endsWith('/files/designs') && url.searchParams.get('fields') === 'id,name,mimeType,trashed')
+      return route.fulfill({ json: { id: 'designs', name: 'My projects', mimeType: 'application/vnd.google-apps.folder' } });
     if (url.searchParams.get('spaces') === 'appDataFolder')
       return route.fulfill({ json: { files: [] } });
     if (url.pathname.endsWith('/files') && route.request().method() === 'POST') {
@@ -414,6 +416,11 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   const picker = page.getByRole('dialog', { name: 'Open Project Folder…' });
   await picker.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(activity).toHaveCount(0);
+  await openFolder();
+  await picker.getByRole('button', { name: 'Recent Projects', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'My projects', exact: true }).click();
+  await expect(picker).toBeHidden();
+  await expect(sidebar.getByText('My projects', { exact: true })).toBeVisible();
   await openFolder();
   await picker.getByRole('button', { name: 'My projects', exact: true }).click();
   await picker.getByRole('button', { name: 'Shared', exact: true }).click();

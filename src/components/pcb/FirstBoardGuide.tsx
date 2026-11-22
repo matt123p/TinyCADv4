@@ -149,7 +149,7 @@ export default function FirstBoardGuide({
             <strong> Finish route</strong>.
           </p>
           <p>
-            On a single-sided board, use <strong>Add wire jumper…</strong> when
+            On a single-sided board, use <strong>Add wire jumper</strong> when
             a wire must bridge a gap. Route to each drilled land separately.
           </p>
           {!hasNets && (

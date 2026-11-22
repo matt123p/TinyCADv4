@@ -1149,7 +1149,7 @@ export default function ProjectBrowser({
       aria-label={t('projects.title')}
       aria-busy={loading || busy}
     >
-      <div className="project-browser-toolbar">
+      <div className="project-browser-toolbar editor-side-panel-header">
         <Menu openOnContext>
           <MenuTrigger disableButtonEnhancement>
             <Button

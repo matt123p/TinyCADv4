@@ -346,16 +346,18 @@ export default function ProjectSourceControl({
 
   return (
     <section className="project-source-control" aria-label="Source Control">
-      <Button
-        size="small"
-        disabled={busy}
-        onClick={() => {
-          setError('');
-          setClone({ source: '', name: '' });
-        }}
-      >
-        Clone Repository…
-      </Button>
+      <div className="editor-side-panel-header">
+        <Button
+          size="small"
+          disabled={busy}
+          onClick={() => {
+            setError('');
+            setClone({ source: '', name: '' });
+          }}
+        >
+          Clone Repository…
+        </Button>
+      </div>
       {!root ? (
         <Button onClick={openFolder}>Open Project Folder…</Button>
       ) : (

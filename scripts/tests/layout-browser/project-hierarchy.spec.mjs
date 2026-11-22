@@ -1,4 +1,4 @@
-import { clickPcbCommand, pcbNetRow, selectPcbNet } from './pcb-controls.mjs';
+import { clickPcbCommand, drawPcbOutline, pcbNetRow, selectCopperRow, selectPcbNet } from './pcb-controls.mjs';
 import { test, expect } from '@playwright/test';
 import { TextWriter, Uint8ArrayReader, ZipReader } from '@zip.js/zip.js';
 import { createHash } from 'node:crypto';
@@ -39,6 +39,24 @@ test('opens project files into tabs and hosts PCB tools in the shared sidebar', 
     const row = (name) => tree.getByRole('button', { name, exact: true });
     const activity = page.getByRole('group', { name: 'Project activity bar' });
     if (!(await tree.isVisible())) await activity.getByRole('button', { name: 'Projects', exact: true }).click();
+    const hideSidebar = page.getByRole('button', { name: 'Hide side panel', exact: true });
+    const hidePosition = await hideSidebar.boundingBox();
+    const hideIcon = await hideSidebar.locator('svg').innerHTML();
+    await hideSidebar.click();
+    await expect(tree).toBeHidden();
+    const showSidebar = page.getByRole('button', { name: 'Show side panel', exact: true });
+    await expect(showSidebar).toBeFocused();
+    await showSidebar.click();
+    await expect(tree).toBeVisible();
+    await activity.getByRole('button', { name: 'Source Control', exact: true }).click();
+    await expect(page.getByRole('region', { name: 'Source Control', exact: true })).toBeVisible();
+    await expect.poll(() => hideSidebar.boundingBox()).toEqual(hidePosition);
+    expect(await hideSidebar.locator('svg').innerHTML()).toBe(hideIcon);
+    await activity.getByRole('button', { name: 'Libraries', exact: true }).click();
+    await expect(page.getByPlaceholder('Search libraries...')).toBeVisible();
+    await expect.poll(() => hideSidebar.boundingBox()).toEqual(hidePosition);
+    expect(await hideSidebar.locator('svg').innerHTML()).toBe(hideIcon);
+    await activity.getByRole('button', { name: 'Projects', exact: true }).click();
     const tabs = page.getByRole('tablist', { name: 'Project files' });
     const initialSchematic = tabs.getByRole('tab', { name: 'tCad1.dsn', exact: true });
     await expect(initialSchematic).toBeVisible();
@@ -84,6 +102,8 @@ test('opens project files into tabs and hosts PCB tools in the shared sidebar', 
     await activity.getByRole('button', { name: 'Libraries', exact: true }).click();
     const footprints = page.getByRole('region', { name: 'Footprints', exact: true });
     await expect(footprints.getByRole('tab', { name: 'Unplaced', exact: true })).toBeVisible();
+    await expect.poll(() => hideSidebar.boundingBox()).toEqual(hidePosition);
+    expect(await hideSidebar.locator('svg').innerHTML()).toBe(hideIcon);
     await expect(footprints.locator('xpath=ancestor::div[contains(@class,"side-panel-container")]')).toHaveCount(1);
     await expect(tree).toBeHidden();
     await activity.getByRole('button', { name: 'Projects', exact: true }).click();
@@ -2744,8 +2764,8 @@ test('checks both regulator packages and exports bottom thermal changes offline'
       await (await release).saveAs(info.outputPath('regulator-manufacturing-release.zip'));
     });
 
-    await layout.getByRole('button', { name: 'Edit zone…' }).click();
-    const zone = page.getByRole('dialog', { name: 'Edit copper zone' });
+    await selectCopperRow(layout, /Copper zone ·/);
+    const zone = layout.getByRole('form', { name: 'Copper zone properties' });
     await zone.getByLabel(/^Cutouts/).fill(
       '28.58, 8.03\n28.72, 8.03\n28.72, 8.29\n28.58, 8.29\n\n' +
       '27.7, 8.58\n28.3, 8.58\n28.3, 8.72\n27.7, 8.72',
@@ -2853,8 +2873,9 @@ test('rebuilds zone copper for release after clearance and outline edits', async
     const layout = page.getByRole('region', { name: 'PCB layout', exact: true });
     const canvas = layout.getByRole('img', { name: 'Board layout' });
     const fill = canvas.locator('[data-zone-fill]');
-    await clickPcbCommand(layout, 'Add copper zone…');
-    const zone = page.getByRole('dialog', { name: 'Add copper zone' });
+    await clickPcbCommand(layout, 'Add copper zone');
+    await drawPcbOutline(canvas, [[3, 3], [8, 3], [8, 8], [3, 8]]);
+    const zone = layout.getByRole('form', { name: 'Copper zone properties' });
     await zone.getByLabel('Net', { exact: true }).selectOption({ label: '0' });
     await zone.getByLabel('Layer', { exact: true }).selectOption('bottom');
     await zone.getByLabel('Outline (X, Y in mm)', { exact: true }).fill('-1, -1\n42, -1\n42, 23\n-1, 23');
@@ -3068,11 +3089,10 @@ test('opens and edits the single-sided timer and logic reference offline', async
     await cam.getByRole('button', { name: 'Download preview bundle…' }).click();
     await (await download).saveAs(info.outputPath('timer-cam-preview.zip'));
     await cam.getByRole('button', { name: 'Close', exact: true }).click();
-    await board.getByRole('button', { name: 'Edit JP1…', exact: true }).click();
-    const jumper = page.getByRole('dialog', { name: 'Edit wire jumper' });
+    await selectCopperRow(board, 'Wire jumper · JP1');
+    const jumper = board.getByRole('form', { name: 'Wire jumper properties' });
     await jumper.getByLabel('Fit jumper').uncheck();
     await jumper.getByRole('button', { name: 'Apply', exact: true }).click();
-    await expect(jumper).toBeHidden();
     await board.getByRole('button', { name: 'Save', exact: true }).click();
     const api = await layoutRuntime();
     await expect.poll(async () => {

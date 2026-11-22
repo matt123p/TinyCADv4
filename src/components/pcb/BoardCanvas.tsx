@@ -32,6 +32,8 @@ import { FootprintArtwork, PadShapeDrawing } from '../projects/FootprintArtwork'
 import { resolveFootprintText } from '../../pcb/footprintText';
 import { padShapePoints } from '../../pcb/padstack';
 import { SelectionMarquee } from '../svg/SelectionMarquee';
+import { copperObjectLabels, isCopperObject } from './boardCopperObjects';
+import type { CopperObject } from './boardCopperObjects';
 
 const point = ({ x, y }: BoardPoint) => `${x},${-y}`;
 const ring = (points: readonly BoardPoint[]) =>
@@ -57,7 +59,8 @@ export interface BoardCanvasHandle {
 export const boardPlacementDragType = 'application/x-tinycad-pcb-component';
 
 export const boardPickKinds = {
-  pad: 'Pad', track: 'Track', via: 'Via', zone: 'Zone boundary', silk: 'Silkscreen',
+  component: 'Component', pad: 'Pad', track: 'Track', via: 'Via', silk: 'Silkscreen',
+  ...copperObjectLabels,
 } as const;
 
 export interface BoardPickTarget {
@@ -270,6 +273,10 @@ const PlacedFootprint = React.memo(function PlacedFootprint({
 
   return (
     <g data-component={id} data-component-selected={selected || undefined}
+      data-board-pick={picking ? JSON.stringify({
+        kind: 'component', id, label, layer: placement.side,
+        locked: placement.locked || placement.positionLocked || placement.rotationLocked,
+      } satisfies BoardPickTarget) : undefined}
       data-placement-group={inGroup || undefined}>
       {copper.filter(({ layerId }) => visible(layerId)).map(({ layerId, netId, padId, label, shape }) => {
         const highlighted = !!netId && netId === selectedNet;
@@ -312,6 +319,10 @@ export default function BoardCanvas({
   geometry,
   canvasRef,
   onPick,
+  hoveredObject,
+  selectedCopper,
+  onSelectCopper,
+  copperDrawing,
   selectedSilk,
   selected,
   group,
@@ -348,6 +359,15 @@ export default function BoardCanvas({
   geometry: ReturnType<typeof boardPlacementView>;
   canvasRef?: React.Ref<BoardCanvasHandle>;
   onPick?(pick: BoardPick): void;
+  hoveredObject?: BoardPickTarget;
+  selectedCopper?: CopperObject;
+  onSelectCopper(target: CopperObject): void;
+  copperDrawing?: {
+    points: readonly BoardPoint[];
+    closed: boolean;
+    snap(x: number, y: number): BoardPoint;
+    add(point: BoardPoint, finish: boolean): void;
+  };
   selectedSilk?: string;
   selected: string;
   group: ReadonlySet<string>;
@@ -466,6 +486,20 @@ export default function BoardCanvas({
   const pickingAttributes = picking ? (target: BoardPickTarget) => ({
     'data-board-pick': JSON.stringify(target),
   }) : undefined;
+  function copperAttributes(target: CopperObject) {
+    return { 'data-board-copper-object': JSON.stringify(target), ...pickingAttributes?.(target) };
+  }
+  function copperHighlight(kind: CopperObject['kind'], id: string, color: string) {
+    const selected = selectedCopper?.kind === kind && selectedCopper.id === id;
+    const hovered = hoveredObject?.kind === kind && hoveredObject.id === id;
+    return { stroke: selected || hovered ? netHighlight : color, strokeWidth: selected || hovered ? 3 : 1.5,
+      strokeDasharray: selected ? undefined : '5 4',
+      'data-copper-highlight': selected ? 'selected' : hovered ? 'hover' : undefined };
+  }
+  function copperHit(target: EventTarget) {
+    const hit = (target as Element).closest('[data-board-copper-object]');
+    if (hit) return JSON.parse(hit.getAttribute('data-board-copper-object')) as CopperObject;
+  }
   function pickAt(event: React.MouseEvent<HTMLDivElement>) {
     const svg = event.currentTarget.querySelector('svg');
     const inverse = svgDrawingMatrix(svg)?.inverse();
@@ -475,8 +509,10 @@ export default function BoardCanvas({
     const location = new DOMPoint(clientX, clientY).matrixTransform(inverse);
     const hits = new Set<string>();
     for (const element of svg.ownerDocument.elementsFromPoint(clientX, clientY)) {
-      const hit = element.closest('[data-board-pick]');
-      if (hit && svg.contains(hit)) hits.add(hit.getAttribute('data-board-pick'));
+      for (let hit = element.closest('[data-board-pick]'); hit && svg.contains(hit);
+        hit = hit.parentElement?.closest('[data-board-pick]')) {
+        hits.add(hit.getAttribute('data-board-pick'));
+      }
     }
     onPick({
       point: { x: Math.round(location.x), y: Math.round(-location.y) },
@@ -640,7 +676,13 @@ export default function BoardCanvas({
   const movingId = dragPreview?.offset ? gesture.current?.componentId : undefined;
   const marquee = dragPreview && gesture.current && !gesture.current.componentId
     ? marqueeBounds(gesture.current.start, dragPreview.point) : undefined;
-  const hoverBounds = selectionEnabled && !dragPreview && hover && (
+  const listedBounds = hoveredObject && !isCopperObject(hoveredObject.kind) && (
+    hoveredObject.kind === 'component' ? selectionBounds.components.get(hoveredObject.id) :
+    hoveredObject.kind === 'pad' ? selectionBounds.pads.get(hoveredObject.componentId + ':' + hoveredObject.id) :
+    hoveredObject.kind === 'silk' ? selectionBounds.components.get(hoveredObject.componentId) :
+    selectionBounds.routes.get(hoveredObject.id)
+  );
+  const hoverBounds = listedBounds || selectionEnabled && !dragPreview && hover && (
     hover.componentId ? (hover.padId && selectionBounds.pads.get(hover.componentId + ':' + hover.padId)) ||
       selectionBounds.components.get(hover.componentId) : selectionBounds.routes.get(hover.routeId)
   );
@@ -658,7 +700,7 @@ export default function BoardCanvas({
       onPointerDown={(event) => {
         if (event.button !== 0) return;
         suppressClick.current = false;
-        if (!selectionEnabled || event.pointerType === 'touch') return;
+        if (!selectionEnabled || event.pointerType === 'touch' || copperHit(event.target)) return;
         const location = pointerOnCanvas(event);
         if (!location) return;
         const { componentId, routeId } = selectionTarget(event.target as Element);
@@ -727,6 +769,21 @@ export default function BoardCanvas({
         if (picking) {
           pickAt(event);
           return;
+        }
+        if (copperDrawing && event.button === 0) {
+          const location = pointerOnCanvas(event);
+          if (!location) return;
+          event.stopPropagation();
+          copperDrawing.add(copperDrawing.snap(location.x, location.y), event.detail > 1);
+          return;
+        }
+        if (selectionEnabled && event.button === 0) {
+          const hit = copperHit(event.target);
+          if (hit) {
+            event.stopPropagation();
+            onSelectCopper(hit);
+            return;
+          }
         }
         if (!placementActive) return;
         if (event.button !== 0 || event.shiftKey) return;
@@ -816,7 +873,19 @@ export default function BoardCanvas({
           }
           onLocation(x, y);
         }}
-        renderLocationPreview={routing ? (pointer) => {
+        renderLocationPreview={copperDrawing ? (pointer) => {
+          if (!pointer) return;
+          const next = copperDrawing.snap(pointer[0], pointer[1]);
+          const points = [...copperDrawing.points, next];
+          const first = copperDrawing.points[0];
+          return <g pointerEvents="none" data-copper-drawing-preview="">
+            {points.length > 1 && <path
+              d={'M' + points.map(point).join(' L') + (copperDrawing.closed && points.length > 2 ? ' Z' : '')}
+              fill={copperDrawing.closed ? netHighlight : 'none'} fillOpacity={0.12}
+              stroke={netHighlight} strokeWidth={2} strokeDasharray="5 3" vectorEffect="non-scaling-stroke" />}
+            {first && <circle {...svgCircle(first.x, -first.y, 4 * pointer[2])} fill={netHighlight} />}
+          </g>;
+        } : routing ? (pointer) => {
           if (!pointer) return;
           const snap = routeSnapAt(...pointer);
           const leg = routingSnap.preview(pointer[0], pointer[1], snap?.position);
@@ -864,46 +933,44 @@ export default function BoardCanvas({
         />
         {board.placementAreas
           ?.filter(({ side }) => side === 'both' || visible(side))
-          .map(({ id, kind, outline }) => (
+          .map(({ id, kind, outline, name, side }) => (
             <path
               key={id}
+              {...copperAttributes({ kind: 'area', id, label: name, layer: side })}
               data-placement-area={id}
               d={ring(outline)}
               fill={kind === 'keep-out' ? '#a32957' : '#177a64'}
               fillOpacity={0.12}
-              stroke={kind === 'keep-out' ? '#a32957' : '#177a64'}
-              strokeWidth={1.5}
-              strokeDasharray="5 4"
+              {...copperHighlight('area', id, kind === 'keep-out' ? '#a32957' : '#177a64')}
               vectorEffect="non-scaling-stroke"
-              pointerEvents="none"
+              pointerEvents={picking ? 'all' : 'stroke'}
             />
           ))}
         {board.routingRegions
           ?.filter(({ side }) => side === 'both' || visible(side))
-          .map(({ id, outline }) => (
+          .map(({ id, outline, name, side }) => (
             <path
               key={id}
+              {...copperAttributes({ kind: 'region', id, label: name, layer: side })}
               data-routing-region={id}
               d={ring(outline)}
               fill="#785193"
               fillOpacity={0.12}
-              stroke="#785193"
-              strokeWidth={1.5}
-              strokeDasharray="5 4"
+              {...copperHighlight('region', id, '#785193')}
               vectorEffect="non-scaling-stroke"
-              pointerEvents="none"
+              pointerEvents={picking ? 'all' : 'stroke'}
             />
           ))}
         <ZoneCopper fills={zoneFills} visibleCopper={visibleCopper} selectedNet={selectedNet} />
-        {picking && board.zones?.filter(({ layerId }) => visible(layerId)).map((zone) => (
+        {board.zones?.filter(({ layerId }) => visible(layerId)).map((zone) => (
           <path key={zone.id}
-            {...pickingAttributes?.({
+            {...copperAttributes({
               kind: 'zone', id: zone.id, layer: zone.layerId,
               label: board.nets?.find(({ id }) => id === zone.netId)?.name ?? 'Unassigned',
             })}
             d={[zone.outline, ...zone.cutouts.map(({ outline }) => outline)].map(ring).join(' ')}
-            fill="none" stroke="#785193" strokeWidth={5} strokeOpacity={0.7}
-            strokeDasharray="5 4" vectorEffect="non-scaling-stroke" pointerEvents="stroke"
+            fill="none" fillRule="evenodd" {...copperHighlight('zone', zone.id, '#785193')}
+            vectorEffect="non-scaling-stroke" pointerEvents={picking ? 'all' : 'stroke'}
           />
         ))}
         {board.mechanicalHoles?.map(
@@ -956,14 +1023,12 @@ export default function BoardCanvas({
               drillNm,
               netId,
             }) => (
-              <g key={id} data-wire-jumper={id}>
+              <g key={id} data-wire-jumper={id} {...copperAttributes({ kind: 'jumper', id, label: reference, layer: 'top' })}>
                 <path
                   d={`M${point(start)} L${point(end)}`}
-                  stroke={fitted ? '#744501' : '#777'}
-                  strokeWidth="1.5"
-                  strokeDasharray="5 4"
+                  {...copperHighlight('jumper', id, fitted ? '#744501' : '#777')}
                   vectorEffect="non-scaling-stroke"
-                  pointerEvents="none"
+                  pointerEvents="stroke"
                 />
                 {[start, end].map((position, index) => (
                   <g key={index}>

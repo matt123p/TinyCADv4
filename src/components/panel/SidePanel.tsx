@@ -17,7 +17,6 @@ interface SidePanelProps {
   editLibrary: tclib;
   editSymbol: tclibLibraryEntry;
   dispatch: Dispatch<any>;
-  toggleSidePanel: () => void;
 }
 
 interface SidePanelState {}
@@ -60,7 +59,7 @@ export class SidePanel extends React.PureComponent<
             ) : this.props.viewLibrary ? (
               <DetailedLibraryViewContainer />
             ) : (
-              <LibrariesPanelContainer inputRef={this.librariesRef} toggleSidePanel={this.props.toggleSidePanel} />
+              <LibrariesPanelContainer inputRef={this.librariesRef} />
             )}
           </div>
         </div>

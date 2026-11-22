@@ -47,10 +47,11 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
   useEffect(() => {
     props.dispatch(initialise() as any);
     const params = new URLSearchParams(window.location.search);
-    const openProject = (chooseFolder = false) => {
+    const openProject = (chooseFolder = false, recentId?: string) => {
       void import('../../io/projects')
-        .then(({ openLaunchedProject, chooseDesktopProjectFolder }) =>
-          chooseFolder ? chooseDesktopProjectFolder() : openLaunchedProject(),
+        .then(({ openLaunchedProject, chooseDesktopProjectFolder, openRecentDesktopProjectFolder }) =>
+          recentId ? openRecentDesktopProjectFolder(recentId) :
+            chooseFolder ? chooseDesktopProjectFolder() : openLaunchedProject(),
         )
         .catch((error) => props.dispatch(actionSelectDialog('io_failure', {
           message: error instanceof Error ? error.message : String(error),
@@ -73,7 +74,8 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
       else props.dispatch(handleMenuCommand(command) as any);
     });
     const unsubscribeWithData = window.electronAPI.onMenuCommandWithData((command, data) => {
-      props.dispatch(handleMenuCommandWithData(command, data) as any);
+      if (command === 'file-open-recent-project') openProject(false, data.id);
+      else props.dispatch(handleMenuCommandWithData(command, data) as any);
     });
     return () => {
       unsubscribe();

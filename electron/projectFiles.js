@@ -12,6 +12,13 @@ import {
 
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const temporaryProjectFile = /^\.tinycad-[0-9a-f-]+\.tmp$/;
+const recentFoldersKey = 'recentProjectFolders';
+
+export function recentProjectFolders(store) {
+  const saved = store.get(recentFoldersKey, []);
+  const folders = [...(Array.isArray(saved) ? saved : []), store.get('recentProjectFolder', null)];
+  return [...new Set(folders.filter((folder) => typeof folder === 'string' && path.isAbsolute(folder)))].slice(0, 10);
+}
 
 export function registerProjectFiles({
   ipcMain,
@@ -31,6 +38,19 @@ export function registerProjectFiles({
   let watchOwner;
   let watchVersion = 0;
   let watchNotice;
+
+  function rememberProjectFolder(folder) {
+    const recent = recentProjectFolders(store).filter((entry) => entry !== folder);
+    store.set?.(recentFoldersKey, [folder, ...recent].slice(0, 10));
+  }
+
+  async function openRecentFolder(folder) {
+    const selected = await fs.realpath(folder);
+    if (selected !== folder) throw new Error('The project folder has moved.');
+    await fs.readdir(selected);
+    openedRoots.add(selected);
+    return { id: selected, name: path.basename(selected) || selected };
+  }
 
   function stopWatching() {
     watchVersion++;
@@ -171,7 +191,7 @@ export function registerProjectFiles({
       )
         throw new Error('The selected project changed. Open it again.');
       openedRoots.add(current.root.id);
-      store.set?.('recentProjectFolder', current.root.id);
+      rememberProjectFolder(current.root.id);
       return current.root;
     }
     if (request.operation === 'git-clone') {
@@ -187,21 +207,30 @@ export function registerProjectFiles({
         request.name,
       );
       openedRoots.add(cloned.id);
-      store.set?.('recentProjectFolder', cloned.id);
+      rememberProjectFolder(cloned.id);
       return cloned;
     }
     if (request.operation === 'recent-project-folder') {
-      const saved = store.get('recentProjectFolder', null);
-      if (typeof saved !== 'string' || !path.isAbsolute(saved)) return null;
-      try {
-        const selected = await fs.realpath(saved);
-        if (selected !== saved) return null;
-        await fs.readdir(selected);
-        openedRoots.add(selected);
-        return { id: selected, name: path.basename(selected) || selected };
-      } catch {
-        return null;
+      for (const folder of recentProjectFolders(store)) {
+        try {
+          return await openRecentFolder(folder);
+        } catch {
+          // Try older folders when the newest one is unavailable.
+        }
       }
+      return null;
+    }
+    if (request.operation === 'open-recent-project-folder') {
+      if (!recentProjectFolders(store).includes(request.id))
+        throw new Error('This folder is unavailable in Recent Projects.');
+      let selected;
+      try {
+        selected = await openRecentFolder(request.id);
+      } catch {
+        throw new Error(`Cannot open project folder: ${request.id}`);
+      }
+      rememberProjectFolder(selected.id);
+      return selected;
     }
     if (
       request.operation === 'choose' ||
@@ -227,7 +256,7 @@ export function registerProjectFiles({
       }
       if (request.operation === 'choose-project-folder') {
         openedRoots.add(selected);
-        store.set?.('recentProjectFolder', selected);
+        rememberProjectFolder(selected);
       } else {
         root = selected;
         store.set('projectFolder', root);

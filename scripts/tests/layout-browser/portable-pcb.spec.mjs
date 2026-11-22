@@ -433,8 +433,8 @@ for (const target of ['filesystem', 'electron']) {
         await connections.getByRole('button', { name: 'Add device' }).click();
         await expect(connections.getByRole('status')).toHaveText('Device added to unplaced components.');
         await connections.getByRole('button', { name: 'Done', exact: true }).click();
-        await editor.getByRole('list', { name: 'Unplaced components' }).getByRole('button', { name: new RegExp('^' + reference) }).click();
-        await editor.getByRole('img', { name: 'Footprint pad preview' }).dragTo(canvas);
+        await page.getByRole('list', { name: 'Unplaced components' }).getByRole('button', { name: new RegExp('^' + reference) }).click();
+        await page.getByRole('img', { name: 'Footprint pad preview' }).dragTo(canvas);
         await expect(canvas.locator('[data-placement-preview]')).toHaveCount(1);
         await canvas.evaluate((svg) => svg.scrollIntoView());
         const point = await canvas.evaluate((svg, [x, y]) => {

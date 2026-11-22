@@ -6,8 +6,8 @@ const menus = {
     'Import schematic or netlist…', 'View board tools',
   ],
   Copper: [
-    'Net rules…', 'Inspect board rules…', 'Run design checks…', 'Add placement area…',
-    'Add routing region…', 'Add copper zone…', 'Add wire jumper…',
+    'Net rules…', 'Inspect board rules…', 'Run design checks…', 'Add placement area',
+    'Add routing region', 'Add copper zone', 'Add wire jumper',
   ],
   Fabrication: [
     'Fabrication settings…', 'CAM read-back preview…', 'Inspect in 3D…', 'Manufacturing revisions…',
@@ -64,4 +64,24 @@ export async function pcbNetRow(workspace, net) {
 
 export async function selectPcbNet(workspace, net) {
   await (await pcbNetRow(workspace, net)).click();
+}
+
+export async function clickPcbPoint(canvas, x, y) {
+  const point = await canvas.evaluate((svg, [x, y]) => {
+    const position = new DOMPoint(x * 1e6, -y * 1e6)
+      .matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
+    return [position.x, position.y];
+  }, [x, y]);
+  await canvas.page().mouse.click(...point);
+}
+
+export async function drawPcbOutline(canvas, points) {
+  for (const [x, y] of points) await clickPcbPoint(canvas, x, y);
+  await canvas.page().keyboard.press('Enter');
+}
+
+export async function selectCopperRow(workspace, name) {
+  await clickPcbCommand(workspace, 'View components');
+  await workspace.getByRole('grid', { name: 'Placed components' })
+    .getByRole('button', { name }).click();
 }

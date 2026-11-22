@@ -16,6 +16,7 @@ The filesystem-only browser build runs in Single File mode. Open a schematic or 
 
 - Let the user choose a local root folder in Electron or a Drive root folder in Google Drive mode. Opening a `.tcproject` from the desktop or Electron’s **File → Open** uses its containing folder as the root and loads the settings. **File → Open Project Folder…** also accepts folders that have no settings file. Keep the current drawing and any unsaved edits when the project tree changes.
 - Show the selected folder as the top of the tree. When a selected folder has no `.tcproject`, let users browse its files and create project settings when needed. Use one root settings file per project and report ambiguity if a folder contains multiple candidates.
+- Provide **Recent Projects** beside **Open Project Folder…** in Electron and in the Drive folder picker. Open the selected root through the same project workflow as a newly chosen folder. Retain up to ten roots per device or signed-in Drive account, newest first.
 - Share the left-hand Projects panel across Circuit Design, Circuit Design + Simulation and PCB Design. Let users show Projects and Libraries independently or together.
 - Provide Project mode in Electron and Google Drive mode. The filesystem-only browser build opens individual design files in Single File mode.
 

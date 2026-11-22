@@ -84,6 +84,11 @@ export async function chooseDesktopProjectFolder() {
     );
 }
 
+export async function openRecentDesktopProjectFolder(id: string) {
+  const root = await projectRequest({ operation: 'open-recent-project-folder', id });
+  window.dispatchEvent(new CustomEvent(projectFolderOpened, { detail: root }));
+}
+
 export async function openLaunchedProject() {
   const launch = await projectRequest({ operation: 'open-launch' });
   if (!launch) return;

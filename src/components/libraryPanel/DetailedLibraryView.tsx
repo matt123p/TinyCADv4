@@ -48,7 +48,7 @@ export const DetailedLibraryView: React.FunctionComponent<DetailedLibraryViewPro
 
     return (
       <>
-        <div className={styles.header}>
+        <div className={styles.header + ' editor-side-panel-header'}>
           <Button
             appearance="subtle"
             icon={<ArrowLeftRegular />}

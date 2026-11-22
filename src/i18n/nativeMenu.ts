@@ -19,6 +19,8 @@ export const buildNativeMenuTranslations = (t: TFunction<'common'>): NativeMenuT
   open: menuLabel(t, 'toolbar.open', 'Open'),
   openProjectFolder: menuLabel(t, 'projects.openFolder', 'Open Project Folder…'),
   closeProject: menuLabel(t, 'projects.closeProject', 'Close Project'),
+  recentProjects: menuLabel(t, 'projects.recentProjects', 'Recent Projects'),
+  noRecentProjects: menuLabel(t, 'projects.noRecentProjects', 'No Recent Projects'),
   openExample: menuLabel(t, 'examples.openExample', 'Open Example'),
   openRecent: menuLabel(t, 'toolbar.openRecent', 'Open Recent'),
   noRecentFiles: menuLabel(t, 'toolbar.noRecentFiles', 'No Recent Files'),

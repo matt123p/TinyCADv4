@@ -1,4 +1,4 @@
-import { clickPcbCommand, pcbMenuItem, pcbNetRow, selectPcbNet } from './pcb-controls.mjs';
+import { clickPcbCommand, clickPcbPoint, drawPcbOutline, pcbMenuItem, pcbNetRow, selectCopperRow, selectPcbNet } from './pcb-controls.mjs';
 import { readFile } from 'node:fs/promises';
 import { librarySqlite } from '../../lib/library-from-sql.mjs';
 import { expect, test } from '@playwright/test';
@@ -265,11 +265,14 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   await properties.getByRole('separator', { name: 'Resize board properties' }).focus();
   await page.keyboard.press('ArrowUp');
   expect((await properties.boundingBox()).height).toBeGreaterThan(initialProperties.height);
-  const toggleProperties = board.getByRole('button', { name: 'Toggle board properties' });
-  await toggleProperties.click();
-  await expect(properties).toBeHidden();
-  await toggleProperties.click();
+  await expect(board.getByRole('button', { name: /Toggle (board properties|footprint browser)/ })).toHaveCount(0);
+  const footprints = page.getByRole('region', { name: 'Footprints', exact: true });
+  await expect(footprints).toBeVisible();
+  await page.getByRole('button', { name: 'Hide side panel', exact: true }).click();
+  await expect(footprints).toBeHidden();
   await expect(properties).toBeVisible();
+  await page.getByRole('button', { name: 'Show side panel', exact: true }).click();
+  await expect(footprints).toBeVisible();
   const bounds = await canvas.boundingBox();
   const anchor = { x: Math.round(bounds.x + bounds.width * 0.4), y: Math.round(bounds.y + bounds.height * 0.4) };
   const worldAtAnchor = () => canvas.evaluate((svg, { x, y }) => {
@@ -408,12 +411,12 @@ test('opens and edits a standalone PCB in the shared shell', async ({
   await board.getByRole('button', { name: 'Redo', exact: true }).click();
   await page.evaluate(() => { window.pcbReplies.hold = 'geometry'; });
   await page.evaluate(() => localStorage.setItem('tinycad.language', 'de'));
-  await clickPcbCommand(board, 'Add copper zone…');
-  const zone = page.getByRole('dialog', { name: 'Add copper zone' });
+  await clickPcbCommand(board, 'Add copper zone');
+  await drawPcbOutline(canvas, [[3, 3], [8, 3], [8, 8], [3, 8]]);
+  const zone = board.getByRole('form', { name: 'Copper zone properties' });
   await zone.getByLabel('Outline (X, Y in mm)', { exact: true }).fill('2,0 2,0\n35,0; 2,0\n35,0 18,0\n2,0; 18,0');
   await zone.getByLabel('Disconnected copper').selectOption('retain');
   await zone.getByRole('button', { name: 'Apply', exact: true }).click();
-  await expect(zone).toBeHidden();
   await expect.poll(() => page.evaluate(() => window.pcbReplies.count())).toBe(1);
   await expect(board.getByText('Filling zones…')).toBeVisible();
   await board.getByRole('button', { name: 'Cancel zone fill' }).click();
@@ -709,10 +712,22 @@ test('uses one PCB workspace, shows DRC below the board, and finishes a route wi
 
 test('imports Protel connectivity into a standalone board and shows its pins in the netlist', async ({ page }) => {
   await page.goto(app.baseURL);
+  const hideSidebar = page.getByRole('button', { name: 'Hide side panel', exact: true });
+  const sidebarPosition = await hideSidebar.boundingBox();
+  const sidebarIcon = await hideSidebar.locator('svg').innerHTML();
   await page.getByRole('button', { name: 'File', exact: true }).click();
   await page.getByRole('menuitem', { name: 'New', exact: true }).click();
   await page.getByRole('menuitem', { name: 'New PCB', exact: true }).click();
   const workspace = page.getByRole('region', { name: 'PCB layout' });
+  const footprints = page.getByRole('region', { name: 'Footprints', exact: true });
+  await expect(footprints).toBeVisible();
+  await expect.poll(() => hideSidebar.boundingBox()).toEqual(sidebarPosition);
+  expect(await hideSidebar.locator('svg').innerHTML()).toBe(sidebarIcon);
+  await expect(workspace.getByRole('button', { name: /Toggle (board properties|footprint browser)/ })).toHaveCount(0);
+  await hideSidebar.click();
+  await expect(footprints).toBeHidden();
+  await page.getByRole('button', { name: 'Show side panel', exact: true }).click();
+  await expect(footprints).toBeVisible();
   await clickPcbCommand(workspace, 'Import schematic or netlist…');
   const dialog = page.getByRole('dialog', { name: 'Import schematic or netlist' });
   await dialog.getByLabel('Circuit source').setInputFiles({
@@ -726,6 +741,73 @@ test('imports Protel connectivity into a standalone board and shows its pins in 
   await clickPcbCommand(workspace, 'View netlist');
   const row = await pcbNetRow(workspace, { label: 'Power' });
   await expect(row).toContainText('J1.1, J2.2');
+});
+
+test('draws copper objects and previews Components and overlap picker selections', async ({ page }) => {
+  const api = await layoutRuntime();
+  const fixture = { ...placementFixture(api), nets: [{ id: crypto.randomUUID(), name: 'Supply' }] };
+  await page.addInitScript((bytes) => {
+    window.showOpenFilePicker = async () => [{
+      name: 'Copper.dpn', getFile: async () => new File([Uint8Array.from(bytes)], 'Copper.dpn'),
+    }];
+  }, [...await api.encodeBoard(fixture)]);
+  await page.goto(app.baseURL);
+  await page.getByRole('button', { name: 'File', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
+  const board = page.getByRole('region', { name: 'PCB layout', exact: true });
+  const canvas = board.getByRole('img', { name: 'Board layout' });
+  const layers = page.getByRole('region', { name: 'Layers', exact: true });
+  const topCopper = layers.getByRole('checkbox', { name: 'Top copper', exact: true });
+  const topPaste = layers.getByRole('checkbox', { name: 'Top solder paste', exact: true });
+  await topCopper.uncheck();
+  await topPaste.check();
+  await layers.getByRole('button', { name: 'Reset to defaults' }).click();
+  await expect(topCopper).toBeChecked();
+  await expect(topPaste).not.toBeChecked();
+
+  const component = board.getByRole('grid', { name: 'Placed components' }).getByRole('button', { name: 'U1', exact: true });
+  await component.hover();
+  await expect(canvas.locator('[data-selection-outline="hover"]')).toBeVisible();
+  await component.click();
+  await expect(canvas.locator('[data-component-selected="true"]')).toHaveCount(1);
+
+  for (const [action, label, shape] of [
+    ['Add placement area', 'Placement area', '[data-placement-area]'],
+    ['Add routing region', 'Routing region', '[data-routing-region]'],
+    ['Add copper zone', 'Copper zone', '[data-board-copper-object*="zone"]'],
+  ]) {
+    await clickPcbCommand(board, action);
+    await expect(board.getByRole('region', { name: label + ' drawing' })).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    for (const [x, y] of [[6, 6], [13, 6], [13, 12], [6, 12], [6, 6]]) {
+      await clickPcbPoint(canvas, x, y);
+    }
+    const properties = board.getByRole('form', { name: label + ' properties' });
+    await expect(properties).toBeVisible();
+    await expect(canvas.locator(shape)).toHaveAttribute('data-copper-highlight', 'selected');
+    if (label === 'Placement area') {
+      await properties.getByLabel('Name', { exact: true }).fill('Antenna');
+      await properties.getByRole('button', { name: 'Apply', exact: true }).click();
+    }
+    await board.getByRole('button', { name: 'Back to Components', exact: true }).click();
+  }
+
+  const area = canvas.locator('[data-placement-area]');
+  const areaRow = board.getByRole('grid', { name: 'Placed components' }).getByRole('button', { name: 'Placement area · Antenna' });
+  await areaRow.hover();
+  await expect(area).toHaveAttribute('data-copper-highlight', 'hover');
+  await areaRow.click();
+  await expect(area).toHaveAttribute('data-copper-highlight', 'selected');
+  await board.getByRole('button', { name: 'Back to Components', exact: true }).click();
+  await clickPcbCommand(board, 'Pick overlapping objects');
+  await clickPcbPoint(canvas, 10, 10);
+  const picker = board.getByRole('region', { name: 'Pick overlapping objects' });
+  const pickedArea = picker.getByRole('button', { name: /Placement area.*Antenna/ });
+  await pickedArea.hover();
+  await expect(area).toHaveAttribute('data-copper-highlight', 'hover');
+  await pickedArea.click();
+  await expect(picker).toBeHidden();
+  await expect(board.getByRole('form', { name: 'Placement area properties' })).toBeVisible();
 });
 
 test('uses the Circuit Design panel switcher, PCB scrollbars and drawing selection', async ({ page }) => {
@@ -974,7 +1056,7 @@ test('searches, previews and places queued footprints in order', async ({ page }
   await page.getByRole('button', { name: 'File', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
   const workspace = page.getByRole('region', { name: 'PCB layout' });
-  const tray = workspace.getByRole('region', { name: 'Unplaced components' });
+  const tray = page.getByRole('region', { name: 'Unplaced components' });
   const results = tray.getByRole('list', { name: 'Unplaced components' });
   const search = tray.getByLabel('Search unplaced components');
   await workspace.getByRole('button', { name: 'First board guide', exact: true }).click();
@@ -1087,7 +1169,7 @@ test('builds and reopens a manually connected standalone PCB', async ({ page }) 
   }
   await dialog.getByRole('button', { name: 'Done' }).click();
   const canvas = workspace.getByRole('img', { name: 'Board layout' });
-  const tray = workspace.getByRole('region', { name: 'Unplaced components' });
+  const tray = page.getByRole('region', { name: 'Unplaced components' });
   for (const [index, reference] of ['J1', 'J2'].entries()) {
     await tray.getByRole('button', { name: reference + ' · Test terminal' }).click();
     await workspace.getByLabel('X (mm)', { exact: true }).fill(String(10 + 10 * index));
@@ -1260,13 +1342,14 @@ test('previews transformed placement airwires without editing the board', async 
   await page.getByRole('button', { name: 'File', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
   const workspace = page.getByRole('region', { name: 'PCB layout' });
-  await workspace.getByRole('list', { name: 'Unplaced components', exact: true })
+  await page.getByRole('list', { name: 'Unplaced components', exact: true })
     .getByRole('button', { name: 'U2' }).click();
   const canvas = workspace.getByRole('img', { name: 'Board layout' });
   const preview = canvas.locator('[data-placement-preview]');
   const guide = preview.locator('[data-placement-airwire]');
-  const placeOnBoard = workspace.getByRole('button', { name: 'Place on board', exact: true });
-  const footprintImage = workspace.getByRole('img', { name: 'Footprint pad preview' });
+  const placeOnBoard = page.getByRole('region', { name: 'Footprints', exact: true })
+    .getByRole('button', { name: 'Place on board', exact: true });
+  const footprintImage = page.getByRole('img', { name: 'Footprint pad preview' });
   await footprintImage.dragTo(canvas);
   await expect(preview).toHaveCount(1);
   await canvas.click({ button: 'right' });
@@ -1322,14 +1405,16 @@ test('previews transformed placement airwires without editing the board', async 
   });
   expect(saved.tracks ?? []).toEqual([]);
   const placedFootprint = canvas.locator('[data-component="' + source.components[1].id + '"]');
-  await placedFootprint.locator('[data-board-pad]').first().click({ button: 'right' });
-  const moveCommand = page.getByRole('menuitem', { name: 'Move on board', exact: true });
-  await expect(moveCommand).toBeVisible();
-  await moveCommand.click();
-  await canvas.hover();
-  await expect(preview).toHaveCount(1);
+  const padBounds = await placedFootprint.locator('[data-board-pad]').first().boundingBox();
+  const dragStart = { x: padBounds.x + padBounds.width / 2, y: padBounds.y + padBounds.height / 2 };
+  await page.mouse.move(dragStart.x, dragStart.y);
+  await page.mouse.down();
+  await page.mouse.move(dragStart.x + 24, dragStart.y, { steps: 5 });
+  const movePreview = canvas.locator('[data-footprint-move-preview]');
+  await expect(movePreview).toHaveCount(1);
   await page.keyboard.press('Escape');
-  await expect(preview).toHaveCount(0);
+  await page.mouse.up();
+  await expect(movePreview).toHaveCount(0);
   await x.fill('26');
   await expect(preview).toHaveCount(0);
   expect(await page.evaluate(() => window.airwireSaved)).toEqual(savedBytes);
@@ -1357,14 +1442,11 @@ test('adds a wire jumper and keeps bare-copper connectivity separate', async ({ 
   await page.getByRole('button', { name: 'File', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
   const workspace = page.getByRole('region', { name: 'PCB layout' });
-  await clickPcbCommand(workspace, 'Add wire jumper…');
-  const jumper = page.getByRole('dialog', { name: 'Add wire jumper' });
-  await jumper.getByLabel('Jumper net').selectOption(netId);
-  for (const [label, value] of [['A X', '8'], ['A Y', '6'], ['B X', '16'], ['B Y', '10']])
-    await jumper.getByLabel(label + ' (mm)', { exact: true }).fill(value);
-  await jumper.getByRole('button', { name: 'Apply', exact: true }).click();
-  await expect(jumper).toBeHidden();
   const canvas = workspace.getByRole('img', { name: 'Board layout' });
+  await clickPcbCommand(workspace, 'Add wire jumper');
+  await clickPcbPoint(canvas, 8, 6);
+  await clickPcbPoint(canvas, 16, 10);
+  await expect(workspace.getByRole('form', { name: 'Wire jumper properties' })).toBeVisible();
   const land = canvas.locator('[data-jumper-end="A"]');
   await expect(land).toBeVisible();
   await workspace.getByRole('button', { name: 'Route track', exact: true }).click();
@@ -1376,7 +1458,7 @@ test('adds a wire jumper and keeps bare-copper connectivity separate', async ({ 
     return { x: p.x, y: p.y };
   });
   await page.mouse.click(second.x, second.y);
-  await workspace.getByRole('button', { name: 'Finish route' }).click();
+  await page.keyboard.press('End');
   await expect.poll(() => canvas.locator('[data-track]').count()).toBeGreaterThan(0);
 
   const checks = page.getByRole('region', { name: 'PCB design checks' });
@@ -1386,8 +1468,8 @@ test('adds a wire jumper and keeps bare-copper connectivity separate', async ({ 
     await checks.getByRole('button', { name: 'Close', exact: true }).click();
   };
   await runChecks('Separate bare copper islands require fitted wire jumpers');
-  await workspace.getByRole('button', { name: 'Edit JP1…' }).click();
-  const edit = page.getByRole('dialog', { name: 'Edit wire jumper' });
+  await selectCopperRow(workspace, 'Wire jumper · JP1');
+  const edit = workspace.getByRole('form', { name: 'Wire jumper properties' });
   await edit.getByLabel('Fit jumper').uncheck();
   await edit.getByRole('button', { name: 'Apply', exact: true }).click();
   await runChecks('Required terminals remain in separate copper islands');
@@ -1775,16 +1857,16 @@ test('creates a routing region and enforces its width and clearance in the route
   await page.getByRole('button', { name: 'File', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
   const workspace = page.getByRole('region', { name: 'PCB layout' });
-  await clickPcbCommand(workspace, 'Add routing region…');
-  const dialog = page.getByRole('dialog', { name: 'Add routing region' });
+  const canvas = workspace.getByRole('img', { name: 'Board layout' });
+  await clickPcbCommand(workspace, 'Add routing region');
+  await drawPcbOutline(canvas, [[8, 5], [13, 5], [13, 10], [8, 10]]);
+  const dialog = workspace.getByRole('form', { name: 'Routing region properties' });
   await dialog.getByLabel('Name', { exact: true }).fill('Wide corridor');
   await dialog.getByLabel('Copper layers').selectOption('top');
-  await dialog.getByLabel('Outline (X, Y in mm)').fill('8, 5\n13, 5\n13, 10\n8, 10');
+  await dialog.getByLabel('Exclude tracks').uncheck();
   await dialog.getByLabel('Minimum track width (mm)').fill('0.4');
   await dialog.getByLabel('Copper clearance (mm)').fill('0.6');
   await dialog.getByRole('button', { name: 'Apply', exact: true }).click();
-  await expect(dialog).toBeHidden();
-  const canvas = workspace.getByRole('img', { name: 'Board layout' });
   await expect(canvas.locator('[data-routing-region]')).toBeVisible();
   const screen = (x, y) => canvas.evaluate((svg, p) => {
     const cursor = new DOMPoint(p.x, -p.y).matrixTransform(svg.querySelector('[data-svg-drawing]').getScreenCTM());
@@ -1821,8 +1903,9 @@ test('creates a routing region and enforces its width and clearance in the route
   await page.mouse.click(...await screen(16, 7));
   await expect(workspace.getByRole('alert')).toContainText('routing region');
   await page.evaluate(() => localStorage.setItem('tinycad.language', 'de'));
-  await workspace.getByLabel('Track width preset').selectOption('custom');
-  await workspace.getByLabel('Track width (mm)').fill('0,45');
+  const tools = page.getByRole('region', { name: 'Board tools', exact: true });
+  await tools.getByLabel('Track width preset').selectOption('custom');
+  await tools.getByLabel('Track width (mm)').fill('0,45');
   await page.mouse.move(...await screen(15, 7));
   await expect(preview).toHaveAttribute('data-route-preview', 'clear');
   await expect(preview).toHaveAttribute('stroke-width', '450000');
@@ -1830,7 +1913,7 @@ test('creates a routing region and enforces its width and clearance in the route
   await expect(preview).toHaveCSS('stroke-dasharray', 'none');
   await expect(blockedMarker).toHaveCount(0);
   await page.mouse.click(...await screen(16, 7));
-  await workspace.getByRole('button', { name: 'Finish route' }).click();
+  await page.keyboard.press('End');
   await expect(canvas.locator('[data-track]')).toHaveCount(2);
   await workspace.getByRole('button', { name: 'Route track', exact: true }).click();
   await page.mouse.click(...await screen(4, 8.5));
@@ -2112,14 +2195,13 @@ test('authors placement areas and locates their design check findings', async ({
   await page.getByRole('button', { name: 'File', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
   const workspace = page.getByRole('region', { name: 'PCB layout' });
-  await clickPcbCommand(workspace, 'Add placement area…');
-  const dialog = page.getByRole('dialog', { name: 'Add placement area' });
+  const canvas = workspace.getByRole('img', { name: 'Board layout' });
+  await clickPcbCommand(workspace, 'Add placement area');
+  await drawPcbOutline(canvas, [[9, 9], [11, 9], [11, 11], [9, 11]]);
+  const dialog = workspace.getByRole('form', { name: 'Placement area properties' });
   await dialog.getByLabel('Name', { exact: true }).fill('Antenna clearance');
   await dialog.getByLabel('Assembly side').selectOption('top');
-  await dialog.getByLabel('Outline (X, Y in mm)').fill('9, 9\n11, 9\n11, 11\n9, 11');
   await dialog.getByRole('button', { name: 'Apply' }).click();
-  await expect(dialog).toBeHidden();
-  const canvas = workspace.getByRole('img', { name: 'Board layout' });
   await expect(canvas.locator('[data-placement-area]')).toHaveCount(1);
   const readView = async () => (await canvas.getAttribute('data-view-box')).split(' ').map(Number);
   const fitBoard = workspace.getByRole('button', { name: 'Fit board', exact: true });
@@ -2141,8 +2223,8 @@ test('authors placement areas and locates their design check findings', async ({
   await expect(checks.getByText(/Placement keep-in and keep-out areas · limited/)).toBeVisible();
   await finding.getByRole('button', { name: /U1 origin intersects top keep-out/ }).focus();
   await page.keyboard.press('Enter');
-  await expect(checks).toBeHidden();
-  await expect(workspace.getByRole('group', { name: 'Position U1' })).toBeVisible();
+  await expect(checks).toBeVisible();
+  await expect(canvas.locator('[data-component-selected="true"]')).toHaveCount(1);
   await expect(canvas.locator('[data-check-marker]')).toHaveCount(1);
   const [left, top, width, height] = await readView();
   expect(left + width / 2).toBe(10e6);
@@ -2159,8 +2241,10 @@ test('authors placement areas and locates their design check findings', async ({
   expect(saved.placementAreas[0]).toMatchObject({ name: 'Antenna clearance', kind: 'keep-out', side: 'top' });
   expect(saved.footprints).toEqual(source.footprints);
   expect(saved.outline).toEqual(source.outline);
-  await clickPcbCommand(workspace, 'View board tools');
-  await workspace.getByRole('button', { name: 'Remove Antenna clearance' }).click();
+  await checks.getByRole('button', { name: 'Close', exact: true }).click();
+  await selectCopperRow(workspace, 'Placement area · Antenna clearance');
+  await workspace.getByRole('region', { name: 'Placement area', exact: true })
+    .getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(canvas.locator('[data-placement-area]')).toHaveCount(0);
   await workspace.getByRole('button', { name: 'Undo', exact: true }).click();
   await expect(canvas.locator('[data-placement-area]')).toHaveCount(1);
@@ -2260,12 +2344,11 @@ test('saves independent zone no-connect settings and exports the refilled copper
   await page.goto(app.baseURL);
   await open();
   const initialPath = await workspace.locator('[data-zone-fill]').getAttribute('d');
-  await workspace.getByRole('button', { name: 'Edit zone…' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Edit copper zone' });
+  await selectCopperRow(workspace, /Copper zone ·/);
+  const dialog = workspace.getByRole('form', { name: 'Copper zone properties' });
   await dialog.getByLabel('Pads', { exact: true }).selectOption('none');
   await dialog.getByLabel('Vias', { exact: true }).selectOption('none');
   await dialog.getByRole('button', { name: 'Apply', exact: true }).click();
-  await expect(dialog).toBeHidden();
   await expect(workspace.getByText('Zones filled.', { exact: true })).toBeVisible();
   const isolatedPath = await workspace.locator('[data-zone-fill]').getAttribute('d');
   expect(isolatedPath).not.toEqual(initialPath);
@@ -2280,10 +2363,10 @@ test('saves independent zone no-connect settings and exports the refilled copper
   await page.reload();
   await open();
   await expect(workspace.locator('[data-zone-fill]')).toHaveAttribute('d', isolatedPath);
-  await workspace.getByRole('button', { name: 'Edit zone…' }).click();
+  await selectCopperRow(workspace, /Copper zone ·/);
   await expect(dialog.getByLabel('Pads', { exact: true })).toHaveValue('none');
   await expect(dialog.getByLabel('Vias', { exact: true })).toHaveValue('none');
-  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await workspace.getByRole('button', { name: 'Back to Components', exact: true }).click();
   await clickPcbCommand(workspace, 'CAM read-back preview…');
   const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
   await expect(cam.getByRole('img', { name: 'CAM read-back' })).toBeVisible();

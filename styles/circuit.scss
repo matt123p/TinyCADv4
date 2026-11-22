@@ -205,12 +205,31 @@ $scrollbar-size: 9px;
 
 .side-panel-collapsed {
   width: 48px;
+}
 
-  .side-panel,
-  .side-panel-es {
-    opacity: 0;
-    pointer-events: none;
-  }
+.side-panel-container > .editor-side-panel-toggle {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-end: 12px;
+  z-index: 1;
+}
+
+.side-panel-collapsed > .editor-side-panel-toggle {
+  inset-inline-end: 8px;
+}
+
+.editor-side-panel-content {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+
+  &[hidden] { display: none; }
+}
+
+.editor-side-panel-content .editor-side-panel-header {
+  min-block-size: 32px;
+  padding-inline-end: 36px;
 }
 
 .side-panel-resizing {
@@ -332,10 +351,6 @@ $scrollbar-size: 9px;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: repeat(2, minmax(0, 1fr));
   }
-}
-
-.side-panel-container[hidden] {
-  display: none;
 }
 
 .project-browser-toolbar,
@@ -834,6 +849,23 @@ $scrollbar-size: 9px;
 
   > .fui-Button { justify-self: end; }
   + .pcb-connection-form { border-top: 1px solid var(--colorNeutralStroke2); }
+}
+
+.pcb-selection-properties .pcb-profile-fields {
+  display: grid;
+  gap: 0.375rem;
+  width: 100%;
+  max-width: 48rem;
+
+  > label:has(> .fui-Input, > .fui-Select, > .fui-Textarea) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .fui-Input { width: 100%; }
+  > .fui-Button { justify-self: end; }
 }
 
 .pcb-contour-preview {

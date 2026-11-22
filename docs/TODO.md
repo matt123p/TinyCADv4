@@ -20,6 +20,8 @@ The [PCB layout specification](TinyCAD_PCB_Layout_Complete_Specification.md), [p
 - [x] Preserve the v4.1.0 Single File startup with project controls hidden. Verify explicit entry into Project mode and standalone PCB open and save in the shared editor. [Single File and Project modes](project-specification.md#single-file-and-project-modes)
 - [x] Repeat the affected classroom, reference board and tab workflows through the redesigned editor. Retain separate evidence for native files, connectivity and manufacturing read-back.
 - [x] Verify the browser workflow for Layers, Board Tools, clickable bottom-panel DRC findings, Protel import, and PCB route completion, selection and deletion.
+- [x] Verify the shared left sidebar toggle across standalone schematic and PCB files, and across Projects, Libraries and Source Control in Project mode.
+- [x] Verify canvas drawing and inline properties for polygon Copper tools, Components and overlap picker previews, and reset of PCB layer visibility to defaults.
 - [ ] Requalify the PCB-only menus and relocated panels in the native desktop editor.
 
 The recovery rerun covers the standalone PCB, placement queue, group edits,

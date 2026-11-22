@@ -24,7 +24,6 @@ import {
   GlobeRegular,
   LibraryRegular,
   FolderRegular,
-  PanelLeftContractRegular,
   DocumentAddRegular,
   FolderAddRegular,
   ArrowClockwiseRegular,
@@ -288,7 +287,6 @@ interface LibrariesPanelProps {
   config: UserConfig;
   dispatch: Dispatch<any>;
   inputRef: any;
-  toggleSidePanel?: () => void;
 }
 
 interface LibrariesPanelState {
@@ -904,7 +902,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
   return (
     <div className={styles.container} ref={props.inputRef}>
       <LibraryBrowserHeader>
-        <div className={styles.searchContainer}>
+        <div className={styles.searchContainer + ' editor-side-panel-header'}>
           <div style={{ flex: 1, position: 'relative' }}>
             <SearchRegular className={styles.searchIcon} />
             <Input
@@ -914,14 +912,6 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
               onChange={(e, data) => handleSearchChange(data.value)}
             />
           </div>
-          {props.toggleSidePanel && (
-            <Button
-              appearance="subtle"
-              icon={<PanelLeftContractRegular />}
-              onClick={props.toggleSidePanel}
-              title={t('library.hideSidePanel')}
-            />
-          )}
         </div>
         <LibrarySourceTabs label={t('library.libraries')} selected={state.source} onSelect={handleSourceChange}
           sources={[

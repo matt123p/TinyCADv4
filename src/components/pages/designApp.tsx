@@ -13,7 +13,7 @@ import {
   DialogTitle, DialogContent, DialogActions, Tab, TabList,
 } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
-import { BookOpenRegular, BranchForkRegular, DismissRegular, FolderRegular, PanelLeftExpandRegular } from '@fluentui/react-icons';
+import { BookOpenRegular, BranchForkRegular, DismissRegular, FolderRegular } from '@fluentui/react-icons';
 import { ProjectFileIcon } from '../projects/ProjectFileIcon';
 import ToolbarContainer from '../../state/containers/toolbarContainer';
 import { EditorToolbar } from '../toolbar/EditorToolbar';
@@ -31,7 +31,7 @@ import { isBoardFile } from '../../../shared/drawingFiles';
 import { BrowserSheetData } from '../../model/dsnView';
 import { boardOpened, circuitOpened, confirmBoardClose, confirmCircuitOpen, editFootprintLibrary, saveActiveBoard, boardHistoryCommand, editorHeaderDocument } from '../../io/boardWorkspaceEvents';
 import { projectDocumentOpened, projectFilesChanged, projectFolderOpened } from '../../io/projectStorage';
-import { chooseProjectFolder, closeProjectMode, saveProjectTabs, startupMode } from '../../io/projectMode';
+import { chooseProjectFolder, closeProjectMode, recentDriveProjectFolders, rememberDriveProjectFolder, saveProjectTabs, startupMode } from '../../io/projectMode';
 import type { docDrawing } from '../../state/undo/undo';
 import type { ProjectLocation } from '../../io/projectStorage';
 import { activateSchematicTab, enableSchematicTabs, openSchematicTabs, schematicFileTabKey, schematicTabDirty } from '../../state/schematicTabs';
@@ -111,14 +111,6 @@ const useStyles = makeStyles({
     minHeight: 0,
     maxWidth: '60vw',
     flexShrink: 0,
-  },
-  toggleButton: {
-    position: 'absolute',
-    top: '8px',
-    right: '8px',
-    zIndex: 1000,
-    minWidth: '32px',
-    padding: '6px',
   },
 });
 
@@ -421,7 +413,6 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const [closingProject, setClosingProject] = useState(false);
   const [closeProjectError, setCloseProjectError] = useState('');
   const [openedProjectRoot, setOpenedProjectRoot] = useState<ProjectLocation>();
-  const [showFootprints, setShowFootprints] = useState(true);
   const [footprintsHost, setFootprintsHost] = useState<HTMLDivElement>(null);
   const [pcbRightPanelHost, setPcbRightPanelHost] = useState<HTMLElement>(null);
   const [sidePanelWidth, setSidePanelWidth] = useState(loadSidePanelWidth);
@@ -445,12 +436,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     const openProject = (event: CustomEvent<ProjectLocation>) => {
       projectModeChanged.current = true;
       if (process.env.TARGET_SYSTEM === 'google') {
-        try {
-          const user = store.getState().altStore.user?.id || '';
-          localStorage.setItem(`tinycad.driveProjectFolder.${user}`, JSON.stringify(event.detail));
-        } catch {
-          // The current folder remains available for this session.
-        }
+        rememberDriveProjectFolder(store.getState().altStore.user?.id || '', event.detail);
       }
       enterProject(event.detail);
     };
@@ -474,10 +460,13 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
         root = await projectRequest({ operation: 'recent-project-folder' });
       } else if (process.env.TARGET_SYSTEM === 'google') {
         const user = store.getState().altStore.user?.id || '';
-        const saved = JSON.parse(localStorage.getItem(`tinycad.driveProjectFolder.${user}`));
-        if (typeof saved?.id === 'string' && typeof saved.name === 'string') {
-          await projectRequest({ operation: 'list', folder: saved.id });
-          root = saved;
+        for (const saved of recentDriveProjectFolders(user)) {
+          try {
+            root = await projectRequest({ operation: 'open-recent-project-folder', id: saved.id });
+            break;
+          } catch {
+            // Try older folders when the newest one is unavailable.
+          }
         }
       }
       if (root && current && !projectModeChanged.current) enterProject(root);
@@ -870,9 +859,11 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const splitVisible = sideBySide && canSplit && !gitReview && !activeProjectFile;
   const boardOnly = pcbActive && !splitVisible && !gitReview && !activeProjectFile;
   const boardToolbarAtTop = boardOnly && !!pcb;
-  const panelsVisible = sidePanelVisible && (projectMode || !boardOnly);
+  const panelsVisible = sidePanelVisible;
   const boardLibrary = pcbActive && !gitReview && !activeProjectFile && !!pcb;
-  const projectFootprintsVisible = panelsVisible && projectPanel === 'libraries' && boardLibrary;
+  const libraryPanel = boardLibrary
+    ? <div className="project-footprints" role="region" aria-label="Footprints" ref={setFootprintsHost} />
+    : <SidePanelContainer />;
   function selectProjectPanel(panel: typeof projectPanel) {
     setSidePanelVisible(!(panelsVisible && projectPanel === panel));
     setProjectPanel(panel);
@@ -951,7 +942,10 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
         </Suspense>
       )}
       {choosingProject && DriveProjectFolderDialog && (
-        <Suspense fallback={null}><DriveProjectFolderDialog onClose={() => setChoosingProject(false)} /></Suspense>
+        <Suspense fallback={null}>
+          <DriveProjectFolderDialog account={store.getState().altStore.user?.id || ''}
+            onClose={() => setChoosingProject(false)} />
+        </Suspense>
       )}
       {confirmCloseProject && (
         <Dialog open onOpenChange={(_, data) => !data.open && !closingProject && setConfirmCloseProject(false)}>
@@ -1072,20 +1066,11 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
         <EditorSidePanel
           width={panelsVisible ? sidePanelWidth : undefined}
           collapsed={!panelsVisible}
+          onToggle={toggleSidePanel}
           resizing={sidePanelResizing}
           onResize={panelsVisible ? handleSidePanelResize : undefined}
           onDragStateChange={setSidePanelResizing}
-          hidden={!panelsVisible && (projectMode || boardOnly)}
         >
-          {!panelsVisible && !projectMode && (
-            <Button
-              className={styles.toggleButton}
-              appearance="subtle"
-              icon={<PanelLeftExpandRegular />}
-              onClick={toggleSidePanel}
-              title={t('designApp.showSidePanel')}
-            />
-          )}
           {projectMode && ProjectBrowser ? (
             <>
               <div className="left-panel-section" hidden={!panelsVisible || projectPanel !== 'projects'}>
@@ -1100,9 +1085,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
                   isProjectDocumentOpen={(id) => documents.isProtected(id) || schematicTabs.some(({ tab }) => tab.file.id === id) || boards.tabs.some(({ document }) => document.fileId === id || document.projectRootId === id || document.ancestorIds?.includes(id))} openedDocumentIds={[...documents.files.map(({ id }) => id), ...schematicTabs.flatMap(({ tab }) => typeof tab.file.id === 'string' ? [tab.file.id] : []), ...boards.tabs.flatMap(({ document }) => document.fileId ? [document.fileId] : [])]} onOpenProjectDocument={openProjectDocument} /></Suspense>
               </div>
               <div className="left-panel-section" hidden={!panelsVisible || projectPanel !== 'libraries'}>
-                {boardLibrary
-                  ? <div className="project-footprints" role="region" aria-label="Footprints" ref={setFootprintsHost} />
-                  : <SidePanelContainer toggleSidePanel={toggleSidePanel} />}
+                {libraryPanel}
               </div>
               {ProjectSourceControl && (gitRoot || projectPanel === 'source') && (
                 <div className="left-panel-section" hidden={!panelsVisible || projectPanel !== 'source'}>
@@ -1118,7 +1101,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
                 </div>
               )}
             </>
-          ) : <SidePanelContainer toggleSidePanel={toggleSidePanel} />}
+          ) : libraryPanel}
         </EditorSidePanel>
         <div className="main-content-area">
           {projectMode && orderedFileTabs.length > 0 && (
@@ -1226,12 +1209,11 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
                 {pcb ? (
                   <BoardWorkspace key={activeBoard.id + ':' + activeBoard.mount} {...pcb}
                     rightPanelHost={pcbRightPanelHost}
-                    footprintsHost={projectMode ? footprintsHost : undefined}
-                    footprintsVisible={projectMode ? projectFootprintsVisible : showFootprints}
-                    onToggleFootprints={projectMode ? (visible) => {
-                      if (visible) setProjectPanel('libraries');
-                      setSidePanelVisible(visible);
-                    } : setShowFootprints}
+                    footprintsHost={footprintsHost}
+                    onShowFootprints={() => {
+                      setProjectPanel('libraries');
+                      setSidePanelVisible(true);
+                    }}
                     bottomPanelHeight={bottomPanelHeight} onBottomPanelResize={handleBottomPanelResize}
                     onOpen={() => dispatch(fileOpen() as any)}
                     onProjectFolder={DriveProjectFolderDialog ? () => window.dispatchEvent(new Event(chooseProjectFolder)) : undefined}
