@@ -4,7 +4,9 @@ import { generateActiveBom, generateActiveNetlist } from './netlists/activeNetli
 import { apiServer, tinycadUrl } from './apiServer';
 import { withoutResults } from '../simulation/document';
 import { drawingFileName, isCompressedDrawing } from '../../shared/drawingFiles.js';
-import { encodeDrawing } from './dsnCodec';
+import { decodeDrawing, encodeDrawing } from './dsnCodec';
+import { activateSchematicTab, openSchematicTabs, schematicFileTabKey } from '../state/schematicTabs';
+import type { dsnDrawing } from '../model/dsnDrawing';
 import React from 'react';
 
 import { ActionCreators } from 'redux-undo';
@@ -58,8 +60,8 @@ export type FileIdType = string | FileSystemFileHandle;
 
 export interface UserManager {
   projectFiles?(request: ProjectStorageRequest): Promise<unknown>;
-  initialize(dispatch: Dispatch): Promise<void>;
-  fileOpen(dispatch: Dispatch, file?: CurrentFile): void;
+  initialize(dispatch: Dispatch, getState: () => docDrawing): Promise<void>;
+  fileOpen(dispatch: Dispatch, file?: CurrentFile, projectMode?: boolean): void;
   saveFile(xml: string | Uint8Array, file: CurrentFile, expectedVersion?: string): Promise<any>;
   login(): Promise<void>;
   renameFile(title: string, fileId: FileIdType): Promise<boolean>;
@@ -87,7 +89,7 @@ export function initialise() {
       userManager = new FileSystemUserManager();
     }
 
-    return userManager.initialize(dispatch);
+    return userManager.initialize(dispatch, getState);
   };
 }
 
@@ -100,6 +102,25 @@ export function login(dispatch: Dispatch, getState: { (): docDrawing }) {
 function checkSaveNeeded(getState: { (): docDrawing }): boolean {
   const state = getState();
   return state.docStore.present.drawingVersion !== state.altStore.savedVersion;
+}
+
+function openingReplacesDirtySchematic(getState: () => docDrawing) {
+  const state = getState();
+  return checkSaveNeeded(getState) && !(state.schematicTabs?.enabled && schematicFileTabKey(state.altStore.file));
+}
+
+export function showOpenedSchematic(dispatch: Dispatch, state: docDrawing, drawing: dsnDrawing, file: CurrentFile) {
+  if (!canOpenCircuit()) return;
+  const path = (value: string) => value.replaceAll('\\', '/').toLowerCase();
+  const existing = openSchematicTabs(state).find(({ tab }) =>
+    tab.file.id === file.id || (process.env.TARGET_SYSTEM === 'electron' && tab.file.project &&
+      path(`${tab.file.project.rootId}/${tab.file.project.documentPath}`) === path(String(file.id))));
+  if (existing) dispatch(activateSchematicTab(existing.key) as any);
+  else {
+    dispatch(actionSetDocument(drawing, file.name, file.id, file.folderId));
+    dispatch(ActionCreators.clearHistory());
+  }
+  window.dispatchEvent(new Event(circuitOpened));
 }
 
 // Performs the actual action after user confirms (or if no save needed)
@@ -122,11 +143,18 @@ export function performPendingAction(pendingAction: UnsavedAction) {
         dispatch(ActionCreators.clearHistory());
         break;
       case 'file-open':
-        userManager.fileOpen(dispatch);
+        userManager.fileOpen(dispatch, undefined, getState().schematicTabs?.enabled);
         break;
       case 'file-open-recent':
-        userManager.fileOpen(dispatch, pendingAction.file as CurrentFile);
+        userManager.fileOpen(dispatch, pendingAction.file as CurrentFile, getState().schematicTabs?.enabled);
         break;
+      case 'file-open-project-schematic':
+        return import('./projects').then(async ({ projectRequest }) => {
+          const { file, folder } = pendingAction;
+          const { data } = await projectRequest({ operation: 'read', id: file.id });
+          const drawing = await decodeDrawing(data);
+          showOpenedSchematic(dispatch, getState(), drawing, { ...file, folderId: folder });
+        }).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
       case 'app-close':
         if (process.env.TARGET_SYSTEM === 'electron' && window.electronAPI) {
           window.electronAPI.sendAppClosingResponse(true);
@@ -139,8 +167,17 @@ export function performPendingAction(pendingAction: UnsavedAction) {
 export function fileOpenProject(pendingAction: OpenProjectAction) {
   return (dispatch: Dispatch, getState: () => docDrawing) => {
     if (getState().altStore.saveInProgress) return;
-    const state = getState();
-    if (checkSaveNeeded(getState) && !(state.schematicTabs?.enabled && state.altStore.file.project))
+    if (openingReplacesDirtySchematic(getState))
+      dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
+    else return dispatch(performPendingAction(pendingAction) as any);
+  };
+}
+
+export function fileOpenProjectSchematic(file: { name: string; id: string }, folder: string) {
+  return (dispatch: Dispatch, getState: () => docDrawing) => {
+    if (getState().altStore.saveInProgress) return;
+    const pendingAction: UnsavedAction = { type: 'file-open-project-schematic', file, folder };
+    if (openingReplacesDirtySchematic(getState))
       dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
     else return dispatch(performPendingAction(pendingAction) as any);
   };
@@ -150,7 +187,7 @@ export function fileNew() {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
     const pendingAction: UnsavedAction = { type: 'file-new' };
     
-    if (checkSaveNeeded(getState)) {
+    if (openingReplacesDirtySchematic(getState)) {
       dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
       return;
     }
@@ -166,7 +203,7 @@ export function fileOpen(file?: CurrentFile) {
       ? { type: 'file-open-recent', file: { name: file.name, id: file.id as string } }
       : { type: 'file-open' };
     
-    if (checkSaveNeeded(getState)) {
+    if (openingReplacesDirtySchematic(getState)) {
       dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
       return;
     }
@@ -183,6 +220,12 @@ export function fileSave(dispatch: Dispatch, getState: { (): docDrawing }) {
 
 export function saveSchematicFile(dispatch: Dispatch, getState: () => docDrawing) {
   return internalfileSave(dispatch, getState, false);
+}
+
+export async function saveStandaloneSchematic(drawing: dsnDrawing, file: CurrentFile) {
+  const netlist = await wkrGenerateNetlist(drawing);
+  const bytes = await encodeDrawing(new updateDrawing().updateNetlistHints(drawing, netlist));
+  return userManager.saveFile(bytes, { ...file, name: drawingFileName(file.name, isCompressedDrawing(bytes)) });
 }
 
 export function fileSaveAs(dispatch: Dispatch, getState: { (): docDrawing }) {
@@ -236,20 +279,7 @@ function internalfileSave(
 
   dispatch(actionSetSaveInProgress(true, null));
 
-  return wkrGenerateNetlist(drawing)
-    .then((netlist) => {
-      const io = new ioXML();
-      const update_drawing = new updateDrawing();
-      const drawing_with_hints = update_drawing.updateNetlistHints(
-        drawing,
-        netlist,
-      );
-      return encodeDrawing(drawing_with_hints).then(bytes => userManager.saveFile(bytes, {
-        ...file,
-        name: drawingFileName(file.name, isCompressedDrawing(bytes)),
-        id: saveAs ? null : file.id,
-      }));
-    })
+  return saveStandaloneSchematic(drawing, { ...file, id: saveAs ? null : file.id })
     .then(
       (meta) => {
         dispatch(

@@ -35,6 +35,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     close: () => ipcRenderer.send('window-close'),
     setTitle: (title) => ipcRenderer.send('window-set-title', title),
     projectFiles: (request) => ipcRenderer.invoke('project-files', request),
+    onProjectFoldersChanged: (callback) => {
+        const listener = () => callback();
+        ipcRenderer.on('project-folders-changed', listener);
+        return () => ipcRenderer.removeListener('project-folders-changed', listener);
+    },
     loadFile: (file) => ipcRenderer.send('load-file', file),
     saveFile: (data) => ipcRenderer.send('save-file', data),
     exampleCatalog: () => ipcRenderer.invoke('bundled-example-catalog'),

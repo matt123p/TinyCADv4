@@ -20,6 +20,89 @@ test.afterAll(async () => {
   await app?.close();
 });
 
+test('opens project files into tabs and hosts PCB tools in the shared sidebar', async ({ page }, info) => {
+  await mkdir(info.project.outputDir, { recursive: true });
+  const root = await mkdtemp(path.join(info.project.outputDir, 'project-shell-'));
+  try {
+    const nested = path.join(root, 'Notes');
+    await mkdir(nested);
+    for (const [name, sheet] of [['First.dsn', 'First sheet'], ['Second.dsn', 'Second sheet']]) {
+      await writeFile(path.join(root, name), `<TinyCADSheets><TinyCAD><NAME>${sheet}</NAME></TinyCAD></TinyCADSheets>`);
+    }
+    await writeFile(path.join(nested, 'View.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="4"/></svg>');
+    await cp(path.resolve('examples/pcb/led-classroom/Reference/LED.dpn'), path.join(root, 'Board.dpn'));
+    await installProjectBridge(page, root, undefined, undefined, {
+      showOpenDialog: async () => ({ canceled: false, filePaths: [root] }),
+    });
+    await page.goto(app.baseURL);
+    const tree = page.getByRole('region', { name: 'Projects', exact: true });
+    const row = (name) => tree.getByRole('button', { name, exact: true });
+    const activity = page.getByRole('group', { name: 'Project activity bar' });
+    if (!(await tree.isVisible())) await activity.getByRole('button', { name: 'Projects', exact: true }).click();
+    const tabs = page.getByRole('tablist', { name: 'Project files' });
+    const initialSchematic = tabs.getByRole('tab', { name: 'tCad1.dsn', exact: true });
+    await expect(initialSchematic).toBeVisible();
+    await expect(tabs.getByRole('button', { name: 'Close tCad1.dsn', exact: true })).toBeVisible();
+    await initialSchematic.press('Delete');
+    await expect(initialSchematic).toHaveCount(0);
+    await expect(row('First.dsn')).toBeVisible();
+    await expect(row('Parent folder')).toHaveCount(0);
+    await expect(row('Actions for First.dsn')).toHaveCount(0);
+    await expect(activity.getByRole('button', { name: 'Close Project', exact: true })).toHaveCount(0);
+    await expect(row('Close Project')).toBeVisible();
+    await expect(row('View.svg')).toHaveCount(0);
+    await row('Notes').click();
+    await expect(row('View.svg')).toBeVisible();
+    await expect(row('First.dsn')).toBeVisible();
+    await expect(row('First.dsn')).toHaveCSS('text-align', 'start');
+    const label = await row('First.dsn').locator('.project-tree-filename').boundingBox();
+    expect(label.x - (await row('First.dsn').boundingBox()).x).toBeLessThan(50);
+    const downloads = [];
+    page.on('download', (file) => downloads.push(file.suggestedFilename()));
+    await row('First.dsn').press('Shift+F10');
+    await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
+    await expect(tabs.getByRole('tab', { name: 'First.dsn', exact: true })).toBeVisible();
+    await page.evaluate(() => window.layoutTest.renameCurrentSheet('Unsaved first sheet'));
+    await row('Second.dsn').click();
+    await expect(tabs.getByRole('tab', { name: 'Second.dsn', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await tabs.getByRole('button', { name: 'Close First.dsn', exact: true }).click();
+    const closeFirst = page.getByRole('dialog', { name: 'Close First.dsn', exact: true });
+    await closeFirst.getByRole('button', { name: 'Cancel' }).click();
+    await expect(tabs.getByRole('tab', { name: 'Second.dsn', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await row('View.svg').click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
+    await expect(tabs.getByRole('tab', { name: 'View.svg', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await row('Board.dpn').click();
+    await expect(tabs.getByRole('tab', { name: 'Board.dpn', exact: true })).toHaveAttribute('aria-selected', 'true');
+    const toolbar = page.getByRole('toolbar', { name: 'PCB commands' });
+    const saveAll = toolbar.getByRole('button', { name: 'Save All', exact: true });
+    await expect(saveAll).toHaveText('');
+    await expect(toolbar.getByRole('button', { name: 'Save', exact: true }).locator('xpath=following-sibling::*[1]')).toHaveAttribute('aria-label', 'Save All');
+    await expect(tabs.getByRole('button', { name: 'Close Board.dpn', exact: true })).toBeVisible();
+    await expect(tree).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Footprints', exact: true })).toBeHidden();
+    await activity.getByRole('button', { name: 'Libraries', exact: true }).click();
+    const footprints = page.getByRole('region', { name: 'Footprints', exact: true });
+    await expect(footprints.getByRole('tab', { name: 'Unplaced', exact: true })).toBeVisible();
+    await expect(footprints.locator('xpath=ancestor::div[contains(@class,"side-panel-container")]')).toHaveCount(1);
+    await expect(tree).toBeHidden();
+    await activity.getByRole('button', { name: 'Projects', exact: true }).click();
+    await expect(tree).toBeVisible();
+    await expect(footprints).toBeHidden();
+    await tabs.getByRole('tab', { name: 'First.dsn *', exact: true }).click();
+    await expect.poll(() => page.evaluate(() => window.layoutTest.snapshot().drawing.sheets[0].name)).toBe('Unsaved first sheet');
+    await expect(tree.locator('li[data-selected]')).toHaveText('First.dsn');
+    await tabs.getByRole('button', { name: 'Close View.svg', exact: true }).click();
+    await expect(tabs.getByRole('tab', { name: 'View.svg', exact: true })).toHaveCount(0);
+    await tabs.getByRole('button', { name: 'Close Board.dpn', exact: true }).click();
+    await expect(tabs.getByRole('tab', { name: 'Board.dpn', exact: true })).toHaveCount(0);
+    expect(downloads).toEqual([]);
+    await page.screenshot({ path: info.outputPath('project-sidebar.png') });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 async function installProjectBridge(page, documents, beforeRequest, takeProjectOpen, dialog, shell) {
   const senderFrame = {};
   const sender = { mainFrame: senderFrame };
@@ -104,7 +187,7 @@ test('authors, wires, navigates, updates and copies repeated and nested child sc
     const prompt = async (menu, name) => {
       await sidebar
         .getByRole('button', { name: 'Project folder actions' })
-        .click();
+        .click({ button: 'right' });
       await page.getByRole('menuitem', { name: menu }).click();
       const dialog = page.getByRole('dialog');
       await dialog.getByRole('textbox', { name: 'Name' }).fill(name);
@@ -138,8 +221,8 @@ test('authors, wires, navigates, updates and copies repeated and nested child sc
     };
     const place = async (name, at) => {
       await sidebar
-        .getByRole('button', { name: 'Actions for ' + name, exact: true })
-        .click();
+        .getByRole('button', { name: name, exact: true })
+        .click({ button: 'right' });
       await page
         .getByRole('menuitem', { name: 'Place as child symbol' })
         .click();
@@ -684,8 +767,8 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     expect(exported).toContain('H1_H1_R1.01');
 
     await projects
-      .getByRole('button', { name: 'Actions for Board.dpn' })
-      .click();
+      .getByRole('button', { name: 'Board.dpn' })
+      .click({ button: 'right' });
     await page
       .getByRole('menuitem', { name: 'Cross-probe schematic…' })
       .click();
@@ -717,8 +800,8 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
       .poll(async () => (await snapshotUI()).drawing.documentId)
       .toBe(root.documentId);
     await projects
-      .getByRole('button', { name: 'Actions for Board.dpn' })
-      .click();
+      .getByRole('button', { name: 'Board.dpn' })
+      .click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Review PCB devices…' }).click();
     const devices = page.getByRole('dialog', { name: 'Review PCB devices' });
     await devices
@@ -834,8 +917,8 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
       page.getByRole('region', { name: 'Schematic hierarchy' }),
     ).toContainText('H7 / H1 · Blocks/Leaf.dsn');
     await projects
-      .getByRole('button', { name: 'Actions for Board.dpn' })
-      .click();
+      .getByRole('button', { name: 'Board.dpn' })
+      .click({ button: 'right' });
     await page
       .getByRole('menuitem', { name: 'Update PCB from Schematic…' })
       .click();
@@ -871,8 +954,8 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     );
     await projects.getByRole('button', { name: 'Blocks', exact: true }).click();
     await projects
-      .getByRole('button', { name: 'Actions for Leaf.dsn' })
-      .click();
+      .getByRole('button', { name: 'Leaf.dsn' })
+      .click({ button: 'right' });
     await page
       .getByRole('menuitem', { name: 'Create PCB from Schematic…' })
       .click();
@@ -937,7 +1020,7 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     ).toContainText('R9');
     await pcbLayout.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(page.getByRole('tab', { name: 'Leaf.dpn', exact: true })).toBeVisible();
-    await pcbLayout.getByRole('button', { name: 'Close', exact: true }).click();
+    await page.getByRole('tablist', { name: 'Project files' }).getByRole('button', { name: /Close (?:Blocks\/)?Leaf\.dpn/ }).click();
 
     const leafRow = projects.locator('li').filter({
       has: page.getByRole('button', { name: 'Leaf.dpn', exact: true }),
@@ -997,11 +1080,12 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     const boardPicker = page.getByRole('dialog', { name: 'Place selected schematic components' });
     await expect(boardPicker.getByRole('list', { name: 'Linked boards' }).getByRole('listitem')).toHaveCount(1);
     await boardPicker.getByRole('button', { name: 'Blocks/Leaf.dpn · 1 package' }).click();
-    const tray = pcbLayout.getByRole('region', { name: 'Unplaced components' });
+    const tray = page.getByRole('region', { name: 'Unplaced components' });
     await expect(tray.getByRole('status')).toHaveText('1 remaining · Place R1');
     await expect(tray.getByRole('img', { name: 'Footprint pad preview' })).toBeVisible();
     await expect(pcbLayout.getByRole('button', { name: 'Place at coordinates' })).toBeDisabled();
     await tray.getByRole('button', { name: 'Stop sequential placement' }).click();
+    await page.getByRole('group', { name: 'Project activity bar' }).getByRole('button', { name: 'Projects', exact: true }).click();
     const checkDialog = page.getByRole('dialog', { name: 'PCB design checks' });
     async function openLeafChecks() {
       await clickPcbCommand(pcbLayout, 'Run design checks…');
@@ -1017,8 +1101,8 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     await expect(eco.getByRole('status')).toHaveText('The board is current.');
     await eco.getByRole('button', { name: 'Close', exact: true }).click();
     await projects
-      .getByRole('button', { name: 'Actions for Leaf.dsn' })
-      .click();
+      .getByRole('button', { name: 'Leaf.dsn' })
+      .click({ button: 'right' });
     await page
       .getByRole('menuitem', {
         name: 'Update PCB from Schematic…',
@@ -1028,7 +1112,7 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     await expect(eco.getByRole('status')).toHaveText('The board is current.');
     await eco.getByRole('button', { name: 'Close', exact: true }).click();
 
-    await projects.getByRole('button', { name: 'Parent folder' }).click();
+    await projects.getByRole('button', { name: 'Blocks', exact: true }).click();
     await projects
       .getByRole('button', { name: 'Open schematic', exact: true })
       .click();
@@ -1055,8 +1139,8 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     }
     async function previewLeafUpdate() {
       await projects
-        .getByRole('button', { name: 'Actions for Leaf.dpn' })
-        .click();
+        .getByRole('button', { name: 'Leaf.dpn' })
+        .click({ button: 'right' });
       await page
         .getByRole('menuitem', { name: 'Update PCB from Schematic…' })
         .click();
@@ -1146,7 +1230,7 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
         .getByRole('img', { name: 'Board layout' })
         .locator('[data-net-highlighted="true"]'),
     ).toHaveCount(1);
-    await pcbLayout.getByRole('button', { name: 'Close', exact: true }).click();
+    await page.getByRole('tablist', { name: 'Project files' }).getByRole('button', { name: /Close (?:Blocks\/)?Leaf\.dpn/ }).click();
     const leafBeforeRemoval = await readFile(leafPath);
     const revisedLeaf = await api.decodeDrawing(leafBeforeRemoval);
     for (const sheet of revisedLeaf.sheets) {
@@ -1186,8 +1270,8 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     const { netId: originalNetId, ...trackGeometry } = track;
     expect(routed.tracks).toEqual([{ ...trackGeometry, reviewRequired: true }]);
     await projects
-      .getByRole('button', { name: 'Actions for Leaf.dpn' })
-      .click();
+      .getByRole('button', { name: 'Leaf.dpn' })
+      .click({ button: 'right' });
     await page
       .getByRole('menuitem', { name: 'Undo last circuit update…' })
       .click();
@@ -1202,15 +1286,15 @@ test('uses expanded project connectivity for exports, cross-probing, and reviewe
     expect(restored.revision).toBe(routed.revision + 1);
     expect(restored.tracks).toEqual([track]);
     expect(restored.appliedCircuit).toEqual(updated.appliedCircuit);
-    await projects.getByRole('button', { name: 'Parent folder' }).click();
+    await projects.getByRole('button', { name: 'Blocks', exact: true }).click();
     await writeFile(leafPath, leafBeforeRemoval);
     const rootFile = path.join(copy, rootPath);
     const rootBeforeAnnotation = await readFile(rootFile);
     const childBeforeAnnotation = await readFile(leafPath);
     async function boardMenu(action) {
       await projects
-        .getByRole('button', { name: 'Actions for Board.dpn' })
-        .click();
+        .getByRole('button', { name: 'Board.dpn' })
+        .click({ button: 'right' });
       await page.getByRole('menuitem', { name: action, exact: true }).click();
     }
     await boardMenu('Edit PCB references…');
@@ -1533,7 +1617,7 @@ test('places bundled SMT and through-hole packages and reopens their embedded ST
     });
     await page.goto(app.baseURL + '?project=1');
     const projects = page.getByRole('region', { name: 'Projects', exact: true });
-    await projects.getByRole('button', { name: 'Actions for Circuit.dsn', exact: true }).click();
+    await projects.getByRole('button', { name: 'Circuit.dsn', exact: true }).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Create PCB from Schematic…', exact: true }).click();
     await page.getByRole('dialog', { name: 'Create PCB from Schematic…', exact: true })
       .getByRole('button', { name: 'OK', exact: true }).click();
@@ -1691,7 +1775,7 @@ test('imports a KiCad symbol and footprint with a portable STEP model', async ({
 
     await projects
       .getByRole('button', { name: 'Project folder actions' })
-      .click();
+      .click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Footprint editor…' }).click();
     const editor = page.getByRole('dialog', { name: 'Footprint editor' });
     await editor
@@ -1907,8 +1991,8 @@ test('imports a KiCad symbol and footprint with a portable STEP model', async ({
     const libraryPath = path.join(directory, 'Test.tcdevice.json');
     await writeFile(libraryPath, deviceData);
     await projects
-      .getByRole('button', { name: 'Actions for Circuit.dsn', exact: true })
-      .click();
+      .getByRole('button', { name: 'Circuit.dsn', exact: true })
+      .click({ button: 'right' });
     await page
       .getByRole('menuitem', {
         name: 'Create PCB from Schematic…',
@@ -1954,7 +2038,7 @@ test('imports a KiCad symbol and footprint with a portable STEP model', async ({
     ).toContainText('R1');
     await layout.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(page.getByRole('tab', { name: 'Circuit.dpn', exact: true })).toBeVisible();
-    await layout.getByRole('button', { name: 'Close', exact: true }).click();
+    await page.getByRole('tablist', { name: 'Project files' }).getByRole('button', { name: 'Close Circuit.dpn', exact: true }).click();
     await rm(libraryPath);
     const pcb = await api.decodeBoard(
       await readFile(path.join(directory, 'Circuit.dpn')),
@@ -2343,8 +2427,8 @@ async function completeLedExercise(page, info, offset) {
     }
     expect(await readFile(releaseArchive)).toEqual(originalArchive);
     await cam.getByRole('button', { name: 'Close', exact: true }).click();
-    await layout.getByRole('button', { name: 'Close', exact: true }).click();
-    await projects.getByRole('button', { name: 'Parent folder' }).click();
+    await page.getByRole('tablist', { name: 'Project files' }).getByRole('button', { name: 'Close LED.dpn', exact: true }).click();
+    await projects.getByRole('button', { name: 'Exercise', exact: true }).click();
 
     await openSample('Reference');
     await projects.getByRole('button', { name: 'LED.dpn', exact: true }).click();
@@ -2563,7 +2647,7 @@ test('cross-probes the simulated RC node on the offline filter reference', async
     await page.getByRole('button', { name: 'Projects', exact: true }).click();
     const projects = page.getByRole('region', { name: 'Projects', exact: true });
     await projects.getByRole('button', { name: 'Filter.tcproject', exact: true }).click();
-    await projects.getByRole('button', { name: 'Actions for Filter.dpn' }).click();
+    await projects.getByRole('button', { name: 'Filter.dpn' }).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Cross-probe schematic…' }).click();
     await page.getByRole('dialog', { name: 'Filter.dpn' })
       .getByRole('button', { name: /^R1 · 2 ·/ }).click();
@@ -3321,7 +3405,7 @@ test('opens a desktop project at its containing folder without replacing the dra
     await page.goto(app.baseURL + '?project=1');
     const projects = page.getByRole('region', { name: 'Projects', exact: true });
     await expect(projects.getByRole('button', { name: 'Startup settings.txt', exact: true })).toBeVisible();
-    await expect(projects.getByRole('button', { name: 'Parent folder' })).toBeDisabled();
+    await expect(projects.getByRole('button', { name: 'Parent folder' })).toHaveCount(0);
     await expect(projects.getByText('First', { exact: true })).toBeVisible();
     await expect(projects.getByText('Unrelated')).toHaveCount(0);
 
@@ -3344,11 +3428,11 @@ test('opens a desktop project at its containing folder without replacing the dra
     await expect(projects.getByText('Unmarked', { exact: true })).toBeVisible();
     const treeButton = (name) => projects.getByRole('button', { name, exact: true });
     async function chooseItemAction(item, action) {
-      await treeButton('Actions for ' + item).click();
+      await treeButton(item).click({ button: 'right' });
       await page.getByRole('menuitem', { name: action, exact: true }).click();
     }
     async function chooseFolderAction(action) {
-      await treeButton('Project folder actions').click();
+      await treeButton('Project folder actions').click({ button: 'right' });
       await page.getByRole('menuitem', { name: action, exact: true }).click();
     }
     async function submitName(name) {
@@ -3404,7 +3488,7 @@ test('opens a desktop project at its containing folder without replacing the dra
     await expect(sheetFolder).toHaveAttribute('aria-expanded', 'false');
     await expect(connectors).toHaveCount(0);
     await expect(treeButton('Build notes.txt')).toBeVisible();
-    await projects.getByRole('button', { name: 'Project folder actions' }).click();
+    await projects.getByRole('button', { name: 'Project folder actions' }).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'New project…' }).click();
     const name = page.getByRole('dialog');
     await name.getByRole('textbox', { name: 'Name' }).fill('Build');
@@ -3547,11 +3631,11 @@ test('relocates linked board folders and recovers interrupted file operations', 
       await expect(item('Open schematic')).toBeVisible();
     }
     async function action(name, command) {
-      await item('Actions for ' + name).click();
+      await item(name).click({ button: 'right' });
       await menu(command).click();
     }
     async function paste() {
-      await item('Project folder actions').click();
+      await item('Project folder actions').click({ button: 'right' });
       await menu('Paste moved item').click();
     }
     const settings = async () => api.decodeProjectSettings(await readFile(marker));
@@ -3615,7 +3699,7 @@ test('relocates linked board folders and recovers interrupted file operations', 
     await item('Module.dpn').click();
     const layout = page.getByRole('region', { name: 'PCB layout' });
     await expect(layout.getByRole('img', { name: 'Board layout' })).toBeVisible();
-    await item('Actions for Module.dpn').click();
+    await item('Module.dpn').click({ button: 'right' });
     await expect(menu('Move to trash')).toBeDisabled();
 
     const trash = page.getByRole('dialog', { name: 'Move to trash' });
@@ -3786,7 +3870,7 @@ test('imports dropped project files, nested folders, and retries a failed copy',
     expect(await readFile(path.join(assets, 'retry.txt'), 'utf8')).toBe('imported retry.txt');
     expect(await readFile(path.join(assets, 'Samples', 'Measurements', 'run.csv'), 'utf8')).toBe('part,size');
 
-    await sidebar.getByRole('button', { name: 'Project folder actions' }).click();
+    await sidebar.getByRole('button', { name: 'Project folder actions' }).click({ button: 'right' });
     const choosing = page.waitForEvent('filechooser');
     await page.getByRole('menuitem', { name: 'Add files…' }).click();
     await (await choosing).setFiles([
@@ -3889,7 +3973,7 @@ test('reviews and commits project changes in the real Git index', async ({ page 
     expect(await readFile(note, 'utf8')).toContain('Second edit');
 
     await activity.getByRole('button', { name: 'Projects', exact: true }).click();
-    await explorer.getByRole('button', { name: 'Actions for Example.tcproject', exact: true }).click();
+    await explorer.getByRole('button', { name: 'Example.tcproject', exact: true }).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Git file history', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'History · Design/Example.tcproject' }))
       .toContainText('Initial project');
@@ -4155,7 +4239,9 @@ test('edits project file tabs, views a datasheet and reports a partial Save All'
     await expect.poll(() => page.evaluate(() => window.layoutTest.snapshot().drawing.documentId)).toBe(drawing.documentId);
     await page.evaluate(() => window.layoutTest.renameCurrentSheet('Unsaved circuit'));
     await explorer.getByRole('button', { name: 'Board.dpn', exact: true }).click();
-    await page.getByRole('region', { name: 'PCB layout' }).getByLabel('Copper layers').selectOption('1');
+    const boardEditor = page.getByRole('region', { name: 'PCB layout' });
+    await clickPcbCommand(boardEditor, 'View board tools');
+    await boardEditor.getByLabel('Copper layers').selectOption('1');
 
     await explorer.getByRole('button', { name: 'Notes.md', exact: true }).click();
     await page.getByRole('textbox', { name: 'Edit Notes.md' }).fill('# Updated notes\nLine two\n');
@@ -4217,11 +4303,11 @@ test('edits project file tabs, views a datasheet and reports a partial Save All'
 
     await tabs.getByRole('tab', { name: 'BOM.csv *', exact: true }).click();
     await expect(csv).toHaveValue('ref,value\nR1,470\n');
-    await page.getByRole('button', { name: 'Close file', exact: true }).click();
+    await tabs.getByRole('button', { name: 'Close BOM.csv', exact: true }).click();
     const choosing = page.getByRole('dialog', { name: 'Close BOM.csv' });
     await choosing.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(csv).toBeVisible();
-    await explorer.getByRole('button', { name: 'Project folder actions' }).click();
+    await explorer.getByRole('button', { name: 'Project folder actions' }).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'New file…', exact: true }).click();
     const create = page.getByRole('dialog', { name: 'New file…' });
     await create.getByRole('textbox', { name: 'Name' }).fill('Build.txt');
@@ -4230,7 +4316,8 @@ test('edits project file tabs, views a datasheet and reports a partial Save All'
     await page.evaluate(() => window.hierarchyTestMenu('file-save'));
     await expect.poll(() => readFile(path.join(root, 'Build.txt'), 'utf8')).toBe('Assembly instructions\n');
   } finally {
-    await rm(root, { recursive: true, force: true });
+    await page.close();
+    await rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -4307,7 +4394,6 @@ test('maps system wires and generates separate outputs for boards sharing a sour
       ([event, coords]) => window.layoutTest.pointer(event, coords), [event, coords],
     );
     const folder = (name) => explorer.getByRole('button', { name, exact: true }).click();
-    const up = () => explorer.getByRole('button', { name: 'Parent folder', exact: true }).click();
     await folder('System.dsn');
     await expect(tabs.getByRole('tab', { name: 'System.dsn', exact: true })).toBeVisible();
     await folder('Main');
@@ -4323,14 +4409,14 @@ test('maps system wires and generates separate outputs for boards sharing a sour
     await tabs.getByRole('tab', { name: 'System.dsn', exact: true }).click();
 
     const place = async (board, position) => {
-      await explorer.getByRole('button', { name: 'Actions for Board.dpn', exact: true }).click();
+      await explorer.getByRole('button', { name: 'Board.dpn', exact: true }).click({ button: 'right' });
       await page.getByRole('menuitem', { name: 'Place board instance', exact: true }).click();
       await expect.poll(async () => (await snapshot()).adding?.hierarchy?.boardInstance?.boardId).toBe(board.boardId);
       await point('lbuttondown', position);
       await expect.poll(async () => (await active()).items.some((item) => item.hierarchy?.boardInstance?.boardId === board.boardId)).toBe(true);
     };
     await place(main, [400, 400]);
-    await up();
+    await folder('Main');
     await folder('Sensor');
     await place(sensor, [650, 400]);
     const placements = (await active()).items.filter((item) => item.hierarchy?.boardInstance);
@@ -4381,7 +4467,7 @@ test('maps system wires and generates separate outputs for boards sharing a sour
     await review.getByRole('button', { name: 'Close' }).click();
 
     await folder('Main');
-    await explorer.getByRole('button', { name: 'Actions for Circuit.dsn', exact: true }).click();
+    await explorer.getByRole('button', { name: 'Circuit.dsn', exact: true }).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Update PCB from Schematic… · Sensor/Board.dpn', exact: true }).click();
     const eco = page.getByRole('dialog', { name: 'Update PCB from Schematic' });
     await expect(eco).toContainText('Main/Circuit.dsn → Sensor/Board.dpn');
@@ -4401,10 +4487,10 @@ test('maps system wires and generates separate outputs for boards sharing a sour
     };
     for (const [directory, board] of [['Main', main], ['Sensor', sensor]]) {
       if (directory === 'Sensor') {
-        await up();
+        await folder('Main');
         await folder(directory);
       }
-      await explorer.getByRole('button', { name: 'Actions for Board.dpn', exact: true }).click();
+      await explorer.getByRole('button', { name: 'Board.dpn', exact: true }).click({ button: 'right' });
       await page.getByRole('menuitem', { name: 'Configure PCB outputs…' }).click();
       await outputDialog.getByRole('button', { name: 'Add netlist recipe' }).click();
       const circuitSource = outputDialog.getByRole('combobox', { name: 'Circuit source' });
@@ -4521,7 +4607,7 @@ test('updates a daughterboard from its own source without changing the motherboa
     await page.goto(app.baseURL + '?project=1');
     const explorer = page.getByRole('region', { name: 'Projects', exact: true });
     await explorer.getByRole('button', { name: 'Sensor', exact: true }).click();
-    await explorer.getByRole('button', { name: 'Actions for Filter.dzn', exact: true }).click();
+    await explorer.getByRole('button', { name: 'Filter.dzn', exact: true }).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Update PCB from Schematic…', exact: true }).click();
 
     const eco = page.getByRole('dialog', { name: 'Update PCB from Schematic' });
@@ -4537,10 +4623,10 @@ test('updates a daughterboard from its own source without changing the motherboa
     const outputDialog = page.getByRole('dialog', { name: 'Project outputs' });
     for (const [folder, name] of [['Sensor', 'Filter'], ['Main', 'LED']]) {
       if (folder === 'Main') {
-        await explorer.getByRole('button', { name: 'Parent folder', exact: true }).click();
+        await explorer.getByRole('button', { name: 'Sensor', exact: true }).click();
         await explorer.getByRole('button', { name: folder, exact: true }).click();
       }
-      await explorer.getByRole('button', { name: 'Actions for ' + name + '.dpn', exact: true }).click();
+      await explorer.getByRole('button', { name: name + '.dpn', exact: true }).click({ button: 'right' });
       await page.getByRole('menuitem', { name: 'Configure PCB outputs…' }).click();
       await outputDialog.getByRole('button', { name: 'Add netlist recipe' }).click();
       await outputDialog.getByRole('button', { name: 'Save recipe' }).click();
@@ -4593,26 +4679,29 @@ test('keeps independent PCB tabs and saves edits on inactive boards', async ({ p
     const layout = page.getByRole('region', { name: 'PCB layout', exact: true });
     const tabs = page.getByRole('tablist', { name: 'Project files', exact: true });
     const layers = layout.getByLabel('Copper layers');
-    const up = explorer.getByRole('button', { name: 'Parent folder', exact: true });
 
     await explorer.getByRole('button', { name: 'Power', exact: true }).click();
     await explorer.getByRole('button', { name: 'Board.dpn', exact: true }).click();
+    await clickPcbCommand(layout, 'View board tools');
     await layers.selectOption('1');
     await expect(tabs.getByRole('tab', { name: 'Power/Board.dpn *', exact: true })).toBeVisible();
-    await up.click();
+    await explorer.getByRole('button', { name: 'Power', exact: true }).click();
     await explorer.getByRole('button', { name: 'Sensor', exact: true }).click();
     await explorer.getByRole('button', { name: 'Board.dpn', exact: true }).click();
     await expect(tabs.getByRole('tab', { name: 'Sensor/Board.dpn', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await clickPcbCommand(layout, 'View board tools');
     await expect(layers).toHaveValue('2');
     await layers.selectOption('1');
 
     await tabs.getByRole('tab', { name: 'Power/Board.dpn *', exact: true }).click();
+    await clickPcbCommand(layout, 'View board tools');
     await expect(layers).toHaveValue('1');
     await layout.getByRole('button', { name: 'Undo', exact: true }).click();
     await expect(layers).toHaveValue('2');
     await layout.getByRole('button', { name: 'Redo', exact: true }).click();
     await expect(layers).toHaveValue('1');
     await tabs.getByRole('tab', { name: 'Sensor/Board.dpn *', exact: true }).click();
+    await clickPcbCommand(layout, 'View board tools');
     await expect(layers).toHaveValue('1');
     await page.getByRole('button', { name: 'Save All', exact: true }).click();
     const summary = page.getByRole('dialog', { name: 'Save All', exact: true });
@@ -4624,20 +4713,22 @@ test('keeps independent PCB tabs and saves edits on inactive boards', async ({ p
       expect((await api.decodeBoard(await readFile(path.join(root, entry.path)))).copperLayers).toHaveLength(1);
 
     await tabs.getByRole('tab', { name: 'Power/Board.dpn', exact: true }).click();
+    await clickPcbCommand(layout, 'View board tools');
     await layers.selectOption('2');
-    await page.getByRole('button', { name: 'Close PCB tab', exact: true }).click();
+    await tabs.getByRole('button', { name: 'Close Power/Board.dpn', exact: true }).click();
     const close = page.getByRole('dialog', { name: 'Close Power/Board.dpn', exact: true });
     await close.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(layers).toHaveValue('2');
-    await page.getByRole('button', { name: 'Close PCB tab', exact: true }).click();
+    await tabs.getByRole('button', { name: 'Close Power/Board.dpn', exact: true }).click();
     await close.getByRole('button', { name: 'Discard and close', exact: true }).click();
     await expect(tabs.getByRole('tab', { name: 'Sensor/Board.dpn', exact: true })).toHaveAttribute('aria-selected', 'true');
     await expect(tabs.getByRole('tab', { name: /Power\/Board\.dpn/ })).toHaveCount(0);
     expect((await api.decodeBoard(await readFile(path.join(root, 'Power', 'Board.dpn')))).copperLayers).toHaveLength(1);
 
-    await up.click();
+    await explorer.getByRole('button', { name: 'Sensor', exact: true }).click();
     await explorer.getByRole('button', { name: 'Loose.dpn', exact: true }).click();
     await expect(tabs.getByRole('tab', { name: 'Loose.dpn', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await clickPcbCommand(layout, 'View board tools');
     await layers.selectOption('1');
     await layout.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(tabs.getByRole('tab', { name: 'Loose.dpn', exact: true })).toBeVisible();
@@ -4645,6 +4736,7 @@ test('keeps independent PCB tabs and saves edits on inactive boards', async ({ p
     expect(api.decodeProjectSettings(await readFile(marker)).entries).toEqual(entries);
 
     await tabs.getByRole('tab', { name: 'Sensor/Board.dpn', exact: true }).click();
+    await clickPcbCommand(layout, 'View board tools');
     await layers.selectOption('2');
     await tabs.getByRole('tab', { name: 'Loose.dpn', exact: true }).click();
     await page.evaluate(() => window.hierarchyTestMenu('file-close-project'));
@@ -4737,15 +4829,27 @@ test('keeps independent schematic tabs and saves a dirty inactive drawing', asyn
     expect((await api.decodeDrawing(await readFile(bFile))).sheets[0].name).toBe('External B');
     await expect.poll(sheetName).toBe('B pending edit');
 
-    await page.getByRole('button', { name: 'Close schematic tab', exact: true }).click();
+    await tabs.getByRole('button', { name: 'Close B.dsn', exact: true }).click();
     const close = page.getByRole('dialog', { name: 'Close B.dsn', exact: true });
     await close.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect.poll(sheetName).toBe('B pending edit');
-    await page.getByRole('button', { name: 'Close schematic tab', exact: true }).click();
+    await tabs.getByRole('button', { name: 'Close B.dsn', exact: true }).click();
     await close.getByRole('button', { name: 'Discard and close', exact: true }).click();
     await expect(tabs.getByRole('tab', { name: 'A.dzn', exact: true })).toHaveAttribute('aria-selected', 'true');
     await expect(tabs.getByRole('tab', { name: /B\.dsn/ })).toHaveCount(0);
     await expect.poll(sheetName).toBe('A second edit');
+
+    await explorer.getByRole('button', { name: 'B.dsn', exact: true }).click();
+    await expect.poll(sheetName).toBe('External B');
+    await edit('Saved from inactive tab');
+    await expect(tabs.getByRole('tab', { name: 'B.dsn *', exact: true })).toBeVisible();
+    await tabs.getByRole('tab', { name: 'A.dzn', exact: true }).click();
+    await tabs.getByRole('button', { name: 'Close B.dsn', exact: true }).click();
+    await close.getByRole('button', { name: 'Save and close', exact: true }).click();
+    await expect(close).toBeHidden();
+    await expect(tabs.getByRole('tab', { name: /B\.dsn/ })).toHaveCount(0);
+    await expect.poll(sheetName).toBe('A second edit');
+    expect((await api.decodeDrawing(await readFile(bFile))).sheets[0].name).toBe('Saved from inactive tab');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

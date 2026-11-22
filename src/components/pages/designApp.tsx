@@ -7,37 +7,44 @@ import React, {
   Suspense,
 } from 'react';
 import { useDispatch, useSelector, useStore } from 'react-redux';
+import { ActionCreators } from 'redux-undo';
 import {
   makeStyles, Button, ToggleButton, Dialog, DialogSurface, DialogBody,
   DialogTitle, DialogContent, DialogActions, Tab, TabList,
 } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
-import { BookOpenRegular, BranchForkRegular, DismissRegular, FolderOpenRegular, FolderRegular, PanelLeftExpandRegular } from '@fluentui/react-icons';
+import { BookOpenRegular, BranchForkRegular, DismissRegular, FolderRegular, PanelLeftExpandRegular } from '@fluentui/react-icons';
+import { ProjectFileIcon } from '../projects/ProjectFileIcon';
 import ToolbarContainer from '../../state/containers/toolbarContainer';
+import { EditorToolbar } from '../toolbar/EditorToolbar';
+import { EditorSaveAllButton, EditorSaveButton } from '../toolbar/FileToolbarControls';
 import SidePanelContainer from '../../state/containers/sidePanelContainer';
 import BomContainer from '../../state/containers/bomContainer';
 import SheetbarContainer from '../../state/containers/sheetbarContainer';
 import BottomPanelContainer from '../../state/containers/bottomPanelContainer';
 import { EditorDrawingStack, EditorSidePanel } from '../panel/EditorLayout';
 import { stopActiveSimulation } from '../../simulation/lifecycle';
-import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
+import { actionSelectDialog, actionSetDocument } from '../../state/dispatcher/AppDispatcher';
 import { Browser } from '../sheets/browser';
 import { tclibLibraryEntry } from '../../model/tclib';
 import { isBoardFile } from '../../../shared/drawingFiles';
 import { BrowserSheetData } from '../../model/dsnView';
 import { boardOpened, circuitOpened, confirmBoardClose, confirmCircuitOpen, editFootprintLibrary, saveActiveBoard, boardHistoryCommand, editorHeaderDocument } from '../../io/boardWorkspaceEvents';
-import { projectFilesChanged, projectFolderOpened } from '../../io/projectStorage';
+import { projectDocumentOpened, projectFilesChanged, projectFolderOpened } from '../../io/projectStorage';
 import { chooseProjectFolder, closeProjectMode, saveProjectTabs, startupMode } from '../../io/projectMode';
 import type { docDrawing } from '../../state/undo/undo';
 import type { ProjectLocation } from '../../io/projectStorage';
-import { activateSchematicTab, enableSchematicTabs, openSchematicTabs, schematicTabDirty, schematicTabKey } from '../../state/schematicTabs';
+import { activateSchematicTab, enableSchematicTabs, openSchematicTabs, schematicFileTabKey, schematicTabDirty } from '../../state/schematicTabs';
 import { useOpenBoards } from '../../io/useOpenBoards';
 import { dirtyProjectDocument, useProjectDocuments } from '../../io/useProjectDocuments';
 import { fileOpen, handleMenuCommand, saveSchematicFile } from '../../io/files';
+import { blank } from '../../io/ioXml';
 import type { SaveSummary } from '../../io/useProjectDocuments';
 import type { GitReview } from '../projects/ProjectSourceControl';
 import type { BoardWorkspaceDocument } from '../pcb/BoardWorkspace';
 import type { StandardLibraryNavigation } from '../../state/actions/libraryActions';
+
+const untrackedSchematicTab = 'untracked-schematic';
 
 // Keep the entire chatbot dependency graph out of browser builds.
 const ChatPanel = process.env.TARGET_SYSTEM === 'electron'
@@ -206,6 +213,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const activeBoard = boards.tabs.find(({ id }) => id === boards.activeId);
   const pcb = activeBoard?.document;
   const [boardToClose, setBoardToClose] = useState<string>();
+  const [untrackedTabClosed, setUntrackedTabClosed] = useState(false);
   const [closingBoard, setClosingBoard] = useState(false);
   const initialWorkspace = React.useRef(new URLSearchParams(window.location.search));
   const [activeWorkspace, setActiveWorkspace] = useState<'circuit' | 'pcb'>(() => {
@@ -219,6 +227,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     (!simulationSuppressed && props.simulationPanelActivated || props.simulationSheet);
   const activateCircuit = useCallback(() => {
     documents.select();
+    setGitReview(undefined);
     setActiveWorkspace('circuit');
   }, [documents.select]);
   useEffect(() => {
@@ -230,6 +239,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const activateBoard = useCallback((id: string) => {
     selectBoard(id);
     documents.select();
+    setGitReview(undefined);
     setActiveWorkspace('pcb');
   }, [selectBoard, documents.select]);
 
@@ -241,7 +251,13 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       (document.fileId && opened.fileId === document.fileId) || (key && opened.session.key === key));
     if (existing && (projectMode || existing.document.session.savedVersion === document.session.savedVersion)) {
       const session = existing.document.session;
-      if (session.savedVersion === document.session.savedVersion)
+      if (existing.document.projectRootId && !document.projectRootId) {
+        activateBoard(existing.id);
+        return;
+      }
+      if (!session.dirty && document.projectRootId && !existing.document.projectRootId)
+        replaceBoard(existing.id, document);
+      else if (session.savedVersion === document.session.savedVersion)
         replaceBoard(existing.id, { ...document, session });
       else if (!session.dirty)
         replaceBoard(existing.id, document);
@@ -275,14 +291,14 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   }, [getBoards, refreshBoardTab]);
 
   useEffect(() => {
-    const open = (event: CustomEvent<BoardWorkspaceDocument['session']>) =>
-      openBoard({ session: event.detail });
+    const open = (event: WindowEventMap[typeof boardOpened]) => openBoard(event.detail);
     const confirm = (event: Event) => {
       if (!projectMode && pcbActive && activeBoard?.document.session.dirty &&
         !window.confirm('Discard unsaved edits to the current PCB?')) event.preventDefault();
     };
     const openCircuit = () => {
       if (!projectMode && pcbActive && activeBoard) removeBoards([activeBoard.id]);
+      setUntrackedTabClosed(false);
       activateCircuit();
     };
     window.addEventListener(boardOpened, open);
@@ -359,28 +375,33 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const [sidePanelVisible, setSidePanelVisible] = useState(true);
   const store = editorStore;
   const schematicRegistry = useSelector((state: docDrawing) => state.schematicTabs);
-  const currentSchematic = useSelector((state: docDrawing) => state.altStore.file.project);
+  const currentFile = useSelector((state: docDrawing) => state.altStore.file);
+  const currentSchematic = currentFile.project;
+  const selectedSchematic = schematicFileTabKey(currentFile);
   const schematicVersion = useSelector((state: docDrawing) => state.docStore.present.drawingVersion);
   const schematicSavedVersion = useSelector((state: docDrawing) => state.altStore.savedVersion);
+  const schematicSaving = useSelector((state: docDrawing) => state.altStore.saveInProgress);
   const schematicTabs = React.useMemo(() => openSchematicTabs(store.getState()),
-    [schematicRegistry, currentSchematic, schematicVersion, schematicSavedVersion, store]);
-  const selectedSchematic = schematicTabKey(currentSchematic);
+    [schematicRegistry, currentSchematic, selectedSchematic, schematicVersion, schematicSavedVersion, store]);
   const canSplit = projectMode && !!selectedSchematic && !!pcb?.projectRootId &&
-    currentSchematic.rootId === pcb.projectRootId &&
+    currentSchematic?.rootId === pcb.projectRootId &&
     props.selected_sheet >= 0 && !props.simulationSheet && !props.editLibrary && !props.editSymbol;
   useEffect(() => {
     if (!canSplit) setSideBySide(false);
   }, [canSplit]);
   const [schematicToClose, setSchematicToClose] = useState<string>();
   const [closingSchematic, setClosingSchematic] = useState(false);
-  const pendingCloseSchematic = schematicTabs.find(({ key }) => key === schematicToClose);
+  const closingSchematicTab = schematicTabs.find(({ key }) => key === schematicToClose);
+  const pendingCloseSchematic = schematicToClose === untrackedSchematicTab
+    ? { key: untrackedSchematicTab, name: currentFile.name }
+    : closingSchematicTab && { key: closingSchematicTab.key, name: closingSchematicTab.tab.file.name };
   useEffect(() => {
     dispatch(enableSchematicTabs(projectMode) as any);
   }, [dispatch, projectMode]);
 
   const restoreProjectAtStartup = React.useRef(projectMode);
   const projectModeChanged = React.useRef(false);
-  const [showSourceControl, setShowSourceControl] = useState(false);
+  const [projectPanel, setProjectPanel] = useState<'projects' | 'libraries' | 'source'>('libraries');
   const [gitRoot, setGitRoot] = useState<ProjectLocation>();
   const [gitCount, setGitCount] = useState(0);
   const [gitAvailable, setGitAvailable] = useState(false);
@@ -395,14 +416,13 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     setGitAvailable(false);
     setGitHistoryRequest(undefined);
   }, [gitRoot?.id]);
-  const [showProjects, setShowProjects] = useState(false);
   const [choosingProject, setChoosingProject] = useState(false);
   const [confirmCloseProject, setConfirmCloseProject] = useState(false);
   const [closingProject, setClosingProject] = useState(false);
   const [closeProjectError, setCloseProjectError] = useState('');
   const [openedProjectRoot, setOpenedProjectRoot] = useState<ProjectLocation>();
-  const [showLibraries, setShowLibraries] = useState(true);
   const [showFootprints, setShowFootprints] = useState(true);
+  const [footprintsHost, setFootprintsHost] = useState<HTMLDivElement>(null);
   const [sidePanelWidth, setSidePanelWidth] = useState(loadSidePanelWidth);
   const [sidePanelResizing, setSidePanelResizing] = useState(false);
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200);
@@ -415,7 +435,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     setGitRoot(root);
     setGitReview(undefined);
     setProjectMode(true);
-    setShowProjects(true);
+    setProjectPanel('projects');
     setSidePanelVisible(true);
   }, []);
 
@@ -515,9 +535,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       setGitRoot(undefined);
       setGitCount(0);
       setGitReview(undefined);
-      setShowSourceControl(false);
-      setShowProjects(false);
-      setShowLibraries(true);
+      setProjectPanel('projects');
       setSidePanelVisible(true);
       setConfirmCloseProject(false);
     } catch (error) {
@@ -548,7 +566,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   useEffect(() => {
     if (props.standardLibraryNavigation || props.editLibrary) {
       setSidePanelVisible(true);
-      setShowLibraries(true);
+      setProjectPanel('libraries');
     }
   }, [props.standardLibraryNavigation, props.editLibrary]);
 
@@ -639,7 +657,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       if (inactive.length) {
         const { saveInactiveSchematic } = await loadProjectServices();
         for (const [key, tab] of inactive)
-          await saveNative(tab.file.project.documentPath, () => saveInactiveSchematic(key, tab, dispatch, store.getState));
+          await saveNative(tab.file.project?.documentPath ?? tab.file.name, () => saveInactiveSchematic(key, tab, dispatch, store.getState));
       }
       if (showSummary || summary.failed.length) setFileSaveSummary(summary);
       if (!showSummary && summary.failed.length) throw new Error('Some project files still have unsaved changes.');
@@ -650,6 +668,37 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   }
 
   const activeProjectFile = documents.files.find(({ id }) => id === documents.active);
+  const fileTabs = React.useMemo(() => [
+    ...schematicTabs.map(({ key, tab }) => ({
+      id: 'schematic:' + key, name: tab.file.name, title: tab.file.project?.documentPath ?? tab.file.name,
+      dirty: schematicTabDirty(tab),
+    })),
+    ...boards.tabs.map(({ id, document: { session } }) => ({
+      id: 'board:' + id, name: session.path, title: session.path, dirty: session.dirty,
+    })),
+    ...documents.files.map((file) => ({
+      id: 'file:' + file.id, name: file.name, title: file.name, dirty: dirtyProjectDocument(file),
+    })),
+  ], [schematicTabs, boards, documents.files]);
+  const [fileTabOrder, setFileTabOrder] = useState<string[]>([]);
+  useEffect(() => {
+    setFileTabOrder((previous) => {
+      const current = new Set(fileTabs.map(({ id }) => id));
+      const retained = previous.filter((id) => current.delete(id));
+      return current.size || retained.length !== previous.length ? [...retained, ...current] : previous;
+    });
+  }, [fileTabs]);
+  const tabPositions = new Map(fileTabOrder.map((id, index) => [id, index]));
+  const orderedFileTabs = [...fileTabs].sort((a, b) =>
+    (tabPositions.get(a.id) ?? fileTabOrder.length) - (tabPositions.get(b.id) ?? fileTabOrder.length));
+  const schematicDirty = schematicVersion !== schematicSavedVersion;
+  if (!selectedSchematic && !props.editLibrary && (schematicDirty || !untrackedTabClosed)) {
+    orderedFileTabs.unshift({ id: untrackedSchematicTab, name: currentFile.name,
+      title: currentFile.name, dirty: schematicDirty });
+  }
+  const selectedFileTab = gitReview ? 'git' : documents.active ? 'file:' + documents.active
+    : pcbActive && boards.activeId ? 'board:' + boards.activeId
+    : selectedSchematic ? 'schematic:' + selectedSchematic : untrackedSchematicTab;
   const pendingCloseBoard = boards.tabs.find(({ id }) => id === boardToClose);
   const pendingCloseFile = documents.files.find(({ id }) => id === fileToClose);
 
@@ -677,19 +726,71 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     setClosingSchematic(true);
     setTabError('');
     try {
-      const { closeProjectSchematicTab, saveProjectDrawing } = await loadProjectServices();
+      const { closeProjectSchematicTab, saveInactiveSchematic, saveProjectDrawing } = await loadProjectServices();
+      const state = store.getState();
+      const untracked = key === untrackedSchematicTab;
+      const active = untracked || schematicFileTabKey(state.altStore.file) === key;
+      let closeKey = untracked ? undefined : key;
       if (save) {
-        await saveProjectDrawing(dispatch, store.getState, undefined, false);
-        const current = store.getState();
-        if (current.docStore.present.drawingVersion !== current.altStore.savedVersion)
-          throw new Error('The schematic still has unsaved changes.');
+        if (active) {
+          if (state.altStore.file.project) await saveProjectDrawing(dispatch, store.getState, undefined, false);
+          else await saveSchematicFile(dispatch, store.getState);
+          const current = store.getState();
+          if (current.docStore.present.drawingVersion !== current.altStore.savedVersion)
+            throw new Error('The schematic still has unsaved changes.');
+          closeKey = schematicFileTabKey(current.altStore.file);
+        } else {
+          const inactive = state.schematicTabs.inactive[key];
+          await saveInactiveSchematic(key, inactive, dispatch, store.getState);
+          const saved = store.getState().schematicTabs.inactive;
+          closeKey = Object.keys(saved).find((id) => saved[id].history === inactive.history);
+        }
       }
-      await closeProjectSchematicTab(dispatch, store.getState, key, discard);
+      if (closeKey) await closeProjectSchematicTab(dispatch, store.getState, closeKey, discard);
+      else if (untracked) {
+        dispatch(actionSetDocument(blank(), 'tCad1.dsn', null, null));
+        dispatch(ActionCreators.clearHistory());
+      }
+      if ((untracked || active) && !schematicFileTabKey(store.getState().altStore.file)) {
+        setUntrackedTabClosed(true);
+        if (selectedFileTab === (untracked ? untrackedSchematicTab : 'schematic:' + key)) {
+          const index = orderedFileTabs.findIndex((tab) => tab.id === selectedFileTab);
+          const next = orderedFileTabs[index + 1] ?? orderedFileTabs[index - 1];
+          if (next) selectProjectTab(next.id);
+        }
+      }
       setSchematicToClose(undefined);
     } catch (error) {
       setTabError(error instanceof Error ? error.message : String(error));
     } finally {
       setClosingSchematic(false);
+    }
+  }
+
+  function selectProjectTab(id: string) {
+    setGitReview(undefined);
+    setTabError('');
+    if (id === untrackedSchematicTab) activateCircuit();
+    else if (id.startsWith('schematic:') && !batch.current && !schematicSaving) {
+      dispatch(activateSchematicTab(id.slice(10)) as any);
+      activateCircuit();
+    } else if (id.startsWith('board:')) activateBoard(id.slice(6));
+    else if (id.startsWith('file:')) documents.select(id.slice(5));
+  }
+
+  function requestTabClose(id: string, dirty: boolean) {
+    if (savingTabBatch || schematicSaving) return;
+    setTabError('');
+    if (id.startsWith('board:')) requestBoardClose(id.slice(6));
+    else if (id.startsWith('file:')) {
+      const fileId = id.slice(5);
+      if (documents.writing.has(fileId)) return;
+      if (dirty) setFileToClose(fileId);
+      else documents.close(fileId);
+    } else {
+      const key = id === untrackedSchematicTab ? id : id.slice(10);
+      if (dirty) setSchematicToClose(key);
+      else void closeSchematicFile(key, false, false);
     }
   }
 
@@ -768,9 +869,27 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const splitVisible = sideBySide && canSplit && !gitReview && !activeProjectFile;
   const boardOnly = pcbActive && !splitVisible && !gitReview && !activeProjectFile;
   const boardToolbarAtTop = boardOnly && !!pcb;
-  const panelsVisible = sidePanelVisible && (projectMode
-    ? showProjects || (showLibraries && !boardOnly) || showSourceControl
-    : !boardOnly);
+  const panelsVisible = sidePanelVisible && (projectMode || !boardOnly);
+  const boardLibrary = pcbActive && !gitReview && !activeProjectFile && !!pcb;
+  const projectFootprintsVisible = panelsVisible && projectPanel === 'libraries' && boardLibrary;
+  function selectProjectPanel(panel: typeof projectPanel) {
+    setSidePanelVisible(!(panelsVisible && projectPanel === panel));
+    setProjectPanel(panel);
+  }
+  const openProjectDocument = async (file: Parameters<typeof documents.open>[0]) => {
+    await documents.open(file);
+    setGitReview(undefined);
+    setTabError('');
+  };
+  useEffect(() => {
+    if (!projectMode) return;
+    const open = ({ detail }: WindowEventMap[typeof projectDocumentOpened]) => {
+      void openProjectDocument({ ...detail, ancestors: [detail.folder] })
+        .catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+    };
+    window.addEventListener(projectDocumentOpened, open);
+    return () => window.removeEventListener(projectDocumentOpened, open);
+  }, [dispatch, documents, projectMode]);
   const ownHeader = !!activeProjectFile || (pcbActive && !!pcb);
   const activeName = activeProjectFile?.name || (pcbActive && pcb ? pcb.session.path : props.drawingName);
   const activeDirty = activeProjectFile ? dirtyProjectDocument(activeProjectFile)
@@ -794,6 +913,8 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     simulationToolbarRef={setSimulationToolbarTarget}
     chatOpen={chatOpen}
     onToggleChat={process.env.TARGET_SYSTEM === 'electron' ? toggleChat : undefined}
+    showSaveAll={projectMode && (!splitVisible || !pcbActive)}
+    saveAllDisabled={savingTabBatch}
   />;
 
   return (
@@ -804,12 +925,20 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     >
       {simulationActive && <Suspense fallback={null}><SimulationFailureDialog /></Suspense>}
       {!pcbActive && !activeProjectFile && !splitVisible && schematicToolbar}
+      {projectMode && (activeProjectFile || (gitReview && pcbActive)) && (
+        <EditorToolbar label={t('toolbar.file')}>
+          <EditorSaveButton label={t('projects.saveFile', { defaultValue: 'Save file' })}
+            disabled={!activeProjectFile || !dirtyProjectDocument(activeProjectFile) || documents.writing.has(activeProjectFile.id) || savingTabBatch}
+            onClick={() => { if (activeProjectFile) void saveDocument(activeProjectFile.id).catch(() => {}); }} />
+          <EditorSaveAllButton disabled={savingTabBatch || schematicSaving} />
+        </EditorToolbar>
+      )}
       {footprintEditorOpen && (
         <Suspense fallback={null}>
           <FootprintEditorDialog onClose={() => setFootprintEditorOpen(false)} />
         </Suspense>
       )}
-      {ProjectAutosave && (props.hasOpenProject || schematicTabs.length > 0) && (
+      {ProjectAutosave && (props.hasOpenProject || schematicTabs.some(({ tab }) => tab.file.project)) && (
         <Suspense fallback={null}><ProjectAutosave /></Suspense>
       )}
       {process.env.TARGET_SYSTEM === 'electron' && ChatPanel && (
@@ -841,7 +970,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       {pendingCloseSchematic && (
         <Dialog open onOpenChange={(_, data) => !data.open && !closingSchematic && setSchematicToClose(undefined)}>
           <DialogSurface><DialogBody>
-            <DialogTitle>Close {pendingCloseSchematic.tab.file.project.documentPath}</DialogTitle>
+            <DialogTitle>Close {pendingCloseSchematic.name}</DialogTitle>
             <DialogContent>
               <p>Save your schematic changes before closing this tab?</p>
               {tabError && <p role="alert">{tabError}</p>}
@@ -915,44 +1044,25 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
         {projectMode && (
           <div className="project-activity-bar" role="group" aria-label={t('projects.activityBar')}>
             <ToggleButton
-              appearance="subtle" icon={<FolderRegular />} checked={panelsVisible && showProjects && !showSourceControl}
+              appearance="subtle" icon={<FolderRegular />} checked={panelsVisible && projectPanel === 'projects'}
               title={t('projects.title')} aria-label={t('projects.title')}
-              onClick={() => {
-                setShowProjects(panelsVisible && !showSourceControl ? !showProjects : true);
-                setShowSourceControl(false);
-                setSidePanelVisible(true);
-              }}
+              onClick={() => selectProjectPanel('projects')}
             />
             <ToggleButton
               appearance="subtle" icon={<BookOpenRegular />}
-              checked={boardOnly ? showFootprints : panelsVisible && showLibraries && !showSourceControl}
+              checked={panelsVisible && projectPanel === 'libraries'}
               title={t('projects.libraries')} aria-label={t('projects.libraries')} disabled={props.editLibrary}
-              onClick={() => {
-                if (boardOnly) {
-                  setShowFootprints(!showFootprints);
-                  return;
-                }
-                setShowLibraries(panelsVisible && !showSourceControl ? !showLibraries : true);
-                setShowSourceControl(false);
-                setSidePanelVisible(true);
-              }}
+              onClick={() => selectProjectPanel('libraries')}
             />
             {ProjectSourceControl && (
               <div className="git-activity-button">
                 <ToggleButton appearance="subtle" icon={<BranchForkRegular />}
                   title={t('projects.sourceControl')} aria-label={t('projects.sourceControl')}
-                  checked={panelsVisible && showSourceControl}
-                  onClick={() => {
-                    setShowSourceControl(!showSourceControl);
-                    setSidePanelVisible(true);
-                  }} />
+                  checked={panelsVisible && projectPanel === 'source'}
+                  onClick={() => selectProjectPanel('source')} />
                 {gitCount > 0 && <small aria-label={t('projects.pendingGit', { count: gitCount })}>{gitCount}</small>}
               </div>
             )}
-            <Button appearance="subtle" icon={<FolderOpenRegular />} title={t('projects.openFolder')}
-              aria-label={t('projects.openFolder')} onClick={() => window.dispatchEvent(new Event(chooseProjectFolder))} />
-            <Button appearance="subtle" icon={<DismissRegular />} title={t('projects.closeProject')}
-              aria-label={t('projects.closeProject')} onClick={() => window.dispatchEvent(new Event(closeProjectMode))} />
           </div>
         )}
         <EditorSidePanel
@@ -974,24 +1084,24 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           )}
           {projectMode && ProjectBrowser ? (
             <>
-              {showProjects && <div className="left-panel-section" hidden={!panelsVisible || showSourceControl}>
+              <div className="left-panel-section" hidden={!panelsVisible || projectPanel !== 'projects'}>
                 <Suspense fallback={null}><ProjectBrowser openedRoot={openedProjectRoot} onGitRoot={openGitRoot}
+                  activeFileId={activeProjectFile?.id ?? (pcbActive ? activeBoard?.document.fileId : typeof currentFile.id === 'string' ? currentFile.id : undefined)}
+                  schematicActive={!activeProjectFile && !pcbActive}
                   onGitHistory={gitAvailable ? (filename) => {
                     setGitHistoryRequest({ filename });
-                    setShowSourceControl(true);
+                    setProjectPanel('source');
                     setSidePanelVisible(true);
                   } : undefined} onOpenBoard={openBoard} onRefreshBoard={refreshProjectBoard} onActivateCircuit={activateCircuit}
-                  isProjectDocumentOpen={(id) => documents.isProtected(id) || boards.tabs.some(({ document }) => document.fileId === id || document.projectRootId === id || document.ancestorIds?.includes(id))} openedDocumentIds={[...documents.files.map(({ id }) => id), ...boards.tabs.flatMap(({ document }) => document.fileId ? [document.fileId] : [])]} onOpenProjectDocument={async (file) => {
-                    await documents.open(file);
-                    setGitReview(undefined);
-                    setTabError('');
-                  }} /></Suspense>
-              </div>}
-              {!boardOnly && showLibraries && <div className="left-panel-section" hidden={!panelsVisible || showSourceControl}>
-                <SidePanelContainer toggleSidePanel={toggleSidePanel} />
-              </div>}
-              {ProjectSourceControl && (gitRoot || showSourceControl) && (
-                <div className="left-panel-section" hidden={!panelsVisible || !showSourceControl}>
+                  isProjectDocumentOpen={(id) => documents.isProtected(id) || schematicTabs.some(({ tab }) => tab.file.id === id) || boards.tabs.some(({ document }) => document.fileId === id || document.projectRootId === id || document.ancestorIds?.includes(id))} openedDocumentIds={[...documents.files.map(({ id }) => id), ...schematicTabs.flatMap(({ tab }) => typeof tab.file.id === 'string' ? [tab.file.id] : []), ...boards.tabs.flatMap(({ document }) => document.fileId ? [document.fileId] : [])]} onOpenProjectDocument={openProjectDocument} /></Suspense>
+              </div>
+              <div className="left-panel-section" hidden={!panelsVisible || projectPanel !== 'libraries'}>
+                {boardLibrary
+                  ? <div className="project-footprints" role="region" aria-label="Footprints" ref={setFootprintsHost} />
+                  : <SidePanelContainer toggleSidePanel={toggleSidePanel} />}
+              </div>
+              {ProjectSourceControl && (gitRoot || projectPanel === 'source') && (
+                <div className="left-panel-section" hidden={!panelsVisible || projectPanel !== 'source'}>
                   <Suspense fallback={null}>
                     <ProjectSourceControl key={gitRoot?.id ?? ''} root={gitRoot}
                       openFolder={() => window.dispatchEvent(new Event(chooseProjectFolder))}
@@ -1007,64 +1117,35 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           ) : <SidePanelContainer toggleSidePanel={toggleSidePanel} />}
         </EditorSidePanel>
         <div className="main-content-area">
-          {projectMode && (documents.files.length > 0 || props.hasOpenProject || boards.tabs.length > 0) && (
+          {projectMode && orderedFileTabs.length > 0 && (
             <div className="project-file-tabs">
-              <TabList aria-label="Project files" selectedValue={gitReview ? 'git' : documents.active ? 'file:' + documents.active : pcbActive && boards.activeId ? 'board:' + boards.activeId : selectedSchematic ? 'schematic:' + selectedSchematic : 'design'}
-                onTabSelect={(_, data) => {
-                  setGitReview(undefined);
-                  setTabError('');
-                  const value = String(data.value);
-                  if (value === 'design') activateCircuit();
-                  else if (value.startsWith('schematic:') && !batch.current) {
-                    dispatch(activateSchematicTab(value.slice(10)) as any);
-                    activateCircuit();
-                  }
-                  else if (value.startsWith('board:')) activateBoard(value.slice(6));
-                  else if (value.startsWith('file:')) documents.select(value.slice(5));
-                }}>
-                {!selectedSchematic && <Tab value="design">Design</Tab>}
-                {schematicTabs.map(({ key, tab }) => (
-                  <Tab key={key} value={'schematic:' + key} title={tab.file.project.documentPath} disabled={savingTabBatch}>
-                    {tab.file.project.documentPath}{schematicTabDirty(tab) ? ' *' : ''}
-                  </Tab>
-                ))}
-                {boards.tabs.map(({ id, document: { session } }) => (
-                  <Tab key={id} value={'board:' + id} title={session.path}>
-                    {session.path}{session.dirty ? ' *' : ''}
-                  </Tab>
-                ))}
-                {documents.files.map((file) => (
-                  <Tab key={file.id} value={'file:' + file.id}>
-                    {file.name}{dirtyProjectDocument(file) ? ' *' : ''}
-                  </Tab>
-                ))}
+              <TabList aria-label="Project files" selectedValue={selectedFileTab}
+                onTabSelect={(_, data) => selectProjectTab(String(data.value))}>
+                {orderedFileTabs.map(({ id, name, title, dirty }) => {
+                  const closeDisabled = savingTabBatch || schematicSaving ||
+                    (id.startsWith('file:') && documents.writing.has(id.slice(5)));
+                  const closeLabel = t('projects.closeTab', { name: title, defaultValue: 'Close {{name}}' });
+                  return <div className="project-file-tab" key={id} role="presentation">
+                    <Tab value={id} title={title} icon={<ProjectFileIcon name={name} />} disabled={savingTabBatch}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Delete' || closeDisabled) return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        requestTabClose(id, dirty);
+                      }}>
+                      {name}{dirty ? ' *' : ''}
+                    </Tab>
+                    <Button appearance="subtle" size="small" icon={<DismissRegular />}
+                      className="project-file-tab-close" tabIndex={-1} title={closeLabel}
+                      aria-label={closeLabel} disabled={closeDisabled}
+                      onClick={() => requestTabClose(id, dirty)} />
+                  </div>;
+                })}
               </TabList>
-              {activeProjectFile && (
-                <div className="project-preview-actions">
-                  {(activeProjectFile.kind === 'text' || activeProjectFile.kind === 'settings') && <Button size="small"
-                    disabled={!dirtyProjectDocument(activeProjectFile) || documents.writing.has(activeProjectFile.id) || savingTabBatch}
-                    onClick={() => { void saveDocument(activeProjectFile.id).catch(() => {}); }}>Save file</Button>}
-                  <Button size="small" disabled={savingTabBatch || documents.writing.has(activeProjectFile.id)}
-                    onClick={() => {
-                      setTabError('');
-                      if (dirtyProjectDocument(activeProjectFile)) setFileToClose(activeProjectFile.id);
-                      else documents.close(activeProjectFile.id);
-                    }}>Close file</Button>
-                </div>
-              )}
-              {!activeProjectFile && !pcbActive && selectedSchematic && !gitReview &&
-                <Button size="small" disabled={savingTabBatch} onClick={() => {
-                  setTabError('');
-                  if (schematicVersion !== schematicSavedVersion) setSchematicToClose(selectedSchematic);
-                  else void closeSchematicFile(selectedSchematic, false, false);
-                }}>Close schematic tab</Button>}
-              {!activeProjectFile && pcbActive && activeBoard && !gitReview &&
-                <Button size="small" disabled={savingTabBatch} onClick={() => requestBoardClose(activeBoard.id)}>Close PCB tab</Button>}
               {canSplit && !activeProjectFile && !gitReview &&
                 <ToggleButton size="small" checked={splitVisible} onClick={toggleSideBySide}>
                   Side by side
                 </ToggleButton>}
-              <Button size="small" disabled={savingTabBatch} onClick={() => { void saveProjectFiles(true); }}>Save All</Button>
             </div>
           )}
           {(activeProjectFile || selectedSchematic) && tabError && !pendingCloseFile && !pendingCloseBoard && !pendingCloseSchematic && <p role="alert" className="project-tab-error">{tabError}</p>}
@@ -1140,10 +1221,16 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               <Suspense fallback={<div role="status">Loading PCB Design…</div>}>
                 {pcb ? (
                   <BoardWorkspace key={activeBoard.id + ':' + activeBoard.mount} {...pcb}
-                    footprintsVisible={showFootprints} onToggleFootprints={setShowFootprints}
+                    footprintsHost={projectMode ? footprintsHost : undefined}
+                    footprintsVisible={projectMode ? projectFootprintsVisible : showFootprints}
+                    onToggleFootprints={projectMode ? (visible) => {
+                      if (visible) setProjectPanel('libraries');
+                      setSidePanelVisible(visible);
+                    } : setShowFootprints}
                     bottomPanelHeight={bottomPanelHeight} onBottomPanelResize={handleBottomPanelResize}
                     onOpen={() => dispatch(fileOpen() as any)}
                     onProjectFolder={DriveProjectFolderDialog ? () => window.dispatchEvent(new Event(chooseProjectFolder)) : undefined}
+                    saveAllDisabled={savingTabBatch || schematicSaving}
                     activeCommands={pcbActive} manageClose={projectMode} onClose={() => requestBoardClose(activeBoard.id)} />
                 ) : <div role="status">Loading PCB Design…</div>}
               </Suspense>

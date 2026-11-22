@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button, Checkbox, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle,
   Input, Menu, MenuItem, MenuDivider, MenuList, MenuPopover, Select,
   MenuTrigger, ToolbarButton, ToolbarDivider } from '@fluentui/react-components';
@@ -11,7 +12,7 @@ import { ListModeMenuButton } from '../panel/ListModeMenuButton';
 import { LibraryBrowserHeader, LibrarySourceTabs } from '../libraryPanel/LibrarySourceTabs';
 import { EditorDrawingStack, EditorSidePanel } from '../panel/EditorLayout';
 import { EditorToolbar } from '../toolbar/EditorToolbar';
-import { EditorFileMenu, EditorHistoryControls, EditorNewMenu, EditorSaveButton } from '../toolbar/FileToolbarControls';
+import { EditorFileMenu, EditorHistoryControls, EditorNewMenu, EditorSaveAllButton, EditorSaveButton } from '../toolbar/FileToolbarControls';
 import { ViewToolbarControls } from '../toolbar/ViewToolbarControls';
 import { ContextualMenuItemType } from '../../manipulators/updateInterfaces';
 import type { ContextMenuItem } from '../../manipulators/updateInterfaces';
@@ -138,11 +139,13 @@ export default function BoardWorkspace({
   onClose,
   onOpen,
   onProjectFolder,
+  footprintsHost,
   footprintsVisible,
   onToggleFootprints,
   bottomPanelHeight,
   onBottomPanelResize,
   manageClose,
+  saveAllDisabled,
   activeCommands = true,
   probe,
   onProbe,
@@ -153,11 +156,13 @@ export default function BoardWorkspace({
   onClose(): void;
   onOpen(): void;
   onProjectFolder?(): void;
+  footprintsHost?: HTMLDivElement | null;
   footprintsVisible: boolean;
   onToggleFootprints(visible: boolean): void;
   bottomPanelHeight: number;
   onBottomPanelResize(delta: number): void;
   manageClose?: boolean;
+  saveAllDisabled?: boolean;
   activeCommands?: boolean;
 }) {
   const [board, setBoard] = useState(session.board);
@@ -1406,6 +1411,54 @@ export default function BoardWorkspace({
   if (boardMenuFootprint && !boardMenuFootprint.locked && !boardMenuFootprint.positionLocked)
     boardMenuItems.unshift({ key: 'move_footprint', text: 'Move on board' });
 
+  const footprintPanel = <>
+    <LibraryBrowserHeader>
+      <LibrarySourceTabs label="Footprints" selected={footprintTab} onSelect={setFootprintTab}
+        sources={[
+          { value: 'unplaced', id: footprintTabId + '-unplaced-tab', panelId: footprintTabId + '-unplaced', label: 'Unplaced' },
+          { value: 'library', id: footprintTabId + '-library-tab', panelId: footprintTabId + '-library', label: 'Library' },
+        ]} />
+    </LibraryBrowserHeader>
+    <div role="tabpanel" id={footprintTabId + '-unplaced'} aria-labelledby={footprintTabId + '-unplaced-tab'}
+      className="pcb-panel-scroll" hidden={footprintTab !== 'unplaced'}>
+      <BoardPlacementTray
+        parts={unplaced}
+        searchInput={placementSearch}
+        devices={board.deviceDefinitions ?? []}
+        definitions={board.footprintDefinitions ?? []}
+        selected={selected}
+        queued={queue}
+        sequential={sequentialPlacement}
+        disabled={busy || routing || measuring}
+        onSelect={selectComponent}
+        onPlace={armPlacement}
+        onToggle={(id) =>
+          setPlacementQueue(
+            queue.includes(id)
+              ? queue.filter((item) => item !== id)
+              : [...queue, id],
+          )
+        }
+        onStart={() => startSequentialPlacement(queue)}
+        onStop={cancelPlacement}
+      />
+    </div>
+    <div role="tabpanel" id={footprintTabId + '-library'} aria-labelledby={footprintTabId + '-library-tab'}
+      className="pcb-panel-scroll" hidden={footprintTab !== 'library'}>
+      <Button size="small" onClick={() => window.dispatchEvent(new Event(editFootprintLibrary))}>Footprint editor…</Button>
+      {!!board.footprintDefinitions?.length && (
+        <label className="pcb-library-choice">
+          Board footprints
+          <Select value={libraryFootprintId} onChange={(event) => setLibraryFootprintId(event.target.value)}>
+            <option value="">Choose a footprint</option>
+            {board.footprintDefinitions.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
+          </Select>
+        </label>
+      )}
+      {libraryFootprint && <DeviceFootprintPreview footprint={libraryFootprint} selected="" />}
+    </div>
+  </>;
+
   return (
     <section
       className="circuit-container pcb-workspace"
@@ -1501,6 +1554,7 @@ export default function BoardWorkspace({
           </Menu>
         ))}
         <EditorSaveButton disabled={busy} onClick={() => { void save(); }} />
+        {manageClose && activeCommands && <EditorSaveAllButton disabled={busy || saveAllDisabled} />}
         {session.canSaveAs && <EditorSaveButton saveAs label="Save As…" disabled={busy}
           onClick={() => { void save(true); }} />}
         <ToolbarDivider />
@@ -1594,16 +1648,16 @@ export default function BoardWorkspace({
             ))}
           </Select>
         </label>
-        <Button
+        {!manageClose && <Button
           disabled={busy}
           onClick={() => {
-            if (manageClose || !session.dirty) {
+            if (!session.dirty) {
               onClose();
             } else setConfirmDiscard(true);
           }}
         >
           Close
-        </Button>
+        </Button>}
       </EditorToolbar>
       <Dialog open={confirmDiscard} onOpenChange={(_, { open }) => setConfirmDiscard(open)}>
         <DialogSurface>
@@ -1845,56 +1899,14 @@ export default function BoardWorkspace({
       )}
       <div className="pcb-content">
         <div className="mid-container">
-          <EditorSidePanel label="Footprints" resizeLabel="Resize footprint browser" hidden={!footprintsVisible}
-            width={`min(${footprintsWidth}px, 27%)`} resizing={footprintsResizing}
-            onDragStateChange={setFootprintsResizing}
-            onResize={(delta) => setFootprintsWidth((width) => Math.max(128, Math.min(440, width + delta)))}>
-            <LibraryBrowserHeader>
-              <LibrarySourceTabs label="Footprints" selected={footprintTab} onSelect={setFootprintTab}
-                sources={[
-                  { value: 'unplaced', id: footprintTabId + '-unplaced-tab', panelId: footprintTabId + '-unplaced', label: 'Unplaced' },
-                  { value: 'library', id: footprintTabId + '-library-tab', panelId: footprintTabId + '-library', label: 'Library' },
-                ]} />
-            </LibraryBrowserHeader>
-            <div role="tabpanel" id={footprintTabId + '-unplaced'} aria-labelledby={footprintTabId + '-unplaced-tab'}
-              className="pcb-panel-scroll" hidden={footprintTab !== 'unplaced'}>
-              <BoardPlacementTray
-                parts={unplaced}
-                searchInput={placementSearch}
-                devices={board.deviceDefinitions ?? []}
-                definitions={board.footprintDefinitions ?? []}
-                selected={selected}
-                queued={queue}
-                sequential={sequentialPlacement}
-                disabled={busy || routing || measuring}
-                onSelect={selectComponent}
-                onPlace={armPlacement}
-                onToggle={(id) =>
-                  setPlacementQueue(
-                    queue.includes(id)
-                      ? queue.filter((item) => item !== id)
-                      : [...queue, id],
-                  )
-                }
-                onStart={() => startSequentialPlacement(queue)}
-                onStop={cancelPlacement}
-              />
-            </div>
-            <div role="tabpanel" id={footprintTabId + '-library'} aria-labelledby={footprintTabId + '-library-tab'}
-              className="pcb-panel-scroll" hidden={footprintTab !== 'library'}>
-              <Button size="small" onClick={() => window.dispatchEvent(new Event(editFootprintLibrary))}>Footprint editor…</Button>
-              {!!board.footprintDefinitions?.length && (
-                <label className="pcb-library-choice">
-                  Board footprints
-                  <Select value={libraryFootprintId} onChange={(event) => setLibraryFootprintId(event.target.value)}>
-                    <option value="">Choose a footprint</option>
-                    {board.footprintDefinitions.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
-                  </Select>
-                </label>
-              )}
-              {libraryFootprint && <DeviceFootprintPreview footprint={libraryFootprint} selected="" />}
-            </div>
-          </EditorSidePanel>
+          {footprintsHost === undefined ? (
+            <EditorSidePanel label="Footprints" resizeLabel="Resize footprint browser" hidden={!footprintsVisible}
+              width={`min(${footprintsWidth}px, 27%)`} resizing={footprintsResizing}
+              onDragStateChange={setFootprintsResizing}
+              onResize={(delta) => setFootprintsWidth((width) => Math.max(128, Math.min(440, width + delta)))}>
+              {footprintPanel}
+            </EditorSidePanel>
+          ) : footprintsHost && createPortal(footprintPanel, footprintsHost)}
           <div className="main-content-area">
           <EditorDrawingStack bottomHeight={bottomPanelHeight} onBottomResize={onBottomPanelResize}
             bottomHidden={!showProperties} bottomLabel="Board properties" resizeLabel="Resize board properties"

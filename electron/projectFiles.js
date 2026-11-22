@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { constants, createReadStream } from 'node:fs';
+import { constants, createReadStream, watch } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import { cloneProjectGit, runProjectGit } from './projectGit.js';
 import {
@@ -11,6 +11,7 @@ import {
 } from '../shared/projectFiles.js';
 
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const temporaryProjectFile = /^\.tinycad-[0-9a-f-]+\.tmp$/;
 
 export function registerProjectFiles({
   ipcMain,
@@ -24,7 +25,33 @@ export function registerProjectFiles({
   let root = store.get('projectFolder', documents);
   const pendingWrites = new Set();
   const openedRoots = new Set();
+  const selectedDocuments = new Set();
   let pendingLaunch;
+  const folderWatchers = new Map();
+  let watchOwner;
+  let watchVersion = 0;
+  let watchNotice;
+
+  function stopWatching() {
+    watchVersion++;
+    clearTimeout(watchNotice);
+    watchNotice = undefined;
+    for (const watcher of folderWatchers.values()) watcher.close();
+    folderWatchers.clear();
+    watchOwner?.removeListener('destroyed', stopWatching);
+    watchOwner?.removeListener('render-process-gone', stopWatching);
+    watchOwner?.removeListener('did-navigate', stopWatching);
+    watchOwner = undefined;
+  }
+
+  function notifyFolderChange() {
+    if (watchNotice) return;
+    watchNotice = setTimeout(() => {
+      watchNotice = undefined;
+      if (watchOwner && !watchOwner.isDestroyed())
+        watchOwner.send('project-folders-changed');
+    }, 100);
+  }
 
   const within = (base, target, directory = false) => {
     const relative = path.relative(base, target);
@@ -212,13 +239,32 @@ export function registerProjectFiles({
       return { id: root, name: path.basename(root) || root };
     }
 
+    const { operation, id, folder, name } = request;
+    let version;
+    if (operation === 'watch-folders') {
+      if (!Array.isArray(request.folders)) throw new Error('Invalid project folders.');
+      if (watchOwner !== event.sender) stopWatching();
+      if (!request.folders.length) {
+        stopWatching();
+        return;
+      }
+      if (!watchOwner) {
+        watchOwner = event.sender;
+        watchOwner.once('destroyed', stopWatching);
+        watchOwner.once('render-process-gone', stopWatching);
+        watchOwner.once('did-navigate', stopWatching);
+      }
+      version = ++watchVersion;
+    }
+
     const base = await fs.realpath(root).catch(() => root);
     const allowedRoots = new Set([base, ...openedRoots]);
-    const resolve = async (id, directory) => {
+    const resolve = async (id, directory, allowSelected = false) => {
       if (typeof id !== 'string' || !path.isAbsolute(id))
         throw new Error('Invalid project location.');
       const target = path.resolve(id);
-      if (![...allowedRoots].some((root) => within(root, target, directory)))
+      if (!(allowSelected && !directory && selectedDocuments.has(target)) &&
+          ![...allowedRoots].some((root) => within(root, target, directory)))
         throw new Error('Location is outside the project folder.');
       if ((await fs.realpath(target)) !== target)
         throw new Error('Symbolic links are unavailable in project trees.');
@@ -232,9 +278,44 @@ export function registerProjectFiles({
         throw new Error('Invalid file or folder name.');
       return path.join(await resolve(folder, true), name);
     };
-    const read = async (id) => readFile(await resolve(id, false));
+    const read = async (id, allowSelected = false) => readFile(await resolve(id, false, allowSelected));
 
-    const { operation, id, folder, name } = request;
+    if (operation === 'watch-folders') {
+      const directories = await Promise.all([...new Set(request.folders)].map(async (id) => {
+        try {
+          return await resolve(id, true);
+        } catch (error) {
+          if (error.code !== 'ENOENT' && error.code !== 'ENOTDIR') throw error;
+        }
+      }));
+      if (version !== watchVersion) return;
+      const wanted = new Set(directories.filter(Boolean));
+      for (const [directory, watcher] of folderWatchers) {
+        if (wanted.has(directory)) continue;
+        watcher.close();
+        folderWatchers.delete(directory);
+      }
+      for (const directory of wanted) {
+        if (folderWatchers.has(directory)) continue;
+        try {
+          const watcher = watch(directory, { persistent: false }, (eventType, filename) => {
+            if (folderWatchers.get(directory) === watcher &&
+              (!filename || eventType === 'rename') && !temporaryProjectFile.test(filename ?? ''))
+              notifyFolderChange();
+          });
+          folderWatchers.set(directory, watcher);
+          watcher.on('error', () => {
+            if (folderWatchers.get(directory) !== watcher) return;
+            watcher.close();
+            folderWatchers.delete(directory);
+            notifyFolderChange();
+          });
+        } catch {
+          // Some filesystems do not support watching. The tree can still be refreshed manually.
+        }
+      }
+      return;
+    }
     if (operation === 'git')
       return runProjectGit(await resolve(folder, true), request.request);
     if (operation === 'list') {
@@ -242,7 +323,7 @@ export function registerProjectFiles({
       return (await fs.readdir(parent, { withFileTypes: true }))
         .filter((item) =>
           request.tree
-            ? !/^\.tinycad-[0-9a-f-]+\.tmp$/.test(item.name)
+            ? !temporaryProjectFile.test(item.name)
             : !item.name.startsWith('.') &&
               (item.isDirectory() ||
                 (item.isFile() && isProjectFile(item.name))),
@@ -257,7 +338,7 @@ export function registerProjectFiles({
         }));
     }
     if (operation === 'read') {
-      const data = await read(id);
+      const data = await read(id, true);
       return { data: new Uint8Array(data), version: hash(data) };
     }
     if (operation === 'mkdir') {
@@ -333,7 +414,7 @@ export function registerProjectFiles({
       )
         throw new Error('Invalid project data.');
       const target = id
-        ? await resolve(id, false)
+        ? await resolve(id, false, true)
         : await destination(folder, name);
       if (pendingWrites.has(target))
         throw new Error('A project save is in progress.');
@@ -351,7 +432,7 @@ export function registerProjectFiles({
           await handle.close();
         }
         if (id) {
-          if (hash(await read(id)) !== version)
+          if (hash(await read(id, true)) !== version)
             throw new Error(
               'Project changed on disk. Reopen it or save a copy.',
             );
@@ -370,4 +451,11 @@ export function registerProjectFiles({
     }
     throw new Error('Unknown project operation.');
   });
+
+  return async (filename) => {
+    const selected = await fs.realpath(filename);
+    if (!(await fs.stat(selected)).isFile()) throw new Error('Select a project file.');
+    selectedDocuments.add(selected);
+    return selected;
+  };
 }

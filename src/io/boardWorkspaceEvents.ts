@@ -7,8 +7,8 @@ export const confirmCircuitOpen = 'tinycad:confirm-circuit-open';
 export const editorHeaderDocument = 'tinycad:editor-header-document';
 export const saveActiveBoard = 'tinycad:save-active-board';
 
-export function showOpenedBoard(session: BoardWorkspaceSession) {
-  window.dispatchEvent(new CustomEvent(boardOpened, { detail: session }));
+export function showOpenedBoard(session: BoardWorkspaceSession, fileId?: string) {
+  window.dispatchEvent(new CustomEvent(boardOpened, { detail: { session, fileId } }));
 }
 
 export function canOpenCircuit() {
@@ -18,7 +18,7 @@ export function canOpenCircuit() {
 declare global {
   interface WindowEventMap {
     'tinycad:editor-header-document': CustomEvent<{ name: string; dirty: boolean } | undefined>;
-    'tinycad:board-opened': CustomEvent<BoardWorkspaceSession>;
+    'tinycad:board-opened': CustomEvent<{ session: BoardWorkspaceSession; fileId?: string }>;
     'tinycad:save-active-board': CustomEvent<boolean>;
   }
 }

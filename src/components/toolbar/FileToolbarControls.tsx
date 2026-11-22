@@ -1,9 +1,10 @@
 import React from 'react';
 import { Menu, MenuDivider, MenuItem, MenuList, MenuPopover, MenuTrigger, ToolbarButton } from '@fluentui/react-components';
-import { ArrowRedoRegular, ArrowUndoRegular, DocumentAddRegular, DocumentRegular, LibraryRegular, SaveCopyRegular, SaveRegular } from '@fluentui/react-icons';
+import { ArrowRedoRegular, ArrowUndoRegular, DocumentAddRegular, DocumentRegular, LibraryRegular, SaveCopyRegular, SaveMultipleRegular, SaveRegular } from '@fluentui/react-icons';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { handleMenuCommand } from '../../io/files';
+import { saveProjectTabs } from '../../io/projectMode';
 
 export function EditorNewMenu({ submenu }: { submenu?: boolean }) {
   const { t } = useTranslation();
@@ -56,6 +57,13 @@ export function EditorSaveButton({ saveAs, disabled, label, title, onClick }: {
     <ToolbarButton aria-label={name} title={title ?? name}
       icon={saveAs ? <SaveCopyRegular /> : <SaveRegular />} disabled={disabled} onClick={onClick} />
   );
+}
+
+export function EditorSaveAllButton({ disabled }: { disabled?: boolean }) {
+  const { t } = useTranslation();
+  const label = t('toolbar.saveAll', { defaultValue: 'Save All' });
+  return <ToolbarButton icon={<SaveMultipleRegular />} title={label} aria-label={label}
+    disabled={disabled} onClick={() => window.dispatchEvent(new Event(saveProjectTabs))} />;
 }
 
 export function EditorHistoryControls({ canUndo, canRedo, onUndo, onRedo, compactLabels }: {

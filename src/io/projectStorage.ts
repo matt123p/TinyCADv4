@@ -10,6 +10,7 @@ import {
 export const projectRootChanged = 'tinycad:project-root-changed';
 export const projectFilesChanged = 'tinycad:project-files-changed';
 export const projectFolderOpened = 'tinycad:project-folder-opened';
+export const projectDocumentOpened = 'tinycad:project-document-opened';
 
 export interface ProjectLocation {
   id: string;
@@ -19,6 +20,7 @@ export interface ProjectLocation {
 declare global {
   interface WindowEventMap {
     'tinycad:project-folder-opened': CustomEvent<ProjectLocation>;
+    'tinycad:project-document-opened': CustomEvent<ProjectLocation & { folder: string }>;
   }
 }
 
@@ -61,6 +63,7 @@ export type ProjectStorageRequest =
   | { operation: 'activate-launch'; ticket: string }
   | { operation: 'choose'; containProject?: string }
   | { operation: 'list'; folder: string; tree?: boolean }
+  | { operation: 'watch-folders'; folders: string[] }
   | { operation: 'read' | 'fingerprint' | 'folder-identity'; id: string }
   | { operation: 'copy'; id: string; folder: string; name: string }
   | { operation: 'mkdir'; folder: string; name: string }
@@ -98,6 +101,7 @@ export interface ProjectStorageResult {
   'recent-project-folder': ProjectLocation | null;
   choose: ProjectLocation | null;
   list: ProjectItem[];
+  'watch-folders': void;
   read: { data: Uint8Array; version: string };
   mkdir: ProjectLocation;
   copy: void;

@@ -8,27 +8,37 @@ import Store from 'electron-store';
 
 
 const store = new Store();
+const supportingExtensions = ['txt', 'md', 'markdown', 'csv', 'tsv', 'log', 'xml', 'json', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'avif'];
 
-export function loadFile(mainWindow, file, isLibraryMode, openNewWindow, openProject) {
+export function loadFile(mainWindow, file, isLibraryMode, openNewWindow, openProject, authorizeDocument) {
+    const loadPicked = (filePath) => {
+        if (isProjectFile(filePath) && openProject) openProject(filePath);
+        else if (file?.projectMode && authorizeDocument && supportingExtensions.includes(path.extname(filePath).slice(1).toLowerCase())) {
+            authorizeDocument(filePath).then((id) => {
+                addRecentFile(mainWindow, id);
+                mainWindow.webContents.send('file-loaded', { id, name: path.basename(id), folderId: path.dirname(id) });
+            }).catch((failure) => error(mainWindow, failure));
+        } else processLoadFile(mainWindow, filePath, isLibraryMode, openNewWindow);
+    };
     if (typeof file === 'string') {
         processLoadFile(mainWindow, file, isLibraryMode, openNewWindow);
     }
     else if (file?.id) {
-        processLoadFile(mainWindow, file.id, isLibraryMode, openNewWindow);
+        if (store.get('recentFiles', []).includes(file.id)) loadPicked(file.id);
+        else processLoadFile(mainWindow, file.id, isLibraryMode, openNewWindow);
     }
     else {
         dialog.showOpenDialog({
             filters: [
+                ...(file?.projectMode ? [{ name: 'Project files', extensions: ['dsn', 'dzn', 'dpn', ...supportingExtensions] }] : []),
                 { name: 'TinyCAD Design Files', extensions: ['dsn', 'dzn', 'dpn'] },
                 { name: 'TinyCAD projects', extensions: ['tcproject'] },
-                { name: 'TinyCAD Libraries', extensions: ['tclib'] }
+                { name: 'TinyCAD Libraries', extensions: ['tclib'] },
             ],
             properties: ['openFile']
         }).then(result => {
             if (!result.canceled && result.filePaths.length > 0) {
-                const currentFilePath = result.filePaths[0];
-                if (isProjectFile(currentFilePath)) openProject(currentFilePath);
-                else processLoadFile(mainWindow, currentFilePath, isLibraryMode, openNewWindow);
+                loadPicked(result.filePaths[0]);
             }
         });
     }
@@ -58,7 +68,7 @@ function readFileInternal(mainWindow, currentFilePath) {
     fs.readFile(currentFilePath, (err, data) => {
         if (!err) {
             addRecentFile(mainWindow, currentFilePath);
-            mainWindow.webContents.send('file-loaded', { name: path.basename(currentFilePath), id: currentFilePath, content: data });
+            mainWindow.webContents.send('file-loaded', { name: path.basename(currentFilePath), id: currentFilePath, folderId: path.dirname(currentFilePath), content: data });
         }
         else {
             removeRecentFile(mainWindow, currentFilePath);

@@ -108,6 +108,7 @@ export function useProjectDocuments() {
   const current = useRef(files);
   const pending = useRef(new Set<string>());
   const openEpoch = useRef(0);
+  const projectEpoch = useRef(0);
 
   const update = useCallback(
     (change: (files: ProjectDocument[]) => ProjectDocument[]) => {
@@ -124,15 +125,16 @@ export function useProjectDocuments() {
 
   async function open(location: ProjectDocumentLocation) {
     if (!loadProjects) return;
+    const epoch = ++openEpoch.current;
+    const project = projectEpoch.current;
     if (!current.current.some(({ id }) => id === location.id)) {
-      const epoch = ++openEpoch.current;
       const opened = await readDocument(location);
-      if (epoch !== openEpoch.current) return;
+      if (project !== projectEpoch.current) return;
       update((files) =>
         files.some(({ id }) => id === opened.id) ? files : [...files, opened],
       );
     }
-    select(location.id);
+    if (epoch === openEpoch.current) select(location.id);
   }
 
   function edit(id: string, value: string) {
@@ -262,6 +264,7 @@ export function useProjectDocuments() {
   }
 
   function clear() {
+    projectEpoch.current++;
     select();
     update(() => []);
   }

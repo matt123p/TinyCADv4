@@ -2,7 +2,7 @@ import { generateActiveBom } from '../../io/netlists/activeNetlist';
 import { chooseProjectFolder, closeProjectMode, saveProjectTabs } from '../../io/projectMode';
 import React, { Dispatch } from 'react';
 import { EditorToolbar } from './EditorToolbar';
-import { EditorFileMenu, EditorHistoryControls, EditorNewMenu, EditorSaveButton } from './FileToolbarControls';
+import { EditorFileMenu, EditorHistoryControls, EditorNewMenu, EditorSaveAllButton, EditorSaveButton } from './FileToolbarControls';
 import { ViewToolbarControls } from './ViewToolbarControls';
 import { useTranslation } from 'react-i18next';
 import {
@@ -179,6 +179,8 @@ interface ToolbarProps {
   selected_sheet: number;
   toolbarDefaults: ToolbarDefaults;
   saveInProgress: boolean;
+  showSaveAll?: boolean;
+  saveAllDisabled?: boolean;
   saveNeeded: boolean;
   editLibrary: tclib;
   editSymbol: tclibLibraryEntry;
@@ -495,6 +497,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         <EditorSaveButton disabled={!props.saveNeeded && !props.saveInProgress}
           title={props.editLibrary ? t('toolbar.saveLibrary') : t('toolbar.saveDesign')}
           onClick={() => props.dispatch(props.editLibrary ? librarySave : fileSave)} />
+        {props.showSaveAll && <EditorSaveAllButton disabled={props.saveAllDisabled || props.saveInProgress} />}
         {process.env.TARGET_SYSTEM === 'filesystem' && (
           <EditorSaveButton saveAs onClick={() => props.dispatch(props.editLibrary ? librarySaveAs : fileSaveAs)} />
         )}

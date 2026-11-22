@@ -1,4 +1,5 @@
-import { isBoardFile } from '../../../shared/drawingFiles';
+import { isBoardFile, isDrawingFile } from '../../../shared/drawingFiles';
+import { ProjectFileIcon } from './ProjectFileIcon';
 import { projectDocumentKind } from '../../io/projectDocumentKind';
 import type { ProjectDocumentLocation } from '../../io/useProjectDocuments';
 import {
@@ -9,7 +10,7 @@ import type { ImportSource } from '../../io/projectImport';
 import type { ProjectImportJob } from './ProjectFileImportDialog';
 import type { BoardWorkspaceDocument } from '../pcb/BoardWorkspace';
 import type { projectCircuitStatus } from '../../io/projectCircuitStatus';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -20,7 +21,6 @@ import {
   DialogTitle,
   Input,
   Menu,
-  MenuButton,
   MenuItem,
   MenuList,
   MenuPopover,
@@ -29,13 +29,12 @@ import {
 } from '@fluentui/react-components';
 import {
   ArrowDownloadRegular,
-  ArrowUpRegular,
   ChevronDownRegular,
   ChevronRightRegular,
   DocumentRegular,
   FolderOpenRegular,
   FolderRegular,
-  MoreHorizontalRegular,
+  DismissRegular,
 } from '@fluentui/react-icons';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -45,7 +44,8 @@ import {
   projectFileTitle,
   MAX_PROJECT_FILE_BYTES,
 } from '../../../shared/projectFiles';
-import { fileOpenProject } from '../../io/files';
+import { fileOpenProject, fileOpenProjectSchematic } from '../../io/files';
+import { closeProjectMode } from '../../io/projectMode';
 import {
   addProjectSchematic,
   chooseDesktopProjectFolder,
@@ -85,6 +85,20 @@ import type { ReferenceDialogState } from './ProjectReferenceDialog';
 import type { ProjectDeviceReview } from '../../io/projectDevices';
 
 type LoadedProject = Awaited<ReturnType<typeof readProject>>;
+
+const canOpenProjectItem = ({ name, folder }: ProjectItem) =>
+  folder || isProjectFile(name) || isDrawingFile(name) || isBoardFile(name) || !!projectDocumentKind(name);
+
+const isSettingsItem = (item: ProjectItem) => !item.folder && !item.unsupported && isProjectFile(item.name);
+
+function openKeyboardContextMenu(event: React.KeyboardEvent<HTMLButtonElement>) {
+  if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
+  event.preventDefault();
+  const { left, bottom } = event.currentTarget.getBoundingClientRect();
+  event.currentTarget.dispatchEvent(new MouseEvent('contextmenu', {
+    bubbles: true, cancelable: true, clientX: left, clientY: bottom,
+  }));
+}
 
 interface ProjectContext {
   marker: ProjectItem;
@@ -153,6 +167,8 @@ interface NamePrompt {
 
 export default function ProjectBrowser({
   openedRoot,
+  activeFileId,
+  schematicActive,
   onGitRoot,
   onGitHistory,
   onOpenBoard,
@@ -163,6 +179,8 @@ export default function ProjectBrowser({
   onActivateCircuit,
 }: {
   openedRoot?: ProjectLocation;
+  activeFileId?: string;
+  schematicActive?: boolean;
   onGitRoot?(root?: ProjectLocation): void;
   onGitHistory?(filename: string): void;
   onOpenBoard(document: BoardWorkspaceDocument): void;
@@ -250,16 +268,30 @@ export default function ProjectBrowser({
   const drive = process.env.TARGET_SYSTEM === 'google';
   const storageKey = `tinycad.driveProjectFolder.${userId || ''}`;
   const folder = trail[trail.length - 1];
-  const blocked = busy || saving || Boolean(fileImport);
   const atProjectRoot = !!context && context.root.id === folder?.id;
   const explicitRoot = chosenRoot ?? openedRoot;
-  const treeMode = Boolean(context || explicitRoot);
+  const treeMode = Boolean(folder);
   const markerId = context?.marker.id;
+  const activeTreeFile = activeFileId ?? (schematicActive && activeProject && activeProject.id === markerId
+    ? context.project.files.get(activeProject.documentPath)?.id : undefined);
   const projectRootId = context?.root.id;
   const projectRootIndex = trail.findIndex(({ id }) => id === projectRootId);
-  const treeRootIndex = explicitRoot ? 0 : projectRootIndex;
-  const treeRoot = treeMode && trail[treeRootIndex];
+  const treeRoot = trail[0];
+  const folderId = folder?.id;
+  const treeRootId = treeRoot ? treeRoot.id : undefined;
+  const listedFolderIds = useMemo(() => {
+    if (!folderId) return [];
+    return [...new Set(treeRootId ? [folderId, treeRootId, ...expanded] : [folderId])];
+  }, [folderId, treeRootId, expanded]);
   const activeListing = listings.get(folder?.id);
+  const settingsFolder = context?.root ?? trail.find(({ id }) => listings.get(id)?.items.some(isSettingsItem));
+  const settingsListing = listings.get(settingsFolder?.id);
+  const settingsParent = trail[trail.findIndex(({ id }) => id === settingsFolder?.id) - 1];
+  const settingsMarkers = settingsListing?.items.filter(isSettingsItem) ?? [];
+  const [settingsFailure, setSettingsFailure] = useState<string>();
+  const marker = settingsMarkers.length === 1 ? settingsMarkers[0] : undefined;
+  const settingsPending = marker && marker.id !== markerId && marker.id !== settingsFailure;
+  const blocked = busy || saving || Boolean(fileImport) || Boolean(settingsPending);
   const loading = Boolean(folder &&
     (activeListing?.tree !== treeMode || activeListing.refresh !== refresh),
   );
@@ -270,7 +302,8 @@ export default function ProjectBrowser({
     return [...parentTrail.slice(index + 1).map(({ name }) => name), name].join('/');
   };
   const linkedPaths = context?.project.settings.entries || [];
-  const reload = () => setRefresh((value) => value + 1);
+  const reload = useCallback(() => setRefresh((value) => value + 1), []);
+  useEffect(() => { if (activeTreeFile) setSelected(undefined); }, [activeTreeFile]);
 
   const gitRoot = context?.root ?? explicitRoot;
   useEffect(() => {
@@ -332,16 +365,29 @@ export default function ProjectBrowser({
       window.removeEventListener(projectFilesChanged, reload);
       window.removeEventListener(projectRootChanged, resetRoot);
     };
-  }, []);
+  }, [reload]);
 
   useEffect(() => {
-    if (!folder) return;
-    const ids = new Set([folder.id]);
-    if (treeRoot) {
-      ids.add(treeRoot.id);
-      for (const id of expanded) ids.add(id);
-    }
-    const stale = [...ids].filter((id) => {
+    if (process.env.TARGET_SYSTEM !== 'electron' || !window.electronAPI?.onProjectFoldersChanged) return;
+    const unsubscribe = window.electronAPI.onProjectFoldersChanged(reload);
+    return () => {
+      unsubscribe();
+      void projectRequest({ operation: 'watch-folders', folders: [] }).catch(() => {});
+    };
+  }, [reload]);
+
+  useEffect(() => {
+    if (process.env.TARGET_SYSTEM !== 'electron' || !window.electronAPI?.onProjectFoldersChanged || !listedFolderIds.length) return;
+    let current = true;
+    void projectRequest({ operation: 'watch-folders', folders: listedFolderIds }).then(() => {
+      // List again to capture changes made while the native watchers were starting.
+      if (current) reload();
+    }).catch(() => {});
+    return () => { current = false; };
+  }, [listedFolderIds, reload]);
+
+  useEffect(() => {
+    const stale = listedFolderIds.filter((id) => {
       const listing = listings.get(id);
       return listing?.tree !== treeMode || listing.refresh !== refresh;
     });
@@ -367,46 +413,32 @@ export default function ProjectBrowser({
         });
     });
     return () => { current = false; };
-  }, [folder, treeRoot, expanded, listings, refresh, treeMode]);
+  }, [listedFolderIds, listings, refresh, treeMode]);
 
   useEffect(() => {
-    if (!folder || !activeListing || loading) return;
-    if (activeListing.error) {
-      setError(activeListing.error);
-      return;
-    }
-    const markers = activeListing.items.filter(
-      (item) => !item.folder && !item.unsupported && isProjectFile(item.name),
-    );
-    const [marker] = markers;
-    const readingWithinProject = Boolean(markerId && !atProjectRoot);
-    if (!readingWithinProject && markers.length !== 1) {
-      if (atProjectRoot) setContext(undefined);
-      if (markers.length > 1) setError(t('projects.ambiguousSettings'));
+    if (!loading && activeListing?.error) setError(activeListing.error);
+  }, [activeListing, loading]);
+
+  useEffect(() => {
+    if (!settingsFolder || !settingsListing || settingsListing.refresh !== refresh || settingsListing.error) return;
+    if (!marker) {
+      setContext(undefined);
+      if (settingsMarkers.length > 1) setError(t('projects.ambiguousSettings'));
       return;
     }
     let current = true;
-    readProject(
-      readingWithinProject ? markerId : marker.id,
-      readingWithinProject ? projectRootId : folder.id,
-    ).then((project) => {
+    readProject(marker.id, settingsFolder.id).then((project) => {
       if (!current) return;
-      if (readingWithinProject) {
-        setContext((value) =>
-          value?.marker.id === markerId && value.root.id === projectRootId
-            ? { ...value, project }
-            : value,
-        );
-      } else {
-        setContext({ marker, root: folder, parent: trail.at(-2), project });
-      }
+      setSettingsFailure(undefined);
+      setContext({ marker, root: settingsFolder, parent: settingsParent, project });
     }).catch((reason) => {
       if (!current) return;
-      if (!readingWithinProject) setContext(undefined);
+      setSettingsFailure(marker.id);
+      setContext(undefined);
       setError(String(reason));
     });
     return () => { current = false; };
-  }, [folder, activeListing, loading, atProjectRoot, markerId, projectRootId, trail, t]);
+  }, [marker, settingsFolder, settingsListing, settingsMarkers.length, settingsParent, refresh, t]);
 
   useEffect(() => {
     if (!context || !folder || saving) return;
@@ -484,7 +516,6 @@ export default function ProjectBrowser({
     setSelected(undefined);
     if (context && !next.some(({ id }) => id === context.root.id)) {
       setContext(undefined);
-      if (!explicitRoot) setExpanded(new Set());
     }
     setSearch('');
     setError('');
@@ -765,14 +796,15 @@ export default function ProjectBrowser({
     const parent = parentTrail.at(-1);
     setError('');
     if (item.folder) {
-      if (treeMode) setExpanded((before) => new Set(before).add(item.id));
+      setExpanded((before) => new Set(before).add(item.id));
       navigate([...parentTrail, item]);
+      setSelected(item);
       return;
     }
     setSelected(item);
     if (isProjectFile(item.name)) {
-      if (context?.marker.id !== item.id)
-        void run(async () => {
+      void run(async () => {
+        if (context?.marker.id !== item.id) {
           const project = await readProject(item.id, parent.id);
           if (parent.id !== folder.id) navigate(parentTrail);
           setContext({
@@ -781,7 +813,9 @@ export default function ProjectBrowser({
             parent: parentTrail.at(-2),
             project,
           });
-        }, false);
+        }
+        await onOpenProjectDocument({ ...item, folder: parent.id, ancestors: parentTrail.map(({ id }) => id) });
+      }, false);
       return;
     }
     if (!treeMode) return;
@@ -808,6 +842,8 @@ export default function ProjectBrowser({
           onOpenBoard(await unlinkedBoardDocument(file, rootId, ancestors)),
         false,
       );
+    } else if (isDrawingFile(item.name)) {
+      void run(async () => { await dispatch(fileOpenProjectSchematic(item, parent.id) as any); }, false);
     } else if (projectDocumentKind(item.name))
       void run(
         () =>
@@ -818,14 +854,6 @@ export default function ProjectBrowser({
           }),
         false,
       );
-    else
-      void run(async () => {
-        const { data } = await projectRequest({
-          operation: 'read',
-          id: item.id,
-        });
-        download(item.name, data);
-      }, false);
   };
 
   const choose = () =>
@@ -1070,9 +1098,7 @@ export default function ProjectBrowser({
         : [];
     });
   }
-  const rows = folder
-    ? visibleRows(treeRoot ? trail.slice(0, treeRootIndex + 1) : trail)
-    : [];
+  const rows = treeRoot ? visibleRows([treeRoot]) : [];
   const dropRoot = treeRoot || folder;
   function collapseFolder(id: string) {
     const closed = new Set([id]);
@@ -1104,31 +1130,17 @@ export default function ProjectBrowser({
       aria-busy={loading || busy}
     >
       <div className="project-browser-toolbar">
-        <Button
-          size="small"
-          appearance="subtle"
-          icon={<ArrowUpRegular />}
-          title={t('projects.up')}
-          aria-label={t('projects.up')}
-          disabled={blocked || trail.length < 2}
-          onClick={() => {
-            if (treeMode && expanded.has(folder.id))
-              collapseFolder(folder.id);
-            else navigate(trail.slice(0, -1));
-          }}
-        />
-        <span title={trail.map(({ name }) => name).join(' / ')}>
-          {dropRoot?.name}
-        </span>
-        <Menu>
+        <Menu openOnContext>
           <MenuTrigger disableButtonEnhancement>
-            <MenuButton
+            <Button
               size="small"
               appearance="subtle"
-              icon={<MoreHorizontalRegular />}
+              className="project-root-label"
               aria-label={t('projects.folderActions')}
               disabled={blocked}
-            />
+              title={dropRoot?.name}
+              onKeyDown={openKeyboardContextMenu}
+            ><span className="project-tree-filename">{dropRoot?.name}</span></Button>
           </MenuTrigger>
           <MenuPopover>
             <MenuList>
@@ -1148,7 +1160,7 @@ export default function ProjectBrowser({
                       const type = projectDocumentKind(name);
                       if (!type || type.kind !== 'text')
                         throw new Error(
-                          'Choose a .txt, .md, .csv, .tsv or .log filename.',
+                          'Choose a text, Markdown, CSV, TSV, log, XML or JSON filename.',
                         );
                       const names = await projectRequest({
                         operation: 'list',
@@ -1307,6 +1319,9 @@ export default function ProjectBrowser({
             </MenuList>
           </MenuPopover>
         </Menu>
+        <Button size="small" appearance="subtle" icon={<DismissRegular />}
+          title={t('projects.closeProject')} aria-label={t('projects.closeProject')}
+          onClick={() => window.dispatchEvent(new Event(closeProjectMode))} />
       </div>
       <input
         ref={addFilesInput}
@@ -1419,7 +1434,7 @@ export default function ProjectBrowser({
             const link = linkedPaths.find(({ path }) => path.toLowerCase() === relative);
             const expandable = treeMode && item.folder && !item.unsupported;
             const isExpanded = expandable && expanded.has(item.id);
-            const selectedRow = selected?.id === item.id || (expandable && folder.id === item.id);
+            const selectedRow = (selected?.id ?? activeTreeFile ?? folder.id) === item.id;
             const inSettingsFolder = parent.id === projectRootId;
             const status =
               link?.kind === 'board' && context
@@ -1440,53 +1455,47 @@ export default function ProjectBrowser({
               <li
                 key={item.id}
                 style={depth ? { paddingInlineStart: Math.min(depth * 12, 96) } : undefined}
-                className={
-                  dropTarget === item.id ? 'project-drop-target' : undefined
-                }
+                className={dropTarget === item.id ? 'project-drop-target' : undefined}
+                data-selected={selectedRow || undefined}
                 {...(treeMode && item.folder && !item.unsupported
                   ? dropHandlers(item)
                   : {})}
               >
-                <Button
+                <Menu openOnContext>
+                  <MenuTrigger disableButtonEnhancement>
+                  <Button
                   size="small"
                   className="project-file-label"
                   title={item.name}
-                  appearance={selectedRow ? 'primary' : 'subtle'}
-                  icon={expandable
-                    ? isExpanded ? <ChevronDownRegular /> : <ChevronRightRegular />
-                    : item.folder ? <FolderRegular /> : <DocumentRegular />}
+                  appearance="subtle"
                   aria-expanded={expandable ? isExpanded : undefined}
                   disabled={blocked || item.unsupported}
                   onClick={() => item.folder ? toggleFolder(item, parentTrail) : open(item, parentTrail)}
+                  onContextMenu={() => setSelected(item)}
+                  onKeyDown={openKeyboardContextMenu}
                 >
-                  {item.name}
+                  <span className="project-tree-chevron" aria-hidden="true">
+                    {expandable && (isExpanded ? <ChevronDownRegular /> : <ChevronRightRegular />)}
+                  </span>
+                  <ProjectFileIcon name={item.name} folder={item.folder} expanded={isExpanded} />
+                  <span className="project-tree-filename">{item.name}</span>
                 </Button>
-                {status && (
-                  <small className="project-board-sync" title={status.detail}>
-                    {t('projects.syncStatus.' + status.status)}
-                  </small>
-                )}
-                <Menu>
-                  <MenuTrigger disableButtonEnhancement>
-                    <Button
-                      size="small"
-                      appearance="subtle"
-                      icon={<MoreHorizontalRegular />}
-                      aria-label={t('projects.itemActions', {
-                        name: item.name,
-                      })}
-                      disabled={blocked}
-                    />
                   </MenuTrigger>
                   <MenuPopover>
                     <MenuList>
                       <MenuItem
                         icon={<FolderOpenRegular />}
-                        disabled={item.unsupported}
+                        disabled={item.unsupported || !canOpenProjectItem(item)}
                         onClick={() => open(item, parentTrail)}
                       >
                         {t('projects.open')}
                       </MenuItem>
+                      {!item.folder && !item.unsupported && !canOpenProjectItem(item) && (
+                        <MenuItem icon={<ArrowDownloadRegular />} onClick={() => void run(async () => {
+                          const { data } = await projectRequest({ operation: 'read', id: item.id });
+                          download(item.name, data);
+                        }, false)}>{t('projects.downloadFile', { defaultValue: 'Download file' })}</MenuItem>
+                      )}
                       {onGitHistory && !item.folder && !item.unsupported && (
                         <MenuItem onClick={() => onGitHistory(item.id)}>
                           {t('projects.gitFileHistory')}
@@ -1789,6 +1798,11 @@ export default function ProjectBrowser({
                     </MenuList>
                   </MenuPopover>
                 </Menu>
+                {status && (
+                  <small className="project-board-sync" title={status.detail}>
+                    {t('projects.syncStatus.' + status.status)}
+                  </small>
+                )}
               </li>
             );
           })}

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { once } from 'node:events';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { EventEmitter, once } from 'node:events';
+import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { registerProjectFiles } from '../../../electron/projectFiles.js';
 import { installElectronBridge } from '../chat-browser/electron-bridge.mjs';
@@ -25,7 +25,12 @@ test('projects share the editor sidebar and save schematic changes and a revisio
   await mkdir(parent, { recursive: true });
   const directory = await mkdtemp(path.join(parent, 'project-browser-'));
   const frame = {};
-  const webContents = { mainFrame: frame };
+  const webContents = Object.assign(new EventEmitter(), {
+    mainFrame: frame,
+    isDestroyed: () => page.isClosed(),
+    send: () => { void page.evaluate(() => window.projectTestFoldersChanged?.()).catch(() => {}); },
+  });
+  let watchedFolders = [];
   let handler;
   let chosenFolder;
   registerProjectFiles({
@@ -49,6 +54,7 @@ test('projects share the editor sidebar and save schematic changes and a revisio
       { sender: webContents, senderFrame: frame },
       request,
     );
+    if (request.operation === 'watch-folders') watchedFolders = request.folders;
     return result?.data ? { ...result, data: Array.from(result.data) } : result;
   });
   await context.addInitScript(() => {
@@ -65,6 +71,10 @@ test('projects share the editor sidebar and save schematic changes and a revisio
       window.projectTestMenu = handler;
       return () => {};
     };
+    window.electronAPI.onProjectFoldersChanged = (handler) => {
+      window.projectTestFoldersChanged = handler;
+      return () => { delete window.projectTestFoldersChanged; };
+    };
   });
   try {
     await writeFile(path.join(directory, 'Ignore.dsn'), 'outside the project');
@@ -79,15 +89,17 @@ test('projects share the editor sidebar and save schematic changes and a revisio
     await projects.click();
     let sidebar = page.getByRole('region', { name: 'Projects', exact: true });
     await expect(sidebar).toBeVisible();
-    await expect(page.locator('.side-panel')).toBeVisible();
+    await expect(page.locator('.side-panel')).toBeHidden();
     await libraries.click();
-    await expect(page.locator('.side-panel')).toHaveCount(0);
-    await expect(sidebar.getByText('Ignore.dsn')).toHaveCount(0);
+    await expect(sidebar).toBeHidden();
+    await expect(page.locator('.side-panel')).toBeVisible();
+    await projects.click();
+    await expect(sidebar.getByText('Ignore.dsn')).toBeVisible();
 
     async function create(kind, name) {
       await sidebar
         .getByRole('button', { name: 'Project folder actions' })
-        .click();
+        .click({ button: 'right' });
       await page.getByRole('menuitem', { name: kind }).click();
       const dialog = page.getByRole('dialog');
       await dialog.getByRole('textbox', { name: 'Name' }).fill(name);
@@ -172,6 +184,21 @@ test('projects share the editor sidebar and save schematic changes and a revisio
     await page.evaluate(() =>
       window.layoutTest.renameCurrentSheet('Amplifier circuit'),
     );
+    const outputDirectory = path.join(sourceRoot, 'outputs');
+    await sidebar.getByRole('button', { name: 'outputs', exact: true }).click();
+    await expect.poll(() => watchedFolders).toContain(outputDirectory);
+    const originalNote = path.join(outputDirectory, 'External.md');
+    const renamedNote = path.join(outputDirectory, 'Renamed.md');
+    await writeFile(originalNote, '# External');
+    await expect(sidebar.getByRole('button', { name: 'External.md', exact: true })).toBeVisible();
+    await rename(originalNote, renamedNote);
+    await expect(sidebar.getByRole('button', { name: 'Renamed.md', exact: true })).toBeVisible();
+    await expect(sidebar.getByRole('button', { name: 'External.md', exact: true })).toHaveCount(0);
+    await rm(renamedNote);
+    await expect(sidebar.getByRole('button', { name: 'Renamed.md', exact: true })).toHaveCount(0);
+    await sidebar.getByRole('button', { name: 'outputs', exact: true }).click();
+    await expect.poll(() => page.evaluate(() => window.layoutTest.snapshot().drawing.sheets[0].name))
+      .toBe('Amplifier circuit');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(
       page.getByRole('button', { name: 'Save', exact: true }),
@@ -217,11 +244,11 @@ test('projects share the editor sidebar and save schematic changes and a revisio
     await expect(
       layout.getByRole('img', { name: 'Board layout' }),
     ).toBeVisible();
-    await layout.getByRole('button', { name: 'Close', exact: true }).click();
+    await page.getByRole('tablist', { name: 'Project files' }).getByRole('button', { name: 'Close layouts/Main.dpn', exact: true }).click();
     const download = page.waitForEvent('download');
     await sidebar
-      .getByRole('button', { name: 'Actions for Main.dpn', exact: true })
-      .click();
+      .getByRole('button', { name: 'Main.dpn', exact: true })
+      .click({ button: 'right' });
     await page
       .getByRole('menuitem', { name: 'Download PCB', exact: true })
       .click();
@@ -235,7 +262,7 @@ test('projects share the editor sidebar and save schematic changes and a revisio
       'Missing or inconsistent project circuit snapshot',
     );
     await writeFile(circuitPath, JSON.stringify(circuit));
-    await sidebar.getByRole('button', { name: 'Parent folder' }).click();
+    await sidebar.getByRole('button', { name: 'layouts', exact: true }).click();
 
     expect(
       await readFile(path.join(copyRoot, 'outputs', 'notes.txt'), 'utf8'),
@@ -243,23 +270,23 @@ test('projects share the editor sidebar and save schematic changes and a revisio
 
     await sidebar
       .getByRole('button', {
-        name: 'Actions for Transistor amplifier.tcproject',
+        name: 'Transistor amplifier.tcproject',
       })
-      .click();
+      .click({ button: 'right' });
     await page
       .getByRole('menuitem', { name: 'Set as comparison base' })
       .click();
-    await sidebar.getByRole('button', { name: 'Parent folder' }).click();
+    await sidebar.getByRole('button', { name: 'Transistor amplifier', exact: true }).click();
     await sidebar
       .getByRole('button', { name: 'Amplifier revision', exact: true })
       .click();
     const copyMarker = sidebar.getByRole('button', {
-      name: 'Actions for Amplifier revision.tcproject',
+      name: 'Amplifier revision.tcproject',
     });
     await expect(
       sidebar.getByRole('button', { name: 'Open schematic' }),
     ).toBeVisible();
-    await copyMarker.click();
+    await copyMarker.click({ button: 'right' });
     const compare = page.getByRole('menuitem', {
       name: 'Compare with Transistor amplifier.tcproject',
     });
@@ -274,7 +301,7 @@ test('projects share the editor sidebar and save schematic changes and a revisio
       .getByRole('button', { name: 'Close', exact: true })
       .click();
     await writeFile(path.join(copyRoot, 'outputs', 'notes.txt'), 'changed');
-    await copyMarker.click();
+    await copyMarker.click({ button: 'right' });
     await compare.click();
     await expect(
       comparison.getByText('Changed outputs/notes.txt'),
@@ -354,13 +381,13 @@ test('projects share the editor sidebar and save schematic changes and a revisio
     await page.getByRole('menuitem', { name: 'Simulate', exact: true }).click();
     await expect(page.locator('.simulation-sheet')).toBeVisible();
     await expect(sidebar).toBeVisible();
-    await expect(page.locator('.side-panel')).toBeVisible();
+    await expect(page.locator('.side-panel')).toBeHidden();
     await page.reload();
     await page.getByRole('button', { name: 'Projects', exact: true }).click();
     chosenFolder = copyRoot;
     await sidebar
       .getByRole('button', { name: 'Project folder actions' })
-      .click();
+      .click({ button: 'right' });
     await page
       .getByRole('menuitem', { name: 'Choose project folder…' })
       .click();
@@ -385,6 +412,7 @@ test('projects share the editor sidebar and save schematic changes and a revisio
     ).toBeVisible();
     expect(errors).toEqual([]);
   } finally {
+    webContents.emit('destroyed');
     await rm(directory, { recursive: true, force: true });
   }
 });

@@ -32,7 +32,7 @@ declare global {
             stopSimulation: (runId: string) => void;
             onSimulation: (callback: (runId: string, event: import('./simulation/contracts').EngineEvent) => void) => () => void;
             // Files
-            loadFile: (file?: { name: string, id: string }) => void;
+            loadFile: (file?: { name: string, id: string, projectMode?: boolean }) => void;
             saveFile: (data: {
                 name: string;
                 id: FileIdType | string;
@@ -64,11 +64,12 @@ declare global {
             setViewMenuState: (state: { hasExampleExplanation: boolean; exampleExplanationVisible: boolean; simulationPanelVisible: boolean }) => void;
             setBoardMenus: (menus: import('./io/boardWorkspaceEvents').BoardMenuState[]) => void;
             projectFiles: (request: import('./io/projectStorage').ProjectStorageRequest) => Promise<any>;
+            onProjectFoldersChanged: (callback: () => void) => () => void;
             setMenuMode: (mode: boolean) => void;
             setMenuTranslations: (translations: Record<string, string>) => void;
 
             // Callbacks
-            fileLoaded: (callback: (data: { content: string | Uint8Array, name: string, id: string }) => void) => () => void;
+            fileLoaded: (callback: (data: { content?: string | Uint8Array, name: string, id: string, folderId?: string }) => void) => () => void;
             fileSaved: (callback: (data: { success: boolean, name: string, id: string, error?: string }) => void) => () => void;
             recentFiles: (callback: (data: { name: string, id: string }[]) => void) => () => void;
             libraryLoaded: (callback: (data: { content: ArrayBuffer, name: string, id: string, lastModified?: Date | string }) => void) => () => void;

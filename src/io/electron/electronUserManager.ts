@@ -1,9 +1,12 @@
 import { isBoardFile } from '../../../shared/drawingFiles.js';
-import { canOpenCircuit, circuitOpened, showOpenedBoard } from '../boardWorkspaceEvents';
+import { showOpenedBoard } from '../boardWorkspaceEvents';
 import { drawingMimeType } from '../../../shared/drawingFiles.js';
 import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
-import { ActionCreators } from 'redux-undo';
+import { showOpenedSchematic } from '../files';
+import { projectDocumentKind } from '../projectDocumentKind';
+import { projectDocumentOpened } from '../projectStorage';
+import type { docDrawing } from '../../state/undo/undo';
 import {
   normalizeTclibLoadError,
   tclib,
@@ -14,7 +17,6 @@ import {
 import {
   actionEditLibrary,
   actionMenuSetRecentFileList,
-  actionSetDocument,
   actionSelectDialog,
   actionSetFileData,
   actionUpdateConfig,
@@ -59,7 +61,7 @@ export class ElectronUserManager implements UserManager {
     return isNaN(date.getTime()) ? null : date.toISOString();
   }
 
-  public initialize(dispatch: Dispatch): Promise<void> {
+  public initialize(dispatch: Dispatch, getState: () => docDrawing): Promise<void> {
     // Clear previous listeners
     this.unsubs.forEach((u) => u());
     this.unsubs = [];
@@ -73,14 +75,18 @@ export class ElectronUserManager implements UserManager {
             const content = typeof data.content === 'string' ? new TextEncoder().encode(data.content) : data.content;
             showOpenedBoard(await openStandaloneBoard(content, {
               name: data.name, id: data.id, folderId: data.id,
+            }), data.id);
+            return;
+          }
+          if (getState().schematicTabs?.enabled && projectDocumentKind(data.name) && data.folderId) {
+            window.dispatchEvent(new CustomEvent(projectDocumentOpened, {
+              detail: { id: data.id, name: data.name, folder: data.folderId },
             }));
             return;
           }
+          if (!data.content) return;
           const doc = await decodeDrawing(data.content);
-          if (!canOpenCircuit()) return;
-          dispatch(actionSetDocument(doc, data.name, data.id, data.id));
-          dispatch(ActionCreators.clearHistory());
-          window.dispatchEvent(new Event(circuitOpened));
+          showOpenedSchematic(dispatch, getState(), doc, { name: data.name, id: data.id, folderId: data.folderId ?? data.id });
         } catch (error) { dispatch(actionSelectDialog('io_failure',{message:String(error)})); }
       }),
     );
@@ -232,10 +238,11 @@ export class ElectronUserManager implements UserManager {
     return Promise.resolve();
   }
 
-  public fileOpen(dispatch: Dispatch, file?: CurrentFile) {
+  public fileOpen(dispatch: Dispatch, file?: CurrentFile, projectMode?: boolean) {
     window.electronAPI.loadFile({
       name: file?.name,
       id: file?.id as string,
+      projectMode,
     });
   }
 

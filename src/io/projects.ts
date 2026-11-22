@@ -9,7 +9,7 @@ import {
 import { decodeDrawing, encodeDrawing } from './dsnCodec';
 import { blank } from './ioXml';
 import { hasChildPlacements } from './hierarchyDrawing';
-import { userManager } from './files';
+import { saveStandaloneSchematic, userManager } from './files';
 import { digest } from './dsnContainer';
 import {
   decodeProjectSettings,
@@ -33,6 +33,7 @@ import {
   reloadSchematicTab,
   removeSchematicTab,
   savedSchematicTab,
+  schematicFileTabKey,
   schematicTabDirty,
   schematicTabKey,
 } from '../state/schematicTabs';
@@ -882,9 +883,9 @@ export async function closeProjectSchematicTab(
   const state = getState();
   const tabs = openSchematicTabs(state);
   const selected = tabs.find((item) => item.key === key)?.tab;
-  if (!selected?.file.project) return;
-  const active = schematicTabKey(state.altStore.file.project) === key;
-  if (discard && schematicTabDirty(selected))
+  if (!selected) return;
+  const active = schematicFileTabKey(state.altStore.file) === key;
+  if (discard && selected.file.project && schematicTabDirty(selected))
     await discardSchematicRecovery(
       state.altStore.user?.id || '',
       selected.file.project,
@@ -892,7 +893,10 @@ export async function closeProjectSchematicTab(
   if (active) {
     const next = tabs.find((item) => item.key !== key);
     if (next) dispatch(activateSchematicTab(next.key) as any);
-    else await closeLinkedSchematic(dispatch, getState, false);
+    else {
+      dispatch(actionSetDocument(blank(), 'tCad1.dsn', null, null));
+      dispatch(ActionCreators.clearHistory());
+    }
   }
   dispatch(removeSchematicTab(key) as any);
 }
@@ -968,11 +972,16 @@ export async function saveInactiveSchematic(
   if (state.schematicTabs?.inactive[key] !== tab)
     throw new Error('The schematic tab changed. Save it again.');
   const source = tab.file.project;
-  if (!source || !schematicTabDirty(tab)) return;
+  if (!schematicTabDirty(tab)) return;
   if (state.altStore.saveInProgress)
     throw new Error('A schematic save is already in progress.');
   dispatch(actionSetSaveInProgress(true, null));
   try {
+    if (!source) {
+      const file = await saveStandaloneSchematic(tab.history.present.drawing, tab.file);
+      dispatch(savedSchematicTab(key, tab, { ...tab.file, name: file.name, id: file.id }, tab.history.present.drawingVersion) as any);
+      return;
+    }
     const started = Date.now();
     const project = await readProject(source.id, source.rootId);
     const document = await savedLinkedSchematic(project, source);

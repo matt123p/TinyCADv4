@@ -115,7 +115,7 @@ export default function ProjectAutosave() {
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [account, inactive, saving, store]);
 
-  if (!dirty || saving) return null;
+  if (!file || !dirty || saving) return null;
   return (
     <div className="project-autosave" role="status">
       {t(

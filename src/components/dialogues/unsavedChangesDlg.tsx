@@ -19,6 +19,7 @@ export type UnsavedAction =
   | import('../../io/projects').OpenProjectAction
   | { type: 'file-new' }
   | { type: 'file-open' }
+  | { type: 'file-open-project-schematic'; file: { name: string; id: string }; folder: string }
   | { type: 'file-open-recent'; file: { name: string; id: string } }
   | { type: 'app-close' };
 

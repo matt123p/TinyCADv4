@@ -29,4 +29,6 @@ export function projectDocumentKind(
     return { kind: 'text', markdown: false, mime: 'text/tab-separated-values' };
   if (suffix === 'txt' || suffix === 'log')
     return { kind: 'text', markdown: false, mime: 'text/plain' };
+  if (suffix === 'xml' || suffix === 'json')
+    return { kind: 'text', markdown: false, mime: suffix === 'xml' ? 'application/xml' : 'application/json' };
 }

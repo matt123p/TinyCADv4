@@ -28,6 +28,7 @@ const appDisplayName = 'TinyCAD';
 
 const store = new Store(); // Create store instance
 let mainWindow;
+let authorizeProjectDocument;
 let fileToOpen = null;
 let projectToOpen;
 
@@ -420,7 +421,7 @@ function createWindow({ openAbout = false } = {}) {
     ipcHandlersRegistered = true;
     registerSimulation();
     registerLicenseHandlers({ ipcMain, app, shell, getWindow: () => mainWindow });
-    registerProjectFiles({ ipcMain, dialog, shell, store, getWindow: () => mainWindow, documents: app.getPath('documents'), takeProjectOpen });
+    authorizeProjectDocument = registerProjectFiles({ ipcMain, dialog, shell, store, getWindow: () => mainWindow, documents: app.getPath('documents'), takeProjectOpen });
     registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
       directory: path.join(__dirname, '../dist/bundled-examples') });
     registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
@@ -473,7 +474,7 @@ function createWindow({ openAbout = false } = {}) {
 
       if (event.sender !== mainWindow.webContents ||
           event.senderFrame !== mainWindow.webContents.mainFrame) return;
-      loadFile(mainWindow, file, isLibraryMode, spawnNewWindow, openProjectFile);
+      loadFile(mainWindow, file, isLibraryMode, spawnNewWindow, openProjectFile, authorizeProjectDocument);
     });
 
     ipcMain.on('save-file', (event, data) => {
