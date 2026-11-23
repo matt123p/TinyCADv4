@@ -8,6 +8,8 @@
 - When asked for SPICE support, the desktop AI assistant can search the bundled catalog offline for exact parts, drop-in candidates and generic models. It can inspect model text and pin mappings, attach a model to a placed component, and set a bundled or Custom definition on a new library symbol. Ordinary symbol and schematic requests preserve existing defaults and skip SPICE setup.
 - Import supported SPICE definitions from KiCad symbol libraries, including embedded models and external model files supplied with the import. TinyCAD preserves pin mappings and parameter overrides in editable Custom definitions.
 - View and enter page dimensions in millimetres (mm) or inches (in) in Page Size.
+- Set and save the printer, paper size, orientation, copies, colour, and duplex options alongside the drawing in desktop Print Preview. Print uses the displayed settings and sends the job directly to the selected printer or system default.
+- Advanced Print opens a PDF of the selected sheets in the system PDF viewer for printing.
 
 ### Changed
 
@@ -16,7 +18,6 @@
 
 ### Fixed
 
-- On Windows only, restore the native print dialog so users can choose a printer and adjust its settings before printing.
 - Show the editable Name field by default on newly placed standard library symbols and remove duplicate name captions from their artwork.
 - Demonstrate Markdown formatting in the notes on bundled equipment and network drawings.
 

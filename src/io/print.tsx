@@ -26,10 +26,11 @@ function blobToBase64(blob: Blob): Promise<string> {
 
 // Common function to generate PDF and return as blob
 function generatePdfBlob(
-  state: docDrawing,
+  drawing: docDrawing['docStore']['present']['drawing'],
+  title: string,
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    const sheet1 = state.docStore.present.drawing.sheets[0];
+    const sheet1 = drawing.sheets[0];
 
     // TinyCAD units -> PDF Points
     const units = 0.5669291338582677;
@@ -42,7 +43,7 @@ function generatePdfBlob(
       info: {
         Author: sheet1.details.author,
         Producer: 'TinyCAD.net',
-        Title: state.altStore.file?.name ?? 'Symbol',
+        Title: title,
       },
     });
 
@@ -123,8 +124,7 @@ function generatePdfBlob(
           .then((arrayBuffer) => doc.registerFont(font.name, arrayBuffer));
       }),
     ).then(() => {
-      for (let si = 0; si < state.docStore.present.drawing.sheets.length; ++si) {
-        const sheet = state.docStore.present.drawing.sheets[si];
+      for (const sheet of drawing.sheets) {
         const svg = (
           <TPrintSheet
             items={sheet.items}
@@ -133,7 +133,7 @@ function generatePdfBlob(
             options={sheet.options}
             images={sheet.images}
             hatches={sheet.hatches}
-            netlistTypes={state.docStore.present.drawing.netlistTypes}
+            netlistTypes={drawing.netlistTypes}
           />
         );
 
@@ -245,21 +245,31 @@ export function pdfExport(
   getState: { (): docDrawing },
 ) {
   const state = getState();
+  const drawing = state.docStore.present.drawing;
+  const title = state.altStore.file?.name ?? 'Symbol';
   const fileName = state.altStore.file?.name
     ? `${state.altStore.file.name.replace(/\.[^.]+$/, '')}.pdf`
     : 'drawing.pdf';
 
   // Check if we're running in Electron with native save dialog
   if (process.env.TARGET_SYSTEM === 'electron') {
-    generatePdfBlob(state).then(async (blob) => {
+    generatePdfBlob(drawing, title).then(async (blob) => {
       const base64 = await blobToBase64(blob);
       window.electronAPI.savePdf({ content: base64, name: fileName });
     });
   } else {
     // Fallback for web: open PDF in new tab (user can save from there)
-    generatePdfBlob(state).then((blob) => {
+    generatePdfBlob(drawing, title).then((blob) => {
       const url = URL.createObjectURL(blob);
       openExternalUrl(url);
     });
   }
+}
+
+export async function openPdfForPrinting(
+  drawing: docDrawing['docStore']['present']['drawing'],
+  title: string,
+) {
+  const blob = await generatePdfBlob(drawing, title);
+  await window.electronAPI.openPrintPdf(await blobToBase64(blob));
 }

@@ -80,10 +80,17 @@ declare global {
             sendAppClosingResponse: (saveNeeded: boolean) => void;
             
             // PDF printing and export
-            printPdf: (pdfBase64: string) => void;
-            getPrinters: () => Promise<{ name: string; displayName: string; isDefault: boolean }[]>;
-            printDocument: (options: { html: string; printerName: string; copies?: number; landscape?: boolean }) => void;
-            onPrintComplete: (callback: (data: { success: boolean, failureReason?: string }) => void) => () => void;
+            openPrintPdf: (pdfBase64: string) => Promise<void>;
+            getPrinters: () => Promise<{ name: string; displayName: string }[]>;
+            printDocument: (options: {
+                html: string;
+                printerName: string;
+                copies: number;
+                landscape: boolean;
+                pageSize: import('./io/printerSettings').PrinterSettings['paperSize'];
+                color?: boolean;
+                duplexMode: import('./io/printerSettings').PrinterSettings['duplexMode'];
+            }) => Promise<{ success: boolean; failureReason?: string; printerUnavailable?: boolean }>;
             savePdf: (data: { content: string, name: string }) => void;
             saveSvg: (data: { content: string, name: string }) => void;
             onPdfSaved: (callback: (data: { success: boolean, path?: string, error?: string, cancelled?: boolean }) => void) => () => void;

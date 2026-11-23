@@ -12,6 +12,7 @@ import { registerBundledExamples } from './bundledExamples.js';
 import { registerOnlineLibrary } from './onlineLibrary.js';
 import { registerLicenseHandlers } from './licenses.js';
 import fs from 'fs';
+import { randomUUID } from 'node:crypto';
 import { spawn } from 'child_process';
 import { loadFile, saveFile, sendRecentFiles } from './io.js';
 import { loadLibrary, loadLibraryToWebContents, saveLibrary, sendLibraries, removeLibrary, saveLibraryConfig } from './libraries.js';
@@ -644,13 +645,19 @@ function createWindow({ openAbout = false } = {}) {
       return printers.map(p => ({
         name: p.name,
         displayName: p.displayName || p.name,
-        isDefault: p.isDefault,
       }));
     });
 
-    ipcMain.on('print-document', async (event, options) => {
-      if (!mainWindow) {
-        return;
+    ipcMain.handle('print-document', async (event, options) => {
+      if (!mainWindow || event.senderFrame !== mainWindow.webContents.mainFrame) {
+        throw new Error('Print requests must come from the TinyCAD window');
+      }
+
+      if (options.printerName) {
+        const printers = await event.sender.getPrintersAsync();
+        if (!printers.some(printer => printer.name === options.printerName)) {
+          return { success: false, printerUnavailable: true };
+        }
       }
 
       const printWindow = new BrowserWindow({
@@ -693,38 +700,56 @@ function createWindow({ openAbout = false } = {}) {
         await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(options.html)}`);
         await waitForPrintLayout();
 
-        const printCallback = (success, failureReason) => {
-          printWindow.close();
-          mainWindow?.webContents.send('print-complete', {
-            success,
-            failureReason: failureReason || undefined
-          });
-        };
-
-        if (process.platform === 'win32') {
-          printWindow.webContents.print(undefined, printCallback);
-          return;
-        }
-
         const printOptions = {
           silent: true,
-          copies: options.copies || 1,
-          landscape: options.landscape || false,
+          copies: options.copies,
+          landscape: options.landscape,
           printBackground: true,
-          usePrinterDefaultPageSize: true,
+          ...(options.printerName && { deviceName: options.printerName }),
+          ...(options.pageSize ? { pageSize: options.pageSize } : { usePrinterDefaultPageSize: true }),
+          ...(options.color !== undefined && { color: options.color }),
+          ...(options.duplexMode && { duplexMode: options.duplexMode }),
         };
 
-        if (typeof options.printerName === 'string' && options.printerName.trim() !== '') {
-          printOptions.deviceName = options.printerName;
-        }
-
-        printWindow.webContents.print(printOptions, printCallback);
-      } catch (err) {
-        printWindow.close();
-        mainWindow?.webContents.send('print-complete', {
-          success: false,
-          failureReason: err.message
+        return await new Promise(resolve => {
+          printWindow.webContents.print(printOptions, (success, failureReason) => {
+            resolve({ success, failureReason });
+          });
         });
+      } finally {
+        if (!printWindow.isDestroyed()) printWindow.destroy();
+      }
+    });
+
+    ipcMain.handle('open-print-pdf', async (event, content) => {
+      if (!mainWindow || event.senderFrame !== mainWindow.webContents.mainFrame) {
+        throw new Error('Print requests must come from the TinyCAD window');
+      }
+
+      const pdf = Buffer.from(content, 'base64');
+      if (pdf.subarray(0, 5).toString() !== '%PDF-') {
+        throw new Error('The print document is not a PDF');
+      }
+      const directory = path.join(app.getPath('temp'), 'TinyCAD-Print');
+      await fs.promises.mkdir(directory, { recursive: true });
+
+      // Leave recent files available to external viewers, including after TinyCAD closes.
+      const expiresBefore = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const files = await fs.promises.readdir(directory);
+      await Promise.allSettled(files.filter(name => /^TinyCAD-[\da-f-]{36}\.pdf$/.test(name)).map(async name => {
+        const file = path.join(directory, name);
+        const info = await fs.promises.lstat(file);
+        if (info.isFile() && info.mtimeMs < expiresBefore) await fs.promises.unlink(file);
+      }));
+
+      const file = path.join(directory, `TinyCAD-${randomUUID()}.pdf`);
+      await fs.promises.writeFile(file, pdf, { flag: 'wx', mode: 0o600 });
+      try {
+        const error = await shell.openPath(file);
+        if (error) throw new Error(error);
+      } catch (error) {
+        await fs.promises.unlink(file).catch(() => {});
+        throw error;
       }
     });
 

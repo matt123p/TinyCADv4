@@ -8,37 +8,159 @@ import {
   DialogActions,
   Button,
   Field,
-  Dropdown,
-  Option,
+  Select,
   Spinner,
   Input,
   Checkbox,
+  makeStyles,
+  tokens,
 } from '@fluentui/react-components';
+import { Print20Regular } from '@fluentui/react-icons';
 import { actionCancelDialog } from '../../state/dispatcher/AppDispatcher';
 import { connect } from 'react-redux';
 import TPrintSheet from '../svg/PrintSheet';
 import { docDrawing } from '../../state/undo/undo';
 import { WithTranslation, withTranslation } from 'react-i18next';
+import {
+  loadPrinterSettings,
+  printerPaperSizes,
+  PrinterSettings,
+  savePrinterSettings,
+} from '../../io/printerSettings';
+
+const useStyles = makeStyles({
+  surface: {
+    maxWidth: 'min(700px, calc(100vw - 24px))',
+  },
+  desktopSurface: {
+    maxWidth: 'min(900px, calc(100vw - 24px))',
+  },
+  content: {
+    padding: '4px',
+  },
+  layout: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: tokens.spacingHorizontalXXL,
+  },
+  preview: {
+    flex: '1.2 1 350px',
+    minWidth: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusLarge,
+    backgroundColor: tokens.colorNeutralBackground3,
+  },
+  canvas: {
+    '--print-preview-page-height': '320px',
+    display: 'grid',
+    placeItems: 'center',
+    flexGrow: 1,
+    minHeight: '352px',
+    padding: tokens.spacingHorizontalXXL,
+    boxSizing: 'border-box',
+    '@media (max-width: 720px)': {
+      '--print-preview-page-height': '200px',
+      minHeight: '200px',
+      padding: tokens.spacingHorizontalL,
+    },
+  },
+  paper: {
+    backgroundColor: '#fff',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    boxShadow: tokens.shadow8,
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+    '& > svg': {
+      display: 'block',
+      width: '100%',
+      height: '100%',
+    },
+  },
+  sheetNavigation: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    padding: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalM}`,
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
+    color: tokens.colorNeutralForeground2,
+  },
+  settings: {
+    flex: '1 1 300px',
+    minWidth: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalL,
+  },
+  settingsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalM}`,
+    border: 0,
+    margin: 0,
+    padding: 0,
+    minWidth: 0,
+    '@media (max-width: 400px)': {
+      gridTemplateColumns: 'minmax(0, 1fr)',
+    },
+  },
+  fullWidthField: {
+    gridColumn: '1 / -1',
+  },
+  sheetList: {
+    display: 'flex',
+    flexDirection: 'column',
+    maxHeight: '120px',
+    overflowY: 'auto',
+    padding: tokens.spacingVerticalXS,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+  },
+  error: {
+    color: tokens.colorPaletteRedForeground1,
+    marginTop: tokens.spacingVerticalM,
+  },
+  actions: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    justifySelf: 'stretch',
+    gap: tokens.spacingHorizontalS,
+    gridColumn: '1 / -1',
+    paddingTop: tokens.spacingVerticalM,
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
+  },
+  saveSettings: {
+    marginInlineEnd: 'auto',
+  },
+});
 
 interface PrinterInfo {
   name: string;
   displayName: string;
-  isDefault: boolean;
 }
 
 interface PrintPreviewDialogProps extends WithTranslation {
   dispatch: Dispatch<any>;
   drawing: docDrawing['docStore']['present']['drawing'];
+  title?: string;
+  styles: ReturnType<typeof useStyles>;
 }
 
 interface PrintPreviewDialogState {
   printers: PrinterInfo[];
-  selectedPrinter: string;
-  copies: number;
+  settings: PrinterSettings;
+  savedSettings: PrinterSettings;
   currentSheet: number;
   selectedPages: boolean[];
   loading: boolean;
   printing: boolean;
+  openingPdf: boolean;
+  printerError: string | null;
   error: string | null;
 }
 
@@ -46,24 +168,23 @@ class PrintPreviewDialog extends React.PureComponent<
   PrintPreviewDialogProps,
   PrintPreviewDialogState
 > {
-  private readonly usesSystemPrintDialog =
-    !!window.electronAPI?.printDocument && /Windows/i.test(navigator.userAgent);
-  private cleanupPrintComplete: (() => void) | null = null;
-
   constructor(props: PrintPreviewDialogProps) {
     super(props);
 
     // Initialize all pages as selected
     const selectedPages = props.drawing.sheets.map(() => true);
+    const settings = loadPrinterSettings();
 
     this.state = {
       printers: [],
-      selectedPrinter: '',
-      copies: 1,
+      settings,
+      savedSettings: settings,
       currentSheet: 0,
       selectedPages,
-      loading: true,
+      loading: !!window.electronAPI?.getPrinters,
       printing: false,
+      openingPdf: false,
+      printerError: null,
       error: null,
     };
 
@@ -73,68 +194,194 @@ class PrintPreviewDialog extends React.PureComponent<
 
   componentDidMount() {
     // Get available printers from Electron
-    if (!this.usesSystemPrintDialog && window.electronAPI?.getPrinters) {
+    if (window.electronAPI?.getPrinters) {
       window.electronAPI.getPrinters().then((printers: PrinterInfo[]) => {
-        const defaultPrinter = printers.find(p => p.isDefault);
         this.setState({
           printers,
-          selectedPrinter: defaultPrinter?.name || (printers[0]?.name ?? ''),
           loading: false,
         });
       }).catch((err: Error) => {
         this.setState({
           loading: false,
-          error: this.props.t('dialogues.printPreview.failedToGetPrinterList', { error: err.message }),
+          printerError: this.props.t('dialogues.printPreview.failedToGetPrinterList', { error: err.message }),
         });
       });
-    } else {
-      this.setState({ loading: false });
-    }
-
-    // Listen for print completion
-    if (window.electronAPI?.onPrintComplete) {
-      this.cleanupPrintComplete = window.electronAPI.onPrintComplete((result: { success: boolean; failureReason?: string }) => {
-        this.setState({ printing: false });
-        if (result.success) {
-          this.props.dispatch(actionCancelDialog());
-        } else if (result.failureReason !== 'Print job canceled') {
-          this.setState({
-            error:
-              result.failureReason || this.props.t('dialogues.printPreview.printFailed'),
-          });
-        }
-      });
     }
   }
 
-  componentWillUnmount() {
-    if (this.cleanupPrintComplete) {
-      this.cleanupPrintComplete();
-    }
+  selectedSheets() {
+    return this.props.drawing.sheets.filter((_, index) => this.state.selectedPages[index]);
   }
 
-  handleClickPrint() {
-    const { selectedPages } = this.state;
-    const pagesToPrint = this.props.drawing.sheets.filter((_, index) => selectedPages[index]);
-    const firstPage = pagesToPrint[0];
-    const isLandscape = firstPage ? firstPage.details.page_size[0] > firstPage.details.page_size[1] : false;
-    
-    if (window.electronAPI?.printDocument) {
-      this.setState({ printing: true, error: null });
-      
-      // Generate the HTML content for printing
-      const html = this.generatePrintHtml();
-      
-      window.electronAPI.printDocument({
-        html,
-        printerName: this.state.selectedPrinter,
-        copies: this.state.copies,
-        landscape: isLandscape,
-      });
-    } else {
-      // Fallback for web: open print dialog
+  async handleClickPrint() {
+    if (!window.electronAPI?.printDocument) {
       this.handleBrowserPrint();
+      return;
     }
+
+    const { settings } = this.state;
+    const [firstPage] = this.selectedSheets();
+    if (!firstPage || !this.canUseSettings()) return;
+
+    const [width, height] = firstPage.details.page_size;
+    const landscape = settings.orientation === 'drawing'
+      ? width > height
+      : settings.orientation === 'landscape';
+
+    this.setState({ printing: true, error: null });
+    try {
+      const result = await window.electronAPI.printDocument({
+        html: this.generatePrintHtml(landscape, settings.paperSize),
+        printerName: settings.printerName,
+        pageSize: settings.paperSize,
+        copies: settings.copies,
+        landscape,
+        color: settings.colour ? settings.colour === 'colour' : undefined,
+        duplexMode: settings.duplexMode,
+      });
+
+      if (!result.success) {
+        const { t } = this.props;
+        throw new Error(result.printerUnavailable
+          ? t('dialogues.printPreview.printerUnavailable')
+          : result.failureReason || t('dialogues.printPreview.printFailed'));
+      }
+      this.props.dispatch(actionCancelDialog());
+    } catch (error) {
+      this.setState({ printing: false, error: (error as Error).message });
+    }
+  }
+
+  handleAdvancedPrint = async () => {
+    const sheets = this.selectedSheets();
+    this.setState({ openingPdf: true, error: null });
+    try {
+      const { openPdfForPrinting } = await import('../../io/print');
+      await openPdfForPrinting(
+        { ...this.props.drawing, sheets },
+        this.props.title ?? 'TinyCAD Print',
+      );
+      this.props.dispatch(actionCancelDialog());
+    } catch (error) {
+      this.setState({
+        openingPdf: false,
+        error: this.props.t('dialogues.printPreview.pdfOpenFailed', {
+          error: (error as Error).message,
+        }),
+      });
+    }
+  };
+
+  updatePrinterSettings(changes: Partial<PrinterSettings>) {
+    this.setState<'settings' | 'error'>(({ settings }) => ({
+      settings: { ...settings, ...changes },
+      error: null,
+    }));
+  }
+
+  handleSavePrinterSettings = () => {
+    const { settings } = this.state;
+    if (!this.canUseSettings()) return;
+
+    try {
+      savePrinterSettings(settings);
+      this.setState({ savedSettings: settings, error: null });
+    } catch (error) {
+      this.setState({
+        error: this.props.t('dialogues.printPreview.setupSaveFailed', {
+          error: (error as Error).message,
+        }),
+      });
+    }
+  };
+
+  hasPrintDestination() {
+    const { printers, settings } = this.state;
+    return settings.printerName
+      ? printers.some(printer => printer.name === settings.printerName)
+      : printers.length > 0;
+  }
+
+  hasValidCopies() {
+    const { copies } = this.state.settings;
+    return Number.isInteger(copies) && copies >= 1 && copies <= 999;
+  }
+
+  canUseSettings() {
+    return !this.state.loading && this.hasPrintDestination() && this.hasValidCopies();
+  }
+
+  renderPrinterSettings(disabled: boolean) {
+    const { t, styles } = this.props;
+    const { printers, settings, printerError } = this.state;
+    const hasDestination = this.hasPrintDestination();
+    const destinationError = printerError || (printers.length === 0
+      ? t('dialogues.printPreview.noPrinters')
+      : !hasDestination && t('dialogues.printPreview.printerUnavailable'));
+    return (
+      <fieldset
+        disabled={disabled || printers.length === 0}
+        className={styles.settingsGrid}
+      >
+        <Field
+          label={t('dialogues.printPreview.printer')}
+          validationState={destinationError ? 'error' : 'none'}
+          validationMessage={destinationError}
+          className={styles.fullWidthField}
+        >
+          <Select value={settings.printerName} onChange={(_, data) => this.updatePrinterSettings({ printerName: data.value })}>
+            <option value="">{t('dialogues.printPreview.systemDefault')}</option>
+            {settings.printerName && !hasDestination && (
+              <option value={settings.printerName} disabled>{settings.printerName}</option>
+            )}
+            {printers.map(({ name, displayName }) => (
+              <option key={name} value={name}>{displayName}</option>
+            ))}
+          </Select>
+        </Field>
+        <Field label={t('dialogues.pageSize.paperSize')}>
+          <Select value={settings.paperSize} onChange={(_, data) => this.updatePrinterSettings({ paperSize: data.value as PrinterSettings['paperSize'] })}>
+            <option value="">{t('dialogues.printPreview.printerDefault')}</option>
+            {Object.keys(printerPaperSizes).map(size => <option key={size}>{size}</option>)}
+          </Select>
+        </Field>
+        <Field label={t('dialogues.pageSize.orientation')}>
+          <Select value={settings.orientation} onChange={(_, data) => this.updatePrinterSettings({ orientation: data.value as PrinterSettings['orientation'] })}>
+            <option value="drawing">{t('dialogues.printPreview.matchDrawing')}</option>
+            <option value="portrait">{t('dialogues.pageSize.portrait')}</option>
+            <option value="landscape">{t('dialogues.pageSize.landscape')}</option>
+          </Select>
+        </Field>
+        <Field
+          label={t('dialogues.printPreview.copies')}
+          validationMessage={!this.hasValidCopies() && t('dialogues.printPreview.invalidCopies')}
+          validationState={this.hasValidCopies() ? 'none' : 'error'}
+        >
+          <Input
+            type="number"
+            min={1}
+            max={999}
+            value={settings.copies ? String(settings.copies) : ''}
+            onChange={(_, data) => this.updatePrinterSettings({ copies: Number(data.value) })}
+          />
+        </Field>
+        <Field label={t('dialogues.printPreview.colourMode')}>
+          <Select value={settings.colour} onChange={(_, data) => this.updatePrinterSettings({ colour: data.value as PrinterSettings['colour'] })}>
+            <option value="">{t('dialogues.printPreview.printerDefault')}</option>
+            <option value="colour">{t('dialogues.printPreview.colour')}</option>
+            <option value="monochrome">{t('dialogues.printPreview.monochrome')}</option>
+          </Select>
+        </Field>
+        <Field label={t('dialogues.printPreview.duplex')} className={styles.fullWidthField}>
+          <Select value={settings.duplexMode} onChange={(_, data) => this.updatePrinterSettings({ duplexMode: data.value as PrinterSettings['duplexMode'] })}>
+            <option value="">{t('dialogues.printPreview.printerDefault')}</option>
+            <option value="simplex">{t('dialogues.printPreview.singleSided')}</option>
+            <option value="longEdge">{t('dialogues.printPreview.longEdge')}</option>
+            <option value="shortEdge">{t('dialogues.printPreview.shortEdge')}</option>
+          </Select>
+        </Field>
+      </fieldset>
+    );
   }
 
   handleBrowserPrint() {
@@ -183,22 +430,13 @@ class PrintPreviewDialog extends React.PureComponent<
     this.props.dispatch(actionCancelDialog());
   }
 
-  generatePrintHtml(): string {
-    const sheets = this.props.drawing.sheets;
-    const { selectedPages } = this.state;
-    
-    // Filter to only selected pages
-    const pagesToPrint = sheets.filter((_, index) => selectedPages[index]);
-    
-    // Determine orientation from first selected page
+  generatePrintHtml(landscape?: boolean, paperSize: PrinterSettings['paperSize'] = ''): string {
+    const pagesToPrint = this.selectedSheets();
     const firstPage = pagesToPrint[0];
-    const isLandscape = firstPage ? firstPage.details.page_size[0] > firstPage.details.page_size[1] : false;
-    
-    // Standard paper sizes in mm (we use the printable area after 10mm margins)
-    // A4: 210x297mm, Letter: 215.9x279.4mm
-    // Printable area with 10mm margins: ~190x277mm (portrait) or ~277x190mm (landscape)
-    const printableWidth = isLandscape ? 277 : 190;
-    const printableHeight = isLandscape ? 190 : 277;
+    const isLandscape = landscape ?? (firstPage.details.page_size[0] > firstPage.details.page_size[1]);
+    const [paperWidth, paperHeight] = printerPaperSizes[paperSize || 'A4'];
+    const printableWidth = (isLandscape ? paperHeight : paperWidth) - 20;
+    const printableHeight = (isLandscape ? paperWidth : paperHeight) - 20;
     
     // Build SVG content by rendering each selected sheet
     let svgContent = '';
@@ -230,6 +468,7 @@ class PrintPreviewDialog extends React.PureComponent<
           options={sheet.options}
           images={sheet.images}
           hatches={sheet.hatches}
+          netlistTypes={this.props.drawing.netlistTypes}
         />
       );
 
@@ -295,141 +534,95 @@ class PrintPreviewDialog extends React.PureComponent<
   }
 
   handleClickCancel() {
-    if (!this.state.printing) {
-      this.props.dispatch(actionCancelDialog());
-    }
+    if (this.state.printing || this.state.openingPdf) return;
+    this.props.dispatch(actionCancelDialog());
   }
 
   renderPreview() {
+    const { styles } = this.props;
     const sheet = this.props.drawing.sheets[this.state.currentSheet];
     if (!sheet) return null;
 
-    // Calculate preview size to fit in dialog
-    // Use a fixed max size for the preview container
-    const maxWidth = 400;
-    const maxHeight = 350;
-    const pageWidth = sheet.details.page_size[0];
-    const pageHeight = sheet.details.page_size[1];
-    
-    const scale = Math.min(maxWidth / pageWidth, maxHeight / pageHeight);
-    const previewWidth = Math.floor(pageWidth * scale);
-    const previewHeight = Math.floor(pageHeight * scale);
-
-    // Render the TPrintSheet component to get its SVG content
-    const ReactDOMServer = require('react-dom/server');
-    const svgContent = ReactDOMServer.renderToStaticMarkup(
-      <TPrintSheet
-        items={sheet.items}
-        page_size={sheet.details.page_size}
-        details={sheet.details}
-        options={sheet.options}
-        images={sheet.images}
-        hatches={sheet.hatches}
-      />
-    );
-
+    const [width, height] = sheet.details.page_size;
     return (
-      <div style={{
-        width: previewWidth,
-        height: previewHeight,
-        border: '1px solid #ccc',
-        backgroundColor: '#fff',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-        overflow: 'hidden',
-        flexShrink: 0,
-      }}>
-        <div 
-          style={{ 
-            width: '100%', 
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+      <div className={styles.canvas}>
+        <div
+          className={styles.paper}
+          style={{
+            width: `min(100%, 400px, calc(var(--print-preview-page-height) * ${width / height}))`,
+            aspectRatio: `${width} / ${height}`,
           }}
-          dangerouslySetInnerHTML={{ 
-            __html: svgContent.replace(
-              /<svg([^>]*)>/,
-              `<svg$1 style="width: ${previewWidth}px; height: ${previewHeight}px;">`
-            )
-          }}
-        />
+        >
+          <TPrintSheet
+            items={sheet.items}
+            page_size={sheet.details.page_size}
+            details={sheet.details}
+            options={sheet.options}
+            images={sheet.images}
+            hatches={sheet.hatches}
+            netlistTypes={this.props.drawing.netlistTypes}
+          />
+        </div>
       </div>
     );
   }
 
   render() {
-    const { t } = this.props;
+    const { t, styles } = this.props;
     const sheets = this.props.drawing.sheets;
     const hasMultiplePages = sheets.length > 1;
     const isElectron = !!window.electronAPI?.printDocument;
-    const { usesSystemPrintDialog } = this;
-
+    const { settings, savedSettings, loading, printing, openingPdf, error } = this.state;
+    const busy = printing || openingPdf;
+    const canUseSettings = this.canUseSettings();
     const selectedCount = this.state.selectedPages.filter(p => p).length;
 
     return (
       <Dialog open={true} onOpenChange={this.handleClickCancel}>
-        <DialogSurface style={{ maxWidth: '700px', overflow: 'hidden' }}>
+        <DialogSurface className={isElectron ? styles.desktopSurface : styles.surface}>
           <DialogBody>
             <DialogTitle>{t('dialogues.printPreview.title')}</DialogTitle>
-            <DialogContent style={{ overflow: 'visible' }}>
-              {this.state.loading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
-                  <Spinner label={t('dialogues.printPreview.loadingPrinters')} />
+            <DialogContent className={styles.content}>
+              <div className={styles.layout}>
+                <div className={styles.preview}>
+                  {this.renderPreview()}
+                  {hasMultiplePages && (
+                    <div className={styles.sheetNavigation}>
+                      <Button
+                        appearance="subtle"
+                        disabled={this.state.currentSheet === 0}
+                        onClick={() => this.setState(s => ({ ...s, currentSheet: s.currentSheet - 1 }))}
+                      >
+                        {t('dialogues.printPreview.prev')}
+                      </Button>
+                      <span>
+                        {t('dialogues.printPreview.pageOf', {
+                          page: this.state.currentSheet + 1,
+                          total: sheets.length,
+                        })}
+                      </span>
+                      <Button
+                        appearance="subtle"
+                        disabled={this.state.currentSheet === sheets.length - 1}
+                        onClick={() => this.setState(s => ({ ...s, currentSheet: s.currentSheet + 1 }))}
+                      >
+                        {t('dialogues.printPreview.next')}
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div style={{ display: 'flex', gap: '24px' }}>
-                  {/* Preview panel */}
-                  <div style={{ flex: '0 0 auto' }}>
-                    {this.renderPreview()}
-                    {hasMultiplePages && (
-                      <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                        <Button
-                          appearance="subtle"
-                          disabled={this.state.currentSheet === 0}
-                          onClick={() => this.setState(s => ({ ...s, currentSheet: s.currentSheet - 1 }))}
-                        >
-                          {t('dialogues.printPreview.prev')}
-                        </Button>
-                        <span style={{ margin: '0 10px' }}>
-                          {t('dialogues.printPreview.pageOf', {
-                            page: this.state.currentSheet + 1,
-                            total: sheets.length,
-                          })}
-                        </span>
-                        <Button
-                          appearance="subtle"
-                          disabled={this.state.currentSheet === sheets.length - 1}
-                          onClick={() => this.setState(s => ({ ...s, currentSheet: s.currentSheet + 1 }))}
-                        >
-                          {t('dialogues.printPreview.next')}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Options panel */}
-                  <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {isElectron && !usesSystemPrintDialog && this.state.printers.length > 0 && (
-                      <Field label={t('dialogues.printPreview.printer')}>
-                        <Dropdown
-                          value={this.state.printers.find(p => p.name === this.state.selectedPrinter)?.displayName || this.state.selectedPrinter}
-                          onOptionSelect={(e, data) => this.setState({ selectedPrinter: data.optionValue as string })}
-                        >
-                          {this.state.printers.map((printer) => (
-                            <Option key={printer.name} value={printer.name} text={`${printer.displayName}${printer.isDefault ? ` ${t('dialogues.printPreview.defaultSuffix')}` : ''}`}>
-                              {printer.displayName}{printer.isDefault ? ` ${t('dialogues.printPreview.defaultSuffix')}` : ''}
-                            </Option>
-                          ))}
-                        </Dropdown>
-                      </Field>
-                    )}
-                    
+                {(isElectron || hasMultiplePages) && (
+                  <div className={styles.settings}>
+                    {isElectron && (loading
+                      ? <Spinner size="small" label={t('dialogues.printPreview.loadingPrinters')} />
+                      : this.renderPrinterSettings(busy))}
                     {hasMultiplePages && (
                       <Field label={t('dialogues.printPreview.pagesToPrint')}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '120px', overflowY: 'auto' }}>
+                        <div className={styles.sheetList}>
                           {sheets.map((sheet, index) => (
                             <Checkbox
                               key={index}
+                              disabled={busy}
                               checked={this.state.selectedPages[index]}
                               onChange={(e, data) => {
                                 const newSelectedPages = [...this.state.selectedPages];
@@ -442,46 +635,46 @@ class PrintPreviewDialog extends React.PureComponent<
                         </div>
                       </Field>
                     )}
-                    
-                    {!usesSystemPrintDialog && <Field label={t('dialogues.printPreview.copies')}>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={999}
-                        value={this.state.copies.toString()}
-                        onChange={(e, data) => {
-                          const val = parseInt(data.value, 10);
-                          if (!isNaN(val) && val > 0) {
-                            this.setState({ copies: val });
-                          }
-                        }}
-                        style={{ width: '100%' }}
-                      />
-                    </Field>}
                   </div>
-                </div>
-              )}
-              
-              {this.state.error && (
-                <div style={{ color: 'red', marginTop: '10px' }}>
-                  {this.state.error}
+                )}
+              </div>
+
+              {error && (
+                <div role="alert" className={styles.error}>
+                  {error}
                 </div>
               )}
             </DialogContent>
-            <DialogActions>
-              <Button 
-                appearance="primary" 
-                onClick={this.handleClickPrint}
-                disabled={this.state.loading || this.state.printing || selectedCount === 0}
-              >
-                {this.state.printing
-                  ? <Spinner size="tiny" />
-                  : selectedCount > 0
-                    ? t('dialogues.printPreview.printButton', { count: selectedCount })
-                    : t('toolbar.print')}
-              </Button>
-              <Button appearance="secondary" onClick={this.handleClickCancel} disabled={this.state.printing}>
+            <DialogActions className={styles.actions}>
+              {isElectron && (
+                <Button
+                  appearance="subtle"
+                  className={styles.saveSettings}
+                  onClick={this.handleSavePrinterSettings}
+                  disabled={busy || !canUseSettings || settings === savedSettings}
+                >
+                  {t('dialogues.printPreview.saveSettings')}
+                </Button>
+              )}
+              <Button appearance="secondary" onClick={this.handleClickCancel} disabled={busy}>
                 {t('common.cancel')}
+              </Button>
+              {window.electronAPI?.openPrintPdf && (
+                <Button
+                  onClick={this.handleAdvancedPrint}
+                  disabled={busy || selectedCount === 0}
+                  title={t('dialogues.printPreview.advancedPrintHint')}
+                >
+                  {openingPdf ? <Spinner size="tiny" /> : t('dialogues.printPreview.advancedPrint')}
+                </Button>
+              )}
+              <Button
+                appearance="primary"
+                icon={printing ? <Spinner size="tiny" /> : <Print20Regular />}
+                onClick={this.handleClickPrint}
+                disabled={busy || selectedCount === 0 || (isElectron && !canUseSettings)}
+              >
+                {t('dialogues.printPreview.printButton', { count: selectedCount })}
               </Button>
             </DialogActions>
           </DialogBody>
@@ -494,7 +687,13 @@ class PrintPreviewDialog extends React.PureComponent<
 function mapStateToProps(state: docDrawing) {
   return {
     drawing: state.docStore.present.drawing,
+    title: state.altStore.file?.name,
   };
 }
 
-export default connect(mapStateToProps)(withTranslation()(PrintPreviewDialog));
+function StyledPrintPreviewDialog(props: Omit<PrintPreviewDialogProps, 'styles'>) {
+  const styles = useStyles();
+  return <PrintPreviewDialog {...props} styles={styles} />;
+}
+
+export default connect(mapStateToProps)(withTranslation()(StyledPrintPreviewDialog));
