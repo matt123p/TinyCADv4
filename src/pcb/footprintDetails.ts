@@ -7,7 +7,7 @@ export const footprintGraphicLayers = [
   'F.Adhes', 'B.Adhes', 'F.Paste', 'B.Paste', 'F.Mask', 'B.Mask',
   'Dwgs.User', 'Cmts.User', 'Eco1.User', 'Eco2.User', 'Margin',
 ] as const;
-export type FootprintGraphicLayer = (typeof footprintGraphicLayers)[number];
+export type FootprintGraphicLayer = (typeof footprintGraphicLayers)[number] | 'F.Cu' | 'B.Cu';
 type GraphicShape =
   | { kind: 'line' | 'rect'; start: BoardPoint; end: BoardPoint }
   | { kind: 'arc'; start: BoardPoint; mid: BoardPoint; end: BoardPoint }
@@ -43,10 +43,11 @@ export interface FootprintAssembly {
   readonly notes?: string;
 }
 
-export function validateFootprintDetails(graphics: readonly FootprintGraphic[] = [], models: readonly FootprintModel[] = []) {
+export function validateFootprintDetails(graphics: readonly FootprintGraphic[] = [], models: readonly FootprintModel[] = [], boardArtwork = false) {
   if (!Array.isArray(graphics) || graphics.length > 4096 || !Array.isArray(models) || models.length > 32) throw new Error('Invalid footprint graphics or models.');
   for (const item of graphics as readonly FootprintGraphic[]) {
-    if (!item || !footprintGraphicLayers.includes(item.layer) || !Number.isSafeInteger(item.strokeNm) || item.strokeNm < 0 || typeof item.filled !== 'boolean') throw new Error('Invalid footprint graphic style.');
+    const copperText = boardArtwork && item?.kind === 'text' && (item.layer === 'F.Cu' || item.layer === 'B.Cu');
+    if (!item || (!copperText && !footprintGraphicLayers.some((layer) => layer === item.layer)) || !Number.isSafeInteger(item.strokeNm) || item.strokeNm < 0 || typeof item.filled !== 'boolean') throw new Error('Invalid footprint graphic style.');
     switch (item.kind) {
       case 'line':
       case 'rect':

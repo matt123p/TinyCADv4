@@ -103,7 +103,7 @@ import label0Image from 'url:../../../images/label0.png';
 import label1Image from 'url:../../../images/label1.png';
 import label2Image from 'url:../../../images/label2.png';
 import label3Image from 'url:../../../images/label3.png';
-import textImage from 'url:../../../images/text.png';
+import { TextToolButton } from './TextToolButton';
 import { rectangleImage, ellipseImage, lineImage } from './shapeToolImages';
 import busImage from 'url:../../../images/bus.png';
 import busJunctionImage from 'url:../../../images/bus_junction.png';
@@ -598,12 +598,9 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         )}
 
         {/* Text */}
-        <ToolbarButton
-          aria-label={t('toolbar.text')}
-          title={t('toolbar.text')}
-          icon={<ImageIcon src={textImage} />}
+        <TextToolButton
           onClick={() => props.dispatch(actionCommand('add_text'))}
-          className={m === 'add_text' ? styles.highlight : undefined}
+          active={m === 'add_text'}
         />
 
         {/* Shapes (split button) */}

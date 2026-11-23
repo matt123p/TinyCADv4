@@ -703,6 +703,18 @@ $scrollbar-size: 9px;
     white-space: nowrap;
 }
 
+.pcb-text-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 8px 12px;
+
+  label {
+    display: grid;
+    gap: 4px;
+  }
+}
+
 .pcb-list-header {
   display: flex;
   align-items: center;

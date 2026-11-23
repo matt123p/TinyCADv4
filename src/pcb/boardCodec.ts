@@ -205,6 +205,7 @@ const placement = record(
   },
   {
     positionNm: child('POSITION', point),
+    referencePositionNm: child('REFERENCEPOSITION', point),
   },
 );
 const asset = record(

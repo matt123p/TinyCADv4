@@ -59,6 +59,7 @@ type BoardFeature =
   | 'wire-jumpers'
   | 'board-annotations'
   | 'board-artwork'
+  | 'footprint-reference-position'
   | 'release-parent';
 
 export interface BoardReleaseParent {
@@ -109,6 +110,7 @@ const supportedFeatures: readonly BoardFeature[] = [
   'wire-jumpers',
   'board-annotations',
   'board-artwork',
+  'footprint-reference-position',
   'release-parent',
 ];
 const copperStack = Object.freeze([

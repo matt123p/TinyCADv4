@@ -75,7 +75,7 @@ export function artworkBounds(item: FootprintGraphic): readonly BoardPoint[] {
   }
 }
 
-export function FootprintArtwork({ item, highlighted, layerColor, hoverOutline }: {
+export const FootprintArtwork = React.memo(function FootprintArtwork({ item, highlighted, layerColor, hoverOutline }: {
   item: FootprintGraphic;
   highlighted?: boolean;
   layerColor?: string;
@@ -183,4 +183,4 @@ export function FootprintArtwork({ item, highlighted, layerColor, hoverOutline }
       }
     }
   }
-}
+});

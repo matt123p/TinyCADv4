@@ -4,6 +4,7 @@ import { isBoardPoint, lengthInNanometres } from './geometry';
 import type { BoardPoint } from './geometry';
 import { validateFootprintDetails } from './footprintDetails';
 import type { FootprintGraphic } from './footprintDetails';
+import { footprintTextStrokes } from './footprintText';
 
 export interface BoardDimension {
   readonly id: string;
@@ -102,7 +103,13 @@ export function validateBoardAnnotations(board: BoardDocument) {
     (!annotations.datum && !annotations.dimensions?.length && !annotations.graphics?.length)
   )
     throw new Error('Invalid PCB measurement datum or dimension collection.');
-  validateFootprintDetails(annotations.graphics);
+  validateFootprintDetails(annotations.graphics, [], true);
+  for (const item of annotations.graphics ?? []) {
+    if (item.layer !== 'F.Cu' && item.layer !== 'B.Cu') continue;
+    if (item.layer === 'B.Cu' && !board.copperLayers.some(({ id }) => id === 'bottom'))
+      throw new Error('Bottom copper text requires a bottom copper layer.');
+    if (item.kind === 'text' && item.visible) footprintTextStrokes(item);
+  }
 
   const ids = new Set<string>();
   for (const dimension of annotations.dimensions ?? []) {

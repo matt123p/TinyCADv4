@@ -158,6 +158,8 @@ Open **First board guide** for help with placement, routing and fabrication. Boa
 
 For a standalone PCB, choose **Board → Import schematic or netlist** to review and apply a `.dsn`, `.dzn`, or TinyCAD Protel `.net` file. Import the same source again to review subsequent changes. For schematics with linked sheets, use **Update PCB from Schematic** in the project. Use the right-hand **Layers** panel to toggle visibility or edit board artwork. Mask, paste, silkscreen, and adhesive artwork participate in CAM export. User drawings, comments, Eco layers, fabrication drawings, and courtyard artwork are available in the editor and KiCad export.
 
+Select a footprint and drag the square beside its silkscreen reference to move the reference independently. The saved offset follows the footprint when it moves, rotates or flips. To add board text, choose **Text**, enter the text, pick a silkscreen or copper layer, then click the board. Text uses the PCB stroke font. Copper text participates in clearance checks and copper export.
+
 The [classroom LED exercise](../examples/pcb/led-classroom/README.md) includes an unplaced practice board and a routed reference. Both project folders open offline with their native schematics, reviewed mappings and embedded assets.
 
 ## Sequential placement

@@ -3,6 +3,7 @@ import { Text, DocItem, DocItemTypes } from '../../model/dsnItem';
 import { TextAreaData } from '../../model/textArea';
 import { updateTextData } from '../../manipulators/updateTextArea';
 import { getFont, measureText, measureTextOffset } from '../../util/measureText';
+import { TextMoveHandle } from './SelectionHandle';
 
 interface TextEditAreaProps {
   dx: number;
@@ -206,20 +207,7 @@ class TTextEditArea extends React.PureComponent<TextEditAreaProps, {}> {
         );
 
         if (textArea.allowMove) {
-          move = (
-            <rect
-              x={-5}
-              y={-5}
-              width="5"
-              height="5"
-              style={{
-                fill: 'none',
-                fillOpacity: 0.75,
-                stroke: 'black',
-                strokeWidth: 1,
-              }}
-            />
-          );
+          move = <TextMoveHandle x={0} y={0} />;
         }
       }
     }

@@ -15,6 +15,7 @@ import { EditorDrawingStack } from '../panel/EditorLayout';
 import { EditorToolbar } from '../toolbar/EditorToolbar';
 import { EditorFileMenu, EditorHistoryControls, EditorNewMenu, EditorSaveAllButton, EditorSaveButton } from '../toolbar/FileToolbarControls';
 import { ViewToolbarControls } from '../toolbar/ViewToolbarControls';
+import { TextToolButton } from '../toolbar/TextToolButton';
 import { ContextualMenuItemType } from '../../manipulators/updateInterfaces';
 import type { ContextMenuItem } from '../../manipulators/updateInterfaces';
 import {
@@ -50,6 +51,10 @@ import { BoardAreaFields } from './BoardAreaFields';
 import { areaFields } from './boardOutlineInput';
 import type { BoardLayerId, VisibleCopper } from '../../pcb/boardLayers';
 import type { FootprintGraphic } from '../../pcb/footprintDetails';
+import { footprintReference, offsetFootprintReference } from '../../pcb/boardReference';
+import { footprintTextStrokes } from '../../pcb/footprintText';
+import { boardTextLayers, BoardTextEditor, BoardTextFields } from './BoardTextFields';
+import type { BoardText } from './BoardTextFields';
 import FootprintArtworkEditor from '../projects/FootprintArtworkEditor';
 import BoardCircuitSourceDialog from './BoardCircuitSourceDialog';
 import type { RouteDeletionPlan } from '../../pcb/routeDeletion';
@@ -312,6 +317,7 @@ export default function BoardWorkspace({
     componentId?: string;
     routeId?: string;
     copper?: CopperObject;
+    artwork?: BoardPickTarget;
     polygon?: { target: CopperObject; at: BoardPoint; handle: number };
   }>();
   const footprintTabId = React.useId();
@@ -365,7 +371,9 @@ export default function BoardWorkspace({
     }
   }, [board]);
   const { geometry } = layout;
-  const canPickObjects = !!geometry && !busy && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && !placementTool && !copperDrawing;
+  const [textDrawing, setTextDrawing] = useState<BoardText>();
+  const textLayers = boardTextLayers.filter((id) => id !== 'B.Cu' || hasBottomCopper);
+  const canPickObjects = !!geometry && !busy && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && !placementTool && !copperDrawing && !textDrawing;
   React.useEffect(() => {
     if (!canPickObjects) setPickingObjects(false);
   }, [canPickObjects]);
@@ -866,6 +874,8 @@ export default function BoardWorkspace({
       }
     }
     if (isCopperObject(target.kind)) selectCopperObject({ kind: target.kind, id: target.id });
+    if (isCopperObject(target.kind) || boardTextIndex(target) >= 0)
+      requestAnimationFrame(() => boardCanvas.current?.focus());
   }
 
   function closeObjectPicker() {
@@ -1036,12 +1046,80 @@ export default function BoardWorkspace({
       if (!jumper) return;
       const [start, end] = editBoardLine([jumper.start, jumper.end], -1, offset);
       edit(() => session.apply([{ type: 'setWireJumper', jumper: { ...jumper, start, end } }]));
-    } else if (target.kind === 'artwork' && target.id.startsWith('artwork:')) {
+    } else if ('reference' in target && target.reference && canPickOnLayers(pickableLayers, target)) {
+      const placement = board.footprints?.find(({ componentId }) => componentId === target.componentId);
+      if (!placement || placement.locked) return;
+      const device = board.deviceDefinitions?.find(({ id }) => id === placement.deviceId);
+      const definition = board.footprintDefinitions?.find(({ id }) => id === device?.footprintId);
+      const part = board.components?.find(({ id }) => id === placement.componentId);
+      const reference = footprintReference(definition, placement, part?.reference);
+      if (!reference) return;
+      const referencePositionNm = offsetFootprintReference(reference.graphic.at, offset, placement);
+      edit(() => session.commit({
+        ...board,
+        requiredFeatures: board.requiredFeatures.includes('footprint-reference-position') ? board.requiredFeatures :
+          [...board.requiredFeatures, 'footprint-reference-position'],
+        footprints: board.footprints.map((item) => item.id === placement.id ? { ...item, referencePositionNm } : item),
+      }));
+    } else if (target.kind === 'artwork' && target.id.startsWith('artwork:') && canPickOnLayers(pickableLayers, target)) {
       const index = Number(target.id.slice(8));
       const graphics = board.annotations.graphics.map((item, itemIndex) =>
         itemIndex === index ? moveBoardArtwork(item, offset) : item);
       edit(() => session.apply([{ type: 'setAnnotations', annotations: { ...board.annotations, graphics } }]));
     }
+  }
+
+  function startText() {
+    if (textDrawing) {
+      cancelText();
+      return;
+    }
+    const layer = textLayers.find((id) => pickableLayers.has(id));
+    if (!canPickObjects || !layer) return;
+    selectArea([], [], false);
+    setPickingObjects(false);
+    setBottomView('selection');
+    setTextDrawing({
+      kind: 'text', layer, text: '', at: { x: 0, y: 0 }, sizeNm: { x: 650_000, y: 1_000_000 },
+      strokeNm: 150_000, rotationMicrodegree: 0, visible: true, filled: false,
+      align: layer.startsWith('B.') ? ['mirror'] : [],
+    });
+  }
+
+  function cancelText() {
+    setTextDrawing(undefined);
+    selectArea([], [], false);
+    boardCanvas.current?.focus();
+  }
+
+  function saveBoardText(item: BoardText, index?: number) {
+    if (!pickableLayers.has(item.layer) || !item.text.trim()) return;
+    edit(() => {
+      footprintTextStrokes(item);
+      const graphics = [...(board.annotations?.graphics ?? [])];
+      const added = index === undefined;
+      const textIndex = index ?? graphics.length;
+      graphics[textIndex] = item;
+      const next = changeAnnotations(datum, dimensions, graphics);
+      if (added) setTextDrawing(undefined);
+      setSelectedSilk({ kind: 'artwork', id: 'artwork:' + textIndex, layer: 'both', boardLayer: item.layer, label: item.text });
+      return next;
+    });
+  }
+
+  function boardTextIndex(target: BoardPickTarget | undefined) {
+    const index = target?.id.startsWith('artwork:') ? Number(target.id.slice(8)) : -1;
+    return board.annotations?.graphics?.[index]?.kind === 'text' ? index : -1;
+  }
+
+  function deleteBoardText(target: BoardPickTarget) {
+    const index = boardTextIndex(target);
+    if (index < 0 || !canPickOnLayers(pickableLayers, target)) return;
+    edit(() => {
+      const next = changeAnnotations(datum, dimensions, board.annotations.graphics.filter((_, i) => i !== index));
+      selectArea([], [], false);
+      return next;
+    });
   }
 
   function fitSelection() {
@@ -1488,6 +1566,7 @@ export default function BoardWorkspace({
           run: () => startCopperDrawing('hole', 'round-hole') },
         { id: 'draw-slot', label: 'Draw slot', disabled: !canPickObjects,
           run: () => startCopperDrawing('hole', 'slot') },
+        { id: 'text', label: t('toolbar.text'), disabled: !canPickObjects || !textLayers.some((id) => pickableLayers.has(id)), run: startText },
         { id: 'dimension', label: 'Add dimension…', disabled: busy || routing, run: () => {
           openBoardTools();
           addDimension();
@@ -1601,8 +1680,9 @@ export default function BoardWorkspace({
 
   function openBoardMenu(
     point: { x: number; y: number },
-    hit?: { componentId?: string; routeId?: string; copper?: CopperObject; at?: BoardPoint; handle?: number },
+    hit?: { componentId?: string; routeId?: string; copper?: CopperObject; artwork?: BoardPickTarget; at?: BoardPoint; handle?: number },
   ) {
+    if (textDrawing) return cancelText();
     if (copperDrawing) {
       const points = copperDrawing.shape === 'polygon' ? finishBoardPolygon(copperDrawing.points, hit?.at && canvasPosition(hit.at.x, -hit.at.y)) : [];
       if (points.length >= 3) finishCopperDrawing(points);
@@ -1628,6 +1708,7 @@ export default function BoardWorkspace({
     }
     if (measuring || deletionDraft || cleanup) return;
     if (hit?.copper) selectCopperObject(hit.copper);
+    if (hit?.artwork) selectPickedObject(hit.artwork);
     const componentId = hit ? hit.componentId : selected;
     const routeId = hit ? hit.routeId : selectedRouteId;
     if (hit?.componentId) selectComponent(hit.componentId);
@@ -1637,7 +1718,8 @@ export default function BoardWorkspace({
     }
     const polygon = hit?.at && hit.copper && copperAreaGeometry(board, hit.copper)?.kind === 'polygon'
       ? { target: hit.copper, at: hit.at, handle: hit.handle ?? -1 } : undefined;
-    setBoardMenu({ point, componentId, routeId, copper: hit ? hit.copper : selectedCopper, polygon });
+    setBoardMenu({ point, componentId, routeId, copper: hit ? hit.copper : selectedCopper,
+      artwork: hit ? hit.artwork : selectedSilk, polygon });
   }
 
   const boardMenuFootprint = boardMenu?.componentId
@@ -1662,7 +1744,8 @@ export default function BoardWorkspace({
   const polygonTarget = boardMenu?.polygon;
   const menuShape = polygonTarget && copperAreaGeometry(board, polygonTarget.target);
   if (menuShape?.kind === 'polygon') boardMenuItems.unshift(...boardPolygonMenu(menuShape, polygonTarget.at, polygonTarget.handle));
-  if (boardMenu?.copper) boardMenuItems.push({ key: 'delete', text: t('toolbar.contextMenu.delete') });
+  if (boardMenu?.copper || boardTextIndex(boardMenu?.artwork) >= 0)
+    boardMenuItems.push({ key: 'delete', text: t('toolbar.contextMenu.delete') });
 
   const footprintPanel = <>
     <LibraryBrowserHeader>
@@ -2206,6 +2289,11 @@ export default function BoardWorkspace({
         const target = event.target as Element;
         if (event.defaultPrevented ||
             (!event.currentTarget.contains(target) && !footprintsHost?.contains(target))) return;
+        if (event.key === 'Delete' && target.closest('.pcb-svg') && canPickObjects && boardTextIndex(selectedSilk) >= 0) {
+          event.preventDefault();
+          deleteBoardText(selectedSilk);
+          return;
+        }
         if (copperDrawing && target.closest('.pcb-svg') && ['Enter', 'End'].includes(event.key)) {
           event.preventDefault();
           finishCopperDrawing();
@@ -2251,7 +2339,9 @@ export default function BoardWorkspace({
           }
         }
         if (event.key !== 'Escape') return;
-        if (copperDrawing) {
+        if (textDrawing) {
+          cancelText();
+        } else if (copperDrawing) {
           cancelCopperDrawing();
         } else if (objectPick) {
           closeObjectPicker();
@@ -2283,7 +2373,10 @@ export default function BoardWorkspace({
               case 'zoom_out': boardCanvas.current?.zoom('out', boardMenu.point); break;
               case 'zoom_fit': boardCanvas.current?.fit(); break;
               case 'fit_selection': fitSelection(); break;
-              case 'delete': if (boardMenu.copper) removeCopperObject(boardMenu.copper); break;
+              case 'delete':
+                if (boardMenu.copper) removeCopperObject(boardMenu.copper);
+                else if (boardMenu.artwork) deleteBoardText(boardMenu.artwork);
+                break;
               default:
                 if (menuShape?.kind === 'polygon') {
                   const next = applyBoardPolygonCommand(menuShape, command, polygonTarget.at, polygonTarget.handle);
@@ -2337,6 +2430,8 @@ export default function BoardWorkspace({
         <EditorHistoryControls compactLabels canUndo={!busy && session.canUndo} canRedo={!busy && session.canRedo}
           onUndo={() => edit(session.undo)} onRedo={() => edit(session.redo)} />
         <ToolbarDivider />
+        <TextToolButton active={!!textDrawing}
+          disabled={!textDrawing && (!canPickObjects || !textLayers.some((id) => pickableLayers.has(id)))} onClick={startText} />
         {areaTools.map(({ kind, label, buttonLabel }) => <BoardShapeTool key={kind} label={label} buttonLabel={buttonLabel} choices={areaToolShapes}
           current={areaShapes[kind]} active={copperDrawing?.kind === kind}
           disabled={(!canPickObjects && copperDrawing?.kind !== kind) || (kind === 'zone' && !board.nets?.length)}
@@ -2575,6 +2670,7 @@ export default function BoardWorkspace({
             <DialogTitle>Board artwork</DialogTitle>
             <DialogContent>
               <FootprintArtworkEditor graphics={board.annotations?.graphics ?? []} busy={busy}
+                copperTextLayers={hasBottomCopper ? ['F.Cu', 'B.Cu'] : ['F.Cu']}
                 legend="Layer graphics" initiallyExpanded
                 run={async (task) => {
                   try { task(); }
@@ -2608,6 +2704,7 @@ export default function BoardWorkspace({
               onSelectCopper={selectCopperObject}
               onSelectArtwork={selectPickedObject}
               onMoveGraphic={moveGraphic}
+              textDrawing={textDrawing}
               copperDrawing={copperDrawing && { points: copperDrawing.points, shape: copperDrawing.shape,
                 snap: canvasPosition, add: addCopperPoint, finish: finishCopperDrawing }}
               areaEditing={selectedCopper && copperAreaGeometry(board, selectedCopper)}
@@ -2640,12 +2737,12 @@ export default function BoardWorkspace({
               onMeasure={measuring && !busy ? measureAt : undefined}
               showRulers={showRulers}
               selectionEnabled={!busy && !routing && !measuring && !trackEdit && !deletionDraft &&
-                !cleanup && !placementTool && !pickingObjects && !copperDrawing}
+                !cleanup && !placementTool && !pickingObjects && !copperDrawing && !textDrawing}
               onSelectArea={selectArea}
               onMoveComponent={moveComponentOnCanvas}
               placementActive={!busy && !routing && !measuring && !!placementTool && placementTool === target?.id}
               placementPreview={currentPlacementPreview()}
-              onDropComponent={!busy && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && !copperDrawing
+              onDropComponent={!busy && !routing && !measuring && !trackEdit && !deletionDraft && !cleanup && !copperDrawing && !textDrawing
                 ? (id, x, y) => armPlacement(id, canvasPosition(x, y)) : undefined}
               onContextCommand={openBoardMenu}
               visibleCopper={visibleCopper}
@@ -2655,7 +2752,8 @@ export default function BoardWorkspace({
               onLocation={(x, y) => {
                 if (busy) return;
                 const location = canvasPosition(x, y);
-                if (regionPicking) chooseRegionPoint(location);
+                if (textDrawing) saveBoardText({ ...textDrawing, at: location });
+                else if (regionPicking) chooseRegionPoint(location);
                 else if (deletionDraft || cleanup) return;
                 else if (trackEdit) moveTrackHandle(location);
                 else if (routing) void routePoint(location);
@@ -2789,7 +2887,7 @@ export default function BoardWorkspace({
                   {routeGroup.length} {routeGroup.length === 1 ? 'copper object' : 'copper objects'} selected
                 </p>
               )}
-              {bottomView === 'selection' && selectedSilk && !selectedSilk.componentId && (
+              {bottomView === 'selection' && selectedSilk && !selectedSilk.componentId && boardTextIndex(selectedSilk) < 0 && (
                 <p className="pcb-editor-message">Selected artwork · {selectedSilk.label}</p>
               )}
               {bottomView === 'components' && <div className="pcb-navigation-grid">
@@ -2799,6 +2897,9 @@ export default function BoardWorkspace({
                   items={[
                     ...(geometry?.features ?? []).map(({ id, label, placement }): BoardPickTarget =>
                       ({ kind: 'component', id, label, layer: placement.side })),
+                    ...(board.annotations?.graphics ?? []).flatMap((item, index): BoardPickTarget[] =>
+                      item.kind === 'text' ? [{ kind: 'artwork', id: 'artwork:' + index, label: item.text,
+                        boardLayer: item.layer, layer: 'both' }] : []),
                     ...copperObjects.map((item) => ({ ...item, label: copperObjectLabels[item.kind] + ' · ' + item.label })),
                   ]}
                   getRowId={({ kind, id }) => kind === 'component' ? id : kind + ':' + id}
@@ -2872,14 +2973,23 @@ export default function BoardWorkspace({
                   </Select>
                 </label>}
               </section>}
+              {textDrawing && <div className="pcb-panel-scroll pcb-selection-properties">
+                <StylePanelLayout><StylePanelSection title="Place text">
+                  <BoardTextFields item={textDrawing} layers={textLayers} pickableLayers={pickableLayers} onChange={setTextDrawing} autoFocus />
+                  <p>Enter text, choose its layer, then click the board to place it.</p>
+                </StylePanelSection></StylePanelLayout>
+              </div>}
+              {bottomView === 'selection' && boardTextIndex(selectedSilk) >= 0 && (
+                <div className="pcb-panel-scroll pcb-selection-properties">
+                  <StylePanelLayout><StylePanelSection title="Board text">
+                    <BoardTextEditor key={selectedSilk.id + ':' + board.revision}
+                      item={board.annotations.graphics[boardTextIndex(selectedSilk)] as BoardText}
+                      layers={textLayers} pickableLayers={pickableLayers} onApply={(item) => saveBoardText(item, boardTextIndex(selectedSilk))} />
+                  </StylePanelSection></StylePanelLayout>
+                </div>
+              )}
               {!copperDrawing && bottomView === 'selection' && selectedCopper && (
                 <section className="pcb-panel-scroll pcb-selection-properties" aria-label={copperObjectLabels[selectedCopper.kind]}>
-                  <div className="pcb-panel-actions">
-                    <Button size="small" onClick={() => openBoardList(idleBottomView)}>
-                      {idleBottomView === 'netlist' ? 'Back to Netlist' : 'Back to Components'}
-                    </Button>
-                    <Button size="small" disabled={busy || routing} onClick={() => removeCopperObject(selectedCopper)}>Remove</Button>
-                  </div>
                   <StylePanelLayout>
                     <StylePanelSection title={copperObjectLabels[selectedCopper.kind]}>
                       <fieldset key={selectedCopper.kind + ':' + selectedCopper.id + ':' + board.revision} disabled={busy || routing}

@@ -4,6 +4,7 @@ import { routeGeometry, viaIsTented } from './boardRouting';
 import { capsulePolygon } from './contours';
 import { fabricationProfileFor } from './fabricationProfiles';
 import { placeEmbeddedDevice } from './padstack';
+import { finishedArtwork } from './boardArtwork';
 
 export function boardCopperGeometry(
   board: BoardDocument,
@@ -58,6 +59,14 @@ export function boardCopperGeometry(
   const jumpers = wireJumperGeometry(board, availableNets);
   features.push(...jumpers.features);
   drills.push(...jumpers.drills);
+  for (const [index, graphic] of (board.annotations?.graphics ?? []).entries()) {
+    if (graphic.kind !== 'text' || (graphic.layer !== 'F.Cu' && graphic.layer !== 'B.Cu')) continue;
+    const layerId = graphic.layer === 'F.Cu' ? 'top' : 'bottom';
+    const artworkId = `${board.boardId}:artwork:${index}`;
+    finishedArtwork(graphic).forEach((region, stroke) => features.push({
+      id: artworkId + ':' + stroke, artworkId, kind: 'artwork', layerId, region,
+    }));
+  }
   // Retired route nets are removed from the intended topology before diagnosing contact.
   return {
     ...routing,

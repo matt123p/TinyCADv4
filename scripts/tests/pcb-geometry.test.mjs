@@ -1487,8 +1487,11 @@ test('reopens a copied XML board offline with shared definitions, connectivity a
   }, kernel);
   assert.equal(unsupported.report.issues.filter(({ code }) => code === 'silk-text').length, 2);
   assert.match(unsupported.report.issues.find(({ code }) => code === 'silk-text').message, /glyph "漢"/);
-  assert.equal(unsupported.files['silk-top.gbr'], undefined);
-  assert.equal(unsupported.files['silk-bottom.gbr'], undefined);
+  const referencesOnly = await api.prepareCamPreview({
+    ...boardCopy, footprintDefinitions: [{ ...definition, graphics: [] }],
+  }, kernel);
+  for (const side of ['top', 'bottom'])
+    assert.equal(unsupported.files[`silk-${side}.gbr`], referencesOnly.files[`silk-${side}.gbr`]);
 
   assert.ok(!preview.report.issues.some(({ code }) => code === 'courtyard-overlap'));
   const sameSide = {
@@ -3502,6 +3505,32 @@ test('keeps routing, zone copper and component bodies clear of a mounting screw 
   assert.ok(api.manufacturingReadiness(injected, preview).some(({ code }) => code === 'mounting-screw-copper'));
   const kicad = await api.exportKicadBoard(board);
   assert.ok(kicad.report.notes.some(({ code }) => code === 'mechanical-clearance'));
+});
+
+test('plots board text on its copper and silkscreen layers and checks copper clearances', async () => {
+  const board = api.createBoard('Board markings', 2, polygon(0, 0, 20_000_000, 20_000_000));
+  const copper = {
+    kind: 'text', layer: 'F.Cu', text: 'A7', at: point(10_000_000, 10_000_000),
+    sizeNm: point(650_000, 1_000_000), strokeNm: 150_000, rotationMicrodegree: 0,
+    align: [], visible: true, filled: false,
+  };
+  const silk = { ...copper, layer: 'B.SilkS', align: ['mirror'], text: 'Rev B' };
+  const candidate = {
+    ...board, requiredFeatures: [...board.requiredFeatures, 'board-annotations', 'board-artwork'],
+    annotations: { graphics: [copper, silk] },
+  };
+  const decoded = await api.decodeBoard(await api.encodeBoard(candidate));
+  assert.deepEqual(decoded.annotations.graphics, [copper, silk]);
+  const preview = await api.prepareCamPreview(decoded, kernel);
+  assert.ok(preview.layers.find(({ id }) => id === 'top').copper.length);
+  assert.equal(preview.layers.find(({ id }) => id === 'bottom').copper.length, 0);
+  assert.ok(preview.artwork.find(({ kind, side }) => kind === 'silk' && side === 'bottom').regions.length);
+  assert.ok(!preview.report.issues.some(({ code }) => code === 'copper-clearance'));
+  const exportResult = await api.exportKicadBoard(decoded);
+  assert.match(exportResult.pcb, /\(gr_text "A7"[^\n]*\(layer "F\.Cu"\)/);
+  const conflicting = { ...decoded, annotations: { graphics: [copper, { ...copper, text: 'A8' }] } };
+  const report = await api.checkBoard(conflicting, kernel);
+  assert.ok(report.issues.some(({ code }) => code === 'copper-clearance'));
 });
 
 test('stores exact drafting coordinates and dimensions independently of the board profile', async () => {

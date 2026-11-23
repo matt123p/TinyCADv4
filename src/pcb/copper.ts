@@ -10,11 +10,12 @@ type LayerId = CopperLayer['id'];
 export interface CopperFeature {
   readonly id: string;
   readonly layerId: LayerId;
-  readonly kind: 'pad' | 'track' | 'via' | 'zone' | 'tie';
+  readonly kind: 'pad' | 'track' | 'via' | 'zone' | 'tie' | 'artwork';
   readonly region: PolygonRegion;
   readonly netId?: string;
   readonly terminalId?: string;
   readonly anchor?: BoardPoint;
+  readonly artworkId?: string;
 }
 
 export interface BoardDrill {

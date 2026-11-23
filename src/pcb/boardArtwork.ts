@@ -9,6 +9,7 @@ import type { Polygon, PolygonRegion } from './contours';
 import { placeFootprintPoint } from './footprint';
 import { footprintArc } from './footprintArc';
 import { footprintTextStrokes, resolveFootprintText } from './footprintText';
+import { footprintReference } from './boardReference';
 import type { FootprintGraphic } from './footprintDetails';
 import { samePoint, validateOutline } from './geometry';
 import type { BoardPoint } from './geometry';
@@ -52,7 +53,7 @@ function closedPolygon(item: FootprintGraphic): Polygon | undefined {
   }
 }
 
-function finishedArtwork(item: FootprintGraphic, text?: string): PolygonRegion[] {
+export function finishedArtwork(item: FootprintGraphic, text?: string): PolygonRegion[] {
   if (item.kind === 'text')
     return footprintTextStrokes(item, text).flatMap((stroke) =>
       stroke
@@ -200,10 +201,8 @@ export function boardArtwork(board: BoardDocument, kernel: PolygonKernel) {
       graphic.kind === 'text' ? graphic.text : undefined);
   }
   for (const placement of board.footprints ?? []) {
-    const graphics =
-      definitions.get(devices.get(placement.deviceId)?.footprintId)?.graphics ??
-      [];
-    if (!graphics.length) continue;
+    const definition = definitions.get(devices.get(placement.deviceId)?.footprintId);
+    const graphics = definition?.graphics ?? [];
     const transform = (polygon: Polygon) =>
       polygon.map((point) => placeFootprintPoint(point, placement));
     const physicalSide = (
@@ -211,7 +210,11 @@ export function boardArtwork(board: BoardDocument, kernel: PolygonKernel) {
     ): CopperLayer['id'] =>
       layer.startsWith('F.') === (placement.side === 'top') ? 'top' : 'bottom';
     const { componentId } = placement;
+    const reference = footprintReference(definition, placement, components.get(componentId)?.reference);
+    if (reference) addArtwork(reference.graphic, placement.id + (reference.index < 0 ? ':reference' : ':silk:' + reference.index), componentId,
+      physicalSide(reference.graphic.layer), transform, reference.graphic.text);
     for (const [i, graphic] of graphics.entries()) {
+      if (i === reference?.index) continue;
       const text = graphic.kind === 'text'
         ? resolveFootprintText(graphic.text, components.get(componentId) ?? {}) : undefined;
       const id = placement.id + (graphic.layer.endsWith('SilkS') ? ':silk:' : ':artwork:') + i;

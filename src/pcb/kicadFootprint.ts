@@ -374,7 +374,7 @@ export function importKicadFootprint(source: string): {
     const graphicLayer = child(node, 'layer')?.values[0];
     if (node.tag === 'property' && graphicLayer === undefined && !child(node, 'at')) continue;
     if (node.tag === 'embedded_fonts' && node.values[0] === 'no') continue;
-    if (node.tag === 'model' || footprintGraphicLayers.includes(graphicLayer as FootprintGraphicLayer)) {
+    if (node.tag === 'model' || footprintGraphicLayers.some((layer) => layer === graphicLayer)) {
       try {
         if (node.tag === 'model') {
           const model = readModel(node);

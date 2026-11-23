@@ -44,6 +44,7 @@ export default function FootprintArtworkEditor({
   busy,
   legend = 'Footprint artwork',
   initiallyExpanded = false,
+  copperTextLayers = [],
 }: {
   graphics: readonly FootprintGraphic[];
   onChange(items: readonly FootprintGraphic[]): void;
@@ -51,6 +52,7 @@ export default function FootprintArtworkEditor({
   busy: boolean;
   legend?: string;
   initiallyExpanded?: boolean;
+  copperTextLayers?: readonly ('F.Cu' | 'B.Cu')[];
 }) {
   const [index, setIndex] = useState<number>();
   const [draft, setDraft] = useState(initial);
@@ -210,7 +212,7 @@ export default function FootprintArtworkEditor({
                   })
                 }
               >
-                {footprintGraphicLayers.map((layer) => (
+                {(draft.kind === 'text' ? [...footprintGraphicLayers, ...copperTextLayers] : footprintGraphicLayers).map((layer) => (
                   <option key={layer} value={layer}>{boardLayerById.get(layer).label}</option>
                 ))}
               </select>

@@ -10,6 +10,7 @@ import type {
   EmbeddedFootprint,
 } from './boardAssets';
 import { editableProfile } from './boardProfiles';
+import { footprintReference } from './boardReference';
 import { preferredTrackWidth, resolveBoardRules } from './boardRules';
 import { viaIsTented } from './boardRouting';
 import type { ContourEdge } from './contours';
@@ -358,6 +359,7 @@ function footprintItems(
       ? ' (attr board_only)'
       : '';
   const name = library.name.replaceAll(':', '-');
+  const reference = footprintReference(library, placement, part.reference);
   const contents = [
     field('Reference', part.reference ?? '', side, rotation),
     field('Value', part.value ?? '', side, rotation),
@@ -365,6 +367,7 @@ function footprintItems(
       ? [field('Datasheet', library.datasheetUrl, side, rotation)]
       : []),
     ...(library.graphics?.flatMap((item, index) => {
+      if (index === reference?.index) return [];
       const invalid =
         (item.strokeNm === 0 && !item.filled) ||
         (item.kind === 'circle' && samePoint(item.center, item.end)) ||
@@ -383,6 +386,7 @@ function footprintItems(
       }
       return [graphic(item, mirror, placement.side, rotation)];
     }) ?? []),
+    ...(reference ? [graphic({ ...reference.graphic, text: '${REFERENCE}' }, mirror, placement.side, rotation)] : []),
     ...pads,
     ...independentApertures,
   ];

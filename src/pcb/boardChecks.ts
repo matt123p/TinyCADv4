@@ -492,7 +492,8 @@ export async function checkBoard(
       });
     candidates.length = 0;
     someNearby(clearanceIndex[feature.layerId], box, widestClearance, (other) => {
-      if (other.index > i && (!feature.netId || feature.netId !== other.feature.netId))
+      if (other.index > i && (!feature.netId || feature.netId !== other.feature.netId) &&
+          (!feature.artworkId || feature.artworkId !== other.feature.artworkId))
         candidates.push(other);
       return false;
     });

@@ -6,6 +6,7 @@ import type {
   PadAssignment,
 } from './footprint';
 import { BOARD_COORDINATE_LIMIT_NM, isBoardPoint } from './geometry';
+import type { BoardPoint } from './geometry';
 import { validatePadStack } from './padstack';
 import type { PadStack } from './padstack';
 import type { RouteRules } from './routing';
@@ -82,6 +83,7 @@ export interface BoardFootprint extends FootprintPlacement {
   readonly locked: boolean;
   readonly positionLocked?: boolean;
   readonly rotationLocked?: boolean;
+  readonly referencePositionNm?: BoardPoint;
 }
 
 export interface BoardComponent {
@@ -365,6 +367,7 @@ export function validateBoardAssets(
       !isEntityId(instance.componentId) ||
       components.has(instance.componentId.toLowerCase()) ||
       !isBoardPoint(instance.positionNm) ||
+      (instance.referencePositionNm !== undefined && !isBoardPoint(instance.referencePositionNm)) ||
       !Number.isSafeInteger(instance.rotationMicrodegree) ||
       instance.rotationMicrodegree < 0 ||
       instance.rotationMicrodegree >= 360_000_000 ||

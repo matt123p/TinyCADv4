@@ -29,7 +29,9 @@ import { dimensionGeometry, dimensionText, snapMeasurementPoint } from '../../pc
 import { routingSnapTargets, snapRoutePoint } from '../../pcb/routingSnap';
 import type { RouteSnap } from '../../pcb/routingSnap';
 import { FootprintPreviewDrawing } from '../projects/DeviceFootprintPreview';
-import { FootprintArtwork, PadShapeDrawing } from '../projects/FootprintArtwork';
+import { artworkBounds, FootprintArtwork, PadShapeDrawing } from '../projects/FootprintArtwork';
+import { footprintReference } from '../../pcb/boardReference';
+import type { FootprintGraphic } from '../../pcb/footprintDetails';
 import { resolveFootprintText } from '../../pcb/footprintText';
 import { padShapePoints } from '../../pcb/padstack';
 import { SelectionMarquee } from '../svg/SelectionMarquee';
@@ -39,7 +41,7 @@ import type { BoardAreaGeometry } from '../../pcb/boardAreaShape';
 import type { BoardMechanicalHole } from '../../pcb/boardMechanical';
 import { BoardLineDrawing, BoardShapeDrawing, boardShapeHandles, drawBoardBounds, editBoardShape, polygonContextHit, previewBoardPolygon } from './boardShapeAdapter';
 import { BoardOpeningDrawing, editOpening, openingFromDrag, openingHandles } from './boardOpeningAdapter';
-import { SelectionHandle } from '../svg/SelectionHandle';
+import { SelectionHandle, TextMoveHandle } from '../svg/SelectionHandle';
 import type { BoardDrawShape } from './BoardShapeTools';
 
 const point = ({ x, y }: BoardPoint) => `${x},${-y}`;
@@ -78,6 +80,7 @@ export interface BoardPickTarget {
   boardLayer?: BoardLayerId;
   componentId?: string;
   locked?: boolean;
+  reference?: boolean;
 }
 
 export interface BoardPick {
@@ -102,7 +105,7 @@ function boundsOf(points: readonly BoardPoint[], area?: { left: number; top: num
 }
 
 type CanvasBounds = ReturnType<typeof boundsOf>;
-type SelectionTarget = { componentId?: string; padId?: string; routeId?: string };
+type SelectionTarget = { componentId?: string; padId?: string; padLayer?: string; routeId?: string };
 type SelectionGesture = {
   pointer: number;
   clientX: number;
@@ -114,11 +117,18 @@ type SelectionGesture = {
 
 function selectionTarget(element: Element): SelectionTarget {
   const hit = element.closest('[data-component], [data-track], [data-via]');
+  const pad = element.closest('[data-board-pad]');
   return {
     componentId: hit?.getAttribute('data-component') ?? undefined,
-    padId: element.closest('[data-board-pad]')?.getAttribute('data-board-pad') ?? undefined,
+    padId: pad?.getAttribute('data-board-pad') ?? undefined,
+    padLayer: pad?.getAttribute('data-board-pad-layer') ?? undefined,
     routeId: hit?.getAttribute('data-track') ?? hit?.getAttribute('data-via') ?? undefined,
   };
+}
+
+function boardArtworkTarget(item: FootprintGraphic, index: number): BoardPickTarget {
+  return { kind: 'artwork', id: 'artwork:' + index, boardLayer: item.layer, layer: 'both',
+    label: item.kind === 'text' ? item.text : item.kind + ' ' + (index + 1) };
 }
 
 function SelectionOutline({ bounds }: { bounds: CanvasBounds }) {
@@ -267,7 +277,7 @@ const ZoneCopper = React.memo(function ZoneCopper({
 });
 
 const PlacedFootprint = React.memo(function PlacedFootprint({
-  feature, margin, selected, inGroup, selectedPad, selectedNet, visibleCopper, picking, pickableLayers, hovered, hoveredPad,
+  feature, margin, selected, inGroup, selectedPad, selectedNet, visibleCopper, picking, pickableLayers, hovered, hoveredPad, hoveredPadLayer,
 }: {
   feature: ReturnType<typeof boardPlacementView>['features'][number];
   margin: number;
@@ -280,13 +290,14 @@ const PlacedFootprint = React.memo(function PlacedFootprint({
   pickableLayers: ReadonlySet<BoardLayerId>;
   hovered?: boolean;
   hoveredPad?: string;
+  hoveredPadLayer?: string;
 }) {
   const { id, label, placement, pads, copper } = feature;
-  const position = placement.positionNm;
   const fill = selected || inGroup ? '#b34b27' : '#226a59';
   const visible = (layerId: CopperLayer['id']) => visibleCopper === 'all' || layerId === visibleCopper;
   const pickingAttributes = (padId: string, layer: CopperLayer['id'], padLabel: string) => ({
       pointerEvents: pickableLayers.has(copperBoardLayer(layer)) ? undefined : 'none',
+      'data-board-pad-layer': layer,
       'data-board-pick': picking ? JSON.stringify({
         kind: 'pad', id: padId, layer, componentId: id, label: label + ' · ' + padLabel,
         locked: placement.locked || placement.positionLocked || placement.rotationLocked,
@@ -310,7 +321,7 @@ const PlacedFootprint = React.memo(function PlacedFootprint({
             key={padId + ':' + layerId}
             shape={shape}
             colour={padFill(padId, highlighted)}
-            hovered={hovered && (!hoveredPad || hoveredPad === padId) && pickableLayers.has(copperBoardLayer(layerId))}
+            hovered={hovered && (!hoveredPad || hoveredPad === padId && hoveredPadLayer === layerId) && pickableLayers.has(copperBoardLayer(layerId))}
             attributes={{
               'data-board-pad': padId,
               ...pickingAttributes(padId, layerId, label),
@@ -328,13 +339,6 @@ const PlacedFootprint = React.memo(function PlacedFootprint({
               'data-net-highlighted': highlighted || undefined }} />
         );
       })}
-      {visible(placement.side) && <ScaledSvgText x={position.x} y={-position.y - margin * 0.14} fill="#192b22"
-        fontSize={margin * 0.29} pointerEvents={pickableLayers.has(copperBoardLayer(placement.side)) ? undefined : 'none'}>
-        {label}
-      </ScaledSvgText>}
-      {hovered && !hoveredPad && pickableLayers.has(copperBoardLayer(placement.side)) && <ScaledSvgText
-        x={position.x} y={-position.y - margin * 0.14} fontSize={margin * 0.29} strokeWidth={40_000}
-        className="selectableLineHighlight" vectorEffect="non-scaling-stroke" pointerEvents="none">{label}</ScaledSvgText>}
     </g>
   );
 });
@@ -350,6 +354,7 @@ export default function BoardCanvas({
   onSelectArtwork,
   onMoveGraphic,
   copperDrawing,
+  textDrawing,
   areaEditing, holeEditing, snapShape, onReshapeArea, onReshapeHole,
   selectedSilk,
   selected,
@@ -431,8 +436,9 @@ export default function BoardCanvas({
   showRulers: boolean;
   onDropComponent?(id: string, x: number, y: number): void;
   onContextCommand(point: { x: number; y: number }, object?: {
-    componentId?: string; routeId?: string; copper?: CopperObject; at?: BoardPoint; handle?: number;
+    componentId?: string; routeId?: string; copper?: CopperObject; artwork?: BoardPickTarget; at?: BoardPoint; handle?: number;
   }): void;
+  textDrawing?: Extract<FootprintGraphic, { kind: 'text' }>;
   trackWidthNm: number;
   onLocation(x: number, y: number): void;
   onMeasure?(point: BoardPoint): void;
@@ -604,9 +610,14 @@ export default function BoardCanvas({
     const definitions = new Map(board.footprintDefinitions?.map((definition) => [definition.id, definition]));
     const parts = new Map(board.components?.map((part) => [part.id, part]));
     return geometry.features.flatMap(({ id, label, placement }) => {
-      const graphics = definitions.get(devices.get(placement.deviceId)?.footprintId)?.graphics ?? [];
-      return graphics.flatMap((graphic, index) => {
-        const idForGraphic = placement.id + ':' + index;
+      const definition = definitions.get(devices.get(placement.deviceId)?.footprintId);
+      const reference = footprintReference(definition, placement, parts.get(id)?.reference);
+      const graphics = (definition?.graphics ?? []).map((graphic, index) => ({ graphic, index }));
+      if (reference?.index === -1) graphics.push(reference);
+      return graphics.flatMap(({ graphic: original, index }) => {
+        const isReference = index === reference?.index;
+        const graphic = isReference ? reference.graphic : original;
+        const idForGraphic = placement.id + (isReference ? ':reference' : ':' + index);
         if (graphic.kind === 'text' && !graphic.visible) return [];
         const artworkLayer = placedBoardLayer(graphic.layer, placement.side);
         const layer: CopperLayer['id'] = artworkLayer.startsWith('B.') ? 'bottom' : 'top';
@@ -614,11 +625,12 @@ export default function BoardCanvas({
           artworkLayer,
           target: {
             kind: artworkLayer.endsWith('SilkS') ? 'silk' as const : 'artwork' as const, id: idForGraphic, componentId: id,
-            label: label + ' · ' + graphic.kind + ' ' + (index + 1), layer, boardLayer: artworkLayer,
+            label: isReference ? label + ' reference' : label + ' · ' + graphic.kind + ' ' + (index + 1), layer, boardLayer: artworkLayer,
+            reference: isReference || undefined,
             locked: placement.locked || placement.positionLocked || placement.rotationLocked,
           },
           placement,
-          graphic: graphic.kind === 'text'
+          graphic: graphic.kind === 'text' && !isReference
             ? { ...graphic, text: resolveFootprintText(graphic.text, parts.get(id) ?? {}) }
             : graphic,
         }];
@@ -775,6 +787,7 @@ export default function BoardCanvas({
   const hoveredComponentId = hoveredObject?.kind === 'component' ? hoveredObject.id :
     hoveredObject?.kind === 'pad' ? hoveredObject.componentId : canvasHover?.componentId;
   const hoveredPadId = hoveredObject?.kind === 'pad' ? hoveredObject.id : canvasHover?.padId;
+  const hoveredPadLayer = hoveredObject?.kind === 'pad' ? hoveredObject.layer : canvasHover?.padLayer;
   const hoveredRouteId = hoveredObject?.kind === 'track' || hoveredObject?.kind === 'via' ? hoveredObject.id : canvasHover?.routeId;
   const selectedOutlines = [
     ...[...group, selected].filter(Boolean).map((id) => ({
@@ -784,6 +797,8 @@ export default function BoardCanvas({
     })),
     ...[...selectedRoutes].map((id) => ({ id, bounds: selectionBounds.routes.get(id) })),
   ];
+  const referenceHandles = artwork.filter(({ target, placement }) => target.reference &&
+    target.componentId === selected && !placement.locked && canPickOnLayers(pickableLayers, target));
 
   return (
     <div ref={drawing} className="circuit-drawing pcb-svg"
@@ -791,6 +806,16 @@ export default function BoardCanvas({
         if (event.button !== 0) return;
         suppressClick.current = false;
         const target = event.target as Element;
+        const referenceId = target.closest('[data-footprint-reference-handle]')?.getAttribute('data-footprint-reference-handle');
+        const reference = referenceId && referenceHandles.find(({ target }) => target.id === referenceId);
+        if (selectionEnabled && reference) {
+          const location = pointerOnCanvas(event);
+          if (location) shapeDrag.current = {
+            pointer: event.pointerId, start: snapShape(location.x, location.y),
+            x: event.clientX, y: event.clientY, handle: -1, drawing: false, graphic: reference.target,
+          };
+          return;
+        }
         const handle = target.closest('[data-pcb-shape-handle]')?.getAttribute('data-pcb-shape-handle');
         const hit = copperHit(target);
         const copper = handle !== undefined ? selectedCopper : hit;
@@ -800,8 +825,7 @@ export default function BoardCanvas({
         const itemIndex = artwork && Number(artwork.getAttribute('data-board-artwork-index'));
         const item = artwork && board.annotations?.graphics?.[itemIndex];
         const graphic: CopperObject | BoardPickTarget | undefined = copper?.kind === 'jumper' ? copper :
-          item && pickableLayers.has(item.layer) ? { kind: 'artwork', id: 'artwork:' + itemIndex,
-            boardLayer: item.layer, layer: 'both', label: item.kind + ' ' + (itemIndex + 1) } : undefined;
+          item && pickableLayers.has(item.layer) ? boardArtworkTarget(item, itemIndex) : undefined;
         const editing = selectionEnabled && !event.shiftKey && (area || hole || graphic);
         const drawingShape = copperDrawing && copperDrawing.shape !== 'polygon' && !copperDrawing.points.length;
         if (editing || drawingShape) {
@@ -885,7 +909,7 @@ export default function BoardCanvas({
         const next = event.buttons === 0 && selectionEnabled && pointerOnCanvas(event)
           ? selectionTarget(event.target as Element) : undefined;
         setHover((previous) => previous?.componentId === next?.componentId &&
-          previous?.padId === next?.padId && previous?.routeId === next?.routeId ? previous : next);
+          previous?.padId === next?.padId && previous?.padLayer === next?.padLayer && previous?.routeId === next?.routeId ? previous : next);
       }}
       onPointerUp={(event) => {
         const shape = shapeDrag.current;
@@ -937,6 +961,14 @@ export default function BoardCanvas({
           pickAt(event);
           return;
         }
+        if (textDrawing && event.button === 0) {
+          const location = pointerOnCanvas(event);
+          if (location) {
+            event.stopPropagation();
+            onLocation(location.x, location.y);
+          }
+          return;
+        }
         if (copperDrawing && event.button === 0) {
           const location = pointerOnCanvas(event);
           if (!location) return;
@@ -986,8 +1018,11 @@ export default function BoardCanvas({
           cancelGesture();
           return;
         }
-        const hit = (event.target as Element).closest('[data-component], [data-track], [data-via]');
-        const handle = (event.target as Element).closest('[data-pcb-shape-handle]')?.getAttribute('data-pcb-shape-handle');
+        const element = event.target as Element;
+        const hit = element.closest('[data-component], [data-track], [data-via]');
+        const handle = element.closest('[data-pcb-shape-handle]')?.getAttribute('data-pcb-shape-handle');
+        const artworkIndex = element.closest('[data-board-artwork-index]')?.getAttribute('data-board-artwork-index');
+        const graphic = board.annotations?.graphics?.[Number(artworkIndex)];
         const location = pointerOnCanvas(event);
         const at = location && { x: Math.round(location.x), y: Math.round(-location.y) };
         let copper = handle === undefined ? copperHit(event.target) : selectedCopper;
@@ -1004,7 +1039,7 @@ export default function BoardCanvas({
         onContextCommand({ x: event.clientX, y: event.clientY }, {
           componentId: hit?.getAttribute('data-component') ?? undefined,
           routeId: hit?.getAttribute('data-track') ?? hit?.getAttribute('data-via') ?? undefined,
-          copper, at, handle: shapeHandle,
+          copper, artwork: graphic && boardArtworkTarget(graphic, Number(artworkIndex)), at, handle: shapeHandle,
         });
       }}
       onDragOver={onDropComponent && ((event) => {
@@ -1061,19 +1096,32 @@ export default function BoardCanvas({
           }
           onLocation(x, y);
         }}
-        renderDrawingOverlay={copperDrawing || selectionEnabled && (areaEditing || holeEditing) ? (units) => {
+        renderDrawingOverlay={copperDrawing || selectionEnabled && (areaEditing || holeEditing || referenceHandles.length) ? (units) => {
           if (copperDrawing) return drawPoint && shapeDrag.current && drawingPreview(shapeDrag.current.start, drawPoint);
           const area = shapePreview ?? areaEditing;
           const hole = holePreview ?? holeEditing;
-          const handles = (area ? boardShapeHandles(area) : openingHandles(hole))
+          const handles = (area ? boardShapeHandles(area) : hole ? openingHandles(hole) : [])
             .map(({ position: p, cursor }, index) => ({ p, index, cursor }));
           return <g data-pcb-shape-handles="">
+            {referenceHandles.map(({ target, placement, graphic }) => {
+              const bounds = boundsOf(artworkBounds(graphic));
+              const corner = placeFootprintPoint({ x: Math.round(bounds.left), y: Math.round(-bounds.top) }, placement);
+              const offset = graphicDrag?.id === target.id ? graphicDrag.offset : { x: 0, y: 0 };
+              return <TextMoveHandle key={target.id} data-footprint-reference-handle={target.id}
+                x={svgLength(corner.x + offset.x)} y={svgLength(-corner.y - offset.y)} size={svgLength(units * 5)}
+                transform={svgLengthTransform} vectorEffect="non-scaling-stroke" pointerEvents="all"
+                style={{ cursor: 'move' }} onClick={(event) => event.stopPropagation()} />;
+            })}
             {handles.map(({ p, index, cursor }) => <SelectionHandle key={index} data-pcb-shape-handle={index}
               x={svgLength(p.x)} y={svgLength(-p.y)} size={svgLength(units * 5)} offset={svgLength(units * 2)}
               transform={svgLengthTransform} vectorEffect="non-scaling-stroke" pointerEvents="all" style={{ cursor }} />)}
           </g>;
         } : undefined}
-        renderLocationPreview={copperDrawing ? (pointer) => {
+        renderLocationPreview={textDrawing ? (pointer) => pointer && pickableLayers.has(textDrawing.layer) &&
+          <g pointerEvents="none" opacity={0.65} data-pcb-text-preview="">
+            <FootprintArtwork item={{ ...textDrawing, at: snapShape(pointer[0], pointer[1]) }}
+              layerColor={boardLayerById.get(textDrawing.layer).color} />
+          </g> : copperDrawing ? (pointer) => {
           const first = copperDrawing.points[0];
           if (pointer && first) return drawingPreview(first, copperDrawing.snap(pointer[0], pointer[1]));
         } : routing ? (pointer) => {
@@ -1275,7 +1323,7 @@ export default function BoardCanvas({
               selected={feature.id === selected} inGroup={group.has(feature.id)}
               selectedPad={feature.id === selected ? selectedPad : undefined}
               selectedNet={highlightedNet} visibleCopper={visibleCopper} picking={picking} pickableLayers={pickableLayers}
-              hovered={hoveredComponentId === feature.id} hoveredPad={hoveredPadId} />;
+              hovered={hoveredComponentId === feature.id} hoveredPad={hoveredPadId} hoveredPadLayer={hoveredPadLayer} />;
             return feature.id === movingId ? <g key={feature.id} opacity={0.7} data-footprint-move-preview=""
               transform={svgTranslation(dragPreview.offset.x, -dragPreview.offset.y)}>{footprint}</g> : footprint;
           })}
@@ -1290,10 +1338,12 @@ export default function BoardCanvas({
         })}
         {artwork.filter(({ artworkLayer }) => !hiddenLayers.has(artworkLayer)).map(({ target, placement, graphic, artworkLayer }) => (
           <g key={target.id} data-pcb-layer={artworkLayer} data-board-artwork-target={target.id} data-artwork-component={target.componentId}
+            data-footprint-reference={target.reference ? target.componentId : undefined}
             {...pickingAttributes?.(target)} onClick={artworkClick(target)}
             data-picked-silk={selectedSilk === target.id || undefined}
-            transform={placementTransform(target.componentId === movingId ? {
-              x: placement.positionNm.x + dragPreview.offset.x, y: placement.positionNm.y + dragPreview.offset.y,
+            transform={placementTransform(target.componentId === movingId || graphicDrag?.id === target.id ? {
+              x: placement.positionNm.x + (graphicDrag?.id === target.id ? graphicDrag.offset.x : dragPreview.offset.x),
+              y: placement.positionNm.y + (graphicDrag?.id === target.id ? graphicDrag.offset.y : dragPreview.offset.y),
             } : placement.positionNm, placement.rotationMicrodegree, placement.side)}
             pointerEvents={canPickOnLayers(pickableLayers, target) && (picking || selectionEnabled) ? 'visiblePainted' : 'none'}>
             <FootprintArtwork item={graphic} highlighted={selectedSilk === target.id}
@@ -1303,8 +1353,7 @@ export default function BoardCanvas({
         ))}
         {board.annotations?.graphics?.map((item, index) => {
           if (hiddenLayers.has(item.layer) || item.kind === 'text' && !item.visible) return null;
-          const target: BoardPickTarget = { kind: 'artwork', id: 'artwork:' + index, boardLayer: item.layer,
-            layer: 'both', label: item.kind + ' ' + (index + 1) };
+          const target = boardArtworkTarget(item, index);
           return <g key={target.id} data-pcb-layer={item.layer} data-board-artwork-target={target.id} data-board-artwork-index={index}
             transform={graphicDrag?.id === target.id ? svgTranslation(graphicDrag.offset.x, -graphicDrag.offset.y) : undefined}
             {...pickingAttributes?.(target)} onClick={artworkClick(target)}
