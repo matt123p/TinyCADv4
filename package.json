@@ -37,7 +37,7 @@
     "dist:test-appx": "npm run setup:test-appx && npm run dist -- --win appx --test-appx",
     "start:electron": "npm run libraries:package && npm run examples:package && cross-env TARGET_SYSTEM=electron parcel index-electron.html --cache-dir .parcel-cache/dev-electron --dist-dir dist",
     "build:electron": "rimraf dist .parcel-cache/build-electron && cross-env TARGET_SYSTEM=electron parcel build index-electron.html --cache-dir .parcel-cache/build-electron --no-cache --no-source-maps --public-url ./ && node scripts/check-electron-build.mjs && npm run libraries:package && npm run examples:package",
-    "electron": "wait-on tcp:1234 && electron .",
+    "electron": "wait-on tcp:1234 && node scripts/start-electron.mjs .",
     "engine:native": "node scripts/build-native-engine.mjs",
     "engine:wasm": "python3 scripts/build-ngspice.py wasm",
     "test:simulation": "node --test scripts/tests/simulation*.test.mjs",

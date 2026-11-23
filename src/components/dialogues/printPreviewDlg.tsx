@@ -159,7 +159,7 @@ interface PrintPreviewDialogState {
   selectedPages: boolean[];
   loading: boolean;
   printing: boolean;
-  openingPdf: boolean;
+  advancedPrinting: boolean;
   printerError: string | null;
   error: string | null;
 }
@@ -183,7 +183,7 @@ class PrintPreviewDialog extends React.PureComponent<
       selectedPages,
       loading: !!window.electronAPI?.getPrinters,
       printing: false,
-      openingPdf: false,
+      advancedPrinting: false,
       printerError: null,
       error: null,
     };
@@ -254,17 +254,23 @@ class PrintPreviewDialog extends React.PureComponent<
 
   handleAdvancedPrint = async () => {
     const sheets = this.selectedSheets();
-    this.setState({ openingPdf: true, error: null });
+    if (sheets.length === 0) return;
+
+    this.setState({ advancedPrinting: true, error: null });
     try {
       const { openPdfForPrinting } = await import('../../io/print');
-      await openPdfForPrinting(
+      const keepPreviewOpen = await openPdfForPrinting(
         { ...this.props.drawing, sheets },
         this.props.title ?? 'TinyCAD Print',
       );
-      this.props.dispatch(actionCancelDialog());
+      if (keepPreviewOpen) {
+        this.setState({ advancedPrinting: false });
+      } else {
+        this.props.dispatch(actionCancelDialog());
+      }
     } catch (error) {
       this.setState({
-        openingPdf: false,
+        advancedPrinting: false,
         error: this.props.t('dialogues.printPreview.pdfOpenFailed', {
           error: (error as Error).message,
         }),
@@ -534,7 +540,7 @@ class PrintPreviewDialog extends React.PureComponent<
   }
 
   handleClickCancel() {
-    if (this.state.printing || this.state.openingPdf) return;
+    if (this.state.printing || this.state.advancedPrinting) return;
     this.props.dispatch(actionCancelDialog());
   }
 
@@ -572,8 +578,8 @@ class PrintPreviewDialog extends React.PureComponent<
     const sheets = this.props.drawing.sheets;
     const hasMultiplePages = sheets.length > 1;
     const isElectron = !!window.electronAPI?.printDocument;
-    const { settings, savedSettings, loading, printing, openingPdf, error } = this.state;
-    const busy = printing || openingPdf;
+    const { settings, savedSettings, loading, printing, advancedPrinting, error } = this.state;
+    const busy = printing || advancedPrinting;
     const canUseSettings = this.canUseSettings();
     const selectedCount = this.state.selectedPages.filter(p => p).length;
 
@@ -665,7 +671,7 @@ class PrintPreviewDialog extends React.PureComponent<
                   disabled={busy || selectedCount === 0}
                   title={t('dialogues.printPreview.advancedPrintHint')}
                 >
-                  {openingPdf ? <Spinner size="tiny" /> : t('dialogues.printPreview.advancedPrint')}
+                  {advancedPrinting ? <Spinner size="tiny" /> : t('dialogues.printPreview.advancedPrint')}
                 </Button>
               )}
               <Button

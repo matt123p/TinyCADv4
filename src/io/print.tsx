@@ -271,5 +271,5 @@ export async function openPdfForPrinting(
   title: string,
 ) {
   const blob = await generatePdfBlob(drawing, title);
-  await window.electronAPI.openPrintPdf(await blobToBase64(blob));
+  return window.electronAPI.openPrintPdf(await blobToBase64(blob));
 }

@@ -80,7 +80,7 @@ declare global {
             sendAppClosingResponse: (saveNeeded: boolean) => void;
             
             // PDF printing and export
-            openPrintPdf: (pdfBase64: string) => Promise<void>;
+            openPrintPdf: (pdfBase64: string) => Promise<boolean | void>;
             getPrinters: () => Promise<{ name: string; displayName: string }[]>;
             printDocument: (options: {
                 html: string;

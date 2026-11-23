@@ -147,7 +147,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Get list of available printers
     getPrinters: () => ipcRenderer.invoke('get-printers'),
     
-    // Print HTML content to a specific printer (uses our custom preview dialog)
+    // Print the sheets selected in TinyCAD’s print preview
     printDocument: (options) => ipcRenderer.invoke('print-document', options),
 
     openNewWindow: (arg) => ipcRenderer.send('open-new-window', arg),

@@ -672,33 +672,43 @@ function createWindow({ openAbout = false } = {}) {
       });
 
       try {
-        const waitForPrintLayout = () => printWindow.webContents.executeJavaScript(`
-          new Promise((resolve) => {
-            const waitForImages = Promise.all(
-              Array.from(document.images || []).map((image) => {
-                if (image.complete) {
-                  return Promise.resolve();
-                }
+        await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(options.html)}`);
+        if (process.platform === 'linux') {
+          // The loaded document has its images. Flush layout to start any font
+          // loads without waiting for animation frames from the hidden window.
+          await printWindow.webContents.executeJavaScript(`
+            (async () => {
+              document.body.getBoundingClientRect();
+              await document.fonts.ready;
+            })()
+          `);
+        } else {
+          const waitForPrintLayout = () => printWindow.webContents.executeJavaScript(`
+            new Promise((resolve) => {
+              const waitForImages = Promise.all(
+                Array.from(document.images || []).map((image) => {
+                  if (image.complete) {
+                    return Promise.resolve();
+                  }
 
-                return new Promise((imageResolve) => {
-                  image.addEventListener('load', imageResolve, { once: true });
-                  image.addEventListener('error', imageResolve, { once: true });
+                  return new Promise((imageResolve) => {
+                    image.addEventListener('load', imageResolve, { once: true });
+                    image.addEventListener('error', imageResolve, { once: true });
+                  });
+                })
+              );
+
+              const waitForFonts = document.fonts?.ready ?? Promise.resolve();
+
+              Promise.all([waitForImages, waitForFonts]).then(() => {
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(resolve);
                 });
-              })
-            );
-
-            const waitForFonts = document.fonts?.ready ?? Promise.resolve();
-
-            Promise.all([waitForImages, waitForFonts]).then(() => {
-              requestAnimationFrame(() => {
-                requestAnimationFrame(resolve);
               });
             });
-          });
-        `);
-
-        await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(options.html)}`);
-        await waitForPrintLayout();
+          `);
+          await waitForPrintLayout();
+        }
 
         const printOptions = {
           silent: true,
@@ -733,7 +743,7 @@ function createWindow({ openAbout = false } = {}) {
       const directory = path.join(app.getPath('temp'), 'TinyCAD-Print');
       await fs.promises.mkdir(directory, { recursive: true });
 
-      // Leave recent files available to external viewers, including after TinyCAD closes.
+      // Keep recent files available to PDF viewers and prune older previews.
       const expiresBefore = Date.now() - 7 * 24 * 60 * 60 * 1000;
       const files = await fs.promises.readdir(directory);
       await Promise.allSettled(files.filter(name => /^TinyCAD-[\da-f-]{36}\.pdf$/.test(name)).map(async name => {
@@ -745,6 +755,12 @@ function createWindow({ openAbout = false } = {}) {
       const file = path.join(directory, `TinyCAD-${randomUUID()}.pdf`);
       await fs.promises.writeFile(file, pdf, { flag: 'wx', mode: 0o600 });
       try {
+        if (process.platform === 'linux') {
+          const { openPdfPrintWindow } = await import('./printPdf.js');
+          await openPdfPrintWindow(mainWindow, file);
+          return true;
+        }
+
         const error = await shell.openPath(file);
         if (error) throw new Error(error);
       } catch (error) {

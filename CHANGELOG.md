@@ -9,7 +9,7 @@
 - Import supported SPICE definitions from KiCad symbol libraries, including embedded models and external model files supplied with the import. TinyCAD preserves pin mappings and parameter overrides in editable Custom definitions.
 - View and enter page dimensions in millimetres (mm) or inches (in) in Page Size.
 - Set and save the printer, paper size, orientation, copies, colour, and duplex options alongside the drawing in desktop Print Preview. Print uses the displayed settings and sends the job directly to the selected printer or system default.
-- Advanced Print opens a PDF of the selected sheets in the system PDF viewer for printing.
+- Open a PDF of the selected sheets for printing with Advanced Print.
 
 ### Changed
 
@@ -18,6 +18,8 @@
 
 ### Fixed
 
+- Fix Print on Linux when launching TinyCAD from development tools on GNOME Wayland, including the VS Code Snap.
+- On Linux, Advanced Print opens the selected sheets as a PDF in TinyCAD and displays the system print dialog. Canceling keeps the PDF open.
 - Show the editable Name field by default on newly placed standard library symbols and remove duplicate name captions from their artwork.
 - Demonstrate Markdown formatting in the notes on bundled equipment and network drawings.
 
