@@ -2,7 +2,8 @@ import { Dispatch } from 'react';
 import { docDrawing } from '../state/undo/undo';
 import TPrintSheet from '../components/svg/PrintSheet';
 import React from 'react';
-import { render, unmountComponentAtNode } from 'react-dom';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import PDFDocument from 'pdfkit';
 import SVGtoPDF from 'svg-to-pdfkit';
 import blobStream from 'blob-stream';
@@ -138,8 +139,10 @@ function generatePdfBlob(
         );
 
         const element = document.createElement('div');
+        const root = createRoot(element);
         try {
-          render(svg, element);
+          // SVGtoPDF reads the rendered SVG immediately.
+          flushSync(() => root.render(svg));
           const drawing = element.children[0] as SVGElement;
           doc.addPage({
             size: [
@@ -149,87 +152,13 @@ function generatePdfBlob(
           });
           SVGtoPDF(doc, drawing, 0, 0, { useCSS: true });
         } finally {
-          unmountComponentAtNode(element);
-          element.remove();
+          root.unmount();
         }
       }
 
       doc.end();
     }).catch(reject);
   });
-}
-
-// Generate HTML content with embedded SVG for printing
-function generatePrintHtml(state: docDrawing): string {
-  const sheets = state.docStore.present.drawing.sheets;
-  
-  // Build SVG content for all sheets
-  let svgContent = '';
-  
-  for (let si = 0; si < sheets.length; ++si) {
-    const sheet = sheets[si];
-    const svg = (
-      <TPrintSheet
-        items={sheet.items}
-        page_size={sheet.details.page_size}
-        details={sheet.details}
-        options={sheet.options}
-        images={sheet.images}
-        hatches={sheet.hatches}
-        netlistTypes={state.docStore.present.drawing.netlistTypes}
-      />
-    );
-
-    const element = document.createElement('div');
-    render(svg, element);
-    
-    // Add page break between sheets (except for the last one)
-    const pageBreak = si < sheets.length - 1 ? 'page-break-after: always;' : '';
-    svgContent += `<div style="${pageBreak}">${element.innerHTML}</div>`;
-    unmountComponentAtNode(element);
-  }
-
-  const sheet1 = sheets[0];
-  const isLandscape = sheet1.details.page_size[0] > sheet1.details.page_size[1];
-  
-  // Create a complete HTML document for printing
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>${state.altStore.file?.name ?? 'TinyCAD Drawing'}</title>
-  <style>
-    @page {
-      size: ${isLandscape ? 'landscape' : 'portrait'};
-      margin: 10mm;
-    }
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: Arial, sans-serif;
-    }
-    svg {
-      max-width: 100%;
-      height: auto;
-      display: block;
-    }
-    @media print {
-      body {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-    }
-  </style>
-</head>
-<body>
-  ${svgContent}
-</body>
-</html>`;
-
-  return html;
 }
 
 export function pdfPrint(

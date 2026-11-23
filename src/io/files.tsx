@@ -29,7 +29,8 @@ import { saveAs } from 'file-saver';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../model/tclib';
 import { libCache } from './libCache';
 import TPrintSheet from '../components/svg/PrintSheet';
-import { render } from 'react-dom';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Coordinate, DocItem, DocItemTypes, dsnPin } from '../model/dsnItem';
 import update from 'immutability-helper';
 
@@ -707,8 +708,7 @@ export function exportSvg(
     ? `${state.altStore.file.name.replace(/\.[^.]+$/, '')}.svg`
     : 'drawing.svg';
 
-  const element = document.createElement('div');
-  render(
+  const svg = (
     <TPrintSheet
       items={sheet.items}
       page_size={sheet.details.page_size}
@@ -716,15 +716,24 @@ export function exportSvg(
       options={sheet.options}
       images={sheet.images}
       hatches={sheet.hatches}
-    />,
-    element,
+    />
   );
 
-  let blob = new Blob(
+  const element = document.createElement('div');
+  const root = createRoot(element);
+  let markup: string;
+  try {
+    flushSync(() => root.render(svg));
+    markup = new XMLSerializer().serializeToString(element.children[0]);
+  } finally {
+    root.unmount();
+  }
+
+  const blob = new Blob(
     [
       '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' +
       '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
-      new XMLSerializer().serializeToString(element.children[0]),
+      markup,
     ],
     { type: 'image/svg+xml' },
   );
