@@ -20,6 +20,92 @@ test.afterAll(async () => {
   await app?.close();
 });
 
+test('restores project tabs and the active file, including an explicitly empty tab strip', async ({ page }, info) => {
+  await mkdir(info.project.outputDir, { recursive: true });
+  const root = await mkdtemp(path.join(info.project.outputDir, 'project-tab-session-'));
+  try {
+    const otherRoot = path.join(root, 'Other project');
+    await mkdir(otherRoot);
+    let selectedFolder = root;
+    const api = await layoutRuntime();
+    const drawing = api.blank();
+    const board = api.createBoard('Board', 2, [
+      { x: 0, y: 0 }, { x: 20e6, y: 0 }, { x: 20e6, y: 20e6 }, { x: 0, y: 20e6 },
+    ]);
+    await writeFile(path.join(root, 'Circuit.dsn'), await api.encodeDrawing(drawing, 'xml'));
+    await writeFile(path.join(root, 'Board.dpn'), await api.encodeBoard(board));
+    await writeFile(path.join(root, 'Notes.md'), '# Build notes');
+    await writeFile(path.join(root, 'Draft.dsn'), '<TinyCADSheets><TinyCAD><NAME>Draft</NAME></TinyCAD></TinyCADSheets>');
+    await writeFile(path.join(root, 'Project.tcproject'), api.encodeProjectSettings({
+      projectId: crypto.randomUUID(), revisionId: crypto.randomUUID(), title: 'Session',
+      requiredFeatures: [], entries: [
+        { kind: 'schematic', id: drawing.documentId, path: 'Circuit.dsn' },
+        { kind: 'board', id: board.boardId, path: 'Board.dpn' },
+      ],
+    }));
+    await installProjectBridge(page, root, undefined, undefined, {
+      showOpenDialog: async () => ({ canceled: false, filePaths: [selectedFolder] }),
+    });
+    await page.goto(app.baseURL);
+    const activity = page.getByRole('group', { name: 'Project activity bar' });
+    const tree = page.getByRole('region', { name: 'Projects', exact: true });
+    if (!(await tree.isVisible())) await activity.getByRole('button', { name: 'Projects', exact: true }).click();
+    const tabs = page.getByRole('tablist', { name: 'Project files' });
+    const labels = ['Notes.md', 'Circuit.dsn', 'Board.dpn', 'Draft.dsn'];
+    const expectTabOrder = async () => {
+      const openTabs = tabs.getByRole('tab');
+      await expect(openTabs).toHaveCount(labels.length);
+      for (const [index, label] of labels.entries()) await expect(openTabs.nth(index)).toHaveAccessibleName(label);
+    };
+    for (const name of labels) {
+      if (name === 'Notes.md') {
+        await tree.getByRole('button', { name, exact: true }).press('Shift+F10');
+        await page.getByRole('menuitem', { name: 'Open', exact: true }).click();
+      } else await tree.getByRole('button', { name, exact: true }).click();
+      await expect(tabs.getByRole('tab', { name, exact: true })).toBeVisible();
+    }
+    await expectTabOrder();
+    await tabs.getByRole('tab', { name: 'Notes.md', exact: true }).click();
+    const close = async () => {
+      await page.evaluate(() => window.hierarchyTestMenu('file-close-project'));
+      await expect(activity).toHaveCount(0);
+    };
+    const reopen = () => page.evaluate(() => window.hierarchyTestMenu('file-open-project-folder'));
+    await close();
+    await reopen();
+    await expectTabOrder();
+    await expect(tabs.getByRole('tab', { name: 'Notes.md', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await page.reload();
+    await expectTabOrder();
+    await expect(tabs.getByRole('tab', { name: 'Notes.md', exact: true })).toHaveAttribute('aria-selected', 'true');
+
+    selectedFolder = otherRoot;
+    await reopen();
+    await expect(tree.getByRole('button', { name: 'Project folder actions' })).toHaveAttribute('title', 'Other project');
+    await expect(tabs).toHaveCount(0);
+    selectedFolder = root;
+    await reopen();
+    await expectTabOrder();
+
+    for (const name of [...labels].reverse()) {
+      await tabs.getByRole('button', { name: 'Close ' + name, exact: true }).click();
+      await expect(tabs.getByRole('tab', { name, exact: true })).toHaveCount(0);
+    }
+    await expect(tabs).toHaveCount(0);
+    await close();
+    await reopen();
+    await expect(tree).toBeVisible();
+    await expect(tabs).toHaveCount(0);
+    await page.reload();
+    await expect(tree).toBeVisible();
+    await expect(tabs).toHaveCount(0);
+    await close();
+  } finally {
+    await page.close();
+    await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  }
+});
+
 test('opens project files into tabs and hosts PCB tools in the shared sidebar', async ({ page }, info) => {
   await mkdir(info.project.outputDir, { recursive: true });
   const root = await mkdtemp(path.join(info.project.outputDir, 'project-shell-'));

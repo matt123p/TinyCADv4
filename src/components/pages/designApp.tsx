@@ -31,6 +31,8 @@ import { isBoardFile } from '../../../shared/drawingFiles';
 import { BrowserSheetData } from '../../model/dsnView';
 import { boardOpened, circuitOpened, confirmBoardClose, confirmCircuitOpen, editFootprintLibrary, saveActiveBoard, boardHistoryCommand, editorHeaderDocument } from '../../io/boardWorkspaceEvents';
 import { projectDocumentOpened, projectFilesChanged, projectFolderOpened } from '../../io/projectStorage';
+import { readProjectTabSession, writeProjectTabSession } from '../../io/projectTabSession';
+import type { ProjectTabLocation, ProjectTabRestore } from '../../io/projectTabSession';
 import { chooseProjectFolder, closeProjectMode, recentDriveProjectFolders, rememberDriveProjectFolder, saveProjectTabs, startupMode } from '../../io/projectMode';
 import type { docDrawing } from '../../state/undo/undo';
 import type { ProjectLocation } from '../../io/projectStorage';
@@ -231,6 +233,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const activateBoard = useCallback((id: string) => {
     selectBoard(id);
     documents.select();
+    setUntrackedTabClosed(true);
     setGitReview(undefined);
     setActiveWorkspace('pcb');
   }, [selectBoard, documents.select]);
@@ -245,7 +248,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       const session = existing.document.session;
       if (existing.document.projectRootId && !document.projectRootId) {
         activateBoard(existing.id);
-        return;
+        return existing.id;
       }
       if (!session.dirty && document.projectRootId && !existing.document.projectRootId)
         replaceBoard(existing.id, document);
@@ -256,11 +259,13 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       else if (document.probe)
         replaceBoard(existing.id, { ...existing.document, probe: document.probe });
       activateBoard(existing.id);
-      return;
+      return existing.id;
     }
     if (!projectMode && current?.document.session.dirty &&
       !window.confirm('Discard unsaved edits to the current PCB?')) return;
-    activateBoard(addBoard(document, !projectMode));
+    const id = addBoard(document, !projectMode);
+    activateBoard(id);
+    return id;
   }, [activateBoard, addBoard, getBoards, projectMode, replaceBoard]);
 
   const refreshBoardTab = useCallback(async (id: string, document: BoardWorkspaceDocument) => {
@@ -413,6 +418,9 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const [closingProject, setClosingProject] = useState(false);
   const [closeProjectError, setCloseProjectError] = useState('');
   const [openedProjectRoot, setOpenedProjectRoot] = useState<ProjectLocation>();
+  const [projectTabRoot, setProjectTabRoot] = useState<{ id: string; account: string }>();
+  const pendingProjectRoot = React.useRef<ProjectLocation>();
+  const [restoreTabs, setRestoreTabs] = useState<ProjectTabRestore>();
   const [footprintsHost, setFootprintsHost] = useState<HTMLDivElement>(null);
   const [pcbRightPanelHost, setPcbRightPanelHost] = useState<HTMLElement>(null);
   const [sidePanelWidth, setSidePanelWidth] = useState(loadSidePanelWidth);
@@ -421,7 +429,19 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const [simulationToolbarTarget, setSimulationToolbarTarget] =
     useState<HTMLSpanElement>(null);
 
+  const loadProjectTabs = useCallback((root: ProjectLocation) => {
+    const account = store.getState().altStore.user?.id || '';
+    const session = readProjectTabSession(root.id, account);
+    setProjectTabRoot({ id: root.id, account });
+    setRestoreTabs(session && { root: root.id, session });
+    if (session) setUntrackedTabClosed(true);
+  }, [store]);
+
   const enterProject = useCallback((root: ProjectLocation) => {
+    if (process.env.TARGET_SYSTEM === 'google') {
+      rememberDriveProjectFolder(store.getState().altStore.user?.id || '', root);
+    }
+    loadProjectTabs(root);
     setSideBySide(false);
     setOpenedProjectRoot(root);
     setGitRoot(root);
@@ -429,25 +449,20 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     setProjectMode(true);
     setProjectPanel('projects');
     setSidePanelVisible(true);
-  }, []);
+  }, [loadProjectTabs, store]);
+
+  const useDefaultProjectRoot = useCallback((root: ProjectLocation) => {
+    if (!projectTabRoot && !openedProjectRoot) loadProjectTabs(root);
+  }, [loadProjectTabs, openedProjectRoot, projectTabRoot]);
 
   useEffect(() => {
     if (!ProjectBrowser) return;
-    const openProject = (event: CustomEvent<ProjectLocation>) => {
-      projectModeChanged.current = true;
-      if (process.env.TARGET_SYSTEM === 'google') {
-        rememberDriveProjectFolder(store.getState().altStore.user?.id || '', event.detail);
-      }
-      enterProject(event.detail);
-    };
     const browse = () => setChoosingProject(true);
-    window.addEventListener(projectFolderOpened, openProject);
     if (DriveProjectFolderDialog) window.addEventListener(chooseProjectFolder, browse);
     return () => {
-      window.removeEventListener(projectFolderOpened, openProject);
       window.removeEventListener(chooseProjectFolder, browse);
     };
-  }, [enterProject, store]);
+  }, []);
 
   useEffect(() => {
     if (!loadProjectServices) return;
@@ -483,7 +498,8 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     if (closingProject || state.altStore.saveInProgress || documents.writing.size || batch.current) return;
     const closingBoards = projectBoardsToClose();
     const linkedDrawing = state.altStore.file.project;
-    const dirtyDrawing = linkedDrawing && state.altStore.savedVersion !== state.docStore.present.drawingVersion;
+    const unlinkedProjectDrawing = !linkedDrawing && state.altStore.file.folderId && schematicFileTabKey(state.altStore.file);
+    const dirtyDrawing = (linkedDrawing || unlinkedProjectDrawing) && state.altStore.savedVersion !== state.docStore.present.drawingVersion;
     setClosingProject(true);
     setCloseProjectError('');
     try {
@@ -494,7 +510,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           return;
         }
       }
-      if (linkedDrawing || closingBoards.length || Object.keys(state.schematicTabs?.inactive ?? {}).length) {
+      if (linkedDrawing || unlinkedProjectDrawing || closingBoards.length || Object.keys(state.schematicTabs?.inactive ?? {}).length) {
         const { closeLinkedSchematic, saveProjectDrawing, closeProjectSchematicTab, saveInactiveSchematic } = await loadProjectServices();
         for (const { document: { session } } of closingBoards) {
           if (save && session.dirty) {
@@ -503,7 +519,8 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           }
         }
         if (save && dirtyDrawing) {
-          await saveProjectDrawing(dispatch, store.getState);
+          if (linkedDrawing) await saveProjectDrawing(dispatch, store.getState);
+          else await saveSchematicFile(dispatch, store.getState);
           const current = store.getState();
           if (current.altStore.savedVersion !== current.docStore.present.drawingVersion) {
             setConfirmCloseProject(false);
@@ -515,18 +532,28 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           await closeProjectSchematicTab(dispatch, store.getState, key, !save);
         }
         if (linkedDrawing) await closeLinkedSchematic(dispatch, store.getState, !save && dirtyDrawing);
+        else if (unlinkedProjectDrawing)
+          await closeProjectSchematicTab(dispatch, store.getState, unlinkedProjectDrawing, !save);
         removeBoards(closingBoards.map(({ id }) => id));
         if (!getBoards().activeId) setActiveWorkspace('circuit');
       }
       documents.clear();
       projectModeChanged.current = true;
-      setProjectMode(false);
-      setOpenedProjectRoot(undefined);
-      setGitRoot(undefined);
       setGitCount(0);
       setGitReview(undefined);
-      setProjectPanel('projects');
-      setSidePanelVisible(true);
+      if (pendingProjectRoot.current) {
+        const root = pendingProjectRoot.current;
+        pendingProjectRoot.current = undefined;
+        enterProject(root);
+      } else {
+        setProjectMode(false);
+        setOpenedProjectRoot(undefined);
+        setProjectTabRoot(undefined);
+        setRestoreTabs(undefined);
+        setGitRoot(undefined);
+        setProjectPanel('projects');
+        setSidePanelVisible(true);
+      }
       setConfirmCloseProject(false);
     } catch (error) {
       setCloseProjectError(error instanceof Error ? error.message : String(error));
@@ -534,24 +561,42 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     } finally {
       setClosingProject(false);
     }
-  }, [closingProject, dispatch, documents, getBoards, removeBoards, store, t]);
+  }, [closingProject, dispatch, documents, enterProject, getBoards, removeBoards, store, t]);
+
+  function cancelProjectClose() {
+    pendingProjectRoot.current = undefined;
+    setConfirmCloseProject(false);
+  }
 
   useEffect(() => {
-    if (!projectMode) return;
-    const requestClose = () => {
+    const requestClose = (nextRoot?: ProjectLocation) => {
       const state = store.getState();
-      if (closingProject || state.altStore.saveInProgress || documents.writing.size || batch.current) return;
+      if (closingProject || restoreTabs || state.altStore.saveInProgress || documents.writing.size || batch.current) return;
+      pendingProjectRoot.current = nextRoot;
       setCloseProjectError('');
       if (
         documents.hasDirty() || projectBoardsToClose().some(({ document }) => document.session.dirty) ||
-        (state.altStore.file.project && state.altStore.savedVersion !== state.docStore.present.drawingVersion) ||
+        ((state.altStore.file.project || state.altStore.file.folderId) &&
+          state.altStore.savedVersion !== state.docStore.present.drawingVersion) ||
         Object.values(state.schematicTabs?.inactive ?? {}).some(schematicTabDirty)
       ) setConfirmCloseProject(true);
       else void finishCloseProject(false);
     };
-    window.addEventListener(closeProjectMode, requestClose);
-    return () => window.removeEventListener(closeProjectMode, requestClose);
-  }, [closingProject, documents, finishCloseProject, getBoards, projectMode, store]);
+    const openProject = (event: CustomEvent<ProjectLocation>) => {
+      projectModeChanged.current = true;
+      const root = event.detail;
+      if (projectMode && projectTabRoot) {
+        if (root.id !== projectTabRoot.id) requestClose(root);
+      } else enterProject(root);
+    };
+    const close = () => requestClose();
+    window.addEventListener(projectFolderOpened, openProject);
+    if (projectMode) window.addEventListener(closeProjectMode, close);
+    return () => {
+      window.removeEventListener(projectFolderOpened, openProject);
+      window.removeEventListener(closeProjectMode, close);
+    };
+  }, [closingProject, documents, enterProject, finishCloseProject, getBoards, projectMode, projectTabRoot, restoreTabs, store]);
 
   useEffect(() => {
     if (props.standardLibraryNavigation || props.editLibrary) {
@@ -662,12 +707,26 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     ...schematicTabs.map(({ key, tab }) => ({
       id: 'schematic:' + key, name: tab.file.name, title: tab.file.project?.documentPath ?? tab.file.name,
       dirty: schematicTabDirty(tab),
+      location: tab.file.project ? {
+        kind: 'schematic', location: {
+          id: tab.file.project.id, name: tab.file.project.name, rootId: tab.file.project.rootId,
+          entryId: tab.file.project.entryId, folderId: tab.file.project.folderId,
+        },
+      } as ProjectTabLocation
+        : typeof tab.file.id === 'string' && tab.file.folderId
+          ? { kind: 'file', id: tab.file.id, folder: tab.file.folderId } as ProjectTabLocation : undefined,
     })),
-    ...boards.tabs.map(({ id, document: { session } }) => ({
+    ...boards.tabs.map(({ id, document: { session, projectRootId, fileId, folderId, ancestorIds } }) => ({
       id: 'board:' + id, name: session.path, title: session.path, dirty: session.dirty,
+      location: session.projectId && projectRootId
+        ? { kind: 'board', rootId: projectRootId, boardId: session.board.boardId } as ProjectTabLocation
+        : fileId && folderId ? {
+          kind: 'file', id: fileId, folder: folderId, path: session.path, ancestors: ancestorIds,
+        } as ProjectTabLocation : undefined,
     })),
     ...documents.files.map((file) => ({
       id: 'file:' + file.id, name: file.name, title: file.name, dirty: dirtyProjectDocument(file),
+      location: { kind: 'file', id: file.id, folder: file.folder, ancestors: file.ancestors } as ProjectTabLocation,
     })),
   ], [schematicTabs, boards, documents.files]);
   const [fileTabOrder, setFileTabOrder] = useState<string[]>([]);
@@ -684,11 +743,20 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   const schematicDirty = schematicVersion !== schematicSavedVersion;
   if (!selectedSchematic && !props.editLibrary && (schematicDirty || !untrackedTabClosed)) {
     orderedFileTabs.unshift({ id: untrackedSchematicTab, name: currentFile.name,
-      title: currentFile.name, dirty: schematicDirty });
+      title: currentFile.name, dirty: schematicDirty, location: undefined });
   }
   const selectedFileTab = gitReview ? 'git' : documents.active ? 'file:' + documents.active
     : pcbActive && boards.activeId ? 'board:' + boards.activeId
     : selectedSchematic ? 'schematic:' + selectedSchematic : untrackedSchematicTab;
+  useEffect(() => {
+    if (!projectMode || !projectTabRoot || restoreTabs || closingProject) return;
+    const tabs = orderedFileTabs.filter(({ location }) => location);
+    const active = tabs.findIndex(({ id }) => id === selectedFileTab);
+    writeProjectTabSession(projectTabRoot.id, projectTabRoot.account, {
+      tabs: tabs.map(({ location }) => location),
+      active: active < 0 ? undefined : active,
+    });
+  }, [projectMode, projectTabRoot, restoreTabs, closingProject, orderedFileTabs, selectedFileTab]);
   const pendingCloseBoard = boards.tabs.find(({ id }) => id === boardToClose);
   const pendingCloseFile = documents.files.find(({ id }) => id === fileToClose);
 
@@ -766,6 +834,13 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       activateCircuit();
     } else if (id.startsWith('board:')) activateBoard(id.slice(6));
     else if (id.startsWith('file:')) documents.select(id.slice(5));
+  }
+
+  function completeTabRestore(order: string[], active?: string) {
+    setFileTabOrder(order);
+    setUntrackedTabClosed(true);
+    if (active) selectProjectTab(active);
+    setRestoreTabs(undefined);
   }
 
   function requestTabClose(id: string, dirty: boolean) {
@@ -870,6 +945,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
   }
   const openProjectDocument = async (file: Parameters<typeof documents.open>[0]) => {
     await documents.open(file);
+    setUntrackedTabClosed(true);
     setGitReview(undefined);
     setTabError('');
   };
@@ -948,7 +1024,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
         </Suspense>
       )}
       {confirmCloseProject && (
-        <Dialog open onOpenChange={(_, data) => !data.open && !closingProject && setConfirmCloseProject(false)}>
+        <Dialog open onOpenChange={(_, data) => !data.open && !closingProject && cancelProjectClose()}>
           <DialogSurface>
             <DialogBody>
               <DialogTitle>{t('projects.closeProject')}</DialogTitle>
@@ -959,7 +1035,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
               <DialogActions>
                 <Button appearance="primary" disabled={closingProject} onClick={(): void => { void finishCloseProject(true); }}>{t('projects.saveAndClose')}</Button>
                 <Button disabled={closingProject} onClick={(): void => { void finishCloseProject(false); }}>{t('projects.discardAndClose')}</Button>
-                <Button disabled={closingProject} onClick={() => setConfirmCloseProject(false)}>{t('common.cancel')}</Button>
+                <Button disabled={closingProject} onClick={cancelProjectClose}>{t('common.cancel')}</Button>
               </DialogActions>
             </DialogBody>
           </DialogSurface>
@@ -1075,6 +1151,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
             <>
               <div className="left-panel-section" hidden={!panelsVisible || projectPanel !== 'projects'}>
                 <Suspense fallback={null}><ProjectBrowser openedRoot={openedProjectRoot} onGitRoot={openGitRoot}
+                  onDefaultRoot={useDefaultProjectRoot} restoreTabs={restoreTabs} onRestoreTabs={completeTabRestore}
                   activeFileId={activeProjectFile?.id ?? (pcbActive ? activeBoard?.document.fileId : typeof currentFile.id === 'string' ? currentFile.id : undefined)}
                   schematicActive={!activeProjectFile && !pcbActive}
                   onGitHistory={gitAvailable ? (filename) => {
@@ -1106,14 +1183,14 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
         <div className="main-content-area">
           {projectMode && orderedFileTabs.length > 0 && (
             <div className="project-file-tabs">
-              <TabList aria-label="Project files" selectedValue={selectedFileTab}
+              <TabList aria-label="Project files" aria-busy={!!restoreTabs} selectedValue={selectedFileTab}
                 onTabSelect={(_, data) => selectProjectTab(String(data.value))}>
                 {orderedFileTabs.map(({ id, name, title, dirty }) => {
-                  const closeDisabled = savingTabBatch || schematicSaving ||
+                  const closeDisabled = !!restoreTabs || savingTabBatch || schematicSaving ||
                     (id.startsWith('file:') && documents.writing.has(id.slice(5)));
                   const closeLabel = t('projects.closeTab', { name: title, defaultValue: 'Close {{name}}' });
                   return <div className="project-file-tab" key={id} role="presentation">
-                    <Tab value={id} title={title} icon={<ProjectFileIcon name={name} />} disabled={savingTabBatch}
+                    <Tab value={id} title={title} icon={<ProjectFileIcon name={name} />} disabled={!!restoreTabs || savingTabBatch}
                       onKeyDown={(event) => {
                         if (event.key !== 'Delete' || closeDisabled) return;
                         event.preventDefault();
@@ -1167,7 +1244,8 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           </section>
         )}
         <div className={'main-content-area' + (splitVisible ? ' project-design-split' : '')}
-          hidden={projectMode && !!(gitReview || activeProjectFile)}>
+          hidden={projectMode && (!!(gitReview || activeProjectFile) ||
+            untrackedTabClosed && !orderedFileTabs.length && !props.editLibrary)}>
           {(!pcbActive || splitVisible) && (
           <div className="project-design-pane" role={splitVisible ? 'group' : undefined}
             aria-label={splitVisible ? 'Schematic pane' : undefined}

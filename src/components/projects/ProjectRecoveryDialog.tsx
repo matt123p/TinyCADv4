@@ -23,9 +23,12 @@ export default function ProjectRecoveryDialog({
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const store = useStore<docDrawing>();
-  const close = () => dispatch(actionCancelDialog());
+  const close = () => {
+    dispatch(actionCancelDialog());
+    prompt.onComplete?.();
+  };
   const open = (choice: 'restore' | 'discard') => {
-    close();
+    dispatch(actionCancelDialog());
     void openProjectDrawing(
       {
         type: 'file-open-project',
@@ -34,7 +37,7 @@ export default function ProjectRecoveryDialog({
       },
       dispatch,
       store.getState,
-    );
+    ).finally(() => prompt.onComplete?.());
   };
   return (
     <Dialog

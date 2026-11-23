@@ -56,6 +56,10 @@ Use the [shared TinyCAD editor design](tinycad-ui-design.md#shared-editor-contra
 
 In Project mode, open each supported file in a tab labelled with its filename. Reopen an existing tab when the same file is selected again. Keep file tabs distinct from navigation within a file, such as schematic sheet tabs. Switching tabs retains edits and undo history. Show which files have unsaved edits. Each tab has a close icon, and Delete closes the focused tab after any unsaved changes are resolved. Put the icon-only Save All command beside Save in the editor toolbar. Provide Download as a separate context-menu action for unsupported file types.
 
+Remember each project's open saved files, tab order, and active tab in local editor preferences. Reopening the folder restores those tabs, including an empty tab strip when all files were closed. Skip files that are unavailable. Saving and recovery continue through the existing document workflows.
+
+The Electron app and browser use the same project tab history limits. Keep up to 50 sessions within a combined 256 KiB budget in Chromium local storage. Prune the least recently used sessions first, and reclaim additional session space if storage is full. Other editor preferences keep their own storage entries.
+
 In Electron and Drive, **New file…** creates a text document in the selected folder. Notes, Markdown and CSV open in editable tabs. Markdown offers a local preview. Images and paginated PDFs open as read-only tabs. An edited tab shows an asterisk until saved. Linked schematics and linked or unlinked PCB files open in separate tabs with folder-relative labels. Switching tabs retains pending edits and undo history for each drawing and board. Save All includes inactive schematic and PCB tabs.
 
 **Save** writes the active file to its existing path. **Save All** writes each modified editable file across the open tabs, including settings when modified. If a file cannot be saved, identify it and keep its pending edits. Report which files were saved and which still need attention. Protect each file against overwriting a newer saved version.

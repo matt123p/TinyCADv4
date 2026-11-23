@@ -64,7 +64,8 @@ import {
 import { projectFileName } from '../../io/projectStorage';
 import type { ProjectItem, ProjectLocation } from '../../io/projectStorage';
 import type { ProjectTrashPreview } from '../../io/projectTrash';
-import { linkedSchematicSnapshot, openSchematicTabs, schematicTabDirty } from '../../state/schematicTabs';
+import { linkedSchematicSnapshot, openSchematicTabs, schematicFileTabKey, schematicTabDirty, schematicTabKey } from '../../state/schematicTabs';
+import type { ProjectTabRestore, ProjectTabLocation } from '../../io/projectTabSession';
 import type { docDrawing } from '../../state/undo/undo';
 import { ProjectNameDialog } from './ProjectNameDialog';
 import { ProjectRevisionDialog } from './ProjectRevisionDialog';
@@ -168,6 +169,9 @@ interface NamePrompt {
 
 export default function ProjectBrowser({
   openedRoot,
+  onDefaultRoot,
+  restoreTabs,
+  onRestoreTabs,
   activeFileId,
   schematicActive,
   onGitRoot,
@@ -180,11 +184,14 @@ export default function ProjectBrowser({
   onActivateCircuit,
 }: {
   openedRoot?: ProjectLocation;
+  onDefaultRoot(root: ProjectLocation): void;
+  restoreTabs?: ProjectTabRestore;
+  onRestoreTabs(order: string[], active?: string): void;
   activeFileId?: string;
   schematicActive?: boolean;
   onGitRoot?(root?: ProjectLocation): void;
   onGitHistory?(filename: string): void;
-  onOpenBoard(document: BoardWorkspaceDocument): void;
+  onOpenBoard(document: BoardWorkspaceDocument): string | undefined;
   onRefreshBoard(fileId: string): Promise<void>;
   onOpenProjectDocument(file: ProjectDocumentLocation): Promise<void>;
   isProjectDocumentOpen(id: string): boolean;
@@ -298,7 +305,7 @@ export default function ProjectBrowser({
   const [settingsFailure, setSettingsFailure] = useState<string>();
   const marker = settingsMarkers.length === 1 ? settingsMarkers[0] : undefined;
   const settingsPending = marker && marker.id !== markerId && marker.id !== settingsFailure;
-  const blocked = busy || saving || Boolean(fileImport) || Boolean(settingsPending);
+  const blocked = busy || saving || Boolean(fileImport) || Boolean(settingsPending) || Boolean(restoreTabs);
   const loading = Boolean(folder &&
     (activeListing?.tree !== treeMode || activeListing.refresh !== refresh),
   );
@@ -311,6 +318,9 @@ export default function ProjectBrowser({
   const linkedPaths = context?.project.settings.entries || [];
   const reload = useCallback(() => setRefresh((value) => value + 1), []);
   useEffect(() => { if (activeTreeFile) setSelected(undefined); }, [activeTreeFile]);
+  useEffect(() => {
+    if (treeRoot && !openedRoot) onDefaultRoot(treeRoot);
+  }, [treeRoot, openedRoot, onDefaultRoot]);
 
   const gitRoot = context?.root ?? explicitRoot;
   useEffect(() => {
@@ -611,11 +621,86 @@ export default function ProjectBrowser({
       session,
       projectRootId: rootId,
       fileId: file.id,
+      folderId: file.folder,
       ancestorIds,
       reloadProjectBoard: () =>
         unlinkedBoardDocument(file, rootId, ancestorIds),
     };
   }
+
+  useEffect(() => {
+    if (!restoreTabs) return;
+    let current = true;
+    const { root, session } = restoreTabs;
+    const listings = new Map<string, Promise<ProjectItem[]>>();
+    const list = (folder: string) => {
+      if (!listings.has(folder)) listings.set(folder, projectRequest({ operation: 'list', folder, tree: true }));
+      return listings.get(folder);
+    };
+    const contexts = new Map<string, Promise<ProjectContext>>();
+    const readContext = (rootId: string) => {
+      if (!contexts.has(rootId)) contexts.set(rootId, (async (): Promise<ProjectContext | undefined> => {
+        const markers = (await list(rootId)).filter(isSettingsItem);
+        if (markers.length !== 1) return;
+        const marker = markers[0];
+        return { marker, root: { id: rootId, name: marker.name }, parent: undefined,
+          project: await readProject(marker.id, rootId) };
+      })());
+      return contexts.get(rootId);
+    };
+
+    async function openSavedTab(tab: ProjectTabLocation): Promise<string | undefined> {
+      if (tab.kind === 'schematic') {
+        onActivateCircuit();
+        await dispatch(fileOpenProject({ type: 'file-open-project', location: tab.location, restoringTab: true }) as any);
+        const key = schematicTabKey(tab.location);
+        return openSchematicTabs(store.getState()).some((item) => item.key === key) ? 'schematic:' + key : undefined;
+      }
+      if (tab.kind === 'board') {
+        const owner = await readContext(tab.rootId);
+        if (!owner || !current) return;
+        const document = await linkedBoardDocument(owner, tab.boardId);
+        const id = current && onOpenBoard(document);
+        return id ? 'board:' + id : undefined;
+      }
+      const file = (await list(tab.folder)).find(({ id, folder, unsupported }) =>
+        id === tab.id && !folder && !unsupported);
+      if (!file || !current) return;
+      const ancestors = tab.ancestors ?? [...new Set([root, tab.folder])];
+      if (isBoardFile(file.name)) {
+        const document = await unlinkedBoardDocument({ ...file, folder: tab.folder, path: tab.path ?? file.name }, root, ancestors);
+        const id = current && onOpenBoard(document);
+        return id ? 'board:' + id : undefined;
+      }
+      if (isDrawingFile(file.name)) {
+        await dispatch(fileOpenProjectSchematic(file, tab.folder) as any);
+        const key = schematicFileTabKey(file);
+        return openSchematicTabs(store.getState()).some((item) => item.key === key) ? 'schematic:' + key : undefined;
+      }
+      if (isProjectFile(file.name) || projectDocumentKind(file.name)) {
+        await onOpenProjectDocument({ ...file, folder: tab.folder, ancestors });
+        return 'file:' + file.id;
+      }
+    }
+
+    void (async () => {
+      const order: string[] = [];
+      let active: string;
+      for (const [index, tab] of session.tabs.entries()) {
+        if (!current) return;
+        try {
+          const key = await openSavedTab(tab);
+          if (!key) continue;
+          if (!order.includes(key)) order.push(key);
+          if (index === session.active) active = key;
+        } catch {
+          // A missing or unavailable file does not prevent other tabs from opening.
+        }
+      }
+      if (current) onRestoreTabs(order, active ?? order.at(-1));
+    })();
+    return () => { current = false; };
+  }, [restoreTabs]);
 
   function navigateFromBoardCanvas(
     context: ProjectContext,

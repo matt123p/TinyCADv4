@@ -304,7 +304,6 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
     page.getByRole('status').filter({ hasText: 'Recovery copy saved at' }),
   ).toBeVisible();
   await page.reload();
-  await open();
   const recovery = page.getByRole('dialog', { name: 'Recover project edits' });
   await recovery
     .getByRole('button', { name: 'Discard copy and open saved' })
@@ -320,13 +319,14 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
     ),
   ).toBe('Saved to Drive');
   await page.reload();
-  await open();
+  await expect(page.getByRole('tablist', { name: 'Project files' })).toHaveAttribute('aria-busy', 'false');
   await expect
     .poll(() =>
       page.evaluate(() => window.layoutTest.snapshot().drawing.documentId),
     )
     .toBe(drawing.documentId);
   await expect(recovery).toHaveCount(0);
+  await sidebar.getByRole('button', { name: 'Shared', exact: true }).click();
   await sidebar.getByRole('button', { name: 'src', exact: true }).click();
   await sidebar
     .getByRole('button', { name: 'Child.dsn', exact: true })
@@ -421,6 +421,7 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   await page.getByRole('menuitem', { name: 'My projects', exact: true }).click();
   await expect(picker).toBeHidden();
   await expect(sidebar.getByText('My projects', { exact: true })).toBeVisible();
+  await expect(sidebar.getByRole('button', { name: 'Project folder actions' })).toBeEnabled();
   await openFolder();
   await picker.getByRole('button', { name: 'My projects', exact: true }).click();
   await picker.getByRole('button', { name: 'Shared', exact: true }).click();
@@ -431,7 +432,9 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   const linked = new URL(app.baseURL);
   linked.searchParams.set('state', JSON.stringify({ action: 'open', ids: ['project'] }));
   await page.goto(linked.href);
-  await expect(sidebar.getByRole('button', { name: 'Board.dpn', exact: true })).toBeVisible();
+  const boardFile = sidebar.getByRole('button', { name: 'Board.dpn', exact: true });
+  await expect(boardFile).toBeVisible();
+  await expect(boardFile).toBeEnabled();
   await expect(activity).toBeVisible();
 
   const transfer = await page.evaluateHandle(() => {
@@ -497,6 +500,9 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   expect(savedSettings.associations).toEqual([{ schematic: drawing.documentId, board: board.boardId }]);
 
   await page.goto(linked.href);
+  const tabs = page.getByRole('tablist', { name: 'Project files' });
+  await expect(tabs.getByRole('tab', { name: 'Shared.tcproject', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await tabs.getByRole('button', { name: 'Close Shared.tcproject', exact: true }).click();
   await sidebar.getByRole('button', { name: 'Board.dpn', exact: true }).click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Cut for move', exact: true }).click();
   await sidebar.getByRole('button', { name: 'src', exact: true }).click();
@@ -515,6 +521,7 @@ test('Google mode opens native schematic and PCB files in the remembered Drive p
   await expect(layout.getByRole('img', { name: 'Board layout' })).toBeVisible();
 
   await page.goto(linked.href);
+  await tabs.getByRole('button', { name: /Close .*Board\.dpn/ }).click();
   await sidebar.getByRole('button', { name: 'src', exact: true }).click();
   await sidebar.getByRole('button', { name: 'Board.dpn', exact: true }).click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Move to trash', exact: true }).click();

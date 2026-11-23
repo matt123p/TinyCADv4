@@ -117,6 +117,7 @@ export interface BoardWorkspaceDocument {
   session: BoardWorkspaceSession;
   projectRootId?: string;
   fileId?: string;
+  folderId?: string;
   ancestorIds?: readonly string[];
   reloadProjectBoard?(): Promise<BoardWorkspaceDocument>;
   probe?: BoardWorkspaceProbe;

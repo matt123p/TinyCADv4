@@ -642,6 +642,7 @@ export type OpenProjectAction = {
   location: Omit<OpenProjectDrawing, 'version' | 'documentPath'>;
   recovery?: { choice: 'restore' | 'discard'; token: string };
   refresh?: boolean;
+  restoringTab?: boolean;
 };
 
 export interface ProjectRecoveryPrompt {
@@ -649,6 +650,7 @@ export interface ProjectRecoveryPrompt {
   token: string;
   time: number;
   conflict: boolean;
+  onComplete?(): void;
 }
 
 async function projectInstanceReferences(
@@ -809,7 +811,11 @@ export async function openProjectDrawing(
         time: draft.time,
         conflict,
       };
-      dispatch(actionSelectDialog('project_recovery', prompt));
+      if (action.restoringTab) {
+        await new Promise<void>((resolve) => {
+          dispatch(actionSelectDialog('project_recovery', { ...prompt, onComplete: resolve }));
+        });
+      } else dispatch(actionSelectDialog('project_recovery', prompt));
       return;
     }
     if (action.recovery?.choice === 'restore' && !draft)
@@ -865,7 +871,7 @@ export async function openProjectDrawing(
     );
     dispatch(ActionCreators.clearHistory());
   } catch (error) {
-    if (stillOpening())
+    if (stillOpening() && !action.restoringTab)
       dispatch(actionSelectDialog('io_failure', { message: String(error) }));
   }
 }

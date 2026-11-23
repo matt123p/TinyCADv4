@@ -21,6 +21,7 @@ The [PCB layout specification](TinyCAD_PCB_Layout_Complete_Specification.md), [p
 - [x] Repeat the affected classroom, reference board and tab workflows through the redesigned editor. Retain separate evidence for native files, connectivity and manufacturing read-back.
 - [x] Verify the browser workflow for Layers, Board Tools, clickable bottom-panel DRC findings, Protel import, and PCB route completion, selection and deletion.
 - [x] Verify the shared left sidebar toggle across standalone schematic and PCB files, and across Projects, Libraries and Source Control in Project mode.
+- [x] Verify that project reopen and reload restore the open file tabs, their order and the active file, including an empty tab strip and switching between projects. [Browser acceptance test](../scripts/tests/layout-browser/project-hierarchy.spec.mjs)
 - [x] Verify canvas drawing and inline properties for polygon Copper tools, Components and overlap picker previews, and reset of PCB layer visibility to defaults.
 - [ ] Requalify the PCB-only menus and relocated panels in the native desktop editor.
 
