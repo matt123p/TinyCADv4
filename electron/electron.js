@@ -21,7 +21,6 @@ const __dirname = path.dirname(__filename);
 const { app, ipcMain, BrowserWindow, Menu, dialog, shell, safeStorage, net } = await import('electron');
 const isDev = (await import('electron-is-dev')).default;
 const isMac = process.platform === 'darwin'
-const electronMajorVersion = Number.parseInt(process.versions.electron.split('.')[0] || '0', 10);
 const appDisplayName = 'TinyCAD';
 
 const store = new Store(); // Create store instance
@@ -656,6 +655,7 @@ function createWindow({ openAbout = false } = {}) {
 
       const printWindow = new BrowserWindow({
         show: false,
+        parent: mainWindow,
         title: 'TinyCAD',
         icon: getWindowIconPath(),
         webPreferences: {
@@ -701,7 +701,7 @@ function createWindow({ openAbout = false } = {}) {
           });
         };
 
-        if (process.platform === 'win32' && electronMajorVersion < 38) {
+        if (process.platform === 'win32') {
           printWindow.webContents.print(undefined, printCallback);
           return;
         }

@@ -46,6 +46,8 @@ class PrintPreviewDialog extends React.PureComponent<
   PrintPreviewDialogProps,
   PrintPreviewDialogState
 > {
+  private readonly usesSystemPrintDialog =
+    !!window.electronAPI?.printDocument && /Windows/i.test(navigator.userAgent);
   private cleanupPrintComplete: (() => void) | null = null;
 
   constructor(props: PrintPreviewDialogProps) {
@@ -71,7 +73,7 @@ class PrintPreviewDialog extends React.PureComponent<
 
   componentDidMount() {
     // Get available printers from Electron
-    if (window.electronAPI?.getPrinters) {
+    if (!this.usesSystemPrintDialog && window.electronAPI?.getPrinters) {
       window.electronAPI.getPrinters().then((printers: PrinterInfo[]) => {
         const defaultPrinter = printers.find(p => p.isDefault);
         this.setState({
@@ -86,7 +88,6 @@ class PrintPreviewDialog extends React.PureComponent<
         });
       });
     } else {
-      // Not in Electron, use browser print
       this.setState({ loading: false });
     }
 
@@ -96,7 +97,7 @@ class PrintPreviewDialog extends React.PureComponent<
         this.setState({ printing: false });
         if (result.success) {
           this.props.dispatch(actionCancelDialog());
-        } else {
+        } else if (result.failureReason !== 'Print job canceled') {
           this.setState({
             error:
               result.failureReason || this.props.t('dialogues.printPreview.printFailed'),
@@ -294,7 +295,9 @@ class PrintPreviewDialog extends React.PureComponent<
   }
 
   handleClickCancel() {
-    this.props.dispatch(actionCancelDialog());
+    if (!this.state.printing) {
+      this.props.dispatch(actionCancelDialog());
+    }
   }
 
   renderPreview() {
@@ -359,8 +362,7 @@ class PrintPreviewDialog extends React.PureComponent<
     const sheets = this.props.drawing.sheets;
     const hasMultiplePages = sheets.length > 1;
     const isElectron = !!window.electronAPI?.printDocument;
-    const usesSystemPrintDialog =
-      isElectron && navigator.userAgent.toLowerCase().includes('windows');
+    const { usesSystemPrintDialog } = this;
 
     const selectedCount = this.state.selectedPages.filter(p => p).length;
 
@@ -478,7 +480,7 @@ class PrintPreviewDialog extends React.PureComponent<
                     ? t('dialogues.printPreview.printButton', { count: selectedCount })
                     : t('toolbar.print')}
               </Button>
-              <Button appearance="secondary" onClick={this.handleClickCancel}>
+              <Button appearance="secondary" onClick={this.handleClickCancel} disabled={this.state.printing}>
                 {t('common.cancel')}
               </Button>
             </DialogActions>
