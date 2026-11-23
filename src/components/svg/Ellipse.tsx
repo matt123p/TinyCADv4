@@ -1,5 +1,6 @@
-﻿import React, { FunctionComponent, memo } from 'react';
+﻿import React, { memo } from 'react';
 
+import type { ShapeDrawingAttributes } from './ShapeDrawingAttributes';
 import { UtilityService } from '../../util/utilityService';
 import { dsnEllipse } from '../../model/dsnItem';
 import { updateEllipse } from '../../manipulators/updateEllipse';
@@ -11,49 +12,23 @@ interface TEllipseProps {
   scale_x: number;
   scale_y: number;
   data: dsnEllipse;
-  hover: boolean;
-  selected: boolean;
-  selected_handle: number;
+  hover?: boolean;
+  selected?: boolean;
+  selected_handle?: number;
+  drawingAttributes?: ShapeDrawingAttributes;
+  selectionAttributes?: ShapeDrawingAttributes;
 }
 
-const TEllipse: FunctionComponent<TEllipseProps> = (props: TEllipseProps) => {
-  const scope = UtilityService.simpleRefreshPoints(props);
-
-  let highlight = props.selected ? (
-    <ellipse
-      cx={scope.x + scope.width / 2}
-      cy={scope.y + scope.height / 2}
-      rx={scope.width / 2}
-      ry={scope.height / 2}
-      className="selectedLineHighlight"
-      strokeWidth={(props.data.line_width + 1.0) * 2}
-    />
-  ) : null;
-
-  let selectable = props.hover ? (
-    <ellipse
-      cx={scope.x + scope.width / 2}
-      cy={scope.y + scope.height / 2}
-      rx={scope.width / 2}
-      ry={scope.height / 2}
-      className="selectableLineHighlight"
-      strokeWidth={(props.data.line_width + 1.0) * 2}
-    />
-  ) : null;
-
-  const update_item = new updateEllipse(props.data);
-  return (
-    <>
-      <ellipse
-        cx={scope.x + scope.width / 2}
-        cy={scope.y + scope.height / 2}
-        rx={scope.width / 2}
-        ry={scope.height / 2}
-        style={update_item.style()}
-      />
-      {selectable} {highlight}
-    </>
-  );
-};
+function TEllipse(props: TEllipseProps) {
+  const { x, y, width, height } = UtilityService.simpleRefreshPoints(props);
+  const draw = (attributes: ShapeDrawingAttributes) =>
+    <ellipse cx={x + width / 2} cy={y + height / 2} rx={width / 2} ry={height / 2} {...attributes} />;
+  const outline = (className: string) => draw({ className, strokeWidth: (props.data.line_width + 1) * 2, ...props.selectionAttributes });
+  return <>
+    {draw(props.drawingAttributes ?? { style: new updateEllipse(props.data).style() })}
+    {props.hover && outline('selectableLineHighlight')}
+    {props.selected && outline('selectedLineHighlight')}
+  </>;
+}
 
 export default memo(TEllipse);

@@ -218,7 +218,7 @@ For standalone boards, parity can compare against an embedded applied circuit, w
 
 ## Editing routed tracks
 
-While routing, move the pointer over assigned copper on the active layer. The snap marker shows the connection point on a pad, track, via or jumper land. Rotated and off-grid pads use their placed copper coordinates. Drilled lands snap to the surrounding copper. Click empty space to add a grid-snapped corner. Changing layers at a same-net plated connection shared by both layers reuses the existing barrel.
+While routing, move the pointer over assigned copper on the routing layer. The snap marker shows the connection point on a pad, track, via or jumper land. Rotated and off-grid pads use their placed copper coordinates. Drilled lands snap to the surrounding copper. Click empty space to add a grid-snapped corner. Changing layers at a same-net plated connection shared by both layers reuses the existing barrel.
 
 The route preview uses horizontal, vertical and 45-degree legs. In Engineering view, choose **Route bend** to put the straight or diagonal segment first. A red preview marks a blocked path. Clicking it keeps the last accepted corner so you can choose another waypoint. **Finish route** checks the whole route against the current board and fabrication rules.
 

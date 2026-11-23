@@ -9,6 +9,7 @@ import {
   validateOutline,
 } from './geometry';
 import type { BoardPoint } from './geometry';
+import type { BoardAreaShape } from './boardAreaShape';
 import { bounds, indexBounds, near, polygonSegments, someNearby } from './regionDistances';
 
 export type Polygon = readonly BoardPoint[];
@@ -35,6 +36,7 @@ export type ContourEdge =
 export interface BoardProfile {
   readonly outline: readonly ContourEdge[];
   readonly cutouts: readonly (readonly ContourEdge[])[];
+  readonly cutoutShapes?: readonly (BoardAreaShape | null)[];
 }
 
 export const TESSELLATION_TOLERANCE_NM = 100;

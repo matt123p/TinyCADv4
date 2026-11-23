@@ -1,3 +1,6 @@
+import { validateAreaShape } from './boardAreaShape';
+import type { BoardAreaShape } from './boardAreaShape';
+import { MAX_CONTOUR_VERTICES as MAX_AREA_VERTICES } from './contours';
 import { isEntityId } from '../model/schematicIdentity';
 import type { BoardDocument } from './board';
 import type { Polygon } from './contours';
@@ -9,6 +12,7 @@ export interface PlacementArea {
   readonly kind: 'keep-in' | 'keep-out';
   readonly side: 'top' | 'bottom' | 'both';
   readonly outline: Polygon;
+  readonly shape?: BoardAreaShape;
 }
 
 export function validatePlacementAreas(board: BoardDocument) {
@@ -36,6 +40,7 @@ export function validatePlacementAreas(board: BoardDocument) {
     )
       throw new Error('Invalid placement area settings.');
     ids.add(area.id.toLowerCase());
-    validateOutline(area.outline);
+    validateOutline(area.outline, area.shape ? MAX_AREA_VERTICES : undefined);
+    validateAreaShape(area.shape, area.outline);
   }
 }

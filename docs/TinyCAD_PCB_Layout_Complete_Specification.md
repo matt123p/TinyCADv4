@@ -464,7 +464,7 @@ Avoid permanently filling both sides with dense panels on a small laptop. Docks 
 | UX-03 | Filter selection by type, layer, visibility and lock state | Hidden/locked objects are not accidentally edited through visible geometry | M1 |
 | UX-04 | Resolve overlapping hit targets with a selectable candidate list | Pad, track, zone boundary and silk can each be selected deterministically | M1 |
 | UX-05 | Distinguish active, visible, selectable and locked layers | Switching the visible layer does not silently change routing layer | M1 |
-| UX-06 | Provide net highlighting, active-layer focus and clearance overlays | Nets remain identifiable without relying on colour alone | M1 |
+| UX-06 | Provide net highlighting, layer visibility and locking, and clearance overlays | Nets remain identifiable without relying on colour alone | M1 |
 | UX-07 | All editing tools support cancel, predictable commit and undo | Escape cancels an uncommitted operation without discarding earlier commits | M1 |
 | UX-08 | Provide command search, remappable shortcuts and contextual help | Every essential tool is accessible without memorising a shortcut | M1 |
 | UX-09 | Support keyboard property editing and accessible issue navigation | User can reach, inspect and zoom to each issue via keyboard | M1 |
@@ -555,6 +555,8 @@ An external router is optional. M1 cannot depend on a hosted service. M2 may off
 ## 16. Copper zones and derived geometry
 
 Zones are editable source intent: net, layer, boundary, holes, priorities, clearance, thermal style and island policy. Filled polygons are generated results. This distinction is necessary both for browser responsiveness and reproducible output; EasyEDA Standard explicitly documents manual refill behaviour [S15].
+
+The routing, placement and copper area toolbar tools offer rectangles, polygons and ellipses. Draw rectangles and ellipses by dragging their bounds. Draw polygons by clicking vertices and completing the outline. A selected shape exposes handles for resizing or moving its vertices. Rectangles keep an editable corner radius, and rectangles and ellipses retain their bounds and type on save. The same tools draw board cutouts. Round holes and slots use the existing drill geometry and expose handles for position and diameter or width.
 
 | ID | Requirement | Acceptance condition | Release |
 |---|---|---|---|

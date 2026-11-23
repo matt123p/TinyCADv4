@@ -391,9 +391,27 @@ $scrollbar-size: 9px;
 }
 
 .pcb-layers-panel h2 {
-    margin: 0 0 4px;
+    margin: 0 auto 0 0;
     font-size: 13px;
     font-weight: 600;
+}
+
+.pcb-layers-heading, .pcb-layer-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.pcb-layers-heading {
+    margin-bottom: 4px;
+}
+
+.pcb-layer-row .pcb-layer-name {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    padding-inline: 4px;
 }
 
 .pcb-layer-list {
@@ -666,6 +684,25 @@ $scrollbar-size: 9px;
   background: var(--colorNeutralBackground1, white);
 }
 
+.pcb-picker-layer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+
+    [role="img"] {
+        display: inline-flex;
+        flex: none;
+        font-size: 16px;
+    }
+}
+
+.pcb-picker-layer-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .pcb-list-header {
   display: flex;
   align-items: center;
@@ -681,6 +718,15 @@ $scrollbar-size: 9px;
   .fui-Input {
     width: 112px;
     min-width: 0;
+  }
+}
+
+.pcb-component-list-header {
+  gap: 4px;
+
+  .pcb-list-mode {
+    min-width: 0;
+    padding-inline: 2px;
   }
 }
 

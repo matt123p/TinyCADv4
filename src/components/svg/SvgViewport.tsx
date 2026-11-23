@@ -30,6 +30,7 @@ export function SvgViewport({
   children,
   onLocation,
   renderLocationPreview,
+  renderDrawingOverlay,
 }: {
   label: string;
   fit: SvgViewBox;
@@ -41,6 +42,7 @@ export function SvgViewport({
   children: React.ReactNode;
   onLocation?(x: number, y: number, unitsPerPixel: number): void;
   renderLocationPreview?(position?: readonly [number, number, number]): React.ReactNode;
+  renderDrawingOverlay?(unitsPerPixel: number): React.ReactNode;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const scene = useRef<SVGGElement>(null);
@@ -230,6 +232,7 @@ export function SvgViewport({
       <g ref={scene} data-svg-drawing="" visibility={scale > 0 ? undefined : 'hidden'}
         transform={`matrix(${scale} 0 0 ${scale} ${zeroX} ${zeroY})`}>
         {children}
+        {scale > 0 && renderDrawingOverlay?.(1 / scale)}
         {renderLocationPreview?.(pointer)}
       </g>
     </svg>

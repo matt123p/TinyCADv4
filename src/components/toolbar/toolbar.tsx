@@ -1,3 +1,4 @@
+import { SplitMenuButton } from './SplitMenuButton';
 import { generateActiveBom } from '../../io/netlists/activeNetlist';
 import { chooseProjectFolder, closeProjectMode, saveProjectTabs } from '../../io/projectMode';
 import React, { Dispatch } from 'react';
@@ -27,6 +28,7 @@ import {
 } from '@fluentui/react-components';
 import {
   ChatSparkleRegular,
+  ChevronDownRegular,
   ArrowUndoRegular,
   ArrowRedoRegular,
   ArrowRotateClockwiseRegular,
@@ -36,7 +38,6 @@ import {
   SaveRegular,
   DismissRegular,
   ArrowDownloadRegular,
-  ChevronDownRegular,
   DocumentRegular,
   ImageRegular,
   SettingsRegular,
@@ -103,9 +104,7 @@ import label1Image from 'url:../../../images/label1.png';
 import label2Image from 'url:../../../images/label2.png';
 import label3Image from 'url:../../../images/label3.png';
 import textImage from 'url:../../../images/text.png';
-import rectangleImage from 'url:../../../images/rectangle.png';
-import ellipseImage from 'url:../../../images/ellipse.png';
-import lineImage from 'url:../../../images/line.png';
+import { rectangleImage, ellipseImage, lineImage } from './shapeToolImages';
 import busImage from 'url:../../../images/bus.png';
 import busJunctionImage from 'url:../../../images/bus_junction.png';
 import busLabelImage from 'url:../../../images/bus_label.png';
@@ -121,26 +120,6 @@ const useStyles = makeStyles({
   imageIcon: {
     width: '18px',
     height: '18px',
-  },
-  splitButton: {
-    display: 'inline-flex',
-    alignItems: 'center',
-  },
-  splitButtonMain: {
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
-  },
-  splitButtonMainHighlighted: {
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
-    backgroundColor: tokens.colorBrandBackground2,
-  },
-  splitButtonMenu: {
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
-    minWidth: '24px',
-    paddingLeft: '2px',
-    paddingRight: '2px',
   },
   spacer: {
     flexGrow: 1,
@@ -214,52 +193,6 @@ const AutorouteWireIcon: React.FC = () => (
     />
   </svg>
 );
-
-// Split button with dropdown menu
-const SplitMenuButton: React.FC<{
-  text: string;
-  optionsSuffix: string;
-  mainImage: string;
-  highlighted: boolean;
-  onMainClick: () => void;
-  menuItems: MenuItemConfig[];
-  onMenuItemClick: (item: MenuItemConfig) => void;
-  styles: ReturnType<typeof useStyles>;
-}> = ({ text, optionsSuffix, mainImage, highlighted, onMainClick, menuItems, onMenuItemClick, styles }) => {
-  return (
-    <div className={styles.splitButton}>
-      <ToolbarButton
-        aria-label={text}
-        title={text}
-        icon={<ImageIcon src={mainImage} />}
-        onClick={onMainClick}
-        className={highlighted ? styles.splitButtonMainHighlighted : styles.splitButtonMain}
-      />
-      <Menu>
-        <MenuTrigger disableButtonEnhancement>
-          <ToolbarButton
-            aria-label={`${text} ${optionsSuffix}`}
-            icon={<ChevronDownRegular />}
-            className={styles.splitButtonMenu}
-          />
-        </MenuTrigger>
-        <MenuPopover>
-          <MenuList>
-            {menuItems.map((item) => (
-              <MenuItem
-                key={item.key}
-                icon={<ImageIcon src={item.image} />}
-                onClick={() => onMenuItemClick(item)}
-              >
-                {item.text}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </MenuPopover>
-      </Menu>
-    </div>
-  );
-};
 
 export const Toolbar: React.FC<ToolbarProps> = (props) => {
   const styles = useStyles();
@@ -647,7 +580,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           onMainClick={() => props.dispatch(actionCommand(props.toolbarDefaults.Power.command))}
           menuItems={powerItems}
           onMenuItemClick={handleMenuItemClick('Power')}
-          styles={styles}
+
         />
 
         {/* Label (split button) - only in normal mode */}
@@ -660,7 +593,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             onMainClick={() => props.dispatch(actionCommand(props.toolbarDefaults.Label.command))}
             menuItems={labelItems}
             onMenuItemClick={handleMenuItemClick('Label')}
-            styles={styles}
+
           />
         )}
 
@@ -682,7 +615,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           onMainClick={() => props.dispatch(actionCommand(props.toolbarDefaults.Shape.command))}
           menuItems={shapeItems}
           onMenuItemClick={handleMenuItemClick('Shape')}
-          styles={styles}
+
         />
 
         {/* Bus (split button) */}
@@ -694,7 +627,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           onMainClick={() => props.dispatch(actionCommand(props.toolbarDefaults.Bus.command))}
           menuItems={busItems}
           onMenuItemClick={handleMenuItemClick('Bus')}
-          styles={styles}
+
         />
 
         {/* Ruler (split button) - only in normal mode */}
@@ -707,7 +640,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             onMainClick={() => props.dispatch(actionCommand(props.toolbarDefaults.Ruler.command))}
             menuItems={rulerItems}
             onMenuItemClick={handleMenuItemClick('Ruler')}
-            styles={styles}
+
           />
         )}
 

@@ -1,73 +1,35 @@
-﻿import React, { FunctionComponent, memo } from 'react';
-
+import React, { memo } from 'react';
 import { UtilityService } from '../../util/utilityService';
-import { dsnRectangle } from '../../model/dsnItem';
+import type { dsnRectangle } from '../../model/dsnItem';
 import { updateRectangle } from '../../manipulators/updateRectangle';
+import type { ShapeDrawingAttributes } from './ShapeDrawingAttributes';
 
-interface TRectangleProps {
+interface RectangleProps {
   dx: number;
   dy: number;
   dr: number;
   scale_x: number;
   scale_y: number;
   data: dsnRectangle;
-  hover: boolean;
-  selected: boolean;
-  selected_handle: number;
+  hover?: boolean;
+  selected?: boolean;
+  selected_handle?: number;
+  cornerRadius?: number;
+  drawingAttributes?: ShapeDrawingAttributes;
+  selectionAttributes?: ShapeDrawingAttributes;
 }
 
-const TRectangle: FunctionComponent<TRectangleProps> = (
-  props: TRectangleProps,
-) => {
-  var scope = UtilityService.simpleRefreshPoints(props);
-  let r = 0;
-  if (props.data.rounded_rect) {
-    r = 10;
-  }
+function Rectangle(props: RectangleProps) {
+  const { x, y, width, height } = UtilityService.simpleRefreshPoints(props);
+  const radius = props.cornerRadius ?? (props.data.rounded_rect ? 10 : 0);
+  const draw = (attributes: ShapeDrawingAttributes) =>
+    <rect x={x} y={y} width={width} height={height} rx={radius} ry={radius} {...attributes} />;
+  const outline = (className: string) => draw({ className, strokeWidth: (props.data.line_width + 1) * 2, strokeLinecap: 'round', ...props.selectionAttributes });
+  return <>
+    {draw(props.drawingAttributes ?? { style: new updateRectangle(props.data).style() })}
+    {props.hover && outline('selectableLineHighlight')}
+    {props.selected && outline('selectedLineHighlight')}
+  </>;
+}
 
-  let highlight = props.selected ? (
-    <rect
-      x={scope.x}
-      y={scope.y}
-      rx={r}
-      ry={r}
-      width={scope.width}
-      height={scope.height}
-      className="selectedLineHighlight"
-      strokeWidth={(props.data.line_width + 1.0) * 2}
-      strokeLinecap="round"
-    />
-  ) : null;
-
-  let selectable = props.hover ? (
-    <rect
-      x={scope.x}
-      y={scope.y}
-      rx={r}
-      ry={r}
-      width={scope.width}
-      height={scope.height}
-      className="selectableLineHighlight"
-      strokeWidth={(props.data.line_width + 1.0) * 2}
-      strokeLinecap="round"
-    />
-  ) : null;
-
-  const update_item = new updateRectangle(props.data);
-  return (
-    <>
-      <rect
-        x={scope.x}
-        y={scope.y}
-        rx={r}
-        ry={r}
-        width={scope.width}
-        height={scope.height}
-        style={update_item.style()}
-      />
-      {selectable} {highlight}
-    </>
-  );
-};
-
-export default memo(TRectangle);
+export default memo(Rectangle);

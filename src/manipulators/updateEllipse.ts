@@ -14,8 +14,25 @@ import { UtilityService } from '../util/utilityService';
 // The simple ellipse object
 //
 export class updateEllipse extends updateRectBase implements MoveAdd, IsInside {
-  constructor(public item: dsnEllipse) {
+  constructor(public item: dsnEllipse, private readonly circular = false) {
     super(item);
+  }
+
+  mouse_move(tracker: ViewTracker, delta: Coordinate, handle: number, snap: Snap) {
+    const moved = super.mouse_move(tracker, delta, handle, snap);
+    if (!this.circular || handle === 0 || moved.obj === this.item) return moved;
+    const item = moved.obj as dsnEllipse;
+    const width = item.point_b[0] - item.point[0];
+    const height = item.point_b[1] - item.point[1];
+    const size = handle === 5 || handle === 7 ? width : handle === 6 || handle === 8 ? height :
+      Math.abs(delta[0]) >= Math.abs(delta[1]) ? width : height;
+    if (size <= 0) return { obj: this.item, r: [0, 0] };
+    const axisOrigin = (first: number, last: number, fromFirst: boolean, fromLast: boolean) =>
+      fromFirst ? last - size : fromLast ? first : (first + last - size) / 2;
+    const x = axisOrigin(item.point[0], item.point_b[0], [1, 3, 5].includes(handle), [2, 4, 7].includes(handle));
+    const y = axisOrigin(item.point[1], item.point_b[1], [1, 2, 6].includes(handle), [3, 4, 8].includes(handle));
+    return { obj: { ...item, point: [x, y], point_b: [x + size, y + size] },
+      r: [this.item.point[0] - x, this.item.point[1] - y] };
   }
 
   getStyleSelector() {

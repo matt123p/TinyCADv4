@@ -1,10 +1,11 @@
-import { Button, Checkbox, Input, Select, Textarea } from '@fluentui/react-components';
+import { BoardAreaFields } from './BoardAreaFields';
+import { Button, Checkbox, Input, Select } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import type { BoardDocument } from '../../pcb/board';
 import { boardInputLength } from './boardNumberInput';
 import { routingRegionKinds } from '../../pcb/routingRegions';
 import type { RoutingRegion } from '../../pcb/routingRegions';
-import { outlineText, outlineVertices } from './boardOutlineInput';
+import { areaFields } from './boardOutlineInput';
 
 export default function RoutingRegionProperties({ board, region, onApply }: {
   board: BoardDocument;
@@ -27,7 +28,7 @@ export default function RoutingRegionProperties({ board, region, onApply }: {
         name: value('name'),
         side: value('side') as RoutingRegion['side'],
         ...(classId ? { classId } : {}),
-        outline: outlineVertices(value('outline')),
+        ...areaFields(form, region.shape),
         exclusions: routingRegionKinds.filter((kind) => form.has(kind)),
         ...(minWidth ? { minWidthNm: boardInputLength(minWidth, 'mm') } : {}),
         ...(maxWidth ? { maxWidthNm: boardInputLength(maxWidth, 'mm') } : {}),
@@ -58,10 +59,7 @@ export default function RoutingRegionProperties({ board, region, onApply }: {
         {board.netClasses?.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
       </Select>
     </label>
-    <label>
-      Outline (X, Y in mm)
-      <Textarea name="outline" rows={5} required defaultValue={outlineText(region.outline)} />
-    </label>
+    <BoardAreaFields shape={region.shape} outline={region.outline} />
     <fieldset>
       <legend>Exclude copper</legend>
       {routingRegionKinds.map((kind) => (

@@ -1,5 +1,6 @@
 ﻿import React, { FunctionComponent, memo } from 'react';
 
+import type { ShapeDrawingAttributes } from './ShapeDrawingAttributes';
 import { UtilityService } from '../../util/utilityService';
 import { dsnLine } from '../../model/dsnItem';
 import { updateLine } from '../../manipulators/updateLine';
@@ -11,9 +12,11 @@ interface TLineProps {
   scale_x: number;
   scale_y: number;
   data: dsnLine;
-  hover: boolean;
-  selected: boolean;
-  selected_handle: number;
+  hover?: boolean;
+  selected?: boolean;
+  selected_handle?: number;
+  drawingAttributes?: ShapeDrawingAttributes;
+  selectionAttributes?: ShapeDrawingAttributes;
 }
 
 const TLine: FunctionComponent<TLineProps> = (props: TLineProps) => {
@@ -55,7 +58,7 @@ const TLine: FunctionComponent<TLineProps> = (props: TLineProps) => {
     }
   }
 
-  if (item.polygon) {
+  if (item.polygon && d.length) {
     // Close the polygon, handling any trailing control points
     const dp0 = UtilityService.rotateSymCordinate(dr, d[0]);
     const p2 = [dp0[0] * props.scale_x + dx, dp0[1] * props.scale_y + dy];
@@ -70,33 +73,13 @@ const TLine: FunctionComponent<TLineProps> = (props: TLineProps) => {
     r = r + ' Z';
   }
 
-  const points = r;
-
-  let highlight = props.selected ? (
-    <path
-      d={points}
-      className="selectedLineHighlight"
-      strokeWidth={(props.data.line_width + 1.0) * 2}
-      strokeLinecap="round"
-    />
-  ) : null;
-
-  let selectable = props.hover ? (
-    <path
-      d={points}
-      className="selectableLineHighlight"
-      strokeWidth={(props.data.line_width + 1.0) * 2}
-      strokeLinecap="round"
-    />
-  ) : null;
-
-  const update_item = new updateLine(item);
-  return (
-    <>
-      <path d={points} style={update_item.style()} strokeLinecap="round" />
-      {selectable} {highlight}
-    </>
-  );
+  const draw = (attributes: ShapeDrawingAttributes) => <path d={r} strokeLinecap="round" {...attributes} />;
+  const outline = (className: string) => draw({ className, strokeWidth: (item.line_width + 1) * 2, ...props.selectionAttributes });
+  return <>
+    {draw(props.drawingAttributes ?? { style: new updateLine(item).style() })}
+    {props.hover && outline('selectableLineHighlight')}
+    {props.selected && outline('selectedLineHighlight')}
+  </>;
 };
 
 export default memo(TLine);

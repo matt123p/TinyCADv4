@@ -1,3 +1,6 @@
+import { validateAreaShape } from './boardAreaShape';
+import type { BoardAreaShape } from './boardAreaShape';
+import { MAX_CONTOUR_VERTICES as MAX_AREA_VERTICES } from './contours';
 import { isEntityId } from '../model/schematicIdentity';
 import type { BoardDocument, CopperLayer } from './board';
 import { boardRuleResolver } from './boardRules';
@@ -15,6 +18,7 @@ export interface RoutingRegion {
   readonly side: Layer | 'both';
   readonly classId?: string;
   readonly outline: Polygon;
+  readonly shape?: BoardAreaShape;
   readonly exclusions: readonly RoutingKind[];
   readonly minWidthNm?: number;
   readonly maxWidthNm?: number;
@@ -74,7 +78,8 @@ export function validateRoutingRegions(board: BoardDocument) {
         region.maxWidthNm === undefined && region.clearanceNm === undefined))
       throw new Error('Invalid routing region rules.');
     ids.add(region.id.toLowerCase());
-    validateOutline(region.outline);
+    validateOutline(region.outline, region.shape ? MAX_AREA_VERTICES : undefined);
+    validateAreaShape(region.shape, region.outline);
     if (region.minWidthNm > region.maxWidthNm)
       throw new Error('The minimum track width exceeds the maximum in routing region ' + region.name + '.');
     for (const { netId, classId } of caps) {

@@ -45,6 +45,7 @@ import {
 import { SelectSymbol } from '../libraryPanel/Search';
 import { Ruler } from '../controls/Ruler';
 import { SelectionMarquee } from './SelectionMarquee';
+import { SelectionHandle } from './SelectionHandle';
 import { DrawingViewportFrame } from './DrawingViewportFrame';
 import { actionSetMousePosition } from '../../state/actions/viewActions';
 import { subscribeNetlist } from '../../io/netlists/netlistSync';
@@ -1538,21 +1539,7 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
           )
             .handles()
             .map((p: Coordinate, index: number) => {
-              return (
-                <rect
-                  x={p[0] - 2}
-                  y={p[1] - 2}
-                  width="5"
-                  height="5"
-                  key={index}
-                  style={{
-                    fill: 'none',
-                    fillOpacity: 0.75,
-                    stroke: 'black',
-                    strokeWidth: 1,
-                  }}
-                />
-              );
+              return <SelectionHandle x={p[0]} y={p[1]} key={index} />;
             })}
         </>
       );

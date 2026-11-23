@@ -1,6 +1,9 @@
 const menus = {
   Board: [
+    'Close board',
     'PCB Size & Shape…', 'Add cutout…', 'Hole or slot…', 'Add dimension…',
+    'Draw cutout: Rectangle', 'Draw cutout: Polygon', 'Draw cutout: Circle / ellipse',
+    'Draw round hole', 'Draw slot',
     'Set measurement datum…', 'Pick overlapping objects', 'Update PCB from Schematic…',
     'Edit PCB references…', 'Update Schematic from PCB…', 'Board connections…',
     'Import schematic or netlist…', 'View board tools',
@@ -14,6 +17,14 @@ const menus = {
     'Review KiCad board…', 'Export KiCad board…',
   ],
 };
+
+export async function closeStandaloneBoard(workspace) {
+  const file = workspace.getByRole('button', { name: 'File', exact: true });
+  if (await file.isVisible()) {
+    await file.click();
+    await workspace.page().getByRole('menuitem', { name: 'Close board', exact: true }).click();
+  } else await clickPcbCommand(workspace, 'Close board');
+}
 
 export function pcbMenuName(label) {
   const entry = Object.entries(menus).find(([, actions]) => actions.includes(label));

@@ -1,3 +1,5 @@
+import { validateAreaShape } from './boardAreaShape';
+import type { BoardAreaShape } from './boardAreaShape';
 import { isEntityId } from '../model/schematicIdentity';
 import type { BoardDocument, CopperLayer } from './board';
 import { MAX_CONTOUR_VERTICES, polygonBoundariesMeet } from './contours';
@@ -17,6 +19,7 @@ export interface BoardZone {
   readonly layerId: CopperLayer['id'];
   readonly priority: number;
   readonly outline: Polygon;
+  readonly shape?: BoardAreaShape;
   readonly cutouts: readonly { readonly outline: Polygon }[];
   readonly clearanceNm?: number;
   readonly padConnection: ZoneConnection;
@@ -65,6 +68,7 @@ export function validateBoardZones(board: BoardDocument) {
       throw new Error('Invalid PCB zone settings.');
     ids.add(zone.id.toLowerCase());
     validateOutline(zone.outline, MAX_CONTOUR_VERTICES);
+    validateAreaShape(zone.shape, zone.outline);
     const holes: Polygon[] = [];
     let vertexCount = zone.outline.length;
     for (const { outline } of zone.cutouts) {

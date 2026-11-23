@@ -9,6 +9,7 @@ import { FolderOpenRegular, SaveRegular, SaveCopyRegular } from '@fluentui/react
 import { BoardNetlistPanel } from './BoardNetlistPanel';
 import { PersistentDataGrid } from '../controls/PersistentDataGrid';
 import { ListModeMenuButton } from '../panel/ListModeMenuButton';
+import { StylePanelLayout, StylePanelSection } from '../panel/StylePanelLayout';
 import { LibraryBrowserHeader, LibrarySourceTabs } from '../libraryPanel/LibrarySourceTabs';
 import { EditorDrawingStack } from '../panel/EditorLayout';
 import { EditorToolbar } from '../toolbar/EditorToolbar';
@@ -34,9 +35,19 @@ import {
 } from '../../pcb/trackEdits';
 import type { ManualTrackEdit } from '../../pcb/trackEdits';
 import { applyRouteDeletion, connectedRouteIds, planRouteDeletion } from '../../pcb/routeDeletion';
-import { boardLayers } from '../../pcb/boardLayers';
-import { boardCopperObjects, copperObjectLabels, drawCopperObject, isCopperObject } from './boardCopperObjects';
+import { boardLayerById, boardLayers } from '../../pcb/boardLayers';
+import { BoardLayersPanel, LayerLockIcon, LayerVisibilityIcon } from './BoardLayersPanel';
+import { boardPickLayers, canPickOnLayers } from './boardLayerPicking';
+import { boardCopperObjects, copperObjectLabels, drawCopperObject, isCopperObject, changeCutout, copperAreaGeometry, reshapeCopperArea } from './boardCopperObjects';
 import type { CopperObject, CopperObjectKind } from './boardCopperObjects';
+import { areaTools, areaToolShapes, BoardShapeTool, openingToolShapes } from './BoardShapeTools';
+import type { AreaTool, AreaToolShape, BoardDrawShape } from './BoardShapeTools';
+import { areaOutline } from '../../pcb/boardAreaShape';
+import type { BoardMechanicalHole } from '../../pcb/boardMechanical';
+import { addBoardPolygonPoint, applyBoardPolygonCommand, boardPolygonMenu, drawBoardBounds, editBoardLine, finishBoardPolygon, moveBoardArtwork } from './boardShapeAdapter';
+import { openingFromDrag } from './boardOpeningAdapter';
+import { BoardAreaFields } from './BoardAreaFields';
+import { areaFields } from './boardOutlineInput';
 import type { BoardLayerId, VisibleCopper } from '../../pcb/boardLayers';
 import type { FootprintGraphic } from '../../pcb/footprintDetails';
 import FootprintArtworkEditor from '../projects/FootprintArtworkEditor';
@@ -68,7 +79,6 @@ import WireJumperProperties from './WireJumperProperties';
 import PlacementAreaProperties from './PlacementAreaProperties';
 import RoutingRegionProperties from './RoutingRegionProperties';
 import { boardRuleResolver, preferredTrackWidth, routeViaPresets } from '../../pcb/boardRules';
-import { editableProfile } from '../../pcb/boardProfiles';
 import {
   boardPlacementView,
   placementPadTemplates,
@@ -189,6 +199,19 @@ export default function BoardWorkspace({
   const [holeDialog, setHoleDialog] = useState(false);
   const [artworkOpen, setArtworkOpen] = useState(false);
   const [hiddenLayers, setHiddenLayers] = useState(defaultHiddenLayers);
+  const [lockedLayers, setLockedLayers] = useState<ReadonlySet<BoardLayerId>>(() => new Set());
+  const hasBottomCopper = board.copperLayers.length > 1;
+  const availableLayers = useMemo(() => boardLayers.filter(({ id }) => id !== 'B.Cu' || hasBottomCopper), [hasBottomCopper]);
+  const pickableLayers = useMemo(() => new Set(availableLayers.map(({ id }) => id)
+    .filter((id) => !hiddenLayers.has(id) && !lockedLayers.has(id))), [availableLayers, hiddenLayers, lockedLayers]);
+  const pickerLayers = (item: BoardPickTarget) => boardPickLayers(item)
+    .filter((id) => id !== 'B.Cu' || hasBottomCopper);
+  const layerColumnLabels = hasBottomCopper ? ['Layer 1', 'Layer 2'] : ['Layer'];
+  const componentColumnSizing = useMemo(() => ({
+    reference: { minWidth: 68, idealWidth: 200 },
+    layer: { minWidth: hasBottomCopper ? 78 : 136, idealWidth: 170 },
+    layer2: { minWidth: 136, idealWidth: 180 },
+  }), [hasBottomCopper]);
   const topVisible = !hiddenLayers.has('F.Cu');
   const bottomVisible = board.copperLayers.length > 1 && !hiddenLayers.has('B.Cu');
   const visibleCopper: VisibleCopper = topVisible ? (bottomVisible ? 'all' : 'top') :
@@ -215,8 +238,10 @@ export default function BoardWorkspace({
   const [objectPick, setObjectPick] = useState<BoardPick>();
   const [hoveredObject, setHoveredObject] = useState<BoardPickTarget>();
   const [copperSelection, setCopperSelection] = useState<Pick<CopperObject, 'kind' | 'id'>>();
+  const [areaShapes, setAreaShapes] = useState<Record<AreaTool, AreaToolShape>>({ area: 'rectangle', region: 'rectangle', zone: 'rectangle', cutout: 'rectangle' });
+  const [openingShape, setOpeningShape] = useState<(typeof openingToolShapes)[number]['key']>('round-hole');
   const [copperDrawing, setCopperDrawing] = useState<{
-    kind: CopperObjectKind; points: readonly BoardPoint[]; netId: string; layerId: CopperLayer['id'];
+    kind: CopperObjectKind; shape: BoardDrawShape; points: readonly BoardPoint[]; netId: string; layerId: CopperLayer['id'];
   }>();
   const copperObjects = useMemo(() => boardCopperObjects(board), [board]);
   const selectedCopper = copperObjects.find(({ kind, id }) => kind === copperSelection?.kind && id === copperSelection.id);
@@ -286,6 +311,8 @@ export default function BoardWorkspace({
     point: { x: number; y: number };
     componentId?: string;
     routeId?: string;
+    copper?: CopperObject;
+    polygon?: { target: CopperObject; at: BoardPoint; handle: number };
   }>();
   const footprintTabId = React.useId();
   const [footprintTab, setFootprintTab] = useState<'unplaced' | 'library'>('unplaced');
@@ -819,12 +846,13 @@ export default function BoardWorkspace({
   }
 
   function selectPickedObject(target: BoardPickTarget) {
+    if (!canPickOnLayers(pickableLayers, target)) return;
     const location = objectPick?.point;
     closeObjectPicker();
     if (target.kind === 'component') selectComponent(target.id);
     if (target.kind === 'pad') selectComponent(target.componentId, target.id);
-    if (target.kind === 'silk') {
-      selectComponent(target.componentId);
+    if (target.kind === 'silk' || target.kind === 'artwork') {
+      selectComponent(target.componentId ?? '');
       setSelectedSilk(target);
     }
     if (target.kind === 'track' || target.kind === 'via') {
@@ -845,37 +873,77 @@ export default function BoardWorkspace({
     setHoveredObject(undefined);
   }
 
+  function clearUnavailableSelection(hidden: ReadonlySet<BoardLayerId>, locked: ReadonlySet<BoardLayerId>) {
+    closeObjectPicker();
+    if (routing) return;
+    const remainingLayers = new Set(availableLayers.map(({ id }) => id).filter((id) => !hidden.has(id) && !locked.has(id)));
+    const pickable = (target: Parameters<typeof canPickOnLayers>[1]) => canPickOnLayers(remainingLayers, target);
+    const components = group.filter((id) => {
+      const feature = selectedFeatures.find((feature) => feature.id === id);
+      return feature && (pickable({ kind: 'component', layer: feature.placement.side }) ||
+        feature.copper.some(({ layerId }) => pickable({ kind: 'pad', layer: layerId })));
+    });
+    const routes = routeGroup.filter((id) => {
+      const track = board.tracks?.find((track) => track.id === id);
+      return pickable({ kind: 'track', layer: track?.layerId ?? 'both' });
+    });
+    if (components.length !== group.length || routes.length !== routeGroup.length) {
+      selectArea(components, routes, false);
+      return;
+    }
+    const feature = selectedFeatures.find(({ id }) => id === selected);
+    const padLayers = selectedPad && feature?.copper.filter(({ padId }) => padId === selectedPad);
+    const componentUnavailable = feature && (padLayers && padLayers.length
+      ? !padLayers.some(({ layerId }) => pickable({ kind: 'pad', layer: layerId }))
+      : !pickable({ kind: 'component', layer: feature.placement.side }));
+    if ((selectedCopper && !pickable(selectedCopper)) ||
+      (selectedSilk ? !pickable(selectedSilk) : componentUnavailable) ||
+      (selectedTrack && !pickable({ kind: 'track', layer: selectedTrack.layerId })) ||
+      (selectedVia && !pickable({ kind: 'via', layer: 'both' }))) selectArea([], [], false);
+  }
+
   function selectCopperObject(item: Pick<CopperObject, 'kind' | 'id'>) {
     selectComponent('');
     setCopperSelection(item);
   }
 
-  function startCopperDrawing(kind: CopperObjectKind) {
-    if (!canPickObjects) return;
+  function startCopperDrawing(kind: CopperObjectKind, shape: BoardDrawShape = kind === 'jumper' ? 'line' : 'polygon') {
+    if (!canPickObjects && copperDrawing?.kind !== kind) return;
     closeObjectPicker();
     setPickingObjects(false);
     selectArea([], [], false);
     setBottomView('selection');
     setError('');
-    const layerId = visibleCopper === 'bottom' || layer === 'bottom' && board.copperLayers.length > 1
-      ? 'bottom' : 'top';
-    if (kind === 'zone' || kind === 'jumper')
+    const layerId = layer === 'bottom' && hasBottomCopper ? 'bottom' : 'top';
+    if (kind === 'zone' || kind === 'jumper') {
       setLayerVisible(kind === 'jumper' || layerId === 'top' ? 'F.Cu' : 'B.Cu', true);
+    } else if (kind === 'cutout' || kind === 'hole') {
+      setLayerVisible('Edge.Cuts', true);
+    }
     const netId = board.nets?.some(({ id }) => id === selectedNet) ? selectedNet : board.nets?.[0]?.id ?? '';
-    setCopperDrawing({ kind, points: [], layerId, netId });
+    setCopperDrawing({ kind, shape, points: [], layerId, netId });
     requestAnimationFrame(() => boardCanvas.current?.focus());
   }
 
   function finishCopperDrawing(points = copperDrawing?.points) {
-    if (!copperDrawing || !points || points.length < (copperDrawing.kind === 'jumper' ? 2 : 3)) return;
+    if (!copperDrawing || !points || points.length < (copperDrawing.shape === 'polygon' ? 3 : 2)) return;
     try {
-      const { kind, netId, layerId } = copperDrawing;
-      const id = crypto.randomUUID();
-      const operation = drawCopperObject(board, kind, id, points, netId, layerId);
+      const { kind, shape, netId, layerId } = copperDrawing;
+      const id = kind === 'cutout' ? String(board.profile?.cutouts.length ?? 0) : crypto.randomUUID();
+      const [first, last] = points;
+      const bounded = shape === 'rectangle' || shape === 'ellipse';
+      if (!bounded && shape !== 'polygon' && samePoint(first, last)) return;
+      const geometry = bounded ? drawBoardBounds(shape, first, last, true) :
+        shape === 'polygon' ? { kind: shape, vertices: points } as const : undefined;
+      if (bounded && !geometry) return;
+      const opening = shape === 'round-hole' || shape === 'slot' ? openingFromDrag(shape, first, last) : undefined;
+      const operation = drawCopperObject(board, kind, id, opening ? [opening.start, opening.end] : points, netId, layerId, geometry, opening?.widthNm);
       setBoard(session.apply([operation]));
       if (kind === 'zone') openBoardTools();
       setCopperDrawing(undefined);
-      selectCopperObject({ kind, id });
+      if (canPickOnLayers(pickableLayers, { kind, layer: kind === 'zone' ? layerId : kind === 'jumper' ? 'top' : 'both' })) {
+        selectCopperObject({ kind, id });
+      } else setBottomView(idleBottomView);
       setError('');
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : String(failure));
@@ -883,15 +951,21 @@ export default function BoardWorkspace({
   }
 
   function addCopperPoint(point: BoardPoint, finish: boolean) {
-    const { kind, points } = copperDrawing;
-    const last = points.at(-1);
-    if (kind !== 'jumper' && points.length > 2 && samePoint(points[0], point)) {
-      finishCopperDrawing();
+    const { shape, points } = copperDrawing;
+    if (shape === 'polygon') {
+      const update = addBoardPolygonPoint(points, point);
+      if (update.end || finish) finishCopperDrawing(update.points);
+      else setCopperDrawing({ ...copperDrawing, points: update.points });
       return;
     }
+    const last = points.at(-1);
     const next = last && samePoint(last, point) ? points : [...points, point];
+    if (next.length > 1) {
+      finishCopperDrawing(next);
+      return;
+    }
     setCopperDrawing({ ...copperDrawing, points: next });
-    if (kind === 'jumper' || finish) finishCopperDrawing(next);
+    if (finish) finishCopperDrawing(next);
   }
 
   function cancelCopperDrawing() {
@@ -911,6 +985,33 @@ export default function BoardWorkspace({
       case 'zone':
         return <BoardZoneProperties board={board} zone={board.zones.find(({ id }) => id === item.id)}
           onApply={(zone) => setBoard(session.apply([{ type: 'setZone', zone }]))} />;
+      case 'cutout': {
+        const shape = copperAreaGeometry(board, item);
+        if (!shape || shape.kind === 'polygon') return null;
+        return <form className="pcb-profile-fields" onSubmit={(event) => {
+          event.preventDefault();
+          const form = new FormData(event.currentTarget);
+          edit(() => session.apply([reshapeCopperArea(board, item, areaFields(form, shape).shape)]));
+        }}>
+          <BoardAreaFields shape={shape} outline={areaOutline(shape)} />
+          {shape.kind === 'rectangle' && <Button type="submit" appearance="primary">Apply</Button>}
+        </form>;
+      }
+      case 'hole': {
+        const hole = board.mechanicalHoles.find(({ id }) => id === item.id);
+        return <form className="pcb-profile-fields" onSubmit={(event) => {
+          event.preventDefault();
+          const data = new FormData(event.currentTarget);
+          edit(() => session.apply([{ type: 'setMechanicalHole', hole: {
+            ...hole, widthNm: boardInputLength(String(data.get('width')), 'mm'),
+          } }]));
+        }}>
+          <label>Diameter or slot width (mm)
+            <Input name="width" required defaultValue={String(hole.widthNm / 1_000_000)} />
+          </label>
+          <Button type="submit" appearance="primary">Apply</Button>
+        </form>;
+      }
       case 'jumper':
         return <WireJumperProperties board={board} jumper={board.jumpers.find(({ id }) => id === item.id)}
           onApply={(jumper) => setBoard(session.apply([{ type: 'setWireJumper', jumper }]))} />;
@@ -919,13 +1020,28 @@ export default function BoardWorkspace({
 
   function removeCopperObject(item: CopperObject) {
     const types = { area: 'removePlacementArea', region: 'removeRoutingRegion',
-      zone: 'removeZone', jumper: 'removeWireJumper' } as const;
+      zone: 'removeZone', jumper: 'removeWireJumper', hole: 'removeMechanicalHole' } as const;
     edit(() => {
-      const next = session.apply([{ type: types[item.kind], id: item.id }]);
+      const operation = item.kind === 'cutout' ? changeCutout(board, Number(item.id)) : { type: types[item.kind], id: item.id };
+      const next = session.apply([operation]);
       setCopperSelection(undefined);
       openBoardList(idleBottomView);
       return next;
     });
+  }
+
+  function moveGraphic(target: CopperObject | BoardPickTarget, offset: BoardPoint) {
+    if (target.kind === 'jumper') {
+      const jumper = board.jumpers?.find(({ id }) => id === target.id);
+      if (!jumper) return;
+      const [start, end] = editBoardLine([jumper.start, jumper.end], -1, offset);
+      edit(() => session.apply([{ type: 'setWireJumper', jumper: { ...jumper, start, end } }]));
+    } else if (target.kind === 'artwork' && target.id.startsWith('artwork:')) {
+      const index = Number(target.id.slice(8));
+      const graphics = board.annotations.graphics.map((item, itemIndex) =>
+        itemIndex === index ? moveBoardArtwork(item, offset) : item);
+      edit(() => session.apply([{ type: 'setAnnotations', annotations: { ...board.annotations, graphics } }]));
+    }
   }
 
   function fitSelection() {
@@ -1344,6 +1460,10 @@ export default function BoardWorkspace({
   }
 
   type MenuAction = BoardMenuItemState & { run(): void };
+  function closeStandaloneBoard() {
+    if (session.dirty) setConfirmDiscard(true);
+    else onClose();
+  }
   const boardCommands: { title: string; items: (MenuAction | null | false)[] }[] = [
     {
       title: 'Board',
@@ -1360,6 +1480,14 @@ export default function BoardWorkspace({
           openBoardTools();
           setHoleDialog(true);
         } },
+        ...areaToolShapes.map(({ key, text }) => ({
+          id: 'draw-cutout-' + key, label: 'Draw cutout: ' + text, disabled: !canPickObjects,
+          run: () => startCopperDrawing('cutout', key),
+        })),
+        { id: 'draw-hole', label: 'Draw round hole', disabled: !canPickObjects,
+          run: () => startCopperDrawing('hole', 'round-hole') },
+        { id: 'draw-slot', label: 'Draw slot', disabled: !canPickObjects,
+          run: () => startCopperDrawing('hole', 'slot') },
         { id: 'dimension', label: 'Add dimension…', disabled: busy || routing, run: () => {
           openBoardTools();
           addDimension();
@@ -1385,6 +1513,8 @@ export default function BoardWorkspace({
         !onUpdate && { id: 'circuit-source', label: 'Import schematic or netlist…',
           disabled: busy || routing, run: () => setCircuitSourceOpen(true) },
         { id: 'tools', label: 'View board tools', run: openBoardTools },
+        process.env.TARGET_SYSTEM === 'electron' && !manageClose &&
+          { id: 'close-board', label: 'Close board', disabled: busy, run: closeStandaloneBoard },
       ],
     },
     {
@@ -1471,10 +1601,12 @@ export default function BoardWorkspace({
 
   function openBoardMenu(
     point: { x: number; y: number },
-    hit?: { componentId?: string; routeId?: string },
+    hit?: { componentId?: string; routeId?: string; copper?: CopperObject; at?: BoardPoint; handle?: number },
   ) {
     if (copperDrawing) {
-      cancelCopperDrawing();
+      const points = copperDrawing.shape === 'polygon' ? finishBoardPolygon(copperDrawing.points, hit?.at && canvasPosition(hit.at.x, -hit.at.y)) : [];
+      if (points.length >= 3) finishCopperDrawing(points);
+      else cancelCopperDrawing();
       return;
     }
     if (busy) return;
@@ -1495,6 +1627,7 @@ export default function BoardWorkspace({
       return;
     }
     if (measuring || deletionDraft || cleanup) return;
+    if (hit?.copper) selectCopperObject(hit.copper);
     const componentId = hit ? hit.componentId : selected;
     const routeId = hit ? hit.routeId : selectedRouteId;
     if (hit?.componentId) selectComponent(hit.componentId);
@@ -1502,7 +1635,9 @@ export default function BoardWorkspace({
       selectComponent('');
       setSelectedRouteId(hit.routeId);
     }
-    setBoardMenu({ point, componentId, routeId });
+    const polygon = hit?.at && hit.copper && copperAreaGeometry(board, hit.copper)?.kind === 'polygon'
+      ? { target: hit.copper, at: hit.at, handle: hit.handle ?? -1 } : undefined;
+    setBoardMenu({ point, componentId, routeId, copper: hit ? hit.copper : selectedCopper, polygon });
   }
 
   const boardMenuFootprint = boardMenu?.componentId
@@ -1524,6 +1659,10 @@ export default function BoardWorkspace({
     { key: 'zoom_fit', text: 'Fit board' },
   ];
   if (boardMenuFootprint || boardMenu?.routeId) boardMenuItems.push({ key: 'fit_selection', text: 'Fit selection' });
+  const polygonTarget = boardMenu?.polygon;
+  const menuShape = polygonTarget && copperAreaGeometry(board, polygonTarget.target);
+  if (menuShape?.kind === 'polygon') boardMenuItems.unshift(...boardPolygonMenu(menuShape, polygonTarget.at, polygonTarget.handle));
+  if (boardMenu?.copper) boardMenuItems.push({ key: 'delete', text: t('toolbar.contextMenu.delete') });
 
   const footprintPanel = <>
     <LibraryBrowserHeader>
@@ -1993,29 +2132,17 @@ export default function BoardWorkspace({
                       <Button
                         size="small"
                         disabled={busy}
-                        onClick={() => setProfileDialog(index)}
+                        onClick={() => {
+                          if (board.profile.cutoutShapes?.[index]) selectCopperObject({ kind: 'cutout', id: String(index) });
+                          else setProfileDialog(index);
+                        }}
                       >
                         Edit cutout {index + 1}…
                       </Button>
                       <Button
                         size="small"
                         disabled={busy}
-                        onClick={() =>
-                          edit(() => {
-                            const profile = editableProfile(board);
-                            return session.apply([
-                              {
-                                type: 'replaceProfile',
-                                profile: {
-                                  ...profile,
-                                  cutouts: profile.cutouts.filter(
-                                    (_, i) => i !== index,
-                                  ),
-                                },
-                              },
-                            ]);
-                          })
-                        }
+                        onClick={() => removeCopperObject({ kind: 'cutout', id: String(index), layer: 'both', label: '' })}
                       >
                         Remove cutout {index + 1}
                       </Button>
@@ -2091,6 +2218,12 @@ export default function BoardWorkspace({
           return;
         }
         if (event.key === 'Delete' && !routing && !trackEdit &&
+            target.closest('.pcb-svg') && !busy && selectedCopper && !copperDrawing) {
+          event.preventDefault();
+          removeCopperObject(selectedCopper);
+          return;
+        }
+        if (event.key === 'Delete' && !routing && !trackEdit &&
             target.closest('.pcb-svg') && (routeGroup.length || selectedRouteId)) {
           event.preventDefault();
           commitDeletion(planRouteDeletion(board, { kind: 'items', ids: routeGroup.length ? routeGroup : [selectedRouteId] }));
@@ -2150,7 +2283,12 @@ export default function BoardWorkspace({
               case 'zoom_out': boardCanvas.current?.zoom('out', boardMenu.point); break;
               case 'zoom_fit': boardCanvas.current?.fit(); break;
               case 'fit_selection': fitSelection(); break;
-
+              case 'delete': if (boardMenu.copper) removeCopperObject(boardMenu.copper); break;
+              default:
+                if (menuShape?.kind === 'polygon') {
+                  const next = applyBoardPolygonCommand(menuShape, command, polygonTarget.at, polygonTarget.handle);
+                  if (next !== menuShape) edit(() => session.apply([reshapeCopperArea(board, polygonTarget.target, next)]));
+                }
             }
           }} />
       )}
@@ -2170,6 +2308,9 @@ export default function BoardWorkspace({
             </MenuItem>
             {session.canSaveAs && <MenuItem icon={<SaveCopyRegular />} disabled={busy}
               onClick={() => { void save(true); }}>Save As…</MenuItem>}
+            {!manageClose && <MenuItem disabled={busy} onClick={closeStandaloneBoard}>
+              Close board
+            </MenuItem>}
           </EditorFileMenu>
         )}
         {process.env.TARGET_SYSTEM === 'electron' && <EditorNewMenu />}
@@ -2195,6 +2336,17 @@ export default function BoardWorkspace({
         <ToolbarDivider />
         <EditorHistoryControls compactLabels canUndo={!busy && session.canUndo} canRedo={!busy && session.canRedo}
           onUndo={() => edit(session.undo)} onRedo={() => edit(session.redo)} />
+        <ToolbarDivider />
+        {areaTools.map(({ kind, label, buttonLabel }) => <BoardShapeTool key={kind} label={label} buttonLabel={buttonLabel} choices={areaToolShapes}
+          current={areaShapes[kind]} active={copperDrawing?.kind === kind}
+          disabled={(!canPickObjects && copperDrawing?.kind !== kind) || (kind === 'zone' && !board.nets?.length)}
+          onDraw={(shape) => {
+            setAreaShapes({ ...areaShapes, [kind]: shape });
+            startCopperDrawing(kind, shape);
+          }} />)}
+        <BoardShapeTool label="Hole or slot" buttonLabel="Hole / slot" choices={openingToolShapes}
+          current={openingShape} active={copperDrawing?.kind === 'hole'} disabled={!canPickObjects && copperDrawing?.kind !== 'hole'}
+          onDraw={(shape) => { setOpeningShape(shape); startCopperDrawing('hole', shape); }} />
         <ToolbarDivider />
         <Button
           ref={guideToggle}
@@ -2245,16 +2397,6 @@ export default function BoardWorkspace({
           </Button>
         )}
 
-        {!manageClose && <Button
-          disabled={busy}
-          onClick={() => {
-            if (!session.dirty) {
-              onClose();
-            } else setConfirmDiscard(true);
-          }}
-        >
-          Close
-        </Button>}
       </EditorToolbar>
       <Dialog open={confirmDiscard} onOpenChange={(_, { open }) => setConfirmDiscard(open)}>
         <DialogSurface>
@@ -2401,19 +2543,30 @@ export default function BoardWorkspace({
         />
       )}
       {rightPanelHost && createPortal(<>
-        <section className="pcb-layers-panel" aria-label="Layers">
-          <h2>Layers</h2>
-          <div className="pcb-layer-list">
-            {boardLayers.filter(({ id }) => id !== 'B.Cu' || board.copperLayers.length > 1)
-              .map(({ id, label, color }) => (
-                <Checkbox key={id} checked={!hiddenLayers.has(id)}
-                  onChange={(_, data) => setLayerVisible(id, data.checked === true)}
-                  label={<><span className="pcb-layer-swatch" style={{ backgroundColor: color }} />{label}</>} />
-              ))}
-          </div>
-          <Button size="small" disabled={busy || routing} onClick={() => setArtworkOpen(true)}>Edit board artwork…</Button>
-          <Button size="small" onClick={() => setHiddenLayers(defaultHiddenLayers())}>Reset to defaults</Button>
-        </section>
+        <BoardLayersPanel layers={availableLayers} hidden={hiddenLayers} locked={lockedLayers}
+          artworkDisabled={busy || routing} onLock={(id, locked) => {
+            const next = new Set(lockedLayers);
+            if (locked) {
+              next.add(id);
+              clearUnavailableSelection(hiddenLayers, next);
+            } else next.delete(id);
+            setLockedLayers(next);
+          }}
+          onVisibility={(id, visible) => {
+            if (!visible) clearUnavailableSelection(new Set([...hiddenLayers, id]), lockedLayers);
+            setLayerVisible(id, visible);
+          }}
+          onShowAll={() => setHiddenLayers(new Set())}
+          onLockAll={(locked) => {
+            const next = new Set(locked ? availableLayers.map(({ id }) => id) : []);
+            if (locked) clearUnavailableSelection(hiddenLayers, next);
+            setLockedLayers(next);
+          }}
+          onArtwork={() => setArtworkOpen(true)} onResetVisibility={() => {
+            const hidden = defaultHiddenLayers();
+            clearUnavailableSelection(hidden, lockedLayers);
+            setHiddenLayers(hidden);
+          }} />
         {boardTools}
       </>, rightPanelHost)}
       <Dialog open={artworkOpen} onOpenChange={(_, { open }) => setArtworkOpen(open)}>
@@ -2453,8 +2606,15 @@ export default function BoardWorkspace({
               hoveredObject={hoveredObject}
               selectedCopper={bottomView === 'selection' ? selectedCopper : undefined}
               onSelectCopper={selectCopperObject}
-              copperDrawing={copperDrawing && { points: copperDrawing.points,
-                closed: copperDrawing.kind !== 'jumper', snap: canvasPosition, add: addCopperPoint }}
+              onSelectArtwork={selectPickedObject}
+              onMoveGraphic={moveGraphic}
+              copperDrawing={copperDrawing && { points: copperDrawing.points, shape: copperDrawing.shape,
+                snap: canvasPosition, add: addCopperPoint, finish: finishCopperDrawing }}
+              areaEditing={selectedCopper && copperAreaGeometry(board, selectedCopper)}
+              holeEditing={selectedCopper?.kind === 'hole' ? board.mechanicalHoles.find(({ id }) => id === selectedCopper.id) : undefined}
+              snapShape={canvasPosition}
+              onReshapeArea={(target, geometry) => edit(() => session.apply([reshapeCopperArea(board, target, geometry)]))}
+              onReshapeHole={(hole: BoardMechanicalHole) => edit(() => session.apply([{ type: 'setMechanicalHole', hole }]))}
               selectedSilk={selectedSilk?.id}
               selected={selected}
               group={groupSelection}
@@ -2490,6 +2650,7 @@ export default function BoardWorkspace({
               onContextCommand={openBoardMenu}
               visibleCopper={visibleCopper}
               hiddenLayers={hiddenLayers}
+              pickableLayers={pickableLayers}
               trackWidthNm={Number(canonicalBoardDecimal(routeWidth)) * 1_000_000 || 0}
               onLocation={(x, y) => {
                 if (busy) return;
@@ -2529,7 +2690,9 @@ export default function BoardWorkspace({
                 setSelected('');
                 setSelectedPad(undefined);
                 setGroup([]);
-                setRouteGroup(wholeRoute ? connectedRouteIds(board, id, point) : []);
+                const tracks = wholeRoute ? new Map(board.tracks?.map(({ id, layerId }) => [id, layerId])) : undefined;
+                setRouteGroup(wholeRoute ? connectedRouteIds(board, id, point).filter((routeId) =>
+                  canPickOnLayers(pickableLayers, { kind: 'track', layer: tracks.get(routeId) ?? 'both' })) : []);
                 pickedRoute.current = point ? { id, point } : undefined;
                 setSelectedRouteId(wholeRoute ? '' : id);
                 setSelectedNet(netId ?? '');
@@ -2626,6 +2789,9 @@ export default function BoardWorkspace({
                   {routeGroup.length} {routeGroup.length === 1 ? 'copper object' : 'copper objects'} selected
                 </p>
               )}
+              {bottomView === 'selection' && selectedSilk && !selectedSilk.componentId && (
+                <p className="pcb-editor-message">Selected artwork · {selectedSilk.label}</p>
+              )}
               {bottomView === 'components' && <div className="pcb-navigation-grid">
                 <PersistentDataGrid
                   ariaLabel="Placed components"
@@ -2637,18 +2803,17 @@ export default function BoardWorkspace({
                   ]}
                   getRowId={({ kind, id }) => kind === 'component' ? id : kind + ':' + id}
                   onRowClick={selectPickedObject}
-                  onRowMouseEnter={setHoveredObject}
+                  onRowMouseEnter={(item) => setHoveredObject(canPickOnLayers(pickableLayers, item) ? item : undefined)}
                   onRowMouseLeave={() => setHoveredObject(undefined)}
                   defaultSortColumn="reference"
+                  columnSizingOptions={componentColumnSizing}
                   columns={[{
                     columnId: 'reference',
                     compare: (a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }),
-                    renderHeaderCell: () => <div className="pcb-list-header">
-                      <span>Reference</span>
-                      {listModeMenu}
-                    </div>,
+                    renderHeaderCell: () => 'Reference',
                     renderCell: (item) => (
                       <Button size="small" appearance="subtle"
+                        disabled={!canPickOnLayers(pickableLayers, item)}
                         onFocus={() => setHoveredObject(item)}
                         onBlur={() => setHoveredObject(undefined)}
                         onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
@@ -2659,13 +2824,37 @@ export default function BoardWorkspace({
                         {item.label}
                       </Button>
                     ),
-                  }]}
+                  }, ...layerColumnLabels.map((label, index) => ({
+                    columnId: index === 0 ? 'layer' : 'layer2',
+                    compare: (a: BoardPickTarget, b: BoardPickTarget) =>
+                      (pickerLayers(a)[index] ?? '').localeCompare(pickerLayers(b)[index] ?? ''),
+                    renderHeaderCell: () => index === layerColumnLabels.length - 1
+                      ? <div className="pcb-list-header pcb-component-list-header"><span>{label}</span>{listModeMenu}</div>
+                      : label,
+                    renderCell: (item: BoardPickTarget) => {
+                      const id = pickerLayers(item)[index];
+                      if (!id) return null;
+                      const layerLabel = boardLayerById.get(id).label;
+                      const visible = !hiddenLayers.has(id);
+                      const locked = lockedLayers.has(id);
+                      const visibilityLabel = visible ? 'Visible' : 'Hidden';
+                      const lockLabel = locked ? 'Locked' : 'Unlocked';
+                      return <div className="pcb-picker-layer">
+                        <span role="img" aria-label={visibilityLabel} title={visibilityLabel}><LayerVisibilityIcon visible={visible} /></span>
+                        <span role="img" aria-label={lockLabel} title={lockLabel}><LayerLockIcon locked={locked} /></span>
+                        <span className="pcb-picker-layer-label" title={layerLabel}>{layerLabel}</span>
+                      </div>;
+                    },
+                  }))]}
                 />
               </div>}
               {copperDrawing && <section className="pcb-panel-scroll" aria-label={copperObjectLabels[copperDrawing.kind] + ' drawing'}>
                 <p>{copperDrawing.kind === 'jumper'
                   ? 'Click the two jumper endpoints.'
-                  : 'Click to add corners. Click the first corner or press Enter to finish.'}</p>
+                  : copperDrawing.shape === 'polygon' ? 'Click to add points. Right-click to finish.'
+                  : copperDrawing.shape === 'round-hole' ? 'Drag from the centre to set the hole diameter.'
+                  : copperDrawing.shape === 'slot' ? 'Drag between the slot endpoints.'
+                  : 'Drag between opposite corners.'}</p>
                 {(copperDrawing.kind === 'zone' || copperDrawing.kind === 'jumper') && <label>
                   Net <Select value={copperDrawing.netId}
                     onChange={(event) => setCopperDrawing({ ...copperDrawing, netId: event.target.value })}>
@@ -2682,11 +2871,6 @@ export default function BoardWorkspace({
                     {board.copperLayers.map(({ id }) => <option key={id} value={id}>{id === 'top' ? 'Top' : 'Bottom'}</option>)}
                   </Select>
                 </label>}
-                <div className="pcb-panel-actions">
-                  {copperDrawing.kind !== 'jumper' && <Button appearance="primary"
-                    disabled={copperDrawing.points.length < 3} onClick={() => finishCopperDrawing()}>Finish outline</Button>}
-                  <Button onClick={cancelCopperDrawing}>Cancel</Button>
-                </div>
               </section>}
               {!copperDrawing && bottomView === 'selection' && selectedCopper && (
                 <section className="pcb-panel-scroll pcb-selection-properties" aria-label={copperObjectLabels[selectedCopper.kind]}>
@@ -2696,10 +2880,17 @@ export default function BoardWorkspace({
                     </Button>
                     <Button size="small" disabled={busy || routing} onClick={() => removeCopperObject(selectedCopper)}>Remove</Button>
                   </div>
-                  <fieldset key={selectedCopper.kind + ':' + selectedCopper.id + ':' + board.revision} disabled={busy || routing}>
-                    <legend>{copperObjectLabels[selectedCopper.kind]} · {selectedCopper.label}</legend>
-                    {renderCopperProperties(selectedCopper)}
-                  </fieldset>
+                  <StylePanelLayout>
+                    <StylePanelSection title={copperObjectLabels[selectedCopper.kind]}>
+                      <fieldset key={selectedCopper.kind + ':' + selectedCopper.id + ':' + board.revision} disabled={busy || routing}
+                        aria-label={selectedCopper.label} style={{ border: 0, margin: 0, padding: 0 }}>
+                        {copperAreaGeometry(board, selectedCopper)?.kind === 'polygon' && (
+                          <p>Right-click an edge to add points or curves. Right-click a handle to delete it.</p>
+                        )}
+                        {renderCopperProperties(selectedCopper)}
+                      </fieldset>
+                    </StylePanelSection>
+                  </StylePanelLayout>
                 </section>
               )}
               {bottomView === 'selection' && (target || groupMembers.length > 0 || sourcePads.length > 0) && (

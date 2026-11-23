@@ -20,9 +20,14 @@ The [PCB layout specification](TinyCAD_PCB_Layout_Complete_Specification.md), [p
 - [x] Preserve the v4.1.0 Single File startup with project controls hidden. Verify explicit entry into Project mode and standalone PCB open and save in the shared editor. [Single File and Project modes](project-specification.md#single-file-and-project-modes)
 - [x] Repeat the affected classroom, reference board and tab workflows through the redesigned editor. Retain separate evidence for native files, connectivity and manufacturing read-back.
 - [x] Verify the browser workflow for Layers, Board Tools, clickable bottom-panel DRC findings, Protel import, and PCB route completion, selection and deletion.
+- [x] Verify Layers eye and lock controls, bulk visibility and locking, and picking across visible, unlocked layers. [Browser interaction checks](../scripts/tests/layout-browser/pcb-workspace.spec.mjs)
+- [x] Verify aligned PCB Components layer columns and eye and lock status icons, including on disabled rows. [Browser interaction checks](../scripts/tests/layout-browser/pcb-workspace.spec.mjs)
 - [x] Verify the shared left sidebar toggle across standalone schematic and PCB files, and across Projects, Libraries and Source Control in Project mode.
 - [x] Verify that project reopen and reload restore the open file tabs, their order and the active file, including an empty tab strip and switching between projects. [Browser acceptance test](../scripts/tests/layout-browser/project-hierarchy.spec.mjs)
 - [x] Verify canvas drawing and inline properties for polygon Copper tools, Components and overlap picker previews, and reset of PCB layer visibility to defaults.
+- [x] Verify rectangle, ellipse and closed-line tools in Circuit Design and PCB Design through the shared manipulators, preview renderers and selection handles. Verify PCB corner rounding, cutouts and drill openings across Undo and native file save and reopen. [Browser interaction checks](../scripts/tests/layout-browser/pcb-workspace.spec.mjs)
+- [x] Verify PCB right-click polygon completion, the Circuit Design point and curve context menu, dragging a curve control and the whole shape, and reopening the native shape with editable controls. [Browser interaction checks](../scripts/tests/layout-browser/pcb-workspace.spec.mjs)
+- [x] Verify PCB polygon context commands near an edge, selection on the first press before dragging, schematic hover outlines, and toolbar hole, slot and cutout tools with the shared bounds handles. [Browser interaction checks](../scripts/tests/layout-browser/pcb-workspace.spec.mjs)
 - [ ] Requalify the PCB-only menus and relocated panels in the native desktop editor.
 
 The recovery rerun covers the standalone PCB, placement queue, group edits,

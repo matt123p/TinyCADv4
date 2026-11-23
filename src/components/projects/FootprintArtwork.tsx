@@ -7,20 +7,24 @@ import { samePoint } from '../../pcb/geometry';
 import type { PadShape } from '../../pcb/padstack';
 import { svgCircle, svgLength, svgLengthTransform } from '../svg/nanometreSvg';
 
-export function PadShapeDrawing({ shape, colour, attributes }: {
+export function PadShapeDrawing({ shape, colour, attributes, hovered }: {
   shape: PadShape;
   colour: string;
   attributes?: Record<`data-${string}`, string | boolean | undefined>;
+  hovered?: boolean;
 }) {
-  if (shape.kind === 'polygon')
-    return <polygon {...attributes} points={shape.vertices.map(({ x, y }) => `${x},${-y}`).join(' ')}
-      fill={colour} fillRule="evenodd" />;
-  const { start, end, widthNm } = shape;
-  if (samePoint(start, end))
-    return <circle {...attributes} {...svgCircle(start.x, -start.y, widthNm / 2)} fill={colour} />;
-  return <line {...attributes} transform={svgLengthTransform}
-    x1={svgLength(start.x)} y1={svgLength(-start.y)} x2={svgLength(end.x)} y2={svgLength(-end.y)}
-    stroke={colour} strokeWidth={svgLength(widthNm)} strokeLinecap="round" />;
+  const draw = (outline: boolean) => {
+    const props = outline ? { className: 'selectableLineHighlight', strokeWidth: 4, vectorEffect: 'non-scaling-stroke', pointerEvents: 'none' } : attributes;
+    if (shape.kind === 'polygon')
+      return <polygon points={shape.vertices.map(({ x, y }) => `${x},${-y}`).join(' ')} fill={colour} fillRule="evenodd" {...props} />;
+    const { start, end, widthNm } = shape;
+    if (samePoint(start, end))
+      return <circle {...svgCircle(start.x, -start.y, widthNm / 2)} fill={colour} {...props} />;
+    return <line transform={svgLengthTransform}
+      x1={svgLength(start.x)} y1={svgLength(-start.y)} x2={svgLength(end.x)} y2={svgLength(-end.y)}
+      stroke={colour} strokeWidth={svgLength(widthNm)} strokeLinecap="round" {...props} />;
+  };
+  return hovered ? <>{draw(false)}{draw(true)}</> : draw(false);
 }
 
 export function artworkBounds(item: FootprintGraphic): readonly BoardPoint[] {
@@ -71,10 +75,11 @@ export function artworkBounds(item: FootprintGraphic): readonly BoardPoint[] {
   }
 }
 
-export function FootprintArtwork({ item, highlighted, layerColor }: {
+export function FootprintArtwork({ item, highlighted, layerColor, hoverOutline }: {
   item: FootprintGraphic;
   highlighted?: boolean;
   layerColor?: string;
+  hoverOutline?: boolean;
 }) {
   const color = highlighted
     ? '#b34b27'
@@ -88,6 +93,8 @@ export function FootprintArtwork({ item, highlighted, layerColor }: {
     strokeWidth: item.strokeNm || 80_000,
     fill: item.filled ? color : 'none',
   };
+  const outline = hoverOutline ? { className: 'selectableLineHighlight', strokeWidth: 4,
+    vectorEffect: 'non-scaling-stroke', pointerEvents: 'none' } : undefined;
   switch (item.kind) {
     case 'line':
       return (
@@ -99,6 +106,7 @@ export function FootprintArtwork({ item, highlighted, layerColor }: {
           y2={svgLength(-item.end.y)}
           {...style}
           strokeWidth={svgLength(style.strokeWidth)}
+          {...outline}
         />
       );
     case 'rect':
@@ -111,6 +119,7 @@ export function FootprintArtwork({ item, highlighted, layerColor }: {
           height={svgLength(Math.abs(item.start.y - item.end.y))}
           {...style}
           strokeWidth={svgLength(style.strokeWidth)}
+          {...outline}
         />
       );
     case 'circle':
@@ -119,6 +128,7 @@ export function FootprintArtwork({ item, highlighted, layerColor }: {
           {...svgCircle(item.center.x, -item.center.y, Math.hypot(item.end.x - item.center.x, item.end.y - item.center.y))}
           {...style}
           strokeWidth={svgLength(style.strokeWidth)}
+          {...outline}
         />
       );
     case 'polygon':
@@ -126,6 +136,7 @@ export function FootprintArtwork({ item, highlighted, layerColor }: {
         <polygon
           points={item.points.map(({ x, y }) => `${x},${-y}`).join(' ')}
           {...style}
+          {...outline}
         />
       );
     case 'arc': {
@@ -136,7 +147,7 @@ export function FootprintArtwork({ item, highlighted, layerColor }: {
           } 0 ${shape.large} ${shape.clockwise} ${item.end.x} ${-item.end.y}`
         : `M ${item.start.x} ${-item.start.y} L ${item.mid.x} ${-item.mid
             .y} L ${item.end.x} ${-item.end.y}`;
-      return <path d={path} {...style} fill="none" />;
+      return <path d={path} {...style} fill="none" {...outline} />;
     }
     case 'text': {
       try {
@@ -156,6 +167,7 @@ export function FootprintArtwork({ item, highlighted, layerColor }: {
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
+            {...outline}
           >
             <title>{item.text}</title>
           </path>

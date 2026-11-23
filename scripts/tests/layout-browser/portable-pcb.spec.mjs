@@ -1,3 +1,4 @@
+import { closeStandaloneBoard } from './pcb-controls.mjs';
 import { selectPcbNet, clickPcbCommand, pcbMenuName } from './pcb-controls.mjs';
 import { build } from 'esbuild';
 import { TextWriter, Uint8ArrayReader, ZipReader } from '@zip.js/zip.js';
@@ -539,7 +540,7 @@ for (const target of ['filesystem', 'electron']) {
         await nativeCommand('File', 'Save');
         await expect.poll(() => electron.evaluate(() => globalThis.portableTestPickers)).toBe(pickers + 1);
         await expect(page).toHaveTitle('TinyCAD - New PCB.dpn');
-        await editor.getByRole('button', { name: 'Close', exact: true }).click();
+        await nativeCommand('Board', 'Close board');
         await expect(editor).toBeHidden();
         await nativeCommand('File', 'Open');
         await expect.poll(() => electron.evaluate(() => globalThis.portableTestOpenFilters))
@@ -548,7 +549,7 @@ for (const target of ['filesystem', 'electron']) {
         expect((await api.decodeBoard(await readFile(untitled))).footprints[0].positionNm)
           .toEqual({ x: 34_000_000, y: 14_000_000 });
       } else if (target === 'electron') {
-        await editor.getByRole('button', { name: 'Close', exact: true }).click();
+        await closeStandaloneBoard(editor);
         await expect(editor).toBeHidden();
         await expect.poll(() => page.evaluate(() => window.portableBoardMenus)).toEqual([]);
       }

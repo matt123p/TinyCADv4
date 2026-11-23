@@ -140,7 +140,9 @@ export default function BoardProfileDialog({
       setAttempted(contour);
       const cutouts = [...profile.cutouts];
       if (cutout) cutouts[cutoutNumber] = contour;
-      onApply({ outline: cutout ? profile.outline : contour, cutouts });
+      const cutoutShapes = profile.cutoutShapes && cutouts.map((_, index) =>
+        cutout && index === cutoutNumber ? null : profile.cutoutShapes[index] ?? null);
+      onApply({ outline: cutout ? profile.outline : contour, cutouts, ...(cutoutShapes?.some(Boolean) ? { cutoutShapes } : {}) });
       onClose();
     } catch (failure) {
       setError(failure instanceof Error ? failure : new Error(String(failure)));

@@ -2,6 +2,7 @@ import { Button, Checkbox, Select } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import { boardPickKinds } from './BoardCanvas';
 import type { BoardPick, BoardPickTarget } from './BoardCanvas';
+import { boardLayerById } from '../../pcb/boardLayers';
 
 export default function BoardPickPanel({ pick, onHover, onSelect, onClose }: {
   pick: BoardPick;
@@ -10,10 +11,8 @@ export default function BoardPickPanel({ pick, onHover, onSelect, onClose }: {
   onClose(): void;
 }) {
   const [kind, setKind] = useState<BoardPickTarget['kind'] | 'all'>('all');
-  const [layer, setLayer] = useState<'all' | 'top' | 'bottom'>('all');
   const [includeLocked, setIncludeLocked] = useState(false);
   const matches = pick.targets.filter((target) => (kind === 'all' || target.kind === kind) &&
-    (layer === 'all' || target.layer === 'both' || target.layer === layer) &&
     (includeLocked || !target.locked));
   return (
     <section className="pcb-panel-scroll" aria-label="Pick overlapping objects">
@@ -26,15 +25,6 @@ export default function BoardPickPanel({ pick, onHover, onSelect, onClose }: {
           {Object.entries(boardPickKinds).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
         </Select>
       </label>
-      <label htmlFor="pcb-pick-layer">
-        Selectable layer
-        <Select id="pcb-pick-layer" value={layer}
-          onChange={(event) => setLayer(event.target.value as typeof layer)}>
-          <option value="all">All visible layers</option>
-          <option value="top">Top</option>
-          <option value="bottom">Bottom</option>
-        </Select>
-      </label>
       <Checkbox label="Include locked objects" checked={includeLocked} onChange={(_, data) => setIncludeLocked(data.checked === true)} />
       <p role="status">{matches.length} matching objects</p>
       {!!matches.length && (
@@ -44,7 +34,7 @@ export default function BoardPickPanel({ pick, onHover, onSelect, onClose }: {
               <Button appearance="subtle" onClick={() => onSelect(target)}
                 onMouseEnter={() => onHover(target)} onMouseLeave={() => onHover()}
                 onFocus={() => onHover(target)} onBlur={() => onHover()}>
-                {boardPickKinds[target.kind]} · {target.label} · {target.layer}
+                {boardPickKinds[target.kind]} · {target.label} · {boardLayerById.get(target.boardLayer)?.label ?? target.layer}
                 {target.locked ? ' · Locked' : ''}
               </Button>
             </li>

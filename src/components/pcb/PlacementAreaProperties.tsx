@@ -1,7 +1,8 @@
-import { Button, Input, Select, Textarea } from '@fluentui/react-components';
+import { BoardAreaFields } from './BoardAreaFields';
+import { Button, Input, Select } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import type { PlacementArea } from '../../pcb/placementAreas';
-import { outlineText, outlineVertices } from './boardOutlineInput';
+import { areaFields } from './boardOutlineInput';
 
 export default function PlacementAreaProperties({
   area,
@@ -21,7 +22,7 @@ export default function PlacementAreaProperties({
         name: String(data.get('name')).trim(),
         kind: data.get('kind') as PlacementArea['kind'],
         side: data.get('side') as PlacementArea['side'],
-        outline: outlineVertices(String(data.get('outline'))),
+        ...areaFields(data, area.shape),
       });
       setError('');
     } catch (failure) {
@@ -63,15 +64,7 @@ export default function PlacementAreaProperties({
         <option value="bottom">Bottom</option>
       </Select>
     </label>
-    <label>
-      Outline (X, Y in mm)
-      <Textarea
-        name="outline"
-        rows={5}
-        required
-        defaultValue={outlineText(area.outline)}
-      />
-    </label>
+    <BoardAreaFields shape={area.shape} outline={area.outline} />
     {error && <p role="alert">{error}</p>}
       <Button appearance="primary" type="submit">Apply</Button>
     </form>

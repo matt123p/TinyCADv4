@@ -12,6 +12,7 @@ import { validateBoardAssets } from './boardAssets';
 import type { BoardAssets } from './boardAssets';
 import { validateBoardMechanical } from './boardMechanical';
 import type { BoardMechanicalHole } from './boardMechanical';
+import { validateAreaShape } from './boardAreaShape';
 import { validateBoardRouting } from './boardRouting';
 import type { BoardTrack, BoardVia } from './boardRouting';
 import { validateBoardFabrication } from './fabricationProfiles';
@@ -198,7 +199,14 @@ export function validateBoard(value: unknown): BoardDocument {
     ) {
       throw new Error('An analytic profile is the sole board outline.');
     }
-    profileRegion(board.profile);
+    const { holes } = profileRegion(board.profile);
+    if (board.profile.cutoutShapes !== undefined) {
+      if (!Array.isArray(board.profile.cutoutShapes) || board.profile.cutoutShapes.length !== holes.length)
+        throw new Error('Invalid board cutout shapes.');
+      board.profile.cutoutShapes.forEach((shape, index) => {
+        if (shape !== null) validateAreaShape(shape, holes[index]);
+      });
+    }
   } else {
     if (
       board.profile !== undefined ||
@@ -272,6 +280,7 @@ export type BoardOperation =
   | { readonly type: 'rename'; readonly title: string }
   | { readonly type: 'setCopperLayers'; readonly count: 1 | 2 }
   | { readonly type: 'addMechanicalHole'; readonly hole: BoardMechanicalHole }
+  | { readonly type: 'setMechanicalHole'; readonly hole: BoardMechanicalHole }
   | { readonly type: 'removeMechanicalHole'; readonly id: string }
   | { readonly type: 'setRules'; readonly rules: RouteRules }
   | { readonly type: 'setNetClass'; readonly netClass: BoardNetClass }
@@ -365,6 +374,12 @@ export class BoardHistory {
               ({ id }) => id !== operation.id,
             ),
           };
+          break;
+        case 'setMechanicalHole':
+          if (!candidate.mechanicalHoles?.some(({ id }) => id === operation.hole.id))
+            throw new Error('The hole to edit is no longer on the board.');
+          candidate = { ...candidate, mechanicalHoles: candidate.mechanicalHoles.map((hole) =>
+            hole.id === operation.hole.id ? operation.hole : hole) };
           break;
         case 'setRules':
           candidate = { ...candidate, rules: operation.rules };

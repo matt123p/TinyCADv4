@@ -2866,7 +2866,7 @@ export class updateView {
     const update_sel_item = updateLineFactoryFactory(sel_item);
     if (update_sel_item) {
       // Apply the menu item
-      let obj = (update_sel_item as any)[command](
+      let obj = update_sel_item.applyPolygonCommand(command,
         view.contextMenuLastPoint,
         new Snap(sheet.details.grid, sheet.details.grid_snap),
       );

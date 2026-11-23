@@ -1,3 +1,4 @@
+import { BoardAreaFields } from './BoardAreaFields';
 import { Button, Input, Select, Textarea } from '@fluentui/react-components';
 import React, { useState } from 'react';
 import type { BoardDocument, CopperLayer } from '../../pcb/board';
@@ -7,7 +8,7 @@ import type {
   ZoneIslands,
 } from '../../pcb/boardZones';
 import { boardInputLength } from './boardNumberInput';
-import { outlineText, outlineVertices } from './boardOutlineInput';
+import { areaFields, outlineText, outlineVertices } from './boardOutlineInput';
 
 const mm = (value: number) => String(value / 1_000_000);
 const nm = (value: string) => boardInputLength(value, 'mm');
@@ -34,7 +35,7 @@ export default function BoardZoneProperties({
         netId: value('net'),
         layerId: value('layer') as CopperLayer['id'],
         priority: Number(value('priority')),
-        outline: outlineVertices(value('outline')),
+        ...areaFields(form, zone.shape),
         cutouts: cutouts
           ? cutouts
               .split(/\r?\n\s*\r?\n/)
@@ -93,16 +94,7 @@ export default function BoardZoneProperties({
         required
       />
     </label>
-    <label>
-      Outline (X, Y in mm)
-      <Textarea
-        aria-label="Outline (X, Y in mm)"
-        name="outline"
-        rows={4}
-        defaultValue={outlineText(zone.outline)}
-        required
-      />
-    </label>
+    <BoardAreaFields shape={zone.shape} outline={zone.outline} />
     <label>
       Cutouts (X, Y in mm, blank line between cutouts)
       <Textarea

@@ -9,5 +9,6 @@ Apply the [shared UI skill](../tinycad-ui/SKILL.md). Use the [v4.1.0 audit](../.
 
 - Keep the library search and preview on the left, drawing and sheet strip in the centre, and symbol/net navigation or selected properties below. Reuse the existing property table, style and pin panels, and modal document properties.
 - Start symbol placement through the existing library preview and sheet drop handler. Use the same add, snap, commit, selection and cancel paths for equivalent tools. Keep .dsn and .dzn open and save behavior available in Single File mode.
+- Keep the schematic rectangle, ellipse and closed-line components and manipulators reusable by PCB Design. The closed-line tool is the schematic polygon implementation. Exercise schematic placement and handle editing when changing any of these tools.
 - Preserve the user's sheet selection, symbol identity, terminal connections and undo history when changing interactions. In Project mode, separate document tabs from sheets and route shared commands to the active editor.
 - Verify an existing drawing on real controls, including library drag, placement, object properties, right click, zoom and rulers when touched. Include the PCB or Simulation pane when changing shared shell behavior.

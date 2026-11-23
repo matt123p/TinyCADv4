@@ -611,11 +611,10 @@ export class updateLine implements SimpleAdd, MoveAdd, IsInside {
     return this.item;
   }
 
-  getContextMenu(items: ContextMenuList, p: Coordinate) {
+  getContextMenu(items: ContextMenuList, p: Coordinate, handle = this.is_inside_item(p, true)?.handle) {
     // Has the user clicked on a handle?  If so,
     // then we can display a different message to if
     // they have clicked on a different area of the line
-    var handle = this.is_inside_item(p, true)?.handle;
     var r = items;
     if (handle < 1 || handle == null) {
       r.push({
@@ -703,6 +702,19 @@ export class updateLine implements SimpleAdd, MoveAdd, IsInside {
   }
 
   // Menu Handlers
+  applyPolygonCommand(command: string, point: Coordinate, snap: Snap, handle?: number) {
+    switch (command) {
+      case 'menu_user_add_handle': return this.menu_user_add_handle(point, snap);
+      case 'menu_user_add_curve': return this.menu_user_add_curve(point, snap);
+      case 'menu_user_add_curve_quadratic': return this.menu_user_add_curve_quadratic(point, snap);
+      case 'menu_user_add_curve_cubic': return this.menu_user_add_curve_cubic(point, snap);
+      case 'menu_user_del_handle': return this.menu_user_del_handle(point, snap, handle);
+      case 'menu_make_polyline': return this.menu_make_polyline(point, snap);
+      case 'menu_make_polygon': return this.menu_make_polygon(point, snap);
+      default: return this.item;
+    }
+  }
+
   menu_user_add_handle(p: Coordinate, snap: Snap) {
     let d_points = this.item.d_points.slice();
 
@@ -778,9 +790,8 @@ export class updateLine implements SimpleAdd, MoveAdd, IsInside {
     return this._insertCurveControlPoints(p, snap, 2);
   }
 
-  menu_user_del_handle(p: Coordinate, snap: Snap) {
+  menu_user_del_handle(p: Coordinate, snap: Snap, handle = this.is_inside_item(p, true)?.handle) {
     let d_points = this.item.d_points.slice();
-    var handle = this.is_inside_item(p, true)?.handle;
 
     if (handle > 0) {
       d_points.splice(handle - 1, 1);
