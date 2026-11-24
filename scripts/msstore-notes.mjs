@@ -1,5 +1,6 @@
 import {
   readFileSync,
+  existsSync,
   writeFileSync,
   mkdirSync,
   appendFileSync,
@@ -16,15 +17,21 @@ const { version } = JSON.parse(
   readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
 );
 if (command === 'generate' && input && !notesFile) {
-  const changelog = readFileSync(
-    new URL('../CHANGELOG.md', import.meta.url),
-    'utf8',
+  const storeNotes = new URL(
+    `../config/msstore-release-notes/v${version}.md`,
+    import.meta.url,
   );
-  const text = plainReleaseNotes(extractReleaseNotes(changelog, version));
+  const markdown = existsSync(storeNotes)
+    ? readFileSync(storeNotes, 'utf8')
+    : extractReleaseNotes(
+        readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8'),
+        version,
+      );
+  const text = plainReleaseNotes(markdown);
   if (!text) throw new Error(`No Store release notes for v${version}.`);
   const notes = `TinyCAD ${version}\n\n${text}\n`;
   if (notes.trim().length > 1500)
-    throw new Error('Store release notes exceed the 1500-character limit. Shorten the changelog entry.');
+    throw new Error('Store release notes exceed the 1500-character limit. Shorten the release notes.');
   mkdirSync(path.dirname(input), { recursive: true });
   writeFileSync(input, notes, 'utf8');
   console.log(`Generated What's new for ${version}: ${input}`);

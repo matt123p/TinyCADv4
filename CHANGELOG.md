@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v4.1.2 — 2026-11-24
+
+This release improves desktop printing and the display of names on standard library symbols. It also expands the bundled SPICE model catalog and adds support for importing KiCad simulation models.
+
 ### Added
 
 - Browse bundled SPICE models offline in the symbol editor and on placed components. The picker shows descriptions, source links and optional model text.
@@ -18,8 +22,10 @@
 
 ### Fixed
 
+- Restore direct printing to the selected printer on Windows.
 - Fix Print on Linux when launching TinyCAD from development tools on GNOME Wayland, including the VS Code Snap.
 - On Linux, Advanced Print opens the selected sheets as a PDF in TinyCAD and displays the system print dialog. Canceling keeps the PDF open.
+- Update printing and SVG export to use React 18 rendering.
 - Show the editable Name field by default on newly placed standard library symbols and remove duplicate name captions from their artwork.
 - Demonstrate Markdown formatting in the notes on bundled equipment and network drawings.
 
