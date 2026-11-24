@@ -207,6 +207,7 @@ export interface DsnSettings {
 }
 
 export interface dsnDrawing {
+  spiceModelPacks?: import('../simulation/catalogBindings').SpiceModelPack[];
   documentId?: string;
   representation?: 'zip-v1' | 'xml';
   saveFormat?: 'auto' | 'zip-v1' | 'xml';

@@ -92,6 +92,7 @@ export const ImportSymbolPickerDialog: FunctionComponent<ImportSymbolPickerDialo
                         count: item.name.ppp,
                       })}
                     </div>
+                    {item.spiceImportError && <div className={styles.symbolMeta}>SPICE model skipped. {item.spiceImportError}</div>}
                   </div>
                 );
               })}

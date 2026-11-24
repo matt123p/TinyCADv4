@@ -1641,6 +1641,69 @@ test('library batch additions preserve unsaved artwork, reject stale edits and u
   );
 });
 
+test('SPICE tools inspect local models and set requested definitions on generated components', async ({ page }) => {
+  const skill = (await run(page, 'read_skill_reference', { path: 'references/spice-models.md' })).data.content;
+  expect(skill).toContain('only when the user explicitly requests SPICE or simulation support');
+  const found = (await run(page, 'search_spice_models', { query: '1N4148' })).data.models;
+  const { id: modelId, packId, revision } = found.find(({ id }) => id === '1N4148_OJ');
+  const model = { modelId, packId, revision };
+  const details = (await run(page, 'inspect_spice_model', model)).data;
+  expect(details.definition).toMatch(/\.model 1N4148_OJ/i);
+  expect(details.source.url).toMatch(/^https:/);
+  const created = (await run(page, 'create_ic_symbol', {
+    name: 'Signal diode',
+    reference: 'D?',
+    pins: [
+      { name: 'A', number: '2', side: 'west', order: 1 },
+      { name: 'K', number: '1', side: 'east', order: 1 },
+    ],
+    includeDefinition: true,
+    format: 'svg',
+  })).data;
+  const { componentId } = created;
+  const target = (await run(page, 'inspect_spice_target', { componentId, ...model })).data;
+  expect(target.mapping.mapping).toEqual(['2', '1']);
+  expect(target.attachment).toBeUndefined();
+  const plain = (await run(page, 'place_component', { componentId, baseRevision: target.revision })).data;
+  const placed = (await run(page, 'inspect_spice_target', { reference: plain.reference })).data;
+  expect(placed.template).toBeUndefined();
+  const attached = (await run(page, 'attach_spice_model', {
+    ...model, reference: plain.reference, sheet: 1, baseRevision: placed.revision, pins: ['2', '1'],
+  })).data;
+  const customSpice = {
+    template: 'DTC_$(ref) %(2) %(1) TEST_DIODE',
+    prologue: '* Test diode\n' + '* Standalone test definition\n'.repeat(50) + '.model TEST_DIODE D(IS=1n)',
+  };
+  const custom = (await run(page, 'place_component', {
+    componentId, customSpice, baseRevision: attached.revision,
+  })).data;
+  expect(custom.applied).toBe(true);
+  expect((await snapshot(page)).xml).toContain('TEST_DIODE');
+  const customTarget = (await run(page, 'inspect_spice_target', { reference: custom.reference })).data;
+  expect(customTarget.template).toBe(customSpice.template);
+  expect(customTarget.prologue).toBe(customSpice.prologue);
+  expect(customTarget.customTemplate).toBe(true);
+  await page.evaluate(xml => window.chatTest.openLibrary(xml), created.definition);
+  const library = (await run(page, 'read_library')).data;
+  expect((await run(page, 'search_spice_models', { query: '1N4148', componentId })).data.total).toBeGreaterThan(0);
+  await run(page, 'add_library_components', {
+    baseRevision: library.revision,
+    components: [
+      { componentId, name: 'Linked diode', spiceModel: { ...model, pins: ['2', '1'] } },
+      { componentId, name: 'Custom diode', customSpice },
+    ],
+  });
+  const { components } = (await run(page, 'read_library')).data;
+  const linked = components.find(({ name }) => name === 'Linked diode').attributes;
+  const binding = linked.find(({ AttName }) => AttName === '$$CATALOG_MODEL');
+  expect(binding.ShowAtt).toBe(2);
+  expect(JSON.parse(binding.AttValue)).toMatchObject({ modelId, packId, pins: ['2', '1'] });
+  const attributes = components.find(({ name }) => name === 'Custom diode').attributes;
+  expect(attributes.find(({ AttName }) => AttName === '$$SPICE_PROLOG')).toMatchObject({
+    AttValue: customSpice.prologue, ShowAtt: 2,
+  });
+});
+
 test('ChatGPT web search shows inline citations and keeps search details collapsed', async ({
   page,
 }) => {
@@ -2358,6 +2421,7 @@ test('bundled library search injects the catalog and places original SPICE symbo
   await page.route('**/api/search/**', async route => { online++; await route.abort(); });
   const skill = (await run(page, 'read_skill_reference', { path: 'SKILL.md' })).data.content;
   expect(skill).toContain('SPICE essentials');
+  expect(skill).toContain('SPICE models when requested');
   expect(skill).toContain('Digital logic');
   expect(skill).toContain('search_bundled_symbols BEFORE the online search_symbols');
   expect(requested).toEqual([]); // The runtime catalog does not eagerly load SQLite.

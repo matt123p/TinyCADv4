@@ -142,25 +142,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on('simulation-event', listener);
         return () => ipcRenderer.removeListener('simulation-event', listener);
     },
-    // Print a PDF using native print dialog (fallback - prints main window)
-    printPdf: (pdfBase64) => ipcRenderer.send('print-pdf', pdfBase64),
+    openPrintPdf: (pdfBase64) => ipcRenderer.invoke('open-print-pdf', pdfBase64),
     
     // Get list of available printers
     getPrinters: () => ipcRenderer.invoke('get-printers'),
     
-    // Print HTML content to a specific printer (uses our custom preview dialog)
-    printDocument: (options) => ipcRenderer.send('print-document', options),
+    // Print the sheets selected in TinyCAD’s print preview
+    printDocument: (options) => ipcRenderer.invoke('print-document', options),
 
     openNewWindow: (arg) => ipcRenderer.send('open-new-window', arg),
     openExternal: (url) => ipcRenderer.send('open-external', url),
     openContainingFolder: (filePath) => ipcRenderer.send('open-containing-folder', filePath),
     
-    onPrintComplete: (callback) => {
-        const listener = (event, data) => callback(data);
-        ipcRenderer.on('print-complete', listener);
-        return () => ipcRenderer.removeListener('print-complete', listener);
-    },
-
     // Save a PDF file using native save dialog
     savePdf: (data) => ipcRenderer.send('save-pdf', data),
     saveSvg: (data) => ipcRenderer.send('save-svg', data),

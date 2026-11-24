@@ -8,8 +8,15 @@ export const kicadImporter: SymbolImporter = {
   supports(fileName: string) {
     return fileName.toLowerCase().endsWith('.kicad_sym');
   },
-  async importSymbols(sourceText: string) {
+  async importSymbols(sourceText, _sourceName, modelFiles = []) {
     const parsed = parseKicadSym(sourceText);
-    return convertKicadLibrary(parsed);
+    const companions = new Map<string, string>();
+    for (const { fileName, content } of modelFiles) {
+      const key = fileName.toLowerCase();
+      if (companions.has(key) && companions.get(key) !== content)
+        throw new Error('More than one SPICE file was supplied as ' + fileName + '.');
+      companions.set(key, content);
+    }
+    return convertKicadLibrary(parsed, companions);
   },
 };

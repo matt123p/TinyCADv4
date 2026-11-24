@@ -3,12 +3,13 @@
   "id": "spice",
   "name": "SPICE essentials",
   "sourceSha256": "3efbdf682121249aa4c2c8f8fdd1dc807025b26c5e46c369eb41c3f28a34d47e",
-  "recipeSha256": "ca85f91783e28be0246236338e8083bb97806f9aa16e3029f378cadec840f984",
+  "recipeSha256": "a2f72ce73d1e45c0c9592eb52c15bac11005b64bdee2b0cc58cbfd31c7ba0c20",
   "contributors": [
     "onetransistor",
-    "aryajur"
+    "aryajur",
+    "TinyCAD contributors"
   ],
-  "notes": "Curated onetransistor drawings with existing aryajur SPICE templates. Generic device models and the 741-style behavioral model are original teaching approximations, not manufacturer-validated models. See docs/spice-library.md for defaults, terminal mapping, and limitations.",
+  "notes": "Curated onetransistor drawings with existing aryajur SPICE templates, plus original LM358 and LM324 package artwork. The LM358 and LM324 use OpenJellyBean models. See docs/libraries.md#spice-essentials for defaults, terminal mapping, and limitations.",
   "references": [
     {
       "title": "ngspice manual",
@@ -17,8 +18,28 @@
     {
       "title": "TI UA741 data sheet",
       "url": "https://www.ti.com/lit/ds/symlink/ua741.pdf"
+    },
+    {
+      "title": "TI LM358 data sheet",
+      "url": "https://www.ti.com/lit/ds/symlink/lm358.pdf"
+    },
+    {
+      "title": "TI LM324 pinout",
+      "url": "https://www.ti.com/lit/ds/symlink/lm324-mil.pdf"
     }
   ],
+  "modelLibrary": {
+    "file": "../library-sources/openjellybean/jellybean.lib.txt",
+    "license": "../library-sources/openjellybean/LICENSE",
+    "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+    "sha256": "bc0304fe2fae01979bcbd6eb74466a3b25e8a632088ffa7ce19b385ada799163",
+    "subcircuits": [
+      "OPAMP_OJ",
+      "LM358_OJ",
+      "LM358_DUAL_OJ",
+      "LM324_QUAD_OJ"
+    ]
+  },
   "entries": [
     {
       "id": "resistor",
@@ -2264,6 +2285,174 @@
         }
       ],
       "xmlSha256": "2ecbd8bf91c0e2904cea59c09a981f77c0525f7ebaf2a2a9654f2f3dbdd84959"
+    },
+    {
+      "id": "lm358",
+      "name": "LM358",
+      "nameId": 28,
+      "symbolId": 27,
+      "source": {
+        "artwork": "../library-sources/spice/lm358.xml",
+        "author": "TinyCAD contributors",
+        "name": "LM358",
+        "description": "Dual operational amplifier with all 8 package pins and a built-in OpenJellyBean SPICE model.",
+        "xmlSha256": "214ccd1db2e45665c31e88fe81d3cace103592719ae2346de71503b8d1725a82"
+      },
+      "notes": "",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "1OUT",
+          "part": 0,
+          "at": "16,24"
+        },
+        {
+          "number": "2",
+          "name": "1IN-",
+          "part": 0,
+          "at": "16,27"
+        },
+        {
+          "number": "3",
+          "name": "1IN+",
+          "part": 0,
+          "at": "16,30"
+        },
+        {
+          "number": "4",
+          "name": "V-",
+          "part": 0,
+          "at": "16,33"
+        },
+        {
+          "number": "5",
+          "name": "2IN+",
+          "part": 0,
+          "at": "44,33"
+        },
+        {
+          "number": "6",
+          "name": "2IN-",
+          "part": 0,
+          "at": "44,30"
+        },
+        {
+          "number": "7",
+          "name": "2OUT",
+          "part": 0,
+          "at": "44,27"
+        },
+        {
+          "number": "8",
+          "name": "V+",
+          "part": 0,
+          "at": "44,24"
+        }
+      ],
+      "xmlSha256": "214ccd1db2e45665c31e88fe81d3cace103592719ae2346de71503b8d1725a82"
+    },
+    {
+      "id": "lm324",
+      "name": "LM324",
+      "nameId": 29,
+      "symbolId": 28,
+      "source": {
+        "artwork": "../library-sources/spice/lm324.xml",
+        "author": "TinyCAD contributors",
+        "name": "LM324",
+        "description": "Quad operational amplifier with all 14 package pins and a built-in OpenJellyBean SPICE model.",
+        "xmlSha256": "20a280a21f403f1ada9d796ee89867df6df86d8cdf1f9f9aad93658656be6ec5"
+      },
+      "notes": "",
+      "changes": [],
+      "pins": [
+        {
+          "number": "1",
+          "name": "1OUT",
+          "part": 0,
+          "at": "16,24"
+        },
+        {
+          "number": "2",
+          "name": "1IN-",
+          "part": 0,
+          "at": "16,27"
+        },
+        {
+          "number": "3",
+          "name": "1IN+",
+          "part": 0,
+          "at": "16,30"
+        },
+        {
+          "number": "4",
+          "name": "V+",
+          "part": 0,
+          "at": "16,33"
+        },
+        {
+          "number": "5",
+          "name": "2IN+",
+          "part": 0,
+          "at": "16,36"
+        },
+        {
+          "number": "6",
+          "name": "2IN-",
+          "part": 0,
+          "at": "16,39"
+        },
+        {
+          "number": "7",
+          "name": "2OUT",
+          "part": 0,
+          "at": "16,42"
+        },
+        {
+          "number": "8",
+          "name": "3OUT",
+          "part": 0,
+          "at": "44,42"
+        },
+        {
+          "number": "9",
+          "name": "3IN-",
+          "part": 0,
+          "at": "44,39"
+        },
+        {
+          "number": "10",
+          "name": "3IN+",
+          "part": 0,
+          "at": "44,36"
+        },
+        {
+          "number": "11",
+          "name": "V-",
+          "part": 0,
+          "at": "44,33"
+        },
+        {
+          "number": "12",
+          "name": "4IN+",
+          "part": 0,
+          "at": "44,30"
+        },
+        {
+          "number": "13",
+          "name": "4IN-",
+          "part": 0,
+          "at": "44,27"
+        },
+        {
+          "number": "14",
+          "name": "4OUT",
+          "part": 0,
+          "at": "44,24"
+        }
+      ],
+      "xmlSha256": "20a280a21f403f1ada9d796ee89867df6df86d8cdf1f9f9aad93658656be6ec5"
     }
   ]
 }

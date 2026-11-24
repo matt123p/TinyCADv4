@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "requiresXspice": true,
+  "pack": {
+    "id": "ngspice-xspice",
+    "version": "e8751dfb7c42",
+    "revision": "e8751dfb7c421d3c177c43e6b1e26f2ed7169f1e4018971bb7537d298e02e118",
+    "filename": "ngspice-xspice_e8751dfb7c42.lib",
+    "sha256": "b8f0b6657baf9c4f0126e6e5d4d28106b9c55c51170444bd3f72f4eff772f7e3",
+    "license": "BSD-3-Clause AND LicenseRef-Public-Domain",
+    "licenseText": "BSD 3-Clause License\n\nCopyright Holger Vogt, 2024\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice,\nthis list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice,\nthis list of conditions and the following disclaimer in the documentation\nand/or other materials provided with the distribution.\n\n3. Neither the name of the copyright holder nor the names of its\ncontributors may be used to endorse or promote products derived from this\nsoftware without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\nARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE\nLIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR\nCONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF\nSUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS\nINTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN\nCONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\nARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\nPOSSIBILITY OF SUCH DAMAGE.\n\nLR8ng.lib states that Holger Vogt’s regulator and helper op-amp are in the public domain.\n",
+    "spice": "* TinyCAD selection from ngspice special models (desktop)\n\n.subckt LTC1044HV pin1 pin2 pin3 pin4 pin5 pin6 pin7 pin8\n\n.param asw=0\n\n.if (asw==1)\n.model switch4 pswitch(cntl_off=1.65 cntl_on=1.65 r_on=1.0 log=TRUE)\nAS1 %g q %gd(pin8 pin2) switch4\nAS2 %g qn %gd(pin2 pin3) switch4\nAS3 %g q %gd(pin3 pin4) switch4\nAS4 %g qn %gd(pin4 pin5) switch4\n.else\n.model swa sw(vt=1.65)\nS1 pin8 pin2 q 0 swa\nS2 pin2 pin3 qn 0 swa\nS3 pin3 pin4 q 0 swa\nS4 pin4 pin5 qn 0 swa\n.endif\n\nCS1 q 0 1p\nCS2 qn 0 1p\n\nabridge1 [dq dqn] [q qn] dac1\n.model dac1 dac_bridge(out_low = 0.7 out_high = 3.0 out_undef = 2.2\n+ input_load = 5.0e-12 t_rise = 50e-9\n+ t_fall = 20e-9)\n\n*flipflop\na7 dqn din nc2 nc3 dq dqn flop1\n.model flop1 d_dff(clk_delay = 13.0e-9 set_delay = 25.0e-9\n+ reset_delay = 27.0e-9 rise_delay = 10.0e-9\n+ fall_delay = 3e-9)\n\n*oscillator\na5 pin1 dosc var_clock\n.model var_clock d_osc(cntl_array = [-2 0 1 2]\n+ freq_array = [1e3 1e3 6e3 6e3]\n+ duty_cycle = 0.5 init_phase = 0\n+ rise_delay = 10e-9 fall_delay=8e-9)\n\n* pull down pin1 to 0 if open\nRpin1 pin1 0 1G \n\n*convergence helper\nRp2 pin2 0 1e9\n*Rp4 pin4 0 1e9\n\n*pin7 (osc) external override ******************************************\nVp7 int7 pin8 1\nRp71 int7 pin7 1Meg\nRp72 int7 0 1G\n* dselect7 high: pin7 open, internal osc\n* dselect7 low: external oscillator\nabridge2 [%vd(pin7 pin8)] [dselect7] adc_buff\n.model adc_buff adc_bridge(in_low = 0.5 in_high = 0.5)\n\nabridge3 [pin7] [dp7] adc_buff\n.model adc_buff adc_bridge(in_low = 0.5 in_high = 0.5)\n\n*mux\nana1 [dosc dselect7] dna1 and1\nana2 [dp7 ~dselect7] dna2 and1\naor12 [dna1 dna2] din or12\n\n.model or12 d_or(rise_delay = 0.5e-9 fall_delay = 0.3e-9\n+ input_load = 0.5e-12)\n\n.model and1 d_and(rise_delay = 0.5e-9 fall_delay = 0.3e-9\n+ input_load = 0.5e-12)\n**************************************************************************\n.ends\n\n.subckt LR8ng in out adj\n\n* controlled resistor\nRreg in outint R = {exp(V(vcrtl)+10)}\n\n* simple diode to prevent reverse current flow and limit the forward current\n* to 20 mA, forward voltage is 0 V.\nasidiode outint out ds1\n.model ds1 sidiode(Roff=10Meg Ron=1 Rrev=1 Vfwd=0\n+ Vrev=1000 Revepsilon=0.02 Epsilon=0.02 Ilimit=20m Revilimit=20m)\n\n* internal 10uA current source to adj\nIadj adj out 10u\nRadj adj dio 10k\nDadj dio out adiode\n.model adiode D cj=2p Rs=10\n\n* error amplifier\nRin ref refin 10k\nRfb2 refin intc 22k\nCfb2  intc vcrtl 10n\nCfb refin vcrtl 470p\nXopa adj refin vcc vee vcrtl kicad_builtin_opamp\nVCC vcc 0 10\nVEE vee 0 -10\n\n* reference voltage\nVref ref 0 1.2\n\n.ends LR8ng\n\n.subckt kicad_builtin_opamp in+ in- vcc vee out params: POLE=20 GAIN=1Meg VOFF=0 ROUT=10\n* add offset voltage\n  Voff in+ inoff dc {VOFF}\n* gain stage with RC pole\n  G10 0 int inoff in- 100u\n  R1 int 0 {GAIN/100u}\n  C1 int 0 {1/(6.28*(GAIN/100u)*POLE)}\n* output decoupling, output resistance\n  Eout 2 0 int 0 1\n  Rout 2 out {ROUT}\n* output limited to vee, vcc\n  Elow lee 0 vee 0 1\n  Ehigh lcc 0 vcc 0 1\n  Dlow lee int Dlimit\n  Dhigh int lcc Dlimit\n  .model Dlimit D N=0.01 Cj=1n Rs=10\n*\n.ends\n"
+  },
+  "models": [
+    {
+      "id": "LTC1044HV",
+      "kind": "charge pump",
+      "description": "XSPICE switched-capacitor voltage converter. The low-voltage pin is not modelled. Requires the desktop engine.",
+      "aliases": [
+        "LTC1044",
+        "charge pump"
+      ],
+      "source": {
+        "name": "ngspice special models (desktop)",
+        "revision": "e8751dfb7c421d3c177c43e6b1e26f2ed7169f1e4018971bb7537d298e02e118",
+        "url": "https://ngspice.sourceforge.io/model-parameters/special_models.zip",
+        "archiveMember": "special_models/LTC1044.lib"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "pin1",
+          "role": "boost"
+        },
+        {
+          "port": "pin2",
+          "role": "capacitor positive"
+        },
+        {
+          "port": "pin3",
+          "role": "ground"
+        },
+        {
+          "port": "pin4",
+          "role": "capacitor negative"
+        },
+        {
+          "port": "pin5",
+          "role": "output"
+        },
+        {
+          "port": "pin6",
+          "role": "low voltage"
+        },
+        {
+          "port": "pin7",
+          "role": "oscillator"
+        },
+        {
+          "port": "pin8",
+          "role": "positive supply"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt LTC1044HV pin1 pin2 pin3 pin4 pin5 pin6 pin7 pin8\n\n.param asw=0\n\n.if (asw==1)\n.model switch4 pswitch(cntl_off=1.65 cntl_on=1.65 r_on=1.0 log=TRUE)\nAS1 %g q %gd(pin8 pin2) switch4\nAS2 %g qn %gd(pin2 pin3) switch4\nAS3 %g q %gd(pin3 pin4) switch4\nAS4 %g qn %gd(pin4 pin5) switch4\n.else\n.model swa sw(vt=1.65)\nS1 pin8 pin2 q 0 swa\nS2 pin2 pin3 qn 0 swa\nS3 pin3 pin4 q 0 swa\nS4 pin4 pin5 qn 0 swa\n.endif\n\nCS1 q 0 1p\nCS2 qn 0 1p\n\nabridge1 [dq dqn] [q qn] dac1\n.model dac1 dac_bridge(out_low = 0.7 out_high = 3.0 out_undef = 2.2\n+ input_load = 5.0e-12 t_rise = 50e-9\n+ t_fall = 20e-9)\n\n*flipflop\na7 dqn din nc2 nc3 dq dqn flop1\n.model flop1 d_dff(clk_delay = 13.0e-9 set_delay = 25.0e-9\n+ reset_delay = 27.0e-9 rise_delay = 10.0e-9\n+ fall_delay = 3e-9)\n\n*oscillator\na5 pin1 dosc var_clock\n.model var_clock d_osc(cntl_array = [-2 0 1 2]\n+ freq_array = [1e3 1e3 6e3 6e3]\n+ duty_cycle = 0.5 init_phase = 0\n+ rise_delay = 10e-9 fall_delay=8e-9)\n\n* pull down pin1 to 0 if open\nRpin1 pin1 0 1G \n\n*convergence helper\nRp2 pin2 0 1e9\n*Rp4 pin4 0 1e9\n\n*pin7 (osc) external override ******************************************\nVp7 int7 pin8 1\nRp71 int7 pin7 1Meg\nRp72 int7 0 1G\n* dselect7 high: pin7 open, internal osc\n* dselect7 low: external oscillator\nabridge2 [%vd(pin7 pin8)] [dselect7] adc_buff\n.model adc_buff adc_bridge(in_low = 0.5 in_high = 0.5)\n\nabridge3 [pin7] [dp7] adc_buff\n.model adc_buff adc_bridge(in_low = 0.5 in_high = 0.5)\n\n*mux\nana1 [dosc dselect7] dna1 and1\nana2 [dp7 ~dselect7] dna2 and1\naor12 [dna1 dna2] din or12\n\n.model or12 d_or(rise_delay = 0.5e-9 fall_delay = 0.3e-9\n+ input_load = 0.5e-12)\n\n.model and1 d_and(rise_delay = 0.5e-9 fall_delay = 0.3e-9\n+ input_load = 0.5e-12)\n**************************************************************************\n.ends\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "LR8ng",
+      "kind": "regulator",
+      "description": "Adjustable high-voltage linear regulator approximation with current limiting. Requires the desktop engine.",
+      "aliases": [
+        "LR8"
+      ],
+      "source": {
+        "name": "ngspice special models (desktop)",
+        "revision": "e8751dfb7c421d3c177c43e6b1e26f2ed7169f1e4018971bb7537d298e02e118",
+        "url": "https://ngspice.sourceforge.io/model-parameters/special_models.zip",
+        "archiveMember": "special_models/LR8ng.lib"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "in",
+          "role": "input"
+        },
+        {
+          "port": "out",
+          "role": "output"
+        },
+        {
+          "port": "adj",
+          "role": "adjust"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt LR8ng in out adj\n\n* controlled resistor\nRreg in outint R = {exp(V(vcrtl)+10)}\n\n* simple diode to prevent reverse current flow and limit the forward current\n* to 20 mA, forward voltage is 0 V.\nasidiode outint out ds1\n.model ds1 sidiode(Roff=10Meg Ron=1 Rrev=1 Vfwd=0\n+ Vrev=1000 Revepsilon=0.02 Epsilon=0.02 Ilimit=20m Revilimit=20m)\n\n* internal 10uA current source to adj\nIadj adj out 10u\nRadj adj dio 10k\nDadj dio out adiode\n.model adiode D cj=2p Rs=10\n\n* error amplifier\nRin ref refin 10k\nRfb2 refin intc 22k\nCfb2  intc vcrtl 10n\nCfb refin vcrtl 470p\nXopa adj refin vcc vee vcrtl kicad_builtin_opamp\nVCC vcc 0 10\nVEE vee 0 -10\n\n* reference voltage\nVref ref 0 1.2\n\n.ends LR8ng\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "kicad_builtin_opamp",
+      "kind": "opamp",
+      "description": "Public-domain generic behavioural op-amp used inside the LR8 regulator.",
+      "aliases": [
+        "generic op-amp"
+      ],
+      "source": {
+        "name": "ngspice special models (desktop)",
+        "revision": "e8751dfb7c421d3c177c43e6b1e26f2ed7169f1e4018971bb7537d298e02e118",
+        "url": "https://ngspice.sourceforge.io/model-parameters/special_models.zip",
+        "archiveMember": "special_models/LR8ng.lib"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "in+",
+          "role": "non-inverting input"
+        },
+        {
+          "port": "in-",
+          "role": "inverting input"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        },
+        {
+          "port": "out",
+          "role": "output"
+        }
+      ],
+      "parameterDefaults": {
+        "POLE": "20",
+        "GAIN": "1Meg",
+        "VOFF": "0",
+        "ROUT": "10"
+      },
+      "definition": ".subckt kicad_builtin_opamp in+ in- vcc vee out params: POLE=20 GAIN=1Meg VOFF=0 ROUT=10\n* add offset voltage\n  Voff in+ inoff dc {VOFF}\n* gain stage with RC pole\n  G10 0 int inoff in- 100u\n  R1 int 0 {GAIN/100u}\n  C1 int 0 {1/(6.28*(GAIN/100u)*POLE)}\n* output decoupling, output resistance\n  Eout 2 0 int 0 1\n  Rout 2 out {ROUT}\n* output limited to vee, vcc\n  Elow lee 0 vee 0 1\n  Ehigh lcc 0 vcc 0 1\n  Dlow lee int Dlimit\n  Dhigh int lcc Dlimit\n  .model Dlimit D N=0.01 Cj=1n Rs=10\n*\n.ends",
+      "compatibleComponents": []
+    }
+  ]
+}

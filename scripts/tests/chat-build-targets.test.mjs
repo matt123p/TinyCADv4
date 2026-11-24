@@ -40,6 +40,9 @@ for (const [target, entry] of [
         bundle.traverseAssets(asset => assets.add(path.relative(root, asset.filePath).replaceAll('\\', '/')));
       }
       assert.ok(assets.has('src/components/pages/designApp.tsx'), 'Must inspect the real editor build');
+      assert.ok(assets.has('bundled-libraries/spice/openjellybean.json'));
+      assert.ok(assets.has('bundled-libraries/spice/circsim.json'));
+      assert.ok(assets.has('bundled-libraries/spice/basic.json'));
       const chatAssets = [...assets].filter(name => /^src\/(?:chat|components\/chat)\//.test(name));
       if (target === 'electron') {
         for (const name of ['src/components/chat/ChatPanel.tsx', 'src/chat/tools.ts', 'src/chat/providers.ts']) {
@@ -68,6 +71,14 @@ for (const [target, entry] of [
       assert.ok(!index.some(({ name }) => name.startsWith('@fluentui/')));
       assert.match(await readNotice('SQLite (via sql.js)'), /SQLite is in the public domain[\s\S]*Permission is hereby granted/);
       assert.match(await readNotice('ngspice'), /Ngspice Licensing[\s\S]*Kenneth S\. Kundert/);
+      assert.match(await readNotice('OpenJellyBean'), /MIT License[\s\S]*openjellybean contributors/);
+      assert.match(await readNotice('circsim'), /MIT License[\s\S]*circsim maintainers/);
+      assert.match(await readNotice('TinyCAD Basic'), /GNU GPL version 3/);
+      assert.match(await readNotice('Spice_Files'), /MIT License[\s\S]*Spice_Files contributors/);
+      assert.match(await readNotice('ngspice special models'), /BSD 3-Clause License[\s\S]*Holger Vogt/);
+      for (const foundry of ['SkyWater SKY130', 'GlobalFoundries GF180MCU', 'IHP SG13G2']) {
+        assert.match(await readNotice(foundry), /Apache License[\s\S]*Version 2\.0/);
+      }
       assert.ok(index.some(({ name, license }) => name === 'Liberation Fonts' && license === 'OFL-1.1'));
       assert.ok(!index.some(({ name }) => ['tslib', 'parcel', 'type-fest'].includes(name)));
       assert.ok(!index.some(({ name }) => name.startsWith('@types/')));

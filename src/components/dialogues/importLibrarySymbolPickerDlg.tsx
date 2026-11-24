@@ -121,6 +121,7 @@ export const ImportLibrarySymbolPickerDialog: FunctionComponent<ImportLibrarySym
                         count: item.name.ppp,
                       })}
                     </div>
+                    {item.spiceImportError && <div className={styles.symbolMeta}>SPICE model skipped. {item.spiceImportError}</div>}
                   </div>
                 );
               })}

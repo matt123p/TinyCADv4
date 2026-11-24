@@ -1,0 +1,47 @@
+* ==========================================================================
+* @part: generic phototransistor optocoupler; PC817, 4N35, CNY17 presets
+* @family: optocouplers
+* @source: Repo
+* @url: (written for this repo)
+* @retrieved: 2026-09-24
+* @licence: MIT
+* @added-by: nav
+* @pins: OPTO_GEN: A K C E
+* @notes: teaching-grade; fixed CTR (no CTR-vs-If or temperature curve)
+* ==========================================================================
+* Written for this repository because the LTspice/Bordodynov PC817 and CNY17
+* models need an Igain parameter from the LTspice symbol and do not load
+* stand-alone in either simulator.
+*
+* How it works: Vsense measures the LED current; F1 injects CTR/BF of it into
+* the base of a high-gain NPN, so Ic = CTR * If in the active region and the
+* transistor saturates normally when the load limits Ic.
+*   LED:  Vf ~ 1.2 V @ 10 mA (IR LED)
+*   CTR:  collector current / LED current (1.0 = 100 %)
+* Usage:  X1 a k c e OPTO_GEN CTR=0.5      (both simulators)
+*         X1 a k c e PC817_GEN
+.subckt OPTO_GEN A K C E params: CTR=1
+Vsense A a1 0
+D1 a1 K DLED_OPTO
+C1 A K 18p
+F1 0 b Vsense {CTR/500}
+Rbe b E 100Meg
+Q1 C b E QPHOTO_OPTO
+.model DLED_OPTO D(Is=8e-13 N=2 Rs=1 Cjo=18p Bv=6 Ibv=10u)
+.model QPHOTO_OPTO NPN(Bf=500 Vaf=100 Ikf=10 Rc=1 Cjc=10p Cje=7p Tf=5n Tr=1u)
+.ends OPTO_GEN
+
+* PC817: CTR 50-600 % over ranks A-D; 130 % is a mid-range (rank B/C) value
+.subckt PC817_GEN A K C E
+X1 A K C E OPTO_GEN CTR=1.3
+.ends PC817_GEN
+
+* 4N35: CTR >= 100 % @ If = 10 mA (datasheet minimum)
+.subckt 4N35_GEN A K C E
+X1 A K C E OPTO_GEN CTR=1.0
+.ends 4N35_GEN
+
+* CNY17-2: CTR 63-125 % @ If = 10 mA
+.subckt CNY17_GEN A K C E
+X1 A K C E OPTO_GEN CTR=0.9
+.ends CNY17_GEN

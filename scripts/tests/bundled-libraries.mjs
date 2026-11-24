@@ -283,6 +283,31 @@ await assert.rejects(
   /read-only/,
 );
 
+const bundledCatalog = validation.parseBundledLibraryCatalog(
+  JSON.parse(
+    await readFile(
+      new URL('../../bundled-libraries/config.json', import.meta.url),
+      'utf8',
+    ),
+  ),
+);
+for (const entry of bundledCatalog.libraries) {
+  const file = new URL('../../bundled-libraries/' + entry.path, import.meta.url);
+  const bundle = await sqlite.loadTcLibrary(
+    'bundled:' + entry.id,
+    entry.name,
+    null,
+    await readFile(file),
+  );
+  assert.ok(bundle.names.length > 0, entry.name);
+  for (const symbol of bundle.names)
+    assert.equal(
+      symbol.ShowName,
+      model.TextDisplayMethod.ShowValue,
+      entry.name + '/' + symbol.Name,
+    );
+}
+
 // Personal-library refreshes preserve bundled data; bundled updates can remove it.
 const actionModules = {};
 for (const name of [

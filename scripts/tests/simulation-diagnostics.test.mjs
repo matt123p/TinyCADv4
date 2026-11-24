@@ -95,7 +95,7 @@ function sessionFixture(componentErrors = []) {
         return { stop() {}, dispose() {} };
       },
     },
-    './deck': { buildDeck: () => 'title\nR1 1 0 bad\n.op\n.end' },
+    './deck': { prepareSpiceDeck: (_net, setup) => ({ deck: 'title\nR1 1 0 bad\n.op\n.end', files: setup.models, identity: 'diagnostic test deck' }) },
     '../io/dsnContainer': { digest: async () => 'hash' },
     './contracts': { newIdentity: () => 'run-1' },
     './resultStore': { activateResultDocument() {}, MAX_RUN_BYTES: 1024 },

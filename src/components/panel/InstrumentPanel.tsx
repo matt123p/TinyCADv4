@@ -46,7 +46,7 @@ import {
   ResistanceTest,
 } from '../../simulation/resistanceTest';
 import { digest } from '../../io/dsnContainer';
-import { buildDeck } from '../../simulation/deck';
+import { prepareSpiceDeck } from '../../simulation/deck';
 import { NetlistWorkerState } from '../../web-worker/netlistState';
 import {
   actionSelectPanel,
@@ -233,7 +233,7 @@ export const InstrumentPanel = React.memo(function InstrumentPanel({
         });
         const baseHash = await digest(
           new TextEncoder().encode(
-            buildDeck(net, setup) + JSON.stringify(setup.models),
+            prepareSpiceDeck(net, setup, current.spiceModelPacks).identity,
           ),
         );
         test = {

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "pack": {
+    "id": "ngspice-special",
+    "version": "e8751dfb7c42",
+    "revision": "e8751dfb7c421d3c177c43e6b1e26f2ed7169f1e4018971bb7537d298e02e118",
+    "filename": "ngspice-special_e8751dfb7c42.lib",
+    "sha256": "03474d7a7369fcf50a11320772ec4014349e7383834cc5b09bb09e0f4975b508",
+    "license": "BSD-3-Clause",
+    "licenseText": "BSD 3-Clause License\n\nCopyright Holger Vogt, 2024\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice,\nthis list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice,\nthis list of conditions and the following disclaimer in the documentation\nand/or other materials provided with the distribution.\n\n3. Neither the name of the copyright holder nor the names of its\ncontributors may be used to endorse or promote products derived from this\nsoftware without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\nARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE\nLIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR\nCONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF\nSUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS\nINTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN\nCONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\nARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\nPOSSIBILITY OF SUCH DAMAGE.\n\nTinyCAD adaptation: the ICL8038 uses a PNP model card in place of the upstream LPNP type, which ngspice 47 rejects.\n",
+    "spice": "* TinyCAD selection from ngspice special models\n\n.subckt ICL8038 Pin1 Pin2 Pin3 Pin4 Pin5 Pin6 Pin7 Pin8 Pin9 Pin10 Pin11 Pin12\n* TinyCAD adaptation: LPNP card uses PNP.\n.model NP NPN (BF=125 Cje=0.5p Cjc=0.5p Rb=500)\n.model PN PNP (BF=25 Cje=0.3p Cjc=1.5p Rb=250)\n.model __D2 D\n.model __D3 D\n.model __D5 D\n.model __D4 D\n\nQ14 Net-_Q12-B_ Net-_Q12-B_ Net-_Q14-E_ NP\nR12 Net-_Q14-E_ Pin11 100\nR8 Net-_Q12-E_ Pin11 100\nR10 Net-_Q13-B_ Net-_Q11-B_ 470\nQ12 Net-_Q10-E_ Net-_Q12-B_ Net-_Q12-E_ NP\nR2 Pin6 Net-_D2-A_ 30k\nQ2 Pin6 Net-_D2-A_ Net-_Q2-E_ NP\nD2 Net-_D2-A_ Net-_D2-K_ __D2\nD3 Net-_D2-K_ Net-_D3-K_ __D3\nD5 Net-_D4-K_ Pin11 __D5\nD4 Net-_D3-K_ Net-_D4-K_ __D4\nQ3 Pin9 Net-_Q3-B_ Pin11 NP\nQ11 Net-_Q10-E_ Net-_Q11-B_ Pin11 NP\nQ13 Net-_Q13-C_ Net-_Q13-B_ Pin11 NP\nR6 Net-_Q3-B_ Pin11 2.7k\nR9 Net-_Q2-E_ Net-_Q13-C_ 620\nR5 Net-_Q4-E_ Net-_Q3-B_ 270\nQ4 Pin6 Net-_Q13-C_ Net-_Q4-E_ NP\nR11 Net-_Q13-C_ Net-_Q20-B_ 27k\nR14 Net-_Q2-E_ Net-_Q13-B_ 1.8k\nQ20 Net-_Q13-B_ Net-_Q20-B_ Pin11 NP\nQ22 Net-_Q13-B_ Net-_Q22-B_ Pin11 NP\nQ21 Net-_Q20-B_ Net-_Q21-B_ Pin11 NP\nR15 Net-_Q21-B_ Pin11 4.7k\nR16 Net-_Q22-B_ Pin11 4.7k\nQ29 Pin6 Net-_Q26-E_ Net-_Q29-E_ NP\nR19 Net-_Q29-E_ Pin11 27k\nQ30 Pin11 Net-_Q29-E_ Net-_Q30-E_ PN\nR18 Net-_Q26-E_ Net-_Q29-E_ 27k\nQ18 Pin10 Net-_Q10-E_ Net-_Q12-B_ NP\nR13 Net-_Q19-E_ Pin11 100\nQ19 Net-_Q12-B_ Net-_Q12-B_ Net-_Q19-E_ NP\nQ7 Net-_Q15-B_ Net-_Q15-B_ Pin8 NP\nQ5 Pin6 Pin8 Net-_Q15-B_ NP\nR3 Pin6 Pin7 11k\nR4 Pin7 Pin11 39k\nQ9 Net-_Q15-B_ Net-_Q10-B_ Net-_Q9-E_ NP\nR7 Net-_Q9-E_ Net-_Q10-E_ 40k\nQ8 Pin5 Net-_Q6-C_ Net-_Q10-B_ NP\nQ6 Net-_Q6-C_ Net-_Q15-B_ Pin5 PN\nQ10 Net-_Q10-B_ Net-_Q10-B_ Net-_Q10-E_ NP\nQ17 Net-_Q16-E_ Net-_Q16-E_ Pin10 NP\nQ16 Pin4 Net-_Q15-C_ Net-_Q16-E_ NP\nQ15 Net-_Q15-C_ Net-_Q15-B_ Pin4 PN\nQ23 Net-_Q22-B_ Net-_Q23-B_ Pin6 PN\nR20 Pin6 Net-_Q33-B_ 27k\nQ34 Pin6 Net-_Q33-B_ Pin3 NP\nR24 Pin3 Pin2 1k\nQ26 Pin6 Net-_Q16-E_ Net-_Q26-E_ NP\nQ33 Net-_Q33-B_ Net-_Q33-B_ Net-_Q30-E_ NP\nR17 Pin6 Net-_Q23-B_ 4k\nQ25 Net-_Q23-B_ Pin10 Net-_Q25-E_ NP\nQ31 Pin6 Net-_Q31-B_ Net-_Q27-E_ NP\nQ36 Pin6 Net-_Q36-B_ Net-_Q31-B_ NP\nR22 Net-_Q36-B_ Net-_Q37-B_ 5k\nR23 Net-_Q37-B_ Pin11 5k\nR21 Pin6 Net-_Q36-B_ 5k\nQ32 Pin11 Net-_Q32-B_ Net-_Q28-E_ PN\nQ24 Net-_Q21-B_ Pin10 Net-_Q24-E_ PN\nQ28 Net-_Q21-B_ Net-_Q24-E_ Net-_Q28-E_ PN\nR7B2 Pin6 Net-_Q28-E_ 15k\nQ27 Net-_Q23-B_ Net-_Q25-E_ Net-_Q27-E_ NP\nR7A2 Net-_Q27-E_ Pin11 10k\nQ37 Pin11 Net-_Q37-B_ Net-_Q32-B_ PN\nQ40 Pin6 Net-_Q40-B_ Net-_Q40-E_ NP\nQ39 Pin11 Net-_Q39-B_ Net-_Q38-B_ PN\nR25 Pin2 Net-_Q38-E_ 10k\nR26 Pin2 Net-_Q40-E_ 2.7k\nR27 Pin2 Net-_Q42-E_ 800\nQ35 Pin11 Net-_Q29-E_ Pin3 PN\nR31 Pin6 Net-_Q44-B_ 33k\nR40 Net-_Q47-B_ Net-_Q39-B_ 1600\nR29 Pin6 Net-_Q40-B_ 33k\nQ41 Pin11 Net-_Q41-B_ Net-_Q40-B_ PN\nQ42 Pin6 Net-_Q42-B_ Net-_Q42-E_ NP\nR30 Pin6 Net-_Q42-B_ 33k\nQ43 Pin11 Net-_Q43-B_ Net-_Q42-B_ PN\nR35 Net-_Q39-B_ Net-_Q41-B_ 330\nR34 Net-_Q41-B_ Net-_Q43-B_ 375\nR46 Net-_Q50-B_ Pin11 33k\nR47 Pin2 Net-_Q48-E_ 2.7k\nQ48 Pin11 Net-_Q48-B_ Net-_Q48-E_ PN\nQ47 Pin6 Net-_Q47-B_ Net-_Q46-B_ NP\nR43 Pin2 Net-_Q46-E_ 10k\nQ38 Pin6 Net-_Q38-B_ Net-_Q38-E_ NP\nR28 Pin6 Net-_Q38-B_ 33k\nR42 Net-_Q46-B_ Pin11 33k\nQ46 Pin11 Net-_Q46-B_ Net-_Q46-E_ PN\nR45 Net-_Q49-B_ Pin11 33k\nR44 Net-_Q48-B_ Pin11 33k\nR32 Pin12 Pin11 5.6k\nQ44 Pin6 Net-_Q44-B_ Pin2 NP\nQ45 Pin11 Pin12 Net-_Q44-B_ PN\nR33 Net-_Q43-B_ Pin12 200\nQ53 Pin6 Pin1 Net-_Q50-B_ NP\nQ50 Pin11 Net-_Q50-B_ Pin2 PN\nR41 Pin6 Pin1 5.2k\nR39 Net-_Q51-B_ Net-_Q47-B_ 330\nR38 Net-_Q52-B_ Net-_Q51-B_ 375\nQ52 Pin6 Net-_Q52-B_ Net-_Q49-B_ NP\nQ49 Pin11 Net-_Q49-B_ Net-_Q49-E_ PN\nR48 Pin2 Net-_Q49-E_ 800\nQ51 Pin6 Net-_Q51-B_ Net-_Q48-B_ NP\nR36 Pin1 Net-_Q52-B_ 200\n.ends\n"
+  },
+  "models": [
+    {
+      "id": "ICL8038",
+      "kind": "function generator",
+      "description": "Transistor-level ICL8038 waveform generator with sine, triangle and square wave outputs.",
+      "aliases": [
+        "8038"
+      ],
+      "source": {
+        "name": "ngspice special models",
+        "revision": "e8751dfb7c421d3c177c43e6b1e26f2ed7169f1e4018971bb7537d298e02e118",
+        "url": "https://ngspice.sourceforge.io/model-parameters/special_models.zip",
+        "archiveMember": "special_models/ICL8038.lib"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "Pin1",
+          "role": "sine adjust 1"
+        },
+        {
+          "port": "Pin2",
+          "role": "sine output"
+        },
+        {
+          "port": "Pin3",
+          "role": "triangle output"
+        },
+        {
+          "port": "Pin4",
+          "role": "duty adjust A"
+        },
+        {
+          "port": "Pin5",
+          "role": "duty adjust B"
+        },
+        {
+          "port": "Pin6",
+          "role": "positive supply"
+        },
+        {
+          "port": "Pin7",
+          "role": "FM bias"
+        },
+        {
+          "port": "Pin8",
+          "role": "FM sweep input"
+        },
+        {
+          "port": "Pin9",
+          "role": "square output"
+        },
+        {
+          "port": "Pin10",
+          "role": "timing capacitor"
+        },
+        {
+          "port": "Pin11",
+          "role": "negative supply"
+        },
+        {
+          "port": "Pin12",
+          "role": "sine adjust 2"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt ICL8038 Pin1 Pin2 Pin3 Pin4 Pin5 Pin6 Pin7 Pin8 Pin9 Pin10 Pin11 Pin12\n* TinyCAD adaptation: LPNP card uses PNP.\n.model NP NPN (BF=125 Cje=0.5p Cjc=0.5p Rb=500)\n.model PN PNP (BF=25 Cje=0.3p Cjc=1.5p Rb=250)\n.model __D2 D\n.model __D3 D\n.model __D5 D\n.model __D4 D\n\nQ14 Net-_Q12-B_ Net-_Q12-B_ Net-_Q14-E_ NP\nR12 Net-_Q14-E_ Pin11 100\nR8 Net-_Q12-E_ Pin11 100\nR10 Net-_Q13-B_ Net-_Q11-B_ 470\nQ12 Net-_Q10-E_ Net-_Q12-B_ Net-_Q12-E_ NP\nR2 Pin6 Net-_D2-A_ 30k\nQ2 Pin6 Net-_D2-A_ Net-_Q2-E_ NP\nD2 Net-_D2-A_ Net-_D2-K_ __D2\nD3 Net-_D2-K_ Net-_D3-K_ __D3\nD5 Net-_D4-K_ Pin11 __D5\nD4 Net-_D3-K_ Net-_D4-K_ __D4\nQ3 Pin9 Net-_Q3-B_ Pin11 NP\nQ11 Net-_Q10-E_ Net-_Q11-B_ Pin11 NP\nQ13 Net-_Q13-C_ Net-_Q13-B_ Pin11 NP\nR6 Net-_Q3-B_ Pin11 2.7k\nR9 Net-_Q2-E_ Net-_Q13-C_ 620\nR5 Net-_Q4-E_ Net-_Q3-B_ 270\nQ4 Pin6 Net-_Q13-C_ Net-_Q4-E_ NP\nR11 Net-_Q13-C_ Net-_Q20-B_ 27k\nR14 Net-_Q2-E_ Net-_Q13-B_ 1.8k\nQ20 Net-_Q13-B_ Net-_Q20-B_ Pin11 NP\nQ22 Net-_Q13-B_ Net-_Q22-B_ Pin11 NP\nQ21 Net-_Q20-B_ Net-_Q21-B_ Pin11 NP\nR15 Net-_Q21-B_ Pin11 4.7k\nR16 Net-_Q22-B_ Pin11 4.7k\nQ29 Pin6 Net-_Q26-E_ Net-_Q29-E_ NP\nR19 Net-_Q29-E_ Pin11 27k\nQ30 Pin11 Net-_Q29-E_ Net-_Q30-E_ PN\nR18 Net-_Q26-E_ Net-_Q29-E_ 27k\nQ18 Pin10 Net-_Q10-E_ Net-_Q12-B_ NP\nR13 Net-_Q19-E_ Pin11 100\nQ19 Net-_Q12-B_ Net-_Q12-B_ Net-_Q19-E_ NP\nQ7 Net-_Q15-B_ Net-_Q15-B_ Pin8 NP\nQ5 Pin6 Pin8 Net-_Q15-B_ NP\nR3 Pin6 Pin7 11k\nR4 Pin7 Pin11 39k\nQ9 Net-_Q15-B_ Net-_Q10-B_ Net-_Q9-E_ NP\nR7 Net-_Q9-E_ Net-_Q10-E_ 40k\nQ8 Pin5 Net-_Q6-C_ Net-_Q10-B_ NP\nQ6 Net-_Q6-C_ Net-_Q15-B_ Pin5 PN\nQ10 Net-_Q10-B_ Net-_Q10-B_ Net-_Q10-E_ NP\nQ17 Net-_Q16-E_ Net-_Q16-E_ Pin10 NP\nQ16 Pin4 Net-_Q15-C_ Net-_Q16-E_ NP\nQ15 Net-_Q15-C_ Net-_Q15-B_ Pin4 PN\nQ23 Net-_Q22-B_ Net-_Q23-B_ Pin6 PN\nR20 Pin6 Net-_Q33-B_ 27k\nQ34 Pin6 Net-_Q33-B_ Pin3 NP\nR24 Pin3 Pin2 1k\nQ26 Pin6 Net-_Q16-E_ Net-_Q26-E_ NP\nQ33 Net-_Q33-B_ Net-_Q33-B_ Net-_Q30-E_ NP\nR17 Pin6 Net-_Q23-B_ 4k\nQ25 Net-_Q23-B_ Pin10 Net-_Q25-E_ NP\nQ31 Pin6 Net-_Q31-B_ Net-_Q27-E_ NP\nQ36 Pin6 Net-_Q36-B_ Net-_Q31-B_ NP\nR22 Net-_Q36-B_ Net-_Q37-B_ 5k\nR23 Net-_Q37-B_ Pin11 5k\nR21 Pin6 Net-_Q36-B_ 5k\nQ32 Pin11 Net-_Q32-B_ Net-_Q28-E_ PN\nQ24 Net-_Q21-B_ Pin10 Net-_Q24-E_ PN\nQ28 Net-_Q21-B_ Net-_Q24-E_ Net-_Q28-E_ PN\nR7B2 Pin6 Net-_Q28-E_ 15k\nQ27 Net-_Q23-B_ Net-_Q25-E_ Net-_Q27-E_ NP\nR7A2 Net-_Q27-E_ Pin11 10k\nQ37 Pin11 Net-_Q37-B_ Net-_Q32-B_ PN\nQ40 Pin6 Net-_Q40-B_ Net-_Q40-E_ NP\nQ39 Pin11 Net-_Q39-B_ Net-_Q38-B_ PN\nR25 Pin2 Net-_Q38-E_ 10k\nR26 Pin2 Net-_Q40-E_ 2.7k\nR27 Pin2 Net-_Q42-E_ 800\nQ35 Pin11 Net-_Q29-E_ Pin3 PN\nR31 Pin6 Net-_Q44-B_ 33k\nR40 Net-_Q47-B_ Net-_Q39-B_ 1600\nR29 Pin6 Net-_Q40-B_ 33k\nQ41 Pin11 Net-_Q41-B_ Net-_Q40-B_ PN\nQ42 Pin6 Net-_Q42-B_ Net-_Q42-E_ NP\nR30 Pin6 Net-_Q42-B_ 33k\nQ43 Pin11 Net-_Q43-B_ Net-_Q42-B_ PN\nR35 Net-_Q39-B_ Net-_Q41-B_ 330\nR34 Net-_Q41-B_ Net-_Q43-B_ 375\nR46 Net-_Q50-B_ Pin11 33k\nR47 Pin2 Net-_Q48-E_ 2.7k\nQ48 Pin11 Net-_Q48-B_ Net-_Q48-E_ PN\nQ47 Pin6 Net-_Q47-B_ Net-_Q46-B_ NP\nR43 Pin2 Net-_Q46-E_ 10k\nQ38 Pin6 Net-_Q38-B_ Net-_Q38-E_ NP\nR28 Pin6 Net-_Q38-B_ 33k\nR42 Net-_Q46-B_ Pin11 33k\nQ46 Pin11 Net-_Q46-B_ Net-_Q46-E_ PN\nR45 Net-_Q49-B_ Pin11 33k\nR44 Net-_Q48-B_ Pin11 33k\nR32 Pin12 Pin11 5.6k\nQ44 Pin6 Net-_Q44-B_ Pin2 NP\nQ45 Pin11 Pin12 Net-_Q44-B_ PN\nR33 Net-_Q43-B_ Pin12 200\nQ53 Pin6 Pin1 Net-_Q50-B_ NP\nQ50 Pin11 Net-_Q50-B_ Pin2 PN\nR41 Pin6 Pin1 5.2k\nR39 Net-_Q51-B_ Net-_Q47-B_ 330\nR38 Net-_Q52-B_ Net-_Q51-B_ 375\nQ52 Pin6 Net-_Q52-B_ Net-_Q49-B_ NP\nQ49 Pin11 Net-_Q49-B_ Net-_Q49-E_ PN\nR48 Pin2 Net-_Q49-E_ 800\nQ51 Pin6 Net-_Q51-B_ Net-_Q48-B_ NP\nR36 Pin1 Net-_Q52-B_ 200\n.ends\n",
+      "compatibleComponents": []
+    }
+  ]
+}

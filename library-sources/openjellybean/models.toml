@@ -1,0 +1,550 @@
+# Metadata for every device in jellybean.lib: what it stands in for, and the datasheet
+# values it is checked against by tests/validate.py.
+#
+# Values and conditions are SI units; magnitudes for PNP / P-channel parts.
+# A check passes if the result lies within:
+#   typ = X                  X +-10 %
+#   typ = X, tol = 0.05      X +-5 %  (widen tol only as far as the fit justifies)
+#   min = A and/or max = B   the datasheet's limits, when it gives no typical value
+# Run `python tests/validate.py --measures` for the measures and their conditions.
+
+# ---------------------------------------------------------------- BJTs ------
+[BC547B_OJ]
+kind = "npn"
+stand_in_for = ["BC547B"]
+source = "onsemi BC546 family datasheet (hFE, VCE(sat), fT); NXP BC547 datasheet (VBE typ)"
+checks = [
+  { measure = "hfe", ic = 2e-3, typ = 290 },
+  { measure = "hfe", ic = 10e-6, typ = 150 },
+  { measure = "vbe", ic = 2e-3, typ = 0.66, tol = 0.03 },
+  { measure = "vcesat", ic = 10e-3, ib = 0.5e-3, typ = 0.09, tol = 0.25 },
+  { measure = "vcesat", ic = 100e-3, ib = 5e-3, typ = 0.2, tol = 0.2 },
+  { measure = "ft", ic = 10e-3, typ = 300e6 },
+]
+
+[BC557B_OJ]
+kind = "pnp"
+stand_in_for = ["BC557B"]
+source = "onsemi BC556 family datasheet; fT from a BC557B sheet giving 150 MHz typ (onsemi gives 320 MHz)"
+checks = [
+  { measure = "hfe", ic = 2e-3, typ = 290 },
+  { measure = "vbe", ic = 2e-3, typ = 0.62 },
+  { measure = "vcesat", ic = 10e-3, ib = 0.5e-3, typ = 0.075, tol = 0.2 },
+  { measure = "vcesat", ic = 100e-3, ib = 5e-3, typ = 0.25 },
+  { measure = "ft", ic = 10e-3, typ = 150e6 },
+]
+
+[2N3904_OJ]
+kind = "npn"
+stand_in_for = ["2N3904", "MMBT3904"]
+source = "onsemi 2N3903/2N3904 datasheet, min/max limits (no typical column)"
+checks = [
+  { measure = "hfe", ic = 10e-3, vce = 1, min = 100, max = 300 },
+  { measure = "hfe", ic = 1e-3, vce = 1, min = 70 },
+  { measure = "hfe", ic = 100e-3, vce = 1, min = 30 },
+  { measure = "vcesat", ic = 10e-3, ib = 1e-3, max = 0.2 },
+  { measure = "vcesat", ic = 50e-3, ib = 5e-3, max = 0.3 },
+  { measure = "vbesat", ic = 10e-3, ib = 1e-3, min = 0.65, max = 0.85 },
+  { measure = "ft", ic = 10e-3, vce = 20, f = 100e6, min = 300e6 },
+  { measure = "cobo", max = 4e-12 },
+  { measure = "cibo", max = 8e-12 },
+]
+
+[2N3906_OJ]
+kind = "pnp"
+stand_in_for = ["2N3906", "MMBT3906"]
+source = "onsemi 2N3906 datasheet, min/max limits (no typical column)"
+checks = [
+  { measure = "hfe", ic = 10e-3, vce = 1, min = 100, max = 300 },
+  { measure = "hfe", ic = 100e-3, vce = 1, min = 30 },
+  { measure = "vcesat", ic = 10e-3, ib = 1e-3, max = 0.25 },
+  { measure = "vcesat", ic = 50e-3, ib = 5e-3, max = 0.4 },
+  { measure = "vbesat", ic = 10e-3, ib = 1e-3, min = 0.65, max = 0.85 },
+  { measure = "ft", ic = 10e-3, vce = 20, f = 100e6, min = 250e6 },
+  { measure = "cobo", max = 4.5e-12 },
+  { measure = "cibo", max = 10e-12 },
+]
+
+# ------------------------------------------------------------ MOSFETs -------
+[2N7000_OJ]
+kind = "nmos"
+stand_in_for = ["2N7000", "2N7002", "BS170"]
+source = "onsemi 2N7000/2N7002/NDS7002A datasheet, typical column"
+checks = [
+  { measure = "vth", id = 1e-3, typ = 2.1 },
+  { measure = "rdson", vgs = 10, id = 0.5, typ = 1.2 },
+  { measure = "rdson", vgs = 4.5, id = 75e-3, typ = 1.8, tol = 0.15 },
+  { measure = "ciss", typ = 20e-12 },
+  { measure = "coss", typ = 11e-12 },
+  { measure = "crss", typ = 4e-12, tol = 0.15 },
+]
+
+[BS250_OJ]
+kind = "pmos"
+stand_in_for = ["BS250"]
+source = "Philips BS250 datasheet, April 1995: VGS(th) limits, typical RDS(on) and capacitances"
+checks = [
+  { measure = "vth", id = 1e-3, min = 1.0, max = 3.5 },
+  { measure = "rdson", vgs = 10, id = 0.2, typ = 9 },
+  { measure = "ciss", vds = 10, typ = 30e-12 },
+  { measure = "coss", vds = 10, typ = 20e-12 },
+  { measure = "crss", vds = 10, typ = 5e-12 },
+]
+
+# --------------------------------------------------------------- JFETs ------
+[2N5457_OJ]
+kind = "njfet"
+stand_in_for = ["2N5457", "MMBF5457"]
+source = "Fairchild 2N5457/5458/5459 datasheet: typical column, min/max where it gives no typical"
+checks = [
+  { measure = "idss", typ = 3e-3 },
+  { measure = "vgs", id = 100e-6, typ = 2.5 },
+  { measure = "vgsoff", id = 10e-9, min = 0.5, max = 6 },
+  { measure = "gfs", min = 1e-3, max = 5e-3 },
+  { measure = "gos", typ = 10e-6, tol = 0.2 },
+  { measure = "ciss", vds = 15, typ = 4.5e-12 },
+  { measure = "crss", vds = 15, typ = 1.5e-12 },
+  { measure = "igss", vrev = 15, max = 1e-9 },
+]
+
+[2N5458_OJ]
+kind = "njfet"
+stand_in_for = ["2N5458", "MMBF5458"]
+source = "Fairchild 2N5457/5458/5459 datasheet: typical column, min/max where it gives no typical"
+checks = [
+  { measure = "idss", typ = 6e-3 },
+  { measure = "vgs", id = 200e-6, typ = 3.5 },
+  { measure = "vgsoff", id = 10e-9, min = 1, max = 7 },
+  { measure = "gfs", min = 1.5e-3, max = 5.5e-3 },
+  { measure = "gos", typ = 10e-6, tol = 0.2 },
+  { measure = "ciss", vds = 15, typ = 4.5e-12 },
+  { measure = "crss", vds = 15, typ = 1.5e-12 },
+  { measure = "igss", vrev = 15, max = 1e-9 },
+]
+
+[2N5459_OJ]
+kind = "njfet"
+stand_in_for = ["2N5459", "MMBF5459"]
+source = "Fairchild 2N5457/5458/5459 datasheet: typical column, min/max where it gives no typical"
+checks = [
+  { measure = "idss", typ = 9e-3 },
+  { measure = "vgs", id = 400e-6, typ = 4.5 },
+  { measure = "vgsoff", id = 10e-9, min = 2, max = 8 },
+  { measure = "gfs", min = 2e-3, max = 6e-3 },
+  { measure = "gos", typ = 10e-6, tol = 0.2 },
+  { measure = "ciss", vds = 15, typ = 4.5e-12 },
+  { measure = "crss", vds = 15, typ = 1.5e-12 },
+  { measure = "igss", vrev = 15, max = 1e-9 },
+]
+
+[J112_OJ]
+kind = "njfet"
+stand_in_for = ["J112", "SST112"]
+source = "Vishay J/SST111 series datasheet 70232: limits, typical column, and typical curves at the chosen VGS(off)"
+checks = [
+  { measure = "idss", min = 5e-3 },
+  { measure = "idss", typ = 36e-3, tol = 0.15 },
+  { measure = "vgsoff", vds = 5, min = 1, max = 5 },
+  { measure = "rdson", vgs = 0, id = 2e-3, max = 50 },
+  { measure = "gfs", vds = 20, id = 1e-3, typ = 6e-3, tol = 0.3 },
+  { measure = "gos", vds = 20, id = 1e-3, typ = 25e-6, tol = 0.3 },
+  { measure = "vgsf", typ = 0.7, tol = 0.05 },
+  { measure = "ciss", vds = 0, vrev = 10, typ = 7e-12 },
+  { measure = "crss", vds = 0, vrev = 10, typ = 3e-12 },
+  { measure = "igss", vrev = 15, max = 1e-9 },
+]
+
+[J113_OJ]
+kind = "njfet"
+stand_in_for = ["J113", "SST113"]
+source = "Vishay J/SST111 series datasheet 70232: limits, typical column, and typical curves at the chosen VGS(off)"
+checks = [
+  { measure = "idss", min = 2e-3 },
+  { measure = "idss", typ = 20e-3, tol = 0.15 },
+  { measure = "vgsoff", vds = 5, max = 3 },
+  { measure = "rdson", vgs = 0, id = 1e-3, max = 100 },
+  { measure = "rdson", vgs = 0, id = 1e-3, typ = 63, tol = 0.1 },
+  { measure = "gfs", vds = 20, id = 1e-3, typ = 6e-3, tol = 0.3 },
+  { measure = "gos", vds = 20, id = 1e-3, typ = 25e-6, tol = 0.3 },
+  { measure = "vgsf", typ = 0.7, tol = 0.05 },
+  { measure = "ciss", vds = 0, vrev = 10, typ = 7e-12 },
+  { measure = "crss", vds = 0, vrev = 10, typ = 3e-12 },
+  { measure = "igss", vrev = 15, max = 1e-9 },
+]
+
+[PN4392_OJ]
+kind = "njfet"
+stand_in_for = ["PN4392", "2N4392"]
+source = "Vishay 2N/PN/SST4391 series datasheet 70241: limits, typical column, typical curves; IDSS limits also from Central PN4391-4393"
+checks = [
+  { measure = "idss", vds = 20, min = 25e-3, max = 75e-3 },
+  { measure = "vgsoff", vds = 20, id = 1e-9, min = 2, max = 5 },
+  { measure = "rdson", vgs = 0, id = 1e-3, max = 60 },
+  { measure = "rdson", vgs = 0, id = 6e-3, typ = 50, tol = 0.15 },
+  { measure = "gfs", vds = 20, id = 1e-3, typ = 6e-3, tol = 0.3 },
+  { measure = "gos", vds = 20, id = 1e-3, typ = 25e-6, tol = 0.3 },
+  { measure = "vgsf", typ = 0.7, tol = 0.05 },
+  { measure = "ciss", vds = 20, typ = 12e-12 },
+  { measure = "crss", vds = 0, vrev = 7, typ = 3.4e-12 },
+  { measure = "igss", vrev = 20, max = 1e-9 },
+]
+
+[PN4393_OJ]
+kind = "njfet"
+stand_in_for = ["PN4393", "2N4393"]
+source = "Vishay 2N/PN/SST4391 series datasheet 70241: limits, typical column, typical curves; IDSS limits also from Central PN4391-4393"
+checks = [
+  { measure = "idss", vds = 20, min = 5e-3, max = 30e-3 },
+  { measure = "vgsoff", vds = 20, id = 1e-9, min = 0.5, max = 3 },
+  { measure = "rdson", vgs = 0, id = 1e-3, max = 100 },
+  { measure = "rdson", vgs = 0, id = 3e-3, typ = 83, tol = 0.15 },
+  { measure = "gfs", vds = 20, id = 1e-3, typ = 6e-3, tol = 0.3 },
+  { measure = "gos", vds = 20, id = 1e-3, typ = 25e-6, tol = 0.3 },
+  { measure = "vgsf", typ = 0.7, tol = 0.05 },
+  { measure = "ciss", vds = 20, typ = 12e-12 },
+  { measure = "crss", vds = 0, vrev = 5, typ = 3.5e-12 },
+  { measure = "igss", vrev = 20, max = 1e-9 },
+]
+
+[2N5460_OJ]
+kind = "pjfet"
+stand_in_for = ["2N5460", "MMBF5460"]
+source = "Fairchild 2N5460/5461/5462 datasheet: limits (no typical IDSS or VGS(off)) and typical Ciss, Crss"
+checks = [
+  { measure = "idss", min = 1e-3, max = 5e-3 },
+  { measure = "vgs", id = 100e-6, min = 0.5, max = 4 },
+  { measure = "vgsoff", min = 0.75, max = 6 },
+  { measure = "gfs", min = 1e-3, max = 4e-3 },
+  { measure = "gos", max = 75e-6 },
+  { measure = "ciss", vds = 15, typ = 5e-12 },
+  { measure = "crss", vds = 15, typ = 1e-12 },
+  { measure = "igss", vrev = 20, max = 5e-9 },
+]
+
+[2N5461_OJ]
+kind = "pjfet"
+stand_in_for = ["2N5461", "MMBF5461"]
+source = "Fairchild 2N5460/5461/5462 datasheet: limits (no typical IDSS or VGS(off)) and typical Ciss, Crss"
+checks = [
+  { measure = "idss", min = 2e-3, max = 9e-3 },
+  { measure = "vgs", id = 200e-6, min = 0.8, max = 4.5 },
+  { measure = "vgsoff", min = 1, max = 7.5 },
+  { measure = "gfs", min = 1.5e-3, max = 5e-3 },
+  { measure = "gos", max = 75e-6 },
+  { measure = "ciss", vds = 15, typ = 5e-12 },
+  { measure = "crss", vds = 15, typ = 1e-12 },
+  { measure = "igss", vrev = 20, max = 5e-9 },
+]
+
+[2N5462_OJ]
+kind = "pjfet"
+stand_in_for = ["2N5462", "MMBF5462"]
+source = "Fairchild 2N5460/5461/5462 datasheet: limits (no typical IDSS or VGS(off)) and typical Ciss, Crss"
+checks = [
+  { measure = "idss", min = 4e-3, max = 16e-3 },
+  { measure = "vgs", id = 400e-6, min = 1.5, max = 6 },
+  { measure = "vgsoff", min = 1.8, max = 9 },
+  { measure = "gfs", min = 2e-3, max = 6e-3 },
+  { measure = "gos", max = 75e-6 },
+  { measure = "ciss", vds = 15, typ = 5e-12 },
+  { measure = "crss", vds = 15, typ = 1e-12 },
+  { measure = "igss", vrev = 20, max = 5e-9 },
+]
+
+# ------------------------------------------------------------- Diodes -------
+[1N4148_OJ]
+kind = "diode"
+stand_in_for = ["1N4148", "1N914"]
+source = "Vishay 1N4148 datasheet 81857 Rev. 1.6: limits, and VF read by eye from Fig. 1"
+checks = [
+  { measure = "vf", i = 1e-3, typ = 0.61, tol = 0.03 },
+  { measure = "vf", i = 10e-3, typ = 0.72, tol = 0.03 },
+  { measure = "vf", i = 100e-3, typ = 0.875, tol = 0.06 },
+  { measure = "ir", vr = 20, max = 25e-9 },
+  { measure = "trr", i_f = 10e-3, i_r = 10e-3, i_stop = 1e-3, max = 8e-9 },
+  { measure = "trr", i_f = 10e-3, i_r = 60e-3, i_stop = 6e-3, r = 100, max = 4e-9 },
+]
+
+[1N5819_OJ]
+kind = "schottky"
+stand_in_for = ["1N5819"]
+source = "Vishay 1N5817/18/19 datasheet 88525: limits, and typical VF read by eye from Fig. 3"
+checks = [
+  { measure = "vf", i = 0.1, typ = 0.30, tol = 0.05 },
+  { measure = "vf", i = 1, typ = 0.42, tol = 0.05 },
+  { measure = "vf", i = 3, typ = 0.55, tol = 0.05 },
+  { measure = "vf", i = 1, max = 0.6 },
+  { measure = "vf", i = 3.1, max = 0.9 },
+  { measure = "ir", vr = 40, max = 1e-3 },
+]
+
+[BAT54_OJ]
+kind = "schottky"
+stand_in_for = ["BAT54"]
+source = "onsemi BAT54T1/D Rev. 12, typical column; Diodes DS11005 Rev. 35 for the trr load"
+checks = [
+  { measure = "vf", i = 0.1e-3, typ = 0.22, tol = 0.05 },
+  { measure = "vf", i = 1e-3, typ = 0.29, tol = 0.05 },
+  { measure = "vf", i = 10e-3, typ = 0.35, tol = 0.05 },
+  { measure = "vf", i = 30e-3, typ = 0.41, tol = 0.05 },
+  { measure = "vf", i = 100e-3, typ = 0.52, tol = 0.05 },
+  { measure = "ir", vr = 25, max = 2e-6 },
+  { measure = "ct", vr = 1, typ = 7.6e-12 },
+  { measure = "ct", vr = 10, typ = 3.4e-12 },
+  { measure = "trr", i_f = 10e-3, i_r = 10e-3, i_stop = 1e-3, r = 100, max = 5e-9 },
+]
+
+[B140_OJ]
+kind = "schottky"
+stand_in_for = ["B140", "SB140"]
+source = "Diodes DS13002 Rev. 21: limits, CT, and typical VF read by eye from Fig. 1"
+checks = [
+  { measure = "vf", i = 0.1, typ = 0.33, tol = 0.08 },
+  { measure = "vf", i = 1, typ = 0.44, tol = 0.06 },
+  { measure = "vf", i = 1, max = 0.5 },
+  { measure = "vf", i = 3, typ = 0.61, tol = 0.05 },
+  { measure = "vf", i = 10, typ = 1.07, tol = 0.05 },
+  { measure = "ir", vr = 40, max = 0.5e-3 },
+  { measure = "ct", vr = 4, typ = 110e-12 },
+]
+
+# ------------------------------------------------------------- Zeners -------
+[ZENER_OJ]
+kind = "zener"
+params = "VZ=8.2 IZT=5m RZ=10 NK=1"
+source = "Parametric: checks that the instance parameters are honoured"
+checks = [
+  { measure = "vz", i = 5e-3, typ = 8.2, tol = 0.01 },
+  { measure = "zz", i = 5e-3, typ = 10 },
+]
+
+[BZX79C3V3_OJ]
+kind = "zener"
+stand_in_for = ["BZX79-C3V3"]
+source = "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA"
+checks = [
+  { measure = "vz", i = 5e-3, typ = 3.3, tol = 0.01 },
+  { measure = "zz", i = 5e-3, typ = 85 },
+]
+
+[BZX79C4V7_OJ]
+kind = "zener"
+stand_in_for = ["BZX79-C4V7"]
+source = "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA"
+checks = [
+  { measure = "vz", i = 5e-3, typ = 4.7, tol = 0.01 },
+  { measure = "zz", i = 5e-3, typ = 50 },
+]
+
+[BZX79C5V1_OJ]
+kind = "zener"
+stand_in_for = ["BZX79-C5V1"]
+source = "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA"
+checks = [
+  { measure = "vz", i = 5e-3, typ = 5.1, tol = 0.01 },
+  { measure = "zz", i = 5e-3, typ = 40 },
+]
+
+[BZX79C5V6_OJ]
+kind = "zener"
+stand_in_for = ["BZX79-C5V6"]
+source = "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA"
+checks = [
+  { measure = "vz", i = 5e-3, typ = 5.6, tol = 0.01 },
+  { measure = "zz", i = 5e-3, typ = 15 },
+]
+
+[BZX79C6V2_OJ]
+kind = "zener"
+stand_in_for = ["BZX79-C6V2"]
+source = "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA"
+checks = [
+  { measure = "vz", i = 5e-3, typ = 6.2, tol = 0.01 },
+  { measure = "zz", i = 5e-3, typ = 6 },
+]
+
+[BZX79C9V1_OJ]
+kind = "zener"
+stand_in_for = ["BZX79-C9V1"]
+source = "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA"
+checks = [
+  { measure = "vz", i = 5e-3, typ = 9.1, tol = 0.01 },
+  { measure = "zz", i = 5e-3, typ = 6 },
+]
+
+[BZX79C12_OJ]
+kind = "zener"
+stand_in_for = ["BZX79-C12"]
+source = "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA"
+checks = [
+  { measure = "vz", i = 5e-3, typ = 12, tol = 0.01 },
+  { measure = "zz", i = 5e-3, typ = 10 },
+]
+
+[BZX79C15_OJ]
+kind = "zener"
+stand_in_for = ["BZX79-C15"]
+source = "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA"
+checks = [
+  { measure = "vz", i = 5e-3, typ = 15, tol = 0.01 },
+  { measure = "zz", i = 5e-3, typ = 10 },
+]
+
+[1N4733A_OJ]
+kind = "zener"
+stand_in_for = ["1N4733A"]
+source = "Vishay 1N4728A-1N4761A datasheet 85816 Rev. 2.7: nominal VZ and typical ZZT"
+checks = [
+  { measure = "vz", i = 49e-3, typ = 5.1, tol = 0.01 },
+  { measure = "zz", i = 49e-3, typ = 7 },
+]
+
+[1N4742A_OJ]
+kind = "zener"
+stand_in_for = ["1N4742A"]
+source = "Vishay 1N4728A-1N4761A datasheet 85816 Rev. 2.7: nominal VZ and typical ZZT"
+checks = [
+  { measure = "vz", i = 21e-3, typ = 12, tol = 0.01 },
+  { measure = "zz", i = 21e-3, typ = 9 },
+]
+
+# ---------------------------------------------------------------- LEDs ------
+[LED_RED_OJ]
+kind = "led"
+stand_in_for = ["generic high-efficiency red 5 mm LED"]
+source = "Kingbright WP7113ID V.14A: table VF and IR, and typical VF read by eye from its curve"
+checks = [
+  { measure = "vf", i = 1e-3, typ = 1.6, tol = 0.05 },
+  { measure = "vf", i = 4e-3, typ = 1.79, tol = 0.05 },
+  { measure = "vf", i = 10e-3, typ = 1.9, tol = 0.03 },
+  { measure = "vf", i = 10e-3, max = 2.3 },
+  { measure = "vf", i = 20e-3, typ = 2.01, tol = 0.05 },
+  { measure = "ir", vr = 5, max = 10e-6 },
+]
+
+[LED_GREEN_OJ]
+kind = "led"
+stand_in_for = ["generic green 5 mm LED"]
+source = "Kingbright WP7113GD V.12B: table VF, IR and capacitance, and typical VF read by eye from its curve"
+checks = [
+  { measure = "vf", i = 1e-3, typ = 1.84, tol = 0.05 },
+  { measure = "vf", i = 4e-3, typ = 1.92, tol = 0.05 },
+  { measure = "vf", i = 10e-3, typ = 2.0, tol = 0.03 },
+  { measure = "vf", i = 10e-3, max = 2.4 },
+  { measure = "vf", i = 20e-3, typ = 2.2, tol = 0.05 },
+  { measure = "ir", vr = 5, max = 10e-6 },
+  { measure = "ct", vr = 0, typ = 15e-12 },
+]
+
+[LED_BLUE_OJ]
+kind = "led"
+stand_in_for = ["generic InGaN blue 5 mm LED"]
+source = "Kingbright WP7113QBC/D V.18B: table VF and IR, and typical VF read by eye from its curve"
+checks = [
+  { measure = "vf", i = 1e-3, typ = 2.45, tol = 0.05 },
+  { measure = "vf", i = 5e-3, typ = 2.72, tol = 0.05 },
+  { measure = "vf", i = 10e-3, typ = 2.93, tol = 0.05 },
+  { measure = "vf", i = 20e-3, typ = 3.3, tol = 0.03 },
+  { measure = "vf", i = 20e-3, max = 4.0 },
+  { measure = "vf", i = 30e-3, typ = 3.53, tol = 0.05 },
+  { measure = "ir", vr = 5, max = 50e-6 },
+]
+
+# ------------------------------------------------------------- Op-amps ------
+[OPAMP_OJ]
+kind = "opamp"
+params = "VOS=3m"
+source = "Parametric: checks the default macromodel and that VOS is honoured"
+defaults = { vcc = 15, vee = -15 }
+checks = [
+  { measure = "aol", typ = 106, tol = 0.02 },
+  { measure = "gbw", typ = 2.6e6 },
+  { measure = "sr", typ = 13e6 },
+  { measure = "vout_max", typ = 13.5, tol = 0.02 },
+  { measure = "vout_min", typ = -13.5, tol = 0.02 },
+  { measure = "iq", typ = 1.4e-3 },
+  { measure = "vos", typ = 3e-3 },
+]
+
+[TL07X_OJ]
+kind = "opamp"
+stand_in_for = ["TL071", "TL072", "TL074"]
+source = "TI TL07x datasheet SLOS080W at +-15 V, 3 MHz GBW grade; 13 V/us from slower published TL07x variants"
+defaults = { vcc = 15, vee = -15 }
+checks = [
+  { measure = "aol", typ = 106, tol = 0.02 },
+  { measure = "gbw", typ = 3e6 },
+  { measure = "pm", min = 45 },
+  { measure = "sr", typ = 13e6 },
+  { measure = "vout_max", typ = 13.5, tol = 0.02 },
+  { measure = "vout_min", typ = -13.5, tol = 0.02 },
+  { measure = "iq", typ = 1.4e-3 },
+  { measure = "isc", min = 10e-3, max = 60e-3 },
+]
+
+[TL072_OJ]
+kind = "opamp2"
+stand_in_for = ["TL072"]
+source = "TI TL07x datasheet SLOS080W: 8-pin pin table, IQ per amplifier"
+defaults = { vcc = 15, vee = -15 }
+checks = [
+  { measure = "iq_total", typ = 2.8e-3 },
+]
+
+[TL074_OJ]
+kind = "opamp4"
+stand_in_for = ["TL074"]
+source = "TI TL07x datasheet SLOS080W: 14-pin pin table, IQ per amplifier"
+defaults = { vcc = 15, vee = -15 }
+checks = [
+  { measure = "iq_total", typ = 5.6e-3 },
+]
+
+[LM358_OJ]
+kind = "opamp"
+stand_in_for = ["LM358", "LM324"]
+source = "TI LM358 datasheet SLOS068AB, typical column (AOL quoted at 15 V)"
+defaults = { vcc = 5, vee = 0 }
+checks = [
+  { measure = "aol", typ = 100, tol = 0.02 },
+  { measure = "gbw", typ = 0.7e6 },
+  { measure = "pm", min = 45 },
+  { measure = "sr", typ = 0.3e6 },
+  { measure = "vout_max", typ = 3.5, tol = 0.02 },
+  { measure = "vout_min", max = 0.02 },
+  { measure = "iq", typ = 0.35e-3 },
+  { measure = "isc", min = 10e-3, max = 60e-3 },
+]
+
+[LM358_DUAL_OJ]
+kind = "opamp2"
+stand_in_for = ["LM358"]
+source = "TI LM358 datasheet SLOS068AB: 8-pin pin table, IQ per amplifier at 5 V"
+defaults = { vcc = 5, vee = 0 }
+checks = [
+  { measure = "iq_total", typ = 0.7e-3 },
+]
+
+[LM324_QUAD_OJ]
+kind = "opamp4"
+stand_in_for = ["LM324"]
+source = "TI LM324 datasheet SLOS066AE: 14-pin pin table, supply current for four amplifiers at 5 V, B1 and SR"
+defaults = { vcc = 5, vee = 0 }
+checks = [
+  { measure = "iq_total", typ = 0.7e-3 },
+  { measure = "gbw", vcc = 15, vee = -15, rl = 1e6, typ = 1.2e6 },
+  { measure = "pm", vcc = 15, vee = -15, rl = 1e6, min = 45 },
+  { measure = "sr", vcc = 15, vee = -15, rl = 1e6, typ = 0.5e6 },
+]
+
+# ------------------------------------------------------- Potentiometers -----
+[POT_OJ]
+kind = "pot"
+params = "R=10k POS=0.25"
+source = "Parametric: checks that the instance parameters are honoured"
+checks = [
+  { measure = "rab", typ = 10e3, tol = 0.01 },
+  { measure = "raw", typ = 2.5e3, tol = 0.01 },
+  { measure = "rwb", typ = 7.5e3, tol = 0.01 },
+  { measure = "ratio", typ = 0.75, tol = 0.01 },
+]

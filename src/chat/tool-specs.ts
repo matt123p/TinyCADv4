@@ -31,6 +31,24 @@ const baseRevision = str(
   'Exact revision returned by read_drawing. Read again after any user or tool edit.',
   64,
 );
+const spiceTarget = { sheet, reference: str('Exact placed component reference. Omit to use the one selected component.', 64) };
+const spiceCatalogId = {
+  modelId: str('Exact model ID from search_spice_models', 80),
+  packId: str('Exact catalog pack ID', 64),
+  revision: str('Exact pack revision from search_spice_models', 80),
+};
+const spiceModel = obj({
+  ...spiceCatalogId,
+  pins: array(str('Physical pin numbers in model-terminal order', 32), 64, 1),
+  parameters: array(obj({ name: str('Exact parameter name', 30), value: str('SPICE quantity', 64) }, ['name', 'value']), 32),
+  replaceExisting: { type: 'boolean', description: 'User approved replacing an existing custom template.' },
+}, ['modelId', 'packId', 'revision']);
+const customSpice = obj({
+  template: str('TinyCAD instance template, with pin macros and a unique device name', 65536),
+  prologue: str('Self-contained SPICE model cards or subcircuits, including dependencies', 262144),
+  epilogue: str('Optional SPICE text after circuit instances', 65536),
+  replaceExisting: { type: 'boolean', description: 'User approved replacing an existing SPICE definition.' },
+}, ['template']);
 const spec = (
   name: string,
   description: string,
@@ -38,6 +56,24 @@ const spec = (
   required: string[] = [],
 ): ToolSpec => ({ name, description, parameters: obj(properties, required) });
 export const toolSpecs: ToolSpec[] = [
+  spec('search_spice_models', 'Search all locally bundled SPICE catalogs by part number, alias or family when the user requests SPICE support. Works in drawing and library mode. Search exact parts, known drop-in replacements and generic models. Returns descriptions, exact IDs, sources and terminal order.', {
+    query: str('Part number, alias or device family', 200), ...spiceTarget,
+    selected: { type: 'boolean', description: 'Restrict the search to the selected placed symbol.' },
+    componentId: str('Restrict the search to a retained component from symbol search or creation.', 128),
+    limit: int(1, 20),
+  }),
+  spec('inspect_spice_model', 'Read a bundled SPICE model’s exact definition, dependencies and source. Use the exact model ID, pack ID and revision from search_spice_models.', {
+    ...spiceCatalogId,
+  }, ['modelId', 'packId', 'revision']),
+  spec('inspect_spice_target', 'Inspect a placed symbol or retained componentId and optionally preview its mapping to a catalog model. Returns physical pins, current template or attachment, revision, and any preverified or suggested mapping.', {
+    ...spiceTarget, ...spiceCatalogId, componentId: str('Retained component instead of a placed reference or selection.', 128),
+  }),
+  spec('attach_spice_model', 'Attach a bundled SPICE model to a placed symbol in one undoable edit. Bundled symbols use verified mappings. Otherwise supply the reviewed symbol pin numbers in model-terminal order. Obtain explicit approval before replacing a custom template.', {
+    ...spiceTarget, ...spiceCatalogId, baseRevision,
+    pins: array(str('Placed symbol pin number in model terminal order', 32), 64, 1),
+    parameters: array(obj({ name: str('Exact model parameter name', 30), value: str('SPICE quantity', 64) }, ['name', 'value']), 32),
+    replaceExisting: { type: 'boolean', description: 'User approved replacement of their existing custom SPICE template.' },
+  }, ['reference', 'sheet', 'modelId', 'packId', 'revision', 'baseRevision']),
   spec(
     'search_bundled_symbols',
     'Search bundled TinyCAD libraries FIRST, before online search or generating a symbol. Searches names, descriptions and attributes in all catalog libraries, including unselected ones; optionally restrict by libraryId. Returns reusable componentIds for get_symbol, place_component or add_library_components, with original SPICE attributes. Does not change library selection. Check errors before treating missing matches as absent.',
@@ -181,6 +217,7 @@ export const toolSpecs: ToolSpec[] = [
       x: int(-10000, 10000),
       y: int(-10000, 10000),
       rotate: int(0, 7),
+      customSpice,
       attributes: array(
         obj({ name: str('', 128), value: str('', 1024) }, ['name', 'value']),
         64,
@@ -231,6 +268,8 @@ export const toolSpecs: ToolSpec[] = [
             name: str('', 128),
             reference: str('', 32),
             description: str('', 1024),
+            spiceModel,
+            customSpice,
           },
           ['componentId'],
         ),
@@ -322,6 +361,7 @@ export const toolSpecs: ToolSpec[] = [
         'references/editor-common.md',
         'references/editor-drawing.md',
         'references/editor-library.md',
+        'references/spice-models.md',
         'assets/symbol.xml',
         'assets/drawing.dsn',
         'assets/ic-555.json',
@@ -384,6 +424,8 @@ export function checkArguments(
       throw new Error(
         `${path} must be an integer ${schema.minimum}–${schema.maximum}.`,
       );
+  } else if (schema.type === 'boolean') {
+    if (typeof value !== 'boolean') throw new Error(`${path} must be a boolean.`);
   } else if (schema.type === 'string') {
     if (
       typeof value !== 'string' ||

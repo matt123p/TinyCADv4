@@ -1,0 +1,276 @@
+* =============================================================================
+* openjellybean - generic "jelly bean" SPICE models
+* Version 0.6.0
+* https://github.com/xdylanm/openjellybean
+* SPDX-License-Identifier: MIT
+* Copyright (c) 2026 openjellybean contributors. See LICENSE for the full text.
+*
+* Original models written from scratch: parameters were fitted in ngspice to
+* typical values published in public datasheets. No manufacturer model file
+* was copied or adapted. They BEHAVE LIKE the named parts at typical bias;
+* they are not the manufacturer's models and carry no manufacturer warranty.
+* Names end in _OJ so they never collide with vendor models in the same tree.
+*
+* Tested with ngspice 47. Uses only standard SPICE syntax plus the VDMOS
+* model (ngspice >= 47, LTspice) and subcircuit params: (ngspice, LTspice).
+* =============================================================================
+
+* ---------------------------------------------------------------- BJTs ------
+* BC547B_OJ : small-signal NPN, 45 V / 100 mA class, hFE group B
+* BC557B_OJ : complementary PNP
+.model BC547B_OJ NPN(IS=1.8e-14 NF=1 BF=330 VAF=65 IKF=0.12 ISE=5e-14 NE=1.5
++ BR=4 NR=1 VAR=20 IKR=0.1 ISC=1e-13 NC=2
++ RB=40 RE=0.4 RC=1.2
++ CJE=10p VJE=0.7 MJE=0.33 CJC=4p VJC=0.6 MJC=0.33 FC=0.5
++ TF=0.45n XTF=2 VTF=10 ITF=0.1 TR=50n
++ EG=1.11 XTI=3 XTB=1.5)
+
+.model BC557B_OJ PNP(IS=1.8e-14 NF=1 BF=330 VAF=40 IKF=0.1 ISE=5e-14 NE=1.5
++ BR=6 NR=1 VAR=15 IKR=0.08 ISC=1e-13 NC=2
++ RB=40 RE=0.6 RC=1.2
++ CJE=12p VJE=0.7 MJE=0.33 CJC=7p VJC=0.6 MJC=0.33 FC=0.5
++ TF=0.95n XTF=2 VTF=10 ITF=0.1 TR=60n
++ EG=1.11 XTI=3 XTB=1.5)
+
+* 2N3904_OJ : 40 V / 200 mA general-purpose NPN (TO-92 pinout E-B-C)
+* 2N3906_OJ : complementary PNP
+.model 2N3904_OJ NPN(IS=1e-14 NF=1 BF=200 VAF=90 IKF=0.07 ISE=4e-14 NE=1.5
++ BR=4 NR=1 VAR=20 IKR=0.1 ISC=1e-13 NC=2
++ RB=10 RE=0.3 RC=1
++ CJE=6p VJE=0.7 MJE=0.33 CJC=5p VJC=0.6 MJC=0.33 FC=0.5
++ TF=0.4n XTF=2 VTF=10 ITF=0.1 TR=30n
++ EG=1.11 XTI=3 XTB=1.5)
+
+.model 2N3906_OJ PNP(IS=1e-14 NF=1 BF=200 VAF=35 IKF=0.08 ISE=4e-14 NE=1.5
++ BR=4 NR=1 VAR=15 IKR=0.08 ISC=1e-13 NC=2
++ RB=10 RE=0.4 RC=1.5
++ CJE=8p VJE=0.7 MJE=0.33 CJC=6.5p VJC=0.6 MJC=0.33 FC=0.5
++ TF=0.5n XTF=2 VTF=10 ITF=0.1 TR=40n
++ EG=1.11 XTI=3 XTB=1.5)
+
+* ------------------------------------------------------------ MOSFETs -------
+* VDMOS model: 3 terminals (D G S), body diode built in.
+* 2N7000_OJ : 60 V small-signal N-channel (also a fair 2N7002 / BS170 stand-in)
+* BS250_OJ  : 45 V small-signal P-channel
+.model 2N7000_OJ VDMOS(VTO=2.0 KP=0.3 LAMBDA=0.01 RD=0.6 RS=0.1 RG=10
++ CGS=16p CGDMAX=20p CGDMIN=3p A=0.5
++ CJO=40p VJ=0.75 M=0.5 IS=1e-13 N=1.1 RB=0.2 BV=60 IBV=10u TT=20n)
+
+.model BS250_OJ VDMOS(pchan VTO=-2.1 KP=0.02 LAMBDA=0.01 RD=1.8 RS=0.2 RG=10
++ CGS=25p CGDMAX=21p CGDMIN=3.7p A=0.5
++ CJO=57p VJ=0.75 M=0.5 IS=1e-13 N=1.1 RB=0.5 BV=45 IBV=10u TT=30n)
+
+* -------------------------------------------------------------- JFETs -------
+* Pins D G S. VTO is negative for both polarities, as SPICE defines it.
+* 2N5457_OJ .. 2N5459_OJ : N-channel general-purpose amplifiers, 25 V
+.model 2N5457_OJ NJF(VTO=-3.06 BETA=3.2e-4 LAMBDA=3.3e-3 RD=20 RS=20
++ CGS=3.2p CGD=5.5p PB=1 IS=1e-14 FC=0.5)
+.model 2N5458_OJ NJF(VTO=-4.28 BETA=3.4e-4 LAMBDA=1.7e-3 RD=20 RS=20
++ CGS=3.2p CGD=5.4p PB=1 IS=1e-14 FC=0.5)
+.model 2N5459_OJ NJF(VTO=-5.7 BETA=2.9e-4 LAMBDA=1.1e-3 RD=20 RS=20
++ CGS=3.2p CGD=5.2p PB=1 IS=1e-14 FC=0.5)
+
+* J112_OJ, J113_OJ : N-channel analog switches, 35 V
+.model J112_OJ NJF(VTO=-2.2 BETA=6.6e-3 LAMBDA=0.035 RD=7 RS=7
++ CGS=13p CGD=9p PB=1.25 IS=1e-15 FC=0.5)
+.model J113_OJ NJF(VTO=-1.5 BETA=8.3e-3 LAMBDA=0.035 RD=12 RS=12
++ CGS=13p CGD=9p PB=1.25 IS=1e-15 FC=0.5)
+
+* PN4392_OJ, PN4393_OJ : N-channel switches, 40 V
+.model PN4392_OJ NJF(VTO=-2.8 BETA=4.4e-3 LAMBDA=0.035 RD=4 RS=4
++ CGS=12p CGD=9p PB=1.17 IS=1e-15 FC=0.5)
+.model PN4393_OJ NJF(VTO=-1.2 BETA=7.4e-3 LAMBDA=0.035 RD=10 RS=10
++ CGS=12.5p CGD=8p PB=1.17 IS=1e-15 FC=0.5)
+
+* 2N5460_OJ .. 2N5462_OJ : P-channel general-purpose amplifiers, 40 V
+.model 2N5460_OJ PJF(VTO=-2.2 BETA=5.3e-4 LAMBDA=5e-3 RD=40 RS=40
++ CGS=4.8p CGD=2.3p PB=1 IS=1e-14 FC=0.5)
+.model 2N5461_OJ PJF(VTO=-3 BETA=5.1e-4 LAMBDA=5e-3 RD=30 RS=30
++ CGS=4.8p CGD=2.3p PB=1 IS=1e-14 FC=0.5)
+.model 2N5462_OJ PJF(VTO=-5 BETA=3.7e-4 LAMBDA=3e-3 RD=20 RS=20
++ CGS=4.7p CGD=2.7p PB=1 IS=1e-14 FC=0.5)
+
+* ------------------------------------------------------------- Diodes -------
+* 1N4148_OJ : small-signal fast switching (also 1N914)
+.model 1N4148_OJ D(IS=2.9n N=1.85 RS=0.9 BV=100 IBV=100u
++ CJO=2p VJ=0.5 M=0.33 TT=2.5n EG=1.11 XTI=3)
+
+* 1N5819_OJ : 1 A / 40 V Schottky
+.model 1N5819_OJ D(IS=1.6u N=1.05 RS=0.057 BV=40 IBV=1m
++ CJO=300p VJ=0.5 M=0.45 TT=0 EG=0.69 XTI=2)
+
+* BAT54_OJ : 200 mA / 30 V small-signal Schottky (one diode of the A/C/S duals)
+.model BAT54_OJ D(IS=14n N=1 RS=1.1 BV=30 IBV=10u
++ CJO=13.5p VJ=0.3 M=0.39 TT=0 EG=0.69 XTI=2)
+
+* B140_OJ : 1 A / 40 V Schottky rectifier (also a fair SB140 stand-in)
+.model B140_OJ D(IS=200n N=1 RS=0.062 BV=45 IBV=500u
++ CJO=310p VJ=0.5 M=0.45 TT=0 EG=0.69 XTI=2)
+
+* ------------------------------------------------------------- Zeners -------
+* Generic zener:  X1 anode cathode ZENER_OJ params: VZ=5.1 IZT=5m RZ=40 NK=1.5
+*   VZ  : zener voltage at test current IZT
+*   RZ  : total dynamic impedance at IZT (as quoted on datasheets)
+*   NK  : knee softness (1 = sharp, 2-3 = the soft knee of sub-5 V parts)
+.subckt ZENER_OJ a k params: VZ=5.1 IZT=5m RZ=40 NK=1.5
+.param RSER={max(RZ - NK*0.025865/IZT, 0.01)}
+.param VOFS={VZ - IZT*RSER - NK*0.025865*ln(IZT/1e-12)}
+Df  a k dfwd
+Vof k n1 {VOFS}
+Dbk n1 n2 dknee
+Rz  n2 a {RSER}
+.model dfwd  D(IS=3n N=1.8 RS=0.5 CJO=40p VJ=0.75 M=0.4 TT=50n)
+.model dknee D(IS=1e-12 N={NK})
+.ends ZENER_OJ
+
+* 500 mW glass zeners, BZX79 class, specified at IZT = 5 mA
+.subckt BZX79C3V3_OJ a k
+X1 a k ZENER_OJ params: VZ=3.3 IZT=5m RZ=85 NK=3
+.ends
+.subckt BZX79C4V7_OJ a k
+X1 a k ZENER_OJ params: VZ=4.7 IZT=5m RZ=50 NK=2.5
+.ends
+.subckt BZX79C5V1_OJ a k
+X1 a k ZENER_OJ params: VZ=5.1 IZT=5m RZ=40 NK=2
+.ends
+.subckt BZX79C5V6_OJ a k
+X1 a k ZENER_OJ params: VZ=5.6 IZT=5m RZ=15 NK=1.5
+.ends
+.subckt BZX79C6V2_OJ a k
+X1 a k ZENER_OJ params: VZ=6.2 IZT=5m RZ=6 NK=1
+.ends
+.subckt BZX79C9V1_OJ a k
+X1 a k ZENER_OJ params: VZ=9.1 IZT=5m RZ=6 NK=1
+.ends
+.subckt BZX79C12_OJ a k
+X1 a k ZENER_OJ params: VZ=12 IZT=5m RZ=10 NK=1
+.ends
+.subckt BZX79C15_OJ a k
+X1 a k ZENER_OJ params: VZ=15 IZT=5m RZ=10 NK=1
+.ends
+* 1 W, 1N47xxA class, specified at the datasheet IZT
+.subckt 1N4733A_OJ a k
+X1 a k ZENER_OJ params: VZ=5.1 IZT=49m RZ=7 NK=2
+.ends
+.subckt 1N4742A_OJ a k
+X1 a k ZENER_OJ params: VZ=12 IZT=21m RZ=9 NK=1
+.ends
+
+* ---------------------------------------------------------------- LEDs ------
+* Generic 5 mm indicator LEDs, one color each:  D1 a k LED_RED_OJ
+* LED_RED_OJ   : high-efficiency red, VF about 1.9 V at 10 mA
+* LED_GREEN_OJ : standard green, VF about 2.0 V at 10 mA
+* LED_BLUE_OJ  : InGaN blue, VF about 3.3 V at 20 mA
+.model LED_RED_OJ D(IS=1.4n N=4.64 RS=1.7 BV=10 IBV=10u
++ CJO=15p VJ=0.75 M=0.33 TT=0 EG=2.46 XTI=0)
+.model LED_GREEN_OJ D(IS=1.1e-18 N=2 RS=10 BV=10 IBV=10u
++ CJO=15p VJ=0.75 M=0.33 TT=0 EG=2.44 XTI=0)
+.model LED_BLUE_OJ D(IS=1.4e-10 N=6 RS=19.7 BV=10 IBV=10u
++ CJO=65p VJ=0.75 M=0.33 TT=0 EG=3.8 XTI=0)
+
+* ------------------------------------------------------------- Op-amps ------
+* Pin order (TI / LTspice convention):  +IN  -IN  V+  V-  OUT
+* Generic single-pole + second-pole macromodel with slew limit, output swing
+* limits, short-circuit current limit and supply current that follows the
+* load (output current is drawn from the correct rail).
+* Not modelled: input common-mode range limits / phase reversal, noise,
+* CMRR/PSRR, offset drift, LM358 crossover distortion.
+*   GBW [Hz]  SR [V/s]  AOL [V/V]  VOS [V]  IB [A, into each pin]
+*   ISC [A]   IQ [A per amplifier]  VOH/VOL: headroom from V+ / V- [V]
+*   ROUT: open-loop output resistance [ohm]  FP2: second pole [Hz]
+.subckt OPAMP_OJ inp inn vcc vee out params: GBW=3e6 SR=13e6 AOL=200k
++ VOS=0 IB=30p RIN=1e12 CIN=3p ISC=30m IQ=1.4m VOH=1.5 VOL=1.5 ROUT=100 FP2=4.5e6
+.param CC=1n
+.param IMAX={SR*CC}
+.param GM={6.2831853*GBW*CC}
+.param VLIN={IMAX/GM}
+Bmid mid 0 V={(V(vcc)+V(vee))/2}
+Iq   vcc vee {IQ}
+Vos  inp inp1 {VOS}
+Ibp  inp mid {IB}
+Ibn  inn mid {IB}
+Rin  inp1 inn {RIN}
+Cinp inp1 mid {CIN}
+Cinn inn mid {CIN}
+* transconductance with tanh slew limit -> integrator
+Bg   mid int I={IMAX}*tanh((V(inp1)-V(inn))/{VLIN})
+Cc   int mid {CC}
+Rint int mid {AOL/GM}
+* output-swing clamps
+Bhi  nhi 0 V=V(vcc)-{VOH}
+Blo  nlo 0 V=V(vee)+{VOL}
+Dhi  int nhi dclamp
+Dlo  nlo int dclamp
+* second pole
+E2   p2a 0 int 0 1
+Rp2  p2a p2 1k
+Cp2  p2 0 {1/(6.2831853*FP2*1k)}
+* current-limited output, current drawn from the rails
+* soft current limit: I = ISC*x/(1+x^4)^0.25, x=(V(p2)-V(out))/(ROUT*ISC)
+Bx   x 0 V=(V(p2)-V(out))/({ROUT}*{ISC})
+Bsrc vcc out I={ISC}*0.5*(abs(V(x))+V(x))/pwr(1+V(x)*V(x)*V(x)*V(x),0.25)
+Bsnk out vee I={ISC}*0.5*(abs(V(x))-V(x))/pwr(1+V(x)*V(x)*V(x)*V(x),0.25)
+.model dclamp D(IS=1e-15 N=0.02)
+.ends OPAMP_OJ
+
+* TL07X_OJ : one section of a TL071/TL072/TL074-class JFET-input op-amp
+.subckt TL07X_OJ inp inn vcc vee out
+* GBW/FP2 chosen so the unity-gain frequency lands at ~3 MHz with ~55-60 deg PM
+X1 inp inn vcc vee out OPAMP_OJ params: GBW=3.5e6 SR=13e6 AOL=200k IB=30p
++ RIN=1e12 CIN=3p ISC=30m IQ=1.4m VOH=1.5 VOL=1.5 ROUT=100 FP2=4.5e6
+.ends TL07X_OJ
+
+* TL072_OJ : complete dual package, pins 1-8 in order:
+*   1OUT 1IN- 1IN+ VCC- 2IN+ 2IN- 2OUT VCC+
+.subckt TL072_OJ out1 inn1 inp1 vee inp2 inn2 out2 vcc
+XA inp1 inn1 vcc vee out1 TL07X_OJ
+XB inp2 inn2 vcc vee out2 TL07X_OJ
+.ends TL072_OJ
+
+* TL074_OJ : complete quad package, pins 1-14 in order:
+*   1OUT 1IN- 1IN+ VCC+ 2IN+ 2IN- 2OUT 3OUT 3IN- 3IN+ VCC- 4IN+ 4IN- 4OUT
+.subckt TL074_OJ out1 inn1 inp1 vcc inp2 inn2 out2 out3 inn3 inp3 vee inp4 inn4 out4
+XA inp1 inn1 vcc vee out1 TL07X_OJ
+XB inp2 inn2 vcc vee out2 TL07X_OJ
+XC inp3 inn3 vcc vee out3 TL07X_OJ
+XD inp4 inn4 vcc vee out4 TL07X_OJ
+.ends TL074_OJ
+
+* LM358_OJ : one section of an LM358/LM324-class single-supply op-amp
+*   (output swings to within ~10 mV of V- at light load; bias current flows
+*    out of the pins, hence negative IB)
+.subckt LM358_OJ inp inn vcc vee out
+X1 inp inn vcc vee out OPAMP_OJ params: GBW=0.8e6 SR=0.3e6 AOL=100k IB=-20n
++ RIN=10Meg CIN=3p ISC=30m IQ=0.35m VOH=1.5 VOL=0.02 ROUT=100 FP2=1.5e6
+.ends LM358_OJ
+
+* LM358_DUAL_OJ : complete dual package, pins 1-8 in order:
+*   1OUT 1IN- 1IN+ GND 2IN+ 2IN- 2OUT VCC+
+.subckt LM358_DUAL_OJ out1 inn1 inp1 vee inp2 inn2 out2 vcc
+XA inp1 inn1 vcc vee out1 LM358_OJ
+XB inp2 inn2 vcc vee out2 LM358_OJ
+.ends LM358_DUAL_OJ
+
+* LM324_QUAD_OJ : complete quad package, pins 1-14 in order:
+*   1OUT 1IN- 1IN+ VCC+ 2IN+ 2IN- 2OUT 3OUT 3IN- 3IN+ GND 4IN+ 4IN- 4OUT
+*   Sections follow the LM324's own datasheet: faster than LM358_OJ, half the supply current.
+.subckt LM324_QUAD_OJ out1 inn1 inp1 vcc inp2 inn2 out2 out3 inn3 inp3 vee inp4 inn4 out4
+.subckt section inp inn vcc vee out
+X1 inp inn vcc vee out OPAMP_OJ params: GBW=1.34e6 SR=0.5e6 AOL=100k IB=-20n
++ RIN=10Meg CIN=3p ISC=30m IQ=0.175m VOH=1.5 VOL=0.02 ROUT=100 FP2=2.5e6
+.ends section
+XA inp1 inn1 vcc vee out1 section
+XB inp2 inn2 vcc vee out2 section
+XC inp3 inn3 vcc vee out3 section
+XD inp4 inn4 vcc vee out4 section
+.ends LM324_QUAD_OJ
+
+* ------------------------------------------------------- Potentiometers -----
+* Generic linear potentiometer:  X1 a w b POT_OJ params: R=10k POS=0.5
+*   R   : total resistance from A to B [ohm]
+*   POS : wiper position, 0 = at A, 1 = at B (limited to that range)
+.subckt POT_OJ a w b params: R=10k POS=0.5
+.param FRAC={max(min(POS,1),0)}
+Ra a w {max(R*FRAC,1e-3)}
+Rb w b {max(R*(1-FRAC),1e-3)}
+.ends POT_OJ

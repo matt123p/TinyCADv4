@@ -198,7 +198,7 @@
       "height": 38,
       "bodyWidth": 44,
       "bodyHeight": 30,
-      "xmlSha256": "272732c3fdf3780d9ebb9ac19c4a7d5b06ff3f6b654d162dc69fb0894efb2225"
+      "xmlSha256": "a05de456638b838da2a58a08b4f00e7d23e24f907a1ae6d786ab02387702685e"
     },
     {
       "id": "motor-can370",
@@ -239,7 +239,7 @@
       "height": 38,
       "bodyWidth": 44,
       "bodyHeight": 30,
-      "xmlSha256": "d1ad4679f2c33bc9e8de821c8eb30e7031a2ad7697fbfd0cad4ad5463fcf62c1"
+      "xmlSha256": "a05de456638b838da2a58a08b4f00e7d23e24f907a1ae6d786ab02387702685e"
     },
     {
       "id": "motor-can775",
@@ -280,7 +280,7 @@
       "height": 38,
       "bodyWidth": 44,
       "bodyHeight": 30,
-      "xmlSha256": "5e5c3c614cbe0ff3169f710835726dc7334f39524bbd56ad7272094f651bf271"
+      "xmlSha256": "4ed1fb4f2af80a5b41213850dd4c63ef4c902d0967b1f89606f9235bef034d8d"
     },
     {
       "id": "motor-coreless",
@@ -321,7 +321,7 @@
       "height": 38,
       "bodyWidth": 44,
       "bodyHeight": 30,
-      "xmlSha256": "3b4c3db884d8a5ce8f1445e749c555164620af671c88182964cea413959a293c"
+      "xmlSha256": "2fe0559c6d7d81f9007e3159149f17c11bf784194c802f9cfdd89abc39142d67"
     },
     {
       "id": "motor-microgear",
@@ -362,7 +362,7 @@
       "height": 38,
       "bodyWidth": 44,
       "bodyHeight": 30,
-      "xmlSha256": "be8ea9a72e781eedd196fc29621179ecaa738b40b72a46465280c28e8be26c58"
+      "xmlSha256": "1b965e8add544111af98e534bdf28b68336ed6d882a8e58517ea85f2790a6117"
     },
     {
       "id": "motor-ttgear",
@@ -403,7 +403,7 @@
       "height": 38,
       "bodyWidth": 44,
       "bodyHeight": 30,
-      "xmlSha256": "13d48c9d97eb3b372d0c1cfa8db8ad20c70445a7ea4ac7e66e87db4343e1a1f2"
+      "xmlSha256": "d3566b9f7f722a8dd5fa503b18475576b374c1f6dd55ea4b6ebc73a78247e028"
     },
     {
       "id": "motor-planetary",
@@ -444,7 +444,7 @@
       "height": 38,
       "bodyWidth": 44,
       "bodyHeight": 30,
-      "xmlSha256": "04cd35a51028c5f45fdb53d644c393b054315608046061d69204edee1273fb54"
+      "xmlSha256": "1b965e8add544111af98e534bdf28b68336ed6d882a8e58517ea85f2790a6117"
     },
     {
       "id": "motor-worm",
@@ -485,7 +485,7 @@
       "height": 38,
       "bodyWidth": 44,
       "bodyHeight": 30,
-      "xmlSha256": "01566d676ba64c918fc53d4491f7cb5ad211c623671b59bbd60bb39b3105f089"
+      "xmlSha256": "3404aa42153e505b2ec83e3ea64a1fbb56e1e70881e8b864bd9a034de0dbe652"
     },
     {
       "id": "motor-encoder",
@@ -571,7 +571,7 @@
       "height": 46,
       "bodyWidth": 44,
       "bodyHeight": 38,
-      "xmlSha256": "f3650d083a997250263bc91a1115e2e78204d6162e9435a2345431496ee4b519"
+      "xmlSha256": "49cbb5df293b7d71dc76ff33e4c1ba1750b2767b6ec9e834f8456ddb76cbe1c0"
     },
     {
       "id": "motor-bldc-outrunner",
@@ -623,7 +623,7 @@
       "height": 40,
       "bodyWidth": 42,
       "bodyHeight": 32,
-      "xmlSha256": "82ec9c07e5ed301f3c883c66383eb0a9ab9240135ae9e318e274403eb6e429e1"
+      "xmlSha256": "d2c1a81db5e3604d7eadb8ed0efd58e1e3569bd671b0e462ea9481a738ac19ca"
     },
     {
       "id": "motor-bldc-inrunner",
@@ -675,7 +675,7 @@
       "height": 40,
       "bodyWidth": 42,
       "bodyHeight": 32,
-      "xmlSha256": "12dc59654a312efe4b461b3f05685bde9e1cd4bcf1b632f5c5dc996a8d468a46"
+      "xmlSha256": "d2feb202549fa04302829a58d1ee59af1fc85352ba54b101aac7c24391e03cb1"
     },
     {
       "id": "motor-bldc-hall",
@@ -782,7 +782,7 @@
       "height": 50,
       "bodyWidth": 42,
       "bodyHeight": 42,
-      "xmlSha256": "80c74f2a2d3e3c8c751d20d4ff797613a5ebe2a435d52a5f30ed569310fd9114"
+      "xmlSha256": "5f63193a0dc5c5afc4432850b70431f2113fe56dc73baa891b883b8e3ca3855a"
     },
     {
       "id": "stepper-nema14",
@@ -845,7 +845,7 @@
       "height": 48,
       "bodyWidth": 38,
       "bodyHeight": 40,
-      "xmlSha256": "e2eeed7e9e2203874e239ba3cb03d2e8fddaa0f5af26a212be2ed656df80337a"
+      "xmlSha256": "92a50128537df1755a09db206d34b850d74ba56fb027673684eb3712db3ea630"
     },
     {
       "id": "stepper-nema17",
@@ -908,7 +908,7 @@
       "height": 48,
       "bodyWidth": 38,
       "bodyHeight": 40,
-      "xmlSha256": "a723aad4fc8b9770eada3ea595856723c7ed4495cba80f7ae0d5592726cd2cb8"
+      "xmlSha256": "63b764672583d6f26c0c9179867b2581514ea2630820bf707e6591436571130c"
     },
     {
       "id": "stepper-nema23",
@@ -971,7 +971,7 @@
       "height": 48,
       "bodyWidth": 38,
       "bodyHeight": 40,
-      "xmlSha256": "302b037e519ffd728880b43e655bf75f55cf1df6434f6f4ead864754dc5e96f2"
+      "xmlSha256": "5f1dc475a5c2a2654b1b602cfa81afcb7f0d1eea94faab9b59dee7043aa85cc6"
     },
     {
       "id": "stepper-nema34",
@@ -1034,7 +1034,7 @@
       "height": 48,
       "bodyWidth": 38,
       "bodyHeight": 40,
-      "xmlSha256": "4daa1edc7778646d525448273188302701013c73d7e32d12c8113d1b8e76a14f"
+      "xmlSha256": "9650b22db83d3541334ef3b7de776db19de428ef862e0e1a37378226aa35b60b"
     },
     {
       "id": "stepper-six",
@@ -1119,7 +1119,7 @@
       "height": 56,
       "bodyWidth": 38,
       "bodyHeight": 48,
-      "xmlSha256": "38537542155cb4422a6e1eb966454db11a3ce12f8ccca5257efad46a0f3765ce"
+      "xmlSha256": "b1db41e85bbda471354fff27ffebe8fffdbd7dedc657045fad1be77abd1f3c57"
     },
     {
       "id": "stepper-eight",
@@ -1226,7 +1226,7 @@
       "height": 56,
       "bodyWidth": 38,
       "bodyHeight": 48,
-      "xmlSha256": "5b8a92e42c48b108b3a4cf08dd5443b5b2e823aa78168792b51ad9a8f9ed4c16"
+      "xmlSha256": "19a364f16274a73cfa55459e9d6735921474bba56743387df0266ae853b0ee80"
     },
     {
       "id": "servo-micro",
@@ -1278,7 +1278,7 @@
       "height": 42,
       "bodyWidth": 28,
       "bodyHeight": 34,
-      "xmlSha256": "ee6b995593a65f3b01a1a26f771c32121d2e84af911372ecc7eb7019b3775478"
+      "xmlSha256": "9aefbe8d2863acfc83b1c9268ef0d5b55949d02066608729b24fd0ac751a37b8"
     },
     {
       "id": "servo-standard",
@@ -1330,7 +1330,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "19643eec02bbe1fe027a2cce17f7d7b037707dd5b92498d1bb2301cf0ca48bfc"
+      "xmlSha256": "9b0ef9cc2979e0efdeb60e379e8341234b91563ecb2fe09dfa3a71c6a8c0a2d5"
     },
     {
       "id": "servo-torque",
@@ -1382,7 +1382,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "e82071c5de53dcc9822e48157c2c2ef23850ed4f51fe7b69ab2876886f3d048d"
+      "xmlSha256": "9b0ef9cc2979e0efdeb60e379e8341234b91563ecb2fe09dfa3a71c6a8c0a2d5"
     },
     {
       "id": "servo-continuous",
@@ -1434,7 +1434,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "57d7b2bac201099199189e39d026143b098d2911dfb47724f2e971a3c0df982c"
+      "xmlSha256": "b11d560bd0300b92db79bf449497252d0f5e7040b79c57c3001f869ebaa21bf2"
     },
     {
       "id": "servo-smart-ttl",
@@ -1520,7 +1520,7 @@
       "height": 50,
       "bodyWidth": 36,
       "bodyHeight": 42,
-      "xmlSha256": "6e3a6a22be8f914e10bed768f4e9421cdb632260f3c0443d4be115282c2f559b"
+      "xmlSha256": "d521fe3ad96daf18b6660f7a230fffbc39e02cb7267679feed05bebd8241495d"
     },
     {
       "id": "servo-smart-rs485",
@@ -1628,7 +1628,7 @@
       "height": 50,
       "bodyWidth": 36,
       "bodyHeight": 42,
-      "xmlSha256": "b4ab09aae591d631489fd07311f4c790b67d42e7e3cc24bfc016a72bdc20ef27"
+      "xmlSha256": "537268a01eb0ac86a34357f6c88ed6c428151222105ff935b3d2dc9b92de2559"
     },
     {
       "id": "driver-a4988",
@@ -1877,7 +1877,7 @@
       "height": 46,
       "bodyWidth": 34,
       "bodyHeight": 38,
-      "xmlSha256": "90021615424e967700f1d62302dfd681457c0cebe79aa2061c21fa557156e0e3"
+      "xmlSha256": "cbf6fe4df4d36680f767935c8211ea600499b0dafc6bcb881e0bcda497679d9e"
     },
     {
       "id": "driver-drv8825",
@@ -2139,7 +2139,7 @@
       "height": 46,
       "bodyWidth": 56,
       "bodyHeight": 38,
-      "xmlSha256": "f440b0ed2ef176d76ad3a2e9f594e4542c7939fb0c607e9a002285f739587c8f"
+      "xmlSha256": "2e15c05a9b48bbed1b9f01b9c657a11aa29badaeb0c652b73a93382b9b2c5fe9"
     },
     {
       "id": "driver-tb6612",
@@ -2388,7 +2388,7 @@
       "height": 46,
       "bodyWidth": 34,
       "bodyHeight": 38,
-      "xmlSha256": "fa6016267e417991a53bd9b5d190f7b0f0b2e03c7e221819d7a5725b76c80d48"
+      "xmlSha256": "ce96e7c13c04b9c984302389c347f1f1c94b35730cbc091dfba10763df5a93f3"
     },
     {
       "id": "driver-dual-hbridge",
@@ -2571,7 +2571,7 @@
       "height": 52,
       "bodyWidth": 46,
       "bodyHeight": 44,
-      "xmlSha256": "c45827cf6e28bc2e48ad22a5b51884df4e055a7b280e6ca9b5cca3cf3db74133"
+      "xmlSha256": "73d450060772b4d082908699aec6f68ef9550cf34d134e728c1eadfa04aeab22"
     },
     {
       "id": "driver-brushed",
@@ -2678,7 +2678,7 @@
       "height": 46,
       "bodyWidth": 46,
       "bodyHeight": 38,
-      "xmlSha256": "d881ef665c1754f08a5075ededeb25bb609ea1a4caab1357ff25180afaac4866"
+      "xmlSha256": "207137e7157daf6a64e16779d2789329f0853666d2b7e32d21b2c142549e169e"
     },
     {
       "id": "driver-step-dir",
@@ -2829,7 +2829,7 @@
       "height": 46,
       "bodyWidth": 46,
       "bodyHeight": 38,
-      "xmlSha256": "7be5257bdfc88b81ab1877affb62141532f97750202ed2176144b64ed692370e"
+      "xmlSha256": "4e46c933bb0c37236d9af56c57d96bbadde24c959faef1cae2f9ee2084f8e24b"
     },
     {
       "id": "driver-esc",
@@ -2925,7 +2925,7 @@
       "height": 48,
       "bodyWidth": 38,
       "bodyHeight": 40,
-      "xmlSha256": "09d5e63c0dcd458b06f0d2206511da5f4afc13f460456d46e2b5df6f2c231254"
+      "xmlSha256": "bc34c6863842df369dbf0b40e4cde802c7c2f10db74b98bd0bad877562adf2f2"
     },
     {
       "id": "driver-servo",
@@ -3032,7 +3032,7 @@
       "height": 46,
       "bodyWidth": 46,
       "bodyHeight": 38,
-      "xmlSha256": "f6e198167fbc863f0fc87ea0c641719341eccea0728aeb2bd2dc10c671030197"
+      "xmlSha256": "a23e3c285ea6e3bc9fb5d2d435878e4bd85246e1fb15b7cc7171c8a4fea7a336"
     },
     {
       "id": "driver-servo16",
@@ -3714,7 +3714,7 @@
       "height": 44,
       "bodyWidth": 76,
       "bodyHeight": 36,
-      "xmlSha256": "fce6a3e0cc26a875cce8f8ec5c3c4e8fa74d7acfb83869af5a31e109e4f7b78a"
+      "xmlSha256": "dabb87ea856eabd07cb1fcf5b27ccb828b45eb22528f8ad33635636bddbd2798"
     },
     {
       "id": "driver-solenoid",
@@ -3798,7 +3798,7 @@
       "height": 52,
       "bodyWidth": 46,
       "bodyHeight": 44,
-      "xmlSha256": "e6fd96acb26ededeef6b348e64b5684d35ac40926c9d2949a0deafa49cc0bcd3"
+      "xmlSha256": "81c24704b9233204741a1c622f00643c98fa14ad00d5d45f389d4d56d2d98e93"
     },
     {
       "id": "encoder-ab",
@@ -3861,7 +3861,7 @@
       "height": 40,
       "bodyWidth": 40,
       "bodyHeight": 32,
-      "xmlSha256": "28bee1ce4cc69192d23aaa255f20d8d30ab1a0cbd61620de4fd32f02b0c98864"
+      "xmlSha256": "af6e9bf2009bdcb8ff4ce7839c647418a197e286b920cb279438117409b36782"
     },
     {
       "id": "encoder-abz",
@@ -3935,7 +3935,7 @@
       "height": 40,
       "bodyWidth": 40,
       "bodyHeight": 32,
-      "xmlSha256": "57d42db1ecc139441b6d363508b5d89fcfbcaf647e9384a75365cd576fadd20d"
+      "xmlSha256": "c5fd7a53620a7d3454c8f355750fd87f29bcc0a371a0f8a5dff9a921c9adf52c"
     },
     {
       "id": "encoder-differential",
@@ -4042,7 +4042,7 @@
       "height": 48,
       "bodyWidth": 40,
       "bodyHeight": 40,
-      "xmlSha256": "5a0ed53a3da7351bc8b7f882f336f486d4a4f0a40d93f83f8ee48dc143ead41f"
+      "xmlSha256": "6d2eeb7b57bc72726d3e395a3cf89a7c8740659b4652df05b39015743b9424ab"
     },
     {
       "id": "encoder-magnetic-i2c",
@@ -4106,7 +4106,7 @@
       "height": 38,
       "bodyWidth": 32,
       "bodyHeight": 30,
-      "xmlSha256": "6d308c15dd3d3e878c0ddb720e5738ec4433e2b1919bd5a632eb275889bcb4f0"
+      "xmlSha256": "f09d3bf53748cb2a920e8793e4bcb3fa953f54446e1da30b915248ec5ebca221"
     },
     {
       "id": "encoder-magnetic-spi",
@@ -4192,7 +4192,7 @@
       "height": 38,
       "bodyWidth": 32,
       "bodyHeight": 30,
-      "xmlSha256": "743b673e26b6396e4693c68aa60f9b0b626200591c57490737c3d47f7e6564b2"
+      "xmlSha256": "fe5d59613da1da99cd17adb1589896cf6db73522b480926e47d9a3e017275cce"
     },
     {
       "id": "feedback-pot",
@@ -4244,7 +4244,7 @@
       "height": 40,
       "bodyWidth": 40,
       "bodyHeight": 32,
-      "xmlSha256": "708e35485c31a7a90cc7b600dffe6f120a85790d91c57e16d97657f2526eb748"
+      "xmlSha256": "eb1b94165a03eb248918a984366c5cf00e5fb523624566e1fb717e3c95ad175b"
     },
     {
       "id": "limit-lever",
@@ -4296,7 +4296,7 @@
       "height": 38,
       "bodyWidth": 30,
       "bodyHeight": 30,
-      "xmlSha256": "a00b3a25981b69bec8f90bbbbb85c089160f553ff69f8c9c688f17e71ac6c659"
+      "xmlSha256": "89cd2e83338d5d7893703dd1c463f33d09e2e5cf7988eb9673124579fb7bce88"
     },
     {
       "id": "limit-roller",
@@ -4348,7 +4348,7 @@
       "height": 38,
       "bodyWidth": 30,
       "bodyHeight": 30,
-      "xmlSha256": "e3492badd1e277935d4b455721461091d8583b5d869e2d535a6aa4d28fcf8e45"
+      "xmlSha256": "0a8b32558620442cde9bf4592294af2723fc4b9d47c2c0a54e4ded152aed541f"
     },
     {
       "id": "limit-plunger",
@@ -4400,7 +4400,7 @@
       "height": 38,
       "bodyWidth": 30,
       "bodyHeight": 30,
-      "xmlSha256": "89704ab882542a201815cc719523fe17e74beb95a15ca9435f5b6fd30e7887c2"
+      "xmlSha256": "410f36bbd731ab4984b424d41fef13dfd720fd3cf14ad6428766b4055af196de"
     },
     {
       "id": "limit-board",
@@ -4451,7 +4451,7 @@
       "height": 38,
       "bodyWidth": 32,
       "bodyHeight": 30,
-      "xmlSha256": "e48e427de8fe53edb51f2bda1e96583ff0bdbf14dbcabd9c92fbee15ed1bb4e3"
+      "xmlSha256": "7b2175b707c65397030857938825909e4510c3a25d8af6d93aad21cf688cb483"
     },
     {
       "id": "limit-optical",
@@ -4503,7 +4503,7 @@
       "height": 38,
       "bodyWidth": 32,
       "bodyHeight": 30,
-      "xmlSha256": "1e9442a238d6e5b1e29c9e5315ffb7c49471dea82598d5300a207bd29a6755ec"
+      "xmlSha256": "06bf52abf0444778ed32650dab541e6d9d61fcc085304255f9fb8d14eed02ff9"
     },
     {
       "id": "limit-inductive-npn",
@@ -4555,7 +4555,7 @@
       "height": 38,
       "bodyWidth": 38,
       "bodyHeight": 30,
-      "xmlSha256": "39631984f8221f22d794e6ec1bf62aa1befb3f3c20a4852f2c433e5bb60d5767"
+      "xmlSha256": "e386b699ef251c92a1db8a6bcbb42565e146dd85335b7a8b71c95b6582c3a1fb"
     },
     {
       "id": "limit-inductive-pnp",
@@ -4607,7 +4607,7 @@
       "height": 38,
       "bodyWidth": 38,
       "bodyHeight": 30,
-      "xmlSha256": "d136d932dc10c0412e57ddc5c3902a119da8b5d07890056a489d864d977f03fc"
+      "xmlSha256": "c8c39b1c97121f703486fe1747bb5256d1c944ca51d924cadef122824930c2ce"
     },
     {
       "id": "limit-reed",
@@ -4648,7 +4648,7 @@
       "height": 38,
       "bodyWidth": 38,
       "bodyHeight": 30,
-      "xmlSha256": "53236ab7d3129b7452a660f2d45005aa789f6bf5f1f1904af2bc4595094dc25b"
+      "xmlSha256": "a9e8964d8a07b5f1cd910a6a321e0212c3989899de823706509aa60a64273c0b"
     },
     {
       "id": "limit-estop",
@@ -4711,7 +4711,7 @@
       "height": 38,
       "bodyWidth": 34,
       "bodyHeight": 30,
-      "xmlSha256": "1d66681431ba454de3cc28b6578b1425858e66d62362767a53bbb684fe03b8f4"
+      "xmlSha256": "3469d955b2122890b46d8460826e2b8d4e6f3c86e9942d9e4d1eda241b7e64b0"
     },
     {
       "id": "solenoid-frame",
@@ -4752,7 +4752,7 @@
       "height": 42,
       "bodyWidth": 42,
       "bodyHeight": 34,
-      "xmlSha256": "bebecf9f1c2ddc8ec166d81b5f18d28b8d82716c33ca4f6e79e913ff9189883e"
+      "xmlSha256": "d4122fe42ed76fd4b59633de2633448c15a08aae00d592f1ec609ae03cbe3076"
     },
     {
       "id": "solenoid-pushpull",
@@ -4793,7 +4793,7 @@
       "height": 42,
       "bodyWidth": 42,
       "bodyHeight": 34,
-      "xmlSha256": "a34fe5df3582c4fbcbf1c0e2ccdb2538db467748398718902ae08554036914d7"
+      "xmlSha256": "89b06d16bb87384f36fa00494fc9f40f585b8f810a145c5bcd77d3fdaebf9167"
     },
     {
       "id": "solenoid-latching",
@@ -4856,7 +4856,7 @@
       "height": 42,
       "bodyWidth": 42,
       "bodyHeight": 34,
-      "xmlSha256": "794b1dabec6ad1bd1c7b19e0eb164c56b18b852ef374542ec14bf83d955159f2"
+      "xmlSha256": "4b7396ad38b05d0f3875358f1d6e99ab2c10fca165d0d9e8ebcec86077638f1b"
     },
     {
       "id": "solenoid-rotary",
@@ -4897,7 +4897,7 @@
       "height": 42,
       "bodyWidth": 42,
       "bodyHeight": 34,
-      "xmlSha256": "a0d807206fdf1a62a2a1d018789b77d92b8f2dfc8df0cb43163e5e7d4b4cbd96"
+      "xmlSha256": "e78b546e68f06b5c7d47e1598712a69141189bb40cf613d249910b4b8641af8c"
     },
     {
       "id": "actuator-linear",
@@ -4938,7 +4938,7 @@
       "height": 46,
       "bodyWidth": 52,
       "bodyHeight": 38,
-      "xmlSha256": "ec002b65cfaafa436d8ea9dbbd9ae316d1a502dbb44a70ed7e56e92aa46e8b96"
+      "xmlSha256": "8c0297e95f90288694a263ecbe0616a9aefe305b6dd00827fedeff3b5b6bcb5e"
     },
     {
       "id": "actuator-feedback",
@@ -5012,7 +5012,7 @@
       "height": 46,
       "bodyWidth": 52,
       "bodyHeight": 38,
-      "xmlSha256": "03643488dae3fe03f9950ab6d3032f7869e2ded747c8de8258ac7108221da2ad"
+      "xmlSha256": "ab9ecf54c96e4a68c3231253be0fd4acb3a15bc5f15b5cfdfa0b15e2fac74424"
     },
     {
       "id": "actuator-screw-stage",
@@ -5120,7 +5120,7 @@
       "height": 54,
       "bodyWidth": 52,
       "bodyHeight": 46,
-      "xmlSha256": "1218e1f7338343a12751dc1186ecfffdaa1be5e8af7958d8b69493d0a09e64fa"
+      "xmlSha256": "0ccfbc37738e92a641e111bc95b5b2ca25747a9b059a18156c4127fced450759"
     },
     {
       "id": "actuator-pneumatic",
@@ -5161,7 +5161,7 @@
       "height": 46,
       "bodyWidth": 52,
       "bodyHeight": 38,
-      "xmlSha256": "b7a62c8f5b57fd263bbb557676f62d3d288139bed704ad28713a8e39cbe5e7ac"
+      "xmlSha256": "da58de15027a17de46a99b2fdfc8031d35ab2d214f794ebccd8dc969fc708c03"
     },
     {
       "id": "valve-pneumatic",
@@ -5257,7 +5257,7 @@
       "height": 54,
       "bodyWidth": 52,
       "bodyHeight": 46,
-      "xmlSha256": "1ce8cf5232e7c3e690868e482155fab1c47f9acb4eefd49f0e9e6c5c45d0f0c4"
+      "xmlSha256": "f4041ee761533e1cb3c99d3c2eaa70b5e3a0aa8137db40c3561b08b69a0ce446"
     },
     {
       "id": "actuator-gripper",
@@ -5309,7 +5309,7 @@
       "height": 46,
       "bodyWidth": 52,
       "bodyHeight": 38,
-      "xmlSha256": "d80d6ae70b86319ee78ca96176a947633b53b0d1b776204e1cc801f2d7db8ec0"
+      "xmlSha256": "e2b7f0f2c9d3a08e44bb1d1922a0c1c1419cf7960ce6ee9a22ad37909bb207e4"
     },
     {
       "id": "mechanical-wheel",
@@ -5327,7 +5327,7 @@
       "height": 40,
       "bodyWidth": 42,
       "bodyHeight": 32,
-      "xmlSha256": "e3307375f0e7213dfb87edb968185c04e79af0b8a6972a9f11d71f06245a51a4"
+      "xmlSha256": "3a9d71c95463b50bc995fc87e9b46e56b38a534bee695b026f129745cf81c0b1"
     },
     {
       "id": "mechanical-caster",
@@ -5345,7 +5345,7 @@
       "height": 40,
       "bodyWidth": 42,
       "bodyHeight": 32,
-      "xmlSha256": "057a62e389c475977befd46b94491068e264ca6c124f985b70bc52b520eba4f6"
+      "xmlSha256": "43e223129af468dc112da49d695dd7cd1fb5ba284b96a56e6107956db33deb16"
     },
     {
       "id": "mechanical-coupling",
@@ -5363,7 +5363,7 @@
       "height": 40,
       "bodyWidth": 42,
       "bodyHeight": 32,
-      "xmlSha256": "3d58a1fe02b5967d99e4674be5c5e3439ba419792cb19eb9aa659d93bb3128e0"
+      "xmlSha256": "26864fea8fd152085363976bee6b5dde8a1411aab15407e69c5e8ab1ec47f4a5"
     },
     {
       "id": "mechanical-lead-axis",
@@ -5381,7 +5381,7 @@
       "height": 40,
       "bodyWidth": 42,
       "bodyHeight": 32,
-      "xmlSha256": "f45f97f18935f2bc2ac9f1d1a8965d89b16df8a535f63e242868d6918bdab0e3"
+      "xmlSha256": "2494f272c0952400010443b0758ca2d822eab45d04fb789fc647831b59ae0a47"
     },
     {
       "id": "mechanical-belt-axis",
@@ -5399,7 +5399,7 @@
       "height": 40,
       "bodyWidth": 42,
       "bodyHeight": 32,
-      "xmlSha256": "361526d43d4a13fbdf8090d30d53eebe5f5cf52ec3f0078d2850741b2844db41"
+      "xmlSha256": "cbaf2f03b62be78e0435ec330375314d7b11ec64e8711a171c8055a96ad8ea30"
     },
     {
       "id": "mechanical-pantilt",
@@ -5417,7 +5417,7 @@
       "height": 40,
       "bodyWidth": 42,
       "bodyHeight": 32,
-      "xmlSha256": "bc632aee30705287318d21391c7ac9b4b82efa1e458b0e6c89a3daef622d6677"
+      "xmlSha256": "5b461dd4c38e1a248bc35014d7101c78ca18f8c4ee7b03217652f82f4a04ebaa"
     },
     {
       "id": "mechanical-horn",
@@ -5435,7 +5435,7 @@
       "height": 40,
       "bodyWidth": 42,
       "bodyHeight": 32,
-      "xmlSha256": "6914a77b0948d419e3d9dc447d9d9ab33bcfbb323d22751ecae41168f13dd4fc"
+      "xmlSha256": "c9c0c69160eab72c107834ca57fdf3741028b8dfee9709379506b4c55532cbdb"
     }
   ]
 }

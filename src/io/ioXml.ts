@@ -1,4 +1,5 @@
 import { createSimulationSheet, validateSetup } from '../simulation/document';
+import { mergeDrawingModelPacks, parseSpiceModelPacks, referencedSpiceModelPacks } from '../simulation/catalogBindings';
 import { newIdentity } from '../simulation/contracts';
 import { XMLBuilder } from '../util/xmlbuilder';
 import {
@@ -206,6 +207,11 @@ export class ioXML {
           sheet.simulation = validateSetup(JSON.parse(this.nodeText(nodes[i])));
           r.sheets.push(sheet);
         }
+        if (nodes[i].nodeName === 'SPICE_MODEL_PACKS') {
+          if (r.spiceModelPacks) throw new Error('Duplicate SPICE model packs.');
+          if (nodes[i].getAttribute('version') !== '1') throw new Error('Unsupported SPICE model pack version.');
+          r.spiceModelPacks = parseSpiceModelPacks(this.nodeText(nodes[i]));
+        }
         if (nodes[i].nodeName === 'NETLIST_TYPES') {
           const parsed = this.readNetlistTypes(nodes[i]);
           r.netlistTypes = parsed.types;
@@ -237,6 +243,13 @@ export class ioXML {
     let dsn = new XMLBuilder();
     dsn.createDoc('TinyCADSheets');
     dsn.appendChild('DSNIDENTITY', null, { id: drawing.documentId || '' });
+    const catalogSymbols = drawing.sheets.flatMap(({ name, items }) => items.flatMap((item) =>
+      item.NodeName === DocItemTypes.Symbol ? [[name, item] as [string, dsnSymbol]] : [],
+    ));
+    const packs = mergeDrawingModelPacks(drawing.spiceModelPacks,
+      referencedSpiceModelPacks({ symbols: catalogSymbols }, drawing.spiceModelPacks, true));
+    if (packs.length)
+      dsn.appendChild('SPICE_MODEL_PACKS', JSON.stringify(packs), { version: '1' });
     for (var i = 0; i < drawing.sheets.length; ++i) {
       const sheet = drawing.sheets[i];
       if (sheet.kind === 'simulation') {

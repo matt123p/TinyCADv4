@@ -13,34 +13,34 @@
           "reference": "U1",
           "library": "embedded-smart-home",
           "libraryPath": "embedded-smart-home/embedded-smart-home.tclib",
-          "librarySha256": "bbe8731729cddcb8a355e27044a011c9b6b42523436195c612f8653978b18f6f",
+          "librarySha256": "7dab4509da0fe685472e1e60359927c7386272e0f9663898fbdff1d4815f48ed",
           "componentId": "esp32-devkitc-v4",
           "nameId": 1,
           "symbolId": 1,
-          "name": "ESP32 DevKitC V4 \u2014 WROOM-32E, 38 pins",
-          "xmlSha256": "9d316a887bd9f7eedd83b614e9e5254dacacc79acfb6c5580f56ddf825ff1a78"
+          "name": "ESP32 DevKitC V4 — WROOM-32E, 38 pins",
+          "xmlSha256": "e96c8fca624705336a569dae5b05bd8c952bb5f6e7ca379ec3cdf5f3ca44c60c"
         },
         {
           "reference": "ENV1",
           "library": "embedded-smart-home",
           "libraryPath": "embedded-smart-home/embedded-smart-home.tclib",
-          "librarySha256": "bbe8731729cddcb8a355e27044a011c9b6b42523436195c612f8653978b18f6f",
+          "librarySha256": "7dab4509da0fe685472e1e60359927c7386272e0f9663898fbdff1d4815f48ed",
           "componentId": "adafruit-bme280",
           "nameId": 13,
           "symbolId": 13,
           "name": "Adafruit BME280 temperature / humidity / pressure (original)",
-          "xmlSha256": "b507493c58772b6e0942226d9ff8ab71f7d8707079abaed83fc26e4f726a76ab"
+          "xmlSha256": "3d4e68ffb2d3bf2b8bd70b5b8f83bacafd467e6489dfa3fbe5e71980b9603658"
         },
         {
           "reference": "DISP1",
           "library": "embedded-smart-home",
           "libraryPath": "embedded-smart-home/embedded-smart-home.tclib",
-          "librarySha256": "bbe8731729cddcb8a355e27044a011c9b6b42523436195c612f8653978b18f6f",
+          "librarySha256": "7dab4509da0fe685472e1e60359927c7386272e0f9663898fbdff1d4815f48ed",
           "componentId": "display-oled12864",
           "nameId": 38,
           "symbolId": 38,
-          "name": "DFRobot Gravity OLED 128x64 \u2014 DFR0486",
-          "xmlSha256": "902ec30c0a8ae204c813cbef2e4454da51deb017465a359efc0650754152a4e7"
+          "name": "DFRobot Gravity OLED 128x64 — DFR0486",
+          "xmlSha256": "e181baf010cbe9164126826d66e7dbc2d701d2fa3e47b960af7d3a6a95ddda03"
         }
       ],
       "expectedNets": [
@@ -86,12 +86,12 @@
           "junctionIssues": 0,
           "bundleDisorder": 0,
           "connectedDistance": 2255,
-          "logicalProximity": 4920,
+          "logicalProximity": 4880,
           "inlineImbalance": 0,
           "wireLength": 2255,
           "bends": 6,
-          "area": 693250,
-          "labelDistance": 0
+          "area": 652125,
+          "labelDistance": 57
         },
         "after": {
           "bodyCollisions": 0,
@@ -109,19 +109,19 @@
           "junctionIssues": 0,
           "bundleDisorder": 0,
           "connectedDistance": 1989.228125,
-          "logicalProximity": 4920,
+          "logicalProximity": 4880,
           "inlineImbalance": 0,
           "wireLength": 1989.228125,
           "bends": 4,
-          "area": 693250,
-          "labelDistance": 0
+          "area": 652125,
+          "labelDistance": 57
         }
       },
-      "draftSha256": "dab1be10f583feb216b5cbcab4c5c078bcc65f461b21354118e02eeb106f586d",
-      "finalSha256": "659aaff7f141b604d4fa7de82f4cf3fa34064db5e3bd655821e4006075f9fda7",
+      "draftSha256": "4bddbb40ca177c9ff060fd5503309c78df7def7d9af701016cf3de6379a7c762",
+      "finalSha256": "9fb80b270ecfd05c689fbaaf1cce9e6dc5a350993d00ed2cedf135fc2a868400",
       "previews": {
-        "png": "9d6904d689d77fda2e923a2384143a0e3ba70e692648eaad334cd3ee15facdf9",
-        "svg": "1fa3235aa23024bff387e440e9c2a67c7249be20e9f349e465ae516ea53ad26c"
+        "png": "190effe503785de49f9825a6575b410a5db10dd595e4174f924fba2b07282be7",
+        "svg": "53f051d1ce9aeba05d38468c7a2160872ef4802ea93d41d7ed44e14b5caae064"
       },
       "checks": {
         "connectivityPreserved": true,
@@ -149,7 +149,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-2",
           "position": [
@@ -161,7 +161,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-3",
           "position": [
@@ -173,7 +173,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-4",
           "position": [
@@ -185,7 +185,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-5",
           "position": [
@@ -197,7 +197,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-6",
           "position": [
@@ -209,7 +209,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-7",
           "position": [
@@ -221,7 +221,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-8",
           "position": [
@@ -233,7 +233,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-9",
           "position": [
@@ -245,7 +245,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-10",
           "position": [
@@ -257,7 +257,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-11",
           "position": [
@@ -269,7 +269,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-12",
           "position": [
@@ -281,7 +281,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-13",
           "position": [
@@ -293,7 +293,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-15",
           "position": [
@@ -305,7 +305,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-16",
           "position": [
@@ -317,7 +317,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-17",
           "position": [
@@ -329,7 +329,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-18",
           "position": [
@@ -341,7 +341,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-19",
           "position": [
@@ -353,7 +353,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-1",
           "position": [
@@ -365,7 +365,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-2",
           "position": [
@@ -377,7 +377,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-4",
           "position": [
@@ -389,7 +389,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-5",
           "position": [
@@ -401,7 +401,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-7",
           "position": [
@@ -413,7 +413,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-8",
           "position": [
@@ -425,7 +425,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-9",
           "position": [
@@ -437,7 +437,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-10",
           "position": [
@@ -449,7 +449,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-11",
           "position": [
@@ -461,7 +461,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-12",
           "position": [
@@ -473,7 +473,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-13",
           "position": [
@@ -485,7 +485,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-14",
           "position": [
@@ -497,7 +497,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-15",
           "position": [
@@ -509,7 +509,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-16",
           "position": [
@@ -521,7 +521,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-17",
           "position": [
@@ -533,7 +533,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-18",
           "position": [
@@ -545,7 +545,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-19",
           "position": [
@@ -557,7 +557,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 189,
+          "itemId": 866,
           "reference": "ENV1",
           "pin": "JP2-2",
           "position": [
@@ -569,7 +569,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 189,
+          "itemId": 866,
           "reference": "ENV1",
           "pin": "JP2-7",
           "position": [
@@ -581,7 +581,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-1",
           "position": [
@@ -593,7 +593,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J1-14",
           "position": [
@@ -605,7 +605,7 @@
         {
           "code": "design_rule",
           "sheet": "ESP32 climate and display station",
-          "itemId": 1,
+          "itemId": 679,
           "reference": "U1",
           "pin": "J3-3",
           "position": [
@@ -628,101 +628,101 @@
           "reference": "PV1",
           "library": "solar",
           "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
-          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "librarySha256": "bf6f09259d752f6b6adbc309b73076fca262ac767bab1e02c1219f6f2ae746c9",
           "nameId": 2,
           "symbolId": 2,
           "name": "Solar - Rooftop solar array",
-          "xmlSha256": "ae49f7e83a5cd6737fd1a278c40e1c9b31afc786bc63b0ecd5c0d68ba336738f"
+          "xmlSha256": "25639b87756114f94d13179a7a42e9ef5caf87fd0a8e966cc9fd6f23ae2ce09f"
         },
         {
           "reference": "PVISO1",
           "library": "solar",
           "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
-          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "librarySha256": "bf6f09259d752f6b6adbc309b73076fca262ac767bab1e02c1219f6f2ae746c9",
           "nameId": 34,
           "symbolId": 34,
           "name": "Switches and protection - Solar DC isolation switch",
-          "xmlSha256": "48838d4ed9d1f71afc277a31887d7de03affd7b2acef024b4458b34f9caf2267"
+          "xmlSha256": "0bcd95df3a4812e915d948128ca32fb82618847503c19d8b3999bceac82e85dc"
         },
         {
           "reference": "INV1",
           "library": "solar",
           "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
-          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "librarySha256": "bf6f09259d752f6b6adbc309b73076fca262ac767bab1e02c1219f6f2ae746c9",
           "nameId": 13,
           "symbolId": 13,
           "name": "Storage - Hybrid solar inverter",
-          "xmlSha256": "1556576abcf3bb861117310bafb00047ae60321868f20ee8a4580aacaf8af571"
+          "xmlSha256": "a9fd618650de8e5335a1a782095cefb640e9c910e03dec994129d34fc7cbe772"
         },
         {
           "reference": "BAT1",
           "library": "solar",
           "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
-          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "librarySha256": "bf6f09259d752f6b6adbc309b73076fca262ac767bab1e02c1219f6f2ae746c9",
           "nameId": 8,
           "symbolId": 8,
           "name": "Storage - Wall battery - DC",
-          "xmlSha256": "6c37e07092f63fd020148020200534223f39d394249ad9b21f9270f1faf0dcc2"
+          "xmlSha256": "c4a67900a63fa30a519605d9542e7acf8bc53bf7633ffbb71861bc7bd4205ece"
         },
         {
           "reference": "BISO1",
           "library": "solar",
           "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
-          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "librarySha256": "bf6f09259d752f6b6adbc309b73076fca262ac767bab1e02c1219f6f2ae746c9",
           "nameId": 35,
           "symbolId": 35,
           "name": "Switches and protection - Battery isolation switch",
-          "xmlSha256": "67c271ef1d7f2ffcfe1a9ded7a8f26fe7edc33f4ad18b649f9f6d1d7ec448088"
+          "xmlSha256": "c95c89f8e851b7ea0c992b22bb0e8607233e4133f941b3cd237daa2670c95a8e"
         },
         {
           "reference": "ACISO1",
           "library": "solar",
           "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
-          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "librarySha256": "bf6f09259d752f6b6adbc309b73076fca262ac767bab1e02c1219f6f2ae746c9",
           "nameId": 33,
           "symbolId": 33,
           "name": "Switches and protection - AC isolation switch",
-          "xmlSha256": "4ba23cb6a9d933402ccecf9a7cb75620d4a7f5a864aba05e3a830c668c2eb9b7"
+          "xmlSha256": "8ae1e2b8f3d49664d6459ed9d3a0cfca3d988f4da4081400e027614b5b48bf95"
         },
         {
           "reference": "GRID1",
           "library": "solar",
           "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
-          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "librarySha256": "bf6f09259d752f6b6adbc309b73076fca262ac767bab1e02c1219f6f2ae746c9",
           "nameId": 22,
           "symbolId": 22,
           "name": "Supply and backup - Electricity grid",
-          "xmlSha256": "18b2724cfe3fd01ffda43cb6b55fd3ae9c062e855c4cf14dd82470211163493a"
+          "xmlSha256": "df315e87161bd74e229ff6d5d008e45c93b5b65bd7c9b57b4d5f7ce5a2caf198"
         },
         {
           "reference": "METER1",
           "library": "solar",
           "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
-          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "librarySha256": "bf6f09259d752f6b6adbc309b73076fca262ac767bab1e02c1219f6f2ae746c9",
           "nameId": 23,
           "symbolId": 23,
           "name": "Supply and backup - Electricity meter",
-          "xmlSha256": "d49f00ea2ab3c9db7440c3d58b5aa9ff8f20607d89503483c998584ad01c24ce"
+          "xmlSha256": "6e043db2c9f3b96699206616f659e176c9023def830c1735684d39422a037c0f"
         },
         {
           "reference": "CU1",
           "library": "solar",
           "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
-          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "librarySha256": "bf6f09259d752f6b6adbc309b73076fca262ac767bab1e02c1219f6f2ae746c9",
           "nameId": 28,
           "symbolId": 28,
           "name": "Supply and backup - Home fuse box",
-          "xmlSha256": "078604170780ee0393cc21eda4f9d7151a81d2bdc2e5ea72e2aa78583721b2af"
+          "xmlSha256": "654279ef8764f770ff65ab9bebfb282c65d42b8b4cd5e15c278d204b187f8439"
         },
         {
           "reference": "HOME1",
           "library": "solar",
           "libraryPath": "solar/Solar-Power-and-Batteries.TCLib",
-          "librarySha256": "7b4a0c58d72e74c6ef01afd1c7b505a25a4d1feaaf18d74c71cb072d680bc6ac",
+          "librarySha256": "bf6f09259d752f6b6adbc309b73076fca262ac767bab1e02c1219f6f2ae746c9",
           "nameId": 48,
           "symbolId": 48,
           "name": "Home loads - Household electricity",
-          "xmlSha256": "7edb07c7df9010b819775ae73ea2c19b943c6ce0a9da8e7082b24c408a4593c7"
+          "xmlSha256": "6da057ddb10ac2320266d64cb56a47b863a17e58dd68b1aae5f6baa4c9b9eddc"
         }
       ],
       "expectedNets": [
@@ -783,12 +783,12 @@
           "junctionIssues": 0,
           "bundleDisorder": 0,
           "connectedDistance": 3355,
-          "logicalProximity": 5657.5,
+          "logicalProximity": 5662.5,
           "inlineImbalance": 200,
           "wireLength": 3355,
           "bends": 8,
-          "area": 1952625,
-          "labelDistance": 0
+          "area": 1933575,
+          "labelDistance": 80
         },
         "after": {
           "bodyCollisions": 0,
@@ -806,19 +806,19 @@
           "junctionIssues": 0,
           "bundleDisorder": 0,
           "connectedDistance": 3205,
-          "logicalProximity": 5657.5,
+          "logicalProximity": 5662.5,
           "inlineImbalance": 155,
           "wireLength": 3205,
           "bends": 8,
-          "area": 1927000,
-          "labelDistance": 0
+          "area": 1908200,
+          "labelDistance": 80
         }
       },
-      "draftSha256": "b894376e148c193f62e99970a9eee3c7cc822f96263804aafbf179ada7bd5392",
-      "finalSha256": "457870b06ff906d1b36d5e2bdfa6d2b73455bf6755381bd3cdb5388a4b4a4288",
+      "draftSha256": "1baa2e4f8945cf7ebab4497df6a60ab2b3dff58de8e5736243c4fdf041e642d1",
+      "finalSha256": "932b19734c4a0c212fd16168f613a96f816dbc89340b18d6aa8f5e9b93990b0f",
       "previews": {
-        "png": "76574b1783325f1aba059f3da24797c0ceec3b7d5c936801d4287873352b955f",
-        "svg": "f4b434caaa57ee8e44b3a43bf4e2008de1b9fab2a5a92d37a08ef3b4071903a4"
+        "png": "fcc33ae3654ed8e9e0b190fd5145bce3eac898e27acf1455e43b1c73f9514604",
+        "svg": "0bc87dc78a855410d9d3f24278e6e7c867b5884036dc38ef794074957ffe0f53"
       },
       "checks": {
         "connectivityPreserved": true,
@@ -846,7 +846,7 @@
         {
           "code": "design_rule",
           "sheet": "Home solar and battery plan",
-          "itemId": 31,
+          "itemId": 1771,
           "reference": "INV1",
           "pin": "BACKUP",
           "position": [
@@ -858,7 +858,7 @@
         {
           "code": "design_rule",
           "sheet": "Home solar and battery plan",
-          "itemId": 55,
+          "itemId": 1794,
           "reference": "BAT1",
           "pin": "DATA",
           "position": [
@@ -870,7 +870,7 @@
         {
           "code": "design_rule",
           "sheet": "Home solar and battery plan",
-          "itemId": 138,
+          "itemId": 1872,
           "reference": "CU1",
           "pin": "EV",
           "position": [
@@ -893,67 +893,67 @@
           "reference": "MIC1",
           "library": "audio-music",
           "libraryPath": "audio-music/audio-music.tclib",
-          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "librarySha256": "171f6da28bbe376bf876c4f23ff66ba002f6fd5b514715dd2e1773cc40153cd2",
           "componentId": "mic-dynamic",
           "nameId": 1,
           "symbolId": 1,
           "name": "Dynamic vocal microphone",
-          "xmlSha256": "e3da32f211b3cebfe9351c057b961061a41bdc8273d1c7202558185d23778b47"
+          "xmlSha256": "5d464e5b39df5f8a4b3af8ee609aa42473bc18e447dc214dcbd1439f5128bfcf"
         },
         {
           "reference": "MIC2",
           "library": "audio-music",
           "libraryPath": "audio-music/audio-music.tclib",
-          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "librarySha256": "171f6da28bbe376bf876c4f23ff66ba002f6fd5b514715dd2e1773cc40153cd2",
           "componentId": "mic-dynamic",
           "nameId": 1,
           "symbolId": 1,
           "name": "Dynamic vocal microphone",
-          "xmlSha256": "e3da32f211b3cebfe9351c057b961061a41bdc8273d1c7202558185d23778b47"
+          "xmlSha256": "5d464e5b39df5f8a4b3af8ee609aa42473bc18e447dc214dcbd1439f5128bfcf"
         },
         {
           "reference": "MIX1",
           "library": "audio-music",
           "libraryPath": "audio-music/audio-music.tclib",
-          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "librarySha256": "171f6da28bbe376bf876c4f23ff66ba002f6fd5b514715dd2e1773cc40153cd2",
           "componentId": "mixer-podcast-4",
           "nameId": 19,
           "symbolId": 19,
           "name": "Four-person podcast / streaming console",
-          "xmlSha256": "2c169967b56ef65a1e5065005f4470c53c23ed29a1768c5567a96d1f9124711a"
+          "xmlSha256": "3e962113f63640a7f34299b9a9f926f951c4acecbbc41091fa3053ada69356e9"
         },
         {
           "reference": "HP1",
           "library": "audio-music",
           "libraryPath": "audio-music/audio-music.tclib",
-          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "librarySha256": "171f6da28bbe376bf876c4f23ff66ba002f6fd5b514715dd2e1773cc40153cd2",
           "componentId": "headphones",
           "nameId": 42,
           "symbolId": 42,
           "name": "Studio headphones",
-          "xmlSha256": "efe704a4934b0072cbc8c706551aae79c1a91121327e06fd3f74406fae9f504c"
+          "xmlSha256": "ddf1481dc23ccdafa4e48984c655e272b76a89a7f89b2234e05151b84ebae1f3"
         },
         {
           "reference": "HP2",
           "library": "audio-music",
           "libraryPath": "audio-music/audio-music.tclib",
-          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "librarySha256": "171f6da28bbe376bf876c4f23ff66ba002f6fd5b514715dd2e1773cc40153cd2",
           "componentId": "headphones",
           "nameId": 42,
           "symbolId": 42,
           "name": "Studio headphones",
-          "xmlSha256": "efe704a4934b0072cbc8c706551aae79c1a91121327e06fd3f74406fae9f504c"
+          "xmlSha256": "ddf1481dc23ccdafa4e48984c655e272b76a89a7f89b2234e05151b84ebae1f3"
         },
         {
           "reference": "PC1",
           "library": "audio-music",
           "libraryPath": "audio-music/audio-music.tclib",
-          "librarySha256": "657cdfe83a272e1556be0925b37dc6b5cc6bbc09fd2a04c362489437ddf97987",
+          "librarySha256": "171f6da28bbe376bf876c4f23ff66ba002f6fd5b514715dd2e1773cc40153cd2",
           "componentId": "computer-laptop",
           "nameId": 24,
           "symbolId": 24,
           "name": "Recording / playback laptop",
-          "xmlSha256": "fde6a7eb2e0216b4c292f7a8963ea2660ee0c25044fa188dd0f4b0fd8652fd60"
+          "xmlSha256": "9efb5d60359df498b97648b782ba78ec0cc6640b6206c73abd6df2288d5f7cef"
         }
       ],
       "expectedNets": [
@@ -998,12 +998,12 @@
           "junctionIssues": 0,
           "bundleDisorder": 0,
           "connectedDistance": 5065,
-          "logicalProximity": 3515,
+          "logicalProximity": 3490,
           "inlineImbalance": 0,
           "wireLength": 5065,
           "bends": 18,
-          "area": 961950,
-          "labelDistance": 0
+          "area": 980781.064453125,
+          "labelDistance": 131.64453125
         },
         "after": {
           "bodyCollisions": 0,
@@ -1021,19 +1021,19 @@
           "junctionIssues": 0,
           "bundleDisorder": 0,
           "connectedDistance": 4865,
-          "logicalProximity": 3515,
+          "logicalProximity": 3490,
           "inlineImbalance": 0,
           "wireLength": 4865,
           "bends": 15,
-          "area": 946050,
-          "labelDistance": 0
+          "area": 975244.74609375,
+          "labelDistance": 131.64453125
         }
       },
-      "draftSha256": "3f361cd44bbe4e36a35ad3e3db55ab345030df2680f78bb0b392e19e1230b6c5",
-      "finalSha256": "faf46666bf3a89ee93b2dd760dc7ff79c38f7733d721ea7f6ffb4dac81df6f90",
+      "draftSha256": "c90c4b0bd6c37662d682528d4039a1de2ff4ed7cb8d6d12cfadf91fefd257d1f",
+      "finalSha256": "6248274c008f149036e3814f67baad1ac610d900ba2b44b2f005d7bb0d1ce5fe",
       "previews": {
-        "png": "2a754056d4155c04f089affc003eef29a5aa4eb4ff568d2fd0ba75511317d067",
-        "svg": "41bf45c117fce2800cd9e5276f9c9a4d6c03faeee594dd8a5a42edde4450271e"
+        "png": "253a523b0c18105745e33f27e63409f265ed8695f2c8ae492d6d80437773f185",
+        "svg": "8b246d7b4eaf7fe7aef1e403b02030d7209b359d6e8358ccd463e7f87eb08e65"
       },
       "checks": {
         "connectivityPreserved": true,
@@ -1061,7 +1061,7 @@
         {
           "code": "design_rule",
           "sheet": "Two-person podcast studio",
-          "itemId": 19,
+          "itemId": 2498,
           "reference": "MIX1",
           "pin": "3",
           "position": [
@@ -1073,7 +1073,7 @@
         {
           "code": "design_rule",
           "sheet": "Two-person podcast studio",
-          "itemId": 19,
+          "itemId": 2498,
           "reference": "MIX1",
           "pin": "4",
           "position": [
@@ -1085,7 +1085,7 @@
         {
           "code": "design_rule",
           "sheet": "Two-person podcast studio",
-          "itemId": 19,
+          "itemId": 2498,
           "reference": "MIX1",
           "pin": "7",
           "position": [
@@ -1097,7 +1097,7 @@
         {
           "code": "design_rule",
           "sheet": "Two-person podcast studio",
-          "itemId": 19,
+          "itemId": 2498,
           "reference": "MIX1",
           "pin": "8",
           "position": [
@@ -1109,7 +1109,7 @@
         {
           "code": "design_rule",
           "sheet": "Two-person podcast studio",
-          "itemId": 19,
+          "itemId": 2498,
           "reference": "MIX1",
           "pin": "9",
           "position": [
@@ -1121,7 +1121,7 @@
         {
           "code": "design_rule",
           "sheet": "Two-person podcast studio",
-          "itemId": 19,
+          "itemId": 2498,
           "reference": "MIX1",
           "pin": "10",
           "position": [
@@ -1133,7 +1133,7 @@
         {
           "code": "design_rule",
           "sheet": "Two-person podcast studio",
-          "itemId": 19,
+          "itemId": 2498,
           "reference": "MIX1",
           "pin": "12",
           "position": [
@@ -1145,7 +1145,7 @@
         {
           "code": "design_rule",
           "sheet": "Two-person podcast studio",
-          "itemId": 126,
+          "itemId": 2603,
           "reference": "PC1",
           "pin": "2",
           "position": [
@@ -1157,7 +1157,7 @@
         {
           "code": "design_rule",
           "sheet": "Two-person podcast studio",
-          "itemId": 126,
+          "itemId": 2603,
           "reference": "PC1",
           "pin": "3",
           "position": [
@@ -1169,7 +1169,7 @@
         {
           "code": "design_rule",
           "sheet": "Two-person podcast studio",
-          "itemId": 126,
+          "itemId": 2603,
           "reference": "PC1",
           "pin": "4",
           "position": [
@@ -1181,7 +1181,7 @@
         {
           "code": "design_rule",
           "sheet": "Two-person podcast studio",
-          "itemId": 126,
+          "itemId": 2603,
           "reference": "PC1",
           "pin": "5",
           "position": [
@@ -1204,56 +1204,56 @@
           "reference": "PSU1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "librarySha256": "39f2d63358edfc49d1a0914e4f253c2354bedce4d16e39c82b81de25b849c921",
           "componentId": "psu-1",
           "nameId": 1,
           "symbolId": 1,
-          "name": "DC bench supply \u2014 1 output",
-          "xmlSha256": "65c052e66f943840bddfc5d0c2a6abc8bde241a9bf3a43f0e4fd8e7fece09467"
+          "name": "DC bench supply — 1 output",
+          "xmlSha256": "ad5f1874880cf25144efa3a2524edb540df4237e00ba07d6b3918d9ed7824f93"
         },
         {
           "reference": "DMM1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "librarySha256": "39f2d63358edfc49d1a0914e4f253c2354bedce4d16e39c82b81de25b849c921",
           "componentId": "dmm-bench",
           "nameId": 16,
           "symbolId": 16,
-          "name": "Bench multimeter \u2014 voltage/current and four-wire sense",
-          "xmlSha256": "8fbd64246bac867f4504ff469d98cffc46c382f5e4b88caa6e23db8f31c70ffc"
+          "name": "Bench multimeter — voltage/current and four-wire sense",
+          "xmlSha256": "bd5fb5ac9950ac9886855302ac93c66c4ee8f53f5b5eeb0265e3138516721f4e"
         },
         {
           "reference": "LOAD1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "librarySha256": "39f2d63358edfc49d1a0914e4f253c2354bedce4d16e39c82b81de25b849c921",
           "componentId": "load-1",
           "nameId": 7,
           "symbolId": 7,
-          "name": "DC electronic load \u2014 1 channel",
-          "xmlSha256": "30b49cf027b1d265c5c8c7387aac92abf408625784e4654359bb2cce2aa6509f"
+          "name": "DC electronic load — 1 channel",
+          "xmlSha256": "d34abbfc9418ab16d952c8b4f773d6299594fa710b05dc94e4105328239dbbbe"
         },
         {
           "reference": "GEN1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "librarySha256": "39f2d63358edfc49d1a0914e4f253c2354bedce4d16e39c82b81de25b849c921",
           "componentId": "generator-1",
           "nameId": 14,
           "symbolId": 14,
-          "name": "Function / arbitrary waveform generator \u2014 1 channel",
-          "xmlSha256": "7879823c41868ccc1fa514c90f5890d4550cadaa1399eea254a4e114769303c7"
+          "name": "Function / arbitrary waveform generator — 1 channel",
+          "xmlSha256": "0f8ff822c38fa891684075ea1ef206cb8dfe780d2a21dbf2d3772a1473e2ed77"
         },
         {
           "reference": "SCOPE1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "librarySha256": "39f2d63358edfc49d1a0914e4f253c2354bedce4d16e39c82b81de25b849c921",
           "componentId": "scope-2",
           "nameId": 11,
           "symbolId": 11,
-          "name": "Digital oscilloscope \u2014 2 channels",
-          "xmlSha256": "23a9575611341abc81c0fa7acbefc16b757020c59e4e2c650b5020f30e044d20"
+          "name": "Digital oscilloscope — 2 channels",
+          "xmlSha256": "fcab6510e69149fe8d76bad99c295f45dc372fb85f06612695f675cdf3ea489f"
         }
       ],
       "expectedNets": [
@@ -1296,8 +1296,8 @@
           "inlineImbalance": 0,
           "wireLength": 3955,
           "bends": 6,
-          "area": 926250,
-          "labelDistance": 0
+          "area": 940950,
+          "labelDistance": 50
         },
         "after": {
           "bodyCollisions": 0,
@@ -1319,15 +1319,15 @@
           "inlineImbalance": 0,
           "wireLength": 3955,
           "bends": 6,
-          "area": 926250,
-          "labelDistance": 0
+          "area": 940950,
+          "labelDistance": 50
         }
       },
-      "draftSha256": "3718b321c6a84dee5d6ac91e92c3d6ec71e6e6a5e8d59b018b400560c952fd8e",
-      "finalSha256": "c9bd7f675c0d13ecc14df59929beb52b84f09afebbd49e01c035ea7d202966bd",
+      "draftSha256": "c04633fdd8c85142dfac11a9bb8c9b643038b66166105a1df684e8144ef329b2",
+      "finalSha256": "3cefa11bf011eac8036322665779169d9ba62ed96b8759c05a8b13c262b1fe8c",
       "previews": {
-        "png": "f648fd65f568b0bf90d3d3cbf4e56a501bf2a4c3826e5ae7339ec90ad0ff2182",
-        "svg": "f75e1efba326ea41177327d276befa0fb083bda0555bed84cc1ca7e2b12be9c1"
+        "png": "711626cea44947e0a97c9957a19aaf10eab5246e078b8ba72f34c963aaa5f89c",
+        "svg": "c7adc5fc2774b73e6d0b12d004a9a00b5447cb8876f033849ebe4ccd3bfde0aa"
       },
       "checks": {
         "connectivityPreserved": true,
@@ -1355,7 +1355,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 1,
+          "itemId": 3369,
           "reference": "PSU1",
           "pin": "3",
           "position": [
@@ -1367,7 +1367,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 1,
+          "itemId": 3369,
           "reference": "PSU1",
           "pin": "4",
           "position": [
@@ -1379,7 +1379,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 37,
+          "itemId": 3404,
           "reference": "DMM1",
           "pin": "3",
           "position": [
@@ -1391,7 +1391,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 37,
+          "itemId": 3404,
           "reference": "DMM1",
           "pin": "4",
           "position": [
@@ -1403,7 +1403,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 37,
+          "itemId": 3404,
           "reference": "DMM1",
           "pin": "5",
           "position": [
@@ -1415,7 +1415,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 37,
+          "itemId": 3404,
           "reference": "DMM1",
           "pin": "6",
           "position": [
@@ -1427,7 +1427,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 83,
+          "itemId": 3449,
           "reference": "LOAD1",
           "pin": "3",
           "position": [
@@ -1439,7 +1439,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 125,
+          "itemId": 3490,
           "reference": "GEN1",
           "pin": "2",
           "position": [
@@ -1451,7 +1451,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 125,
+          "itemId": 3490,
           "reference": "GEN1",
           "pin": "3",
           "position": [
@@ -1463,7 +1463,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 125,
+          "itemId": 3490,
           "reference": "GEN1",
           "pin": "4",
           "position": [
@@ -1475,7 +1475,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 179,
+          "itemId": 3543,
           "reference": "SCOPE1",
           "pin": "2",
           "position": [
@@ -1487,7 +1487,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 179,
+          "itemId": 3543,
           "reference": "SCOPE1",
           "pin": "3",
           "position": [
@@ -1499,7 +1499,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 179,
+          "itemId": 3543,
           "reference": "SCOPE1",
           "pin": "4",
           "position": [
@@ -1511,7 +1511,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 179,
+          "itemId": 3543,
           "reference": "SCOPE1",
           "pin": "5",
           "position": [
@@ -1523,7 +1523,7 @@
         {
           "code": "design_rule",
           "sheet": "DC load and waveform bench",
-          "itemId": 179,
+          "itemId": 3543,
           "reference": "SCOPE1",
           "pin": "6",
           "position": [
@@ -1546,56 +1546,56 @@
           "reference": "U1",
           "library": "embedded-smart-home",
           "libraryPath": "embedded-smart-home/embedded-smart-home.tclib",
-          "librarySha256": "bbe8731729cddcb8a355e27044a011c9b6b42523436195c612f8653978b18f6f",
+          "librarySha256": "7dab4509da0fe685472e1e60359927c7386272e0f9663898fbdff1d4815f48ed",
           "componentId": "esp32-devkitc-v4",
           "nameId": 1,
           "symbolId": 1,
-          "name": "ESP32 DevKitC V4 \u2014 WROOM-32E, 38 pins",
-          "xmlSha256": "9d316a887bd9f7eedd83b614e9e5254dacacc79acfb6c5580f56ddf825ff1a78"
+          "name": "ESP32 DevKitC V4 — WROOM-32E, 38 pins",
+          "xmlSha256": "e96c8fca624705336a569dae5b05bd8c952bb5f6e7ca379ec3cdf5f3ca44c60c"
         },
         {
           "reference": "DRV1",
           "library": "motors-motion",
           "libraryPath": "motors-motion/motors-motion.tclib",
-          "librarySha256": "8132a58bf4422b7dd51b6cae035087fefff8de7cf266c14d3bea09d468abad54",
+          "librarySha256": "b16a77bf2989a0ff32a5ec223a9c8a7bc090394ff7729ea514eeeadcb5b11f95",
           "componentId": "driver-brushed",
           "nameId": 29,
           "symbolId": 29,
-          "name": "High-power brushed DC driver \u2014 PWM/direction",
-          "xmlSha256": "d881ef665c1754f08a5075ededeb25bb609ea1a4caab1357ff25180afaac4866"
+          "name": "High-power brushed DC driver — PWM/direction",
+          "xmlSha256": "207137e7157daf6a64e16779d2789329f0853666d2b7e32d21b2c142549e169e"
         },
         {
           "reference": "M1",
           "library": "motors-motion",
           "libraryPath": "motors-motion/motors-motion.tclib",
-          "librarySha256": "8132a58bf4422b7dd51b6cae035087fefff8de7cf266c14d3bea09d468abad54",
+          "librarySha256": "b16a77bf2989a0ff32a5ec223a9c8a7bc090394ff7729ea514eeeadcb5b11f95",
           "componentId": "motor-planetary",
           "nameId": 7,
           "symbolId": 7,
           "name": "Planetary DC gearmotor",
-          "xmlSha256": "04cd35a51028c5f45fdb53d644c393b054315608046061d69204edee1273fb54"
+          "xmlSha256": "1b965e8add544111af98e534bdf28b68336ed6d882a8e58517ea85f2790a6117"
         },
         {
           "reference": "PSU1",
           "library": "test-measurement",
           "libraryPath": "test-measurement/test-measurement.tclib",
-          "librarySha256": "3263a1b3e11b4afeeed4f916c3b13c417f07c4bd4b42bf01709e96fd734c8e18",
+          "librarySha256": "39f2d63358edfc49d1a0914e4f253c2354bedce4d16e39c82b81de25b849c921",
           "componentId": "psu-1",
           "nameId": 1,
           "symbolId": 1,
-          "name": "DC bench supply \u2014 1 output",
-          "xmlSha256": "65c052e66f943840bddfc5d0c2a6abc8bde241a9bf3a43f0e4fd8e7fece09467"
+          "name": "DC bench supply — 1 output",
+          "xmlSha256": "ad5f1874880cf25144efa3a2524edb540df4237e00ba07d6b3918d9ed7824f93"
         },
         {
           "reference": "LIMIT1",
           "library": "motors-motion",
           "libraryPath": "motors-motion/motors-motion.tclib",
-          "librarySha256": "8132a58bf4422b7dd51b6cae035087fefff8de7cf266c14d3bea09d468abad54",
+          "librarySha256": "b16a77bf2989a0ff32a5ec223a9c8a7bc090394ff7729ea514eeeadcb5b11f95",
           "componentId": "limit-roller",
           "nameId": 42,
           "symbolId": 42,
           "name": "SPDT roller limit microswitch",
-          "xmlSha256": "e3492badd1e277935d4b455721461091d8583b5d869e2d535a6aa4d28fcf8e45"
+          "xmlSha256": "0a8b32558620442cde9bf4592294af2723fc4b9d47c2c0a54e4ded152aed541f"
         }
       ],
       "expectedNets": [
@@ -1655,12 +1655,12 @@
           "junctionIssues": 0,
           "bundleDisorder": 20,
           "connectedDistance": 3190,
-          "logicalProximity": 4570,
+          "logicalProximity": 4638.333333333333,
           "inlineImbalance": 0,
           "wireLength": 3550,
           "bends": 15,
-          "area": 1099912.2031860352,
-          "labelDistance": 0
+          "area": 1119577.0859985352,
+          "labelDistance": 49
         },
         "after": {
           "bodyCollisions": 0,
@@ -1678,19 +1678,19 @@
           "junctionIssues": 0,
           "bundleDisorder": 20,
           "connectedDistance": 2891.29375,
-          "logicalProximity": 4570,
+          "logicalProximity": 4638.333333333333,
           "inlineImbalance": 0,
           "wireLength": 3251.29375,
           "bends": 14,
-          "area": 948600,
-          "labelDistance": 0
+          "area": 967200,
+          "labelDistance": 49
         }
       },
-      "draftSha256": "a9fdb8cf0f5eec2acacfdb8a44854132c21d032cf76f6ca201fa54efdd1263b2",
-      "finalSha256": "7e59ceb389c84c9b065a75449b1a36d2d3f46ff98bd7c568030b0bdbabe72165",
+      "draftSha256": "116b3fab780ff6fc6adbd906aea4e296b739e1325804afbfe1ee607a4197da2c",
+      "finalSha256": "50b09013c3abf90758daf59bc461faed29a3673ab5bf9772ee9a29c04ed654af",
       "previews": {
-        "png": "746e6c0fb8a4f11548a38e51e3cf269324f9ae0bf7cad29314920387d462c42e",
-        "svg": "83d14097e33fe9fa85fc95e8db68c6955637ae60584eebf46a95c9b8eb9f946d"
+        "png": "f30704c0ad7fa2bed6c9d153f2e429120d16f3c1d651c23d91543bfa04e9b0ad",
+        "svg": "fc90ccaabe0c8b2522ac414cb45a61cf8cd0f65a72f739e9cb79d3512dbd5e4c"
       },
       "checks": {
         "connectivityPreserved": true,
@@ -1718,7 +1718,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-1",
           "position": [
@@ -1730,7 +1730,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-2",
           "position": [
@@ -1742,7 +1742,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-3",
           "position": [
@@ -1754,7 +1754,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-4",
           "position": [
@@ -1766,7 +1766,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-5",
           "position": [
@@ -1778,7 +1778,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-6",
           "position": [
@@ -1790,7 +1790,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-7",
           "position": [
@@ -1802,7 +1802,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-8",
           "position": [
@@ -1814,7 +1814,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-10",
           "position": [
@@ -1826,7 +1826,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-12",
           "position": [
@@ -1838,7 +1838,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-13",
           "position": [
@@ -1850,7 +1850,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-15",
           "position": [
@@ -1862,7 +1862,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-16",
           "position": [
@@ -1874,7 +1874,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-17",
           "position": [
@@ -1886,7 +1886,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-18",
           "position": [
@@ -1898,7 +1898,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-19",
           "position": [
@@ -1910,7 +1910,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-1",
           "position": [
@@ -1922,7 +1922,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-2",
           "position": [
@@ -1934,7 +1934,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-3",
           "position": [
@@ -1946,7 +1946,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-4",
           "position": [
@@ -1958,7 +1958,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-5",
           "position": [
@@ -1970,7 +1970,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-6",
           "position": [
@@ -1982,7 +1982,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-7",
           "position": [
@@ -1994,7 +1994,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-10",
           "position": [
@@ -2006,7 +2006,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-11",
           "position": [
@@ -2018,7 +2018,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-12",
           "position": [
@@ -2030,7 +2030,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-13",
           "position": [
@@ -2042,7 +2042,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-14",
           "position": [
@@ -2054,7 +2054,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-15",
           "position": [
@@ -2066,7 +2066,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-16",
           "position": [
@@ -2078,7 +2078,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-17",
           "position": [
@@ -2090,7 +2090,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-18",
           "position": [
@@ -2102,7 +2102,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-19",
           "position": [
@@ -2114,7 +2114,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 285,
+          "itemId": 4972,
           "reference": "PSU1",
           "pin": "3",
           "position": [
@@ -2126,7 +2126,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 285,
+          "itemId": 4972,
           "reference": "PSU1",
           "pin": "4",
           "position": [
@@ -2138,7 +2138,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 321,
+          "itemId": 5007,
           "reference": "LIMIT1",
           "pin": "3",
           "position": [
@@ -2150,7 +2150,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-14",
           "position": [
@@ -2162,7 +2162,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 189,
+          "itemId": 4878,
           "reference": "DRV1",
           "pin": "1",
           "position": [
@@ -2174,7 +2174,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J1-9",
           "position": [
@@ -2186,7 +2186,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-9",
           "position": [
@@ -2198,7 +2198,7 @@
         {
           "code": "design_rule",
           "sheet": "DC motor and limit-control bench",
-          "itemId": 1,
+          "itemId": 4691,
           "reference": "U1",
           "pin": "J3-8",
           "position": [
@@ -2210,6 +2210,6 @@
       ]
     }
   ],
-  "service": "https://www.tinycad.net/mcp",
+  "renderer": "Local TinyCAD drawing renderer and auto-tidy (renderer/drawing.tsx)",
   "scope": "Equipment/PCB wiring and cable plans; no firmware, hardware testing or SPICE models. Spare ports and physical socket/body-envelope notices are intentional. Preserve real pin types; extended power classification is a known checker limitation."
 }

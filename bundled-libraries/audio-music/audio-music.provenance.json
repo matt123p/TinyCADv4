@@ -152,7 +152,7 @@
       "height": 44,
       "bodyWidth": 24,
       "bodyHeight": 36,
-      "xmlSha256": "e3da32f211b3cebfe9351c057b961061a41bdc8273d1c7202558185d23778b47"
+      "xmlSha256": "5d464e5b39df5f8a4b3af8ee609aa42473bc18e447dc214dcbd1439f5128bfcf"
     },
     {
       "id": "mic-condenser",
@@ -181,7 +181,7 @@
       "height": 44,
       "bodyWidth": 24,
       "bodyHeight": 36,
-      "xmlSha256": "c67476df31ee93fce2421d9c6ef118b11a6bea23bab6bbc504057c5f94d98859"
+      "xmlSha256": "7689231403c4fcd1a68891ba4ec2590a1358fdb017c0b484f7a5d88bd3799fe6"
     },
     {
       "id": "mic-pencil",
@@ -210,7 +210,7 @@
       "height": 44,
       "bodyWidth": 24,
       "bodyHeight": 36,
-      "xmlSha256": "fa4b017118b3ba80ff897ed9203b9e4809ec037367df4073650e2935d89d8325"
+      "xmlSha256": "cf536be130cb87323fb7b1829665a1bbcf175871b9972fc4a5d37673a949e39e"
     },
     {
       "id": "mic-ribbon",
@@ -239,7 +239,7 @@
       "height": 44,
       "bodyWidth": 24,
       "bodyHeight": 36,
-      "xmlSha256": "62d86bfbab0799a156728460c15539e74c0c6e40c60d861a989a2ef1fed3040b"
+      "xmlSha256": "5ffd42d3dfc36db229dc16b4d7dc18efa59ab06f6cec24f229b9e0da88698170"
     },
     {
       "id": "mic-boundary",
@@ -268,7 +268,7 @@
       "height": 44,
       "bodyWidth": 24,
       "bodyHeight": 36,
-      "xmlSha256": "91fd5fa987b3e4a23618c93d86750861b9fe8c5d186d2e185502f10458df5bde"
+      "xmlSha256": "9da45a467f7d7d7897d74a68d6bf3214b9524cacaba99934b44e384c79b99240"
     },
     {
       "id": "mic-gooseneck",
@@ -297,7 +297,7 @@
       "height": 44,
       "bodyWidth": 24,
       "bodyHeight": 36,
-      "xmlSha256": "92d4bcfa067eb7bf78fd5cba01708d380c3b196b9ae3bef7d810230892c03c7e"
+      "xmlSha256": "fd39a8e243557be2192a831aeae86b96ed0f2d355f1acac93a5bc236e2d59163"
     },
     {
       "id": "mic-usb",
@@ -334,7 +334,7 @@
       "height": 44,
       "bodyWidth": 24,
       "bodyHeight": 36,
-      "xmlSha256": "ae2d6b1ee68381015eaa0e0f887288288f69a88d3964e301c7477656903a6bce"
+      "xmlSha256": "a19c05918bbdd847e373d4b9df8426354da443b6370def93929837059b6f9c10"
     },
     {
       "id": "wireless-handheld",
@@ -362,7 +362,7 @@
       "height": 44,
       "bodyWidth": 24,
       "bodyHeight": 36,
-      "xmlSha256": "58b9beb85e6b1c8217067be60496a3c6a608ccebc2d4ce2c10c4e5c71c71368f"
+      "xmlSha256": "9c6d1baf45701b9c734c0d91318bb320c2ceb56c402fc1a7151524af6e59ae72"
     },
     {
       "id": "wireless-lavalier",
@@ -390,7 +390,7 @@
       "height": 44,
       "bodyWidth": 24,
       "bodyHeight": 36,
-      "xmlSha256": "46b661d12dee3568b059d4eed7bb435d2804f2f6aea3f9b4b29f2ae32afb485b"
+      "xmlSha256": "ba1a39136dd50a1c8e5d846765fd7d09201d70ca768498ffa907cd1a6993441f"
     },
     {
       "id": "wireless-headset",
@@ -418,7 +418,7 @@
       "height": 44,
       "bodyWidth": 24,
       "bodyHeight": 36,
-      "xmlSha256": "89dcf429027b71d8a461ef82649713ac1c3b23dc1299b53f867fc9f46738b60c"
+      "xmlSha256": "1b275f0fe1f3beb92a03851e6e5687edbb5b5bf70d3ff244761d7d4c1f0f82ec"
     },
     {
       "id": "wireless-receiver-2",
@@ -482,7 +482,7 @@
       "height": 20,
       "bodyWidth": 64,
       "bodyHeight": 12,
-      "xmlSha256": "ff317965881b803002c3625e924251de8192beffd6b893e4bdd83f86fd0a6eef"
+      "xmlSha256": "89831dbc129ec727ca9d36d50db67b84ca812a99c2a2276f6c2d88646b9b2d06"
     },
     {
       "id": "mixer-analog-4",
@@ -638,7 +638,7 @@
       "height": 80,
       "bodyWidth": 46,
       "bodyHeight": 72,
-      "xmlSha256": "165d94479f962f959e377793b958d11a20a212acf9e4d70ec1a3053fd16405f5"
+      "xmlSha256": "b09e74c8a247d374dad40499f66767d86e4fe169ab4c46c52b6d274ad2e370b3"
     },
     {
       "id": "mixer-analog-8",
@@ -839,7 +839,7 @@
       "height": 80,
       "bodyWidth": 60,
       "bodyHeight": 72,
-      "xmlSha256": "f34d3814ba8e57b4c3de57ff066974a3f7b5335b4d8284246cb5b433cc9e0130"
+      "xmlSha256": "cb02c9f74c0468cca9297a9ea7bcb7ee6c79df41ee6f579c9da942b1870155f3"
     },
     {
       "id": "mixer-analog-12",
@@ -1094,7 +1094,7 @@
       "height": 80,
       "bodyWidth": 84,
       "bodyHeight": 72,
-      "xmlSha256": "03b0caf30733812e0fe7ad0ce32df3132d25d716155129dea34d65b41e678763"
+      "xmlSha256": "f71dc67c8ba04fbc8152436ad1aeaa65d0d4d7e138851a7795e5e73abf4b102d"
     },
     {
       "id": "mixer-analog-16",
@@ -1385,7 +1385,7 @@
       "height": 80,
       "bodyWidth": 108,
       "bodyHeight": 72,
-      "xmlSha256": "b428edf87d64793c65e3335a5a1f9eada38f78bfa45f00425c7f84917b093aad"
+      "xmlSha256": "896e2577197acc58289772cf9bd06e528eb18c67d1669b03738739e69b367f1a"
     },
     {
       "id": "mixer-analog-24",
@@ -1766,7 +1766,7 @@
       "height": 80,
       "bodyWidth": 84,
       "bodyHeight": 72,
-      "xmlSha256": "d170cb8e99bb4c39bb68ed157d4ecfbd468de6216875c1abede54cb7327d3183"
+      "xmlSha256": "66cad5a2facc37417052d9d85bffaf3974dc4dc02c55b4776dafdc559d9946b9"
     },
     {
       "id": "mixer-digital-16",
@@ -2039,7 +2039,7 @@
       "height": 74,
       "bodyWidth": 108,
       "bodyHeight": 66,
-      "xmlSha256": "13021dc25cfe6f1c0526a346ae05b28026beeeb88f306413c8f3a80be48a4e0f"
+      "xmlSha256": "a18782a0f23d7b3bb39ab1f7081750a09bd93fed89aa73a5c3e40d2ba112764d"
     },
     {
       "id": "mixer-digital-32",
@@ -2456,7 +2456,7 @@
       "height": 74,
       "bodyWidth": 108,
       "bodyHeight": 66,
-      "xmlSha256": "9885d07e04b25ba968f11737b80ded64a4ef4d01697a4b7d5435c20037e721db"
+      "xmlSha256": "7b8f1d999ab954ee528709c130a9cd00aabbb6d29fa4755093051ed9d5af1235"
     },
     {
       "id": "mixer-podcast-4",
@@ -2584,7 +2584,7 @@
       "height": 74,
       "bodyWidth": 46,
       "bodyHeight": 66,
-      "xmlSha256": "2c169967b56ef65a1e5065005f4470c53c23ed29a1768c5567a96d1f9124711a"
+      "xmlSha256": "3e962113f63640a7f34299b9a9f926f951c4acecbbc41091fa3053ada69356e9"
     },
     {
       "id": "interface-2",
@@ -2658,7 +2658,7 @@
       "height": 30,
       "bodyWidth": 40,
       "bodyHeight": 22,
-      "xmlSha256": "0126c9703343bf73af9b54f712f2101bbaf2f646c0fc916b6793f4f932bf931c"
+      "xmlSha256": "2068ba49eae16e98ac87b9f4d9d30b9573f4c972c0fe74340e322fe7ec585a71"
     },
     {
       "id": "interface-4",
@@ -2768,7 +2768,7 @@
       "height": 38,
       "bodyWidth": 52,
       "bodyHeight": 30,
-      "xmlSha256": "fea798e656c5d81c0447715fd87a54cff8e099ebc9213a36ebce65586afb1420"
+      "xmlSha256": "bcc037a7a1898efa760f6d213ad58e6e7f4d170ad1ddd577f9595d8df59d4846"
     },
     {
       "id": "interface-8",
@@ -2932,7 +2932,7 @@
       "height": 38,
       "bodyWidth": 52,
       "bodyHeight": 30,
-      "xmlSha256": "a5b754da689111ef45eae5d5bfb64d9f0dc8e573cd83c2fe815706327e719991"
+      "xmlSha256": "410ba4ce659df605b80bce000722846136fc6be0c3f3880a0d26369f44dc52cb"
     },
     {
       "id": "computer-pc",
@@ -3005,7 +3005,7 @@
       "height": 46,
       "bodyWidth": 48,
       "bodyHeight": 38,
-      "xmlSha256": "0940d548fa5ef9d91b667346537b899fb2611cbf1613df76de5a4f6fe8ecb0a1"
+      "xmlSha256": "f35da1481555e57c3cfb46423bc40cc857f9878713b0744814b31241a9ca9750"
     },
     {
       "id": "computer-laptop",
@@ -3070,7 +3070,7 @@
       "height": 46,
       "bodyWidth": 48,
       "bodyHeight": 38,
-      "xmlSha256": "fde6a7eb2e0216b4c292f7a8963ea2660ee0c25044fa188dd0f4b0fd8652fd60"
+      "xmlSha256": "9efb5d60359df498b97648b782ba78ec0cc6640b6206c73abd6df2288d5f7cef"
     },
     {
       "id": "computer-phone",
@@ -3107,7 +3107,7 @@
       "height": 42,
       "bodyWidth": 24,
       "bodyHeight": 34,
-      "xmlSha256": "d83fc22e6a7cb2621c4bd33e6c5bd3d02f8fbcb2d800d5f612cb7a5b2ead8015"
+      "xmlSha256": "87c7603db1d164703d48485975ce36b6ff89d44ba152970cfb1f9f7e08044883"
     },
     {
       "id": "recorder-stereo",
@@ -3170,7 +3170,7 @@
       "height": 30,
       "bodyWidth": 34,
       "bodyHeight": 22,
-      "xmlSha256": "c74f8dfa3bf72174f7afac721954807dbd8e4a62f7d54f47876a5df352b1e724"
+      "xmlSha256": "d7e4347e73b69197c460a141b3cdb9383b8aa414abcb6235285073002679f5b5"
     },
     {
       "id": "recorder-multitrack",
@@ -3296,7 +3296,7 @@
       "height": 38,
       "bodyWidth": 52,
       "bodyHeight": 30,
-      "xmlSha256": "08391f6696fd85a7cfa13ad2e6eb7924a2d4bf7add1f8fbd100795b756bc962a"
+      "xmlSha256": "8a620260a7ad5e4e5b00665a0dd7c1473d189d7c5e491ddd0b055f7bf9c85397"
     },
     {
       "id": "camera-stream",
@@ -3341,7 +3341,7 @@
       "height": 36,
       "bodyWidth": 30,
       "bodyHeight": 28,
-      "xmlSha256": "de2b6d324ba15e7706bf5525b181dd028c416e993156441dc596a41bb90c0705"
+      "xmlSha256": "e70ecff98c30cbd0f7efbfb0d0bfd0beb2207a2f8b7cebdd8c3f48edb2e12029"
     },
     {
       "id": "capture-usb",
@@ -3377,7 +3377,7 @@
       "height": 30,
       "bodyWidth": 24,
       "bodyHeight": 22,
-      "xmlSha256": "bfe32dbc92bb9b8a960777800664d8dd456710059d29bee9d09cb3098bb9fc43"
+      "xmlSha256": "f5254993259a0ccee3466503f2545269a13a543cb511ef69f1b3b0bbcf53d254"
     },
     {
       "id": "speaker-pa-active",
@@ -3424,7 +3424,7 @@
       "height": 52,
       "bodyWidth": 32,
       "bodyHeight": 44,
-      "xmlSha256": "1609839e56c0edc1cfbba511c2f9d8b4d7ff261b58f1b64d49f638c723a208f8"
+      "xmlSha256": "f6d361fcd49600adf6ae1dcde6c100034b4eab0f85ae132c7cefa3c40accc6d8"
     },
     {
       "id": "speaker-pa-passive",
@@ -3462,7 +3462,7 @@
       "height": 52,
       "bodyWidth": 32,
       "bodyHeight": 44,
-      "xmlSha256": "b9d132e94a81b1358ba8e12f758fc09db80dcb20dd4a8a37b8b49e05144125f4"
+      "xmlSha256": "fe27d838d18adb9f34c1081eae1c95369de5181a8fe69a6e16077c7b81da7f16"
     },
     {
       "id": "speaker-monitor-active",
@@ -3509,7 +3509,7 @@
       "height": 52,
       "bodyWidth": 32,
       "bodyHeight": 44,
-      "xmlSha256": "e34127e6b649c211b9d38663c9e653bbfa3a735dac40f4f5d055301446a65b72"
+      "xmlSha256": "79b677c27011d855307f6b39264a11b0c2bf2a2c74554d676d37590d8117726c"
     },
     {
       "id": "speaker-monitor-passive",
@@ -3547,7 +3547,7 @@
       "height": 52,
       "bodyWidth": 32,
       "bodyHeight": 44,
-      "xmlSha256": "1c76207e56ea71e0e79b642fdbd8e6901b721160511eb88874c36cc33b5e6a20"
+      "xmlSha256": "81a2b4f31a64eb0a702b8b2cb0be43fd02bbd7568d9aa1e5068fe122ae9bc972"
     },
     {
       "id": "speaker-sub-active",
@@ -3594,7 +3594,7 @@
       "height": 42,
       "bodyWidth": 32,
       "bodyHeight": 34,
-      "xmlSha256": "dafebcb1132bf5e4616793ec342a6a0b915162f60c07c8b542d364ac05f665e3"
+      "xmlSha256": "82ff8108c2086fc97f722f7e6245116f05448fb1f0fe7007a7b5c7e10d8d85bc"
     },
     {
       "id": "speaker-sub-passive",
@@ -3632,7 +3632,7 @@
       "height": 42,
       "bodyWidth": 32,
       "bodyHeight": 34,
-      "xmlSha256": "cc92ebb2cca2e1db3e50964f260bb6eacfcf4297042aa63c2f0cf90cf24118ae"
+      "xmlSha256": "52e9c58fcbdc5ef0669011caaa204b06eacce942ad7367771ae2d7eb1781954f"
     },
     {
       "id": "speaker-studio-monitor",
@@ -3679,7 +3679,7 @@
       "height": 52,
       "bodyWidth": 32,
       "bodyHeight": 44,
-      "xmlSha256": "8345fd97b3175dc8a2927f375db714b7c5f0c3fc117045ac00b757052cb396dc"
+      "xmlSha256": "f6d361fcd49600adf6ae1dcde6c100034b4eab0f85ae132c7cefa3c40accc6d8"
     },
     {
       "id": "speaker-column-pa",
@@ -3726,7 +3726,7 @@
       "height": 64,
       "bodyWidth": 24,
       "bodyHeight": 56,
-      "xmlSha256": "20c8ea5780931ee177f3466e142763e86abbe7f97d8d70b21b4e460a91ac4f35"
+      "xmlSha256": "15c506e8cc172bee0e9843b3f32b8f0d6faa9d703ea97c44fdd904e88eb92feb"
     },
     {
       "id": "speaker-line-array",
@@ -3764,7 +3764,7 @@
       "height": 34,
       "bodyWidth": 32,
       "bodyHeight": 26,
-      "xmlSha256": "accc87fb06479f7ec51ddfca9358a4f9f77f6802f632ffe33b4046637cc76807"
+      "xmlSha256": "30a2f09887f635670e2d60ed6dfaf380ef2e3bca29ef70ec04a2aa0164b0a55a"
     },
     {
       "id": "speaker-installed",
@@ -3792,7 +3792,7 @@
       "height": 36,
       "bodyWidth": 32,
       "bodyHeight": 28,
-      "xmlSha256": "53d2fca09cc7ebaa6735b837699e11536556d1aaff1a33deeac73682eeca0903"
+      "xmlSha256": "65db8f6e74db15da1f40dc63d1cfb49fbba8e9b0663b3da272e14a90c09d0378"
     },
     {
       "id": "amp-power-stereo",
@@ -3856,7 +3856,7 @@
       "height": 32,
       "bodyWidth": 64,
       "bodyHeight": 24,
-      "xmlSha256": "b8c426bd2fab993f145ca3e45c6859b199a83a50b243b7d8da417f87b53b8305"
+      "xmlSha256": "afbec1729b9cf331a7e3aca24f6075e285f9f32add3f13c136ad655db6f1cf6b"
     },
     {
       "id": "amp-headphone-4",
@@ -3938,7 +3938,7 @@
       "height": 20,
       "bodyWidth": 64,
       "bodyHeight": 12,
-      "xmlSha256": "7c33f57fd1ab027c0d0b193fad735777307dfbe9696a2ce0169c2aee05e0362f"
+      "xmlSha256": "509e0c790e703f42405d5a847a4a54abdf44bf3b1da4ef7e0f03f765f11fe40d"
     },
     {
       "id": "headphones",
@@ -3965,7 +3965,7 @@
       "height": 40,
       "bodyWidth": 28,
       "bodyHeight": 32,
-      "xmlSha256": "efe704a4934b0072cbc8c706551aae79c1a91121327e06fd3f74406fae9f504c"
+      "xmlSha256": "ddf1481dc23ccdafa4e48984c655e272b76a89a7f89b2234e05151b84ebae1f3"
     },
     {
       "id": "iem-wired",
@@ -4010,7 +4010,7 @@
       "height": 30,
       "bodyWidth": 24,
       "bodyHeight": 22,
-      "xmlSha256": "e82bd93c6ed5d38ea5af94f4025b167519cf80d2a8269d1ab177cf26a1eaab71"
+      "xmlSha256": "456175a62c543f5f35c29da666bcdc66096ac9bd44cfc96c20283b5f27cfb5a6"
     },
     {
       "id": "iem-transmitter",
@@ -4065,7 +4065,7 @@
       "height": 20,
       "bodyWidth": 64,
       "bodyHeight": 12,
-      "xmlSha256": "cc5ff434808b407159c96c3351cb4b68bc1cb53ba26b6e472de43f542acca1dc"
+      "xmlSha256": "154a4dc52e75bd9314c79db7b7624efd07b508761218047520612ea79eeaf01d"
     },
     {
       "id": "iem-receiver",
@@ -4101,7 +4101,7 @@
       "height": 30,
       "bodyWidth": 24,
       "bodyHeight": 22,
-      "xmlSha256": "c1b0ebff575bdacd75865b39ad21b2c9e981b6fd1652d6d2a8e46cdd822ccba7"
+      "xmlSha256": "9911547ee6142c2da2300fccd79a8ed4d17ddb5e593391601718ff5ceed58348"
     },
     {
       "id": "instrument-electric",
@@ -4129,7 +4129,7 @@
       "height": 58,
       "bodyWidth": 24,
       "bodyHeight": 50,
-      "xmlSha256": "622fcbfd2197daf9b60aa103ad5abbed79d52b67f7b767ecc9b54e29b7124444"
+      "xmlSha256": "428dbd4068c03e29b9456f4e78f4a34ec64015b7996017c9517c2dc474369ac1"
     },
     {
       "id": "instrument-bass",
@@ -4157,7 +4157,7 @@
       "height": 58,
       "bodyWidth": 24,
       "bodyHeight": 50,
-      "xmlSha256": "37a17b373872dd5e31ba34b3884292b66cd32a2a918fe7b1637b39786c4ed2e7"
+      "xmlSha256": "85f789516611e1d95c7c8db0758a0b920bce1641ad11ff6ab6d0544688413616"
     },
     {
       "id": "instrument-acoustic",
@@ -4185,7 +4185,7 @@
       "height": 58,
       "bodyWidth": 24,
       "bodyHeight": 50,
-      "xmlSha256": "fbf9cb6bc09065aa122fae0435dfdab24a73560fa6d6a1fd9d46c4382889a473"
+      "xmlSha256": "89580c51aa46bc1e1080ccc5bedce131c81da7e2ec2475cfb06cebe39941602b"
     },
     {
       "id": "combo-guitar",
@@ -4232,7 +4232,7 @@
       "height": 52,
       "bodyWidth": 32,
       "bodyHeight": 44,
-      "xmlSha256": "b635d32f8349f08dc3823b1f12657dc2a78f76f4c67c2f3ab366c83e72b0f6fd"
+      "xmlSha256": "ec64f9962c35b45b252b19cef8c1a7488bc9bc89e8c8b0287a0c1a7b63c9c087"
     },
     {
       "id": "combo-bass",
@@ -4279,7 +4279,7 @@
       "height": 52,
       "bodyWidth": 32,
       "bodyHeight": 44,
-      "xmlSha256": "155282313b4acc58cfdc1c07464fb88cec9a8e9de2235617bfcdea2290d9c6df"
+      "xmlSha256": "ec64f9962c35b45b252b19cef8c1a7488bc9bc89e8c8b0287a0c1a7b63c9c087"
     },
     {
       "id": "keyboard-49",
@@ -4362,7 +4362,7 @@
       "height": 40,
       "bodyWidth": 60,
       "bodyHeight": 32,
-      "xmlSha256": "d2c6666844bbdc0c559e421abec53c0e3dff7d23b62eb8ade27ace139d73f7eb"
+      "xmlSha256": "f701fde3340eaf481d1de21af1b6b1135f667d696ca0acef9824fe7e282d856a"
     },
     {
       "id": "keyboard-61",
@@ -4445,7 +4445,7 @@
       "height": 40,
       "bodyWidth": 70,
       "bodyHeight": 32,
-      "xmlSha256": "d80572edf5eed70f34b409f138c51cbb0343913546fb21f1d1a9908858e794ea"
+      "xmlSha256": "716b7800f44f43e572e8febb1ce98ba05e39794d1505484d454281754bf9d3b0"
     },
     {
       "id": "keyboard-88",
@@ -4528,7 +4528,7 @@
       "height": 40,
       "bodyWidth": 86,
       "bodyHeight": 32,
-      "xmlSha256": "e1d5324f87b1108b10611fae5f1c4d7fe6db71580b0df98dfafd6242962d5766"
+      "xmlSha256": "6b995e95c628fb17a21722ac97d5947544faef0d741e856e45b0bd6da1dfb1e5"
     },
     {
       "id": "midi-controller",
@@ -4574,7 +4574,7 @@
       "height": 40,
       "bodyWidth": 42,
       "bodyHeight": 32,
-      "xmlSha256": "7264cd84f1fc05ab01203fc2cf7c87d27140b8ebef1540249c5a2e1b5c06e9bc"
+      "xmlSha256": "1b0a6177e85344cae2637c9a909c090e885e017f68ab757624078f6641e31fd4"
     },
     {
       "id": "drum-machine",
@@ -4647,7 +4647,7 @@
       "height": 44,
       "bodyWidth": 42,
       "bodyHeight": 36,
-      "xmlSha256": "f339221d002f8350c88f9467de3a18bc8bdc44b68fb4d35d17b0ccf7b9807b79"
+      "xmlSha256": "a4bd510f0417818bd1d43d04feac6cf74ffb0c85975c07f15a8fd54d1724bf2d"
     },
     {
       "id": "dj-controller",
@@ -4711,7 +4711,7 @@
       "height": 44,
       "bodyWidth": 66,
       "bodyHeight": 36,
-      "xmlSha256": "dba4b496deb9b4814642835cc204bab1956d1f2620d8277b9352500a6d108e22"
+      "xmlSha256": "5bb03408975ae464ed1e8c5c19e497ed65bd557b3ffc7009868bf83a3b92d968"
     },
     {
       "id": "di-passive",
@@ -4756,7 +4756,7 @@
       "height": 30,
       "bodyWidth": 24,
       "bodyHeight": 22,
-      "xmlSha256": "c04fcad06bbda5353d3bdce4ecdc7f5ba07334e4fe87ec78bb8b57079207e0da"
+      "xmlSha256": "013afca5de8cd1f062af3d66bf027e8f85c9b61a3e753a5445815016da0b46f1"
     },
     {
       "id": "di-active",
@@ -4801,7 +4801,7 @@
       "height": 30,
       "bodyWidth": 24,
       "bodyHeight": 22,
-      "xmlSha256": "3a8a094559552c4aed8d08cc9b97c24a66c7fcd1a967d5c4d8a12593337a56b7"
+      "xmlSha256": "013afca5de8cd1f062af3d66bf027e8f85c9b61a3e753a5445815016da0b46f1"
     },
     {
       "id": "di-stereo",
@@ -4873,7 +4873,7 @@
       "height": 30,
       "bodyWidth": 40,
       "bodyHeight": 22,
-      "xmlSha256": "e8dac1c34779c7ed093c1d08960b0bed5409fe2aa6fbb1e7f07b95e78de51401"
+      "xmlSha256": "5b06e232bc233b3befd46192e1729eb2a1414179a0c8dc04d6ad1cf0c1d9e31a"
     },
     {
       "id": "reamp",
@@ -4909,7 +4909,7 @@
       "height": 30,
       "bodyWidth": 24,
       "bodyHeight": 22,
-      "xmlSha256": "d9f5f74a10622a8d473a20d103d9fef069231ce1592e9cb1dcdfc03a0f8832a1"
+      "xmlSha256": "217714ff034a667e51a91213e1696ccd0c72a36a362301dc62e8839df0ea9c22"
     },
     {
       "id": "splitter-mic",
@@ -4963,7 +4963,7 @@
       "height": 30,
       "bodyWidth": 28,
       "bodyHeight": 22,
-      "xmlSha256": "161779ae20bd03af66731d7eaa11de4f54c52bbb61571057e6cd9cb7bd86b8a8"
+      "xmlSha256": "e2779a3a7c786c7ea2bc34e8108d09bd8065db7df18d57f33da66767a130b47e"
     },
     {
       "id": "stagebox-analog-8",
@@ -5099,7 +5099,7 @@
       "height": 50,
       "bodyWidth": 56,
       "bodyHeight": 42,
-      "xmlSha256": "cf34bcded3f5a4ea234eac923aa82c413f4f0d5c7bb9db9b77ac135ab965eb31"
+      "xmlSha256": "7dc9b316eb852fee51ca7c7683eb23a529dd66e4ffd4d124a9914709becf780a"
     },
     {
       "id": "stagebox-analog-16",
@@ -5307,7 +5307,7 @@
       "height": 50,
       "bodyWidth": 56,
       "bodyHeight": 42,
-      "xmlSha256": "0214326f2d95a3981ef6eb8e812581d27a43022065cdb3152a39945fc96d381d"
+      "xmlSha256": "7451ee0e86b2c103f1a6aaf9cd1973224cb5769767b3e2f4e2ddede89295f872"
     },
     {
       "id": "stagebox-analog-24",
@@ -5623,7 +5623,7 @@
       "height": 50,
       "bodyWidth": 56,
       "bodyHeight": 42,
-      "xmlSha256": "96509e179f2412013b3527a43195be2db8fa8d66aab1add1ec57159baf9d1de7"
+      "xmlSha256": "1c2d3534297045478490d21bd3b814e1de54b76878412496f395ac2d65ee3943"
     },
     {
       "id": "stagebox-digital-16",
@@ -5876,7 +5876,7 @@
       "height": 50,
       "bodyWidth": 56,
       "bodyHeight": 42,
-      "xmlSha256": "131c039a3b2bcdefaecf62034b2b547eaeb8c42e22d30f9041edc790617edab7"
+      "xmlSha256": "cf0b19138779597e165859bba92303c29e02873b3f971f90f7fd88ae7d1bbe71"
     },
     {
       "id": "stagebox-dante-16",
@@ -6129,7 +6129,7 @@
       "height": 50,
       "bodyWidth": 56,
       "bodyHeight": 42,
-      "xmlSha256": "b19a0631796bbdc1b13f4760938031169c8724e9d870c4e4c083670bb2fa3adc"
+      "xmlSha256": "fce9462b77e5e8b85e8f8114e21f371de1828f85a513fee9479be70e185a1353"
     },
     {
       "id": "patchbay-trs-24",
@@ -6580,7 +6580,7 @@
       "height": 20,
       "bodyWidth": 64,
       "bodyHeight": 12,
-      "xmlSha256": "75ab72d2731346e72dc0720b1310656cc9c5713242cb78982ad89a3c8b4967df"
+      "xmlSha256": "7c7637878b8290eb7bc020221cd7eebcf9b88050ad30032525a74d11af0010f6"
     },
     {
       "id": "midi-thru-4",
@@ -6652,7 +6652,7 @@
       "height": 30,
       "bodyWidth": 40,
       "bodyHeight": 22,
-      "xmlSha256": "544046399fb74ced64787c79611162af81ff0f0482cfce8eed3eedb168e3558f"
+      "xmlSha256": "981b93aef99dabf3dda98d4d201a93e3d316521da73d498aa2116595809b1d2e"
     },
     {
       "id": "network-audio-switch",
@@ -6752,7 +6752,7 @@
       "height": 20,
       "bodyWidth": 64,
       "bodyHeight": 12,
-      "xmlSha256": "4717bad6940ee6db72f734f03451169b8bee54f41adba6bd33bcadf8015523ce"
+      "xmlSha256": "72b657aff6772ec2d0487023f48272388f092d538bbb68e5be0b4212eaa3554e"
     },
     {
       "id": "processor-eq",
@@ -6817,7 +6817,7 @@
       "height": 20,
       "bodyWidth": 64,
       "bodyHeight": 12,
-      "xmlSha256": "f730f53125dde75de27b5a22ae6b295e37118e0be34501889acbc308d49e762f"
+      "xmlSha256": "5fb1d1633eedcb28404454cdbcb505f681a2aa3824bef908e0f26fdc64364559"
     },
     {
       "id": "processor-compressor",
@@ -6882,7 +6882,7 @@
       "height": 20,
       "bodyWidth": 64,
       "bodyHeight": 12,
-      "xmlSha256": "8823d118b3b10341155fe85a0584e11c37e2e5248560d191667df25456eb55ab"
+      "xmlSha256": "5fb1d1633eedcb28404454cdbcb505f681a2aa3824bef908e0f26fdc64364559"
     },
     {
       "id": "processor-effects",
@@ -6947,7 +6947,7 @@
       "height": 20,
       "bodyWidth": 64,
       "bodyHeight": 12,
-      "xmlSha256": "e5245ef00069b0743554f6a5bb447a5c8a59bdb7d5229902e05b240202a57f8d"
+      "xmlSha256": "5fb1d1633eedcb28404454cdbcb505f681a2aa3824bef908e0f26fdc64364559"
     },
     {
       "id": "processor-crossover",
@@ -7012,7 +7012,7 @@
       "height": 20,
       "bodyWidth": 64,
       "bodyHeight": 12,
-      "xmlSha256": "df2d1673a53f857b254c82a807bbfbbb5edfc55070f02512cbd7a203b17525f8"
+      "xmlSha256": "5fb1d1633eedcb28404454cdbcb505f681a2aa3824bef908e0f26fdc64364559"
     },
     {
       "id": "monitor-controller",
@@ -7093,7 +7093,7 @@
       "height": 30,
       "bodyWidth": 46,
       "bodyHeight": 22,
-      "xmlSha256": "a131e6fb572669b7a91ccb02e72201e25672b7203d51bf344d9dba4c1992326b"
+      "xmlSha256": "1d0c2230769a5391c6e9bb9e2e5b4e59228cc9e150dfa2abff4e1afe99b159cf"
     },
     {
       "id": "connector-xlr-f",
@@ -7121,7 +7121,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "05d32fbbbcb123be2a7a0cb318ae2fb223be1ae1452704a3e48d8b362e2afb0d"
+      "xmlSha256": "0913ece052ddcde8b1326ca71a7d87f89be6fa7ec5dd2eb43b090330ee78d0f5"
     },
     {
       "id": "connector-xlr-m",
@@ -7149,7 +7149,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "cb006d7725bb3a46ea530c53756ce2c136311bb0f7331c1f2b462fc152a7abfd"
+      "xmlSha256": "4dcfc47ac6e07c936b97b5d9cb3238555051ad7b9592aa2429ef4528987567c3"
     },
     {
       "id": "connector-trs-balanced",
@@ -7177,7 +7177,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "a9898af7e785a7494737247f47cf816a2e890bb4467e4b2a5f7dc81378cf64b4"
+      "xmlSha256": "18e8e5076195a0db8f8819c14187817d1035632fe2a6cbb55f53abfeb9b30204"
     },
     {
       "id": "connector-trs-stereo",
@@ -7205,7 +7205,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "2e00635dbc52ae26c68edcaa92c7ffd0125f48b978aa19b963febd8fc5663a5f"
+      "xmlSha256": "4c9973fc95fcff212709725c7afeb2d7b9ef412d4b64cd715ed9f3ff45543408"
     },
     {
       "id": "connector-ts-instrument",
@@ -7233,7 +7233,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "c0fde7d71a17747135c5242598b0855f998a3dde7eaa31a10453ae597c5d7c92"
+      "xmlSha256": "6bbe6d8ccc3a6af74a8f2b19dc7f9cfe19d01a224351541917eb95074a79f2fe"
     },
     {
       "id": "connector-minijack-stereo",
@@ -7261,7 +7261,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "c7b34840f552496f3c160fe7c6724c2ee5c0298c02381048be9ef112dcbefc26"
+      "xmlSha256": "740044b291d3261f716c57a156a96fc619f2dd23b0118b60c133b208c3b38a7e"
     },
     {
       "id": "connector-trrs-ctia",
@@ -7289,7 +7289,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "cd92bb96f0e5d4be4193e6cf8ef122693e9ae332ed146629b06d29e5186e2ca4"
+      "xmlSha256": "b7c92eee688c435418a1e998d5db56fad9678d0e95d3ed4e3b515b5ad956365a"
     },
     {
       "id": "connector-rca",
@@ -7317,7 +7317,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "ebbde92b59d3321ec10417a0171133ef12487b02dcf64d25cb0bab7e6db1c9f2"
+      "xmlSha256": "93b47f3046eeda2bdc86b850d34a1a46c19e3281b6f598766182300383cbc256"
     },
     {
       "id": "connector-speakon",
@@ -7345,7 +7345,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "4164a04c4d827aef091a0fa78192028c0f16457caa2c71b997736555866e64ec"
+      "xmlSha256": "815391beb9bf353167d386a4bd5dc41b61ac495afc564db677410c306b59f2b7"
     },
     {
       "id": "connector-midi-din",
@@ -7372,7 +7372,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "336780954528b01f074b3c6e7414a0a4dbdf0bf916dba835d564f489c502ec83"
+      "xmlSha256": "4868052f7d38253cf21e2c10880caadbeec43a84a895d3701b47670963a3aa73"
     },
     {
       "id": "connector-midi-trs-a",
@@ -7399,7 +7399,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "f4d88f339ed1bf0551b087e9ae313dd84f1dd6188535f5a808dc2e9e6105e052"
+      "xmlSha256": "0f54b0f8a0843f4eb701c9f63a69ff59e35b6dcb05bcfb1db638397616c77705"
     },
     {
       "id": "connector-midi-trs-b",
@@ -7426,7 +7426,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "a5b06bc16c35a495f53b933cd615f32839f86ffdd4e8fb73af43ec9c9c0de60f"
+      "xmlSha256": "261a86362ddad3e3cff696988f7c66290d5ef15b85769897576ed46988cbc635"
     },
     {
       "id": "connector-adat",
@@ -7454,7 +7454,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "e9b7b1deefb78f81f6e55d598cb2f5163a3abea3a563b19aaa6bc5cc775e73ee"
+      "xmlSha256": "6c605305c0428c8891a0caff3b141f903424fcc95998b9a65d051da82e76dc67"
     },
     {
       "id": "connector-spdif",
@@ -7482,7 +7482,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "039280b891efbde5e63068251261056b77e11ffa46d17403dc669b187a48134a"
+      "xmlSha256": "de179ca79c9e3f79a4fc70a3c6f568db7a4d1d300f162f6ed4295b73bf644cf3"
     },
     {
       "id": "connector-usb-c",
@@ -7510,7 +7510,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "3435aff91f7614350eb8a34e5164c5dd2c4f91eb659b95357cf08936c3a0a428"
+      "xmlSha256": "c4c77a25da54b5e03f3720e6797fd5c27805578209cbe4df718c2fdcfc233c53"
     },
     {
       "id": "connector-ethercon",
@@ -7538,7 +7538,7 @@
       "height": 28,
       "bodyWidth": 24,
       "bodyHeight": 20,
-      "xmlSha256": "550664ebaee88f06ef55268773cfa5ca05bfc7fe3353c678556100faf95e4006"
+      "xmlSha256": "843f565452b08783c411f81aca344ea27ad0c5a4b2a21998a22056237bd8e3b5"
     },
     {
       "id": "adapter-xlr-coupler",
@@ -7574,7 +7574,7 @@
       "height": 30,
       "bodyWidth": 32,
       "bodyHeight": 22,
-      "xmlSha256": "0437fc026994662cd045af27b6484897dd341ae1676634b705f786bf8b660bb5"
+      "xmlSha256": "a3f14457ff06ea2b46126b6a82c80d46f94f3e9ccc448e83b688330f6b571b24"
     },
     {
       "id": "adapter-trs-xlr",
@@ -7610,7 +7610,7 @@
       "height": 30,
       "bodyWidth": 32,
       "bodyHeight": 22,
-      "xmlSha256": "eb7060b8949cd2886db7d5a007afd58d43af38f8877eaba172faba9b55efae0a"
+      "xmlSha256": "89fb4c93384ab57ef7f984e1ab99f3215b0127641ea27057915661c83a511c15"
     },
     {
       "id": "adapter-stereo-breakout",
@@ -7655,7 +7655,7 @@
       "height": 30,
       "bodyWidth": 32,
       "bodyHeight": 22,
-      "xmlSha256": "2ca5911ba7d36ece5fbf4c1dbfc57c2bad7f35e1c2d8d30f5c70097b8ccc86d8"
+      "xmlSha256": "17af854f669f2e956843195d4528748e9dfb7bf99c603d5b39e230a0e3d1292a"
     },
     {
       "id": "adapter-insert",
@@ -7700,7 +7700,7 @@
       "height": 30,
       "bodyWidth": 32,
       "bodyHeight": 22,
-      "xmlSha256": "d29d2a90a33d61d68681ca5d854fa4578223f2cebf3d5ed01c72d0aba9296341"
+      "xmlSha256": "95dcf59ed5be2356c6befd7199516ddd29cd8ee5f05e0f0cdeee4c8da8d41e77"
     },
     {
       "id": "position-mic-boom",
@@ -7718,7 +7718,7 @@
       "height": 50,
       "bodyWidth": 32,
       "bodyHeight": 42,
-      "xmlSha256": "6e2c18b33c2f9bb90e3c8f589636c7f11560e0eb8e1aecb0ebd2236bca6ae853"
+      "xmlSha256": "f078dbf19faf3a4cb930cba481cb544c2760592d1010b150d00840c15c1957a3"
     },
     {
       "id": "position-pop-filter",
@@ -7736,7 +7736,7 @@
       "height": 40,
       "bodyWidth": 24,
       "bodyHeight": 32,
-      "xmlSha256": "f2a5772eae708dc3166febc63947e9cbf5c8e700ee937c6d336111a71ea573e6"
+      "xmlSha256": "bf47ad1dc48a31e5ba976335d7e7cd4f4a1de24d687247f42c47a927a3db9ed5"
     },
     {
       "id": "position-drums",
@@ -7754,7 +7754,7 @@
       "height": 48,
       "bodyWidth": 48,
       "bodyHeight": 40,
-      "xmlSha256": "550e2db0b80d562d0048cda1fd7f0f767d956e59071bb66862ad883fcc0af93f"
+      "xmlSha256": "29ec98a79f2608d896b0f083c2f163ba79e18399833cd18d6232b27391a4819f"
     },
     {
       "id": "position-lectern",
@@ -7772,7 +7772,7 @@
       "height": 42,
       "bodyWidth": 28,
       "bodyHeight": 34,
-      "xmlSha256": "c6e9da7cb6e795ffeec7d0d48de789860254a6278a2f83648141ebb5164f2711"
+      "xmlSha256": "a5b835919ecaf82370b68a7a74cd4841d9b1d20d1f267bc4c8804d7dc584d227"
     },
     {
       "id": "position-acoustic-panel",
@@ -7790,7 +7790,7 @@
       "height": 44,
       "bodyWidth": 28,
       "bodyHeight": 36,
-      "xmlSha256": "3bb96e6e5d820b34c2a362b277db66140bb7d0ddb9ebc17aabbf35ac5f7d8c44"
+      "xmlSha256": "8b5937ae75d57745ba28d587021baa6289fab41b5da1d75fa2b22d94a925de24"
     }
   ]
 }

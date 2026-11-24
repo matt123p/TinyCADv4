@@ -178,9 +178,6 @@ export function compactEmbedded(record) {
       )}</PIN>`,
     );
   }
-  art.push(
-    note(1, bodyHeight + 3, d.short, { size: 8, font: 2, colour: '263645' }),
-  );
   if (d.kind === 'display') {
     art.push(note(1, 2, 'FRONT', { colour: '263645' }));
     art.push(

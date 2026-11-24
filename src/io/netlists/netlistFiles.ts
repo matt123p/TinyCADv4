@@ -1,7 +1,8 @@
 import { saveAs } from 'file-saver';
 import { NetlistData } from './netlistGenerator';
 import { writeVHDL } from './netlistVHDL';
-import { writeSpice } from './netlistSpice';
+import { writeSpiceWithModels } from './netlistSpice';
+import type { SpiceModelPack } from '../../simulation/catalogBindings';
 
 // Create netlist and output as a PCB file (PADS-PCB)
 function writePADS(netlist: NetlistData, withValue: boolean) {
@@ -206,12 +207,13 @@ export function downloadNetlist(
   filename: string,
   file_type: string,
   netlist: NetlistData,
+  spiceModelPacks?: SpiceModelPack[],
 ) {
   let txt = null;
   let ext = null;
   switch (file_type) {
     case 'SPICE':
-      txt = writeSpice(netlist);
+      txt = writeSpiceWithModels(netlist, spiceModelPacks);
       ext = '.cir';
       break;
     case 'VHDL':

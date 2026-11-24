@@ -148,6 +148,10 @@ export function DocStoreReducer(
   state: docStore = intialState,
   action: AppActionTypes,
 ): docStore {
+  if (action.type === 'simulation/catalog-model') {
+    if (state.editSymbol || state.editLibrary || state.drawing !== action.source || action.source === action.drawing) return state;
+    return { ...state, drawing: action.drawing, drawingVersion: state.drawingVersion + 1 };
+  }
   if (action.type === 'simulation/apply-tuning') {
     const target = state.drawing.sheets.find(s => s.id === action.sheetId && s.kind === 'simulation');
     if (!target || state.editSymbol) return state;
@@ -636,25 +640,29 @@ export function DocStoreReducer(
     //
     case MenuActionTypes.MenuPaste:
       if (sheet) {
-        ({ view, sheet } = update_view.handlePaste(
+        const pasted = update_view.handlePaste(
           view,
           sheet,
           action.text,
           action.pos ?? view.contextMenuLastPoint,
-        ));
+          state.drawing.spiceModelPacks,
+        );
+        ({ view, sheet } = pasted);
+        if (pasted.spiceModelPacks && pasted.spiceModelPacks !== state.drawing.spiceModelPacks)
+          state = { ...state, drawing: { ...state.drawing, spiceModelPacks: pasted.spiceModelPacks } };
         update_hatches = true;
       }
       break;
 
     case MenuActionTypes.MenuCut:
       if (sheet) {
-        ({ view, sheet } = update_view.handleCopy(view, sheet, true));
+        ({ view, sheet } = update_view.handleCopy(view, sheet, true, state.drawing.spiceModelPacks));
       }
       break;
 
     case MenuActionTypes.MenuCopy:
       if (sheet) {
-        ({ view, sheet } = update_view.handleCopy(view, sheet, false));
+        ({ view, sheet } = update_view.handleCopy(view, sheet, false, state.drawing.spiceModelPacks));
       }
       break;
 
@@ -1316,6 +1324,7 @@ export function DocStoreReducer(
   }
 
   if (state.editSymbol != prev_edit_symbol) {
+    if (!state.editSymbol) return state;
     // Has the name changed?
     if (state.editSymbol.NameID === prev_edit_symbol?.NameID) {
       // No, so write back the new name data

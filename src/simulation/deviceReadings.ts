@@ -5,13 +5,15 @@ import { ResultData, ResultVector, SimulationSetup } from './contracts';
 
 function statement(net: NetlistData, symbol: dsnSymbol): string[] | undefined {
   const ref = symbol.text.find((f) => f.description === 'Ref')?.value;
+  const catalogRef = ref ? `tc_${ref.toLowerCase()}` : '';
   return writeSpice({
     ...net,
     symbols: net.symbols.filter(([, s]) => s === symbol),
   })
     .split(/\r?\n/)
     .map((line) => line.trim().split(/\s+/))
-    .find((tokens) => tokens[0]?.toLowerCase() === ref?.toLowerCase());
+    .find(([name]) => !name?.startsWith('*') && (name?.toLowerCase() === ref?.toLowerCase() ||
+      (catalogRef && name?.slice(1).toLowerCase() === catalogRef)));
 }
 export function deviceSaveLine(
   net: NetlistData,
@@ -57,17 +59,13 @@ export function measuredDevice(
   symbol: dsnSymbol,
   data: ResultData,
 ): { current?: ResultVector; power?: ResultVector } {
-  const hint = symbol.text
-    .find((f) => f.description === 'Ref')
-    ?.value?.toLowerCase();
-  if (!data.vectors.some((v) => v.name.toLowerCase().startsWith(`@${hint}[`)))
-    return {};
   const tokens = statement(net, symbol);
   if (!tokens) return {};
   const [ref, p, n, e] = tokens,
     find = (name: string) =>
       data.vectors.find((v) => v.name.toLowerCase() === name.toLowerCase()),
     count = data.vectors[0]?.real.length || 0;
+  if (!data.vectors.some((v) => v.name.toLowerCase().startsWith(`@${ref.toLowerCase()}[`))) return {};
   const node = (name: string): number[] | undefined =>
     name === '0'
       ? Array(count).fill(0)

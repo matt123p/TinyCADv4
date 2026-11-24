@@ -29,7 +29,8 @@ import { saveAs } from 'file-saver';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../model/tclib';
 import { libCache } from './libCache';
 import TPrintSheet from '../components/svg/PrintSheet';
-import { render } from 'react-dom';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Coordinate, DocItem, DocItemTypes, dsnPin } from '../model/dsnItem';
 import update from 'immutability-helper';
 
@@ -43,7 +44,7 @@ import { GoogleUserManager } from './google/googleUserManager';
 import { FileSystemUserManager } from './filesystem/filesystemUserManager';
 import { wkrGenerateNetlist } from '../web-worker/worker';
 import { downloadNetlist } from './netlists/netlistFiles';
-import { findImporter, ImportedSymbol } from './kicad/importer';
+import { findImporter, ImportedSymbol, type SymbolImportFile } from './kicad/importer';
 import { actionEditLibrarySymbol, actionSelectLibrarySymbol } from '../state/dispatcher/AppDispatcher';
 import { get_global_id } from '../util/global_id';
 import { openCurrentAppUrl, openExternalUrl } from '../util/navigation';
@@ -524,27 +525,35 @@ export function importSelectedSymbolsToCurrentLibrary(selectedSymbols: ImportedS
   };
 }
 
-function pickImportFile(): Promise<{ fileName: string; content: string } | null> {
+function pickImportFile(): Promise<SymbolImportFile | null> {
   if (process.env.TARGET_SYSTEM === 'electron' && window.electronAPI?.openKicadImport) {
     return window.electronAPI.openKicadImport();
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.kicad_sym';
-    input.onchange = () => {
-      const file = input.files?.[0];
-      if (!file) {
-        resolve(null);
-        return;
+    input.accept = '.kicad_sym,.lib,.cir,.sub,.mod,.model,.spice,.sp,.spi,.inc,.txt';
+    input.multiple = true;
+    input.oncancel = () => resolve(null);
+    input.onchange = async () => {
+      try {
+        const files = Array.from(input.files ?? []);
+        if (!files.length) return resolve(null);
+        const libraries = files.filter((file) => findImporter(file.name));
+        if (libraries.length !== 1)
+          throw new Error('Select one KiCad symbol library and any accompanying SPICE files.');
+        const [file] = libraries;
+        const companions = files.filter((entry) => entry !== file);
+        if (companions.some(({ size }) => size > 8 * 1024 * 1024))
+          throw new Error('An accompanying SPICE file exceeds 8 MiB.');
+        const modelFiles = await Promise.all(companions.map(async (entry) => ({
+          fileName: entry.name, content: await entry.text(),
+        })));
+        resolve({ fileName: file.name, content: await file.text(), modelFiles });
+      } catch (error) {
+        reject(error);
       }
-      file.text().then((content) => {
-        resolve({
-          fileName: file.name,
-          content,
-        });
-      });
     };
     input.click();
   });
@@ -571,6 +580,7 @@ export function importSymbolsFromFile() {
       const importedSymbols = await importer.importSymbols(
         picked.content,
         picked.fileName,
+        picked.modelFiles,
       );
 
       if (importedSymbols.length === 0) {
@@ -698,8 +708,7 @@ export function exportSvg(
     ? `${state.altStore.file.name.replace(/\.[^.]+$/, '')}.svg`
     : 'drawing.svg';
 
-  const element = document.createElement('div');
-  render(
+  const svg = (
     <TPrintSheet
       items={sheet.items}
       page_size={sheet.details.page_size}
@@ -707,15 +716,24 @@ export function exportSvg(
       options={sheet.options}
       images={sheet.images}
       hatches={sheet.hatches}
-    />,
-    element,
+    />
   );
 
-  let blob = new Blob(
+  const element = document.createElement('div');
+  const root = createRoot(element);
+  let markup: string;
+  try {
+    flushSync(() => root.render(svg));
+    markup = new XMLSerializer().serializeToString(element.children[0]);
+  } finally {
+    root.unmount();
+  }
+
+  const blob = new Blob(
     [
       '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' +
       '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
-      new XMLSerializer().serializeToString(element.children[0]),
+      markup,
     ],
     { type: 'image/svg+xml' },
   );
@@ -977,8 +995,8 @@ export function handleMenuCommand(command: string) {
       case 'tools-spice':
         wkrGenerateNetlist(state.docStore.present.drawing).then((netlist) => {
           dispatch(actionUpdateNetlistHints(netlist));
-          downloadNetlist(state.altStore.file.name, 'SPICE', netlist);
-        });
+          downloadNetlist(state.altStore.file.name, 'SPICE', netlist, state.docStore.present.drawing.spiceModelPacks);
+        }).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
         break;
       case 'tools-vhdl':
         if (process.env.TARGET_SYSTEM !== 'electron') {

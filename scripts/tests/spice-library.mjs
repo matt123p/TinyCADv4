@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
+import { ngspiceAvailable, runNgspice } from './ngspice-runner.mjs';
 import {
   readMysqlRows,
   readComponentDump,
@@ -184,7 +184,7 @@ await checkSpiceComponents(lib);
 const selection = JSON.parse(
   await readFile(path.join(root, 'library-recipes/spice.json'), 'utf8'),
 );
-assert.equal(lib.names.length, 27);
+assert.equal(lib.names.length, 29);
 assert.deepEqual(
   lib.names.map((n) => n.Name),
   selection.components.map((c) => c.name),
@@ -220,7 +220,7 @@ import { checkSpicePlacement } from './scripts/tests/spice-placement.mjs';
 checkSpicePlacement(${JSON.stringify(lib)}, ${JSON.stringify(exportFile)});
 `);
 
-  if (process.env.NGSPICE_BIN) {
+  if (ngspiceAvailable) {
     const exports = JSON.parse(await readFile(exportFile, 'utf8'));
     for (const [index, entry] of exports.entries()) {
       let harness = 'V1 drive 0 DC 1 AC 1\nRfeed drive n1 1k\n';
@@ -236,6 +236,15 @@ checkSpicePlacement(${JSON.stringify(lib)}, ${JSON.stringify(exportFile)});
         analysis =
           '.save all\n.op\n.print op v(n6)\n.tran 100n 30u\n.measure tran output_at_11u FIND v(n6) AT=11u\n.print tran v(n6)\n';
       }
+      if (entry.name === 'LM358' || entry.name === 'LM324') {
+        const dual = entry.name === 'LM358';
+        const [positive, negative] = dual ? [8, 4] : [4, 11];
+        const channels = dual ? [[1, 2, 3], [7, 6, 5]]
+          : [[1, 2, 3], [7, 6, 5], [8, 9, 10], [14, 13, 12]];
+        harness = `VCC n${positive} 0 5\nVEE n${negative} 0 -5\n`;
+        for (const [output, inverting, input] of channels)
+          harness += `Vin${input} n${input} 0 0.5\nRfb${output} n${output} n${inverting} 1u\nRload${output} n${output} 0 10k\n`;
+      }
       const file = path.join(directory, index + '.cir');
       await writeFile(
         file,
@@ -247,11 +256,8 @@ checkSpicePlacement(${JSON.stringify(lib)}, ${JSON.stringify(exportFile)});
           analysis +
           '.end\n',
       );
-      const result = spawnSync(process.env.NGSPICE_BIN, ['-b', file], {
-        encoding: 'utf8',
-        timeout: 20000,
-      });
-      const output = (result.stdout || '') + (result.stderr || '');
+      const result = runNgspice(file);
+      const output = result.log;
       assert.equal(result.status, 0, entry.name + ': ' + output.slice(-3000));
       assert.ok(
         !/error:|unknown|fatal/i.test(output),
@@ -268,7 +274,7 @@ checkSpicePlacement(${JSON.stringify(lib)}, ${JSON.stringify(exportFile)});
       }
     }
     console.log(
-      'ngspice simulation passed for all 27 entries, including 741 follower transient behavior.',
+      `ngspice simulation passed for all ${lib.names.length} entries, including 741 follower transient behavior.`,
     );
   }
   console.log(

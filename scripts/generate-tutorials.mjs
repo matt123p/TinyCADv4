@@ -116,7 +116,7 @@ for (const id of chosen) {
       throw Error('Non-native wire');
     const sim = drawing.sheets.find((s) => s.kind === 'simulation'),
       net = new api.NetlistWorkerState().init(drawing),
-      deck = api.buildDeck(net, sim.simulation),
+      deck = api.buildDeck(net, sim.simulation, [], drawing.spiceModelPacks),
       deckFile = path.resolve('build/tutorials/' + id + '.cir');
     await fs.writeFile(deckFile, deck);
     const run = runNgspice(deckFile);

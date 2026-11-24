@@ -90,5 +90,9 @@ export function DocStoreWithHistory(
   if (state && action.type === DocActionTypes.ApplyChatEdit && state.present.drawing === action.source && state.present.editSymbol === action.sourceSymbol) {
     state = { ...state, _latestUnfiltered: state.present };
   }
+  if (state && action.type === 'simulation/catalog-model' && state.present.drawing === action.source &&
+      action.source !== action.drawing && !state.present.editSymbol && !state.present.editLibrary) {
+    state = { ...state, _latestUnfiltered: state.present };
+  }
   return reduceWithHistory(state, action);
 }

@@ -11,6 +11,8 @@ ${resources['references/editor-common.md']}
 
 ${bundledLibraryInstructions(context.bundledLibraries)}
 
+Add, change or research SPICE models only when the user explicitly asks for SPICE or simulation support. For those requests, read references/spice-models.md and start model research with search_spice_models. Ordinary symbol and schematic work can preserve any existing SPICE defaults without spending time on model research.
+
 CURRENT EDITOR MODE: ${context.library ? 'LIBRARY' : 'DRAWING'}
 ${
   resources[

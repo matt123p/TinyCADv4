@@ -1,0 +1,1588 @@
+{
+  "schemaVersion": 1,
+  "pack": {
+    "id": "basic",
+    "version": "ebd2fe129c05",
+    "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+    "filename": "basic_ebd2fe129c05.lib",
+    "format": "templates",
+    "sha256": "25fd0c9d7ed426104ffd5cd5b348491c44cbeee6c401f3e690068debc82246ef",
+    "license": "GPL-3.0-only",
+    "licenseText": "TinyCAD Basic SPICE templates are licensed under GNU GPL version 3.\nhttps://www.gnu.org/licenses/gpl-3.0.html",
+    "spice": "{\"BASIC_RESISTOR\":{\"instance\":\"R$(refnum) %(1) %(2) $(Value) ?(not_empty(TC1), $(TC1), ) ?(not_empty(TC2),  $(TC2), )\",\"prologue\":\"\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"TC1\":\"\",\"TC2\":\"\",\"Value\":\"1k\"}},\"BASIC_CAPACITOR\":{\"instance\":\"C$(refnum) %(1) %(2) $(Value) IC=$(Initial Voltage)\",\"prologue\":\"\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"Initial Voltage\":\"0V\",\"Value\":\"100n\"}},\"BASIC_INDUCTOR\":{\"instance\":\"L$(refnum) %(1) %(2) $(Value)\",\"prologue\":\"\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"Value\":\"1m\"}},\"BASIC_POTENTIOMETER\":{\"instance\":\"R$(refnum)A %(1) %(3) {max(1u,$(Value)*$(Wiper))}\\nR$(refnum)B %(3) %(2) {max(1u,$(Value)*(1-$(Wiper)))}\",\"prologue\":\"\",\"templatePins\":[\"1\",\"3\",\"2\"],\"attributes\":{\"Value\":\"10k\",\"Wiper\":\"0.5\"}},\"BASIC_NPN\":{\"instance\":\"Q$(refnum) %(3) %(1) %(2) $(Model)\",\"prologue\":\"?(empty(Model File),.model TC_NPN NPN(Is=1e-14 Bf=200 Vaf=100 Cje=10p Cjc=5p Tf=500p),.include \\\"$(Model File)\\\")\",\"templatePins\":[\"3\",\"1\",\"2\"],\"attributes\":{\"Model\":\"TC_NPN\",\"Model File\":\"\"}},\"BASIC_PNP\":{\"instance\":\"Q$(refnum) %(3) %(1) %(2) $(Model)\",\"prologue\":\"?(empty(Model File),.model TC_PNP PNP(Is=1e-14 Bf=100 Vaf=100 Cje=10p Cjc=5p Tf=500p),.include \\\"$(Model File)\\\")\",\"templatePins\":[\"3\",\"1\",\"2\"],\"attributes\":{\"Model\":\"TC_PNP\",\"Model File\":\"\"}},\"BASIC_NMOS\":{\"instance\":\"M$(refnum) %(D) %(G) %(S) %(S) $(Model Name) L=$(Length) W=$(Width)\",\"prologue\":\"?(empty(Model File),.model TC_NMOS NMOS(Level=1 Vto=1.5 Kp=20u Lambda=0.02 Gamma=0.5 Phi=0.7),.include \\\"$(Model File)\\\")\",\"templatePins\":[\"D\",\"G\",\"S\"],\"attributes\":{\"Length\":\"10u\",\"Model File\":\"\",\"Model Name\":\"TC_NMOS\",\"Width\":\"100u\"}},\"BASIC_PMOS\":{\"instance\":\"M$(refnum) %(D) %(G) %(S) %(S) $(Model Name) L=$(Length) W=$(Width)\",\"prologue\":\"?(empty(Model File),.model TC_PMOS PMOS(Level=1 Vto=-1.5 Kp=10u Lambda=0.02 Gamma=0.5 Phi=0.7),.include \\\"$(Model File)\\\")\",\"templatePins\":[\"D\",\"G\",\"S\"],\"attributes\":{\"Length\":\"10u\",\"Model File\":\"\",\"Model Name\":\"TC_PMOS\",\"Width\":\"100u\"}},\"BASIC_DIODE\":{\"instance\":\"D$(refnum) %(1) %(2) $(Model)\",\"prologue\":\"?(empty(Model File),.model TC_D D(Is=1n N=1.8 Rs=0.5 Cjo=2p Tt=4n Bv=100 Ibv=10u),.include \\\"$(Model File)\\\")\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"Model\":\"TC_D\",\"Model File\":\"\"}},\"BASIC_ZENER\":{\"instance\":\"D$(refnum) %(1) %(2) $(Model)\",\"prologue\":\"?(empty(Model File),.model TC_ZENER5V1 D(Is=1n N=1.6 Rs=2 Bv=5.1 Ibv=1m Cjo=80p),.include \\\"$(Model File)\\\")\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"Model\":\"TC_ZENER5V1\",\"Model File\":\"\"}},\"BASIC_LED_RED\":{\"instance\":\"D$(refnum) %(1) %(2) $(Model)\",\"prologue\":\"?(empty(Model File),.model TC_LED_RED D(Is=1e-18 N=2 Rs=8 Eg=1.8 Cjo=10p),.include \\\"$(Model File)\\\")\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"Model\":\"TC_LED_RED\",\"Model File\":\"\"}},\"BASIC_LED_GREEN\":{\"instance\":\"D$(refnum) %(1) %(2) $(Model)\",\"prologue\":\"?(empty(Model File),.model TC_LED_GREEN D(Is=1e-21 N=2 Rs=10 Eg=2.2 Cjo=10p),.include \\\"$(Model File)\\\")\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"Model\":\"TC_LED_GREEN\",\"Model File\":\"\"}},\"BASIC_LED_BLUE\":{\"instance\":\"D$(refnum) %(1) %(2) $(Model)\",\"prologue\":\"?(empty(Model File),.model TC_LED_BLUE D(Is=1e-26 N=2 Rs=12 Eg=2.8 Cjo=10p),.include \\\"$(Model File)\\\")\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"Model\":\"TC_LED_BLUE\",\"Model File\":\"\"}},\"BASIC_LED_YELLOW\":{\"instance\":\"D$(refnum) %(1) %(2) $(Model)\",\"prologue\":\"?(empty(Model File),.model TC_LED_YELLOW D(Is=1e-20 N=2 Rs=10 Eg=2 Cjo=10p),.include \\\"$(Model File)\\\")\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"Model\":\"TC_LED_YELLOW\",\"Model File\":\"\"}},\"BASIC_UA741\":{\"instance\":\"X$(ref) %(3) %(2) %(7) %(4) %(6) $(Model)\",\"prologue\":\".subckt TC_UA741 P N VP VN OUT\\nRin P N 2Meg\\nBdrive 0 pole I=max(-15.9154943m,min(15.9154943m,0.2*(v(P)-v(N))))\\nRpole pole 0 1Meg\\nCpole pole 0 31.8309886n\\nBlimit drive 0 V=max(v(VN)+2,min(v(VP)-2,v(pole)))\\nRout drive OUT 75\\n.ends TC_UA741\",\"templatePins\":[\"3\",\"2\",\"7\",\"4\",\"6\"],\"attributes\":{\"Model\":\"TC_UA741\"}},\"BASIC_TRANSFORMER\":{\"instance\":\"LT$(refnum)P %(1) %(2) $(Primary inductance)\\nLT$(refnum)S %(3) %(4) $(Secondary inductance)\\nKT$(refnum) LT$(refnum)P LT$(refnum)S $(Coupling)\",\"prologue\":\"\",\"templatePins\":[\"1\",\"2\",\"3\",\"4\"],\"attributes\":{\"Coupling\":\"0.999\",\"Primary inductance\":\"10m\",\"Secondary inductance\":\"10m\"}},\"BASIC_XTAL\":{\"instance\":\"X$(ref) %(1) %(2) TC_XTAL PARAMS: FREQ=$(Frequency) RM=$(Motional resistance) CM=$(Motional capacitance) C0=$(Shunt capacitance)\",\"prologue\":\".subckt TC_XTAL A B params: FREQ=8Meg RM=20 CM=20f C0=3p\\nRmot A mot1 {RM}\\nLmot mot1 mot2 {1/(39.47841760435743*FREQ*FREQ*CM)}\\nCmot mot2 B {CM}\\nCshunt A B {C0}\\n.ends TC_XTAL\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"Frequency\":\"8Meg\",\"Motional capacitance\":\"20f\",\"Motional resistance\":\"20\",\"Shunt capacitance\":\"3p\"}},\"BASIC_CERAMIC\":{\"instance\":\"X$(ref) %(1) %(2) TC_CERAMIC PARAMS: FREQ=$(Frequency) RM=$(Motional resistance) CM=$(Motional capacitance) C0=$(Shunt capacitance)\",\"prologue\":\".subckt TC_CERAMIC A B params: FREQ=4Meg RM=10 CM=10p C0=30p\\nRmot A mot1 {RM}\\nLmot mot1 mot2 {1/(39.47841760435743*FREQ*FREQ*CM)}\\nCmot mot2 B {CM}\\nCshunt A B {C0}\\n.ends TC_CERAMIC\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"Frequency\":\"4Meg\",\"Motional capacitance\":\"10p\",\"Motional resistance\":\"10\",\"Shunt capacitance\":\"30p\"}},\"BASIC_VOLTAGE\":{\"instance\":\"V$(refnum) %(1) %(2) DC $(Value)?(not_empty(AC magnitude), AC $(AC magnitude) $(AC Phase),)\",\"prologue\":\"\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"AC Phase\":\"0\",\"AC magnitude\":\"\",\"Value\":\"5\"}},\"BASIC_CURRENT\":{\"instance\":\"I$(refnum) %(1) %(2) DC $(Value)?(not_empty(AC magnitude), AC $(AC magnitude) $(AC Phase),)\",\"prologue\":\"\",\"templatePins\":[\"1\",\"2\"],\"attributes\":{\"AC Phase\":\"0\",\"AC magnitude\":\"\",\"Value\":\"1m\"}}}"
+  },
+  "models": [
+    {
+      "id": "BASIC_RESISTOR",
+      "label": "Ideal resistor",
+      "kind": "resistor",
+      "description": "Resistance follows Value. Optional temperature coefficients are available as symbol fields.",
+      "aliases": [
+        "Resistor",
+        "Resistor (US)"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "terminal 1"
+        },
+        {
+          "role": "terminal 2"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 1,
+          "symbolId": 1,
+          "name": "Resistor",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        },
+        {
+          "libraryId": "spice",
+          "nameId": 25,
+          "symbolId": 24,
+          "name": "Resistor (US)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_CAPACITOR",
+      "label": "Ideal capacitor",
+      "kind": "capacitor",
+      "description": "Capacitance follows Value and uses the initial voltage field.",
+      "aliases": [
+        "Capacitor",
+        "Electrolytic capacitor",
+        "Trimmer capacitor"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "terminal 1"
+        },
+        {
+          "role": "terminal 2"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 4,
+          "symbolId": 4,
+          "name": "Capacitor",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        },
+        {
+          "libraryId": "spice",
+          "nameId": 5,
+          "symbolId": 5,
+          "name": "Electrolytic capacitor",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        },
+        {
+          "libraryId": "spice",
+          "nameId": 6,
+          "symbolId": 6,
+          "name": "Trimmer capacitor",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_INDUCTOR",
+      "label": "Ideal inductor",
+      "kind": "inductor",
+      "description": "Linear inductance follows Value.",
+      "aliases": [
+        "Inductor",
+        "Inductor with core"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "terminal 1"
+        },
+        {
+          "role": "terminal 2"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 7,
+          "symbolId": 7,
+          "name": "Inductor",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        },
+        {
+          "libraryId": "spice",
+          "nameId": 8,
+          "symbolId": 8,
+          "name": "Inductor with core",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_POTENTIOMETER",
+      "label": "Basic potentiometer",
+      "kind": "potentiometer",
+      "description": "Two resistors in series, with resistance and position controlled by the Value and Wiper fields.",
+      "aliases": [
+        "Potentiometer",
+        "Trimmer resistor",
+        "Potentiometer (US)",
+        "Trimmer resistor (US)"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "end A"
+        },
+        {
+          "role": "wiper"
+        },
+        {
+          "role": "end B"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 2,
+          "symbolId": 2,
+          "name": "Potentiometer",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "3",
+            "2"
+          ]
+        },
+        {
+          "libraryId": "spice",
+          "nameId": 3,
+          "symbolId": 3,
+          "name": "Trimmer resistor",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "3",
+            "2"
+          ]
+        },
+        {
+          "libraryId": "spice",
+          "nameId": 26,
+          "symbolId": 25,
+          "name": "Potentiometer (US)",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "3",
+            "2"
+          ]
+        },
+        {
+          "libraryId": "spice",
+          "nameId": 27,
+          "symbolId": 26,
+          "name": "Trimmer resistor (US)",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "3",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_NPN",
+      "label": "Generic NPN transistor",
+      "kind": "npn",
+      "description": "Generic NPN model for circuit experiments.",
+      "aliases": [
+        "NPN transistor"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "collector"
+        },
+        {
+          "role": "base"
+        },
+        {
+          "role": "emitter"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 9,
+          "symbolId": 9,
+          "name": "NPN transistor",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_PNP",
+      "label": "Generic PNP transistor",
+      "kind": "pnp",
+      "description": "Generic PNP model for circuit experiments.",
+      "aliases": [
+        "PNP transistor"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "collector"
+        },
+        {
+          "role": "base"
+        },
+        {
+          "role": "emitter"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 10,
+          "symbolId": 10,
+          "name": "PNP transistor",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_NMOS",
+      "label": "Basic N-channel MOSFET",
+      "kind": "nmos",
+      "description": "Level-one N-channel MOSFET with body tied to source.",
+      "aliases": [
+        "N-channel MOSFET"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 11,
+          "symbolId": 11,
+          "name": "N-channel MOSFET",
+          "pinLayout": [
+            "2",
+            "3",
+            "4"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "2",
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_PMOS",
+      "label": "Basic P-channel MOSFET",
+      "kind": "pmos",
+      "description": "Level-one P-channel MOSFET with body tied to source.",
+      "aliases": [
+        "P-channel MOSFET"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 12,
+          "symbolId": 12,
+          "name": "P-channel MOSFET",
+          "pinLayout": [
+            "2",
+            "3",
+            "4"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "2",
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_DIODE",
+      "label": "Generic diode",
+      "kind": "diode",
+      "description": "Generic silicon diode with junction capacitance and breakdown.",
+      "aliases": [
+        "Diode"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 13,
+          "symbolId": 13,
+          "name": "Diode",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_ZENER",
+      "label": "Basic 5.1 V zener",
+      "kind": "zener",
+      "description": "Generic 5.1 V zener diode.",
+      "aliases": [
+        "Zener diode (5.1 V)"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 14,
+          "symbolId": 14,
+          "name": "Zener diode (5.1 V)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_LED_RED",
+      "label": "Basic red LED",
+      "kind": "led",
+      "description": "Electrical approximation of a red indicator LED.",
+      "aliases": [
+        "LED (red)"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 15,
+          "symbolId": 15,
+          "name": "LED (red)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_LED_GREEN",
+      "label": "Basic green LED",
+      "kind": "led",
+      "description": "Electrical approximation of a green indicator LED.",
+      "aliases": [
+        "LED (green)"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 16,
+          "symbolId": 16,
+          "name": "LED (green)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_LED_BLUE",
+      "label": "Basic blue LED",
+      "kind": "led",
+      "description": "Electrical approximation of a blue indicator LED.",
+      "aliases": [
+        "LED (blue)"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 17,
+          "symbolId": 17,
+          "name": "LED (blue)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_LED_YELLOW",
+      "label": "Basic yellow LED",
+      "kind": "led",
+      "description": "Electrical approximation of a yellow indicator LED.",
+      "aliases": [
+        "LED (yellow)"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 18,
+          "symbolId": 18,
+          "name": "LED (yellow)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_UA741",
+      "label": "Basic 741 op-amp",
+      "kind": "opamp",
+      "description": "Behavioural 741 with slew rate, finite gain and output voltage limits.",
+      "aliases": [
+        "741 op-amp"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "non-inverting input"
+        },
+        {
+          "role": "inverting input"
+        },
+        {
+          "role": "positive supply"
+        },
+        {
+          "role": "negative supply"
+        },
+        {
+          "role": "output"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 19,
+          "symbolId": 19,
+          "name": "741 op-amp",
+          "pinLayout": [
+            "2",
+            "3",
+            "4",
+            "6",
+            "7"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "2",
+            "7",
+            "4",
+            "6"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_TRANSFORMER",
+      "label": "Basic transformer",
+      "kind": "transformer",
+      "description": "Linear transformer with editable winding inductances and coupling.",
+      "aliases": [
+        "Transformer"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "primary dotted"
+        },
+        {
+          "role": "primary return"
+        },
+        {
+          "role": "secondary dotted"
+        },
+        {
+          "role": "secondary return"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 20,
+          "symbolId": 20,
+          "name": "Transformer",
+          "pinLayout": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_XTAL",
+      "label": "Basic quartz crystal",
+      "kind": "crystal",
+      "description": "Quartz crystal with editable resonance, motional resistance and capacitance.",
+      "aliases": [
+        "XTAL (quartz crystal)"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "terminal 1"
+        },
+        {
+          "role": "terminal 2"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 21,
+          "symbolId": 21,
+          "name": "XTAL (quartz crystal)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_CERAMIC",
+      "label": "Basic ceramic resonator",
+      "kind": "resonator",
+      "description": "Ceramic resonator with editable resonance and motional circuit.",
+      "aliases": [
+        "Ceramic resonator"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "terminal 1"
+        },
+        {
+          "role": "terminal 2"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 22,
+          "symbolId": 21,
+          "name": "Ceramic resonator",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_VOLTAGE",
+      "label": "Ideal DC / AC voltage source",
+      "kind": "voltage source",
+      "description": "Ideal voltage source with DC value and optional AC magnitude and phase.",
+      "aliases": [
+        "DC / AC voltage source"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "positive"
+        },
+        {
+          "role": "negative"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 23,
+          "symbolId": 22,
+          "name": "DC / AC voltage source",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BASIC_CURRENT",
+      "label": "Ideal DC / AC current source",
+      "kind": "current source",
+      "description": "Ideal current source with DC value and optional AC magnitude and phase.",
+      "aliases": [
+        "DC / AC current source"
+      ],
+      "source": {
+        "name": "TinyCAD Basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+      },
+      "designator": "",
+      "parameterDefaults": {},
+      "terminals": [
+        {
+          "role": "positive"
+        },
+        {
+          "role": "negative"
+        }
+      ],
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 24,
+          "symbolId": 23,
+          "name": "DC / AC current source",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "Resistor": {
+      "template": "R$(refnum) %(1) %(2) $(Value) ?(not_empty(TC1), $(TC1), ) ?(not_empty(TC2),  $(TC2), )",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_RESISTOR",
+        "label": "Ideal resistor",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Resistor (US)": {
+      "template": "R$(refnum) %(1) %(2) $(Value) ?(not_empty(TC1), $(TC1), ) ?(not_empty(TC2),  $(TC2), )",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_RESISTOR",
+        "label": "Ideal resistor",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Capacitor": {
+      "template": "C$(refnum) %(1) %(2) $(Value) IC=$(Initial Voltage)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_CAPACITOR",
+        "label": "Ideal capacitor",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Electrolytic capacitor": {
+      "template": "C$(refnum) %(1) %(2) $(Value) IC=$(Initial Voltage)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_CAPACITOR",
+        "label": "Ideal capacitor",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Trimmer capacitor": {
+      "template": "C$(refnum) %(1) %(2) $(Value) IC=$(Initial Voltage)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_CAPACITOR",
+        "label": "Ideal capacitor",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Inductor": {
+      "template": "L$(refnum) %(1) %(2) $(Value)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_INDUCTOR",
+        "label": "Ideal inductor",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Inductor with core": {
+      "template": "L$(refnum) %(1) %(2) $(Value)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_INDUCTOR",
+        "label": "Ideal inductor",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Potentiometer": {
+      "template": "R$(refnum)A %(1) %(3) {max(1u,$(Value)*$(Wiper))}\nR$(refnum)B %(3) %(2) {max(1u,$(Value)*(1-$(Wiper)))}",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_POTENTIOMETER",
+        "label": "Basic potentiometer",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "3",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Trimmer resistor": {
+      "template": "R$(refnum)A %(1) %(3) {max(1u,$(Value)*$(Wiper))}\nR$(refnum)B %(3) %(2) {max(1u,$(Value)*(1-$(Wiper)))}",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_POTENTIOMETER",
+        "label": "Basic potentiometer",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "3",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Potentiometer (US)": {
+      "template": "R$(refnum)A %(1) %(3) {max(1u,$(Value)*$(Wiper))}\nR$(refnum)B %(3) %(2) {max(1u,$(Value)*(1-$(Wiper)))}",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_POTENTIOMETER",
+        "label": "Basic potentiometer",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "3",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Trimmer resistor (US)": {
+      "template": "R$(refnum)A %(1) %(3) {max(1u,$(Value)*$(Wiper))}\nR$(refnum)B %(3) %(2) {max(1u,$(Value)*(1-$(Wiper)))}",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_POTENTIOMETER",
+        "label": "Basic potentiometer",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "3",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "NPN transistor": {
+      "template": "Q$(refnum) %(3) %(1) %(2) $(Model)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_NPN",
+        "label": "Generic NPN transistor",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "3",
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "PNP transistor": {
+      "template": "Q$(refnum) %(3) %(1) %(2) $(Model)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_PNP",
+        "label": "Generic PNP transistor",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "3",
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "N-channel MOSFET": {
+      "template": "M$(refnum) %(D) %(G) %(S) %(S) $(Model Name) L=$(Length) W=$(Width)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_NMOS",
+        "label": "Basic N-channel MOSFET",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "3",
+          "2",
+          "4"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "P-channel MOSFET": {
+      "template": "M$(refnum) %(D) %(G) %(S) %(S) $(Model Name) L=$(Length) W=$(Width)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_PMOS",
+        "label": "Basic P-channel MOSFET",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "3",
+          "2",
+          "4"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Diode": {
+      "template": "D$(refnum) %(1) %(2) $(Model)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_DIODE",
+        "label": "Generic diode",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Zener diode (5.1 V)": {
+      "template": "D$(refnum) %(1) %(2) $(Model)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_ZENER",
+        "label": "Basic 5.1 V zener",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "LED (red)": {
+      "template": "D$(refnum) %(1) %(2) $(Model)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_LED_RED",
+        "label": "Basic red LED",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "LED (green)": {
+      "template": "D$(refnum) %(1) %(2) $(Model)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_LED_GREEN",
+        "label": "Basic green LED",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "LED (blue)": {
+      "template": "D$(refnum) %(1) %(2) $(Model)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_LED_BLUE",
+        "label": "Basic blue LED",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "LED (yellow)": {
+      "template": "D$(refnum) %(1) %(2) $(Model)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_LED_YELLOW",
+        "label": "Basic yellow LED",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "741 op-amp": {
+      "template": "X$(ref) %(3) %(2) %(7) %(4) %(6) $(Model)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_UA741",
+        "label": "Basic 741 op-amp",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "3",
+          "2",
+          "7",
+          "4",
+          "6"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Transformer": {
+      "template": "LT$(refnum)P %(1) %(2) $(Primary inductance)\nLT$(refnum)S %(3) %(4) $(Secondary inductance)\nKT$(refnum) LT$(refnum)P LT$(refnum)S $(Coupling)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_TRANSFORMER",
+        "label": "Basic transformer",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "XTAL (quartz crystal)": {
+      "template": "X$(ref) %(1) %(2) TC_XTAL PARAMS: FREQ=$(Frequency) RM=$(Motional resistance) CM=$(Motional capacitance) C0=$(Shunt capacitance)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_XTAL",
+        "label": "Basic quartz crystal",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "Ceramic resonator": {
+      "template": "X$(ref) %(1) %(2) TC_CERAMIC PARAMS: FREQ=$(Frequency) RM=$(Motional resistance) CM=$(Motional capacitance) C0=$(Shunt capacitance)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_CERAMIC",
+        "label": "Basic ceramic resonator",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "DC / AC voltage source": {
+      "template": "V$(refnum) %(1) %(2) DC $(Value)?(not_empty(AC magnitude), AC $(AC magnitude) $(AC Phase),)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_VOLTAGE",
+        "label": "Ideal DC / AC voltage source",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "DC / AC current source": {
+      "template": "I$(refnum) %(1) %(2) DC $(Value)?(not_empty(AC magnitude), AC $(AC magnitude) $(AC Phase),)",
+      "binding": {
+        "packId": "basic",
+        "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+        "modelId": "BASIC_CURRENT",
+        "label": "Ideal DC / AC current source",
+        "source": {
+          "name": "TinyCAD Basic",
+          "revision": "ebd2fe129c05f4af630a9a44093ebb2cabed663cb1fceb773d9b445bd1ee18c1",
+          "url": "https://github.com/matt123p/TinyCADv4/blob/main/library-recipes/spice-basic-models.json"
+        },
+        "pins": [
+          "1",
+          "2"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "LM358": {
+      "template": "XTC_$(ref) %(1) %(2) %(3) %(4) %(5) %(6) %(7) %(8) LM358_DUAL_OJ",
+      "binding": {
+        "packId": "openjellybean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "modelId": "LM358_DUAL_OJ",
+        "source": {
+          "name": "OpenJellyBean",
+          "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+          "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L249"
+        },
+        "pins": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    },
+    "LM324": {
+      "template": "XTC_$(ref) %(1) %(2) %(3) %(4) %(5) %(6) %(7) %(8) %(9) %(10) %(11) %(12) %(13) %(14) LM324_QUAD_OJ",
+      "binding": {
+        "packId": "openjellybean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "modelId": "LM324_QUAD_OJ",
+        "source": {
+          "name": "OpenJellyBean",
+          "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+          "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L257"
+        },
+        "pins": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14"
+        ],
+        "parameters": {},
+        "previous": []
+      }
+    }
+  }
+}

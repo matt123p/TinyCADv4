@@ -15,6 +15,7 @@ import {
   Textarea,
 } from '@fluentui/react-components';
 import { PropertyItem, EditablePropertyTable } from '../controls/EditablePropertyTable';
+import { BUNDLED_SPICE_SYMBOL, MODEL_BINDING } from '../../simulation/catalogBindings';
 
 interface EditSymbolPanelProps extends WithTranslation {
   editSymbol: tclibLibraryEntry;
@@ -185,7 +186,8 @@ export class EditSymbolPanel extends React.PureComponent<EditSymbolPanelProps> {
       show: v.ShowAtt,
       editable: true,
       deletable: true,
-    })).filter((v) => v.name !== 'Ref' && !v.name.startsWith('$$SPICE'));
+    })).filter((v) => v.name !== 'Ref' && !v.name.startsWith('$$SPICE')
+      && v.name !== MODEL_BINDING && v.name !== BUNDLED_SPICE_SYMBOL);
 
     const items: PropertyItem[] = [
       {

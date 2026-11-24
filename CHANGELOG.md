@@ -1,5 +1,35 @@
 # Changelog
 
+## Unreleased
+
+## v4.1.2 — 2026-11-24
+
+This release improves desktop printing and the display of names on standard library symbols. It also expands the bundled SPICE model catalog and adds support for importing KiCad simulation models.
+
+### Added
+
+- Browse bundled SPICE models offline in the symbol editor and on placed components. The picker shows descriptions, source links and optional model text.
+- When asked for SPICE support, the desktop AI assistant can search the bundled catalog offline for exact parts, drop-in candidates and generic models. It can inspect model text and pin mappings, attach a model to a placed component, and set a bundled or Custom definition on a new library symbol. Ordinary symbol and schematic requests preserve existing defaults and skip SPICE setup.
+- Import supported SPICE definitions from KiCad symbol libraries, including embedded models and external model files supplied with the import. TinyCAD preserves pin mappings and parameter overrides in editable Custom definitions.
+- View and enter page dimensions in millimetres (mm) or inches (in) in Page Size.
+- Set and save the printer, paper size, orientation, copies, colour, and duplex options alongside the drawing in desktop Print Preview. Print uses the displayed settings and sends the job directly to the selected printer or system default.
+- Open a PDF of the selected sheets for printing with Advanced Print.
+
+### Changed
+
+- All 29 SPICE essentials components start with a compatible bundled model and preset pin mapping. The catalog includes 20 TinyCAD Basic models, and the LM358 and LM324 default to OpenJellyBean package models.
+- Library symbols link to shared model definitions. Stock parts in the SPICE and XSPICE tutorials use those links and retain their original simulation results.
+
+### Fixed
+
+- Restore direct printing to the selected printer on Windows.
+- Fix Print on Linux when launching TinyCAD from development tools on GNOME Wayland, including the VS Code Snap.
+- On Linux, Advanced Print opens the selected sheets as a PDF in TinyCAD and displays the system print dialog. Canceling keeps the PDF open.
+- Update printing and SVG export to use React 18 rendering.
+- Show the editable Name field by default on newly placed standard library symbols and remove duplicate name captions from their artwork.
+- Demonstrate Markdown formatting in the notes on bundled equipment and network drawings.
+
+
 ## v4.1.1 — 2026-11-20
 
 ### Fixed

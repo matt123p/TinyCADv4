@@ -12,6 +12,10 @@ import {
   makeStyles,
 } from '@fluentui/react-components';
 import { SpiceFields } from '../controls/SpiceFields';
+import { SpiceModelPicker } from './SpiceModelPicker';
+import type { dsnDrawing } from '../../model/dsnDrawing';
+import { BUNDLED_SPICE_SYMBOL, MODEL_BINDING, SPICE_ALTERNATE } from '../../simulation/catalogBindings';
+import { changeSpiceModel } from '../../simulation/spiceModelCatalog';
 import { ArrowResetRegular, PulseRegular } from '@fluentui/react-icons';
 import { dsnSymbol } from '../../model/dsnItem';
 import { updateSymbol } from '../../manipulators/updateSymbol';
@@ -114,6 +118,8 @@ const useStyles = makeStyles({
 
 interface SymbolPanelProps {
   selectedSymbol: dsnSymbol;
+  drawing: dsnDrawing;
+  sheetId: string;
   dispatch: Dispatch<any>;
 }
 
@@ -122,6 +128,8 @@ let lastSelectedTab = 'options';
 
 export const SymbolPanel: React.FC<SymbolPanelProps> = ({
   selectedSymbol,
+  drawing,
+  sheetId,
   dispatch,
 }) => {
   const styles = useStyles();
@@ -144,7 +152,7 @@ export const SymbolPanel: React.FC<SymbolPanelProps> = ({
         v.display === TextDisplayMethod.ShowValueExtra;
 
       // Skip SPICE properties
-      if (isSpice) return;
+      if (isSpice || v.description === BUNDLED_SPICE_SYMBOL || v.description === MODEL_BINDING) return;
 
       items.push({
         id: index,
@@ -220,6 +228,7 @@ export const SymbolPanel: React.FC<SymbolPanelProps> = ({
     property.description.startsWith('$$SPICE'),
   );
   const standardSpiceNames = new Set([
+    SPICE_ALTERNATE,
     '$$SPICE',
     '$$SPICE_PROLOG',
     '$$SPICE_EPILOG',
@@ -339,35 +348,36 @@ export const SymbolPanel: React.FC<SymbolPanelProps> = ({
               role="tabpanel"
               aria-label="SPICE properties"
             >
-              <SpiceFields
+              <SpiceModelPicker
                 key={selectedSymbol._id}
-                value={(name) =>
-                  existingSpice.find((property) => property.description === name)
-                    ?.value
-                }
-                onChange={(name, value) =>
-                  dispatch(actionSymbolSpiceProperty(name, value))
-                }
-              />
-              {existingSpice.filter((property) =>
-                !standardSpiceNames.has(property.description),
-              ).map((property) => (
-                <Field
-                  key={property.description}
-                  label={property.description}
-                  size="small"
-                >
-                  <Textarea
-                    size="small"
-                    resize="vertical"
-                    rows={2}
-                    value={property.value}
-                    onChange={(_, data) => dispatch(
-                      actionSymbolSpiceProperty(property.description, data.value),
-                    )}
-                  />
-                </Field>
-              ))}
+                symbol={selectedSymbol}
+                packs={drawing.spiceModelPacks}
+                onChange={(selection) => dispatch({
+                  type: 'simulation/catalog-model',
+                  source: drawing,
+                  drawing: changeSpiceModel(drawing, sheetId, selectedSymbol._id, selection),
+                })}
+              >
+                <SpiceFields
+                  value={(name) => existingSpice.find((property) => property.description === name)?.value}
+                  onChange={(name, value) => dispatch(actionSymbolSpiceProperty(name, value))}
+                />
+                {existingSpice.filter((property) =>
+                  !standardSpiceNames.has(property.description),
+                ).map((property) => (
+                  <Field key={property.description} label={property.description} size="small">
+                    <Textarea
+                      size="small"
+                      resize="vertical"
+                      rows={2}
+                      value={property.value}
+                      onChange={(_, data) => dispatch(
+                        actionSymbolSpiceProperty(property.description, data.value),
+                      )}
+                    />
+                  </Field>
+                ))}
+              </SpiceModelPicker>
             </div>
           )}
         </div>

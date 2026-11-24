@@ -13,6 +13,7 @@ import { createSimulationSheet } from '../../src/simulation/document';
 import { NetlistWorkerState } from '../../src/web-worker/netlistState';
 import { buildDeck } from '../../src/simulation/deck';
 import { checkSpiceComponents } from '../../src/simulation/diagnostics';
+import { modelBinding, withBundledSpiceIdentity } from '../../src/simulation/catalogBindings';
 import { autoPlaceSymbolText, sameConnectivity } from '../../src/layout';
 export * from '../layout/runtime';
 export {
@@ -21,6 +22,7 @@ export {
   vectorUnit,
 } from '../../src/simulation/resultStore';
 export { digest } from '../../src/io/dsnContainer';
+export { modelBinding };
 export { buildDeck, NetlistWorkerState };
 const font = {
   font_name: 'Arial',
@@ -127,7 +129,7 @@ export class TutorialCircuit {
     this.sheet = new updateView().handleSelectLibrarySymbol(
       {},
       this.sheet,
-      e.name,
+      withBundledSpiceIdentity(e.name),
       parsed.sheets.map((s) => s.items),
       anchor as any,
     ).sheet;

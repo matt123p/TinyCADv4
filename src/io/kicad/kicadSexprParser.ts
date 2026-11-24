@@ -48,6 +48,14 @@ function tokenize(input: string): Token[] {
       continue;
     }
 
+    if (ch === '|') {
+      const end = input.indexOf('|', i + 1);
+      if (end === -1) throw new Error('Unclosed KiCad embedded file payload');
+      tokens.push({ type: 'string', value: input.slice(i + 1, end) });
+      i = end + 1;
+      continue;
+    }
+
     if (ch === '"') {
       let value = '';
       i += 1;

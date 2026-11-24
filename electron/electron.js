@@ -12,6 +12,7 @@ import { registerBundledExamples } from './bundledExamples.js';
 import { registerOnlineLibrary } from './onlineLibrary.js';
 import { registerLicenseHandlers } from './licenses.js';
 import fs from 'fs';
+import { randomUUID } from 'node:crypto';
 import { spawn } from 'child_process';
 import { loadFile, saveFile, sendRecentFiles } from './io.js';
 import { loadLibrary, loadLibraryToWebContents, saveLibrary, sendLibraries, removeLibrary, saveLibraryConfig } from './libraries.js';
@@ -21,7 +22,6 @@ const __dirname = path.dirname(__filename);
 const { app, ipcMain, BrowserWindow, Menu, dialog, shell, safeStorage, net } = await import('electron');
 const isDev = (await import('electron-is-dev')).default;
 const isMac = process.platform === 'darwin'
-const electronMajorVersion = Number.parseInt(process.versions.electron.split('.')[0] || '0', 10);
 const appDisplayName = 'TinyCAD';
 
 const store = new Store(); // Create store instance
@@ -575,19 +575,30 @@ function createWindow({ openAbout = false } = {}) {
       }
 
       const result = await dialog.showOpenDialog(mainWindow, {
-        filters: [{ name: 'KiCad Symbols', extensions: ['kicad_sym'] }],
-        properties: ['openFile'],
+        filters: [{ name: 'KiCad Symbols and SPICE files', extensions: [
+          'kicad_sym', 'lib', 'cir', 'sub', 'mod', 'model', 'spice', 'sp', 'spi', 'inc', 'txt',
+        ] }],
+        properties: ['openFile', 'multiSelections'],
       });
 
       if (result.canceled || result.filePaths.length === 0) {
         return null;
       }
 
-      const selectedPath = result.filePaths[0];
+      const libraries = result.filePaths.filter((file) => /\.kicad_sym$/i.test(file));
+      if (libraries.length !== 1)
+        throw new Error('Select one KiCad symbol library and any accompanying SPICE files.');
+      const [selectedPath] = libraries;
+      const modelFiles = await Promise.all(result.filePaths.filter((file) => file !== selectedPath).map(async (file) => {
+        if ((await fs.promises.stat(file)).size > 8 * 1024 * 1024)
+          throw new Error('An accompanying SPICE file exceeds 8 MiB.');
+        return { fileName: path.basename(file), content: await fs.promises.readFile(file, 'utf8') };
+      }));
       const content = await fs.promises.readFile(selectedPath, 'utf8');
       return {
         fileName: path.basename(selectedPath),
         content,
+        modelFiles,
       };
     });
 
@@ -634,17 +645,24 @@ function createWindow({ openAbout = false } = {}) {
       return printers.map(p => ({
         name: p.name,
         displayName: p.displayName || p.name,
-        isDefault: p.isDefault,
       }));
     });
 
-    ipcMain.on('print-document', async (event, options) => {
-      if (!mainWindow) {
-        return;
+    ipcMain.handle('print-document', async (event, options) => {
+      if (!mainWindow || event.senderFrame !== mainWindow.webContents.mainFrame) {
+        throw new Error('Print requests must come from the TinyCAD window');
+      }
+
+      if (options.printerName) {
+        const printers = await event.sender.getPrintersAsync();
+        if (!printers.some(printer => printer.name === options.printerName)) {
+          return { success: false, printerUnavailable: true };
+        }
       }
 
       const printWindow = new BrowserWindow({
         show: false,
+        parent: mainWindow,
         title: 'TinyCAD',
         icon: getWindowIconPath(),
         webPreferences: {
@@ -654,66 +672,100 @@ function createWindow({ openAbout = false } = {}) {
       });
 
       try {
-        const waitForPrintLayout = () => printWindow.webContents.executeJavaScript(`
-          new Promise((resolve) => {
-            const waitForImages = Promise.all(
-              Array.from(document.images || []).map((image) => {
-                if (image.complete) {
-                  return Promise.resolve();
-                }
+        await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(options.html)}`);
+        if (process.platform === 'linux') {
+          // The loaded document has its images. Flush layout to start any font
+          // loads without waiting for animation frames from the hidden window.
+          await printWindow.webContents.executeJavaScript(`
+            (async () => {
+              document.body.getBoundingClientRect();
+              await document.fonts.ready;
+            })()
+          `);
+        } else {
+          const waitForPrintLayout = () => printWindow.webContents.executeJavaScript(`
+            new Promise((resolve) => {
+              const waitForImages = Promise.all(
+                Array.from(document.images || []).map((image) => {
+                  if (image.complete) {
+                    return Promise.resolve();
+                  }
 
-                return new Promise((imageResolve) => {
-                  image.addEventListener('load', imageResolve, { once: true });
-                  image.addEventListener('error', imageResolve, { once: true });
+                  return new Promise((imageResolve) => {
+                    image.addEventListener('load', imageResolve, { once: true });
+                    image.addEventListener('error', imageResolve, { once: true });
+                  });
+                })
+              );
+
+              const waitForFonts = document.fonts?.ready ?? Promise.resolve();
+
+              Promise.all([waitForImages, waitForFonts]).then(() => {
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(resolve);
                 });
-              })
-            );
-
-            const waitForFonts = document.fonts?.ready ?? Promise.resolve();
-
-            Promise.all([waitForImages, waitForFonts]).then(() => {
-              requestAnimationFrame(() => {
-                requestAnimationFrame(resolve);
               });
             });
-          });
-        `);
-
-        await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(options.html)}`);
-        await waitForPrintLayout();
-
-        const printCallback = (success, failureReason) => {
-          printWindow.close();
-          mainWindow?.webContents.send('print-complete', {
-            success,
-            failureReason: failureReason || undefined
-          });
-        };
-
-        if (process.platform === 'win32' && electronMajorVersion < 38) {
-          printWindow.webContents.print(undefined, printCallback);
-          return;
+          `);
+          await waitForPrintLayout();
         }
 
         const printOptions = {
           silent: true,
-          copies: options.copies || 1,
-          landscape: options.landscape || false,
+          copies: options.copies,
+          landscape: options.landscape,
           printBackground: true,
-          usePrinterDefaultPageSize: true,
+          ...(options.printerName && { deviceName: options.printerName }),
+          ...(options.pageSize ? { pageSize: options.pageSize } : { usePrinterDefaultPageSize: true }),
+          ...(options.color !== undefined && { color: options.color }),
+          ...(options.duplexMode && { duplexMode: options.duplexMode }),
         };
 
-        if (typeof options.printerName === 'string' && options.printerName.trim() !== '') {
-          printOptions.deviceName = options.printerName;
+        return await new Promise(resolve => {
+          printWindow.webContents.print(printOptions, (success, failureReason) => {
+            resolve({ success, failureReason });
+          });
+        });
+      } finally {
+        if (!printWindow.isDestroyed()) printWindow.destroy();
+      }
+    });
+
+    ipcMain.handle('open-print-pdf', async (event, content) => {
+      if (!mainWindow || event.senderFrame !== mainWindow.webContents.mainFrame) {
+        throw new Error('Print requests must come from the TinyCAD window');
+      }
+
+      const pdf = Buffer.from(content, 'base64');
+      if (pdf.subarray(0, 5).toString() !== '%PDF-') {
+        throw new Error('The print document is not a PDF');
+      }
+      const directory = path.join(app.getPath('temp'), 'TinyCAD-Print');
+      await fs.promises.mkdir(directory, { recursive: true });
+
+      // Keep recent files available to PDF viewers and prune older previews.
+      const expiresBefore = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const files = await fs.promises.readdir(directory);
+      await Promise.allSettled(files.filter(name => /^TinyCAD-[\da-f-]{36}\.pdf$/.test(name)).map(async name => {
+        const file = path.join(directory, name);
+        const info = await fs.promises.lstat(file);
+        if (info.isFile() && info.mtimeMs < expiresBefore) await fs.promises.unlink(file);
+      }));
+
+      const file = path.join(directory, `TinyCAD-${randomUUID()}.pdf`);
+      await fs.promises.writeFile(file, pdf, { flag: 'wx', mode: 0o600 });
+      try {
+        if (process.platform === 'linux') {
+          const { openPdfPrintWindow } = await import('./printPdf.js');
+          await openPdfPrintWindow(mainWindow, file);
+          return true;
         }
 
-        printWindow.webContents.print(printOptions, printCallback);
-      } catch (err) {
-        printWindow.close();
-        mainWindow?.webContents.send('print-complete', {
-          success: false,
-          failureReason: err.message
-        });
+        const error = await shell.openPath(file);
+        if (error) throw new Error(error);
+      } catch (error) {
+        await fs.promises.unlink(file).catch(() => {});
+        throw error;
       }
     });
 
