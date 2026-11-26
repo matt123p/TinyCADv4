@@ -149,7 +149,16 @@ const common = {
   },
   panel: {
     common: { show: '显示', colour: '颜色', search: '搜索...', part: '部件' },
-    symbol: { propertiesTitle: '符号属性', properties: '属性', options: '选项', showPowerPins: '显示电源引脚', allowResize: '允许调整大小', resetSize: '重置大小' },
+    symbol: {
+      propertiesTitle: '符号属性', properties: '属性', options: '选项', showPowerPins: '显示电源引脚', allowResize: '允许调整大小', resetSize: '重置大小',
+      property: '属性',
+      propertyFonts: '属性字体',
+      fontDefaults: '符号属性默认字体',
+      mixedFonts: '多种值',
+      inheritedFont: '默认（{{value}}）',
+      resetFont: '重置',
+      invalidFontSize: '请输入大于零的字号。',
+    },
     style: { line: '线条', width: '宽度', pattern: '样式', fill: '填充', rounded: '圆角', hatch: '填充线', font: '字体', size: '大小', bold: '加粗', italic: '斜体', solid: '实线', horizontal: '水平', vertical: '垂直', downwards: '向下斜线', upwards: '向上斜线', crosshatch: '交叉线', diagonalCrosshatch: '对角交叉线' },
     pinList: { symbol: '符号', pins: '引脚', spice: 'Spice' },
     pinTable: { addPin: '添加引脚' },

@@ -451,6 +451,13 @@ const common = {
     },
     symbol: {
       propertiesTitle: 'Symboleigenschappen',
+      property: 'Eigenschap',
+      propertyFonts: 'Lettertypen voor eigenschappen',
+      fontDefaults: 'Standaardlettertypen voor symbooleigenschappen',
+      mixedFonts: 'Gemengd',
+      inheritedFont: 'Standaard ({{value}})',
+      resetFont: 'Herstellen',
+      invalidFontSize: 'Voer een lettergrootte groter dan nul in.',
       properties: 'Eigenschappen',
       options: 'Opties',
       showPowerPins: 'Voedingspinnen tonen',

@@ -54,7 +54,14 @@ export interface Text {
   font_id?: number;
 }
 
+export type SymbolPropertyFont = Partial<Pick<Text, 'font_name' | 'font_size'>>;
+
+export interface SymbolPropertyFontDefault extends SymbolPropertyFont {
+  description: string;
+}
+
 export interface SymbolTextItem {
+  font?: SymbolPropertyFont;
   position: Coordinate;
   value: string;
   description: string;
@@ -207,6 +214,8 @@ export interface dsnSymbol extends dsnPointBase, Text {
   rotation: number;
   _symbol: libSymbol;
   text: SymbolTextItem[];
+  // Derived from the drawing settings. Only per-field overrides are saved on symbols.
+  _propertyFontDefaults?: readonly SymbolPropertyFontDefault[];
   _active_points: Coordinate[];
   textData: TextAreaData[];
   hints: dsnSymbolHint[];

@@ -20,6 +20,7 @@ import {
   dsnPin,
   dsnPower,
   dsnSymbol,
+  SymbolPropertyFont,
   dsnText,
   dsnWire,
   Text,
@@ -47,7 +48,7 @@ import { updatePower } from '../manipulators/updatePower';
 import { updatePin } from '../manipulators/updatePin';
 import { updateLabel } from '../manipulators/updateLabel';
 import { updateBusLabel } from '../manipulators/updateBusLabel';
-import { updateSymbol } from '../manipulators/updateSymbol';
+import { updateSymbol, syncSymbolPropertyFonts } from '../manipulators/updateSymbol';
 import md5 from 'md5';
 import { updateFactory } from '../manipulators/updateFactory';
 import { measureText, getFont } from '../util/measureText';
@@ -231,7 +232,7 @@ export class ioXML {
       r.netTypeAssignments = {};
     }
 
-    return r;
+    return syncSymbolPropertyFonts(r);
   }
 
   public to_dsn(
@@ -856,6 +857,7 @@ export class ioXML {
               type: field.display,
               show: field.show ? 1 : 0,
             };
+            Object.assign(a, field.font);
             o.appendChild('FIELD', null, a);
           }
           for (let j = 0; j < item.hints.length; ++j) {
@@ -1408,6 +1410,7 @@ export class ioXML {
                 type: parseInt(fields[j].getAttribute('type'), 10),
                 show: parseInt(fields[j].getAttribute('show'), 10) !== 0,
                 display: parseInt(fields[j].getAttribute('type'), 10),
+                ...this.readPropertyFont(fields[j]),
               };
               field.position[1] -= o.font_size;
               o.text.push(field);
@@ -1515,6 +1518,9 @@ export class ioXML {
     };
     const root = dsn.appendChild('DSNSETTINGS');
     root.appendChild('SHOW_RULERS', nextSettings.showRulers ? '1' : '0');
+    for (const entry of settings?.symbolPropertyFonts ?? []) {
+      root.appendChild('SYMBOL_PROPERTY_FONT', null, entry);
+    }
   }
 
   private readSettings(node: any): DsnSettings {
@@ -1527,10 +1533,25 @@ export class ioXML {
       const child = childNodes[i];
       if (child.nodeName === 'SHOW_RULERS') {
         settings.showRulers = this.nodeText(child) !== '0';
+      } else if (child.nodeName === 'SYMBOL_PROPERTY_FONT') {
+        const description = child.getAttribute('description');
+        const { font } = this.readPropertyFont(child);
+        if (description !== null && font) {
+          (settings.symbolPropertyFonts ??= []).push({ description, ...font });
+        }
       }
     }
 
     return settings;
+  }
+
+  private readPropertyFont(node: Element): { font?: SymbolPropertyFont } {
+    const font: SymbolPropertyFont = {};
+    const name = node.getAttribute('font_name')?.trim();
+    const size = Number(node.getAttribute('font_size'));
+    if (name) font.font_name = name;
+    if (Number.isFinite(size) && size > 0) font.font_size = size;
+    return Object.keys(font).length ? { font } : {};
   }
 
   private writeNetlistTypes(dsn: XMLBuilder, drawing: dsnDrawing) {

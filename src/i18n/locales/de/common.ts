@@ -158,7 +158,16 @@ const common = {
   },
   panel: {
     common: { show: 'Anzeigen', colour: 'Farbe', search: 'Suchen...', part: 'Teil' },
-    symbol: { propertiesTitle: 'Symboleigenschaften', properties: 'Eigenschaften', options: 'Optionen', showPowerPins: 'Versorgungspins anzeigen', allowResize: 'Größenänderung erlauben', resetSize: 'Größe zurücksetzen' },
+    symbol: {
+      propertiesTitle: 'Symboleigenschaften', properties: 'Eigenschaften', options: 'Optionen', showPowerPins: 'Versorgungspins anzeigen', allowResize: 'Größenänderung erlauben', resetSize: 'Größe zurücksetzen',
+      property: 'Eigenschaft',
+      propertyFonts: 'Schriftarten für Eigenschaften',
+      fontDefaults: 'Standardschriftarten für Symboleigenschaften',
+      mixedFonts: 'Gemischt',
+      inheritedFont: 'Standard ({{value}})',
+      resetFont: 'Zurücksetzen',
+      invalidFontSize: 'Gib eine Schriftgröße größer als null ein.',
+    },
     style: { line: 'Linie', width: 'Breite', pattern: 'Muster', fill: 'Füllung', rounded: 'Abgerundet', hatch: 'Schraffur', font: 'Schrift', size: 'Größe', bold: 'Fett', italic: 'Kursiv', solid: 'Durchgezogen', horizontal: 'Horizontal', vertical: 'Vertikal', downwards: 'Abwärts', upwards: 'Aufwärts', crosshatch: 'Kreuzschraffur', diagonalCrosshatch: 'Diagonale Kreuzschraffur' },
     pinList: { symbol: 'Symbol', pins: 'Pins', spice: 'Spice' },
     pinTable: { addPin: 'Pin hinzufügen' },

@@ -451,6 +451,13 @@ const common = {
     },
     symbol: {
       propertiesTitle: 'Właściwości symbolu',
+      property: 'Właściwość',
+      propertyFonts: 'Czcionki właściwości',
+      fontDefaults: 'Domyślne czcionki właściwości symboli',
+      mixedFonts: 'Różne wartości',
+      inheritedFont: 'Domyślne ({{value}})',
+      resetFont: 'Resetuj',
+      invalidFontSize: 'Wpisz rozmiar czcionki większy od zera.',
       properties: 'Właściwości',
       options: 'Opcje',
       showPowerPins: 'Pokaż piny zasilania',

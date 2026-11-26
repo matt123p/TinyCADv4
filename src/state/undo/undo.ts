@@ -34,6 +34,7 @@ const reduceWithHistory = undoable(DocStoreReducer, {
       undoCheckpoint = true;
     }
     if (
+      action.type === SymbolActionTypes.SetPropertyFonts ||
       action.type === SymbolActionTypes.SymbolEditOutline ||
       action.type === SymbolActionTypes.SymbolEditSymbol ||
       action.type === SymbolActionTypes.ReplaceSymbol
@@ -72,7 +73,8 @@ export function DocStoreWithHistory(
   state: StateWithHistory<docStore> | undefined,
   action: AppActionTypes,
 ): StateWithHistory<docStore> {
-  if (state && action.type === MenuActionTypes.MenuSetStyle && action.style.image) {
+  if (state && (action.type === SymbolActionTypes.SetPropertyFonts ||
+      (action.type === MenuActionTypes.MenuSetStyle && action.style.image))) {
     state = { ...state, _latestUnfiltered: state.present };
   }
   if (

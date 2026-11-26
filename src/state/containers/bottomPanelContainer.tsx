@@ -12,6 +12,10 @@ const mapStateToProps = (state: docDrawing) => {
   const update_view = new updateView();
   // Check if there's any selection (for showing style panel)
   const hasSelection = view?._selected_array?.length > 0;
+  const selectedIds = new Set(view?._selected_array);
+  const hasSelectedSymbols = hasSelection && sheet?.items.some(
+    (item) => item.NodeName === DocItemTypes.Symbol && selectedIds.has(item._id),
+  );
   // Check if we're in library edit mode
   const isLibraryEditMode = !!state.docStore.present.editLibrary;
   return {
@@ -19,7 +23,8 @@ const mapStateToProps = (state: docDrawing) => {
       (view.add?.NodeName === DocItemTypes.Symbol && readControl(view.add) ? view.add : null),
     selectedPin: update_view.getSelectedPin(view, sheet),
     selectedItem: update_view.getSelected(view, sheet),
-    hasSelection: hasSelection,
+    hasSelection,
+    hasSelectedSymbols,
     drawing: state.docStore.present.drawing,
     panel: state.altStore.panel,
     isLibraryEditMode: isLibraryEditMode,

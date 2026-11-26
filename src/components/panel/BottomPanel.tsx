@@ -1,5 +1,5 @@
 import React, { Dispatch, lazy, Suspense } from 'react';
-import { makeStyles, tokens } from '@fluentui/react-components';
+import { Button, makeStyles, tokens } from '@fluentui/react-components';
 import { DocItem, DocItemTypes, dsnPin, dsnSymbol } from '../../model/dsnItem';
 import StylePanelContainer from '../../state/containers/stylePanelContainer';
 import SymbolPanelContainer from '../../state/containers/symbolPanelContainer';
@@ -10,7 +10,8 @@ import { SymbolListPanel } from './SymbolListPanel';
 import { NetlistListPanel } from './NetlistListPanel';
 import { PinListPanel } from './PinListPanel';
 import { dsnDrawing } from '../../model/dsnDrawing';
-import { Panels } from '../../state/dispatcher/AppDispatcher';
+import { useTranslation } from 'react-i18next';
+import { actionSelectDialog, Panels } from '../../state/dispatcher/AppDispatcher';
 
 const SpiceControlPanel = lazy(() =>
   import('./SpiceControlPanel').then(m => ({ default: m.SpiceControlPanel })),
@@ -60,6 +61,7 @@ interface BottomPanelProps {
   selectedPin: dsnPin;
   selectedItem: DocItem;
   hasSelection: boolean;
+  hasSelectedSymbols: boolean;
   drawing: dsnDrawing;
   dispatch: Dispatch<any>;
   panel: Panels;
@@ -70,6 +72,7 @@ export const BottomPanel: React.FunctionComponent<BottomPanelProps> = (
   props: BottomPanelProps,
 ) => {
   const styles = useStyles();
+  const { t } = useTranslation();
   const [listMode, setListMode] = React.useState<'symbols' | 'netlist'>('symbols');
   const selectedIsWireOrPower =
     props.selectedItem?.NodeName === DocItemTypes.Wire ||
@@ -97,6 +100,15 @@ export const BottomPanel: React.FunctionComponent<BottomPanelProps> = (
 
   return (
     <div className={styles.container}>
+      {props.hasSelectedSymbols && !props.isLibraryEditMode && (
+        <div className={styles.header}>
+          <Button size="small" appearance="subtle"
+            onClick={() => props.dispatch(actionSelectDialog('symbol_property_fonts', null))}
+          >
+            {t('panel.symbol.propertyFonts')}
+          </Button>
+        </div>
+      )}
       <div className={styles.content}>
         {panelType === 'symbol' && (
           <div className={styles.panelContent}>

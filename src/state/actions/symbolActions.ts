@@ -1,4 +1,4 @@
-import { DocItem, dsnPin } from '../../model/dsnItem';
+import { DocItem, dsnPin, SymbolPropertyFont } from '../../model/dsnItem';
 import { tclibLibraryEntry } from '../../model/tclib';
 
 export type ReplaceSymbolScope = 'single_symbol' | 'all_symbols_on_sheet';
@@ -8,6 +8,7 @@ export enum SymbolActionTypes {
   SymbolAllowResize = '[Symbol] SymbolAllowResize',
   SymbolResetResize = '[Symbol] SymbolResetResize',
   SymbolShow = '[Symbol] SymbolShow',
+  SetPropertyFonts = '[Symbol] SetPropertyFonts',
   SetSymbolValue = '[Symbol] SetSymbolValue',
   SetSymbolSpiceProperty = '[Symbol] SetSymbolSpiceProperty',
   SetSymbolPPP = '[Symbol] SetSymbolPPP',
@@ -37,6 +38,18 @@ export interface SymbolResetResize {
 export interface SymbolShow {
   type: SymbolActionTypes.SymbolShow;
   index: number;
+}
+
+export interface PropertyFontEdit {
+  description: string;
+  index?: number;
+  font: { [K in keyof SymbolPropertyFont]: SymbolPropertyFont[K] | null };
+}
+
+export interface SetPropertyFonts {
+  type: SymbolActionTypes.SetPropertyFonts;
+  target: { sheetIndex: number; symbolIds: number[] } | null;
+  edits: PropertyFontEdit[];
 }
 
 export interface SetSymbolValue {
@@ -102,6 +115,7 @@ export type SymbolActions =
   | SymbolAllowResize
   | SymbolResetResize
   | SymbolShow
+  | SetPropertyFonts
   | SetSymbolValue
   | SetSymbolSpiceProperty
   | SetSymbolPPP

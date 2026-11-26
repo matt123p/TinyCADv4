@@ -150,7 +150,16 @@ const common = {
   },
   panel: {
     common: { show: '表示', colour: '色', search: '検索...', part: 'パート' },
-    symbol: { propertiesTitle: 'シンボルプロパティ', properties: 'プロパティ', options: 'オプション', showPowerPins: '電源ピンを表示', allowResize: 'サイズ変更を許可', resetSize: 'サイズをリセット' },
+    symbol: {
+      propertiesTitle: 'シンボルプロパティ', properties: 'プロパティ', options: 'オプション', showPowerPins: '電源ピンを表示', allowResize: 'サイズ変更を許可', resetSize: 'サイズをリセット',
+      property: 'プロパティ',
+      propertyFonts: 'プロパティのフォント',
+      fontDefaults: 'シンボルプロパティの既定フォント',
+      mixedFonts: '複数の値',
+      inheritedFont: '既定 ({{value}})',
+      resetFont: 'リセット',
+      invalidFontSize: '0 より大きいフォントサイズを入力してください。',
+    },
     style: { line: '線', width: '太さ', pattern: 'パターン', fill: '塗りつぶし', rounded: '角丸', hatch: 'ハッチ', font: 'フォント', size: 'サイズ', bold: '太字', italic: '斜体', solid: '実線', horizontal: '水平', vertical: '垂直', downwards: '右下がり', upwards: '右上がり', crosshatch: 'クロスハッチ', diagonalCrosshatch: '斜めクロスハッチ' },
     pinList: { symbol: 'シンボル', pins: 'ピン', spice: 'Spice' },
     pinTable: { addPin: 'ピンを追加' },

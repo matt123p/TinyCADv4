@@ -150,7 +150,16 @@ const common = {
   },
   panel: {
     common: { show: 'Afficher', colour: 'Couleur', search: 'Rechercher...', part: 'Partie' },
-    symbol: { propertiesTitle: 'Propriétés du symbole', properties: 'Propriétés', options: 'Options', showPowerPins: 'Afficher les broches d’alimentation', allowResize: 'Autoriser le redimensionnement', resetSize: 'Réinitialiser la taille' },
+    symbol: {
+      propertiesTitle: 'Propriétés du symbole', properties: 'Propriétés', options: 'Options', showPowerPins: 'Afficher les broches d’alimentation', allowResize: 'Autoriser le redimensionnement', resetSize: 'Réinitialiser la taille',
+      property: 'Propriété',
+      propertyFonts: 'Polices des propriétés',
+      fontDefaults: 'Polices par défaut des propriétés de symbole',
+      mixedFonts: 'Valeurs différentes',
+      inheritedFont: 'Par défaut ({{value}})',
+      resetFont: 'Réinitialiser',
+      invalidFontSize: 'Saisissez une taille de police supérieure à zéro.',
+    },
     style: { line: 'Ligne', width: 'Largeur', pattern: 'Motif', fill: 'Remplissage', rounded: 'Arrondi', hatch: 'Hachure', font: 'Police', size: 'Taille', bold: 'Gras', italic: 'Italique', solid: 'Plein', horizontal: 'Horizontal', vertical: 'Vertical', downwards: 'Descendant', upwards: 'Montant', crosshatch: 'Hachures croisées', diagonalCrosshatch: 'Hachures diagonales croisées' },
     pinList: { symbol: 'Symbole', pins: 'Broches', spice: 'Spice' },
     pinTable: { addPin: 'Ajouter une broche' },

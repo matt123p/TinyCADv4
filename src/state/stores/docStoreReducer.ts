@@ -2,8 +2,8 @@ import { createSimulationSheet, withoutResults } from '../../simulation/document
 import { createControl, updateControl, compactControl, resizeStudentInstruments } from '../../simulation/controlSymbols';
 import { updatePower } from '../../manipulators/updatePower';
 import { applyBindings } from '../../simulation/bindings';
-import { dsnSymbol } from '../../model/dsnItem';
-import { updateSymbol } from '../../manipulators/updateSymbol';
+import { dsnSymbol, SymbolPropertyFont } from '../../model/dsnItem';
+import { updateSymbol, applySymbolPropertyFontDefaults, syncSymbolPropertyFonts } from '../../manipulators/updateSymbol';
 import {
   actionSelectPanel,
   actionSelectBottomPanel,
@@ -18,7 +18,7 @@ import { get_global_id } from '../../util/global_id';
 import { MenuActionTypes } from '../actions/menuActions';
 import { FindActionTypes } from '../actions/findActions';
 import { DialogActionTypes } from '../actions/dialogActions';
-import { SymbolActionTypes } from '../actions/symbolActions';
+import { PropertyFontEdit, SetPropertyFonts, SymbolActionTypes } from '../actions/symbolActions';
 import { TextActionTypes } from '../actions/menuText';
 import { dsnDrawing, dsnSheet } from '../../model/dsnDrawing';
 import { dsnView } from '../../model/dsnView';
@@ -141,13 +141,84 @@ export function activeSelectedSheet(state: docStore) {
   return index;
 }
 
-//
-// Handle dispatcher actions
-//
+function editPropertyFont(current: SymbolPropertyFont | undefined, edit: PropertyFontEdit) {
+  const font = {
+    font_name: edit.font.font_name === undefined ? current?.font_name : edit.font.font_name ?? undefined,
+    font_size: edit.font.font_size === undefined ? current?.font_size : edit.font.font_size ?? undefined,
+  };
+  if (font.font_name === current?.font_name && font.font_size === current?.font_size) return current;
+  if (font.font_name === undefined) delete font.font_name;
+  if (font.font_size === undefined) delete font.font_size;
+  return Object.keys(font).length ? font : undefined;
+}
+
+function setPropertyFonts(state: docStore, { target, edits }: SetPropertyFonts): docStore {
+  if (!edits.length || state.editLibrary) return state;
+  const drawing = state.drawing;
+  if (!target) {
+    const defaults = new Map(drawing.settings.symbolPropertyFonts?.map(
+      ({ description, ...font }) => [description, font] as const,
+    ));
+    let changed = false;
+    for (const edit of edits) {
+      const current = defaults.get(edit.description);
+      const font = editPropertyFont(current, edit);
+      if (font === current) continue;
+      changed = true;
+      if (font) defaults.set(edit.description, font);
+      else defaults.delete(edit.description);
+    }
+    if (!changed) return state;
+    const symbolPropertyFonts = defaults.size
+      ? Array.from(defaults, ([description, font]) => ({ description, ...font }))
+      : undefined;
+    return {
+      ...state,
+      drawing: { ...drawing, settings: { ...drawing.settings, symbolPropertyFonts } },
+      drawingVersion: state.drawingVersion + 1,
+    };
+  }
+
+  const sheet = drawing.sheets[target.sheetIndex];
+  if (!sheet || sheet.kind === 'simulation') return state;
+  const selected = new Set(target.symbolIds);
+  const byName = new Map(edits.filter((edit) => edit.index === undefined).map((edit) => [edit.description, edit]));
+  const byIndex = new Map(edits.filter((edit) => edit.index !== undefined).map((edit) => [edit.index, edit]));
+  let changed = false;
+  const items = sheet.items.map((item) => {
+    if (item.NodeName !== DocItemTypes.Symbol || !selected.has(item._id)) return item;
+    const text = item.text.map((field, index) => {
+      const edit = byIndex.get(index) ?? byName.get(field.description);
+      if (edit?.description !== field.description) return field;
+      const font = editPropertyFont(field.font, edit);
+      return font === field.font ? field : { ...field, font };
+    });
+    if (text.every((field, index) => field === item.text[index])) return item;
+    changed = true;
+    return new updateSymbol({ ...item, text }).post_construction();
+  });
+  if (!changed) return state;
+  const sheets = drawing.sheets.slice();
+  sheets[target.sheetIndex] = { ...sheet, items };
+  return { ...state, drawing: { ...drawing, sheets }, drawingVersion: state.drawingVersion + 1 };
+}
+
 export function DocStoreReducer(
   state: docStore = intialState,
   action: AppActionTypes,
 ): docStore {
+  const next = reduceDocument(state, action);
+  const drawing = next.drawing === state.drawing
+    ? next.drawing
+    : syncSymbolPropertyFonts(next.drawing, state.drawing);
+  const pending = next.view.add;
+  const add = pending && applySymbolPropertyFontDefaults(pending, drawing.settings.symbolPropertyFonts);
+  if (drawing === next.drawing && pending === add) return next;
+  return { ...next, drawing, view: pending === add ? next.view : { ...next.view, add } };
+}
+
+function reduceDocument(state: docStore, action: AppActionTypes): docStore {
+  if (action.type === SymbolActionTypes.SetPropertyFonts) return setPropertyFonts(state, action);
   if (action.type === 'simulation/catalog-model') {
     if (state.editSymbol || state.editLibrary || state.drawing !== action.source || action.source === action.drawing) return state;
     return { ...state, drawing: action.drawing, drawingVersion: state.drawingVersion + 1 };
@@ -606,7 +677,9 @@ export function DocStoreReducer(
     //
     case LibraryActionTypes.SelectLibrarySymbol:
       if (sheet && action.beginPlacement) {
-        ({ view, sheet } = update_view.beginLibrarySymbolPlacement(view, sheet, action.name, action.symbolData));
+        ({ view, sheet } = update_view.beginLibrarySymbolPlacement(
+          view, sheet, action.name, action.symbolData, state.drawing.settings.symbolPropertyFonts,
+        ));
       } else if (sheet) {
         ({ view, sheet } = update_view.handleSelectLibrarySymbol(
           view,
@@ -614,6 +687,7 @@ export function DocStoreReducer(
           action.name,
           action.symbolData,
           action.pos ?? view.contextMenuLastPoint,
+          state.drawing.settings.symbolPropertyFonts,
         ));
       }
       break;

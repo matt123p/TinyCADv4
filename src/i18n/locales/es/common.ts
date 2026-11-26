@@ -150,7 +150,16 @@ const common = {
   },
   panel: {
     common: { show: 'Mostrar', colour: 'Color', search: 'Buscar...', part: 'Parte' },
-    symbol: { propertiesTitle: 'Propiedades del símbolo', properties: 'Propiedades', options: 'Opciones', showPowerPins: 'Mostrar pines de alimentación', allowResize: 'Permitir redimensionar', resetSize: 'Restablecer tamaño' },
+    symbol: {
+      propertiesTitle: 'Propiedades del símbolo', properties: 'Propiedades', options: 'Opciones', showPowerPins: 'Mostrar pines de alimentación', allowResize: 'Permitir redimensionar', resetSize: 'Restablecer tamaño',
+      property: 'Propiedad',
+      propertyFonts: 'Fuentes de propiedades',
+      fontDefaults: 'Fuentes predeterminadas de las propiedades del símbolo',
+      mixedFonts: 'Varios valores',
+      inheritedFont: 'Predeterminado ({{value}})',
+      resetFont: 'Restablecer',
+      invalidFontSize: 'Introduce un tamaño de fuente mayor que cero.',
+    },
     style: { line: 'Línea', width: 'Ancho', pattern: 'Patrón', fill: 'Relleno', rounded: 'Redondeado', hatch: 'Trama', font: 'Fuente', size: 'Tamaño', bold: 'Negrita', italic: 'Cursiva', solid: 'Sólido', horizontal: 'Horizontal', vertical: 'Vertical', downwards: 'Descendente', upwards: 'Ascendente', crosshatch: 'Trama cruzada', diagonalCrosshatch: 'Trama diagonal cruzada' },
     pinList: { symbol: 'Símbolo', pins: 'Pines', spice: 'Spice' },
     pinTable: { addPin: 'Agregar pin' },

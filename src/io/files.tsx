@@ -1034,6 +1034,9 @@ export function handleMenuCommand(command: string) {
       case 'settings-settings':
         dispatch(actionSelectDialog('settings', null));
         break;
+      case 'settings-symbol-property-fonts':
+        dispatch(actionSelectDialog('symbol_property_font_defaults', null));
+        break;
       case 'settings-colours':
         dispatch(actionSelectDialog('colours', null));
         break;

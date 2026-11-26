@@ -1,4 +1,4 @@
-import { DocItem, Coordinate, dsnPin } from './dsnItem';
+import { DocItem, Coordinate, dsnPin, SymbolPropertyFontDefault } from './dsnItem';
 import { Snap } from '../manipulators/snap';
 import type { SimulationSetup } from '../simulation/contracts';
 
@@ -204,6 +204,7 @@ export interface NetlistTypes {
 
 export interface DsnSettings {
   showRulers: boolean;
+  symbolPropertyFonts?: SymbolPropertyFontDefault[];
 }
 
 export interface dsnDrawing {

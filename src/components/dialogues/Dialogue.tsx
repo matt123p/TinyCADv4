@@ -3,6 +3,7 @@ import EditSheetDialog from './editSheetDlg';
 import DesignDetailsDialog from './designDetailsDlg';
 import PageSizeDialog from './pageSizeDlg';
 import SettingsDialog from './settingsDlg';
+import { SymbolPropertyFontsDialog } from './symbolPropertyFontsDlg';
 import ColoursDialog from './coloursDlg';
 import DrcDialog from './drcDlg';
 import AnnotateDialog from './annotateDlg';
@@ -52,6 +53,10 @@ const TDialogue: FunctionComponent<TDialogueProps> = (
       return <DesignDetailsDialog details={props.dialogue_props} />;
     case 'settings':
       return <SettingsDialog details={props.dialogue_props} />;
+    case 'symbol_property_font_defaults':
+      return <SymbolPropertyFontsDialog key="defaults" defaults />;
+    case 'symbol_property_fonts':
+      return <SymbolPropertyFontsDialog key="selection" defaults={false} />;
     case 'colours':
       return <ColoursDialog options={props.dialogue_props} />;
     case 'drc':

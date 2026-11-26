@@ -3044,6 +3044,7 @@ export class updateView {
         show: fallback.show_text(field.display, value),
         display: field.display,
         position: [0, 0],
+        font: existingField?.font,
       } as SymbolTextItem;
     });
 
@@ -3055,10 +3056,7 @@ export class updateView {
     });
     const laidOut = layoutHelper.layout_text_fields(
       oldSymbol.rotation,
-      text.map((field) => ({
-        ...field,
-        position: [...field.position],
-      })),
+      text,
     );
 
     if (!keepFieldValues) {
@@ -3478,9 +3476,12 @@ export class updateView {
     return { view: view, sheet: sheet };
   }
 
-  beginLibrarySymbolPlacement(view: dsnView, sheet: dsnSheet, name: tclibLibraryEntry, items: DocItem[][]): viewResult {
+  beginLibrarySymbolPlacement(
+    view: dsnView, sheet: dsnSheet, name: tclibLibraryEntry, items: DocItem[][],
+    defaults?: dsnSymbol['_propertyFontDefaults'],
+  ): viewResult {
     const idle = this.cancel_add(view, sheet).view;
-    const prepared = this.handleSelectLibrarySymbol(idle, sheet, name, items, null);
+    const prepared = this.handleSelectLibrarySymbol(idle, sheet, name, items, null, defaults);
     const symbol = prepared.sheet.items[prepared.sheet.items.length - 1];
     return {
       sheet: { ...prepared.sheet, items: prepared.sheet.items.slice(0, -1) },
@@ -3495,18 +3496,19 @@ export class updateView {
     name: tclibLibraryEntry,
     items: DocItem[][],
     point: Coordinate,
+    defaults?: dsnSymbol['_propertyFontDefaults'],
   ) {
     const ensured = this.ensureLibrarySymbolOnSheet(sheet, name, items);
     sheet = ensured.sheet;
     const selected_symboldef = ensured.symbol;
 
-    let pos = -selected_symboldef.outlines[0].size[0] + 2.4 * 5;
-    const posfn = (show: boolean) => {
-      const r = pos;
-      if (show) {
-        pos += 2.4 * 5;
-      }
-      return r;
+    const fontSize = 10;
+    let pos = -selected_symboldef.outlines[0].size[0] + 12;
+    const posfn = (description: string, show: boolean): Coordinate => {
+      const size = defaults?.find((font) => font.description === description)?.font_size ?? fontSize;
+      const position: Coordinate = [5, pos + size - fontSize];
+      if (show) pos += size + 2;
+      return position;
     };
 
     // Centre symbol on drop point
@@ -3539,31 +3541,20 @@ export class updateView {
           value: name.Name,
           show: update_symbol.show_text(name.ShowName, name.Name),
           display: name.ShowName,
-          position: [
-            5.0,
-            posfn(update_symbol.show_text(name.ShowName, name.Name)),
-          ],
+          position: posfn('Name', update_symbol.show_text(name.ShowName, name.Name)),
         },
         {
           description: 'Ref',
           value: name.Reference,
           show: update_symbol.show_text(name.ShowRef, name.Reference),
           display: name.ShowRef,
-          position: [
-            5.0,
-            posfn(update_symbol.show_text(name.ShowRef, name.Reference)),
-          ],
+          position: posfn('Ref', update_symbol.show_text(name.ShowRef, name.Reference)),
         },
         ...name.Attributes.filter(
           (a) => a.AttName !== 'Reference',
         ).map((a) => ({
-          position: [
-            5.0,
-            posfn(
-              !a.AttName.startsWith('$$') &&
-                update_symbol.show_text(a.ShowAtt, a.AttValue),
-            ),
-          ],
+          position: posfn(a.AttName, !a.AttName.startsWith('$$') &&
+            update_symbol.show_text(a.ShowAtt, a.AttValue)),
           value: a.AttValue,
           description: a.AttName,
           show:
@@ -3575,11 +3566,12 @@ export class updateView {
         })),
       ],
       hints: [],
+      _propertyFontDefaults: defaults,
       font_name: 'Arial',
       font_colour: '#FF0000',
       font_bold: false,
       font_italic: false,
-      font_size: 10,
+      font_size: fontSize,
       _active_points: null,
       textData: [],
     };

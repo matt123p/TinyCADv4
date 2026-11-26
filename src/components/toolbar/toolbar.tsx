@@ -1027,6 +1027,11 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                   <MenuItem icon={<SettingsRegular />} onClick={() => props.dispatch(actionSelectDialog('settings', null))}>
                     {t('toolbar.settings')}
                   </MenuItem>
+                  {!props.editLibrary && (
+                    <MenuItem onClick={() => props.dispatch(actionSelectDialog('symbol_property_font_defaults', null))}>
+                      {t('panel.symbol.fontDefaults')}
+                    </MenuItem>
+                  )}
                   <MenuItem icon={<ColorRegular />} onClick={() => props.dispatch(actionSelectDialog('colours', null))}>
                     {t('toolbar.colours')}
                   </MenuItem>

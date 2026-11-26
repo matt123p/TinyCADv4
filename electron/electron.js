@@ -209,6 +209,7 @@ function createWindow({ openAbout = false } = {}) {
           { label: getMenuLabel('designDetails', 'Design Details...'), click: () => mainWindow.webContents.send('menu-command', 'settings-design-details') },
           { label: getMenuLabel('pageSize', 'Page Size...'), click: () => mainWindow.webContents.send('menu-command', 'settings-page-size') },
           { label: getMenuLabel('settingsDialog', 'Settings...'), click: () => mainWindow.webContents.send('menu-command', 'settings-settings') },
+          { label: getMenuLabel('symbolPropertyFontDefaults', 'Symbol Property Font Defaults...'), click: () => mainWindow.webContents.send('menu-command', 'settings-symbol-property-fonts') },
           { label: getMenuLabel('colours', 'Colours...'), click: () => mainWindow.webContents.send('menu-command', 'settings-colours') },
         ]
       }]),

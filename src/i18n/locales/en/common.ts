@@ -451,6 +451,13 @@ const common = {
     },
     symbol: {
       propertiesTitle: 'Symbol Properties',
+      property: 'Property',
+      propertyFonts: 'Property Fonts',
+      fontDefaults: 'Symbol Property Font Defaults',
+      mixedFonts: 'Mixed',
+      inheritedFont: 'Default ({{value}})',
+      resetFont: 'Reset',
+      invalidFontSize: 'Enter a font size greater than zero.',
       properties: 'Properties',
       options: 'Options',
       showPowerPins: 'Show Power Pins',
