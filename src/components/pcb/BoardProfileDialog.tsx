@@ -156,7 +156,7 @@ export default function BoardProfileDialog({
         if (!data.open) onClose();
       }}
     >
-      <DialogSurface className="pcb-dialog pcb-dialog-wide">
+      <DialogSurface className={`pcb-dialog ${shape === 'custom' ? 'pcb-dialog-wide' : 'pcb-dialog-compact'}`}>
         <form onSubmit={submit} onChange={() => setError(undefined)}>
           <DialogBody>
             <DialogTitle>
@@ -202,22 +202,8 @@ export default function BoardProfileDialog({
                 </label>
               ) : (
                 <>
-                  <label>
-                    {shape === 'circle' ? 'Centre X (mm)' : 'Origin X (mm)'}
-                    <Input
-                      value={x}
-                      onChange={(event) => setX(event.target.value)}
-                    />
-                  </label>
-                  <label>
-                    {shape === 'circle' ? 'Centre Y (mm)' : 'Origin Y (mm)'}
-                    <Input
-                      value={y}
-                      onChange={(event) => setY(event.target.value)}
-                    />
-                  </label>
                   {shape !== 'circle' && (
-                    <>
+                    <div className="pcb-form-pair">
                       <label>
                         Width (mm)
                         <Input
@@ -232,8 +218,18 @@ export default function BoardProfileDialog({
                           onChange={(e) => setHeight(e.target.value)}
                         />
                       </label>
-                    </>
+                    </div>
                   )}
+                  <div className="pcb-form-pair">
+                    <label>
+                      {shape === 'circle' ? 'Centre X (mm)' : 'Origin X (mm)'}
+                      <Input value={x} onChange={(event) => setX(event.target.value)} />
+                    </label>
+                    <label>
+                      {shape === 'circle' ? 'Centre Y (mm)' : 'Origin Y (mm)'}
+                      <Input value={y} onChange={(event) => setY(event.target.value)} />
+                    </label>
+                  </div>
                   {shape !== 'rectangle' && (
                     <label>
                       Radius (mm)
@@ -262,7 +258,7 @@ export default function BoardProfileDialog({
             <DialogActions>
               <Button onClick={onClose}>Cancel</Button>
               <Button type="submit" appearance="primary">
-                Apply
+                {cutout ? 'Apply cutout' : 'Apply outline'}
               </Button>
             </DialogActions>
           </DialogBody>

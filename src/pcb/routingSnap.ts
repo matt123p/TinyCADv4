@@ -93,16 +93,22 @@ export function routingSnapTargets(board: BoardDocument) {
 
 /** Screen tolerance only controls acquisition. A selected endpoint is in board coordinates. */
 export function snapRoutePoint(
+  ...args: Parameters<typeof snapRouteTarget>
+): RouteSnap | undefined {
+  return snapRouteTarget(...args)?.snap;
+}
+
+export function snapRouteTarget(
   targets: ReturnType<typeof routingSnapTargets>,
   pointer: BoardPoint,
   radius: number,
   layerId: CopperLayer['id'],
   activeNet?: string,
-): RouteSnap | undefined {
+) {
   const point = rounded(pointer);
   if (!isBoardPoint(point)) return;
   const box = { minX: point.x, minY: point.y, maxX: point.x, maxY: point.y };
-  let best: { snap: RouteSnap; gap: number; distance: number };
+  let best: { id: string; snap: RouteSnap; gap: number; distance: number };
   for (const target of targets) {
     if (target.layerId !== layerId || !near(target.box, box, radius)) continue;
     const { box: outlineBox, region, holes, drill, contains, fixed, fallback } = target.details;
@@ -125,9 +131,9 @@ export function snapRoutePoint(
     if (!position) continue;
     const distance = pointDistance(point, position);
     if (!best || gap < best.gap || distance < best.distance)
-      best = { snap: { position, netId, layerId }, gap, distance };
+      best = { id: target.id, snap: { position, netId, layerId }, gap, distance };
   }
-  if (best && (!activeNet || activeNet === best.snap.netId)) return best.snap;
+  if (best && (!activeNet || activeNet === best.snap.netId)) return { id: best.id, snap: best.snap };
 }
 
 function pointDistance(a: BoardPoint, b: BoardPoint) {

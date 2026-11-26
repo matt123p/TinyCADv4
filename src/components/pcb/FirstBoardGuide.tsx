@@ -83,9 +83,9 @@ export default function FirstBoardGuide({
             </>
           ) : (
             <p>
-              To start from a schematic, open its project folder and choose
-              <strong> Create PCB from Schematic…</strong> from the schematic’s
-              actions.
+              Choose <strong>Import schematic or netlist…</strong> from the Board
+              menu. For a linked board, use <strong>Create PCB from Schematic…</strong>
+              {' '}from the project schematic’s actions.
             </p>
           )}
         </>
@@ -145,8 +145,8 @@ export default function FirstBoardGuide({
           <p>
             An airwire shows an electrical connection to make. Start a track on
             a pad and click to add corners. On a two-layer board, a via connects
-            the copper layers. End at another pad on the same net and choose
-            <strong> Finish route</strong>.
+            the copper layers. End at another pad on the same net to finish, or
+            choose <strong>Finish route</strong> to commit the current path.
           </p>
           <p>
             On a single-sided board, use <strong>Add wire jumper</strong> when
@@ -207,13 +207,13 @@ export default function FirstBoardGuide({
           ))}
         </Select>
         <Button disabled={step === 0} onClick={() => onStepChange(step - 1)}>
-          Previous step
+          Back
         </Button>
         <Button
           disabled={step === steps.length - 1}
           onClick={() => onStepChange(step + 1)}
         >
-          Next step
+          Next
         </Button>
         <Button onClick={onClose}>Close guide</Button>
       </div>

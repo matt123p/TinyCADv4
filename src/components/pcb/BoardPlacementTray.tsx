@@ -18,6 +18,11 @@ export default function BoardPlacementTray({
   queued,
   sequential,
   disabled,
+  hasComponents,
+  sourceAction,
+  sourceDisabled,
+  onSource,
+  onGuide,
   onSelect,
   onPlace,
   onToggle,
@@ -32,6 +37,11 @@ export default function BoardPlacementTray({
   queued: readonly string[];
   sequential: boolean;
   disabled: boolean;
+  hasComponents: boolean;
+  sourceAction: string;
+  sourceDisabled: boolean;
+  onSource(): void;
+  onGuide(button: HTMLButtonElement): void;
   onSelect(id: string): void;
   onPlace(id: string): void;
   onToggle(id: string): void;
@@ -56,48 +66,52 @@ export default function BoardPlacementTray({
   );
   const highlighted = parts.find(({ id }) => id === selected);
   const footprint = highlighted && footprintFor(highlighted);
+  const first = results.find(footprintFor);
+  const missing = parts.some((part) => !footprintFor(part));
+  const [showQueue, setShowQueue] = useState(false);
+  const showQueueControls = showQueue || sequential;
   return (
-    <section aria-labelledby="unplaced-components-heading">
-      <h3 id="unplaced-components-heading">Unplaced components</h3>
+    <section className="pcb-placement-tray" aria-labelledby="unplaced-components-heading">
+      <h3 id="unplaced-components-heading">
+        Unplaced components{parts.length ? ' (' + parts.length + ')' : ''}
+      </h3>
       {parts.length ? (
         <>
-          <label>
-            Search unplaced components{' '}
+          <div className="pcb-placement-search">
             <Input
               ref={searchInput}
               value={search}
               size="small"
+              placeholder="Search components"
+              aria-label="Search unplaced components"
               onChange={(event) => setSearch(event.target.value)}
             />
-          </label>
+          </div>
           {results.length ? (
-            <ul aria-label="Unplaced components">
+            <ul className="pcb-part-list" aria-label="Unplaced components">
               {results.map((part) => {
                 const label = part.reference ?? part.id;
                 const definition = footprintFor(part);
                 return (
                   <li key={part.id}>
-                    <Checkbox
+                    {showQueueControls && <Checkbox
                       aria-label={'Queue ' + label + ' for placement'}
                       checked={queued.includes(part.id)}
                       disabled={disabled || sequential || !definition}
                       onChange={() => onToggle(part.id)}
-                    />
+                    />}
                     <Button
                       size="small"
-                      appearance={part.id === selected ? 'primary' : 'subtle'}
+                      appearance={part.id === selected ? 'secondary' : 'subtle'}
                       aria-pressed={part.id === selected}
                       disabled={disabled || sequential || !definition}
                       onClick={() => onSelect(part.id)}
                     >
-                      {label}
-                      {part.value ? ' · ' + part.value : ''}
+                      <span className="pcb-part-row">
+                        <span><strong>{label}</strong>{part.value ? ' · ' + part.value : ''}</span>
+                        <small>{definition?.name ?? 'Footprint mapping needed'}</small>
+                      </span>
                     </Button>
-                    {definition ? (
-                      <small>{definition.name}</small>
-                    ) : (
-                      <small>Needs a reviewed device</small>
-                    )}
                   </li>
                 );
               })}
@@ -116,24 +130,40 @@ export default function BoardPlacementTray({
               </Button>
             </>
           ) : (
-            <Button disabled={disabled || !queued.length} onClick={onStart}>
-              Start sequential placement
-            </Button>
+            <div className="pcb-placement-actions">
+              <Button size="small" appearance="subtle" aria-expanded={showQueue}
+                disabled={disabled} onClick={() => setShowQueue(!showQueue)}>Batch placement</Button>
+              {showQueue && <Button size="small" disabled={disabled || !queued.length} onClick={onStart}>
+                Start sequential placement
+              </Button>}
+            </div>
           )}
-          {footprint && (
+          {missing && <Button size="small" disabled={sourceDisabled} onClick={onSource}>Review footprint mappings…</Button>}
+          <div className="pcb-placement-preview">
+          {footprint ? (
             <>
               <LibraryDragPreview enabled={!disabled && !sequential}
                 dataType={boardPlacementDragType} getData={() => highlighted.id} effectAllowed="copy">
                 <DeviceFootprintPreview footprint={footprint} selected="" />
               </LibraryDragPreview>
-              {!sequential && <Button disabled={disabled} onClick={() => onPlace(highlighted.id)}>
+              {!sequential && <Button appearance="primary" disabled={disabled} onClick={() => onPlace(highlighted.id)}>
                 Place on board
               </Button>}
             </>
-          )}
+          ) : first && !sequential ? (
+            <Button appearance="primary" disabled={disabled} onClick={() => onPlace(first.id)}>Place first component</Button>
+          ) : null}
+          </div>
         </>
-      ) : (
+      ) : hasComponents ? (
         <p>All board components are placed.</p>
+      ) : (
+        <div className="pcb-placement-empty">
+          <p>No components yet.</p>
+          <Button size="small" appearance="primary" disabled={sourceDisabled} onClick={onSource}>{sourceAction}</Button>
+          <Button size="small" appearance="subtle" onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+            onGuide(event.currentTarget)}>First board guide</Button>
+        </div>
       )}
     </section>
   );

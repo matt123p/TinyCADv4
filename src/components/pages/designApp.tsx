@@ -1288,6 +1288,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
                   <BoardWorkspace key={activeBoard.id + ':' + activeBoard.mount} {...pcb}
                     rightPanelHost={pcbRightPanelHost}
                     footprintsHost={footprintsHost}
+                    footprintsVisible={panelsVisible && (!projectMode || projectPanel === 'libraries')}
                     onShowFootprints={() => {
                       setProjectPanel('libraries');
                       setSidePanelVisible(true);

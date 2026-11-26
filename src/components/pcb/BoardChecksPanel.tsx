@@ -37,7 +37,7 @@ export default function BoardChecksPanel({
   waitForRefill(): Promise<void>;
   filename: string;
   onClose(): void;
-  onChecked(revision: number): void;
+  onChecked(revision: number, findings: number): void;
   onInspect(issue: BoardFinding): void;
   onProbe?: (pin: BoardFinding['sourcePins'][number]) => void;
   onWaive(waiver: BoardWaiver): void;
@@ -68,7 +68,7 @@ export default function BoardChecksPanel({
       (result) => {
         if (active) {
           setReport(result);
-          onChecked(result.revision);
+          onChecked(result.revision, result.issues.length);
         }
         worker?.dispose();
       },

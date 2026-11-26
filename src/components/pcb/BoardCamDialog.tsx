@@ -47,7 +47,7 @@ export default function BoardCamDialog({
   projectId?: string;
   readProjectCircuit?: BoardWorkspaceSession['readProjectCircuit'];
   waitForRefill(): Promise<void>;
-  onChecked(revision: number): void;
+  onChecked(revision: number, findings: number): void;
   onClose(): void;
 }) {
   const [preview, setPreview] = useState<BoardCamPreview>();
@@ -79,7 +79,7 @@ export default function BoardCamDialog({
       (result) => {
         if (active) {
           setPreview(result);
-          onChecked(result.report.revision);
+          onChecked(result.report.revision, result.report.issues.length);
         }
         worker?.dispose();
       },
@@ -265,7 +265,7 @@ export default function BoardCamDialog({
     <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
       <DialogSurface className="pcb-dialog pcb-dialog-wide">
         <DialogBody>
-          <DialogTitle>CAM read-back preview</DialogTitle>
+          <DialogTitle>Manufacturing preview</DialogTitle>
           <DialogContent>
             {error && <p role="alert">{error}</p>}
             {!current && !error && (

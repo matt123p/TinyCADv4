@@ -288,6 +288,8 @@ export default function ProjectBrowser({
   const markerId = context?.marker.id;
   const activeTreeFile = activeFileId ?? (schematicActive && activeProject && activeProject.id === markerId
     ? context.project.files.get(activeProject.documentPath)?.id : undefined);
+  const activeSchematic = schematicActive && context?.project.settings.entries.find(({ id, kind, path }) =>
+    kind === 'schematic' && context.project.files.get(path)?.id === activeTreeFile && !!id && !!activeTreeFile);
   const projectRootId = context?.root.id;
   const projectRootIndex = trail.findIndex(({ id }) => id === projectRootId);
   const treeRoot = trail[0];
@@ -735,6 +737,14 @@ export default function ProjectBrowser({
       );
       onActivateCircuit();
     }, false);
+  }
+
+  function promptCreateBoard(context: ProjectContext, source: { id: string; path: string }) {
+    setPrompt({
+      title: t('projects.createBoardCircuit'),
+      name: source.path.replace(/\.d[sz]n$/i, '.dpn'),
+      submit: (path) => openCircuitEco(context, { sourceId: source.id, path }),
+    });
   }
 
   async function openCircuitEco(
@@ -1755,17 +1765,7 @@ export default function ProjectBrowser({
                         context &&
                         !editingLibrary && (
                           <MenuItem
-                            onClick={() =>
-                              setPrompt({
-                                title: t('projects.createBoardCircuit'),
-                                name: link.path.replace(/\.d[sz]n$/i, '.dpn'),
-                                submit: (path) =>
-                                  openCircuitEco(context, {
-                                    sourceId: link.id,
-                                    path,
-                                  }),
-                              })
-                            }
+                            onClick={() => promptCreateBoard(context, link)}
                           >
                             {t('projects.createBoardCircuit')}
                           </MenuItem>
@@ -1917,6 +1917,14 @@ export default function ProjectBrowser({
             </li>
           )}
         </ul>
+      )}
+      {activeSchematic && !editingLibrary && (
+        <div className="project-browser-contents">
+          <Button size="small" appearance="subtle" disabled={blocked}
+            onClick={() => promptCreateBoard(context, activeSchematic)}>
+            {t('projects.createBoardCircuit')}
+          </Button>
+        </div>
       )}
       {atProjectRoot && (
         <div className="project-browser-contents">

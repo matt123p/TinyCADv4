@@ -55,6 +55,8 @@ The left footprint panel has **Unplaced** and **Library** tabs. Project mode kee
 
 Keep ordinary selection and placement on the drawing. Move advanced settings out of the main editing path. Use the established panel sizes, styles, borders, and density as the starting point. Review the actual rendered window at regular and narrow sizes.
 
+Keep **Route track**, **Fit board**, and **Check board** visible at 900 px. Group PCB drawing commands under **Draw** and put secondary view commands in **More PCB commands** at narrow widths. Use the shared drawing tools and shape choices for the commands in **Draw**. Show active routing controls beside the canvas and group manufacturing and auxiliary layers behind disclosures. [PCB UI and UX review](pcb-ui-ux-review.md)
+
 ### Placement and persistence
 
 1. Select a component or footprint in the left panel and drag its picture onto the drawing. Reuse the preview drag and sheet drop pattern. Provide a keyboard entry into the same placement tool.
@@ -74,7 +76,7 @@ Keep ordinary selection and placement on the drawing. Move advanced settings out
 - In PCB Design, pick objects across all visible, unlocked layers. The eye and lock controls act independently. The Layers panel header offers Show All and Lock All / Unlock All. Layer locks and visibility are editor state, and routing has its own layer control.
 - Visible, unlocked holes, slots and cutouts use the shared schematic hover and selection outlines, just like objects on other layers. Locked objects let pointer hits pass through to eligible objects underneath.
 - Keep every placed object in the Components grid. Use aligned columns for applicable layers, with a layer name and the Layers panel's eye and lock icons in each populated cell. Keep the status indicators visible and accessible when picking is disabled.
-- Give each multi-step PCB dialog a stable, viewport-bounded Fluent surface. Keep its title and action footer fixed while the content scrolls. Align labels and fields in the body at normal sizes and stack them when space is limited. Use checkboxes for persistent flags such as position, rotation and routing locks.
+- Size simple PCB forms to their contents and bound them to the viewport. Use a larger surface for previews, custom outline editing, and change reviews. Keep each surface's title and action footer visible while the body scrolls. Align fields and stack them when space is limited. Use checkboxes for persistent flags such as position, rotation and routing locks. Use **Back** for previous steps, **Cancel** for exiting a draft, and **Close** for dismissing a viewer.
 - Use the existing SVG unit conversion when drawing nanometre geometry with native SVG shapes. Check a board on both sides of the drawing origin to verify that rendering, rulers and pointer actions agree at large coordinates. [Large-coordinate PCB rendering](pcb-performance.md#large-coordinate-pcb-rendering)
 
 ## Acceptance evidence

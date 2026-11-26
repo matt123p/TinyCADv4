@@ -81,25 +81,27 @@ export default function BoardHoleDialog({
         if (!data.open) onClose();
       }}
     >
-      <DialogSurface className="pcb-dialog">
+      <DialogSurface className="pcb-dialog pcb-dialog-compact">
         <form onSubmit={submit}>
           <DialogBody>
             <DialogTitle>Add hole or slot</DialogTitle>
             <DialogContent className="pcb-profile-fields">
-              <label>
-                Centre X (mm)
-                <Input
-                  value={positionX}
-                  onChange={(e) => setPositionX(e.target.value)}
-                />
-              </label>
-              <label>
-                Centre Y (mm)
-                <Input
-                  value={positionY}
-                  onChange={(e) => setPositionY(e.target.value)}
-                />
-              </label>
+              <div className="pcb-form-pair">
+                <label>
+                  Centre X (mm)
+                  <Input
+                    value={positionX}
+                    onChange={(e) => setPositionX(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Centre Y (mm)
+                  <Input
+                    value={positionY}
+                    onChange={(e) => setPositionY(e.target.value)}
+                  />
+                </label>
+              </div>
               <label>
                 Hole width (mm)
                 <Input
@@ -141,48 +143,51 @@ export default function BoardHoleDialog({
                   />
                 </label>
               )}
-              <label>
-                Extra routing clearance (mm)
-                <Input
-                  value={clearance}
-                  onChange={(e) => setClearance(e.target.value)}
-                />
-              </label>
-              <label>
-                Screw-head diameter (mm)
-                <Input
-                  value={headDiameter}
-                  onChange={(e) => setHeadDiameter(e.target.value)}
-                />
-              </label>
-              {headDiameter.trim() && (
-                <>
-                  <label>
-                    Screw-head side
-                    <Select
-                      value={headSide}
-                      onChange={(e) => setHeadSide(e.target.value as BoardMechanicalHole['screwHeadSide'])}
-                    >
-                      <option value="top">Top</option>
-                      <option value="bottom">Bottom</option>
-                      <option value="both">Both</option>
-                    </Select>
-                  </label>
-                  <label>
-                    Extra component clearance (mm)
-                    <Input
-                      value={bodyClearance}
-                      onChange={(e) => setBodyClearance(e.target.value)}
-                    />
-                  </label>
-                </>
-              )}
+              <details className="pcb-form-options">
+                <summary>Advanced</summary>
+                <label>
+                  Extra routing clearance (mm)
+                  <Input
+                    value={clearance}
+                    onChange={(e) => setClearance(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Screw-head diameter (mm)
+                  <Input
+                    value={headDiameter}
+                    onChange={(e) => setHeadDiameter(e.target.value)}
+                  />
+                </label>
+                {headDiameter.trim() && (
+                  <>
+                    <label>
+                      Screw-head side
+                      <Select
+                        value={headSide}
+                        onChange={(e) => setHeadSide(e.target.value as BoardMechanicalHole['screwHeadSide'])}
+                      >
+                        <option value="top">Top</option>
+                        <option value="bottom">Bottom</option>
+                        <option value="both">Both</option>
+                      </Select>
+                    </label>
+                    <label>
+                      Extra component clearance (mm)
+                      <Input
+                        value={bodyClearance}
+                        onChange={(e) => setBodyClearance(e.target.value)}
+                      />
+                    </label>
+                  </>
+                )}
+              </details>
               {error && <p role="alert">{error}</p>}
             </DialogContent>
             <DialogActions>
               <Button onClick={onClose}>Cancel</Button>
               <Button type="submit" appearance="primary">
-                Add
+                Add hole or slot
               </Button>
             </DialogActions>
           </DialogBody>

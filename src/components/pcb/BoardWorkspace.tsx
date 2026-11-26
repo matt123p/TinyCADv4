@@ -5,7 +5,7 @@ import { Button, Checkbox, Dialog, DialogActions, DialogBody, DialogContent, Dia
   MenuTrigger, ToolbarButton, ToolbarDivider } from '@fluentui/react-components';
 import { useTranslation } from 'react-i18next';
 import { AnchoredContextMenu } from '../controls/AnchoredContextMenu';
-import { FolderOpenRegular, SaveRegular, SaveCopyRegular } from '@fluentui/react-icons';
+import { CheckmarkCircleRegular, ChevronDownRegular, FolderOpenRegular, MoreHorizontalRegular, SaveRegular, SaveCopyRegular } from '@fluentui/react-icons';
 import { BoardNetlistPanel } from './BoardNetlistPanel';
 import { PersistentDataGrid } from '../controls/PersistentDataGrid';
 import { ListModeMenuButton } from '../panel/ListModeMenuButton';
@@ -15,7 +15,6 @@ import { EditorDrawingStack } from '../panel/EditorLayout';
 import { EditorToolbar } from '../toolbar/EditorToolbar';
 import { EditorFileMenu, EditorHistoryControls, EditorNewMenu, EditorSaveAllButton, EditorSaveButton } from '../toolbar/FileToolbarControls';
 import { ViewToolbarControls } from '../toolbar/ViewToolbarControls';
-import { TextToolButton } from '../toolbar/TextToolButton';
 import { ContextualMenuItemType } from '../../manipulators/updateInterfaces';
 import type { ContextMenuItem } from '../../manipulators/updateInterfaces';
 import {
@@ -24,7 +23,7 @@ import {
 } from '../../pcb/hierarchicalSnapshot';
 import { createBoardWorker } from '../../pcb/boardWorker';
 import type { ManualRoute } from '../../pcb/manualBoardRouting';
-import { isCentrelineClear, manualRouteLeg } from '../../pcb/routing';
+import { centrelineBlock, manualRouteLeg } from '../../pcb/routing';
 import type { RouteBend } from '../../pcb/routing';
 import type { BoardDocument, CopperLayer } from '../../pcb/board';
 import type { ViaTenting } from '../../pcb/boardRouting';
@@ -41,8 +40,9 @@ import { BoardLayersPanel, LayerLockIcon, LayerVisibilityIcon } from './BoardLay
 import { boardPickLayers, canPickOnLayers } from './boardLayerPicking';
 import { boardCopperObjects, copperObjectLabels, drawCopperObject, isCopperObject, changeCutout, copperAreaGeometry, reshapeCopperArea } from './boardCopperObjects';
 import type { CopperObject, CopperObjectKind } from './boardCopperObjects';
-import { areaTools, areaToolShapes, BoardShapeTool, openingToolShapes } from './BoardShapeTools';
-import type { AreaTool, AreaToolShape, BoardDrawShape } from './BoardShapeTools';
+import { areaTools, areaToolShapes, BoardShapeMenu, openingToolShapes } from './BoardShapeTools';
+import wireImage from 'url:../../../images/wire.png';
+import type { BoardDrawShape } from './BoardShapeTools';
 import { areaOutline } from '../../pcb/boardAreaShape';
 import type { BoardMechanicalHole } from '../../pcb/boardMechanical';
 import { addBoardPolygonPoint, applyBoardPolygonCommand, boardPolygonMenu, drawBoardBounds, editBoardLine, finishBoardPolygon, moveBoardArtwork } from './boardShapeAdapter';
@@ -63,7 +63,7 @@ import RouteDeletionPanel from './RouteDeletionPanel';
 import type { RouteDeletionDraft } from './RouteDeletionPanel';
 import type { BoardFootprint } from '../../pcb/boardAssets';
 import BoardCanvas from './BoardCanvas';
-import type { BoardCanvasHandle, BoardPick, BoardPickTarget } from './BoardCanvas';
+import type { BoardCanvasHandle, BoardContextTarget, BoardPick, BoardPickTarget } from './BoardCanvas';
 import BoardPickPanel from './BoardPickPanel';
 import BoardAnnotationDialog from './BoardAnnotationDialog';
 import type { AnnotationDraft } from './BoardAnnotationDialog';
@@ -109,6 +109,23 @@ const defaultHiddenLayers = () => new Set<BoardLayerId>([
   'F.Mask', 'B.Mask', 'F.Paste', 'B.Paste', 'F.Fab', 'B.Fab', 'F.CrtYd', 'B.CrtYd',
 ]);
 
+type RouteObstruction = NonNullable<ReturnType<typeof centrelineBlock>>;
+const routeBlockMessages: Record<RouteObstruction['kind'], string> = {
+  layer: 'This copper layer is unavailable.',
+  edge: 'Too close to the board edge.',
+  drill: 'Too close to a drill opening.',
+  copper: 'Too close to copper on another net.',
+  region: 'A routing restriction blocks this segment.',
+  track: 'Too close to an existing track.',
+};
+
+function routeBlockMessage(obstruction: RouteObstruction) {
+  const message = routeBlockMessages[obstruction.kind];
+  return obstruction.kind === 'track' && obstruction.gapNm < obstruction.requiredNm
+    ? `${message} Gap ${mm(obstruction.gapNm)} mm. Required ${mm(obstruction.requiredNm)} mm.`
+    : message;
+}
+
 const BoardRuleInspectionDialog = React.lazy(() => import('./BoardRuleInspectionDialog'));
 const BoardInspectionDialog = React.lazy(
   () => import('./BoardInspectionDialog'),
@@ -150,6 +167,7 @@ export default function BoardWorkspace({
   onOpen,
   onProjectFolder,
   footprintsHost,
+  footprintsVisible,
   rightPanelHost,
   onShowFootprints,
   bottomPanelHeight,
@@ -167,6 +185,7 @@ export default function BoardWorkspace({
   onOpen(): void;
   onProjectFolder?(): void;
   footprintsHost: HTMLDivElement | null;
+  footprintsVisible: boolean;
   rightPanelHost?: HTMLElement | null;
   onShowFootprints(): void;
   bottomPanelHeight: number;
@@ -214,8 +233,8 @@ export default function BoardWorkspace({
   const layerColumnLabels = hasBottomCopper ? ['Layer 1', 'Layer 2'] : ['Layer'];
   const componentColumnSizing = useMemo(() => ({
     reference: { minWidth: 68, idealWidth: 200 },
-    layer: { minWidth: hasBottomCopper ? 78 : 136, idealWidth: 170 },
-    layer2: { minWidth: 136, idealWidth: 180 },
+    layer: { minWidth: hasBottomCopper ? 78 : 156, idealWidth: 170 },
+    layer2: { minWidth: 156, idealWidth: 180 },
   }), [hasBottomCopper]);
   const topVisible = !hiddenLayers.has('F.Cu');
   const bottomVisible = board.copperLayers.length > 1 && !hiddenLayers.has('B.Cu');
@@ -235,6 +254,7 @@ export default function BoardWorkspace({
   const dimensions = board.annotations?.dimensions ?? [];
   const datum = board.annotations?.datum;
   const [routing, setRouting] = useState(false);
+  const [routeSource, setRouteSource] = useState<string>();
   const routeToggle = React.useRef<HTMLButtonElement>(null);
   const routeLayerControl = React.useRef<HTMLSelectElement>(null);
   const [selectedRouteId, setSelectedRouteId] = useState('');
@@ -243,8 +263,6 @@ export default function BoardWorkspace({
   const [objectPick, setObjectPick] = useState<BoardPick>();
   const [hoveredObject, setHoveredObject] = useState<BoardPickTarget>();
   const [copperSelection, setCopperSelection] = useState<Pick<CopperObject, 'kind' | 'id'>>();
-  const [areaShapes, setAreaShapes] = useState<Record<AreaTool, AreaToolShape>>({ area: 'rectangle', region: 'rectangle', zone: 'rectangle', cutout: 'rectangle' });
-  const [openingShape, setOpeningShape] = useState<(typeof openingToolShapes)[number]['key']>('round-hole');
   const [copperDrawing, setCopperDrawing] = useState<{
     kind: CopperObjectKind; shape: BoardDrawShape; points: readonly BoardPoint[]; netId: string; layerId: CopperLayer['id'];
   }>();
@@ -264,7 +282,14 @@ export default function BoardWorkspace({
   const [connectionsOpen, setConnectionsOpen] = useState(false);
   const [circuitSourceOpen, setCircuitSourceOpen] = useState(false);
   const [camOpen, setCamOpen] = useState(false);
-  const [checkedRevision, setCheckedRevision] = useState<number>();
+  const [lastCheck, setLastCheck] = useState<{ revision: number; findings: number }>();
+  const recordCheck = React.useCallback((revision: number, findings: number) => {
+    setLastCheck({ revision, findings });
+  }, []);
+  const checkSummary = !lastCheck ? 'Design checks have not been run.'
+    : lastCheck.revision !== board.revision ? 'Design checks are stale.'
+      : lastCheck.findings === 1 ? 'Design checks found 1 issue.'
+        : `Design checks found ${lastCheck.findings} issues.`;
   const [revisionOpen, setRevisionOpen] = useState(false);
   const [kicadOpen, setKicadOpen] = useState(false);
   const [kicadReviewOpen, setKicadReviewOpen] = useState(false);
@@ -318,6 +343,7 @@ export default function BoardWorkspace({
     routeId?: string;
     copper?: CopperObject;
     artwork?: BoardPickTarget;
+    routeStart?: BoardContextTarget['routeStart'];
     polygon?: { target: CopperObject; at: BoardPoint; handle: number };
   }>();
   const footprintTabId = React.useId();
@@ -329,6 +355,7 @@ export default function BoardWorkspace({
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
   const guideToggle = React.useRef<HTMLButtonElement>(null);
+  const guideReturnFocus = React.useRef<HTMLButtonElement>(null);
   const placementSearch = React.useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -511,19 +538,22 @@ export default function BoardWorkspace({
     : mm(widthPreset === 'minimum' ? routeRules.minWidthNm : preferredWidth);
   const viaPresets = routeViaPresets(board, routeRules);
 
-  function setRoutingMode(active: boolean) {
+  function setRoutingMode(active: boolean, start?: BoardContextTarget['routeStart']) {
     if (!active) cancelCopperJob();
     else {
       cancelPlacement();
-      openBoardTools();
-      setLayerVisible(layer === 'top' ? 'F.Cu' : 'B.Cu', true);
+      const startLayer = start?.layerId ?? layer;
+      setLayer(startLayer);
+      setLayerVisible(startLayer === 'top' ? 'F.Cu' : 'B.Cu', true);
+      if (start) setSelectedNet(start.netId);
       requestAnimationFrame(() => boardCanvas.current?.focus());
     }
     setError('');
     setCleanupDraft(undefined);
     setTrackEditDraft(undefined);
     setDeleteRoute(undefined);
-    setRoute([]);
+    setRoute(start ? [{ position: start.position, layer: start.layerId }] : []);
+    setRouteSource(start?.label);
     setReroute('');
     setMeasuring(false);
     setMeasurement([]);
@@ -533,6 +563,7 @@ export default function BoardWorkspace({
   async function routePoint(
     position: BoardPoint,
     targetNet?: string,
+    sourceLabel?: string,
   ) {
     if (busy || activeCopperJob.current) return;
     if (!route.length && targetNet) {
@@ -545,14 +576,16 @@ export default function BoardWorkspace({
     const last = route.at(-1);
     if (!last) {
       setRoute([{ position, layer }]);
+      setRouteSource(sourceLabel);
       return;
     }
     const points = manualRouteLeg(last.position, position, routeBend);
     if (!points.length) return;
     let completed: typeof route | undefined;
     function addPoints(geometry: RouteClearance) {
-      if (!clearRouteLeg(geometry, last.position, points, layer)) {
-        setError('Track blocked by the board edge, a drill, copper clearance or a routing region.');
+      const obstruction = routeLegObstruction(geometry, last.position, points, layer);
+      if (obstruction) {
+        setError('Track blocked. ' + routeBlockMessage(obstruction.reason));
         return;
       }
       const next = [...route, ...points.map((position) => ({ position, layer }))];
@@ -709,22 +742,31 @@ export default function BoardWorkspace({
     };
   }, [routing, clearanceInput, clearanceAttempt]);
 
-  function clearRouteLeg(
+  function routeLegObstruction(
     geometry: RouteClearance,
     start: BoardPoint,
     points: readonly BoardPoint[],
     side: CopperLayer['id'],
   ) {
-    return points.every((end, index) => isCentrelineClear(geometry, index ? points[index - 1] : start, end, side));
+    for (const end of points) {
+      const reason = centrelineBlock(geometry, start, end, side);
+      if (reason) return { reason, start, end } as const;
+      start = end;
+    }
   }
 
   function previewRouteLeg(position: BoardPoint) {
     const last = route.at(-1);
     if (!last || !routeClearance) return;
     const points = manualRouteLeg(last.position, position, routeBend);
-    if (points.length) return {
+    if (!points.length) return;
+    const obstruction = routeLegObstruction(routeClearance, last.position, points, last.layer);
+    return {
       points: [last.position, ...points],
-      blocked: !clearRouteLeg(routeClearance, last.position, points, last.layer),
+      obstruction: obstruction && {
+        point: { x: (obstruction.start.x + obstruction.end.x) / 2, y: (obstruction.start.y + obstruction.end.y) / 2 },
+        message: routeBlockMessage(obstruction.reason),
+      },
     };
   }
   React.useEffect(
@@ -1542,22 +1584,16 @@ export default function BoardWorkspace({
     if (session.dirty) setConfirmDiscard(true);
     else onClose();
   }
+  const routeDisabled = !routing && (busy || !!copperDrawing || !board.nets?.length);
+  const checksDisabled = busy || routing || !geometry;
+  const textDisabled = !textDrawing && (!canPickObjects || !textLayers.some((id) => pickableLayers.has(id)));
   const boardCommands: { title: string; items: (MenuAction | null | false)[] }[] = [
     {
       title: 'Board',
       items: [
-        { id: 'outline', label: 'PCB Size & Shape…', disabled: busy, run: () => {
-          openBoardTools();
-          setProfileDialog('outline');
-        } },
-        { id: 'cutout', label: 'Add cutout…', disabled: busy, run: () => {
-          openBoardTools();
-          setProfileDialog('cutout');
-        } },
-        { id: 'hole', label: 'Hole or slot…', disabled: busy, run: () => {
-          openBoardTools();
-          setHoleDialog(true);
-        } },
+        { id: 'outline', label: 'PCB Size & Shape…', disabled: busy, run: () => setProfileDialog('outline') },
+        { id: 'cutout', label: 'Add cutout…', disabled: busy, run: () => setProfileDialog('cutout') },
+        { id: 'hole', label: 'Hole or slot…', disabled: busy, run: () => setHoleDialog(true) },
         ...areaToolShapes.map(({ key, text }) => ({
           id: 'draw-cutout-' + key, label: 'Draw cutout: ' + text, disabled: !canPickObjects,
           run: () => startCopperDrawing('cutout', key),
@@ -1599,10 +1635,12 @@ export default function BoardWorkspace({
     {
       title: 'Copper',
       items: [
+        { id: 'route', label: routing ? 'Cancel route' : 'Route track', disabled: routeDisabled,
+          run: () => setRoutingMode(!routing) },
         { id: 'net-rules', label: 'Net rules…', disabled: busy || routing, run: () => setNetRulesOpen(true) },
         { id: 'inspect-rules', label: 'Inspect board rules…',
           disabled: busy || routing || !geometry, run: () => setRuleInspectionOpen(true) },
-        { id: 'checks', label: t('pcbChecks.run'), disabled: busy || routing || !geometry, run: showBoardChecks },
+        { id: 'checks', label: t('pcbChecks.run'), disabled: checksDisabled, run: showBoardChecks },
         null,
         { id: 'area', label: 'Add placement area', disabled: !canPickObjects, run: () => startCopperDrawing('area') },
         { id: 'region', label: 'Add routing region', disabled: !canPickObjects, run: () => startCopperDrawing('region') },
@@ -1617,7 +1655,7 @@ export default function BoardWorkspace({
       title: 'Fabrication',
       items: [
         { id: 'fabrication-settings', label: 'Fabrication settings…', disabled: busy || routing, run: () => setFabricationOpen(true) },
-        { id: 'cam', label: 'CAM read-back preview…', disabled: busy || routing || !geometry, run: () => setCamOpen(true) },
+        { id: 'cam', label: 'Manufacturing preview…', disabled: busy || routing || !geometry, run: () => setCamOpen(true) },
         { id: '3d', label: 'Inspect in 3D…', disabled: busy || routing || !geometry, run: () => setInspectionOpen(true) },
         { id: 'revisions', label: 'Manufacturing revisions…', disabled: busy || routing, run: () => setRevisionOpen(true) },
         { id: 'review-kicad', label: 'Review KiCad board…', disabled: busy || routing, run: () => setKicadReviewOpen(true) },
@@ -1680,7 +1718,7 @@ export default function BoardWorkspace({
 
   function openBoardMenu(
     point: { x: number; y: number },
-    hit?: { componentId?: string; routeId?: string; copper?: CopperObject; artwork?: BoardPickTarget; at?: BoardPoint; handle?: number },
+    hit?: BoardContextTarget,
   ) {
     if (textDrawing) return cancelText();
     if (copperDrawing) {
@@ -1718,7 +1756,7 @@ export default function BoardWorkspace({
     }
     const polygon = hit?.at && hit.copper && copperAreaGeometry(board, hit.copper)?.kind === 'polygon'
       ? { target: hit.copper, at: hit.at, handle: hit.handle ?? -1 } : undefined;
-    setBoardMenu({ point, componentId, routeId, copper: hit ? hit.copper : selectedCopper,
+    setBoardMenu({ point, componentId, routeId, routeStart: hit?.routeStart, copper: hit ? hit.copper : selectedCopper,
       artwork: hit ? hit.artwork : selectedSilk, polygon });
   }
 
@@ -1741,6 +1779,8 @@ export default function BoardWorkspace({
     { key: 'zoom_fit', text: 'Fit board' },
   ];
   if (boardMenuFootprint || boardMenu?.routeId) boardMenuItems.push({ key: 'fit_selection', text: 'Fit selection' });
+  if (boardMenu?.routeStart && !routeDisabled)
+    boardMenuItems.unshift({ key: 'route_pad', text: 'Route from pad' });
   const polygonTarget = boardMenu?.polygon;
   const menuShape = polygonTarget && copperAreaGeometry(board, polygonTarget.target);
   if (menuShape?.kind === 'polygon') boardMenuItems.unshift(...boardPolygonMenu(menuShape, polygonTarget.at, polygonTarget.handle));
@@ -1768,6 +1808,15 @@ export default function BoardWorkspace({
         queued={queue}
         sequential={sequentialPlacement}
         disabled={busy || routing || measuring}
+        hasComponents={!!board.components?.length}
+        sourceAction={onUpdate ? 'Update PCB from Schematic…' : 'Import schematic or netlist…'}
+        sourceDisabled={busy || routing || (!!onUpdate && session.dirty)}
+        onSource={onUpdate ?? (() => setCircuitSourceOpen(true))}
+        onGuide={(button) => {
+          guideReturnFocus.current = button;
+          setGuideOpen(true);
+          openBoardTools();
+        }}
         onSelect={selectComponent}
         onPlace={armPlacement}
         onToggle={(id) =>
@@ -1796,6 +1845,204 @@ export default function BoardWorkspace({
       {libraryFootprint && <DeviceFootprintPreview footprint={libraryFootprint} selected="" />}
     </div>
   </>;
+
+  const routeNetName = board.nets?.find(({ id }) => id === selectedNet)?.name;
+  const canStartOnCopper = (board.tracks?.length || board.vias?.length ||
+    geometry?.features.some(({ pads }) => pads.some(({ netId }) => !!netId)));
+  const routeControls = routing && (
+    <fieldset className="pcb-route-controls" aria-label="Route controls" disabled={busy}>
+      <div className="pcb-route-bar">
+        <div className="pcb-route-instruction" role="status">
+          <strong>{route.length && routeNetName ? [routeSource, routeNetName].filter(Boolean).join(' · ') : 'Route track'}</strong>
+          <span>{route.length
+            ? 'Click same-net copper to finish, or click the board to add a corner.'
+            : canStartOnCopper ? 'Click a pad, via, or track to start.'
+              : 'Place a component with connected pads to start on copper.'}</span>
+        </div>
+        <div className="pcb-route-fields">
+          <label>
+            Route layer
+            <Select
+              ref={routeLayerControl}
+              value={layer}
+              onChange={(event) =>
+                changeRouteLayer(event.target.value as CopperLayer['id'])
+              }
+            >
+              {board.copperLayers.map(({ id }) => (
+                <option key={id} value={id}>
+                  {id === 'top' ? 'Top' : 'Bottom'}
+                </option>
+              ))}
+            </Select>
+          </label>
+          <label>
+            Track width preset
+            <Select value={widthPreset} onChange={(event) => {
+              setTrackWidth(routeWidth);
+              setWidthPreset(event.target.value as WidthPreset);
+            }}>
+              <option value="minimum">Minimum ({mm(routeRules.minWidthNm)} mm)</option>
+              <option value="preferred">Preferred ({mm(preferredWidth)} mm)</option>
+              <option value="custom">Custom</option>
+            </Select>
+          </label>
+          {widthPreset === 'custom' && <label>
+            Track width (mm)
+            <Input size="small" value={trackWidth} onChange={(event) => setTrackWidth(event.target.value)} />
+          </label>}
+          {routeRules.maxWidthNm !== undefined && <p>Maximum track width {mm(routeRules.maxWidthNm)} mm</p>}
+          <Button size="small" disabled={route.length < 2 && !reroute}
+            title="Finish route (End)" onClick={() => { void finishRoute(); }}>Finish route</Button>
+        </div>
+      </div>
+      <div role="status" className="pcb-route-clearance" aria-label="Route clearance">
+        {!selectedNet || routeClearance ? '' : routeClearanceError
+          ? 'Route preview unavailable. ' + routeClearanceError
+          : 'Preparing route clearance…'}
+      </div>
+      {routeClearanceError && (
+        <Button onClick={() => {
+          routeLayerControl.current?.focus();
+          setClearanceDraft(undefined);
+          setClearanceAttempt((attempt) => attempt + 1);
+        }}>
+          Retry route preview
+        </Button>
+      )}
+      <details className="pcb-route-options">
+        <summary>Routing options</summary>
+        <div className="pcb-route-fields">
+          <label>
+            Route bend
+            <Select value={routeBend} onChange={(event) => setRouteBend(event.target.value as RouteBend)}>
+              <option value="straight-first">Straight first</option>
+              <option value="diagonal-first">Diagonal first</option>
+            </Select>
+          </label>
+          {board.copperLayers.length === 2 && (
+            <>
+              <label>
+                Through-via style
+                <Select value={viaStyle} onChange={(event) => {
+                  if (viaStyle !== 'custom') {
+                    setViaDiameter(mm(viaPresets[viaStyle].viaDiameterNm));
+                    setViaDrill(mm(viaPresets[viaStyle].viaDrillNm));
+                  }
+                  setViaStyle(event.target.value as ViaStyle);
+                }}>
+                  <option value="compact">Compact ({mm(viaPresets.compact.viaDiameterNm)} mm diameter, {mm(viaPresets.compact.viaDrillNm)} mm drill)</option>
+                  <option value="preferred">Preferred ({mm(viaPresets.preferred.viaDiameterNm)} mm diameter, {mm(viaPresets.preferred.viaDrillNm)} mm drill)</option>
+                  <option value="custom">Custom</option>
+                </Select>
+              </label>
+              {viaStyle === 'custom' && (
+                <>
+                  <label>
+                    Via diameter (mm)
+                    <Input size="small" value={viaDiameter} onChange={(event) => setViaDiameter(event.target.value)} />
+                  </label>
+                  <label>
+                    Via drill (mm)
+                    <Input size="small" value={viaDrill} onChange={(event) => setViaDrill(event.target.value)} />
+                  </label>
+                </>
+              )}
+            </>
+          )}
+        </div>
+        <details>
+          <summary>Enter route coordinates</summary>
+          <form className="pcb-waypoint-entry" onSubmit={enterRoutePoint}>
+            <label>
+              Waypoint X (mm)
+              <Input name="x" size="small" inputMode="decimal" required />
+            </label>
+            <label>
+              Waypoint Y (mm)
+              <Input name="y" size="small" inputMode="decimal" required />
+            </label>
+            <Button type="submit" disabled={!selectedNet}>
+              Add waypoint
+            </Button>
+          </form>
+          <p role="status" aria-label="Route waypoints">
+            {route.length
+              ? 'Last point at X ' + mm(route.at(-1).position.x) +
+                ' mm, Y ' + mm(route.at(-1).position.y) + ' mm.'
+              : 'Choose a starting point.'}
+          </p>
+        </details>
+      </details>
+      <div role="status" data-copper-edit-pending={busy || undefined}>
+        {busy ? t('pcbChecks.checkingCopper') : ''}
+      </div>
+    </fieldset>
+  );
+
+  const selectedRoutingProperties = (
+    <div className="pcb-panel-scroll pcb-selection-properties">
+      {routeSelection && (
+        <fieldset disabled={busy}>
+          <legend>
+            {selectedTrack ? 'Selected track' : 'Selected via'}
+          </legend>
+          {selectedVia && (
+            <label>
+              Via solder mask
+              <Select
+                value={selectedVia.tenting ?? 'both'}
+                disabled={selectedVia.locked}
+                onChange={(event) => setViaTenting(event.target.value as ViaTenting)}
+              >
+                <option value="both">Tent both sides</option>
+                <option value="top">Tent top only</option>
+                <option value="bottom">Tent bottom only</option>
+                <option value="none">Expose both sides</option>
+              </Select>
+            </label>
+          )}
+          {selectedTrack && (
+            <>
+              <Button disabled={selectedTrack.locked} onClick={splitTrack}>Split track</Button>
+              <Button disabled={!selectedTrack.netId} onClick={beginBranch}>Branch from track</Button>
+              <Button disabled={!selectedTrack.netId || selectedTrack.locked} onClick={() => beginTrackEdit()}>Drag segment</Button>
+              {(['start', 'end'] as const).map((endpoint) => (
+                <Button key={endpoint} disabled={!selectedTrack.netId || !cornerTrack(board, selectedTrack, endpoint)}
+                  onClick={() => beginTrackEdit(endpoint)}>
+                  Move {endpoint} corner
+                </Button>
+              ))}
+              <Button
+                disabled={!selectedTrack.netId || selectedTrack.locked}
+                onClick={beginReroute}
+              >
+                Reroute track
+              </Button>
+            </>
+          )}
+          {(
+            <Checkbox label={selectedTrack ? 'Lock track' : 'Lock via'}
+              checked={!!routeSelection.locked} onChange={toggleRoutingLock} />
+          )}
+          <Button disabled={routeSelection.locked} onClick={() => previewDeletion({ kind: 'item', id: selectedRouteId })}>
+            Delete selected copper
+          </Button>
+          {selectedTrack?.netId && !selectedTrack.locked && (
+            <Button onClick={() => previewDeletion({
+              kind: 'connection', trackId: selectedTrack.id,
+              picked: pickedRoute.current?.id === selectedTrack.id ? pickedRoute.current.point : undefined,
+            })}>Delete connection</Button>
+          )}
+        </fieldset>
+      )}
+      {routeGroup.length > 0 && (
+        <Button disabled={busy} onClick={() => commitDeletion(planRouteDeletion(board, { kind: 'items', ids: routeGroup }))}>
+          Delete selected copper
+        </Button>
+      )}
+    </div>
+  );
 
   const boardTools = (boardToolsOpen || (bottomView === 'selection' && (routeSelection || routeGroup.length > 0))) && (
     <section className="pcb-board-tools" aria-label="Board tools">
@@ -1834,16 +2081,13 @@ export default function BoardWorkspace({
               )}
               </div>}
             {pickingObjects && <p role="status">Click the board to list objects under the pointer.</p>}
-            {checkedRevision !== undefined && checkedRevision !== board.revision && (
-              <p role="status">Design checks are stale.</p>
-            )}
             {guideOpen && boardToolsOpen && (
               <FirstBoardGuide
                 step={guideStep}
                 onStepChange={setGuideStep}
                 onClose={() => {
                   setGuideOpen(false);
-                  guideToggle.current?.focus();
+                  (guideReturnFocus.current?.isConnected ? guideReturnFocus.current : guideToggle.current)?.focus();
                 }}
                 onUpdate={onUpdate}
                 onOutline={() => setProfileDialog('outline')}
@@ -1921,136 +2165,6 @@ export default function BoardWorkspace({
                 )}
               </details>
             )}
-            {routing && (
-              <fieldset disabled={busy}>
-                <legend>Manual route</legend>
-                <p>
-                  Pick copper to connect or click empty space to set a corner. Red previews show blocked routes.
-                  Choose another layer to switch at the last corner.
-                </p>
-                <div role="status" aria-label="Route clearance">
-                  {!selectedNet || routeClearance ? '' : routeClearanceError
-                    ? 'Route preview unavailable. ' + routeClearanceError
-                    : 'Preparing route clearance…'}
-                </div>
-                {routeClearanceError && (
-                  <Button onClick={() => {
-                    routeLayerControl.current?.focus();
-                    setClearanceDraft(undefined);
-                    setClearanceAttempt((attempt) => attempt + 1);
-                  }}>
-                    Retry route preview
-                  </Button>
-                )}
-                <details>
-                  <summary>Enter route coordinates</summary>
-                  <form className="pcb-waypoint-entry" onSubmit={enterRoutePoint}>
-                    <label>
-                      Waypoint X (mm)
-                      <Input name="x" size="small" inputMode="decimal" required />
-                    </label>
-                    <label>
-                      Waypoint Y (mm)
-                      <Input name="y" size="small" inputMode="decimal" required />
-                    </label>
-                    <Button type="submit" disabled={!selectedNet}>
-                      Add waypoint
-                    </Button>
-                  </form>
-                  <p role="status" aria-label="Route waypoints">
-                    {route.length
-                      ? 'Last point at X ' + mm(route.at(-1).position.x) +
-                        ' mm, Y ' + mm(route.at(-1).position.y) + ' mm.'
-                      : 'Choose a starting point.'}
-                  </p>
-                </details>
-                {(
-                  <label>
-                    Route bend
-                    <Select value={routeBend} onChange={(event) => setRouteBend(event.target.value as RouteBend)}>
-                      <option value="straight-first">Straight first</option>
-                      <option value="diagonal-first">Diagonal first</option>
-                    </Select>
-                  </label>
-                )}
-                <label>
-                  Route layer
-                  <Select
-                    ref={routeLayerControl}
-                    value={layer}
-                    onChange={(event) =>
-                      changeRouteLayer(event.target.value as CopperLayer['id'])
-                    }
-                  >
-                    {board.copperLayers.map(({ id }) => (
-                      <option key={id} value={id}>
-                        {id === 'top' ? 'Top' : 'Bottom'}
-                      </option>
-                    ))}
-                  </Select>
-                </label>
-                <>
-                    <label>
-                      Track width preset
-                      <Select value={widthPreset} onChange={(event) => {
-                        setTrackWidth(routeWidth);
-                        setWidthPreset(event.target.value as WidthPreset);
-                      }}>
-                        <option value="minimum">Minimum ({mm(routeRules.minWidthNm)} mm)</option>
-                        <option value="preferred">Preferred ({mm(preferredWidth)} mm)</option>
-                        <option value="custom">Custom</option>
-                      </Select>
-                    </label>
-                    {widthPreset === 'custom' && <label>
-                      Track width (mm)
-                      <Input size="small" value={trackWidth} onChange={(event) => setTrackWidth(event.target.value)} />
-                    </label>}
-                    {routeRules.maxWidthNm !== undefined && <p>Maximum track width {mm(routeRules.maxWidthNm)} mm</p>}
-                    {board.copperLayers.length === 2 && (
-                      <>
-                        <label>
-                          Through-via style
-                          <Select value={viaStyle} onChange={(event) => {
-                            if (viaStyle !== 'custom') {
-                              setViaDiameter(mm(viaPresets[viaStyle].viaDiameterNm));
-                              setViaDrill(mm(viaPresets[viaStyle].viaDrillNm));
-                            }
-                            setViaStyle(event.target.value as ViaStyle);
-                          }}>
-                            <option value="compact">Compact ({mm(viaPresets.compact.viaDiameterNm)} mm diameter, {mm(viaPresets.compact.viaDrillNm)} mm drill)</option>
-                            <option value="preferred">Preferred ({mm(viaPresets.preferred.viaDiameterNm)} mm diameter, {mm(viaPresets.preferred.viaDrillNm)} mm drill)</option>
-                            <option value="custom">Custom</option>
-                          </Select>
-                        </label>
-                        {viaStyle === 'custom' && (
-                          <>
-                            <label>
-                              Via diameter (mm)
-                              <Input size="small" value={viaDiameter} onChange={(event) => setViaDiameter(event.target.value)} />
-                            </label>
-                            <label>
-                              Via drill (mm)
-                              <Input size="small" value={viaDrill} onChange={(event) => setViaDrill(event.target.value)} />
-                            </label>
-                          </>
-                        )}
-                      </>
-                    )}
-                </>
-                <Button
-                  disabled={route.length < 2 && !reroute}
-                  title="Finish route (End)"
-                  onClick={(): void => {
-                    void finishRoute();
-                  }}
-                >
-                  Finish route
-                </Button>
-                <div role="status" data-copper-edit-pending={busy || undefined}>
-                  {busy ? t('pcbChecks.checkingCopper') : ''}
-                </div>
-              </fieldset>
-            )}
             {trackEdit && (
               <fieldset>
                 <legend>{trackEdit.action.kind === 'drag' ? 'Drag segment' : 'Move corner'}</legend>
@@ -2073,65 +2187,6 @@ export default function BoardWorkspace({
                   {busy ? t('pcbChecks.checkingCopper') : ''}
                 </div>
               </fieldset>
-            )}
-            {!routing && !trackEdit && !deletionDraft && !cleanup && routeSelection && (
-              <fieldset disabled={busy}>
-                <legend>
-                  {selectedTrack ? 'Selected track' : 'Selected via'}
-                </legend>
-                {selectedVia && (
-                  <label>
-                    Via solder mask
-                    <Select
-                      value={selectedVia.tenting ?? 'both'}
-                      disabled={selectedVia.locked}
-                      onChange={(event) => setViaTenting(event.target.value as ViaTenting)}
-                    >
-                      <option value="both">Tent both sides</option>
-                      <option value="top">Tent top only</option>
-                      <option value="bottom">Tent bottom only</option>
-                      <option value="none">Expose both sides</option>
-                    </Select>
-                  </label>
-                )}
-                {selectedTrack && (
-                  <>
-                    <Button disabled={selectedTrack.locked} onClick={splitTrack}>Split track</Button>
-                    <Button disabled={!selectedTrack.netId} onClick={beginBranch}>Branch from track</Button>
-                    <Button disabled={!selectedTrack.netId || selectedTrack.locked} onClick={() => beginTrackEdit()}>Drag segment</Button>
-                    {(['start', 'end'] as const).map((endpoint) => (
-                      <Button key={endpoint} disabled={!selectedTrack.netId || !cornerTrack(board, selectedTrack, endpoint)}
-                        onClick={() => beginTrackEdit(endpoint)}>
-                        Move {endpoint} corner
-                      </Button>
-                    ))}
-                    <Button
-                      disabled={!selectedTrack.netId || selectedTrack.locked}
-                      onClick={beginReroute}
-                    >
-                      Reroute track
-                    </Button>
-                  </>
-                )}
-                {(
-                  <Checkbox label={selectedTrack ? 'Lock track' : 'Lock via'}
-                    checked={!!routeSelection.locked} onChange={toggleRoutingLock} />
-                )}
-                <Button disabled={routeSelection.locked} onClick={() => previewDeletion({ kind: 'item', id: selectedRouteId })}>
-                  Delete selected copper
-                </Button>
-                {selectedTrack?.netId && !selectedTrack.locked && (
-                  <Button onClick={() => previewDeletion({
-                    kind: 'connection', trackId: selectedTrack.id,
-                    picked: pickedRoute.current?.id === selectedTrack.id ? pickedRoute.current.point : undefined,
-                  })}>Delete connection</Button>
-                )}
-              </fieldset>
-            )}
-            {!routing && !trackEdit && !deletionDraft && !cleanup && routeGroup.length > 0 && (
-              <Button disabled={busy} onClick={() => commitDeletion(planRouteDeletion(board, { kind: 'items', ids: routeGroup }))}>
-                Delete selected copper
-              </Button>
             )}
             {!routing &&
               !trackEdit &&
@@ -2373,6 +2428,7 @@ export default function BoardWorkspace({
               case 'zoom_out': boardCanvas.current?.zoom('out', boardMenu.point); break;
               case 'zoom_fit': boardCanvas.current?.fit(); break;
               case 'fit_selection': fitSelection(); break;
+              case 'route_pad': setRoutingMode(true, boardMenu.routeStart); break;
               case 'delete':
                 if (boardMenu.copper) removeCopperObject(boardMenu.copper);
                 else if (boardMenu.artwork) deleteBoardText(boardMenu.artwork);
@@ -2430,68 +2486,86 @@ export default function BoardWorkspace({
         <EditorHistoryControls compactLabels canUndo={!busy && session.canUndo} canRedo={!busy && session.canRedo}
           onUndo={() => edit(session.undo)} onRedo={() => edit(session.redo)} />
         <ToolbarDivider />
-        <TextToolButton active={!!textDrawing}
-          disabled={!textDrawing && (!canPickObjects || !textLayers.some((id) => pickableLayers.has(id)))} onClick={startText} />
-        {areaTools.map(({ kind, label, buttonLabel }) => <BoardShapeTool key={kind} label={label} buttonLabel={buttonLabel} choices={areaToolShapes}
-          current={areaShapes[kind]} active={copperDrawing?.kind === kind}
-          disabled={(!canPickObjects && copperDrawing?.kind !== kind) || (kind === 'zone' && !board.nets?.length)}
-          onDraw={(shape) => {
-            setAreaShapes({ ...areaShapes, [kind]: shape });
-            startCopperDrawing(kind, shape);
-          }} />)}
-        <BoardShapeTool label="Hole or slot" buttonLabel="Hole / slot" choices={openingToolShapes}
-          current={openingShape} active={copperDrawing?.kind === 'hole'} disabled={!canPickObjects && copperDrawing?.kind !== 'hole'}
-          onDraw={(shape) => { setOpeningShape(shape); startCopperDrawing('hole', shape); }} />
-        <ToolbarDivider />
-        <Button
-          ref={guideToggle}
-          aria-expanded={guideOpen}
-          onClick={() => {
-            if (boardToolsOpen && guideOpen) setGuideOpen(false);
-            else {
-              setGuideOpen(true);
-              openBoardTools();
-            }
-          }}
-        >
-          First board guide
-        </Button>
-        <Button disabled={!geometry} onClick={() => boardCanvas.current?.fit()}>
-          Fit board
-        </Button>
-        <Button disabled={!geometry || (!routeSelection && !selectedFeatures.length && !routeGroup.length)} onClick={fitSelection}>
-          Fit selection
-        </Button>
-        <ViewToolbarControls
-          canZoomIn={!!geometry}
-          canZoomOut={!!geometry}
-          showRulers={showRulers}
-          onZoom={(direction) => boardCanvas.current?.zoom(direction)}
-          onToggleRulers={() => setShowRulers(!showRulers)}
-        />
-        <Button
+        <ToolbarButton
           ref={routeToggle}
-          disabled={!routing && (busy || !!copperDrawing || !board.nets?.length)}
+          aria-pressed={routing}
+          className={routing ? 'pcb-active-tool' : undefined}
+          disabled={routeDisabled}
+          icon={<img src={wireImage} width={18} height={18} alt="" />}
           onClick={() => setRoutingMode(!routing)}
         >
           {routing ? 'Cancel route' : 'Route track'}
-        </Button>
-        {(
-          <Button
-            disabled={busy || routing || !!copperDrawing}
-            onClick={() => {
-              setDeleteRoute(undefined);
-              setCleanupDraft(undefined);
-              setTrackEditDraft(undefined);
-              setMeasuring(!measuring);
-              setMeasurement([]);
-              if (!measuring) openBoardTools();
-            }}
-          >
-            {measuring ? 'End measurement' : 'Measure distance'}
-          </Button>
-        )}
+        </ToolbarButton>
+        <Menu>
+          <MenuTrigger disableButtonEnhancement>
+            <ToolbarButton icon={<ChevronDownRegular />} data-active-pcb-tool={textDrawing ? 'text' : copperDrawing?.kind}
+              className={copperDrawing || textDrawing ? 'pcb-active-tool' : undefined}>Draw</ToolbarButton>
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              {areaTools.map(({ kind, label }) => (
+                <BoardShapeMenu key={kind} label={label} choices={areaToolShapes}
+                  disabled={(!canPickObjects && copperDrawing?.kind !== kind) || (kind === 'zone' && !board.nets?.length)}
+                  onDraw={(shape) => startCopperDrawing(kind, shape)} />
+              ))}
+              <BoardShapeMenu label="Hole or slot" choices={openingToolShapes}
+                disabled={!canPickObjects && copperDrawing?.kind !== 'hole'} onDraw={(shape) => startCopperDrawing('hole', shape)} />
+              <MenuItem disabled={textDisabled} onClick={startText}>{t('toolbar.text')}</MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+        <ToolbarDivider />
+        <ToolbarButton disabled={!geometry} onClick={() => boardCanvas.current?.fit()}>
+          Fit board
+        </ToolbarButton>
+        <ToolbarButton disabled={checksDisabled} title={checkSummary} aria-label="Check board"
+          icon={<CheckmarkCircleRegular />} onClick={showBoardChecks}>
+          Check board
+        </ToolbarButton>
+        <Menu>
+          <MenuTrigger disableButtonEnhancement>
+            <ToolbarButton ref={guideToggle} aria-label="More PCB commands" icon={<MoreHorizontalRegular />} />
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              <MenuItem disabled={!geometry || (!routeSelection && !selectedFeatures.length && !routeGroup.length)}
+                onClick={fitSelection}>Fit selection</MenuItem>
+              <MenuItem disabled={busy || routing || !!copperDrawing} onClick={() => {
+                setDeleteRoute(undefined);
+                setCleanupDraft(undefined);
+                setTrackEditDraft(undefined);
+                setMeasuring(!measuring);
+                setMeasurement([]);
+                if (!measuring) openBoardTools();
+              }}>{measuring ? 'End measurement' : 'Measure distance'}</MenuItem>
+              <MenuItem className="pcb-overflow-view" disabled={!geometry} onClick={() => boardCanvas.current?.zoom('in')}>
+                Zoom In
+              </MenuItem>
+              <MenuItem className="pcb-overflow-view" disabled={!geometry} onClick={() => boardCanvas.current?.zoom('out')}>
+                Zoom Out
+              </MenuItem>
+              <MenuItem className="pcb-overflow-view" onClick={() => setShowRulers(!showRulers)}>
+                {showRulers ? 'Hide rulers' : 'Show rulers'}
+              </MenuItem>
+              <MenuDivider />
+              <MenuItem onClick={() => {
+                guideReturnFocus.current = guideToggle.current;
+                setGuideOpen(true);
+                openBoardTools();
+              }}>First board guide</MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
 
+        <div className="pcb-toolbar-view">
+          <ViewToolbarControls
+            canZoomIn={!!geometry}
+            canZoomOut={!!geometry}
+            showRulers={showRulers}
+            onZoom={(direction) => boardCanvas.current?.zoom(direction)}
+            onToggleRulers={() => setShowRulers(!showRulers)}
+          />
+        </div>
       </EditorToolbar>
       <Dialog open={confirmDiscard} onOpenChange={(_, { open }) => setConfirmDiscard(open)}>
         <DialogSurface>
@@ -2564,7 +2638,7 @@ export default function BoardWorkspace({
             projectId={session.projectId}
             readProjectCircuit={session.readProjectCircuit}
             waitForRefill={waitForRefill}
-            onChecked={setCheckedRevision}
+            onChecked={recordCheck}
             onClose={() => setCamOpen(false)}
           />
         </React.Suspense>
@@ -2639,6 +2713,7 @@ export default function BoardWorkspace({
       )}
       {rightPanelHost && createPortal(<>
         <BoardLayersPanel layers={availableLayers} hidden={hiddenLayers} locked={lockedLayers}
+          routeLayer={routing ? layer === 'top' ? 'F.Cu' : 'B.Cu' : undefined}
           artworkDisabled={busy || routing} onLock={(id, locked) => {
             const next = new Set(lockedLayers);
             if (locked) {
@@ -2687,12 +2762,29 @@ export default function BoardWorkspace({
         </DialogSurface>
       </Dialog>
       <div className="pcb-content">
+        {lastCheck && lastCheck.revision !== board.revision && (
+          <p className="pcb-editor-message" role="status">{checkSummary}</p>
+        )}
         <div className="mid-container">
           {footprintsHost && createPortal(footprintPanel, footprintsHost)}
           <div className="main-content-area">
           <EditorDrawingStack bottomHeight={bottomPanelHeight} onBottomResize={onBottomPanelResize}
             bottomLabel="Board properties" resizeLabel="Resize board properties"
             drawing={geometry ? (
+            <div className="pcb-drawing-layout" data-routing={routing || undefined}>
+            {routeControls}
+            {!routing && !footprintsVisible && unplaced.length > 0 && (
+              <div className="pcb-start-actions">
+                <Button size="small" onClick={() => {
+                  setFootprintTab('unplaced');
+                  onShowFootprints();
+                  requestAnimationFrame(() => placementSearch.current?.focus());
+                }}>Show unplaced components ({unplaced.length})</Button>
+              </div>
+            )}
+            {placementTool && target && <div className="pcb-placement-instruction" role="status">
+              Placing {target.reference ?? 'component'}. Click the board to place. Press Escape to cancel.
+            </div>}
             <BoardCanvas
               board={board}
               geometry={geometry}
@@ -2764,7 +2856,7 @@ export default function BoardWorkspace({
               routingSnap={routing ? {
                 layer,
                 activeNet: route.length ? selectedNet : undefined,
-                connect: ({ position, netId }) => { void routePoint(position, netId); },
+                connect: ({ position, netId }, label) => { void routePoint(position, netId, label); },
                 preview: (x, y, target) => previewRouteLeg(target ?? canvasPosition(x, y)),
               } : undefined}
               onComponent={(id) => { if (!deletionDraft && !cleanup) selectComponent(id); }}
@@ -2798,6 +2890,7 @@ export default function BoardWorkspace({
                 boardCanvas.current?.focus();
               }}
             />
+            </div>
           ) : (
             <p role="alert">{layout.error}</p>
           )}>
@@ -2808,7 +2901,6 @@ export default function BoardWorkspace({
                   onSelect={route.length || deletionDraft || cleanup ? undefined : (id) => {
                     setHoveredNet('');
                     setSelectedNet(id);
-                    if (routing) openBoardTools();
                   }}
                   onHover={routing || deletionDraft || cleanup ? undefined : setHoveredNet}>
                   {netSources.length > 0 && <details open key={selectedNet}>
@@ -2829,7 +2921,7 @@ export default function BoardWorkspace({
           readProjectCircuit={session.readProjectCircuit}
           waitForRefill={waitForRefill}
           filename={filename}
-          onChecked={setCheckedRevision}
+          onChecked={recordCheck}
           onClose={() => openBoardList(idleBottomView)}
           onWaive={(waiver) =>
             edit(() => session.apply([{ type: 'addWaiver', waiver }]))
@@ -2882,6 +2974,15 @@ export default function BoardWorkspace({
           }}
         />
       )}
+              {bottomView === 'selection' && !placementTool && !copperDrawing && !textDrawing && (
+                <div className="pcb-property-navigation">
+                  <Button size="small" appearance="subtle" onClick={() => openBoardList(idleBottomView)}>
+                    {idleBottomView === 'netlist' ? 'Back to Netlist' : 'Back to Components'}
+                  </Button>
+                </div>
+              )}
+              {bottomView === 'selection' && !routing && !trackEdit && !deletionDraft && !cleanup &&
+                (routeSelection || routeGroup.length > 0) && selectedRoutingProperties}
               {bottomView === 'selection' && routeGroup.length > 0 && (
                 <p className="pcb-editor-message">
                   {routeGroup.length} {routeGroup.length === 1 ? 'copper object' : 'copper objects'} selected
@@ -3070,21 +3171,12 @@ export default function BoardWorkspace({
                     </fieldset>
                   )}
                   {target && (
-                    <fieldset disabled={busy || routing || measuring}>
+                    <fieldset className="pcb-position-form" disabled={busy || routing || measuring}>
                       <legend>
                         {selectedPlacement ? 'Position' : 'Place'}{' '}
                         {target.reference ?? 'component'}
                       </legend>
-                      {selectedPlacement && (
-                        <>
-                          <Checkbox label="Lock component" checked={!!selectedPlacement.locked}
-                            onChange={() => togglePlacementLock('locked')} />
-                          <Checkbox label="Lock position" checked={!!selectedPlacement.positionLocked}
-                            disabled={selectedPlacement.locked} onChange={() => togglePlacementLock('positionLocked')} />
-                          <Checkbox label="Lock rotation" checked={!!selectedPlacement.rotationLocked}
-                            disabled={selectedPlacement.locked} onChange={() => togglePlacementLock('rotationLocked')} />
-                        </>
-                      )}
+                      <div className="pcb-position-fields">
                       <label>
                         X (mm){' '}
                         <Input
@@ -3096,7 +3188,7 @@ export default function BoardWorkspace({
                             setQueuePositionSet(true);
                           }}
                         />
-                      </label>{' '}
+                      </label>
                       <label>
                         Y (mm){' '}
                         <Input
@@ -3108,7 +3200,7 @@ export default function BoardWorkspace({
                             setQueuePositionSet(true);
                           }}
                         />
-                      </label>{' '}
+                      </label>
                       <label>
                         Rotation (°){' '}
                         <Input
@@ -3121,7 +3213,7 @@ export default function BoardWorkspace({
                           disabled={rotationLocked}
                           onChange={(e) => setRotation(e.target.value)}
                         />
-                      </label>{' '}
+                      </label>
                       <label>
                         Layer{' '}
                         <Select
@@ -3138,13 +3230,25 @@ export default function BoardWorkspace({
                             </option>
                           ))}
                         </Select>
-                      </label>{' '}
+                      </label>
+                      </div>
+                      <div className="pcb-position-actions">
+                      {selectedPlacement && (
+                        <div className="pcb-position-locks" role="group" aria-label="Placement locks">
+                          <Checkbox label="Lock component" checked={!!selectedPlacement.locked}
+                            onChange={() => togglePlacementLock('locked')} />
+                          <Checkbox label="Lock position" checked={!!selectedPlacement.positionLocked}
+                            disabled={selectedPlacement.locked} onChange={() => togglePlacementLock('positionLocked')} />
+                          <Checkbox label="Lock rotation" checked={!!selectedPlacement.rotationLocked}
+                            disabled={selectedPlacement.locked} onChange={() => togglePlacementLock('rotationLocked')} />
+                        </div>
+                      )}
                       {(
                         <Checkbox label="Show straight-line estimates" checked={showPlacementEstimates}
                           onChange={(_, { checked }) => setShowPlacementEstimates(checked === true)} />
                       )}
                       <Button
-                        appearance="primary"
+                        appearance={selectedPlacement ? 'primary' : 'secondary'}
                         disabled={
                           selectedPlacement?.locked ||
                           (sequentialPlacement && !queuePositionSet)
@@ -3155,6 +3259,7 @@ export default function BoardWorkspace({
                       >
                         {selectedPlacement ? 'Apply position' : 'Place at coordinates'}
                       </Button>
+                      </div>
                     </fieldset>
                   )}
                   {selectedSilk && <p>Selected silkscreen · {selectedSilk.label} · {selectedSilk.layer}</p>}

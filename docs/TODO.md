@@ -30,6 +30,9 @@ The [PCB layout specification](TinyCAD_PCB_Layout_Complete_Specification.md), [p
 - [x] Verify PCB right-click polygon completion, the Circuit Design point and curve context menu, dragging a curve control and the whole shape, and reopening the native shape with editable controls. [Browser interaction checks](../scripts/tests/layout-browser/pcb-workspace.spec.mjs)
 - [x] Verify PCB polygon context commands near an edge, selection on the first press before dragging, schematic hover outlines, and toolbar hole, slot and cutout tools with the shared bounds handles. [Browser interaction checks](../scripts/tests/layout-browser/pcb-workspace.spec.mjs)
 - [ ] Requalify the PCB-only menus and relocated panels in the native desktop editor.
+- [x] Verify the compact toolbar, Layers disclosure, routing strip, and form navigation in Chromium. Check the rendered PCB at 1440 × 900 and 900 × 700, routing from a pad, and Back to the import source. [PCB UI and UX review](pcb-ui-ux-review.md)
+- [x] Check the revised native Electron menus through board outline editing, Save As, design checks, and manufacturing preview. The test host exercised the 2D workflow with the WebGL 2 fallback.
+- [ ] Observe schematic users placing a footprint, routing around an obstacle, and locating a design-check finding without coaching. Use the classroom LED exercise from the [PCB UI and UX review](pcb-ui-ux-review.md#delivery-and-acceptance).
 
 The recovery rerun covers the standalone PCB, placement queue, group edits,
 portable board, classroom LED exercise, connector reference, embedded starter

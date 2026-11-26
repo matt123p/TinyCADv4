@@ -250,19 +250,16 @@ export function prepareCentrelineClearance(
     return [...groups].flatMap(([clearance, regions]) =>
       expandRoutingObstacles(kernel, regions, radius + clearance + marginNm));
   }
-  const byLayer = new Map(
-    layers.map((layer) => [
-      layer,
-      [
-        ...expandRoutingObstacles(
-          kernel,
-          keepouts.filter(({ side }) => side === layer).map(({ copper }) => copper),
-          radius + marginNm,
-        ),
-        ...expandedCopper(layer),
-      ],
-    ]),
-  );
+  const keepoutCounts = new Map<Side, number>();
+  const byLayer = new Map(layers.map((layer) => {
+    const regions = expandRoutingObstacles(
+      kernel,
+      keepouts.filter(({ side }) => side === layer).map(({ copper }) => copper),
+      radius + marginNm,
+    );
+    keepoutCounts.set(layer, regions.length);
+    return [layer, [...regions, ...expandedCopper(layer)]];
+  }));
   const withBounds = (regions: readonly PolygonRegion[]) =>
     regions.map((region) => ({ region, box: bounds(region) }));
   const straightTracksByLayer = new Map(layers.map((layer) => [layer,
@@ -270,31 +267,58 @@ export function prepareCentrelineClearance(
       .map(({ start, end, widthNm, clearanceNm }) => ({
         start, end, box: segmentBounds(start, end),
         distanceNm: radius + widthNm / 2 + clearanceNm + marginNm,
+        copperOffsetNm: radius + widthNm / 2,
+        clearanceNm,
       })),
   ]));
   return {
     area,
     holes: withBounds(holes),
+    keepoutCounts,
     straightTracksByLayer,
     byLayer: new Map([...byLayer].map(([layer, regions]) => [layer, withBounds(regions)])),
   };
 }
 
-export function isCentrelineClear(
-  { area, holes, byLayer, straightTracksByLayer }: ReturnType<typeof prepareCentrelineClearance>,
+type CentrelineBlock =
+  | { kind: 'layer' | 'edge' | 'drill' | 'copper' | 'region' }
+  | { kind: 'track'; gapNm: number; requiredNm: number };
+
+export function centrelineBlock(
+  { area, holes, byLayer, keepoutCounts, straightTracksByLayer }: ReturnType<typeof prepareCentrelineClearance>,
   a: BoardPoint,
   b: BoardPoint,
   layer: Side,
-): boolean {
+): CentrelineBlock | undefined {
   const obstacles = byLayer.get(layer);
   const box = segmentBounds(a, b);
   const blocked = (item: (typeof holes)[number]) =>
     near(box, item.box, 0) && hits(a, b, item.region);
-  return !!obstacles && area.some(
+  if (!obstacles) return { kind: 'layer' };
+  if (!area.some(
     (region) => inside(a, region) && inside(b, region) && !alongBoundary(a, b, region),
-  ) && !holes.some(blocked) && !obstacles.some(blocked) &&
-    !straightTracksByLayer.get(layer)?.some(({ start, end, box: trackBox, distanceNm }) =>
-      near(box, trackBox, distanceNm) && segmentDistanceNm(a, b, start, end) <= distanceNm);
+  )) return { kind: 'edge' };
+  if (holes.some(blocked)) return { kind: 'drill' };
+  const obstacle = obstacles.findIndex(blocked);
+  if (obstacle >= 0) return { kind: obstacle < (keepoutCounts?.get(layer) ?? 0) ? 'region' : 'copper' };
+  for (const track of straightTracksByLayer.get(layer) ?? []) {
+    if (!near(box, track.box, track.distanceNm)) continue;
+    const distance = segmentDistanceNm(a, b, track.start, track.end);
+    if (distance <= track.distanceNm) return {
+      kind: 'track',
+      gapNm: Math.max(0, Math.round(distance - track.copperOffsetNm)),
+      requiredNm: track.clearanceNm,
+    };
+  }
+}
+
+export function isCentrelineClear(
+  geometry: ReturnType<typeof prepareCentrelineClearance>,
+  a: BoardPoint,
+  b: BoardPoint,
+  layer: Side,
+): boolean {
+  return centrelineBlock(geometry, a, b, layer) === undefined;
 }
 
 export function centrelineClearance(

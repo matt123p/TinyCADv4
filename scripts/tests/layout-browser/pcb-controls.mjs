@@ -13,10 +13,21 @@ const menus = {
     'Add routing region', 'Add copper zone', 'Add wire jumper',
   ],
   Fabrication: [
-    'Fabrication settings…', 'CAM read-back preview…', 'Inspect in 3D…', 'Manufacturing revisions…',
+    'Fabrication settings…', 'Manufacturing preview…', 'Inspect in 3D…', 'Manufacturing revisions…',
     'Review KiCad board…', 'Export KiCad board…',
   ],
 };
+
+export async function pcbMoreCommand(workspace, label) {
+  await workspace.getByRole('button', { name: 'More PCB commands', exact: true }).click();
+  return workspace.page().getByRole('menuitem', { name: label, exact: true });
+}
+
+export async function drawPcbShape(workspace, label, shape) {
+  await workspace.getByRole('button', { name: 'Draw', exact: true }).click();
+  if (shape) await workspace.page().getByRole('menuitem', { name: label, exact: true }).click();
+  await workspace.page().getByRole('menuitem', { name: shape ?? label, exact: true }).click();
+}
 
 export async function closeStandaloneBoard(workspace) {
   const file = workspace.getByRole('button', { name: 'File', exact: true });

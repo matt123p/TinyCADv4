@@ -1,4 +1,3 @@
-import { closeStandaloneBoard } from './pcb-controls.mjs';
 import { selectPcbNet, clickPcbCommand, pcbMenuName } from './pcb-controls.mjs';
 import { build } from 'esbuild';
 import { TextWriter, Uint8ArrayReader, ZipReader } from '@zip.js/zip.js';
@@ -297,8 +296,9 @@ for (const target of ['filesystem', 'electron']) {
       await expect(outline).toHaveClass(/\bfui-DialogSurface\b/);
       const outlineGeometry = await dialogGeometry(outline);
       await outline.getByLabel('Shape', { exact: true }).selectOption('custom');
-      await expect(outline.getByRole('button', { name: 'Apply', exact: true })).toBeInViewport();
-      expect(await dialogGeometry(outline)).toEqual(outlineGeometry);
+      await expect(outline.getByRole('button', { name: 'Apply outline', exact: true })).toBeInViewport();
+      const customOutlineGeometry = await dialogGeometry(outline);
+      expect(customOutlineGeometry[0]).toBeGreaterThan(outlineGeometry[0]);
       await outline.getByRole('button', { name: 'Cancel', exact: true }).click();
 
       await editor.getByRole('button', { name: 'Save As…' }).click();
@@ -315,8 +315,7 @@ for (const target of ['filesystem', 'electron']) {
         await expect.poll(() => page.evaluate(() => window.pcbModelRequests)).toEqual(expect.arrayContaining([
           ['geometry', 0], ['route-clearance', 0],
         ]));
-        await page.getByRole('region', { name: 'Board tools', exact: true })
-          .getByRole('button', { name: 'Cancel route', exact: true }).click();
+        await editor.getByRole('button', { name: 'Cancel route', exact: true }).click();
       }
 
       await runPcbCommand('Run design checks…');
@@ -343,8 +342,8 @@ for (const target of ['filesystem', 'electron']) {
         ['check', 1], ['inspect', 1],
       ]));
 
-      await runPcbCommand('CAM read-back preview…');
-      const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+      await runPcbCommand('Manufacturing preview…');
+      const cam = page.getByRole('dialog', { name: 'Manufacturing preview' });
       await expect(cam.getByRole('img', { name: 'CAM read-back' })).toBeVisible();
       await expect(cam.locator('[data-plating="plated"]')).toHaveCount(16);
       const bundle = await download(
@@ -377,13 +376,14 @@ for (const target of ['filesystem', 'electron']) {
       await expect(fabrication).toBeHidden();
       await runPcbCommand('Hole or slot…');
       const drill = page.getByRole('dialog', { name: 'Add hole or slot' });
+      await drill.getByText('Advanced', { exact: true }).click();
       await drill.getByLabel('Screw-head diameter (mm)').fill('2');
-      await drill.getByRole('button', { name: 'Add', exact: true }).click();
+      await drill.getByRole('button', { name: 'Add hole or slot', exact: true }).click();
       await expect(drill.getByRole('alert')).toContainText('screw-head keep-out');
       await drill.getByLabel('Screw-head diameter (mm)').fill('6');
       await drill.getByLabel('Screw-head side').selectOption('bottom');
       await drill.getByLabel('Extra component clearance (mm)').fill('1');
-      await drill.getByRole('button', { name: 'Add', exact: true }).click();
+      await drill.getByRole('button', { name: 'Add hole or slot', exact: true }).click();
       await expect(drill).toBeHidden();
       await expect(editor.locator('[data-hole]')).toHaveCount(1);
       await expect(editor.locator('[data-screw-head="bottom"]')).toHaveCount(1);
@@ -447,7 +447,9 @@ for (const target of ['filesystem', 'electron']) {
       }
       const point = await placeDevice('J99', 34_000_000, 6_000_000);
       await expect(canvas.locator('[data-component]')).toHaveCount(3);
-      const placed = canvas.getByText('J99', { exact: true });
+      const placed = canvas.locator('[data-footprint-reference]').filter({
+        has: page.locator('title').filter({ hasText: /^J99$/ }),
+      });
       await expect(placed).toBeVisible();
       const placedBounds = await placed.boundingBox();
       await page.mouse.move(point.x + 10, point.y + 10);
@@ -455,7 +457,8 @@ for (const target of ['filesystem', 'electron']) {
       expect(await placed.boundingBox()).toEqual(placedBounds);
       expect(await readFile(destination)).toEqual(unchangedOnDisk);
       if (target === 'electron') {
-        const pad = placed.locator('xpath=ancestor::*[@data-component]').locator('[data-board-pad]').first();
+        const componentId = await placed.getAttribute('data-footprint-reference');
+        const pad = canvas.locator(`[data-component=${JSON.stringify(componentId)}] [data-board-pad]`).first();
         const bounds = await pad.boundingBox();
         const scale = await canvas.locator('[data-svg-drawing]').evaluate((drawing) => drawing.getScreenCTM().a);
         const x = bounds.x + bounds.width / 2;
@@ -531,7 +534,8 @@ for (const target of ['filesystem', 'electron']) {
         await nativeCommand('File', 'New', 'New PCB');
         await expect(page).toHaveTitle('TinyCAD - Untitled.dpn*');
         await runPcbCommand('View board tools');
-        await editor.getByLabel('Grid (mm)', { exact: true }).fill('1');
+        await page.getByRole('region', { name: 'Board tools', exact: true })
+          .getByLabel('Grid (mm)', { exact: true }).fill('1');
         await placeDevice('J1', 34_000_000, 14_000_000);
         await expect(canvas.locator('[data-component]')).toHaveCount(1);
         await expect(canvas.locator('[data-placement-preview]')).toHaveCount(0);
@@ -549,7 +553,7 @@ for (const target of ['filesystem', 'electron']) {
         expect((await api.decodeBoard(await readFile(untitled))).footprints[0].positionNm)
           .toEqual({ x: 34_000_000, y: 14_000_000 });
       } else if (target === 'electron') {
-        await closeStandaloneBoard(editor);
+        await runPcbCommand('Close board');
         await expect(editor).toBeHidden();
         await expect.poll(() => page.evaluate(() => window.portableBoardMenus)).toEqual([]);
       }

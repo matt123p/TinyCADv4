@@ -26,7 +26,7 @@ import RouteDeletionOverlay from './RouteDeletionOverlay';
 import type { BoardTrack, BoardVia } from '../../pcb/boardRouting';
 import type { TrackEditPreview } from './TrackEditOverlay';
 import { dimensionGeometry, dimensionText, snapMeasurementPoint } from '../../pcb/boardAnnotations';
-import { routingSnapTargets, snapRoutePoint } from '../../pcb/routingSnap';
+import { routingSnapTargets, snapRouteTarget } from '../../pcb/routingSnap';
 import type { RouteSnap } from '../../pcb/routingSnap';
 import { FootprintPreviewDrawing } from '../projects/DeviceFootprintPreview';
 import { artworkBounds, FootprintArtwork, PadShapeDrawing } from '../projects/FootprintArtwork';
@@ -48,6 +48,17 @@ const point = ({ x, y }: BoardPoint) => `${x},${-y}`;
 const ring = (points: readonly BoardPoint[]) =>
   'M' + points.map(point).join(' L') + ' Z';
 const netHighlight = '#1765db';
+const copperColor = (layer: CopperLayer['id']) => boardLayerById.get(copperBoardLayer(layer)).color;
+
+export type BoardContextTarget = {
+  componentId?: string;
+  routeId?: string;
+  copper?: CopperObject;
+  artwork?: BoardPickTarget;
+  at?: BoardPoint;
+  handle?: number;
+  routeStart?: RouteSnap & { label?: string };
+};
 
 export interface PlacementPreview {
   pads: ReturnType<typeof placementPadTemplates>;
@@ -178,6 +189,7 @@ const RoutedCopper = React.memo(function RoutedCopper({
         shape: <line
           key={id}
           data-track={id}
+          data-copper-layer={layerId}
           {...pickingAttributes?.({
             kind: 'track', id, layer: layerId, locked,
             label: netNames.get(netId) ?? 'Unassigned',
@@ -189,7 +201,7 @@ const RoutedCopper = React.memo(function RoutedCopper({
           x2={svgLength(end.x)}
           y2={svgLength(-end.y)}
           strokeLinecap="round"
-          stroke={reviewRequired ? '#a52c24' : layerId === 'top' ? '#b17a2d' : '#397188'}
+          stroke={reviewRequired ? '#a52c24' : copperColor(layerId)}
           strokeWidth={svgLength(widthNm)}
         />,
       };
@@ -293,18 +305,18 @@ const PlacedFootprint = React.memo(function PlacedFootprint({
   hoveredPadLayer?: string;
 }) {
   const { id, label, placement, pads, copper } = feature;
-  const fill = selected || inGroup ? '#b34b27' : '#226a59';
   const visible = (layerId: CopperLayer['id']) => visibleCopper === 'all' || layerId === visibleCopper;
   const pickingAttributes = (padId: string, layer: CopperLayer['id'], padLabel: string) => ({
       pointerEvents: pickableLayers.has(copperBoardLayer(layer)) ? undefined : 'none',
       'data-board-pad-layer': layer,
+      'data-copper-layer': layer,
       'data-board-pick': picking ? JSON.stringify({
         kind: 'pad', id: padId, layer, componentId: id, label: label + ' · ' + padLabel,
         locked: placement.locked || placement.positionLocked || placement.rotationLocked,
       } satisfies BoardPickTarget) : undefined,
     });
-  const padFill = (padId: string, highlighted: boolean) => highlighted
-    ? netHighlight : selected && padId === selectedPad ? '#af242e' : fill;
+  const padFill = (padId: string, highlighted: boolean, layer: CopperLayer['id']) => highlighted
+    ? netHighlight : selected && padId === selectedPad ? '#af242e' : copperColor(layer);
 
   return (
     <g data-component={id} data-component-selected={selected || undefined}
@@ -320,7 +332,7 @@ const PlacedFootprint = React.memo(function PlacedFootprint({
           <PadShapeDrawing
             key={padId + ':' + layerId}
             shape={shape}
-            colour={padFill(padId, highlighted)}
+            colour={padFill(padId, highlighted, layerId)}
             hovered={hovered && (!hoveredPad || hoveredPad === padId && hoveredPadLayer === layerId) && pickableLayers.has(copperBoardLayer(layerId))}
             attributes={{
               'data-board-pad': padId,
@@ -334,7 +346,7 @@ const PlacedFootprint = React.memo(function PlacedFootprint({
         const highlighted = !!netId && netId === selectedNet;
         return (
           <PadShapeDrawing key={padId} shape={{ kind: 'capsule', start: position, end: position, widthNm: margin * 0.17 }}
-            colour={padFill(padId, highlighted)} hovered={hovered && (!hoveredPad || hoveredPad === padId)}
+            colour={padFill(padId, highlighted, placement.side)} hovered={hovered && (!hoveredPad || hoveredPad === padId)}
             attributes={{ 'data-board-pad': padId, ...pickingAttributes(padId, placement.side, label),
               'data-net-highlighted': highlighted || undefined }} />
         );
@@ -435,9 +447,7 @@ export default function BoardCanvas({
   placementPreview?: PlacementPreview;
   showRulers: boolean;
   onDropComponent?(id: string, x: number, y: number): void;
-  onContextCommand(point: { x: number; y: number }, object?: {
-    componentId?: string; routeId?: string; copper?: CopperObject; artwork?: BoardPickTarget; at?: BoardPoint; handle?: number;
-  }): void;
+  onContextCommand(point: { x: number; y: number }, object?: BoardContextTarget): void;
   textDrawing?: Extract<FootprintGraphic, { kind: 'text' }>;
   trackWidthNm: number;
   onLocation(x: number, y: number): void;
@@ -445,8 +455,11 @@ export default function BoardCanvas({
   routingSnap?: {
     layer: CopperLayer['id'];
     activeNet?: string;
-    connect(snap: RouteSnap): void;
-    preview(x: number, y: number, target?: BoardPoint): { points: readonly BoardPoint[]; blocked: boolean } | undefined;
+    connect(snap: RouteSnap, label?: string): void;
+    preview(x: number, y: number, target?: BoardPoint): {
+      points: readonly BoardPoint[];
+      obstruction?: { point: BoardPoint; message: string };
+    } | undefined;
   };
   onRouteObject(id: string, netId?: string, picked?: BoardPoint, wholeRoute?: boolean): void;
   onComponent(componentId: string): void;
@@ -639,9 +652,13 @@ export default function BoardCanvas({
   }, [board, geometry]);
   const routing = !!routingSnap;
   const snapTargets = useMemo(() => routing ? routingSnapTargets(board) : [], [board, routing]);
+  const routeStartLabels = useMemo(() => new Map<string, string>(geometry.features.flatMap((feature) =>
+    feature.copper.map(({ padId, label, layerId }) =>
+      [`${feature.placement.id}:${padId}:${layerId}`, `${feature.label} · pad ${label}`] as const),
+  )), [geometry.features]);
   function routeSnapAt(x: number, y: number, unitsPerPixel: number) {
     if (routingSnap)
-      return snapRoutePoint(
+      return snapRouteTarget(
         snapTargets, { x, y: -y }, 8 * unitsPerPixel, routingSnap.layer, routingSnap.activeNet,
       );
   }
@@ -801,7 +818,7 @@ export default function BoardCanvas({
     target.componentId === selected && !placement.locked && canPickOnLayers(pickableLayers, target));
 
   return (
-    <div ref={drawing} className="circuit-drawing pcb-svg"
+    <div ref={drawing} className="circuit-drawing pcb-svg" data-routing-side={routingSnap?.layer}
       onPointerDown={(event) => {
         if (event.button !== 0) return;
         suppressClick.current = false;
@@ -1025,6 +1042,20 @@ export default function BoardCanvas({
         const graphic = board.annotations?.graphics?.[Number(artworkIndex)];
         const location = pointerOnCanvas(event);
         const at = location && { x: Math.round(location.x), y: Math.round(-location.y) };
+        const pad = element.closest('[data-board-pad]');
+        const padId = pad?.getAttribute('data-board-pad');
+        const padLayer = pad?.getAttribute('data-board-pad-layer');
+        const componentId = hit?.getAttribute('data-component') ?? undefined;
+        const feature = padId && geometry.features.find(({ id }) => id === componentId);
+        let routeStart: BoardContextTarget['routeStart'];
+        if (!routing && at && feature && (padLayer === 'top' || padLayer === 'bottom') &&
+          canPickOnLayers(pickableLayers, { kind: 'pad', layer: padLayer })) {
+          const target = snapRouteTarget(
+            routingSnapTargets(board).filter(({ id }) => id === `${feature.placement.id}:${padId}:${padLayer}`),
+            at, 0, padLayer,
+          );
+          if (target) routeStart = { ...target.snap, label: routeStartLabels.get(target.id) };
+        }
         let copper = handle === undefined ? copperHit(event.target) : selectedCopper;
         let shapeHandle = handle === undefined ? undefined : Number(handle);
         if (!hit && at && areaEditing?.kind === 'polygon' && selectedCopper && canPickOnLayers(pickableLayers, selectedCopper) &&
@@ -1037,9 +1068,9 @@ export default function BoardCanvas({
           }
         }
         onContextCommand({ x: event.clientX, y: event.clientY }, {
-          componentId: hit?.getAttribute('data-component') ?? undefined,
+          componentId,
           routeId: hit?.getAttribute('data-track') ?? hit?.getAttribute('data-via') ?? undefined,
-          copper, artwork: graphic && boardArtworkTarget(graphic, Number(artworkIndex)), at, handle: shapeHandle,
+          copper, artwork: graphic && boardArtworkTarget(graphic, Number(artworkIndex)), at, handle: shapeHandle, routeStart,
         });
       }}
       onDragOver={onDropComponent && ((event) => {
@@ -1070,7 +1101,7 @@ export default function BoardCanvas({
         onLocation={(x, y, unitsPerPixel) => {
           const routeTarget = routeSnapAt(x, y, unitsPerPixel);
           if (routeTarget) {
-            routingSnap.connect(routeTarget);
+            routingSnap.connect(routeTarget.snap, routeStartLabels.get(routeTarget.id));
             return;
           }
           if (onMeasure) {
@@ -1126,19 +1157,19 @@ export default function BoardCanvas({
           if (pointer && first) return drawingPreview(first, copperDrawing.snap(pointer[0], pointer[1]));
         } : routing ? (pointer) => {
           if (!pointer) return;
-          const snap = routeSnapAt(...pointer);
+          const snap = routeSnapAt(...pointer)?.snap;
           const leg = routingSnap.preview(pointer[0], pointer[1], snap?.position);
           const width = Math.max(180_000, trackWidthNm);
-          const blockedEnd = leg?.blocked ? leg.points.at(-1) : undefined;
+          const obstruction = leg?.obstruction;
           const markerSize = 3 * pointer[2];
           return <g pointerEvents="none">
             {leg && <path
-              data-route-preview={leg.blocked ? 'blocked' : 'clear'}
+              data-route-preview={obstruction ? 'blocked' : 'clear'}
               d={'M' + leg.points.map(point).join(' L')}
               fill="none"
-              stroke={leg.blocked ? '#b72525' : '#1765db'}
+              stroke={obstruction ? '#b72525' : '#1765db'}
               strokeWidth={width}
-              strokeDasharray={leg.blocked ? `${3 * width} ${2 * width}` : undefined}
+              strokeDasharray={obstruction ? `${3 * width} ${2 * width}` : undefined}
               strokeLinecap="round"
               strokeLinejoin="round"
               opacity="0.8"
@@ -1151,12 +1182,15 @@ export default function BoardCanvas({
               strokeWidth="2"
               vectorEffect="non-scaling-stroke"
             />}
-            {blockedEnd && <g data-route-blocked-marker="" aria-hidden="true"
-              transform={svgTranslation(blockedEnd.x, -blockedEnd.y)}>
+            {obstruction && <g data-route-blocked-marker=""
+              transform={svgTranslation(obstruction.point.x, -obstruction.point.y)}>
               <circle {...svgCircle(0, 0, markerSize * 1.8)} fill="white" />
               <path d={`M${-markerSize},${-markerSize} L${markerSize},${markerSize} M${markerSize},${-markerSize} L${-markerSize},${markerSize}`}
                 fill="none" stroke="#b72525" strokeWidth={2}
                 strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+              <ScaledSvgText x={0} y={-markerSize * 3} fill="#90221e" textAnchor="middle"
+                stroke="white" strokeWidth={3} vectorEffect="non-scaling-stroke" paintOrder="stroke"
+                fontSize={12 * pointer[2]}>{obstruction.message}</ScaledSvgText>
             </g>}
           </g>;
         } : offsets && ((pointer) => previewAt(pointer && [pointer[0], pointer[1]]))}
@@ -1165,9 +1199,9 @@ export default function BoardCanvas({
           d={[geometry.profile.outer, ...geometry.profile.holes]
             .map(ring)
             .join(' ')}
-          fill="#e8f0e9"
+          fill="#e9edf0"
           fillRule="evenodd"
-          stroke={hiddenLayers.has('Edge.Cuts') ? 'none' : '#465b52'}
+          stroke={hiddenLayers.has('Edge.Cuts') ? 'none' : '#445464'}
           strokeWidth={margin * 0.065}
         />
         {!hiddenLayers.has('Edge.Cuts') && geometry.profile.holes.map((outline, index) => {
@@ -1307,10 +1341,11 @@ export default function BoardCanvas({
           <path
             key={netId + ':' + index}
             d={'M' + point(start) + ' L' + point(end)}
-            stroke={netId === selectedNet ? netHighlight : '#8292a3'}
+            stroke={netId === selectedNet ? netHighlight : '#64768a'}
             fill="none"
-            strokeWidth={margin * 0.04}
-            strokeDasharray={margin * 0.16}
+            strokeWidth={1.25}
+            strokeDasharray="4 4"
+            vectorEffect="non-scaling-stroke"
             pointerEvents="none"
           />
         ))}

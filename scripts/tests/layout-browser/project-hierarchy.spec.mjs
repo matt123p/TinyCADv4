@@ -1,4 +1,4 @@
-import { clickPcbCommand, drawPcbOutline, pcbNetRow, selectCopperRow, selectPcbNet } from './pcb-controls.mjs';
+import { pcbMoreCommand, clickPcbCommand, drawPcbOutline, pcbNetRow, selectCopperRow, selectPcbNet } from './pcb-controls.mjs';
 import { test, expect } from '@playwright/test';
 import { TextWriter, Uint8ArrayReader, ZipReader } from '@zip.js/zip.js';
 import { createHash } from 'node:crypto';
@@ -1723,8 +1723,8 @@ test('places bundled SMT and through-hole packages and reopens their embedded ST
     });
     await page.goto(app.baseURL + '?project=1');
     const projects = page.getByRole('region', { name: 'Projects', exact: true });
-    await projects.getByRole('button', { name: 'Circuit.dsn', exact: true }).click({ button: 'right' });
-    await page.getByRole('menuitem', { name: 'Create PCB from Schematic…', exact: true }).click();
+    await projects.getByRole('button', { name: 'Circuit.dsn', exact: true }).click();
+    await projects.getByRole('button', { name: 'Create PCB from Schematic…', exact: true }).click();
     await page.getByRole('dialog', { name: 'Create PCB from Schematic…', exact: true })
       .getByRole('button', { name: 'OK', exact: true }).click();
     const transfer = page.getByRole('dialog', { name: 'Create PCB from Schematic', exact: true });
@@ -1746,14 +1746,18 @@ test('places bundled SMT and through-hole packages and reopens their embedded ST
     await transfer.getByRole('button', { name: 'Create linked PCB' }).click();
     const editor = page.getByRole('region', { name: 'PCB layout' });
     const placed = editor.getByRole('grid', { name: 'Placed components', exact: true });
+    const unplaced = page.getByRole('list', { name: 'Unplaced components', exact: true });
+    if (!(await unplaced.isVisible())) await editor.getByRole('button', { name: 'Show unplaced components (2)', exact: true }).click();
     for (const [reference, x, rotation, side] of [['D1', '18', '90', 'bottom'], ['J1', '32', '0', 'top']]) {
-      await editor.getByRole('list', { name: 'Unplaced components', exact: true })
+      await unplaced
         .getByRole('button', { name: new RegExp('^' + reference + ' ·') }).click();
       const place = editor.getByRole('group', { name: 'Place ' + reference, exact: true });
       await place.getByLabel('X (mm)', { exact: true }).fill(x);
       await place.getByLabel('Rotation (°)', { exact: true }).fill(rotation);
       await place.getByLabel('Layer', { exact: true }).selectOption(side);
       await place.getByRole('button', { name: 'Place at coordinates' }).click();
+      await expect(editor.getByRole('group', { name: 'Position ' + reference, exact: true })).toBeVisible();
+      await clickPcbCommand(editor, 'View components');
       await expect(placed).toContainText(reference);
     }
 
@@ -2374,11 +2378,12 @@ async function completeLedExercise(page, info, offset) {
     await expect(schematicPane).toHaveCount(0);
     await expect(canvas).toBeVisible();
 
-    const unplaced = layout.getByRole('list', { name: 'Unplaced components', exact: true });
+    const unplaced = page.getByRole('list', { name: 'Unplaced components', exact: true });
+    if (!(await unplaced.isVisible())) await layout.getByRole('button', { name: 'Show unplaced components (3)', exact: true }).click();
     await expect(unplaced.getByRole('listitem')).toHaveCount(3);
     await unplaced.getByRole('button', { name: /^D1/ }).click();
-    await expect(layout.getByRole('img', { name: 'Footprint pad preview' })).toBeVisible();
-    await layout.getByRole('button', { name: 'First board guide', exact: true }).click();
+    await expect(page.getByRole('img', { name: 'Footprint pad preview' })).toBeVisible();
+    await (await pcbMoreCommand(layout, 'First board guide')).click();
     await expect(page.getByRole('region', { name: 'First board guide' })).toBeVisible();
     const placed = layout.getByRole('grid', { name: 'Placed components', exact: true });
     for (const footprint of reference.footprints) {
@@ -2407,7 +2412,6 @@ async function completeLedExercise(page, info, offset) {
       await selectPcbNet(layout, netId);
       await clickBoardPoint(tracks[0].start);
       for (const { end } of tracks) await clickBoardPoint(end);
-      await layout.getByRole('button', { name: 'Finish route', exact: true }).click();
       await expect(layout.getByRole('button', { name: 'Route track', exact: true })).toBeVisible();
     }
     await layout.getByRole('button', { name: 'Save', exact: true }).click();
@@ -2423,8 +2427,8 @@ async function completeLedExercise(page, info, offset) {
     await checks.getByText('Check coverage', { exact: true }).click();
     await expect(checks.getByText(/Schematic parity · checked/)).toBeVisible();
     await checks.getByRole('button', { name: 'Close', exact: true }).click();
-    await clickPcbCommand(layout, 'CAM read-back preview…');
-    const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+    await clickPcbCommand(layout, 'Manufacturing preview…');
+    const cam = page.getByRole('dialog', { name: 'Manufacturing preview' });
     await expect(cam.getByRole('status')).toContainText('Gerber and drill read-back matched revision');
     await expect(cam.locator('[data-plating="plated"]')).toHaveCount(6);
     const downloadEvent = page.waitForEvent('download');
@@ -2511,7 +2515,7 @@ async function completeLedExercise(page, info, offset) {
     expect(working.releaseParent).toEqual({
       id: releaseManifest.reviewId, revision: completed.revision, boardSha256: releaseManifest.nativeBoardSha256,
     });
-    await clickPcbCommand(layout, 'CAM read-back preview…');
+    await clickPcbCommand(layout, 'Manufacturing preview…');
     await reviewEveryCamLayer(cam);
     const nextReleaseEvent = page.waitForEvent('download');
     await release.click();
@@ -2662,8 +2666,8 @@ test('reviews moved pads and changed drills without changing unrelated routes', 
     await expect(layout).toBeHidden();
     await expect(page.locator('svg').getByText('D1', { exact: true })).toBeVisible();
     await projects.getByRole('button', { name: 'LED.dpn', exact: true }).click();
-    await clickPcbCommand(layout, 'CAM read-back preview…');
-    const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+    await clickPcbCommand(layout, 'Manufacturing preview…');
+    const cam = page.getByRole('dialog', { name: 'Manufacturing preview' });
     await cam.getByText(/Manufacturing review · [1-9][0-9]* release blockers/).click();
     await expect(cam.getByRole('button', { name: 'Release and download…' })).toBeDisabled();
     const download = page.waitForEvent('download');
@@ -2713,8 +2717,8 @@ test('checks and exports the adversarial geometry reference offline', async ({ p
     if (!(await physical.isVisible())) await checks.getByText('Check coverage', { exact: true }).click();
     await expect(physical).toBeVisible();
     await checks.getByRole('button', { name: 'Close', exact: true }).click();
-    await clickPcbCommand(layout, 'CAM read-back preview…');
-    const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+    await clickPcbCommand(layout, 'Manufacturing preview…');
+    const cam = page.getByRole('dialog', { name: 'Manufacturing preview' });
     await expect(cam.getByRole('img', { name: 'CAM read-back' })).toBeVisible();
     await cam.getByText(/Manufacturing review · .* release blockers/).click();
     await expect(cam.getByRole('list', { name: 'Release blockers' }).getByRole('listitem')
@@ -2798,8 +2802,8 @@ test('cross-probes the simulated RC node on the offline filter reference', async
     await checks.getByText('Check coverage', { exact: true }).click();
     await expect(checks.getByText(/Schematic parity · checked/)).toBeVisible();
     await checks.getByRole('button', { name: 'Close', exact: true }).click();
-    await clickPcbCommand(layout, 'CAM read-back preview…');
-    const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+    await clickPcbCommand(layout, 'Manufacturing preview…');
+    const cam = page.getByRole('dialog', { name: 'Manufacturing preview' });
     await expect(cam.getByRole('img', { name: 'CAM read-back' })).toBeVisible();
     const event = page.waitForEvent('download');
     await cam.getByRole('button', { name: 'Download preview bundle…' }).click();
@@ -2830,9 +2834,9 @@ test('checks both regulator packages and exports bottom thermal changes offline'
     await expect(layout.getByRole('grid', { name: 'Placed components' })).toContainText('U1');
     await expect(layout.getByRole('grid', { name: 'Placed components' })).toContainText('U2');
     const checks = page.getByRole('region', { name: 'PCB design checks' });
-    const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+    const cam = page.getByRole('dialog', { name: 'Manufacturing preview' });
     async function downloadPreview(name, review) {
-      await clickPcbCommand(layout, 'CAM read-back preview…');
+      await clickPcbCommand(layout, 'Manufacturing preview…');
       await expect(cam.getByRole('img', { name: 'CAM read-back' })).toBeVisible();
       if (review) await review();
       const event = page.waitForEvent('download');
@@ -2911,8 +2915,8 @@ test('checks the copied MCU and sensor schematic, board, and antenna keepout off
     await openChecks();
     await expect(checks.getByRole('status')).toContainText('found no issues', { timeout: 30_000 });
     await closeChecks();
-    const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
-    await clickPcbCommand(layout, 'CAM read-back preview…');
+    const cam = page.getByRole('dialog', { name: 'Manufacturing preview' });
+    await clickPcbCommand(layout, 'Manufacturing preview…');
     await expect(cam.getByRole('img', { name: 'CAM read-back' })).toBeVisible({ timeout: 40_000 });
     const event = page.waitForEvent('download');
     await cam.getByRole('button', { name: 'Download preview bundle…' }).click();
@@ -2969,7 +2973,7 @@ test('rebuilds zone copper for release after clearance and outline edits', async
     await expect(layout.getByText('Zones filled.', { exact: true })).toBeVisible();
     await expect(fill).toHaveCount(1);
 
-    const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+    const cam = page.getByRole('dialog', { name: 'Manufacturing preview' });
     const release = cam.getByRole('button', { name: 'Release and download…' });
     async function download(button, name) {
       const event = page.waitForEvent('download');
@@ -2978,7 +2982,7 @@ test('rebuilds zone copper for release after clearance and outline edits', async
       await (await event).saveAs(artifact);
       return artifact;
     }
-    const openCam = () => clickPcbCommand(layout, 'CAM read-back preview…');
+    const openCam = () => clickPcbCommand(layout, 'Manufacturing preview…');
     await openCam();
     await reviewEveryCamLayer(cam);
     const prior = await download(cam.getByRole('button', { name: 'Download preview bundle…' }), 'zone-before.zip');
@@ -2991,7 +2995,7 @@ test('rebuilds zone copper for release after clearance and outline edits', async
     await clickPcbCommand(layout, 'PCB Size & Shape…');
     const outline = page.getByRole('dialog', { name: 'PCB Size & Shape' });
     await outline.getByLabel('Width (mm)', { exact: true }).fill('38');
-    await outline.getByRole('button', { name: 'Apply', exact: true }).click();
+    await outline.getByRole('button', { name: 'Apply outline', exact: true }).click();
     await expect(layout.getByText('Zone fill is stale.', { exact: true })).toBeVisible();
     await expect(layout.getByText('Design checks are stale.', { exact: true })).toBeVisible();
     await expect(fill).toHaveCount(0);
@@ -3091,8 +3095,8 @@ test('keeps DNP pads in copper checks and excludes the part from fitted exports'
     expect(dnp.tracks).toEqual(original.tracks);
     expect(dnp.footprints).toEqual(original.footprints);
     expect(dnp.deviceDefinitions).toEqual(original.deviceDefinitions);
-    await clickPcbCommand(layout, 'CAM read-back preview…');
-    const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+    await clickPcbCommand(layout, 'Manufacturing preview…');
+    const cam = page.getByRole('dialog', { name: 'Manufacturing preview' });
     const event = page.waitForEvent('download');
     await cam.getByRole('button', { name: 'Download preview bundle…' }).click();
     const archive = info.outputPath('led-dnp-cam-preview.zip');
@@ -3168,8 +3172,8 @@ test('opens and edits the single-sided timer and logic reference offline', async
     await expect(findings).toHaveCount(1, { timeout: 30_000 });
     await expect(findings).toContainText('Separate bare copper islands require fitted wire jumpers');
     await checks.getByRole('button', { name: 'Close', exact: true }).click();
-    await clickPcbCommand(board, 'CAM read-back preview…');
-    const cam = page.getByRole('dialog', { name: 'CAM read-back preview' });
+    await clickPcbCommand(board, 'Manufacturing preview…');
+    const cam = page.getByRole('dialog', { name: 'Manufacturing preview' });
     await expect(cam.getByRole('img', { name: 'CAM read-back' })).toBeVisible({ timeout: 55_000 });
     const download = page.waitForEvent('download');
     await cam.getByRole('button', { name: 'Download preview bundle…' }).click();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SplitMenuButton } from '../toolbar/SplitMenuButton';
+import { Menu, MenuItem, MenuList, MenuPopover, MenuTrigger } from '@fluentui/react-components';
 import { rectangleImage, ellipseImage, lineImage } from '../toolbar/shapeToolImages';
 
 export const areaToolShapes = [
@@ -15,20 +15,31 @@ export const openingToolShapes = [
 ] as const;
 export type OpeningToolShape = (typeof openingToolShapes)[number]['key'];
 export const areaTools = [
-  { kind: 'region', label: 'Routing area', buttonLabel: 'Routing' },
-  { kind: 'area', label: 'Placement area', buttonLabel: 'Placement' },
-  { kind: 'zone', label: 'Copper area', buttonLabel: 'Copper' },
-  { kind: 'cutout', label: 'Board cutout', buttonLabel: 'Cutout' },
+  { kind: 'region', label: 'Routing region' },
+  { kind: 'area', label: 'Placement area' },
+  { kind: 'zone', label: 'Copper zone' },
+  { kind: 'cutout', label: 'Cutout' },
 ] as const;
-export type AreaTool = (typeof areaTools)[number]['kind'];
 
-export function BoardShapeTool<Shape extends BoardDrawShape>({ label, buttonLabel, choices, current, active, disabled, onDraw }: {
-  label: string; buttonLabel: string; current: Shape; active: boolean; disabled: boolean;
+export function BoardShapeMenu<Shape extends BoardDrawShape>({ label, choices, disabled, onDraw }: {
+  label: string;
   choices: readonly { key: Shape; text: string; image: string }[];
+  disabled: boolean;
   onDraw(shape: Shape): void;
 }) {
-  return <SplitMenuButton text={label} buttonLabel={buttonLabel} optionsSuffix="shape options" highlighted={active} disabled={disabled}
-    mainImage={choices.find(({ key }) => key === current).image} onMainClick={() => onDraw(current)}
-    menuItems={choices}
-    onMenuItemClick={({ key }) => onDraw(key)} />;
+  return (
+    <Menu>
+      <MenuTrigger disableButtonEnhancement>
+        <MenuItem disabled={disabled}>{label}</MenuItem>
+      </MenuTrigger>
+      <MenuPopover>
+        <MenuList>
+          {choices.map(({ key, text, image }) => (
+            <MenuItem key={key} icon={<img src={image} width={18} height={18} alt="" />}
+              onClick={() => onDraw(key)}>{text}</MenuItem>
+          ))}
+        </MenuList>
+      </MenuPopover>
+    </Menu>
+  );
 }
