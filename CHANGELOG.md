@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- Set the font and size of visible symbol attributes in the **Text Size** tab. Set drawing-wide defaults for Ref, Name and custom attributes, and override either setting for individual symbols or a multi-selection. Font changes preserve label positions and values. [#34](https://github.com/matt123p/TinyCADv4/issues/34)
+
+### Changed
+
+- Save symbol attribute fonts through DSN font tables and preserve the reserved pin font on sheets that use it.
+
 ## v4.1.2 — 2026-11-24
 
 This release improves desktop printing and the display of names on standard library symbols. It also expands the bundled SPICE model catalog and adds support for importing KiCad simulation models.

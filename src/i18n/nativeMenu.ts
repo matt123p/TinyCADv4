@@ -55,7 +55,7 @@ export const buildNativeMenuTranslations = (t: TFunction<'common'>): NativeMenuT
   designDetails: menuLabel(t, 'toolbar.designDetails', 'Design Details...'),
   pageSize: menuLabel(t, 'toolbar.pageSize', 'Page Size...'),
   settingsDialog: menuLabel(t, 'toolbar.settingsDialog', 'Settings...'),
-  symbolPropertyFontDefaults: menuLabel(t, 'panel.symbol.fontDefaults', 'Symbol Property Font Defaults') + '...',
+  symbolPropertyFontDefaults: menuLabel(t, 'panel.symbol.fontDefaults', 'Default Symbol Attribute Fonts') + '...',
   colours: menuLabel(t, 'toolbar.colours', 'Colours...'),
 
   discord: menuLabel(t, 'toolbar.discord', 'Discord'),

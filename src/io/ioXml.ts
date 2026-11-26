@@ -39,7 +39,7 @@ import {
   NetlistTypeDefinition,
   ensureNetlistTypes,
 } from '../model/dsnDrawing';
-import { isStroked, isFilled, isText } from '../model/dsnTypeGuards';
+import { isStroked, isFilled } from '../model/dsnTypeGuards';
 import { get_global_id } from '../util/global_id';
 import { Snap } from '../manipulators/snap';
 import { updateLine } from '../manipulators/updateLine';
@@ -71,6 +71,17 @@ interface XMLFont {
   STRIKEOUT: number;
   CHARSET: number;
 }
+
+type SymbolFieldFontIds = WeakMap<dsnSymbol, (number | undefined)[]>;
+
+interface SheetFonts {
+  custom: XMLFont[];
+  usesPinFont: boolean;
+}
+
+// TinyCAD v3 reserves 0 for text, 1 for pin text, and 2 for rulers.
+const pinFontId = 1;
+const firstCustomFontId = 3;
 
 interface XMLFill {
   INDEX: string;
@@ -219,7 +230,7 @@ export class ioXML {
           r.netTypeAssignments = parsed.assignments;
         }
         if (nodes[i].nodeName === 'DSNSETTINGS') {
-          r.settings = this.readSettings(nodes[i]);
+          r.settings = this.readSettings(root[0], nodes[i]);
         }
       }
     }
@@ -251,6 +262,18 @@ export class ioXML {
       referencedSpiceModelPacks({ symbols: catalogSymbols }, drawing.spiceModelPacks, true));
     if (packs.length)
       dsn.appendChild('SPICE_MODEL_PACKS', JSON.stringify(packs), { version: '1' });
+    // Drawing defaults have document-scoped IDs. Each schematic keeps its own font table.
+    const defaultFonts: XMLFont[] = [];
+    const propertyDefaults = (drawing.settings?.symbolPropertyFonts ?? []).map(({ description, ...font }) => {
+      const id = this.registerFont(defaultFonts, {
+        font_name: font.font_name ?? 'Arial',
+        font_size: font.font_size ?? 10,
+        font_bold: false,
+        font_italic: false,
+      });
+      return { description, ...this.propertyFontReference(font, id) };
+    });
+    this.writeFonts(dsn, defaultFonts);
     for (var i = 0; i < drawing.sheets.length; ++i) {
       const sheet = drawing.sheets[i];
       if (sheet.kind === 'simulation') {
@@ -266,7 +289,11 @@ export class ioXML {
         false,
       );
     }
-    this.writeSettings(dsn, drawing.settings);
+    const settings = dsn.appendChild('DSNSETTINGS');
+    settings.appendChild('SHOW_RULERS', drawing.settings?.showRulers === false ? '0' : '1');
+    for (const attributes of propertyDefaults) {
+      settings.appendChild('SYMBOL_PROPERTY_FONT', null, attributes);
+    }
     this.writeNetlistTypes(dsn, drawing);
 
     return dsn;
@@ -291,7 +318,8 @@ export class ioXML {
     // 8. ... Drawing Objects ...
 
     // Compile a list of fonts, styles, fills, symboldefs & images
-    let fonts: XMLFont[] = [];
+    const fonts: SheetFonts = { custom: [], usesPinFont: false };
+    const fieldFontIds: SymbolFieldFontIds = new WeakMap();
     let styles: XMLStyle[] = [];
     let fills: XMLFill[] = [];
     let symboldefs: { [key: string]: XMLSymbolDef } = {};
@@ -303,7 +331,7 @@ export class ioXML {
     );
 
     // Create the resources and document for insertion later
-    this.to_resources(root, items, fonts, styles, fills, symboldefs, images);
+    this.to_resources(root, items, fonts, styles, fills, symboldefs, images, fieldFontIds);
 
     if (sheet.id) root.insert.setAttribute('id', sheet.id);
 
@@ -338,12 +366,15 @@ export class ioXML {
     }
 
     // 3.. FONT (s)
-    for (let index = 0; index < fonts.length; ++index) {
-      let font = root.appendChild('FONT', null, {
-        id: index + 1,
-      });
-      font.appendChildren(fonts[index]);
+    if (fonts.usesPinFont) {
+      root.appendChild('FONT', null, { id: pinFontId }).appendChildren(this.fontResource({
+        font_name: 'Arial',
+        font_size: -10, // The legacy Windows logical height for the built-in pin font.
+        font_bold: false,
+        font_italic: false,
+      }));
     }
+    this.writeFonts(root, fonts.custom);
 
     // 4.. STYLE (s)
     for (let index = 0; index < styles.length; ++index) {
@@ -392,7 +423,7 @@ export class ioXML {
           tinycad = symboldef.appendChild('TinyCADSheets');
           for (let i = 0; i < symbol.outlines.length; ++i) {
             const ts = tinycad.appendChild('TinyCAD');
-            this.to_tinycad_simple(sheet, ts, symbol.outlines[i].items, false);
+            this.to_tinycad_simple(sheet, ts, symbol.outlines[i].items, false, fieldFontIds);
           }
         } else {
           tinycad = symboldef.appendChild('TinyCAD');
@@ -401,6 +432,7 @@ export class ioXML {
             tinycad,
             symbol.outlines[0].items,
             false,
+            fieldFontIds,
           );
         }
       }
@@ -473,19 +505,43 @@ export class ioXML {
     }
 
     // Now the actual drawing objects
-    this.to_tinycad_simple(sheet, root, items, no_junctions);
+    this.to_tinycad_simple(sheet, root, items, no_junctions, fieldFontIds);
 
     return root;
   }
 
-  to_resources(
+  private fontResource(font: Text): XMLFont {
+    return {
+      HEIGHT: font.font_size,
+      FACENAME: font.font_name,
+      WIDTH: 0,
+      WEIGHT: font.font_bold ? 700 : 400,
+      ITALIC: font.font_italic ? 255 : 0,
+      UNDERLINE: 0,
+      STRIKEOUT: 0,
+      CHARSET: 0,
+    };
+  }
+
+  private registerFont(fonts: XMLFont[], font: Text) {
+    return this.lookup_item(fonts, this.fontResource(font)) + firstCustomFontId - 1;
+  }
+
+  private writeFonts(root: XMLBuilder, fonts: XMLFont[]) {
+    fonts.forEach((font, index) => {
+      root.appendChild('FONT', null, { id: firstCustomFontId + index }).appendChildren(font);
+    });
+  }
+
+  private to_resources(
     root: XMLBuilder,
     items: DocItem[],
-    fonts: XMLFont[],
+    fonts: SheetFonts,
     styles: XMLStyle[],
     fills: XMLFill[],
     symboldefs: { [key: string]: XMLSymbolDef },
     images: { [key: string]: XMLImageDef },
+    fieldFontIds: SymbolFieldFontIds,
   ) {
     // Extract resources
     for (let i = 0; i < items.length; ++i) {
@@ -521,21 +577,26 @@ export class ioXML {
         }
       }
 
-      if (isText(item)) {
-        let font = {
-          HEIGHT: item.font_size,
-          FACENAME: item.font_name,
-          WIDTH: 0,
-          WEIGHT: item.font_bold ? 700 : 400,
-          ITALIC: item.font_italic ? 255 : 0,
-          UNDERLINE: 0,
-          STRIKEOUT: 0,
-          CHARSET: 0,
-        };
-        item.font_id = this.lookup_item(fonts, font);
+      if (
+        item.NodeName === DocItemTypes.Text ||
+        item.NodeName === DocItemTypes.Label ||
+        item.NodeName === DocItemTypes.BusLabel
+      ) {
+        item.font_id = this.registerFont(fonts.custom, item);
+      }
+      if (
+        item.NodeName === DocItemTypes.Symbol ||
+        item.NodeName === DocItemTypes.Pin ||
+        item.NodeName === DocItemTypes.Power
+      ) {
+        fonts.usesPinFont = true;
       }
 
       if (item.NodeName === DocItemTypes.Symbol) {
+        const symbol = new updateSymbol(item);
+        fieldFontIds.set(item, item.text.map((field) => field.font
+          ? this.registerFont(fonts.custom, symbol.propertyFont(field))
+          : undefined));
         let symboldef = {
           symbol: item._symbol,
         };
@@ -549,6 +610,7 @@ export class ioXML {
             fills,
             symboldefs,
             images,
+            fieldFontIds,
           );
         }
       }
@@ -562,11 +624,12 @@ export class ioXML {
     }
   }
 
-  to_tinycad_simple(
+  private to_tinycad_simple(
     sheet: dsnSheet,
     root: XMLBuilder,
     items: DocItem[],
     no_junctions: boolean,
+    fieldFontIds: SymbolFieldFontIds,
   ) {
     for (let i = 0; i < items.length; ++i) {
       let item = items[i];
@@ -857,7 +920,9 @@ export class ioXML {
               type: field.display,
               show: field.show ? 1 : 0,
             };
-            Object.assign(a, field.font);
+            if (field.font) {
+              Object.assign(a, this.propertyFontReference(field.font, fieldFontIds.get(item)[j]));
+            }
             o.appendChild('FIELD', null, a);
           }
           for (let j = 0; j < item.hints.length; ++j) {
@@ -1410,7 +1475,7 @@ export class ioXML {
                 type: parseInt(fields[j].getAttribute('type'), 10),
                 show: parseInt(fields[j].getAttribute('show'), 10) !== 0,
                 display: parseInt(fields[j].getAttribute('type'), 10),
-                ...this.readPropertyFont(fields[j]),
+                ...this.readPropertyFont(root, fields[j]),
               };
               field.position[1] -= o.font_size;
               o.text.push(field);
@@ -1512,18 +1577,14 @@ export class ioXML {
     return 0;
   }
 
-  private writeSettings(dsn: XMLBuilder, settings: DsnSettings | null | undefined) {
-    const nextSettings: DsnSettings = {
-      showRulers: settings?.showRulers !== false,
-    };
-    const root = dsn.appendChild('DSNSETTINGS');
-    root.appendChild('SHOW_RULERS', nextSettings.showRulers ? '1' : '0');
-    for (const entry of settings?.symbolPropertyFonts ?? []) {
-      root.appendChild('SYMBOL_PROPERTY_FONT', null, entry);
-    }
+  private propertyFontReference(font: SymbolPropertyFont, id: number) {
+    // A font resource is complete even when only one of its settings overrides the default.
+    if (font.font_name === undefined) return { font: id, font_inherit: 'name' };
+    if (font.font_size === undefined) return { font: id, font_inherit: 'size' };
+    return { font: id };
   }
 
-  private readSettings(node: any): DsnSettings {
+  private readSettings(root: Element, node: any): DsnSettings {
     const settings: DsnSettings = {
       showRulers: true,
     };
@@ -1535,7 +1596,7 @@ export class ioXML {
         settings.showRulers = this.nodeText(child) !== '0';
       } else if (child.nodeName === 'SYMBOL_PROPERTY_FONT') {
         const description = child.getAttribute('description');
-        const { font } = this.readPropertyFont(child);
+        const { font } = this.readPropertyFont(root, child);
         if (description !== null && font) {
           (settings.symbolPropertyFonts ??= []).push({ description, ...font });
         }
@@ -1545,12 +1606,16 @@ export class ioXML {
     return settings;
   }
 
-  private readPropertyFont(node: Element): { font?: SymbolPropertyFont } {
+  private readPropertyFont(root: Element, node: Element): { font?: SymbolPropertyFont } {
+    const id = node.getAttribute('font');
+    if (!id) return {};
+    const resource = this.font(root, id, true);
+    const inherit = node.getAttribute('font_inherit');
     const font: SymbolPropertyFont = {};
-    const name = node.getAttribute('font_name')?.trim();
-    const size = Number(node.getAttribute('font_size'));
-    if (name) font.font_name = name;
-    if (Number.isFinite(size) && size > 0) font.font_size = size;
+    if (resource.font_name && inherit !== 'name') font.font_name = resource.font_name;
+    if (Number.isFinite(resource.font_size) && resource.font_size > 0 && inherit !== 'size') {
+      font.font_size = resource.font_size;
+    }
     return Object.keys(font).length ? { font } : {};
   }
 
@@ -1676,7 +1741,7 @@ export class ioXML {
     );
   }
 
-  private font(root: XMLDocument, fs: string) {
+  private font(root: XMLDocument | Element, fs: string, direct = false) {
     const o: Text = {
       font_name: '',
       font_size: 0,
@@ -1687,9 +1752,10 @@ export class ioXML {
     let fonts = root.getElementsByTagName('FONT');
     for (let k = 0; k < fonts.length; ++k) {
       let selected_font = fonts[k];
+      if (direct && selected_font.parentNode !== root) continue;
       if (parseInt(selected_font.getAttribute('id'), 10) === f) {
         o.font_size = this.fontSizeFromHeight(
-          this.nodeNumber(selected_font.getElementsByTagName('HEIGHT')[0]),
+          parseFloat(this.nodeText(selected_font.getElementsByTagName('HEIGHT')[0])) || 0,
         );
         // let width = nodeNumber( font.getElementsByTagName( "WIDTH" )[0] );
         // let underline = nodeNumber( font.getElementsByTagName( "UNDERLINE" )[0] );

@@ -11,6 +11,7 @@ const mapStateToProps = (state: docDrawing) => {
   return {
     drawing: state.docStore.present.drawing,
     sheetId: sheet?.id,
+    isLibraryEditMode: !!state.docStore.present.editLibrary,
     selectedSymbol: update_view.getSelectedSymbol(view, sheet),
   };
 };

@@ -189,7 +189,7 @@ function setPropertyFonts(state: docStore, { target, edits }: SetPropertyFonts):
     if (item.NodeName !== DocItemTypes.Symbol || !selected.has(item._id)) return item;
     const text = item.text.map((field, index) => {
       const edit = byIndex.get(index) ?? byName.get(field.description);
-      if (edit?.description !== field.description) return field;
+      if (!item.textData?.[index] || edit?.description !== field.description) return field;
       const font = editPropertyFont(field.font, edit);
       return font === field.font ? field : { ...field, font };
     });

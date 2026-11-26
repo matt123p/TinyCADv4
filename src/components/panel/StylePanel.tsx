@@ -12,7 +12,7 @@ import {
 } from '@fluentui/react-components';
 import { MergedStyle } from '../../manipulators/updateInterfaces';
 import { actionStyle } from '../../state/dispatcher/AppDispatcher';
-import { FONT_OPTIONS } from './styleFontOptions';
+import { FontDropdown, FontSizeSpinButton } from './FontControls';
 
 const useStyles = makeStyles({
   container: {
@@ -397,42 +397,20 @@ export const StylePanel: React.FC<StylePanelProps> = (props) => {
             </div>
             <div className={styles.row}>
               <span className={styles.label}>{t('panel.style.font')}</span>
-              <Dropdown
+              <FontDropdown
                 style={{ minWidth: '100px' }}
                 placeholder=""
                 value={selectedStyle.font_name || ''}
-                onOptionSelect={(e, data) =>
-                  fontChange(data.optionValue as string)
-                }
+                onFontChange={fontChange}
                 disabled={!('font_name' in selectedStyle)}
-              >
-                {FONT_OPTIONS.map((o) => (
-                  <Option key={o.key} value={o.key}>
-                    {o.text}
-                  </Option>
-                ))}
-              </Dropdown>
+              />
             </div>
             <div className={styles.row}>
               <span className={styles.label}>{t('panel.style.size')}</span>
-              <SpinButton
+              <FontSizeSpinButton
                 style={{ width: '70px' }}
                 value={selectedStyle.font_size}
-                min={4}
-                max={200}
-                step={1}
-                onChange={(e, data) => {
-                  const nextValue = getClampedSpinButtonValue(
-                    data.value,
-                    data.displayValue,
-                    4,
-                    200,
-                  );
-
-                  if (nextValue !== null) {
-                    fontSizeChange(nextValue);
-                  }
-                }}
+                onSizeChange={fontSizeChange}
                 disabled={!('font_size' in selectedStyle)}
               />
               <PanelCheckbox
