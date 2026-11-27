@@ -7,7 +7,7 @@ import {
   SymbolRef,
 } from '../io/netlists/netlistGenerator';
 import { updateSymbol } from '../manipulators/updateSymbol';
-import { dsnDrawing, dsnSheet } from '../model/dsnDrawing';
+import { DrcSource, dsnDrawing, dsnSheet } from '../model/dsnDrawing';
 import { DocItemTypes } from '../model/dsnItem';
 import { makeNetForSheet } from './netlist';
 
@@ -16,6 +16,48 @@ interface SheetSnapshot {
   eprops: { [key: string]: EProp };
   labels: { [key: string]: string };
   symbols: SymbolRef[];
+}
+
+interface HierarchyContext {
+  index: number;
+  prefix: string;
+  path: string[];
+  fileId?: string;
+  sheets: dsnSheet[];
+  children: Map<number, HierarchyContext>;
+  modelPacks?: dsnDrawing['spiceModelPacks'];
+}
+
+function hierarchyContexts(sheets: dsnSheet[]): HierarchyContext[] {
+  const contexts: HierarchyContext[] = [
+    { index: 0, prefix: '', path: [], sheets, children: new Map() },
+  ];
+  // Breadth-first numbering follows v3. Reused drawings share data, not context.
+  for (const context of contexts) {
+    for (const sheet of context.sheets) {
+      if (sheet.hierarchicalSymbol) continue;
+      for (const item of sheet.items) {
+        if (item.NodeName !== DocItemTypes.Symbol || !item._hierarchicalDrawing) continue;
+        const ref = item.text.find((field) => field.description === 'Ref')?.value || `H${contexts.length}`;
+        const child = {
+          index: contexts.length,
+          prefix: context.prefix + ref + '_',
+          path: [...context.path, ref],
+          fileId: item._hierarchicalTarget,
+          sheets: item._hierarchicalDrawing.sheets,
+          children: new Map<number, HierarchyContext>(),
+          modelPacks: item._hierarchicalDrawing.spiceModelPacks,
+        };
+        context.children.set(item._id, child);
+        contexts.push(child);
+      }
+    }
+  }
+  return contexts;
+}
+
+function scopedLabel(index: number, label: string) {
+  return JSON.stringify([index, label]);
 }
 
 class UnionFind {
@@ -99,37 +141,107 @@ function createSheetSnapshot(sheet: dsnSheet): SheetSnapshot {
   };
 }
 
-function mergeSheetSnapshots(sheets: SheetSnapshot[]): NetlistData {
+type ScopedSnapshot = { context: HierarchyContext; sheet: dsnSheet; snapshot: SheetSnapshot };
+
+function mergeSheetSnapshots(sheets: ScopedSnapshot[]): NetlistData {
   const uf = new UnionFind();
   const labelsToKeys = new Map<string, Set<string>>();
+  const exportedLabels = new Map<string, string>();
   const flatNets = new Map<string, NetListNode[]>();
   const flatEprops = new Map<string, EProp>();
   const symbols: SymbolRef[] = [];
+  const drcHierarchy: NetlistData['drcHierarchy'] = { errors: [], unmatchedPorts: [], placements: [] };
+  const childLabels = new Set(sheets.flatMap(({ context, snapshot }) =>
+    context.index ? Object.keys(snapshot.labels).map((label) => scopedLabel(context.index, label)) : [],
+  ));
+  const symbolIds = new Map<string, number>();
+  const localId = (context: HierarchyContext, id: number) => {
+    if (!context.index) return id;
+    const key = `${context.index}:${id}`;
+    if (!symbolIds.has(key)) symbolIds.set(key, -1 - symbolIds.size);
+    return symbolIds.get(key)!;
+  };
+  const addLabel = (label: string, net: string) => {
+    if (!labelsToKeys.has(label)) labelsToKeys.set(label, new Set());
+    labelsToKeys.get(label)!.add(net);
+  };
 
   for (let index = 0; index < sheets.length; ++index) {
-    const snapshot = sheets[index];
-    symbols.push(...snapshot.symbols);
+    const { snapshot, context, sheet } = sheets[index];
+    const source: DrcSource = { fileId: context.fileId, sheet: sheet.name,
+      instance: context.index, instancePath: context.path };
+    const drcSource = context.index ? source : undefined;
+    const scopeFields = <T extends { _id: number; text: SymbolRef[1]['text'] }>(symbol: T): T => ({
+      ...symbol,
+      _id: localId(context, symbol._id),
+      _hierarchicalReference: {
+        local: symbol.text.find((field) => field.description === 'Ref')?.value || '',
+        parents: context.path,
+      },
+      text: symbol.text.map((field) => field.description === 'Ref'
+        ? { ...field, value: context.prefix + field.value }
+        : field),
+    });
+    if (context.index) {
+      for (const [sheet, symbol] of snapshot.symbols)
+        symbols.push([context.prefix + sheet, scopeFields(symbol), source]);
+    } else {
+      symbols.push(...snapshot.symbols);
+    }
+    const ports = new Map<number, SymbolRef[1]>();
+    for (const item of sheet.items) {
+      if (item.NodeName !== DocItemTypes.Symbol || item.hierarchicalFile === undefined) continue;
+      const { _hierarchicalDrawing, ...link } = item;
+      const placement = context.index ? scopeFields(link) : link;
+      ports.set(item._id, placement);
+      drcHierarchy.placements.push([sheet.name, placement, source]);
+      if (!_hierarchicalDrawing) drcHierarchy.errors.push({
+        symbol: placement.text.find((field) => field.description === 'Ref')?.value,
+        id: placement._id, a: item.point, sheet: sheet.name, source,
+        text: `${item.hierarchicalFile}: ${item._hierarchicalError ?? 'Linked schematic unavailable'}`,
+      });
+    }
 
     for (const net in snapshot.nets) {
-      if (!snapshot.nets.hasOwnProperty(net)) {
+      if (!Object.hasOwn(snapshot.nets, net)) {
         continue;
       }
       const scopedNet = `${index}:${net}`;
       uf.add(scopedNet);
-      flatNets.set(scopedNet, snapshot.nets[net]);
+      const nodes = snapshot.nets[net];
+      for (const { hierarchicalPort, a } of nodes) {
+        const child = hierarchicalPort && context.children.get(hierarchicalPort.symbolId);
+        if (!child) continue;
+        const label = scopedLabel(child.index, hierarchicalPort.name);
+        if (hierarchicalPort.name) addLabel(label, scopedNet);
+        if (!hierarchicalPort.name || !childLabels.has(label)) {
+          const placement = ports.get(hierarchicalPort.symbolId)!;
+          drcHierarchy.unmatchedPorts.push({
+            symbol: placement.text.find((field) => field.description === 'Ref')?.value,
+            pin: hierarchicalPort.name, a, id: placement._id, sheet: sheet.name, source,
+            text: 'Hierarchical pin has no matching label in the linked schematic',
+          });
+        }
+      }
+      flatNets.set(scopedNet, context.index ? nodes.map((node) => ({
+        ...node,
+        sheet: context.prefix + node.sheet,
+        reference: node.reference && context.prefix + node.reference,
+        symbol: node.symbol && scopeFields(node.symbol),
+        drcSource,
+      })) : nodes);
       flatEprops.set(scopedNet, snapshot.eprops[net] || buildEmptyEprop());
     }
 
     for (const label in snapshot.labels) {
-      if (!snapshot.labels.hasOwnProperty(label)) {
+      if (!Object.hasOwn(snapshot.labels, label)) {
         continue;
       }
       const scopedNet = `${index}:${snapshot.labels[label]}`;
       uf.add(scopedNet);
-      if (!labelsToKeys.has(label)) {
-        labelsToKeys.set(label, new Set<string>());
-      }
-      labelsToKeys.get(label)!.add(scopedNet);
+      addLabel(scopedLabel(context.index, label), scopedNet);
+      const exported = context.prefix + label;
+      if (!exportedLabels.has(exported)) exportedLabels.set(exported, scopedNet);
     }
   }
 
@@ -246,9 +358,8 @@ function mergeSheetSnapshots(sheets: SheetSnapshot[]): NetlistData {
   }
 
   const labels: { [key: string]: string } = {};
-  for (const [label, scoped] of labelsToKeys) {
-    const first = Array.from(scoped)[0];
-    const root = uf.find(first);
+  for (const [label, scopedNet] of exportedLabels) {
+    const root = uf.find(scopedNet);
     labels[label] = rootToFinal.get(root)!;
   }
 
@@ -274,6 +385,7 @@ function mergeSheetSnapshots(sheets: SheetSnapshot[]): NetlistData {
     labels,
     nodes: {},
     symbols,
+    ...(drcHierarchy.placements.length ? { drcHierarchy } : {}),
   };
 }
 
@@ -324,10 +436,25 @@ export class NetlistWorkerState {
   }
 
   private rebuildGlobal() {
-    const snapshots = Array.from(this.sheets.keys())
-      .filter((name) => this.snapshots.has(name))
-      .map((name) => this.snapshots.get(name)!);
+    const cache = new Map<dsnSheet, SheetSnapshot>();
+    const contexts = hierarchyContexts([...this.sheets.values()]);
+    const snapshots = contexts.flatMap(
+      (context) => context.sheets.filter((sheet) => !sheet.hierarchicalSymbol).map((sheet) => {
+        let snapshot = context.index ? cache.get(sheet) : this.snapshots.get(sheet.name);
+        if (!snapshot) {
+          snapshot = createSheetSnapshot(sheet);
+          cache.set(sheet, snapshot);
+        }
+        return { context, sheet, snapshot };
+      }),
+    );
 
     this.netlist = mergeSheetSnapshots(snapshots);
+    const packs = new Set(contexts.flatMap((context) => context.modelPacks ?? []));
+    if (packs.size) this.netlist.hierarchyModelPacks = [...packs];
+    const errors = this.netlist.drcHierarchy?.errors;
+    if (errors?.length) this.netlist.hierarchyErrors = errors.map(({ source, text }) =>
+      source.instancePath.length ? `${source.instancePath.join('_')}_${text}` : text,
+    );
   }
 }

@@ -14,12 +14,15 @@ import { DrcOptions } from '../../model/dsnDrawing';
 import {
   actionDrc,
   actionCancelDialog,
+  actionSelectDialog,
 } from '../../state/dispatcher/AppDispatcher';
 import { connect } from 'react-redux';
 import { wkrGenerateNetlist } from '../../web-worker/worker';
 import { Dispatch, AnyAction } from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
 import { docDrawing } from '../../state/undo/undo';
+import { readCurrentHierarchy } from '../../io/projects';
+import { activeSchematicTabKey } from '../../state/schematicTabs';
 
 interface DrcDialogProps extends WithTranslation {
   drc: DrcOptions;
@@ -78,13 +81,22 @@ class DrcDialog extends React.PureComponent<DrcDialogProps, DrcDialogState> {
       this.setState({ busy: true });
       this.props.dispatch(
         (dispatch: Dispatch, getState: { (): docDrawing }) => {
-          wkrGenerateNetlist(getState().docStore.present.drawing).then(
-            (netlist) => {
-              if (!this.cancel) {
-                dispatch(actionDrc(this.state, netlist));
-              }
-            },
-          );
+          const state = getState();
+          const project = state.schematicTabs?.projectRoot;
+          const { busy, ...options } = this.state;
+          void readCurrentHierarchy(state, true)
+            .then((drawing) => wkrGenerateNetlist(drawing, !!project))
+            .then((netlist) => {
+              const current = getState();
+              if (this.cancel || project !== current.schematicTabs?.projectRoot ||
+                  state.docStore.present.drawing !== current.docStore.present.drawing) return;
+              if (!project && netlist.hierarchyErrors?.length) throw new Error(netlist.hierarchyErrors.join('\n'));
+              dispatch(actionDrc(options, netlist, project ? activeSchematicTabKey(state) : undefined));
+            }).catch((error) => {
+              if (!this.cancel) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+            }).finally(() => {
+              if (!this.cancel) this.setState({ busy: false });
+            });
         },
       );
     }

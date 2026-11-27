@@ -90,6 +90,7 @@ export interface altStore {
 
   // The panel currently being shown
   panel: Panels;
+  projectDrcTabKey?: string;
 
   // The bottom panel currently being shown
   bottomPanel: BottomPanels;
@@ -339,7 +340,7 @@ export function AltStoreReducer(
         case 3: // Center without selecting
           // Make the sheet come in to focus and center the item
           for (const s of state.activeSheets) {
-            s.onshowItem(action.selection.id);
+            s.onshowItem(action.selection.id, action.selection.source ? action.selection.a : undefined, action.selection.sheet);
           }
           break;
       }
@@ -449,13 +450,14 @@ export function AltStoreReducer(
       break;
 
     case 'simulation/diagnostics':
-      return action.errors.length ? { ...state, panel: Panels.DrcPanel } : state;
+      return action.errors.length ? { ...state, panel: Panels.DrcPanel, projectDrcTabKey: undefined } : state;
 
     case DialogActionTypes.SetDRC:
       state = update(state, {
         show_dialogue: { $set: null },
         dialogue_props: { $set: null },
         panel: { $set: Panels.DrcPanel },
+        projectDrcTabKey: { $set: action.projectTabKey },
       });
       break;
 

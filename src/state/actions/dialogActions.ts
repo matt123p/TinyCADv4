@@ -82,6 +82,7 @@ export interface SetDRC {
   type: DialogActionTypes.SetDRC;
   drc: DrcOptions;
   netlist: NetlistData;
+  projectTabKey?: string;
 }
 
 export interface SetAnnotate {

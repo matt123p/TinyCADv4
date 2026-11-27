@@ -50,7 +50,7 @@ import {
   dirtyProjectDocument,
   useProjectDocuments,
 } from '../../io/useProjectDocuments';
-import { actionSetDocument } from '../../state/dispatcher/AppDispatcher';
+import { actionCommand, actionFindSelection, actionSetDocument } from '../../state/dispatcher/AppDispatcher';
 import SidePanelContainer from '../../state/containers/sidePanelContainer';
 import {
   activeSchematicTabKey,
@@ -74,6 +74,9 @@ import type { BrowserFile } from './ProjectFileBrowser';
 import ProjectSourceControl from './ProjectSourceControl';
 import ProjectFileTabs from './ProjectFileTabs';
 import type { ChatProject } from '../../chat/project-context';
+import { DocItemTypes, type dsnSymbol } from '../../model/dsnItem';
+import type { DrcError } from '../../model/dsnDrawing';
+import { drcResultInActiveDrawing, projectDrcResultSelected } from '../../state/projectDrc';
 
 const account = '';
 const pathSeparator = (path: string) => (path.includes('\\') ? '\\' : '/');
@@ -143,6 +146,8 @@ export default function ProjectWorkspace({
         current.altStore.standardLibraryNavigation &&
       previous.docStore.present.drawingVersion ===
         current.docStore.present.drawingVersion &&
+      previous.docStore.present.hierarchyRevision ===
+        current.docStore.present.hierarchyRevision &&
       previous.docStore.present.view.selected_sheet ===
         current.docStore.present.view.selected_sheet &&
       activeSchematicTabKey(previous) === activeSchematicTabKey(current),
@@ -163,6 +168,7 @@ export default function ProjectWorkspace({
   const saveLock = useRef(false);
   const transition = useRef(false);
   const opening = useRef(0);
+  const drcSelection = useRef(0);
   const [order, setOrder] = useState<string[]>([]);
   const [pinned, setPinned] = useState<string[]>([]);
   const [preview, setPreview] = useState<string>();
@@ -290,6 +296,7 @@ export default function ProjectWorkspace({
   async function open(
     file: BrowserFile,
     mode: 'restore' | 'preview' | 'keep' = 'restore',
+    snapshot?: { data: Uint8Array; version?: string },
   ) {
     const blocked = () =>
       saveLock.current ||
@@ -311,7 +318,7 @@ export default function ProjectWorkspace({
     if (schematic) {
       if (existing) activate(key);
       else {
-        const drawing = await readProjectDrawing(file);
+        const drawing = await readProjectDrawing(file, projectRoot.current?.id, snapshot);
         if (!canOpen()) return;
         documents.select();
         dispatch(drawing);
@@ -621,6 +628,8 @@ export default function ProjectWorkspace({
             const meta = await saveSchematicFile(
               tab.file,
               tab.history.present.drawing,
+              false,
+              root?.id,
             );
             dispatch(
               savedSchematicTab(
@@ -630,9 +639,8 @@ export default function ProjectWorkspace({
                   ...tab.file,
                   id: meta.id,
                   name: meta.name,
-                  projectVersion: tab.file.projectVersion
-                    ? meta.version
-                    : undefined,
+                  projectVersion: meta.version,
+                  folderId: meta.version ? meta.folderId ?? tab.file.folderId : tab.file.folderId,
                 },
                 tab.history.present.drawingVersion,
               ),
@@ -693,7 +701,7 @@ export default function ProjectWorkspace({
           id,
           name: file.name,
           folder: file.folderId,
-        });
+        }, projectRoot.current?.id);
         const current = store.getState();
         if (activeSchematicTabKey(current) === key) {
           if (
@@ -937,6 +945,135 @@ export default function ProjectWorkspace({
     setPanel(next);
   }
 
+  useEffect(() => {
+    if (!root) return;
+    const listener = (event: Event) => {
+      const result = (event as CustomEvent<DrcError>).detail;
+      if (!result) return;
+      const state = store.getState();
+      const checkedId = state.altStore.projectDrcTabKey;
+      const selection = ++drcSelection.current;
+      const currentReport = () => projectRoot.current === root && selection === drcSelection.current &&
+        store.getState().altStore.projectDrcTabKey === checkedId;
+      const center = () => {
+        const current = store.getState();
+        if (currentReport() && drcResultInActiveDrawing(current, result) &&
+            current.docStore.present.drawing.sheets.some((sheet) => sheet.name === result.sheet))
+          dispatch(actionFindSelection(3, result.source ? result : {
+            ...result, source: { sheet: result.sheet, instance: 0, instancePath: [] },
+          }));
+      };
+      const show = async () => {
+        if (documents.active || !drcResultInActiveDrawing(state, result)) {
+          const fileId = result.source?.fileId;
+          const tab = openSchematicTabs(state).find(({ key, tab }) => fileId ? tab.file.id === fileId : key === checkedId);
+          if (tab) activate(tab.key);
+          else if (fileId) {
+            const file = await projectRequest({ operation: 'read-hierarchical-drawing', project: root.id, filename: fileId });
+            if (!currentReport()) return;
+            await open({ id: file.id, name: file.id.split(/[\\/]/).at(-1), folder: file.folder, ancestors: [] }, 'keep', file);
+          }
+        }
+        center();
+        requestAnimationFrame(center);
+      };
+      void show().catch(report);
+    };
+    window.addEventListener(projectDrcResultSelected, listener);
+    return () => window.removeEventListener(projectDrcResultSelected, listener);
+  });
+
+  useEffect(() => {
+    if (!root) return;
+    const listener = (event: Event) => {
+      if (!(event instanceof CustomEvent)) return;
+      const { command, symbolId } = event.detail;
+      if (command !== 'open' && command !== 'refresh' && command !== 'change') return;
+      const { altStore, docStore: { present } } = store.getState();
+      if (altStore.saveInProgress || saveLock.current || documents.active) return;
+      const index = present.view.selected_sheet;
+      const source = present.drawing.sheets[index];
+      const item = source?.items.find((item) => item._id === symbolId);
+      if (item?.NodeName !== DocItemTypes.Symbol || item.hierarchicalFile === undefined) return;
+      const owner = typeof altStore.file.id === 'string' ? altStore.file.id : undefined;
+      const stillCurrent = () => {
+        const current = store.getState().docStore.present;
+        return projectRoot.current === root && current.drawing === present.drawing &&
+          current.view.selected_sheet === index;
+      };
+      const handle = async () => {
+        if (command === 'open') {
+          const linked = await projectRequest({
+            operation: 'read-hierarchical-drawing', project: root.id, owner: item._hierarchicalOwner ?? owner, filename: item.hierarchicalFile,
+            allowExternal: true,
+          });
+          if (!stillCurrent()) return;
+          const { id, folder } = linked;
+          await open({ id, name: id.split(/[\\/]/).at(-1), folder, ancestors: [] }, 'keep', linked);
+        } else {
+          let placement = item;
+          if (command === 'change') {
+            const selection = await projectRequest({ operation: 'choose-hierarchical-drawing', project: root.id });
+            if (!selection || !stillCurrent()) return;
+            const { relative, id } = await projectRequest({
+              operation: 'read-hierarchical-drawing', project: root.id, owner, filename: selection.id,
+            });
+            const hierarchicalFile = owner ? relative : id;
+            placement = { ...item, hierarchicalFile, _hierarchicalOwner: owner, text: item.text.map((field) =>
+              field.description === 'Design' ? { ...field, value: selection.name } : field) };
+          }
+          const { resolveProjectHierarchy } = await import('../../io/projectHierarchy');
+          const drawing = await resolveProjectHierarchy(
+            { ...present.drawing, sheets: [{ ...source, items: [placement] }] },
+            root.id, owner, command === 'refresh',
+          );
+          if (!stillCurrent()) return;
+          const refreshed = drawing.sheets[0].items[0] as dsnSymbol;
+          if (refreshed._hierarchicalError) throw new Error(refreshed._hierarchicalError);
+          dispatch({
+            ...actionCommand('refresh_hierarchical_symbol'),
+            ...(placement === item ? { hierarchicalRefresh: refreshed } : { hierarchicalRedirect: refreshed }),
+          });
+        }
+      };
+      if (command === 'change') requestAnimationFrame(() => void handle().catch(report));
+      else void handle().catch(report);
+    };
+    const choose = () => {
+      if (!activeKey || documents.active || !hierarchySheet ||
+          hierarchySheet.hierarchicalSymbol || hierarchySheet.kind === 'simulation') return;
+      const drawing = store.getState().docStore.present.drawing;
+      void projectRequest({ operation: 'choose-hierarchical-drawing', project: root.id })
+        .then((file) => {
+          if (file && projectRoot.current === root && drawing === store.getState().docStore.present.drawing)
+            return insertHierarchy(file.id);
+        }).catch(report);
+    };
+    window.addEventListener('tinycad:hierarchy-symbol', listener);
+    window.addEventListener('tinycad:insert-hierarchical-symbol', choose);
+    return () => {
+      window.removeEventListener('tinycad:hierarchy-symbol', listener);
+      window.removeEventListener('tinycad:insert-hierarchical-symbol', choose);
+    };
+  });
+
+  const hierarchySheet = state.docStore.present.drawing.sheets[sheet];
+  const unresolvedLink = root && !openDocument && state.docStore.present.drawing.sheets
+    .flatMap((part) => part.items)
+    .find((item): item is dsnSymbol => item.NodeName === DocItemTypes.Symbol && !!item._hierarchicalError);
+  async function insertHierarchy(fileId: string) {
+    const { docStore: { present }, altStore } = store.getState();
+    if (altStore.saveInProgress || saveLock.current) return;
+    const currentSheet = present.view.selected_sheet;
+    const owner = typeof altStore.file.id === 'string' ? altStore.file.id : undefined;
+    const { prepareHierarchicalPlacement } = await import('../../io/projectHierarchy');
+    const placement = await prepareHierarchicalPlacement(present.drawing, currentSheet, root.id, owner, fileId);
+    const current = store.getState().docStore.present;
+    if (projectRoot.current !== root || current.drawing !== present.drawing || current.view.selected_sheet !== currentSheet)
+      return;
+    dispatch({ ...actionCommand('add_hierarchical_symbol'), hierarchicalPlacement: placement });
+  }
+
   return children({
     chatProject: root && { root, active: openDocument, pdfPage },
     projectSidebar: root && {
@@ -1014,6 +1151,9 @@ export default function ProjectWorkspace({
               root={root}
               active={selectedId}
               open={(file, keep) => open(file, keep ? 'keep' : 'preview')}
+              insertHierarchy={activeKey && !openDocument && hierarchySheet &&
+                  !hierarchySheet.hierarchicalSymbol && hierarchySheet.kind !== 'simulation'
+                ? insertHierarchy : undefined}
               report={report}
               gitChanges={
                 gitSnapshot &&
@@ -1071,6 +1211,10 @@ export default function ProjectWorkspace({
       </p>
     ) : restoring ? (
       <p role="status">Restoring project tabs…</p>
+    ) : unresolvedLink ? (
+      <p className="project-error" role="status">
+        {unresolvedLink.hierarchicalFile} · {unresolvedLink._hierarchicalError}
+      </p>
     ) : undefined,
     tabs: root && (
       <ProjectFileTabs

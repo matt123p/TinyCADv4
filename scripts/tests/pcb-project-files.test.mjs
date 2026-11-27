@@ -4,7 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { recentProjectFolders, registerProjectFiles } from '../../electron/projectFiles.js';
 
-test('chat can browse and read only paths within the selected project', async (t) => {
+test('chat stays within the project and legacy external schematic links require access', async (t) => {
   const parent = path.resolve('.tmp');
   await mkdir(parent, { recursive: true });
   const area = await mkdtemp(path.join(parent, 'chat-project-'));
@@ -18,19 +18,30 @@ test('chat can browse and read only paths within the selected project', async (t
   ]);
   await Promise.all([
     writeFile(path.join(project, 'Docs', 'Pins.txt'), 'Pin 1: VCC'),
+    writeFile(path.join(project, 'Docs', 'Top.dsn'), '<TinyCAD/>'),
+    writeFile(path.join(project, 'Child.dsn'), '<TinyCADSheets/>'),
     writeFile(path.join(project, '.git', 'config'), 'git metadata'),
     writeFile(path.join(outside, 'Private.txt'), 'outside data'),
+    writeFile(path.join(outside, 'Child.dsn'), '<TinyCADSheets><HierarchicalSymbol/></TinyCADSheets>'),
     symlink(outside, path.join(project, 'Linked'), process.platform === 'win32' ? 'junction' : 'dir'),
   ]);
   const mainFrame = {};
   const webContents = { mainFrame };
   let handler;
   let selected = project;
+  let allowLink = false;
+  const configuration = new Map();
   registerProjectFiles({
     ipcMain: { handle: (_, callback) => { handler = callback; } },
     getWindow: () => ({ webContents }),
-    dialog: { showOpenDialog: async () => ({ canceled: false, filePaths: [selected] }) },
-    store: { get: (_, fallback) => fallback },
+    dialog: {
+      showOpenDialog: async () => ({ canceled: false, filePaths: [selected] }),
+      showMessageBox: async (_, { detail }) => {
+        assert.equal(detail, path.join(outside, 'Child.dsn'));
+        return { response: allowLink ? 0 : 1 };
+      },
+    },
+    store: { get: (key, fallback) => configuration.get(key) ?? fallback, set: (key, value) => configuration.set(key, value) },
     documents: area,
   });
   const request = (payload) => handler({ sender: webContents, senderFrame: mainFrame }, payload);
@@ -39,15 +50,41 @@ test('chat can browse and read only paths within the selected project', async (t
   selected = outside;
   await request({ operation: 'choose-project-folder' });
   assert.deepEqual(await request({ operation: 'chat-list', project }), {
-    entries: [{ path: 'Docs', kind: 'folder' }], nextOffset: null,
+    entries: [{ path: 'Docs', kind: 'folder' }, { path: 'Child.dsn', kind: 'file' }], nextOffset: null,
   });
   assert.deepEqual((await request({ operation: 'chat-list', project, relative: 'Docs' })).entries,
-    [{ path: 'Docs/Pins.txt', kind: 'file' }]);
+    [{ path: 'Docs/Pins.txt', kind: 'file' }, { path: 'Docs/Top.dsn', kind: 'file' }]);
   const data = await request({ operation: 'chat-read', project, relative: 'Docs/Pins.txt' });
   assert.equal(new TextDecoder().decode(data), 'Pin 1: VCC');
   for (const relative of ['../Outside/Private.txt', path.join(outside, 'Private.txt'), '.git/config', 'Docs\\Pins.txt'])
     await assert.rejects(request({ operation: 'chat-read', project, relative }), /inside the current project/);
   await assert.rejects(request({ operation: 'chat-read', project, relative: 'Linked/Private.txt' }), /Symbolic links/);
+  const owner = path.join(project, 'Docs', 'Top.dsn');
+  const linked = await request({ operation: 'read-hierarchical-drawing', project, owner, filename: '..\\Child.dsn' });
+  assert.equal(linked.id, path.join(project, 'Child.dsn'));
+  assert.equal(linked.relative, path.join('..', 'Child.dsn'));
+  assert.equal(new TextDecoder().decode(linked.data), '<TinyCADSheets/>');
+  assert.match(linked.version, /^[a-f0-9]{64}$/);
+  assert.deepEqual(await request({
+    operation: 'rebase-hierarchical-links', project, owner: path.join(project, 'Copy.dsn'),
+    links: [{ owner, filename: '..\\Child.dsn' }],
+  }), ['Child.dsn']);
+  const external = {
+    operation: 'read-hierarchical-drawing', project, owner, filename: '../../Outside/Child.dsn',
+  };
+  await assert.rejects(request(external), /outside the open project/);
+  await assert.rejects(request({ ...external, allowExternal: true }), /declined/);
+  allowLink = true;
+  const approved = await request({ ...external, allowExternal: true });
+  assert.equal(approved.id, path.join(outside, 'Child.dsn'));
+  assert.equal(approved.version, undefined);
+  assert.deepEqual(await request(external), approved);
+  assert.deepEqual(await request({
+    operation: 'rebase-hierarchical-links', project, owner: path.join(project, 'Copy.dsn'),
+    links: [{ owner, filename: external.filename }],
+  }), [path.join('..', 'Outside', 'Child.dsn')]);
+  await assert.rejects(request({ operation: 'chat-read', project, relative: '../Outside/Child.dsn' }), /inside the current project/);
+  await assert.rejects(request({ ...external, owner: undefined, filename: 'Linked/Child.dsn' }), /Symbolic links/);
 });
 
 test('remembers export destinations per drawing and format in the project settings', async (t) => {

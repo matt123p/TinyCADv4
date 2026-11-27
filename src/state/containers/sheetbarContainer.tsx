@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 
 const mapStateToProps = (state: docDrawing) => {
   return {
+    project: !!state.schematicTabs?.projectRoot,
     sheets: state.docStore.present.drawing.sheets,
     selected_sheet: state.docStore.present.view.selected_sheet,
     bom: state.docStore.present.bom,

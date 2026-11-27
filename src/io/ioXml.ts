@@ -201,7 +201,7 @@ export class ioXML {
     } else {
       let nodes = root[0].childNodes;
       for (let i = 0; i < nodes.length; ++i) {
-        if (nodes[i].nodeName === 'HierarchicalSymbol') {
+        if (nodes[i].nodeName === 'HierarchicalSymbol' || nodes[i].nodeName === 'HierachicalSymbol') {
           let sheet = this.from_tinycad(nodes[i], nodes[i], true);
           r.sheets.push(sheet);
         }
@@ -256,7 +256,8 @@ export class ioXML {
     dsn.createDoc('TinyCADSheets');
     dsn.appendChild('DSNIDENTITY', null, { id: drawing.documentId || '' });
     const catalogSymbols = drawing.sheets.flatMap(({ name, items }) => items.flatMap((item) =>
-      item.NodeName === DocItemTypes.Symbol ? [[name, item] as [string, dsnSymbol]] : [],
+      item.NodeName === DocItemTypes.Symbol && item.hierarchicalFile === undefined
+        ? [[name, item] as [string, dsnSymbol]] : [],
     ));
     const packs = mergeDrawingModelPacks(drawing.spiceModelPacks,
       referencedSpiceModelPacks({ symbols: catalogSymbols }, drawing.spiceModelPacks, true));
@@ -597,6 +598,7 @@ export class ioXML {
         fieldFontIds.set(item, item.text.map((field) => field.font
           ? this.registerFont(fonts.custom, symbol.propertyFont(field))
           : undefined));
+        if (item.hierarchicalFile !== undefined) continue;
         let symboldef = {
           symbol: item._symbol,
         };
@@ -874,14 +876,17 @@ export class ioXML {
           o = root.appendChild('METAFILE', null, a);
           break;
         case DocItemTypes.Symbol:
+          const hierarchical = item.hierarchicalFile !== undefined;
           a = {
             pos: root.makeCoords(item.point),
-            id: item._symbol.id,
-            show_power: item.show_power ? 1 : 0,
             can_scale: item.allow_resize ? 1 : 0,
             scale_x: item.scale_x,
             scale_y: item.scale_y,
-            part: item.part,
+            ...(hierarchical ? { file: item.hierarchicalFile } : {
+              id: item._symbol.id,
+              show_power: item.show_power ? 1 : 0,
+              part: item.part,
+            }),
           };
 
           // tslint:disable-next-line: no-bitwise
@@ -906,7 +911,7 @@ export class ioXML {
               a.rotate = 3 | (mirror ? 4 : 0);
               break;
           }
-          o = root.appendChild('SYMBOL', null, a);
+          o = root.appendChild(hierarchical ? 'HIERARCHICAL_SYMBOL' : 'SYMBOL', null, a);
 
           for (let j = 0; j < item.text.length; ++j) {
             let field = item.text[j];
@@ -915,7 +920,7 @@ export class ioXML {
                 field.position[0],
                 field.position[1] + item.font_size,
               ]),
-              value: field.value,
+              value: hierarchical && field.description === 'Design' ? '' : field.value,
               description: field.description,
               type: field.display,
               show: field.show ? 1 : 0,
@@ -1329,9 +1334,9 @@ export class ioXML {
             point: this.coords(node.getAttribute('pos')),
             rotation: this.rotation2(node.getAttribute('direction')),
             name: this.nodeText(node) ?? '',
-            number: node.getAttribute('number'),
-            length: parseInt(node.getAttribute('length'), 10),
-            number_pos: parseInt(node.getAttribute('number_pos'), 10),
+            number: node.getAttribute('number') ?? '',
+            length: parseInt(node.getAttribute('length') ?? '20', 10),
+            number_pos: parseInt(node.getAttribute('number_pos') ?? '0', 10),
             centre_name: !!parseInt(node.getAttribute('centre_name'), 10),
             which: parseInt(node.getAttribute('which'), 10),
             elec: parseInt(node.getAttribute('elec'), 10),
@@ -1339,7 +1344,7 @@ export class ioXML {
             show_name: (show & 1) !== 0,
             // tslint:disable-next-line: no-bitwise
             show_number: (show & 2) !== 0,
-            part: parseInt(node.getAttribute('part'), 10),
+            part: parseInt(node.getAttribute('part') ?? '0', 10),
             // The label's default style
             font_name: 'Arial',
             font_colour: '#000000',
@@ -1422,8 +1427,12 @@ export class ioXML {
         case 'ruler':
           // o = <DesignRuler;
           break;
+        case 'HIERACHICAL_SYMBOL':
+        case 'HIERARCHICAL_SYMBOL':
         case 'SYMBOL':
           {
+            const hierarchical = node.nodeName !== 'SYMBOL';
+            const hierarchicalFile = hierarchical ? node.getAttribute('file') ?? '' : undefined;
             let rot = parseInt(node.getAttribute('rotate'), 10);
             // tslint:disable-next-line: no-bitwise
             let mirror = (rot & 4) !== 0;
@@ -1451,13 +1460,16 @@ export class ioXML {
               NodeName: DocItemTypes.Symbol,
               _id: get_global_id(),
               point: this.coords(node.getAttribute('pos')),
-              show_power: parseInt(node.getAttribute('show_power'), 10) !== 0,
+              ...(hierarchical ? { hierarchicalFile } : {}),
+              show_power: hierarchical || parseInt(node.getAttribute('show_power'), 10) !== 0,
               allow_resize: parseInt(node.getAttribute('can_scale'), 10) !== 0,
               scale_x: parseFloat(node.getAttribute('scale_x') ?? '1.0'),
               scale_y: parseFloat(node.getAttribute('scale_y') ?? '1.0'),
-              part: parseInt(node.getAttribute('part'), 10),
+              part: hierarchical ? 0 : parseInt(node.getAttribute('part'), 10),
               rotation: rotation,
-              _symbol: this.symboldef(root, newSheet, node.getAttribute('id')),
+              _symbol: hierarchical
+                ? this.emptySymbol()
+                : this.symboldef(root, newSheet, node.getAttribute('id')),
               text: [],
               font_name: 'Arial',
               font_colour: '#FF0000',
@@ -1470,7 +1482,9 @@ export class ioXML {
             for (let j = 0; j < fields.length; ++j) {
               let field = {
                 position: this.coords(fields[j].getAttribute('pos')),
-                value: fields[j].getAttribute('value'),
+                value: hierarchical && fields[j].getAttribute('description') === 'Design'
+                  ? hierarchicalFile.split(/[\\/]/).at(-1)
+                  : fields[j].getAttribute('value'),
                 description: fields[j].getAttribute('description'),
                 type: parseInt(fields[j].getAttribute('type'), 10),
                 show: parseInt(fields[j].getAttribute('show'), 10) !== 0,
@@ -1994,13 +2008,8 @@ export class ioXML {
     return selected_imagedef;
   }
 
-  private symboldef(root: any, sheet: dsnSheet, sId: string) {
-    const s = parseInt(sId, 10);
-    if (s in sheet.symbols) {
-      return sheet.symbols[s];
-    }
-    let symbols = root.getElementsByTagName('SYMBOLDEF');
-    let selected_symboldef: libSymbol = {
+  private emptySymbol(): libSymbol {
+    return {
       id: null,
       description: null,
       name: null,
@@ -2017,6 +2026,15 @@ export class ioXML {
       uid: null,
       heterogeneous: false,
     };
+  }
+
+  private symboldef(root: any, sheet: dsnSheet, sId: string) {
+    const s = parseInt(sId, 10);
+    if (s in sheet.symbols) {
+      return sheet.symbols[s];
+    }
+    let symbols = root.getElementsByTagName('SYMBOLDEF');
+    const selected_symboldef = this.emptySymbol();
     for (let k = 0; k < symbols.length; ++k) {
       let symbol = symbols[k];
       if (parseInt(symbol.getAttribute('id'), 10) === s) {

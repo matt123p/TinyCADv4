@@ -47,11 +47,25 @@ export function makeNetForSheet(
     switch (ObjPtr.NodeName) {
       case DocItemTypes.Symbol:
         {
+          const update_ap = new updateSymbol(ObjPtr);
+          let active_points = update_ap.active_points();
+          if (ObjPtr.hierarchicalFile !== undefined) {
+            for (const [x, y, pin] of active_points) {
+              netlist_builder.Add({
+                parent: pin,
+                a: [x, y],
+                eprop: null,
+                sheet: null,
+                netlist: null,
+                hints: [],
+                hierarchicalPort: { symbolId: ObjPtr._id, name: pin.name },
+              });
+            }
+            break;
+          }
           netlist_builder.addSymbol(ObjPtr);
 
           let myRefDes = ObjPtr.text.find((a) => a.description === 'Ref').value;
-          const update_ap = new updateSymbol(ObjPtr);
-          let active_points = update_ap.active_points();
           for (let j = 0; j < active_points.length; ++j) {
             let pointer = active_points[j];
             let pin = pointer[2];

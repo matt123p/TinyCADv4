@@ -48,6 +48,7 @@ export interface RenameDocument {
 
 export interface BomGenerate {
   type: DocActionTypes.BomGenerate;
+  drawing?: dsnDrawing;
 }
 
 export interface BomClose {

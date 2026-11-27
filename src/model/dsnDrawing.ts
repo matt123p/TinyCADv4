@@ -155,6 +155,13 @@ export interface dsnSheet {
   hierarchicalSymbol: boolean;
 }
 
+export interface DrcSource {
+  fileId?: string;
+  sheet: string;
+  instance: number;
+  instancePath: string[];
+}
+
 export interface DrcError {
   symbol?: string;
   pin?: string;
@@ -162,6 +169,7 @@ export interface DrcError {
   a: Coordinate;
   id: number;
   sheet: string;
+  source?: DrcSource;
 }
 
 export interface DrcOptions {
@@ -233,7 +241,7 @@ export interface dsnDrawing {
   };*/;
 
   // The DRC output
-  drcTable: any[];
+  drcTable: DrcError[];
 
   // The annotate dialogue
   annotate: AnnotateOptions;

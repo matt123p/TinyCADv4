@@ -52,6 +52,10 @@ export type ProjectStorageRequest =
   | { operation: 'list'; folder: string; tree?: boolean }
   | { operation: 'chat-list'; project: string; relative?: string; offset?: number }
   | { operation: 'chat-read'; project: string; relative: string }
+  | { operation: 'read-hierarchical-drawing'; project: string; owner?: string; filename: string; allowExternal?: boolean }
+  | { operation: 'choose-hierarchical-drawing'; project: string }
+  | { operation: 'choose-hierarchical-save'; project: string; owner?: string; name: string; compressed: boolean }
+  | { operation: 'rebase-hierarchical-links'; project: string; owner: string; links: { owner?: string; filename: string }[] }
   | { operation: 'watch-folders'; folders: string[] }
   | { operation: 'read' | 'fingerprint' | 'folder-identity'; id: string }
   | {
@@ -118,6 +122,10 @@ export interface ProjectStorageResult {
   list: ProjectItem[];
   'chat-list': { entries: { path: string; kind: 'file' | 'folder' }[]; nextOffset: number | null };
   'chat-read': Uint8Array;
+  'read-hierarchical-drawing': { id: string; folder: string; relative: string; data: Uint8Array; version?: string };
+  'choose-hierarchical-drawing': ProjectLocation | null;
+  'choose-hierarchical-save': (ProjectLocation & { folder: string; version?: string }) | null;
+  'rebase-hierarchical-links': string[];
   'watch-folders': void;
   read: { data: Uint8Array; version: string };
   mkdir: ProjectLocation;

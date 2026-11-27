@@ -848,6 +848,11 @@ export class updateView {
   }
 
   mousemove_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
+    if (view.menu_command === 'add_hierarchical_symbol' && view.add?.NodeName === DocItemTypes.Symbol) {
+      const point = new Snap(sheet.details.grid, sheet.details.grid_snap).snap(p);
+      const add = new updateSymbol({ ...view.add, point, _active_points: null }).post_construction();
+      return { sheet, view: { ...view, add, display_add: true, cursor: 'copy' } };
+    }
     if (view.menu_command === 'add_spice_ground' && view.add?.NodeName === DocItemTypes.Power) {
       const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
       const point = snap.snap_magnetic(p, false, sheet.items)?.point ?? snap.snap(p);
@@ -3778,14 +3783,15 @@ export class updateView {
     );
   }
 
-  makeBomForSheet(sheet: dsnSheet, bom: dsnBomEntry[]): dsnBomEntry[] {
+  makeBomForSheet(sheet: dsnSheet, bom: dsnBomEntry[], prefix = ''): dsnBomEntry[] {
     for (let i = 0; i < sheet.items.length; ++i) {
       let ObjPtr = sheet.items[i];
 
       switch (ObjPtr.NodeName) {
         case DocItemTypes.Symbol:
           {
-            const myRefDes = ObjPtr.text.find(
+            if (ObjPtr.hierarchicalFile !== undefined) break;
+            const myRefDes = prefix + ObjPtr.text.find(
               (a) => a.description === 'Ref',
             ).value;
             const myName = ObjPtr.text.find(

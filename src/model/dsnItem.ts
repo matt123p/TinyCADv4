@@ -206,6 +206,16 @@ export interface dsnSymbolHint {
 
 export interface dsnSymbol extends dsnPointBase, Text {
   NodeName: DocItemTypes.Symbol;
+  /** The v3 HIERARCHICAL_SYMBOL file attribute, resolved relative to its owner. */
+  hierarchicalFile?: string;
+  /** Resolved circuit for this link. The DSN stores only hierarchicalFile. */
+  _hierarchicalDrawing?: import('./dsnDrawing').dsnDrawing;
+  _hierarchicalError?: string;
+  /** The saved file that originally owned the relative link. */
+  _hierarchicalOwner?: string;
+  _hierarchicalTarget?: string;
+  /** Local reference and ancestor placements on a flattened component. */
+  _hierarchicalReference?: { local: string; parents: string[] };
   show_power: boolean;
   allow_resize: boolean;
   scale_x: number;

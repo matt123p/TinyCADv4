@@ -197,9 +197,10 @@ export function actionBomClose() {
   return action;
 }
 
-export function actionBomGenerate() {
+export function actionBomGenerate(drawing?: dsnDrawing) {
   const action: BomGenerate = {
     type: DocActionTypes.BomGenerate,
+    ...(drawing ? { drawing } : {}),
   };
   return action;
 }
@@ -468,10 +469,11 @@ export function actionSheetRename(sheet_name: string) {
   return action;
 }
 
-export function actionSheetAdd(sheet_name: string) {
+export function actionSheetAdd(sheet_name: string, hierarchical = false) {
   const action: MenuSheetAdd = {
     type: MenuActionTypes.MenuSheetAdd,
     sheet_name,
+    ...(hierarchical ? { hierarchical: true } : {}),
   };
   return action;
 }
@@ -590,11 +592,12 @@ export function actionUpdateColoursAllSheets(colours: SheetColours) {
   return action;
 }
 
-export function actionDrc(drc: DrcOptions, netlist: NetlistData) {
+export function actionDrc(drc: DrcOptions, netlist: NetlistData, projectTabKey?: string) {
   const action: SetDRC = {
     type: DialogActionTypes.SetDRC,
     drc,
     netlist: netlist,
+    projectTabKey,
   };
   return action;
 }

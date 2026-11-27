@@ -6,7 +6,6 @@ import {
   actionCommandWithDefault,
   actionMenuBrowserClose,
   actionSelectDialog,
-  actionBomGenerate,
 } from '../../state/dispatcher/AppDispatcher';
 import {
   Toolbar as FluentToolbar,
@@ -190,6 +189,7 @@ const useStyles = makeStyles({
 });
 
 interface ToolbarProps {
+  hierarchicalSymbolSheet?: boolean;
   simulationPanelVisible?: boolean;
   simulationToolbarRef?: React.Ref<HTMLSpanElement>;
   simulationSheet?: boolean;
@@ -787,7 +787,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
               <MenuItem icon={<SettingsRegular />} onClick={() => props.dispatch(actionSelectDialog('annotate', null))}>
                 {t('toolbar.annotateSymbols')}
               </MenuItem>
-              <MenuItem icon={<DataAreaRegular />} onClick={() => props.dispatch(actionBomGenerate())}>
+              <MenuItem icon={<DataAreaRegular />} onClick={() => props.dispatch(handleMenuCommand('tools-bom'))}>
                 {t('toolbar.billOfMaterials')}
               </MenuItem>
               <MenuItem icon={<ShareRegular />} onClick={() => props.dispatch(actionSelectDialog('netlist', null))}>
@@ -935,7 +935,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         <span ref={props.simulationToolbarRef} style={{ display: 'contents' }} />
         {!props.simulationSheet && <>
         {/* Pin (Only if editing symbol) */}
-        {props.editSymbol && process.env.TARGET_SYSTEM !== 'electron' && (
+        {(props.hierarchicalSymbolSheet || (props.editSymbol && process.env.TARGET_SYSTEM !== 'electron')) && (
           <ToolbarButton
             aria-label={t('toolbar.pin')}
             title={t('toolbar.pin')}

@@ -147,6 +147,7 @@ export function withSchematicTabs(
     if (raw.type === 'schematic-tabs/enable' && state)
       return {
         ...state,
+        altStore: { ...state.altStore, projectDrcTabKey: undefined },
         schematicTabs: raw.enabled
           ? {
               enabled: true,

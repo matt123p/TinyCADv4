@@ -53,6 +53,7 @@ type Entry = { item: ProjectItem; parent: string };
 type Props = {
   root: ProjectLocation;
   active?: string;
+  insertHierarchy?(id: string): Promise<void>;
   gitChanges?: ReadonlyMap<string, string>;
   open(file: BrowserFile, keepOpen?: boolean): Promise<void>;
   beforeChange(id: string, kind: 'relocate' | 'trash', newName?: string): void;
@@ -163,6 +164,7 @@ export default function ProjectFileBrowser({
   active,
   gitChanges,
   open,
+  insertHierarchy,
   beforeChange,
   relocated,
   removed,
@@ -524,6 +526,11 @@ export default function ProjectFileBrowser({
         >
           {entry ? rootReveal : rootReveal.replace('Reveal in', 'Open in')}
         </MenuItem>
+        {entry && !entry.item.folder && isDrawingFile(entry.item.name) && insertHierarchy && (
+          <MenuItem disabled={busy || restricted} onClick={() => void insertHierarchy(entry.item.id).catch(report)}>
+            Insert as Hierarchical Symbol
+          </MenuItem>
+        )}
         {entry && (
           <>
             <MenuDivider />

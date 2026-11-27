@@ -1,7 +1,7 @@
 import { NetlistData } from './netlistGenerator';
 import { updateSymbol } from '../../manipulators/updateSymbol';
 import { dsnSymbol } from '../../model/dsnItem';
-import { activeSpiceModelPacks, checkCatalogDefinitions, nativeSpicePrologue, type SpiceModelPack } from '../../simulation/catalogBindings';
+import { activeSpiceModelPacks, checkCatalogDefinitions, mergeDrawingModelPacks, nativeSpicePrologue, type SpiceModelPack } from '../../simulation/catalogBindings';
 
 function findSpiceAttribute(symbol: dsnSymbol, name: string) {
     // Legacy library templates use $(NAME) for the editor's Name property.
@@ -118,6 +118,13 @@ function expandSpice(
     };
 
     const findAttr = (val: string): { found: boolean; value: string } => {
+        const hierarchy = symbol._hierarchicalReference;
+        if (hierarchy && ['ref', 'refnum'].includes(val.toLowerCase())) {
+            const start = hierarchy.local.search(/[0-9]/);
+            const local = val.toLowerCase() === 'refnum' && start !== -1
+                ? hierarchy.local.slice(start) : hierarchy.local;
+            return { found: !!local, value: [local, ...[...hierarchy.parents].reverse()].join('_') };
+        }
         // Special handling for 'ref' and 'refnum' like C++ get_attr
         if (val.toLowerCase() === 'ref') {
             const refDes = getRefDes();
@@ -255,6 +262,8 @@ function expandSpice(
 }
 
 export function writeSpice(netlist: NetlistData, packs?: SpiceModelPack[]) {
+    if (netlist.hierarchyModelPacks?.length)
+        packs = mergeDrawingModelPacks(packs, netlist.hierarchyModelPacks);
     let txt = '';
     const now = new Date();
     txt += `* Schematics Netlist created on ${now.toISOString()} *\n`;

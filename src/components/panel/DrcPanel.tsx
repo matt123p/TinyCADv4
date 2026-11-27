@@ -1,6 +1,9 @@
 import React, { Dispatch } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FindResult } from '../../model/dsnView';
+import { useStore } from 'react-redux';
+import { drcResultInActiveDrawing, projectDrcResultSelected } from '../../state/projectDrc';
+import type { docDrawing } from '../../state/undo/undo';
+import type { DrcError } from '../../model/dsnDrawing';
 import { Coordinate, DocItem } from '../../model/dsnItem';
 import {
   TableCellLayout,
@@ -38,7 +41,8 @@ const useStyles = makeStyles({
 
 interface DrcPanelProps {
   selected: DocItem;
-  drcTable: FindResult[];
+  drcTable: DrcError[];
+  checkedFileName?: string;
   hover_point: Coordinate;
   dispatch: Dispatch<any>;
 }
@@ -46,13 +50,19 @@ interface DrcPanelProps {
 export const DrcPanel: React.FC<DrcPanelProps> = ({
   selected,
   drcTable,
+  checkedFileName,
   hover_point,
   dispatch,
 }) => {
   const styles = useStyles();
   const { t } = useTranslation();
+  const store = useStore<docDrawing>();
 
-  const handleRowClick = (item: FindResult) => {
+  const handleRowClick = (item: DrcError) => {
+    if (checkedFileName) {
+      window.dispatchEvent(new CustomEvent(projectDrcResultSelected, { detail: item }));
+      return;
+    }
     // Mode 3: Center without selecting - switch to sheet and center the item
     if (item.id < 0) return;
     dispatch(actionFindSelection(3, item));
@@ -60,15 +70,24 @@ export const DrcPanel: React.FC<DrcPanelProps> = ({
     requestAnimationFrame(() => dispatch(actionFindSelection(3, item)));
   };
 
-  const handleMouseEnter = (item: FindResult) => {
-    if (item.id >= 0) dispatch(actionFindSelection(1, item));
+  const handleMouseEnter = (item: DrcError) => {
+    const state = store.getState();
+    if (drcResultInActiveDrawing(state, item) && (item.source || item.id >= 0) &&
+        state.docStore.present.drawing.sheets[state.docStore.present.view.selected_sheet]?.name === item.sheet)
+      dispatch(actionFindSelection(1, item));
   };
 
-  const handleMouseLeave = (item: FindResult) => {
-    if (item.id >= 0) dispatch(actionFindSelection(0, item));
+  const handleMouseLeave = (item: DrcError) => {
+    if (drcResultInActiveDrawing(store.getState(), item) && (item.source || item.id >= 0))
+      dispatch(actionFindSelection(0, item));
   };
 
-  const columns: TableColumnDefinition<FindResult>[] = [
+  const fileLabel = (item: DrcError) => {
+    const file = item.source?.fileId?.split(/[\\/]/).at(-1) ?? checkedFileName;
+    const instance = item.source?.instancePath.join(' / ');
+    return instance ? `${file} (${instance})` : file;
+  };
+  const columns: TableColumnDefinition<DrcError>[] = [
     {
       columnId: 'sheet',
       compare: (a, b) => (a.sheet || '').localeCompare(b.sheet || ''),
@@ -109,14 +128,20 @@ export const DrcPanel: React.FC<DrcPanelProps> = ({
       renderCell: (item) => <TableCellLayout title={item.text}>{item.text}</TableCellLayout>,
     },
   ];
+  if (checkedFileName) columns.unshift({
+    columnId: 'file',
+    compare: (a, b) => fileLabel(a).localeCompare(fileLabel(b)),
+    renderHeaderCell: () => t('panel.drc.file', { defaultValue: 'File / instance' }),
+    renderCell: (item) => <TableCellLayout title={item.source?.fileId ?? checkedFileName}>{fileLabel(item)}</TableCellLayout>,
+  });
 
   return (
     <div className={styles.container}>
       <PersistentDataGrid
         items={drcTable || []}
         columns={columns}
-        stateKey="DrcPanel"
-        getRowId={(item) => `${item.id}-${item.text}-${item.pin || ''}`}
+        stateKey={checkedFileName ? 'ProjectDrcPanel' : 'DrcPanel'}
+        getRowId={(item) => JSON.stringify([item.source?.instance, item.sheet, item.id, item.a, item.text, item.pin])}
         onRowClick={handleRowClick}
         onRowMouseEnter={handleMouseEnter}
         onRowMouseLeave={handleMouseLeave}

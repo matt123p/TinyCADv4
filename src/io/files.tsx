@@ -12,6 +12,7 @@ import { ioXML } from './ioXml';
 import {
   actionAddImage,
   actionBomGenerate,
+  actionSheetAdd,
   actionCommand,
   actionMenuBrowserOpen,
   actionRename,
@@ -180,10 +181,21 @@ export async function fileSaveWithoutResults(dispatch: Dispatch, getState: { ():
   const file = state.altStore.file;
   dispatch(actionSetSaveInProgress(true, null));
   try {
-    const bytes = await encodeDrawing(withoutResults(drawing));
+    const copy = withoutResults(drawing);
+    const name = file.name.replace(/\.(dsn|dzn)$/i, '') + '-without-results';
+    const project = state.schematicTabs?.projectRoot;
+    if (project) {
+      const { hasProjectHierarchy } = await import('./projectHierarchy');
+      if (hasProjectHierarchy(copy)) {
+        await saveSchematicFile({ ...file, name: name + '.dsn' }, copy, true, project);
+        window.dispatchEvent(new Event(projectFilesChanged));
+        return;
+      }
+    }
+    const bytes = await encodeDrawing(copy);
     await userManager.saveFile(bytes, {
       ...file, id: null,
-      name: drawingFileName(file.name.replace(/\.(dsn|dzn)$/i, '') + '-without-results', isCompressedDrawing(bytes)),
+      name: drawingFileName(name, isCompressedDrawing(bytes)),
     });
   } catch (error) {
     if (error) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
@@ -192,11 +204,33 @@ export async function fileSaveWithoutResults(dispatch: Dispatch, getState: { ():
   }
 }
 
-export async function saveSchematicFile(file: CurrentFile, drawing: dsnDrawing, saveAs = false) {
-  const netlist = await wkrGenerateNetlist(drawing);
+export async function saveSchematicFile(file: CurrentFile, drawing: dsnDrawing, saveAs = false, project?: string) {
+  const netlist = await wkrGenerateNetlist(drawing, !!project);
   const updated = new updateDrawing().updateNetlistHints(drawing, netlist);
   const projectSave = process.env.TARGET_SYSTEM === 'electron' && file.projectVersion && !saveAs;
-  const bytes = await encodeDrawing(updated, projectSave ? (/\.dzn$/i.test(file.name) ? 'zip-v1' : 'xml') : undefined);
+  let bytes = await encodeDrawing(updated, projectSave ? (/\.dzn$/i.test(file.name) ? 'zip-v1' : 'xml') : undefined);
+  if (project) {
+    const { hasProjectHierarchy, rebaseProjectHierarchy } = await import('./projectHierarchy');
+    const { projectRequest, isProjectSchematicPath } = await import('./projects');
+    const owner = typeof file.id === 'string' ? file.id : undefined;
+    if (hasProjectHierarchy(drawing) && (saveAs || !owner || isProjectSchematicPath(project, owner))) {
+      const compressed = isCompressedDrawing(bytes);
+      const destination = projectSave
+        ? { id: owner, name: file.name, folder: file.folderId, version: file.projectVersion }
+        : await projectRequest({
+            operation: 'choose-hierarchical-save', project, owner, name: file.name, compressed,
+          });
+      if (!destination) throw undefined;
+      const rebased = await rebaseProjectHierarchy(updated, project, owner, destination.id);
+      if (rebased !== updated) bytes = await encodeDrawing(rebased, compressed ? 'zip-v1' : 'xml');
+      const saved = await projectRequest({
+        operation: 'write',
+        id: destination.version ? destination.id : undefined,
+        folder: destination.folder, name: destination.name, version: destination.version, data: bytes,
+      });
+      return { ...saved, folderId: destination.folder };
+    }
+  }
   if (projectSave) {
     const { projectRequest } = await import('./projects');
     return projectRequest({
@@ -222,15 +256,15 @@ async function internalfileSave(
   if (saveInProgress) return false;
   dispatch(actionSetSaveInProgress(true, null));
   try {
-    const meta = await saveSchematicFile(file, present.drawing, saveAs);
-    dispatch(actionSetFileData(meta.name, meta.id, file.folderId, present.drawingVersion,
-      file.projectVersion && !saveAs ? meta.version : undefined));
+    const meta = await saveSchematicFile(file, present.drawing, saveAs, state.schematicTabs?.projectRoot);
+    dispatch(actionSetFileData(meta.name, meta.id, meta.version ? meta.folderId ?? file.folderId : file.folderId,
+      present.drawingVersion, meta.version));
     if (!file.id && typeof meta.id === 'string') {
       await bindDrawingExports({ ...designExportSource(state), drawingId: meta.id, name: meta.name }).catch((error) =>
         dispatch(actionSelectDialog('io_failure', { message: `The drawing was saved, but its export locations could not be remembered. ${String(error)}` })),
       );
     }
-    if (file.projectVersion && !saveAs)
+    if (meta.version)
       window.dispatchEvent(new Event(projectFilesChanged));
     return true;
   } catch (error) {
@@ -364,7 +398,11 @@ export function saveNetlist(format: Exclude<DesignExportFormat, 'bom'>, chooseLo
     const { drawing } = state.docStore.present;
     const source = designExportSource(state);
     return exportDrawingData(dispatch, { ...source, format }, chooseLocation, async () => {
-      const netlist = await wkrGenerateNetlist(drawing);
+      const { readCurrentHierarchy } = await import('./projects');
+      const linked = await readCurrentHierarchy(state);
+      const netlist = await wkrGenerateNetlist(linked, !!source.project);
+      if (netlist.hierarchyErrors?.length)
+        throw new Error(netlist.hierarchyErrors.join('\n'));
       if (getState().docStore.present.drawing === drawing)
         dispatch(actionUpdateNetlistHints(netlist));
       return netlistContents(source.name, format, netlist, drawing.spiceModelPacks);
@@ -1049,7 +1087,23 @@ export function handleMenuCommand(command: string) {
         dispatch(actionSelectDialog('annotate', null));
         break;
       case 'tools-bom':
-        dispatch(actionBomGenerate());
+        if (state.schematicTabs?.projectRoot) {
+          void import('./projects').then(({ readCurrentHierarchy }) => readCurrentHierarchy(state))
+            .then((linked) => {
+              if (getState().docStore.present.drawing === state.docStore.present.drawing)
+                dispatch(actionBomGenerate(linked));
+            }).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+        } else {
+          dispatch(actionBomGenerate());
+        }
+        break;
+      case 'tools-add-hierarchical-symbol':
+        if (state.schematicTabs?.projectRoot)
+          dispatch(actionSheetAdd('Hierarchical Symbol', true));
+        break;
+      case 'tools-insert-hierarchical-symbol':
+        if (state.schematicTabs?.projectRoot)
+          window.dispatchEvent(new Event('tinycad:insert-hierarchical-symbol'));
         break;
       case 'tools-netlist':
         dispatch(actionSelectDialog('netlist', null));

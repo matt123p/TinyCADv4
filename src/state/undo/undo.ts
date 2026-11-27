@@ -9,6 +9,7 @@ import { altStore } from '../stores/altStoreReducer';
 import { SymbolActionTypes } from '../actions/symbolActions';
 import { LibraryActionTypes } from '../actions/libraryActions';
 import { DocActionTypes } from '../actions/docActions';
+import { DialogActionTypes } from '../actions/dialogActions';
 
 let lastEvent = new Date();
 let needHistory = false;
@@ -25,6 +26,8 @@ const reduceWithHistory = undoable(DocStoreReducer, {
     currentState: docStore,
     previousHistory: StateWithHistory<docStore>,
   ) => {
+    if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalRefresh) return false;
+    if (action.type === DialogActionTypes.SetDRC) return false;
     if (action.type === 'simulation/diagnostics' || action.type === 'simulation/panel') return false;
     const now = new Date();
     needHistory =

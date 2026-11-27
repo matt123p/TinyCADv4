@@ -353,21 +353,18 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     setTimeout(() => this.props.dispatch(actionUnregisterTSheet(this)), 0);
   }
 
-  onshowItem(id: number) {
-    const item = this.props.items.find((f) => f._id === id);
-    if (item) {
-      const update = updateFactory(item);
-      const bb = update.getBoundingRect();
-
-      let scale = this.props.zoom / 100.0;
-      let offset = (this.border + 0.5) * scale;
-
-      const x = bb.x1 * scale + offset - this._div.clientWidth / 2;
-      const y = bb.y1 * scale + offset - this._div.clientHeight / 2;
-
-      this._div.scrollLeft = x;
-      this._div.scrollTop = y;
+  onshowItem(id: number, point?: Coordinate, sheet?: string) {
+    if (!this._div || (sheet && sheet !== this.props.sheet_name)) return;
+    if (!point) {
+      const item = this.props.items.find((f) => f._id === id);
+      if (!item) return;
+      const { x1, y1 } = updateFactory(item).getBoundingRect();
+      point = [x1, y1];
     }
+    const scale = this.props.zoom / 100;
+    const offset = (this.border + 0.5) * scale;
+    this._div.scrollLeft = point[0] * scale + offset - this._div.clientWidth / 2;
+    this._div.scrollTop = point[1] * scale + offset - this._div.clientHeight / 2;
   }
 
   onkeydown(e: any) {

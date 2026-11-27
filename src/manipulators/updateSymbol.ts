@@ -303,6 +303,15 @@ export class updateSymbol
   }
 
   getContextMenu(items: ContextMenuList) {
+    if (this.item.hierarchicalFile !== undefined) {
+      return [
+        ...items.slice(0, 4),
+        { key: `hierarchy:open:${this.item._id}`, text: 'Open Linked Schematic' },
+        { key: `hierarchy:refresh:${this.item._id}`, text: 'Reload Linked Schematic' },
+        { key: `hierarchy:change:${this.item._id}`, text: 'Change Linked Schematic…' },
+        ...items.slice(4),
+      ];
+    }
     return [
       ...items.slice(0, 4),
       {
@@ -1088,6 +1097,7 @@ export class updateSymbol
     const UpdateTextAreas = this.create_updateTextArea(this.item, point);
     let r = update(this.item, {
       point: { $set: point },
+      _active_points: { $set: null },
       textData: {
         $set: this.create_text_blocks(
           UpdateTextAreas,

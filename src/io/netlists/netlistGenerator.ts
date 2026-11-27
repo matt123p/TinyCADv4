@@ -16,6 +16,7 @@ import {
   dsnSymbolHint,
 } from '../../model/dsnItem';
 import { updateSymbol } from '../../manipulators/updateSymbol';
+import type { DrcError, DrcSource } from '../../model/dsnDrawing';
 
 export interface EProp {
   inputs: number;
@@ -49,6 +50,8 @@ export interface NetListNode {
   eprop: number;
   netlist: string;
   label?: string;
+  hierarchicalPort?: { symbolId: number; name: string };
+  drcSource?: DrcSource;
   symbol?: NetListSymbol;
   reference?: string;
   pin?: string;
@@ -62,9 +65,12 @@ export interface NetlistData {
   eprops: { [key: string]: EProp };
   labels: { [key: string]: string };
   symbols: SymbolRef[];
+  hierarchyErrors?: string[];
+  drcHierarchy?: { errors: DrcError[]; unmatchedPorts: DrcError[]; placements: SymbolRef[] };
+  hierarchyModelPacks?: import('../../simulation/catalogBindings').SpiceModelPack[];
 }
 
-export type SymbolRef = [string, dsnSymbol];
+export type SymbolRef = [string, dsnSymbol, DrcSource?];
 
 export type NetList = NetListNode[];
 

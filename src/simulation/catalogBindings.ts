@@ -317,10 +317,11 @@ export function referencedSpiceModelPacks(
 }
 
 export function activeSpiceModelPacks(
-  netlist: Pick<NetlistData, 'symbols'>,
+  netlist: Pick<NetlistData, 'symbols' | 'hierarchyModelPacks'>,
   packs: SpiceModelPack[] = [],
 ) {
-  return referencedSpiceModelPacks(netlist, packs).filter((pack) => !pack.format);
+  return referencedSpiceModelPacks(netlist, mergeDrawingModelPacks(packs, netlist.hierarchyModelPacks))
+    .filter((pack) => !pack.format);
 }
 
 export function nativeSpicePrologue(symbol: SpiceSymbolFields, packs?: SpiceModelPack[]) {

@@ -118,6 +118,8 @@ export function buildDeck(
   catalogFiles: readonly string[] = [],
   packs?: SpiceModelPack[],
 ): string {
+  if (netlist.hierarchyErrors?.length)
+    throw new Error(netlist.hierarchyErrors.join('\n'));
   if (!netlist.symbols.length)
     throw new Error('Place and connect a circuit on a schematic sheet first.');
   const references = new Set<string>();

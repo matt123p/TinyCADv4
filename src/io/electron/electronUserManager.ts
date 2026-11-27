@@ -2,6 +2,7 @@ import { activateSchematicTab, openSchematicTabs, schematicFileTabKey } from '..
 import type { docDrawing } from '../../state/undo/undo';
 import { drawingMimeType } from '../../../shared/drawingFiles.js';
 import { decodeDrawing } from '../dsnCodec';
+import { isProjectSchematicPath, readProjectDrawing } from '../projects';
 import { Dispatch } from 'redux';
 import { ActionCreators } from 'redux-undo';
 import {
@@ -73,8 +74,14 @@ export class ElectronUserManager implements UserManager {
             if (openSchematicTabs(getState()).some((entry) => entry.key === key)) {
               dispatch(activateSchematicTab(key));
             } else {
-              const doc = await decodeDrawing(data.content);
-              dispatch(actionSetDocument(doc, data.name, data.id, data.id));
+              const project = getState().schematicTabs?.projectRoot;
+              const doc = project && isProjectSchematicPath(project, data.id)
+                ? await readProjectDrawing({ id: data.id, name: data.name,
+                    folder: data.id.slice(0, Math.max(project.length, data.id.length - data.name.length - 1)),
+                  }, project)
+                : actionSetDocument(await decodeDrawing(data.content), data.name, data.id, data.id);
+              if (getState().schematicTabs?.projectRoot !== project) return;
+              dispatch(doc);
               dispatch(ActionCreators.clearHistory());
             }
           } catch (error) {

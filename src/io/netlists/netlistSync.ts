@@ -159,6 +159,7 @@ export function subscribeNetlist(listener: NetlistListener) {
 export function initializeNetlistSync(store: Store) {
   let previousDrawing: dsnDrawing | null = null;
   let previousVersion = -1;
+  let previousHierarchyRevision = 0;
   let running = false;
   let resyncRequested = false;
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -170,11 +171,13 @@ export function initializeNetlistSync(store: Store) {
     if (present.editSymbol) {
       previousDrawing = null;
       previousVersion = -1;
+      previousHierarchyRevision = 0;
       return;
     }
 
     const drawing = present.drawing;
     const drawingVersion = present.drawingVersion;
+    const hierarchyRevision = present.hierarchyRevision ?? 0;
 
     if (!drawing) {
       return;
@@ -196,10 +199,11 @@ export function initializeNetlistSync(store: Store) {
       store.dispatch(actionStampWireNetTypes(netlist));
       previousDrawing = drawing;
       previousVersion = drawingVersion;
+      previousHierarchyRevision = hierarchyRevision;
       return;
     }
 
-    if (drawingVersion === previousVersion) {
+    if (drawingVersion === previousVersion && hierarchyRevision === previousHierarchyRevision) {
       return;
     }
 
@@ -222,6 +226,7 @@ export function initializeNetlistSync(store: Store) {
 
     previousDrawing = drawing;
     previousVersion = drawingVersion;
+    previousHierarchyRevision = hierarchyRevision;
   };
 
   const scheduleSync = async () => {

@@ -3,7 +3,7 @@ import {
   MergedStyle,
 } from '../../manipulators/updateInterfaces';
 import { IPoint } from '../dispatcher/AppDispatcher';
-import { Coordinate } from '../../model/dsnItem';
+import { Coordinate, type dsnSymbol } from '../../model/dsnItem';
 import { CurrentFile } from '../stores/altStoreReducer';
 
 // Simple interface for toolbar menu item (key is the command)
@@ -41,6 +41,9 @@ export enum MenuActionTypes {
 }
 
 export interface MenuCommand {
+  hierarchicalPlacement?: dsnSymbol;
+  hierarchicalRefresh?: dsnSymbol;
+  hierarchicalRedirect?: dsnSymbol;
   type: MenuActionTypes.MenuCommand;
   command: string;
   dx?: number;
@@ -117,6 +120,7 @@ export interface MenuSheetMove {
 export interface MenuSheetAdd {
   type: MenuActionTypes.MenuSheetAdd;
   sheet_name: string;
+  hierarchical?: boolean;
 }
 
 export interface MenuSheetRename {

@@ -42,6 +42,7 @@ const getStore = () => {
 };
 
 export interface docStore {
+  hierarchyRevision?: number;
   drawing: dsnDrawing;
   view: dsnView;
   bom: dsnBomEntry[];
@@ -218,6 +219,19 @@ export function DocStoreReducer(
 }
 
 function reduceDocument(state: docStore, action: AppActionTypes): docStore {
+  if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalRefresh) {
+    const selected = activeSheet(state);
+    const refreshed = action.hierarchicalRefresh;
+    if (!selected?.items.some((item) => item._id === refreshed._id)) return state;
+    const sheets = state.drawing.sheets.map((sheet) => sheet === selected
+      ? { ...sheet, items: sheet.items.map((item) => item._id === refreshed._id ? refreshed : item) }
+      : sheet);
+    return {
+      ...state,
+      drawing: { ...state.drawing, sheets },
+      hierarchyRevision: (state.hierarchyRevision ?? 0) + 1,
+    };
+  }
   if (action.type === SymbolActionTypes.SetPropertyFonts) return setPropertyFonts(state, action);
   if (action.type === 'simulation/catalog-model') {
     if (state.editSymbol || state.editLibrary || state.drawing !== action.source || action.source === action.drawing) return state;
@@ -446,7 +460,7 @@ function reduceDocument(state: docStore, action: AppActionTypes): docStore {
 
     case DocActionTypes.BomGenerate:
       if (state.drawing) {
-        const bom = update_drawing.makeBomForDrawing(state.drawing);
+        const bom = update_drawing.makeBomForDrawing(action.drawing ?? state.drawing);
         state = update(state, {
           bom: { $set: bom },
         });
@@ -544,6 +558,16 @@ function reduceDocument(state: docStore, action: AppActionTypes): docStore {
     case MenuActionTypes.MenuCommand:
     case MenuActionTypes.MenuCommandWithDefault:
       {
+        if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalRedirect && sheet) {
+          const replacement = action.hierarchicalRedirect;
+          sheet = { ...sheet, items: sheet.items.map((item) => item._id === replacement._id ? replacement : item) };
+          break;
+        }
+        if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalPlacement &&
+            sheet && !sheet.hierarchicalSymbol && sheet.kind !== 'simulation') {
+          ({ view, sheet } = update_view.add_object(view, sheet, action.hierarchicalPlacement, 'add_hierarchical_symbol'));
+          break;
+        }
         if (action.command) {
           let fname = 'command_' + action.command;
           if (fname in update_view && sheet) {
@@ -831,6 +855,8 @@ function reduceDocument(state: docStore, action: AppActionTypes): docStore {
     case MenuActionTypes.MenuSheetAdd:
       {
         let sheets = state.drawing.sheets.slice();
+        const hierarchical = action.hierarchical === true;
+        if (hierarchical && sheets.some((item) => item.hierarchicalSymbol)) break;
         let new_sheet: dsnSheet = {
           items: [],
           details: sheet.details,
@@ -839,9 +865,10 @@ function reduceDocument(state: docStore, action: AppActionTypes): docStore {
           symbols: {},
           images: {},
           hatches: [],
-          hierarchicalSymbol: false,
+          hierarchicalSymbol: hierarchical,
         };
-        sheets.push(new_sheet);
+        if (hierarchical) sheets.unshift(new_sheet);
+        else sheets.push(new_sheet);
         sheet = null;
         view = null;
         state = update(state, {
@@ -849,7 +876,7 @@ function reduceDocument(state: docStore, action: AppActionTypes): docStore {
             sheets: { $set: sheets },
           },
           view: {
-            selected_sheet: { $set: sheets.length - 1 },
+            selected_sheet: { $set: hierarchical ? 0 : sheets.length - 1 },
           },
         });
       }
@@ -1036,18 +1063,9 @@ function reduceDocument(state: docStore, action: AppActionTypes): docStore {
       break;
 
     case DialogActionTypes.SetDRC:
-      let drcTable = update_drawing.designRulesCheck(
-        state.drawing,
-        action.drc,
-        action.netlist,
-      );
-      state = update(state, {
-        drawing: {
-          drc: { $set: action.drc },
-          drcTable: { $set: drcTable },
-        },
-      });
-      break;
+      return { ...state, drawing: { ...state.drawing, drc: action.drc,
+        drcTable: update_drawing.designRulesCheck(state.drawing, action.drc, action.netlist),
+      } };
 
     case DialogActionTypes.SetAnnotate:
       state = update(state, {

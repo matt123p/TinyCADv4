@@ -6,6 +6,7 @@ type WorkerCommand =
   | 'netlist-init'
   | 'netlist-update'
   | 'netlist-get'
+  | 'netlist-calculate'
   | 'netlist';
 
 interface WorkerRequest {
@@ -111,6 +112,8 @@ function runLocal(command: WorkerCommand, payload?: any) {
     case 'netlist-get':
       ensureLocalStateInitialized();
       return Promise.resolve(state.get());
+    case 'netlist-calculate':
+      return Promise.resolve(new NetlistWorkerState().init(payload.drawing));
     case 'netlist':
       localNetlistInitialized = true;
       return Promise.resolve(state.init(payload));
@@ -231,7 +234,8 @@ export async function wkrGetNetlist(): Promise<NetlistData> {
   return runWorker('netlist-get');
 }
 
-export function wkrGenerateNetlist(drawing: dsnDrawing): Promise<NetlistData> {
+export function wkrGenerateNetlist(drawing: dsnDrawing, fresh = false): Promise<NetlistData> {
+  if (fresh) return runWorker('netlist-calculate', { drawing });
   if (!netlistInitialized) {
     return wkrInitNetlist(drawing);
   }
