@@ -123,6 +123,21 @@ function createWindow({ openAbout = false } = {}) {
     },
   });
 
+  mainWindow.webContents.on('context-menu', (_event, { isEditable, editFlags }) => {
+    if (!isEditable) return;
+    Menu.buildFromTemplate([
+      { label: getMenuLabel('undo', 'Undo'), click: () => mainWindow.webContents.send('menu-command', 'edit-undo') },
+      { label: getMenuLabel('redo', 'Redo'), click: () => mainWindow.webContents.send('menu-command', 'edit-redo') },
+      { type: 'separator' },
+      { role: 'cut', enabled: editFlags.canCut },
+      { role: 'copy', enabled: editFlags.canCopy },
+      { role: 'paste', enabled: editFlags.canPaste },
+      { role: 'delete', enabled: editFlags.canDelete },
+      { type: 'separator' },
+      { role: 'selectAll', enabled: editFlags.canSelectAll },
+    ]).popup({ window: mainWindow });
+  });
+
   function updateMenu() {
     const recentFiles = store.get('recentFiles') || [];
     const recentMenu = recentFiles.map(file => ({
@@ -193,7 +208,7 @@ function createWindow({ openAbout = false } = {}) {
         label: getMenuLabel('edit', 'Edit'),
         submenu: [
           { label: getMenuLabel('undo', 'Undo'), accelerator: 'CmdOrCtrl+Z', click: () => mainWindow.webContents.send('menu-command', 'edit-undo') },
-          { label: getMenuLabel('redo', 'Redo'), accelerator: 'CmdOrCtrl+Y', click: () => mainWindow.webContents.send('menu-command', 'edit-redo') },
+          { label: getMenuLabel('redo', 'Redo'), accelerator: isMac ? 'Cmd+Shift+Z' : 'Ctrl+Y', click: () => mainWindow.webContents.send('menu-command', 'edit-redo') },
           { type: 'separator' },
           { role: 'cut' },
           { role: 'copy' },

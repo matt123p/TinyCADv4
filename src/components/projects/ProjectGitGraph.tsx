@@ -46,11 +46,13 @@ export default function ProjectGitGraph({
   snapshot,
   inspect,
   compare,
+  label = 'Commit graph',
 }: {
   commits: GitCommit[];
   snapshot: GitSnapshot;
-  inspect(commit: GitCommit): void;
-  compare(commit: GitCommit): void;
+  inspect?(commit: GitCommit): void;
+  compare?(commit: GitCommit): void;
+  label?: string;
 }) {
   const rows = graphRows(commits);
   const width = x(
@@ -59,12 +61,25 @@ export default function ProjectGitGraph({
       0,
     ),
   );
-  const labels = new Map(snapshot.branches.map(({ name, id }) => [id, name]));
+  const labels = new Map<string, string[]>();
+  for (const { name, id } of snapshot.branches) {
+    const names = labels.get(id) ?? [];
+    names.push(name);
+    labels.set(id, names);
+  }
+  const commitLabel = (commit: GitCommit) => (
+    <>
+      <span>{commit.subject}</span>
+      {labels.get(commit.id)?.map((name) => (
+        <small key={name}>{name}</small>
+      ))}
+    </>
+  );
   return (
     <details className="project-git-group" open>
-      <summary>Commit Graph</summary>
+      <summary>{label === 'Commit graph' ? 'Commit Graph' : label}</summary>
       {!rows.length && <p>No commits yet.</p>}
-      <ol className="project-git-graph" aria-label="Commit graph">
+      <ol className="project-git-graph" aria-label={label}>
         {rows.map(({ commit, before, after, current, node, parents }) => (
           <li key={commit.id}>
             <svg width={width} height={28} aria-hidden="true">
@@ -100,30 +115,33 @@ export default function ProjectGitGraph({
                 fill={palette[node.color % palette.length]}
               />
             </svg>
-            <Menu openOnContext>
-              <MenuTrigger disableButtonEnhancement>
-                <button
-                  type="button"
-                  onClick={() => inspect(commit)}
-                  title={`${commit.short} · ${commit.date} · ${commit.subject}`}
-                >
-                  <span>{commit.subject}</span>
-                  {labels.has(commit.id) && (
-                    <small>{labels.get(commit.id)}</small>
-                  )}
-                </button>
-              </MenuTrigger>
-              <MenuPopover>
-                <MenuList>
-                  <MenuItem onClick={() => inspect(commit)}>
-                    Open Changes
-                  </MenuItem>
-                  <MenuItem onClick={() => compare(commit)}>
-                    Compare with Branch or Tag…
-                  </MenuItem>
-                </MenuList>
-              </MenuPopover>
-            </Menu>
+            {inspect && compare ? (
+              <Menu openOnContext>
+                <MenuTrigger disableButtonEnhancement>
+                  <button
+                    type="button"
+                    onClick={() => inspect(commit)}
+                    title={`${commit.short} · ${commit.date} · ${commit.subject}`}
+                  >
+                    {commitLabel(commit)}
+                  </button>
+                </MenuTrigger>
+                <MenuPopover>
+                  <MenuList>
+                    <MenuItem onClick={() => inspect(commit)}>
+                      Open Changes
+                    </MenuItem>
+                    <MenuItem onClick={() => compare(commit)}>
+                      Compare with Branch or Tag…
+                    </MenuItem>
+                  </MenuList>
+                </MenuPopover>
+              </Menu>
+            ) : (
+              <div className="project-git-graph-label" title={commit.short}>
+                {commitLabel(commit)}
+              </div>
+            )}
           </li>
         ))}
       </ol>

@@ -778,6 +778,29 @@ export async function runProjectGit(folder, request) {
       await git(root, ['switch', '--no-guess', '--', request.branch]);
       return status(root, folder);
     }
+    case 'merge-branch': {
+      if (snapshot.branch !== request.into ||
+          !snapshot.branches.some(({ name }) => name === request.into))
+        throw new Error('The current branch changed. Refresh and try again.');
+      if (request.branch === snapshot.branch ||
+          !snapshot.branches.some(({ name }) => name === request.branch))
+        throw new Error('Select a different local branch to merge.');
+      if (snapshot.changes.some(({ index, working }) =>
+        index !== '.' || (working !== '.' && working !== '?')))
+        throw new Error('Commit or stash tracked changes before merging.');
+      const mergeHead = () =>
+        git(root, ['rev-parse', '--verify', '-q', 'MERGE_HEAD'], { accept: [0, 1] });
+      if (await mergeHead())
+        throw new Error('Finish the existing merge in Git before starting another.');
+      try {
+        await git(root, ['merge', '--no-edit', '--no-autostash', '--', 'refs/heads/' + request.branch]);
+      } catch (error) {
+        if (!(await mergeHead())) throw error;
+        await git(root, ['merge', '--abort']);
+        throw new Error('The merge was cancelled because the branches have conflicts.');
+      }
+      return status(root, folder);
+    }
     case 'publish-branch':
       if (
         snapshot.head === '(initial)' ||
@@ -880,6 +903,7 @@ export async function runProjectGit(folder, request) {
         ]),
       );
     }
+    case 'branch-graph':
     case 'graph': {
       if (snapshot.head === '(initial)') return [];
       return historyRecords(
@@ -891,7 +915,9 @@ export async function runProjectGit(folder, request) {
           '-z',
           '--format=%H%x00%h%x00%P%x00%as%x00%s',
           'HEAD',
-          ...(snapshot.upstream ? ['@{upstream}'] : []),
+          ...(request.command === 'branch-graph'
+            ? ['--branches']
+            : snapshot.upstream ? ['@{upstream}'] : []),
           '--',
         ]),
       );

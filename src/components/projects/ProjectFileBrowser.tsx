@@ -12,11 +12,18 @@ import {
 import {
   ChevronDownRegular,
   ChevronRightRegular,
+  CodeRegular,
+  DeveloperBoardRegular,
   DocumentAddRegular,
+  DocumentImageRegular,
+  DocumentPdfRegular,
   DocumentRegular,
+  DocumentTableRegular,
   FolderAddRegular,
   FolderOpenRegular,
   FolderRegular,
+  LibraryRegular,
+  MarkdownRegular,
   MoreHorizontalRegular,
   ArrowClockwiseRegular,
 } from '@fluentui/react-icons';
@@ -24,6 +31,8 @@ import {
   MAX_PROJECT_FILE_BYTES,
   validProjectName,
 } from '../../../shared/projectFiles';
+import { isDrawingFile } from '../../../shared/drawingFiles';
+import { projectDocumentKind } from '../../io/projectDocumentKind';
 import { projectRequest } from '../../io/projects';
 import { projectFilesChanged } from '../../io/projectStorage';
 import type { ProjectItem, ProjectLocation } from '../../io/projectStorage';
@@ -70,6 +79,25 @@ const rootReveal = /Mac/i.test(navigator.platform)
   : /Win/i.test(navigator.platform)
   ? 'Reveal in File Explorer'
   : 'Reveal in File Manager';
+
+function projectFileIcon(name: string) {
+  if (isDrawingFile(name)) return DeveloperBoardRegular;
+  if (/\.tclib$/i.test(name)) return LibraryRegular;
+  const document = projectDocumentKind(name);
+  if (document.kind === 'image') return DocumentImageRegular;
+  if (document.kind === 'pdf') return DocumentPdfRegular;
+  if (document.kind === 'text') {
+    if (document.preview === 'markdown') return MarkdownRegular;
+    if (document.preview === 'table') return DocumentTableRegular;
+    if (
+      /^(xml|html|json|yaml|yml|js|javascript|ts|typescript|css|scss|py|sh|bash|sql|toml|ini|c|cpp|h|rs|go)$/i.test(
+        document.language ?? '',
+      )
+    )
+      return CodeRegular;
+  }
+  return DocumentRegular;
+}
 
 function InlineName({
   item,
@@ -556,6 +584,11 @@ export default function ProjectFileBrowser({
           const entry = { item, parent: folder };
           const isExpanded = expanded.includes(item.id);
           const gitStatus = gitChanges?.get(item.id);
+          const Icon = item.folder
+            ? isExpanded
+              ? FolderOpenRegular
+              : FolderRegular
+            : projectFileIcon(item.name);
           return (
             <li key={item.id}>
               {renaming?.item.id === item.id ? (
@@ -627,15 +660,7 @@ export default function ProjectFileBrowser({
                       ) : (
                         <span className="project-tree-spacer" />
                       )}
-                      {item.folder ? (
-                        isExpanded ? (
-                          <FolderOpenRegular />
-                        ) : (
-                          <FolderRegular />
-                        )
-                      ) : (
-                        <DocumentRegular />
-                      )}
+                      <Icon aria-hidden="true" />
                       <span>{item.name}</span>
                       {gitStatus && (
                         <small
@@ -663,7 +688,7 @@ export default function ProjectFileBrowser({
 
   return (
     <section className="project-browser" aria-label="Project Files">
-      <div className="project-explorer-header">
+      <div className="project-explorer-header side-panel-header">
         <button
           type="button"
           className="project-root-name"
@@ -671,7 +696,8 @@ export default function ProjectFileBrowser({
           aria-pressed={!selected}
           onClick={() => setSelected(undefined)}
         >
-          {root.name}
+          <FolderOpenRegular aria-hidden="true" />
+          <span>{root.name}</span>
         </button>
         {newFileMenu(destination(selected), true)}
         <Button
@@ -794,6 +820,12 @@ export default function ProjectFileBrowser({
         }}
       >
         {tree(root.id, [root.id])}
+        <Menu openOnContext>
+          <MenuTrigger disableButtonEnhancement>
+            <div className="project-tree-background" />
+          </MenuTrigger>
+          <MenuPopover>{actions()}</MenuPopover>
+        </Menu>
       </div>
     </section>
   );

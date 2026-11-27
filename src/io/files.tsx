@@ -1,4 +1,5 @@
 import { projectFilesChanged } from './projectStorage';
+import { newProjectDesign } from './projectMode';
 import type { dsnDrawing } from '../model/dsnDrawing';
 import { apiServer, tinycadUrl } from './apiServer';
 import { withoutResults } from '../simulation/document';
@@ -129,6 +130,9 @@ export function performPendingAction(pendingAction: UnsavedAction) {
 
 export function fileNew() {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
+    if (process.env.TARGET_SYSTEM === 'electron' && getState().schematicTabs?.enabled &&
+        !window.dispatchEvent(new Event(newProjectDesign, { cancelable: true })))
+      return;
     const pendingAction: UnsavedAction = { type: 'file-new' };
     
     if (!getState().schematicTabs?.enabled && checkSaveNeeded(getState)) {

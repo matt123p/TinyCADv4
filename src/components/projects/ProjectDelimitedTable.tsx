@@ -17,24 +17,39 @@ const previewRows = 50_000;
 const maxPreviewLength = 8 * 1024 * 1024;
 const pageSize = 100;
 
-function parseTable(text: string, separator: string) {
-  const directive = /^sep=([^\n])\n/i.exec(text);
+export function delimitedFormat(text: string, name: string, separator = '') {
+  const directive = /^sep=([^\n])(?:\n|$)/i.exec(text);
   const declared = directive && delimitersToGuess.includes(directive[1]);
   const source = declared ? text.slice(directive[0].length) : text;
-  let delimiter = separator || (declared ? directive[1] : '');
-  let detected = true;
-  if (!delimiter) {
-    // Blank records should not influence file format detection.
-    const sample = Papa.parse<string[]>(source, {
-      delimitersToGuess,
-      skipEmptyLines: true,
-      preview: 10,
-    });
-    delimiter = sample.meta.delimiter;
-    detected = !sample.errors.some(
+  const explicit =
+    separator ||
+    (declared && directive[1]) ||
+    (/\.(tsv|tab)$/i.test(name) && '\t') ||
+    (/\.psv$/i.test(name) && '|') ||
+    (/\.ssv$/i.test(name) && ';');
+  if (explicit) return { source, delimiter: explicit, detected: true };
+
+  // Blank records should not influence file format detection.
+  const sample = Papa.parse<string[]>(source, {
+    delimitersToGuess,
+    skipEmptyLines: true,
+    preview: 10,
+  });
+  return {
+    source,
+    delimiter: sample.meta.delimiter,
+    detected: !sample.errors.some(
       ({ code }) => code === 'UndetectableDelimiter',
-    );
-  }
+    ),
+  };
+}
+
+function parseTable(text: string, name: string, separator: string) {
+  const { source, delimiter, detected } = delimitedFormat(
+    text,
+    name,
+    separator,
+  );
   const { data, errors, meta } = Papa.parse<string[]>(source, {
     delimiter,
     preview: previewRows + 1,
@@ -56,9 +71,11 @@ function parseTable(text: string, separator: string) {
 }
 
 export default function ProjectDelimitedTable({
+  active,
   text,
   name,
 }: {
+  active: boolean;
   text: string;
   name: string;
 }) {
@@ -66,14 +83,17 @@ export default function ProjectDelimitedTable({
   const [page, setPage] = useState(0);
   const result = useMemo(
     () =>
-      text.length <= maxPreviewLength ? parseTable(text, separator) : undefined,
-    [text, separator],
+      active && text.length <= maxPreviewLength
+        ? parseTable(text, name, separator)
+        : undefined,
+    [active, text, name, separator],
   );
 
+  if (!active) return null;
   if (!result)
     return (
       <p>
-        This file is too large for table preview. Open Source to see the text.
+        This file is too large for table preview. Open Text to see the contents.
       </p>
     );
   if (!result.rows.length) return <p>This file has no rows.</p>;
@@ -82,7 +102,9 @@ export default function ProjectDelimitedTable({
     !separator && result.detected
       ? separators.find(({ value }) => value === result.delimiter)?.label
       : undefined;
-  const start = page * pageSize;
+  const lastPage = Math.ceil(result.rows.length / pageSize) - 1;
+  const currentPage = Math.min(page, lastPage);
+  const start = currentPage * pageSize;
   const end = Math.min(start + pageSize, result.rows.length);
 
   return (
@@ -111,8 +133,8 @@ export default function ProjectDelimitedTable({
           <>
             <Button
               size="small"
-              disabled={!page}
-              onClick={() => setPage(page - 1)}
+              disabled={!currentPage}
+              onClick={() => setPage(currentPage - 1)}
             >
               Previous
             </Button>
@@ -121,8 +143,8 @@ export default function ProjectDelimitedTable({
             </span>
             <Button
               size="small"
-              disabled={end === result.rows.length}
-              onClick={() => setPage(page + 1)}
+              disabled={currentPage === lastPage}
+              onClick={() => setPage(currentPage + 1)}
             >
               Next
             </Button>
@@ -133,7 +155,7 @@ export default function ProjectDelimitedTable({
         <p>No separator detected. Choose one to split the text into columns.</p>
       )}
       {result.invalidQuotes && (
-        <p>Some fields have invalid quotes. Check the source for details.</p>
+        <p>Some fields have invalid quotes. Check the Text tab for details.</p>
       )}
       {result.limited && (
         <p>Showing the first {previewRows.toLocaleString()} rows.</p>

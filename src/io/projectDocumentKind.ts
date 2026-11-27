@@ -83,6 +83,7 @@ export function projectDocumentKind(name: string): ProjectDocumentKind {
           : suffix === 'tsv' || suffix === 'tab'
           ? 'text/tab-separated-values'
           : 'text/plain',
+      language: 'csv',
       preview: 'table',
     };
 

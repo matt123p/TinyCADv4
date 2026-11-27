@@ -5,6 +5,43 @@ import path from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
 import { registerProjectFiles } from '../../electron/projectFiles.js';
+import { runProjectGit } from '../../electron/projectGit.js';
+
+test('graphs local branches and restores the checkout when a merge conflicts', async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), 'tinycad-branch-merge-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+  const request = (options) => runProjectGit(root, options);
+  const commit = async (value, message) => {
+    await writeFile(path.join(root, 'Notes.txt'), value + '\n');
+    git('add', 'Notes.txt');
+    git('commit', '-qm', message);
+  };
+  git('init', '-q', '-b', 'main');
+  git('config', 'user.name', 'TinyCAD Tests');
+  git('config', 'user.email', 'tinycad@example.test');
+  await commit('Initial', 'Initial');
+  await request({ command: 'create-branch', branch: 'feature' });
+  await request({ command: 'switch-branch', branch: 'feature' });
+  await commit('Feature', 'Feature change');
+  await request({ command: 'switch-branch', branch: 'main' });
+  const graph = await request({ command: 'branch-graph' });
+  assert.ok(graph.some(({ subject }) => subject === 'Feature change'));
+  await request({ command: 'merge-branch', branch: 'feature', into: 'main' });
+  assert.equal(git('show', 'HEAD:Notes.txt'), 'Feature');
+  await request({ command: 'switch-branch', branch: 'feature' });
+  await commit('Other side', 'Other change');
+  await request({ command: 'switch-branch', branch: 'main' });
+  await commit('Current side', 'Current change');
+  const before = git('rev-parse', 'HEAD');
+  await assert.rejects(
+    request({ command: 'merge-branch', branch: 'feature', into: 'main' }),
+    /cancelled because the branches have conflicts/,
+  );
+  assert.equal(git('rev-parse', 'HEAD'), before);
+  assert.equal(git('status', '--porcelain'), '');
+  assert.equal((await readFile(path.join(root, 'Notes.txt'), 'utf8')).trim(), 'Current side');
+});
 
 test('shares the Git index and commit history with the installed client', async (t) => {
   const root = await mkdtemp(path.join(tmpdir(), 'tinycad-project-git-'));

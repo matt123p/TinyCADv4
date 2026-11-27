@@ -8,16 +8,16 @@ import React, {
   Suspense,
 } from 'react';
 import { useDispatch } from 'react-redux';
-import { makeStyles, Button } from '@fluentui/react-components';
-import { useTranslation } from 'react-i18next';
-import { PanelLeftExpandRegular } from '@fluentui/react-icons';
+import { makeStyles } from '@fluentui/react-components';
 import ToolbarContainer from '../../state/containers/toolbarContainer';
+import { EditorToolbarFrame } from '../toolbar/toolbar';
 import SidePanelContainer from '../../state/containers/sidePanelContainer';
 import SheetContainer from '../../state/containers/sheetContainer';
 import BomContainer from '../../state/containers/bomContainer';
 import SheetbarContainer from '../../state/containers/sheetbarContainer';
 import BottomPanelContainer from '../../state/containers/bottomPanelContainer';
 import { ResizeHandle } from '../panel/ResizeHandle';
+import { SidePanelToggle } from '../panel/SidePanelToggle';
 import { SimulationFailureDialog } from '../simulation/SimulationFailureDialog';
 import { Browser } from '../sheets/browser';
 import { tclibLibraryEntry } from '../../model/tclib';
@@ -132,10 +132,13 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       dispatch({ type: 'simulation/panel', visible: true });
   }, [dispatch, props.simulationSheet, props.selectedSpiceControl]);
   const styles = useStyles();
-  const { t } = useTranslation();
   const [chatOpen, setChatOpen] = useState(false);
   const toggleChat = useCallback(() => setChatOpen(previous => !previous), []);
   const closeChat = useCallback(() => setChatOpen(false), []);
+  const chatControls = {
+    chatOpen,
+    onToggleChat: process.env.TARGET_SYSTEM === 'electron' ? toggleChat : undefined,
+  };
   const [sidePanelVisible, setSidePanelVisible] = useState(true);
   const [sidePanelWidth, setSidePanelWidth] = useState(loadSidePanelWidth);
   const [sidePanelResizing, setSidePanelResizing] = useState(false);
@@ -196,54 +199,68 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     props.cancelCreation();
   };
 
-  const editor = ({ sidebar, tabs, document }: ProjectWorkspaceLayout) => (
-    <div
-      onKeyDown={handleKeyDown}
-      className={sidebar ? "page-container project-mode" : "page-container"}
-      style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
-    >
-      <SimulationFailureDialog />
-      {!document && <ToolbarContainer
-        simulationToolbarRef={setSimulationToolbarTarget}
-        chatOpen={chatOpen}
-        onToggleChat={process.env.TARGET_SYSTEM === 'electron' ? toggleChat : undefined}
-      />}
-      {process.env.TARGET_SYSTEM === 'electron' && ChatPanel && (
-        <Suspense fallback={null}>
-          <ChatPanel open={chatOpen} onClose={closeChat} />
-        </Suspense>
-      )}
-      {tabs}
-      <div className="mid-container">
-        {sidebar}
+  const renderSidebar = (projectSidebar: ProjectWorkspaceLayout['projectSidebar']) => {
+    const visible = projectSidebar?.visible ?? sidePanelVisible;
+    return (
+      <>
+        {projectSidebar?.activityBar}
         <div
-          className={`side-panel-container${
-            sidePanelVisible ? '' : ' side-panel-collapsed'
-          }${sidePanelResizing ? ' side-panel-resizing' : ''}`}
-          style={document ? { display: 'none' } : sidePanelVisible ? { width: sidePanelWidth } : undefined}
+          className={`side-panel-container${visible ? '' : ' side-panel-collapsed'}${sidePanelResizing ? ' side-panel-resizing' : ''}${projectSidebar ? ' project-side-panel' : ''}`}
+          style={visible ? { width: sidePanelWidth } : undefined}
         >
-          {sidePanelVisible && (
+          {visible && (
             <ResizeHandle
               direction="horizontal"
               onResize={handleSidePanelResize}
               onDragStateChange={setSidePanelResizing}
             />
           )}
-          {!sidePanelVisible && (
-            <Button
+          {!projectSidebar && !visible && (
+            <SidePanelToggle
               className={styles.toggleButton}
-              appearance="subtle"
-              icon={<PanelLeftExpandRegular />}
-              onClick={toggleSidePanel}
-              title={t('designApp.showSidePanel')}
+              expanded={false}
+              onToggle={toggleSidePanel}
             />
           )}
-          <SidePanelContainer toggleSidePanel={toggleSidePanel} />
+          {projectSidebar ? projectSidebar.content : (
+            <SidePanelContainer toggleSidePanel={toggleSidePanel} />
+          )}
         </div>
+      </>
+    );
+  };
+
+  const editor = ({ projectSidebar, status, tabs, document, documentToolbar, saveBlocked }: ProjectWorkspaceLayout) => (
+    <div
+      onKeyDown={handleKeyDown}
+      className={projectSidebar ? 'page-container project-mode' : 'page-container'}
+      style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
+    >
+      <SimulationFailureDialog />
+      {documentToolbar ? (
+        <EditorToolbarFrame label="Editor toolbar" {...chatControls}>
+          {documentToolbar}
+        </EditorToolbarFrame>
+      ) : (
+        <ToolbarContainer
+          saveBlocked={saveBlocked}
+          simulationToolbarRef={setSimulationToolbarTarget}
+          {...chatControls}
+        />
+      )}
+      {process.env.TARGET_SYSTEM === 'electron' && ChatPanel && (
+        <Suspense fallback={null}>
+          <ChatPanel open={chatOpen} onClose={closeChat} />
+        </Suspense>
+      )}
+      <div className="mid-container">
+        {renderSidebar(projectSidebar)}
         <div className="main-content-area">
+          {tabs}
+          {status}
           {document}
           <div
-            style={document ? { display: 'none' } : undefined}
+            style={documentToolbar ? { display: 'none' } : undefined}
             className={
               props.editSymbol ? 'circuit-container-es' : 'circuit-container'
             }
@@ -267,7 +284,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           </div>
           <div
             className="bottom-panel-wrapper"
-            style={document ? { display: 'none' } : { height: bottomPanelHeight }}
+            style={documentToolbar ? { display: 'none' } : { height: bottomPanelHeight }}
           >
             <ResizeHandle
               direction="vertical"
@@ -276,7 +293,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
             <BottomPanelContainer />
           </div>
         </div>
-        {!document && !props.editSymbol && (props.simulationPanelActivated || props.hasExampleExplanation) && (
+        {!documentToolbar && !props.editSymbol && (props.simulationPanelActivated || props.hasExampleExplanation) && (
           <div className={`${styles.rightPanels} design-right-panels`}>
             {props.simulationPanelActivated && (
               <Suspense fallback={null}>

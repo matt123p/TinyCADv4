@@ -1,11 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { useSelector, useStore } from 'react-redux';
 import { ActionCreators } from 'redux-undo';
-import { Button } from '@fluentui/react-components';
+import { useTranslation } from 'react-i18next';
+import { Button, ToolbarButton } from '@fluentui/react-components';
 import {
+  ArrowRedoRegular,
+  ArrowUndoRegular,
   BranchForkRegular,
+  Dismiss12Regular,
   DismissRegular,
+  FolderOpenRegular,
   FolderRegular,
+  LibraryRegular,
+  SaveCopyRegular,
+  SaveRegular,
 } from '@fluentui/react-icons';
 import { isDrawingFile } from '../../../shared/drawingFiles';
 import { fileSave, saveSchematicFile } from '../../io/files';
@@ -15,6 +23,8 @@ import { blank } from '../../io/ioXml';
 import {
   closeProjectMode,
   confirmProjectClose,
+  editProjectHistory,
+  newProjectDesign,
   saveActiveProjectFile,
   saveProjectTabs,
   saveStartupMode,
@@ -41,6 +51,7 @@ import {
   useProjectDocuments,
 } from '../../io/useProjectDocuments';
 import { actionSetDocument } from '../../state/dispatcher/AppDispatcher';
+import SidePanelContainer from '../../state/containers/sidePanelContainer';
 import {
   activeSchematicTabKey,
   activateSchematicTab,
@@ -54,7 +65,10 @@ import {
   schematicTabDirty,
 } from '../../state/schematicTabs';
 import type { docDrawing } from '../../state/undo/undo';
+import { SidePanelToggle } from '../panel/SidePanelToggle';
+import { EditorToolbarDivider } from '../toolbar/toolbar';
 import ProjectDocumentEditor from './ProjectDocumentEditor';
+import type { ProjectTextEditor } from './ProjectDocumentEditor';
 import ProjectFileBrowser from './ProjectFileBrowser';
 import type { BrowserFile } from './ProjectFileBrowser';
 import ProjectGitDiff from './ProjectGitDiff';
@@ -82,10 +96,19 @@ function drawingLocation(
 }
 
 export type ProjectWorkspaceLayout = {
-  sidebar?: React.ReactNode;
+  projectSidebar?: {
+    activityBar: React.ReactNode;
+    content: React.ReactNode;
+    visible: boolean;
+  };
+  status?: React.ReactNode;
   tabs?: React.ReactNode;
   document?: React.ReactNode;
+  documentToolbar?: React.ReactNode;
+  saveBlocked?: boolean;
 };
+
+type ProjectPanel = 'files' | 'git' | 'libraries';
 
 type Tab = {
   key: string;
@@ -101,6 +124,8 @@ export default function ProjectWorkspace({
 }: {
   children(layout: ProjectWorkspaceLayout): React.ReactNode;
 }) {
+  const { t } = useTranslation();
+  const sidebarId = useId();
   const store = useStore<docDrawing>();
   const { dispatch } = store;
   const state = useSelector(
@@ -113,6 +138,9 @@ export default function ProjectWorkspace({
       previous.schematicTabs === current.schematicTabs &&
       previous.altStore.file === current.altStore.file &&
       previous.altStore.savedVersion === current.altStore.savedVersion &&
+      previous.altStore.saveInProgress === current.altStore.saveInProgress &&
+      previous.altStore.standardLibraryNavigation ===
+        current.altStore.standardLibraryNavigation &&
       previous.docStore.present.drawingVersion ===
         current.docStore.present.drawingVersion &&
       activeSchematicTabKey(previous) === activeSchematicTabKey(current),
@@ -120,9 +148,10 @@ export default function ProjectWorkspace({
   const activeKey = activeSchematicTabKey(state);
   const activeFile = state.altStore.file;
   const [root, setRoot] = useState<ProjectLocation>();
+  const projectRoot = useRef<ProjectLocation>();
   const [restoring, setRestoring] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
-  const [panel, setPanel] = useState<'files' | 'git'>('files');
+  const [panel, setPanel] = useState<ProjectPanel>('files');
   const [review, setReview] = useState<GitReview>();
   const [showReview, setShowReview] = useState(false);
   const [error, setError] = useState('');
@@ -133,11 +162,19 @@ export default function ProjectWorkspace({
     blame?: boolean;
   }>();
   const [saving, setSaving] = useState(false);
+  const [textEditor, setTextEditor] = useState<ProjectTextEditor>(null);
   const saveLock = useRef(false);
   const transition = useRef(false);
   const opening = useRef(0);
   const [order, setOrder] = useState<string[]>([]);
   const documents = useProjectDocuments();
+
+  useEffect(() => {
+    if (state.altStore.standardLibraryNavigation) {
+      setPanel('libraries');
+      setShowSidebar(true);
+    }
+  }, [state.altStore.standardLibraryNavigation]);
 
   function report(error: unknown) {
     setError(error instanceof Error ? error.message : String(error));
@@ -145,6 +182,37 @@ export default function ProjectWorkspace({
 
   function clearDrawing() {
     dispatch(actionSetDocument(blank(), 'tCad1.dsn', null, null));
+    dispatch(ActionCreators.clearHistory());
+  }
+
+  async function createDesign(location: ProjectLocation) {
+    const blocked = () =>
+      projectRoot.current !== location ||
+      transition.current ||
+      saveLock.current ||
+      store.getState().altStore.saveInProgress;
+    if (blocked()) return;
+    const entries = await projectRequest({
+      operation: 'list',
+      folder: location.id,
+      tree: true,
+    });
+    if (blocked()) return;
+    const occupied = new Set([
+      ...entries.map(({ name }) => name.toLowerCase()),
+      ...openSchematicTabs(store.getState()).map(({ tab }) =>
+        tab.file.name.toLowerCase(),
+      ),
+    ]);
+    let number = 1;
+    while (
+      occupied.has(`tcad${number}.dsn`) ||
+      occupied.has(`tcad${number}.dzn`)
+    )
+      number++;
+    dispatch(
+      actionSetDocument(blank(), `tCad${number}.dsn`, null, location.id),
+    );
     dispatch(ActionCreators.clearHistory());
   }
 
@@ -220,6 +288,7 @@ export default function ProjectWorkspace({
     }
     opening.current++;
     dispatch(enableSchematicTabs(true));
+    projectRoot.current = next;
     setRoot(next);
     setPanel('files');
     setShowSidebar(true);
@@ -307,6 +376,7 @@ export default function ProjectWorkspace({
     documents.clear();
     dispatch(enableSchematicTabs(false));
     clearDrawing();
+    projectRoot.current = undefined;
     setRoot(undefined);
     setShowReview(false);
     setOrder([]);
@@ -461,7 +531,11 @@ export default function ProjectWorkspace({
   }
 
   async function saveAll() {
-    if (saveLock.current || store.getState().altStore.saveInProgress)
+    if (
+      saveLock.current ||
+      store.getState().altStore.saveInProgress ||
+      documents.isSaving()
+    )
       throw new Error('A save is already in progress.');
     saveLock.current = true;
     setSaving(true);
@@ -587,6 +661,11 @@ export default function ProjectWorkspace({
       void enter(event.detail).catch(report);
     };
     const onClose = () => leave();
+    const onNewDesign = (event: Event) => {
+      if (!projectRoot.current) return;
+      event.preventDefault();
+      void createDesign(projectRoot.current).catch(report);
+    };
     const onSaveAll = () => {
       if (root) void saveAll().catch(report);
     };
@@ -597,8 +676,15 @@ export default function ProjectWorkspace({
       }
       if (!documents.active && !showReview) return;
       event.preventDefault();
-      if (documents.active && !showReview)
+      if (documents.active && !showReview && !documents.isSaving())
         void documents.save(documents.active).catch(report);
+    };
+    const onEditHistory = (event: Event) => {
+      if ((!documents.active && !showReview) || !(event instanceof CustomEvent))
+        return;
+      event.preventDefault();
+      if (!showReview && (event.detail === 'undo' || event.detail === 'redo'))
+        editHistory(event.detail);
     };
     const onConfirmClose = (event: Event) => {
       if (root && !canReplace('Quit and discard unsaved project changes?'))
@@ -606,14 +692,18 @@ export default function ProjectWorkspace({
     };
     window.addEventListener(projectFolderOpened, onOpen);
     window.addEventListener(closeProjectMode, onClose);
+    window.addEventListener(newProjectDesign, onNewDesign);
     window.addEventListener(saveProjectTabs, onSaveAll);
     window.addEventListener(saveActiveProjectFile, onSave);
+    window.addEventListener(editProjectHistory, onEditHistory);
     window.addEventListener(confirmProjectClose, onConfirmClose);
     return () => {
       window.removeEventListener(projectFolderOpened, onOpen);
       window.removeEventListener(closeProjectMode, onClose);
+      window.removeEventListener(newProjectDesign, onNewDesign);
       window.removeEventListener(saveProjectTabs, onSaveAll);
       window.removeEventListener(saveActiveProjectFile, onSave);
+      window.removeEventListener(editProjectHistory, onEditHistory);
       window.removeEventListener(confirmProjectClose, onConfirmClose);
     };
   });
@@ -701,120 +791,175 @@ export default function ProjectWorkspace({
   const openDocument = documents.files.find(
     ({ id }) => id === documents.active,
   );
+  const saveAllAction = root && {
+    run: () => {
+      void saveAll().catch(report);
+    },
+    disabled:
+      restoring ||
+      saving ||
+      state.altStore.saveInProgress ||
+      documents.writing.size > 0,
+  };
+
+  function editHistory(command: 'undo' | 'redo') {
+    textEditor?.run(command);
+  }
+
+  function selectPanel(next: ProjectPanel) {
+    setShowSidebar(next !== panel || !showSidebar);
+    setPanel(next);
+  }
 
   return children({
-    sidebar: root ? (
-      <aside
-        className="project-workspace-sidebar"
-        aria-label="Project Manager"
-        hidden={!showSidebar}
-      >
-        <div className="project-actions">
+    projectSidebar: root && {
+      visible: showSidebar,
+      activityBar: (
+        <nav className="project-activity-bar" aria-label="Project views">
+          <SidePanelToggle
+            className="project-sidebar-toggle"
+            expanded={showSidebar}
+            controls={sidebarId}
+            onToggle={() => setShowSidebar((visible) => !visible)}
+          />
           <Button
-            size="small"
+            appearance="subtle"
             icon={<FolderRegular />}
-            aria-pressed={panel === 'files'}
-            onClick={() => setPanel('files')}
-          >
-            Files
-          </Button>
+            aria-label="Files"
+            title="Files"
+            aria-controls={sidebarId}
+            aria-pressed={showSidebar && panel === 'files'}
+            onClick={() => selectPanel('files')}
+          />
           <Button
-            size="small"
+            appearance="subtle"
             icon={<BranchForkRegular />}
-            aria-pressed={panel === 'git'}
-            onClick={() => setPanel('git')}
+            aria-label="Git"
+            title={gitCount ? `Git (${gitCount} changes)` : 'Git'}
+            aria-controls={sidebarId}
+            aria-pressed={showSidebar && panel === 'git'}
+            onClick={() => selectPanel('git')}
           >
-            Git{gitCount > 0 && ` (${gitCount})`}
+            {gitCount > 0 && (
+              <span className="project-activity-count" aria-hidden="true">
+                {gitCount}
+              </span>
+            )}
           </Button>
           <Button
-            size="small"
+            appearance="subtle"
+            icon={<LibraryRegular />}
+            aria-label={t('library.libraries')}
+            title={t('library.libraries')}
+            aria-controls={sidebarId}
+            aria-pressed={showSidebar && panel === 'libraries'}
+            onClick={() => selectPanel('libraries')}
+          />
+          <Button
+            appearance="subtle"
+            icon={<FolderOpenRegular />}
+            aria-label="Open Project Folder…"
+            title="Open Project Folder…"
+            onClick={openFolder}
+          />
+          <Button
+            appearance="subtle"
             icon={<DismissRegular />}
             aria-label="Close project"
+            title="Close project"
             onClick={leave}
           />
-        </div>
-        <Button size="small" onClick={openFolder}>
-          Open Project Folder…
-        </Button>
-        <div hidden={panel !== 'files' || restoring}>
-          <ProjectFileBrowser
-            key={root.id}
-            root={root}
-            active={selectedId}
-            open={open}
-            report={report}
-            gitChanges={
-              gitSnapshot &&
-              new Map(
-                gitSnapshot.changes
-                  .filter(({ outside }) => !outside)
-                  .map((change) => [
-                    gitSnapshot.root.replace(/[\\/]$/, '') +
-                      pathSeparator(gitSnapshot.root) +
-                      change.path.replaceAll(
-                        '/',
-                        pathSeparator(gitSnapshot.root),
-                      ),
-                    change.conflicted
-                      ? 'U'
-                      : change.working !== '.'
-                      ? change.working
-                      : change.index,
-                  ]),
-              )
-            }
-            showHistory={
-              gitSnapshot &&
-              ((filename, blame) => {
-                setHistoryRequest({ filename, blame });
-                setPanel('git');
-              })
-            }
-            beforeChange={beforeFileChange}
-            relocated={relocateOpenFiles}
-            removed={closeRemovedFiles}
-          />
-        </div>
-        <div hidden={panel !== 'git' || restoring}>
-          <ProjectSourceControl
-            key={root.id}
-            root={root}
-            openFolder={openFolder}
-            setCount={setGitCount}
-            onSnapshot={setGitSnapshot}
-            historyRequest={historyRequest}
-            openReview={(next) => {
-              setReview(next);
-              setShowReview(!!next);
-            }}
-            schematicDirty={hasDirtyDrawings}
-            supportingFilesDirty={documents.hasDirty}
-            saveOpenFiles={saveAll}
-            refreshOpenFiles={refreshOpenFiles}
-          />
-        </div>
-        {restoring && <p role="status">Restoring project tabs…</p>}
-        {error && (
-          <p className="project-error" role="alert">
-            {error}
-          </p>
-        )}
-      </aside>
-    ) : error ? (
+        </nav>
+      ),
+      content: (
+        <aside
+          className="project-workspace-sidebar side-panel-surface"
+          aria-label="Project sidebar"
+          id={sidebarId}
+          hidden={!showSidebar}
+        >
+          <div
+            className="project-files-panel"
+            hidden={panel !== 'files' || restoring}
+          >
+            <ProjectFileBrowser
+              key={root.id}
+              root={root}
+              active={selectedId}
+              open={open}
+              report={report}
+              gitChanges={
+                gitSnapshot &&
+                new Map(
+                  gitSnapshot.changes
+                    .filter(({ outside }) => !outside)
+                    .map((change) => [
+                      gitSnapshot.root.replace(/[\\/]$/, '') +
+                        pathSeparator(gitSnapshot.root) +
+                        change.path.replaceAll(
+                          '/',
+                          pathSeparator(gitSnapshot.root),
+                        ),
+                      change.conflicted
+                        ? 'U'
+                        : change.working !== '.'
+                        ? change.working
+                        : change.index,
+                    ]),
+                )
+              }
+              showHistory={
+                gitSnapshot &&
+                ((filename, blame) => {
+                  setHistoryRequest({ filename, blame });
+                  setPanel('git');
+                  setShowSidebar(true);
+                })
+              }
+              beforeChange={beforeFileChange}
+              relocated={relocateOpenFiles}
+              removed={closeRemovedFiles}
+            />
+          </div>
+          <div
+            className="project-git-panel"
+            hidden={panel !== 'git' || restoring}
+          >
+            <ProjectSourceControl
+              key={root.id}
+              root={root}
+              openFolder={openFolder}
+              setCount={setGitCount}
+              onSnapshot={setGitSnapshot}
+              historyRequest={historyRequest}
+              openReview={(next) => {
+                setReview(next);
+                setShowReview(!!next);
+              }}
+              schematicDirty={hasDirtyDrawings}
+              supportingFilesDirty={documents.hasDirty}
+              saveOpenFiles={saveAll}
+              refreshOpenFiles={refreshOpenFiles}
+            />
+          </div>
+          <div
+            className="project-libraries-panel"
+            hidden={panel !== 'libraries' || restoring}
+          >
+            <SidePanelContainer />
+          </div>
+        </aside>
+      ),
+    },
+    status: error ? (
       <p className="project-error" role="alert">
         {error}
       </p>
+    ) : restoring ? (
+      <p role="status">Restoring project tabs…</p>
     ) : undefined,
     tabs: root && (
       <div className="project-file-tabs" aria-label="Open files">
-        <Button
-          size="small"
-          appearance="subtle"
-          icon={<FolderRegular />}
-          aria-label="Show Project Manager"
-          aria-pressed={showSidebar}
-          onClick={() => setShowSidebar((visible) => !visible)}
-        />
         <div className="project-tab-list">
           {tabs.map((tab) => (
             <div className="project-file-tab" key={tab.key}>
@@ -832,9 +977,11 @@ export default function ProjectWorkspace({
               </Button>
               <Button
                 size="small"
+                className="project-file-tab-close"
                 appearance="subtle"
-                icon={<DismissRegular />}
+                icon={<Dismiss12Regular />}
                 aria-label={`Close ${tab.name}`}
+                title={`Close ${tab.name}`}
                 disabled={restoring || saving}
                 onClick={tab.close}
               />
@@ -843,48 +990,73 @@ export default function ProjectWorkspace({
         </div>
         <Button
           size="small"
-          disabled={restoring || saving}
-          onClick={() => {
-            void saveAll().catch(report);
-          }}
+          appearance="subtle"
+          className="project-save-all"
+          icon={<SaveCopyRegular />}
+          title="Save All"
+          disabled={saveAllAction.disabled}
+          onClick={saveAllAction.run}
         >
           Save All
         </Button>
       </div>
     ),
-    document:
-      root &&
-      (showReview && review ? (
-        <ProjectGitDiff
-          key={review.title}
-          review={review}
-          close={() => setShowReview(false)}
+    saveBlocked: saveAllAction?.disabled,
+    documentToolbar: root && (openDocument || showReview) && (
+      <>
+        <ToolbarButton
+          icon={<SaveRegular />}
+          aria-label={t('toolbar.save')}
+          title={t('toolbar.save')}
+          disabled={
+            showReview ||
+            !openDocument ||
+            !dirtyProjectDocument(openDocument) ||
+            saveAllAction.disabled
+          }
+          onClick={() => {
+            void documents.save(openDocument.id).catch(report);
+          }}
         />
-      ) : (
-        openDocument && (
-          <div className="project-document-area">
-            {openDocument.kind === 'text' && (
-              <Button
-                size="small"
-                disabled={
-                  !dirtyProjectDocument(openDocument) ||
-                  documents.writing.has(openDocument.id)
-                }
-                onClick={() => {
-                  void documents.save(openDocument.id).catch(report);
-                }}
-              >
-                Save {openDocument.name}
-              </Button>
-            )}
-            <ProjectDocumentEditor
-              key={openDocument.id}
-              file={openDocument}
-              active
-              onEdit={(value) => documents.edit(openDocument.id, value)}
-            />
-          </div>
-        )
-      )),
+        <EditorToolbarDivider />
+        <ToolbarButton
+          icon={<ArrowUndoRegular />}
+          aria-label="Undo"
+          title="Undo"
+          disabled={!textEditor?.canUndo || showReview}
+          onClick={() => editHistory('undo')}
+        />
+        <ToolbarButton
+          icon={<ArrowRedoRegular />}
+          aria-label="Redo"
+          title="Redo"
+          disabled={!textEditor?.canRedo || showReview}
+          onClick={() => editHistory('redo')}
+        />
+      </>
+    ),
+    document: root && (documents.files.length > 0 || showReview) && (
+      <div
+        className="project-document-area"
+        hidden={!openDocument && !showReview}
+      >
+        {showReview && review && (
+          <ProjectGitDiff
+            key={review.title}
+            review={review}
+            close={() => setShowReview(false)}
+          />
+        )}
+        {documents.files.map((file) => (
+          <ProjectDocumentEditor
+            key={file.id}
+            file={file}
+            active={!showReview && file === openDocument}
+            editorRef={setTextEditor}
+            onEdit={(value) => documents.edit(file.id, value)}
+          />
+        ))}
+      </div>
+    ),
   });
 }

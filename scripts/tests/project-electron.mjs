@@ -41,11 +41,11 @@ async function launch(...files) {
 }
 
 const tableFixtures = [
-  ['Comma.csv', ',', 'Comma (,)'],
-  ['Semicolon.csv', ';', 'Semicolon (;)'],
-  ['Pipe.csv', '|', 'Pipe (|)'],
-  ['Tabs.tsv', '\t', 'Tab'],
-  ['Caret.csv', '^', 'Caret (^)'],
+  ['Comma.csv', ','],
+  ['Semicolon.csv', ';'],
+  ['Pipe.csv', '|'],
+  ['Tabs.tsv', '\t'],
+  ['Caret.csv', '^'],
 ];
 const sourceFixtures = [
   ['Config.json', '{"label":"demo","enabled":true}', '.hljs-attr', '"label"'],
@@ -68,6 +68,11 @@ try {
       path.join(project, 'Charging.dzn'),
     ),
     writeFile(path.join(project, 'Notes.md'), '# Initial\n'),
+    writeFile(path.join(project, 'tCad2.dzn'), ''),
+    writeFile(
+      path.join(project, 'Preview.svg'),
+      '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"/>',
+    ),
     writeFile(marker, '<?xml version="1.0"?><TinyCADProject/>'),
     ...sourceFixtures.map(([name, content]) =>
       writeFile(path.join(project, name), content),
@@ -79,12 +84,6 @@ try {
       ),
     ),
   ]);
-  git('init', '-q');
-  git('config', 'user.name', 'TinyCAD Test');
-  git('config', 'user.email', 'test@example.invalid');
-  git('add', '.');
-  git('commit', '-qm', 'Initial project');
-
   let page = await launch();
   await desktop.evaluate(({ BrowserWindow, dialog, Menu }, folder) => {
     dialog.showOpenDialog = async () => ({
@@ -104,22 +103,203 @@ try {
   const tabs = () => page.getByLabel('Open files');
   const button = (name) => page.getByRole('button', { name, exact: true });
   const tab = (name) => tabs().getByRole('button', { name, exact: true });
+  const saveAll = () => tab('Save All');
   const open = (name) =>
     files().getByRole('button', { name, exact: true }).click();
+  const edit = (name) => page.getByRole('textbox', { name: `Edit ${name}` });
+  const toolbar = () => page.getByRole('toolbar', { name: 'Editor toolbar' });
+  const view = (name) => page.getByRole('tab', { name, exact: true });
+  const tokens = (name, token) =>
+    page.getByRole('region', { name, exact: true }).locator(token);
+  const menu = (...labels) =>
+    desktop.evaluate(({ BrowserWindow, Menu }, labels) => {
+      let items = Menu.getApplicationMenu().items;
+      let target;
+      for (const name of labels) {
+        target = items.find(({ label }) => label.replaceAll('&', '') === name);
+        items = target.submenu?.items;
+      }
+      target.click(undefined, BrowserWindow.getAllWindows()[0]);
+    }, labels);
+
+  const activityBar = () =>
+    page.getByRole('navigation', { name: 'Project views' });
+  const librarySearch = () =>
+    page.getByPlaceholder(/Search (libraries|TinyCAD\.net)/);
+  const sidebar = () =>
+    page.getByRole('complementary', { name: 'Project sidebar' });
+  const tabOffset = async (left) =>
+    (await tabs().boundingBox()).x - (left.x + left.width);
+  await expect(page.locator('.side-panel-container')).toHaveCount(1);
+  await expect(files()).toBeVisible();
+  await expect(activityBar().getByRole('button').first()).toHaveAccessibleName(
+    'Hide side panel',
+  );
+  await expect(librarySearch()).toBeHidden();
+  await expect
+    .poll(async () => tabOffset(await sidebar().boundingBox()))
+    .toBeCloseTo(1, 0);
+  await activityBar().getByRole('button', { name: 'Libraries' }).click();
+  await expect(librarySearch()).toBeVisible();
+  await expect(files()).toBeHidden();
+  await button('Hide side panel').click();
+  await expect(sidebar()).toBeHidden();
+  await expect
+    .poll(async () => tabOffset(await activityBar().boundingBox()))
+    .toBeCloseTo(0, 0);
+  await button('Show side panel').click();
+  await expect(librarySearch()).toBeVisible();
+  await activityBar().getByRole('button', { name: 'Git' }).click();
+  await button('Initialize Repository').click();
+  await expect(button('Stage project files')).toBeEnabled();
+  await expect(button('Unstage project files')).toBeDisabled();
+  await expect(button('Review Commit')).toBeDisabled();
+  await button('Synchronize repository').click();
+  for (const name of ['Fetch', 'Pull', 'Push', 'Sync Changes']) {
+    await expect(
+      page.getByRole('menuitem', { name, exact: true }),
+    ).toBeDisabled();
+  }
+  await page.keyboard.press('Escape');
+  await button('Repository actions').click();
+  await expect(
+    page.getByRole('menuitem', { name: 'Initialize Repository' }),
+  ).toBeDisabled();
+  await page.keyboard.press('Escape');
+  git('config', 'user.name', 'TinyCAD Test');
+  git('config', 'user.email', 'test@example.invalid');
+  git('add', '.');
+  git('commit', '-qm', 'Initial project');
+  await button('Refresh source control').click();
+  await expect(button('Stage project files')).toBeDisabled();
+  const initialBranch = git('branch', '--show-current');
+  await button(initialBranch).click();
+  await expect(page.getByRole('list', { name: 'Branch graph' })).toContainText(
+    'Initial project',
+  );
+  await page.getByRole('textbox', { name: 'Branch name' }).fill('experiment');
+  await button('Create branch').click();
+  await expect(button('experiment')).toBeVisible();
+  await page
+    .getByRole('dialog', { name: 'Branches' })
+    .getByRole('button', { name: 'Close' })
+    .click();
+  await activityBar().getByRole('button', { name: 'Files' }).click();
+
+  const background = files().locator('.project-tree-background');
+  await background.click({ button: 'right' });
+  await expect(
+    page.getByRole('menuitem', { name: 'New Folder' }),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await menu('File', 'New', 'New Design');
+  await expect(tab('tCad3.dsn')).toBeVisible();
+  await menu('File', 'New', 'New Design');
+  await expect(tab('tCad4.dsn')).toBeVisible();
+  await button('Close tCad4.dsn').click();
+  await button('Close tCad3.dsn').click();
+  const toolbarHeight = (
+    await page.locator('.toolbar-container:visible').boundingBox()
+  ).height;
+  await open('Preview.svg');
+  await expect(page.getByRole('img', { name: 'Preview.svg' })).toBeVisible();
+  await expect(
+    toolbar().getByRole('button', { name: 'Save', exact: true }),
+  ).toBeDisabled();
+  const chat = toolbar().getByRole('button', { name: 'Chat', exact: true });
+  await chat.click();
+  await expect(page.locator('#tinycad-chat')).toBeVisible();
+  await expect(chat).toHaveAttribute('aria-expanded', 'true');
+  await chat.click();
+  await expect(page.locator('#tinycad-chat')).toBeHidden();
+  await toolbar().getByRole('button', { name: 'Language menu' }).click();
+  await page.getByRole('menuitem', { name: 'Français', exact: true }).click();
+  await toolbar().getByRole('button', { name: 'Menu de langue' }).click();
+  await page.getByRole('menuitem', { name: 'English', exact: true }).click();
+  await expect(
+    toolbar().getByRole('button', { name: 'Language menu' }),
+  ).toBeVisible();
+  expect(
+    (await page.locator('.toolbar-container:visible').boundingBox()).height,
+  ).toBe(toolbarHeight);
+  await button('Zoom in').click();
+  await expect(
+    page.getByRole('slider', { name: 'Zoom percentage' }),
+  ).toHaveAttribute('aria-valuetext', '125%');
+  await button('Fit').click();
+  await expect(
+    page.getByRole('slider', { name: 'Zoom percentage' }),
+  ).toHaveAttribute('aria-valuetext', '100%');
+  await expect(saveAll()).toBeVisible();
+  await activityBar().getByRole('button', { name: 'Libraries' }).click();
+  await expect(librarySearch()).toBeVisible();
+  await button('Hide side panel').click();
+  await expect(sidebar()).toBeHidden();
+  await expect(page.getByRole('img', { name: 'Preview.svg' })).toBeVisible();
+  await button('Show side panel').click();
+  await activityBar().getByRole('button', { name: 'Files' }).click();
+  await button('Close Preview.svg').click();
+  const circuitTabClass = await page
+    .locator('.sheetbar:visible .sheet-heading-on')
+    .getAttribute('class');
+
+  await desktop.evaluate(({ Menu }) => {
+    const popup = Menu.prototype.popup;
+    Menu.prototype.popup = function (...args) {
+      if (this.items.some(({ role }) => role === 'cut')) {
+        globalThis.projectEditorContextItems = this.items.map(({ label }) =>
+          label.replaceAll('&', ''),
+        );
+        return;
+      }
+      return popup.apply(this, args);
+    };
+  });
+
   for (const [name, content, token, expected] of sourceFixtures) {
     await open(name);
-    const source = page.getByLabel(`Source of ${name}`);
-    if (token) await expect(source.locator(token).first()).toHaveText(expected);
-    else
-      await expect(source).toContainText(
-        typeof content === 'string' ? content : 'Plain text in UTF-16',
-      );
+    await expect(edit(name)).toHaveValue(
+      typeof content === 'string' ? content : 'Plain text in UTF-16\n',
+    );
+    if (token) await expect(tokens(name, token).first()).toHaveText(expected);
+    if (name === 'Parts.xml') {
+      const undo = toolbar().getByRole('button', { name: 'Undo' });
+      const redo = toolbar().getByRole('button', { name: 'Redo' });
+      await expect(undo).toBeDisabled();
+      await expect(redo).toBeDisabled();
+      await edit(name).fill('<updated/>');
+      await expect(undo).toBeEnabled();
+      await expect(redo).toBeDisabled();
+      await undo.click();
+      await expect(edit(name)).toHaveValue(content);
+      await expect(undo).toBeDisabled();
+      await expect(redo).toBeEnabled();
+      await redo.click();
+      await expect(edit(name)).toHaveValue('<updated/>');
+      await expect(redo).toBeDisabled();
+      await undo.click();
+    }
     if (name === 'UTF16.txt') {
-      await button('Edit Source').click();
-      await page
-        .getByRole('textbox', { name: 'Edit UTF16.txt' })
-        .fill('Revised UTF-16\n');
-      await button('Save UTF16.txt').click();
+      await edit(name).fill('Revised UTF-16\n');
+      await edit(name).click({ button: 'right' });
+      await expect
+        .poll(() =>
+          desktop.evaluate(() => globalThis.projectEditorContextItems),
+        )
+        .toEqual(
+          expect.arrayContaining(['Undo', 'Redo', 'Cut', 'Copy', 'Paste']),
+        );
+      await menu('Edit', 'Undo');
+      await expect(edit(name)).toHaveValue('Plain text in UTF-16\n');
+      await menu('Edit', 'Redo');
+      await expect(edit(name)).toHaveValue('Revised UTF-16\n');
+      await edit(name).press('ControlOrMeta+a');
+      await edit(name).press('ControlOrMeta+x');
+      await expect(edit(name)).toHaveValue('');
+      await edit(name).press('ControlOrMeta+v');
+      await expect(edit(name)).toHaveValue('Revised UTF-16\n');
+      await menu('File', 'Save');
       await expect(tab('UTF16.txt')).toBeVisible();
       assert.deepEqual(
         await readFile(path.join(project, name)),
@@ -128,27 +308,55 @@ try {
     }
     await button(`Close ${name}`).click();
   }
-  for (const [name, separator, label] of tableFixtures) {
+  for (const [name, separator] of tableFixtures) {
     await open(name);
-    await button('View as Table').click();
-    const table = page.getByRole('table', { name });
-    await expect(
-      page.getByLabel('Separator').locator('option:checked'),
-    ).toHaveText(`Auto (${label})`);
-    await expect(table.getByRole('row')).toHaveCount(2);
-    const cells = table.getByRole('row').nth(1).getByRole('cell');
-    await expect(cells).toHaveCount(2);
+    await expect(edit(name)).toBeEditable();
+    await expect(tokens(name, '.hljs-punctuation')).toHaveCount(2);
+    assert.equal(
+      await tokens(name, '.hljs-punctuation').first().textContent(),
+      separator,
+    );
+    await expect(tokens(name, '.hljs-string')).toHaveCount(1);
+    await expect(view('Text')).toHaveAttribute('aria-selected', 'true');
+    await expect(view('Text')).toHaveClass(circuitTabClass);
+    await view('Text').press('ArrowRight');
+    await expect(view('Table')).toBeFocused();
+    await expect(view('Table')).toHaveAttribute('aria-selected', 'true');
+    const cells = page
+      .getByRole('table', { name, exact: true })
+      .getByRole('row')
+      .nth(1)
+      .getByRole('cell');
     await expect(cells.first()).toHaveText('001');
     assert.equal(
       await cells.last().textContent(),
       `first${separator}value\nsecond "line"`,
     );
+    await expect(edit(name)).toBeHidden();
+    await view('Text').click();
+    if (name === 'Comma.csv') {
+      await edit(name).fill('Part,Description\n002,Updated\n');
+      await view('Table').click();
+      await expect(cells.last()).toHaveText('Updated');
+      await expect(button('Undo')).toBeDisabled();
+      await view('Text').click();
+      await expect(button('Undo')).toBeEnabled();
+      await toolbar()
+        .getByRole('button', { name: 'Save', exact: true })
+        .click();
+      await expect(tab(name)).toBeVisible();
+      assert.equal(
+        await readFile(path.join(project, name), 'utf8'),
+        'Part,Description\r\n002,Updated\r\n',
+      );
+    }
     await button(`Close ${name}`).click();
   }
 
   await files().getByRole('button', { name: 'Divider.dzn' }).click();
   await files().getByRole('button', { name: 'Charging.dzn' }).click();
   await expect(tab('Charging.dzn')).toHaveAttribute('aria-pressed', 'true');
+  await expect(saveAll()).toBeVisible();
   await tab('Divider.dzn').click();
   await expect(tab('Divider.dzn')).toHaveAttribute('aria-pressed', 'true');
   const originalDrawing = await readFile(path.join(project, 'Divider.dzn'));
@@ -172,14 +380,22 @@ try {
   await expect(tab('Divider.dzn •')).toBeVisible();
 
   await files().getByRole('button', { name: 'Notes.md' }).click();
-  const text = () => page.getByRole('textbox', { name: 'Edit Notes.md' });
-  await button('Edit Source').click();
-  await text().fill('# Reopened notes\n');
-  await button('Preview Markdown').click();
+  await expect(view('Preview')).toHaveAttribute('aria-selected', 'true');
+  await expect(view('Preview')).toHaveClass(circuitTabClass);
+  await expect(page.getByRole('heading', { name: 'Initial' })).toBeVisible();
+  await view('Source').click();
+  await edit('Notes.md').fill('# Reopened notes\n');
+  await tab('Charging.dzn').click();
+  await tab('Notes.md •').click();
+  await button('Undo').click();
+  await expect(edit('Notes.md')).toHaveValue('# Initial\n');
+  await button('Redo').click();
+  await expect(edit('Notes.md')).toHaveValue('# Reopened notes\n');
+  await view('Preview').click();
   await expect(
     page.getByRole('heading', { name: 'Reopened notes' }),
   ).toBeVisible();
-  await button('Save All').click();
+  await saveAll().click();
   await expect(tab('Notes.md')).toHaveAttribute('aria-pressed', 'true');
   await expect(tab('Divider.dzn')).toBeVisible();
   assert.notDeepEqual(
@@ -416,10 +632,6 @@ try {
   await expect(tab('Divider.dzn')).toBeVisible();
   await expect(tab('Charging.dzn')).toBeVisible();
   await expect(tab('Notes.md')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByLabel('Source of Notes.md')).toContainText(
-    '# Reopened notes',
-  );
-  await button('Preview Markdown').click();
   await expect(
     page.getByRole('heading', { name: 'Reopened notes' }),
   ).toBeVisible();

@@ -17,7 +17,7 @@ interface SidePanelProps {
   editLibrary: tclib;
   editSymbol: tclibLibraryEntry;
   dispatch: Dispatch<any>;
-  toggleSidePanel: () => void;
+  toggleSidePanel?: () => void;
 }
 
 interface SidePanelState {}

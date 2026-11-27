@@ -72,10 +72,12 @@ export type GitRequest =
         | 'incoming'
         | 'outgoing'
         | 'graph'
+        | 'branch-graph'
         | 'stash-list'
         | 'references';
     }
   | { command: 'create-branch' | 'switch-branch'; branch: string }
+  | { command: 'merge-branch'; branch: string; into: string }
   | { command: 'stage' | 'unstage' | 'history'; path?: string }
   | { command: 'publish-branch'; remote: string }
   | { command: 'stash-create'; message?: string }
@@ -113,6 +115,7 @@ export interface GitResult {
   init: GitSnapshot;
   'create-branch': GitSnapshot;
   'switch-branch': GitSnapshot;
+  'merge-branch': GitSnapshot;
   fetch: GitSnapshot;
   pull: GitSnapshot;
   push: GitSnapshot;
@@ -130,6 +133,7 @@ export interface GitResult {
   'unstage-lines': GitSnapshot;
   discard: GitSnapshot;
   graph: GitCommit[];
+  'branch-graph': GitCommit[];
   'publish-branch': GitSnapshot;
   'stash-list': GitStash[];
   'stash-create': GitSnapshot;

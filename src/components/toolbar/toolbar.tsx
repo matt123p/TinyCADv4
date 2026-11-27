@@ -194,6 +194,7 @@ interface ToolbarProps {
   simulationSheet?: boolean;
   chatOpen?: boolean;
   onToggleChat?: () => void;
+  saveBlocked?: boolean;
   menu_command: string;
   wireMode: WireMode;
   can_undo: boolean;
@@ -449,35 +450,122 @@ const ScrollableToolbarWrapper: React.FC<{ children: React.ReactNode; className?
   );
 };
 
-export const Toolbar: React.FC<ToolbarProps> = (props) => {
+export function EditorToolbarFrame({
+  children,
+  label,
+  chatOpen,
+  onToggleChat,
+  onAbout,
+}: Pick<ToolbarProps, 'chatOpen' | 'onToggleChat'> & {
+  children: React.ReactNode;
+  label?: string;
+  onAbout?: () => void;
+}) {
   const styles = useStyles();
   const { t, i18n } = useTranslation();
-  const chatButton = process.env.TARGET_SYSTEM === 'electron' && props.onToggleChat && (
-    <ToolbarButton
-      aria-label="Chat"
-      title="Chat"
-      icon={<ChatSparkleRegular />}
-      aria-expanded={!!props.chatOpen}
-      aria-controls="tinycad-chat"
-      className={props.chatOpen ? styles.highlight : undefined}
-      onClick={props.onToggleChat}
-    >
-      Chat
-    </ToolbarButton>
+  const currentLanguage = normalizeLanguageCode(i18n.language);
+  return (
+    <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
+      <FluentToolbar className={styles.toolbarContent} aria-label={label}>
+        {children}
+        <div className={styles.spacer} />
+        {process.env.TARGET_SYSTEM === 'electron' && onToggleChat && (
+          <ToolbarButton
+            aria-label="Chat"
+            title="Chat"
+            icon={<ChatSparkleRegular />}
+            aria-expanded={!!chatOpen}
+            aria-controls="tinycad-chat"
+            className={chatOpen ? styles.highlight : undefined}
+            onClick={onToggleChat}
+          >
+            Chat
+          </ToolbarButton>
+        )}
+        <Menu>
+          <MenuTrigger disableButtonEnhancement>
+            <ToolbarButton
+              aria-label={t('toolbar.languageMenu')}
+              title={t('toolbar.language')}
+              icon={<GlobeRegular />}
+            >
+              {currentLanguage.slice(0, 2).toLowerCase()}
+            </ToolbarButton>
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              <MenuItem onClick={() => openExternalUrl('https://docs.tinycad.net/v4/Language-translation/')}>
+                {t('toolbar.aboutTranslations')}
+              </MenuItem>
+              <MenuDivider />
+              {SUPPORTED_LANGUAGES.map(({ code, label }) => (
+                <MenuItem
+                  key={code}
+                  icon={currentLanguage === code ? <CheckmarkRegular /> : undefined}
+                  onClick={() => {
+                    persistLanguagePreference(code);
+                    void i18n.changeLanguage(code);
+                  }}
+                >
+                  {label}
+                </MenuItem>
+              ))}
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+        {process.env.TARGET_SYSTEM !== 'electron' && onAbout && (
+          <Menu>
+            <MenuTrigger disableButtonEnhancement>
+              <ToolbarButton
+                aria-label={t('toolbar.help')}
+                title={t('toolbar.help')}
+                icon={<QuestionCircleRegular />}
+              />
+            </MenuTrigger>
+            <MenuPopover>
+              <MenuList>
+                <MenuItem
+                  icon={<ImageIcon src={discordImage} />}
+                  onClick={() => openExternalUrl('https://discord.gg/bdXnjhrSYQ')}
+                >
+                  {t('toolbar.discord')}
+                </MenuItem>
+                <MenuItem
+                  icon={<DocumentRegular />}
+                  onClick={() => openExternalUrl('https://docs.tinycad.net/v4/')}
+                >
+                  {t('toolbar.manual')}
+                </MenuItem>
+                <MenuDivider />
+                <MenuItem onClick={onAbout}>{t('toolbar.aboutTinyCAD')}</MenuItem>
+              </MenuList>
+            </MenuPopover>
+          </Menu>
+        )}
+      </FluentToolbar>
+    </ScrollableToolbarWrapper>
   );
-  const m = props.menu_command;
-  const currentLanguageAbbreviation = normalizeLanguageCode(i18n.language).slice(0, 2).toLowerCase();
+}
 
-  const changeLanguage = (code: string) => {
-    persistLanguagePreference(code);
-    void i18n.changeLanguage(code);
+export function EditorToolbarDivider() {
+  const styles = useStyles();
+  return <ToolbarDivider className={styles.divider} />;
+}
+
+export const Toolbar: React.FC<ToolbarProps> = (props) => {
+  const styles = useStyles();
+  const { t } = useTranslation();
+  const sharedActions = {
+    chatOpen: props.chatOpen,
+    onToggleChat: props.onToggleChat,
+    onAbout: () => { props.dispatch(actionSelectDialog('about', null)); },
   };
+  const m = props.menu_command;
 
   // BOM sheet toolbar
   if (props.selected_sheet === -1) {
     return (
-      <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
-        <FluentToolbar>
+      <EditorToolbarFrame {...sharedActions}>
           <ToolbarButton
             aria-label={t('toolbar.closeBomAria')}
             icon={<DismissRegular />}
@@ -492,17 +580,14 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           >
             {t('toolbar.downloadBom')}
           </ToolbarButton>
-          {chatButton}
-        </FluentToolbar>
-      </ScrollableToolbarWrapper>
+      </EditorToolbarFrame>
     );
   }
 
   // Browser sheet toolbar
   if (props.selected_sheet < -1) {
     return (
-      <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
-        <FluentToolbar>
+      <EditorToolbarFrame {...sharedActions}>
           <ToolbarDivider className={styles.divider} />
           <ToolbarButton
             aria-label={t('toolbar.closeHelpAria')}
@@ -511,17 +596,14 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           >
             {t('toolbar.close')}
           </ToolbarButton>
-          {chatButton}
-        </FluentToolbar>
-      </ScrollableToolbarWrapper>
+      </EditorToolbarFrame>
     );
   }
 
   // Library editor toolbar (no symbol selected)
   if (props.editLibrary && !props.editSymbol) {
     return (
-      <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
-        <FluentToolbar>
+      <EditorToolbarFrame {...sharedActions}>
           {process.env.TARGET_SYSTEM === 'filesystem' && (
              <ToolbarButton
                 aria-label={t('toolbar.open')}
@@ -568,9 +650,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             disabled={!props.can_redo}
             onClick={() => props.dispatch(ActionCreators.redo())}
           />
-          {chatButton}
-        </FluentToolbar>
-      </ScrollableToolbarWrapper>
+      </EditorToolbarFrame>
     );
   }
 
@@ -624,8 +704,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
   };
 
   return (
-    <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
-      <FluentToolbar className={styles.toolbarContent}>
+    <EditorToolbarFrame {...sharedActions}>
         {/* File Menu */}
         {process.env.TARGET_SYSTEM !== 'electron' && (
          <Menu>
@@ -709,7 +788,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           aria-label={t('toolbar.save')}
           title={props.editLibrary ? t('toolbar.saveLibrary') : t('toolbar.saveDesign')}
           icon={<SaveRegular />}
-          disabled={!props.saveNeeded && !props.saveInProgress}
+          disabled={!props.saveNeeded || props.saveInProgress || props.saveBlocked}
           onClick={() => props.dispatch(props.editLibrary ? librarySave : fileSave)}
         >
         </ToolbarButton>
@@ -1041,75 +1120,6 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           </>
         )}
 
-        <div className={styles.spacer} />
-
-        {chatButton}
-
-        {/* Far Items */}
-        <>
-        <Menu>
-          <MenuTrigger disableButtonEnhancement>
-            <ToolbarButton
-              aria-label={t('toolbar.languageMenu')}
-              title={t('toolbar.language')}
-              icon={<GlobeRegular />}
-            >
-              {currentLanguageAbbreviation}
-            </ToolbarButton>
-          </MenuTrigger>
-          <MenuPopover>
-            <MenuList>
-              <MenuItem onClick={() => openExternalUrl('https://docs.tinycad.net/v4/Language-translation/')}>
-                {t('toolbar.aboutTranslations')}
-              </MenuItem>
-              <MenuDivider />
-              {SUPPORTED_LANGUAGES.map((language) => (
-                <MenuItem
-                  key={language.code}
-                  icon={normalizeLanguageCode(i18n.language) === language.code ? <CheckmarkRegular /> : undefined}
-                  onClick={() => changeLanguage(language.code)}
-                >
-                  {language.label}
-                </MenuItem>
-              ))}
-            </MenuList>
-          </MenuPopover>
-        </Menu>
-
-         {/* Help */}
-        {process.env.TARGET_SYSTEM !== 'electron' && (
-          <Menu>
-            <MenuTrigger disableButtonEnhancement>
-              <ToolbarButton
-                aria-label={t('toolbar.help')}
-                title={t('toolbar.help')}
-                icon={<QuestionCircleRegular />}
-              />
-            </MenuTrigger>
-            <MenuPopover>
-              <MenuList>
-                <MenuItem
-                  icon={<ImageIcon src={discordImage} />}
-                  onClick={() => openExternalUrl('https://discord.gg/bdXnjhrSYQ')}
-                >
-                  {t('toolbar.discord')}
-                </MenuItem>
-                <MenuItem
-                  icon={<DocumentRegular />}
-                  onClick={() => openExternalUrl('https://docs.tinycad.net/v4/')}
-                >
-                  {t('toolbar.manual')}
-                </MenuItem>
-                <MenuDivider />
-                <MenuItem onClick={() => props.dispatch(actionSelectDialog('about', null))}>
-                  {t('toolbar.aboutTinyCAD')}
-                </MenuItem>
-              </MenuList>
-            </MenuPopover>
-          </Menu>
-        )}
-        </>
-      </FluentToolbar>
-    </ScrollableToolbarWrapper>
+    </EditorToolbarFrame>
   );
 };

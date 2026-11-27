@@ -1,4 +1,4 @@
-import { closeProjectMode, confirmProjectClose, saveActiveProjectFile, saveProjectTabs } from '../../io/projectMode';
+import { closeProjectMode, confirmProjectClose, editProjectHistory, saveActiveProjectFile, saveProjectTabs } from '../../io/projectMode';
 import { openLaunchedProject, openProjectFolder } from '../../io/projects';
 import { useStore } from 'react-redux';
 import type { docDrawing } from '../../state/undo/undo';
@@ -65,6 +65,15 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
       else if (command === 'file-open-project-launch') openFolder(undefined, true);
       else if (command === 'file-close-project') window.dispatchEvent(new Event(closeProjectMode));
       else if (command === 'file-save-all') window.dispatchEvent(new Event(saveProjectTabs));
+      else if (command === 'edit-undo' || command === 'edit-redo') {
+        const detail = command === 'edit-undo' ? 'undo' : 'redo';
+        const editable = document.activeElement?.closest('textarea, input, [contenteditable="true"]');
+        if (editable && !editable.hasAttribute('data-project-text-editor')) {
+          document.execCommand(detail);
+        } else if (window.dispatchEvent(new CustomEvent(editProjectHistory, { detail, cancelable: true }))) {
+          props.dispatch(handleMenuCommand(command) as any);
+        }
+      }
       else if (command !== 'file-save' || window.dispatchEvent(new Event(saveActiveProjectFile, { cancelable: true })))
         props.dispatch(handleMenuCommand(command) as any);
     });

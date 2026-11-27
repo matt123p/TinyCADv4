@@ -20,7 +20,9 @@ import {
   AddRegular,
   ArrowClockwiseRegular,
   ArrowUndoRegular,
+  BranchForkRegular,
   CheckmarkRegular,
+  ChevronDownRegular,
   HistoryRegular,
   MoreHorizontalRegular,
   SubtractRegular,
@@ -28,16 +30,14 @@ import {
 import ProjectGitMaintenance from './ProjectGitMaintenance';
 import type { MaintenanceMode } from './ProjectGitMaintenance';
 import ProjectGitGraph from './ProjectGitGraph';
+import ProjectGitBranches from './ProjectGitBranches';
 import { cloneProject, projectGit } from '../../io/projectGit';
 import type {
   GitChange,
   GitCommit,
   GitDiffLine,
-  GitConflict,
-  GitResolution,
   GitSnapshot,
 } from '../../io/projectGit';
-import ProjectGitConflictDialog from './ProjectGitConflictDialog';
 import { projectFilesChanged } from '../../io/projectStorage';
 import type { ProjectLocation } from '../../io/projectStorage';
 
@@ -100,17 +100,20 @@ export default function ProjectSourceControl({
   const [reference, setReference] = useState('');
   const [graph, setGraph] = useState<GitCommit[]>([]);
   const lock = useRef(false);
+  const refreshing = useRef(false);
   const refreshQueued = useRef(false);
+  const revision = useRef(0);
   const active = useRef(false);
   const lastHistoryRequest = useRef<typeof historyRequest>();
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [newBranch, setNewBranch] = useState<string>();
+  const [branchesOpen, setBranchesOpen] = useState(false);
   const [clone, setClone] = useState<{ source: string; name: string }>();
   const [checkout, setCheckout] = useState<
-    { command: 'switch-branch'; branch: string } | { command: 'pull' | 'sync' }
+    | { command: 'switch-branch'; branch: string }
+    | { command: 'merge-branch'; branch: string; into: string }
+    | { command: 'pull' | 'sync' }
   >();
-  const [conflict, setConflict] = useState<GitConflict>();
   const [confirmation, setConfirmation] = useState<GitSnapshot>();
   const [history, setHistory] = useState<{
     title: string;
@@ -128,6 +131,8 @@ export default function ProjectSourceControl({
   async function run(operation: () => Promise<void>) {
     if (!active.current || lock.current) return;
     lock.current = true;
+    revision.current++;
+    if (refreshing.current) refreshQueued.current = true;
     setBusy(true);
     setError('');
     try {
@@ -139,21 +144,32 @@ export default function ProjectSourceControl({
       lock.current = false;
       if (active.current) {
         setBusy(false);
-        if (refreshQueued.current) {
-          refreshQueued.current = false;
-          refresh();
-        }
+        if (refreshQueued.current) refresh();
       }
     }
   }
 
   function refresh() {
-    if (!id) return;
-    if (lock.current) {
+    if (!id || !active.current) return;
+    if (lock.current || refreshing.current) {
       refreshQueued.current = true;
       return;
     }
-    void run(async () => apply(await projectGit(id, { command: 'status' })));
+    refreshing.current = true;
+    refreshQueued.current = false;
+    const startedAt = revision.current;
+    void projectGit(id, { command: 'status' })
+      .then((next) => {
+        if (revision.current === startedAt) apply(next);
+      })
+      .catch((error) => {
+        if (active.current && revision.current === startedAt)
+          setError(error instanceof Error ? error.message : String(error));
+      })
+      .finally(() => {
+        refreshing.current = false;
+        if (refreshQueued.current) refresh();
+      });
   }
 
   useEffect(() => {
@@ -336,26 +352,7 @@ export default function ProjectSourceControl({
       openReview();
       if (next.head !== before.head || next.branch !== before.branch)
         await refreshOpenFiles(next.root);
-    });
-  }
-
-  async function showConflict(path: string) {
-    const next = await projectGit(id, { command: 'conflict', path });
-    if (active.current) setConflict(next);
-  }
-
-  function resolveConflict(resolution: GitResolution) {
-    void run(async () => {
-      const next = await projectGit(id, {
-        command: 'resolve-conflict',
-        path: conflict.path,
-        token: conflict.token,
-        ...resolution,
-      });
-      apply(next);
-      setConflict(undefined);
-      openReview();
-      await refreshOpenFiles(next.root);
+      window.dispatchEvent(new Event(projectFilesChanged));
     });
   }
 
@@ -433,15 +430,9 @@ export default function ProjectSourceControl({
                 <button
                   type="button"
                   className="project-git-file-name"
-                  disabled={busy || file.outside}
+                  disabled={busy || file.outside || kind === 'conflict'}
                   title={description(file)}
-                  onClick={() =>
-                    void run(() =>
-                      kind === 'conflict'
-                        ? showConflict(file.path)
-                        : review(file, kind === 'index'),
-                    )
-                  }
+                  onClick={() => void run(() => review(file, kind === 'index'))}
                 >
                   <span>{file.path.slice(lastSlash + 1)}</span>
                   {lastSlash !== -1 && (
@@ -482,7 +473,7 @@ export default function ProjectSourceControl({
                     <Button
                       size="small"
                       appearance="subtle"
-                      disabled={busy}
+                      disabled={busy || !hasCommits}
                       aria-label="File History"
                       title={`History of ${file.path}`}
                       icon={<HistoryRegular />}
@@ -509,10 +500,21 @@ export default function ProjectSourceControl({
     ) ?? [];
   const conflicts =
     snapshot?.changes.filter(({ conflicted }) => conflicted) ?? [];
+  const hasCommits = !!snapshot && snapshot.head !== '(initial)';
+  const hasRemotes = !!snapshot?.remotes.length;
+  const hasUpstream = !!snapshot?.upstream;
+
+  function initialize() {
+    void run(async () => apply(await projectGit(id, { command: 'init' })));
+  }
+
+  function fetchChanges() {
+    void run(async () => apply(await projectGit(id, { command: 'fetch' })));
+  }
 
   return (
     <section className="project-source-control" aria-label="Source Control">
-      <header className="project-source-control-header">
+      <header className="project-source-control-header side-panel-header">
         <strong>Source Control</strong>
         {root && (
           <Button
@@ -520,7 +522,11 @@ export default function ProjectSourceControl({
             appearance="subtle"
             disabled={busy}
             icon={<ArrowClockwiseRegular />}
-            onClick={refresh}
+            onClick={() => {
+              void run(async () =>
+                apply(await projectGit(id, { command: 'status' })),
+              );
+            }}
             aria-label="Refresh source control"
             title="Refresh source control"
           />
@@ -538,6 +544,12 @@ export default function ProjectSourceControl({
           <MenuPopover>
             <MenuList>
               <MenuItem
+                disabled={busy || !root || snapshot !== null}
+                onClick={initialize}
+              >
+                Initialize Repository
+              </MenuItem>
+              <MenuItem
                 onClick={() => {
                   setError('');
                   setClone({ source: '', name: '' });
@@ -545,55 +557,36 @@ export default function ProjectSourceControl({
               >
                 Clone Repository…
               </MenuItem>
-              {snapshot && !snapshot.scope && (
-                <MenuItem
-                  onClick={() => {
-                    setError('');
-                    setMaintenance('stash');
-                  }}
-                >
-                  Stashes…
-                </MenuItem>
-              )}
-              {snapshot && snapshot.head !== '(initial)' && (
-                <MenuItem
-                  onClick={() => {
-                    setError('');
-                    setMaintenance('worktrees');
-                  }}
-                >
-                  Worktrees…
-                </MenuItem>
-              )}
-              {snapshot &&
-                !snapshot.upstream &&
-                snapshot.remotes.length > 0 &&
-                snapshot.head !== '(initial)' && (
-                  <MenuItem
-                    onClick={() => {
-                      setError('');
-                      setMaintenance('publish');
-                    }}
-                  >
-                    Publish Branch…
-                  </MenuItem>
-                )}
-              {snapshot && (
-                <MenuItem onClick={() => showHistory()}>
-                  Commit History
-                </MenuItem>
-              )}
-              {snapshot?.remotes.length > 0 && (
-                <MenuItem
-                  onClick={() => {
-                    void run(async () =>
-                      apply(await projectGit(id, { command: 'fetch' })),
-                    );
-                  }}
-                >
-                  Fetch
-                </MenuItem>
-              )}
+              <MenuItem
+                disabled={!hasCommits || !!snapshot?.scope}
+                onClick={() => {
+                  setError('');
+                  setMaintenance('stash');
+                }}
+              >
+                Stashes…
+              </MenuItem>
+              <MenuItem
+                disabled={!hasCommits}
+                onClick={() => {
+                  setError('');
+                  setMaintenance('worktrees');
+                }}
+              >
+                Worktrees…
+              </MenuItem>
+              <MenuItem
+                disabled={!hasCommits || hasUpstream || !hasRemotes}
+                onClick={() => {
+                  setError('');
+                  setMaintenance('publish');
+                }}
+              >
+                Publish Branch…
+              </MenuItem>
+              <MenuItem disabled={!hasCommits} onClick={() => showHistory()}>
+                Commit History
+              </MenuItem>
             </MenuList>
           </MenuPopover>
         </Menu>
@@ -604,65 +597,71 @@ export default function ProjectSourceControl({
         <>
           {error && <p role="alert">{error}</p>}
           {snapshot === null && (
-            <Button
-              disabled={busy}
-              onClick={() => {
-                void run(async () =>
-                  apply(await projectGit(id, { command: 'init' })),
-                );
-              }}
-            >
+            <Button disabled={busy} onClick={initialize}>
               Initialize Repository
             </Button>
           )}
           {snapshot && (
             <>
-              <div>
-                <strong>{snapshot.branch}</strong>
-                <br />
-                <small>{snapshot.root}</small>
-              </div>
-              {!!snapshot.branches.length && (
-                <div className="git-actions">
-                  <label>
-                    Branch{' '}
-                    <select
-                      value={snapshot.branch}
+              <div className="project-git-branch-header">
+                <Button
+                  appearance="subtle"
+                  size="small"
+                  icon={<BranchForkRegular />}
+                  title="Manage branches"
+                  disabled={busy}
+                  onClick={() => {
+                    setError('');
+                    setBranchesOpen(true);
+                  }}
+                >
+                  {snapshot.branch}
+                </Button>
+                <Menu>
+                  <MenuTrigger>
+                    <Button
+                      appearance="subtle"
+                      size="small"
+                      icon={<ChevronDownRegular />}
+                      aria-label="Synchronize repository"
+                      title="Synchronize repository"
                       disabled={busy}
-                      onChange={(event) => {
-                        const branch = event.target.value;
-                        if (branch !== snapshot.branch) {
-                          setError('');
-                          setCheckout({ command: 'switch-branch', branch });
-                        }
-                      }}
-                    >
-                      {!snapshot.branches.some(
-                        ({ name }) => name === snapshot.branch,
-                      ) && (
-                        <option value={snapshot.branch}>
-                          {snapshot.branch}
-                        </option>
-                      )}
-                      {snapshot.branches.map(({ name, id }) => (
-                        <option key={name} title={id.slice(0, 7)} value={name}>
-                          {name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <Button
-                    size="small"
-                    disabled={busy || snapshot.head === '(initial)'}
-                    onClick={() => {
-                      setError('');
-                      setNewBranch('');
-                    }}
-                  >
-                    New branch…
-                  </Button>
-                </div>
-              )}
+                    />
+                  </MenuTrigger>
+                  <MenuPopover>
+                    <MenuList>
+                      <MenuItem disabled={!hasRemotes} onClick={fetchChanges}>
+                        Fetch
+                      </MenuItem>
+                      <MenuItem
+                        disabled={!hasUpstream}
+                        onClick={() => setCheckout({ command: 'pull' })}
+                      >
+                        Pull
+                      </MenuItem>
+                      <MenuItem
+                        disabled={!hasUpstream}
+                        onClick={() => {
+                          void run(async () =>
+                            apply(await projectGit(id, { command: 'push' })),
+                          );
+                        }}
+                      >
+                        Push
+                      </MenuItem>
+                      <MenuItem
+                        disabled={!hasUpstream}
+                        onClick={() => setCheckout({ command: 'sync' })}
+                      >
+                        Sync Changes
+                      </MenuItem>
+                    </MenuList>
+                  </MenuPopover>
+                </Menu>
+              </div>
+              <small className="project-git-root" title={snapshot.root}>
+                {snapshot.root}
+              </small>
               {snapshot.upstream && (
                 <div className="git-actions">
                   <small>{snapshot.upstream}</small>
@@ -679,52 +678,6 @@ export default function ProjectSourceControl({
                     onClick={() => showHistory(undefined, 'outgoing')}
                   >
                     {snapshot.ahead} outgoing
-                  </Button>
-                </div>
-              )}
-              {!!snapshot.remotes.length && (
-                <div className="git-actions">
-                  <Button
-                    size="small"
-                    disabled={busy}
-                    onClick={() => {
-                      void run(async () =>
-                        apply(await projectGit(id, { command: 'fetch' })),
-                      );
-                    }}
-                  >
-                    Fetch
-                  </Button>
-                  <Button
-                    size="small"
-                    disabled={busy || !snapshot.upstream}
-                    onClick={() => {
-                      setError('');
-                      setCheckout({ command: 'pull' });
-                    }}
-                  >
-                    Pull
-                  </Button>
-                  <Button
-                    size="small"
-                    disabled={busy || !snapshot.upstream}
-                    onClick={() => {
-                      void run(async () =>
-                        apply(await projectGit(id, { command: 'push' })),
-                      );
-                    }}
-                  >
-                    Push
-                  </Button>
-                  <Button
-                    size="small"
-                    disabled={busy || !snapshot.upstream}
-                    onClick={() => {
-                      setError('');
-                      setCheckout({ command: 'sync' });
-                    }}
-                  >
-                    Sync Changes
                   </Button>
                 </div>
               )}
@@ -772,7 +725,12 @@ export default function ProjectSourceControl({
               >
                 Review Commit
               </Button>
-              {!!conflicts.length && changeGroup(conflicts, 'conflict')}
+              {!!conflicts.length && (
+                <>
+                  <p role="status">Resolve the listed conflicts in Git.</p>
+                  {changeGroup(conflicts, 'conflict')}
+                </>
+              )}
               {changeGroup(staged, 'index')}
               {changeGroup(working, 'working')}
               <ProjectGitGraph
@@ -864,23 +822,6 @@ export default function ProjectSourceControl({
           refreshFiles={refreshOpenFiles}
         />
       )}
-      {conflict && (
-        <ProjectGitConflictDialog
-          key={conflict.token}
-          conflict={conflict}
-          busy={busy}
-          error={error}
-          hasUnsaved={hasUnsaved}
-          onResolve={resolveConflict}
-          onSaveOpenFiles={() => {
-            void run(async () => {
-              await saveOpenFiles();
-              await showConflict(conflict.path);
-            });
-          }}
-          onClose={() => setConflict(undefined)}
-        />
-      )}
       {clone && (
         <Dialog
           open
@@ -934,51 +875,27 @@ export default function ProjectSourceControl({
           </DialogSurface>
         </Dialog>
       )}
-      {newBranch !== undefined && (
-        <Dialog
-          open
-          onOpenChange={(_, data) =>
-            !data.open && !busy && setNewBranch(undefined)
-          }
-        >
-          <DialogSurface>
-            <DialogBody>
-              <DialogTitle>New branch</DialogTitle>
-              <DialogContent className="git-dialog-fields">
-                <label>
-                  Branch name
-                  <Input
-                    value={newBranch}
-                    onChange={(_, data) => setNewBranch(data.value)}
-                  />
-                </label>
-                {error && <p role="alert">{error}</p>}
-              </DialogContent>
-              <DialogActions>
-                <Button
-                  appearance="primary"
-                  disabled={busy || !newBranch.trim()}
-                  onClick={() => {
-                    void run(async () => {
-                      apply(
-                        await projectGit(id, {
-                          command: 'create-branch',
-                          branch: newBranch.trim(),
-                        }),
-                      );
-                      setNewBranch(undefined);
-                    });
-                  }}
-                >
-                  Create branch
-                </Button>
-                <Button disabled={busy} onClick={() => setNewBranch(undefined)}>
-                  Cancel
-                </Button>
-              </DialogActions>
-            </DialogBody>
-          </DialogSurface>
-        </Dialog>
+      {branchesOpen && snapshot && (
+        <ProjectGitBranches
+          open={!checkout}
+          folder={id}
+          snapshot={snapshot}
+          busy={busy}
+          error={error}
+          close={() => setBranchesOpen(false)}
+          run={(operation) => {
+            void run(operation);
+          }}
+          apply={apply}
+          checkout={(command, branch) => {
+            setError('');
+            setCheckout(
+              command === 'merge-branch'
+                ? { command, branch, into: snapshot.branch }
+                : { command, branch },
+            );
+          }}
+        />
       )}
       {checkout && (
         <Dialog
@@ -990,7 +907,9 @@ export default function ProjectSourceControl({
           <DialogSurface>
             <DialogBody>
               <DialogTitle>
-                {checkout.command === 'switch-branch'
+                {checkout.command === 'merge-branch'
+                  ? 'Merge branches'
+                  : checkout.command === 'switch-branch'
                   ? 'Switch branch'
                   : checkout.command === 'pull'
                   ? 'Pull changes'
@@ -998,7 +917,9 @@ export default function ProjectSourceControl({
               </DialogTitle>
               <DialogContent>
                 <p>
-                  {checkout.command === 'switch-branch'
+                  {checkout.command === 'merge-branch'
+                    ? `Merge ${checkout.branch} into ${checkout.into}.`
+                    : checkout.command === 'switch-branch'
                     ? 'Switch this repository to ' + checkout.branch + '.'
                     : 'Update this checkout from ' + snapshot.upstream + '.'}
                 </p>

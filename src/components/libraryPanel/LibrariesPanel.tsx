@@ -11,6 +11,7 @@ import {
   actionSelectDialog,
 } from '../../state/dispatcher/AppDispatcher';
 import LibraryView from './LibraryView';
+import { SidePanelToggle } from '../panel/SidePanelToggle';
 import {
   Input,
   Button,
@@ -25,7 +26,6 @@ import {
   GlobeRegular,
   LibraryRegular,
   FolderRegular,
-  PanelLeftContractRegular,
   DocumentAddRegular,
   FolderAddRegular,
   ArrowClockwiseRegular,
@@ -64,12 +64,6 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
-    backgroundColor: tokens.colorNeutralBackground2,
-  },
-  header: {
-    padding: '12px',
-    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
-    backgroundColor: tokens.colorNeutralBackground1,
   },
   searchContainer: {
     position: 'relative',
@@ -925,8 +919,8 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
     ));
 
   return (
-    <div className={styles.container} ref={props.inputRef}>
-      <div className={styles.header}>
+    <div className={mergeClasses(styles.container, 'side-panel-surface')} ref={props.inputRef}>
+      <div className="side-panel-header">
         <div className={styles.searchContainer}>
           <div style={{ flex: 1, position: 'relative' }}>
             <SearchRegular className={styles.searchIcon} />
@@ -938,12 +932,7 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
             />
           </div>
           {props.toggleSidePanel && (
-            <Button
-              appearance="subtle"
-              icon={<PanelLeftContractRegular />}
-              onClick={props.toggleSidePanel}
-              title={t('library.hideSidePanel')}
-            />
+            <SidePanelToggle expanded onToggle={props.toggleSidePanel} />
           )}
         </div>
         <TabList className={styles.sourceTabs} size="small" appearance="subtle"
