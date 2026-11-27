@@ -56,19 +56,22 @@ const source: BundledLibrarySource = {
     else localStorage.setItem(selectionKey, JSON.stringify(ids));
   },
   async load(entry) {
-    const bytes = window.electronAPI?.readBundledLibrary
-      ? await window.electronAPI.readBundledLibrary(entry.id)
-      : new Uint8Array(await (await fetchResource(entry.path)).arrayBuffer());
+    if (window.electronAPI?.readBundledLibrary) {
+      const library = await window.electronAPI.readBundledLibrary(entry.id);
+      if (library.fileId === 'bundled:spice') {
+        const { withBundledSpiceIdentity } = await import('../simulation/catalogBindings');
+        return { ...library, names: library.names.map(withBundledSpiceIdentity) };
+      }
+      return library;
+    }
+    const bytes = await (await fetchResource(entry.path)).arrayBuffer();
     // SQLite and library bytes are only requested after a library is selected.
     const { loadTcLibrary } = await import('./tclib');
     return loadTcLibrary(
       BUNDLED_LIBRARY_PREFIX + entry.id,
       entry.name,
       null,
-      bytes.buffer.slice(
-        bytes.byteOffset,
-        bytes.byteOffset + bytes.byteLength,
-      ) as ArrayBuffer,
+      bytes,
     );
   },
 };

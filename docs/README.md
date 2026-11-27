@@ -14,6 +14,8 @@ These documents describe TinyCAD's current implementation and the contracts usef
 
 The [symbol inventory](symbol-libraries/README.md) explains the machine-readable data used by library generators. Implementation details that change frequently belong in the linked source, recipes, schemas and tests.
 
+The [self-hosted container design](self-hosted-container.md) describes a proposed browser workspace, native Linux simulation, library service, and publishing workflow.
+
 Use **Standard → Network layout** for the 47 physical network device symbols, or **Open Example → Examples** for the transistor amplifier and small office network. The network example embeds its artwork and shows matching rack panels with socket-to-socket cabling. The same collection includes explained examples for embedded/smart home, solar/batteries, Audio & Music, Test & Measurement, and Motors & Motion. Each opens as a standalone editable drawing; the **Explanation** panel keeps the connection tables and extension ideas available.
 
 Use **Standard → Embedded processors and smart home** for 44 PCB wiring symbols with physical headers, sensor function icons and LCD/OLED/touch/e-paper screens. The [library guide](embedded-smart-home.md) includes the board inventory, galleries, source survey and pinout conventions.

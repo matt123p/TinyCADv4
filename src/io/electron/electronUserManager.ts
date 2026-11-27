@@ -91,37 +91,8 @@ export class ElectronUserManager implements UserManager {
     );
 
     this.unsubs.push(
-      window.electronAPI.libraryLoaded((data) => {
-        if (data.content) {
-          // Import the tc lib module
-          import('../tclib')
-            .then((module) =>
-              // Load the library
-              module.loadTcLibrary(
-                data.id,
-                data.name,
-                this.toModifiedString(data.lastModified),
-                data.content,
-              ),
-            )
-            .then((lib) => {
-              // ... and set it
-              dispatch(
-                actionSetLibraryData({
-                  ...lib,
-                  bad: false,
-                  loadError: undefined,
-                }),
-              );
-            })
-            .catch((error) => {
-              dispatch(
-                actionSetLibraryData(
-                  this.createFailedLibrary(data.id, data.name, error),
-                ),
-              );
-            });
-        }
+      window.electronAPI.libraryLoaded((library) => {
+        dispatch(actionSetLibraryData({ ...library, bad: false, loadError: undefined }));
       }),
     );
 
@@ -184,38 +155,23 @@ export class ElectronUserManager implements UserManager {
     // Check for library to open
     const libraryPath = urlParams.get('library');
     if (libraryPath) {
-        // Load the library and open it for editing
-        return import('../tclib').then((module) => {
-        // Request the library to be loaded
-        return new Promise<void>((resolve) => {
-            // Set up a one-time listener for the library data
-            const unsubscribe = window.electronAPI.libraryLoaded((data) => {
-            if (data.id === libraryPath && data.content) {
-                unsubscribe();
-                if (data.content.byteLength === 0) {
-                  const lib = { ...this.newLibrary(), fileId: data.id, name: data.name };
-                  dispatch(actionEditLibrary(lib, data.name, data.id, null));
-                  resolve();
-                  return;
-                }
-                module.loadTcLibrary(
-                data.id,
-                data.name,
-                this.toModifiedString(data.lastModified),
-                data.content,
-                ).then((lib) => {
-                dispatch(actionEditLibrary(lib, lib.name, lib.fileId, null));
-                resolve();
-                });
-            }
-            });
-            // Request the library
-            window.electronAPI.loadLibrary({
-                name: libraryPath, // Name might be incorrect initially but loadLibrary mainly needs path
-                id: libraryPath,
-            });
+      return new Promise<void>((resolve) => {
+        const loaded = window.electronAPI.libraryLoaded((library) => {
+          if (library.fileId !== libraryPath) return;
+          loaded();
+          failed();
+          dispatch(actionEditLibrary(library, library.name, library.fileId, null));
+          resolve();
         });
+        const failed = window.electronAPI.libraryLoadFailed((data) => {
+          if (data.id !== libraryPath) return;
+          loaded();
+          failed();
+          dispatch(actionSelectDialog('io_failure', { message: data.error.summary }));
+          resolve();
         });
+        window.electronAPI.loadLibrary({ id: libraryPath, silent: true, allowEmpty: true });
+      });
     }
 
     // Check for file to open

@@ -48,9 +48,9 @@ declare global {
 
             // Libraries
             bundledLibraryCatalog: () => Promise<unknown>;
-            readBundledLibrary: (id: string) => Promise<Uint8Array>;
+            readBundledLibrary: (id: string) => Promise<import('./model/tclib').tclib>;
             bundledLibrarySelection: (ids?: string[]) => Promise<unknown>;
-            loadLibrary: (file?: { name?: string, id?: string, silent?: boolean, folderId?: string | null }) => void;
+            loadLibrary: (file?: { name?: string, id?: string, silent?: boolean, allowEmpty?: boolean, folderId?: string | null }) => void;
             saveLibrary: (data: {
                 name: string;
                 id: FileIdType | string;
@@ -70,7 +70,7 @@ declare global {
             fileLoaded: (callback: (data: { content: string | Uint8Array, name: string, id: string }) => void) => () => void;
             fileSaved: (callback: (data: { success: boolean, name: string, id: string }) => void) => () => void;
             recentFiles: (callback: (data: { name: string, id: string }[]) => void) => () => void;
-            libraryLoaded: (callback: (data: { content: ArrayBuffer, name: string, id: string, lastModified?: Date | string }) => void) => () => void;
+            libraryLoaded: (callback: (library: import('./model/tclib').tclib) => void) => () => void;
             libraryLoadFailed: (callback: (data: { id: string, name: string, error: ElectronLibraryLoadError }) => void) => () => void;
             librarySaved: (callback: (data: { success: boolean, name: string, id: string }) => void) => () => void;
             libraries: (callback: (data: {

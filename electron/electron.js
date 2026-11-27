@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import Store from 'electron-store';
 import { registerBundledLibraries } from './bundledLibraries.js';
+import { unpackedResource } from './tclibReader.js';
 import { registerBundledExamples } from './bundledExamples.js';
 import { registerOnlineLibrary } from './onlineLibrary.js';
 import { registerLicenseHandlers } from './licenses.js';
@@ -429,7 +430,7 @@ function createWindow({ openAbout = false } = {}) {
     registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
       directory: path.join(__dirname, '../dist/bundled-examples') });
     registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
-      directory: path.join(__dirname, isDev ? '../bundled-libraries' : '../dist/bundled-libraries') });
+      directory: unpackedResource(path.join(__dirname, isDev ? '../bundled-libraries' : '../dist/bundled-libraries')) });
     registerChatSecretHandlers(ipcMain, { app, safeStorage });
     registerOnlineLibrary({ ipcMain, app, getWindow: () => mainWindow,
       send: (url, options) => net.fetch(url, options) });
