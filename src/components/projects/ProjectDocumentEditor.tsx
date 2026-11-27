@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@fluentui/react-components';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
+import hljs from 'highlight.js/lib/common';
+import 'highlight.js/styles/github.css';
+import ProjectDelimitedTable from './ProjectDelimitedTable';
 import type { ProjectDocument } from '../../io/useProjectDocuments';
 
 const ProjectPdfViewer = React.lazy(() => import('./ProjectPdfViewer'));
@@ -29,18 +32,31 @@ function ProjectImage({
   return url && <img src={url} alt={name} onError={() => setError(true)} />;
 }
 
-export default function ProjectDocumentEditor({
+type TextDocument = Extract<ProjectDocument, { kind: 'text' }>;
+
+function ProjectTextDocument({
   file,
-  active,
   onEdit,
 }: {
-  file: ProjectDocument;
-  active: boolean;
+  file: TextDocument;
   onEdit(value: string): void;
 }) {
-  const [preview, setPreview] = useState(false);
+  const [view, setView] = useState<'source' | 'edit' | 'preview'>('source');
   const text =
-    file.kind === 'text' && file.markdown && preview ? file.value : undefined;
+    file.preview === 'markdown' && view === 'preview' ? file.value : undefined;
+  const highlighted = useMemo(() => {
+    if (
+      view !== 'source' ||
+      file.value.length > 200_000 ||
+      !file.language ||
+      !hljs.getLanguage(file.language)
+    )
+      return undefined;
+    return hljs.highlight(file.value, {
+      language: file.language,
+      ignoreIllegals: true,
+    }).value;
+  }, [file.language, file.value, view]);
   const html = useMemo(
     () =>
       text === undefined
@@ -72,6 +88,83 @@ export default function ProjectDocumentEditor({
   );
 
   return (
+    <>
+      <div
+        className="project-preview-actions"
+        role="group"
+        aria-label="Text view"
+      >
+        <Button
+          size="small"
+          aria-pressed={view === 'source'}
+          onClick={() => setView('source')}
+        >
+          Source
+        </Button>
+        <Button
+          size="small"
+          aria-pressed={view === 'edit'}
+          onClick={() => setView('edit')}
+        >
+          Edit Source
+        </Button>
+        {file.preview && (
+          <Button
+            size="small"
+            aria-pressed={view === 'preview'}
+            onClick={() => setView('preview')}
+          >
+            {file.preview === 'markdown' ? 'Preview Markdown' : 'View as Table'}
+          </Button>
+        )}
+      </div>
+      {view === 'source' && (
+        <pre
+          className="project-source-preview"
+          aria-label={`Source of ${file.name}`}
+          tabIndex={0}
+        >
+          {highlighted === undefined ? (
+            <code className="hljs">{file.value}</code>
+          ) : (
+            <code
+              className="hljs"
+              dangerouslySetInnerHTML={{ __html: highlighted }}
+            />
+          )}
+        </pre>
+      )}
+      {view === 'edit' && (
+        <textarea
+          aria-label={`Edit ${file.name}`}
+          spellCheck={false}
+          value={file.value}
+          onChange={(event) => onEdit(event.target.value)}
+        />
+      )}
+      {view === 'preview' &&
+        (file.preview === 'markdown' ? (
+          <article
+            className="project-markdown-preview"
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        ) : (
+          <ProjectDelimitedTable text={file.value} name={file.name} />
+        ))}
+    </>
+  );
+}
+
+export default function ProjectDocumentEditor({
+  file,
+  active,
+  onEdit,
+}: {
+  file: ProjectDocument;
+  active: boolean;
+  onEdit(value: string): void;
+}) {
+  return (
     <section
       hidden={!active}
       className="project-document-editor"
@@ -79,32 +172,7 @@ export default function ProjectDocumentEditor({
       aria-label={file.name}
     >
       {file.kind === 'text' ? (
-        <>
-          {file.markdown && (
-            <div className="project-preview-actions">
-              <Button
-                size="small"
-                aria-pressed={preview}
-                onClick={() => setPreview(!preview)}
-              >
-                {preview ? 'Edit Markdown' : 'Preview Markdown'}
-              </Button>
-            </div>
-          )}
-          <textarea
-            hidden={preview}
-            aria-label={`Edit ${file.name}`}
-            spellCheck={false}
-            value={file.value}
-            onChange={(event) => onEdit(event.target.value)}
-          />
-          {preview && (
-            <article
-              className="project-markdown-preview"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
-          )}
-        </>
+        <ProjectTextDocument file={file} onEdit={onEdit} />
       ) : (
         active && (
           <div className="project-asset-preview">

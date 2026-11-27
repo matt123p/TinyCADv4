@@ -15,7 +15,6 @@ import {
   ChevronRightRegular,
 } from '@fluentui/react-icons';
 import { MAX_PROJECT_FILE_BYTES } from '../../../shared/projectFiles';
-import { isDrawingFile } from '../../../shared/drawingFiles';
 import { projectDocumentKind } from '../../io/projectDocumentKind';
 import { projectRequest } from '../../io/projects';
 import { projectFilesChanged } from '../../io/projectStorage';
@@ -152,9 +151,6 @@ export default function ProjectFileBrowser({
       <ul className="project-files">
         {(folders[folder] ?? []).map((item) => {
           const isExpanded = expanded.includes(item.id);
-          const viewable =
-            !item.unsupported &&
-            (isDrawingFile(item.name) || projectDocumentKind(item.name));
           return (
             <li key={item.id}>
               <button
@@ -174,7 +170,7 @@ export default function ProjectFileBrowser({
                         ? expanded.filter((id) => id !== item.id)
                         : [...expanded, item.id],
                     );
-                  } else if (viewable) {
+                  } else if (!item.unsupported) {
                     void open({ ...item, folder, ancestors }).catch(report);
                   }
                 }}
@@ -236,9 +232,9 @@ export default function ProjectFileBrowser({
               title: 'New Text File',
               name: 'Notes.md',
               action: async (name) => {
-                if (projectDocumentKind(name)?.kind !== 'text')
+                if (projectDocumentKind(name).kind !== 'text')
                   throw new Error(
-                    'Enter a supported text filename such as Notes.md or Notes.txt.',
+                    'Enter a text filename such as Notes.md or Notes.txt.',
                   );
                 const file = await projectRequest({
                   operation: 'write',

@@ -39,6 +39,21 @@ async function launch(...files) {
   return page;
 }
 
+const tableFixtures = [
+  ['Comma.csv', ',', 'Comma (,)'],
+  ['Semicolon.csv', ';', 'Semicolon (;)'],
+  ['Pipe.csv', '|', 'Pipe (|)'],
+  ['Tabs.tsv', '\t', 'Tab'],
+  ['Caret.csv', '^', 'Caret (^)'],
+];
+const sourceFixtures = [
+  ['Config.json', '{"label":"demo","enabled":true}', '.hljs-attr', '"label"'],
+  ['Parts.xml', '<parts><part id="a"/></parts>', '.hljs-name', 'parts'],
+  ['Config.yaml', 'label: demo\nenabled: true\n', '.hljs-attr', 'label:'],
+  ['README', 'Plain extensionless text'],
+  ['UTF16.txt', Buffer.from('\ufeffPlain text in UTF-16\r\n', 'utf16le')],
+];
+
 try {
   await mkdir(project);
   const marker = path.join(project, 'Circuit.tcproject');
@@ -53,6 +68,15 @@ try {
     ),
     writeFile(path.join(project, 'Notes.md'), '# Initial\n'),
     writeFile(marker, '<?xml version="1.0"?><TinyCADProject/>'),
+    ...sourceFixtures.map(([name, content]) =>
+      writeFile(path.join(project, name), content),
+    ),
+    ...tableFixtures.map(([name, separator]) =>
+      writeFile(
+        path.join(project, name),
+        `Part${separator}Description\r\n001${separator}"first${separator}value\r\nsecond ""line"""\r\n`,
+      ),
+    ),
   ]);
   git('init', '-q');
   git('config', 'user.name', 'TinyCAD Test');
@@ -79,6 +103,48 @@ try {
   const tabs = () => page.getByLabel('Open files');
   const button = (name) => page.getByRole('button', { name, exact: true });
   const tab = (name) => tabs().getByRole('button', { name, exact: true });
+  const open = (name) =>
+    files().getByRole('button', { name, exact: true }).click();
+  for (const [name, content, token, expected] of sourceFixtures) {
+    await open(name);
+    const source = page.getByLabel(`Source of ${name}`);
+    if (token) await expect(source.locator(token).first()).toHaveText(expected);
+    else
+      await expect(source).toContainText(
+        typeof content === 'string' ? content : 'Plain text in UTF-16',
+      );
+    if (name === 'UTF16.txt') {
+      await button('Edit Source').click();
+      await page
+        .getByRole('textbox', { name: 'Edit UTF16.txt' })
+        .fill('Revised UTF-16\n');
+      await button('Save UTF16.txt').click();
+      await expect(tab('UTF16.txt')).toBeVisible();
+      assert.deepEqual(
+        await readFile(path.join(project, name)),
+        Buffer.from('\ufeffRevised UTF-16\r\n', 'utf16le'),
+      );
+    }
+    await button(`Close ${name}`).click();
+  }
+  for (const [name, separator, label] of tableFixtures) {
+    await open(name);
+    await button('View as Table').click();
+    const table = page.getByRole('table', { name });
+    await expect(
+      page.getByLabel('Separator').locator('option:checked'),
+    ).toHaveText(`Auto (${label})`);
+    await expect(table.getByRole('row')).toHaveCount(2);
+    const cells = table.getByRole('row').nth(1).getByRole('cell');
+    await expect(cells).toHaveCount(2);
+    await expect(cells.first()).toHaveText('001');
+    assert.equal(
+      await cells.last().textContent(),
+      `first${separator}value\nsecond "line"`,
+    );
+    await button(`Close ${name}`).click();
+  }
+
   await files().getByRole('button', { name: 'Divider.dzn' }).click();
   await files().getByRole('button', { name: 'Charging.dzn' }).click();
   await expect(tab('Charging.dzn')).toHaveAttribute('aria-pressed', 'true');
@@ -106,6 +172,7 @@ try {
 
   await files().getByRole('button', { name: 'Notes.md' }).click();
   const text = () => page.getByRole('textbox', { name: 'Edit Notes.md' });
+  await button('Edit Source').click();
   await text().fill('# Reopened notes\n');
   await button('Preview Markdown').click();
   await expect(
@@ -171,7 +238,13 @@ try {
   await expect(tab('Divider.dzn')).toBeVisible();
   await expect(tab('Charging.dzn')).toBeVisible();
   await expect(tab('Notes.md')).toHaveAttribute('aria-pressed', 'true');
-  await expect(text()).toHaveValue('# Reopened notes\n');
+  await expect(page.getByLabel('Source of Notes.md')).toContainText(
+    '# Reopened notes',
+  );
+  await button('Preview Markdown').click();
+  await expect(
+    page.getByRole('heading', { name: 'Reopened notes' }),
+  ).toBeVisible();
   await button('Close project').click();
   await expect(tabs()).toHaveCount(0);
 

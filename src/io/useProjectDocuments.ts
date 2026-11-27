@@ -1,6 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { projectDocumentKind } from './projectDocumentKind';
-import type { ProjectDocumentKind } from './projectDocumentKind';
+import type {
+  ProjectDocumentKind,
+  ProjectTextKind,
+} from './projectDocumentKind';
 import { projectFilesChanged } from './projectStorage';
 import type { ProjectLocation } from './projectStorage';
 
@@ -10,12 +13,12 @@ export type ProjectDocumentLocation = ProjectLocation & {
   folder: string;
   ancestors: readonly string[];
 };
-type Text = {
-  kind: 'text';
-  markdown: boolean;
+type TextEncoding = 'utf-8' | 'utf-16le' | 'utf-16be';
+type Text = ProjectTextKind & {
+  encoding: TextEncoding;
   saved: string;
   value: string;
-  crlf: boolean;
+  newline: '\n' | '\r\n' | '\r';
   bom: boolean;
 };
 type Asset = { kind: 'image' | 'pdf'; bytes: Uint8Array };
@@ -38,28 +41,48 @@ function openDocument(
 ): ProjectDocument & (Text | Asset) {
   const base = { ...location, version, mime: type.mime };
   if (type.kind !== 'text') return { ...base, kind: type.kind, bytes: data };
-  const bom = data[0] === 0xef && data[1] === 0xbb && data[2] === 0xbf;
-  const text = new TextDecoder('utf-8', { fatal: true }).decode(data);
-  const crlf =
-    text.includes('\r\n') && !text.replaceAll('\r\n', '').includes('\n');
+  const encoding: TextEncoding =
+    data[0] === 0xff && data[1] === 0xfe
+      ? 'utf-16le'
+      : data[0] === 0xfe && data[1] === 0xff
+      ? 'utf-16be'
+      : 'utf-8';
+  const bom =
+    encoding !== 'utf-8' ||
+    (data[0] === 0xef && data[1] === 0xbb && data[2] === 0xbf);
+  let text: string;
+  try {
+    text = new TextDecoder(encoding, { fatal: true }).decode(data);
+  } catch {
+    throw new Error('This file is not UTF-8 or UTF-16 text.');
+  }
+  if (/[\x00-\x08\x0e-\x1a]/.test(text))
+    throw new Error(
+      'This file contains binary data and cannot be opened as text.',
+    );
+  const newline = (/\r\n|\n|\r/.exec(text)?.[0] as Text['newline']) ?? '\n';
   const saved = text.replace(/\r\n?/g, '\n');
-  return {
-    ...base,
-    kind: 'text',
-    markdown: type.markdown,
-    saved,
-    value: saved,
-    crlf,
-    bom,
-  };
+  return { ...base, ...type, encoding, bom, newline, saved, value: saved };
+}
+
+function encodeText(file: Text): Uint8Array {
+  const text =
+    (file.bom ? '\ufeff' : '') + file.value.replaceAll('\n', file.newline);
+  if (file.encoding === 'utf-8') return new TextEncoder().encode(text);
+  const view = new DataView(new ArrayBuffer(text.length * 2));
+  for (let index = 0; index < text.length; index++)
+    view.setUint16(
+      index * 2,
+      text.charCodeAt(index),
+      file.encoding === 'utf-16le',
+    );
+  return new Uint8Array(view.buffer);
 }
 
 async function readDocument(
   location: ProjectDocumentLocation,
 ): Promise<ProjectDocument> {
   const type = projectDocumentKind(location.name);
-  if (!type)
-    throw new Error('This file type is unavailable in the project editor.');
   const { data, version } = await projectRequest({
     operation: 'read',
     id: location.id,
@@ -118,16 +141,13 @@ export function useProjectDocuments() {
     pending.current.add(id);
     setWriting(new Set(pending.current));
     try {
-      const content =
-        (file.bom ? '\ufeff' : '') +
-        (file.crlf ? file.value.replaceAll('\n', '\r\n') : file.value);
       const { version } = await projectRequest({
         operation: 'write',
         id,
         folder: file.folder,
         name: file.name,
         version: file.version,
-        data: new TextEncoder().encode(content),
+        data: encodeText(file),
         mediaType: file.mime,
       });
       update((files) =>
