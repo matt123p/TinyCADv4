@@ -25,14 +25,14 @@ export function drawingViewMenu(getLabel, state, libraryMode, send) {
     {
       label: getLabel('viewExplanation', 'View Explanation'),
       type: 'checkbox',
-      enabled: !libraryMode && state.hasExampleExplanation,
+      enabled: !libraryMode && state.canvas !== false && state.hasExampleExplanation,
       checked: state.hasExampleExplanation && state.exampleExplanationVisible,
       click: () => send('view-explanation'),
     },
     {
       label: getLabel('showCharts', 'Show Charts'),
       type: 'checkbox',
-      enabled: !libraryMode,
+      enabled: !libraryMode && state.canvas !== false,
       checked: state.simulationPanelVisible,
       click: () => send('view-show-charts'),
     },
@@ -40,11 +40,13 @@ export function drawingViewMenu(getLabel, state, libraryMode, send) {
     {
       label: getLabel('zoomIn', 'Zoom In'),
       accelerator: 'CmdOrCtrl+Plus',
+      enabled: state.canvas !== false,
       click: () => send('view-zoom-in'),
     },
     {
       label: getLabel('zoomOut', 'Zoom Out'),
       accelerator: 'CmdOrCtrl+-',
+      enabled: state.canvas !== false,
       click: () => send('view-zoom-out'),
     },
   ];

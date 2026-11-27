@@ -64,6 +64,7 @@ declare global {
             }) => void;
             setViewMenuState: (state: { hasExampleExplanation: boolean; exampleExplanationVisible: boolean; simulationPanelVisible: boolean }) => void;
             setMenuMode: (mode: boolean) => void;
+            setEditorMenuState: (state: { project: boolean; editor: string }) => void;
             setMenuTranslations: (translations: Record<string, string>) => void;
 
             // Callbacks

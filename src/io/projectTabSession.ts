@@ -9,6 +9,8 @@ export type ProjectTabLocation =
 export interface ProjectTabSession {
   tabs: ProjectTabLocation[];
   active?: number;
+  pinned?: number[];
+  preview?: number;
 }
 
 export interface ProjectTabRestore {
@@ -92,12 +94,21 @@ export function readProjectTabSession(root: string, account: string): ProjectTab
     if (!Array.isArray(data?.tabs)) return;
     const tabs: ProjectTabLocation[] = [];
     let active: number;
+    let preview: number;
+    const pinned: number[] = [];
+    const pinnedIndices = new Set(Array.isArray(data.pinned) ? data.pinned : []);
     for (const [index, tab] of data.tabs.entries()) {
       if (!validLocation(tab)) continue;
       if (index === data.active) active = tabs.length;
+      if (pinnedIndices.has(index)) pinned.push(tabs.length);
+      else if (index === data.preview) preview = tabs.length;
       tabs.push(tab);
     }
-    const session = { tabs, active };
+    const session = {
+      tabs, active,
+      ...(pinned.length ? { pinned } : {}),
+      ...(preview !== undefined ? { preview } : {}),
+    };
     try {
       saveSession(key, session);
     } catch {

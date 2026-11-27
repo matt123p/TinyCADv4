@@ -53,6 +53,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     saveLibraryConfig: (config) => ipcRenderer.send('save-library-config', config),
     setViewMenuState: (state) => ipcRenderer.send('set-view-menu-state', state),
     setMenuMode: (mode) => ipcRenderer.send('set-menu-mode', mode),
+    setEditorMenuState: (state) => ipcRenderer.send('set-editor-menu-state', state),
     setMenuTranslations: (translations) => ipcRenderer.send('set-menu-translations', translations),
 
     fileLoaded: (callback) => {

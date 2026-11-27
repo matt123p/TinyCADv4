@@ -29,6 +29,7 @@ export class ChatSession {
     transport: ChatTransport,
     signal: AbortSignal,
     changed: (messages: ChatMessage[]) => void,
+    context?: { data: unknown; attachments?: Attachment[] },
   ) {
     if (this.running) throw new Error('A chat turn is already running.');
     this.running = true;
@@ -46,7 +47,11 @@ export class ChatSession {
       for (const message of this.messages) {
         if (
           message.result?.images?.length ||
-          message.attachments?.some((file) => file.mime.startsWith('image/'))
+          message.attachments?.some((file) => file.mime.startsWith('image/')) ||
+          (message === turn &&
+            context?.attachments?.some((file) =>
+              file.mime.startsWith('image/'),
+            ))
         )
           message.imagesViewed = true;
       }
@@ -80,8 +85,24 @@ export class ChatSession {
           kind: 'request',
           text: 'Sending the conversation, drawing tools and reference files to the model',
         });
+        const request = context
+          ? this.messages.map((message) =>
+              message === turn
+                ? {
+                    ...message,
+                    text: `${text}\n\nTinyCAD active editor reference (JSON):\n${JSON.stringify(
+                      context.data,
+                    )}`,
+                    attachments: [
+                      ...attachments,
+                      ...(context.attachments ?? []),
+                    ],
+                  }
+                : message,
+            )
+          : this.messages;
         const answer = await transport.complete(
-          this.messages,
+          request,
           typeof this.system === 'function' ? this.system() : this.system,
           this.tools,
           signal,
@@ -91,7 +112,7 @@ export class ChatSession {
           },
         );
         if (signal.aborted) throw new DOMException('Stopped', 'AbortError');
-        const unseen = this.messages.some(
+        const unseen = request.some(
           (m) =>
             !m.imagesViewed &&
             (m.result?.images?.length ||

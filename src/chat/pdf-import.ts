@@ -1,5 +1,6 @@
 import workerUrl from 'url:pdfjs-dist/build/pdf.worker.min.mjs';
 import { Attachment } from './types';
+import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 
 export function selectPdfPages(selection: string, count: number): number[] {
   if (!selection.trim()) {
@@ -25,15 +26,16 @@ export function selectPdfPages(selection: string, count: number): number[] {
   if (pages.size > 20) throw new Error('Choose up to 20 PDF pages.');
   return Array.from(pages).sort((a, b) => a - b);
 }
-export async function pdfImages(
-  file: File,
-  pages: string,
+async function withPdf<T>(
+  bytes: Uint8Array,
   signal: AbortSignal,
-): Promise<Attachment[]> {
+  read: (pdf: PDFDocumentProxy) => Promise<T>,
+): Promise<T> {
   const pdfjs = await import('pdfjs-dist');
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
   const task = pdfjs.getDocument({
-    data: new Uint8Array(await file.arrayBuffer()),
+    data: bytes,
+    enableXfa: false,
   });
   const abort = () => {
     void task.destroy();
@@ -41,30 +43,84 @@ export async function pdfImages(
   signal.addEventListener('abort', abort, { once: true });
   try {
     if (signal.aborted) throw new DOMException('Stopped', 'AbortError');
-    const pdf = await task.promise;
-    const result: Attachment[] = [];
-    for (const pageNumber of selectPdfPages(pages, pdf.numPages)) {
-      if (signal.aborted) throw new DOMException('Stopped', 'AbortError');
-      const page = await pdf.getPage(pageNumber);
-      const base = page.getViewport({ scale: 1 });
-      const viewport = page.getViewport({
-        scale: 2000 / Math.max(base.width, base.height),
-      });
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.ceil(viewport.width);
-      canvas.height = Math.ceil(viewport.height);
-      await page.render({ canvas, viewport }).promise;
-      result.push({
-        name: `${file.name}, page ${pageNumber}`,
-        mime: 'image/png',
-        data: canvas.toDataURL('image/png').split(',')[1],
-      });
-      page.cleanup();
-      canvas.width = canvas.height = 0;
-    }
-    return result;
+    return await read(await task.promise);
   } finally {
     signal.removeEventListener('abort', abort);
     await task.destroy();
   }
+}
+
+async function pdfPageImage(
+  page: PDFPageProxy,
+  name: string,
+): Promise<Attachment> {
+  const base = page.getViewport({ scale: 1 });
+  const viewport = page.getViewport({
+    scale: 2000 / Math.max(base.width, base.height),
+  });
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.ceil(viewport.width);
+  canvas.height = Math.ceil(viewport.height);
+  try {
+    await page.render({ canvas, viewport }).promise;
+    return {
+      name,
+      mime: 'image/png',
+      data: canvas.toDataURL('image/png').split(',')[1],
+    };
+  } finally {
+    canvas.width = canvas.height = 0;
+  }
+}
+
+export async function pdfImages(
+  file: File,
+  pages: string,
+  signal: AbortSignal,
+) {
+  return withPdf(
+    new Uint8Array(await file.arrayBuffer()),
+    signal,
+    async (pdf) => {
+      const result: Attachment[] = [];
+      for (const number of selectPdfPages(pages, pdf.numPages)) {
+        signal.throwIfAborted();
+        const page = await pdf.getPage(number);
+        try {
+          result.push(await pdfPageImage(page, `${file.name}, page ${number}`));
+        } finally {
+          page.cleanup();
+        }
+      }
+      return result;
+    },
+  );
+}
+
+export function readPdfPage(
+  bytes: Uint8Array,
+  name: string,
+  number: number,
+  image: boolean,
+  signal: AbortSignal,
+) {
+  return withPdf(bytes.slice(), signal, async (pdf) => {
+    if (number > pdf.numPages)
+      throw new Error(`This PDF has ${pdf.numPages} pages.`);
+    const page = await pdf.getPage(number);
+    try {
+      const content = await page.getTextContent();
+      const text = content.items
+        .map((item) =>
+          'str' in item ? item.str + (item.hasEOL ? '\n' : ' ') : '',
+        )
+        .join('');
+      const preview = image
+        ? await pdfPageImage(page, `${name}, page ${number}`)
+        : undefined;
+      return { text, pages: pdf.numPages, preview };
+    } finally {
+      page.cleanup();
+    }
+  });
 }

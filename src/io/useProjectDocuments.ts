@@ -112,17 +112,20 @@ export function useProjectDocuments() {
     setActive(id);
   }, []);
 
-  async function open(location: ProjectDocumentLocation) {
+  async function open(location: ProjectDocumentLocation, canOpen = () => true) {
     const epoch = ++openEpoch.current;
     const project = projectEpoch.current;
     if (!current.current.some(({ id }) => id === location.id)) {
       const opened = await readDocument(location);
-      if (project !== projectEpoch.current) return;
+      if (project !== projectEpoch.current || epoch !== openEpoch.current || !canOpen())
+        return false;
       update((files) =>
         files.some(({ id }) => id === opened.id) ? files : [...files, opened],
       );
     }
-    if (epoch === openEpoch.current) select(location.id);
+    if (epoch !== openEpoch.current || !canOpen()) return false;
+    select(location.id);
+    return true;
   }
 
   function edit(id: string, value: string) {
@@ -206,12 +209,6 @@ export function useProjectDocuments() {
     return unavailable;
   }, [update]);
 
-  function close(id: string) {
-    if (pending.current.has(id)) return;
-    update((files) => files.filter((file) => file.id !== id));
-    if (active === id) select(current.current.at(-1)?.id);
-  }
-
   function relocate(locations: Record<string, ProjectDocumentLocation>) {
     const selected = active && locations[active];
     update((files) =>
@@ -233,9 +230,9 @@ export function useProjectDocuments() {
     if (selected) select(selected.id);
   }
 
-  function removeWhere(matches: (id: string) => boolean) {
+  function removeWhere(matches: (id: string) => boolean, selectNext = true) {
     update((files) => files.filter((file) => !matches(file.id)));
-    if (active && matches(active)) select(current.current.at(-1)?.id);
+    if (selectNext && active && matches(active)) select(current.current.at(-1)?.id);
   }
 
   function clear() {
@@ -246,6 +243,7 @@ export function useProjectDocuments() {
 
   return {
     files,
+    has: (id: string) => current.current.some((file) => file.id === id),
     active,
     writing,
     select,
@@ -254,7 +252,6 @@ export function useProjectDocuments() {
     save,
     saveAll,
     refresh,
-    close,
     relocate,
     removeWhere,
     clear,

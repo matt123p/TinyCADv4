@@ -40,9 +40,26 @@ import {
   providerDefaults,
 } from '../../chat/types';
 import { createEditorTools } from '../../chat/tools';
-import { toolSpecs } from '../../chat/tool-specs';
+import {
+  checkArguments,
+  projectToolSpecs,
+  toolSpecs,
+} from '../../chat/tool-specs';
 import { editorChatSystem } from '../../chat/prompt';
-import { readAttachments, validateAttachments } from '../../chat/attachments';
+import {
+  MAX_ATTACHMENT_BYTES,
+  readAttachments,
+  validateAttachments,
+} from '../../chat/attachments';
+import {
+  activeChatReference,
+  attachmentBytes,
+  chatEditingTarget,
+  readProjectReference,
+} from '../../chat/project-context';
+import type { ChatProject } from '../../chat/project-context';
+import type { docDrawing } from '../../state/undo/undo';
+import { projectRequest } from '../../io/projects';
 import './chat.css';
 
 const storageKey = 'tinycad.chat.settings.v1';
@@ -108,11 +125,34 @@ interface Download {
   url: string;
   image: boolean;
 }
-export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
-  open,
-  onClose,
-}) => {
-  const store = useStore();
+const editorTools = new Set([
+  'read_drawing',
+  'read_metadata',
+  'read_library',
+  'inspect_spice_target',
+  'attach_spice_model',
+  'add_library_components',
+  'set_drawing',
+  'edit_drawing',
+  'add_to_drawing',
+  'place_component',
+  'insert_symbol',
+  'auto_layout',
+]);
+const implicitDrawingTools = new Set([
+  'validate_drawing',
+  'read_netlist',
+  'render_drawing',
+  'auto_tidy_drawing',
+  'export_file',
+]);
+
+export const ChatPanel: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  project?: ChatProject;
+}> = ({ open, onClose, project }) => {
+  const store = useStore<docDrawing>();
   const [settings, setSettings] = useState(loadSettings);
   const [connection, setConnection] = useState<ChatConnection>();
   const key = connection?.kind === 'api-key' ? connection.key : '';
@@ -138,6 +178,11 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
   const [error, setError] = useState('');
   const controller = useRef<AbortController>();
   const session = useRef<ChatSession>();
+  const turnContext = useRef<{
+    project?: ChatProject;
+    target: ReturnType<typeof chatEditingTarget>;
+    referenceView: boolean;
+  }>();
   const urls = useRef<string[]>([]);
   const transcript = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -338,10 +383,19 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
       return;
     }
     setBusy(true);
-    setPreparingAttachments(files.length > 0);
+    setPreparingAttachments(
+      files.length > 0 || (project?.active && project.active.kind !== 'text'),
+    );
     setError('');
     const abort = new AbortController();
     controller.current = abort;
+    const submitted = store.getState();
+    turnContext.current = {
+      project,
+      target: chatEditingTarget(submitted),
+      referenceView:
+        !!project?.active || submitted.docStore.present.view.selected_sheet < 0,
+    };
     try {
       const transport = chatGPT?.sharing
         ? createChatGPTTransport(settings, chatGPT.profileId)
@@ -361,27 +415,88 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
         pdfPages,
         abort.signal,
       );
+      const context = await activeChatReference(
+        project,
+        submitted,
+        settings.provider,
+        MAX_ATTACHMENT_BYTES -
+          attachments.reduce((sum, file) => sum + attachmentBytes(file), 0),
+        abort.signal,
+      );
       setPreparingAttachments(false);
       if (abort.signal.aborted) return;
-      if (!session.current)
+      if (!session.current) {
+        const execute = createEditorTools(store, (file) => {
+          const url = URL.createObjectURL(file.blob);
+          urls.current.push(url);
+          setDownloads((previous) => [
+            ...previous,
+            { name: file.name, url, image: file.blob.type === 'image/png' },
+          ]);
+        });
         session.current = new ChatSession(
           () =>
             editorChatSystem({
               library: !!store.getState().docStore.present.editLibrary,
               webSearch: !!chatGPT?.sharing,
+              project: !!project,
+              referenceView: turnContext.current.referenceView,
               bundledLibraries:
                 bundledLibraries.getSnapshot().catalog?.libraries,
             }),
-          toolSpecs,
-          createEditorTools(store, (file) => {
-            const url = URL.createObjectURL(file.blob);
-            urls.current.push(url);
-            setDownloads((previous) => [
-              ...previous,
-              { name: file.name, url, image: file.blob.type === 'image/png' },
-            ]);
-          }),
+          project ? [...toolSpecs, ...projectToolSpecs] : toolSpecs,
+          async (name, args, signal) => {
+            const current = store.getState();
+            const { project: scope, target } = turnContext.current;
+            if (name === 'list_project_files' || name === 'read_project_file') {
+              if (
+                !scope ||
+                current.schematicTabs?.projectRoot !== scope.root.id
+              )
+                throw new Error(
+                  'Open the project and send a new message to browse its files.',
+                );
+              checkArguments(
+                args,
+                projectToolSpecs.find((tool) => tool.name === name).parameters,
+              );
+              if (name === 'read_project_file')
+                return readProjectReference(
+                  scope,
+                  args as Parameters<typeof readProjectReference>[1],
+                  signal,
+                );
+              return {
+                data: await projectRequest({
+                  operation: 'chat-list',
+                  project: scope.root.id,
+                  relative: args.path as string,
+                  offset: args.offset as number,
+                }),
+              };
+            }
+            if (
+              editorTools.has(name) ||
+              (implicitDrawingTools.has(name) &&
+                !args.definition &&
+                !args.componentId)
+            ) {
+              if (!target)
+                throw new Error(
+                  'No schematic or library was open when this message was sent.',
+                );
+              if (
+                JSON.stringify(target) !==
+                JSON.stringify(chatEditingTarget(current))
+              )
+                throw new Error(
+                  'The editing target changed. Send a new message to work on the new editor.',
+                );
+            }
+            return execute(name, args, signal);
+          },
         );
+      }
       try {
         savePreferences(settings);
       } catch {
@@ -398,6 +513,7 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
         transport,
         abort.signal,
         setMessages,
+        context,
       );
     } catch (e) {
       setError(
@@ -605,6 +721,11 @@ export const ChatPanel: React.FC<{ open: boolean; onClose: () => void }> = ({
           <div className="chat-attachment-status" role="status">
             {preparingAttachments ? 'Preparing attachments…' : ''}
           </div>
+          {project?.active && (
+            <small className="chat-model-hint">
+              Active reference when sending: {project.active.name}
+            </small>
+          )}
           {files.map((f, i) => (
             <div key={i} className="chat-attachment">
               <span>

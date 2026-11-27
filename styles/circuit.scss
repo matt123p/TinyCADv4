@@ -304,11 +304,18 @@
 }
 
 .project-tab-list {
-  display: flex;
   min-width: 0;
   flex: 1;
-  overflow: auto;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+
+.project-tab-track { display: flex; width: max-content; }
+.project-file-tab-name.preview { font-style: italic; }
+.project-file-tab-name .fui-Button__icon { font-size: 12px; }
+.project-tab-scroll { display: flex; flex-shrink: 0; }
+.project-tab-scroll .fui-Button { min-width: 24px; padding: 2px; }
+.project-empty-editor { margin: auto; color: var(--colorNeutralForeground3); }
 
 .project-file-tabs {
   flex-shrink: 0;
@@ -558,47 +565,99 @@
 
 .project-source-control { padding: 0 12px 8px; }
 
-.project-git-branch-header,
-.project-branch-actions,
-.project-branch-create {
+.project-git-branch-header {
   display: flex;
-  align-items: center;
-  gap: 4px;
+  align-items: stretch;
+  gap: 6px;
+  margin-block: 8px;
 }
 
-.project-git-branch-header .fui-Button:first-child {
+.project-git-branch-header .project-current-branch {
+  flex: 1;
+  justify-content: flex-start;
+  text-align: start;
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.project-git-root { overflow-wrap: anywhere; }
+.project-current-branch > span:not(.fui-Button__icon) {
+  display: grid;
+  padding-block: 4px;
+  gap: 2px;
+}
 
-.project-branch-dialog { max-width: min(760px, calc(100vw - 32px)); }
+.project-current-branch small {
+  color: var(--colorNeutralForeground3);
+  font-weight: 400;
+}
+
+.fui-DialogSurface.project-branch-dialog {
+  width: min(820px, calc(100vw - 32px));
+  max-width: none;
+}
+.project-branch-current {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-radius: var(--borderRadiusMedium);
+  background: var(--colorBrandBackground2);
+  padding: 10px 12px;
+  margin-block-end: 16px;
+  overflow-wrap: anywhere;
+}
 
 .project-branch-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 20px;
 }
 
+.project-branch-layout > section { min-width: 0; }
+.project-branch-layout h3 { font-size: 14px; margin: 0; }
 .project-branch-list {
   list-style: none;
-  margin: 0 0 8px;
-  padding: 0;
-  max-height: 280px;
+  display: grid;
+  gap: 4px;
+  margin: 8px 0;
+  padding: 4px;
+  max-height: 190px;
   overflow: auto;
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--borderRadiusMedium);
 }
 
 .project-branch-list .fui-Button {
   width: 100%;
-  justify-content: space-between;
+  justify-content: flex-start;
+  text-align: start;
   overflow-wrap: anywhere;
 }
 
-.project-branch-actions { flex-wrap: wrap; }
-.project-branch-create { align-items: end; margin-top: 12px; }
-.project-branch-create .fui-Field { flex: 1; min-width: 0; }
-.project-branch-graph { max-height: 390px; overflow: auto; }
+.project-branch-list .fui-Badge { margin-inline-start: auto; }
+.project-branch-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.project-branch-create {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--colorNeutralStroke2);
+}
+.project-branch-create .fui-Field { width: 100%; }
+.project-branch-create p { margin: 0; }
+.project-branch-graph {
+  background: var(--colorNeutralBackground2);
+  border-radius: var(--borderRadiusMedium);
+  padding: 12px;
+}
+.project-branch-graph .project-git-graph {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 390px;
+  overflow: auto;
+}
 
 .project-git-graph-label {
   display: flex;

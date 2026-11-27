@@ -440,11 +440,13 @@ export default function ProjectDocumentEditor({
   active,
   editorRef,
   onEdit,
+  onPdfPageChange,
 }: {
   file: ProjectDocument;
   active: boolean;
   editorRef(editor: ProjectTextEditor | null): void;
   onEdit(value: string): void;
+  onPdfPageChange?(page: number): void;
 }) {
   return (
     <section
@@ -465,7 +467,7 @@ export default function ProjectDocumentEditor({
         active && (
           <div className="project-asset-preview">
             <React.Suspense fallback={<p role="status">Opening PDF…</p>}>
-              <ProjectPdfViewer bytes={file.bytes} name={file.name} />
+              <ProjectPdfViewer bytes={file.bytes} name={file.name} onPageChange={onPdfPageChange} />
             </React.Suspense>
           </div>
         )

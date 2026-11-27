@@ -85,6 +85,7 @@ export default function ProjectSourceControl({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [branchesOpen, setBranchesOpen] = useState(false);
+  const [branchNotice, setBranchNotice] = useState('');
   const [clone, setClone] = useState<{ source: string; name: string }>();
   const [checkout, setCheckout] = useState<
     | { command: 'switch-branch'; branch: string }
@@ -244,6 +245,12 @@ export default function ProjectSourceControl({
       }
       apply(next);
       setCheckout(undefined);
+      if (change.command === 'switch-branch')
+        setBranchNotice(`Switched to ${next.branch}.`);
+      if (change.command === 'merge-branch')
+        setBranchNotice(
+          `Merge complete. ${next.branch} contains ${change.branch}.`,
+        );
       if (next.head !== before.head || next.branch !== before.branch)
         await refreshOpenFiles(next.root);
       window.dispatchEvent(new Event(projectFilesChanged));
@@ -486,17 +493,21 @@ export default function ProjectSourceControl({
             <>
               <div className="project-git-branch-header">
                 <Button
-                  appearance="subtle"
-                  size="small"
+                  className="project-current-branch"
+                  appearance="secondary"
                   icon={<BranchForkRegular />}
                   title="Manage branches"
                   disabled={busy}
                   onClick={() => {
                     setError('');
+                    setBranchNotice('');
                     setBranchesOpen(true);
                   }}
                 >
-                  {snapshot.branch}
+                  <span>
+                    <small>Current branch</small>
+                    <strong>{snapshot.branch}</strong>
+                  </span>
                 </Button>
                 <Menu>
                   <MenuTrigger>
@@ -540,9 +551,6 @@ export default function ProjectSourceControl({
                   </MenuPopover>
                 </Menu>
               </div>
-              <small className="project-git-root" title={snapshot.root}>
-                {snapshot.root}
-              </small>
               {snapshot.upstream && (
                 <div className="git-actions">
                   <small>{snapshot.upstream}</small>
@@ -698,6 +706,8 @@ export default function ProjectSourceControl({
           snapshot={snapshot}
           busy={busy}
           error={error}
+          notice={branchNotice}
+          announce={setBranchNotice}
           close={() => setBranchesOpen(false)}
           run={(operation) => {
             void run(operation);
@@ -705,6 +715,7 @@ export default function ProjectSourceControl({
           apply={apply}
           checkout={(command, branch) => {
             setError('');
+            setBranchNotice('');
             setCheckout(
               command === 'merge-branch'
                 ? { command, branch, into: snapshot.branch }
@@ -736,7 +747,7 @@ export default function ProjectSourceControl({
                   {checkout.command === 'merge-branch'
                     ? `Merge ${checkout.branch} into ${checkout.into}.`
                     : checkout.command === 'switch-branch'
-                    ? 'Switch this repository to ' + checkout.branch + '.'
+                  ? `Switch from ${snapshot.branch} to ${checkout.branch}.`
                     : 'Update this checkout from ' + snapshot.upstream + '.'}
                 </p>
                 {hasUnsaved && (
@@ -761,7 +772,15 @@ export default function ProjectSourceControl({
                   disabled={busy}
                   onClick={() => performCheckout(false)}
                 >
-                  {hasUnsaved ? 'Retain edits and continue' : 'Continue'}
+                  {hasUnsaved
+                    ? 'Keep edits and continue'
+                    : checkout.command === 'merge-branch'
+                    ? 'Merge branches'
+                    : checkout.command === 'switch-branch'
+                    ? 'Switch branch'
+                    : checkout.command === 'pull'
+                    ? 'Pull changes'
+                    : 'Sync changes'}
                 </Button>
                 <Button disabled={busy} onClick={() => setCheckout(undefined)}>
                   Cancel

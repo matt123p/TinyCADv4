@@ -381,6 +381,48 @@ export function registerProjectFiles({
     }
     if (operation === 'git')
       return runProjectGit(await resolve(folder, true), request.request);
+    if (operation === 'chat-list' || operation === 'chat-read') {
+      const { project, relative = '', offset = 0 } = request;
+      const parts = typeof relative === 'string' ? relative.split('/') : [];
+      const visible = (name) =>
+        name.toLowerCase() !== '.git' && !temporaryProjectFile.test(name);
+      if (
+        !openedRoots.has(project) ||
+        (relative === ''
+          ? operation !== 'chat-list'
+          : !parts.length || parts.some((name) =>
+              name === '.' || name === '..' || !validProjectName(name) || !visible(name)))
+      ) throw new Error('Choose a path inside the current project.');
+
+      const directory = operation === 'chat-list';
+      const target = path.join(project, relative);
+      if (!within(project, target, directory))
+        throw new Error('Choose a path inside the current project.');
+      if (!Number.isSafeInteger(offset) || offset < 0)
+        throw new Error('Invalid directory offset.');
+      let items;
+      try {
+        await resolve(target, directory);
+        if (!directory) return new Uint8Array(await readFile(target, 32 * 1024 * 1024));
+        items = await fs.readdir(target, { withFileTypes: true });
+      } catch (error) {
+        if (error.code) throw new Error('Could not open that project file or folder.');
+        throw error;
+      }
+      const entries = items
+        .filter((entry) => visible(entry.name) && validProjectName(entry.name) &&
+          (entry.isDirectory() || entry.isFile()))
+        .sort((a, b) => Number(b.isDirectory()) - Number(a.isDirectory()) ||
+          a.name.localeCompare(b.name));
+      const limit = 100;
+      return {
+        entries: entries.slice(offset, offset + limit).map((entry) => ({
+          path: relative ? `${relative}/${entry.name}` : entry.name,
+          kind: entry.isDirectory() ? 'folder' : 'file',
+        })),
+        nextOffset: offset + limit < entries.length ? offset + limit : null,
+      };
+    }
     if (operation === 'list') {
       const parent = await resolve(folder, true);
       return (await fs.readdir(parent, { withFileTypes: true }))

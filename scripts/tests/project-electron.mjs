@@ -173,7 +173,7 @@ try {
   await button('Refresh source control').click();
   await expect(button('Stage project files')).toBeDisabled();
   const initialBranch = git('branch', '--show-current');
-  await button(initialBranch).click();
+  await button(`Current branch ${initialBranch}`).click();
   await expect(page.getByRole('list', { name: 'Branch graph' })).toContainText(
     'Initial project',
   );
@@ -185,6 +185,26 @@ try {
     .getByRole('button', { name: 'Close' })
     .click();
   await activityBar().getByRole('button', { name: 'Files' }).click();
+
+  await open('Config.json');
+  await expect(tab('Config.json')).toHaveClass(/preview/);
+  await open('Parts.xml');
+  await expect(tab('Config.json')).toHaveCount(0);
+  await tab('Parts.xml').click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Pin', exact: true }).click();
+  await open('Config.json');
+  await expect(tab('Parts.xml')).toBeVisible();
+  await tab('Config.json').dblclick();
+  await open('Config.yaml');
+  await expect(tab('Config.json')).toBeVisible();
+  await tab('Config.yaml').click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Close All', exact: true }).click();
+  await expect(tab('Config.json')).toHaveCount(0);
+  await expect(tab('Parts.xml')).toBeVisible();
+  await button('Close Parts.xml').click();
+  await expect(page.getByText('Open a project file to get started.')).toBeVisible();
+  await menu('File', 'New', 'New Design');
+  await expect(tab('tCad1.dsn')).toBeVisible();
 
   const background = files().locator('.project-tree-background');
   await background.click({ button: 'right' });
@@ -353,8 +373,8 @@ try {
     await button(`Close ${name}`).click();
   }
 
-  await files().getByRole('button', { name: 'Divider.dzn' }).click();
-  await files().getByRole('button', { name: 'Charging.dzn' }).click();
+  await files().getByRole('button', { name: 'Divider.dzn' }).dblclick();
+  await files().getByRole('button', { name: 'Charging.dzn' }).dblclick();
   await expect(tab('Charging.dzn')).toHaveAttribute('aria-pressed', 'true');
   await expect(saveAll()).toBeVisible();
   await tab('Divider.dzn').click();

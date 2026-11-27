@@ -54,7 +54,7 @@ type Props = {
   root: ProjectLocation;
   active?: string;
   gitChanges?: ReadonlyMap<string, string>;
-  open(file: BrowserFile): Promise<void>;
+  open(file: BrowserFile, keepOpen?: boolean): Promise<void>;
   beforeChange(id: string, kind: 'relocate' | 'trash', newName?: string): void;
   relocated(previous: ProjectItem, next: ProjectItem, parent: string): void;
   removed(id: string): void;
@@ -654,6 +654,10 @@ export default function ProjectFileBrowser({
                           void open({ ...item, folder, ancestors }).catch(
                             report,
                           );
+                      }}
+                      onDoubleClick={() => {
+                        if (!item.folder && !item.unsupported)
+                          void open({ ...item, folder, ancestors }, true).catch(report);
                       }}
                     >
                       {item.folder ? (

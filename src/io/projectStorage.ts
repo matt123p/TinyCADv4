@@ -50,6 +50,8 @@ export type ProjectStorageRequest =
   | { operation: 'activate-launch'; ticket: string }
   | { operation: 'choose'; containProject?: string }
   | { operation: 'list'; folder: string; tree?: boolean }
+  | { operation: 'chat-list'; project: string; relative?: string; offset?: number }
+  | { operation: 'chat-read'; project: string; relative: string }
   | { operation: 'watch-folders'; folders: string[] }
   | { operation: 'read' | 'fingerprint' | 'folder-identity'; id: string }
   | {
@@ -114,6 +116,8 @@ export interface ProjectStorageResult {
   'open-recent-project-folder': ProjectLocation;
   choose: ProjectLocation | null;
   list: ProjectItem[];
+  'chat-list': { entries: { path: string; kind: 'file' | 'folder' }[]; nextOffset: number | null };
+  'chat-read': Uint8Array;
   'watch-folders': void;
   read: { data: Uint8Array; version: string };
   mkdir: ProjectLocation;

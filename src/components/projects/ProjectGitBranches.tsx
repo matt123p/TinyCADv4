@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Button,
+  Badge,
   Dialog,
   DialogActions,
   DialogBody,
@@ -10,6 +11,12 @@ import {
   Field,
   Input,
 } from '@fluentui/react-components';
+import {
+  AddRegular,
+  ArrowSwapRegular,
+  BranchForkRegular,
+  CheckmarkRegular,
+} from '@fluentui/react-icons';
 import type { GitCommit, GitSnapshot } from '../../io/projectGit';
 import { projectGit } from '../../io/projectGit';
 import ProjectGitGraph from './ProjectGitGraph';
@@ -20,6 +27,8 @@ export default function ProjectGitBranches({
   snapshot,
   busy,
   error,
+  notice,
+  announce,
   close,
   run,
   apply,
@@ -30,6 +39,8 @@ export default function ProjectGitBranches({
   snapshot: GitSnapshot;
   busy: boolean;
   error: string;
+  notice: string;
+  announce(message: string): void;
   close(): void;
   run(operation: () => Promise<void>): void;
   apply(snapshot: GitSnapshot): void;
@@ -63,7 +74,9 @@ export default function ProjectGitBranches({
       },
       (reason) => {
         if (active)
-          setGraphError(reason instanceof Error ? reason.message : String(reason));
+          setGraphError(
+            reason instanceof Error ? reason.message : String(reason),
+          );
       },
     );
     return () => {
@@ -80,8 +93,15 @@ export default function ProjectGitBranches({
         <DialogBody>
           <DialogTitle>Branches</DialogTitle>
           <DialogContent>
+            <div className="project-branch-current">
+              <BranchForkRegular />
+              <span>Current branch</span>
+              <strong>{snapshot.branch}</strong>
+            </div>
+            {notice && <p role="status">{notice}</p>}
             <div className="project-branch-layout">
-              <div>
+              <section aria-labelledby="project-local-branches">
+                <h3 id="project-local-branches">Local branches</h3>
                 <ul className="project-branch-list" aria-label="Local branches">
                   {localBranches.map((branch) => (
                     <li key={branch.name}>
@@ -90,11 +110,19 @@ export default function ProjectGitBranches({
                           selected === branch.name ? 'secondary' : 'subtle'
                         }
                         aria-pressed={selected === branch.name}
+                        disabled={busy}
+                        icon={
+                          snapshot.branch === branch.name ? (
+                            <CheckmarkRegular />
+                          ) : (
+                            <BranchForkRegular />
+                          )
+                        }
                         onClick={() => setSelected(branch.name)}
                       >
-                        {branch.name}
+                        <span>{branch.name}</span>
                         {snapshot.branch === branch.name && (
-                          <small>Current</small>
+                          <Badge appearance="tint">Current</Badge>
                         )}
                       </Button>
                     </li>
@@ -103,17 +131,19 @@ export default function ProjectGitBranches({
                 <div className="project-branch-actions">
                   <Button
                     size="small"
+                    icon={<ArrowSwapRegular />}
                     disabled={!canSelect}
                     onClick={() => checkout('switch-branch', selected)}
                   >
-                    Switch branch
+                    Switch to selected
                   </Button>
                   <Button
                     size="small"
+                    icon={<BranchForkRegular />}
                     disabled={!canMerge}
                     onClick={() => checkout('merge-branch', selected)}
                   >
-                    Merge into current branch
+                    Merge selected into current
                   </Button>
                 </div>
                 <form
@@ -123,6 +153,7 @@ export default function ProjectGitBranches({
                     if (busy || !hasCommits || !name.trim()) return;
                     run(async () => {
                       const branch = name.trim();
+                      announce('');
                       apply(
                         await projectGit(folder, {
                           command: 'create-branch',
@@ -131,26 +162,44 @@ export default function ProjectGitBranches({
                       );
                       setSelected(branch);
                       setName('');
+                      announce(`Created ${branch}.`);
                     });
                   }}
                 >
+                  <h3>Create a branch</h3>
+                  <p>
+                    {hasCommits ? (
+                      <>
+                        Starts from <strong>{snapshot.branch}</strong> and keeps
+                        it checked out.
+                      </>
+                    ) : (
+                      'Create the first commit before adding another branch.'
+                    )}
+                  </p>
                   <Field label="Branch name">
                     <Input
                       value={name}
+                      placeholder="e.g. revise-power-supply"
                       disabled={busy || !hasCommits}
                       onChange={(_, data) => setName(data.value)}
                     />
                   </Field>
                   <Button
                     type="submit"
-                    size="small"
+                    icon={<AddRegular />}
+                    appearance="primary"
                     disabled={busy || !hasCommits || !name.trim()}
                   >
                     Create branch
                   </Button>
                 </form>
-              </div>
-              <div className="project-branch-graph">
+              </section>
+              <section
+                className="project-branch-graph"
+                aria-labelledby="project-branch-graph-heading"
+              >
+                <h3 id="project-branch-graph-heading">Branch graph</h3>
                 {graphError ? (
                   <p role="alert">{graphError}</p>
                 ) : graph ? (
@@ -158,16 +207,17 @@ export default function ProjectGitBranches({
                     commits={graph}
                     snapshot={snapshot}
                     label="Branch graph"
+                    collapsible={false}
                   />
                 ) : (
                   <p role="status">Loading branch graph…</p>
                 )}
-              </div>
+              </section>
             </div>
             {error && <p role="alert">{error}</p>}
           </DialogContent>
           <DialogActions>
-            <Button disabled={busy} onClick={close}>
+            <Button appearance="secondary" disabled={busy} onClick={close}>
               Close
             </Button>
           </DialogActions>

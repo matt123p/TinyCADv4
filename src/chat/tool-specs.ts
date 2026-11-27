@@ -55,6 +55,18 @@ const spec = (
   properties: Record<string, unknown>,
   required: string[] = [],
 ): ToolSpec => ({ name, description, parameters: obj(properties, required) });
+export const projectToolSpecs = [
+  spec('list_project_files', 'List a folder inside the current project. Browse returned relative folder paths to see the project hierarchy.', {
+    path: str('Project-relative folder using forward slashes. Omit to list the project root.', 4096),
+    offset: int(0, 1000000),
+  }),
+  spec('read_project_file', 'Read a file inside the current project using a relative path. Supports source, CSV, Markdown, TinyCAD drawings and libraries, images and PDF pages. Use nextOffset to read more text and request a PDF page image when checking diagrams or pin tables.', {
+    path: str('Exact project-relative file path from list_project_files, using forward slashes.', 4096),
+    offset: int(0, 100000000),
+    page: int(1, 100000),
+    image: { type: 'boolean', description: 'Include a page image for a PDF.' },
+  }, ['path']),
+];
 export const toolSpecs: ToolSpec[] = [
   spec('search_spice_models', 'Search all locally bundled SPICE catalogs by part number, alias or family when the user requests SPICE support. Works in drawing and library mode. Search exact parts, known drop-in replacements and generic models. Returns descriptions, exact IDs, sources and terminal order.', {
     query: str('Part number, alias or device family', 200), ...spiceTarget,
@@ -375,11 +387,12 @@ export const toolSpecs: ToolSpec[] = [
   ),
   spec(
     'export_file',
-    'Only when the user explicitly requests a download: create a real downloadable native drawing (.dsn), standalone component XML, or SQLite .TCLib library. The file is attached in chat; never invent download links. Does not overwrite any existing file.',
+    'Create a downloadable native drawing, component XML or SQLite .TCLib when explicitly requested or when the user asks to create a symbol and there is no open editing target. Does not overwrite any file.',
     {
       kind: choice('drawing', 'component', 'library'),
       filename: str('Download filename', 128),
       definition,
+      componentId: str('Retained component ID for component or library export', 128),
       name: str('Library component name', 128),
       reference: str('Reference prefix, e.g. U?', 32),
       description: str('Function and verified package', 1024),

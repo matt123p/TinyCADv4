@@ -230,7 +230,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     );
   };
 
-  const editor = ({ projectSidebar, status, tabs, document, documentToolbar, saveBlocked }: ProjectWorkspaceLayout) => (
+  const editor = ({ projectSidebar, status, tabs, document, documentToolbar, saveBlocked, chatProject }: ProjectWorkspaceLayout) => (
     <div
       onKeyDown={handleKeyDown}
       className={projectSidebar ? 'page-container project-mode' : 'page-container'}
@@ -250,7 +250,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       )}
       {process.env.TARGET_SYSTEM === 'electron' && ChatPanel && (
         <Suspense fallback={null}>
-          <ChatPanel open={chatOpen} onClose={closeChat} />
+          <ChatPanel key={chatProject?.root.id ?? 'single'} open={chatOpen} onClose={closeChat} project={chatProject} />
         </Suspense>
       )}
       <div className="mid-container">

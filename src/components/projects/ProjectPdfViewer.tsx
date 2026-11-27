@@ -10,14 +10,20 @@ import type {
 export default function ProjectPdfViewer({
   bytes,
   name,
+  onPageChange,
 }: {
   bytes: Uint8Array;
   name: string;
+  onPageChange?(page: number): void;
 }) {
   const canvas = useRef<HTMLCanvasElement>();
   const [pdf, setPdf] = useState<PDFDocumentProxy>();
   const [page, setPage] = useState(1);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    onPageChange?.(page);
+  }, [page, onPageChange]);
 
   useEffect(() => {
     let active = true;

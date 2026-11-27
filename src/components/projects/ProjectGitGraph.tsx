@@ -38,10 +38,12 @@ export default function ProjectGitGraph({
   commits,
   snapshot,
   label = 'Commit graph',
+  collapsible = true,
 }: {
   commits: GitCommit[];
   snapshot: GitSnapshot;
   label?: string;
+  collapsible?: boolean;
 }) {
   const rows = graphRows(commits);
   const width = x(
@@ -64,9 +66,8 @@ export default function ProjectGitGraph({
       ))}
     </>
   );
-  return (
-    <details className="project-git-group" open>
-      <summary>{label === 'Commit graph' ? 'Commit Graph' : label}</summary>
+  const graph = (
+    <>
       {!rows.length && <p>No commits yet.</p>}
       <ol className="project-git-graph" aria-label={label}>
         {rows.map(({ commit, before, after, current, node, parents }) => (
@@ -110,6 +111,12 @@ export default function ProjectGitGraph({
           </li>
         ))}
       </ol>
-    </details>
+    </>
   );
+  return collapsible ? (
+    <details className="project-git-group" open>
+      <summary>Commit Graph</summary>
+      {graph}
+    </details>
+  ) : graph;
 }

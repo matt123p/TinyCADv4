@@ -1,8 +1,54 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { recentProjectFolders, registerProjectFiles } from '../../electron/projectFiles.js';
+
+test('chat can browse and read only paths within the selected project', async (t) => {
+  const parent = path.resolve('.tmp');
+  await mkdir(parent, { recursive: true });
+  const area = await mkdtemp(path.join(parent, 'chat-project-'));
+  t.after(() => rm(area, { recursive: true, force: true }));
+  const project = path.join(area, 'Project');
+  const outside = path.join(area, 'Outside');
+  await Promise.all([
+    mkdir(path.join(project, 'Docs'), { recursive: true }),
+    mkdir(path.join(project, '.git'), { recursive: true }),
+    mkdir(outside),
+  ]);
+  await Promise.all([
+    writeFile(path.join(project, 'Docs', 'Pins.txt'), 'Pin 1: VCC'),
+    writeFile(path.join(project, '.git', 'config'), 'git metadata'),
+    writeFile(path.join(outside, 'Private.txt'), 'outside data'),
+    symlink(outside, path.join(project, 'Linked'), process.platform === 'win32' ? 'junction' : 'dir'),
+  ]);
+  const mainFrame = {};
+  const webContents = { mainFrame };
+  let handler;
+  let selected = project;
+  registerProjectFiles({
+    ipcMain: { handle: (_, callback) => { handler = callback; } },
+    getWindow: () => ({ webContents }),
+    dialog: { showOpenDialog: async () => ({ canceled: false, filePaths: [selected] }) },
+    store: { get: (_, fallback) => fallback },
+    documents: area,
+  });
+  const request = (payload) => handler({ sender: webContents, senderFrame: mainFrame }, payload);
+  await assert.rejects(request({ operation: 'chat-list', project }), /inside the current project/);
+  await request({ operation: 'choose-project-folder' });
+  selected = outside;
+  await request({ operation: 'choose-project-folder' });
+  assert.deepEqual(await request({ operation: 'chat-list', project }), {
+    entries: [{ path: 'Docs', kind: 'folder' }], nextOffset: null,
+  });
+  assert.deepEqual((await request({ operation: 'chat-list', project, relative: 'Docs' })).entries,
+    [{ path: 'Docs/Pins.txt', kind: 'file' }]);
+  const data = await request({ operation: 'chat-read', project, relative: 'Docs/Pins.txt' });
+  assert.equal(new TextDecoder().decode(data), 'Pin 1: VCC');
+  for (const relative of ['../Outside/Private.txt', path.join(outside, 'Private.txt'), '.git/config', 'Docs\\Pins.txt'])
+    await assert.rejects(request({ operation: 'chat-read', project, relative }), /inside the current project/);
+  await assert.rejects(request({ operation: 'chat-read', project, relative: 'Linked/Private.txt' }), /Symbolic links/);
+});
 
 test('remembers export destinations per drawing and format in the project settings', async (t) => {
   const parent = path.resolve('.tmp');

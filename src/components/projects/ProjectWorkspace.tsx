@@ -7,12 +7,10 @@ import {
   ArrowRedoRegular,
   ArrowUndoRegular,
   BranchForkRegular,
-  Dismiss12Regular,
   DismissRegular,
   FolderOpenRegular,
   FolderRegular,
   LibraryRegular,
-  SaveCopyRegular,
   SaveRegular,
 } from '@fluentui/react-icons';
 import { isDrawingFile } from '../../../shared/drawingFiles';
@@ -74,6 +72,8 @@ import type { ProjectTextEditor } from './ProjectDocumentEditor';
 import ProjectFileBrowser from './ProjectFileBrowser';
 import type { BrowserFile } from './ProjectFileBrowser';
 import ProjectSourceControl from './ProjectSourceControl';
+import ProjectFileTabs from './ProjectFileTabs';
+import type { ChatProject } from '../../chat/project-context';
 
 const account = '';
 const pathSeparator = (path: string) => (path.includes('\\') ? '\\' : '/');
@@ -105,6 +105,7 @@ export type ProjectWorkspaceLayout = {
   tabs?: React.ReactNode;
   document?: React.ReactNode;
   documentToolbar?: React.ReactNode;
+  chatProject?: ChatProject;
   saveBlocked?: boolean;
 };
 
@@ -115,7 +116,6 @@ type Tab = {
   name: string;
   dirty: boolean;
   select(): void;
-  close(): void;
   location?: ProjectTabLocation;
 };
 
@@ -143,6 +143,8 @@ export default function ProjectWorkspace({
         current.altStore.standardLibraryNavigation &&
       previous.docStore.present.drawingVersion ===
         current.docStore.present.drawingVersion &&
+      previous.docStore.present.view.selected_sheet ===
+        current.docStore.present.view.selected_sheet &&
       activeSchematicTabKey(previous) === activeSchematicTabKey(current),
   );
   const activeKey = activeSchematicTabKey(state);
@@ -157,10 +159,14 @@ export default function ProjectWorkspace({
   const [gitSnapshot, setGitSnapshot] = useState<GitSnapshot>();
   const [saving, setSaving] = useState(false);
   const [textEditor, setTextEditor] = useState<ProjectTextEditor>(null);
+  const [pdfPage, setPdfPage] = useState(1);
   const saveLock = useRef(false);
   const transition = useRef(false);
   const opening = useRef(0);
   const [order, setOrder] = useState<string[]>([]);
+  const [pinned, setPinned] = useState<string[]>([]);
+  const [preview, setPreview] = useState<string>();
+  const previewKey = useRef<string>();
   const documents = useProjectDocuments();
   const refreshDocuments = documents.refresh;
 
@@ -190,9 +196,39 @@ export default function ProjectWorkspace({
     setError(error instanceof Error ? error.message : String(error));
   }
 
-  function clearDrawing() {
-    dispatch(actionSetDocument(blank(), 'tCad1.dsn', null, null));
+  function clearDrawing(empty = false) {
+    const drawing = blank();
+    dispatch(actionSetDocument(
+      empty ? { ...drawing, documentId: '' } : drawing,
+      'tCad1.dsn',
+      null,
+      null,
+    ));
     dispatch(ActionCreators.clearHistory());
+  }
+
+  function markPreview(key?: string) {
+    previewKey.current = key;
+    setPreview(key);
+  }
+
+  function keepOpen(key: string) {
+    if (previewKey.current === key) markPreview();
+  }
+
+  function replaceTabKey(previous: string, next: string) {
+    const replace = (keys: string[]) =>
+      keys.includes(previous)
+        ? [...new Set(keys.map((key) => key === previous ? next : key))]
+        : keys;
+    setOrder(replace);
+    setPinned(replace);
+    if (previewKey.current === previous) markPreview(next);
+  }
+
+  function forgetClosed(keys: ReadonlySet<string>) {
+    if (previewKey.current && keys.has(previewKey.current)) markPreview();
+    setPinned((pinned) => pinned.filter((key) => !keys.has(key)));
   }
 
   async function createDesign(location: ProjectLocation) {
@@ -251,31 +287,53 @@ export default function ProjectWorkspace({
     dispatch(activateSchematicTab(key));
   }
 
-  async function open(file: BrowserFile) {
-    if (saveLock.current || store.getState().altStore.saveInProgress) return;
+  async function open(
+    file: BrowserFile,
+    mode: 'restore' | 'preview' | 'keep' = 'restore',
+  ) {
+    const blocked = () =>
+      saveLock.current ||
+      store.getState().altStore.saveInProgress ||
+      (mode !== 'restore' && (transition.current || documents.isSaving()));
+    if (blocked()) return;
     const epoch = ++opening.current;
     setError('');
     if (/\.tclib$/i.test(file.name)) {
       await projectRequest({ operation: 'edit-library', id: file.id });
       return;
     }
-    if (!isDrawingFile(file.name)) {
-      await documents.open(file);
+    const canOpen = () => epoch === opening.current && !blocked();
+    const schematic = isDrawingFile(file.name);
+    const key = schematic ? schematicFileTabKey(file) : 'file:' + file.id;
+    const existing = schematic
+      ? openSchematicTabs(store.getState()).some((entry) => entry.key === key)
+      : documents.has(file.id);
+    if (schematic) {
+      if (existing) activate(key);
+      else {
+        const drawing = await readProjectDrawing(file);
+        if (!canOpen()) return;
+        documents.select();
+        dispatch(drawing);
+        dispatch(ActionCreators.clearHistory());
+      }
+    } else if (!(await documents.open(file, canOpen)) || !canOpen()) {
       return;
     }
-    documents.select();
-    const key = schematicFileTabKey(file);
-    if (
-      openSchematicTabs(store.getState()).some((entry) => entry.key === key)
-    ) {
-      activate(key);
-      return;
+    if (mode === 'keep') keepOpen(key);
+    if (mode !== 'preview' || existing) return;
+    const replaced = previewKey.current;
+    if (replaced && replaced !== key) {
+      if (replaced.startsWith('file:')) {
+        documents.removeWhere((id) => id === replaced.slice(5), false);
+      } else {
+        closeSchematics(new Set([replaced]));
+        if (!schematic) documents.select(file.id);
+      }
+      replaceTabKey(replaced, key);
+    } else {
+      markPreview(key);
     }
-    const drawing = await readProjectDrawing(file);
-    if (epoch !== opening.current || store.getState().altStore.saveInProgress)
-      return;
-    dispatch(drawing);
-    dispatch(ActionCreators.clearHistory());
   }
 
   async function enter(next: ProjectLocation) {
@@ -287,6 +345,8 @@ export default function ProjectWorkspace({
     transition.current = true;
     setRestoring(true);
     setError('');
+    setPinned([]);
+    markPreview();
     if (root) {
       dispatch(enableSchematicTabs(false));
       clearDrawing();
@@ -303,6 +363,15 @@ export default function ProjectWorkspace({
     saveStartupMode('project');
     try {
       const session = readProjectTabSession(next.id, account);
+      const initial = store.getState();
+      const initialKey = activeSchematicTabKey(initial);
+      if (
+        session && initialKey && !initial.altStore.file.id &&
+        initial.docStore.present.drawingVersion === initial.altStore.savedVersion
+      ) {
+        clearDrawing(true);
+        dispatch(removeSchematicTab(initialKey));
+      }
       const restored: {
         key: string;
         kind: 'drawing' | 'file';
@@ -363,6 +432,8 @@ export default function ProjectWorkspace({
         }
       }
       setOrder(restored.map(({ key }) => key));
+      setPinned(restored.filter(({ index }) => session?.pinned?.includes(index)).map(({ key }) => key));
+      markPreview(restored.find(({ index }) => index === session?.preview)?.key);
       const selected =
         restored.find(({ index }) => index === session?.active) ??
         restored.at(-1);
@@ -384,26 +455,20 @@ export default function ProjectWorkspace({
     projectRoot.current = undefined;
     setRoot(undefined);
     setOrder([]);
+    setPinned([]);
+    markPreview();
     setError('');
     saveStartupMode('single');
   }
 
-  function closeDrawing(key: string) {
+  function closeSchematics(keys: ReadonlySet<string>) {
     const current = store.getState();
-    const tabs = openSchematicTabs(current);
-    const closing = tabs.find((entry) => entry.key === key);
-    if (!closing || saveLock.current || current.altStore.saveInProgress) return;
-    if (
-      schematicTabDirty(closing.tab) &&
-      !window.confirm(`Discard changes to ${closing.tab.file.name}?`)
-    )
-      return;
-    if (activeSchematicTabKey(current) === key) {
-      const other = tabs.filter((entry) => entry.key !== key).at(-1);
-      if (other) activate(other.key);
-      else clearDrawing();
+    if (keys.has(activeSchematicTabKey(current))) {
+      const other = openSchematicTabs(current).findLast(({ key }) => !keys.has(key));
+      if (other) dispatch(activateSchematicTab(other.key));
+      else clearDrawing(true);
     }
-    dispatch(removeSchematicTab(key));
+    for (const key of keys) dispatch(removeSchematicTab(key));
   }
 
   function beforeFileChange(
@@ -507,31 +572,31 @@ export default function ProjectWorkspace({
     );
     if (Object.keys(drawings).length) dispatch(relocateSchematicTabs(drawings));
     if (Object.keys(supporting).length) documents.relocate(supporting);
-    setOrder((keys) =>
-      keys.map((key) =>
-        drawings[key]
-          ? schematicFileTabKey(drawings[key])
-          : key.startsWith('file:') && supporting[key.slice(5)]
-          ? 'file:' + supporting[key.slice(5)].id
-          : key,
-      ),
-    );
+    const relocatedKey = (key: string) =>
+      drawings[key]
+        ? schematicFileTabKey(drawings[key])
+        : key.startsWith('file:') && supporting[key.slice(5)]
+        ? 'file:' + supporting[key.slice(5)].id
+        : key;
+    setOrder((keys) => keys.map(relocatedKey));
+    setPinned((keys) => keys.map(relocatedKey));
+    if (previewKey.current) markPreview(relocatedKey(previewKey.current));
   }
 
   function closeRemovedFiles(id: string) {
-    const current = store.getState();
-    const tabs = openSchematicTabs(current);
-    const removed = tabs.filter(
+    const removed = openSchematicTabs(store.getState()).filter(
       ({ tab: { file } }) =>
         typeof file.id === 'string' && isInside(id, file.id),
     );
-    if (removed.some(({ key }) => key === activeSchematicTabKey(current))) {
-      const remaining = tabs.filter((tab) => !removed.includes(tab)).at(-1);
-      if (remaining) activate(remaining.key);
-      else clearDrawing();
-    }
-    for (const { key } of removed) dispatch(removeSchematicTab(key));
-    documents.removeWhere((file) => isInside(id, file));
+    const drawingKeys = new Set(removed.map(({ key }) => key));
+    const removedFile = (file: string) => isInside(id, file);
+    closeSchematics(drawingKeys);
+    documents.removeWhere(removedFile);
+    if (documents.active && !removedFile(documents.active)) documents.select(documents.active);
+    forgetClosed(new Set([
+      ...drawingKeys,
+      ...documents.files.filter((file) => removedFile(file.id)).map((file) => 'file:' + file.id),
+    ]));
   }
 
   async function saveAll() {
@@ -572,6 +637,8 @@ export default function ProjectWorkspace({
                 tab.history.present.drawingVersion,
               ),
             );
+            const savedKey = schematicFileTabKey({ ...tab.file, id: meta.id, name: meta.name });
+            if (savedKey && savedKey !== key) replaceTabKey(key, savedKey);
             if (!tab.file.id && typeof meta.id === 'string') {
               await bindDrawingExports({
                 project: root?.id,
@@ -688,8 +755,9 @@ export default function ProjectWorkspace({
         event.preventDefault();
         return;
       }
-      if (!documents.active) return;
+      if (!documents.active && (!root || activeSchematicTabKey(store.getState()))) return;
       event.preventDefault();
+      if (!documents.active) return;
       if (event instanceof CustomEvent && event.detail === 'file-save-as') return;
       if (!documents.isSaving())
         void documents.save(documents.active).catch(report);
@@ -724,11 +792,20 @@ export default function ProjectWorkspace({
   });
 
   useEffect(() => {
-    let previous = activeSchematicTabKey(store.getState());
+    let previousState = store.getState();
     return store.subscribe(() => {
-      const current = activeSchematicTabKey(store.getState());
+      const next = store.getState();
+      const previous = activeSchematicTabKey(previousState);
+      const current = activeSchematicTabKey(next);
+      if (current && previewKey.current === current &&
+          next.docStore.present.drawingVersion !== next.altStore.savedVersion)
+        keepOpen(current);
+      const previousDrawing = previousState.docStore.present.drawing;
+      previousState = next;
       if (current === previous) return;
-      previous = current;
+      if (previous && current && previousDrawing === next.docStore.present.drawing) {
+        replaceTabKey(previous, current);
+      }
       opening.current++;
       documents.select();
     });
@@ -740,7 +817,6 @@ export default function ProjectWorkspace({
         name: tab.file.name,
         dirty: schematicTabDirty(tab),
         select: () => activate(key),
-        close: () => closeDrawing(key),
         location: drawingLocation(tab.file, root.id),
       }))
     : [];
@@ -754,13 +830,6 @@ export default function ProjectWorkspace({
         select: () => {
           opening.current++;
           documents.select(file.id);
-        },
-        close: () => {
-          if (
-            !dirtyProjectDocument(file) ||
-            window.confirm(`Discard changes to ${file.name}?`)
-          )
-            documents.close(file.id);
         },
         location: {
           kind: 'file',
@@ -776,13 +845,49 @@ export default function ProjectWorkspace({
     ...allTabs.filter(({ key }) => !order.includes(key)),
   ];
   const selection = documents.active ? 'file:' + documents.active : activeKey;
+
+  function closeTabs(keys: string[]) {
+    const current = store.getState();
+    if (transition.current || saveLock.current || current.altStore.saveInProgress || documents.isSaving()) return;
+    const closing = new Set(keys);
+    const dirty = tabs.filter((tab) => closing.has(tab.key) && tab.dirty);
+    if (dirty.length && !window.confirm(
+      `Discard unsaved changes in ${dirty.map(({ name }) => name).join(', ')}?`,
+    )) return;
+    const index = tabs.findIndex(({ key }) => key === selection);
+    const next = closing.has(selection)
+      ? tabs.slice(index + 1).find(({ key }) => !closing.has(key)) ??
+        tabs.slice(0, index).findLast(({ key }) => !closing.has(key))
+      : tabs[index];
+    opening.current++;
+    closeSchematics(new Set(keys.filter((key) => !key.startsWith('file:'))));
+    documents.removeWhere((id) => closing.has('file:' + id), false);
+    forgetClosed(closing);
+    if (next) next.select();
+    else documents.select();
+  }
+
+  function moveTab(index: number, offset: -1 | 1) {
+    const keys = tabs.map(({ key }) => key);
+    const target = index + offset;
+    if (!keys[target]) return;
+    [keys[index], keys[target]] = [keys[target], keys[index]];
+    setOrder(keys);
+  }
+
+  function togglePin(key: string) {
+    keepOpen(key);
+    setPinned((keys) => keys.includes(key) ? keys.filter((id) => id !== key) : [...keys, key]);
+  }
+
   const tabOrder = JSON.stringify(tabs.map(({ key }) => key));
+  const restorable = tabs.filter(({ location }) => location);
   const cached = JSON.stringify(
-    tabs.filter(({ location }) => location).map(({ location }) => location),
+    restorable.map(({ location }) => location),
   );
-  const activeIndex = tabs
-    .filter(({ location }) => location)
-    .findIndex(({ key }) => key === selection);
+  const activeIndex = restorable.findIndex(({ key }) => key === selection);
+  const previewIndex = restorable.findIndex(({ key }) => key === preview);
+  const pinnedIndices = JSON.stringify(restorable.flatMap(({ key }, index) => pinned.includes(key) ? [index] : []));
 
   useEffect(() => {
     setOrder(JSON.parse(tabOrder));
@@ -792,8 +897,10 @@ export default function ProjectWorkspace({
       writeProjectTabSession(root.id, account, {
         tabs: JSON.parse(cached),
         active: activeIndex >= 0 ? activeIndex : undefined,
+        preview: previewIndex >= 0 ? previewIndex : undefined,
+        pinned: pinnedIndices === '[]' ? undefined : JSON.parse(pinnedIndices),
       });
-  }, [root, restoring, cached, activeIndex]);
+  }, [root, restoring, cached, activeIndex, previewIndex, pinnedIndices]);
 
   const selectedId =
     documents.active ??
@@ -804,6 +911,13 @@ export default function ProjectWorkspace({
   const openDocument = documents.files.find(
     ({ id }) => id === documents.active,
   );
+  const sheet = state.docStore.present.view.selected_sheet;
+  const editor = openDocument?.kind ?? (root && !tabs.length
+    ? 'empty'
+    : sheet === -1 ? 'bom' : sheet < -1 ? 'web' : 'design');
+  useEffect(() => {
+    window.electronAPI?.setEditorMenuState?.({ project: !!root, editor });
+  }, [!!root, editor]);
   const saveAllAction = root && {
     run: () => {
       void saveAll().catch(report);
@@ -820,11 +934,11 @@ export default function ProjectWorkspace({
   }
 
   function selectPanel(next: ProjectPanel) {
-    setShowSidebar(next !== panel || !showSidebar);
     setPanel(next);
   }
 
   return children({
+    chatProject: root && { root, active: openDocument, pdfPage },
     projectSidebar: root && {
       visible: showSidebar,
       activityBar: (
@@ -899,7 +1013,7 @@ export default function ProjectWorkspace({
               key={root.id}
               root={root}
               active={selectedId}
-              open={open}
+              open={(file, keep) => open(file, keep ? 'keep' : 'preview')}
               report={report}
               gitChanges={
                 gitSnapshot &&
@@ -959,64 +1073,29 @@ export default function ProjectWorkspace({
       <p role="status">Restoring project tabs…</p>
     ) : undefined,
     tabs: root && (
-      <div className="project-file-tabs" aria-label="Open files">
-        <div className="project-tab-list">
-          {tabs.map((tab) => {
-            const selected = selection === tab.key;
-            const appearance = selected ? 'primary' : 'subtle';
-            return (
-              <div
-                className={selected ? 'project-file-tab selected' : 'project-file-tab'}
-                key={tab.key}
-              >
-                <Button
-                  size="small"
-                  className="project-file-tab-name"
-                  appearance={appearance}
-                  aria-pressed={selected}
-                  disabled={restoring || saving}
-                  onClick={tab.select}
-                >
-                  {tab.name}
-                  {tab.dirty ? ' •' : ''}
-                </Button>
-                <Button
-                  size="small"
-                  className="project-file-tab-close"
-                  appearance={appearance}
-                  icon={<Dismiss12Regular />}
-                  aria-label={`Close ${tab.name}`}
-                  title={`Close ${tab.name}`}
-                  disabled={restoring || saving}
-                  onClick={tab.close}
-                />
-              </div>
-            );
-          })}
-        </div>
-        <Button
-          size="small"
-          appearance="subtle"
-          className="project-save-all"
-          icon={<SaveCopyRegular />}
-          title="Save All"
-          disabled={saveAllAction.disabled}
-          onClick={saveAllAction.run}
-        >
-          Save All
-        </Button>
-      </div>
+      <ProjectFileTabs
+        tabs={tabs}
+        selection={selection}
+        preview={preview}
+        pinned={pinned}
+        disabled={saveAllAction.disabled}
+        saveAll={saveAllAction.run}
+        closeTabs={closeTabs}
+        moveTab={moveTab}
+        keepOpen={keepOpen}
+        togglePin={togglePin}
+      />
     ),
     saveBlocked: saveAllAction?.disabled,
-    documentToolbar: root && openDocument && (
+    documentToolbar: root && (openDocument || !tabs.length) && (
       <>
         <ToolbarButton
           icon={<SaveRegular />}
           aria-label={t('toolbar.save')}
           title={t('toolbar.save')}
-          disabled={!dirtyProjectDocument(openDocument) || saveAllAction.disabled}
+          disabled={!openDocument || !dirtyProjectDocument(openDocument) || saveAllAction.disabled}
           onClick={() => {
-            void documents.save(openDocument.id).catch(report);
+            if (openDocument) void documents.save(openDocument.id).catch(report);
           }}
         />
         <EditorToolbarDivider />
@@ -1036,15 +1115,21 @@ export default function ProjectWorkspace({
         />
       </>
     ),
-    document: root && documents.files.length > 0 && (
-      <div className="project-document-area" hidden={!openDocument}>
+    document: root && (documents.files.length > 0 || !tabs.length) && (
+      <div className="project-document-area" hidden={!openDocument && !!tabs.length}>
+        {!tabs.length && <p className="project-empty-editor">Open a project file to get started.</p>}
         {documents.files.map((file) => (
           <ProjectDocumentEditor
             key={file.id}
             file={file}
             active={file === openDocument}
             editorRef={setTextEditor}
-            onEdit={(value) => documents.edit(file.id, value)}
+            onPdfPageChange={setPdfPage}
+            onEdit={(value) => {
+              if (file.kind === 'text' && file.value !== value)
+                keepOpen('file:' + file.id);
+              documents.edit(file.id, value);
+            }}
           />
         ))}
       </div>

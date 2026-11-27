@@ -40,6 +40,7 @@ function queueProjectOpen(filename) {
   else open();
 }
 let isLibraryMode = false;
+let editorMenuState = { project: false, editor: 'design' };
 let viewMenuState = { hasExampleExplanation: false, exampleExplanationVisible: false, simulationPanelVisible: false };
 let menuTranslations = {};
 let refreshMenu = () => {};
@@ -139,6 +140,12 @@ function createWindow({ openAbout = false } = {}) {
   });
 
   function updateMenu() {
+    const { project, editor } = editorMenuState;
+    const design = editor === 'design' && !isLibraryMode;
+    const canvas = editor === 'design';
+    const editable = canvas || editor === 'text';
+    const canSave = editable || editor === 'bom';
+    const canSaveAs = canvas || editor === 'bom';
     const recentFiles = store.get('recentFiles') || [];
     const recentMenu = recentFiles.map(file => ({
       label: path.basename(file),
@@ -177,29 +184,29 @@ function createWindow({ openAbout = false } = {}) {
           { label: getMenuLabel('open', 'Open'), accelerator: 'CmdOrCtrl+O', click: () => mainWindow.webContents.send('menu-command', 'file-open') },
           { label: 'Open Project Folder…', click: () => mainWindow.webContents.send('menu-command', 'file-open-project-folder') },
           { label: 'Recent Projects', submenu: recentProjects.length ? recentProjects : [{ label: 'No Recent Projects', enabled: false }] },
-          { label: 'Close Project', click: () => mainWindow.webContents.send('menu-command', 'file-close-project') },
+          { label: 'Close Project', enabled: project, click: () => mainWindow.webContents.send('menu-command', 'file-close-project') },
           ...drawingOpenMenu(getMenuLabel, recentMenu, command => mainWindow.webContents.send('menu-command', command)),
-          { label: getMenuLabel('save', 'Save'), accelerator: 'CmdOrCtrl+S', click: () => mainWindow.webContents.send('menu-command', 'file-save') },
-          { label: 'Save All', click: () => mainWindow.webContents.send('menu-command', 'file-save-all') },
-          { label: getMenuLabel('saveAs', 'Save As...'), accelerator: 'CmdOrCtrl+Shift+S', click: () => mainWindow.webContents.send('menu-command', 'file-save-as') },
-          { label: getMenuLabel('saveWithoutResults', 'Save without results...'), click: () => mainWindow.webContents.send('menu-command', 'file-save-without-results') },
+          { label: getMenuLabel('save', 'Save'), accelerator: 'CmdOrCtrl+S', enabled: canSave, click: () => mainWindow.webContents.send('menu-command', 'file-save') },
+          ...(project ? [{ label: 'Save All', click: () => mainWindow.webContents.send('menu-command', 'file-save-all') }] : []),
+          { label: getMenuLabel('saveAs', 'Save As...'), accelerator: 'CmdOrCtrl+Shift+S', enabled: canSaveAs, click: () => mainWindow.webContents.send('menu-command', 'file-save-as') },
+          { label: getMenuLabel('saveWithoutResults', 'Save without results...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'file-save-without-results') },
           { type: 'separator' },
           {
             label: getMenuLabel('import', 'Import'),
             submenu: [
-              { label: getMenuLabel('importImage', 'Image...'), click: () => mainWindow.webContents.send('menu-command', 'import-image') },
-              { label: getMenuLabel('importKicadSymbols', 'KiCad Symbols...'), click: () => mainWindow.webContents.send('menu-command', 'import-kicad-symbols') },
+              { label: getMenuLabel('importImage', 'Image...'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'import-image') },
+              { label: getMenuLabel('importKicadSymbols', 'KiCad Symbols...'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'import-kicad-symbols') },
             ],
           },
           {
             label: getMenuLabel('export', 'Export'),
             submenu: [
-              { label: getMenuLabel('exportSvg', 'Export to SVG'), click: () => mainWindow.webContents.send('menu-command', 'file-export-svg') },
-              { label: getMenuLabel('exportPdf', 'Export to PDF'), click: () => mainWindow.webContents.send('menu-command', 'file-export-pdf') },
+              { label: getMenuLabel('exportSvg', 'Export to SVG'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'file-export-svg') },
+              { label: getMenuLabel('exportPdf', 'Export to PDF'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'file-export-pdf') },
             ],
           },
           { type: 'separator' },
-          { label: getMenuLabel('print', 'Print'), accelerator: 'CmdOrCtrl+P', click: () => mainWindow.webContents.send('menu-command', 'file-print') },
+          { label: getMenuLabel('print', 'Print'), accelerator: 'CmdOrCtrl+P', enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'file-print') },
           { type: 'separator' },
           isMac ? { role: 'close' } : { role: 'quit' }
         ]
@@ -216,38 +223,38 @@ function createWindow({ openAbout = false } = {}) {
           { role: 'delete' },
           { role: 'selectAll' },
           { type: 'separator' },
-          { label: getMenuLabel('rotateLeft', 'Rotate Left'), click: () => mainWindow.webContents.send('menu-command', 'edit-rotate-left') },
-          { label: getMenuLabel('rotateRight', 'Rotate Right'), click: () => mainWindow.webContents.send('menu-command', 'edit-rotate-right') },
-          { label: getMenuLabel('flipHorizontal', 'Flip Horizontal'), click: () => mainWindow.webContents.send('menu-command', 'edit-flip-h') },
-          { label: getMenuLabel('flipVertical', 'Flip Vertical'), click: () => mainWindow.webContents.send('menu-command', 'edit-flip-v') }
+          { label: getMenuLabel('rotateLeft', 'Rotate Left'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'edit-rotate-left') },
+          { label: getMenuLabel('rotateRight', 'Rotate Right'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'edit-rotate-right') },
+          { label: getMenuLabel('flipHorizontal', 'Flip Horizontal'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'edit-flip-h') },
+          { label: getMenuLabel('flipVertical', 'Flip Vertical'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'edit-flip-v') }
         ]
       },
       {
         label: getMenuLabel('view', 'View'),
-        submenu: drawingViewMenu(getMenuLabel, viewMenuState, isLibraryMode,
+        submenu: drawingViewMenu(getMenuLabel, { ...viewMenuState, canvas }, isLibraryMode,
           command => mainWindow.webContents.send('menu-command', command))
       },
       ...(isLibraryMode ? [] : [{
         label: getMenuLabel('tools', 'Tools'),
         submenu: [
-          { label: getMenuLabel('autoLayout', 'Auto-layout'), click: () => mainWindow.webContents.send('menu-command', 'tools-auto-layout') },
-          { label: getMenuLabel('annotateSymbols', 'Annotate Symbols...'), click: () => mainWindow.webContents.send('menu-command', 'tools-annotate') },
-          { label: getMenuLabel('billOfMaterials', 'Bill of Materials...'), click: () => mainWindow.webContents.send('menu-command', 'tools-bom') },
+          { label: getMenuLabel('autoLayout', 'Auto-layout'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-auto-layout') },
+          { label: getMenuLabel('annotateSymbols', 'Annotate Symbols...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-annotate') },
+          { label: getMenuLabel('billOfMaterials', 'Bill of Materials...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-bom') },
           { type: 'separator' },
-          { label: getMenuLabel('checkDesignRules', 'Check Design Rules'), click: () => mainWindow.webContents.send('menu-command', 'tools-drc') },
+          { label: getMenuLabel('checkDesignRules', 'Check Design Rules'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-drc') },
           { type: 'separator' },
-          { label: getMenuLabel('generateNetlist', 'Generate Netlist...'), click: () => mainWindow.webContents.send('menu-command', 'tools-netlist') },
-          { label: getMenuLabel('generateSpiceNetlist', 'Generate Spice NetList'), click: () => mainWindow.webContents.send('menu-command', 'tools-spice') },
-          { label: getMenuLabel('createVhdlFile', 'Create VHDL file'), click: () => mainWindow.webContents.send('menu-command', 'tools-vhdl') },
+          { label: getMenuLabel('generateNetlist', 'Generate Netlist...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-netlist') },
+          { label: getMenuLabel('generateSpiceNetlist', 'Generate Spice NetList'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-spice') },
+          { label: getMenuLabel('createVhdlFile', 'Create VHDL file'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-vhdl') },
         ]
       }]),
       ...(isLibraryMode ? [] : [{
         label: getMenuLabel('settings', 'Settings'),
         submenu: [
-          { label: getMenuLabel('designDetails', 'Design Details...'), click: () => mainWindow.webContents.send('menu-command', 'settings-design-details') },
-          { label: getMenuLabel('pageSize', 'Page Size...'), click: () => mainWindow.webContents.send('menu-command', 'settings-page-size') },
+          { label: getMenuLabel('designDetails', 'Design Details...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'settings-design-details') },
+          { label: getMenuLabel('pageSize', 'Page Size...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'settings-page-size') },
           { label: getMenuLabel('settingsDialog', 'Settings...'), click: () => mainWindow.webContents.send('menu-command', 'settings-settings') },
-          { label: getMenuLabel('symbolPropertyFontDefaults', 'Default Symbol Attribute Fonts...'), click: () => mainWindow.webContents.send('menu-command', 'settings-symbol-property-fonts') },
+          { label: getMenuLabel('symbolPropertyFontDefaults', 'Default Symbol Attribute Fonts...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'settings-symbol-property-fonts') },
           { label: getMenuLabel('colours', 'Colours...'), click: () => mainWindow.webContents.send('menu-command', 'settings-colours') },
         ]
       }]),
@@ -576,6 +583,16 @@ function createWindow({ openAbout = false } = {}) {
         isLibraryMode = mode;
         refreshMenu();
       }
+    });
+
+    ipcMain.on('set-editor-menu-state', (event, state) => {
+      if (!mainWindow || event.sender !== mainWindow.webContents ||
+          event.senderFrame !== mainWindow.webContents.mainFrame ||
+          !['design', 'text', 'image', 'pdf', 'bom', 'web', 'empty'].includes(state?.editor)) return;
+      const project = state.project === true;
+      if (project === editorMenuState.project && state.editor === editorMenuState.editor) return;
+      editorMenuState = { project, editor: state.editor };
+      refreshMenu();
     });
 
     ipcMain.on('set-view-menu-state', (event, state) => {

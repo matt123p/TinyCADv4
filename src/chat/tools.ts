@@ -792,8 +792,10 @@ export function createEditorTools(
       };
     }
     if (name === 'export_file') {
-      const definition = args.definition ?? currentXml(),
-        component = args.kind !== 'drawing';
+      const component = args.kind !== 'drawing';
+      const asset = component && args.componentId
+        ? await resolveComponent(args.componentId, signal) : undefined;
+      const definition = args.definition ?? asset?.definition ?? currentXml();
       const validation = await native(
         component ? 'validate_component' : 'validate_drawing',
         { definition },
@@ -806,11 +808,12 @@ export function createEditorTools(
           .replace(/[\\/\x00-\x1f]/g, '_')
           .replace(/\.(dsn|xml|tclib)$/i, '') || 'TinyCAD';
       if (args.kind === 'library') {
-        if (!args.name?.trim())
+        const name = args.name ?? asset?.name;
+        if (!name?.trim())
           throw new Error('Library export requires the component name.');
         const { saveTcLibrary } = await import('../io/tclib');
         const bytes = await saveTcLibrary({
-          name: args.name,
+          name,
           fileId: null,
           modified: '',
           symbols: [{ SymbolId: 1, Data: definition }],
@@ -818,13 +821,13 @@ export function createEditorTools(
             {
               NameID: 1,
               SymbolID: 1,
-              Name: args.name,
-              Reference: args.reference ?? 'U?',
+              Name: name,
+              Reference: args.reference ?? asset?.reference ?? 'U?',
               ppp: 1,
-              Description: args.description ?? '',
+              Description: args.description ?? asset?.description ?? '',
               ShowName: 0,
               ShowRef: 0,
-              Attributes: (args.attributes || []).map(
+              Attributes: (args.attributes ?? asset?.attributes ?? []).map(
                 (a: { name: string; value: string }) => ({
                   AttName: a.name,
                   AttValue: a.value,
