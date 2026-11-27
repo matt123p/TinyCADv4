@@ -183,7 +183,7 @@ export function useProjectDocuments() {
     return summary;
   }
 
-  async function refresh(matches: (id: string) => boolean) {
+  const refresh = useCallback(async (matches: (id: string) => boolean) => {
     const unavailable: string[] = [];
     for (const file of current.current) {
       if (
@@ -204,7 +204,7 @@ export function useProjectDocuments() {
       }
     }
     return unavailable;
-  }
+  }, [update]);
 
   function close(id: string) {
     if (pending.current.has(id)) return;

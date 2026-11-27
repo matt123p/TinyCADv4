@@ -538,8 +538,27 @@ try {
   await expect
     .poll(() => readFile(path.join(scratch, 'opened'), 'utf8'))
     .toBe(project);
-  page.once('dialog', (dialog) => dialog.accept());
-  await context('Assets renamed copy', 'Move to Trash');
+  await row('Assets renamed copy').click({ button: 'right' });
+  const deleteItem = page.getByRole('menuitem', {
+    name: 'Delete',
+    exact: true,
+  });
+  await expect(
+    deleteItem.locator('xpath=preceding-sibling::*[1]'),
+  ).toHaveClass(/\bfui-MenuDivider\b/);
+  await deleteItem.click();
+  const deleteDialog = page.getByRole('dialog', {
+    name: 'Delete',
+    exact: true,
+  });
+  await expect(deleteDialog).toBeVisible();
+  await expect(deleteItem).toHaveCount(0);
+  await deleteDialog.getByRole('button', { name: 'Cancel' }).click();
+  await expect(row('Assets renamed copy')).toBeVisible();
+  await row('Assets renamed copy').press('Delete');
+  await deleteDialog
+    .getByRole('button', { name: 'Delete', exact: true })
+    .click();
   await expect(row('Assets renamed copy')).toHaveCount(0);
   assert.equal(
     await readFile(path.join(scratch, 'trashed', 'Notes.md'), 'utf8'),
@@ -555,16 +574,11 @@ try {
     name: 'Staged Changes',
     exact: true,
   });
-  const changedNotes = working
-    .getByRole('button', { name: 'Notes.md', exact: true })
-    .first();
-  await changedNotes.click();
-  const diff = page.getByRole('region', { name: 'Git diff' });
-  await expect(
-    diff.getByText('Reopened notes', { exact: false }).first(),
-  ).toBeVisible();
-  await button('Side by Side').click();
-  await expect(diff.locator('.diff-split')).toBeVisible();
+  const changedNotes = working.locator('.project-git-file').filter({
+    hasText: 'Notes.md',
+  }).first();
+  await expect(changedNotes.getByRole('button', { name: 'Notes.md' })).toHaveCount(0);
+  await expect(source.getByText('Open Saved Changes', { exact: true })).toHaveCount(0);
   if (process.env.TINYCAD_TEST_PROJECT_SCREENSHOTS)
     await page.screenshot({
       path: path.join(
@@ -572,59 +586,44 @@ try {
         'source-control.png',
       ),
     });
-  await button('Stage Hunk').click();
-  await expect(staged.getByRole('button', { name: 'Notes.md' })).toBeVisible();
-  assert.equal(git('diff', '--cached', '--name-only'), 'Notes.md');
-  await staged.getByRole('button', { name: 'Notes.md' }).click();
-  await button('Unstage Hunk').click();
-  await expect(staged.getByRole('button', { name: 'Notes.md' })).toHaveCount(0);
-  assert.equal(git('diff', '--cached', '--name-only'), '');
-  await changedNotes.click();
-  await button('Select removed line 1').click();
-  await button('Select added line 1').click();
-  await button('Stage Selected Lines').click();
-  await expect(staged.getByRole('button', { name: 'Notes.md' })).toBeVisible();
-  await staged.getByRole('button', { name: 'Notes.md' }).click();
-  await button('Select removed line 1').click();
-  await button('Select added line 1').click();
-  await button('Unstage Selected Lines').click();
-  await expect(staged.getByRole('button', { name: 'Notes.md' })).toHaveCount(0);
-  await changedNotes
-    .locator('xpath=..')
-    .getByRole('button', { name: 'Stage', exact: true })
-    .click();
-  await expect(staged.getByRole('button', { name: 'Notes.md' })).toBeVisible();
+
+  await view('Source').click();
+  await edit('Notes.md').fill('# Unsaved notes\n');
+  const stageWarning = page.getByRole('dialog', { name: 'Stage with unsaved edits?' });
   await source
-    .getByRole('textbox', { name: 'Commit message' })
-    .fill('Update notes');
+    .getByRole('button', { name: 'Stage project files', exact: true })
+    .click();
+  await expect(stageWarning).toContainText('unsaved edits');
+  await stageWarning.getByRole('button', { name: 'Cancel' }).click();
+  assert.equal(git('diff', '--cached', '--name-only'), '');
+
+  await changedNotes.getByRole('button', { name: 'Stage', exact: true }).click();
+  await stageWarning.getByRole('button', { name: 'Stage Saved Changes' }).click();
+  await expect(staged.getByText('Notes.md', { exact: true })).toBeVisible();
+  assert.equal(git('show', ':Notes.md'), '# Reopened notes');
+  await source.getByRole('textbox', { name: 'Commit message' }).fill('Update notes');
+
+  const commitReview = page.getByRole('dialog', { name: 'Commit staged changes' });
   await source.getByRole('button', { name: 'Review Commit' }).click();
-  await page
-    .getByRole('dialog', { name: 'Commit staged changes' })
-    .getByRole('button', { name: 'Commit', exact: true })
-    .click();
+  await expect(commitReview.getByRole('alert')).toContainText('unsaved edits');
+  await commitReview.getByRole('button', { name: 'Cancel' }).click();
+  assert.equal(git('log', '-1', '--format=%s'), 'Initial project');
+
+  await source.getByRole('button', { name: 'Review Commit' }).click();
+  await commitReview.getByRole('button', { name: 'Commit', exact: true }).click();
   await expect.poll(() => git('log', '-1', '--format=%s')).toBe('Update notes');
-  const graph = source.getByRole('list', { name: 'Commit graph' });
-  const initial = graph.getByRole('button', { name: 'Initial project' });
-  await initial.click();
-  await expect(page.getByRole('region', { name: 'Git diff' })).toBeVisible();
-  await button('Close Review').click();
-  await initial.click({ button: 'right' });
-  await page
-    .getByRole('menuitem', { name: 'Compare with Branch or Tag…' })
-    .click();
-  await page
-    .getByRole('dialog', { name: /Compare/ })
-    .getByRole('button', { name: 'Compare', exact: true })
-    .click();
-  await expect(page.getByRole('region', { name: 'Git diff' })).toBeVisible();
-  await button('Close Review').click();
+  assert.equal(git('show', 'HEAD:Notes.md'), '# Reopened notes');
+  await expect(edit('Notes.md')).toHaveValue('# Unsaved notes\n');
+  await edit('Notes.md').fill('# Reopened notes\n');
+  await view('Preview').click();
+  await expect(source.getByRole('list', { name: 'Commit graph' })).toContainText('Update notes');
   await button('Files').click();
-  await context('Notes.md', 'Line History');
+  await row('Notes.md').click({ button: 'right' });
+  await expect(deleteItem).toBeVisible();
   await expect(
-    page.getByRole('region', { name: 'Line History · Notes.md' }),
-  ).toContainText(git('log', '-1', '--format=%an'));
-  await button('Close Review').click();
-  await button('Files').click();
+    page.getByRole('menuitem', { name: /^(File|Line) History$/ }),
+  ).toHaveCount(0);
+  await page.keyboard.press('Escape');
 
   await desktop.close();
   desktop = undefined;

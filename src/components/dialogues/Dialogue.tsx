@@ -9,6 +9,7 @@ import DrcDialog from './drcDlg';
 import AnnotateDialog from './annotateDlg';
 import AutoLayoutDialog from './autoLayoutDlg';
 import NetlistDialog from './netlistDlg';
+import { DriveExportDialog } from './driveExportDlg';
 import { DeleteSheetDialog } from './deleteSheetDlg';
 import { ClipboardFailureDialog } from './clipboardFailureDlg';
 import ColourPickerDialog from './colourPickerDlg';
@@ -75,6 +76,8 @@ const TDialogue: FunctionComponent<TDialogueProps> = (
       );
     case 'netlist':
       return <NetlistDialog />;
+    case 'drive_export':
+      return <DriveExportDialog {...props.dialogue_props} />;
     case 'netlist_type_editor':
       return <NetlistTypeEditorDialog />;
     case 'symbol_delete':

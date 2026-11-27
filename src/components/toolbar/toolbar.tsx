@@ -68,7 +68,7 @@ import {
 import { ActionCreators } from 'redux-undo';
 import { SPICE_COMPONENTS, insertSpiceComponent, showSpiceLibrary } from '../../io/spiceComponents';
 import {
-  downloadBom,
+  saveBom,
   fileSave,
   librarySave,
   fileNew,
@@ -93,6 +93,7 @@ import {
   SUPPORTED_LANGUAGES,
 } from '../../i18n/languages';
 import { openCurrentAppUrl, openExternalUrl } from '../../util/navigation';
+import { useDesignExportDestination } from '../controls/useDesignExportDestination';
 
 
 // Images (ES module imports)
@@ -552,6 +553,53 @@ export function EditorToolbarDivider() {
   return <ToolbarDivider className={styles.divider} />;
 }
 
+function BomExportButtons({ dispatch }: { dispatch: Dispatch<any> }) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = React.useState(false);
+  const destination = useDesignExportDestination('bom');
+  async function save(chooseLocation: boolean) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await dispatch(saveBom(chooseLocation) as any);
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (process.env.TARGET_SYSTEM === 'filesystem') {
+    return (
+      <ToolbarButton
+        aria-label={t('toolbar.downloadBomAria')}
+        icon={<ArrowDownloadRegular />}
+        disabled={busy}
+        onClick={() => { void save(true); }}
+      >
+        {t('toolbar.downloadBom')}
+      </ToolbarButton>
+    );
+  }
+  return (
+    <>
+      {destination && (
+        <ToolbarButton
+          aria-label={t('toolbar.save')}
+          title={t('toolbar.save') + ' — ' + destination}
+          icon={<SaveRegular />}
+          disabled={busy}
+          onClick={() => { void save(false); }}
+        />
+      )}
+      <ToolbarButton
+        aria-label={t('toolbar.saveAs')}
+        title={t('toolbar.saveAs')}
+        icon={<SaveCopyRegular />}
+        disabled={busy}
+        onClick={() => { void save(true); }}
+      />
+    </>
+  );
+}
+
 export const Toolbar: React.FC<ToolbarProps> = (props) => {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -573,13 +621,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           >
             {t('toolbar.closeBom')}
           </ToolbarButton>
-          <ToolbarButton
-            aria-label={t('toolbar.downloadBomAria')}
-            icon={<ArrowDownloadRegular />}
-            onClick={() => props.dispatch(downloadBom)}
-          >
-            {t('toolbar.downloadBom')}
-          </ToolbarButton>
+          <EditorToolbarDivider />
+          <BomExportButtons dispatch={props.dispatch} />
       </EditorToolbarFrame>
     );
   }
@@ -752,6 +795,9 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
               </MenuItem>
               <MenuItem icon={<ShareRegular />} onClick={() => props.dispatch(handleMenuCommand('tools-spice'))}>
                 {t('toolbar.generateSpiceNetlist')}
+              </MenuItem>
+              <MenuItem icon={<ShareRegular />} onClick={() => props.dispatch(handleMenuCommand('tools-vhdl'))}>
+                {t('toolbar.createVhdlFile')}
               </MenuItem>
               <MenuDivider />
               {/* New Custom Library */}

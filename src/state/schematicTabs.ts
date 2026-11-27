@@ -18,6 +18,7 @@ export type SchematicSnapshot = {
 
 export type SchematicTabs = {
   enabled: boolean;
+  projectRoot?: string;
   order: string[];
   inactive: Record<string, SchematicSnapshot>;
 };
@@ -25,7 +26,7 @@ export type SchematicTabs = {
 type EditorAction = AppActionTypes | SetMousePosition;
 
 type TabsAction =
-  | { type: 'schematic-tabs/enable'; enabled: boolean }
+  | { type: 'schematic-tabs/enable'; enabled: boolean; projectRoot?: string }
   | {
       type: 'schematic-tabs/activate';
       key: string;
@@ -102,8 +103,11 @@ export function reloadSchematicTab(
   return { type: 'schematic-tabs/reload', key, original, document };
 }
 
-export function enableSchematicTabs(enabled: boolean): TabsAction {
-  return { type: 'schematic-tabs/enable', enabled };
+export function enableSchematicTabs(
+  enabled: boolean,
+  projectRoot?: string,
+): TabsAction {
+  return { type: 'schematic-tabs/enable', enabled, projectRoot };
 }
 
 export function activateSchematicTab(key: string): TabsAction {
@@ -144,7 +148,12 @@ export function withSchematicTabs(
       return {
         ...state,
         schematicTabs: raw.enabled
-          ? { enabled: true, order: active ? [active] : [], inactive: {} }
+          ? {
+              enabled: true,
+              projectRoot: raw.projectRoot,
+              order: active ? [active] : [],
+              inactive: {},
+            }
           : disabled,
       };
     if (!state) return reduce(state, raw as EditorAction);
@@ -281,6 +290,6 @@ export function withSchematicTabs(
       delete inactive[incoming];
       if (!order.includes(incoming)) order.push(incoming);
     }
-    return { ...next, schematicTabs: { enabled: true, order, inactive } };
+    return { ...next, schematicTabs: { ...tabs, order, inactive } };
   };
 }

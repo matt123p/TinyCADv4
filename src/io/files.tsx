@@ -46,7 +46,10 @@ import { updateFactory } from '../manipulators/updateFactory';
 import { GoogleUserManager } from './google/googleUserManager';
 import { FileSystemUserManager } from './filesystem/filesystemUserManager';
 import { wkrGenerateNetlist } from '../web-worker/worker';
-import { downloadNetlist } from './netlists/netlistFiles';
+import { netlistContents } from './netlists/netlistFiles';
+import { bindDrawingExports, designExportSource, driveExportLocation, rememberDriveExport, saveDesignExport } from './designExports';
+import type { DesktopDesignExport, DesignExportFormat } from './designExports';
+import { designExportFormats, designExportName } from '../../shared/designExports';
 import { findImporter, ImportedSymbol, type SymbolImportFile } from './kicad/importer';
 import { actionEditLibrarySymbol, actionSelectLibrarySymbol } from '../state/dispatcher/AppDispatcher';
 import { get_global_id } from '../util/global_id';
@@ -213,7 +216,8 @@ async function internalfileSave(
   getState: { (): docDrawing },
   saveAs: boolean,
 ) {
-  const { altStore, docStore: { present } } = getState();
+  const state = getState();
+  const { altStore, docStore: { present } } = state;
   const { file, saveInProgress } = altStore;
   if (saveInProgress) return false;
   dispatch(actionSetSaveInProgress(true, null));
@@ -221,6 +225,11 @@ async function internalfileSave(
     const meta = await saveSchematicFile(file, present.drawing, saveAs);
     dispatch(actionSetFileData(meta.name, meta.id, file.folderId, present.drawingVersion,
       file.projectVersion && !saveAs ? meta.version : undefined));
+    if (!file.id && typeof meta.id === 'string') {
+      await bindDrawingExports({ ...designExportSource(state), drawingId: meta.id, name: meta.name }).catch((error) =>
+        dispatch(actionSelectDialog('io_failure', { message: `The drawing was saved, but its export locations could not be remembered. ${String(error)}` })),
+      );
+    }
     if (file.projectVersion && !saveAs)
       window.dispatchEvent(new Event(projectFilesChanged));
     return true;
@@ -302,21 +311,68 @@ export function renameFile(
   );
 }
 
-export function downloadBom(dispatch: Dispatch, getState: { (): docDrawing }) {
-  const bom = getState().docStore.present.bom;
-  let filename = getState().altStore.file.name;
-  filename = filename.replace(/\.[^/.]+$/, '') + '.csv';
+async function exportDrawingData(
+  dispatch: Dispatch,
+  source: DesktopDesignExport,
+  chooseLocation: boolean,
+  contents: () => string | Promise<string>,
+): Promise<boolean> {
+  if (process.env.TARGET_SYSTEM !== 'google') return saveDesignExport(source, chooseLocation, contents);
+  const manager = userManager as GoogleUserManager;
+  const remembered = driveExportLocation(source);
+  const { mime, extension } = designExportFormats[source.format];
+  if (!chooseLocation && remembered) {
+    rememberDriveExport(source, await manager.saveExport(await contents(), remembered, mime));
+    return true;
+  }
+  dispatch(actionSelectDialog('drive_export', {
+    filename: remembered?.name ?? designExportName(source.name, source.format),
+    folderId: remembered ? remembered.folderId : source.folderId,
+    load: () => manager.exportFolders(remembered ? undefined : source.drawingId),
+    save: async (enteredName: string, folderId?: string) => {
+      const name = /\.[^/.]+$/.test(enteredName) ? enteredName : enteredName + extension;
+      if (!name.toLowerCase().endsWith(extension) && !(source.format === 'VHDL' && /\.vhd$/i.test(name)))
+        throw new Error(`Choose a filename ending in ${extension}.`);
+      const id = remembered?.name === name && remembered.folderId === folderId ? remembered.id : undefined;
+      const saved = await manager.saveExport(await contents(), { id, name, folderId }, mime);
+      rememberDriveExport(source, saved);
+    },
+  }));
+  return false;
+}
 
-  let txt =
-    'Reference,Quantity,Name\r\n' +
-    bom
-      .map(
-        (be) => `\"${be.References.join(',')}\",${be.Quantity},\"${be.Name}\"`,
-      )
-      .join('\r\n');
+export function saveBom(chooseLocation: boolean) {
+  return async (dispatch: Dispatch, getState: () => docDrawing) => {
+    const state = getState();
+    const { bom } = state.docStore.present;
+    if (!bom) return false;
+    const csv = (text: string) => '"' + text.replaceAll('"', '""') + '"';
+    return exportDrawingData(dispatch, { ...designExportSource(state), format: 'bom' }, chooseLocation, () =>
+      'Reference,Quantity,Name\r\n' + bom.map(({ References, Quantity, Name }) =>
+        `${csv(References.join(','))},${Quantity},${csv(Name)}`,
+      ).join('\r\n'),
+    ).catch((error) => {
+      dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+      return false;
+    });
+  };
+}
 
-  var blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
-  saveAs(blob, filename);
+export function saveNetlist(format: Exclude<DesignExportFormat, 'bom'>, chooseLocation: boolean) {
+  return (dispatch: Dispatch, getState: () => docDrawing) => {
+    const state = getState();
+    const { drawing } = state.docStore.present;
+    const source = designExportSource(state);
+    return exportDrawingData(dispatch, { ...source, format }, chooseLocation, async () => {
+      const netlist = await wkrGenerateNetlist(drawing);
+      if (getState().docStore.present.drawing === drawing)
+        dispatch(actionUpdateNetlistHints(netlist));
+      return netlistContents(source.name, format, netlist, drawing.spiceModelPacks);
+    }).catch((error) => {
+      dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+      return false;
+    });
+  };
 }
 
 export function removeLibrary(fileId: string) {
@@ -915,7 +971,9 @@ export function handleMenuCommand(command: string) {
         dispatch(fileOpen() as any);
         break;
       case 'file-save':
-        if (editLibrary) {
+        if (state.docStore.present.view.selected_sheet === -1) {
+          dispatch(saveBom(false) as any);
+        } else if (editLibrary) {
           dispatch(librarySave as any);
         } else {
           dispatch(fileSave as any);
@@ -925,7 +983,9 @@ export function handleMenuCommand(command: string) {
         dispatch(fileSaveWithoutResults as any);
         break;
       case 'file-save-as':
-        if (editLibrary) {
+        if (state.docStore.present.view.selected_sheet === -1) {
+          dispatch(saveBom(true) as any);
+        } else if (editLibrary) {
           dispatch(librarySaveAs as any);
         } else {
           dispatch(fileSaveAs as any);
@@ -995,19 +1055,10 @@ export function handleMenuCommand(command: string) {
         dispatch(actionSelectDialog('netlist', null));
         break;
       case 'tools-spice':
-        wkrGenerateNetlist(state.docStore.present.drawing).then((netlist) => {
-          dispatch(actionUpdateNetlistHints(netlist));
-          downloadNetlist(state.altStore.file.name, 'SPICE', netlist, state.docStore.present.drawing.spiceModelPacks);
-        }).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+        dispatch(saveNetlist('SPICE', true) as any);
         break;
       case 'tools-vhdl':
-        if (process.env.TARGET_SYSTEM !== 'electron') {
-          break;
-        }
-        wkrGenerateNetlist(state.docStore.present.drawing).then((netlist) => {
-          dispatch(actionUpdateNetlistHints(netlist));
-          downloadNetlist(state.altStore.file.name, 'VHDL', netlist);
-        });
+        dispatch(saveNetlist('VHDL', true) as any);
         break;
       case 'import-kicad-symbols':
         dispatch(importSymbolsFromFile() as any);

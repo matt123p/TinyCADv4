@@ -331,6 +331,17 @@
   padding: 0;
 }
 
+.project-file-tab.selected .project-file-tab-name {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.project-file-tab.selected .project-file-tab-close {
+  align-self: stretch;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
 .project-file-tab-close .fui-Button__icon { font-size: 12px; }
 
 .project-files-panel,
@@ -703,18 +714,14 @@
 
 .project-inline-name small { color: var(--colorPaletteRedForeground1); }
 
-.project-source-control-header,
-.project-git-review-header {
+.project-source-control-header {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
 .project-source-control-header { margin-inline: -12px; padding: 8px 12px; }
-.project-git-review-header { border-bottom: 1px solid var(--colorNeutralStroke2); padding-block: 4px; }
-
-.project-source-control-header strong,
-.project-git-review-header strong {
+.project-source-control-header strong {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -752,24 +759,19 @@
 .project-git-file:hover,
 .project-git-file:focus-within { background: var(--colorNeutralBackground1Hover); }
 
-.project-git-file-name,
-.project-git-graph button {
-  cursor: pointer;
+.project-git-file-name {
   display: flex;
   align-items: center;
   gap: 5px;
   flex: 1;
   color: inherit;
-  background: transparent;
   text-align: start;
-  border: 0;
   padding: 4px;
   min-width: 0;
 }
 
 .project-git-file-name span,
-.project-git-file-name small,
-.project-git-graph button span {
+.project-git-file-name small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -806,25 +808,6 @@
   white-space: nowrap;
 }
 
-.project-git-patch { overflow: auto; flex: 1; min-height: 0; margin-top: 6px; }
-.project-git-patch .diff { min-width: 100%; font-size: 12px; }
-.project-git-hunk { display: flex; align-items: center; justify-content: space-between; padding: 2px 6px; }
-.project-git-review > pre { overflow: auto; }
-
 .project-git-maintenance { display: flex; flex-direction: column; gap: 8px; }
 .project-git-maintenance li { padding-block: 4px; border-bottom: 1px solid var(--colorNeutralStroke2); }
 .project-git-maintenance li small { display: block; overflow-wrap: anywhere; }
-
-.project-git-line-number {
-  background: transparent;
-  color: inherit;
-  border: 0;
-  padding: 0 3px;
-  font: inherit;
-  cursor: pointer;
-  width: 100%;
-  text-align: end;
-}
-
-.project-git-line-number:hover,
-.project-git-line-number[aria-pressed="true"] { background: var(--colorBrandBackground2); }

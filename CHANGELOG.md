@@ -6,10 +6,21 @@
 
 - Set the font and size of visible symbol attributes in the **Text Size** tab. Set drawing-wide defaults for Ref, Name and custom attributes, and override either setting for individual symbols or a multi-selection. Font changes preserve label positions and values. [#34](https://github.com/matt123p/TinyCADv4/issues/34)
 - Select a wire to edit its connected net's type in the **Wire Properties** panel or open the **Netlist Types** editor to customise wire appearance.
+- Use **Save As** to choose where to save bills of materials, netlists and VHDL files on desktop and Google Drive. Desktop projects store each schematic's export destinations in the `.tcproject` file. The browser filesystem edition offers downloads.
+- View the Git branch graph, create or switch branches, and merge from the branch dialog. Fetch, Pull, Push and Sync are grouped in a menu next to the branch name.
 
 ### Changed
 
 - Save symbol attribute fonts through DSN font tables and preserve the reserved pin font on sheets that use it.
+- Switch between Files, Git and Libraries in the shared desktop project sidebar. File tabs start alongside the sidebar, with **Save All** at the far right and the close button inside the selected tab.
+- Use a consistent toolbar across editors, including the BOM viewer. Edit syntax-highlighted files directly, switch Markdown and CSV views using bottom tabs, and zoom centred images from a bottom control.
+- Source Control warns about unsaved edits before staging or committing. The saved-changes viewer and file and line history actions have been removed.
+- The project file menu calls the trash action **Delete**. The context menu closes before the confirmation opens.
+
+### Fixed
+
+- Open the project folder's context menu from the blank space below the file tree.
+- Use the next available name for a new schematic, accounting for project files and unsaved tabs.
 
 ## v4.1.2 — 2026-11-24
 

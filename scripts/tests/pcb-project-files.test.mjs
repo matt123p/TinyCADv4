@@ -4,6 +4,112 @@ import path from 'node:path';
 import test from 'node:test';
 import { recentProjectFolders, registerProjectFiles } from '../../electron/projectFiles.js';
 
+test('remembers export destinations per drawing and format in the project settings', async (t) => {
+  const parent = path.resolve('.tmp');
+  await mkdir(parent, { recursive: true });
+  const area = await mkdtemp(path.join(parent, 'design-exports-'));
+  t.after(() => rm(area, { recursive: true, force: true }));
+  const folder = path.join(area, 'Project');
+  const other = path.join(folder, 'Other');
+  await mkdir(other, { recursive: true });
+  const marker = path.join(folder, 'Settings.tcproject');
+  const originalSettings = '<?xml version="1.0"?><TinyCADProject><Name>Test</Name></TinyCADProject>';
+  await writeFile(marker, originalSettings);
+  const drawingId = path.join(folder, 'Circuit.dsn');
+  const secondId = path.join(other, 'Circuit.dsn');
+  await Promise.all([drawingId, secondId].map((id) => writeFile(id, 'drawing')));
+  const preferences = new Map();
+  const mainFrame = {};
+  const webContents = { mainFrame };
+  let selection;
+  let dialogues = [];
+  const register = async (localPreferences = preferences) => {
+    let handle;
+    registerProjectFiles({
+      ipcMain: { handle: (_, callback) => { handle = callback; } },
+      getWindow: () => ({ webContents }),
+      dialog: {
+        showOpenDialog: async () => ({ canceled: false, filePaths: [folder] }),
+        showSaveDialog: async (_, options) => {
+          dialogues.push(options);
+          return selection ? { canceled: false, filePath: selection } : { canceled: true };
+        },
+      },
+      store: {
+        get: (key, fallback) => localPreferences.get(key) ?? fallback,
+        set: (key, value) => localPreferences.set(key, value),
+      },
+      documents: area,
+    });
+    const request = (payload) => handle({ sender: webContents, senderFrame: mainFrame }, payload);
+    await request({ operation: 'choose-project-folder' });
+    return request;
+  };
+  const first = { project: folder, drawingId, name: 'Circuit.dsn', draftId: 'draft-one' };
+  const second = { ...first, drawingId: secondId, draftId: 'draft-two' };
+  const bom = path.join(folder, 'Components.csv');
+  const netlist = path.join(area, 'Board.net');
+  const vhdl = path.join(other, 'Circuit.vhdl');
+  function save(request, source, format, text, saveAs = true) {
+    return request({ operation: 'save-design-export', ...source, format, text, saveAs });
+  }
+  const location = (request, source, format) => request({ operation: 'export-destination', ...source, format });
+  async function readSettings() {
+    const contents = await readFile(marker, 'utf8');
+    assert.ok(contents.startsWith(originalSettings));
+    return JSON.parse(contents.match(/<\?tinycad-exports\s+([\s\S]*?)\?>/)[1]);
+  }
+  let request = await register();
+  selection = bom;
+  assert.equal(await save(request, first, 'bom', 'parts'), true);
+  assert.equal(await location(request, second, 'bom'), null);
+  selection = netlist;
+  await save(request, first, 'PADS-PCB', 'nets');
+  selection = vhdl;
+  await save(request, second, 'VHDL', 'hdl');
+  assert.equal(await location(request, first, 'VHDL'), null);
+  assert.deepEqual((await readSettings()).drawings, {
+    'Circuit.dsn': { bom: 'Components.csv', 'PADS-PCB': netlist },
+    'Other/Circuit.dsn': { VHDL: 'Other/Circuit.vhdl' },
+  });
+
+  request = await register();
+  dialogues = [];
+  selection = undefined;
+  assert.equal(await save(request, first, 'bom', 'updated', false), true);
+  assert.equal(dialogues.length, 0);
+  assert.equal(await readFile(bom, 'utf8'), 'updated');
+  assert.equal(await location(request, { ...first, project: undefined }, 'bom'), bom);
+  assert.equal(await save(request, first, 'PADS-PCB', 'cancelled'), false);
+  assert.equal(dialogues.at(-1).defaultPath, netlist);
+  assert.equal(await readFile(netlist, 'utf8'), 'nets');
+
+  const imported = await register(new Map());
+  assert.equal(await save(imported, first, 'bom', 'not authorized', false), false);
+  assert.equal(dialogues.at(-1).defaultPath, bom);
+  assert.equal(await readFile(bom, 'utf8'), 'updated');
+
+  const draft = { project: folder, name: 'New.dsn', draftId: 'draft-three' };
+  const draftNetlist = path.join(other, 'Custom.net');
+  selection = draftNetlist;
+  await save(request, draft, 'PADS-PCB', 'draft nets');
+  assert.deepEqual(Object.values((await readSettings()).drafts), [
+    { name: draft.name, outputs: { 'PADS-PCB': 'Other/Custom.net' } },
+  ]);
+  request = await register(new Map());
+  assert.equal(await location(request, draft, 'PADS-PCB'), draftNetlist);
+  assert.equal(await location(request, { ...draft, draftId: 'unrelated' }, 'PADS-PCB'), null);
+  const saved = { ...draft, name: 'Renamed.dsn', drawingId: path.join(other, 'Renamed.dsn') };
+  await writeFile(saved.drawingId, 'drawing');
+  await request({ operation: 'bind-design-exports', ...saved });
+  const settings = await readSettings();
+  assert.equal(settings.drafts, undefined);
+  assert.deepEqual(settings.drawings['Other/Renamed.dsn'], {
+    'PADS-PCB': 'Other/Custom.net',
+  });
+  assert.equal(await location(await register(new Map()), saved, 'PADS-PCB'), draftNetlist);
+});
+
 test('reopens recent project folders in order without granting access to arbitrary folders', async (t) => {
   const parent = path.resolve('.tmp');
   await mkdir(parent, { recursive: true });

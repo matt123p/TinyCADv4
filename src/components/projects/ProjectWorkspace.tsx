@@ -16,7 +16,9 @@ import {
   SaveRegular,
 } from '@fluentui/react-icons';
 import { isDrawingFile } from '../../../shared/drawingFiles';
+import { isProjectFile } from '../../../shared/projectFiles';
 import { fileSave, saveSchematicFile } from '../../io/files';
+import { bindDrawingExports } from '../../io/designExports';
 import type { GitSnapshot } from '../../io/projectGit';
 import { projectDocumentKind } from '../../io/projectDocumentKind';
 import { blank } from '../../io/ioXml';
@@ -71,9 +73,7 @@ import ProjectDocumentEditor from './ProjectDocumentEditor';
 import type { ProjectTextEditor } from './ProjectDocumentEditor';
 import ProjectFileBrowser from './ProjectFileBrowser';
 import type { BrowserFile } from './ProjectFileBrowser';
-import ProjectGitDiff from './ProjectGitDiff';
 import ProjectSourceControl from './ProjectSourceControl';
-import type { GitReview } from './ProjectSourceControl';
 
 const account = '';
 const pathSeparator = (path: string) => (path.includes('\\') ? '\\' : '/');
@@ -152,15 +152,9 @@ export default function ProjectWorkspace({
   const [restoring, setRestoring] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [panel, setPanel] = useState<ProjectPanel>('files');
-  const [review, setReview] = useState<GitReview>();
-  const [showReview, setShowReview] = useState(false);
   const [error, setError] = useState('');
   const [gitCount, setGitCount] = useState(0);
   const [gitSnapshot, setGitSnapshot] = useState<GitSnapshot>();
-  const [historyRequest, setHistoryRequest] = useState<{
-    filename: string;
-    blame?: boolean;
-  }>();
   const [saving, setSaving] = useState(false);
   const [textEditor, setTextEditor] = useState<ProjectTextEditor>(null);
   const saveLock = useRef(false);
@@ -168,6 +162,22 @@ export default function ProjectWorkspace({
   const opening = useRef(0);
   const [order, setOrder] = useState<string[]>([]);
   const documents = useProjectDocuments();
+  const refreshDocuments = documents.refresh;
+
+  useEffect(() => {
+    if (!root) return;
+    const prefix = root.id.replace(/[\\/]$/, '') + pathSeparator(root.id);
+    const refreshSettings = () => {
+      void refreshDocuments((id) => {
+        if (!id.startsWith(prefix)) return false;
+        const name = id.slice(prefix.length);
+        return !/[\\/]/.test(name) && isProjectFile(name);
+      });
+    };
+    window.addEventListener(projectFilesChanged, refreshSettings);
+    return () =>
+      window.removeEventListener(projectFilesChanged, refreshSettings);
+  }, [root, refreshDocuments]);
 
   useEffect(() => {
     if (state.altStore.standardLibraryNavigation) {
@@ -237,7 +247,6 @@ export default function ProjectWorkspace({
 
   function activate(key: string) {
     opening.current++;
-    setShowReview(false);
     documents.select();
     dispatch(activateSchematicTab(key));
   }
@@ -252,7 +261,6 @@ export default function ProjectWorkspace({
     }
     if (!isDrawingFile(file.name)) {
       await documents.open(file);
-      if (epoch === opening.current) setShowReview(false);
       return;
     }
     documents.select();
@@ -266,7 +274,6 @@ export default function ProjectWorkspace({
     const drawing = await readProjectDrawing(file);
     if (epoch !== opening.current || store.getState().altStore.saveInProgress)
       return;
-    setShowReview(false);
     dispatch(drawing);
     dispatch(ActionCreators.clearHistory());
   }
@@ -280,21 +287,19 @@ export default function ProjectWorkspace({
     transition.current = true;
     setRestoring(true);
     setError('');
-    setShowReview(false);
     if (root) {
       dispatch(enableSchematicTabs(false));
       clearDrawing();
       documents.clear();
     }
     opening.current++;
-    dispatch(enableSchematicTabs(true));
+    dispatch(enableSchematicTabs(true, next.id));
     projectRoot.current = next;
     setRoot(next);
     setPanel('files');
     setShowSidebar(true);
     setGitCount(0);
     setGitSnapshot(undefined);
-    setHistoryRequest(undefined);
     saveStartupMode('project');
     try {
       const session = readProjectTabSession(next.id, account);
@@ -378,7 +383,6 @@ export default function ProjectWorkspace({
     clearDrawing();
     projectRoot.current = undefined;
     setRoot(undefined);
-    setShowReview(false);
     setOrder([]);
     setError('');
     saveStartupMode('single');
@@ -568,6 +572,16 @@ export default function ProjectWorkspace({
                 tab.history.present.drawingVersion,
               ),
             );
+            if (!tab.file.id && typeof meta.id === 'string') {
+              await bindDrawingExports({
+                project: root?.id,
+                drawingId: meta.id,
+                draftId: tab.history.present.drawing.documentId || tab.file.name,
+                name: meta.name,
+              }).catch((error) => report(
+                `${meta.name} was saved, but its export locations could not be remembered. ${String(error)}`,
+              ));
+            }
           }
         } catch (error) {
           failures.push(
@@ -674,16 +688,17 @@ export default function ProjectWorkspace({
         event.preventDefault();
         return;
       }
-      if (!documents.active && !showReview) return;
+      if (!documents.active) return;
       event.preventDefault();
-      if (documents.active && !showReview && !documents.isSaving())
+      if (event instanceof CustomEvent && event.detail === 'file-save-as') return;
+      if (!documents.isSaving())
         void documents.save(documents.active).catch(report);
     };
     const onEditHistory = (event: Event) => {
-      if ((!documents.active && !showReview) || !(event instanceof CustomEvent))
+      if (!documents.active || !(event instanceof CustomEvent))
         return;
       event.preventDefault();
-      if (!showReview && (event.detail === 'undo' || event.detail === 'redo'))
+      if (event.detail === 'undo' || event.detail === 'redo')
         editHistory(event.detail);
     };
     const onConfirmClose = (event: Event) => {
@@ -715,7 +730,6 @@ export default function ProjectWorkspace({
       if (current === previous) return;
       previous = current;
       opening.current++;
-      setShowReview(false);
       documents.select();
     });
   }, [store, documents.select]);
@@ -739,7 +753,6 @@ export default function ProjectWorkspace({
         dirty: dirtyProjectDocument(file),
         select: () => {
           opening.current++;
-          setShowReview(false);
           documents.select(file.id);
         },
         close: () => {
@@ -908,14 +921,6 @@ export default function ProjectWorkspace({
                     ]),
                 )
               }
-              showHistory={
-                gitSnapshot &&
-                ((filename, blame) => {
-                  setHistoryRequest({ filename, blame });
-                  setPanel('git');
-                  setShowSidebar(true);
-                })
-              }
               beforeChange={beforeFileChange}
               relocated={relocateOpenFiles}
               removed={closeRemovedFiles}
@@ -931,11 +936,6 @@ export default function ProjectWorkspace({
               openFolder={openFolder}
               setCount={setGitCount}
               onSnapshot={setGitSnapshot}
-              historyRequest={historyRequest}
-              openReview={(next) => {
-                setReview(next);
-                setShowReview(!!next);
-              }}
               schematicDirty={hasDirtyDrawings}
               supportingFilesDirty={documents.hasDirty}
               saveOpenFiles={saveAll}
@@ -961,32 +961,38 @@ export default function ProjectWorkspace({
     tabs: root && (
       <div className="project-file-tabs" aria-label="Open files">
         <div className="project-tab-list">
-          {tabs.map((tab) => (
-            <div className="project-file-tab" key={tab.key}>
-              <Button
-                size="small"
-                appearance={
-                  selection === tab.key && !showReview ? 'primary' : 'subtle'
-                }
-                aria-pressed={selection === tab.key && !showReview}
-                disabled={restoring || saving}
-                onClick={tab.select}
+          {tabs.map((tab) => {
+            const selected = selection === tab.key;
+            const appearance = selected ? 'primary' : 'subtle';
+            return (
+              <div
+                className={selected ? 'project-file-tab selected' : 'project-file-tab'}
+                key={tab.key}
               >
-                {tab.name}
-                {tab.dirty ? ' •' : ''}
-              </Button>
-              <Button
-                size="small"
-                className="project-file-tab-close"
-                appearance="subtle"
-                icon={<Dismiss12Regular />}
-                aria-label={`Close ${tab.name}`}
-                title={`Close ${tab.name}`}
-                disabled={restoring || saving}
-                onClick={tab.close}
-              />
-            </div>
-          ))}
+                <Button
+                  size="small"
+                  className="project-file-tab-name"
+                  appearance={appearance}
+                  aria-pressed={selected}
+                  disabled={restoring || saving}
+                  onClick={tab.select}
+                >
+                  {tab.name}
+                  {tab.dirty ? ' •' : ''}
+                </Button>
+                <Button
+                  size="small"
+                  className="project-file-tab-close"
+                  appearance={appearance}
+                  icon={<Dismiss12Regular />}
+                  aria-label={`Close ${tab.name}`}
+                  title={`Close ${tab.name}`}
+                  disabled={restoring || saving}
+                  onClick={tab.close}
+                />
+              </div>
+            );
+          })}
         </div>
         <Button
           size="small"
@@ -1002,18 +1008,13 @@ export default function ProjectWorkspace({
       </div>
     ),
     saveBlocked: saveAllAction?.disabled,
-    documentToolbar: root && (openDocument || showReview) && (
+    documentToolbar: root && openDocument && (
       <>
         <ToolbarButton
           icon={<SaveRegular />}
           aria-label={t('toolbar.save')}
           title={t('toolbar.save')}
-          disabled={
-            showReview ||
-            !openDocument ||
-            !dirtyProjectDocument(openDocument) ||
-            saveAllAction.disabled
-          }
+          disabled={!dirtyProjectDocument(openDocument) || saveAllAction.disabled}
           onClick={() => {
             void documents.save(openDocument.id).catch(report);
           }}
@@ -1023,35 +1024,25 @@ export default function ProjectWorkspace({
           icon={<ArrowUndoRegular />}
           aria-label="Undo"
           title="Undo"
-          disabled={!textEditor?.canUndo || showReview}
+          disabled={!textEditor?.canUndo}
           onClick={() => editHistory('undo')}
         />
         <ToolbarButton
           icon={<ArrowRedoRegular />}
           aria-label="Redo"
           title="Redo"
-          disabled={!textEditor?.canRedo || showReview}
+          disabled={!textEditor?.canRedo}
           onClick={() => editHistory('redo')}
         />
       </>
     ),
-    document: root && (documents.files.length > 0 || showReview) && (
-      <div
-        className="project-document-area"
-        hidden={!openDocument && !showReview}
-      >
-        {showReview && review && (
-          <ProjectGitDiff
-            key={review.title}
-            review={review}
-            close={() => setShowReview(false)}
-          />
-        )}
+    document: root && documents.files.length > 0 && (
+      <div className="project-document-area" hidden={!openDocument}>
         {documents.files.map((file) => (
           <ProjectDocumentEditor
             key={file.id}
             file={file}
-            active={!showReview && file === openDocument}
+            active={file === openDocument}
             editorRef={setTextEditor}
             onEdit={(value) => documents.edit(file.id, value)}
           />

@@ -1,4 +1,5 @@
 import type { GitRequest, GitResult, GitWorktree } from './projectGit';
+import type { DesktopDesignExport } from './designExports';
 export const projectFilesChanged = 'tinycad:project-files-changed';
 export const projectFolderOpened = 'tinycad:project-folder-opened';
 
@@ -35,6 +36,13 @@ export type ProjectStorageRequest =
       createBranch: boolean;
     }
   | { operation: 'git'; folder: string; request: GitRequest }
+  | ({ operation: 'export-destination' } & DesktopDesignExport)
+  | ({
+      operation: 'save-design-export';
+      saveAs: boolean;
+      text: string;
+    } & DesktopDesignExport)
+  | ({ operation: 'bind-design-exports' } & Omit<DesktopDesignExport, 'format'>)
   | { operation: 'choose-project-folder' }
   | { operation: 'recent-project-folder' }
   | { operation: 'open-recent-project-folder'; id: string }
@@ -91,6 +99,9 @@ export interface ProjectStorageResult {
   'worktree-open': ProjectLocation;
   'worktree-add': ProjectLocation | null;
   git: GitResult[keyof GitResult];
+  'export-destination': string | null;
+  'save-design-export': boolean;
+  'bind-design-exports': void;
   'open-launch': {
     ticket: string;
     root: ProjectLocation;

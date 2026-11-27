@@ -1,8 +1,8 @@
-import { saveAs } from 'file-saver';
 import { NetlistData } from './netlistGenerator';
 import { writeVHDL } from './netlistVHDL';
 import { writeSpiceWithModels } from './netlistSpice';
 import type { SpiceModelPack } from '../../simulation/catalogBindings';
+import type { DesignExportFormat } from '../designExports';
 
 // Create netlist and output as a PCB file (PADS-PCB)
 function writePADS(netlist: NetlistData, withValue: boolean) {
@@ -203,48 +203,36 @@ function writePCB(netlist: NetlistData) {
 
 
 
-export function downloadNetlist(
+export function netlistContents(
   filename: string,
-  file_type: string,
+  file_type: Exclude<DesignExportFormat, 'bom'>,
   netlist: NetlistData,
   spiceModelPacks?: SpiceModelPack[],
 ) {
   let txt = null;
-  let ext = null;
   switch (file_type) {
     case 'SPICE':
       txt = writeSpiceWithModels(netlist, spiceModelPacks);
-      ext = '.cir';
       break;
     case 'VHDL':
       txt = writeVHDL(netlist, filename);
-      ext = '.vhdl';
       break;
     case 'PADS-PCB':
       txt = writePADS(netlist, false);
-      ext = '.net';
       break;
     case 'PADS-PCB-WITH-VALUE':
       txt = writePADS(netlist, true);
-      ext = '.net';
       break;
     case 'Eagle SCR':
       txt = writeEagle(netlist);
-      ext = '.scr'; // Fixed extension for Eagle SCR
       break;
     case 'Protel':
       txt = writeProtel(netlist);
-      ext = '.net';
       break;
     case 'gEDA PCB':
       txt = writePCB(netlist);
-      ext = '.net';
       break;
   }
 
-  txt = txt.replaceAll('\n', '\r\n');
-  filename = filename.replace(/\.[^/.]+$/, '') + ext;
-
-  var blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
-  saveAs(blob, filename);
+  return txt.replace(/\r?\n/g, '\r\n');
 }

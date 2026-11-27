@@ -1,6 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Button,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
   Input,
   Menu,
   MenuDivider,
@@ -47,7 +54,6 @@ type Props = {
   root: ProjectLocation;
   active?: string;
   gitChanges?: ReadonlyMap<string, string>;
-  showHistory?(id: string, blame?: boolean): void;
   open(file: BrowserFile): Promise<void>;
   beforeChange(id: string, kind: 'relocate' | 'trash', newName?: string): void;
   relocated(previous: ProjectItem, next: ProjectItem, parent: string): void;
@@ -156,13 +162,13 @@ export default function ProjectFileBrowser({
   root,
   active,
   gitChanges,
-  showHistory,
   open,
   beforeChange,
   relocated,
   removed,
   report,
 }: Props) {
+  const { t } = useTranslation();
   const expansionKey = 'tinycad.projectFolders.' + root.id;
   const [expanded, setExpanded] = useState<string[]>(() => {
     try {
@@ -180,6 +186,7 @@ export default function ProjectFileBrowser({
   const [dragged, setDragged] = useState<Entry>();
   const [dropTarget, setDropTarget] = useState<string>();
   const [renaming, setRenaming] = useState<Entry>();
+  const [deleteEntry, setDeleteEntry] = useState<Entry>();
   const [renameError, setRenameError] = useState('');
   const [refresh, setRefresh] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -357,11 +364,6 @@ export default function ProjectFileBrowser({
   }
 
   function remove(entry: Entry) {
-    if (
-      entry.item.unsupported ||
-      !window.confirm(`Move "${entry.item.name}" to the system Trash?`)
-    )
-      return;
     void change(async () => {
       beforeChange(entry.item.id, 'trash');
       if (
@@ -388,6 +390,11 @@ export default function ProjectFileBrowser({
         current?.item.id === entry.item.id ? undefined : current,
       );
     });
+  }
+
+  function cancelDelete() {
+    setDeleteEntry(undefined);
+    focusRow(deleteEntry.item.id);
   }
 
   function reveal(entry?: Entry) {
@@ -517,27 +524,16 @@ export default function ProjectFileBrowser({
         >
           {entry ? rootReveal : rootReveal.replace('Reveal in', 'Open in')}
         </MenuItem>
-        {showHistory &&
-          entry &&
-          !entry.item.folder &&
-          !entry.item.unsupported && (
-            <>
-              <MenuItem onClick={() => showHistory(entry.item.id)}>
-                File History
-              </MenuItem>
-              {!/\.(?:dsn|dzn|dpn|tcproject|tclib|tplib|pdf|png|jpe?g|gif|webp|bmp|avif)$/i.test(
-                entry.item.name,
-              ) && (
-                <MenuItem onClick={() => showHistory(entry.item.id, true)}>
-                  Line History
-                </MenuItem>
-              )}
-            </>
-          )}
         {entry && (
-          <MenuItem disabled={busy || restricted} onClick={() => remove(entry)}>
-            Move to Trash
-          </MenuItem>
+          <>
+            <MenuDivider />
+            <MenuItem
+              disabled={busy || restricted}
+              onClick={() => setDeleteEntry(entry)}
+            >
+              {t('common.delete')}
+            </MenuItem>
+          </>
         )}
         {!entry && (
           <MenuItem disabled={busy} onClick={() => filePicker.current.click()}>
@@ -603,7 +599,16 @@ export default function ProjectFileBrowser({
                   }}
                 />
               ) : (
-                <Menu openOnContext>
+                <Menu
+                  openOnContext
+                  surfaceMotion={{
+                    children: (Motion, props) =>
+                      deleteEntry?.item.id === item.id &&
+                      !props.visible ? null : (
+                        <Motion {...props} />
+                      ),
+                  }}
+                >
                   <MenuTrigger disableButtonEnhancement>
                     <button
                       type="button"
@@ -789,7 +794,7 @@ export default function ProjectFileBrowser({
           else if (command && (key === 'x' || key === 'c')) {
             setClipboard({ ...selected, move: key === 'x' });
           } else if (key === 'f2') startRename(selected);
-          else if (key === 'delete') remove(selected);
+          else if (key === 'delete') setDeleteEntry(selected);
           else if (
             key === 'arrowright' &&
             selected.item.folder &&
@@ -827,6 +832,36 @@ export default function ProjectFileBrowser({
           <MenuPopover>{actions()}</MenuPopover>
         </Menu>
       </div>
+      {deleteEntry && (
+        <Dialog
+          open
+          onOpenChange={(_, data) => {
+            if (!data.open) cancelDelete();
+          }}
+        >
+          <DialogSurface>
+            <DialogBody>
+              <DialogTitle>{t('common.delete')}</DialogTitle>
+              <DialogContent>
+                Move “{deleteEntry.item.name}” to the{' '}
+                {/Win/i.test(navigator.platform) ? 'Recycle Bin' : 'Trash'}?
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={cancelDelete}>{t('common.cancel')}</Button>
+                <Button
+                  appearance="primary"
+                  onClick={() => {
+                    setDeleteEntry(undefined);
+                    remove(deleteEntry);
+                  }}
+                >
+                  {t('common.delete')}
+                </Button>
+              </DialogActions>
+            </DialogBody>
+          </DialogSurface>
+        </Dialog>
+      )}
     </section>
   );
 }

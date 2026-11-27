@@ -74,7 +74,10 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
           props.dispatch(handleMenuCommand(command) as any);
         }
       }
-      else if (command !== 'file-save' || window.dispatchEvent(new Event(saveActiveProjectFile, { cancelable: true })))
+      else if (
+        (command !== 'file-save' && command !== 'file-save-as') ||
+        window.dispatchEvent(new CustomEvent(saveActiveProjectFile, { cancelable: true, detail: command }))
+      )
         props.dispatch(handleMenuCommand(command) as any);
     });
     const unsubscribeWithData = window.electronAPI.onMenuCommandWithData((command, data) => {

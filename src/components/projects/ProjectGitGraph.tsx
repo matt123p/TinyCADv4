@@ -1,11 +1,4 @@
 import React from 'react';
-import {
-  Menu,
-  MenuItem,
-  MenuList,
-  MenuPopover,
-  MenuTrigger,
-} from '@fluentui/react-components';
 import type { GitCommit, GitSnapshot } from '../../io/projectGit';
 
 type Lane = { id: string; color: number };
@@ -44,14 +37,10 @@ function graphRows(commits: GitCommit[]) {
 export default function ProjectGitGraph({
   commits,
   snapshot,
-  inspect,
-  compare,
   label = 'Commit graph',
 }: {
   commits: GitCommit[];
   snapshot: GitSnapshot;
-  inspect?(commit: GitCommit): void;
-  compare?(commit: GitCommit): void;
   label?: string;
 }) {
   const rows = graphRows(commits);
@@ -115,33 +104,9 @@ export default function ProjectGitGraph({
                 fill={palette[node.color % palette.length]}
               />
             </svg>
-            {inspect && compare ? (
-              <Menu openOnContext>
-                <MenuTrigger disableButtonEnhancement>
-                  <button
-                    type="button"
-                    onClick={() => inspect(commit)}
-                    title={`${commit.short} · ${commit.date} · ${commit.subject}`}
-                  >
-                    {commitLabel(commit)}
-                  </button>
-                </MenuTrigger>
-                <MenuPopover>
-                  <MenuList>
-                    <MenuItem onClick={() => inspect(commit)}>
-                      Open Changes
-                    </MenuItem>
-                    <MenuItem onClick={() => compare(commit)}>
-                      Compare with Branch or Tag…
-                    </MenuItem>
-                  </MenuList>
-                </MenuPopover>
-              </Menu>
-            ) : (
-              <div className="project-git-graph-label" title={commit.short}>
-                {commitLabel(commit)}
-              </div>
-            )}
+            <div className="project-git-graph-label" title={commit.short}>
+              {commitLabel(commit)}
+            </div>
           </li>
         ))}
       </ol>

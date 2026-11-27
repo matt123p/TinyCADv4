@@ -245,6 +245,45 @@ export class GoogleUserManager implements UserManager {
     return this.saveFileInternal(xml, { ...file, name: drawingFileName(file.name, isCompressedDrawing(xml)) }, drawingMimeType(xml));
   }
 
+  async exportFolders(drawingId?: string) {
+    const headers = { Authorization: `Bearer ${this.getToken()}` };
+    const folders: { id: string; name: string }[] = [];
+    const preferred = drawingId ? fetch(
+      `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(drawingId)}?fields=parents`,
+      { headers },
+    ).then(async (response) => response.ok ? (await response.json()).parents?.[0] : undefined)
+      .catch((): undefined => undefined) : Promise.resolve(undefined);
+    let page: string | undefined;
+    do {
+      const params = new URLSearchParams({
+        q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+        fields: 'nextPageToken,files(id,name,capabilities(canAddChildren))',
+        pageSize: '100',
+        orderBy: 'name',
+      });
+      if (page) params.set('pageToken', page);
+      const response = await fetch('https://www.googleapis.com/drive/v3/files?' + params, { headers });
+      if (!response.ok) throw new Error(`Unable to list Drive folders (${response.status}).`);
+      const result: {
+        files?: { id: string; name: string; capabilities?: { canAddChildren?: boolean } }[];
+        nextPageToken?: string;
+      } = await response.json();
+      folders.push(...(result.files ?? []).filter(({ capabilities }) => capabilities?.canAddChildren));
+      page = result.nextPageToken;
+    } while (page);
+    return { folders, preferred: await preferred };
+  }
+
+  async saveExport(text: string, destination: { id?: string; name: string; folderId?: string }, mime: string) {
+    const result = await this.saveFileInternal(text, {
+      name: destination.name,
+      id: destination.id,
+      folderId: destination.folderId,
+    }, mime);
+    if (typeof result.id !== 'string' || !result.id) throw new Error('Drive did not return a saved file ID.');
+    return { id: result.id as string, name: result.name as string, folderId: destination.folderId };
+  }
+
   private saveFileInternal(
     xml: string | Uint8Array,
     file: CurrentFile,

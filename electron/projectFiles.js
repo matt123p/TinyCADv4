@@ -3,6 +3,7 @@ import path from 'node:path';
 import { constants, createReadStream, watch } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import { addProjectWorktree, cloneProjectGit, projectWorktrees, runProjectGit } from './projectGit.js';
+import { createDesignExportHandler } from './designExports.js';
 import {
   MAX_PROJECT_FILE_BYTES,
   MAX_PROJECT_SETTINGS_BYTES,
@@ -153,6 +154,9 @@ export function registerProjectFiles({
       await fs.copyFile(source, target, constants.COPYFILE_EXCL);
     }
   }
+  const handleDesignExport = createDesignExportHandler({
+    dialog, store, openedRoots, readFile, pendingWrites, linkNewFile,
+  });
   ipcMain.handle('project-files', async (event, request) => {
     const window = getWindow();
     if (
@@ -162,6 +166,8 @@ export function registerProjectFiles({
     ) {
       throw new Error('Projects are available only to the host main frame.');
     }
+    if (['export-destination', 'save-design-export', 'bind-design-exports'].includes(request.operation))
+      return handleDesignExport(window, request);
     if (request.operation === 'open-launch') {
       const filename = takeProjectOpen?.();
       if (!filename) return null;
