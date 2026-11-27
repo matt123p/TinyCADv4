@@ -149,6 +149,11 @@ const common = {
     designDetails: { title: '設計詳細', detailsTab: '詳細', guidesTab: 'ガイド', author: '作成者', revision: 'リビジョン', organisation: '組織', date: '日付', documentTitle: 'タイトル', sheets: 'シート', showDesignDetails: '設計詳細を表示', showDesignGuides: '設計ガイドを表示', segmentsX: 'セグメント X', segmentsY: 'セグメント Y', applyAllSheets: 'すべてのシートに適用 (ページ番号を除く)' },
   },
   panel: {
+    wire: {
+      propertiesTitle: '配線プロパティ',
+      netlistType: 'ネットリストタイプ',
+      netlistTypeDescription: 'ネットリストタイプを使うと、配線の外観を変更し、ネットリストのエクスポート用に属性を追加できます。',
+    },
     common: { show: '表示', colour: '色', search: '検索...', part: 'パート' },
     symbol: {
       propertiesTitle: 'シンボルプロパティ', properties: 'プロパティ', options: 'オプション', showPowerPins: '電源ピンを表示', allowResize: 'サイズ変更を許可', resetSize: 'サイズをリセット',

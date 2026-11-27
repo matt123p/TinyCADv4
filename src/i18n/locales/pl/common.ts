@@ -443,6 +443,11 @@ const common = {
     },
   },
   panel: {
+    wire: {
+      propertiesTitle: 'Właściwości przewodu',
+      netlistType: 'Typ netlisty',
+      netlistTypeDescription: 'Typy netlisty określają wygląd przewodów i pozwalają zdefiniować dodatkowe atrybuty do eksportu netlisty.',
+    },
     common: {
       show: 'Pokaż',
       colour: 'Kolor',

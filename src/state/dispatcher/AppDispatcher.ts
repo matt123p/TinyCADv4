@@ -281,7 +281,7 @@ export function actionUpdateNetlistHints(netlist: NetlistData) {
 }
 
 export function actionUpdateNetlistTypes(
-  netlist: NetlistData,
+  netlist: NetlistData | null,
   netlistTypes: NetlistTypes,
   netTypeAssignments: { [net: string]: string },
 ) {

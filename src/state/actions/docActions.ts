@@ -84,7 +84,7 @@ export interface UpdateNetlistHints {
 
 export interface UpdateNetlistTypes {
   type: DocActionTypes.UpdateNetlistTypes;
-  netlist: NetlistData;
+  netlist: NetlistData | null;
   netlistTypes: NetlistTypes;
   netTypeAssignments: { [net: string]: string };
 }

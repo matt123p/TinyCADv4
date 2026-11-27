@@ -23,6 +23,7 @@ const mapStateToProps = (state: docDrawing) => {
       (view.add?.NodeName === DocItemTypes.Symbol && readControl(view.add) ? view.add : null),
     selectedPin: update_view.getSelectedPin(view, sheet),
     selectedItem: update_view.getSelected(view, sheet),
+    sheetName: sheet?.name,
     hasSelection,
     hasSelectedSymbols,
     drawing: state.docStore.present.drawing,

@@ -443,6 +443,11 @@ const common = {
     },
   },
   panel: {
+    wire: {
+      propertiesTitle: 'Wire Properties',
+      netlistType: 'Netlist type',
+      netlistTypeDescription: 'Netlist types control how wires look and let you define extra attributes for netlist export.',
+    },
     common: {
       show: 'Show',
       colour: 'Colour',

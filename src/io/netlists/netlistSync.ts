@@ -124,13 +124,28 @@ function findNetlistDirtySheets(prev: dsnDrawing, next: dsnDrawing) {
 type NetlistListener = (netlist: NetlistData | null) => void;
 
 let currentNetlist: NetlistData | null = null;
+let netlistDrawing: dsnDrawing | null = null;
 const listeners = new Set<NetlistListener>();
 
-function publishNetlist(netlist: NetlistData | null) {
+function publishNetlist(netlist: NetlistData, drawing: dsnDrawing) {
   currentNetlist = netlist;
+  netlistDrawing = drawing;
   for (const listener of listeners) {
     listener(currentNetlist);
   }
+}
+
+export function getCurrentNetlist(drawing: dsnDrawing): NetlistData | null {
+  if (!netlistDrawing) {
+    return null;
+  }
+  if (drawing.sheets !== netlistDrawing.sheets) {
+    const { changedSheets, removedSheets } = findNetlistDirtySheets(netlistDrawing, drawing);
+    if (changedSheets.length || removedSheets.length) {
+      return null;
+    }
+  }
+  return currentNetlist;
 }
 
 export function subscribeNetlist(listener: NetlistListener) {
@@ -177,7 +192,7 @@ export function initializeNetlistSync(store: Store) {
         sheets: drawing.sheets.map((s) => s.name),
       });
       const netlist = await wkrInitNetlist(drawing);
-      publishNetlist(netlist);
+      publishNetlist(netlist, drawing);
       store.dispatch(actionStampWireNetTypes(netlist));
       previousDrawing = drawing;
       previousVersion = drawingVersion;
@@ -199,7 +214,7 @@ export function initializeNetlistSync(store: Store) {
         delta.changedSheets,
         delta.removedSheets,
       );
-      publishNetlist(netlist);
+      publishNetlist(netlist, drawing);
       store.dispatch(actionStampWireNetTypes(netlist));
     } else {
       netlistLog('no netlist-active changes');

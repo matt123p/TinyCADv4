@@ -161,7 +161,7 @@ export class updateDrawing {
 
   updateNetlistTypes(
     drawing: dsnDrawing,
-    netlist: NetlistData,
+    netlist: NetlistData | null,
     netlistTypes: NetlistTypes,
     netTypeAssignments: { [net: string]: string },
   ) {
@@ -174,7 +174,9 @@ export class updateDrawing {
       netlistTypes: resolvedTypes,
       netTypeAssignments: resolvedAssignments,
     };
-    return this.stampWireNetTypes(updatedDrawing, netlist, resolvedTypes, resolvedAssignments);
+    return netlist
+      ? this.stampWireNetTypes(updatedDrawing, netlist, resolvedTypes, resolvedAssignments)
+      : updatedDrawing;
   }
 
   /**

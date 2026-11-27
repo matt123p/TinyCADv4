@@ -149,6 +149,11 @@ const common = {
     designDetails: { title: 'Detalles del diseño', detailsTab: 'Detalles', guidesTab: 'Guías', author: 'Autor', revision: 'Revisión', organisation: 'Organización', date: 'Fecha', documentTitle: 'Título', sheets: 'Hojas', showDesignDetails: 'Mostrar detalles del diseño', showDesignGuides: 'Mostrar guías del diseño', segmentsX: 'Segmentos X', segmentsY: 'Segmentos Y', applyAllSheets: 'Aplicar a todas las hojas (excepto n.º de página)' },
   },
   panel: {
+    wire: {
+      propertiesTitle: 'Propiedades del cable',
+      netlistType: 'Tipo de lista de redes',
+      netlistTypeDescription: 'Los tipos de lista de redes controlan el aspecto de los cables y permiten definir atributos adicionales para la exportación de la lista de redes.',
+    },
     common: { show: 'Mostrar', colour: 'Color', search: 'Buscar...', part: 'Parte' },
     symbol: {
       propertiesTitle: 'Propiedades del símbolo', properties: 'Propiedades', options: 'Opciones', showPowerPins: 'Mostrar pines de alimentación', allowResize: 'Permitir redimensionar', resetSize: 'Restablecer tamaño',

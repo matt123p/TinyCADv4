@@ -149,6 +149,11 @@ const common = {
     designDetails: { title: 'Détails du schéma', detailsTab: 'Détails', guidesTab: 'Guides', author: 'Auteur', revision: 'Révision', organisation: 'Organisation', date: 'Date', documentTitle: 'Titre', sheets: 'Feuilles', showDesignDetails: 'Afficher les détails du schéma', showDesignGuides: 'Afficher les guides du schéma', segmentsX: 'Segments X', segmentsY: 'Segments Y', applyAllSheets: 'Appliquer à toutes les feuilles (sauf n° de page)' },
   },
   panel: {
+    wire: {
+      propertiesTitle: 'Propriétés du fil',
+      netlistType: 'Type de netlist',
+      netlistTypeDescription: 'Les types de netlist définissent l’apparence des fils et permettent d’ajouter des attributs pour l’exportation de la netlist.',
+    },
     common: { show: 'Afficher', colour: 'Couleur', search: 'Rechercher...', part: 'Partie' },
     symbol: {
       propertiesTitle: 'Propriétés du symbole', properties: 'Propriétés', options: 'Options', showPowerPins: 'Afficher les broches d’alimentation', allowResize: 'Autoriser le redimensionnement', resetSize: 'Réinitialiser la taille',

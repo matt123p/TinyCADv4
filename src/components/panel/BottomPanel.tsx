@@ -9,6 +9,7 @@ import PinPanelContainer from '../../state/containers/pinPanelContainer';
 import DrcPanelContainer from '../../state/containers/drcPanelContainer';
 import { SymbolListPanel } from './SymbolListPanel';
 import { NetlistListPanel } from './NetlistListPanel';
+import { WirePanel } from './WirePanel';
 import { PinListPanel } from './PinListPanel';
 import { dsnDrawing } from '../../model/dsnDrawing';
 import { useTranslation } from 'react-i18next';
@@ -64,6 +65,7 @@ interface BottomPanelProps {
   selectedSymbol: dsnSymbol;
   selectedPin: dsnPin;
   selectedItem: DocItem;
+  sheetName: string;
   hasSelection: boolean;
   hasSelectedSymbols: boolean;
   drawing: dsnDrawing;
@@ -79,12 +81,15 @@ export const BottomPanel: React.FunctionComponent<BottomPanelProps> = (
   const { t } = useTranslation();
   const [fallbackTab, setFallbackTab] = React.useState('options');
   const [listMode, setListMode] = React.useState<'symbols' | 'netlist'>('symbols');
-  const selectedIsWireOrPower =
-    props.selectedItem?.NodeName === DocItemTypes.Wire ||
-    props.selectedItem?.NodeName === DocItemTypes.Power;
+  const selectedWire =
+    props.selectedItem?.NodeName === DocItemTypes.Wire ? props.selectedItem : null;
+  const selectedIsPower = props.selectedItem?.NodeName === DocItemTypes.Power;
   // Determine which panel to show
-  const getPanelType = (): 'symbol' | 'pin' | 'style' | 'drc' | 'empty' | 'pinList' => {
-    if (selectedIsWireOrPower) {
+  const getPanelType = (): 'symbol' | 'pin' | 'wire' | 'style' | 'drc' | 'empty' | 'pinList' => {
+    if (selectedWire) {
+      return 'wire';
+    }
+    if (selectedIsPower) {
       return 'empty';
     }
     if (props.selectedSymbol) {
@@ -144,6 +149,17 @@ export const BottomPanel: React.FunctionComponent<BottomPanelProps> = (
             <PinPanelContainer />
           </div>
         )}
+        {panelType === 'wire' && (
+          <div className={styles.panelContent}>
+            <WirePanel
+              key={selectedWire._id}
+              wire={selectedWire}
+              sheetName={props.sheetName}
+              drawing={props.drawing}
+              dispatch={props.dispatch}
+            />
+          </div>
+        )}
         {panelType === 'style' && (
           <div className={styles.panelContent}>
             <StylePanelContainer />
@@ -175,7 +191,7 @@ export const BottomPanel: React.FunctionComponent<BottomPanelProps> = (
               <NetlistListPanel
                 dispatch={props.dispatch}
                 drawing={props.drawing}
-                focusedParentId={selectedIsWireOrPower ? props.selectedItem?._id : undefined}
+                focusedParentId={selectedIsPower ? props.selectedItem._id : undefined}
                 listMode={listMode}
                 onListModeChange={setListMode}
               />

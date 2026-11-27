@@ -443,6 +443,11 @@ const common = {
     },
   },
   panel: {
+    wire: {
+      propertiesTitle: 'Draadeigenschappen',
+      netlistType: 'Netlijsttype',
+      netlistTypeDescription: 'Met netlijsttypen bepaal je hoe draden eruitzien en kun je extra attributen voor netlijstexport opgeven.',
+    },
     common: {
       show: 'Tonen',
       colour: 'Kleur',

@@ -148,6 +148,11 @@ const common = {
     designDetails: { title: '设计详情', detailsTab: '详情', guidesTab: '参考线', author: '作者', revision: '修订', organisation: '组织', date: '日期', documentTitle: '标题', sheets: '图纸', showDesignDetails: '显示设计详情', showDesignGuides: '显示设计参考线', segmentsX: 'X 分段', segmentsY: 'Y 分段', applyAllSheets: '应用到所有图纸（页码除外）' },
   },
   panel: {
+    wire: {
+      propertiesTitle: '导线属性',
+      netlistType: '网表类型',
+      netlistTypeDescription: '网表类型可用于更改导线的外观，并为网表导出添加额外属性。',
+    },
     common: { show: '显示', colour: '颜色', search: '搜索...', part: '部件' },
     symbol: {
       propertiesTitle: '符号属性', properties: '属性', options: '选项', showPowerPins: '显示电源引脚', allowResize: '允许调整大小', resetSize: '重置大小',

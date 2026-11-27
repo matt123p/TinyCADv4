@@ -157,6 +157,11 @@ const common = {
     designDetails: { title: 'Designdetails', detailsTab: 'Details', guidesTab: 'Hilfslinien', author: 'Autor', revision: 'Revision', organisation: 'Organisation', date: 'Datum', documentTitle: 'Titel', sheets: 'Blätter', showDesignDetails: 'Designdetails anzeigen', showDesignGuides: 'Design-Hilfslinien anzeigen', segmentsX: 'Segmente X', segmentsY: 'Segmente Y', applyAllSheets: 'Auf alle Blätter anwenden (außer Seiten-Nr.)' },
   },
   panel: {
+    wire: {
+      propertiesTitle: 'Leitungseigenschaften',
+      netlistType: 'Netzlistentyp',
+      netlistTypeDescription: 'Netzlistentypen bestimmen das Aussehen von Leitungen und ermöglichen zusätzliche Attribute für den Netzlistenexport.',
+    },
     common: { show: 'Anzeigen', colour: 'Farbe', search: 'Suchen...', part: 'Teil' },
     symbol: {
       propertiesTitle: 'Symboleigenschaften', properties: 'Eigenschaften', options: 'Optionen', showPowerPins: 'Versorgungspins anzeigen', allowResize: 'Größenänderung erlauben', resetSize: 'Größe zurücksetzen',

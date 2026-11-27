@@ -149,6 +149,11 @@ const common = {
     designDetails: { title: 'Dettagli disegno', detailsTab: 'Dettagli', guidesTab: 'Guide', author: 'Autore', revision: 'Revisione', organisation: 'Organizzazione', date: 'Data', documentTitle: 'Titolo', sheets: 'Fogli', showDesignDetails: 'Mostra dettagli disegno', showDesignGuides: 'Mostra guide disegno', segmentsX: 'Segmenti X', segmentsY: 'Segmenti Y', applyAllSheets: 'Applica a tutti i fogli (tranne numero pagina)' },
   },
   panel: {
+    wire: {
+      propertiesTitle: 'Proprietà del filo',
+      netlistType: 'Tipo di netlist',
+      netlistTypeDescription: 'I tipi di netlist definiscono l’aspetto dei fili e consentono di aggiungere attributi per l’esportazione della netlist.',
+    },
     common: { show: 'Mostra', colour: 'Colore', search: 'Cerca...', part: 'Parte' },
     symbol: {
       propertiesTitle: 'Proprietà simbolo', properties: 'Proprietà', options: 'Opzioni', showPowerPins: 'Mostra pin di alimentazione', allowResize: 'Consenti ridimensionamento', resetSize: 'Ripristina dimensione',

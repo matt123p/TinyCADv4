@@ -28,7 +28,7 @@ import {
 } from '../../model/dsnDrawing';
 import { DocItemTypes, dsnJunction, dsnLabel, dsnPower, dsnWire } from '../../model/dsnItem';
 import { defaultSheetOption } from '../../io/ioXml';
-import { NetlistData } from '../../io/netlists/netlistGenerator';
+import { getCurrentNetlist } from '../../io/netlists/netlistSync';
 import {
   actionCancelDialog,
   actionUpdateColoursAllSheets,
@@ -73,14 +73,6 @@ interface AttributeEditRow {
 }
 
 type ColourField = 'wire' | 'label' | 'power';
-
-const emptyNetlist: NetlistData = {
-  nets: {},
-  nodes: {},
-  eprops: {},
-  labels: {},
-  symbols: [],
-};
 
 const previewWireData: dsnWire = {
   NodeName: DocItemTypes.Wire,
@@ -660,7 +652,7 @@ const NetlistTypeEditorDialog: React.FC<NetlistTypeEditorDialogProps> = ({
         : DEFAULT_NETLIST_TYPE_NAME;
     }
 
-    dispatch(actionUpdateNetlistTypes(emptyNetlist, resolved, assignments));
+    dispatch(actionUpdateNetlistTypes(getCurrentNetlist(drawing), resolved, assignments));
 
     if (defaultRow && drawing?.sheets?.[0]?.options) {
       const designColours = drawing.sheets[0].options;
