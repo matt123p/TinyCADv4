@@ -1,3 +1,5 @@
+import { isProjectFile } from '../shared/projectFiles.js';
+import { recentProjectFolders, registerProjectFiles } from './projectFiles.js';
 import { isDrawingFile } from '../shared/drawingFiles.js';
 import { registerSimulation } from './simulation.js';
 import { chartWindowOptions, configureChartWindow } from './chartWindows.js';
@@ -27,6 +29,15 @@ const appDisplayName = 'TinyCAD';
 const store = new Store(); // Create store instance
 let mainWindow;
 let fileToOpen = null;
+let projectToOpen = null;
+
+function queueProjectOpen(filename) {
+  projectToOpen = path.resolve(filename);
+  const contents = mainWindow.webContents;
+  const open = () => contents.send('menu-command', 'file-open-project-launch');
+  if (contents.isLoadingMainFrame()) contents.once('did-finish-load', open);
+  else open();
+}
 let isLibraryMode = false;
 let viewMenuState = { hasExampleExplanation: false, exampleExplanationVisible: false, simulationPanelVisible: false };
 let menuTranslations = {};
@@ -115,6 +126,10 @@ function createWindow({ openAbout = false } = {}) {
       click: () => mainWindow.webContents.send('menu-command-with-data', 'file-open-recent', { name: path.basename(file), id: file })
     }));
 
+    const recentProjects = recentProjectFolders(store).map(id => ({
+      label: isMac ? id : id.replaceAll('&', '&&'),
+      click: () => mainWindow.webContents.send('menu-command-with-data', 'file-open-recent-project', { id }),
+    }));
     const menuTemplate = [
       ...(isMac ? [{
         label: app.name,
@@ -141,8 +156,12 @@ function createWindow({ openAbout = false } = {}) {
             ]
           },
           { label: getMenuLabel('open', 'Open'), accelerator: 'CmdOrCtrl+O', click: () => mainWindow.webContents.send('menu-command', 'file-open') },
+          { label: 'Open Project Folder…', click: () => mainWindow.webContents.send('menu-command', 'file-open-project-folder') },
+          { label: 'Recent Projects', submenu: recentProjects.length ? recentProjects : [{ label: 'No Recent Projects', enabled: false }] },
+          { label: 'Close Project', click: () => mainWindow.webContents.send('menu-command', 'file-close-project') },
           ...drawingOpenMenu(getMenuLabel, recentMenu, command => mainWindow.webContents.send('menu-command', command)),
           { label: getMenuLabel('save', 'Save'), accelerator: 'CmdOrCtrl+S', click: () => mainWindow.webContents.send('menu-command', 'file-save') },
+          { label: 'Save All', click: () => mainWindow.webContents.send('menu-command', 'file-save-all') },
           { label: getMenuLabel('saveAs', 'Save As...'), accelerator: 'CmdOrCtrl+Shift+S', click: () => mainWindow.webContents.send('menu-command', 'file-save-as') },
           { label: getMenuLabel('saveWithoutResults', 'Save without results...'), click: () => mainWindow.webContents.send('menu-command', 'file-save-without-results') },
           { type: 'separator' },
@@ -285,6 +304,9 @@ function createWindow({ openAbout = false } = {}) {
       qp.set('action', 'new-library');
     } else if (arg.toLowerCase().endsWith('.tclib')) {
       qp.set('library', arg);
+    } else if (isProjectFile(arg)) {
+      projectToOpen = path.resolve(arg);
+      qp.set('project', '1');
     } else if (isDrawingFile(arg)) {
       qp.set('file', arg);
     }
@@ -294,6 +316,9 @@ function createWindow({ openAbout = false } = {}) {
   if (fileToOpen) {
     if (fileToOpen.toLowerCase().endsWith('.tclib')) {
       qp.set('library', fileToOpen);
+    } else if (isProjectFile(fileToOpen)) {
+      projectToOpen = path.resolve(fileToOpen);
+      qp.set('project', '1');
     } else if (isDrawingFile(fileToOpen)) {
       qp.set('file', fileToOpen);
     }
@@ -387,6 +412,15 @@ function createWindow({ openAbout = false } = {}) {
   if (!ipcHandlersRegistered) {
     ipcHandlersRegistered = true;
     registerSimulation();
+    registerProjectFiles({
+      ipcMain, getWindow: () => mainWindow, dialog, shell, store,
+      documents: app.getPath('documents'), onRecentProjectsChanged: () => refreshMenu(),
+      takeProjectOpen: () => {
+        const filename = projectToOpen;
+        projectToOpen = null;
+        return filename;
+      },
+    });
     registerLicenseHandlers({ ipcMain, app, shell, getWindow: () => mainWindow });
     registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
       directory: path.join(__dirname, '../dist/bundled-examples') });
@@ -438,7 +472,7 @@ function createWindow({ openAbout = false } = {}) {
         return;
       }
 
-      loadFile(mainWindow, file, isLibraryMode, spawnNewWindow);
+      loadFile(mainWindow, file, isLibraryMode, spawnNewWindow, queueProjectOpen);
     });
 
     ipcMain.on('save-file', (event, data) => {
@@ -844,7 +878,9 @@ app.on('open-file', (event, filePath) => {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
 
-    if (isDrawingFile(filePath)) {
+    if (isProjectFile(filePath)) {
+      queueProjectOpen(filePath);
+    } else if (isDrawingFile(filePath)) {
       loadFile(mainWindow, filePath, isLibraryMode, spawnNewWindow);
     } else if (filePath.toLowerCase().endsWith('.tclib')) {
       loadLibrary(mainWindow, filePath);

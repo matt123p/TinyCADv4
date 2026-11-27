@@ -1,3 +1,7 @@
+import { closeProjectMode, confirmProjectClose, saveActiveProjectFile, saveProjectTabs } from '../../io/projectMode';
+import { openLaunchedProject, openProjectFolder } from '../../io/projects';
+import { useStore } from 'react-redux';
+import type { docDrawing } from '../../state/undo/undo';
 import React, { FunctionComponent, useEffect } from 'react';
 import ContextmenuContainer from '../../state/containers/contextmenuContainer';
 import DialogueContainer from '../../state/containers/dialogueContainer';
@@ -29,6 +33,7 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
   props: MainAppElectronProps,
 ) => {
   let content = null;
+  const store = useStore<docDrawing>();
 
   useEffect(() => {
     if (window.electronAPI && window.electronAPI.setMenuMode) {
@@ -46,14 +51,26 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
 
   useEffect(() => {
     props.dispatch(initialise() as any);
-    if (new URLSearchParams(window.location.search).get('about') === '1') {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('about') === '1') {
       props.dispatch(actionSelectDialog('about', null));
     }
+    const openFolder = (id?: string, launch = false) => {
+      void (launch ? openLaunchedProject() : openProjectFolder(id)).catch((error) => props.dispatch(actionSelectDialog('io_failure', {
+        message: error instanceof Error ? error.message : String(error),
+      })));
+    };
     const unsubscribe = window.electronAPI.onMenuCommand((command) => {
-      props.dispatch(handleMenuCommand(command) as any);
+      if (command === 'file-open-project-folder') openFolder();
+      else if (command === 'file-open-project-launch') openFolder(undefined, true);
+      else if (command === 'file-close-project') window.dispatchEvent(new Event(closeProjectMode));
+      else if (command === 'file-save-all') window.dispatchEvent(new Event(saveProjectTabs));
+      else if (command !== 'file-save' || window.dispatchEvent(new Event(saveActiveProjectFile, { cancelable: true })))
+        props.dispatch(handleMenuCommand(command) as any);
     });
     const unsubscribeWithData = window.electronAPI.onMenuCommandWithData((command, data) => {
-      props.dispatch(handleMenuCommandWithData(command, data) as any);
+      if (command === 'file-open-recent-project') openFolder(data.id);
+      else props.dispatch(handleMenuCommandWithData(command, data) as any);
     });
     return () => {
       unsubscribe();
@@ -75,6 +92,12 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
   useEffect(() => {
     if (window.electronAPI?.onAppClosing) {
       const unsubscribe = window.electronAPI.onAppClosing(() => {
+        if (store.getState().schematicTabs?.enabled) {
+          window.electronAPI.sendAppClosingResponse(
+            window.dispatchEvent(new Event(confirmProjectClose, { cancelable: true })),
+          );
+          return;
+        }
         if (props.saveNeeded) {
           props.dispatch(
             actionSelectDialog('unsaved_changes', {

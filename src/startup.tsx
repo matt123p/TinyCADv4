@@ -1,5 +1,7 @@
 ﻿import { invalidateSimulationDocument } from './simulation/session';
 import { activateResultDocument } from './simulation/resultStore';
+import { withSchematicTabs } from './state/schematicTabs';
+import type { docDrawing } from './state/undo/undo';
 import { DocActionTypes } from './state/actions/docActions';
 import { Middleware } from 'redux';
 import React from 'react';
@@ -21,16 +23,25 @@ import {
 import { imageFile } from './io/files';
 import i18n from './i18n';
 
-const simulationLifecycle: Middleware = () => next => action => {
+const simulationLifecycle: Middleware<{}, docDrawing> = ({ getState }) => next => action => {
+  const previous = getState().docStore.present.drawing.documentId;
   if (action.type === DocActionTypes.SetDocument) {
     invalidateSimulationDocument();
     activateResultDocument(action.doc.documentId);
   }
-  return next(action);
+  const result = next(action);
+  const current = getState().docStore.present.drawing.documentId;
+  if (action.type === 'schematic-tabs/activate' && current !== previous) {
+    invalidateSimulationDocument();
+    activateResultDocument(current);
+  }
+  return result;
 };
 
+const editorReducer = combineReducers({ docStore: DocStoreWithHistory, altStore: AltStoreReducer });
+
 export const store = createStore(
-  combineReducers({ docStore: DocStoreWithHistory, altStore: AltStoreReducer }),
+  process.env.TARGET_SYSTEM === 'electron' ? withSchematicTabs(editorReducer) : editorReducer,
   // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
   applyMiddleware(ReduxThunk, simulationLifecycle),
 );

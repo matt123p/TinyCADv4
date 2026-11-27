@@ -29,6 +29,7 @@ export interface SetDocument {
   filename: string;
   id: FileIdType;
   folderId: string;
+  projectVersion?: string;
 }
 
 export interface SetFileData {
@@ -36,6 +37,7 @@ export interface SetFileData {
   filename: string;
   id: FileIdType;
   folderId: string;
+  projectVersion?: string;
   drawingVersion: number;
 }
 

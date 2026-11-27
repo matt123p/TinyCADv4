@@ -8,6 +8,8 @@ interface ElectronLibraryLoadError {
 declare global {
     interface Window {
         electronAPI: {
+            projectFiles(request: import('./io/projectStorage').ProjectStorageRequest): Promise<unknown>;
+            onProjectFoldersChanged(callback: () => void): () => void;
             licenseIndex: () => Promise<import('./io/licenses').LicenseNotice[]>;
             readLicense: (file: string) => Promise<string>;
             openChromiumLicenses: () => Promise<void>;

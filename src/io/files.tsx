@@ -1,3 +1,5 @@
+import { projectFilesChanged } from './projectStorage';
+import type { dsnDrawing } from '../model/dsnDrawing';
 import { apiServer, tinycadUrl } from './apiServer';
 import { withoutResults } from '../simulation/document';
 import { drawingFileName, isCompressedDrawing } from '../../shared/drawingFiles.js';
@@ -129,7 +131,7 @@ export function fileNew() {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
     const pendingAction: UnsavedAction = { type: 'file-new' };
     
-    if (checkSaveNeeded(getState)) {
+    if (!getState().schematicTabs?.enabled && checkSaveNeeded(getState)) {
       dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
       return;
     }
@@ -145,7 +147,7 @@ export function fileOpen(file?: CurrentFile) {
       ? { type: 'file-open-recent', file: { name: file.name, id: file.id as string } }
       : { type: 'file-open' };
     
-    if (checkSaveNeeded(getState)) {
+    if (!getState().schematicTabs?.enabled && checkSaveNeeded(getState)) {
       dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
       return;
     }
@@ -183,50 +185,46 @@ export async function fileSaveWithoutResults(dispatch: Dispatch, getState: { ():
   }
 }
 
-function internalfileSave(
+export async function saveSchematicFile(file: CurrentFile, drawing: dsnDrawing, saveAs = false) {
+  const netlist = await wkrGenerateNetlist(drawing);
+  const updated = new updateDrawing().updateNetlistHints(drawing, netlist);
+  const projectSave = process.env.TARGET_SYSTEM === 'electron' && file.projectVersion && !saveAs;
+  const bytes = await encodeDrawing(updated, projectSave ? (/\.dzn$/i.test(file.name) ? 'zip-v1' : 'xml') : undefined);
+  if (projectSave) {
+    const { projectRequest } = await import('./projects');
+    return projectRequest({
+      operation: 'write', id: file.id as string, folder: file.folderId,
+      name: file.name, version: file.projectVersion, data: bytes,
+    });
+  }
+  return userManager.saveFile(bytes, {
+    ...file,
+    name: drawingFileName(file.name, isCompressedDrawing(bytes)),
+    id: saveAs ? null : file.id,
+  });
+}
+
+async function internalfileSave(
   dispatch: Dispatch,
   getState: { (): docDrawing },
   saveAs: boolean,
 ) {
-  const file = getState().altStore.file;
-  const saveInProgress = getState().altStore.saveInProgress;
-  const drawing = getState().docStore.present.drawing;
-  const drawingVerison = getState().docStore.present.drawingVersion;
-
-  // If we are already saving the file, then ignore this...
-  if (saveInProgress) {
-    return;
-  }
-
+  const { altStore, docStore: { present } } = getState();
+  const { file, saveInProgress } = altStore;
+  if (saveInProgress) return false;
   dispatch(actionSetSaveInProgress(true, null));
-
-  wkrGenerateNetlist(drawing)
-    .then((netlist) => {
-      const io = new ioXML();
-      const update_drawing = new updateDrawing();
-      const drawing_with_hints = update_drawing.updateNetlistHints(
-        drawing,
-        netlist,
-      );
-      return encodeDrawing(drawing_with_hints).then(bytes => userManager.saveFile(bytes, {
-        ...file,
-        name: drawingFileName(file.name, isCompressedDrawing(bytes)),
-        id: saveAs ? null : file.id,
-      }));
-    })
-    .then(
-      (meta) => {
-        dispatch(
-          actionSetFileData(meta.name, meta.id, file.folderId, drawingVerison),
-        );
-      },
-      (error: string) => {
-        dispatch(actionSetSaveInProgress(false, null));
-        if (error) {
-          dispatch(actionSelectDialog('io_failure', { message: error }));
-        }
-      },
-    );
+  try {
+    const meta = await saveSchematicFile(file, present.drawing, saveAs);
+    dispatch(actionSetFileData(meta.name, meta.id, file.folderId, present.drawingVersion,
+      file.projectVersion && !saveAs ? meta.version : undefined));
+    if (file.projectVersion && !saveAs)
+      window.dispatchEvent(new Event(projectFilesChanged));
+    return true;
+  } catch (error) {
+    dispatch(actionSetSaveInProgress(false, null));
+    if (error) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+    return false;
+  }
 }
 
 export function librarySave(dispatch: Dispatch, getState: { (): docDrawing }) {

@@ -1,6 +1,12 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  projectFiles: (request) => ipcRenderer.invoke('project-files', request),
+  onProjectFoldersChanged: (callback) => {
+    const listener = () => callback();
+    ipcRenderer.on('project-folders-changed', listener);
+    return () => ipcRenderer.removeListener('project-folders-changed', listener);
+  },
     licenseIndex: () => ipcRenderer.invoke('licenses-index'),
     readLicense: (file) => ipcRenderer.invoke('licenses-read', file),
     openChromiumLicenses: () => ipcRenderer.invoke('licenses-open-chromium'),

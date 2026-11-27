@@ -48,6 +48,7 @@ export interface LibraryFolder {
 }
 
 export interface CurrentFile {
+  projectVersion?: string;
   id: FileIdType | string;
   name: string;
   folderId?: string;
@@ -282,6 +283,7 @@ export function AltStoreReducer(
           name: { $set: action.filename },
           id: { $set: action.id },
           folderId: { $set: action.folderId },
+          projectVersion: { $set: action.projectVersion },
         },
         savedVersion: { $set: 1 },
       });
@@ -297,6 +299,7 @@ export function AltStoreReducer(
           name: { $set: action.filename },
           id: { $set: action.id },
           folderId: { $set: action.folderId },
+          projectVersion: { $set: action.projectVersion },
         },
         savedVersion: { $set: action.drawingVersion },
       });

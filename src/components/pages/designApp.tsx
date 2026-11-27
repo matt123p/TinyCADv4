@@ -1,3 +1,4 @@
+import type { ProjectWorkspaceLayout } from '../projects/ProjectWorkspace';
 import React, {
   FunctionComponent,
   useState,
@@ -26,6 +27,10 @@ import type { StandardLibraryNavigation } from '../../state/actions/libraryActio
 // Keep the entire chatbot dependency graph out of browser builds.
 const ChatPanel = process.env.TARGET_SYSTEM === 'electron'
   ? lazy(() => import('../chat/ChatPanel').then((m) => ({ default: m.ChatPanel })))
+  : null;
+
+const ProjectWorkspace = process.env.TARGET_SYSTEM === 'electron'
+  ? lazy(() => import('../projects/ProjectWorkspace'))
   : null;
 
 const SimulationSheet = lazy(() =>
@@ -191,29 +196,31 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
     props.cancelCreation();
   };
 
-  return (
+  const editor = ({ sidebar, tabs, document }: ProjectWorkspaceLayout) => (
     <div
       onKeyDown={handleKeyDown}
-      className="page-container"
+      className={sidebar ? "page-container project-mode" : "page-container"}
       style={{ top: process.env.TARGET_SYSTEM === 'electron' ? 0 : undefined }}
     >
       <SimulationFailureDialog />
-      <ToolbarContainer
+      {!document && <ToolbarContainer
         simulationToolbarRef={setSimulationToolbarTarget}
         chatOpen={chatOpen}
         onToggleChat={process.env.TARGET_SYSTEM === 'electron' ? toggleChat : undefined}
-      />
+      />}
       {process.env.TARGET_SYSTEM === 'electron' && ChatPanel && (
         <Suspense fallback={null}>
           <ChatPanel open={chatOpen} onClose={closeChat} />
         </Suspense>
       )}
+      {tabs}
       <div className="mid-container">
+        {sidebar}
         <div
           className={`side-panel-container${
             sidePanelVisible ? '' : ' side-panel-collapsed'
           }${sidePanelResizing ? ' side-panel-resizing' : ''}`}
-          style={sidePanelVisible ? { width: sidePanelWidth } : undefined}
+          style={document ? { display: 'none' } : sidePanelVisible ? { width: sidePanelWidth } : undefined}
         >
           {sidePanelVisible && (
             <ResizeHandle
@@ -234,7 +241,9 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           <SidePanelContainer toggleSidePanel={toggleSidePanel} />
         </div>
         <div className="main-content-area">
+          {document}
           <div
+            style={document ? { display: 'none' } : undefined}
             className={
               props.editSymbol ? 'circuit-container-es' : 'circuit-container'
             }
@@ -258,7 +267,7 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           </div>
           <div
             className="bottom-panel-wrapper"
-            style={{ height: bottomPanelHeight }}
+            style={document ? { display: 'none' } : { height: bottomPanelHeight }}
           >
             <ResizeHandle
               direction="vertical"
@@ -267,8 +276,8 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
             <BottomPanelContainer />
           </div>
         </div>
-        {!props.editSymbol && (props.simulationPanelActivated || props.hasExampleExplanation) && (
-          <div className={styles.rightPanels}>
+        {!document && !props.editSymbol && (props.simulationPanelActivated || props.hasExampleExplanation) && (
+          <div className={`${styles.rightPanels} design-right-panels`}>
             {props.simulationPanelActivated && (
               <Suspense fallback={null}>
                 <ChartWorkspace />
@@ -285,4 +294,10 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
       </div>
     </div>
   );
+
+  return ProjectWorkspace ? (
+    <Suspense fallback={null}>
+      <ProjectWorkspace>{editor}</ProjectWorkspace>
+    </Suspense>
+  ) : editor({});
 };

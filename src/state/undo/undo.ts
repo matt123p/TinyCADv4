@@ -1,3 +1,4 @@
+import type { SchematicTabs } from '../schematicTabs';
 import undoable from 'redux-undo';
 
 import { StateWithHistory } from 'redux-undo';
@@ -13,6 +14,7 @@ let lastEvent = new Date();
 let needHistory = false;
 
 export interface docDrawing {
+  schematicTabs?: SchematicTabs;
   docStore: StateWithHistory<docStore>;
   altStore: altStore;
 }

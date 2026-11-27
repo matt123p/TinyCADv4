@@ -1,3 +1,5 @@
+import { activateSchematicTab, openSchematicTabs, schematicFileTabKey } from '../../state/schematicTabs';
+import type { docDrawing } from '../../state/undo/undo';
 import { drawingMimeType } from '../../../shared/drawingFiles.js';
 import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
@@ -64,12 +66,21 @@ export class ElectronUserManager implements UserManager {
 
     // Add the callbacks
     this.unsubs.push(
-      window.electronAPI.fileLoaded(async (data) => {
-        try {
-          const doc = await decodeDrawing(data.content);
-          dispatch(actionSetDocument(doc, data.name, data.id, data.id));
-          dispatch(ActionCreators.clearHistory());
-        } catch (error) { dispatch(actionSelectDialog('io_failure',{message:String(error)})); }
+      window.electronAPI.fileLoaded((data) => {
+        dispatch((async (dispatch: Dispatch, getState: () => docDrawing) => {
+          try {
+            const key = schematicFileTabKey({ id: data.id, name: data.name });
+            if (openSchematicTabs(getState()).some((entry) => entry.key === key)) {
+              dispatch(activateSchematicTab(key));
+            } else {
+              const doc = await decodeDrawing(data.content);
+              dispatch(actionSetDocument(doc, data.name, data.id, data.id));
+              dispatch(ActionCreators.clearHistory());
+            }
+          } catch (error) {
+            dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+          }
+        }) as any);
       }),
     );
 

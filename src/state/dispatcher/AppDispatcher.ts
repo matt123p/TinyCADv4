@@ -177,6 +177,7 @@ export function actionSetDocument(
   filename: string,
   id: FileIdType,
   folderId: string,
+  projectVersion?: string,
 ) {
   const action: SetDocument = {
     type: DocActionTypes.SetDocument,
@@ -184,6 +185,7 @@ export function actionSetDocument(
     filename,
     id,
     folderId,
+    projectVersion,
   };
   return action;
 }
@@ -241,6 +243,7 @@ export function actionSetFileData(
   id: FileIdType,
   folderId: string,
   drawingVersion: number,
+  projectVersion?: string,
 ) {
   const action: SetFileData = {
     type: DocActionTypes.SetFileData,
@@ -248,6 +251,7 @@ export function actionSetFileData(
     id,
     folderId,
     drawingVersion,
+    projectVersion,
   };
   return action;
 }

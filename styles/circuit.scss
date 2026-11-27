@@ -229,3 +229,111 @@
   border: none;
   box-shadow: none !important;
 }
+
+.project-workspace-sidebar {
+  flex: 0 0 265px;
+  max-width: 30vw;
+  min-width: 0;
+  overflow: auto;
+  padding: 8px;
+  border-inline-end: 1px solid var(--colorNeutralStroke2);
+}
+
+.project-actions,
+.project-file-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+}
+
+.project-actions { flex-wrap: wrap; }
+
+.project-tab-list {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.project-file-tabs {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.project-file-tab {
+  display: flex;
+  flex: 0 0 auto;
+  border-inline-end: 1px solid var(--colorNeutralStroke2);
+}
+
+.project-browser { padding-top: 8px; }
+
+.project-files {
+  margin: 0;
+  padding-inline-start: 12px;
+  list-style: none;
+}
+
+.project-files button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 4px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: start;
+}
+
+.project-files button:hover,
+.project-files button[aria-current] { background: var(--colorNeutralBackground2Hover); }
+
+.project-files button span {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.project-document-area,
+.project-document-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
+}
+
+.project-document-editor textarea {
+  flex: 1;
+  min-height: 160px;
+  resize: none;
+  font: 13px monospace;
+}
+
+.project-asset-preview { text-align: center; }
+.project-asset-preview img,
+.project-asset-preview canvas { max-width: 100%; height: auto; }
+.project-markdown-preview { overflow-wrap: anywhere; }
+.project-error { color: var(--colorPaletteRedForeground1); overflow-wrap: anywhere; white-space: pre-wrap; }
+
+.project-mode .side-panel-container { max-width: 24vw; }
+.project-mode .design-right-panels { max-width: min(29vw, 400px); overflow: auto; }
+
+.project-source-control ul {
+  padding: 0;
+  list-style: none;
+}
+
+.project-source-control .git-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-block: 4px;
+}
+
+.project-source-control .git-change { overflow-wrap: anywhere; }

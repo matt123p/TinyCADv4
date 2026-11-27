@@ -1,3 +1,4 @@
+import { isProjectFile } from '../shared/projectFiles.js';
 import { isDrawingFile, drawingFileName, isCompressedDrawing } from '../shared/drawingFiles.js';
 import { dialog } from "electron";
 import fs from "fs";
@@ -7,30 +8,35 @@ import Store from 'electron-store';
 
 const store = new Store();
 
-export function loadFile(mainWindow, file, isLibraryMode, openNewWindow) {
+export function loadFile(mainWindow, file, isLibraryMode, openNewWindow, openProject) {
     if (typeof file === 'string') {
-        processLoadFile(mainWindow, file, isLibraryMode, openNewWindow);
+        processLoadFile(mainWindow, file, isLibraryMode, openNewWindow, openProject);
     }
     else if (file?.id) {
-        processLoadFile(mainWindow, file.id, isLibraryMode, openNewWindow);
+        processLoadFile(mainWindow, file.id, isLibraryMode, openNewWindow, openProject);
     }
     else {
         dialog.showOpenDialog({
             filters: [
                 { name: 'TinyCAD Drawings', extensions: ['dsn', 'dzn'] },
-                { name: 'TinyCAD Libraries', extensions: ['tclib'] }
+                { name: 'TinyCAD Libraries', extensions: ['tclib'] },
+                { name: 'TinyCAD Projects', extensions: ['tcproject'] }
             ],
             properties: ['openFile']
         }).then(result => {
             if (!result.canceled && result.filePaths.length > 0) {
                 const currentFilePath = result.filePaths[0];
-                processLoadFile(mainWindow, currentFilePath, isLibraryMode, openNewWindow);
+                processLoadFile(mainWindow, currentFilePath, isLibraryMode, openNewWindow, openProject);
             }
         });
     }
 }
 
-function processLoadFile(mainWindow, filePath, isLibraryMode, openNewWindow) {
+function processLoadFile(mainWindow, filePath, isLibraryMode, openNewWindow, openProject) {
+    if (isProjectFile(filePath) && openProject) {
+        openProject(filePath);
+        return;
+    }
     const isLib = filePath.toLowerCase().endsWith('.tclib');
     const isDsn = isDrawingFile(filePath);
 

@@ -92,6 +92,8 @@
     "prebuild:electron": "npm run chat-bundle",
     "test:chat:browser": "npm run chat-bundle && playwright test --config scripts/tests/chat-browser/playwright.config.mjs",
     "chatgpt:local": "node chatgpt/server.js",
+    "test:project": "node --test scripts/tests/pcb-project-files.test.mjs scripts/tests/pcb-project-git.test.mjs scripts/tests/project-tab-session.test.mjs",
+    "test:project:electron": "node scripts/tests/project-electron.mjs",
     "test:electron-build": "node --test scripts/tests/renderer-imports.test.mjs",
     "dist:mas": "node scripts/dist-mas.mjs"
   },
@@ -158,6 +160,13 @@
           "role": "Editor"
         },
         {
+          "ext": "tcproject",
+          "name": "TinyCAD Project",
+          "description": "TinyCAD Project Settings",
+          "icon": "assets/TinyCAD File.png",
+          "role": "Editor"
+        },
+        {
           "ext": "tclib",
           "name": "TinyCAD Library",
           "description": "TinyCAD Component Library",
@@ -208,6 +217,13 @@
         "ext": "dzn",
         "name": "TinyCAD Compressed Design",
         "description": "TinyCAD Compressed Design File",
+        "icon": "assets/TinyCAD File",
+        "role": "Editor"
+      },
+      {
+        "ext": "tcproject",
+        "name": "TinyCAD Project",
+        "description": "TinyCAD Project Settings",
         "icon": "assets/TinyCAD File",
         "role": "Editor"
       },
