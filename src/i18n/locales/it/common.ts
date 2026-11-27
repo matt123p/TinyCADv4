@@ -149,6 +149,12 @@ const common = {
     designDetails: { title: 'Dettagli disegno', detailsTab: 'Dettagli', guidesTab: 'Guide', author: 'Autore', revision: 'Revisione', organisation: 'Organizzazione', date: 'Data', documentTitle: 'Titolo', sheets: 'Fogli', showDesignDetails: 'Mostra dettagli disegno', showDesignGuides: 'Mostra guide disegno', segmentsX: 'Segmenti X', segmentsY: 'Segmenti Y', applyAllSheets: 'Applica a tutti i fogli (tranne numero pagina)' },
   },
   panel: {
+    colourPicker: {
+      hue: 'Tonalità',
+      saturation: 'Saturazione',
+      brightness: 'Luminosità',
+      presets: 'Colori predefiniti',
+    },
     wire: {
       propertiesTitle: 'Proprietà del filo',
       netlistType: 'Tipo di netlist',

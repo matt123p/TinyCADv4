@@ -148,6 +148,12 @@ const common = {
     designDetails: { title: '设计详情', detailsTab: '详情', guidesTab: '参考线', author: '作者', revision: '修订', organisation: '组织', date: '日期', documentTitle: '标题', sheets: '图纸', showDesignDetails: '显示设计详情', showDesignGuides: '显示设计参考线', segmentsX: 'X 分段', segmentsY: 'Y 分段', applyAllSheets: '应用到所有图纸（页码除外）' },
   },
   panel: {
+    colourPicker: {
+      hue: '色相',
+      saturation: '饱和度',
+      brightness: '亮度',
+      presets: '预设颜色',
+    },
     wire: {
       propertiesTitle: '导线属性',
       netlistType: '网表类型',

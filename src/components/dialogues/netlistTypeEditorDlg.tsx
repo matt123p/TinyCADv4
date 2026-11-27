@@ -15,7 +15,7 @@ import {
   tokens,
 } from '@fluentui/react-components';
 import { Search24Regular } from '@fluentui/react-icons';
-import { ColorResult, SketchPicker } from 'react-color';
+import { ColourPicker } from '../controls/ColourPicker';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import {
@@ -292,7 +292,6 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
-    overflowX: 'hidden',
   },
   pickerLayout: {
     display: 'flex',
@@ -303,15 +302,18 @@ const useStyles = makeStyles({
   pickerControls: {
     display: 'flex',
     flexDirection: 'column',
+    flex: '1 1 248px',
+    minWidth: 0,
     gap: '10px',
   },
   fieldSwitch: {
     display: 'flex',
+    flexWrap: 'wrap',
     gap: '6px',
   },
   previewPanel: {
-    minWidth: '280px',
-    maxWidth: '320px',
+    flex: '1 1 280px',
+    minWidth: 0,
     border: `1px solid ${tokens.colorNeutralStroke1}`,
     borderRadius: tokens.borderRadiusMedium,
     padding: '10px',
@@ -331,6 +333,7 @@ const useStyles = makeStyles({
   },
   previewLegend: {
     display: 'flex',
+    flexWrap: 'wrap',
     gap: '12px',
     fontSize: '11px',
     color: tokens.colorNeutralForeground2,
@@ -575,8 +578,9 @@ const NetlistTypeEditorDialog: React.FC<NetlistTypeEditorDialogProps> = ({
     [navigateCell],
   );
 
+  const childEditorOpen = !!(colourEditor || attributesEditorRowId);
   useEffect(() => {
-    if (focusedCell && tableRef.current) {
+    if (!childEditorOpen && focusedCell && tableRef.current) {
       const cell = document.getElementById(`nt-cell-${focusedCell.row}-${focusedCell.col}`);
       if (cell) {
         const focusable = cell.querySelector('input, button') as HTMLElement;
@@ -588,7 +592,7 @@ const NetlistTypeEditorDialog: React.FC<NetlistTypeEditorDialogProps> = ({
         }
       }
     }
-  }, [focusedCell]);
+  }, [childEditorOpen, focusedCell]);
 
   const isDefaultRow = (row: TypeRow): boolean =>
     row.originalName === DEFAULT_NETLIST_TYPE_NAME;
@@ -726,19 +730,19 @@ const NetlistTypeEditorDialog: React.FC<NetlistTypeEditorDialogProps> = ({
     updateRow(currentColourRow.id, patch);
   };
 
-  const handlePickerChange = (colour: ColorResult) => {
+  const handlePickerChange = (colour: string) => {
     if (!currentColourRow || !colourEditor) {
       return;
     }
     switch (colourEditor.field) {
       case 'wire':
-        updateColourEditor({ wireColor: colour.hex, overrideWireColor: true });
+        updateColourEditor({ wireColor: colour, overrideWireColor: true });
         break;
       case 'label':
-        updateColourEditor({ labelColor: colour.hex, overrideLabelColor: true });
+        updateColourEditor({ labelColor: colour, overrideLabelColor: true });
         break;
       case 'power':
-        updateColourEditor({ powerColor: colour.hex, overridePowerColor: true });
+        updateColourEditor({ powerColor: colour, overridePowerColor: true });
         break;
     }
   };
@@ -1161,9 +1165,9 @@ const NetlistTypeEditorDialog: React.FC<NetlistTypeEditorDialogProps> = ({
                     {currentColourRowIsDefault ? (
                       <Text size={200}>{t('dialogues.netlistTypeEditor.appliesToDesignDefaults')}</Text>
                     ) : null}
-                    <SketchPicker
-                      disableAlpha={true}
-                      color={getColourValue(currentColourRow, activeColourField)}
+                    <ColourPicker
+                      key={activeColourField}
+                      colour={getColourValue(currentColourRow, activeColourField)}
                       onChange={handlePickerChange}
                     />
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

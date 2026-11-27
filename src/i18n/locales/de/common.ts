@@ -157,6 +157,12 @@ const common = {
     designDetails: { title: 'Designdetails', detailsTab: 'Details', guidesTab: 'Hilfslinien', author: 'Autor', revision: 'Revision', organisation: 'Organisation', date: 'Datum', documentTitle: 'Titel', sheets: 'Blätter', showDesignDetails: 'Designdetails anzeigen', showDesignGuides: 'Design-Hilfslinien anzeigen', segmentsX: 'Segmente X', segmentsY: 'Segmente Y', applyAllSheets: 'Auf alle Blätter anwenden (außer Seiten-Nr.)' },
   },
   panel: {
+    colourPicker: {
+      hue: 'Farbton',
+      saturation: 'Sättigung',
+      brightness: 'Helligkeit',
+      presets: 'Voreingestellte Farben',
+    },
     wire: {
       propertiesTitle: 'Leitungseigenschaften',
       netlistType: 'Netzlistentyp',

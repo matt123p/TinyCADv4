@@ -149,6 +149,12 @@ const common = {
     designDetails: { title: 'Detalles del diseño', detailsTab: 'Detalles', guidesTab: 'Guías', author: 'Autor', revision: 'Revisión', organisation: 'Organización', date: 'Fecha', documentTitle: 'Título', sheets: 'Hojas', showDesignDetails: 'Mostrar detalles del diseño', showDesignGuides: 'Mostrar guías del diseño', segmentsX: 'Segmentos X', segmentsY: 'Segmentos Y', applyAllSheets: 'Aplicar a todas las hojas (excepto n.º de página)' },
   },
   panel: {
+    colourPicker: {
+      hue: 'Tono',
+      saturation: 'Saturación',
+      brightness: 'Brillo',
+      presets: 'Colores predefinidos',
+    },
     wire: {
       propertiesTitle: 'Propiedades del cable',
       netlistType: 'Tipo de lista de redes',
