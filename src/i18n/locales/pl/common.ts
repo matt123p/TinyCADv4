@@ -443,6 +443,12 @@ const common = {
     },
   },
   panel: {
+    colourPicker: {
+      hue: 'Odcień',
+      saturation: 'Nasycenie',
+      brightness: 'Jasność',
+      presets: 'Gotowe kolory',
+    },
     wire: {
       propertiesTitle: 'Właściwości przewodu',
       netlistType: 'Typ netlisty',

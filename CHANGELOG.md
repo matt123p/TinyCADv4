@@ -16,6 +16,7 @@
 - Use a consistent toolbar across editors, including the BOM viewer. Edit syntax-highlighted files directly, switch Markdown and CSV views using bottom tabs, and zoom centred images from a bottom control.
 - Source Control warns about unsaved edits before staging or committing. The saved-changes viewer and file and line history actions have been removed.
 - The project file menu calls the trash action **Delete**. The context menu closes before the confirmation opens.
+- Use the same colour picker for application colours, drawing objects, and netlist types.
 
 ### Fixed
 

@@ -443,6 +443,12 @@ const common = {
     },
   },
   panel: {
+    colourPicker: {
+      hue: 'Hue',
+      saturation: 'Saturation',
+      brightness: 'Brightness',
+      presets: 'Preset colours',
+    },
     wire: {
       propertiesTitle: 'Wire Properties',
       netlistType: 'Netlist type',

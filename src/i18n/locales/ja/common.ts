@@ -149,6 +149,12 @@ const common = {
     designDetails: { title: '設計詳細', detailsTab: '詳細', guidesTab: 'ガイド', author: '作成者', revision: 'リビジョン', organisation: '組織', date: '日付', documentTitle: 'タイトル', sheets: 'シート', showDesignDetails: '設計詳細を表示', showDesignGuides: '設計ガイドを表示', segmentsX: 'セグメント X', segmentsY: 'セグメント Y', applyAllSheets: 'すべてのシートに適用 (ページ番号を除く)' },
   },
   panel: {
+    colourPicker: {
+      hue: '色相',
+      saturation: '彩度',
+      brightness: '明度',
+      presets: 'プリセット色',
+    },
     wire: {
       propertiesTitle: '配線プロパティ',
       netlistType: 'ネットリストタイプ',

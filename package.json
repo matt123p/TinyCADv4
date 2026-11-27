@@ -290,6 +290,7 @@
     }
   },
   "dependencies": {
+    "@ctrl/tinycolor": "^3.6.1",
     "@fluentui/react-components": "^9.72.10",
     "@fluentui/react-icons": "^2.0.317",
     "@zip.js/zip.js": "2.24.0",
@@ -313,7 +314,6 @@
     "papaparse": "5.7.1",
     "pdfkit": "^0.13.0",
     "react": "^18.3.1",
-    "react-color": "2.18.0",
     "react-dom": "^18.3.1",
     "react-i18next": "^16.5.4",
     "react-redux": "^7.2.1",
@@ -341,7 +341,6 @@
     "@types/papaparse": "5.5.2",
     "@types/pdfkit": "^0.12.2",
     "@types/react": "^18.3.27",
-    "@types/react-color": "^3.0.4",
     "@types/react-dom": "^18.3.7",
     "@types/react-redux": "^7.1.9",
     "@types/sql.js": "^1.4.3",

@@ -149,6 +149,12 @@ const common = {
     designDetails: { title: 'Détails du schéma', detailsTab: 'Détails', guidesTab: 'Guides', author: 'Auteur', revision: 'Révision', organisation: 'Organisation', date: 'Date', documentTitle: 'Titre', sheets: 'Feuilles', showDesignDetails: 'Afficher les détails du schéma', showDesignGuides: 'Afficher les guides du schéma', segmentsX: 'Segments X', segmentsY: 'Segments Y', applyAllSheets: 'Appliquer à toutes les feuilles (sauf n° de page)' },
   },
   panel: {
+    colourPicker: {
+      hue: 'Teinte',
+      saturation: 'Saturation',
+      brightness: 'Luminosité',
+      presets: 'Couleurs prédéfinies',
+    },
     wire: {
       propertiesTitle: 'Propriétés du fil',
       netlistType: 'Type de netlist',

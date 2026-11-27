@@ -443,6 +443,12 @@ const common = {
     },
   },
   panel: {
+    colourPicker: {
+      hue: 'Kleurtoon',
+      saturation: 'Verzadiging',
+      brightness: 'Helderheid',
+      presets: 'Vooraf ingestelde kleuren',
+    },
     wire: {
       propertiesTitle: 'Draadeigenschappen',
       netlistType: 'Netlijsttype',
