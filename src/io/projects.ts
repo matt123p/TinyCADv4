@@ -1,3 +1,4 @@
+import { blank } from './ioXml';
 import { decodeDrawing } from './dsnCodec';
 import { projectFolderOpened } from './projectStorage';
 import type {
@@ -43,6 +44,6 @@ export async function readProjectDrawing(file: {
     operation: 'read',
     id: file.id,
   });
-  const drawing = await decodeDrawing(data);
+  const drawing = data.length ? await decodeDrawing(data) : blank();
   return actionSetDocument(drawing, file.name, file.id, file.folder, version);
 }

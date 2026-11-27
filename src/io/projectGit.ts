@@ -41,6 +41,7 @@ export type GitResolution =
   | { choice: 'ours' | 'theirs' }
   | { choice: 'text'; text: string };
 
+export type GitDiffLine = { type: 'insert' | 'delete'; line: number };
 export type GitDiff = { text: string; hunks: string[]; token: string };
 export type GitCommit = {
   id: string;
@@ -48,6 +49,15 @@ export type GitCommit = {
   parents: string[];
   date: string;
   subject: string;
+};
+
+export type GitStash = { id: string; ref: string; subject: string };
+export type GitWorktree = {
+  id: string;
+  branch?: string;
+  head?: string;
+  bare: boolean;
+  prunable: boolean;
 };
 
 export type GitRequest =
@@ -60,10 +70,19 @@ export type GitRequest =
         | 'push'
         | 'sync'
         | 'incoming'
-        | 'outgoing';
+        | 'outgoing'
+        | 'graph'
+        | 'stash-list'
+        | 'references';
     }
   | { command: 'create-branch' | 'switch-branch'; branch: string }
   | { command: 'stage' | 'unstage' | 'history'; path?: string }
+  | { command: 'publish-branch'; remote: string }
+  | { command: 'stash-create'; message?: string }
+  | ({ command: 'stash-apply' | 'stash-pop' | 'stash-drop' } & Pick<
+      GitStash,
+      'id' | 'ref'
+    >)
   | { command: 'conflict'; path: string }
   | ({
       command: 'resolve-conflict';
@@ -71,9 +90,23 @@ export type GitRequest =
       token: string;
     } & GitResolution)
   | { command: 'diff'; path: string; staged: boolean }
-  | { command: 'stage-hunk'; path: string; hunk: number; token: string }
+  | {
+      command: 'stage-hunk' | 'unstage-hunk';
+      path: string;
+      hunk: number;
+      token: string;
+    }
+  | {
+      command: 'stage-lines' | 'unstage-lines';
+      path: string;
+      lines: GitDiffLine[];
+      token: string;
+    }
+  | { command: 'discard'; path: string; token: string }
   | { command: 'commit'; message: string; token: string }
-  | { command: 'revision'; id: string };
+  | { command: 'revision'; id: string }
+  | { command: 'compare'; id: string; ref: string }
+  | { command: 'blame'; path: string };
 
 export interface GitResult {
   status: GitSnapshot | null;
@@ -92,15 +125,46 @@ export interface GitResult {
   'resolve-conflict': GitSnapshot;
   diff: GitDiff;
   'stage-hunk': GitSnapshot;
+  'unstage-hunk': GitSnapshot;
+  'stage-lines': GitSnapshot;
+  'unstage-lines': GitSnapshot;
+  discard: GitSnapshot;
+  graph: GitCommit[];
+  'publish-branch': GitSnapshot;
+  'stash-list': GitStash[];
+  'stash-create': GitSnapshot;
+  'stash-apply': GitSnapshot;
+  'stash-pop': GitSnapshot;
+  'stash-drop': GitSnapshot;
   commit: GitSnapshot;
   history: GitCommit[];
   revision: string;
+  references: { ref: string; name: string }[];
+  compare: string;
+  blame: string;
 }
 
 export function projectGit<T extends GitRequest>(folder: string, request: T) {
   return projectRequest({ operation: 'git', folder, request }) as Promise<
     GitResult[T['command']]
   >;
+}
+
+export async function openProjectWorktree(
+  folder: string,
+  request:
+    | { id: string }
+    | { name: string; branch: string; createBranch: boolean },
+) {
+  const root = await projectRequest(
+    'id' in request
+      ? { operation: 'worktree-open', folder, ...request }
+      : { operation: 'worktree-add', folder, ...request },
+  );
+  if (root)
+    window.dispatchEvent(
+      new CustomEvent(projectFolderOpened, { detail: root }),
+    );
 }
 
 export async function cloneProject(source: string, name: string) {

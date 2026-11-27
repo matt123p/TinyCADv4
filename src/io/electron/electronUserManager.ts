@@ -192,6 +192,12 @@ export class ElectronUserManager implements UserManager {
             const unsubscribe = window.electronAPI.libraryLoaded((data) => {
             if (data.id === libraryPath && data.content) {
                 unsubscribe();
+                if (data.content.byteLength === 0) {
+                  const lib = { ...this.newLibrary(), fileId: data.id, name: data.name };
+                  dispatch(actionEditLibrary(lib, data.name, data.id, null));
+                  resolve();
+                  return;
+                }
                 module.loadTcLibrary(
                 data.id,
                 data.name,

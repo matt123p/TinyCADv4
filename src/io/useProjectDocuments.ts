@@ -212,6 +212,32 @@ export function useProjectDocuments() {
     if (active === id) select(current.current.at(-1)?.id);
   }
 
+  function relocate(locations: Record<string, ProjectDocumentLocation>) {
+    const selected = active && locations[active];
+    update((files) =>
+      files.map((file) => {
+        const location = locations[file.id];
+        if (!location) return file;
+        const type = projectDocumentKind(location.name);
+        return file.kind === 'text' && type.kind === 'text'
+          ? {
+              ...file,
+              ...location,
+              ...type,
+              language: type.language,
+              preview: type.preview,
+            }
+          : { ...file, ...location, mime: type.mime };
+      }),
+    );
+    if (selected) select(selected.id);
+  }
+
+  function removeWhere(matches: (id: string) => boolean) {
+    update((files) => files.filter((file) => !matches(file.id)));
+    if (active && matches(active)) select(current.current.at(-1)?.id);
+  }
+
   function clear() {
     projectEpoch.current++;
     select();
@@ -229,11 +255,13 @@ export function useProjectDocuments() {
     saveAll,
     refresh,
     close,
+    relocate,
+    removeWhere,
     clear,
-    hasDirty: () => current.current.some(dirtyProjectDocument),
-    isProtected: (id: string) =>
+    isSaving: () => pending.current.size > 0,
+    hasDirty: (matches: (id: string) => boolean = () => true) =>
       current.current.some(
-        (file) => file.id === id || file.ancestors.includes(id),
+        (file) => matches(file.id) && dirtyProjectDocument(file),
       ),
   };
 }

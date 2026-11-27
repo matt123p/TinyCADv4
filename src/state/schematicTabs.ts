@@ -31,6 +31,7 @@ type TabsAction =
       key: string;
     }
   | { type: 'schematic-tabs/remove'; key: string }
+  | { type: 'schematic-tabs/relocate'; files: Record<string, CurrentFile> }
   | {
       type: 'schematic-tabs/reload';
       key: string;
@@ -122,6 +123,12 @@ export function savedSchematicTab(
   return { type: 'schematic-tabs/saved', key, original, file, savedVersion };
 }
 
+export function relocateSchematicTabs(
+  files: Record<string, CurrentFile>,
+): TabsAction {
+  return { type: 'schematic-tabs/relocate', files };
+}
+
 const disabled: SchematicTabs = { enabled: false, order: [], inactive: {} };
 
 export function withSchematicTabs(
@@ -144,6 +151,29 @@ export function withSchematicTabs(
     if (!tabs.enabled) {
       const { schematicTabs: _, ...editor } = state;
       return reduce(editor, raw as EditorAction);
+    }
+
+    if (raw.type === 'schematic-tabs/relocate') {
+      const inactive = Object.fromEntries(
+        Object.entries(tabs.inactive).map(([key, tab]) => {
+          const file = raw.files[key];
+          return file
+            ? [schematicFileTabKey(file), { ...tab, file }]
+            : [key, tab];
+        }),
+      );
+      const file = raw.files[active] ?? state.altStore.file;
+      return {
+        ...state,
+        altStore: { ...state.altStore, file },
+        schematicTabs: {
+          ...tabs,
+          order: tabs.order.map((key) =>
+            raw.files[key] ? schematicFileTabKey(raw.files[key]) : key,
+          ),
+          inactive,
+        },
+      };
     }
 
     if (raw.type === 'schematic-tabs/activate') {

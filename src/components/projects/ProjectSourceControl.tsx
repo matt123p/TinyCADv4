@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Button,
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuPopover,
+  MenuTrigger,
   Dialog,
   DialogActions,
   DialogBody,
@@ -9,11 +14,25 @@ import {
   DialogTitle,
   Textarea,
   Input,
+  Select,
 } from '@fluentui/react-components';
+import {
+  AddRegular,
+  ArrowClockwiseRegular,
+  ArrowUndoRegular,
+  CheckmarkRegular,
+  HistoryRegular,
+  MoreHorizontalRegular,
+  SubtractRegular,
+} from '@fluentui/react-icons';
+import ProjectGitMaintenance from './ProjectGitMaintenance';
+import type { MaintenanceMode } from './ProjectGitMaintenance';
+import ProjectGitGraph from './ProjectGitGraph';
 import { cloneProject, projectGit } from '../../io/projectGit';
 import type {
   GitChange,
   GitCommit,
+  GitDiffLine,
   GitConflict,
   GitResolution,
   GitSnapshot,
@@ -26,14 +45,18 @@ export type GitReview = {
   title: string;
   text: string;
   hunks?: string[];
-  stageHunk?: (index: number) => void;
+  applyHunk?: (index: number) => void;
+  applyLines?: (lines: GitDiffLine[]) => void;
+  linesLabel?: string;
+  hunkLabel?: string;
 };
 
 type Props = {
   root?: ProjectLocation;
   openFolder(): void;
   setCount(count: number): void;
-  historyRequest?: { filename: string };
+  onSnapshot(snapshot: GitSnapshot | null): void;
+  historyRequest?: { filename: string; blame?: boolean };
   openReview(review?: GitReview): void;
   schematicDirty(): boolean;
   supportingFilesDirty(): boolean;
@@ -59,6 +82,7 @@ export default function ProjectSourceControl({
   root,
   openFolder,
   setCount,
+  onSnapshot,
   historyRequest,
   openReview,
   schematicDirty,
@@ -68,7 +92,15 @@ export default function ProjectSourceControl({
 }: Props) {
   const [snapshot, setSnapshot] = useState<GitSnapshot | null>();
   const [busy, setBusy] = useState(false);
+  const [maintenance, setMaintenance] = useState<MaintenanceMode>();
+  const [compareCommit, setCompareCommit] = useState<{
+    commit: GitCommit;
+    references: { ref: string; name: string }[];
+  }>();
+  const [reference, setReference] = useState('');
+  const [graph, setGraph] = useState<GitCommit[]>([]);
   const lock = useRef(false);
+  const refreshQueued = useRef(false);
   const active = useRef(false);
   const lastHistoryRequest = useRef<typeof historyRequest>();
   const [error, setError] = useState('');
@@ -89,6 +121,7 @@ export default function ProjectSourceControl({
   function apply(next: GitSnapshot | null) {
     if (!active.current) return;
     setSnapshot(next);
+    onSnapshot(next);
     setCount(next?.changes.filter(({ outside }) => !outside).length ?? 0);
   }
 
@@ -104,24 +137,78 @@ export default function ProjectSourceControl({
         setError(error instanceof Error ? error.message : String(error));
     } finally {
       lock.current = false;
-      if (active.current) setBusy(false);
+      if (active.current) {
+        setBusy(false);
+        if (refreshQueued.current) {
+          refreshQueued.current = false;
+          refresh();
+        }
+      }
     }
   }
 
   function refresh() {
     if (!id) return;
+    if (lock.current) {
+      refreshQueued.current = true;
+      return;
+    }
     void run(async () => apply(await projectGit(id, { command: 'status' })));
   }
 
   useEffect(() => {
     active.current = true;
     refresh();
+    const unwatch = window.electronAPI.onProjectFoldersChanged(refresh);
     window.addEventListener(projectFilesChanged, refresh);
+    window.addEventListener('focus', refresh);
     return () => {
+      unwatch();
+      window.removeEventListener('focus', refresh);
       active.current = false;
       window.removeEventListener(projectFilesChanged, refresh);
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!id || !snapshot) return;
+    let current = true;
+    void projectGit(id, { command: 'graph' })
+      .then((commits) => {
+        if (current) setGraph(commits);
+      })
+      .catch((error) => {
+        if (current)
+          setError(error instanceof Error ? error.message : String(error));
+      });
+    return () => {
+      current = false;
+    };
+  }, [
+    id,
+    snapshot?.head,
+    snapshot?.upstream,
+    snapshot?.behind,
+    snapshot?.ahead,
+  ]);
+
+  function inspectCommit(commit: GitCommit) {
+    void run(async () => {
+      const text = await projectGit(id, { command: 'revision', id: commit.id });
+      if (!active.current) return;
+      openReview({ title: commit.short + ' · ' + commit.subject, text });
+      setHistory(undefined);
+    });
+  }
+
+  function compareRevision(commit: GitCommit) {
+    void run(async () => {
+      const references = await projectGit(id, { command: 'references' });
+      if (!active.current) return;
+      setReference(references[0]?.ref ?? '');
+      setCompareCommit({ commit, references });
+    });
+  }
 
   function stage(deposit: boolean, path?: string) {
     void run(async () => {
@@ -139,27 +226,42 @@ export default function ProjectSourceControl({
       staged,
     });
     if (!active.current) return;
+    const applyPart = (part: number | GitDiffLine[]) => {
+      void run(async () => {
+        const location = { path: file.path, token: diff.token };
+        const next = await projectGit(
+          id,
+          typeof part === 'number'
+            ? {
+                ...location,
+                command: staged ? 'unstage-hunk' : 'stage-hunk',
+                hunk: part,
+              }
+            : {
+                ...location,
+                command: staged ? 'unstage-lines' : 'stage-lines',
+                lines: part,
+              },
+        );
+        apply(next);
+        const remaining = next.changes.find(
+          (entry) =>
+            entry.path === file.path &&
+            (staged ? entry.index : entry.working) !== '.',
+        );
+        if (remaining) await review(remaining, staged);
+        else openReview();
+      });
+    };
     openReview({
       title: (staged ? 'Staged ' : 'Changes to ') + description(file),
       text:
         diff.text || 'No textual differences. Compare or stage the whole file.',
       hunks: diff.hunks,
-      stageHunk: (hunk) => {
-        void run(async () => {
-          const next = await projectGit(id, {
-            command: 'stage-hunk',
-            path: file.path,
-            token: diff.token,
-            hunk,
-          });
-          apply(next);
-          const remaining = next.changes.find(
-            ({ path, working }) => path === file.path && working !== '.',
-          );
-          if (remaining) await review(remaining, false);
-          else openReview();
-        });
-      },
+      hunkLabel: staged ? 'Unstage Hunk' : 'Stage Hunk',
+      linesLabel: staged ? 'Unstage Selected Lines' : 'Stage Selected Lines',
+      applyHunk: diff.hunks.length ? applyPart : undefined,
+      applyLines: diff.hunks.length ? applyPart : undefined,
     });
   }
 
@@ -195,7 +297,15 @@ export default function ProjectSourceControl({
       value.replaceAll(String.fromCharCode(92), '/');
     const prefix = slash(snapshot.root) + '/';
     const filename = slash(historyRequest.filename);
-    if (filename.startsWith(prefix)) showHistory(filename.slice(prefix.length));
+    if (!filename.startsWith(prefix)) return;
+    const path = filename.slice(prefix.length);
+    if (historyRequest.blame) {
+      void run(async () => {
+        const text = await projectGit(id, { command: 'blame', path });
+        if (active.current)
+          openReview({ title: 'Line History · ' + path, text });
+      });
+    } else showHistory(path);
   }, [historyRequest, snapshot, busy]);
 
   function performCheckout(save: boolean) {
@@ -249,76 +359,142 @@ export default function ProjectSourceControl({
     });
   }
 
-  function changeRows(
+  function discard(file: GitChange) {
+    if (schematicDirty() || supportingFilesDirty()) {
+      setError('Save or close open files before discarding Git changes.');
+      return;
+    }
+    void run(async () => {
+      const { token } = await projectGit(id, {
+        command: 'diff',
+        path: file.path,
+        staged: false,
+      });
+      if (!window.confirm(`Discard the working changes to "${file.path}"?`))
+        return;
+      const next = await projectGit(id, {
+        command: 'discard',
+        path: file.path,
+        token,
+      });
+      apply(next);
+      openReview();
+      await refreshOpenFiles(next.root);
+      window.dispatchEvent(new Event(projectFilesChanged));
+    });
+  }
+
+  function changeGroup(
     files: GitChange[],
     kind: 'working' | 'index' | 'conflict',
   ) {
+    const label =
+      kind === 'working'
+        ? 'Changes'
+        : kind === 'index'
+        ? 'Staged Changes'
+        : 'Merge Changes';
+    const stageLabel = kind === 'index' ? 'Unstage' : 'Stage';
+    const stageIcon = kind === 'index' ? <SubtractRegular /> : <AddRegular />;
     return (
-      <ul
-        aria-label={
-          kind === 'working'
-            ? 'Unstaged changes'
-            : kind === 'index'
-            ? 'Staged changes'
-            : 'Conflicts'
-        }
-      >
-        {files.map((file) => (
-          <li key={file.path}>
-            <div className="git-change">
-              <Button
-                size="small"
-                appearance="subtle"
-                disabled={busy || file.outside}
-                title={description(file)}
-                onClick={() => {
-                  void run(() =>
-                    kind === 'conflict'
-                      ? showConflict(file.path)
-                      : review(file, kind === 'index'),
-                  );
-                }}
-              >
-                {description(file)}
-              </Button>
-              <small>
-                {kind === 'conflict' ? 'Conflicted' : changed(file[kind])}
-                {file.outside ? ' · Outside project' : ''}
-              </small>
-            </div>
-            {!file.outside && (
-              <div className="git-actions">
-                {kind === 'conflict' ? (
-                  <Button
-                    size="small"
-                    disabled={busy}
-                    onClick={() => {
-                      void run(() => showConflict(file.path));
-                    }}
-                  >
-                    Resolve…
-                  </Button>
-                ) : (
-                  <Button
-                    size="small"
-                    disabled={busy}
-                    onClick={() => stage(kind !== 'index', file.path)}
-                  >
-                    {kind === 'index' ? 'Unstage' : 'Stage'}
-                  </Button>
-                )}
-                <Button
-                  size="small"
-                  disabled={busy}
-                  onClick={() => showHistory(file.path)}
+      <details className="project-git-group" open>
+        <summary>
+          <span>{label}</span>
+          <span className="project-git-count">{files.length}</span>
+          {kind !== 'conflict' && (
+            <Button
+              aria-label={
+                kind === 'index'
+                  ? 'Unstage project files'
+                  : 'Stage project files'
+              }
+              title={
+                kind === 'index'
+                  ? 'Unstage project files'
+                  : 'Stage project files'
+              }
+              disabled={busy || !files.some(({ outside }) => !outside)}
+              size="small"
+              appearance="subtle"
+              icon={stageIcon}
+              onClick={(event: React.MouseEvent) => {
+                event.preventDefault();
+                stage(kind !== 'index');
+              }}
+            />
+          )}
+        </summary>
+        <ul aria-label={label}>
+          {files.map((file) => {
+            const code = kind === 'conflict' ? 'U' : file[kind];
+            const lastSlash = file.path.lastIndexOf('/');
+            return (
+              <li key={file.path} className="project-git-file">
+                <button
+                  type="button"
+                  className="project-git-file-name"
+                  disabled={busy || file.outside}
+                  title={description(file)}
+                  onClick={() =>
+                    void run(() =>
+                      kind === 'conflict'
+                        ? showConflict(file.path)
+                        : review(file, kind === 'index'),
+                    )
+                  }
                 >
-                  History
-                </Button>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+                  <span>{file.path.slice(lastSlash + 1)}</span>
+                  {lastSlash !== -1 && (
+                    <small>{file.path.slice(0, lastSlash)}</small>
+                  )}
+                </button>
+                <span
+                  className="project-git-file-code"
+                  title={file.outside ? 'Outside project' : changed(code)}
+                  data-change={code}
+                >
+                  {code === '?' ? 'U' : code}
+                </span>
+                {!file.outside && (
+                  <div className="project-git-file-actions">
+                    {kind !== 'conflict' && (
+                      <Button
+                        size="small"
+                        appearance="subtle"
+                        disabled={busy}
+                        aria-label={stageLabel}
+                        title={`${stageLabel} ${file.path}`}
+                        icon={stageIcon}
+                        onClick={() => stage(kind !== 'index', file.path)}
+                      />
+                    )}
+                    {kind === 'working' && file.working !== '?' && (
+                      <Button
+                        size="small"
+                        appearance="subtle"
+                        disabled={busy}
+                        aria-label="Discard Changes"
+                        title={`Discard changes to ${file.path}`}
+                        icon={<ArrowUndoRegular />}
+                        onClick={() => discard(file)}
+                      />
+                    )}
+                    <Button
+                      size="small"
+                      appearance="subtle"
+                      disabled={busy}
+                      aria-label="File History"
+                      title={`History of ${file.path}`}
+                      icon={<HistoryRegular />}
+                      onClick={() => showHistory(file.path)}
+                    />
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </details>
     );
   }
 
@@ -336,36 +512,96 @@ export default function ProjectSourceControl({
 
   return (
     <section className="project-source-control" aria-label="Source Control">
-      <div className="editor-side-panel-header">
-        <Button
-          size="small"
-          disabled={busy}
-          onClick={() => {
-            setError('');
-            setClone({ source: '', name: '' });
-          }}
-        >
-          Clone Repository…
-        </Button>
-      </div>
+      <header className="project-source-control-header">
+        <strong>Source Control</strong>
+        {root && (
+          <Button
+            size="small"
+            appearance="subtle"
+            disabled={busy}
+            icon={<ArrowClockwiseRegular />}
+            onClick={refresh}
+            aria-label="Refresh source control"
+            title="Refresh source control"
+          />
+        )}
+        <Menu>
+          <MenuTrigger>
+            <Button
+              size="small"
+              appearance="subtle"
+              icon={<MoreHorizontalRegular />}
+              aria-label="Repository actions"
+              disabled={busy}
+            />
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              <MenuItem
+                onClick={() => {
+                  setError('');
+                  setClone({ source: '', name: '' });
+                }}
+              >
+                Clone Repository…
+              </MenuItem>
+              {snapshot && !snapshot.scope && (
+                <MenuItem
+                  onClick={() => {
+                    setError('');
+                    setMaintenance('stash');
+                  }}
+                >
+                  Stashes…
+                </MenuItem>
+              )}
+              {snapshot && snapshot.head !== '(initial)' && (
+                <MenuItem
+                  onClick={() => {
+                    setError('');
+                    setMaintenance('worktrees');
+                  }}
+                >
+                  Worktrees…
+                </MenuItem>
+              )}
+              {snapshot &&
+                !snapshot.upstream &&
+                snapshot.remotes.length > 0 &&
+                snapshot.head !== '(initial)' && (
+                  <MenuItem
+                    onClick={() => {
+                      setError('');
+                      setMaintenance('publish');
+                    }}
+                  >
+                    Publish Branch…
+                  </MenuItem>
+                )}
+              {snapshot && (
+                <MenuItem onClick={() => showHistory()}>
+                  Commit History
+                </MenuItem>
+              )}
+              {snapshot?.remotes.length > 0 && (
+                <MenuItem
+                  onClick={() => {
+                    void run(async () =>
+                      apply(await projectGit(id, { command: 'fetch' })),
+                    );
+                  }}
+                >
+                  Fetch
+                </MenuItem>
+              )}
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+      </header>
       {!root ? (
         <Button onClick={openFolder}>Open Project Folder…</Button>
       ) : (
         <>
-          <div className="git-actions">
-            <Button size="small" disabled={busy} onClick={refresh}>
-              Refresh
-            </Button>
-            {snapshot && (
-              <Button
-                size="small"
-                disabled={busy}
-                onClick={() => showHistory()}
-              >
-                History
-              </Button>
-            )}
-          </div>
           {error && <p role="alert">{error}</p>}
           {snapshot === null && (
             <Button
@@ -510,11 +746,16 @@ export default function ProjectSourceControl({
                 </div>
               )}
               <Textarea
+                className="project-git-commit-message"
+                placeholder="Commit message"
                 aria-label="Commit message"
                 value={message}
                 onChange={(_, data) => setMessage(data.value)}
               />
               <Button
+                className="project-git-commit-button"
+                appearance="primary"
+                icon={<CheckmarkRegular />}
                 disabled={
                   busy ||
                   !message.trim() ||
@@ -529,35 +770,99 @@ export default function ProjectSourceControl({
                   });
                 }}
               >
-                Review commit
+                Review Commit
               </Button>
-              {!!conflicts.length && (
-                <>
-                  <h3>Conflicts</h3>
-                  {changeRows(conflicts, 'conflict')}
-                </>
-              )}
-              <h3>Staged changes</h3>
-              <Button
-                size="small"
-                disabled={busy || !staged.some(({ outside }) => !outside)}
-                onClick={() => stage(false)}
-              >
-                Unstage project files
-              </Button>
-              {changeRows(staged, 'index')}
-              <h3>Changes</h3>
-              <Button
-                size="small"
-                disabled={busy || !working.some(({ outside }) => !outside)}
-                onClick={() => stage(true)}
-              >
-                Stage project files
-              </Button>
-              {changeRows(working, 'working')}
+              {!!conflicts.length && changeGroup(conflicts, 'conflict')}
+              {changeGroup(staged, 'index')}
+              {changeGroup(working, 'working')}
+              <ProjectGitGraph
+                commits={graph}
+                snapshot={snapshot}
+                inspect={inspectCommit}
+                compare={compareRevision}
+              />
             </>
           )}
         </>
+      )}
+      {compareCommit && (
+        <Dialog
+          open
+          onOpenChange={(_, data) => {
+            if (!data.open && !busy) setCompareCommit(undefined);
+          }}
+        >
+          <DialogSurface>
+            <DialogBody>
+              <DialogTitle>Compare {compareCommit.commit.short}</DialogTitle>
+              <DialogContent>
+                <label>
+                  Compare with{' '}
+                  <Select
+                    value={reference}
+                    onChange={(_, { value }) => setReference(value)}
+                  >
+                    {compareCommit.references.map(({ ref, name }) => (
+                      <option key={ref} value={ref}>
+                        {name}
+                      </option>
+                    ))}
+                  </Select>
+                </label>
+                {error && <p role="alert">{error}</p>}
+              </DialogContent>
+              <DialogActions>
+                <Button
+                  disabled={busy}
+                  onClick={() => setCompareCommit(undefined)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  appearance="primary"
+                  disabled={busy || !reference}
+                  onClick={() => {
+                    void run(async () => {
+                      const { commit, references } = compareCommit;
+                      const text = await projectGit(id, {
+                        command: 'compare',
+                        id: commit.id,
+                        ref: reference,
+                      });
+                      if (!active.current) return;
+                      openReview({
+                        title:
+                          references.find(({ ref }) => ref === reference).name +
+                          ' ↔ ' +
+                          commit.short,
+                        text: text || 'No textual differences.',
+                      });
+                      setCompareCommit(undefined);
+                    });
+                  }}
+                >
+                  Compare
+                </Button>
+              </DialogActions>
+            </DialogBody>
+          </DialogSurface>
+        </Dialog>
+      )}
+      {maintenance && snapshot && (
+        <ProjectGitMaintenance
+          mode={maintenance}
+          folder={id}
+          snapshot={snapshot}
+          busy={busy}
+          error={error}
+          close={() => setMaintenance(undefined)}
+          run={(operation) => {
+            void run(operation);
+          }}
+          apply={apply}
+          hasUnsaved={() => schematicDirty() || supportingFilesDirty()}
+          refreshFiles={refreshOpenFiles}
+        />
       )}
       {conflict && (
         <ProjectGitConflictDialog
@@ -803,20 +1108,7 @@ export default function ProjectSourceControl({
                       <Button
                         disabled={busy}
                         appearance="subtle"
-                        onClick={() => {
-                          void run(async () => {
-                            const text = await projectGit(id, {
-                              command: 'revision',
-                              id: commit.id,
-                            });
-                            if (!active.current) return;
-                            openReview({
-                              title: commit.short + ' · ' + commit.subject,
-                              text,
-                            });
-                            setHistory(undefined);
-                          });
-                        }}
+                        onClick={() => inspectCommit(commit)}
                       >
                         {commit.subject}
                       </Button>

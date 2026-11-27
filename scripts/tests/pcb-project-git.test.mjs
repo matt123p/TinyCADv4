@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
@@ -389,4 +389,70 @@ test('stages a three-way text result, whole binary version and selected deletion
   });
   assert.equal(git('ls-files', '-u'), '');
   assert.match(git('diff', '--cached', '--name-status'), /D\tOld\.csv/);
+});
+
+test('shares stash, worktrees and published upstream with the Git CLI', async (t) => {
+  const area = await mkdtemp(path.join(tmpdir(), 'tinycad-project-controls-'));
+  t.after(() => rm(area, { recursive: true, force: true }));
+  const root = path.join(area, 'Project');
+  const remote = path.join(area, 'Remote');
+  await mkdir(root);
+  const cli = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+  const frame = {};
+  const webContents = { mainFrame: frame };
+  let handler;
+  registerProjectFiles({
+    ipcMain: { handle: (_, callback) => { handler = callback; } },
+    getWindow: () => ({ webContents }),
+    documents: root,
+    store: { get: (_, fallback) => fallback },
+    dialog: { showOpenDialog: async () => ({ canceled: false, filePaths: [area] }) },
+  });
+  const request = (payload) => handler({ sender: webContents, senderFrame: frame }, payload);
+  const git = (command, fields) => request({ operation: 'git', folder: root, request: { command, ...fields } });
+  cli('init', '-q', '-b', 'main');
+  cli('config', 'user.email', 'tinycad@example.test');
+  cli('config', 'user.name', 'TinyCAD Tests');
+  cli('config', 'commit.gpgSign', 'false');
+  await writeFile(path.join(root, 'Readme.txt'), 'Base\n');
+  cli('add', '.');
+  cli('commit', '-qm', 'Initial');
+  cli('init', '--bare', '-q', remote);
+  cli('remote', 'add', 'origin', remote);
+  assert.equal((await git('publish-branch', { remote: 'origin' })).upstream, 'origin/main');
+  await writeFile(path.join(root, 'Readme.txt'), 'Extra\nBase\nSelected\n');
+  const pathspec = { path: 'Readme.txt' };
+  const partial = await git('diff', { ...pathspec, staged: false });
+  await git('stage-lines', { ...pathspec, token: partial.token, lines: [{ type: 'insert', line: 3 }] });
+  assert.equal(cli('show', ':Readme.txt'), 'Base\nSelected');
+  const indexed = await git('diff', { ...pathspec, staged: true });
+  await git('unstage-lines', { ...pathspec, token: indexed.token, lines: [{ type: 'insert', line: 2 }] });
+  assert.equal(cli('show', ':Readme.txt'), 'Base');
+  assert.equal(await readFile(path.join(root, 'Readme.txt'), 'utf8'), 'Extra\nBase\nSelected\n');
+  await writeFile(path.join(root, 'Readme.txt'), 'Local edit\n');
+  cli('add', 'Readme.txt');
+  assert.equal((await git('stash-create', { message: 'Workbench' })).changes.length, 0);
+  const [stash] = await git('stash-list');
+  assert.match(stash.subject, /Workbench/);
+  await assert.rejects(git('stash-pop', { ...stash, id: 'invalid' }), /changed/);
+  assert.match((await git('stash-pop', stash)).changes[0].index, /M/);
+  assert.deepEqual(await git('stash-list'), []);
+  const [initial] = await git('graph');
+  assert.equal(initial.subject, 'Initial');
+  assert.match(await git('blame', { path: 'Readme.txt' }), /Local edit/);
+  cli('tag', 'baseline');
+  cli('commit', '-qm', 'Local commit');
+  const [latest] = await git('graph');
+  const reference = (await git('references')).find(({ ref }) => ref === 'refs/tags/baseline');
+  assert.match(await git('compare', { id: latest.id, ref: reference.ref }), /\+Local edit/);
+  await assert.rejects(git('compare', { id: latest.id, ref: '--outside' }), /existing branch or tag/);
+
+  await assert.rejects(request({ operation: 'worktree-open', folder: root, id: remote }), /unavailable/);
+  const clean = await request({
+    operation: 'worktree-add', folder: root, name: 'Clean copy', branch: 'experiment', createBranch: true,
+  });
+  assert.equal(clean.id, path.join(area, 'Clean copy'));
+  assert.equal(execFileSync('git', ['branch', '--show-current'], { cwd: clean.id, encoding: 'utf8' }).trim(), 'experiment');
+  assert.ok((await request({ operation: 'worktree-list', folder: root })).some((entry) => entry.id === clean.id));
+  assert.deepEqual(await request({ operation: 'worktree-open', folder: root, id: clean.id }), clean);
 });

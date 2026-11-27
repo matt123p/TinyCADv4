@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { constants, createReadStream, watch } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
-import { cloneProjectGit, runProjectGit } from './projectGit.js';
+import { addProjectWorktree, cloneProjectGit, projectWorktrees, runProjectGit } from './projectGit.js';
 import {
   MAX_PROJECT_FILE_BYTES,
   MAX_PROJECT_SETTINGS_BYTES,
@@ -29,6 +29,7 @@ export function registerProjectFiles({
   documents,
   takeProjectOpen,
   onRecentProjectsChanged,
+  openLibrary,
 }) {
   let root = store.get('projectFolder', documents);
   const pendingWrites = new Set();
@@ -329,9 +330,9 @@ export function registerProjectFiles({
       for (const directory of wanted) {
         if (folderWatchers.has(directory)) continue;
         try {
-          const watcher = watch(directory, { persistent: false }, (eventType, filename) => {
+          const watcher = watch(directory, { persistent: false }, (_, filename) => {
             if (folderWatchers.get(directory) === watcher &&
-              (!filename || eventType === 'rename') && !temporaryProjectFile.test(filename ?? ''))
+              !temporaryProjectFile.test(filename ?? ''))
               notifyFolderChange();
           });
           folderWatchers.set(directory, watcher);
@@ -346,6 +347,31 @@ export function registerProjectFiles({
         }
       }
       return;
+    }
+    if (operation === 'worktree-list')
+      return projectWorktrees(await resolve(folder, true));
+    if (operation === 'worktree-add' || operation === 'worktree-open') {
+      const project = await resolve(folder, true);
+      let target;
+      if (operation === 'worktree-add') {
+        if (!validProjectName(name)) throw new Error('Enter a valid worktree folder name.');
+        const selection = await dialog.showOpenDialog(window, {
+          title: 'Choose a parent folder for the worktree',
+          defaultPath: path.dirname(project),
+          properties: ['openDirectory'],
+        });
+        if (selection.canceled) return null;
+        target = path.join(await fs.realpath(selection.filePaths[0]), name);
+        await addProjectWorktree(project, target, request.branch, request.createBranch === true);
+      } else {
+        const worktree = (await projectWorktrees(project)).find((item) => item.id === id && !item.prunable && !item.bare);
+        if (!worktree) throw new Error('This worktree is unavailable.');
+        target = worktree.id;
+      }
+      const selected = await fs.realpath(target);
+      openedRoots.add(selected);
+      rememberProjectFolder(selected);
+      return { id: selected, name: path.basename(selected) || selected };
     }
     if (operation === 'git')
       return runProjectGit(await resolve(folder, true), request.request);
@@ -372,6 +398,42 @@ export function registerProjectFiles({
       const data = await read(id, true);
       return { data: new Uint8Array(data), version: hash(data) };
     }
+    if (operation === 'reveal') {
+      const target = await resolve(id, request.directory === true);
+      if (request.openFolder && request.directory) {
+        const error = await shell.openPath(target);
+        if (error) throw new Error(error);
+      } else {
+        shell.showItemInFolder(target);
+      }
+      return;
+    }
+    if (operation === 'edit-library') {
+      const target = await resolve(id, false);
+      if (!/\.tclib$/i.test(target)) throw new Error('Choose a TinyCAD library.');
+      openLibrary(target);
+      return;
+    }
+    if (operation === 'create-entry') {
+      const directory = request.directory === true;
+      const parent = await resolve(folder, true);
+      const suffix = request.extension ?? '';
+      if (!/^(?:\.[a-z0-9]+)?$/i.test(suffix) || (directory && suffix))
+        throw new Error('Invalid file extension.');
+      const stem = directory ? 'New Folder' : 'New File';
+      for (let count = 1; count <= 1000; count++) {
+        const name = stem + (count === 1 ? '' : ' ' + count) + suffix;
+        const target = path.join(parent, name);
+        try {
+          if (directory) await fs.mkdir(target);
+          else await (await fs.open(target, 'wx')).close();
+          return { id: target, name };
+        } catch (error) {
+          if (error.code !== 'EEXIST') throw error;
+        }
+      }
+      throw new Error('Could not find an available name.');
+    }
     if (operation === 'mkdir') {
       const target = await destination(folder, name);
       await fs.mkdir(target);
@@ -385,9 +447,26 @@ export function registerProjectFiles({
         );
       const target = await destination(folder, name);
       if (target === source) return { id: target, name };
-      if (pendingWrites.has(source) || pendingWrites.has(target))
+      if (pendingWrites.has(source) || pendingWrites.has(target) ||
+          (request.directory && [...pendingWrites].some((file) => within(source, file))))
         throw new Error('A project save is in progress.');
-      if (request.directory === true) {
+      if (request.directory && within(source, target))
+        throw new Error('A folder cannot be moved into itself.');
+      const caseOnly = path.dirname(source) === path.dirname(target) &&
+        path.basename(source).toLowerCase() === path.basename(target).toLowerCase();
+      const aliasesSource = caseOnly && await fs.realpath(target).then(
+        (resolved) => resolved === source,
+        (error) => {
+          if (error.code === 'ENOENT') return false;
+          throw error;
+        },
+      );
+      if (aliasesSource) {
+        const names = await fs.readdir(path.dirname(source));
+        if (names.includes(path.basename(target)))
+          throw new Error('A file or folder already has that name.');
+        await fs.rename(source, target);
+      } else if (request.directory === true) {
         try {
           await fs.lstat(target);
           throw new Error('A file or folder already has that name.');
@@ -411,17 +490,58 @@ export function registerProjectFiles({
       if (allowedRoots.has(target) || pendingWrites.has(target) ||
           (request.directory && [...pendingWrites].some((file) => within(target, file))))
         throw new Error('This location is in use.');
-      await shell.trashItem(target);
-      return;
+      const identity = await fs.stat(target, { bigint: true });
+      try {
+        await shell.trashItem(target);
+        return true;
+      } catch {
+        const result = await dialog.showMessageBox(window, {
+          type: 'warning',
+          message: 'The system Trash is unavailable for this item.',
+          detail: `Permanently delete "${path.basename(target)}"?`,
+          buttons: ['Cancel', 'Delete Permanently'],
+          defaultId: 0,
+          cancelId: 0,
+        });
+        if (result.response !== 1) return false;
+        const selected = await resolve(id, request.directory === true);
+        const current = await fs.stat(selected, { bigint: true });
+        if (selected !== target || current.ino !== identity.ino || current.dev !== identity.dev)
+          throw new Error('The location changed. Select it again.');
+        if (pendingWrites.has(target) ||
+            (request.directory && [...pendingWrites].some((file) => within(target, file))))
+          throw new Error('A project save is in progress.');
+        if (request.directory) await fs.rm(target, { recursive: true });
+        else await fs.unlink(target);
+        return true;
+      }
     }
     if (operation === 'copy') {
-      const source = await resolve(id, false);
-      await fs.copyFile(
-        source,
-        await destination(folder, name),
-        constants.COPYFILE_EXCL,
-      );
-      return;
+      const directory = request.directory === true;
+      const source = await resolve(id, directory);
+      const target = await destination(folder, name);
+      if (directory) {
+        if (within(source, target, true)) throw new Error('A folder cannot be copied into itself.');
+        await fs.mkdir(target);
+        try {
+          for (const child of await fs.readdir(source)) {
+            if (child === '.git') continue;
+            await fs.cp(path.join(source, child), path.join(target, child), {
+              recursive: true,
+              force: false,
+              errorOnExist: true,
+              verbatimSymlinks: true,
+              filter: (entry) => path.basename(entry) !== '.git',
+            });
+          }
+        } catch (error) {
+          await fs.rm(target, { recursive: true, force: true });
+          throw error;
+        }
+      } else {
+        await fs.copyFile(source, target, constants.COPYFILE_EXCL);
+      }
+      return { id: target, name };
     }
     if (operation === 'folder-identity') {
       const stat = await fs.stat(await resolve(id, true), { bigint: true });

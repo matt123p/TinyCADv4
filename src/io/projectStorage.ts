@@ -1,4 +1,4 @@
-import type { GitRequest, GitResult } from './projectGit';
+import type { GitRequest, GitResult, GitWorktree } from './projectGit';
 export const projectFilesChanged = 'tinycad:project-files-changed';
 export const projectFolderOpened = 'tinycad:project-folder-opened';
 
@@ -25,6 +25,15 @@ export interface ProjectFile extends ProjectLocation {
 export type ProjectStorageRequest =
   | { operation: 'root' }
   | { operation: 'git-clone'; source: string; name: string }
+  | { operation: 'worktree-list'; folder: string }
+  | { operation: 'worktree-open'; folder: string; id: string }
+  | {
+      operation: 'worktree-add';
+      folder: string;
+      name: string;
+      branch: string;
+      createBranch: boolean;
+    }
   | { operation: 'git'; folder: string; request: GitRequest }
   | { operation: 'choose-project-folder' }
   | { operation: 'recent-project-folder' }
@@ -35,7 +44,26 @@ export type ProjectStorageRequest =
   | { operation: 'list'; folder: string; tree?: boolean }
   | { operation: 'watch-folders'; folders: string[] }
   | { operation: 'read' | 'fingerprint' | 'folder-identity'; id: string }
-  | { operation: 'copy'; id: string; folder: string; name: string }
+  | {
+      operation: 'copy';
+      id: string;
+      folder: string;
+      name: string;
+      directory?: boolean;
+    }
+  | {
+      operation: 'create-entry';
+      folder: string;
+      directory: boolean;
+      extension?: string;
+    }
+  | {
+      operation: 'reveal';
+      id: string;
+      directory: boolean;
+      openFolder?: boolean;
+    }
+  | { operation: 'edit-library'; id: string }
   | { operation: 'mkdir'; folder: string; name: string }
   | { operation: 'trash'; id: string; directory: boolean }
   | {
@@ -59,6 +87,9 @@ export type ProjectStorageRequest =
 export interface ProjectStorageResult {
   root: ProjectLocation;
   'git-clone': ProjectLocation | null;
+  'worktree-list': GitWorktree[];
+  'worktree-open': ProjectLocation;
+  'worktree-add': ProjectLocation | null;
   git: GitResult[keyof GitResult];
   'open-launch': {
     ticket: string;
@@ -75,10 +106,13 @@ export interface ProjectStorageResult {
   'watch-folders': void;
   read: { data: Uint8Array; version: string };
   mkdir: ProjectLocation;
-  copy: void;
+  copy: ProjectLocation;
+  'create-entry': ProjectLocation;
+  reveal: void;
+  'edit-library': void;
   fingerprint: string;
   'folder-identity': string;
-  trash: void;
+  trash: boolean;
   rename: ProjectLocation;
   move: ProjectLocation;
   write: ProjectFile;

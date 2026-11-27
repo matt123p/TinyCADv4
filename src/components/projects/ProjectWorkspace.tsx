@@ -9,6 +9,8 @@ import {
 } from '@fluentui/react-icons';
 import { isDrawingFile } from '../../../shared/drawingFiles';
 import { fileSave, saveSchematicFile } from '../../io/files';
+import type { GitSnapshot } from '../../io/projectGit';
+import { projectDocumentKind } from '../../io/projectDocumentKind';
 import { blank } from '../../io/ioXml';
 import {
   closeProjectMode,
@@ -28,7 +30,7 @@ import {
   projectFilesChanged,
   projectFolderOpened,
 } from '../../io/projectStorage';
-import type { ProjectLocation } from '../../io/projectStorage';
+import type { ProjectItem, ProjectLocation } from '../../io/projectStorage';
 import {
   readProjectTabSession,
   writeProjectTabSession,
@@ -45,6 +47,7 @@ import {
   enableSchematicTabs,
   openSchematicTabs,
   reloadSchematicTab,
+  relocateSchematicTabs,
   removeSchematicTab,
   savedSchematicTab,
   schematicFileTabKey,
@@ -54,6 +57,7 @@ import type { docDrawing } from '../../state/undo/undo';
 import ProjectDocumentEditor from './ProjectDocumentEditor';
 import ProjectFileBrowser from './ProjectFileBrowser';
 import type { BrowserFile } from './ProjectFileBrowser';
+import ProjectGitDiff from './ProjectGitDiff';
 import ProjectSourceControl from './ProjectSourceControl';
 import type { GitReview } from './ProjectSourceControl';
 
@@ -123,6 +127,11 @@ export default function ProjectWorkspace({
   const [showReview, setShowReview] = useState(false);
   const [error, setError] = useState('');
   const [gitCount, setGitCount] = useState(0);
+  const [gitSnapshot, setGitSnapshot] = useState<GitSnapshot>();
+  const [historyRequest, setHistoryRequest] = useState<{
+    filename: string;
+    blame?: boolean;
+  }>();
   const [saving, setSaving] = useState(false);
   const saveLock = useRef(false);
   const transition = useRef(false);
@@ -169,6 +178,10 @@ export default function ProjectWorkspace({
     if (saveLock.current || store.getState().altStore.saveInProgress) return;
     const epoch = ++opening.current;
     setError('');
+    if (/\.tclib$/i.test(file.name)) {
+      await projectRequest({ operation: 'edit-library', id: file.id });
+      return;
+    }
     if (!isDrawingFile(file.name)) {
       await documents.open(file);
       if (epoch === opening.current) setShowReview(false);
@@ -211,6 +224,8 @@ export default function ProjectWorkspace({
     setPanel('files');
     setShowSidebar(true);
     setGitCount(0);
+    setGitSnapshot(undefined);
+    setHistoryRequest(undefined);
     saveStartupMode('project');
     try {
       const session = readProjectTabSession(next.id, account);
@@ -315,6 +330,134 @@ export default function ProjectWorkspace({
       else clearDrawing();
     }
     dispatch(removeSchematicTab(key));
+  }
+
+  function beforeFileChange(
+    id: string,
+    kind: 'relocate' | 'trash',
+    name?: string,
+  ) {
+    const current = store.getState();
+    if (
+      saveLock.current ||
+      current.altStore.saveInProgress ||
+      documents.isSaving()
+    )
+      throw new Error('Wait for the open files to finish saving.');
+    const drawings = openSchematicTabs(current).filter(
+      ({ tab }) => typeof tab.file.id === 'string' && isInside(id, tab.file.id),
+    );
+    if (
+      kind === 'trash' &&
+      (drawings.some(({ tab }) => schematicTabDirty(tab)) ||
+        documents.hasDirty((file) => isInside(id, file)))
+    )
+      throw new Error('Save or close the open files before deleting them.');
+    if (
+      kind === 'relocate' &&
+      drawings.some(({ tab }) => tab.file.id === id) &&
+      !isDrawingFile(name)
+    )
+      throw new Error('Close the schematic before changing its file type.');
+    const document = documents.files.find((file) => file.id === id);
+    if (
+      kind === 'relocate' &&
+      document &&
+      (isDrawingFile(name) ||
+        /\.tclib$/i.test(name) ||
+        document.kind !== projectDocumentKind(name).kind)
+    )
+      throw new Error('Close the open file before changing its file type.');
+  }
+
+  function relocateOpenFiles(
+    previous: ProjectItem,
+    next: ProjectItem,
+    parent: string,
+  ) {
+    function move(path: string) {
+      return path && isInside(previous.id, path)
+        ? next.id + path.slice(previous.id.length)
+        : path;
+    }
+    function directory(id: string) {
+      const last = id.lastIndexOf(pathSeparator(root.id));
+      return id.slice(0, Math.max(root.id.length, last));
+    }
+    const drawings = Object.fromEntries(
+      openSchematicTabs(store.getState()).flatMap(({ key, tab: { file } }) =>
+        typeof file.id === 'string' && isInside(previous.id, file.id)
+          ? [
+              [
+                key,
+                {
+                  ...file,
+                  id: move(file.id),
+                  name: file.id === previous.id ? next.name : file.name,
+                  folderId:
+                    file.id === previous.id ? parent : directory(move(file.id)),
+                },
+              ],
+            ]
+          : [],
+      ),
+    );
+    const supporting = Object.fromEntries(
+      documents.files.flatMap((file) => {
+        if (!isInside(previous.id, file.id)) return [];
+        const id = move(file.id);
+        const folder = directory(id);
+        const ancestors = folder
+          .slice(root.id.length)
+          .split(pathSeparator(root.id))
+          .filter(Boolean)
+          .reduce(
+            (ids, part) => [
+              ...ids,
+              ids.at(-1).replace(/[\\/]$/, '') + pathSeparator(root.id) + part,
+            ],
+            [root.id],
+          );
+        return [
+          [
+            file.id,
+            {
+              id,
+              folder,
+              ancestors,
+              name: file.id === previous.id ? next.name : file.name,
+            },
+          ],
+        ];
+      }),
+    );
+    if (Object.keys(drawings).length) dispatch(relocateSchematicTabs(drawings));
+    if (Object.keys(supporting).length) documents.relocate(supporting);
+    setOrder((keys) =>
+      keys.map((key) =>
+        drawings[key]
+          ? schematicFileTabKey(drawings[key])
+          : key.startsWith('file:') && supporting[key.slice(5)]
+          ? 'file:' + supporting[key.slice(5)].id
+          : key,
+      ),
+    );
+  }
+
+  function closeRemovedFiles(id: string) {
+    const current = store.getState();
+    const tabs = openSchematicTabs(current);
+    const removed = tabs.filter(
+      ({ tab: { file } }) =>
+        typeof file.id === 'string' && isInside(id, file.id),
+    );
+    if (removed.some(({ key }) => key === activeSchematicTabKey(current))) {
+      const remaining = tabs.filter((tab) => !removed.includes(tab)).at(-1);
+      if (remaining) activate(remaining.key);
+      else clearDrawing();
+    }
+    for (const { key } of removed) dispatch(removeSchematicTab(key));
+    documents.removeWhere((file) => isInside(id, file));
   }
 
   async function saveAll() {
@@ -600,13 +743,36 @@ export default function ProjectWorkspace({
             active={selectedId}
             open={open}
             report={report}
-            isOpen={(id) =>
-              documents.isProtected(id) ||
-              drawingTabs.some(
-                ({ location }) =>
-                  location?.kind === 'drawing' && isInside(id, location.id),
+            gitChanges={
+              gitSnapshot &&
+              new Map(
+                gitSnapshot.changes
+                  .filter(({ outside }) => !outside)
+                  .map((change) => [
+                    gitSnapshot.root.replace(/[\\/]$/, '') +
+                      pathSeparator(gitSnapshot.root) +
+                      change.path.replaceAll(
+                        '/',
+                        pathSeparator(gitSnapshot.root),
+                      ),
+                    change.conflicted
+                      ? 'U'
+                      : change.working !== '.'
+                      ? change.working
+                      : change.index,
+                  ]),
               )
             }
+            showHistory={
+              gitSnapshot &&
+              ((filename, blame) => {
+                setHistoryRequest({ filename, blame });
+                setPanel('git');
+              })
+            }
+            beforeChange={beforeFileChange}
+            relocated={relocateOpenFiles}
+            removed={closeRemovedFiles}
           />
         </div>
         <div hidden={panel !== 'git' || restoring}>
@@ -615,6 +781,8 @@ export default function ProjectWorkspace({
             root={root}
             openFolder={openFolder}
             setCount={setGitCount}
+            onSnapshot={setGitSnapshot}
+            historyRequest={historyRequest}
             openReview={(next) => {
               setReview(next);
               setShowReview(!!next);
@@ -687,26 +855,11 @@ export default function ProjectWorkspace({
     document:
       root &&
       (showReview && review ? (
-        <section className="project-document-editor" aria-label={review.title}>
-          <div className="project-actions">
-            <strong>{review.title}</strong>
-            <Button size="small" onClick={() => setShowReview(false)}>
-              Close Review
-            </Button>
-          </div>
-          {review.stageHunk &&
-            review.hunks?.map((hunk, index) => (
-              <div key={index}>
-                <Button size="small" onClick={() => review.stageHunk(index)}>
-                  Stage Hunk
-                </Button>
-                <pre>{hunk}</pre>
-              </div>
-            ))}
-          {(!review.stageHunk || !review.hunks?.length) && (
-            <pre>{review.text}</pre>
-          )}
-        </section>
+        <ProjectGitDiff
+          key={review.title}
+          review={review}
+          close={() => setShowReview(false)}
+        />
       ) : (
         openDocument && (
           <div className="project-document-area">

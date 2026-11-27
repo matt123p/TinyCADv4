@@ -46,9 +46,12 @@ let ipcHandlersRegistered = false;
 
 const spawnNewWindow = (filePath) => {
   const args = [];
-  if (isDev) {
-    args.push('.');
+  if (!app.isPackaged) {
+    if (process.argv.includes('--no-sandbox')) args.push('--no-sandbox');
+    args.push(app.getAppPath());
   }
+  const profile = process.argv.find(arg => arg.startsWith('--user-data-dir='));
+  if (profile) args.push(profile);
   args.push(filePath);
   const subprocess = spawn(process.execPath, args, {
     detached: true,
@@ -415,6 +418,7 @@ function createWindow({ openAbout = false } = {}) {
     registerProjectFiles({
       ipcMain, getWindow: () => mainWindow, dialog, shell, store,
       documents: app.getPath('documents'), onRecentProjectsChanged: () => refreshMenu(),
+      openLibrary: spawnNewWindow,
       takeProjectOpen: () => {
         const filename = projectToOpen;
         projectToOpen = null;

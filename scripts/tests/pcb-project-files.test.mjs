@@ -192,3 +192,35 @@ test('opens only a queued desktop project and rejects stale launch tickets', asy
     /no longer available/,
   );
 });
+
+test('creates unique empty entries and confirms permanent deletion only after the system trash fails', async (t) => {
+  const area = await mkdtemp(path.resolve('.tmp/project-entry-'));
+  t.after(() => rm(area, { recursive: true, force: true }));
+  const root = path.join(area, 'Project');
+  await mkdir(root);
+  const frame = {};
+  const webContents = { mainFrame: frame };
+  let reply = 0;
+  let handler;
+  const prompts = [];
+  registerProjectFiles({
+    ipcMain: { handle: (_, callback) => { handler = callback; } },
+    getWindow: () => ({ webContents }),
+    documents: root,
+    store: { get: (_, fallback) => fallback },
+    shell: { trashItem: async () => { throw new Error('Trash unavailable'); } },
+    dialog: { showMessageBox: async (_, options) => { prompts.push(options); return { response: reply }; } },
+  });
+  const request = (payload) => handler({ sender: webContents, senderFrame: frame }, payload);
+  const create = () => request({ operation: 'create-entry', folder: root, directory: false, extension: '.tclib' });
+  const [first, second] = await Promise.all([create(), create()]);
+  assert.deepEqual([first.name, second.name].sort(), ['New File 2.tclib', 'New File.tclib']);
+  assert.equal((await readFile(first.id)).byteLength, 0);
+  await assert.rejects(request({ operation: 'reveal', id: area, directory: true }), /outside/);
+  assert.equal(await request({ operation: 'trash', id: first.id, directory: false }), false);
+  assert.equal((await readFile(first.id)).byteLength, 0);
+  assert.equal(prompts[0].defaultId, 0);
+  reply = 1;
+  assert.equal(await request({ operation: 'trash', id: first.id, directory: false }), true);
+  await assert.rejects(readFile(first.id), { code: 'ENOENT' });
+});

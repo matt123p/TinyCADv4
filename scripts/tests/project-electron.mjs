@@ -6,6 +6,7 @@ import {
   mkdtemp,
   readFile,
   rm,
+  stat,
   writeFile,
 } from 'node:fs/promises';
 import os from 'node:os';
@@ -190,46 +191,223 @@ try {
     '# Reopened notes\n',
   );
 
-  await button('New Folder…').click();
-  await page.getByRole('textbox', { name: 'Name' }).fill('Assets');
-  await button('OK').click();
-  await expect(files().getByRole('button', { name: 'Assets' })).toBeVisible();
-  await button('Assets').click();
-  await button('Rename…').click();
-  await page.getByRole('textbox', { name: 'Name' }).fill('Assets renamed');
-  await button('OK').click();
-  await expect(
-    files().getByRole('button', { name: 'Assets renamed' }),
-  ).toBeVisible();
+  const row = (name) => files().getByRole('button', { name, exact: true });
+  const context = async (name, action) => {
+    await row(name).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: action, exact: true }).click();
+  };
+  const inlineName = async (from, to) => {
+    const name = page.getByRole('textbox', {
+      name: `Rename ${from}`,
+      exact: true,
+    });
+    await expect(name).toBeFocused();
+    await name.fill(to);
+    await name.press('Enter');
+    await expect(row(to)).toBeVisible();
+  };
+  await row('project').click();
+  await button('New Folder').click();
+  await expect
+    .poll(async () =>
+      stat(path.join(project, 'New Folder')).then((s) => s.isDirectory()),
+    )
+    .toBe(true);
+  if (process.env.TINYCAD_TEST_PROJECT_SCREENSHOTS) {
+    await page
+      .getByRole('textbox', { name: 'Rename New Folder', exact: true })
+      .waitFor();
+    await page.screenshot({
+      path: path.join(
+        process.env.TINYCAD_TEST_PROJECT_SCREENSHOTS,
+        'explorer.png',
+      ),
+    });
+  }
+  await inlineName('New Folder', 'Assets');
+  await row('Assets').focus();
+  await page.keyboard.press('F2');
+  await inlineName('Assets', 'Assets renamed');
 
-  await files().getByRole('button', { name: 'Notes.md' }).click();
-  await button('Copy').click();
-  await button('Assets renamed').click();
-  await button('Paste…').click();
-  await page.getByRole('textbox', { name: 'Name' }).fill('Notes copy.md');
-  await button('OK').click();
-  await expect(
-    files().getByRole('button', { name: 'Notes copy.md' }),
-  ).toBeVisible();
+  for (const [label, extension] of [
+    ['Schematic (.dsn)', 'dsn'],
+    ['Compressed schematic (.dzn)', 'dzn'],
+    ['Symbol library (.tclib)', 'tclib'],
+    ['JSON (.json)', 'json'],
+  ]) {
+    await row('project').click();
+    await button('New File').click();
+    await page.getByRole('menuitem', { name: label, exact: true }).click();
+    await inlineName(`New File.${extension}`, `Empty.${extension}`);
+    assert.equal(
+      (await readFile(path.join(project, `Empty.${extension}`))).byteLength,
+      0,
+    );
+  }
+  await open('Empty.dzn');
+  await expect(tab('Empty.dzn')).toHaveAttribute('aria-pressed', 'true');
+  await context('Empty.dzn', 'Rename');
+  await inlineName('Empty.dzn', 'Renamed.dzn');
+  await expect(tab('Renamed.dzn')).toHaveAttribute('aria-pressed', 'true');
+  await button('Close Renamed.dzn').click();
+
+  await context('Notes.md', 'Copy');
+  await context('Assets renamed', 'Paste');
+  await expect(row('Assets renamed')).toHaveAttribute('aria-expanded', 'true');
+  assert.equal(
+    await readFile(path.join(project, 'Assets renamed', 'Notes.md'), 'utf8'),
+    '# Reopened notes\n',
+  );
+  await context('Assets renamed', 'Copy');
+  await button('Project file actions').click();
+  await page.getByRole('menuitem', { name: 'Paste', exact: true }).click();
+  await expect(row('Assets renamed copy')).toBeVisible();
   assert.equal(
     await readFile(
-      path.join(project, 'Assets renamed', 'Notes copy.md'),
+      path.join(project, 'Assets renamed copy', 'Notes.md'),
       'utf8',
     ),
     '# Reopened notes\n',
   );
 
+  await row('Empty.json').focus();
+  await page.keyboard.press('Control+x');
+  await row('Assets renamed').focus();
+  await page.keyboard.press('Control+v');
+  await expect(
+    row('Assets renamed')
+      .locator('xpath=..')
+      .getByRole('button', { name: 'Empty.json' }),
+  ).toBeVisible();
+  assert.equal(
+    (await readFile(path.join(project, 'Assets renamed', 'Empty.json')))
+      .byteLength,
+    0,
+  );
+  await assert.rejects(readFile(path.join(project, 'Empty.json')), {
+    code: 'ENOENT',
+  });
+
+  await row('Renamed.dzn').dragTo(row('Assets renamed'));
+  await expect(
+    row('Assets renamed')
+      .locator('xpath=..')
+      .getByRole('button', { name: 'Renamed.dzn' }),
+  ).toBeVisible();
+  assert.equal(
+    (await readFile(path.join(project, 'Assets renamed', 'Renamed.dzn')))
+      .byteLength,
+    0,
+  );
+
+  await desktop.evaluate(({ shell }, directory) => {
+    const fs = process.getBuiltinModule('fs');
+    shell.showItemInFolder = (filename) =>
+      fs.writeFileSync(directory + '/revealed', filename);
+    shell.openPath = async (filename) => {
+      fs.writeFileSync(directory + '/opened', filename);
+      return '';
+    };
+    shell.trashItem = async (filename) =>
+      fs.renameSync(filename, directory + '/trashed');
+  }, scratch);
+  await context('Empty.tclib', 'Reveal in File Manager');
+  await expect
+    .poll(() => readFile(path.join(scratch, 'revealed'), 'utf8'))
+    .toBe(path.join(project, 'Empty.tclib'));
+  await button('Project file actions').click();
+  await page
+    .getByRole('menuitem', { name: 'Open in File Manager', exact: true })
+    .click();
+  await expect
+    .poll(() => readFile(path.join(scratch, 'opened'), 'utf8'))
+    .toBe(project);
+  page.once('dialog', (dialog) => dialog.accept());
+  await context('Assets renamed copy', 'Move to Trash');
+  await expect(row('Assets renamed copy')).toHaveCount(0);
+  assert.equal(
+    await readFile(path.join(scratch, 'trashed', 'Notes.md'), 'utf8'),
+    '# Reopened notes\n',
+  );
+
+  await row('Assets renamed').click();
+  await open('Notes.md');
   await page.getByRole('button', { name: /^Git/ }).click();
   const source = page.getByRole('region', { name: 'Source Control' });
-  await source
-    .getByRole('listitem')
-    .filter({ hasText: 'Notes.md' })
+  const working = source.getByRole('list', { name: 'Changes', exact: true });
+  const staged = source.getByRole('list', {
+    name: 'Staged Changes',
+    exact: true,
+  });
+  const changedNotes = working
+    .getByRole('button', { name: 'Notes.md', exact: true })
+    .first();
+  await changedNotes.click();
+  const diff = page.getByRole('region', { name: 'Git diff' });
+  await expect(
+    diff.getByText('Reopened notes', { exact: false }).first(),
+  ).toBeVisible();
+  await button('Side by Side').click();
+  await expect(diff.locator('.diff-split')).toBeVisible();
+  if (process.env.TINYCAD_TEST_PROJECT_SCREENSHOTS)
+    await page.screenshot({
+      path: path.join(
+        process.env.TINYCAD_TEST_PROJECT_SCREENSHOTS,
+        'source-control.png',
+      ),
+    });
+  await button('Stage Hunk').click();
+  await expect(staged.getByRole('button', { name: 'Notes.md' })).toBeVisible();
+  assert.equal(git('diff', '--cached', '--name-only'), 'Notes.md');
+  await staged.getByRole('button', { name: 'Notes.md' }).click();
+  await button('Unstage Hunk').click();
+  await expect(staged.getByRole('button', { name: 'Notes.md' })).toHaveCount(0);
+  assert.equal(git('diff', '--cached', '--name-only'), '');
+  await changedNotes.click();
+  await button('Select removed line 1').click();
+  await button('Select added line 1').click();
+  await button('Stage Selected Lines').click();
+  await expect(staged.getByRole('button', { name: 'Notes.md' })).toBeVisible();
+  await staged.getByRole('button', { name: 'Notes.md' }).click();
+  await button('Select removed line 1').click();
+  await button('Select added line 1').click();
+  await button('Unstage Selected Lines').click();
+  await expect(staged.getByRole('button', { name: 'Notes.md' })).toHaveCount(0);
+  await changedNotes
+    .locator('xpath=..')
     .getByRole('button', { name: 'Stage', exact: true })
     .click();
+  await expect(staged.getByRole('button', { name: 'Notes.md' })).toBeVisible();
+  await source
+    .getByRole('textbox', { name: 'Commit message' })
+    .fill('Update notes');
+  await source.getByRole('button', { name: 'Review Commit' }).click();
+  await page
+    .getByRole('dialog', { name: 'Commit staged changes' })
+    .getByRole('button', { name: 'Commit', exact: true })
+    .click();
+  await expect.poll(() => git('log', '-1', '--format=%s')).toBe('Update notes');
+  const graph = source.getByRole('list', { name: 'Commit graph' });
+  const initial = graph.getByRole('button', { name: 'Initial project' });
+  await initial.click();
+  await expect(page.getByRole('region', { name: 'Git diff' })).toBeVisible();
+  await button('Close Review').click();
+  await initial.click({ button: 'right' });
+  await page
+    .getByRole('menuitem', { name: 'Compare with Branch or Tag…' })
+    .click();
+  await page
+    .getByRole('dialog', { name: /Compare/ })
+    .getByRole('button', { name: 'Compare', exact: true })
+    .click();
+  await expect(page.getByRole('region', { name: 'Git diff' })).toBeVisible();
+  await button('Close Review').click();
+  await button('Files').click();
+  await context('Notes.md', 'Line History');
   await expect(
-    source.getByRole('button', { name: 'Unstage', exact: true }),
-  ).toBeVisible();
-  assert.equal(git('diff', '--cached', '--name-only'), 'Notes.md');
+    page.getByRole('region', { name: 'Line History · Notes.md' }),
+  ).toContainText(git('log', '-1', '--format=%an'));
+  await button('Close Review').click();
   await button('Files').click();
 
   await desktop.close();
@@ -254,6 +432,11 @@ try {
   await expect(
     files().getByRole('button', { name: 'Circuit.tcproject' }),
   ).toBeVisible();
+  await desktop.close();
+  desktop = undefined;
+  page = await launch(path.join(project, 'Empty.tclib'));
+  await expect(page.getByTitle('New Symbol')).toBeVisible();
+  await expect(page.getByText('Empty.tclib', { exact: true })).toBeVisible();
   assert.deepEqual(errors, []);
   console.log('Electron project smoke test passed');
 } catch (error) {
