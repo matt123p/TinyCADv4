@@ -396,7 +396,11 @@ export const DesignApp: FunctionComponent<DesignAppProps> = (props) => {
           )}
           </div>
         </div>
-        {activeBoard && <aside className="pcb-right-panel" aria-label="PCB panels" ref={setPcbRightPanelHost} />}
+        {activeBoard && (
+          <div className={styles.rightPanels}>
+            <aside className="pcb-right-panel" aria-label="PCB panels" ref={setPcbRightPanelHost} />
+          </div>
+        )}
         {!activeBoard && !documentToolbar && !props.editSymbol && (props.simulationPanelActivated || props.hasExampleExplanation) && (
           <div className={`${styles.rightPanels} design-right-panels`}>
             {props.simulationPanelActivated && (
