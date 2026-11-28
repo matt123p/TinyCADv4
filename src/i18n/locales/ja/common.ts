@@ -1,5 +1,6 @@
 const common = {
   projectHierarchy: {
+    addSymbol: '階層シンボルを追加',
     missingSymbolSheet: 'リンク先の回路図に階層シンボルシートがありません。',
     unreadableLink: 'リンク先の回路図を読み込めませんでした。',
     cyclePlacement: 'この図面を配置すると循環参照が発生します。',

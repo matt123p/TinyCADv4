@@ -52,6 +52,7 @@ import {
   projectFilesChanged,
   projectFolderOpened,
   hierarchyDropEvent,
+  hierarchySymbolEvent,
 } from '../../io/projectStorage';
 import type { ProjectItem, ProjectLocation, ProjectOpenLocation } from '../../io/projectStorage';
 import type { HierarchyDesign } from '../../io/projectHierarchyBrowser';
@@ -64,7 +65,7 @@ import {
   dirtyProjectDocument,
   useProjectDocuments,
 } from '../../io/useProjectDocuments';
-import { actionCommand, actionFindSelection, actionSetDocument, actionSheetSelect } from '../../state/dispatcher/AppDispatcher';
+import { actionCommand, actionFindSelection, actionSetDocument, actionSheetAdd, actionSheetSelect } from '../../state/dispatcher/AppDispatcher';
 import SidePanelContainer from '../../state/containers/sidePanelContainer';
 import {
   activeSchematicTabKey,
@@ -1038,8 +1039,7 @@ export default function ProjectWorkspace({
 
   useEffect(() => {
     if (!root) return;
-    const listener = (event: Event) => {
-      if (!(event instanceof CustomEvent)) return;
+    const listener = (event: WindowEventMap[typeof hierarchySymbolEvent]) => {
       const { command, symbolId } = event.detail;
       if (command !== 'open' && command !== 'refresh' && command !== 'change') return;
       const { altStore, docStore: { present } } = store.getState();
@@ -1061,7 +1061,9 @@ export default function ProjectWorkspace({
           });
           if (!stillCurrent()) return;
           const { id, folder } = linked;
-          await open({ id, name: id.split(/[\\/]/).at(-1), folder, ancestors: [] }, 'keep', linked);
+          const file: BrowserFile = { id, name: id.split(/[\\/]/).at(-1), folder, ancestors: [] };
+          await open(file, 'keep', linked);
+          showHierarchyCircuit(schematicFileTabKey(file));
         } else {
           let placement = item;
           if (command === 'change') {
@@ -1091,26 +1093,14 @@ export default function ProjectWorkspace({
       if (command === 'change') requestAnimationFrame(() => void handle().catch(report));
       else void handle().catch(report);
     };
-    const choose = () => {
-      if (!activeKey || documents.active || !hierarchySheet ||
-          hierarchySheet.hierarchicalSymbol || hierarchySheet.kind === 'simulation') return;
-      const drawing = store.getState().docStore.present.drawing;
-      void projectRequest({ operation: 'choose-hierarchical-drawing', project: root.id })
-        .then((file) => {
-          if (file && projectRoot.current === root && drawing === store.getState().docStore.present.drawing)
-            return insertHierarchy(file.id);
-        }).catch(report);
-    };
-    window.addEventListener('tinycad:hierarchy-symbol', listener);
-    window.addEventListener('tinycad:insert-hierarchical-symbol', choose);
+    window.addEventListener(hierarchySymbolEvent, listener);
     const drop = (event: WindowEventMap[typeof hierarchyDropEvent]) => {
       if (event.detail.project === root.id)
         void insertHierarchy(event.detail.id, event.detail.point).catch(report);
     };
     window.addEventListener(hierarchyDropEvent, drop);
     return () => {
-      window.removeEventListener('tinycad:hierarchy-symbol', listener);
-      window.removeEventListener('tinycad:insert-hierarchical-symbol', choose);
+      window.removeEventListener(hierarchySymbolEvent, listener);
       window.removeEventListener(hierarchyDropEvent, drop);
     };
   });
@@ -1121,6 +1111,16 @@ export default function ProjectWorkspace({
     .find((item): item is dsnSymbol => item.NodeName === DocItemTypes.Symbol && !!item._hierarchicalError);
   const canInsertHierarchy = !!(activeKey && !openDocument && hierarchySheet &&
     !hierarchySheet.hierarchicalSymbol && hierarchySheet.kind !== 'simulation');
+  const canAddHierarchySymbol = !!(activeKey && !openDocument &&
+    !state.docStore.present.drawing.sheets.some((part) => part.hierarchicalSymbol));
+
+  function addHierarchySymbol() {
+    const current = store.getState();
+    if (projectRoot.current !== root || transition.current || saveLock.current ||
+        current.altStore.saveInProgress || activeSchematicTabKey(current) !== activeKey ||
+        current.docStore.present.drawing.sheets.some((part) => part.hierarchicalSymbol)) return;
+    dispatch(actionSheetAdd('Hierarchical Symbol', true));
+  }
 
   async function insertHierarchy(fileId: string, point?: Coordinate) {
     const currentState = store.getState();
@@ -1148,16 +1148,21 @@ export default function ProjectWorkspace({
       const folder = design.id.slice(0, Math.max(root.id.length, design.id.lastIndexOf(pathSeparator(root.id))));
       await open({ id: design.id, name: design.filename, folder, ancestors: [] }, 'keep');
     }
+    const key = design.tab ?? schematicFileTabKey({ id: design.id, name: design.filename });
+    if (showHierarchyCircuit(key) && design.tab) keepOpen(design.tab);
+  }
+
+  function showHierarchyCircuit(key: string) {
     const current = store.getState();
     if (projectRoot.current !== root ||
-        activeSchematicTabKey(current) !== (design.tab ?? schematicFileTabKey({ id: design.id, name: design.filename })))
-      return;
-    if (design.tab) keepOpen(design.tab);
+        activeSchematicTabKey(current) !== key)
+      return false;
     const { drawing, view } = current.docStore.present;
     if (drawing.sheets[view.selected_sheet]?.hierarchicalSymbol) {
       const circuit = drawing.sheets.findIndex((sheet) => !sheet.hierarchicalSymbol && sheet.kind !== 'simulation');
       if (circuit !== -1) dispatch(actionSheetSelect(circuit));
     }
+    return true;
   }
 
   return children({
@@ -1297,6 +1302,7 @@ export default function ProjectWorkspace({
           >
             <ProjectHierarchyBrowser key={root.id} project={root.id} state={state}
               showActive={!openDocument} canInsert={canInsertHierarchy}
+              addSymbol={canAddHierarchySymbol ? addHierarchySymbol : undefined}
               open={openHierarchyDesign} insert={insertHierarchy} report={report} />
           </div>
           <div

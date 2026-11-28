@@ -47,6 +47,7 @@ import { actionSetMousePosition } from '../../state/actions/viewActions';
 import { subscribeNetlist } from '../../io/netlists/netlistSync';
 import { NetlistData } from '../../io/netlists/netlistGenerator';
 import { hierarchyDragType, hierarchyDropEvent } from '../../io/projectStorage';
+import { handleSchematicDoubleClick } from '../../io/projects';
 
 interface TSheetProps {
   sheet_name: string;
@@ -578,16 +579,16 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
     });
     this.props.dispatch(actionSetMousePosition([x, y]));
 
-    this.props.dispatch(
-      actionEditorEvent(
-        name,
-        [x, y],
-        [x - this._mouse_drag_start[0], y - this._mouse_drag_start[1]],
-        [event_x, event_y],
-        { x: clientX, y: clientY },
-        key,
-      ),
+    const action = actionEditorEvent(
+      name,
+      [x, y],
+      [x - this._mouse_drag_start[0], y - this._mouse_drag_start[1]],
+      [event_x, event_y],
+      { x: clientX, y: clientY },
+      key,
     );
+    this.props.dispatch(name === 'ldoubleclick' && key === 0
+      ? handleSchematicDoubleClick(action) : action);
 
     if (name === 'lbuttondown' && !this._in_mouse_drag) {
       this._mouse_drag_start = [x, y];

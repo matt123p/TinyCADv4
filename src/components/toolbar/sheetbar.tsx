@@ -11,7 +11,6 @@ import {
   actionSelectDialog,
   actionSheetMove,
   actionSetPPP,
-  actionSheetAdd,
 } from '../../state/dispatcher/AppDispatcher';
 import { dsnBomEntry } from '../../model/dsnBomEntry';
 import { tclibLibraryEntry } from '../../model/tclib';
@@ -50,7 +49,6 @@ const useStyles = makeStyles({
 });
 
 interface SheetbarProps {
-  project?: boolean;
   sheets: dsnSheet[];
   selected_sheet: number;
   editSymbol: tclibLibraryEntry;
@@ -135,11 +133,6 @@ export const Sheetbar: React.FC<SheetbarProps> = (props) => {
             text: 'Duplicate setup',
             iconName: 'Copy',
             onClick: () => props.dispatch({ type: 'simulation/duplicate', sheetId: sheet.id }),
-          }] : props.project && !props.sheets.some((item) => item.hierarchicalSymbol) ? [{
-            key: 'add_hierarchical_symbol',
-            text: 'Add Hierarchical Symbol',
-            iconName: 'Add',
-            onClick: () => props.dispatch(actionSheetAdd('Hierarchical Symbol', true)),
           }] : undefined}
           draggable={canDrag}
           onDragStart={handleDragStart}

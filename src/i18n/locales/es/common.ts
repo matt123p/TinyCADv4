@@ -1,5 +1,6 @@
 const common = {
   projectHierarchy: {
+    addSymbol: 'Añadir símbolo jerárquico',
     missingSymbolSheet: 'El esquema vinculado no tiene una hoja de símbolo jerárquico.',
     unreadableLink: 'No se pudo leer el esquema vinculado.',
     cyclePlacement: 'Colocar este dibujo crearía un ciclo.',

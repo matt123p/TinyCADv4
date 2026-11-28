@@ -18,6 +18,7 @@ import { connect } from 'react-redux';
 import { ActionCreators } from 'redux-undo';
 import { docDrawing } from '../undo/undo';
 import { ContextMenuItem } from '../../manipulators/updateInterfaces';
+import { hierarchySymbolEvent } from '../../io/projectStorage';
 
 interface ContextMenuProps {
   hidden: boolean;
@@ -139,7 +140,7 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => {
       if (key.startsWith('hierarchy:')) {
         dispatch(actionCommand(null));
         const [, command, symbolId] = key.split(':');
-        window.dispatchEvent(new CustomEvent('tinycad:hierarchy-symbol', {
+        window.dispatchEvent(new CustomEvent(hierarchySymbolEvent, {
           detail: { command, symbolId: Number(symbolId) },
         }));
       } else if (key === 'undo') {

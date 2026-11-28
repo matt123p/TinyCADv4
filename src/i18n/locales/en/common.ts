@@ -1,5 +1,6 @@
 const common = {
   projectHierarchy: {
+    addSymbol: 'Add Hierarchical Symbol',
     missingSymbolSheet: 'The linked schematic has no hierarchical symbol sheet.',
     unreadableLink: 'The linked schematic could not be read.',
     cyclePlacement: 'Placing this drawing would create a cycle.',

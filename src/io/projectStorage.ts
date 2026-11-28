@@ -8,6 +8,7 @@ export const projectFolderOpened = 'tinycad:project-folder-opened';
 export const checkProjectOpen = 'tinycad:check-project-open';
 export const hierarchyDragType = 'application/x-tinycad-hierarchy';
 export const hierarchyDropEvent = 'tinycad:drop-project-hierarchy';
+export const hierarchySymbolEvent = 'tinycad:hierarchy-symbol';
 
 export interface ProjectLocation {
   id: string;
@@ -22,6 +23,7 @@ declare global {
   interface WindowEventMap {
     'tinycad:project-folder-opened': CustomEvent<ProjectOpenLocation>;
     [hierarchyDropEvent]: CustomEvent<{ project: string; id: string; point: Coordinate }>;
+    [hierarchySymbolEvent]: CustomEvent<{ command: string; symbolId: number }>;
   }
 }
 

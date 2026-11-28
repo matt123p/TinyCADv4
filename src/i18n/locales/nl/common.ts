@@ -1,5 +1,6 @@
 const common = {
   projectHierarchy: {
+    addSymbol: 'Hiërarchisch symbool toevoegen',
     missingSymbolSheet: 'Het gekoppelde schema heeft geen hiërarchisch symboolblad.',
     unreadableLink: 'Het gekoppelde schema kon niet worden gelezen.',
     cyclePlacement: 'Het plaatsen van deze tekening zou een cyclus veroorzaken.',

@@ -1,5 +1,6 @@
 const common = {
   projectHierarchy: {
+    addSymbol: '添加层次符号',
     missingSymbolSheet: '链接的原理图没有层级符号图纸。',
     unreadableLink: '无法读取链接的原理图。',
     cyclePlacement: '放置此图纸会产生循环引用。',

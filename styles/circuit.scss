@@ -352,10 +352,17 @@
   border-block-start: 1px solid var(--colorNeutralStroke2);
 }
 
-.project-child-designs h3 {
+.project-child-designs-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   flex-shrink: 0;
+  min-height: 28px;
+  padding: 2px 8px;
+}
+
+.project-child-designs-heading h3 {
   margin: 0;
-  padding: 6px 8px;
   font-size: 13px;
   font-weight: 600;
 }

@@ -12,7 +12,6 @@ import { ioXML } from './ioXml';
 import {
   actionAddImage,
   actionBomGenerate,
-  actionSheetAdd,
   actionCommand,
   actionMenuBrowserOpen,
   actionRename,
@@ -1123,14 +1122,6 @@ export function handleMenuCommand(command: string) {
         } else {
           dispatch(actionBomGenerate());
         }
-        break;
-      case 'tools-add-hierarchical-symbol':
-        if (state.schematicTabs?.projectRoot)
-          dispatch(actionSheetAdd('Hierarchical Symbol', true));
-        break;
-      case 'tools-insert-hierarchical-symbol':
-        if (state.schematicTabs?.projectRoot)
-          window.dispatchEvent(new Event('tinycad:insert-hierarchical-symbol'));
         break;
       case 'tools-netlist':
         dispatch(actionSelectDialog('netlist', null));

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, SearchBox, Spinner } from '@fluentui/react-components';
 import {
+  AddRegular,
   ArrowClockwiseRegular,
   ChevronDownRegular,
   ChevronRightRegular,
@@ -78,6 +79,7 @@ interface Props {
   state: docDrawing;
   showActive: boolean;
   canInsert: boolean;
+  addSymbol?(): void;
   open(design: HierarchyDesign): Promise<void>;
   insert(id: string): Promise<void>;
   report(error: unknown): void;
@@ -88,6 +90,7 @@ export default function ProjectHierarchyBrowser({
   state,
   showActive,
   canInsert,
+  addSymbol,
   open,
   insert,
   report,
@@ -362,7 +365,19 @@ export default function ProjectHierarchyBrowser({
         className="project-child-designs"
         aria-label={t('projectHierarchy.available')}
       >
-        <h3>{t('projectHierarchy.available')}</h3>
+        <div className="project-child-designs-heading">
+          <h3>{t('projectHierarchy.available')}</h3>
+          {addSymbol && (
+            <Button
+              icon={<AddRegular />}
+              appearance="subtle"
+              size="small"
+              aria-label={t('projectHierarchy.addSymbol')}
+              title={t('projectHierarchy.addSymbol')}
+              onClick={addSymbol}
+            />
+          )}
+        </div>
         <div className="project-child-design-list">
           <ul>
             {results.candidates.map((entry) => (

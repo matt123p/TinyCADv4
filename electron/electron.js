@@ -242,11 +242,6 @@ function createWindow({ openAbout = false } = {}) {
       ...(isLibraryMode ? [] : [{
         label: getMenuLabel('tools', 'Tools'),
         submenu: [
-          ...(project ? [
-            { label: 'Add Hierarchical Symbol', enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-add-hierarchical-symbol') },
-            { label: 'Insert Another Design as a Symbol…', enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-insert-hierarchical-symbol') },
-            { type: 'separator' },
-          ] : []),
           { label: getMenuLabel('autoLayout', 'Auto-layout'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-auto-layout') },
           { label: getMenuLabel('annotateSymbols', 'Annotate Symbols...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-annotate') },
           { label: getMenuLabel('billOfMaterials', 'Bill of Materials...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-bom') },
