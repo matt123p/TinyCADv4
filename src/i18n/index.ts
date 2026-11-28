@@ -26,6 +26,12 @@ const localeLoaders: Record<string, () => Promise<LocaleModule>> = {
 
 const supportedCodes = SUPPORTED_LANGUAGES.map((language) => language.code);
 
+i18n.on('languageChanged', (language) => {
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = normalizeLanguageCode(language);
+  }
+});
+
 void i18n
   .use(
     resourcesToBackend((language: string) => {
@@ -49,7 +55,5 @@ void i18n
       useSuspense: false,
     },
   });
-
-void i18n.loadLanguages([detectInitialLanguage()]);
 
 export default i18n;

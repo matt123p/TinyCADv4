@@ -16,6 +16,8 @@ A conceptual home-energy plan using **Solar power and batteries**. Its ten embed
 | Metered supply | METER1 HOME AC | CU1 AC IN |
 | Household branch | CU1 HOME | HOME1 HOME AC |
 
+The drawing uses Netlist Types to show solar PV DC in orange, battery DC in purple, inverter AC in teal, grid AC in blue and household AC in rose. Edit the display colours and line widths in **Netlist Types**.
+
 The array and battery have separate DC connections to the hybrid inverter. The inverter's AC connection and the metered grid supply join the distribution equipment through separate ports. A crossing without a junction dot does not connect the two cables. Each equipment port represents a **whole cable or logical link**; it does not specify individual live, neutral, earth or DC conductors. The drawing does not model internal switching or energy flow numerically.
 
 ## What the plan assumes

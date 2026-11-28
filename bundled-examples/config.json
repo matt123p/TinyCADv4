@@ -2,10 +2,10 @@
   "version": 1,
   "groups": [
     {
-      "id": "examples",
-      "title": "Examples",
+      "id": "electronics",
+      "title": "Electronics",
       "preview": "images/AMP.svg",
-      "description": "Editable example drawings for circuits, network layouts, embedded boards, home energy, audio, laboratory setups and motion control. Select an example to read its explanation, then choose **Open drawing** to edit a copy.",
+      "description": "Explore a transistor amplifier and an ESP32 circuit with a sensor and display.",
       "examples": [
         {
           "id": "amp",
@@ -15,18 +15,26 @@
           "description": "A transistor amplifier schematic from the original TinyCAD examples, drawn by Matt Pyne. Open the drawing to explore its components and connections, or use it as a starting point for your own design."
         },
         {
-          "id": "network-layout",
-          "title": "Small office network",
-          "path": "drawings/network-layout.dsn",
-          "preview": "images/network-layout.png",
-          "description": "A small office network built from the **Network layout** bundled library. All seven device definitions are embedded, so this drawing opens without loading the library.\n\nThe four matching 19-inch 1U panels are a router, a 24-port PoE+ switch with four SFP+ cages, a 24-port patch panel, and a blank panel. An ISP fibre terminal, ceiling access point, and five-port desk switch complete the layout.\n\n| Connection | Route |\n| --- | --- |\n| Internet hand-off | ONT1 LAN1 to RTR1 WAN1 |\n| Rack uplink | RTR1 SFP+1 to SW1 SFP+1 |\n| Ceiling access point | SW1 port 4 to PP1 port 1 to AP1 PoE/LAN |\n| Desk switch | SW1 port 6 to PP1 port 3 to DS1 port 1 |\n\nShort rack patch leads and longer office cable runs meet at the patch-panel sockets. Each socket represents one whole cable connection. Spare ports and the external ISP fibre endpoint are intentionally left open. This is a physical cable plan with no SPICE simulation model; circuit-checker notices about open sockets and wires entering panel outlines are expected.\n\nChoose **Open drawing** to edit a copy. Keep rack devices at their default scale and use a vertical step of **120 drawing units** to stack additional 1U panels. Add more devices from **Standard \u2192 Network layout**, and use **Save As** to keep your own plan."
-        },
-        {
           "id": "embedded-climate-station",
           "title": "ESP32 climate and display station",
           "path": "drawings/embedded-climate-station.dsn",
           "preview": "images/embedded-climate-station.png",
           "descriptionPath": "descriptions/embedded-climate-station.md"
+        }
+      ]
+    },
+    {
+      "id": "schematics",
+      "title": "Schematics",
+      "preview": "images/network-layout.png",
+      "description": "Explore equipment wiring and cable plans for networking, home energy, audio, test benches and motion control.",
+      "examples": [
+        {
+          "id": "network-layout",
+          "title": "Small office network",
+          "path": "drawings/network-layout.dsn",
+          "preview": "images/network-layout.png",
+          "description": "A small office network built from the **Network layout** bundled library. All seven device definitions are embedded, so this drawing opens without loading the library.\n\nThe four matching 19-inch 1U panels are a router, a 24-port PoE+ switch with four SFP+ cages, a 24-port patch panel, and a blank panel. An ISP fibre terminal, ceiling access point, and five-port desk switch complete the layout.\n\n| Connection | Route |\n| --- | --- |\n| Internet hand-off | ONT1 LAN1 to RTR1 WAN1 |\n| Rack uplink | RTR1 SFP+1 to SW1 SFP+1 |\n| Ceiling access point | SW1 port 4 to PP1 port 1 to AP1 PoE/LAN |\n| Desk switch | SW1 port 6 to PP1 port 3 to DS1 port 1 |\n\nThe drawing uses Netlist Types to show ISP fibre in orange, the internet hand-off in blue, the SFP+ uplink in purple, access-point PoE in teal and desk Ethernet in rose. Edit the display colours and line widths in **Netlist Types**.\n\nShort rack patch leads and longer office cable runs meet at the patch-panel sockets. Each socket represents one whole cable connection. Spare ports and the external ISP fibre endpoint are intentionally left open. This is a physical cable plan with no SPICE simulation model; circuit-checker notices about open sockets and wires entering panel outlines are expected.\n\nChoose **Open drawing** to edit a copy. Keep rack devices at their default scale and use a vertical step of **120 drawing units** to stack additional 1U panels. Add more devices from **Standard \u2192 Network layout**, and use **Save As** to keep your own plan."
         },
         {
           "id": "solar-battery-home",

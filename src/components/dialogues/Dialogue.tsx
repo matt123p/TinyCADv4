@@ -24,7 +24,7 @@ import { ImportLibrarySymbolPickerDialog } from './importLibrarySymbolPickerDlg'
 import { LibraryInfoDialog } from './libraryInfoDlg';
 import { LibraryFolderDialog } from './libraryFolderDlg';
 import { ReplaceSymbolDialog } from './replaceSymbolDlg';
-import OpenExampleDialog from './openExampleDlg';
+import WelcomeDialog from './welcomeDlg';
 
 interface TDialogueProps {
   show_dialogue: string;
@@ -39,7 +39,7 @@ const TDialogue: FunctionComponent<TDialogueProps> = (
 ) => {
   switch (props.show_dialogue) {
     case 'open_example':
-      return <OpenExampleDialog groupId={props.dialogue_props?.groupId} exampleId={props.dialogue_props?.exampleId} />;
+      return <WelcomeDialog groupId={props.dialogue_props?.groupId} exampleId={props.dialogue_props?.exampleId} />;
     case 'auto_layout':
       return <AutoLayoutDialog />;
     case 'sheet_rename':

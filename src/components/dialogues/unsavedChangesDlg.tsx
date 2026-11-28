@@ -13,12 +13,13 @@ import { actionCancelDialog, actionSelectDialog } from '../../state/dispatcher/A
 import { useDispatch, useSelector } from 'react-redux';
 import { fileSave, librarySave, performPendingAction } from '../../io/files';
 import { docDrawing } from '../../state/undo/undo';
+import type { CurrentFile } from '../../state/stores/altStoreReducer';
 
 export type UnsavedAction = 
   | import('../../io/examples').PreparedExample
   | { type: 'file-new' }
   | { type: 'file-open' }
-  | { type: 'file-open-recent'; file: { name: string; id: string } }
+  | { type: 'file-open-recent'; file: CurrentFile }
   | { type: 'app-close' };
 
 interface UnsavedChangesDialogProps {

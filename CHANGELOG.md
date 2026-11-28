@@ -8,6 +8,8 @@
 - Select a wire to edit its connected net's type in the **Wire Properties** panel or open the **Netlist Types** editor to customise wire appearance.
 - Use **Save As** to choose where to save bills of materials, netlists and VHDL files on desktop and Google Drive. Desktop projects store each schematic's export destinations in the `.tcproject` file. The browser filesystem edition offers downloads.
 - View the Git branch graph, create or switch branches, and merge from the branch dialog. Fetch, Pull, Push and Sync are grouped in a menu next to the branch name.
+- The new welcome page shows the TinyCAD version and gives you quick access to new drawings, existing files and recent drawings. Use **Show welcome page on startup** to save your startup preference.
+- Open the first drawing, simulation and AI Assistant guides from the welcome page in your selected language. Ask for help on Discord or report an issue on GitHub from the welcome page or Help menu.
 
 ### Changed
 
@@ -17,11 +19,16 @@
 - Source Control warns about unsaved edits before staging or committing. The saved-changes viewer and file and line history actions have been removed.
 - The project file menu calls the trash action **Delete**. The context menu closes before the confirmation opens.
 - Use the same colour picker for application colours, drawing objects, and netlist types.
+- The Small office network, Home solar and battery plan, and Two-person podcast studio examples use editable **Netlist Types** to distinguish cable groups by colour and line width. Their previews and explanations show the new styling.
+- Browse bundled examples on the welcome page under **Electronics**, **Schematics**, **SPICE tutorial**, and **XSPICE and digital tutorial**.
+- The language pickers on the welcome page and toolbar display flags. TinyCAD starts with the first supported language from your operating system or browser preferences, falls back to English, and remembers your selection.
+- The About dialog uses **TinyCAD** as its title.
 
 ### Fixed
 
 - Open the project folder's context menu from the blank space below the file tree.
 - Use the next available name for a new schematic, accounting for project files and unsaved tabs.
+- Wrap bold and italic drawing notes within their text boxes when viewing or editing a drawing. Plain notes preserve their line breaks and spacing.
 
 ## v4.1.2 — 2026-11-24
 

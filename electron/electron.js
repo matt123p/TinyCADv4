@@ -1,6 +1,7 @@
 import { isProjectFile } from '../shared/projectFiles.js';
 import { recentProjectFolders, registerProjectFiles } from './projectFiles.js';
 import { isDrawingFile } from '../shared/drawingFiles.js';
+import { helpLinks, manualLinks } from '../shared/helpLinks.js';
 import { registerSimulation } from './simulation.js';
 import { chartWindowOptions, configureChartWindow } from './chartWindows.js';
 import { drawingOpenMenu, drawingViewMenu } from './drawingMenus.js';
@@ -43,6 +44,7 @@ let isLibraryMode = false;
 let editorMenuState = { project: false, editor: 'design' };
 let viewMenuState = { hasExampleExplanation: false, exampleExplanationVisible: false, simulationPanelVisible: false };
 let menuTranslations = {};
+let menuLanguage = 'en';
 let refreshMenu = () => {};
 let ipcHandlersRegistered = false;
 
@@ -103,6 +105,7 @@ function createWindow({ openAbout = false } = {}) {
   // Load saved window size & position
   const windowState = store.get('windowState') || { width: 1200, height: 800 };
   const windowIcon = getWindowIconPath();
+  const additionalArguments = [`--tinycad-system-languages=${app.getPreferredSystemLanguages().join(',')}`];
   const appWindowUrl = isDev
     ? 'http://localhost:1234/'
     : `file://${path.join(__dirname, '../dist/index-electron.html')}`;
@@ -120,6 +123,7 @@ function createWindow({ openAbout = false } = {}) {
     webPreferences: {
       nodeIntegration: false, // Important for security
       contextIsolation: true, // Prevents direct access to Node APIs
+      additionalArguments,
       preload: path.join(__dirname, './preload.js')
     },
   });
@@ -266,8 +270,9 @@ function createWindow({ openAbout = false } = {}) {
       {
         role: 'help',
         submenu: [
-          { label: getMenuLabel('discord', 'Discord'), click: () => shell.openExternal('https://discord.gg/bdXnjhrSYQ') },
-          { label: getMenuLabel('manual', 'Manual'), click: () => shell.openExternal('https://docs.tinycad.net/v4/') },
+          { label: getMenuLabel('discord', 'Discord'), click: () => shell.openExternal(helpLinks.discord) },
+          { label: getMenuLabel('manual', 'Manual'), click: () => shell.openExternal(manualLinks(menuLanguage).home) },
+          { label: getMenuLabel('reportIssue', 'Report an issue on GitHub'), click: () => shell.openExternal(helpLinks.issues) },
           ...(isMac ? [] : [
             { type: 'separator' },
             { label: getMenuLabel('aboutTinyCAD', 'About TinyCAD'), click: showAbout },
@@ -308,6 +313,7 @@ function createWindow({ openAbout = false } = {}) {
           webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
+            additionalArguments,
             preload: path.join(__dirname, './preload.js')
           }
         }
@@ -370,16 +376,6 @@ function createWindow({ openAbout = false } = {}) {
   }
 
   mainWindow.loadURL(url);
-
-  // Call a function after the main renderer has started
-  mainWindow.webContents.on('did-finish-load', () => {
-    // Send the list of recent files
-    sendRecentFiles(mainWindow);
-
-    // Send the list of libraries
-    sendLibraries(mainWindow);
-  });
-
 
   // Save window size & position when closing
   let isQuitting = false;
@@ -536,6 +532,13 @@ function createWindow({ openAbout = false } = {}) {
       saveLibrary(mainWindow, filePath);
     });
 
+    ipcMain.on('request-startup-lists', (event) => {
+      const window = BrowserWindow.fromWebContents(event.sender);
+      if (!window || event.senderFrame !== event.sender.mainFrame) return;
+      sendRecentFiles(window);
+      sendLibraries(window);
+    });
+
     ipcMain.on('refresh-libraries', () => {
       if (!mainWindow) {
         return;
@@ -613,7 +616,7 @@ function createWindow({ openAbout = false } = {}) {
       }
     });
 
-    ipcMain.on('set-menu-translations', (event, translations) => {
+    ipcMain.on('set-menu-translations', (event, translations, language) => {
       if (!mainWindow || event.sender !== mainWindow.webContents) {
         return;
       }
@@ -623,6 +626,7 @@ function createWindow({ openAbout = false } = {}) {
       }
 
       menuTranslations = translations;
+      menuLanguage = language;
       refreshMenu();
     });
 

@@ -12,6 +12,8 @@ A host-and-guest recording setup built from **Audio & Music**. Two dynamic micro
 | Stereo headphone cable | MIX1 HP 2 | HP2 STEREO IN | Guest monitoring |
 | USB data/audio cable | MIX1 USB HOST | PC1 USB 1 | Recording and playback |
 
+The drawing uses Netlist Types to show microphone XLR in purple, headphone feeds in teal and USB audio in blue. Edit the display colours and line widths in **Netlist Types**.
+
 Each socket is one **whole-cable endpoint**. An XLR endpoint does not expose its individual contacts, and a headphone jack represents stereo audio rather than a balanced mono line. Cable crossings without dots are separate connections. The example uses two instances of the same embedded microphone definition and two of the same headphone definition.
 
 ## Set up a recording

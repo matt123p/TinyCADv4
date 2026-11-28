@@ -51,7 +51,6 @@ import {
   DocumentRegular,
   RulerRegular,
   GlobeRegular,
-  CheckmarkRegular,
   PulseRegular,
   DataLineRegular,
   TargetRegular,
@@ -93,6 +92,8 @@ import {
 } from '../../i18n/languages';
 import { openCurrentAppUrl, openExternalUrl } from '../../util/navigation';
 import { useDesignExportDestination } from '../controls/useDesignExportDestination';
+import { helpLinks, manualLinks } from '../../../shared/helpLinks';
+import { LanguageFlag } from '../controls/LanguageFlag';
 
 
 // Images (ES module imports)
@@ -483,7 +484,7 @@ export function EditorToolbarFrame({
             Chat
           </ToolbarButton>
         )}
-        <Menu>
+        <Menu checkedValues={{ language: [currentLanguage] }} hasCheckmarks hasIcons>
           <MenuTrigger disableButtonEnhancement>
             <ToolbarButton
               aria-label={t('toolbar.languageMenu')}
@@ -495,21 +496,27 @@ export function EditorToolbarFrame({
           </MenuTrigger>
           <MenuPopover>
             <MenuList>
-              <MenuItem onClick={() => openExternalUrl('https://docs.tinycad.net/v4/Language-translation/')}>
+              <MenuItem onClick={() => openExternalUrl(manualLinks(currentLanguage).languageTranslation)}>
                 {t('toolbar.aboutTranslations')}
               </MenuItem>
               <MenuDivider />
-              {SUPPORTED_LANGUAGES.map(({ code, label }) => (
-                <MenuItem
-                  key={code}
-                  icon={currentLanguage === code ? <CheckmarkRegular /> : undefined}
+              {SUPPORTED_LANGUAGES.map((language) => (
+                <MenuItemRadio
+                  key={language.code}
+                  name="language"
+                  value={language.code}
+                  lang={language.code}
+                  icon={{
+                    children: <LanguageFlag language={language.code} />,
+                    style: { width: 24 },
+                  }}
                   onClick={() => {
-                    persistLanguagePreference(code);
-                    void i18n.changeLanguage(code);
+                    persistLanguagePreference(language.code);
+                    void i18n.changeLanguage(language.code);
                   }}
                 >
-                  {label}
-                </MenuItem>
+                  {language.label}
+                </MenuItemRadio>
               ))}
             </MenuList>
           </MenuPopover>
@@ -527,15 +534,18 @@ export function EditorToolbarFrame({
               <MenuList>
                 <MenuItem
                   icon={<ImageIcon src={discordImage} />}
-                  onClick={() => openExternalUrl('https://discord.gg/bdXnjhrSYQ')}
+                  onClick={() => openExternalUrl(helpLinks.discord)}
                 >
                   {t('toolbar.discord')}
                 </MenuItem>
                 <MenuItem
                   icon={<DocumentRegular />}
-                  onClick={() => openExternalUrl('https://docs.tinycad.net/v4/')}
+                  onClick={() => openExternalUrl(manualLinks(currentLanguage).home)}
                 >
                   {t('toolbar.manual')}
+                </MenuItem>
+                <MenuItem onClick={() => openExternalUrl(helpLinks.issues)}>
+                  {t('toolbar.reportIssue')}
                 </MenuItem>
                 <MenuDivider />
                 <MenuItem onClick={onAbout}>{t('toolbar.aboutTinyCAD')}</MenuItem>

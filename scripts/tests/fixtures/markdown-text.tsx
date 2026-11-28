@@ -5,7 +5,11 @@ import { layoutMarkdown } from '../../../src/util/markdown';
 import { updateText } from '../../../src/manipulators/updateText';
 import { DocItemTypes } from '../../../src/model/dsnItem';
 import { updateTextData } from '../../../src/manipulators/updateTextArea';
-import { measureText } from '../../../src/util/measureText';
+import {
+  loadDrawingFonts,
+  measureText,
+  measureTextOffset,
+} from '../../../src/util/measureText';
 import { markdownSourceRuns } from '../../../src/util/markdownSource';
 import { blank, ioXML } from '../../../src/io/ioXml';
 import { XMLBuilder } from '../../../src/util/xmlbuilder';
@@ -16,6 +20,12 @@ function check(value, message) {
 }
 
 window.runMarkdownChecks = async () => {
+  await loadDrawingFonts();
+  const faces = Array.from(document.fonts);
+  check(
+    faces.length === 12 && faces.every(face => face.status === 'loaded'),
+    'All bundled drawing font faces load before text layout',
+  );
   const source =
     '# RC circuit\n**Bold**, *italic*, ~~removed~~, `R1`\n\n' +
     '> Measure the time constant\n\n---\n\n' +
@@ -111,10 +121,10 @@ window.runMarkdownChecks = async () => {
   const hostile =
     '<script>alert(1)</script><img src="https://example.com/a.png" onerror="alert(1)">';
   draw({
-    data: {
+    data: new updateText({
       ...item,
-      text: hostile + '\n\n![remote](https://example.com/a.png)',
-    },
+      text: '# Note\n\n' + hostile + '\n\n![remote](https://example.com/a.png)',
+    }).post_construction(),
   });
   check(
     !root.querySelector('script,img,image,foreignObject,iframe,a'),
@@ -125,6 +135,65 @@ window.runMarkdownChecks = async () => {
       root.textContent.includes('![remote]'),
     'Unsupported markup is visible text',
   );
+  for (const newline of ['\r', '\n', '\r\n']) {
+    const plainSource = `First  line${newline}Second_line`;
+    const plain = new updateText({
+      ...item,
+      text: plainSource,
+      font_size: 10,
+      point_b: [130, 35],
+    }).post_construction();
+    draw({ data: plain });
+    const rows = Array.from(root.querySelectorAll('text'));
+    const offset = measureTextOffset('10px Arial') / 2;
+    check(
+      rows.length === 2 &&
+        rows.map((row) => row.textContent).join('') === plainSource &&
+        rows.every((row) => row.getAttribute('x') === '1') &&
+        rows[0].getAttribute('y') === '10' &&
+        rows[1].getAttribute('y') === '25' &&
+        rows[0].parentElement.getCTM().f === 10 + offset &&
+        !root.querySelector('[data-markdown]'),
+      'Plain text uses legacy insets and both baselines in a tight box',
+    );
+    draw({ data: plain, selected: true, selected_handle: -2 });
+    check(
+      root.querySelector('text').parentElement.getCTM().f === 10 + offset,
+      'Plain text keeps its baseline when editing begins',
+    );
+  }
+  const firstLine = 'Dante V3 Karte im MixRack';
+  const wrapSource = `${firstLine} in I/O-Slot 1\rSuper-MADI Karte im Surface in I/O-Slot 5`;
+  const wrapWidth = 200;
+  for (const font_italic of [false, true]) {
+    const wrapped = new updateText({
+      ...item,
+      text: wrapSource,
+      font_size: 16,
+      font_bold: true,
+      font_italic,
+      point_b: [10 + wrapWidth, 145],
+    }).post_construction();
+    const blocks = wrapped.textData.textBlocks;
+    check(
+      blocks[0].value.trimEnd() === 'Dante V3 Karte im' &&
+        blocks[1].value.startsWith('MixRack ') &&
+        blocks.map((block) => block.value).join('') === wrapSource,
+      'Narrow boxes wrap styled words intact and preserve the source',
+    );
+    for (const selected of [false, true]) {
+      draw({ data: wrapped, selected, selected_handle: selected ? -2 : 0 });
+      const rows = Array.from(root.querySelectorAll('text'));
+      check(
+        rows.length === blocks.length &&
+          rows.every((row) => {
+            const length = row.textContent.trimEnd().length;
+            return length === 0 || row.getSubStringLength(0, length) <= wrapWidth - 1;
+          }),
+        'Rendered words fit inside the box in preview and editing',
+      );
+    }
+  }
   const lines = layoutMarkdown('first\nsecond', item, 500).filter(
     (shape) => shape.kind === 'text',
   );
@@ -422,7 +491,11 @@ window.runMarkdownChecks = async () => {
         'Text box bounds survive saving: ' + index,
       );
       draw({ data: note });
-      check(root.querySelector('[data-markdown]'), 'Reloaded note renders');
+      check(
+        Boolean(root.querySelector('[data-markdown]')) ===
+          [0, 2, 4].includes(index),
+        'Reloaded notes use the renderer appropriate to their source',
+      );
       check(
         JSON.stringify(layoutMarkdown(note.text, note, 520)) ===
           JSON.stringify(layoutMarkdown(savedSources[index], note, 520)),

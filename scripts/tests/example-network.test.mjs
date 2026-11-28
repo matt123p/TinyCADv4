@@ -13,7 +13,7 @@ test('bundled office network embeds stackable panels and connects only the inten
     initialiseLayoutRuntime();
     module.exports = (async () => {
       const catalog = JSON.parse(fs.readFileSync('bundled-examples/config.json', 'utf8'));
-      const example = catalog.groups.find(g => g.id === 'examples').examples.find(e => e.id === 'network-layout');
+      const example = catalog.groups.find(g => g.id === 'schematics').examples.find(e => e.id === 'network-layout');
       assert.ok(example, 'Network drawing is registered in Open Example');
       assert.ok(fs.statSync('bundled-examples/' + example.preview).size > 0);
       const drawing = await decodeDrawing(fs.readFileSync('bundled-examples/' + example.path));

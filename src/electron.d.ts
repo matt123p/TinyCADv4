@@ -10,6 +10,7 @@ declare global {
         electronAPI: {
             projectFiles(request: import('./io/projectStorage').ProjectStorageRequest): Promise<unknown>;
             onProjectFoldersChanged(callback: () => void): () => void;
+            preferredSystemLanguages?: string[];
             licenseIndex: () => Promise<import('./io/licenses').LicenseNotice[]>;
             readLicense: (file: string) => Promise<string>;
             openChromiumLicenses: () => Promise<void>;
@@ -65,11 +66,12 @@ declare global {
             setViewMenuState: (state: { hasExampleExplanation: boolean; exampleExplanationVisible: boolean; simulationPanelVisible: boolean }) => void;
             setMenuMode: (mode: boolean) => void;
             setEditorMenuState: (state: { project: boolean; editor: string }) => void;
-            setMenuTranslations: (translations: Record<string, string>) => void;
+            setMenuTranslations: (translations: Record<string, string>, language: string) => void;
 
             // Callbacks
             fileLoaded: (callback: (data: { content: string | Uint8Array, name: string, id: string }) => void) => () => void;
             fileSaved: (callback: (data: { success: boolean, name: string, id: string }) => void) => () => void;
+            requestStartupLists?: () => void;
             recentFiles: (callback: (data: { name: string, id: string }[]) => void) => () => void;
             libraryLoaded: (callback: (library: import('./model/tclib').tclib) => void) => () => void;
             libraryLoadFailed: (callback: (data: { id: string, name: string, error: ElectronLibraryLoadError }) => void) => () => void;

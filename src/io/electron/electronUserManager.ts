@@ -148,6 +148,8 @@ export class ElectronUserManager implements UserManager {
     );
 
 
+    window.electronAPI.requestStartupLists?.();
+
     // Check URL parameters for startup actions
     const urlParams = new URLSearchParams(window.location.search);
     

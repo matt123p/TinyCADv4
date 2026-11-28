@@ -1,4 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
+const languageArgument = '--tinycad-system-languages=';
+const preferredSystemLanguages = process.argv.find((arg) => arg.startsWith(languageArgument))
+    ?.slice(languageArgument.length).split(',').filter(Boolean) ?? [];
 
 contextBridge.exposeInMainWorld('electronAPI', {
   projectFiles: (request) => ipcRenderer.invoke('project-files', request),
@@ -7,6 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('project-folders-changed', listener);
     return () => ipcRenderer.removeListener('project-folders-changed', listener);
   },
+    preferredSystemLanguages,
     licenseIndex: () => ipcRenderer.invoke('licenses-index'),
     readLicense: (file) => ipcRenderer.invoke('licenses-read', file),
     openChromiumLicenses: () => ipcRenderer.invoke('licenses-open-chromium'),
@@ -54,7 +58,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setViewMenuState: (state) => ipcRenderer.send('set-view-menu-state', state),
     setMenuMode: (mode) => ipcRenderer.send('set-menu-mode', mode),
     setEditorMenuState: (state) => ipcRenderer.send('set-editor-menu-state', state),
-    setMenuTranslations: (translations) => ipcRenderer.send('set-menu-translations', translations),
+    setMenuTranslations: (translations, language) => ipcRenderer.send('set-menu-translations', translations, language),
 
     fileLoaded: (callback) => {
         const listener = (event, data) => {
@@ -77,6 +81,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         };
     },
 
+    requestStartupLists: () => ipcRenderer.send('request-startup-lists'),
     recentFiles: (callback) => {
         const listener = (event, data) => {
             callback(data);
