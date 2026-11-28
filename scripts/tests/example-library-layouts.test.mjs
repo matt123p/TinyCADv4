@@ -102,12 +102,14 @@ test('all five new library examples retain their source artwork, exact nets and 
   const catalog = parseExampleCatalog(
     JSON.parse(await fs.readFile('bundled-examples/config.json', 'utf8')),
   );
-  const entries = catalog.groups.find((g) => g.id === 'examples').examples;
-  assert.equal(
-    entries.length,
-    7,
-    'Keep AMP and the office network alongside the five new examples',
-  );
+  const electronics = catalog.groups.find((g) => g.id === 'electronics').examples;
+  const schematics = catalog.groups.find((g) => g.id === 'schematics').examples;
+  assert.deepEqual(electronics.map((entry) => entry.id), ['amp', 'embedded-climate-station']);
+  assert.deepEqual(schematics.map((entry) => entry.id), [
+    'network-layout', 'solar-battery-home', 'podcast-studio',
+    'lab-measurement-bench', 'motor-control-bench',
+  ]);
+  const entries = [...electronics, ...schematics];
   const resources = exampleResourcePaths(catalog);
   const provenance = JSON.parse(
     await fs.readFile(

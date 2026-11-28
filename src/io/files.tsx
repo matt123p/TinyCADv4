@@ -50,6 +50,7 @@ import { get_global_id } from '../util/global_id';
 import { openCurrentAppUrl, openExternalUrl } from '../util/navigation';
 import { normalizeUserConfig, sortLibrariesByConfig, ConfiguredLibraryFile } from './libraryConfig';
 import { commitExample } from './examples';
+import { showWelcomeOnStartup } from './welcomePreferences';
 
 export type FileIdType = string | FileSystemFileHandle;
 
@@ -72,6 +73,7 @@ export interface UserManager {
 }
 
 export let userManager: UserManager = null;
+let startupWelcomeHandled = false;
 
 export function initialise() {
   return (dispatch: Dispatch, getState: { (): docDrawing }): Promise<void> => {
@@ -83,7 +85,23 @@ export function initialise() {
       userManager = new FileSystemUserManager();
     }
 
-    return userManager.initialize(dispatch);
+    return Promise.resolve(userManager.initialize(dispatch)).then(() => {
+      if (startupWelcomeHandled) return;
+      startupWelcomeHandled = true;
+
+      const launch = new URLSearchParams(window.location.search);
+      const { altStore, docStore } = getState();
+      if (
+        showWelcomeOnStartup() &&
+        altStore.loginState === 3 &&
+        !altStore.file.id &&
+        !altStore.show_dialogue &&
+        !docStore.present.editLibrary &&
+        !['about', 'file', 'library', 'action', 'state'].some((key) => launch.has(key))
+      ) {
+        dispatch(actionSelectDialog('open_example', null));
+      }
+    });
   };
 }
 
@@ -114,7 +132,7 @@ export function performPendingAction(pendingAction: UnsavedAction) {
         userManager.fileOpen(dispatch);
         break;
       case 'file-open-recent':
-        userManager.fileOpen(dispatch, pendingAction.file as CurrentFile);
+        userManager.fileOpen(dispatch, pendingAction.file);
         break;
       case 'app-close':
         if (process.env.TARGET_SYSTEM === 'electron' && window.electronAPI) {
@@ -142,7 +160,7 @@ export function fileNew() {
 export function fileOpen(file?: CurrentFile) {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
     const pendingAction: UnsavedAction = file 
-      ? { type: 'file-open-recent', file: { name: file.name, id: file.id as string } }
+      ? { type: 'file-open-recent', file }
       : { type: 'file-open' };
     
     if (checkSaveNeeded(getState)) {

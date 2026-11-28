@@ -8,6 +8,7 @@ interface ElectronLibraryLoadError {
 declare global {
     interface Window {
         electronAPI: {
+            preferredSystemLanguages?: string[];
             licenseIndex: () => Promise<import('./io/licenses').LicenseNotice[]>;
             readLicense: (file: string) => Promise<string>;
             openChromiumLicenses: () => Promise<void>;
@@ -62,7 +63,7 @@ declare global {
             }) => void;
             setViewMenuState: (state: { hasExampleExplanation: boolean; exampleExplanationVisible: boolean; simulationPanelVisible: boolean }) => void;
             setMenuMode: (mode: boolean) => void;
-            setMenuTranslations: (translations: Record<string, string>) => void;
+            setMenuTranslations: (translations: Record<string, string>, language: string) => void;
 
             // Callbacks
             fileLoaded: (callback: (data: { content: string | Uint8Array, name: string, id: string }) => void) => () => void;

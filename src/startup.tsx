@@ -103,7 +103,7 @@ const initializeNativeMenuTranslations = () => {
     }
 
     const t = i18n.getFixedT(language, 'common');
-    window.electronAPI.setMenuTranslations(buildNativeMenuTranslations(t));
+    window.electronAPI.setMenuTranslations(buildNativeMenuTranslations(t), language);
   };
 
   const queueNativeMenuSync = () => {
@@ -244,9 +244,5 @@ void loadDrawingFonts().then(() => {
   scheduleAfterFirstPaint(async () => {
     const { initializeNetlistSync } = await import('./io/netlists/netlistSync');
     initializeNetlistSync(store as any);
-  });
-
-  scheduleAfterFirstPaint(() => {
-    initializeNativeMenuTranslations();
   });
 });

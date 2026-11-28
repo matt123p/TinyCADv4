@@ -60,5 +60,6 @@ export const buildNativeMenuTranslations = (t: TFunction<'common'>): NativeMenuT
 
   discord: menuLabel(t, 'toolbar.discord', 'Discord'),
   manual: menuLabel(t, 'toolbar.manual', 'Manual'),
+  reportIssue: menuLabel(t, 'toolbar.reportIssue', 'Report an issue on GitHub'),
   aboutTinyCAD: menuLabel(t, 'toolbar.aboutTinyCAD', 'About TinyCAD'),
 });

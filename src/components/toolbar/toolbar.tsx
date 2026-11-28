@@ -52,7 +52,6 @@ import {
   DocumentRegular,
   RulerRegular,
   GlobeRegular,
-  CheckmarkRegular,
   PulseRegular,
   DataLineRegular,
   TargetRegular,
@@ -93,6 +92,8 @@ import {
   SUPPORTED_LANGUAGES,
 } from '../../i18n/languages';
 import { openCurrentAppUrl, openExternalUrl } from '../../util/navigation';
+import { helpLinks, manualLinks } from '../../../shared/helpLinks';
+import { LanguageFlag } from '../controls/LanguageFlag';
 
 
 // Images (ES module imports)
@@ -466,7 +467,8 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
     </ToolbarButton>
   );
   const m = props.menu_command;
-  const currentLanguageAbbreviation = normalizeLanguageCode(i18n.language).slice(0, 2).toLowerCase();
+  const currentLanguage = normalizeLanguageCode(i18n.language);
+  const currentLanguageAbbreviation = currentLanguage.slice(0, 2).toLowerCase();
 
   const changeLanguage = (code: string) => {
     persistLanguagePreference(code);
@@ -1047,7 +1049,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
 
         {/* Far Items */}
         <>
-        <Menu>
+        <Menu checkedValues={{ language: [currentLanguage] }} hasCheckmarks hasIcons>
           <MenuTrigger disableButtonEnhancement>
             <ToolbarButton
               aria-label={t('toolbar.languageMenu')}
@@ -1059,18 +1061,24 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           </MenuTrigger>
           <MenuPopover>
             <MenuList>
-              <MenuItem onClick={() => openExternalUrl('https://docs.tinycad.net/v4/Language-translation/')}>
+              <MenuItem onClick={() => openExternalUrl(manualLinks(currentLanguage).languageTranslation)}>
                 {t('toolbar.aboutTranslations')}
               </MenuItem>
               <MenuDivider />
               {SUPPORTED_LANGUAGES.map((language) => (
-                <MenuItem
+                <MenuItemRadio
                   key={language.code}
-                  icon={normalizeLanguageCode(i18n.language) === language.code ? <CheckmarkRegular /> : undefined}
+                  name="language"
+                  value={language.code}
+                  lang={language.code}
+                  icon={{
+                    children: <LanguageFlag language={language.code} />,
+                    style: { width: 24 },
+                  }}
                   onClick={() => changeLanguage(language.code)}
                 >
                   {language.label}
-                </MenuItem>
+                </MenuItemRadio>
               ))}
             </MenuList>
           </MenuPopover>
@@ -1090,15 +1098,18 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
               <MenuList>
                 <MenuItem
                   icon={<ImageIcon src={discordImage} />}
-                  onClick={() => openExternalUrl('https://discord.gg/bdXnjhrSYQ')}
+                  onClick={() => openExternalUrl(helpLinks.discord)}
                 >
                   {t('toolbar.discord')}
                 </MenuItem>
                 <MenuItem
                   icon={<DocumentRegular />}
-                  onClick={() => openExternalUrl('https://docs.tinycad.net/v4/')}
+                  onClick={() => openExternalUrl(manualLinks(currentLanguage).home)}
                 >
                   {t('toolbar.manual')}
+                </MenuItem>
+                <MenuItem onClick={() => openExternalUrl(helpLinks.issues)}>
+                  {t('toolbar.reportIssue')}
                 </MenuItem>
                 <MenuDivider />
                 <MenuItem onClick={() => props.dispatch(actionSelectDialog('about', null))}>

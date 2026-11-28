@@ -6,10 +6,15 @@
 
 - Set the font and size of visible symbol attributes in the **Text Size** tab. Set drawing-wide defaults for Ref, Name and custom attributes, and override either setting for individual symbols or a multi-selection. Font changes preserve label positions and values. [#34](https://github.com/matt123p/TinyCADv4/issues/34)
 - Select a wire to edit its connected net's type in the **Wire Properties** panel or open the **Netlist Types** editor to customise wire appearance.
+- The new welcome page shows the TinyCAD version and gives you quick access to new drawings, existing files and recent drawings. Use **Show welcome page on startup** to save your startup preference.
+- Open the first drawing, simulation and AI Assistant guides from the welcome page in your selected language. Ask for help on Discord or report an issue on GitHub from the welcome page or Help menu.
 
 ### Changed
 
 - The Small office network, Home solar and battery plan, and Two-person podcast studio examples use editable **Netlist Types** to distinguish cable groups by colour and line width. Their previews and explanations show the new styling.
+- Browse bundled examples on the welcome page under **Electronics**, **Schematics**, **SPICE tutorial**, and **XSPICE and digital tutorial**.
+- The language pickers on the welcome page and toolbar display flags. TinyCAD starts with the first supported language from your operating system or browser preferences, falls back to English, and remembers your selection.
+- The About dialog uses **TinyCAD** as its title.
 
 ### Fixed
 

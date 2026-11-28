@@ -1,6 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
+const languageArgument = '--tinycad-system-languages=';
+const preferredSystemLanguages = process.argv.find((arg) => arg.startsWith(languageArgument))
+    ?.slice(languageArgument.length).split(',').filter(Boolean) ?? [];
 
 contextBridge.exposeInMainWorld('electronAPI', {
+    preferredSystemLanguages,
     licenseIndex: () => ipcRenderer.invoke('licenses-index'),
     readLicense: (file) => ipcRenderer.invoke('licenses-read', file),
     openChromiumLicenses: () => ipcRenderer.invoke('licenses-open-chromium'),
@@ -47,7 +51,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     saveLibraryConfig: (config) => ipcRenderer.send('save-library-config', config),
     setViewMenuState: (state) => ipcRenderer.send('set-view-menu-state', state),
     setMenuMode: (mode) => ipcRenderer.send('set-menu-mode', mode),
-    setMenuTranslations: (translations) => ipcRenderer.send('set-menu-translations', translations),
+    setMenuTranslations: (translations, language) => ipcRenderer.send('set-menu-translations', translations, language),
 
     fileLoaded: (callback) => {
         const listener = (event, data) => {
