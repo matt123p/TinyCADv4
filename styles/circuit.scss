@@ -313,17 +313,6 @@ $scrollbar-size: 9px;
 
 .pcb-drc-panel { padding: 4px 8px; }
 
-.project-browser {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  min-width: 0;
-  min-height: 0;
-  padding: 8px;
-  overflow: auto;
-}
-
 .project-board-sync {
   min-width: 0;
   color: var(--colorNeutralForeground2);
