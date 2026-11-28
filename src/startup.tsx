@@ -20,6 +20,7 @@ import {
 } from './state/dispatcher/AppDispatcher';
 import { imageFile } from './io/files';
 import i18n from './i18n';
+import { loadDrawingFonts } from './util/measureText';
 
 const simulationLifecycle: Middleware = () => next => action => {
   if (action.type === DocActionTypes.SetDocument) {
@@ -226,25 +227,26 @@ document.addEventListener('copy', function (e) {
   return false;
 });
 
-const container = document.getElementById('app');
-const root = createRoot(container!);
-root.render(
-  <FluentProvider theme={webLightTheme}>
-    <Provider store={store}>
-      {process.env.TARGET_SYSTEM === 'electron' ? (
-        <MainAppElectronContainer />
-      ) : (
-        <MainAppBrowserContainer />
-      )}
-    </Provider>
-  </FluentProvider>,
-);
+void loadDrawingFonts().then(() => {
+  const container = document.getElementById('app');
+  const root = createRoot(container!);
+  root.render(
+    <FluentProvider theme={webLightTheme}>
+      <Provider store={store}>
+        {process.env.TARGET_SYSTEM === 'electron' ? (
+          <MainAppElectronContainer />
+        ) : (
+          <MainAppBrowserContainer />
+        )}
+      </Provider>
+    </FluentProvider>,
+  );
+  scheduleAfterFirstPaint(async () => {
+    const { initializeNetlistSync } = await import('./io/netlists/netlistSync');
+    initializeNetlistSync(store as any);
+  });
 
-scheduleAfterFirstPaint(async () => {
-  const { initializeNetlistSync } = await import('./io/netlists/netlistSync');
-  initializeNetlistSync(store as any);
-});
-
-scheduleAfterFirstPaint(() => {
-  initializeNativeMenuTranslations();
+  scheduleAfterFirstPaint(() => {
+    initializeNativeMenuTranslations();
+  });
 });

@@ -70,6 +70,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         };
     },
 
+    requestStartupLists: () => ipcRenderer.send('request-startup-lists'),
     recentFiles: (callback) => {
         const listener = (event, data) => {
             callback(data);

@@ -41,12 +41,14 @@ await build({
     },
   ],
 });
+const [svgStyles, fontStyles] = await Promise.all([
+  readFile(path.join(root, 'styles/svg.scss'), 'utf8'),
+  readFile(path.join(root, 'styles/liberation-fonts.scss'), 'utf8'),
+]);
 await writeFile(
   path.join(output, 'index.html'),
-  `<!doctype html><meta charset="utf-8"><style>${await readFile(
-    path.join(root, 'styles/svg.scss'),
-    'utf8',
-  )}</style><script src="test.js"></script>`,
+  `<!doctype html><meta charset="utf-8"><style>${svgStyles}
+${fontStyles.replaceAll("url('fonts/", "url('../../styles/fonts/")}</style><script src="test.js"></script>`,
 );
 await writeFile(
   path.join(output, 'main.cjs'),

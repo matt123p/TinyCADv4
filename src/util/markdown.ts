@@ -33,6 +33,47 @@ export type MarkdownShape =
     }
   | { kind: 'bullet'; x: number; y: number; radius: number };
 
+function lexMarkdown(source: string) {
+  return Lexer.lex(source.replace(/\r\n?/g, '\n'), { gfm: true });
+}
+
+function hasInlineMarkdown(tokens: Token[]): boolean {
+  return tokens.some((token) => {
+    switch (token.type) {
+      case 'strong':
+      case 'em':
+      case 'del':
+      case 'codespan':
+      case 'br':
+      case 'escape':
+        return true;
+      case 'text':
+        return !!token.tokens && hasInlineMarkdown(token.tokens);
+      default:
+        return false;
+    }
+  });
+}
+
+/** Recognize the Markdown constructs that change how a drawing note displays. */
+export function hasMarkdown(source: string): boolean {
+  return lexMarkdown(source).some((token) => {
+    switch (token.type) {
+      case 'heading':
+      case 'code':
+      case 'hr':
+      case 'blockquote':
+      case 'list':
+        return true;
+      case 'paragraph':
+      case 'text':
+        return !!token.tokens && hasInlineMarkdown(token.tokens);
+      default:
+        return false;
+    }
+  });
+}
+
 /** A small Markdown subset rendered with text and vector shapes, never HTML. */
 export function layoutMarkdown(
   source: string,
@@ -309,6 +350,6 @@ export function layoutMarkdown(
           y += normal.size * 0.45;
       }
   }
-  blocks(Lexer.lex(source.replace(/\r\n?/g, '\n'), { gfm: true }));
+  blocks(lexMarkdown(source));
   return shapes;
 }

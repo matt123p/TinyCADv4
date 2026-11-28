@@ -22,6 +22,8 @@ interface TTextProps {
 const TText: FunctionComponent<TTextProps> = (props: TTextProps) => {
   const item = props.data;
   const scope = UtilityService.simpleRefreshPoints(props);
+  const hasMarkdown = item.textData?.textBlocks.some((block) => block.sourceRuns);
+  const editing = props.selected && props.selected_handle === -2;
 
   let r = 0;
   if (item.rounded_rect) {
@@ -42,7 +44,7 @@ const TText: FunctionComponent<TTextProps> = (props: TTextProps) => {
         filter={props.selected ? 'url(#dropshadow)' : null}
       />
 
-      {props.selected && props.selected_handle === -2 ? (
+      {editing || !hasMarkdown ? (
         <TTextEditArea
           dx={props.dx}
           dy={props.dy}

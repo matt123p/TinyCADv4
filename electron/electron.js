@@ -315,16 +315,6 @@ function createWindow({ openAbout = false } = {}) {
 
   mainWindow.loadURL(url);
 
-  // Call a function after the main renderer has started
-  mainWindow.webContents.on('did-finish-load', () => {
-    // Send the list of recent files
-    sendRecentFiles(mainWindow);
-
-    // Send the list of libraries
-    sendLibraries(mainWindow);
-  });
-
-
   // Save window size & position when closing
   let isQuitting = false;
   let pendingAppQuit = false;
@@ -468,6 +458,13 @@ function createWindow({ openAbout = false } = {}) {
       }
 
       saveLibrary(mainWindow, filePath);
+    });
+
+    ipcMain.on('request-startup-lists', (event) => {
+      const window = BrowserWindow.fromWebContents(event.sender);
+      if (!window || event.senderFrame !== event.sender.mainFrame) return;
+      sendRecentFiles(window);
+      sendLibraries(window);
     });
 
     ipcMain.on('refresh-libraries', () => {

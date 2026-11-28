@@ -51,7 +51,7 @@ import { updateBusLabel } from '../manipulators/updateBusLabel';
 import { updateSymbol, syncSymbolPropertyFonts } from '../manipulators/updateSymbol';
 import md5 from 'md5';
 import { updateFactory } from '../manipulators/updateFactory';
-import { measureText, getFont } from '../util/measureText';
+import { measureText, getStyledFont } from '../util/measureText';
 import { uudecode } from './uudecode';
 import { updateView } from '../manipulators/updateView';
 
@@ -1135,7 +1135,7 @@ export class ioXML {
             // Markdown text reserves three units of padding on every side.
             // Legacy TEXT has no explicit box, so include that padding in its bounds.
             // Leave a pixel for rounding/kerning differences between Markdown runs.
-            const txt_size = Math.ceil(measureText(getFont(o), o.text)) + 1;
+            const txt_size = Math.ceil(measureText(getStyledFont(o), o.text)) + 1;
             const pos = this.coords(node.getAttribute('pos'));
             switch (rotation) {
               case 0: // Right
