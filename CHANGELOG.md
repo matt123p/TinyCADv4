@@ -7,6 +7,14 @@
 - Set the font and size of visible symbol attributes in the **Text Size** tab. Set drawing-wide defaults for Ref, Name and custom attributes, and override either setting for individual symbols or a multi-selection. Font changes preserve label positions and values. [#34](https://github.com/matt123p/TinyCADv4/issues/34)
 - Select a wire to edit its connected net's type in the **Wire Properties** panel or open the **Netlist Types** editor to customise wire appearance.
 
+### Changed
+
+- The Small office network, Home solar and battery plan, and Two-person podcast studio examples use editable **Netlist Types** to distinguish cable groups by colour and line width. Their previews and explanations show the new styling.
+
+### Fixed
+
+- Wrap bold and italic drawing notes within their text boxes when viewing or editing a drawing. Plain notes preserve their line breaks and spacing.
+
 ## v4.1.2 — 2026-11-24
 
 This release improves desktop printing and the display of names on standard library symbols. It also expands the bundled SPICE model catalog and adds support for importing KiCad simulation models.

@@ -164,7 +164,7 @@ test('all five new library examples retain their source artwork, exact nets and 
     assert.equal(
       sha(bytes),
       proof.finalSha256,
-      'Deliver the exact final auto-tidy XML',
+      'Deliver the exact reviewed XML with its final wire styling',
     );
     for (const ext of ['png', 'svg']) {
       const preview = await fs.readFile(

@@ -815,10 +815,10 @@
         }
       },
       "draftSha256": "1baa2e4f8945cf7ebab4497df6a60ab2b3dff58de8e5736243c4fdf041e642d1",
-      "finalSha256": "932b19734c4a0c212fd16168f613a96f816dbc89340b18d6aa8f5e9b93990b0f",
+      "finalSha256": "91b4876aa0a336140143ad4c6ea727fe5549d01455d7e15e26cdcd26876e11cf",
       "previews": {
-        "png": "fcc33ae3654ed8e9e0b190fd5145bce3eac898e27acf1455e43b1c73f9514604",
-        "svg": "0bc87dc78a855410d9d3f24278e6e7c867b5884036dc38ef794074957ffe0f53"
+        "png": "ca29b266be9449ad2153047e0b8c86b10516d2e54a4c91b2239bb412766c685b",
+        "svg": "d4a2f9e0dfec2a1b0c226b588e1fdb01c6a463cdaf2d2b4671cc2a42b7eac1d6"
       },
       "checks": {
         "connectivityPreserved": true,
@@ -879,7 +879,8 @@
           ],
           "message": "Unconnected nets"
         }
-      ]
+      ],
+      "layoutSha256": "932b19734c4a0c212fd16168f613a96f816dbc89340b18d6aa8f5e9b93990b0f"
     },
     {
       "id": "podcast-studio",
@@ -1030,10 +1031,10 @@
         }
       },
       "draftSha256": "c90c4b0bd6c37662d682528d4039a1de2ff4ed7cb8d6d12cfadf91fefd257d1f",
-      "finalSha256": "6248274c008f149036e3814f67baad1ac610d900ba2b44b2f005d7bb0d1ce5fe",
+      "finalSha256": "fb1625b2e6e93af6f6efb8236284a343a27a73475c3d6fdfd1b26e281796148e",
       "previews": {
-        "png": "253a523b0c18105745e33f27e63409f265ed8695f2c8ae492d6d80437773f185",
-        "svg": "8b246d7b4eaf7fe7aef1e403b02030d7209b359d6e8358ccd463e7f87eb08e65"
+        "png": "1f32c9a9f8a5cdf0a7f203dd44ce9720f1f5e10a88ddcd5cbb18773061a45e95",
+        "svg": "1ceb764d9af3af0c0203649ffa011bb178f20c5be1877d3dc41e00af6749910d"
       },
       "checks": {
         "connectivityPreserved": true,
@@ -1190,7 +1191,8 @@
           ],
           "message": "Unconnected nets"
         }
-      ]
+      ],
+      "layoutSha256": "6248274c008f149036e3814f67baad1ac610d900ba2b44b2f005d7bb0d1ce5fe"
     },
     {
       "id": "lab-measurement-bench",
