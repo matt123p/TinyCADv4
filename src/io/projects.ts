@@ -32,7 +32,7 @@ export async function readCurrentHierarchy(state: docDrawing, includeOpenDrawing
     typeof tab.file.id === 'string' ? [[tab.file.id, tab.history.present.drawing] as const] : [],
   )) : undefined;
   const { resolveProjectHierarchy } = await import('./projectHierarchy');
-  return resolveProjectHierarchy(drawing, project, typeof owner === 'string' ? owner : undefined, false, openDrawings);
+  return resolveProjectHierarchy(drawing, project, typeof owner === 'string' ? owner : undefined, openDrawings);
 }
 
 export async function openProjectFolder(recentId?: string) {

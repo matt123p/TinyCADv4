@@ -1,5 +1,7 @@
 import type { GitRequest, GitResult, GitWorktree } from './projectGit';
 import type { DesktopDesignExport } from './designExports';
+import type { NormalizedUserConfig } from './libraryConfig';
+import type { tclib } from '../model/tclib';
 export const projectFilesChanged = 'tinycad:project-files-changed';
 export const projectFolderOpened = 'tinycad:project-folder-opened';
 
@@ -43,6 +45,10 @@ export type ProjectStorageRequest =
       text: string;
     } & DesktopDesignExport)
   | ({ operation: 'bind-design-exports' } & Omit<DesktopDesignExport, 'format'>)
+  | { operation: 'project-library-config'; project: string }
+  | { operation: 'save-project-library-config'; project: string; config: NormalizedUserConfig; initialOnly?: boolean }
+  | { operation: 'choose-project-libraries'; project: string; id?: string }
+  | { operation: 'read-project-library'; project: string; id: string }
   | { operation: 'choose-project-folder' }
   | { operation: 'recent-project-folder' }
   | { operation: 'open-recent-project-folder'; id: string }
@@ -52,7 +58,7 @@ export type ProjectStorageRequest =
   | { operation: 'list'; folder: string; tree?: boolean }
   | { operation: 'chat-list'; project: string; relative?: string; offset?: number }
   | { operation: 'chat-read'; project: string; relative: string }
-  | { operation: 'read-hierarchical-drawing'; project: string; owner?: string; filename: string; allowExternal?: boolean }
+  | { operation: 'read-hierarchical-drawing'; project: string; owner?: string; filename: string }
   | { operation: 'choose-hierarchical-drawing'; project: string }
   | { operation: 'choose-hierarchical-save'; project: string; owner?: string; name: string; compressed: boolean }
   | { operation: 'rebase-hierarchical-links'; project: string; owner: string; links: { owner?: string; filename: string }[] }
@@ -108,6 +114,10 @@ export interface ProjectStorageResult {
   'export-destination': string | null;
   'save-design-export': boolean;
   'bind-design-exports': void;
+  'project-library-config': { saved: boolean; config: unknown };
+  'save-project-library-config': void;
+  'choose-project-libraries': ProjectLocation[];
+  'read-project-library': tclib;
   'open-launch': {
     ticket: string;
     root: ProjectLocation;

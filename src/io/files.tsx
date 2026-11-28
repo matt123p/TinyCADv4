@@ -58,6 +58,7 @@ import { openCurrentAppUrl, openExternalUrl } from '../util/navigation';
 import { normalizeUserConfig, sortLibrariesByConfig, ConfiguredLibraryFile } from './libraryConfig';
 import { commitExample } from './examples';
 import { showWelcomeOnStartup } from './welcomePreferences';
+import { updateProjectLibraryConfig } from './projectLibraries';
 
 export type FileIdType = string | FileSystemFileHandle;
 
@@ -444,6 +445,11 @@ export function removeLibrary(fileId: string) {
       },
     });
 
+    if (state.schematicTabs?.projectRoot) {
+      return updateProjectLibraryConfig(updatedConfig, dispatch, getState).catch((error) =>
+        dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+    }
+
     dispatch(actionUpdateConfig(updatedConfig));
     dispatch(actionSetLibraryList(sortLibrariesByConfig(libraries, updatedConfig)));
 
@@ -453,6 +459,10 @@ export function removeLibrary(fileId: string) {
 
 export function saveLibraryConfig(config: UserConfig) {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
+    if (getState().schematicTabs?.projectRoot) {
+      return updateProjectLibraryConfig(config, dispatch, getState).catch((error) =>
+        dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+    }
     const normalizedConfig = normalizeUserConfig(config);
     const libraries = sortLibrariesByConfig(
       getState().altStore.libraries,

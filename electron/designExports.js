@@ -1,22 +1,14 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { createHash, randomUUID } from 'node:crypto';
-import lockfile from 'proper-lockfile';
+import { createHash } from 'node:crypto';
 import {
   designExportFormats,
   designExportName,
 } from '../shared/designExports.js';
 import { isDrawingFile } from '../shared/drawingFiles.js';
-import {
-  isProjectFile,
-  MAX_PROJECT_SETTINGS_BYTES,
-  validProjectName,
-} from '../shared/projectFiles.js';
+import { validProjectName } from '../shared/projectFiles.js';
 
 const settingsKey = 'designExportLocations';
-const settingsBlock = /<\?tinycad-exports\s+([\s\S]*?)\?>/;
-const blankSettings =
-  '<?xml version="1.0" encoding="UTF-8"?>\n<TinyCADProject/>\n';
 const keyFor = (...fields) =>
   createHash('sha256').update(JSON.stringify(fields)).digest('hex');
 
@@ -30,25 +22,7 @@ function relativeTo(root, file) {
     : undefined;
 }
 
-function decodeSettings(bytes) {
-  const encoding =
-    bytes[0] === 0xff && bytes[1] === 0xfe
-      ? 'utf-16le'
-      : bytes[0] === 0xfe && bytes[1] === 0xff
-      ? 'utf-16be'
-      : 'utf-8';
-  let text = new TextDecoder(encoding, {
-    fatal: true,
-    ignoreBOM: true,
-  }).decode(bytes);
-  if (!text.trim())
-    text =
-      (text.startsWith('\uFEFF') ? '\uFEFF' : '') +
-      (encoding === 'utf-8'
-        ? blankSettings
-        : blankSettings.replace('UTF-8', 'UTF-16'));
-  const block = settingsBlock.exec(text);
-  const settings = block ? JSON.parse(block[1]) : { version: 1, drawings: {} };
+function exportSettings(settings = { version: 1, drawings: {} }) {
   if (
     settings?.version !== 1 ||
     !settings.drawings ||
@@ -60,101 +34,18 @@ function decodeSettings(bytes) {
         typeof settings.drafts !== 'object'))
   )
     throw new Error('Unsupported export settings in the project file.');
-  return { text, encoding, settings };
+  return settings;
 }
 
 export function createDesignExportHandler({
-  dialog,
-  store,
-  openedRoots,
-  readFile,
-  pendingWrites,
-  linkNewFile,
+  dialog, store, openedRoots, readProjectSettings, updateProjectSettings, writeAtomic,
 }) {
   const drafts = new Map();
-
-  async function projectSettings(root) {
-    const entries = await fs.readdir(root, { withFileTypes: true });
-    const markers = entries.filter(
-      (entry) => !entry.isDirectory() && isProjectFile(entry.name),
-    );
-    if (markers.length > 1 || (markers.length && !markers[0].isFile()))
-      throw new Error('Keep one root settings file in the project folder.');
-    const name = path.basename(root) + '.tcproject';
-    const target = path.join(
-      root,
-      markers[0]?.name ?? (validProjectName(name) ? name : 'Project.tcproject'),
-    );
-    const bytes = markers.length
-      ? await readFile(target, MAX_PROJECT_SETTINGS_BYTES)
-      : null;
-    return {
-      target,
-      bytes,
-      ...decodeSettings(bytes ?? Buffer.from(blankSettings)),
-    };
-  }
-
-  async function writeAtomic(target, data, beforeReplace) {
-    if (pendingWrites.has(target))
-      throw new Error('A save is already in progress for this file.');
-    pendingWrites.add(target);
-    const temp = path.join(
-      path.dirname(target),
-      `.tinycad-${randomUUID()}.tmp`,
-    );
-    try {
-      const file = await fs.open(temp, 'wx');
-      try {
-        await file.writeFile(data);
-        await file.sync();
-      } finally {
-        await file.close();
-      }
-      if (await beforeReplace()) await fs.rename(temp, target);
-      else await linkNewFile(temp, target);
-    } finally {
-      pendingWrites.delete(target);
-      await fs.unlink(temp).catch((error) => {
-        if (error.code !== 'ENOENT')
-          console.error('Unable to remove temporary export', error);
-      });
-    }
-  }
-
-  async function updateProjectSettings(root, update) {
-    const release = await lockfile.lock(root, {
-      lockfilePath: path.join(root, '.tinycad-e070ca7e.tmp'),
-      retries: { retries: 5, minTimeout: 30, maxTimeout: 250 },
-    });
-    try {
-      const { target, bytes, text, encoding, settings } = await projectSettings(
-        root,
-      );
-      if (!update(settings)) return;
-      const block =
-        '<?tinycad-exports\n' +
-        JSON.stringify(settings, null, 2).replaceAll('?', '\\u003f') +
-        '\n?>';
-      const next = settingsBlock.test(text)
-        ? text.replace(settingsBlock, () => block)
-        : text + (text.endsWith('\n') ? '' : '\n') + block + '\n';
-      const data = Buffer.from(next, encoding === 'utf-8' ? 'utf8' : 'utf16le');
-      if (encoding === 'utf-16be') data.swap16();
-      if (data.length > MAX_PROJECT_SETTINGS_BYTES)
-        throw new Error('The project settings file is too large.');
-      await writeAtomic(target, data, async () => {
-        if (!bytes) return false;
-        if (!bytes.equals(await readFile(target, MAX_PROJECT_SETTINGS_BYTES)))
-          throw new Error(
-            'The project settings changed on disk. Try saving again.',
-          );
-        return true;
-      });
-    } finally {
-      await release();
-    }
-  }
+  const readExports = async (root) => exportSettings(await readProjectSettings(root, 'exports'));
+  const updateExports = (root, update) => updateProjectSettings(root, 'exports', (value) => {
+    const settings = exportSettings(value);
+    if (update(settings)) return settings;
+  });
 
   return async function handleDesignExport(window, request) {
     const { operation, drawingId, project, draftId, name, format } = request;
@@ -184,9 +75,9 @@ export function createDesignExportHandler({
       if (!drawingId) return;
       if (
         drawing &&
-        (await projectSettings(project)).settings.drafts?.[draftKey]
+        (await readExports(project)).drafts?.[draftKey]
       )
-        await updateProjectSettings(project, (settings) => {
+        await updateExports(project, (settings) => {
           const outputs = settings.drafts?.[draftKey]?.outputs;
           if (!outputs) return false;
           settings.drawings[drawing] = {
@@ -218,7 +109,7 @@ export function createDesignExportHandler({
         : null;
     const settings =
       drawing || projectDraft
-        ? (await projectSettings(project)).settings
+        ? await readExports(project)
         : undefined;
     const configured = drawing
       ? settings.drawings[drawing]?.[format]
@@ -286,7 +177,7 @@ export function createDesignExportHandler({
     });
     try {
       if ((drawing || projectDraft) && file !== configuredPath)
-        await updateProjectSettings(project, (settings) => {
+        await updateExports(project, (settings) => {
           const destination = relativeTo(project, file) ?? file;
           if (drawing) {
             settings.drawings[drawing] = {

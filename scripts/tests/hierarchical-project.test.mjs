@@ -7,7 +7,7 @@ test('v3 hierarchical links round-trip and repeated nested instances connect onl
     import { readFileSync } from 'node:fs';
     import { ioXML } from './src/io/ioXml';
     import { XMLBuilder } from './src/util/xmlbuilder';
-    import { resolveProjectHierarchy } from './src/io/projectHierarchy';
+    import { prepareHierarchicalPlacement, resolveProjectHierarchy } from './src/io/projectHierarchy';
     import { NetlistWorkerState } from './src/web-worker/netlistState';
     import { updateSymbol } from './src/manipulators/updateSymbol';
     import { updateDrawing } from './src/manipulators/updateDrawing';
@@ -62,13 +62,21 @@ test('v3 hierarchical links round-trip and repeated nested instances connect onl
       const name = request.filename.split(/[\\\\/]/).at(-1);
       const content = files.get(name);
       if (!content) throw Error('Missing file');
-      return { id: '/project/' + name, data: new TextEncoder().encode(xml.to_dsn(content, true, true).tostring()) };
+      return { id: '/project/' + name, relative: name, data: new TextEncoder().encode(xml.to_dsn(content, true, true).tostring()) };
     } } };
     const middleWithPins = await resolveProjectHierarchy(middle, '/project', '/project/block.dsn');
     const nested = middleWithPins.sheets[1].items[0];
     middle.sheets[1].items.push(label(new updateSymbol(nested).active_points()[0], 'IN'));
 
     const expanded = await resolveProjectHierarchy(parent, '/project', '/project/top.dsn');
+    const draftLink = await prepareHierarchicalPlacement(parent, 0, '/project', undefined, '/project/block.dsn');
+    assert.equal(draftLink.hierarchicalFile, 'block.dsn');
+    assert.equal(draftLink._hierarchicalOwner, '/project');
+    const legacyAbsolute = read('<TinyCADSheets><TinyCAD>'
+      + link('HIERARCHICAL_SYMBOL', 'H1', '/project/block.dsn', '20,20')
+      + '</TinyCAD></TinyCADSheets>');
+    const normalized = await resolveProjectHierarchy(legacyAbsolute, '/project', '/project/top.dsn');
+    assert.equal(normalized.sheets[0].items[0].hierarchicalFile, 'block.dsn');
     const links = expanded.sheets[0].items;
     assert.equal(links[0]._hierarchicalDrawing.sheets[0].hierarchicalSymbol, true);
     assert.equal(links[0].hierarchicalFile, '.\\\\block.dsn');
@@ -114,7 +122,7 @@ test('v3 hierarchical links round-trip and repeated nested instances connect onl
     outputs.sheets.push({ ...outputs.sheets[1], name: 'Second circuit sheet', items: [extra] });
     const editedTab = new Map([['/project/leaf.dsn', outputs]]);
     const linkedDrawing = await resolveProjectHierarchy({ ...parent, sheets: [shared] },
-      '/project', '/project/top.dsn', false, editedTab);
+      '/project', '/project/top.dsn', editedTab);
     const drcNetlist = new NetlistWorkerState().init(linkedDrawing);
     const findings = drc.designRulesCheck(linkedDrawing, {
       Output: true, MultipleNetNames: true, UnAssignedRefDes: true, UnConnected: true,
@@ -129,7 +137,7 @@ test('v3 hierarchical links round-trip and repeated nested instances connect onl
     assert.equal(findings.some((finding) => finding.text === 'Multiple names on same net'), false);
 
     outputs.sheets[1].items = outputs.sheets[1].items.filter((item) => item.text !== 'IN');
-    const missingPort = await resolveProjectHierarchy(parent, '/project', '/project/top.dsn', false, editedTab);
+    const missingPort = await resolveProjectHierarchy(parent, '/project', '/project/top.dsn', editedTab);
     const portFindings = drc.designRulesCheck(missingPort, { UnConnected: true }, new NetlistWorkerState().init(missingPort));
     assert.deepEqual(portFindings.filter((finding) => finding.text.includes('matching label'))
       .map(({ source, pin }) => [source.fileId, source.sheet, source.instancePath, pin]), [

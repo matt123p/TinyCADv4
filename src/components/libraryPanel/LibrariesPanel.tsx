@@ -5,6 +5,7 @@ import type { StandardLibraryNavigation } from '../../state/actions/libraryActio
 import React, { Dispatch, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { loadLibraries, saveLibraryConfig } from '../../io/files';
+import { addProjectLibraries, refreshProjectLibraries } from '../../io/projectLibraries';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../../model/tclib';
 import SymbolView from './SymbolView';
 import {
@@ -300,6 +301,7 @@ const useStyles = makeStyles({
 });
 
 interface LibrariesPanelProps {
+  projectRoot?: string;
   standardLibraryNavigation?: StandardLibraryNavigation;
   libraries: tclib[];
   config: UserConfig;
@@ -691,6 +693,17 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
       : ROOT_LIBRARY_FOLDER_ID;
 
     window.setTimeout(() => {
+      if (props.projectRoot) {
+        const add = addProjectLibraries(undefined, targetFolderId === ROOT_LIBRARY_FOLDER_ID ? null : targetFolderId);
+        props.dispatch(async (...args: Parameters<typeof add>) => {
+          try {
+            await add(...args);
+          } catch (error) {
+            args[0](actionSelectDialog('io_failure', { message: String(error) }));
+          }
+        });
+        return;
+      }
       window.electronAPI?.loadLibrary({
         folderId: targetFolderId === ROOT_LIBRARY_FOLDER_ID ? null : targetFolderId,
       });
@@ -1031,7 +1044,9 @@ export const LibrariesPanel: React.FunctionComponent<LibrariesPanelProps> = (
                         size="small"
                         icon={<ArrowClockwiseRegular />}
                         title={t('library.refreshLibraries')}
-                        onClick={() => window.electronAPI.refreshLibraries()}
+                        onClick={() => props.projectRoot
+                          ? props.dispatch(refreshProjectLibraries)
+                          : window.electronAPI.refreshLibraries()}
                       >
                         <span
                           className={styles.buttonText}

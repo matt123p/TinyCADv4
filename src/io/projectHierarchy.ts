@@ -127,12 +127,11 @@ export async function prepareHierarchicalPlacement(
   );
   let number = 1;
   while (used.has(`H${number}`)) number++;
-  const hierarchicalFile = owner ? file.relative : file.id;
   const item: dsnSymbol = {
     NodeName: DocItemTypes.Symbol,
     _id: get_global_id(),
     point: [0, 0],
-    hierarchicalFile,
+    hierarchicalFile: file.relative,
     show_power: true,
     allow_resize: false,
     scale_x: 1,
@@ -209,7 +208,8 @@ export async function rebaseProjectHierarchy(
       if (
         item.NodeName === DocItemTypes.Symbol &&
         item.hierarchicalFile !== undefined &&
-        (item._hierarchicalOwner ?? previous) !== next
+        ((item._hierarchicalOwner ?? previous) !== next ||
+          (!item._hierarchicalError && /^(?:[A-Za-z]:|[\\/])/.test(item.hierarchicalFile)))
       )
         changed.push(item);
   if (!changed.length) return drawing;
@@ -242,12 +242,11 @@ export async function resolveProjectHierarchy(
   drawing: dsnDrawing,
   project: string,
   owner?: string,
-  allowExternal = false,
   openDrawings?: ReadonlyMap<string, dsnDrawing>,
 ): Promise<dsnDrawing> {
   const xml = new ioXML();
   const loaded = new Map<string, dsnDrawing>();
-  const requests = new Map<string, Promise<{ id: string; data: Uint8Array }>>();
+  const requests = new Map<string, Promise<{ id: string; relative: string; data: Uint8Array }>>();
   let placements = 0;
 
   async function hydrate(
@@ -273,7 +272,8 @@ export async function resolveProjectHierarchy(
           continue;
         }
         changed = linked = true;
-        const owner = item._hierarchicalOwner ?? id;
+        // Keep the draft's project-root anchor when the editor acquires a saved filename.
+        const owner = item._hierarchicalOwner ?? id ?? project;
         const symbol: dsnSymbol = {
           ...item,
           _hierarchicalOwner: owner,
@@ -293,13 +293,14 @@ export async function resolveProjectHierarchy(
                 project,
                 owner,
                 filename: item.hierarchicalFile,
-                ...(allowExternal ? { allowExternal } : {}),
               }),
             );
           const file = await requests.get(key)!;
           if (stack.includes(file.id))
             throw new Error('The linked schematics contain a cycle.');
           symbol._hierarchicalTarget = file.id;
+          if (/^(?:[A-Za-z]:|[\\/])/.test(item.hierarchicalFile))
+            symbol.hierarchicalFile = file.relative;
           if (!loaded.has(file.id))
             loaded.set(file.id, openDrawings?.get(file.id) ?? await decodeDrawing(file.data));
           const child = loaded.get(file.id)!;

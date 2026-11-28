@@ -54,6 +54,8 @@ type Props = {
   root: ProjectLocation;
   active?: string;
   insertHierarchy?(id: string): Promise<void>;
+  addLibrary(id: string): Promise<void>;
+  edited(): void;
   gitChanges?: ReadonlyMap<string, string>;
   open(file: BrowserFile, keepOpen?: boolean): Promise<void>;
   beforeChange(id: string, kind: 'relocate' | 'trash', newName?: string): void;
@@ -165,6 +167,8 @@ export default function ProjectFileBrowser({
   gitChanges,
   open,
   insertHierarchy,
+  addLibrary,
+  edited,
   beforeChange,
   relocated,
   removed,
@@ -250,12 +254,13 @@ export default function ProjectFileBrowser({
     };
   }, [root.id, expanded, refresh]);
 
-  async function change(operation: () => Promise<void>, onError = report) {
+  async function change(operation: () => Promise<void | false>, onError = report) {
     if (lock.current) return;
     lock.current = true;
     setBusy(true);
     try {
-      await operation();
+      if (await operation() === false) return;
+      edited();
       window.dispatchEvent(new Event(projectFilesChanged));
     } catch (error) {
       onError(error);
@@ -356,9 +361,11 @@ export default function ProjectFileBrowser({
   function finishRename(name: string) {
     return change(
       async () => {
+        const unchanged = name === renaming.item.name;
         const next = await relocate(renaming, renaming.parent, name);
         setRenaming(undefined);
         focusRow(next.item.id);
+        if (unchanged) return false;
       },
       (error) =>
         setRenameError(error instanceof Error ? error.message : String(error)),
@@ -375,7 +382,7 @@ export default function ProjectFileBrowser({
           directory: entry.item.folder,
         }))
       )
-        return;
+        return false;
       removed(entry.item.id);
       setExpanded((previous) =>
         previous.filter((id) => !isWithin(id, entry.item.id)),
@@ -529,6 +536,12 @@ export default function ProjectFileBrowser({
         {entry && !entry.item.folder && isDrawingFile(entry.item.name) && insertHierarchy && (
           <MenuItem disabled={busy || restricted} onClick={() => void insertHierarchy(entry.item.id).catch(report)}>
             Insert as Hierarchical Symbol
+          </MenuItem>
+        )}
+        {entry && !entry.item.folder && /\.tclib$/i.test(entry.item.name) && (
+          <MenuItem disabled={busy || restricted} icon={<LibraryRegular />}
+            onClick={() => void addLibrary(entry.item.id).catch(report)}>
+            {t('library.addToCustom')}
           </MenuItem>
         )}
         {entry && (

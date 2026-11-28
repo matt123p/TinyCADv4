@@ -19,6 +19,12 @@ import { fileSave, saveSchematicFile } from '../../io/files';
 import { bindDrawingExports } from '../../io/designExports';
 import type { GitSnapshot } from '../../io/projectGit';
 import { projectDocumentKind } from '../../io/projectDocumentKind';
+import {
+  addProjectLibraries,
+  endProjectLibraries,
+  rememberProjectLibrariesOnEdit,
+  startProjectLibraries,
+} from '../../io/projectLibraries';
 import { blank } from '../../io/ioXml';
 import {
   closeProjectMode,
@@ -202,6 +208,10 @@ export default function ProjectWorkspace({
     setError(error instanceof Error ? error.message : String(error));
   }
 
+  function rememberLibraries() {
+    void rememberProjectLibrariesOnEdit(store.getState).catch(report);
+  }
+
   function clearDrawing(empty = false) {
     const drawing = blank();
     dispatch(actionSetDocument(
@@ -369,6 +379,7 @@ export default function ProjectWorkspace({
     setGitSnapshot(undefined);
     saveStartupMode('project');
     try {
+      await startProjectLibraries(next.id, dispatch, store.getState).catch(report);
       const session = readProjectTabSession(next.id, account);
       const initial = store.getState();
       const initialKey = activeSchematicTabKey(initial);
@@ -458,6 +469,7 @@ export default function ProjectWorkspace({
     opening.current++;
     documents.clear();
     dispatch(enableSchematicTabs(false));
+    endProjectLibraries(dispatch, store.getState);
     clearDrawing();
     projectRoot.current = undefined;
     setRoot(undefined);
@@ -805,11 +817,15 @@ export default function ProjectWorkspace({
       const next = store.getState();
       const previous = activeSchematicTabKey(previousState);
       const current = activeSchematicTabKey(next);
+      const edited = !transition.current && current && current === previous &&
+        next.docStore.present.drawingVersion > previousState.docStore.present.drawingVersion &&
+        next.docStore.present.drawingVersion !== next.altStore.savedVersion;
       if (current && previewKey.current === current &&
           next.docStore.present.drawingVersion !== next.altStore.savedVersion)
         keepOpen(current);
       const previousDrawing = previousState.docStore.present.drawing;
       previousState = next;
+      if (edited) rememberLibraries();
       if (current === previous) return;
       if (previous && current && previousDrawing === next.docStore.present.drawing) {
         replaceTabKey(previous, current);
@@ -1005,7 +1021,6 @@ export default function ProjectWorkspace({
         if (command === 'open') {
           const linked = await projectRequest({
             operation: 'read-hierarchical-drawing', project: root.id, owner: item._hierarchicalOwner ?? owner, filename: item.hierarchicalFile,
-            allowExternal: true,
           });
           if (!stillCurrent()) return;
           const { id, folder } = linked;
@@ -1015,17 +1030,16 @@ export default function ProjectWorkspace({
           if (command === 'change') {
             const selection = await projectRequest({ operation: 'choose-hierarchical-drawing', project: root.id });
             if (!selection || !stillCurrent()) return;
-            const { relative, id } = await projectRequest({
+            const { relative } = await projectRequest({
               operation: 'read-hierarchical-drawing', project: root.id, owner, filename: selection.id,
             });
-            const hierarchicalFile = owner ? relative : id;
-            placement = { ...item, hierarchicalFile, _hierarchicalOwner: owner, text: item.text.map((field) =>
+            placement = { ...item, hierarchicalFile: relative, _hierarchicalOwner: owner, text: item.text.map((field) =>
               field.description === 'Design' ? { ...field, value: selection.name } : field) };
           }
           const { resolveProjectHierarchy } = await import('../../io/projectHierarchy');
           const drawing = await resolveProjectHierarchy(
             { ...present.drawing, sheets: [{ ...source, items: [placement] }] },
-            root.id, owner, command === 'refresh',
+            root.id, owner,
           );
           if (!stillCurrent()) return;
           const refreshed = drawing.sheets[0].items[0] as dsnSymbol;
@@ -1151,6 +1165,8 @@ export default function ProjectWorkspace({
               root={root}
               active={selectedId}
               open={(file, keep) => open(file, keep ? 'keep' : 'preview')}
+              addLibrary={async (id) => { await addProjectLibraries(id)(dispatch, store.getState); }}
+              edited={rememberLibraries}
               insertHierarchy={activeKey && !openDocument && hierarchySheet &&
                   !hierarchySheet.hierarchicalSymbol && hierarchySheet.kind !== 'simulation'
                 ? insertHierarchy : undefined}
@@ -1270,8 +1286,10 @@ export default function ProjectWorkspace({
             editorRef={setTextEditor}
             onPdfPageChange={setPdfPage}
             onEdit={(value) => {
-              if (file.kind === 'text' && file.value !== value)
+              if (file.kind === 'text' && file.value !== value) {
                 keepOpen('file:' + file.id);
+                rememberLibraries();
+              }
               documents.edit(file.id, value);
             }}
           />

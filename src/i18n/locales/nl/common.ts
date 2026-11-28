@@ -654,6 +654,7 @@ const common = {
     new: 'Nieuw',
     refresh: 'Vernieuwen',
     addExistingLibrary: 'Een bestaande bibliotheek toevoegen',
+    addToCustom: 'Toevoegen aan aangepaste bibliotheken',
     createNewLibrary: 'Een nieuwe bibliotheek maken',
     refreshLibraries: 'Bibliotheken vernieuwen',
     noLibrariesLine1: 'Geen bibliotheken geladen.',

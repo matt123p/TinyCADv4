@@ -7,6 +7,7 @@ const mapStateToProps = (state: docDrawing) => {
     libraries: state.altStore.libraries,
     standardLibraryNavigation: state.altStore.standardLibraryNavigation,
     config: state.altStore.config,
+    projectRoot: state.schematicTabs?.projectRoot,
   };
 };
 

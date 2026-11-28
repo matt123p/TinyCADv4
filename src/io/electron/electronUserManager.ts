@@ -64,6 +64,11 @@ export class ElectronUserManager implements UserManager {
     // Clear previous listeners
     this.unsubs.forEach((u) => u());
     this.unsubs = [];
+    const outsideProject = (callback: () => void) => {
+      dispatch(((_dispatch: Dispatch, getState: () => docDrawing) => {
+        if (!getState().schematicTabs?.projectRoot) callback();
+      }) as any);
+    };
 
     // Add the callbacks
     this.unsubs.push(
@@ -98,19 +103,19 @@ export class ElectronUserManager implements UserManager {
     );
 
     this.unsubs.push(
-      window.electronAPI.libraryLoaded((library) => {
+      window.electronAPI.libraryLoaded((library) => outsideProject(() => {
         dispatch(actionSetLibraryData({ ...library, bad: false, loadError: undefined }));
-      }),
+      })),
     );
 
     this.unsubs.push(
-      window.electronAPI.libraryLoadFailed((data) => {
+      window.electronAPI.libraryLoadFailed((data) => outsideProject(() => {
         dispatch(actionSetLibraryData(this.createFailedLibrary(data.id, data.name, data.error)));
-      }),
+      })),
     );
 
     this.unsubs.push(
-      window.electronAPI.libraries((data) => {
+      window.electronAPI.libraries((data) => outsideProject(() => {
         const config = normalizeUserConfig({
           fileId: this.currentConfig.fileId,
           libraries: data.libraries.map((library) => ({
@@ -144,7 +149,7 @@ export class ElectronUserManager implements UserManager {
             );
           }
         }
-      }),
+      })),
     );
 
 

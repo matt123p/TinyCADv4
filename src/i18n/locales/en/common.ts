@@ -654,6 +654,7 @@ const common = {
     new: 'New',
     refresh: 'Refresh',
     addExistingLibrary: 'Add an existing library',
+    addToCustom: 'Add to Custom Libraries',
     createNewLibrary: 'Create a new library',
     refreshLibraries: 'Refresh libraries',
     noLibrariesLine1: 'No libraries loaded.',

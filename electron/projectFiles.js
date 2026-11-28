@@ -4,6 +4,8 @@ import { constants, createReadStream, watch } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import { addProjectWorktree, cloneProjectGit, projectWorktrees, runProjectGit } from './projectGit.js';
 import { createDesignExportHandler } from './designExports.js';
+import { createProjectSettings } from './projectSettings.js';
+import { createProjectLibraryHandler } from './projectLibraries.js';
 import { drawingFileName, isDrawingFile } from '../shared/drawingFiles.js';
 import {
   MAX_PROJECT_FILE_BYTES,
@@ -88,21 +90,32 @@ export function registerProjectFiles({
     );
   };
 
-  const linkedFilesKey = 'externalHierarchicalSchematics';
-  const linkedFiles = () => {
-    const saved = store.get(linkedFilesKey, []);
-    return Array.isArray(saved) ? saved : [];
-  };
   const sameFilename = (first, second) => process.platform === 'win32'
     ? first.toLowerCase() === second.toLowerCase()
     : first === second;
-  const canReadLinkedFile = (project, filename) => within(project, filename) ||
-    linkedFiles().some((entry) => entry?.project === project &&
-      typeof entry.filename === 'string' && sameFilename(entry.filename, filename));
-  const grantLinkedFile = (project, filename) => {
-    if (!canReadLinkedFile(project, filename))
-      store.set(linkedFilesKey, [...linkedFiles(), { project, filename }]);
+
+  const hierarchyBase = (project, owner) => {
+    if (!openedRoots.has(project) ||
+        (owner !== undefined && owner !== project && (typeof owner !== 'string' || !path.isAbsolute(owner) ||
+          !within(project, owner) || !isDrawingFile(owner))))
+      throw new Error('Choose a linked schematic inside the open project.');
+    return owner === undefined || owner === project ? project : path.dirname(owner);
   };
+  const hierarchyTarget = (project, base, filename) => {
+    if (typeof filename !== 'string' || filename.includes('\0') || !isDrawingFile(filename))
+      throw new Error('Choose a TinyCAD schematic.');
+    const target = path.resolve(base, filename.replaceAll('\\', '/'));
+    if (!within(project, target))
+      throw new Error('The linked schematic is outside the open project.');
+    return target;
+  };
+  const hierarchyRelative = (base, target) => path.relative(base, target).split(path.sep).join('/');
+  async function resolveHierarchyFile(project, target) {
+    const id = await fs.realpath(target);
+    if (!within(project, id) || !sameFilename(id, target))
+      throw new Error('Symbolic links are unavailable in project trees.');
+    return id;
+  }
 
   async function readFile(filename, maxBytes = MAX_PROJECT_FILE_BYTES) {
     const file = await fs.open(
@@ -171,9 +184,9 @@ export function registerProjectFiles({
       await fs.copyFile(source, target, constants.COPYFILE_EXCL);
     }
   }
-  const handleDesignExport = createDesignExportHandler({
-    dialog, store, openedRoots, readFile, pendingWrites, linkNewFile,
-  });
+  const projectSettings = createProjectSettings({ readFile, pendingWrites, linkNewFile });
+  const handleDesignExport = createDesignExportHandler({ dialog, store, openedRoots, ...projectSettings });
+  const handleProjectLibraries = createProjectLibraryHandler({ dialog, store, openedRoots, within, ...projectSettings });
   ipcMain.handle('project-files', async (event, request) => {
     const window = getWindow();
     if (
@@ -185,6 +198,8 @@ export function registerProjectFiles({
     }
     if (['export-destination', 'save-design-export', 'bind-design-exports'].includes(request.operation))
       return handleDesignExport(window, request);
+    if (['project-library-config', 'save-project-library-config', 'choose-project-libraries', 'read-project-library'].includes(request.operation))
+      return handleProjectLibraries(window, request);
     if (request.operation === 'open-launch') {
       const filename = takeProjectOpen?.();
       if (!filename) return null;
@@ -411,10 +426,10 @@ export function registerProjectFiles({
       });
       if (selection.canceled || !selection.filePath) return null;
       const selected = path.resolve(selection.filePath);
-      await resolve(path.dirname(selected), true);
       const id = drawingFileName(selected, compressed === true);
       if (!within(project, id) || !validProjectName(path.basename(id)))
         throw new Error('Save the linked schematic inside the open project.');
+      await resolve(path.dirname(selected), true);
       let version;
       try {
         await resolve(id, false);
@@ -428,67 +443,38 @@ export function registerProjectFiles({
     }
     if (operation === 'rebase-hierarchical-links') {
       const { project, owner, links } = request;
-      if (!openedRoots.has(project) || typeof owner !== 'string' ||
-          !path.isAbsolute(owner) || !within(project, owner) ||
-          !Array.isArray(links) || links.length > 1000)
+      if (typeof owner !== 'string' || !Array.isArray(links) || links.length > 1000)
         throw new Error('Choose a schematic inside the open project.');
+      const base = hierarchyBase(project, owner);
       return links.map(({ owner: source, filename }) => {
-        if (typeof filename !== 'string' || filename.includes('\0')) throw new Error('Invalid link.');
-        if (source !== undefined && (typeof source !== 'string' ||
-            !path.isAbsolute(source) || !canReadLinkedFile(project, source))) return filename;
-        const target = path.resolve(source ? path.dirname(source) : project,
-          filename.replaceAll('\\', path.sep));
-        return path.relative(path.dirname(owner), target);
+        const target = hierarchyTarget(project, hierarchyBase(project, source), filename);
+        return hierarchyRelative(base, target);
       });
     }
     if (operation === 'choose-hierarchical-drawing') {
       const { project } = request;
-      if (!openedRoots.has(project)) throw new Error('Open a project first.');
+      const base = hierarchyBase(project);
       const selection = await dialog.showOpenDialog(window, {
         defaultPath: project,
         properties: ['openFile'],
         filters: [{ name: 'TinyCAD schematics', extensions: ['dsn', 'dzn'] }],
       });
       if (selection.canceled) return null;
-      const id = await fs.realpath(selection.filePaths[0]);
-      if (!isDrawingFile(id)) throw new Error('Choose a TinyCAD schematic.');
-      grantLinkedFile(project, id);
+      const target = hierarchyTarget(project, base, selection.filePaths[0]);
+      const id = await resolveHierarchyFile(project, target);
       return { id, name: path.basename(id) };
     }
     if (operation === 'read-hierarchical-drawing') {
       const { project, owner, filename } = request;
-      if (!openedRoots.has(project) ||
-          (owner !== undefined && (typeof owner !== 'string' ||
-            !path.isAbsolute(owner) || !canReadLinkedFile(project, owner))) ||
-          typeof filename !== 'string' || filename.includes('\0') ||
-          !isDrawingFile(filename))
-        throw new Error('Choose a linked schematic inside the open project.');
-      const target = path.resolve(owner ? path.dirname(owner) : project,
-        filename.replaceAll('\\', path.sep));
-      if (!canReadLinkedFile(project, target)) {
-        if (request.allowExternal !== true)
-          throw new Error('The linked schematic is outside the open project. Reload the linked schematic to allow access.');
-        const { response } = await dialog.showMessageBox(window, {
-          type: 'question',
-          message: 'Allow this project to read the linked schematic?',
-          detail: target,
-          buttons: ['Allow', 'Cancel'],
-          defaultId: 1,
-          cancelId: 1,
-        });
-        if (response !== 0) throw new Error('Access to the linked schematic was declined.');
-      }
-      const id = await fs.realpath(target);
-      if (!sameFilename(id, target))
-        throw new Error('Symbolic links are unavailable in project trees.');
+      const base = hierarchyBase(project, owner);
+      const id = await resolveHierarchyFile(project, hierarchyTarget(project, base, filename));
       const data = await readFile(id, 32 * 1024 * 1024);
-      if (request.allowExternal === true) grantLinkedFile(project, target);
       return {
         id,
         folder: path.dirname(id),
-        relative: path.relative(owner ? path.dirname(owner) : project, id),
+        relative: hierarchyRelative(base, id),
         data: new Uint8Array(data),
-        version: within(project, id) ? hash(data) : undefined,
+        version: hash(data),
       };
     }
     if (operation === 'chat-list' || operation === 'chat-read') {
