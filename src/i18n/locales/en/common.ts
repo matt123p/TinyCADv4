@@ -543,6 +543,7 @@ const common = {
     },
     drc: {
       sheet: 'Sheet',
+      file: 'File / instance',
       symbol: 'Symbol',
       pin: 'Pin',
       message: 'Message',

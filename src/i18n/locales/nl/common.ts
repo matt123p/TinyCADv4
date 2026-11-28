@@ -543,6 +543,7 @@ const common = {
     },
     drc: {
       sheet: 'Blad',
+      file: 'Bestand / instantie',
       symbol: 'Symbool',
       pin: 'Pin',
       message: 'Bericht',

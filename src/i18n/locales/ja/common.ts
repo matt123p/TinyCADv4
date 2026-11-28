@@ -178,7 +178,7 @@ const common = {
     pinList: { symbol: 'シンボル', pins: 'ピン', spice: 'Spice' },
     pinTable: { addPin: 'ピンを追加' },
     pin: { pinProperties: 'ピンプロパティ', name: '名前', number: '番号', type: 'タイプ', shape: '形状', electrical: '電気的', length: '長さ', offset: 'オフセット', centreOnPin: 'ピン上に中央配置', showName: '名前表示', showNum: '番号表示', normal: '通常', dot: 'ドット', clock: 'クロック', dotClock: 'ドットクロック', power: '電源', hidden: '非表示', cross: 'クロス', inputLow: 'Low 入力', clockLow: 'Low クロック', outputLow: 'Low 出力', fallingEdgeClock: '立下りエッジクロック', input: '入力', output: '出力', tristate: '3状態', openCollector: 'オープンコレクタ', passive: '受動', inputOutput: '入出力', notConnected: '未接続', free: '自由', unspecified: '未指定', powerInput: '電源入力', powerOutput: '電源出力', openEmitter: 'オープンエミッタ' },
-    drc: { sheet: 'シート', symbol: 'シンボル', pin: 'ピン', message: 'メッセージ', resultsCount: 'DRC 結果 ({{count}})' },
+    drc: { sheet: 'シート', file: 'ファイル / インスタンス', symbol: 'シンボル', pin: 'ピン', message: 'メッセージ', resultsCount: 'DRC 結果 ({{count}})' },
     editSymbol: { symbolAttributes: 'シンボル属性', outline: '外形', description: '説明', showValueOnly: '値のみ表示', hideValue: '値を隠す', neverShow: '表示しない', showValueExtraOnly: '値を表示 (追加のみ)', showNameValueWhenPresent: '存在時に Name=Value を表示', showNameValue: 'Name=Value を表示', showValueWhenPresent: '存在時に値を表示', sameOutlineAllParts: '全パート同一外形', differentOutlinePerPart: 'パートごとに外形を変える' },
     editSpice: { model: 'モデル', prologue: 'プロローグ', epilogue: 'エピローグ', priority: '優先度' },
     symbolList: { filters: 'フィルター', symbols: 'シンボル', power: '電源', labels: 'ラベル', text: 'テキスト', sheetName: 'シート名', type: 'タイプ', reference: '参照', name: '名前', typeSymbol: 'シンボル', typePower: '電源', typeLabel: 'ラベル', typeText: 'テキスト' },

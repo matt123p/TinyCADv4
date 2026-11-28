@@ -177,7 +177,7 @@ const common = {
     pinList: { symbol: '符号', pins: '引脚', spice: 'Spice' },
     pinTable: { addPin: '添加引脚' },
     pin: { pinProperties: '引脚属性', name: '名称', number: '编号', type: '类型', shape: '形状', electrical: '电气', length: '长度', offset: '偏移', centreOnPin: '中心对齐到引脚', showName: '显示名称', showNum: '显示编号', normal: '普通', dot: '圆点', clock: '时钟', dotClock: '圆点时钟', power: '电源', hidden: '隐藏', cross: '叉形', inputLow: '低电平输入', clockLow: '低电平时钟', outputLow: '低电平输出', fallingEdgeClock: '下降沿时钟', input: '输入', output: '输出', tristate: '三态', openCollector: '开集电极', passive: '无源', inputOutput: '输入/输出', notConnected: '未连接', free: '自由', unspecified: '未指定', powerInput: '电源输入', powerOutput: '电源输出', openEmitter: '开射极' },
-    drc: { sheet: '图纸', symbol: '符号', pin: '引脚', message: '消息', resultsCount: 'DRC 结果（{{count}}）' },
+    drc: { sheet: '图纸', file: '文件 / 实例', symbol: '符号', pin: '引脚', message: '消息', resultsCount: 'DRC 结果（{{count}}）' },
     editSymbol: { symbolAttributes: '符号属性项', outline: '外形', description: '描述', showValueOnly: '仅显示值', hideValue: '隐藏值', neverShow: '从不显示', showValueExtraOnly: '显示值（仅扩展项）', showNameValueWhenPresent: '存在时显示 名称=值', showNameValue: '显示 名称=值', showValueWhenPresent: '存在时显示值', sameOutlineAllParts: '所有部件使用相同外形', differentOutlinePerPart: '每个部件使用不同外形' },
     editSpice: { model: '模型', prologue: '前导', epilogue: '后导', priority: '优先级' },
     symbolList: { filters: '筛选', symbols: '符号', power: '电源', labels: '标签', text: '文本', sheetName: '图纸名称', type: '类型', reference: '位号', name: '名称', typeSymbol: '符号', typePower: '电源', typeLabel: '标签', typeText: '文本' },

@@ -285,9 +285,10 @@ function patchForLines(text, lines, reverse) {
 async function workingDiff(root, entry, staged) {
   const files = [...new Set([entry.path, entry.original].filter(Boolean))];
   if (!staged && entry.working === '?') {
+    // Git treats the literal /dev/null as an empty file on every platform.
     return git(
       root,
-      ['diff', ...diffOptions, '--no-index', '--', devNull, entry.path],
+      ['diff', ...diffOptions, '--no-index', '--', '/dev/null', entry.path],
       { accept: [0, 1] },
     );
   }
@@ -525,7 +526,7 @@ export async function projectWorktrees(folder) {
           .find((line) => line.startsWith(key + ' '))
           ?.slice(key.length + 1);
       return {
-        id: field('worktree'),
+        id: path.normalize(field('worktree')),
         branch: field('branch')?.replace(/^refs\/heads\//, ''),
         head: field('HEAD'),
         bare: fields.includes('bare'),
