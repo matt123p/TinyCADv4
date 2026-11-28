@@ -102,7 +102,7 @@ test('all five new library examples retain their source artwork, exact nets and 
   const catalog = parseExampleCatalog(
     JSON.parse(await fs.readFile('bundled-examples/config.json', 'utf8')),
   );
-  const electronics = catalog.groups.find((g) => g.id === 'electronics').examples;
+  const electronics = catalog.groups.find((g) => g.id === 'electronics').examples.filter((entry) => !entry.project);
   const schematics = catalog.groups.find((g) => g.id === 'schematics').examples;
   assert.deepEqual(electronics.map((entry) => entry.id), ['amp', 'embedded-climate-station']);
   assert.deepEqual(schematics.map((entry) => entry.id), [

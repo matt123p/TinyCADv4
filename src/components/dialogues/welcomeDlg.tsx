@@ -928,7 +928,7 @@ export default function WelcomeDialog(props: WelcomeDialogProps) {
                   void load();
                 }}
               >
-                {opening ? t('examples.opening') : t('examples.openDrawing')}
+                {opening ? t('examples.opening') : t(example.project ? 'examples.openProject' : 'examples.openDrawing')}
               </Button>
             ) : (
               <WelcomeHelp language={language} />

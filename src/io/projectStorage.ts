@@ -5,6 +5,7 @@ import type { tclib } from '../model/tclib';
 import type { Coordinate } from '../model/dsnItem';
 export const projectFilesChanged = 'tinycad:project-files-changed';
 export const projectFolderOpened = 'tinycad:project-folder-opened';
+export const checkProjectOpen = 'tinycad:check-project-open';
 export const hierarchyDragType = 'application/x-tinycad-hierarchy';
 export const hierarchyDropEvent = 'tinycad:drop-project-hierarchy';
 
@@ -13,9 +14,13 @@ export interface ProjectLocation {
   name: string;
 }
 
+export interface ProjectOpenLocation extends ProjectLocation {
+  initialDrawing?: ProjectLocation;
+}
+
 declare global {
   interface WindowEventMap {
-    'tinycad:project-folder-opened': CustomEvent<ProjectLocation>;
+    'tinycad:project-folder-opened': CustomEvent<ProjectOpenLocation>;
     [hierarchyDropEvent]: CustomEvent<{ project: string; id: string; point: Coordinate }>;
   }
 }
@@ -73,6 +78,7 @@ export type ProjectStorageRequest =
   | { operation: 'read-project-library'; project: string; id: string }
   | { operation: 'scan-project-hierarchy'; project: string }
   | { operation: 'choose-project-folder' }
+  | { operation: 'install-project-example'; groupId: string; exampleId: string }
   | { operation: 'recent-project-folder' }
   | { operation: 'open-recent-project-folder'; id: string }
   | { operation: 'open-launch' }
@@ -150,6 +156,7 @@ export interface ProjectStorageResult {
   } | null;
   'activate-launch': ProjectLocation;
   'choose-project-folder': ProjectLocation | null;
+  'install-project-example': ProjectOpenLocation | null;
   'recent-project-folder': ProjectLocation | null;
   'open-recent-project-folder': ProjectLocation;
   choose: ProjectLocation | null;

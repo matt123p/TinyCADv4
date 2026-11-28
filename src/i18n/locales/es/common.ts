@@ -235,6 +235,8 @@ const common = {
     search: "Buscar grupos y ejemplos",
     browse: "Explorador de ejemplos",
     drawings: "Dibujos",
+    openProject: "Abrir proyecto",
+    saveBeforeOpeningProject: "Guarde o cierre todos los archivos con cambios sin guardar antes de abrir un proyecto. Al abrir un proyecto se cierran todos los archivos abiertos.",
     openDrawing: "Abrir dibujo",
     opening: "Abriendo…",
     loading: "Cargando…",

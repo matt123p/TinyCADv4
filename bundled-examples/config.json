@@ -5,7 +5,7 @@
       "id": "electronics",
       "title": "Electronics",
       "preview": "images/AMP.svg",
-      "description": "Explore a transistor amplifier and an ESP32 circuit with a sensor and display.",
+      "description": "Explore transistor amplifier designs and an ESP32 circuit with a sensor and display.",
       "examples": [
         {
           "id": "amp",
@@ -13,6 +13,22 @@
           "path": "drawings/AMP.dsn",
           "preview": "images/AMP.svg",
           "description": "A transistor amplifier schematic from the original TinyCAD examples, drawn by Matt Pyne. Open the drawing to explore its components and connections, or use it as a starting point for your own design."
+        },
+        {
+          "id": "stereo-transistor-amplifier",
+          "title": "Stereo transistor headphone amplifier",
+          "path": "projects/stereo-transistor-amplifier/Stereo amplifier.dsn",
+          "preview": "projects/stereo-transistor-amplifier/Preview.png",
+          "descriptionPath": "projects/stereo-transistor-amplifier/README.md",
+          "project": {
+            "folder": "Amplifier Example",
+            "files": [
+              "projects/stereo-transistor-amplifier/Mono amplifier.dsn",
+              "projects/stereo-transistor-amplifier/Power supply.dsn",
+              "projects/stereo-transistor-amplifier/Stereo transistor amplifier.tcproject",
+              "projects/stereo-transistor-amplifier/README.md"
+            ]
+          }
         },
         {
           "id": "embedded-climate-station",

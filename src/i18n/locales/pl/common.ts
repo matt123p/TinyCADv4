@@ -647,6 +647,8 @@ const common = {
     search: "Szukaj grup i przykładów",
     browse: "Przeglądarka przykładów",
     drawings: "Rysunki",
+    openProject: "Otwórz projekt",
+    saveBeforeOpeningProject: "Przed otwarciem projektu zapisz lub zamknij wszystkie pliki z niezapisanymi zmianami. Otwarcie projektu zamknie wszystkie aktualnie otwarte pliki.",
     openDrawing: "Otwórz rysunek",
     opening: "Otwieranie…",
     loading: "Ładowanie…",

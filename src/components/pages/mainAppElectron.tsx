@@ -56,7 +56,7 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
       props.dispatch(actionSelectDialog('about', null));
     }
     const openFolder = (id?: string, launch = false) => {
-      void (launch ? openLaunchedProject() : openProjectFolder(id)).catch((error) => props.dispatch(actionSelectDialog('io_failure', {
+      void (launch ? openLaunchedProject(store.getState) : openProjectFolder(store.getState, id)).catch((error) => props.dispatch(actionSelectDialog('io_failure', {
         message: error instanceof Error ? error.message : String(error),
       })));
     };

@@ -440,9 +440,13 @@ function createWindow({ openAbout = false } = {}) {
   if (!ipcHandlersRegistered) {
     ipcHandlersRegistered = true;
     registerSimulation();
+    const exampleSources = app.isPackaged
+      ? [{ directory: path.join(__dirname, '../dist/bundled-examples') }]
+      : repositoryExampleSources(path.join(__dirname, '..'));
     registerProjectFiles({
       ipcMain, getWindow: () => mainWindow, dialog, shell, store,
       documents: app.getPath('documents'), onRecentProjectsChanged: () => refreshMenu(),
+      exampleSources,
       openLibrary: spawnNewWindow,
       takeProjectOpen: () => {
         const filename = projectToOpen;
@@ -452,9 +456,7 @@ function createWindow({ openAbout = false } = {}) {
     });
     registerLicenseHandlers({ ipcMain, app, shell, getWindow: () => mainWindow });
     registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
-      sources: app.isPackaged
-        ? [{ directory: path.join(__dirname, '../dist/bundled-examples') }]
-        : repositoryExampleSources(path.join(__dirname, '..')) });
+      sources: exampleSources });
     registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
       directory: unpackedResource(path.join(__dirname, isDev ? '../bundled-libraries' : '../dist/bundled-libraries')) });
     registerChatSecretHandlers(ipcMain, { app, safeStorage });

@@ -1,13 +1,15 @@
 import { blank } from './ioXml';
 import { decodeDrawing } from './dsnCodec';
-import { projectFolderOpened } from './projectStorage';
+import { checkProjectOpen, projectFolderOpened } from './projectStorage';
 import type {
+  ProjectOpenLocation,
   ProjectStorageRequest,
   ProjectStorageResult,
 } from './projectStorage';
 import { actionSetDocument } from '../state/dispatcher/AppDispatcher';
 import type { docDrawing } from '../state/undo/undo';
 import { openSchematicTabs, schematicTabDirty } from '../state/schematicTabs';
+import i18n from '../i18n';
 
 export function projectRequest<T extends ProjectStorageRequest>(request: T) {
   return window.electronAPI.projectFiles(request) as Promise<
@@ -40,26 +42,43 @@ export function openHierarchyEdits(state: docDrawing) {
   ));
 }
 
-export async function openProjectFolder(recentId?: string) {
+export function assertProjectCanOpen(state: docDrawing) {
+  if (
+    state.altStore.saveInProgress ||
+    state.docStore.present.drawingVersion !== state.altStore.savedVersion ||
+    openSchematicTabs(state).some(({ tab }) => schematicTabDirty(tab)) ||
+    !window.dispatchEvent(new Event(checkProjectOpen, { cancelable: true }))
+  ) throw new Error(i18n.t('examples.saveBeforeOpeningProject'));
+}
+
+export function activateProjectFolder(root: ProjectOpenLocation) {
+  window.dispatchEvent(new CustomEvent(projectFolderOpened, { detail: root }));
+}
+
+export async function openProjectFolder(getState: () => docDrawing, recentId?: string) {
+  assertProjectCanOpen(getState());
   const root = await projectRequest(
     recentId
       ? { operation: 'open-recent-project-folder', id: recentId }
       : { operation: 'choose-project-folder' },
   );
-  if (root)
-    window.dispatchEvent(
-      new CustomEvent(projectFolderOpened, { detail: root }),
-    );
+  if (root) {
+    assertProjectCanOpen(getState());
+    activateProjectFolder(root);
+  }
 }
 
-export async function openLaunchedProject() {
+export async function openLaunchedProject(getState: () => docDrawing) {
+  assertProjectCanOpen(getState());
   const launch = await projectRequest({ operation: 'open-launch' });
   if (!launch) return;
+  assertProjectCanOpen(getState());
   const root = await projectRequest({
     operation: 'activate-launch',
     ticket: launch.ticket,
   });
-  window.dispatchEvent(new CustomEvent(projectFolderOpened, { detail: root }));
+  assertProjectCanOpen(getState());
+  activateProjectFolder(root);
 }
 
 export async function readProjectDrawing(file: {

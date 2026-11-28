@@ -30,6 +30,8 @@ import type { MaintenanceMode } from './ProjectGitMaintenance';
 import ProjectGitGraph from './ProjectGitGraph';
 import ProjectGitBranches from './ProjectGitBranches';
 import { cloneProject, projectGit } from '../../io/projectGit';
+import { useStore } from 'react-redux';
+import type { docDrawing } from '../../state/undo/undo';
 import type {
   GitChange,
   GitCommit,
@@ -73,6 +75,7 @@ export default function ProjectSourceControl({
   saveOpenFiles,
   refreshOpenFiles,
 }: Props) {
+  const { getState } = useStore<docDrawing>();
   const [snapshot, setSnapshot] = useState<GitSnapshot | null>();
   const [busy, setBusy] = useState(false);
   const [maintenance, setMaintenance] = useState<MaintenanceMode>();
@@ -682,6 +685,7 @@ export default function ProjectSourceControl({
                   onClick={() => {
                     void run(async () => {
                       const folder = await cloneProject(
+                        getState,
                         clone.source,
                         clone.name.trim(),
                       );

@@ -1,5 +1,5 @@
-import { projectRequest } from './projects';
-import { projectFolderOpened } from './projectStorage';
+import { activateProjectFolder, assertProjectCanOpen, projectRequest } from './projects';
+import type { docDrawing } from '../state/undo/undo';
 
 export type GitChange = {
   path: string;
@@ -155,27 +155,30 @@ export function projectGit<T extends GitRequest>(folder: string, request: T) {
 }
 
 export async function openProjectWorktree(
+  getState: () => docDrawing,
   folder: string,
   request:
     | { id: string }
     | { name: string; branch: string; createBranch: boolean },
 ) {
+  assertProjectCanOpen(getState());
   const root = await projectRequest(
     'id' in request
       ? { operation: 'worktree-open', folder, ...request }
       : { operation: 'worktree-add', folder, ...request },
   );
-  if (root)
-    window.dispatchEvent(
-      new CustomEvent(projectFolderOpened, { detail: root }),
-    );
+  if (root) {
+    assertProjectCanOpen(getState());
+    activateProjectFolder(root);
+  }
 }
 
-export async function cloneProject(source: string, name: string) {
+export async function cloneProject(getState: () => docDrawing, source: string, name: string) {
+  assertProjectCanOpen(getState());
   const root = await projectRequest({ operation: 'git-clone', source, name });
-  if (root)
-    window.dispatchEvent(
-      new CustomEvent(projectFolderOpened, { detail: root }),
-    );
+  if (root) {
+    assertProjectCanOpen(getState());
+    activateProjectFolder(root);
+  }
   return root;
 }

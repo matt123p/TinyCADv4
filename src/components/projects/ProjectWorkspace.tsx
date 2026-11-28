@@ -38,6 +38,8 @@ import {
   startupMode,
 } from '../../io/projectMode';
 import {
+  activateProjectFolder,
+  assertProjectCanOpen,
   openLaunchedProject,
   openProjectFolder,
   openHierarchyEdits,
@@ -46,11 +48,12 @@ import {
   readProjectDrawing,
 } from '../../io/projects';
 import {
+  checkProjectOpen,
   projectFilesChanged,
   projectFolderOpened,
   hierarchyDropEvent,
 } from '../../io/projectStorage';
-import type { ProjectItem, ProjectLocation } from '../../io/projectStorage';
+import type { ProjectItem, ProjectLocation, ProjectOpenLocation } from '../../io/projectStorage';
 import type { HierarchyDesign } from '../../io/projectHierarchyBrowser';
 import {
   readProjectTabSession,
@@ -359,22 +362,18 @@ export default function ProjectWorkspace({
     }
   }
 
-  async function enter(next: ProjectLocation) {
-    if (
-      root?.id === next.id ||
-      !canReplace('Switch projects and discard unsaved changes?')
-    )
-      return;
+  async function enter(next: ProjectOpenLocation) {
+    if (projectRoot.current?.id === next.id) return;
+    assertProjectCanOpen(store.getState());
     transition.current = true;
     setRestoring(true);
     setError('');
+    setOrder([]);
     setPinned([]);
     markPreview();
-    if (root) {
-      dispatch(enableSchematicTabs(false));
-      clearDrawing();
-      documents.clear();
-    }
+    dispatch(enableSchematicTabs(false));
+    clearDrawing(true);
+    documents.clear();
     opening.current++;
     dispatch(enableSchematicTabs(true, next.id));
     projectRoot.current = next;
@@ -386,16 +385,11 @@ export default function ProjectWorkspace({
     saveStartupMode('project');
     try {
       await startProjectLibraries(next.id, dispatch, store.getState).catch(report);
-      const session = readProjectTabSession(next.id, account);
-      const initial = store.getState();
-      const initialKey = activeSchematicTabKey(initial);
-      if (
-        session && initialKey && !initial.altStore.file.id &&
-        initial.docStore.present.drawingVersion === initial.altStore.savedVersion
-      ) {
-        clearDrawing(true);
-        dispatch(removeSchematicTab(initialKey));
+      if (next.initialDrawing) {
+        await open({ ...next.initialDrawing, folder: next.id, ancestors: [] });
+        return;
       }
+      const session = readProjectTabSession(next.id, account);
       const restored: {
         key: string;
         kind: 'drawing' | 'file';
@@ -745,7 +739,7 @@ export default function ProjectWorkspace({
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('project') === '1') {
-      void openLaunchedProject().catch(report);
+      void openLaunchedProject(store.getState).catch(report);
       return;
     }
     if (
@@ -755,17 +749,18 @@ export default function ProjectWorkspace({
       return;
     void projectRequest({ operation: 'recent-project-folder' })
       .then((recent) => {
-        if (recent)
-          window.dispatchEvent(
-            new CustomEvent(projectFolderOpened, { detail: recent }),
-          );
+        if (recent) activateProjectFolder(recent);
       })
       .catch(report);
   }, []);
 
   useEffect(() => {
-    const onOpen = (event: CustomEvent<ProjectLocation>) => {
+    const onOpen = (event: CustomEvent<ProjectOpenLocation>) => {
       void enter(event.detail).catch(report);
+    };
+    const onCheckOpen = (event: Event) => {
+      if (transition.current || saveLock.current || documents.isSaving() || documents.hasDirty())
+        event.preventDefault();
     };
     const onClose = () => leave();
     const onNewDesign = (event: Event) => {
@@ -800,6 +795,7 @@ export default function ProjectWorkspace({
         event.preventDefault();
     };
     window.addEventListener(projectFolderOpened, onOpen);
+    window.addEventListener(checkProjectOpen, onCheckOpen);
     window.addEventListener(closeProjectMode, onClose);
     window.addEventListener(newProjectDesign, onNewDesign);
     window.addEventListener(saveProjectTabs, onSaveAll);
@@ -808,6 +804,7 @@ export default function ProjectWorkspace({
     window.addEventListener(confirmProjectClose, onConfirmClose);
     return () => {
       window.removeEventListener(projectFolderOpened, onOpen);
+      window.removeEventListener(checkProjectOpen, onCheckOpen);
       window.removeEventListener(closeProjectMode, onClose);
       window.removeEventListener(newProjectDesign, onNewDesign);
       window.removeEventListener(saveProjectTabs, onSaveAll);
@@ -936,7 +933,7 @@ export default function ProjectWorkspace({
     documents.active ??
     (typeof activeFile.id === 'string' ? activeFile.id : undefined);
   const openFolder = () => {
-    void openProjectFolder().catch(report);
+    void openProjectFolder(store.getState).catch(report);
   };
   const openDocument = documents.files.find(
     ({ id }) => id === documents.active,

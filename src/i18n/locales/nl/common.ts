@@ -647,6 +647,8 @@ const common = {
     search: "Groepen en voorbeelden zoeken",
     browse: "Voorbeelden bekijken",
     drawings: "Tekeningen",
+    openProject: "Project openen",
+    saveBeforeOpeningProject: "Sla alle bestanden met niet-opgeslagen wijzigingen op of sluit ze voordat je een project opent. Bij het openen van een project worden alle huidige bestanden gesloten.",
     openDrawing: "Tekening openen",
     opening: "Openen…",
     loading: "Laden…",

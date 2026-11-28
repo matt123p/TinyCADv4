@@ -235,6 +235,8 @@ const common = {
     search: "グループとサンプルを検索",
     browse: "サンプルブラウザー",
     drawings: "図面",
+    openProject: "プロジェクトを開く",
+    saveBeforeOpeningProject: "プロジェクトを開く前に、未保存の変更があるファイルをすべて保存するか閉じてください。プロジェクトを開くと、現在開いているファイルはすべて閉じられます。",
     openDrawing: "図面を開く",
     opening: "開いています…",
     loading: "読み込み中…",

@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useStore } from 'react-redux';
+import type { docDrawing } from '../../state/undo/undo';
 import {
   Button,
   Checkbox,
@@ -50,6 +52,7 @@ export default function ProjectGitMaintenance({
   hasUnsaved,
   refreshFiles,
 }: Props) {
+  const { getState } = useStore<docDrawing>();
   const [stashes, setStashes] = useState<GitStash[]>([]);
   const [worktrees, setWorktrees] = useState<GitWorktree[]>([]);
   const [message, setMessage] = useState('');
@@ -182,8 +185,7 @@ export default function ProjectGitMaintenance({
                           title={entry.id}
                           onClick={() =>
                             run(async () => {
-                              requireSavedFiles();
-                              await openProjectWorktree(folder, {
+                              await openProjectWorktree(getState, folder, {
                                 id: entry.id,
                               });
                               close();
@@ -239,8 +241,7 @@ export default function ProjectGitMaintenance({
                   disabled={busy || !directory.trim() || !branch.trim()}
                   onClick={() =>
                     run(async () => {
-                      requireSavedFiles();
-                      await openProjectWorktree(folder, {
+                      await openProjectWorktree(getState, folder, {
                         name: directory.trim(),
                         branch: branch.trim(),
                         createBranch: newBranch,

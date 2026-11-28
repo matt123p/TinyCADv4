@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import {
   mkdtemp,
   mkdir,
+  readdir,
   readFile,
   writeFile,
   rm,
@@ -14,6 +15,7 @@ import { loadComponent } from './load-component.mjs';
 import * as validation from '../../shared/bundledExamples.js';
 import { packageExamples } from '../package-examples.mjs';
 import { registerBundledExamples } from '../../electron/bundledExamples.js';
+import { registerProjectFiles } from '../../electron/projectFiles.js';
 import { repositoryExampleSources } from '../../shared/exampleSources.js';
 
 const require = createRequire(import.meta.url);
@@ -456,6 +458,49 @@ try {
     );
   }
   const resources = validation.exampleResourcePaths(bundled);
+  const amplifier = bundled.groups.find(group => group.id === 'electronics')
+    .examples.find(example => example.id === 'stereo-transistor-amplifier');
+  assert.ok(amplifier.project);
+  const browser = new ExampleResources({ catalog: async () => bundled }, () => false);
+  await assert.rejects(() => browser.entry('electronics', amplifier.id), /Unknown/);
+  assert.equal((await browser.entry('electronics', 'amp')).id, 'amp');
+
+  let selection = { canceled: true };
+  const installParent = path.join(temporary, 'installed');
+  await mkdir(installParent);
+  const settings = new Map();
+  registerProjectFiles({
+    ipcMain: { handle: (key, handler) => handlers.set(key, handler) },
+    getWindow: () => window,
+    dialog: { showOpenDialog: async () => selection },
+    store: { get: (key, fallback) => settings.get(key) ?? fallback, set: (key, value) => settings.set(key, value) },
+    documents: temporary,
+    exampleSources: [{ directory: tutorialsOutput }],
+  });
+  const project = (operation, fields) => handlers.get('project-files')(event, { operation, ...fields });
+  const install = () => project('install-project-example', { groupId: 'electronics', exampleId: amplifier.id });
+  assert.equal(await install(), null);
+  assert.deepEqual(await readdir(installParent), []);
+  assert.deepEqual(settings.get('recentProjectFolders'), undefined);
+  selection = { canceled: false, filePaths: [installParent] };
+  const original = await install();
+  await writeFile(path.join(original.id, 'README.md'), 'My notes');
+  const [first, second] = await Promise.all([install(), install()]);
+  assert.equal(original.name, 'Amplifier Example');
+  assert.deepEqual([first.name, second.name].sort(), ['Amplifier Example.1', 'Amplifier Example.2']);
+  assert.equal(await readFile(path.join(original.id, 'README.md'), 'utf8'), 'My notes');
+  assert.deepEqual(first.initialDrawing, { id: path.join(first.id, 'Stereo amplifier.dsn'), name: 'Stereo amplifier.dsn' });
+  const filesToCopy = [amplifier.path, ...amplifier.project.files];
+  assert.deepEqual((await readdir(first.id)).sort(), filesToCopy.map(file => path.basename(file)).sort());
+  for (const file of filesToCopy) {
+    assert.deepEqual(await readFile(path.join(first.id, path.basename(file))), await readFile(path.join(tutorialsOutput, file)));
+  }
+  const child = await project('read-hierarchical-drawing', {
+    project: first.id, owner: first.initialDrawing.id, filename: 'Mono amplifier.dsn',
+  });
+  assert.equal(child.relative, 'Mono amplifier.dsn');
+  assert.ok(settings.get('recentProjectFolders').includes(first.id));
+
   const tutorialGroups = bundled.groups.filter(group =>
     ['spice-tutorial', 'xspice-tutorial'].includes(group.id));
   // The introductory guide reuses the divider drawing as a separate entry.

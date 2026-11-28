@@ -40,6 +40,12 @@ export async function loadExampleSources(sources) {
         examples: group.examples.map((example) => ({
           ...content(example),
           path: prefix + example.path,
+          ...(example.project && {
+            project: {
+              ...example.project,
+              files: example.project.files.map((file) => prefix + file),
+            },
+          }),
         })),
       })),
     );

@@ -243,6 +243,8 @@ const common = {
     search: "Gruppen und Beispiele suchen",
     browse: "Beispielübersicht",
     drawings: "Zeichnungen",
+    openProject: "Projekt öffnen",
+    saveBeforeOpeningProject: "Speichern oder schließen Sie alle Dateien mit ungespeicherten Änderungen, bevor Sie ein Projekt öffnen. Dabei werden alle derzeit geöffneten Dateien geschlossen.",
     openDrawing: "Zeichnung öffnen",
     opening: "Wird geöffnet…",
     loading: "Wird geladen…",

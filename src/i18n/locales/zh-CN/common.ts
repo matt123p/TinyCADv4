@@ -234,6 +234,8 @@ const common = {
     search: "搜索分组和示例",
     browse: "示例浏览器",
     drawings: "图纸",
+    openProject: "打开项目",
+    saveBeforeOpeningProject: "请先保存或关闭所有包含未保存更改的文件。打开项目时，当前打开的所有文件都会关闭。",
     openDrawing: "打开图纸",
     opening: "正在打开…",
     loading: "正在加载…",

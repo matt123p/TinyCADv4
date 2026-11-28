@@ -648,6 +648,8 @@ const common = {
     browse: "Example browser",
     drawings: "Drawings",
     openDrawing: "Open drawing",
+    openProject: "Open project",
+    saveBeforeOpeningProject: "Save or close all files with unsaved changes before opening a project. Opening a project closes all current files.",
     opening: "Opening…",
     loading: "Loading…",
     retry: "Retry",

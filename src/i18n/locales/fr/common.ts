@@ -235,6 +235,8 @@ const common = {
     search: "Rechercher des groupes et exemples",
     browse: "Navigateur d’exemples",
     drawings: "Dessins",
+    openProject: "Ouvrir le projet",
+    saveBeforeOpeningProject: "Enregistrez ou fermez tous les fichiers dont les modifications ne sont pas enregistrées avant d’ouvrir un projet. L’ouverture d’un projet ferme tous les fichiers ouverts.",
     openDrawing: "Ouvrir le dessin",
     opening: "Ouverture…",
     loading: "Chargement…",

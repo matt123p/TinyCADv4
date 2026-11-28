@@ -34,6 +34,21 @@
                           "type": "string",
                           "minLength": 1,
                           "description": "Relative path to a TinyCAD .dsn drawing or .dzn simulation."
+                        },
+                        "project": {
+                          "type": "object",
+                          "description": "Desktop-only example copied to a new project folder. The example path is the drawing opened first.",
+                          "required": ["folder", "files"],
+                          "properties": {
+                            "folder": { "type": "string", "minLength": 1 },
+                            "files": {
+                              "type": "array",
+                              "uniqueItems": true,
+                              "items": { "type": "string", "minLength": 1 },
+                              "description": "Additional files alongside the entry drawing, including the project marker."
+                            }
+                          },
+                          "additionalProperties": false
                         }
                       }
                     }

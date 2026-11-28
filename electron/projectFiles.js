@@ -7,6 +7,7 @@ import { createDesignExportHandler } from './designExports.js';
 import { createProjectSettings } from './projectSettings.js';
 import { createProjectLibraryHandler } from './projectLibraries.js';
 import { createHierarchyIndex } from './projectHierarchyIndex.js';
+import { installProjectExample } from './bundledExamples.js';
 import { drawingFileName, isDrawingFile } from '../shared/drawingFiles.js';
 import {
   MAX_PROJECT_FILE_BYTES,
@@ -35,6 +36,7 @@ export function registerProjectFiles({
   takeProjectOpen,
   onRecentProjectsChanged,
   openLibrary,
+  exampleSources,
 }) {
   let root = store.get('projectFolder', documents);
   const pendingWrites = new Set();
@@ -205,6 +207,25 @@ export function registerProjectFiles({
     if (request.operation === 'scan-project-hierarchy') {
       if (!openedRoots.has(request.project)) throw new Error('Open a project folder first.');
       return scanHierarchy(request.project);
+    }
+    if (request.operation === 'install-project-example' && exampleSources) {
+      const installed = await installProjectExample(exampleSources, request.groupId, request.exampleId, async () => {
+        const selection = await dialog.showOpenDialog(window, {
+          defaultPath: root,
+          properties: ['openDirectory', 'createDirectory'],
+        });
+        return selection.canceled ? null : fs.realpath(selection.filePaths[0]);
+      });
+      if (!installed) return null;
+      const location = await openRecentFolder(installed.destination);
+      rememberProjectFolder(location.id);
+      return {
+        ...location,
+        initialDrawing: {
+          id: path.join(location.id, installed.drawingName),
+          name: installed.drawingName,
+        },
+      };
     }
     if (request.operation === 'open-launch') {
       const filename = takeProjectOpen?.();
