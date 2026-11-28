@@ -14,6 +14,7 @@ import { loadComponent } from './load-component.mjs';
 import * as validation from '../../shared/bundledExamples.js';
 import { packageExamples } from '../package-examples.mjs';
 import { registerBundledExamples } from '../../electron/bundledExamples.js';
+import { repositoryExampleSources } from '../../shared/exampleSources.js';
 
 const require = createRequire(import.meta.url);
 const catalog = {
@@ -389,7 +390,7 @@ try {
   registerBundledExamples({
     ipcMain: { handle: (key, handler) => handlers.set(key, handler) },
     getWindow: () => window,
-    directory: output,
+    sources: [{ directory: output }],
   });
   const event = {
     sender: window.webContents,
@@ -439,6 +440,21 @@ try {
   const bundled = validation.parseExampleCatalog(JSON.parse(
     await readFile(path.join(tutorialsOutput, 'config.json'), 'utf8'),
   ));
+  // An unpackaged app must still serve the full catalog while dist is rebuilt.
+  const sourceHandlers = new Map();
+  registerBundledExamples({
+    ipcMain: { handle: (key, handler) => sourceHandlers.set(key, handler) },
+    getWindow: () => window,
+    sources: repositoryExampleSources(path.join(import.meta.dirname, '../..')),
+  });
+  assert.deepEqual(await sourceHandlers.get('bundled-example-catalog')(event), bundled);
+  for (const group of bundled.groups) {
+    const resource = group.examples[0].path;
+    assert.deepEqual(
+      await sourceHandlers.get('bundled-example-read')(event, resource),
+      new Uint8Array(await readFile(path.join(tutorialsOutput, resource))),
+    );
+  }
   const resources = validation.exampleResourcePaths(bundled);
   const tutorialGroups = bundled.groups.filter(group =>
     ['spice-tutorial', 'xspice-tutorial'].includes(group.id));

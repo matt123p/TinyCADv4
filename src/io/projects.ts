@@ -7,7 +7,7 @@ import type {
 } from './projectStorage';
 import { actionSetDocument } from '../state/dispatcher/AppDispatcher';
 import type { docDrawing } from '../state/undo/undo';
-import { openSchematicTabs } from '../state/schematicTabs';
+import { openSchematicTabs, schematicTabDirty } from '../state/schematicTabs';
 
 export function projectRequest<T extends ProjectStorageRequest>(request: T) {
   return window.electronAPI.projectFiles(request) as Promise<
@@ -28,11 +28,16 @@ export async function readCurrentHierarchy(state: docDrawing, includeOpenDrawing
   const project = state.schematicTabs?.projectRoot;
   if (!project) return drawing;
   const owner = state.altStore.file.id;
-  const openDrawings = includeOpenDrawings ? new Map(openSchematicTabs(state).flatMap(({ tab }) =>
-    typeof tab.file.id === 'string' ? [[tab.file.id, tab.history.present.drawing] as const] : [],
-  )) : undefined;
+  const openDrawings = includeOpenDrawings ? openHierarchyEdits(state) : undefined;
   const { resolveProjectHierarchy } = await import('./projectHierarchy');
   return resolveProjectHierarchy(drawing, project, typeof owner === 'string' ? owner : undefined, openDrawings);
+}
+
+export function openHierarchyEdits(state: docDrawing) {
+  return new Map(openSchematicTabs(state).flatMap(({ tab }) =>
+    typeof tab.file.id === 'string' && schematicTabDirty(tab)
+      ? [[tab.file.id, tab.history.present.drawing] as const] : [],
+  ));
 }
 
 export async function openProjectFolder(recentId?: string) {

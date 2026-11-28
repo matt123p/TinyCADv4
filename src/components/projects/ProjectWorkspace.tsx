@@ -11,6 +11,7 @@ import {
   FolderOpenRegular,
   FolderRegular,
   LibraryRegular,
+  OrganizationRegular,
   SaveRegular,
 } from '@fluentui/react-icons';
 import { isDrawingFile } from '../../../shared/drawingFiles';
@@ -39,14 +40,18 @@ import {
 import {
   openLaunchedProject,
   openProjectFolder,
+  openHierarchyEdits,
   projectRequest,
+  readCurrentHierarchy,
   readProjectDrawing,
 } from '../../io/projects';
 import {
   projectFilesChanged,
   projectFolderOpened,
+  hierarchyDropEvent,
 } from '../../io/projectStorage';
 import type { ProjectItem, ProjectLocation } from '../../io/projectStorage';
+import type { HierarchyDesign } from '../../io/projectHierarchyBrowser';
 import {
   readProjectTabSession,
   writeProjectTabSession,
@@ -56,7 +61,7 @@ import {
   dirtyProjectDocument,
   useProjectDocuments,
 } from '../../io/useProjectDocuments';
-import { actionCommand, actionFindSelection, actionSetDocument } from '../../state/dispatcher/AppDispatcher';
+import { actionCommand, actionFindSelection, actionSetDocument, actionSheetSelect } from '../../state/dispatcher/AppDispatcher';
 import SidePanelContainer from '../../state/containers/sidePanelContainer';
 import {
   activeSchematicTabKey,
@@ -76,11 +81,12 @@ import { EditorToolbarDivider } from '../toolbar/toolbar';
 import ProjectDocumentEditor from './ProjectDocumentEditor';
 import type { ProjectTextEditor } from './ProjectDocumentEditor';
 import ProjectFileBrowser from './ProjectFileBrowser';
+import ProjectHierarchyBrowser from './ProjectHierarchyBrowser';
 import type { BrowserFile } from './ProjectFileBrowser';
 import ProjectSourceControl from './ProjectSourceControl';
 import ProjectFileTabs from './ProjectFileTabs';
 import type { ChatProject } from '../../chat/project-context';
-import { DocItemTypes, type dsnSymbol } from '../../model/dsnItem';
+import { DocItemTypes, type Coordinate, type dsnSymbol } from '../../model/dsnItem';
 import type { DrcError } from '../../model/dsnDrawing';
 import { drcResultInActiveDrawing, projectDrcResultSelected } from '../../state/projectDrc';
 
@@ -118,7 +124,7 @@ export type ProjectWorkspaceLayout = {
   saveBlocked?: boolean;
 };
 
-type ProjectPanel = 'files' | 'git' | 'libraries';
+type ProjectPanel = 'files' | 'git' | 'libraries' | 'hierarchy';
 
 type Tab = {
   key: string;
@@ -959,7 +965,41 @@ export default function ProjectWorkspace({
 
   function selectPanel(next: ProjectPanel) {
     setPanel(next);
+    if (next === 'hierarchy') setShowSidebar(true);
   }
+
+  useEffect(() => {
+    if (!root || !activeKey || openDocument) return;
+    let timer: ReturnType<typeof setTimeout>;
+    let revision = 0;
+    const refresh = () => {
+      clearTimeout(timer);
+      const ticket = ++revision;
+      timer = setTimeout(() => {
+        const current = store.getState();
+        const source = current.docStore.present.drawing;
+        if (!source.sheets.some((sheet) => sheet.items.some(
+          (item) => item.NodeName === DocItemTypes.Symbol && item.hierarchicalFile !== undefined,
+        ))) return;
+        void readCurrentHierarchy(current, true).then((drawing) => {
+          if (ticket === revision && projectRoot.current === root &&
+              activeSchematicTabKey(store.getState()) === activeKey)
+            dispatch({ ...actionCommand('refresh_hierarchical_symbol'), hierarchicalReload: { source, drawing } });
+        }).catch((error) => { if (ticket === revision) report(error); });
+      }, 150);
+    };
+    refresh();
+    window.addEventListener('focus', refresh);
+    window.addEventListener(projectFilesChanged, refresh);
+    const unsubscribe = window.electronAPI.onProjectFoldersChanged(refresh);
+    return () => {
+      revision++;
+      clearTimeout(timer);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener(projectFilesChanged, refresh);
+      unsubscribe();
+    };
+  }, [root, activeKey, openDocument, store]);
 
   useEffect(() => {
     if (!root) return;
@@ -1039,11 +1079,12 @@ export default function ProjectWorkspace({
           const { resolveProjectHierarchy } = await import('../../io/projectHierarchy');
           const drawing = await resolveProjectHierarchy(
             { ...present.drawing, sheets: [{ ...source, items: [placement] }] },
-            root.id, owner,
+            root.id, owner, openHierarchyEdits(store.getState()),
           );
           if (!stillCurrent()) return;
           const refreshed = drawing.sheets[0].items[0] as dsnSymbol;
-          if (refreshed._hierarchicalError) throw new Error(refreshed._hierarchicalError);
+          if (placement !== item && refreshed._hierarchicalError)
+            throw new Error(refreshed._hierarchicalError);
           dispatch({
             ...actionCommand('refresh_hierarchical_symbol'),
             ...(placement === item ? { hierarchicalRefresh: refreshed } : { hierarchicalRedirect: refreshed }),
@@ -1065,9 +1106,15 @@ export default function ProjectWorkspace({
     };
     window.addEventListener('tinycad:hierarchy-symbol', listener);
     window.addEventListener('tinycad:insert-hierarchical-symbol', choose);
+    const drop = (event: WindowEventMap[typeof hierarchyDropEvent]) => {
+      if (event.detail.project === root.id)
+        void insertHierarchy(event.detail.id, event.detail.point).catch(report);
+    };
+    window.addEventListener(hierarchyDropEvent, drop);
     return () => {
       window.removeEventListener('tinycad:hierarchy-symbol', listener);
       window.removeEventListener('tinycad:insert-hierarchical-symbol', choose);
+      window.removeEventListener(hierarchyDropEvent, drop);
     };
   });
 
@@ -1075,17 +1122,45 @@ export default function ProjectWorkspace({
   const unresolvedLink = root && !openDocument && state.docStore.present.drawing.sheets
     .flatMap((part) => part.items)
     .find((item): item is dsnSymbol => item.NodeName === DocItemTypes.Symbol && !!item._hierarchicalError);
-  async function insertHierarchy(fileId: string) {
-    const { docStore: { present }, altStore } = store.getState();
-    if (altStore.saveInProgress || saveLock.current) return;
+  const canInsertHierarchy = !!(activeKey && !openDocument && hierarchySheet &&
+    !hierarchySheet.hierarchicalSymbol && hierarchySheet.kind !== 'simulation');
+
+  async function insertHierarchy(fileId: string, point?: Coordinate) {
+    const currentState = store.getState();
+    const { docStore: { present }, altStore } = currentState;
+    if (!canInsertHierarchy || altStore.saveInProgress || saveLock.current) return;
     const currentSheet = present.view.selected_sheet;
     const owner = typeof altStore.file.id === 'string' ? altStore.file.id : undefined;
     const { prepareHierarchicalPlacement } = await import('../../io/projectHierarchy');
-    const placement = await prepareHierarchicalPlacement(present.drawing, currentSheet, root.id, owner, fileId);
-    const current = store.getState().docStore.present;
-    if (projectRoot.current !== root || current.drawing !== present.drawing || current.view.selected_sheet !== currentSheet)
+    const openDrawings = openHierarchyEdits(currentState);
+    const placement = await prepareHierarchicalPlacement(present.drawing, currentSheet, root.id, owner, fileId, openDrawings);
+    const latest = store.getState();
+    const current = latest.docStore.present;
+    if (projectRoot.current !== root ||
+        activeSchematicTabKey(latest) !== activeSchematicTabKey(currentState) ||
+        current.drawingVersion !== present.drawingVersion ||
+        current.view.selected_sheet !== currentSheet)
       return;
-    dispatch({ ...actionCommand('add_hierarchical_symbol'), hierarchicalPlacement: placement });
+    dispatch({ ...actionCommand('add_hierarchical_symbol'), hierarchicalPlacement: placement, hierarchicalDropPoint: point });
+  }
+
+  async function openHierarchyDesign(design: HierarchyDesign) {
+    if (design.tab) {
+      activate(design.tab);
+    } else if (design.id) {
+      const folder = design.id.slice(0, Math.max(root.id.length, design.id.lastIndexOf(pathSeparator(root.id))));
+      await open({ id: design.id, name: design.filename, folder, ancestors: [] }, 'keep');
+    }
+    const current = store.getState();
+    if (projectRoot.current !== root ||
+        activeSchematicTabKey(current) !== (design.tab ?? schematicFileTabKey({ id: design.id, name: design.filename })))
+      return;
+    if (design.tab) keepOpen(design.tab);
+    const { drawing, view } = current.docStore.present;
+    if (drawing.sheets[view.selected_sheet]?.hierarchicalSymbol) {
+      const circuit = drawing.sheets.findIndex((sheet) => !sheet.hierarchicalSymbol && sheet.kind !== 'simulation');
+      if (circuit !== -1) dispatch(actionSheetSelect(circuit));
+    }
   }
 
   return children({
@@ -1135,6 +1210,15 @@ export default function ProjectWorkspace({
           />
           <Button
             appearance="subtle"
+            icon={<OrganizationRegular />}
+            aria-label={t('projectHierarchy.title')}
+            title={t('projectHierarchy.title')}
+            aria-controls={sidebarId}
+            aria-pressed={showSidebar && panel === 'hierarchy'}
+            onClick={() => selectPanel('hierarchy')}
+          />
+          <Button
+            appearance="subtle"
             icon={<FolderOpenRegular />}
             aria-label="Open Project Folder…"
             title="Open Project Folder…"
@@ -1167,9 +1251,7 @@ export default function ProjectWorkspace({
               open={(file, keep) => open(file, keep ? 'keep' : 'preview')}
               addLibrary={async (id) => { await addProjectLibraries(id)(dispatch, store.getState); }}
               edited={rememberLibraries}
-              insertHierarchy={activeKey && !openDocument && hierarchySheet &&
-                  !hierarchySheet.hierarchicalSymbol && hierarchySheet.kind !== 'simulation'
-                ? insertHierarchy : undefined}
+              insertHierarchy={canInsertHierarchy ? insertHierarchy : undefined}
               report={report}
               gitChanges={
                 gitSnapshot &&
@@ -1211,6 +1293,14 @@ export default function ProjectWorkspace({
               saveOpenFiles={saveAll}
               refreshOpenFiles={refreshOpenFiles}
             />
+          </div>
+          <div
+            className="project-hierarchy-panel"
+            hidden={panel !== 'hierarchy' || restoring}
+          >
+            <ProjectHierarchyBrowser key={root.id} project={root.id} state={state}
+              showActive={!openDocument} canInsert={canInsertHierarchy}
+              open={openHierarchyDesign} insert={insertHierarchy} report={report} />
           </div>
           <div
             className="project-libraries-panel"

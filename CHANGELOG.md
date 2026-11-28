@@ -10,6 +10,8 @@
 - View the Git branch graph, create or switch branches, and merge from the branch dialog. Fetch, Pull, Push and Sync are grouped in a menu next to the branch name.
 - The new welcome page shows the TinyCAD version and gives you quick access to new drawings, existing files and recent drawings. Use **Show welcome page on startup** to save your startup preference.
 - Open the first drawing, simulation and AI Assistant guides from the welcome page in your selected language. Ask for help on Discord or report an issue on GitHub from the welcome page or Help menu.
+- Browse linked drawings in the Project mode **Hierarchy** panel. Repeated child instances appear with their references, open drawings contribute unsaved changes, and searchable child designs can be previewed and dragged onto a sheet. The project file caches the bounded scan, which honours `.gitignore`.
+- Store custom library selections in the project file on the first edit. Add libraries from the project explorer or use the library picker, which opens at the project root.
 
 ### Changed
 
@@ -23,12 +25,15 @@
 - Browse bundled examples on the welcome page under **Electronics**, **Schematics**, **SPICE tutorial**, and **XSPICE and digital tutorial**.
 - The language pickers on the welcome page and toolbar display flags. TinyCAD starts with the first supported language from your operating system or browser preferences, falls back to English, and remembers your selection.
 - The About dialog uses **TinyCAD** as its title.
+- Project hierarchy links use relative paths within the project folder.
 
 ### Fixed
 
 - Open the project folder's context menu from the blank space below the file tree.
 - Use the next available name for a new schematic, accounting for project files and unsaved tabs.
 - Wrap bold and italic drawing notes within their text boxes when viewing or editing a drawing. Plain notes preserve their line breaks and spacing.
+- Refresh child symbols when opening or revisiting a parent schematic. Missing files and symbol sheets show a placeholder and details in the Hierarchy panel and DRC. The hierarchy tree stops at cycles, and netlist export reports broken links.
+- Keep examples and tutorials available in local Electron runs while build output is regenerated.
 
 ## v4.1.2 — 2026-11-24
 

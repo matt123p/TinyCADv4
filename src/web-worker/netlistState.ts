@@ -453,8 +453,8 @@ export class NetlistWorkerState {
     const packs = new Set(contexts.flatMap((context) => context.modelPacks ?? []));
     if (packs.size) this.netlist.hierarchyModelPacks = [...packs];
     const errors = this.netlist.drcHierarchy?.errors;
-    if (errors?.length) this.netlist.hierarchyErrors = errors.map(({ source, text }) =>
-      source.instancePath.length ? `${source.instancePath.join('_')}_${text}` : text,
+    if (errors?.length) this.netlist.hierarchyErrors = errors.map(({ sheet, symbol, text }) =>
+      `${sheet}${symbol ? ` (${symbol})` : ''}: ${text}`,
     );
   }
 }

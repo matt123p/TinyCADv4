@@ -44,13 +44,18 @@ export function createProjectSettings({
   pendingWrites,
   linkNewFile,
 }) {
-  async function projectSettings(root) {
+  async function projectSettings(root, maxEntries = Infinity) {
     if ((await fs.realpath(root)) !== root)
       throw new Error('The project folder has moved.');
-    const entries = await fs.readdir(root, { withFileTypes: true });
-    const markers = entries.filter(
-      (entry) => !entry.isDirectory() && isProjectFile(entry.name),
-    );
+    const markers = [];
+    let count = 0;
+    for await (const entry of await fs.opendir(root)) {
+      if (++count > maxEntries)
+        throw new Error('The project folder has too many entries.');
+      if (!entry.isDirectory() && isProjectFile(entry.name))
+        markers.push(entry);
+      if (markers.length > 1) break;
+    }
     if (markers.length > 1 || (markers.length && !markers[0].isFile()))
       throw new Error('Keep one root settings file in the project folder.');
     const name = path.basename(root) + '.tcproject';
@@ -95,13 +100,16 @@ export function createProjectSettings({
     }
   }
 
-  async function updateProjectSettings(root, section, update) {
+  async function updateProjectSettings(root, section, update, maxEntries) {
     const release = await lockfile.lock(root, {
       lockfilePath: path.join(root, '.tinycad-e070ca7e.tmp'),
       retries: { retries: 5, minTimeout: 30, maxTimeout: 250 },
     });
     try {
-      const { target, bytes, text, encoding } = await projectSettings(root);
+      const { target, bytes, text, encoding } = await projectSettings(
+        root,
+        maxEntries,
+      );
       const settingsBlock = sectionPattern(section);
       const settings = await update(readSection(text, section));
       if (settings === undefined) return;
@@ -131,8 +139,8 @@ export function createProjectSettings({
     }
   }
 
-  async function readProjectSettings(root, section) {
-    return readSection((await projectSettings(root)).text, section);
+  async function readProjectSettings(root, section, maxEntries) {
+    return readSection((await projectSettings(root, maxEntries)).text, section);
   }
 
   return { readProjectSettings, updateProjectSettings, writeAtomic };

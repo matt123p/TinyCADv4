@@ -89,7 +89,9 @@ class DrcDialog extends React.PureComponent<DrcDialogProps, DrcDialogState> {
             .then((netlist) => {
               const current = getState();
               if (this.cancel || project !== current.schematicTabs?.projectRoot ||
-                  state.docStore.present.drawing !== current.docStore.present.drawing) return;
+                  (project ? activeSchematicTabKey(state) !== activeSchematicTabKey(current) ||
+                    state.docStore.present.drawingVersion !== current.docStore.present.drawingVersion
+                    : state.docStore.present.drawing !== current.docStore.present.drawing)) return;
               if (!project && netlist.hierarchyErrors?.length) throw new Error(netlist.hierarchyErrors.join('\n'));
               dispatch(actionDrc(options, netlist, project ? activeSchematicTabKey(state) : undefined));
             }).catch((error) => {

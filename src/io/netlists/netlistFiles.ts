@@ -209,6 +209,8 @@ export function netlistContents(
   netlist: NetlistData,
   spiceModelPacks?: SpiceModelPack[],
 ) {
+  if (netlist.hierarchyErrors?.length)
+    throw new Error(netlist.hierarchyErrors.join('\n'));
   let txt = null;
   switch (file_type) {
     case 'SPICE':

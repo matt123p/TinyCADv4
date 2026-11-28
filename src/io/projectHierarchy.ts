@@ -1,18 +1,49 @@
-import type { dsnDrawing, dsnSheet } from '../model/dsnDrawing';
+import type { dsnDrawing, dsnSheet, libSymbolPart } from '../model/dsnDrawing';
 import {
   DocItemTypes,
   type Coordinate,
   type dsnPin,
   type dsnSymbol,
+  type dsnText,
 } from '../model/dsnItem';
 import { Snap } from '../manipulators/snap';
 import { updateSymbol } from '../manipulators/updateSymbol';
-import { updateFactory } from '../manipulators/updateFactory';
+import { updateFactory, updateTextFactory } from '../manipulators/updateFactory';
 import { getFont, measureText } from '../util/measureText';
 import { decodeDrawing } from './dsnCodec';
-import { ioXML } from './ioXml';
+import { blank, ioXML } from './ioXml';
 import { projectRequest } from './projects';
 import { get_global_id } from '../util/global_id';
+
+function missingOutline(): libSymbolPart {
+  const marker: dsnText = {
+    NodeName: DocItemTypes.Text,
+    _id: get_global_id(),
+    point: [-32, -32],
+    point_b: [0, 0],
+    rotation: 0,
+    text: '?',
+    textData: null,
+    font_name: 'Arial',
+    font_size: 22,
+    font_bold: true,
+    font_italic: false,
+    font_colour: '#b42318',
+    line_colour: '#b42318',
+    line_width: 1,
+    line_pattern: -1,
+    stroked: true,
+    filled: false,
+    fill_colour: '#ffffff',
+    hatch: 0,
+  };
+  return {
+    items: [updateTextFactory(marker).post_construction()],
+    active_points: [],
+    size: [32, 32],
+    ref_point: [0, 0],
+  };
+}
 
 function legacyPinEnd(pin: dsnPin): Coordinate {
   const [x, y] = pin.point;
@@ -107,6 +138,7 @@ export async function prepareHierarchicalPlacement(
   project: string,
   owner: string | undefined,
   fileId: string,
+  openDrawings?: ReadonlyMap<string, dsnDrawing>,
 ) {
   const file = await projectRequest({
     operation: 'read-hierarchical-drawing',
@@ -179,6 +211,7 @@ export async function prepareHierarchicalPlacement(
     { ...drawing, sheets: [{ ...drawing.sheets[sheetIndex], items: [item] }] },
     project,
     owner,
+    openDrawings,
   );
   const placement = result.sheets[0].items[0] as dsnSymbol;
   if (placement._hierarchicalError)
@@ -246,6 +279,7 @@ export async function resolveProjectHierarchy(
 ): Promise<dsnDrawing> {
   const xml = new ioXML();
   const loaded = new Map<string, dsnDrawing>();
+  let placeholder: libSymbolPart;
   const requests = new Map<string, Promise<{ id: string; relative: string; data: Uint8Array }>>();
   let placements = 0;
 
@@ -302,14 +336,15 @@ export async function resolveProjectHierarchy(
           if (/^(?:[A-Za-z]:|[\\/])/.test(item.hierarchicalFile))
             symbol.hierarchicalFile = file.relative;
           if (!loaded.has(file.id))
-            loaded.set(file.id, openDrawings?.get(file.id) ?? await decodeDrawing(file.data));
+            loaded.set(file.id, openDrawings?.get(file.id) ??
+              (file.data.length ? await decodeDrawing(file.data) : blank()));
           const child = loaded.get(file.id)!;
-          const artwork = child.sheets.findLast(
+          const artwork = child.sheets.find(
             (part) => part.hierarchicalSymbol,
           );
           if (!artwork)
             throw new Error(
-              'The linked schematic needs a hierarchical symbol sheet.',
+              'The linked schematic has no hierarchical symbol sheet.',
             );
           const outline = hierarchyOutline(xml, artwork, sheet);
           symbol._symbol = { ...item._symbol, outlines: [outline] };
@@ -319,8 +354,11 @@ export async function resolveProjectHierarchy(
             file.id,
           ]);
         } catch (error) {
-          symbol._hierarchicalError =
-            error instanceof Error ? error.message : String(error);
+          const message = error instanceof Error ? error.message : String(error);
+          symbol._hierarchicalError = message.replace(/^Error invoking remote method '[^']+': (?:Error: )?/, '');
+          symbol._symbol = { ...item._symbol, outlines: [placeholder ??= missingOutline()] };
+          symbol._active_points = undefined;
+          symbol.hints = [];
         }
         items.push(new updateSymbol(symbol).post_construction());
       }

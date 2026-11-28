@@ -26,7 +26,8 @@ const reduceWithHistory = undoable(DocStoreReducer, {
     currentState: docStore,
     previousHistory: StateWithHistory<docStore>,
   ) => {
-    if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalRefresh) return false;
+    if (action.type === MenuActionTypes.MenuCommand &&
+        (action.hierarchicalRefresh || action.hierarchicalReload)) return false;
     if (action.type === DialogActionTypes.SetDRC) return false;
     if (action.type === 'simulation/diagnostics' || action.type === 'simulation/panel') return false;
     const now = new Date();

@@ -219,6 +219,11 @@ export function DocStoreReducer(
 }
 
 function reduceDocument(state: docStore, action: AppActionTypes): docStore {
+  if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalReload) {
+    const { source, drawing } = action.hierarchicalReload;
+    if (state.drawing !== source || drawing === source) return state;
+    return { ...state, drawing, hierarchyRevision: (state.hierarchyRevision ?? 0) + 1 };
+  }
   if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalRefresh) {
     const selected = activeSheet(state);
     const refreshed = action.hierarchicalRefresh;
@@ -566,6 +571,12 @@ function reduceDocument(state: docStore, action: AppActionTypes): docStore {
         if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalPlacement &&
             sheet && !sheet.hierarchicalSymbol && sheet.kind !== 'simulation') {
           ({ view, sheet } = update_view.add_object(view, sheet, action.hierarchicalPlacement, 'add_hierarchical_symbol'));
+          if (action.hierarchicalDropPoint) {
+            const [width, height] = action.hierarchicalPlacement._symbol.outlines[0].size;
+            const [x, y] = action.hierarchicalDropPoint;
+            const moved = update_view.mousemove_add(view, sheet, [x + width / 2, y + height / 2]).view;
+            ({ view, sheet } = update_view.complete_add(moved, sheet));
+          }
           break;
         }
         if (action.command) {

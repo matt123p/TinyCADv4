@@ -6,6 +6,7 @@ import { addProjectWorktree, cloneProjectGit, projectWorktrees, runProjectGit } 
 import { createDesignExportHandler } from './designExports.js';
 import { createProjectSettings } from './projectSettings.js';
 import { createProjectLibraryHandler } from './projectLibraries.js';
+import { createHierarchyIndex } from './projectHierarchyIndex.js';
 import { drawingFileName, isDrawingFile } from '../shared/drawingFiles.js';
 import {
   MAX_PROJECT_FILE_BYTES,
@@ -187,6 +188,7 @@ export function registerProjectFiles({
   const projectSettings = createProjectSettings({ readFile, pendingWrites, linkNewFile });
   const handleDesignExport = createDesignExportHandler({ dialog, store, openedRoots, ...projectSettings });
   const handleProjectLibraries = createProjectLibraryHandler({ dialog, store, openedRoots, within, ...projectSettings });
+  const scanHierarchy = createHierarchyIndex({ readFile, ...projectSettings });
   ipcMain.handle('project-files', async (event, request) => {
     const window = getWindow();
     if (
@@ -200,6 +202,10 @@ export function registerProjectFiles({
       return handleDesignExport(window, request);
     if (['project-library-config', 'save-project-library-config', 'choose-project-libraries', 'read-project-library'].includes(request.operation))
       return handleProjectLibraries(window, request);
+    if (request.operation === 'scan-project-hierarchy') {
+      if (!openedRoots.has(request.project)) throw new Error('Open a project folder first.');
+      return scanHierarchy(request.project);
+    }
     if (request.operation === 'open-launch') {
       const filename = takeProjectOpen?.();
       if (!filename) return null;
@@ -467,8 +473,16 @@ export function registerProjectFiles({
     if (operation === 'read-hierarchical-drawing') {
       const { project, owner, filename } = request;
       const base = hierarchyBase(project, owner);
-      const id = await resolveHierarchyFile(project, hierarchyTarget(project, base, filename));
-      const data = await readFile(id, 32 * 1024 * 1024);
+      const target = hierarchyTarget(project, base, filename);
+      let id, data;
+      try {
+        id = await resolveHierarchyFile(project, target);
+        data = await readFile(id, 32 * 1024 * 1024);
+      } catch (error) {
+        if (error.code === 'ENOENT' || error.code === 'ENOTDIR')
+          throw new Error('The linked schematic file is missing.');
+        throw error;
+      }
       return {
         id,
         folder: path.dirname(id),

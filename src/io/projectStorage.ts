@@ -2,8 +2,11 @@ import type { GitRequest, GitResult, GitWorktree } from './projectGit';
 import type { DesktopDesignExport } from './designExports';
 import type { NormalizedUserConfig } from './libraryConfig';
 import type { tclib } from '../model/tclib';
+import type { Coordinate } from '../model/dsnItem';
 export const projectFilesChanged = 'tinycad:project-files-changed';
 export const projectFolderOpened = 'tinycad:project-folder-opened';
+export const hierarchyDragType = 'application/x-tinycad-hierarchy';
+export const hierarchyDropEvent = 'tinycad:drop-project-hierarchy';
 
 export interface ProjectLocation {
   id: string;
@@ -13,6 +16,7 @@ export interface ProjectLocation {
 declare global {
   interface WindowEventMap {
     'tinycad:project-folder-opened': CustomEvent<ProjectLocation>;
+    [hierarchyDropEvent]: CustomEvent<{ project: string; id: string; point: Coordinate }>;
   }
 }
 
@@ -23,6 +27,24 @@ export interface ProjectItem extends ProjectLocation {
 
 export interface ProjectFile extends ProjectLocation {
   version: string;
+}
+
+export interface HierarchyLink {
+  filename: string;
+  reference: string;
+}
+
+export interface HierarchyScan {
+  drawings: {
+    path: string;
+    hasSymbol: boolean;
+    hasSymbolSheet?: boolean;
+    unreadable?: boolean;
+    links: HierarchyLink[];
+  }[];
+  limited: boolean;
+  unreadable: number;
+  cacheUnavailable: boolean;
 }
 
 export type ProjectStorageRequest =
@@ -49,6 +71,7 @@ export type ProjectStorageRequest =
   | { operation: 'save-project-library-config'; project: string; config: NormalizedUserConfig; initialOnly?: boolean }
   | { operation: 'choose-project-libraries'; project: string; id?: string }
   | { operation: 'read-project-library'; project: string; id: string }
+  | { operation: 'scan-project-hierarchy'; project: string }
   | { operation: 'choose-project-folder' }
   | { operation: 'recent-project-folder' }
   | { operation: 'open-recent-project-folder'; id: string }
@@ -118,6 +141,7 @@ export interface ProjectStorageResult {
   'save-project-library-config': void;
   'choose-project-libraries': ProjectLocation[];
   'read-project-library': tclib;
+  'scan-project-hierarchy': HierarchyScan;
   'open-launch': {
     ticket: string;
     root: ProjectLocation;

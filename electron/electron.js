@@ -13,6 +13,7 @@ import Store from 'electron-store';
 import { registerBundledLibraries } from './bundledLibraries.js';
 import { unpackedResource } from './tclibReader.js';
 import { registerBundledExamples } from './bundledExamples.js';
+import { repositoryExampleSources } from '../shared/exampleSources.js';
 import { registerOnlineLibrary } from './onlineLibrary.js';
 import { registerLicenseHandlers } from './licenses.js';
 import fs from 'fs';
@@ -451,7 +452,9 @@ function createWindow({ openAbout = false } = {}) {
     });
     registerLicenseHandlers({ ipcMain, app, shell, getWindow: () => mainWindow });
     registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
-      directory: path.join(__dirname, '../dist/bundled-examples') });
+      sources: app.isPackaged
+        ? [{ directory: path.join(__dirname, '../dist/bundled-examples') }]
+        : repositoryExampleSources(path.join(__dirname, '..')) });
     registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
       directory: unpackedResource(path.join(__dirname, isDev ? '../bundled-libraries' : '../dist/bundled-libraries')) });
     registerChatSecretHandlers(ipcMain, { app, safeStorage });

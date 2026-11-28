@@ -46,6 +46,7 @@ import { Ruler } from '../controls/Ruler';
 import { actionSetMousePosition } from '../../state/actions/viewActions';
 import { subscribeNetlist } from '../../io/netlists/netlistSync';
 import { NetlistData } from '../../io/netlists/netlistGenerator';
+import { hierarchyDragType, hierarchyDropEvent } from '../../io/projectStorage';
 
 interface TSheetProps {
   sheet_name: string;
@@ -1394,6 +1395,18 @@ export class TSheet extends React.PureComponent<TSheetProps, TSheetState> {
   ondrop(e: React.DragEvent) {
     e.preventDefault();
     const [x, y] = this.getEventLocation(e);
+
+    const linked = e.dataTransfer.getData(hierarchyDragType);
+    if (linked) {
+      try {
+        const { project, id } = JSON.parse(linked);
+        if (typeof project === 'string' && typeof id === 'string')
+          window.dispatchEvent(new CustomEvent(hierarchyDropEvent, { detail: { project, id, point: [x, y] } }));
+      } catch {
+        // Ignore malformed drag data.
+      }
+      return;
+    }
 
     // We only accept one file at a time
     if (e.dataTransfer.types.indexOf('application/json') >= 0) {

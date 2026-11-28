@@ -1,5 +1,65 @@
 import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdir, mkdtemp, readFile, rm, writeFile, utimes } from 'node:fs/promises';
+import path from 'node:path';
+import { BlobReader, Uint8ArrayWriter, ZipWriter } from '@zip.js/zip.js';
+import { COMPRESSED_DRAWING_MIME } from '../../shared/drawingFiles.js';
+import { createHierarchyIndex } from '../../electron/projectHierarchyIndex.js';
+import { createProjectSettings } from '../../electron/projectSettings.js';
 import { runRegression } from './run-regression.mjs';
+
+test('project hierarchy scan indexes DSN and DZN, observes nested ignores and reuses its timestamp cache', async (t) => {
+  await mkdir(path.resolve('.tmp'), { recursive: true });
+  const root = await mkdtemp(path.resolve('.tmp', 'hierarchy-index-'));
+  t.after(() => rm(root, { force: true, recursive: true }));
+  const main = path.join(root, 'Main.dsn');
+  const xml = (reference) => '<TinyCAD><HIERACHICAL_SYMBOL file="Parts/Child.dzn">' +
+    '<FIELD description="Ref" value="' + reference + '"/></HIERACHICAL_SYMBOL></TinyCAD>';
+  const linked = new ZipWriter(new Uint8ArrayWriter(), { useWebWorkers: false });
+  await linked.add('mimetype', new BlobReader(new Blob([COMPRESSED_DRAWING_MIME])));
+  await linked.add('drawing.xml', new BlobReader(new Blob([
+    '<TinyCADSheets><HierarchicalSymbol/><TinyCAD/></TinyCADSheets>',
+  ])));
+  await Promise.all([mkdir(path.join(root, 'Parts')), mkdir(path.join(root, 'Ignored'))]);
+  await Promise.all([
+    writeFile(main, xml('U3')),
+    writeFile(path.join(root, '.gitignore'), 'Ignored/\n*.ignore.dsn\n'),
+    writeFile(path.join(root, 'Parts', '.gitignore'), '*.dsn\n!Reincluded.dsn\n'),
+    writeFile(path.join(root, 'Parts', 'Child.dzn'), await linked.close()),
+    writeFile(path.join(root, 'Parts', 'Excluded.dsn'), xml('X1')),
+    writeFile(path.join(root, 'Parts', 'Reincluded.dsn'), '<TinyCAD/>'),
+    writeFile(path.join(root, 'Ignored', 'Excluded.dsn'), xml('X2')),
+    writeFile(path.join(root, 'Ignore.ignore.dsn'), xml('X3')),
+  ]);
+  const read = [];
+  const settings = createProjectSettings({
+    readFile: (id) => readFile(id), pendingWrites: new Set(),
+    linkNewFile: async (source, target) => writeFile(target, await readFile(source), { flag: 'wx' }),
+  });
+  const index = () => createHierarchyIndex({
+    ...settings,
+    readFile: (id) => { if (!id.endsWith('.gitignore')) read.push(path.basename(id)); return readFile(id); },
+  });
+  const first = await index()(root);
+  assert.equal(first.limited, false);
+  assert.equal(first.unreadable, 0);
+  assert.deepEqual(first.drawings.map(({ path }) => path), ['Main.dsn', 'Parts/Child.dzn', 'Parts/Reincluded.dsn']);
+  assert.deepEqual(first.drawings[0].links, [{ filename: 'Parts/Child.dzn', reference: 'U3' }]);
+  assert.equal(first.drawings[1].hasSymbol, true);
+  assert.match(await readFile(path.join(root, path.basename(root) + '.tcproject'), 'utf8'), /tinycad-hierarchy/);
+  read.length = 0;
+  assert.deepEqual((await index()(root)).drawings, first.drawings);
+  assert.deepEqual(read, []);
+  await writeFile(main, xml('U4'));
+  await utimes(main, new Date(), new Date(Date.now() + 3000));
+  const changed = await index()(root);
+  assert.deepEqual(read, ['Main.dsn']);
+  assert.equal(changed.drawings[0].links[0].reference, 'U4');
+  await mkdir(path.join(root, ...Array(34).fill('d')), { recursive: true });
+  const bounded = await index()(root);
+  assert.equal(bounded.limited, true);
+  assert.deepEqual(bounded.drawings, changed.drawings);
+});
 
 test('v3 hierarchical links round-trip and repeated nested instances connect only through their named ports', async () => {
   await runRegression(`
@@ -8,6 +68,7 @@ test('v3 hierarchical links round-trip and repeated nested instances connect onl
     import { ioXML } from './src/io/ioXml';
     import { XMLBuilder } from './src/util/xmlbuilder';
     import { prepareHierarchicalPlacement, resolveProjectHierarchy } from './src/io/projectHierarchy';
+    import { hierarchyBrowserModel, searchHierarchy } from './src/io/projectHierarchyBrowser';
     import { NetlistWorkerState } from './src/web-worker/netlistState';
     import { updateSymbol } from './src/manipulators/updateSymbol';
     import { updateDrawing } from './src/manipulators/updateDrawing';
@@ -69,6 +130,59 @@ test('v3 hierarchical links round-trip and repeated nested instances connect onl
     middle.sheets[1].items.push(label(new updateSymbol(nested).active_points()[0], 'IN'));
 
     const expanded = await resolveProjectHierarchy(parent, '/project', '/project/top.dsn');
+    const topTab = JSON.stringify(['/project/top.dsn']);
+    const blockTab = JSON.stringify(['/project/block.dsn']);
+    const tab = (id, name, drawing) => ({ file: { id, name }, history: { present: { drawing } } });
+    const blockSnapshot = tab('/project/block.dsn', 'block.dsn', middle);
+    const browser = hierarchyBrowserModel('/project', { drawings: [
+      { path: 'top.dsn', hasSymbol: false, links: [{ filename: 'block.dsn', reference: 'U0' }] },
+      { path: 'leaf.dsn', hasSymbol: true, links: [] },
+    ] }, {
+      schematicTabs: { enabled: true, order: [topTab, blockTab], inactive: { [topTab]: tab('/project/top.dsn', 'top.dsn', parent) } },
+      altStore: blockSnapshot, docStore: blockSnapshot.history,
+    }, true);
+    assert.equal(browser.tree[0].filename, 'top.dsn');
+    assert.deepEqual(browser.tree[0].children.map((child) => child.reference), ['H1', 'H2']);
+    assert.deepEqual(browser.tree[0].children.map((child) => child.children[0].reference), ['H7', 'H7']);
+    assert.deepEqual(browser.candidates.map(({ filename }) => filename), ['block.dsn', 'leaf.dsn']);
+    assert.deepEqual([...browser.placementCycles].sort(), ['block.dsn', 'top.dsn']);
+    const unsavedArtwork = { ...middle, sheets: [middle.sheets[0], { ...middle.sheets[1], items: [] }] };
+    const standalone = hierarchyBrowserModel('/project', undefined, {
+      schematicTabs: { enabled: true, order: [blockTab], inactive: {} },
+      altStore: blockSnapshot, docStore: { present: { drawing: unsavedArtwork } },
+    }, true);
+    assert.deepEqual(standalone.tree, []);
+    assert.equal(standalone.candidates[0].drawing, unsavedArtwork);
+    assert.equal(standalone.placementCycles.has('block.dsn'), true);
+    const search = (query) => searchHierarchy(browser.tree, browser.candidates, query);
+    const byRef = search('  h2 BLOCK  ');
+    assert.equal(byRef.tree[0].filename, 'top.dsn');
+    assert.deepEqual(byRef.tree[0].children.map((child) => child.reference), ['H2']);
+    assert.equal(byRef.tree[0].children[0].children.length, 0);
+    const byFilename = search('LEAF');
+    assert.deepEqual(byFilename.tree[0].children.map((child) => child.reference), ['H1', 'H2']);
+    assert.deepEqual(byFilename.candidates.map(({ filename }) => filename), ['leaf.dsn']);
+    assert.deepEqual(search('unknown'), { tree: [], candidates: [] });
+    assert.equal(search(' ').tree, browser.tree);
+    const loop = hierarchyBrowserModel('/project', { drawings: [
+      { path: 'block.dsn', hasSymbol: true, links: [
+        { filename: 'top.dsn', reference: 'U9' },
+        { filename: 'leaf.dsn', reference: 'U10' },
+      ] },
+      { path: 'leaf.dsn', hasSymbol: true, links: [] },
+    ] }, {
+      schematicTabs: { enabled: true, order: [topTab], inactive: {} },
+      altStore: tab('/project/top.dsn', 'top.dsn', parent),
+      docStore: { present: { drawing: parent } },
+    }, true);
+    const [backLink, otherLink] = loop.tree[0].children[0].children;
+    assert.equal(backLink.filename, 'top.dsn');
+    assert.equal(backLink.reference, 'U9');
+    assert.equal(backLink.cycle, true);
+    assert.deepEqual(backLink.children, []);
+    assert.equal(otherLink.filename, 'leaf.dsn');
+    assert.equal(otherLink.cycle, false);
+    assert.equal(loop.limited, false);
     const draftLink = await prepareHierarchicalPlacement(parent, 0, '/project', undefined, '/project/block.dsn');
     assert.equal(draftLink.hierarchicalFile, 'block.dsn');
     assert.equal(draftLink._hierarchicalOwner, '/project');
@@ -154,6 +268,37 @@ test('v3 hierarchical links round-trip and repeated nested instances connect onl
     const [cycleFinding] = drc.designRulesCheck(rejected, {}, cycleNetlist);
     assert.equal(cycleFinding.sheet, 'Cycle');
     assert.match(cycleFinding.text, /cycle/i);
+    files.delete('block.dsn');
+    const missing = await resolveProjectHierarchy(expanded, '/project', '/project/top.dsn');
+    const marker = missing.sheets[0].items[0];
+    assert.equal(marker._symbol.outlines[0].items[0].text, '?');
+    assert.deepEqual(new updateSymbol(marker).active_points(), []);
+    assert.equal(marker._hierarchicalDrawing, undefined);
+    const missingNetlist = new NetlistWorkerState().init(missing);
+    assert.equal(drc.designRulesCheck(missing, {}, missingNetlist).length, 2);
+    assert.throws(() => netlistContents('Top.dsn', 'PADS-PCB', missingNetlist), /H1.*Missing file/);
+    const brokenTree = hierarchyBrowserModel('/project', { drawings: [] }, {
+      schematicTabs: { enabled: true, order: [topTab], inactive: {} },
+      altStore: tab('/project/top.dsn', 'top.dsn', missing),
+      docStore: { present: { drawing: missing } },
+    }, true);
+    assert.match(brokenTree.tree[0].children[0].error, /Missing file/);
+
+    files.set('block.dsn', { ...middle, sheets: [middle.sheets[1]] });
+    const noArtwork = await resolveProjectHierarchy(missing, '/project', '/project/top.dsn');
+    assert.equal(noArtwork.sheets[0].items[0]._symbol.outlines[0].items[0].text, '?');
+    const invalidNetlist = new NetlistWorkerState().init(noArtwork);
+    assert.match(drc.designRulesCheck(noArtwork, {}, invalidNetlist)[0].text, /no hierarchical symbol sheet/);
+    assert.throws(() => netlistContents('Top.dsn', 'VHDL', invalidNetlist), /no hierarchical symbol sheet/);
+
+    const revised = structuredClone(middle);
+    revised.sheets[0].items[0].name = 'REVISED';
+    files.set('block.dsn', revised);
+    const restored = await resolveProjectHierarchy(noArtwork, '/project', '/project/top.dsn');
+    assert.equal(new updateSymbol(restored.sheets[0].items[0]).active_points()[0][2].name, 'REVISED');
+    assert.equal(restored.sheets[0].items[0]._hierarchicalError, undefined);
+    assert.equal(restored.sheets[0].items[0].text[0].value, 'H1');
+    assert.equal(new NetlistWorkerState().init(restored).hierarchyErrors, undefined);
     const unresolved = new NetlistWorkerState().init(parent);
     assert.equal(unresolved.hierarchyErrors.length, 2);
     })();

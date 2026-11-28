@@ -308,6 +308,7 @@
     "i18next": "^25.8.13",
     "i18next-resources-to-backend": "^1.2.1",
     "iconv-lite": "^0.7.2",
+    "ignore": "7.0.13",
     "immutability-helper": "3.0.2",
     "marked": "^18.1.3",
     "md5": "2.2.1",

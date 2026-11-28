@@ -418,13 +418,12 @@ export function saveNetlist(format: Exclude<DesignExportFormat, 'bom'>, chooseLo
     const source = designExportSource(state);
     return exportDrawingData(dispatch, { ...source, format }, chooseLocation, async () => {
       const { readCurrentHierarchy } = await import('./projects');
-      const linked = await readCurrentHierarchy(state);
+      const linked = await readCurrentHierarchy(state, true);
       const netlist = await wkrGenerateNetlist(linked, !!source.project);
-      if (netlist.hierarchyErrors?.length)
-        throw new Error(netlist.hierarchyErrors.join('\n'));
+      const contents = netlistContents(source.name, format, netlist, drawing.spiceModelPacks);
       if (getState().docStore.present.drawing === drawing)
         dispatch(actionUpdateNetlistHints(netlist));
-      return netlistContents(source.name, format, netlist, drawing.spiceModelPacks);
+      return contents;
     }).catch((error) => {
       dispatch(actionSelectDialog('io_failure', { message: String(error) }));
       return false;
