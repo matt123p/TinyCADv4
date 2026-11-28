@@ -216,6 +216,10 @@ $scrollbar-size: 9px;
   min-height: 0;
 }
 
+.project-footprints[hidden] {
+  display: none;
+}
+
 .pcb-right-panel {
   width: min(224px, 28vw);
   min-width: 0;
