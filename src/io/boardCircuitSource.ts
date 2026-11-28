@@ -66,7 +66,7 @@ export async function readBoardCircuitSource(file: File, previous?: CircuitSnaps
     return readProtel(await file.text(), documentId, revision, previous);
   }
   if (!/\.d[sz]n$/i.test(file.name)) throw new Error('Choose a TinyCAD schematic or Protel netlist.');
-  const drawing = await decodeDrawing(await file.arrayBuffer());
+  const drawing = await decodeDrawing(await file.arrayBuffer(), new Map());
   const documentId = drawing.documentId ?? await stableHierarchyId('schematic-document', file.name.toLowerCase());
   const graph = await buildHierarchicalNetlist({ path: file.name, drawing: { ...drawing, documentId } }, async () => {
     throw new Error('Open the schematic and its linked sheets in a project to update the PCB.');

@@ -24,6 +24,7 @@ import { ioXML } from './ioXml';
 import { decodeDrawing } from './dsnCodec';
 import { canOpenCircuit, circuitOpened } from './boardWorkspaceEvents';
 import { XMLBuilder } from '../util/xmlbuilder';
+import { activateProjectFolder, assertProjectCanOpen, projectRequest } from './projects';
 
 interface ExampleSource {
   catalog(): Promise<unknown>;
@@ -71,12 +72,19 @@ export interface ExampleImage {
 
 export class ExampleResources {
   private catalogPromise: Promise<ExampleCatalog> | null = null;
-  constructor(private source: ExampleSource) {}
+  constructor(private source: ExampleSource, private supportsProjects = () => true) {}
   catalog(): Promise<ExampleCatalog> {
     if (!this.catalogPromise)
       this.catalogPromise = this.source
         .catalog()
         .then(parseExampleCatalog)
+        .then((catalog) => this.supportsProjects() ? catalog : {
+          ...catalog,
+          groups: catalog.groups.map((group) => ({
+            ...group,
+            examples: group.examples.filter((example) => !example.project),
+          })).filter((group) => group.examples.length > 0),
+        })
         .catch((error) => {
           this.catalogPromise = null;
           throw error;
@@ -118,12 +126,17 @@ export class ExampleResources {
     );
     return { url, dispose: () => URL.revokeObjectURL(url) };
   }
-  async drawing(groupId: string, exampleId: string, signal?: AbortSignal) {
+  async entry(groupId: string, exampleId: string) {
     const catalog = await this.catalog();
     const example = catalog.groups
       .find((group) => group.id === groupId)
       ?.examples.find((example) => example.id === exampleId);
     if (!example) throw new Error('Unknown example drawing.');
+    return example;
+  }
+  async drawing(groupId: string, exampleId: string, signal?: AbortSignal) {
+    const example = await this.entry(groupId, exampleId);
+    if (example.project) throw new Error('This example opens as a project.');
     const bytes = await this.read(example.path, signal);
     const drawing = example.path.toLowerCase().endsWith('.dzn')
       ? await decodeDrawing(bytes)
@@ -150,7 +163,10 @@ export function parseExampleDrawing(text: string): dsnDrawing {
   return document;
 }
 
-export const exampleResources = new ExampleResources(source);
+export const exampleResources = new ExampleResources(
+  source,
+  () => typeof window.electronAPI?.projectFiles === 'function',
+);
 
 export interface PreparedExample {
   type: 'file-open-example';
@@ -178,14 +194,25 @@ export function openExample(
   signal?: AbortSignal,
 ) {
   return async (dispatch: Dispatch, getState: () => docDrawing) => {
+    const current = () => !signal?.aborted && getState().altStore.show_dialogue === 'open_example';
+    const entry = await exampleResources.entry(groupId, exampleId);
+    if (!current()) return;
+    if (entry.project) {
+      assertProjectCanOpen(getState());
+      const project = await projectRequest({ operation: 'install-project-example', groupId, exampleId });
+      if (!project || !current()) return;
+      assertProjectCanOpen(getState());
+      dispatch(actionCancelDialog());
+      activateProjectFolder(project);
+      return;
+    }
     // Validate the selected drawing before asking to replace an unsaved document.
     const { example, document } = await exampleResources.drawing(
       groupId,
       exampleId,
       signal,
     );
-    if (signal?.aborted || getState().altStore.show_dialogue !== 'open_example')
-      return;
+    if (!current()) return;
     const pendingAction: PreparedExample = {
       type: 'file-open-example',
       document,

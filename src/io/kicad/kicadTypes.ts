@@ -108,6 +108,9 @@ export interface KiSubSymbol {
 }
 
 export interface KiSymbol {
+  onBoard?: boolean;
+  inBom?: boolean;
+  issues?: string[];
   name: string;
   properties: KiProperty[];
   pinNamesOffset: number;
@@ -116,11 +119,10 @@ export interface KiSymbol {
   power: boolean;
   extendsName?: string;
   subsymbols: KiSubSymbol[];
-  onBoard?: boolean;
-  inBom?: boolean;
-  issues: string[];
+  embeddedFiles?: ReadonlyMap<string, string>;
 }
 
 export interface KiCadLibrary {
   symbols: KiSymbol[];
+  embeddedFiles?: ReadonlyMap<string, string>;
 }

@@ -177,8 +177,7 @@ export function actionSetDocument(
   filename: string,
   id: FileIdType,
   folderId: string,
-  project?: SetDocument['project'],
-  recovered?: boolean,
+  projectVersion?: string,
 ) {
   const action: SetDocument = {
     type: DocActionTypes.SetDocument,
@@ -186,8 +185,7 @@ export function actionSetDocument(
     filename,
     id,
     folderId,
-    project,
-    recovered,
+    projectVersion,
   };
   return action;
 }
@@ -199,10 +197,10 @@ export function actionBomClose() {
   return action;
 }
 
-export function actionBomGenerate(rows?: BomGenerate['rows']) {
+export function actionBomGenerate(drawing?: dsnDrawing) {
   const action: BomGenerate = {
     type: DocActionTypes.BomGenerate,
-    rows,
+    ...(drawing ? { drawing } : {}),
   };
   return action;
 }
@@ -246,7 +244,7 @@ export function actionSetFileData(
   id: FileIdType,
   folderId: string,
   drawingVersion: number,
-  project?: SetFileData['project'],
+  projectVersion?: string,
 ) {
   const action: SetFileData = {
     type: DocActionTypes.SetFileData,
@@ -254,7 +252,7 @@ export function actionSetFileData(
     id,
     folderId,
     drawingVersion,
-    project,
+    projectVersion,
   };
   return action;
 }
@@ -288,7 +286,7 @@ export function actionUpdateNetlistHints(netlist: NetlistData) {
 }
 
 export function actionUpdateNetlistTypes(
-  netlist: NetlistData,
+  netlist: NetlistData | null,
   netlistTypes: NetlistTypes,
   netTypeAssignments: { [net: string]: string },
 ) {
@@ -471,10 +469,11 @@ export function actionSheetRename(sheet_name: string) {
   return action;
 }
 
-export function actionSheetAdd(sheet_name: string) {
+export function actionSheetAdd(sheet_name: string, hierarchical = false) {
   const action: MenuSheetAdd = {
     type: MenuActionTypes.MenuSheetAdd,
     sheet_name,
+    ...(hierarchical ? { hierarchical: true } : {}),
   };
   return action;
 }
@@ -593,11 +592,12 @@ export function actionUpdateColoursAllSheets(colours: SheetColours) {
   return action;
 }
 
-export function actionDrc(drc: DrcOptions, netlist: NetlistData) {
+export function actionDrc(drc: DrcOptions, netlist: NetlistData, projectTabKey?: string) {
   const action: SetDRC = {
     type: DialogActionTypes.SetDRC,
     drc,
     netlist: netlist,
+    projectTabKey,
   };
   return action;
 }

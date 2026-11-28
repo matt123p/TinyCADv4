@@ -1,0 +1,95 @@
+* Provenance: written for circsim from manufacturer datasheet parameters, MIT.
+* In-house discrete-MOSFET .model cards using ngspice's VDMOS model (the
+* purpose-built vertical-DMOS power-MOSFET model, ngspice >= 30). VDMOS takes
+* datasheet figures directly: vto (Vgs(th)), rd/rs/Rds(on) via the channel,
+* kp (transconductance), and the gate-charge / output capacitances. No vendor
+* model text is copied; only the datasheet electrical characteristics
+* (Vgs(th), Rds(on)@Vgs, Ciss/Coss/Crss, Qg) inform the parameters.
+*
+* VDMOS glossary: vto=threshold, kp=transconductance, lambda=channel-length
+* modulation, rd/rs=ohmic, rg=gate, cgdmax/cgdmin/cgs=gate charge model,
+* cjo=body-diode cap, is/rb=body diode. pchan selects a P-channel device.
+
+* --------------------------------------------------------------------------- NMOS
+* 2N7002 small-signal logic-level NMOS (SOT-23): Vgs(th)=1.0-2.5V,
+* Rds(on)~1.2-7.5 ohm @ Vgs=10V/Id=0.5A, Id=115mA cont, Ciss~50pF.
+.model M2N7002 VDMOS(vto=1.6 kp=0.12 lambda=0.05 rd=1.8 rs=0.2 rg=3
++ cgdmax=20p cgdmin=4p cgs=28p cjo=20p is=1e-13 rb=0.5 bv=60)
+
+* AO3400-class logic-level NMOS (SOT-23): Vgs(th)=0.65-1.45V,
+* Rds(on)~22-30 mohm @ Vgs=4.5V, Id=5.7A, Ciss~750pF (low-Rds power FET).
+.model MAO3400 VDMOS(vto=1.05 kp=40 lambda=0.02 rd=0.018 rs=0.004 rg=1.5
++ cgdmax=300p cgdmin=40p cgs=600p cjo=200p is=1e-12 rb=0.01 bv=30)
+
+* NCE4012S 40V/12A logic-level power NMOS (SOP-8, pads 1-3=S, 4=G, 5-8=D):
+* Vgs(th) typ 2.2V, Rds(on)~18 mohm @ Vgs=4.5V (rd=9 mohm + channel, kp tuned
+* so rd+rs+1/(kp*(4.5-vto)) ~= 18 mohm), Id=12A, Ciss~1.7nF (cgs=1.6n),
+* Crss~160pF (cgdmax). Body diode via is/rb, bv=40.
+.model MNCE4012S VDMOS(vto=2.2 kp=55 lambda=0.01 rd=0.009 rs=0.001 rg=1.2
++ cgdmax=160p cgdmin=25p cgs=1.6n cjo=500p is=1e-12 rb=0.005 bv=40)
+
+* NCE6005AS dual 60V/5A logic-level NMOS (SOP-8: 1=S1 2=G1 3=S2 4=G2 5,6=D2
+* 7,8=D1): Vgs(th) typ 1.6V, Rds(on)~32 mohm @ Vgs=4.5V per FET, Id=5A.
+* Two independent VDMOS devices in a subckt (terminals d1 g1 s1 d2 g2 s2).
+* The .model card lives INSIDE the subckt so deck inlining carries it along
+* (the generator inlines the .subckt block; a top-level card would dangle).
+.subckt NCE6005AS d1 g1 s1 d2 g2 s2
+.model MNCE6005AS VDMOS(vto=1.6 kp=19 lambda=0.02 rd=0.012 rs=0.002 rg=1.5
++ cgdmax=110p cgdmin=20p cgs=750p cjo=300p is=1e-12 rb=0.01 bv=60)
+m1 d1 g1 s1 s1 MNCE6005AS
+m2 d2 g2 s2 s2 MNCE6005AS
+.ends NCE6005AS
+
+* --------------------------------------------------------------------------- PMOS
+* Generic P-channel logic-level MOSFET (AO3401/DMP-class): Vgs(th)=-0.6..-1.3V,
+* Rds(on)~50-85 mohm @ Vgs=-4.5V, Id~-4A, Ciss~700pF. pchan=1 makes it P-type;
+* vto is given as a positive magnitude with pchan.
+.model MPMOS_GEN VDMOS(pchan=1 vto=-1.1 kp=18 lambda=0.02 rd=0.05 rs=0.01 rg=2
++ cgdmax=250p cgdmin=40p cgs=550p cjo=180p is=1e-12 rb=0.02 bv=30)
+
+* AO3401 / AO3401A P-channel 30V logic-level MOSFET (SOT-23): Vgs(th)=-0.5..-1.3V
+* (typ -0.9V), Rds(on)~50-60 mohm @ Vgs=-4.5V (rd + channel via kp), Id=-4A,
+* Ciss~900pF (cgs=750p + cgdmax=150p). Dedicated datasheet-tuned card (the
+* MPMOS_GEN generic aborted a real-board transient with "timestep too small").
+.model MAO3401 VDMOS(pchan=1 vto=-1.1 kp=12 lambda=0.02 rd=0.02 rs=0.005 rg=1.5
++ cgdmax=150p cgdmin=25p cgs=750p cjo=250p is=1e-12 rb=0.02 bv=30)
+
+* --------------------------------------------------------------------------- POWER NMOS (TO-220)
+* The cards below are fitted by hand to datasheet points: the channel gives
+* 1/(kp*(Vgs-vto)) ohm, rd + rs add the fixed part, so two Rds(on) points at two
+* gate voltages fix kp and rd + rs (the 0.9 x max rule of fit-model-cards.mjs
+* turns a maximum Rds(on) into a typical one). Capacitances: cgs = Ciss - Crss,
+* cgdmax = 2 x Crss, cgdmin = 0.2 x Crss, cjo = Coss.
+
+* IRLZ44N logic-level 55 V / 47 A NMOS: Vgs(th) 1.0 to 2.0 V (1.5 typ),
+* Rds(on) 22 mohm at Vgs=10 V and 25 mohm at 5 V (ID 25 A, max values; 0.9 x max used),
+* Ciss 1700 pF, Coss 400 pF, Crss 150 pF. Pins 1=G 2=D 3=S.
+.model MIRLZ44N VDMOS(vto=1.5 kp=62 lambda=0.01 rd=0.0155 rs=0.0024 rg=1.7
++ cgdmax=300p cgdmin=30p cgs=1550p cjo=400p is=1e-12 rb=0.005 bv=55)
+
+* IRF540N 100 V / 33 A NMOS: Vgs(th) 2.0 to 4.0 V (3 typ), Rds(on) 44 mohm max
+* at Vgs=10 V, ID 16 A (0.9 x max used), Ciss 1960 pF, Coss 250 pF, Crss 40 pF.
+* Pins 1=G 2=D 3=S.
+.model MIRF540N VDMOS(vto=3 kp=18 lambda=0.01 rd=0.027 rs=0.005 rg=2
++ cgdmax=80p cgdmin=8p cgs=1920p cjo=250p is=1e-12 rb=0.01 bv=100)
+
+* IRF3205 55 V / 110 A NMOS: Vgs(th) 2.0 to 4.0 V (3 typ), Rds(on) 8 mohm max at
+* Vgs=10 V, ID 62 A (0.9 x max used), Ciss 3247 pF, Coss 781 pF, Crss 211 pF.
+* Pins 1=G 2=D 3=S.
+.model MIRF3205 VDMOS(vto=3 kp=71 lambda=0.01 rd=0.0045 rs=0.0007 rg=1
++ cgdmax=420p cgdmin=42p cgs=3030p cjo=780p is=1e-12 rb=0.002 bv=55)
+
+* --------------------------------------------------------------------------- POWER PMOS
+* IRF9540N 100 V / 23 A PMOS (TO-220): Vgs(th) -2.0 to -4.0 V (-3 typ), Rds(on)
+* 117 mohm max at Vgs=-10 V, ID -11 A (0.9 x max used), Ciss 1300 pF, Coss 400 pF,
+* Crss 140 pF. Pins 1=G 2=D 3=S. pchan=1 with vto given as a negative value, as
+* in the cards above.
+.model MIRF9540N VDMOS(pchan=1 vto=-3 kp=4.76 lambda=0.01 rd=0.065 rs=0.01 rg=2.5
++ cgdmax=280p cgdmin=28p cgs=1160p cjo=400p is=1e-12 rb=0.02 bv=100)
+
+* IRLML6402 20 V / 3.7 A logic-level PMOS (SOT-23): Vgs(th) -0.4 to -0.7 V,
+* Rds(on) 65 mohm max at Vgs=-4.5 V (ID -3.7 A) and 135 mohm max at -2.5 V
+* (ID -3.1 A), 0.9 x max used, Ciss 633 pF, Coss 145 pF, Crss 110 pF.
+* Pins 1=G 2=S 3=D.
+.model MIRLML6402 VDMOS(pchan=1 vto=-0.75 kp=4.98 lambda=0.02 rd=0.004 rs=0.001 rg=3
++ cgdmax=220p cgdmin=22p cgs=520p cjo=145p is=1e-12 rb=0.03 bv=20)

@@ -14,7 +14,8 @@ source = Path(sys.argv[1] if len(sys.argv) > 1 else '../TinyCAD.net')
 destination = Path(__file__).resolve().parents[1] / 'src/chat/skill'
 files = [Path('SKILL.md'), *sorted(Path('references') / p.name for p in (source / 'skills/tinycad/references').glob('*.md')),
          *sorted(Path('assets') / p.name for p in (source / 'skills/tinycad/assets').iterdir() if p.is_file())]
-resources = {str(p): (source / 'skills/tinycad' / p).read_text() for p in files}
+resources = {p.as_posix(): (source / 'skills/tinycad' / p).read_text(encoding='utf-8') for p in files}
+resources['references/spice-models.md'] = (destination / 'spice-models.md').read_text(encoding='utf-8')
 (destination / 'resources.json').write_text(json.dumps(resources, indent=2) + '\n')
 root = ET.fromstring((source / 'tinycad-net-service/TinyCAD.File.Service/Schema/TinyCADSchema.xsd').read_text(encoding='utf-16'))
 ns = {'xs': 'http://www.w3.org/2001/XMLSchema'}
@@ -46,6 +47,11 @@ sequence.insert(0, choice)
 identity = ET.SubElement(drawing, xs + 'complexType', name='dsnIdentityType')
 ET.SubElement(identity, xs + 'attribute', name='id', type='xs:string', use='required')
 sequence.insert(0, ET.Element(xs + 'element', name='DSNIDENTITY', type='dsnIdentityType', minOccurs='0'))
+packs = ET.SubElement(drawing, xs + 'complexType', name='spiceModelPacksType')
+content = ET.SubElement(packs, xs + 'simpleContent')
+extension = ET.SubElement(content, xs + 'extension', base='xs:string')
+ET.SubElement(extension, xs + 'attribute', name='version', type='xs:string', use='required')
+sequence.insert(1, ET.Element(xs + 'element', name='SPICE_MODEL_PACKS', type='spiceModelPacksType', minOccurs='0'))
 ET.SubElement(type_named('tinycad'), xs + 'attribute', name='id', type='xs:string', use='optional')
 simulation = ET.SubElement(drawing, xs + 'complexType', name='simulationSheetType')
 content = ET.SubElement(simulation, xs + 'simpleContent')

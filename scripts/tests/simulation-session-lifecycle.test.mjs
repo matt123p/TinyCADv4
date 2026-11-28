@@ -30,7 +30,7 @@ function fixture(digest, onEngineLoad) {
         },
       };
     },
-    './deck': { buildDeck: () => 'title\nR1 1 0 1k\n.op\n.end' },
+    './deck': { prepareSpiceDeck: (_net, setup) => ({ deck: 'title\nR1 1 0 1k\n.op\n.end', files: setup.models, identity: 'lifecycle test deck' }) },
     '../io/dsnContainer': { digest: digest || (async () => 'hash') },
     './contracts': { newIdentity: () => 'run-' + ++sequence },
     './resultStore': {

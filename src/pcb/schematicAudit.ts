@@ -22,7 +22,9 @@ export function auditPcbSchematic(drawing: dsnDrawing): PcbSchematicIssue[] {
   const sheetNames = new Set<string>();
   const referenceNames = new Set<string>();
   const unitIds = new Set<string>();
-  for (const sheet of drawing.sheets) {
+  const interfaceSheets = drawing.sheets.filter((sheet) => sheet.hierarchicalSymbol);
+  const circuitSheets = drawing.sheets.filter((sheet) => !sheet.hierarchicalSymbol);
+  for (const sheet of [...interfaceSheets, ...circuitSheets]) {
     if (sheet.kind === 'simulation') continue;
     if (sheetNames.has(sheet.name)) {
       issues.push({

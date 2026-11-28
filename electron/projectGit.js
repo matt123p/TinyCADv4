@@ -213,12 +213,82 @@ function diffHunks(text) {
   };
 }
 
+function patchForLines(text, lines, reverse) {
+  if (!Array.isArray(lines) || !lines.length || lines.length > 5000)
+    throw new Error('Select changed lines in the diff first.');
+  const selected = new Set(
+    lines.map((line) => {
+      if (
+        !line ||
+        (line.type !== 'insert' && line.type !== 'delete') ||
+        !Number.isSafeInteger(line.line) ||
+        line.line < 1
+      )
+        throw new Error('Invalid diff line selection.');
+      return line.type + line.line;
+    }),
+  );
+  const { header, hunks } = diffHunks(text);
+  const result = [];
+  let delta = 0;
+  for (const hunk of hunks) {
+    const [range, ...sourceLines] = hunk.replace(/\n$/, '').split('\n');
+    const match = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(range);
+    if (!match) continue;
+    let oldLine = Number(match[1]);
+    let newLine = Number(match[2]);
+    const start = reverse ? newLine : oldLine;
+    const patch = [];
+    let before = 0;
+    let after = 0;
+    let changed = false;
+    let emitted = false;
+    for (const line of sourceLines) {
+      const prefix = line[0];
+      if (prefix === '\\') {
+        if (emitted) patch.push(line);
+        continue;
+      }
+      const key = prefix === '-' ? 'delete' + oldLine : 'insert' + newLine;
+      if (prefix !== '+') oldLine++;
+      if (prefix !== '-') newLine++;
+      const change = prefix === '+' || prefix === '-';
+      const apply = change && selected.delete(key);
+      const inBase = reverse ? prefix !== '-' : prefix !== '+';
+      emitted = !change || apply || inBase;
+      if (!emitted) continue;
+      const output = apply ? (inBase ? '-' : '+') : ' ';
+      if (output !== '+') before++;
+      if (output !== '-') after++;
+      changed ||= apply;
+      patch.push(output + line.slice(1));
+    }
+    if (!changed) continue;
+    const ending = start + delta + (before === 0 ? 1 : after === 0 ? -1 : 0);
+    result.push(
+      `@@ -${start},${before} +${Math.max(0, ending)},${after} @@\n${patch.join(
+        '\n',
+      )}\n`,
+    );
+    delta += after - before;
+  }
+  if (selected.size || !result.length)
+    throw new Error(
+      'The selected lines changed. Refresh the diff and try again.',
+    );
+  return (
+    header.replace(/^(?:index |old mode |new mode ).*\n/gm, '') +
+    result.join('')
+  );
+}
+
 async function workingDiff(root, entry, staged) {
   const files = [...new Set([entry.path, entry.original].filter(Boolean))];
   if (!staged && entry.working === '?') {
+    // Git treats the literal /dev/null as an empty file on every platform.
     return git(
       root,
-      ['diff', ...diffOptions, '--no-index', '--', devNull, entry.path],
+      ['diff', ...diffOptions, '--no-index', '--', '/dev/null', entry.path],
       { accept: [0, 1] },
     );
   }
@@ -442,6 +512,118 @@ async function resolveConflict(root, entry, request) {
   await git(root, ['add', '--', entry.path]);
 }
 
+export async function projectWorktrees(folder) {
+  const root = await repository(folder);
+  if (!root) throw new Error('Open a Git repository first.');
+  const output = await git(root, ['worktree', 'list', '--porcelain', '-z']);
+  return output
+    .split('\0\0')
+    .filter(Boolean)
+    .map((record) => {
+      const fields = record.split('\0');
+      const field = (key) =>
+        fields
+          .find((line) => line.startsWith(key + ' '))
+          ?.slice(key.length + 1);
+      return {
+        id: path.normalize(field('worktree')),
+        branch: field('branch')?.replace(/^refs\/heads\//, ''),
+        head: field('HEAD'),
+        bare: fields.includes('bare'),
+        prunable: fields.some(
+          (line) => line === 'prunable' || line.startsWith('prunable '),
+        ),
+      };
+    });
+}
+
+export async function addProjectWorktree(folder, target, branch, createBranch) {
+  const root = await repository(folder);
+  if (!root) throw new Error('Open a Git repository first.');
+  if (
+    typeof branch !== 'string' ||
+    !branch ||
+    branch.startsWith('-') ||
+    branch.includes('@{')
+  )
+    throw new Error('Enter a valid branch name.');
+  await git(root, ['check-ref-format', '--branch', branch]);
+  if (!createBranch)
+    await git(root, ['show-ref', '--verify', 'refs/heads/' + branch]);
+  const exists = await fs.lstat(target).then(
+    () => true,
+    (error) => {
+      if (error.code === 'ENOENT') return false;
+      throw error;
+    },
+  );
+  if (exists) throw new Error('A file or folder already has that name.');
+  await git(root, [
+    'worktree',
+    'add',
+    ...(createBranch ? ['-b', branch, '--', target] : ['--', target, branch]),
+  ]);
+}
+
+async function listStashes(root) {
+  const output = await git(root, [
+    'stash',
+    'list',
+    '-z',
+    '--format=%H%x00%gd%x00%gs',
+  ]);
+  const fields = output.split('\0');
+  const stashes = [];
+  for (let i = 0; i + 2 < fields.length; i += 3)
+    stashes.push({ id: fields[i], ref: fields[i + 1], subject: fields[i + 2] });
+  return stashes;
+}
+
+async function visibleRevision(root, snapshot, id) {
+  if (typeof id !== 'string' || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(id))
+    throw new Error('Invalid commit identity.');
+  const references = snapshot.upstream ? ['HEAD', '@{upstream}'] : ['HEAD'];
+  const visible = await Promise.all(
+    references.map(async (ref) => {
+      try {
+        await git(root, ['merge-base', '--is-ancestor', id, ref]);
+        return true;
+      } catch {
+        return false;
+      }
+    }),
+  );
+  if (!visible.includes(true))
+    throw new Error('This revision is outside the active branch history.');
+}
+
+async function comparisonReferences(root) {
+  const refs = await git(root, [
+    'for-each-ref',
+    '--format=%(refname)%00%(refname:short)%00%(symref)',
+    'refs/heads',
+    'refs/remotes',
+    'refs/tags',
+  ]);
+  return refs
+    .split('\n')
+    .filter(Boolean)
+    .flatMap((line) => {
+      const [ref, name, symbolic] = line.split('\0');
+      return symbolic ? [] : [{ ref, name }];
+    });
+}
+
+function projectFilePath(snapshot, name) {
+  if (
+    typeof name !== 'string' ||
+    !inside(snapshot.scope, name) ||
+    name.split('/').some((part) => !validProjectName(part))
+  )
+    throw new Error('This file is outside the project.');
+  return name;
+}
+
 export async function runProjectGit(folder, request) {
   const root = await repository(folder);
   if (request.command === 'status') return root ? status(root, folder) : null;
@@ -485,6 +667,21 @@ export async function runProjectGit(folder, request) {
       );
       return status(root, folder);
     }
+    case 'discard': {
+      const entry = find(request.path);
+      if (entry.working === '?' || entry.working === '.' || entry.conflicted)
+        throw new Error('This change cannot be restored from the Git index.');
+      const text = await workingDiff(root, entry, false);
+      if (digest(text) !== request.token)
+        throw new Error('The diff changed. Refresh it before discarding.');
+      await git(root, [
+        'restore',
+        '--worktree',
+        '--',
+        ...pathsFor([entry], true),
+      ]);
+      return status(root, folder);
+    }
     case 'conflict': {
       const { filename, mode, ...conflict } = await readConflict(
         root,
@@ -499,8 +696,7 @@ export async function runProjectGit(folder, request) {
       const entry = find(request.path);
       const text = await workingDiff(root, entry, request.staged === true);
       const partial =
-        !request.staged &&
-        entry.working === 'M' &&
+        (request.staged ? entry.index : entry.working) === 'M' &&
         !entry.original &&
         !wholeFile.test(entry.path);
       return {
@@ -509,21 +705,40 @@ export async function runProjectGit(folder, request) {
         token: digest(text),
       };
     }
-    case 'stage-hunk': {
+    case 'stage-hunk':
+    case 'unstage-hunk':
+    case 'stage-lines':
+    case 'unstage-lines': {
       const entry = find(request.path);
-      if (entry.working !== 'M' || entry.original || wholeFile.test(entry.path))
-        throw new Error('Stage this change as a whole file.');
-      const text = await workingDiff(root, entry, false);
-      const { header, hunks } = diffHunks(text);
+      const reverse = request.command.startsWith('unstage');
       if (
-        digest(text) !== request.token ||
-        !Number.isInteger(request.hunk) ||
-        !hunks[request.hunk]
+        (reverse ? entry.index : entry.working) !== 'M' ||
+        entry.original ||
+        wholeFile.test(entry.path)
       )
+        throw new Error('Apply this change as a whole file.');
+      const text = await workingDiff(root, entry, reverse);
+      if (digest(text) !== request.token)
         throw new Error('The diff changed. Refresh it before staging.');
-      await git(root, ['apply', '--cached', '--whitespace=nowarn', '-'], {
-        input: header + hunks[request.hunk],
-      });
+      const part = request.command.endsWith('-lines');
+      const { header, hunks } = diffHunks(text);
+      if (!part && (!Number.isInteger(request.hunk) || !hunks[request.hunk]))
+        throw new Error('The diff changed. Refresh it before staging.');
+      await git(
+        root,
+        [
+          'apply',
+          '--cached',
+          ...(reverse && !part ? ['--reverse'] : []),
+          '--whitespace=nowarn',
+          '-',
+        ],
+        {
+          input: part
+            ? patchForLines(text, request.lines, reverse)
+            : header + hunks[request.hunk],
+        },
+      );
       return status(root, folder);
     }
     case 'commit': {
@@ -562,6 +777,83 @@ export async function runProjectGit(folder, request) {
       if (!snapshot.branches.some(({ name }) => name === request.branch))
         throw new Error('Select an existing local branch.');
       await git(root, ['switch', '--no-guess', '--', request.branch]);
+      return status(root, folder);
+    }
+    case 'merge-branch': {
+      if (snapshot.branch !== request.into ||
+          !snapshot.branches.some(({ name }) => name === request.into))
+        throw new Error('The current branch changed. Refresh and try again.');
+      if (request.branch === snapshot.branch ||
+          !snapshot.branches.some(({ name }) => name === request.branch))
+        throw new Error('Select a different local branch to merge.');
+      if (snapshot.changes.some(({ index, working }) =>
+        index !== '.' || (working !== '.' && working !== '?')))
+        throw new Error('Commit or stash tracked changes before merging.');
+      const mergeHead = () =>
+        git(root, ['rev-parse', '--verify', '-q', 'MERGE_HEAD'], { accept: [0, 1] });
+      if (await mergeHead())
+        throw new Error('Finish the existing merge in Git before starting another.');
+      try {
+        await git(root, ['merge', '--no-edit', '--no-autostash', '--', 'refs/heads/' + request.branch]);
+      } catch (error) {
+        if (!(await mergeHead())) throw error;
+        await git(root, ['merge', '--abort']);
+        throw new Error('The merge was cancelled because the branches have conflicts.');
+      }
+      return status(root, folder);
+    }
+    case 'publish-branch':
+      if (
+        snapshot.head === '(initial)' ||
+        !snapshot.branches.some(({ name }) => name === snapshot.branch) ||
+        !snapshot.remotes.includes(request.remote)
+      )
+        throw new Error('Select a Git remote and a local branch with commits.');
+      await git(
+        root,
+        [
+          'push',
+          '--set-upstream',
+          '--',
+          request.remote,
+          'HEAD:refs/heads/' + snapshot.branch,
+        ],
+        { timeout: 180000 },
+      );
+      return status(root, folder);
+    case 'stash-list':
+    case 'stash-create':
+    case 'stash-apply':
+    case 'stash-pop':
+    case 'stash-drop': {
+      if (snapshot.scope)
+        throw new Error('Open the repository root to manage its stashes.');
+      if (request.command === 'stash-list') return listStashes(root);
+      if (request.command === 'stash-create') {
+        const message =
+          typeof request.message === 'string'
+            ? request.message.trim().slice(0, 1000)
+            : '';
+        await git(root, [
+          'stash',
+          'push',
+          '--include-untracked',
+          ...(message ? ['--message', message] : []),
+        ]);
+      } else {
+        const item = (await listStashes(root)).find(
+          ({ id, ref }) => id === request.id && ref === request.ref,
+        );
+        if (!item)
+          throw new Error('The stash list changed. Refresh and try again.');
+        const action = request.command.slice('stash-'.length);
+        await git(root, [
+          'stash',
+          action,
+          ...(action === 'drop' ? [] : ['--index']),
+          item.ref,
+        ]);
+      }
       return status(root, folder);
     }
     case 'fetch':
@@ -612,16 +904,54 @@ export async function runProjectGit(folder, request) {
         ]),
       );
     }
+    case 'branch-graph':
+    case 'graph': {
+      if (snapshot.head === '(initial)') return [];
+      return historyRecords(
+        await git(root, [
+          'log',
+          '--topo-order',
+          '-n',
+          '50',
+          '-z',
+          '--format=%H%x00%h%x00%P%x00%as%x00%s',
+          'HEAD',
+          ...(request.command === 'branch-graph'
+            ? ['--branches']
+            : snapshot.upstream ? ['@{upstream}'] : []),
+          '--',
+        ]),
+      );
+    }
+    case 'references':
+      return comparisonReferences(root);
+    case 'compare': {
+      await visibleRevision(root, snapshot, request.id);
+      const reference = (await comparisonReferences(root)).find(
+        ({ ref }) => ref === request.ref,
+      );
+      if (!reference) throw new Error('Select an existing branch or tag.');
+      return git(root, [
+        'diff',
+        ...diffOptions,
+        reference.ref,
+        request.id,
+        '--',
+        snapshot.scope || '.',
+      ]);
+    }
+    case 'blame': {
+      const name = projectFilePath(snapshot, request.path);
+      if (wholeFile.test(name))
+        throw new Error('Line history is available for text files.');
+      return git(root, ['blame', '--date=short', '--', name]);
+    }
     case 'history': {
       if (snapshot.head === '(initial)') return [];
-      const name = request.path;
-      if (
-        name !== undefined &&
-        (typeof name !== 'string' ||
-          !inside(snapshot.scope, name) ||
-          name.split('/').some((part) => !validProjectName(part)))
-      )
-        throw new Error('This history path is outside the project.');
+      const name =
+        request.path === undefined
+          ? undefined
+          : projectFilePath(snapshot, request.path);
       return historyRecords(
         await git(root, [
           'log',
@@ -634,24 +964,7 @@ export async function runProjectGit(folder, request) {
       );
     }
     case 'revision': {
-      if (
-        typeof request.id !== 'string' ||
-        !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(request.id)
-      )
-        throw new Error('Invalid commit identity.');
-      const references = snapshot.upstream ? ['HEAD', '@{upstream}'] : ['HEAD'];
-      const visible = await Promise.all(
-        references.map(async (ref) => {
-          try {
-            await git(root, ['merge-base', '--is-ancestor', request.id, ref]);
-            return true;
-          } catch {
-            return false;
-          }
-        }),
-      );
-      if (!visible.includes(true))
-        throw new Error('This revision is outside the active branch history.');
+      await visibleRevision(root, snapshot, request.id);
       return git(root, [
         'show',
         ...diffOptions,

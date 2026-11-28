@@ -13,6 +13,7 @@ interface TextEditAreaProps {
   scale_y: number;
   'draw-data': TextAreaData;
   'draw-item': Text;
+  baselineFont?: Text;
   'move-handle': number;
   parent: DocItem;
   selected: boolean;
@@ -264,7 +265,7 @@ class TTextEditArea extends React.PureComponent<TextEditAreaProps, {}> {
     }
 
     let offsetY = this.props['draw-data'].textBlocks.some(block => block.sourceRuns)
-      ? 0 : measureTextOffset(getFont(this.props['draw-item']));
+      ? 0 : measureTextOffset(getFont(this.props.baselineFont ?? this.props['draw-item']));
 
     const update_textArea = new updateTextData(
       textArea.drawX,

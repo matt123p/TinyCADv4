@@ -194,7 +194,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "65c052e66f943840bddfc5d0c2a6abc8bde241a9bf3a43f0e4fd8e7fece09467"
+      "xmlSha256": "ad5f1874880cf25144efa3a2524edb540df4237e00ba07d6b3918d9ed7824f93"
     },
     {
       "id": "psu-2",
@@ -273,7 +273,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "54f4d0ef9d1bbdeaf0965ce1fa2eacc0df05b436f16035f6553b267bc60a8248"
+      "xmlSha256": "60fa0099944ec501424a86ca687c9bf05349818f9dd2c52f2454ba2b44dd584e"
     },
     {
       "id": "psu-3",
@@ -372,7 +372,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "2c8d93ccd556388549f6e6f329beae1f41931d3f44da37157a1f18edcc9e00a0"
+      "xmlSha256": "83a8ebb85b7bdd57ba65bdf8e002388affc7588e18bcad838ef4321b1decc935"
     },
     {
       "id": "psu-4",
@@ -491,7 +491,7 @@
       "height": 40,
       "bodyWidth": 64,
       "bodyHeight": 32,
-      "xmlSha256": "5b939b4a9c2370a78faec73f82265d9e40c3678f74c7f574329af1290b20454d"
+      "xmlSha256": "2d2a4d3a7506c1f2263baf5f8c44e0d83320d200fbbf7cd29c2e5b59711344bb"
     },
     {
       "id": "psu-remote-sense",
@@ -570,7 +570,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "b47e778d4d12144985025be74e95b480f164b47d5de88782bbb1a2d3d28504a3"
+      "xmlSha256": "0f15ecb9ad72906e2d56285e8cfd06b747162260b992aa3f6a85c97455aba902"
     },
     {
       "id": "smu",
@@ -649,7 +649,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "2da341dbb1e8ff9e76ef17562ea452490a3470a6dddd00faa3ef76ceed6630d1"
+      "xmlSha256": "2befe803ed8dba3b7be04b8e207b22224e509be9d3260db2d05644f2dd4521c7"
     },
     {
       "id": "load-1",
@@ -698,7 +698,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "30b49cf027b1d265c5c8c7387aac92abf408625784e4654359bb2cce2aa6509f"
+      "xmlSha256": "d34abbfc9418ab16d952c8b4f773d6299594fa710b05dc94e4105328239dbbbe"
     },
     {
       "id": "load-2",
@@ -767,7 +767,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "16139898d407990abd9be00e29e4b93f82fa6f07e9ec261d315428a76eaba2d1"
+      "xmlSha256": "4a6da8447e7b20982baea3a654053e197088bb38da2729f467233578fc824ca9"
     },
     {
       "id": "source-ac",
@@ -826,7 +826,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "06e108b62d7c18c0e8a784edea7051f6be2f09682fdc79a8933fca4cad8994d2"
+      "xmlSha256": "17e2c053e56e9d60d5264d555eb9465c57c82cb7ec52a62ab3d96877f32ca6cc"
     },
     {
       "id": "variac",
@@ -884,7 +884,7 @@
       "height": 48,
       "bodyWidth": 36,
       "bodyHeight": 40,
-      "xmlSha256": "c791a85486209730fc873c1e1d0b3581c2759b7701b6fb2fdb436c275359fcb3"
+      "xmlSha256": "b6354f05e8917d7af7dfc9609fe18eb769d0850a158ce46d86a53db172ca6b22"
     },
     {
       "id": "scope-2",
@@ -964,7 +964,7 @@
       "height": 48,
       "bodyWidth": 64,
       "bodyHeight": 40,
-      "xmlSha256": "23a9575611341abc81c0fa7acbefc16b757020c59e4e2c650b5020f30e044d20"
+      "xmlSha256": "fcab6510e69149fe8d76bad99c295f45dc372fb85f06612695f675cdf3ea489f"
     },
     {
       "id": "scope-4",
@@ -1064,7 +1064,7 @@
       "height": 48,
       "bodyWidth": 64,
       "bodyHeight": 40,
-      "xmlSha256": "991fdacef4a5dd69b348b6e56e6e181a6a1f13539c30b2f67e681dcae6240a02"
+      "xmlSha256": "1dc071ec9488ab75f43f87521ffd45053a48e206fc54ec08b119b0f125f0f3e8"
     },
     {
       "id": "scope-mso",
@@ -1156,7 +1156,7 @@
       "height": 48,
       "bodyWidth": 64,
       "bodyHeight": 40,
-      "xmlSha256": "3c7cc3acca9426ae6ce80750c77f18fab80108a03e947ec8d348673a5fce97cb"
+      "xmlSha256": "a0cda5e59cf9595d8b1d52b266b52cb79f67996728a8400980849fb217f69964"
     },
     {
       "id": "generator-1",
@@ -1216,7 +1216,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "7879823c41868ccc1fa514c90f5890d4550cadaa1399eea254a4e114769303c7"
+      "xmlSha256": "0f8ff822c38fa891684075ea1ef206cb8dfe780d2a21dbf2d3772a1473e2ed77"
     },
     {
       "id": "generator-2",
@@ -1286,7 +1286,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "9e22c6c46a7c7e9defe49987b1f544cf73a0ad25dfd66e493f7780f6b08dc9a2"
+      "xmlSha256": "9c2fa28b0a95104ccfbea883bfae2bc4e9e306f96ecb9affbda492498008d0c3"
     },
     {
       "id": "dmm-bench",
@@ -1367,7 +1367,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "8fbd64246bac867f4504ff469d98cffc46c382f5e4b88caa6e23db8f31c70ffc"
+      "xmlSha256": "bd5fb5ac9950ac9886855302ac93c66c4ee8f53f5b5eeb0265e3138516721f4e"
     },
     {
       "id": "dmm-handheld",
@@ -1427,7 +1427,7 @@
       "height": 48,
       "bodyWidth": 26,
       "bodyHeight": 40,
-      "xmlSha256": "879f261a36e84a9752ee9cfc4d289765af3c209bb44af387ea78d7bcb1456556"
+      "xmlSha256": "99e95b4eb342a6d11eab16cba6c73992f5de71668a2a850ff1c83ff03a8983ab"
     },
     {
       "id": "clamp-meter",
@@ -1467,7 +1467,7 @@
       "height": 60,
       "bodyWidth": 26,
       "bodyHeight": 52,
-      "xmlSha256": "5f28263044b10761c72d7b3fabb71cbf107986f61bec03894761960a3a36cd7c"
+      "xmlSha256": "bca0f76fa04282d119b361bd78038130fc2c3670f20cf14266584fa1ef4cbe91"
     },
     {
       "id": "lcr",
@@ -1536,7 +1536,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "ec596d0a4cacfb0ab5a53a2a06e5797dd5f6e1c0a95013cbfa27168b959e5133"
+      "xmlSha256": "193018a610664f93bbe9a621492ccd29db21582fc214e9d243374ff0ad73df01"
     },
     {
       "id": "counter",
@@ -1596,7 +1596,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "133c8ce1aada1ea0d49a1a4c1d8d40e7f6dd8f9399b971fe72a1cfac09df5c41"
+      "xmlSha256": "20287faa6a47d44cd1a553d4c047532521d8b8f0934f69a9c9e61a496b339438"
     },
     {
       "id": "spectrum",
@@ -1656,7 +1656,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "a68e4c87722a4769e9e5af3479550471cfdb0b4255273f47dac5e7432880f93d"
+      "xmlSha256": "fe78a64762531336a0189607ddd4b561f2549da86d72a1a45d5fc4e0c9834e8a"
     },
     {
       "id": "rf-generator",
@@ -1716,7 +1716,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "966db7507693e7da73e7d58c1422dbea157f69287ca197f0b1a6d547675fee88"
+      "xmlSha256": "cc5fd03227b8b1223d610459a047e2f7ed3b65bc20b590a778af6a12f29c24af"
     },
     {
       "id": "vna",
@@ -1776,7 +1776,7 @@
       "height": 40,
       "bodyWidth": 56,
       "bodyHeight": 32,
-      "xmlSha256": "d3962c4bd860a68de3a1b2eb91eeb31fcb404659e6b7e49da9b8eac0300d1066"
+      "xmlSha256": "00de5a13b1f4fc9ad247d0e977948a5e48a2764e5e0e86c1b45533db452ee685"
     },
     {
       "id": "logic-analyzer",
@@ -1975,7 +1975,7 @@
       "height": 48,
       "bodyWidth": 48,
       "bodyHeight": 40,
-      "xmlSha256": "372a7d6ad8d603565dcb1c3c40143b8f3e5a0adebc3d8d7ebac400ff01a3f5d1"
+      "xmlSha256": "0058b6ccde37536f4c12cc33e64b29f4c550478e0ef854beb271a71bfa8c5833"
     },
     {
       "id": "daq-8",
@@ -2185,7 +2185,7 @@
       "height": 48,
       "bodyWidth": 48,
       "bodyHeight": 40,
-      "xmlSha256": "ff254eaffc8cdbf69a0047080324fbda73a32d0e0b52aeeec7ccfe16d7cab45e"
+      "xmlSha256": "79e4c9a3923ab895c39a37e8c06c606c7747f917acedb414b542bdfb8cadde3e"
     },
     {
       "id": "dio-8",
@@ -2304,7 +2304,7 @@
       "height": 40,
       "bodyWidth": 48,
       "bodyHeight": 32,
-      "xmlSha256": "bfcfa03c94a75ee6a53ce1c4cc7e3f2e16fbc7ead19574f7388ae8a549059afd"
+      "xmlSha256": "46e7dcf4e6c9d37b335e47c37f4c6e721d4b37031930dff7f10f90c4a4cb528b"
     },
     {
       "id": "logger-tc-8",
@@ -2413,7 +2413,7 @@
       "height": 40,
       "bodyWidth": 48,
       "bodyHeight": 32,
-      "xmlSha256": "d0ebcf09e34f7a520f458e8aa28916a4c62284084b5299dabbd1793bf2fbc9f8"
+      "xmlSha256": "5f31b36500b649fe73e7e5f500b8f892a5210e24632bdc29e6a71fba2c8710a0"
     },
     {
       "id": "logger-rtd-4",
@@ -2603,7 +2603,7 @@
       "height": 48,
       "bodyWidth": 48,
       "bodyHeight": 40,
-      "xmlSha256": "b99d8778683f515dd316e1cee52e158946f9f5dee451c89cc40b58e908dd50c7"
+      "xmlSha256": "77a6192ae8798e5ea637e42bf9d6f49d4212330c2188fd87401fa72d77bc8a09"
     },
     {
       "id": "calibrator-tc",
@@ -2631,7 +2631,7 @@
       "height": 48,
       "bodyWidth": 26,
       "bodyHeight": 40,
-      "xmlSha256": "784875507d71af7180377538a6ea4905a34443dde15db092505bcb3e6520172c"
+      "xmlSha256": "3dac2f6d3cddb5144164e8fc0a9649bcf84f721b939a0c4ecdd48e19f6400a35"
     },
     {
       "id": "calibrator-loop",
@@ -2669,7 +2669,7 @@
       "height": 48,
       "bodyWidth": 26,
       "bodyHeight": 40,
-      "xmlSha256": "6cbfa012ae354d6cad8a0a17cd0b5b987958c8a4e4114a08499ed96c8fbb6062"
+      "xmlSha256": "13264d5798e14aa01d13891556a7c910396fadca43bb48ab138929fbc893e458"
     },
     {
       "id": "decade-resistance",
@@ -2717,7 +2717,7 @@
       "height": 38,
       "bodyWidth": 48,
       "bodyHeight": 30,
-      "xmlSha256": "9d2eec62b3d85cb14b6360653128148c0c2e5eb61cd01d86f4067a088e2fda60"
+      "xmlSha256": "e59176a2b0503058373be78f6110288ef2dfd81245475e88e8e9680bc8c63c03"
     },
     {
       "id": "probe-passive",
@@ -2766,7 +2766,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "8c498ebed6c2d50d2e1cccf919a0b321cb965e890959d888b52b5a9a99aa772b"
+      "xmlSha256": "658323e069c2357b40aa69ad3410bab7d7aae953b335ba4f4ae392debf0197bc"
     },
     {
       "id": "probe-differential",
@@ -2825,7 +2825,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "98a4dc86732d4e7fa50dad6eb666c603d8436c4fa9c585ee645bf7996b6954ca"
+      "xmlSha256": "b096d4d50a912d01dc1ad4e5b11bc1d7e0055da65bede6886c185c512225ada9"
     },
     {
       "id": "probe-current",
@@ -2864,7 +2864,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "d139ebdb126e8791a7c613bb20012fa9f9b5a63fe8c081e93692fb6fb7253969"
+      "xmlSha256": "2c8ebb7aa74388e2bf48af6a43dc1640fbc980369634b5273c16127affcda715"
     },
     {
       "id": "probe-tc-immersion",
@@ -2893,7 +2893,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "009e4aebe9f41accf1c931f021e983c9eb46686be381efe7461b175a506d985e"
+      "xmlSha256": "3786660a5c0bfb87be573f332ceeca3f53f8e6ec3ed81f721eac266d0ce70235"
     },
     {
       "id": "probe-tc-surface",
@@ -2922,7 +2922,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "f0ae0ad8282f302f072aca7b5425d66f50679dca61130d1eaea5d4263a3eeaba"
+      "xmlSha256": "b18833cec598c452eb2f28e1cdd2ed0ab27dde8b7ca51661ebe199162fc25b9f"
     },
     {
       "id": "probe-tc-bead",
@@ -2951,7 +2951,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "77752b99985e944ce27737c66a2a672cb9c697754b2ba8b98481274b47a8b9a8"
+      "xmlSha256": "4e3804c20145d4f7b3b3a0ad5c028102f2952fc13fc185c6c73607419077dbe3"
     },
     {
       "id": "probe-rtd-2",
@@ -2990,7 +2990,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "41327b6186e2879081175e1bbe2309287b53124806d9e4ad131abb9736d5a6a2"
+      "xmlSha256": "04cfba0080d5f8f081dbc4a85542fb9cf9fce4bf2aaa5ec0048f9220fa2a349f"
     },
     {
       "id": "probe-rtd-3",
@@ -3039,7 +3039,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "0dee677744c5fe26df11b26b9f9bc37456e238f8bb8dec29c540f88b7fde76db"
+      "xmlSha256": "82f76c1054944921d5e7f374ec2c35c62a5d5be310e56ccca9475a482d0afe36"
     },
     {
       "id": "probe-rtd-4",
@@ -3098,7 +3098,7 @@
       "height": 42,
       "bodyWidth": 38,
       "bodyHeight": 34,
-      "xmlSha256": "886c944f0e20df42c17e41829ca0b41de38e146ba4c96aaf9a493add4b9823af"
+      "xmlSha256": "199482bf974445b9bec37dbe6d02a1aeb6b3be8480714d49cd8a38a8e219845c"
     },
     {
       "id": "probe-thermistor",
@@ -3137,7 +3137,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "0195431a2cad707534c132466d68e6f4b9ec18d5fd29e801a2ed2d2ecbbc126e"
+      "xmlSha256": "214014feea1031a4a635a2efde4de5daf93f57e9c748d414191903194475c74a"
     },
     {
       "id": "probe-ph",
@@ -3166,7 +3166,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "dc99c5f70130609ba78f6533931d4f689ea778390fb1dab3e3110b1e245f34b1"
+      "xmlSha256": "e5b7379f117900b1f5d89b50d09f7ba0bcbf60f7392371a2e244c0a73edb384b"
     },
     {
       "id": "probe-pressure",
@@ -3216,7 +3216,7 @@
       "height": 42,
       "bodyWidth": 36,
       "bodyHeight": 34,
-      "xmlSha256": "fae100e1bf766da0bf66b26ace9c07b8979f05aa8e0f4cdd0ca1e61bcb5b648f"
+      "xmlSha256": "e98d196fb3d831ac5aa70ae9ae9725042ff2bff3913b29f19e428198e9c12200"
     },
     {
       "id": "load-cell",
@@ -3275,7 +3275,7 @@
       "height": 32,
       "bodyWidth": 40,
       "bodyHeight": 24,
-      "xmlSha256": "2c3e58edeb8d08d958b78de886550f90254c43d27061f145d53daa0b0950fe3c"
+      "xmlSha256": "5c674ed6bc2d7663e552f28fe22586d4d5d45fca4ce0125ca760fd7559ca715b"
     },
     {
       "id": "hotplate",
@@ -3314,7 +3314,7 @@
       "height": 42,
       "bodyWidth": 38,
       "bodyHeight": 34,
-      "xmlSha256": "b14f4d3683f8f1e870120166b9054f73fc47219ddec310498c4884282979ef69"
+      "xmlSha256": "5b82667217a4d5844bab6d9ed7d6342955001a0c60a6beb241ec170e149dfb0e"
     },
     {
       "id": "hotplate-stirrer",
@@ -3353,7 +3353,7 @@
       "height": 42,
       "bodyWidth": 38,
       "bodyHeight": 34,
-      "xmlSha256": "0147027ac16eaf8bd2bdaef42ea0a2ee1901fa9e76094c11d63f96d9718f6ea0"
+      "xmlSha256": "73a32fcc66366361773fab771f469aaf60575afd240b998f19bb5b3583ea736a"
     },
     {
       "id": "heater-cartridge",
@@ -3392,7 +3392,7 @@
       "height": 36,
       "bodyWidth": 40,
       "bodyHeight": 28,
-      "xmlSha256": "c57c7601056a13cacb7bf0b6e9a38a4dbb7cadf5cad6a510005ba0b99dbed91b"
+      "xmlSha256": "c3286925aec0ff201c267237aa4c812a2529a2bf5b098bfb0321d5e13ff679f1"
     },
     {
       "id": "heater-mat",
@@ -3431,7 +3431,7 @@
       "height": 36,
       "bodyWidth": 40,
       "bodyHeight": 28,
-      "xmlSha256": "74e65bdf5f8f40a952116a9b1c61926cb7f68f7f2dc5a7cd11cac13a894c8db7"
+      "xmlSha256": "49c2841ba995902d3b2790c6f865e72b8aa0500d0fbba32ab4d6d9408429900d"
     },
     {
       "id": "heater-band",
@@ -3470,7 +3470,7 @@
       "height": 36,
       "bodyWidth": 40,
       "bodyHeight": 28,
-      "xmlSha256": "b89d84634a62237c8c1b7fbe90b3f165d85c1edc244130afd24bc749bd608dfb"
+      "xmlSha256": "6be7e50a10a325fbbde06b9212ca7e541a50fdae01cc9a90bfe203c8f5937c72"
     },
     {
       "id": "heater-immersion",
@@ -3509,7 +3509,7 @@
       "height": 36,
       "bodyWidth": 40,
       "bodyHeight": 28,
-      "xmlSha256": "90c530767c837041260b0b75b0708260b5f034e3020602e81df6abbe18ee5af2"
+      "xmlSha256": "aead41d9d2aefc6b2ad7191a631e41e7d239e8a72294789d39fc9bc1245bc65c"
     },
     {
       "id": "peltier",
@@ -3548,7 +3548,7 @@
       "height": 36,
       "bodyWidth": 40,
       "bodyHeight": 28,
-      "xmlSha256": "3b644f3f3690e5cecf70861180b6ac6b7d1156b66677bea9304b7aad48ea0727"
+      "xmlSha256": "bb9eb9a2281ba7f758fa69c7d1feb34b168efcddc3626e80b15900f3df777292"
     },
     {
       "id": "water-bath",
@@ -3588,7 +3588,7 @@
       "height": 50,
       "bodyWidth": 40,
       "bodyHeight": 42,
-      "xmlSha256": "6f0a09b44838a3715b1ce379c42fe67eff1d39ce039c38756749ab3fd6d29a88"
+      "xmlSha256": "c805837e3d54e7dc04eed26f9bcf032ebdfbaf7edcd8b50f9d9883809b45e00f"
     },
     {
       "id": "dry-well",
@@ -3637,7 +3637,7 @@
       "height": 50,
       "bodyWidth": 40,
       "bodyHeight": 42,
-      "xmlSha256": "e32e3559385ad8817e05385f289a0b19c4859c84b6e2e6ea760356a9f6df5801"
+      "xmlSha256": "45dbf2ab007bb099bacfe9ce954cc819c4c5c5341cb56fc59440b5a2ef39687a"
     },
     {
       "id": "oven",
@@ -3676,7 +3676,7 @@
       "height": 50,
       "bodyWidth": 40,
       "bodyHeight": 42,
-      "xmlSha256": "fa002c5ab5361afebca48330f0979e085f662572d83dd95f3e388a93313ab5ef"
+      "xmlSha256": "d56cc44716c0de3a657f6008dc7b32ce8a842f1d56858dffaa57aa57cbbc3575"
     },
     {
       "id": "chiller",
@@ -3735,7 +3735,7 @@
       "height": 50,
       "bodyWidth": 44,
       "bodyHeight": 42,
-      "xmlSha256": "aaa471c99a678bd663cd6b36a8e0822337c9fc233ae7773fdd1a4716cf1e0b18"
+      "xmlSha256": "9c0854c985330f7f97a239b8965c88b148d3b6ca140ba359cae22be6112afb76"
     },
     {
       "id": "relay-spdt",
@@ -3804,7 +3804,7 @@
       "height": 50,
       "bodyWidth": 20,
       "bodyHeight": 42,
-      "xmlSha256": "7d671101ee4f2f06f13cadf18e30aa5999d2c03c42c68552adc714d7d96a23b4"
+      "xmlSha256": "05c75021d42606ed19f2c96f15b92a0ce9c1b78836bee17d32794a33e34129e6"
     },
     {
       "id": "relay-dpdt",
@@ -3903,7 +3903,7 @@
       "height": 42,
       "bodyWidth": 34,
       "bodyHeight": 34,
-      "xmlSha256": "b6a2fabbe4c48917c6154952e9935a6ca57adac8544ab10a677124e943ff80ab"
+      "xmlSha256": "35914fd8086d2175d021e23e3a4df4b0667c52bd2c53061179ac488c3b428c05"
     },
     {
       "id": "relay-ssr",
@@ -3962,7 +3962,7 @@
       "height": 42,
       "bodyWidth": 34,
       "bodyHeight": 34,
-      "xmlSha256": "6087030fc99257fb64802d0e492113c3ba9eee44666a0b6af3a7b06498399ffb"
+      "xmlSha256": "58213210f227df12d6c1ed62abcc41c9e613beffb48d85b58545b1b3cc5bd5fb"
     },
     {
       "id": "relay-board-4",
@@ -4161,7 +4161,7 @@
       "height": 46,
       "bodyWidth": 58,
       "bodyHeight": 38,
-      "xmlSha256": "d4cabff2a73cfde7807213896138ffef0d6f1e309f504ea5cf675f2a80fe7b57"
+      "xmlSha256": "fcfb1626b6fc08c7320bb23d908a655338ea2e63ae1b2ca54c84929ae617aad8"
     },
     {
       "id": "pid-controller",
@@ -4270,7 +4270,7 @@
       "height": 52,
       "bodyWidth": 38,
       "bodyHeight": 44,
-      "xmlSha256": "c48acc8d52ec14c99866d7b3761a59ea5b37d1eaf5e203918b4064b35779fbb8"
+      "xmlSha256": "7a77296df3b0285ee6343e1d55ff7dfd15472cfef4cae3c07fd051295fdf0a25"
     },
     {
       "id": "thermostat",
@@ -4319,7 +4319,7 @@
       "height": 38,
       "bodyWidth": 32,
       "bodyHeight": 30,
-      "xmlSha256": "9cf3c94f50d6890e887860bab284b880f2d4bb90c8bc5def6083075eb9e7aec0"
+      "xmlSha256": "d38f0a97d825b233775f80cfc841fa7c675c91a9c1e5b09de91027de3eab300a"
     },
     {
       "id": "contactor",
@@ -4418,7 +4418,7 @@
       "height": 42,
       "bodyWidth": 34,
       "bodyHeight": 34,
-      "xmlSha256": "9d0977aa10174c9c3f3e524caf897c446c5d88acaca9ba067b2cbc1f15550ba0"
+      "xmlSha256": "81300de05578223d727e6d70dcbe6d22d44c251cfb2cdf4199e65bc7178143e2"
     },
     {
       "id": "emergency-stop",
@@ -4477,7 +4477,7 @@
       "height": 38,
       "bodyWidth": 32,
       "bodyHeight": 30,
-      "xmlSha256": "8cf004813329f4deae1d3eed95056259878598029b47795742c0924ee75e65c8"
+      "xmlSha256": "1be2a0a5836c9eb54008006cf5243c931df7bf5f275a20096fe4af8048043551"
     },
     {
       "id": "solenoid-valve",
@@ -4536,7 +4536,7 @@
       "height": 42,
       "bodyWidth": 34,
       "bodyHeight": 34,
-      "xmlSha256": "d579faf3e6a87c1499d1c6404ef04ded895c44089303aa9eaffc6f27c5287cfb"
+      "xmlSha256": "fd98df92faea142a16f9d805e1f4f2cbc677263c3145d7ec80a254d6addb780f"
     },
     {
       "id": "fan",
@@ -4575,7 +4575,7 @@
       "height": 42,
       "bodyWidth": 34,
       "bodyHeight": 34,
-      "xmlSha256": "63662b7d21845259adde913b8fb3d82ae19225be40957cbec9aa2afa43bbfbed"
+      "xmlSha256": "949286b861529f71c0a37d0fbfe7c463521d8f7462a026d7e889618a3ff372a6"
     },
     {
       "id": "pump-peristaltic",
@@ -4624,7 +4624,7 @@
       "height": 44,
       "bodyWidth": 40,
       "bodyHeight": 36,
-      "xmlSha256": "600911ccf37cc54a91efb9f137a9621d1c9e9cc7b8989c69b349b8330837fd25"
+      "xmlSha256": "ece14d41dbfa208c7421f2f9ba83f46ed7caeecd8db05bd474ea38ba956471fa"
     },
     {
       "id": "pump-vacuum",
@@ -4673,7 +4673,7 @@
       "height": 44,
       "bodyWidth": 40,
       "bodyHeight": 36,
-      "xmlSha256": "2f5317ff383d4cf3c3a1655be8144370177f6fb1c4f7bf0f0b9de251a5072c2e"
+      "xmlSha256": "3f9b2f8d70501f671b74588057ff87d15c3cd32fa82c3232a7c71f0ec94c89dc"
     },
     {
       "id": "balance",
@@ -4712,7 +4712,7 @@
       "height": 44,
       "bodyWidth": 40,
       "bodyHeight": 36,
-      "xmlSha256": "88e6506d41f3aac1e9a7a8e8f281c6b5b0a6f6bc95a9ecb854907760f4ec74ae"
+      "xmlSha256": "e008a500c7345e32a5c0e387d2ad78c77a7ff81f4f9a8c0679cfcc514fbf824f"
     },
     {
       "id": "microscope",
@@ -4751,7 +4751,7 @@
       "height": 44,
       "bodyWidth": 40,
       "bodyHeight": 36,
-      "xmlSha256": "d85ff20bc499ac9c34203bc0fcd1c0d4c94a6f59a4614f6a50cbea01b5ca6894"
+      "xmlSha256": "8f920915eef43bba7b43a88f8647e3508ba15bce036b7dfe7582580e6b5efbc6"
     },
     {
       "id": "soldering-station",
@@ -4800,7 +4800,7 @@
       "height": 44,
       "bodyWidth": 40,
       "bodyHeight": 36,
-      "xmlSha256": "cccfaae25aec8df71ecdb0548d283cd6f0c421a78f12ed94382d88861a149adf"
+      "xmlSha256": "ef9d55a7f84ffd75d291c8474cfa72269a16668ece3f970902a8f45abafa2ffd"
     },
     {
       "id": "pc",
@@ -4859,7 +4859,7 @@
       "height": 42,
       "bodyWidth": 44,
       "bodyHeight": 34,
-      "xmlSha256": "504a9fb15cfe540b91ca6db9c483c0082858c5dced789811dd6b581fd5e3bc93"
+      "xmlSha256": "84e8c82180f077dc8eb83e1a098a7adb046153f1afe9ffb6f13225c1fb23a7f1"
     },
     {
       "id": "beaker",
@@ -4877,7 +4877,7 @@
       "height": 42,
       "bodyWidth": 28,
       "bodyHeight": 34,
-      "xmlSha256": "498af3a7f70aeb50f1f1d9cce26534eecf30e8dc8b62b5970a90a0e77613d915"
+      "xmlSha256": "c9da698bf9114680eab9c9d4bcc1f1306ac594de8eae172427ad0e62a7206b99"
     },
     {
       "id": "flask",
@@ -4895,7 +4895,7 @@
       "height": 42,
       "bodyWidth": 28,
       "bodyHeight": 34,
-      "xmlSha256": "c0c9c489470d304c5dd7da440e52711bb8142e2f8f37b72e10ecf1e189e585cd"
+      "xmlSha256": "3113fd30e6e4e8251f0418f3244605ec9163e7a0abaac30780f40029efed3466"
     },
     {
       "id": "stand-clamp",
@@ -4912,7 +4912,7 @@
       "height": 48,
       "bodyWidth": 32,
       "bodyHeight": 40,
-      "xmlSha256": "78565b1b630b1bee79e96a240a03429019f9afce14453721ab7912c998fed668"
+      "xmlSha256": "51011564ee8da629e738d5de14ed5211df4507cfa683b60f5c3327d1488368bd"
     },
     {
       "id": "terminal-block-8",
@@ -5090,7 +5090,7 @@
       "height": 26,
       "bodyWidth": 40,
       "bodyHeight": 18,
-      "xmlSha256": "c758e1be8a63f10e45a78f2009b2e783b63b00be6a4737248d9467a7f446bb1d"
+      "xmlSha256": "347facac834285f630f60b929a0a7f828ea7a1da78fd6349d6f5d242109794f3"
     },
     {
       "id": "bnc-breakout",
@@ -5139,7 +5139,7 @@
       "height": 32,
       "bodyWidth": 30,
       "bodyHeight": 24,
-      "xmlSha256": "3a65deeae33aa969fe9f63895e2cde72c174a60ea10e35713029695c76aa7ccf"
+      "xmlSha256": "88dbfd454ab1c9a26e61b265f0de05be911ba331a1532e7ea1628fcedf097ac8"
     },
     {
       "id": "bnc-tee",
@@ -5188,7 +5188,7 @@
       "height": 32,
       "bodyWidth": 30,
       "bodyHeight": 24,
-      "xmlSha256": "48827acb2a833fbf7030b916b568d82a4532f522261f81a3bcf3a8fba4c392f3"
+      "xmlSha256": "15852e1f1bbeaf69ded094c89e45de1b3176f8fb5154e10e94d1c2ad6ea70e19"
     },
     {
       "id": "bnc-terminator",
@@ -5217,7 +5217,7 @@
       "height": 32,
       "bodyWidth": 30,
       "bodyHeight": 24,
-      "xmlSha256": "15b9d3c0a73e8140b64a54dec1ea9b3baef821299aee8fb93f1c0006c8346cac"
+      "xmlSha256": "d7707c49f1e7239280c82967bf0a6ca242b03836e2d59b68001165d62a065720"
     }
   ]
 }

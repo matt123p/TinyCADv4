@@ -3,7 +3,6 @@ import React, { FunctionComponent, useEffect, useId, useState } from 'react';
 import {
   Dialog,
   DialogSurface,
-  DialogTitle,
   DialogContent,
   DialogBody,
   DialogActions,
@@ -143,9 +142,8 @@ export const AboutDialog: FunctionComponent = () => {
 
   return (
     <Dialog open={true} onOpenChange={() => dispatch(actionCancelDialog())}>
-      <DialogSurface className={styles.surface}>
+      <DialogSurface className={styles.surface} aria-label="TinyCAD">
         <DialogBody>
-          <DialogTitle>{t('dialogues.about.title')}</DialogTitle>
           <DialogContent>
             <div className={styles.header}>
               <Text className={styles.title}>TinyCAD</Text>

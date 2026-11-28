@@ -1,3 +1,4 @@
+import type { BoardWorkspaceSession } from '../../io/boardWorkspace';
 import React, { useState } from 'react';
 import {
   Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle,
@@ -10,8 +11,9 @@ import type { CircuitDeviceSelection, CircuitEco } from '../../pcb/circuitEco';
 import type { CircuitSnapshot } from '../../pcb/circuitSnapshot';
 import { maxDeviceLibraryBytes, readLibraryDevice } from '../../pcb/deviceLibrary';
 
-export default function BoardCircuitSourceDialog({ board, onApply, onClose }: {
+export default function BoardCircuitSourceDialog({ board, readProjectCircuit, onApply, onClose }: {
   board: BoardDocument;
+  readProjectCircuit?: BoardWorkspaceSession['readProjectCircuit'];
   onApply(board: BoardDocument): void;
   onClose(): void;
 }) {
@@ -40,7 +42,10 @@ export default function BoardCircuitSourceDialog({ board, onApply, onClose }: {
       setReviewing(true);
       return;
     }
-    const snapshot = await readBoardCircuitSource(sourceFile, previous);
+    const linked = readProjectCircuit && await readProjectCircuit(board);
+    if (linked && linked.state !== 'resolved')
+      throw new Error(linked.state === 'unavailable' ? linked.detail : 'No schematic is linked to this PCB.');
+    const snapshot = linked?.state === 'resolved' ? linked.snapshot : await readBoardCircuitSource(sourceFile, previous);
     const next = await previewCircuitEco(board, previous, snapshot, { loadKernel: projectPcbKernel });
     setDevices(new Map());
     setProposed(snapshot);
@@ -69,9 +74,9 @@ export default function BoardCircuitSourceDialog({ board, onApply, onClose }: {
   return <Dialog open onOpenChange={(_, { open }) => { if (!open && !busy) onClose(); }}>
     <DialogSurface className={reviewing ? 'pcb-dialog' : 'pcb-dialog pcb-dialog-compact'}>
       <DialogBody>
-        <DialogTitle ref={heading} tabIndex={-1}>Import schematic or netlist</DialogTitle>
+        <DialogTitle ref={heading} tabIndex={-1}>{readProjectCircuit ? 'Update PCB from Schematic' : 'Import schematic or netlist'}</DialogTitle>
         <DialogContent>
-          <div hidden={reviewing}>
+          <div hidden={reviewing || !!readProjectCircuit}>
             <p>Choose a TinyCAD schematic (.dsn or .dzn) or TinyCAD Protel netlist (.net).</p>
             <label>Circuit source <input type="file" accept=".dsn,.dzn,.net" disabled={busy}
               onChange={(event) => {
@@ -81,7 +86,7 @@ export default function BoardCircuitSourceDialog({ board, onApply, onClose }: {
               }} /></label>
           </div>
           {reviewing && review && <section aria-label="Circuit review">
-            <p className="pcb-review-source">{sourceFile.name}</p>
+            <p className="pcb-review-source">{sourceFile?.name ?? 'Project schematic'}</p>
             <p>{proposed.components.length} {proposed.components.length === 1 ? 'component' : 'components'}, {proposed.nets.length} {proposed.nets.length === 1 ? 'net' : 'nets'}</p>
             {review.unchanged && <p>The PCB already has this connectivity.</p>}
             {review.changes.length > 0 && <ul>{review.changes.map(({ id, reference, kind }) =>
@@ -117,7 +122,7 @@ export default function BoardCircuitSourceDialog({ board, onApply, onClose }: {
                 onClose();
               });
             }}>Apply to PCB</Button> : (
-            <Button appearance="primary" disabled={!sourceFile || busy} onClick={() => { void run(load); }}>
+            <Button appearance="primary" disabled={(!sourceFile && !readProjectCircuit) || busy} onClick={() => { void run(load); }}>
               Review circuit
             </Button>
           )}

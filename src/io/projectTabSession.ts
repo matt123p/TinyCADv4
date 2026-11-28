@@ -1,15 +1,16 @@
-import type { OpenProjectDrawing } from './projectStorage';
-
-type LinkedDrawing = Pick<OpenProjectDrawing, 'id' | 'name' | 'rootId' | 'entryId' | 'folderId'>;
+type LinkedDrawing = { id: string; name: string; rootId: string; entryId: string; folderId?: string };
 
 export type ProjectTabLocation =
   | { kind: 'schematic'; location: LinkedDrawing }
+  | { kind: 'drawing'; id: string; folder: string; name: string }
   | { kind: 'board'; rootId: string; boardId: string }
   | { kind: 'file'; id: string; folder: string; path?: string; ancestors?: readonly string[] };
 
 export interface ProjectTabSession {
   tabs: ProjectTabLocation[];
   active?: number;
+  pinned?: number[];
+  preview?: number;
 }
 
 export interface ProjectTabRestore {
@@ -77,6 +78,8 @@ function validLocation(tab: ProjectTabLocation): boolean {
   if (tab?.kind === 'schematic') return typeof tab.location?.rootId === 'string' &&
     typeof tab.location.id === 'string' && typeof tab.location.entryId === 'string' &&
     typeof tab.location.name === 'string';
+  if (tab?.kind === 'drawing') return typeof tab.id === 'string' &&
+    typeof tab.folder === 'string' && typeof tab.name === 'string';
   if (tab?.kind === 'board') return typeof tab.rootId === 'string' && typeof tab.boardId === 'string';
   return tab?.kind === 'file' && typeof tab.id === 'string' && typeof tab.folder === 'string' &&
     (tab.path === undefined || typeof tab.path === 'string') &&
@@ -91,12 +94,21 @@ export function readProjectTabSession(root: string, account: string): ProjectTab
     if (!Array.isArray(data?.tabs)) return;
     const tabs: ProjectTabLocation[] = [];
     let active: number;
+    let preview: number;
+    const pinned: number[] = [];
+    const pinnedIndices = new Set(Array.isArray(data.pinned) ? data.pinned : []);
     for (const [index, tab] of data.tabs.entries()) {
       if (!validLocation(tab)) continue;
       if (index === data.active) active = tabs.length;
+      if (pinnedIndices.has(index)) pinned.push(tabs.length);
+      else if (index === data.preview) preview = tabs.length;
       tabs.push(tab);
     }
-    const session = { tabs, active };
+    const session = {
+      tabs, active,
+      ...(pinned.length ? { pinned } : {}),
+      ...(preview !== undefined ? { preview } : {}),
+    };
     try {
       saveSession(key, session);
     } catch {

@@ -14,7 +14,6 @@ const mapStateToProps = (state: docDrawing) => {
     (present.view.add?.NodeName === DocItemTypes.Symbol ? present.view.add : null);
   return {
     hasExampleExplanation: !!state.altStore.exampleExplanation,
-    simulationPanelVisible: state.altStore.simulationPanelVisible,
     simulationPanelActivated: state.altStore.simulationPanelActivated,
     standardLibraryNavigation: state.altStore.standardLibraryNavigation,
     selectedSpiceControl: !!symbol && !!readControl(symbol),
@@ -23,10 +22,6 @@ const mapStateToProps = (state: docDrawing) => {
     dialogOpen: !!state.altStore.show_dialogue,
     selected_sheet: state.docStore.present.view.selected_sheet,
     editSymbol: state.docStore.present.editSymbol,
-    editLibrary: !!present.editLibrary,
-    drawingName: state.altStore.file?.name,
-    drawingDirty: present.drawingVersion !== state.altStore.savedVersion,
-    hasOpenProject: !!state.altStore.file.project,
     browserSheets: state.docStore.present.view.browserSheets,
   };
 };

@@ -6,6 +6,7 @@ import { get_global_id } from '../../util/global_id';
 import { newSchematicEntityId } from '../../model/schematicIdentity';
 import { ImportedSymbol } from './importer';
 import { arcToDPoints } from './arcApprox';
+import { importKicadSpice, kicadModelFiles } from './kicadSpice';
 import {
   KiArc,
   KiBezier,
@@ -362,12 +363,12 @@ function collectUnits(symbol: KiSymbol, includeDeMorgan: boolean) {
   return byUnit;
 }
 
-function toImported(symbol: KiSymbol, includeDeMorgan: boolean): ImportedSymbol {
+function toImported(symbol: KiSymbol, includeDeMorgan: boolean, readModel: ReturnType<typeof kicadModelFiles>): ImportedSymbol {
   const value = property(symbol, 'Value', symbol.name);
   const reference = withRefSuffix(property(symbol, 'Reference', 'U?'));
   const description = property(symbol, 'Description', value);
 
-  const attrs = symbol.properties
+  let attrs = symbol.properties
     .filter((p) => {
       const key = p.key.toLowerCase();
       return key !== 'value' && key !== 'reference' && key !== 'description';
@@ -412,6 +413,18 @@ function toImported(symbol: KiSymbol, includeDeMorgan: boolean): ImportedSymbol 
     return items;
   });
 
+  let spiceImportError: string;
+  try {
+    const spice = importKicadSpice(symbol,
+      unitKeys.map((id) => units[id].pins.map(({ number }) => number)),
+      readModel,
+    );
+    if (spice.length)
+      attrs = [...attrs.filter((attribute) => !spice.some(({ AttName }) => AttName === attribute.AttName)), ...spice];
+  } catch (error) {
+    spiceImportError = error instanceof Error ? error.message : String(error);
+  }
+
   const name: tclibLibraryEntry = {
     NameID: 0,
     SymbolID: 0,
@@ -424,24 +437,25 @@ function toImported(symbol: KiSymbol, includeDeMorgan: boolean): ImportedSymbol 
     Attributes: attrs,
   };
 
-  return { name, symbolData, ...(symbol.issues?.length ? { issues: [...new Set(symbol.issues)] } : {}) };
+  return { name, symbolData, issues: symbol.issues, ...(spiceImportError ? { spiceImportError } : {}) };
 }
 
-export function convertKicadLibrary(lib: KiCadLibrary): ImportedSymbol[] {
+export function convertKicadLibrary(lib: KiCadLibrary, companions: ReadonlyMap<string, string> = new Map()): ImportedSymbol[] {
   const imported: ImportedSymbol[] = [];
+  const readModel = kicadModelFiles(lib.embeddedFiles, companions);
 
   for (const symbol of lib.symbols) {
     const hasDeMorgan = symbol.subsymbols.some((s) => s.style === 2);
     if (hasDeMorgan) {
-      imported.push(toImported(symbol, false));
-      const dm = toImported(symbol, true);
+      imported.push(toImported(symbol, false, readModel));
+      const dm = toImported(symbol, true, readModel);
       dm.name = {
         ...dm.name,
         Name: `${dm.name.Name} (De Morgan)`,
       };
       imported.push(dm);
     } else {
-      imported.push(toImported(symbol, false));
+      imported.push(toImported(symbol, false, readModel));
     }
   }
 

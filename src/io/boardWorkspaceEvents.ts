@@ -12,7 +12,7 @@ export function showOpenedBoard(session: BoardWorkspaceSession, fileId?: string)
 }
 
 export function canOpenCircuit() {
-  return window.dispatchEvent(new Event(confirmCircuitOpen, { cancelable: true }));
+  return window.dispatchEvent(new Event(confirmCircuitOpen, { cancelable: true })) !== false;
 }
 
 declare global {

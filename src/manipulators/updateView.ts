@@ -1,7 +1,8 @@
+import { newSchematicEntityId } from '../model/schematicIdentity';
 import { clampSchematicZoom, schematicZoomLimits, zoomStepFactor } from '../util/editorZoom';
 import type { HierarchicalLink } from '../model/dsnItem';
 import { dsnView, FindResult, WireMode } from '../model/dsnView';
-import { newSchematicEntityId } from '../model/schematicIdentity';
+import { referencedSpiceModelPacks, mergeDrawingModelPacks, type SpiceModelPack } from '../simulation/catalogBindings';
 import {
   dsnRectangle,
   DocItemTypes,
@@ -133,6 +134,7 @@ export const style_names = {
 export interface viewResult {
   view: dsnView;
   sheet: dsnSheet;
+  spiceModelPacks?: SpiceModelPack[];
 }
 
 export class updateView {
@@ -844,6 +846,11 @@ export class updateView {
   }
 
   mousemove_add(view: dsnView, sheet: dsnSheet, p: Coordinate): viewResult {
+    if (view.menu_command === 'add_hierarchical_symbol' && view.add?.NodeName === DocItemTypes.Symbol) {
+      const point = new Snap(sheet.details.grid, sheet.details.grid_snap).snap(p);
+      const add = new updateSymbol({ ...view.add, point, _active_points: null }).post_construction();
+      return { sheet, view: { ...view, add, display_add: true, cursor: 'copy' } };
+    }
     if (view.menu_command === 'add_spice_ground' && view.add?.NodeName === DocItemTypes.Power) {
       const snap = new Snap(sheet.details.grid, sheet.details.grid_snap);
       const point = snap.snap_magnetic(p, false, sheet.items)?.point ?? snap.snap(p);
@@ -2709,17 +2716,20 @@ export class updateView {
     sheet: dsnSheet,
     text: string,
     point: Coordinate,
+    packs?: SpiceModelPack[],
   ): viewResult {
     if (!point) {
       point = [100, 100];
     }
     // See if it is TinyCAD XML file data
+    let spiceModelPacks = packs;
     if (text.includes('<TinyCADSheets>') || text.includes('<TinyCAD>')) {
       // Convert from text to an XML document
       let xmlBuilder = new XMLBuilder();
       const io = new ioXML();
       xmlBuilder.fromText(text);
       const doc = io.from_dsn(xmlBuilder);
+      if (doc.spiceModelPacks?.length) spiceModelPacks = mergeDrawingModelPacks(packs, doc.spiceModelPacks);
       let dr = [0, 0];
       let copy_items = doc.sheets[0].items;
       if (point != null) {
@@ -2805,20 +2815,25 @@ export class updateView {
       sheet = this.tidy_wires(sheet);
     }
 
-    return { view: view, sheet: sheet };
+    return { view: view, sheet: sheet, spiceModelPacks };
   }
 
-  copy_tinycad_doc(view: dsnView, sheet: dsnSheet) {
-    let items = [];
+  copy_tinycad_doc(view: dsnView, sheet: dsnSheet, packs?: SpiceModelPack[]) {
+    const items: DocItem[] = [];
     for (let i = 0; i < view._selected_array.length; ++i) {
       let a = sheet.items.find((e) => {
         return e._id === view._selected_array[i];
       });
-      items.push(a);
+      if (a) items.push(a);
     }
 
     let copy_doc = new XMLBuilder();
     copy_doc.createDoc('TinyCADSheets');
+    const embedded = referencedSpiceModelPacks({ symbols: items.flatMap((item) =>
+      item.NodeName === DocItemTypes.Symbol ? [[sheet.name, item]] : [],
+    ) }, packs, true);
+    if (embedded.length)
+      copy_doc.appendChild('SPICE_MODEL_PACKS', JSON.stringify(embedded), { version: '1' });
     const io = new ioXML();
     io.to_tinycad(sheet, copy_doc, items, false, false, false);
     return copy_doc.tostring();
@@ -3045,6 +3060,7 @@ export class updateView {
         show: fallback.show_text(field.display, value),
         display: field.display,
         position: [0, 0],
+        font: existingField?.font,
       } as SymbolTextItem;
     });
 
@@ -3056,10 +3072,7 @@ export class updateView {
     });
     const laidOut = layoutHelper.layout_text_fields(
       oldSymbol.rotation,
-      text.map((field) => ({
-        ...field,
-        position: [...field.position],
-      })),
+      text,
     );
 
     if (!keepFieldValues) {
@@ -3435,7 +3448,7 @@ export class updateView {
     return sheet;
   }
 
-  handleCopy(view: dsnView, sheet: dsnSheet, cut: boolean): viewResult {
+  handleCopy(view: dsnView, sheet: dsnSheet, cut: boolean, packs?: SpiceModelPack[]): viewResult {
     const item = this.getSelectedText(view, sheet);
     let copy_data: string = null;
     const update_item = updateTextFactory(item);
@@ -3461,7 +3474,7 @@ export class updateView {
     }
 
     if (!copy_data) {
-      copy_data = this.copy_tinycad_doc(view, sheet);
+      copy_data = this.copy_tinycad_doc(view, sheet, packs);
       if (cut) {
         ({ view, sheet } = this.command_delete(view, sheet));
       }
@@ -3479,24 +3492,12 @@ export class updateView {
     return { view: view, sheet: sheet };
   }
 
-  beginHierarchyPlacement(view: dsnView, sheet: dsnSheet, definition: libSymbol, hierarchy: HierarchicalLink, reference: string): dsnView {
-    const name: tclibLibraryEntry = {
-      id: definition.uid, NameID: 0, SymbolID: definition.id,
-      Name: definition.name.value, Reference: reference, ppp: 1, Description: '',
-      ShowName: TextDisplayMethod.ShowValue, ShowRef: TextDisplayMethod.ShowValue, Attributes: [],
-    };
-    const prepared = this.beginLibrarySymbolPlacement(view, {
-      ...sheet, symbols: { ...sheet.symbols, [definition.id]: definition },
-    }, name, [definition.outlines[0].items]).view;
-    return {
-      ...prepared,
-      add: new updateSymbol({ ...(prepared.add as dsnSymbol), hierarchy, show_power: true }).post_construction(),
-    };
-  }
-
-  beginLibrarySymbolPlacement(view: dsnView, sheet: dsnSheet, name: tclibLibraryEntry, items: DocItem[][]): viewResult {
+  beginLibrarySymbolPlacement(
+    view: dsnView, sheet: dsnSheet, name: tclibLibraryEntry, items: DocItem[][],
+    defaults?: dsnSymbol['_propertyFontDefaults'],
+  ): viewResult {
     const idle = this.cancel_add(view, sheet).view;
-    const prepared = this.handleSelectLibrarySymbol(idle, sheet, name, items, null);
+    const prepared = this.handleSelectLibrarySymbol(idle, sheet, name, items, null, defaults);
     const symbol = prepared.sheet.items[prepared.sheet.items.length - 1];
     return {
       sheet: { ...prepared.sheet, items: prepared.sheet.items.slice(0, -1) },
@@ -3511,18 +3512,19 @@ export class updateView {
     name: tclibLibraryEntry,
     items: DocItem[][],
     point: Coordinate,
+    defaults?: dsnSymbol['_propertyFontDefaults'],
   ) {
     const ensured = this.ensureLibrarySymbolOnSheet(sheet, name, items);
     sheet = ensured.sheet;
     const selected_symboldef = ensured.symbol;
 
-    let pos = -selected_symboldef.outlines[0].size[0] + 2.4 * 5;
-    const posfn = (show: boolean) => {
-      const r = pos;
-      if (show) {
-        pos += 2.4 * 5;
-      }
-      return r;
+    const fontSize = 10;
+    let pos = -selected_symboldef.outlines[0].size[0] + 12;
+    const posfn = (description: string, show: boolean): Coordinate => {
+      const size = defaults?.find((font) => font.description === description)?.font_size ?? fontSize;
+      const position: Coordinate = [5, pos + size - fontSize];
+      if (show) pos += size + 2;
+      return position;
     };
 
     // Centre symbol on drop point
@@ -3556,31 +3558,20 @@ export class updateView {
           value: name.Name,
           show: update_symbol.show_text(name.ShowName, name.Name),
           display: name.ShowName,
-          position: [
-            5.0,
-            posfn(update_symbol.show_text(name.ShowName, name.Name)),
-          ],
+          position: posfn('Name', update_symbol.show_text(name.ShowName, name.Name)),
         },
         {
           description: 'Ref',
           value: name.Reference,
           show: update_symbol.show_text(name.ShowRef, name.Reference),
           display: name.ShowRef,
-          position: [
-            5.0,
-            posfn(update_symbol.show_text(name.ShowRef, name.Reference)),
-          ],
+          position: posfn('Ref', update_symbol.show_text(name.ShowRef, name.Reference)),
         },
         ...name.Attributes.filter(
           (a) => a.AttName !== 'Reference',
         ).map((a) => ({
-          position: [
-            5.0,
-            posfn(
-              !a.AttName.startsWith('$$') &&
-                update_symbol.show_text(a.ShowAtt, a.AttValue),
-            ),
-          ],
+          position: posfn(a.AttName, !a.AttName.startsWith('$$') &&
+            update_symbol.show_text(a.ShowAtt, a.AttValue)),
           value: a.AttValue,
           description: a.AttName,
           show:
@@ -3592,11 +3583,12 @@ export class updateView {
         })),
       ],
       hints: [],
+      _propertyFontDefaults: defaults,
       font_name: 'Arial',
       font_colour: '#FF0000',
       font_bold: false,
       font_italic: false,
-      font_size: 10,
+      font_size: fontSize,
       _active_points: null,
       textData: [],
     };
@@ -3669,6 +3661,7 @@ export class updateView {
     sheet: dsnSheet,
     text: string,
     point: Coordinate,
+    packs?: SpiceModelPack[],
   ): viewResult {
     const item = this.getSelectedText(view, sheet);
     const update_item = updateTextFactory(item);
@@ -3683,7 +3676,7 @@ export class updateView {
     }
 
     // Not handled by our selected item, so is it a TinyCAD document?
-    return this.paste_tinycad_doc(view, sheet, text, point);
+    return this.paste_tinycad_doc(view, sheet, text, point, packs);
   }
 
   add_object(
@@ -3802,14 +3795,15 @@ export class updateView {
     );
   }
 
-  makeBomForSheet(sheet: dsnSheet, bom: dsnBomEntry[]): dsnBomEntry[] {
+  makeBomForSheet(sheet: dsnSheet, bom: dsnBomEntry[], prefix = ''): dsnBomEntry[] {
     for (let i = 0; i < sheet.items.length; ++i) {
       let ObjPtr = sheet.items[i];
 
       switch (ObjPtr.NodeName) {
         case DocItemTypes.Symbol:
           {
-            const myRefDes = ObjPtr.text.find(
+            if (ObjPtr.hierarchicalFile !== undefined) break;
+            const myRefDes = prefix + ObjPtr.text.find(
               (a) => a.description === 'Ref',
             ).value;
             const myName = ObjPtr.text.find(

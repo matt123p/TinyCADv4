@@ -12,10 +12,60 @@ import {
 } from '@fluentui/react-components';
 import { MergedStyle } from '../../manipulators/updateInterfaces';
 import { actionStyle } from '../../state/dispatcher/AppDispatcher';
-import { StylePanelLayout, StylePanelSection } from './StylePanelLayout';
-import { FONT_OPTIONS } from './styleFontOptions';
+import { FontDropdown, FontSizeSpinButton } from './FontControls';
 
 const useStyles = makeStyles({
+  container: {
+    display: 'flex',
+    flexDirection: 'row',
+    height: '100%',
+    overflowX: 'auto',
+    overflowY: 'hidden',
+    gap: '10px',
+    padding: '8px 10px',
+    background: '#fafafa',
+    boxSizing: 'border-box',
+    alignItems: 'flex-start',
+  },
+  section: {
+    display: 'flex',
+    flexDirection: 'row',
+    background: 'white',
+    borderRadius: '4px',
+    padding: '4px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    border: '1px solid #d0d0d0',
+    flexShrink: 0,
+  },
+  titleVertical: {
+    writingMode: 'vertical-rl',
+    transform: 'rotate(180deg)',
+    background: 'linear-gradient(to bottom, #0078d4 0%, #005a9e 100%)',
+    color: 'white',
+    fontWeight: 600,
+    fontSize: '11px',
+    letterSpacing: '1px',
+    textTransform: 'uppercase',
+    padding: '8px 4px',
+    borderRadius: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '24px',
+    height: 'auto',
+    alignSelf: 'stretch',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.15)',
+    marginRight: '8px',
+    cursor: 'default',
+    userSelect: 'none',
+  },
+  content: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    padding: '4px',
+    justifyContent: 'flex-start',
+  },
   row: {
     display: 'flex',
     flexDirection: 'row',
@@ -153,9 +203,11 @@ export const StylePanel: React.FC<StylePanelProps> = (props) => {
   ];
 
   return (
-    <StylePanelLayout>
+    <div className={styles.container}>
       {selectedStyle.image && (
-        <StylePanelSection title="Image">
+        <div className={styles.section}>
+          <div className={styles.titleVertical}>Image</div>
+          <div className={styles.content}>
             <div className={styles.row}>
               <Checkbox label="Fixed aspect ratio" checked={selectedStyle.fixed_aspect ?? 'mixed'}
               onChange={(_, data) => dispatch(actionStyle({ line: false, fill: false, text: false, text_colour: false, border_style: false, image: true, fixed_aspect: data.checked === true }))} />
@@ -180,10 +232,13 @@ export const StylePanel: React.FC<StylePanelProps> = (props) => {
                 </label>;
               })}
             </div>
-        </StylePanelSection>
+          </div>
+        </div>
       )}
       {selectedStyle.line && (
-        <StylePanelSection title={t('panel.style.line')}>
+        <div className={styles.section}>
+          <div className={styles.titleVertical}>{t('panel.style.line')}</div>
+          <div className={styles.content}>
             <div className={styles.row}>
               <PanelCheckbox
                 checked={selectedStyle.stroked}
@@ -269,11 +324,14 @@ export const StylePanel: React.FC<StylePanelProps> = (props) => {
                 ))}
               </Dropdown>
             </div>
-        </StylePanelSection>
+          </div>
+        </div>
       )}
 
       {selectedStyle.fill && (
-        <StylePanelSection title={t('panel.style.fill')}>
+        <div className={styles.section}>
+          <div className={styles.titleVertical}>{t('panel.style.fill')}</div>
+          <div className={styles.content}>
             <div className={styles.row}>
               <PanelCheckbox
                 checked={selectedStyle.filled}
@@ -320,11 +378,14 @@ export const StylePanel: React.FC<StylePanelProps> = (props) => {
                 ))}
               </Dropdown>
             </div>
-        </StylePanelSection>
+          </div>
+        </div>
       )}
 
       {selectedStyle.text && (
-        <StylePanelSection title={t('panel.style.font')}>
+        <div className={styles.section}>
+          <div className={styles.titleVertical}>{t('panel.style.font')}</div>
+          <div className={styles.content}>
             <div className={styles.row}>
               <ColourPicker
                 iconName="FontColorSwatch"
@@ -336,42 +397,20 @@ export const StylePanel: React.FC<StylePanelProps> = (props) => {
             </div>
             <div className={styles.row}>
               <span className={styles.label}>{t('panel.style.font')}</span>
-              <Dropdown
+              <FontDropdown
                 style={{ minWidth: '100px' }}
                 placeholder=""
                 value={selectedStyle.font_name || ''}
-                onOptionSelect={(e, data) =>
-                  fontChange(data.optionValue as string)
-                }
+                onFontChange={fontChange}
                 disabled={!('font_name' in selectedStyle)}
-              >
-                {FONT_OPTIONS.map((o) => (
-                  <Option key={o.key} value={o.key}>
-                    {o.text}
-                  </Option>
-                ))}
-              </Dropdown>
+              />
             </div>
             <div className={styles.row}>
               <span className={styles.label}>{t('panel.style.size')}</span>
-              <SpinButton
+              <FontSizeSpinButton
                 style={{ width: '70px' }}
                 value={selectedStyle.font_size}
-                min={4}
-                max={200}
-                step={1}
-                onChange={(e, data) => {
-                  const nextValue = getClampedSpinButtonValue(
-                    data.value,
-                    data.displayValue,
-                    4,
-                    200,
-                  );
-
-                  if (nextValue !== null) {
-                    fontSizeChange(nextValue);
-                  }
-                }}
+                onSizeChange={fontSizeChange}
                 disabled={!('font_size' in selectedStyle)}
               />
               <PanelCheckbox
@@ -387,8 +426,9 @@ export const StylePanel: React.FC<StylePanelProps> = (props) => {
                 caption={t('panel.style.italic')}
               />
             </div>
-        </StylePanelSection>
+          </div>
+        </div>
       )}
-    </StylePanelLayout>
+    </div>
   );
 };

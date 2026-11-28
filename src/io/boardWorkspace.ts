@@ -16,6 +16,8 @@ import { digest } from '../util/sha256';
 export type BoardPlacementInput = Parameters<typeof placeUnplacedComponent>[2];
 export interface BoardWorkspaceSession {
   readonly path: string;
+  readonly file?: CurrentFile;
+  readonly busy: boolean;
   readonly key?: string;
   readonly savedVersion?: string;
   readonly projectId?: string;
@@ -70,6 +72,7 @@ async function reviewPlacement(board: BoardDocument, next: BoardDocument) {
 
 interface BoardWorkspaceStorage {
   path(): string;
+  file?(): CurrentFile;
   key?: string;
   version?(): string;
   projectId?: string;
@@ -101,6 +104,8 @@ export function editableBoardWorkspace(
   }
 
   return {
+    get file() { return storage.file?.(); },
+    get busy() { return writing; },
     get key() {
       return storage.key;
     },
@@ -225,6 +230,7 @@ function standaloneStorage(
     get key() {
       return file.id ? key() : undefined;
     },
+    file: () => file,
     version: () => version,
     canSaveAs: true,
     saved: !!file.id,

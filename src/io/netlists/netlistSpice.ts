@@ -1,6 +1,7 @@
 import { NetlistData } from './netlistGenerator';
 import { updateSymbol } from '../../manipulators/updateSymbol';
 import { dsnSymbol } from '../../model/dsnItem';
+import { activeSpiceModelPacks, checkCatalogDefinitions, mergeDrawingModelPacks, nativeSpicePrologue, type SpiceModelPack } from '../../simulation/catalogBindings';
 
 function findSpiceAttribute(symbol: dsnSymbol, name: string) {
     // Legacy library templates use $(NAME) for the editor's Name property.
@@ -117,6 +118,13 @@ function expandSpice(
     };
 
     const findAttr = (val: string): { found: boolean; value: string } => {
+        const hierarchy = symbol._hierarchicalReference;
+        if (hierarchy && ['ref', 'refnum'].includes(val.toLowerCase())) {
+            const start = hierarchy.local.search(/[0-9]/);
+            const local = val.toLowerCase() === 'refnum' && start !== -1
+                ? hierarchy.local.slice(start) : hierarchy.local;
+            return { found: !!local, value: [local, ...[...hierarchy.parents].reverse()].join('_') };
+        }
         // Special handling for 'ref' and 'refnum' like C++ get_attr
         if (val.toLowerCase() === 'ref') {
             const refDes = getRefDes();
@@ -253,7 +261,9 @@ function expandSpice(
     return res;
 }
 
-export function writeSpice(netlist: NetlistData) {
+export function writeSpice(netlist: NetlistData, packs?: SpiceModelPack[]) {
+    if (netlist.hierarchyModelPacks?.length)
+        packs = mergeDrawingModelPacks(packs, netlist.hierarchyModelPacks);
     let txt = '';
     const now = new Date();
     txt += `* Schematics Netlist created on ${now.toISOString()} *\n`;
@@ -264,7 +274,8 @@ export function writeSpice(netlist: NetlistData) {
     
     netlist.symbols.forEach(symRef => {
         const symbol = symRef[1];
-        const prolog = symbol.text.find(t => t.description === '$$SPICE_PROLOG')?.value;
+        const prolog = symbol.text.find(t => t.description === '$$SPICE_PROLOG')?.value
+            ?? nativeSpicePrologue(symbol, packs);
         if (prolog) {
             // Get priority (default 5)
             let priority = 5;
@@ -335,4 +346,18 @@ export function writeSpice(netlist: NetlistData) {
     }
     
     return txt;
+}
+
+/** Export a standalone SPICE circuit with only the catalog packs it uses. */
+export function writeSpiceWithModels(netlist: NetlistData, packs?: SpiceModelPack[]) {
+    const netlistText = writeSpice(netlist, packs);
+    const embedded = activeSpiceModelPacks(netlist, packs);
+    if (!embedded.length) return netlistText;
+    checkCatalogDefinitions(embedded, [netlistText]);
+    const definitions = embedded.map((pack) => {
+        const notice = pack.licenseText.trimEnd().split(/\r?\n/).map((line) => `* ${line}`).join('\n');
+        return `* ${pack.id} ${pack.revision}\n${notice}\n${pack.spice}\n`;
+    }).join('\n');
+    const titleEnd = netlistText.indexOf('\n') + 1;
+    return netlistText.slice(0, titleEnd) + definitions + netlistText.slice(titleEnd);
 }

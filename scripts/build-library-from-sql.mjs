@@ -8,6 +8,60 @@ import {
   serializeLibrary,
 } from './lib/library-from-sql.mjs';
 
+async function recipeResources(selection, directory) {
+  if (!Array.isArray(selection?.components)) return {};
+  const artwork = new Map(
+    await Promise.all(
+      selection.components
+        .filter((component) => component.artwork)
+        .map(async ({ artwork }) => [
+          artwork,
+          await fs.readFile(path.resolve(directory, artwork), 'utf8'),
+        ]),
+    ),
+  );
+  if (selection.linkedSpiceCatalog) {
+    const catalog = JSON.parse(await fs.readFile(
+      path.resolve(directory, selection.linkedSpiceCatalog), 'utf8',
+    ));
+    return { artwork, linkedSpice: catalog.defaults };
+  }
+  const modelLibrary = selection.modelLibrary;
+  if (!modelLibrary) return { artwork };
+
+  const [library, license] = await Promise.all([
+    fs.readFile(path.resolve(directory, modelLibrary.file), 'utf8'),
+    fs.readFile(path.resolve(directory, modelLibrary.license), 'utf8'),
+  ]);
+  const spice = library.replace(/\r\n/g, '\n');
+  if (createHash('sha256').update(spice).digest('hex') !== modelLibrary.sha256)
+    throw new Error('Bundled SPICE model library checksum mismatch.');
+  const definitions = modelLibrary.subcircuits.map((name) => {
+    if (!/^\w+$/.test(name))
+      throw new Error(`Invalid subcircuit name: ${name}`);
+    const definition = new RegExp(
+      `^\\.subckt ${name}\\b[\\s\\S]*?^\\.ends ${name}$`,
+      'm',
+    ).exec(spice)?.[0];
+    if (!definition) throw new Error(`Missing bundled subcircuit ${name}`);
+    return definition;
+  });
+  // Keep the built-in definitions distinct from the unmodified catalog pack.
+  const modelNames = new RegExp(
+    `\\b(${modelLibrary.subcircuits.join('|')})\\b`,
+    'g',
+  );
+  const prolog = [
+    `* OpenJellyBean models from ${modelLibrary.revision}`,
+    ...license
+      .trimEnd()
+      .split(/\r?\n/)
+      .map((line) => `* ${line}`.trimEnd()),
+    ...definitions.map((definition) => definition.replace(modelNames, 'TC_$1')),
+  ].join('\n');
+  return { artwork, prolog };
+}
+
 export async function buildLibraryFromSql({ sql, recipe, output }) {
   const source = await fs.readFile(sql, 'utf8');
   const selection = JSON.parse(await fs.readFile(recipe, 'utf8'));
@@ -22,6 +76,7 @@ export async function buildLibraryFromSql({ sql, recipe, output }) {
     readComponentDump(source),
     selection,
     createHash('sha256').update(source).digest('hex'),
+    await recipeResources(selection, path.dirname(path.resolve(recipe))),
   );
   const bytes = await serializeLibrary(model.library, model.provenance);
   await fs.mkdir(path.dirname(destination), { recursive: true });

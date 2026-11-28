@@ -1,5 +1,7 @@
-﻿import { invalidateSimulationDocument } from './simulation/lifecycle';
-import { activateResultDocument, moveResultScope, retainProjectResultScopes } from './simulation/resultStore';
+﻿import { invalidateSimulationDocument } from './simulation/session';
+import { activateResultDocument } from './simulation/resultStore';
+import { withSchematicTabs } from './state/schematicTabs';
+import type { docDrawing } from './state/undo/undo';
 import { DocActionTypes } from './state/actions/docActions';
 import { Middleware } from 'redux';
 import React from 'react';
@@ -11,7 +13,6 @@ import ReduxThunk from 'redux-thunk';
 import { DocStoreWithHistory } from './state/undo/undo';
 import MainAppElectronContainer from './state/containers/mainAppElectronContainer';
 import MainAppBrowserContainer from './state/containers/mainAppBrowserContainer';
-import { schematicTabKey, withSchematicTabs } from './state/schematicTabs';
 import { AltStoreReducer } from './state/stores/altStoreReducer';
 import {
   actionCopyEvent,
@@ -21,36 +22,27 @@ import {
 } from './state/dispatcher/AppDispatcher';
 import { imageFile } from './io/files';
 import i18n from './i18n';
+import { loadDrawingFonts } from './util/measureText';
 
-const simulationLifecycle: Middleware = ({ getState }) => next => action => {
-  const changesDocument = action.type === DocActionTypes.SetDocument ||
-    action.type === DocActionTypes.SetFileData ||
-    action.type === 'schematic-tabs/activate' ||
-    action.type === 'schematic-tabs/remove' ||
-    action.type === 'schematic-tabs/enable';
-  if (!changesDocument) return next(action);
-  const previous = getState();
-  const previousScope = schematicTabKey(previous.altStore.file.project);
+const simulationLifecycle: Middleware<{}, docDrawing> = ({ getState }) => next => action => {
+  const previous = getState().docStore.present.drawing.documentId;
   if (action.type === DocActionTypes.SetDocument) {
     invalidateSimulationDocument();
-    activateResultDocument(action.doc.documentId, schematicTabKey(action.project) ?? null);
+    activateResultDocument(action.doc.documentId);
   }
   const result = next(action);
-  const current = getState();
-  const scope = schematicTabKey(current.altStore.file.project);
-  if (action.type === 'schematic-tabs/activate' && previousScope !== scope) {
+  const current = getState().docStore.present.drawing.documentId;
+  if (action.type === 'schematic-tabs/activate' && current !== previous) {
     invalidateSimulationDocument();
-    activateResultDocument(current.docStore.present.drawing.documentId, scope ?? null);
+    activateResultDocument(current);
   }
-  if (action.type === DocActionTypes.SetFileData) moveResultScope(previousScope, scope);
-  const open = new Set<string>(Object.keys(current.schematicTabs?.inactive ?? {}));
-  if (scope) open.add(scope);
-  retainProjectResultScopes(open);
   return result;
 };
 
+const editorReducer = combineReducers({ docStore: DocStoreWithHistory, altStore: AltStoreReducer });
+
 export const store = createStore(
-  withSchematicTabs(combineReducers({ docStore: DocStoreWithHistory, altStore: AltStoreReducer })),
+  process.env.TARGET_SYSTEM === 'electron' ? withSchematicTabs(editorReducer) : editorReducer,
   // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
   applyMiddleware(ReduxThunk, simulationLifecycle),
 );
@@ -122,7 +114,7 @@ const initializeNativeMenuTranslations = () => {
     }
 
     const t = i18n.getFixedT(language, 'common');
-    window.electronAPI.setMenuTranslations(buildNativeMenuTranslations(t));
+    window.electronAPI.setMenuTranslations(buildNativeMenuTranslations(t), language);
   };
 
   const queueNativeMenuSync = () => {
@@ -246,25 +238,22 @@ document.addEventListener('copy', function (e) {
   return false;
 });
 
-const container = document.getElementById('app');
-const root = createRoot(container!);
-root.render(
-  <FluentProvider theme={webLightTheme}>
-    <Provider store={store}>
-      {process.env.TARGET_SYSTEM === 'electron' ? (
-        <MainAppElectronContainer />
-      ) : (
-        <MainAppBrowserContainer />
-      )}
-    </Provider>
-  </FluentProvider>,
-);
-
-scheduleAfterFirstPaint(async () => {
-  const { initializeNetlistSync } = await import('./io/netlists/netlistSync');
-  initializeNetlistSync(store as any);
-});
-
-scheduleAfterFirstPaint(() => {
-  initializeNativeMenuTranslations();
+void loadDrawingFonts().then(() => {
+  const container = document.getElementById('app');
+  const root = createRoot(container!);
+  root.render(
+    <FluentProvider theme={webLightTheme}>
+      <Provider store={store}>
+        {process.env.TARGET_SYSTEM === 'electron' ? (
+          <MainAppElectronContainer />
+        ) : (
+          <MainAppBrowserContainer />
+        )}
+      </Provider>
+    </FluentProvider>,
+  );
+  scheduleAfterFirstPaint(async () => {
+    const { initializeNetlistSync } = await import('./io/netlists/netlistSync');
+    initializeNetlistSync(store as any);
+  });
 });

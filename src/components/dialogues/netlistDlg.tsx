@@ -1,5 +1,6 @@
-import React from 'react';
-import { WithTranslation, withTranslation } from 'react-i18next';
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
 import {
   Dialog,
   DialogSurface,
@@ -10,141 +11,90 @@ import {
   Button,
   Dropdown,
   Option,
+  Spinner,
 } from '@fluentui/react-components';
-import {
-  actionCancelDialog,
-  actionUpdateNetlistHints,
-} from '../../state/dispatcher/AppDispatcher';
-import { connect } from 'react-redux';
-import { Dispatch } from 'redux';
-import { docDrawing } from '../../state/undo/undo';
-import { generateActiveNetlist } from '../../io/netlists/activeNetlist';
-import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
-import { downloadNetlist } from '../../io/netlists/netlistFiles';
+import { actionCancelDialog } from '../../state/dispatcher/AppDispatcher';
+import { saveNetlist } from '../../io/files';
+import { useDesignExportDestination } from '../controls/useDesignExportDestination';
 
-interface NetlistDialogProps extends WithTranslation {
-  dispatch: Dispatch<any>;
-}
-
-interface NetlistDialogState {
-  file_type: string;
-  busy: boolean;
-}
-
-const file_types = [
+const formats = [
   'PADS-PCB',
   'PADS-PCB-WITH-VALUE',
   'Eagle SCR',
   'Protel',
   'gEDA PCB',
-];
+] as const;
+type Format = (typeof formats)[number];
 
-//
-// This class represents the netlist dialogue
-//
-class NetlistDialog extends React.PureComponent<
-  NetlistDialogProps,
-  NetlistDialogState
-> {
-  private cancel = false;
+export default function NetlistDialog() {
+  const { t } = useTranslation();
+  const dispatch = useDispatch<any>();
+  const [format, setFormat] = useState<Format>();
+  const [busy, setBusy] = useState(false);
+  const destination = useDesignExportDestination(format);
+  const close = () => dispatch(actionCancelDialog());
 
-  constructor(props: NetlistDialogProps) {
-    super(props);
-
-    this.handleClickOk = this.handleClickOk.bind(this);
-    this.handleClickCancel = this.handleClickCancel.bind(this);
-
-    this.state = {
-      file_type: null,
-      busy: false,
-    };
-  }
-
-  handleClickOk() {
-    if (!this.state.busy) {
-      this.setState({ busy: true });
-      this.props.dispatch(
-        (dispatch: Dispatch, getState: { (): docDrawing }) => {
-          const initial = getState();
-          generateActiveNetlist(initial).then(
-            (netlist) => {
-              if (!this.cancel && getState().docStore.present.drawing === initial.docStore.present.drawing && getState().altStore.file === initial.altStore.file) {
-                // Write the netlist hints back to the drawing
-                if (!netlist.sources) this.props.dispatch(actionUpdateNetlistHints(netlist));
-
-                // We can close the dialogue
-                this.props.dispatch(actionCancelDialog());
-
-                // Now save the netlist
-                downloadNetlist(
-                  getState().altStore.file.name,
-                  this.state.file_type,
-                  netlist,
-                );
-              }
-            },
-            (error) => {
-              if (!this.cancel) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
-            },
-          ).finally(() => { if (!this.cancel) this.setState({ busy: false }); });
-        },
-      );
+  async function save(chooseLocation: boolean) {
+    if (busy || !format) return;
+    setBusy(true);
+    try {
+      if (await dispatch(saveNetlist(format, chooseLocation))) close();
+    } finally {
+      setBusy(false);
     }
   }
 
-  handleClickCancel() {
-    this.cancel = true;
-    this.props.dispatch(actionCancelDialog());
-  }
-
-  handleNetlistChange(value: string) {
-    this.setState({
-      file_type: value,
-    });
-  }
-
-  render() {
-    const { t } = this.props;
-    return (
-      <Dialog open={true} onOpenChange={this.handleClickCancel}>
-        <DialogSurface>
-          <DialogBody>
-            <DialogTitle>{t('dialogues.netlist.title')}</DialogTitle>
-            <DialogContent>
-              <div style={{ display: 'flex', flexDirection: 'column', rowGap: '10px' }}>
-                <Dropdown
-                  placeholder={t('dialogues.netlist.selectOutputFormat')}
-                  value={this.state.file_type || ''}
-                  onOptionSelect={(e, data) =>
-                    this.handleNetlistChange(data.optionValue as string)
-                  }
-                >
-                  {file_types.map((t) => (
-                    <Option key={t} value={t}>
-                      {t}
-                    </Option>
-                  ))}
-                </Dropdown>
-              </div>
-            </DialogContent>
-            <DialogActions>
-              {this.state.busy ? <div className="lds-hourglass"></div> : null}
+  return (
+    <Dialog open onOpenChange={(_, data) => !data.open && !busy && close()}>
+      <DialogSurface>
+        <DialogBody>
+          <DialogTitle>{t('dialogues.netlist.title')}</DialogTitle>
+          <DialogContent>
+            <Dropdown
+              disabled={busy}
+              placeholder={t('dialogues.netlist.selectOutputFormat')}
+              value={format ?? ''}
+              selectedOptions={format ? [format] : []}
+              onOptionSelect={(_, data) =>
+                setFormat(data.optionValue as Format)
+              }
+            >
+              {formats.map((value) => (
+                <Option key={value}>{value}</Option>
+              ))}
+            </Dropdown>
+          </DialogContent>
+          <DialogActions>
+            {busy && <Spinner size="tiny" />}
+            {destination && (
               <Button
                 appearance="primary"
-                onClick={this.handleClickOk}
-                disabled={this.state.busy || !this.state.file_type}
+                title={destination}
+                disabled={busy}
+                onClick={() => {
+                  void save(false);
+                }}
               >
-                {t('common.ok')}
+                {t('toolbar.save')}
               </Button>
-              <Button appearance="secondary" onClick={this.handleClickCancel}>
-                {t('common.cancel')}
-              </Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
-    );
-  }
+            )}
+            <Button
+              appearance={destination ? 'secondary' : 'primary'}
+              disabled={busy || !format}
+              onClick={() => {
+                void save(true);
+              }}
+            >
+              {process.env.TARGET_SYSTEM === 'filesystem'
+                ? 'Download'
+                : t('toolbar.saveAs')}
+            </Button>
+            <Button disabled={busy} onClick={close}>
+              {t('common.cancel')}
+            </Button>
+          </DialogActions>
+        </DialogBody>
+      </DialogSurface>
+    </Dialog>
+  );
 }
-
-export default connect()(withTranslation()(NetlistDialog));

@@ -66,6 +66,8 @@ jobs:
           github-token: ${{ github.token }}
       - run: node scripts/stage-engine-artifacts.mjs
 
+      - name: Refresh APT indexes for Snapcraft
+        run: sudo apt-get -o APT::Update::Error-Mode=any update
 
       - name: Build Electron App
         run: npm run dist -- --publish never

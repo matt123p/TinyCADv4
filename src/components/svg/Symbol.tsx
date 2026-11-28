@@ -50,7 +50,8 @@ const TSymbol: FunctionComponent<TSymbolProps> = (props: TSymbolProps) => {
         dr={0}
         scale_x={1.0}
         scale_y={1.0}
-        draw-item={item}
+        draw-item={t.textArea.drawItem}
+        baselineFont={item}
         draw-data={t}
         draw-colour={item.font_colour}
         move-handle={t.textArea.moveHandle}

@@ -13,7 +13,7 @@ test('bundled office network embeds stackable panels and connects only the inten
     initialiseLayoutRuntime();
     module.exports = (async () => {
       const catalog = JSON.parse(fs.readFileSync('bundled-examples/config.json', 'utf8'));
-      const example = catalog.groups.find(g => g.id === 'examples').examples.find(e => e.id === 'network-layout');
+      const example = catalog.groups.find(g => g.id === 'schematics').examples.find(e => e.id === 'network-layout');
       assert.ok(example, 'Network drawing is registered in Open Example');
       assert.ok(fs.statSync('bundled-examples/' + example.preview).size > 0);
       const drawing = await decodeDrawing(fs.readFileSync('bundled-examples/' + example.path));
@@ -25,6 +25,12 @@ test('bundled office network embeds stackable panels and connects only the inten
       assert.deepEqual(Object.keys(devices).sort(), ['AP1', 'DS1', 'ONT1', 'PP1', 'RK1', 'RTR1', 'SW1']);
       for (const s of symbols) {
         assert.ok(s._symbol.outlines[0].items.length > 0, 'Symbol artwork is embedded');
+        const name = s.text.find(t => t.description === 'Name');
+        const ref = s.text.find(t => t.description === 'Ref');
+        assert.ok(name?.show && name.value.trim() && ref.show);
+        assert.equal(name.display, 0);
+        assert.equal(name.position[1], ref.position[1]);
+        assert.ok(name.position[0] > ref.position[0]);
         assert.equal(s.scale_x, 1);
         assert.equal(s.scale_y, 1);
         for (const [x,y] of new updateSymbol(s).active_points())
@@ -35,6 +41,12 @@ test('bundled office network embeds stackable panels and connects only the inten
         assert.deepEqual(new updateSymbol(s).outline().size, [1320, 120]);
         assert.equal(s.point[0], rack[0].point[0]);
         assert.equal(s.point[1], rack[0].point[1] + i * 120, 'Rack faces stack without gaps');
+        const ref = s.text.find(t => t.description === 'Ref');
+        if (reference(s) === 'RK1') {
+          assert.ok(ref.position[1] >= 0 && ref.position[1] <= 20, 'Blank-panel labels sit just below the rack and clear of the cable');
+        } else {
+          assert.ok(ref.position[0] > 0 && ref.position[0] <= 25, 'Rack labels sit directly beside the panel');
+        }
       }
       const connections = doc => {
         const netlist = new NetlistGenerator();

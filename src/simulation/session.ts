@@ -1,5 +1,4 @@
 import { registerSimulationLifecycle } from './lifecycle';
-import { hasChildPlacements } from '../io/hierarchyDrawing';
 import { checkSpiceComponents, locateSpiceErrors } from './diagnostics';
 import { NetlistData } from '../io/netlists/netlistGenerator';
 import { dsnDrawing, DrcError } from '../model/dsnDrawing';
@@ -12,7 +11,7 @@ import {
   newIdentity,
 } from './contracts';
 import type { EngineJob } from './engine';
-import { buildDeck } from './deck';
+import { prepareSpiceDeck } from './deck';
 import { digest } from '../io/dsnContainer';
 import {
   putResult,
@@ -135,32 +134,32 @@ export async function runSimulation(
   };
   publish();
   try {
-    if (hasChildPlacements(drawing))
-      throw new Error('Hierarchical drawings need instance-aware connectivity before simulation.');
     const circuit = {
       ...drawing,
       sheets: drawing.sheets.filter((sheet) => sheet.kind !== 'simulation'),
     };
     netlist = new NetlistWorkerState().init(circuit);
-    const errors = checkSpiceComponents(netlist, setup);
+    const errors = checkSpiceComponents(netlist, setup, drawing.spiceModelPacks);
     if (errors.length) {
       report(errors);
       throw new Error('Correct the SPICE errors listed below before running.');
     }
-    deck = buildDeck(netlist, setup);
-    if (process.env.TARGET_SYSTEM !== 'electron' && /^\s*A\S*\s/im.test(deck))
+    const prepared = prepareSpiceDeck(netlist, setup, drawing.spiceModelPacks);
+    deck = prepared.deck;
+    if (process.env.TARGET_SYSTEM !== 'electron' &&
+      [deck, ...Object.values(prepared.files)].some((text) => /^\s*A\S*\s/im.test(text)))
       throw new Error(
         'This circuit uses XSPICE code models. Run it in the Electron desktop app; the browser engine supports analogue models only.',
       );
     const circuitHash = await digest(
-      new TextEncoder().encode(deck + JSON.stringify(setup.models)),
+      new TextEncoder().encode(prepared.identity),
     );
     const setupHash = await digest(
       new TextEncoder().encode(
         JSON.stringify({
           analysis: setup.analysis,
           parameters: setup.parameters,
-          models: setup.models,
+          models: prepared.files,
         }),
       ),
     );
@@ -314,7 +313,7 @@ export async function runSimulation(
       return;
     }
     job = startEngine(
-      { runId: run.id, deck, files: setup.models, maxBytes: MAX_RUN_BYTES },
+      { runId: run.id, deck, files: prepared.files, maxBytes: MAX_RUN_BYTES },
       (event) => {
         if (finished) return;
         try {

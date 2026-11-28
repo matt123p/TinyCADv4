@@ -2,16 +2,26 @@ import { DocItem } from '../../model/dsnItem';
 import { tclibLibraryEntry } from '../../model/tclib';
 
 export interface ImportedSymbol {
+  issues?: string[];
   name: tclibLibraryEntry;
   symbolData: DocItem[][];
-  issues?: string[];
+  spiceImportError?: string;
+}
+
+export interface ImportModelFile {
+  fileName: string;
+  content: string;
+}
+
+export interface SymbolImportFile extends ImportModelFile {
+  modelFiles?: ImportModelFile[];
 }
 
 export interface SymbolImporter {
   id: string;
   title: string;
   supports(fileName: string): boolean;
-  importSymbols(sourceText: string, sourceName: string): Promise<ImportedSymbol[]>;
+  importSymbols(sourceText: string, sourceName: string, modelFiles?: ImportModelFile[]): Promise<ImportedSymbol[]>;
 }
 
 import { kicadImporter } from './kicadImporter';

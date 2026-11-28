@@ -9,7 +9,11 @@ import { loadComponent } from './load-component.mjs';
 
 const zip = new Uint8Array([80, 75, 3, 4, 1, 2, 3]);
 const xml = new TextEncoder().encode('<TinyCADSheets/>');
-const shared = { '../../../shared/drawingFiles.js': formats };
+const shared = {
+  '../../../shared/drawingFiles.js': formats,
+  '../boardWorkspaceEvents': { canOpenCircuit: () => true, circuitOpened: 'tinycad:circuit-opened' },
+  './recentDrawings': { updateRecentDrawings: async () => [] },
+};
 
 test('filesystem Save suggests .dzn on compression and preserves the original .dsn', async () => {
   const { FileSystemUserManager } = loadComponent(
@@ -70,6 +74,7 @@ test('filesystem Open accepts schematic and PCB extensions and sends bytes to he
       },
       '../../state/dispatcher/AppDispatcher': {
         actionSetDocument: () => ({ type: 'loaded' }),
+        actionSelectDialog: (dialog, props) => ({ type: 'dialog', dialog, props }),
       },
       'redux-undo': {
         ActionCreators: { clearHistory: () => ({ type: 'clear' }) },
@@ -164,6 +169,45 @@ test('Drive uploads update the extension and MIME with content while preserving 
   }
 });
 
+test('Drive export Save As selects a writable folder and Save updates the same file', async () => {
+  const { GoogleUserManager } = loadComponent('src/io/google/googleUserManager.ts', shared);
+  const manager = new GoogleUserManager();
+  manager.getToken = () => 'test-token';
+  const original = globalThis.fetch;
+  const uploads = [];
+  globalThis.fetch = async (value, options) => {
+    const url = new URL(value);
+    if (url.pathname === '/drive/v3/files/drawing')
+      return Response.json({ parents: ['folder'] });
+    if (url.pathname === '/drive/v3/files')
+      return Response.json(url.searchParams.has('pageToken') ? {
+        files: [{ id: 'second', name: 'Second', capabilities: { canAddChildren: true } }],
+      } : {
+        nextPageToken: 'next',
+        files: [
+          { id: 'folder', name: 'Exports', capabilities: { canAddChildren: true } },
+          { id: 'readonly', name: 'Read only', capabilities: { canAddChildren: false } },
+        ],
+      });
+    if (options.method === 'PUT') return Response.json({ id: 'export-id', name: 'Materials.csv' });
+    uploads.push({ path: url.pathname, method: options.method, metadata: JSON.parse(options.body) });
+    return new Response(null, { headers: { Location: 'https://www.googleapis.com/upload/test' } });
+  };
+  try {
+    const { folders, preferred } = await manager.exportFolders('drawing');
+    assert.equal(preferred, 'folder');
+    assert.deepEqual(folders.map(({ id }) => id), ['folder', 'second']);
+    const saved = await manager.saveExport('header', { name: 'Materials.csv', folderId: preferred }, 'text/csv');
+    await manager.saveExport('updated', saved, 'text/csv');
+    assert.deepEqual(uploads.map(({ method }) => method), ['POST', 'PATCH']);
+    assert.deepEqual(uploads[0].metadata.parents, ['folder']);
+    assert.equal(uploads[1].path, '/upload/drive/v3/files/export-id');
+    assert.equal(uploads[1].metadata.parents, undefined);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
 test('Electron packaging and Drive UI registration include .dzn', async () => {
   const pkg = JSON.parse(await fs.readFile('package.json', 'utf8'));
   for (const associations of [
@@ -235,7 +279,7 @@ test('Electron Open lists both extensions and Save suggests the format-matching 
       },
     };
     io.loadFile(window, null, false, () => {});
-    assert.deepEqual(openOptions.filters[0].extensions, ['dsn', 'dzn']);
+    assert.deepEqual(openOptions.filters[0].extensions, ['dsn', 'dzn', 'dpn']);
     const original = path.join(directory, 'lesson.dsn');
     await fs.writeFile(original, xml);
     const saved = new Promise((resolve) => {

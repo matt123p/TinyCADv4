@@ -35,6 +35,19 @@ export function measureText(font, string) {
 // re-use canvas object for better performance
 let context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D = null;
 
+export function loadDrawingFonts() {
+  const families = ['Arial', 'Courier New', 'Times'];
+  const styles = ['normal', 'bold', 'italic', 'italic bold'];
+
+  // Canvas can measure with a fallback while a font loads. Wait for the
+  // bundled faces before storing line breaks derived from their widths.
+  return Promise.allSettled(
+    families.flatMap((family) =>
+      styles.map((style) => document.fonts.load(`${style} 10px "${family}"`)),
+    ),
+  );
+}
+
 function textContext() {
   if (!context) {
     const canvas = typeof document === 'undefined'
@@ -47,6 +60,12 @@ function textContext() {
 
 export function getFont(item: Text) {
   return item.font_size + 'px ' + item.font_name;
+}
+
+export function getStyledFont(item: Text) {
+  const style = item.font_italic ? 'italic ' : '';
+  const weight = item.font_bold ? 'bold ' : '';
+  return style + weight + getFont(item);
 }
 
 export function measureText(font: string, string: string) {

@@ -5,7 +5,15 @@
   "author": "onetransistor",
   "output": "bundled-libraries/spice/spice.tclib",
   "requireSpice": true,
-  "notes": "Curated onetransistor drawings with existing aryajur SPICE templates. Generic device models and the 741-style behavioral model are original teaching approximations, not manufacturer-validated models. See docs/libraries.md#spice-essentials for defaults, terminal mapping, and limitations.",
+  "notes": "Curated onetransistor drawings with existing aryajur SPICE templates, plus original LM358 and LM324 package artwork. The LM358 and LM324 use OpenJellyBean models. See docs/libraries.md#spice-essentials for defaults, terminal mapping, and limitations.",
+  "linkedSpiceCatalog": "../bundled-libraries/spice/basic.json",
+  "modelLibrary": {
+    "file": "../library-sources/openjellybean/jellybean.lib.txt",
+    "license": "../library-sources/openjellybean/LICENSE",
+    "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+    "sha256": "bc0304fe2fae01979bcbd6eb74466a3b25e8a632088ffa7ce19b385ada799163",
+    "subcircuits": ["OPAMP_OJ", "LM358_OJ", "LM358_DUAL_OJ", "LM324_QUAD_OJ"]
+  },
   "references": [
     {
       "title": "ngspice manual",
@@ -14,6 +22,14 @@
     {
       "title": "TI UA741 data sheet",
       "url": "https://www.ti.com/lit/ds/symlink/ua741.pdf"
+    },
+    {
+      "title": "TI LM358 data sheet",
+      "url": "https://www.ti.com/lit/ds/symlink/lm358.pdf"
+    },
+    {
+      "title": "TI LM324 pinout",
+      "url": "https://www.ti.com/lit/ds/symlink/lm324-mil.pdf"
     }
   ],
   "components": [
@@ -1846,8 +1862,34 @@
       },
       "baseSymbol": "trimmer-resistor",
       "resistorStyle": "us"
+    },
+    {
+      "id": "lm358",
+      "artwork": "../library-sources/spice/lm358.xml",
+      "name": "LM358",
+      "reference": "U?",
+      "description": "Dual operational amplifier with all 8 package pins and a built-in OpenJellyBean SPICE model.",
+      "attributes": {
+        "$$SPICE": {
+          "value": "X$(ref) %(1) %(2) %(3) %(4) %(5) %(6) %(7) %(8) TC_LM358_DUAL_OJ",
+          "show": 2
+        }
+      }
+    },
+    {
+      "id": "lm324",
+      "artwork": "../library-sources/spice/lm324.xml",
+      "name": "LM324",
+      "reference": "U?",
+      "description": "Quad operational amplifier with all 14 package pins and a built-in OpenJellyBean SPICE model.",
+      "attributes": {
+        "$$SPICE": {
+          "value": "X$(ref) %(1) %(2) %(3) %(4) %(5) %(6) %(7) %(8) %(9) %(10) %(11) %(12) %(13) %(14) TC_LM324_QUAD_OJ",
+          "show": 2
+        }
+      }
     }
   ],
-  "showName": 1,
+  "showName": 0,
   "pinGrid": 1
 }

@@ -1,6 +1,5 @@
 import type { SchematicInstanceReference } from './schematicReferences';
-import type { SchematicSource } from '../io/netlists/netlistGenerator';
-import { DocItem, Coordinate, dsnPin } from './dsnItem';
+import { DocItem, Coordinate, dsnPin, SymbolPropertyFontDefault } from './dsnItem';
 import { Snap } from '../manipulators/snap';
 import type { SimulationSetup } from '../simulation/contracts';
 
@@ -157,14 +156,21 @@ export interface dsnSheet {
   hierarchicalSymbol: boolean;
 }
 
+export interface DrcSource {
+  fileId?: string;
+  sheet: string;
+  instance: number;
+  instancePath: string[];
+}
+
 export interface DrcError {
-  source?: SchematicSource;
   symbol?: string;
   pin?: string;
   text: string;
   a: Coordinate;
   id: number;
   sheet: string;
+  source?: DrcSource;
 }
 
 export interface DrcOptions {
@@ -207,9 +213,11 @@ export interface NetlistTypes {
 
 export interface DsnSettings {
   showRulers: boolean;
+  symbolPropertyFonts?: SymbolPropertyFontDefault[];
 }
 
 export interface dsnDrawing {
+  spiceModelPacks?: import('../simulation/catalogBindings').SpiceModelPack[];
   documentId?: string;
   instanceReferences?: readonly SchematicInstanceReference[];
   representation?: 'zip-v1' | 'xml';
@@ -235,7 +243,7 @@ export interface dsnDrawing {
   };*/;
 
   // The DRC output
-  drcTable: any[];
+  drcTable: DrcError[];
 
   // The annotate dialogue
   annotate: AnnotateOptions;

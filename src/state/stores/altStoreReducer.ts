@@ -7,7 +7,6 @@ import {
 import update from 'immutability-helper';
 import { hasSimulation } from '../../io/drawingSaveFormat';
 import type { ExampleContent } from '../../../shared/bundledExamples';
-import type { OpenProjectDrawing } from '../../io/projectStorage';
 
 import { DocActionTypes } from '../actions/docActions';
 import { MenuActionTypes } from '../actions/menuActions';
@@ -49,10 +48,10 @@ export interface LibraryFolder {
 }
 
 export interface CurrentFile {
+  projectVersion?: string;
   id: FileIdType | string;
   name: string;
   folderId?: string;
-  project?: OpenProjectDrawing;
 }
 
 export interface UserConfig {
@@ -91,6 +90,7 @@ export interface altStore {
 
   // The panel currently being shown
   panel: Panels;
+  projectDrcTabKey?: string;
 
   // The bottom panel currently being shown
   bottomPanel: BottomPanels;
@@ -284,9 +284,9 @@ export function AltStoreReducer(
           name: { $set: action.filename },
           id: { $set: action.id },
           folderId: { $set: action.folderId },
-          project: { $set: action.project },
+          projectVersion: { $set: action.projectVersion },
         },
-        savedVersion: { $set: action.recovered ? 0 : 1 },
+        savedVersion: { $set: 1 },
       });
     }
 
@@ -300,7 +300,7 @@ export function AltStoreReducer(
           name: { $set: action.filename },
           id: { $set: action.id },
           folderId: { $set: action.folderId },
-          project: { $set: action.project },
+          projectVersion: { $set: action.projectVersion },
         },
         savedVersion: { $set: action.drawingVersion },
       });
@@ -340,7 +340,7 @@ export function AltStoreReducer(
         case 3: // Center without selecting
           // Make the sheet come in to focus and center the item
           for (const s of state.activeSheets) {
-            s.onshowItem(action.selection.id);
+            s.onshowItem(action.selection.id, action.selection.source ? action.selection.a : undefined, action.selection.sheet);
           }
           break;
       }
@@ -402,7 +402,6 @@ export function AltStoreReducer(
           name: { $set: action.filename },
           id: { $set: action.id },
           folderId: { $set: action.folderId },
-          project: { $set: undefined },
         },
         savedVersion: { $set: 0 },
         panel: { $set: Panels.LibrariesPanel },
@@ -451,13 +450,14 @@ export function AltStoreReducer(
       break;
 
     case 'simulation/diagnostics':
-      return action.errors.length ? { ...state, panel: Panels.DrcPanel } : state;
+      return action.errors.length ? { ...state, panel: Panels.DrcPanel, projectDrcTabKey: undefined } : state;
 
     case DialogActionTypes.SetDRC:
       state = update(state, {
         show_dialogue: { $set: null },
         dialogue_props: { $set: null },
         panel: { $set: Panels.DrcPanel },
+        projectDrcTabKey: { $set: action.projectTabKey },
       });
       break;
 

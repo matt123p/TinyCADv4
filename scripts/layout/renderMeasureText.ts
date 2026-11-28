@@ -2,6 +2,8 @@ import {
   measureText as width,
   measureTextOffset as offset,
 } from '../../renderer/serverMeasureText';
+export { getFont, getStyledFont } from '../../renderer/serverMeasureText';
+
 // Preview generation is headless. Reserve extra room for platform font fallback
 // and bold advances; the editor reflows the stored Markdown with its own canvas.
 export function measureText(font: string, text: string) {
@@ -11,7 +13,4 @@ export function measureText(font: string, text: string) {
 }
 export function measureTextOffset(font: string) {
   return offset(font);
-}
-export function getFont(item: any) {
-  return item.font_size + 'px ' + item.font_name;
 }

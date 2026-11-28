@@ -143,7 +143,7 @@ test('native active points sit at visible terminal/socket centres on the normal 
   }
 });
 
-test('all native rendered captions and terminal labels fit their preview envelopes', async () => {
+test('native terminal labels fit their preview envelopes without a fixed caption', async () => {
   const api = await layoutRuntime();
   for (const r of result.records) {
     const drawing = await recordDrawing(api, r),
@@ -153,8 +153,8 @@ test('all native rendered captions and terminal labels fit their preview envelop
       n.textContent.normalize('NFKC').replaceAll('−', '-'),
     );
     assert.ok(
-      texts.includes(r.device.short),
-      r.device.id + ' complete caption',
+      !texts.includes(r.device.short),
+      r.device.id + ' has no fixed caption',
     );
     for (const p of r.ports)
       assert.ok(
@@ -168,7 +168,7 @@ test('all native rendered captions and terminal labels fit their preview envelop
     );
     assert.ok(
       b.y2 >= r.height * 5,
-      r.device.id + ' caption included in envelope',
+      r.device.id + ' full vertical envelope',
     );
   }
 });

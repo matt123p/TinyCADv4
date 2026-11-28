@@ -4,7 +4,7 @@
   "name": "Functional blocks",
   "styleReference": {
     "id": "derived:full_adder",
-    "xmlSha256": "a5acdc5e2ebd3d4d41a2e67d2e68732827830b351f502985f5cafe0ab913384a"
+    "xmlSha256": "f1ee917638ba93f028393b06da32ace8c69327dab5de53fb06a115ba0b1b0563"
   },
   "recipeSha256": "6df5bf3d2de70eca39c211bcc8dd759d3faf3235800beae51ff6f5e8bd29b0f4",
   "notes": "Configurable educational SPICE behaviour is embedded. Explicit power/reference terminals retain inventory names. ADC, PCM and state-machine entries provide both edge variants. MCU/FPGA I/O uses configurable truth tables and optional clocked outputs, not vendor firmware or HDL.",
@@ -15,7 +15,7 @@
       "name": "ADC functional block, 4-bit illustration (rising edge)",
       "nameId": 1,
       "symbolId": 1,
-      "xmlSha256": "ecf9c371099c115b5977827fc5f37dbc9a767b1569e032ab6f6f3edb9877242f",
+      "xmlSha256": "c393010d2c9632fe13cab2de06d0c1bb3498416b4bf6bdf0c23ed5bac0335bd6",
       "clockEdge": "rising"
     },
     {
@@ -24,7 +24,7 @@
       "name": "Communication channel block",
       "nameId": 2,
       "symbolId": 2,
-      "xmlSha256": "baba73516144f080f06de13531a02bc045561bafffea00e99c1fa799fe0dac88",
+      "xmlSha256": "0baa0668d16c2d329e6d680b002862ff6a6a1a963c154fcec4593ab52971570d",
       "clockEdge": null
     },
     {
@@ -33,7 +33,7 @@
       "name": "DAC functional block, 4-bit illustration",
       "nameId": 3,
       "symbolId": 3,
-      "xmlSha256": "5503fb75b9cc1a6ed30aab525bf0cf83a06afdbac55e0c19a03f71232117cc4a",
+      "xmlSha256": "64127d11809c1c6045f15afea960cc95ab1cd5ae3f186f6653d52495e0e55df5",
       "clockEdge": null
     },
     {
@@ -42,7 +42,7 @@
       "name": "Data-logger interface",
       "nameId": 4,
       "symbolId": 4,
-      "xmlSha256": "cbf325865053be9042bcd65424136e8187c29e972ce0903c11bde00553107afe",
+      "xmlSha256": "be145defe02b5ac71bb794aa223d343c33a4d6249636513b9f611bc58fa23b17",
       "clockEdge": null
     },
     {
@@ -51,7 +51,7 @@
       "name": "Generic FPGA interface",
       "nameId": 5,
       "symbolId": 5,
-      "xmlSha256": "5ea4e57d1b32c9fbf4a3ce661e3f4498ef59f030444fbcef22f80dc83389a19f",
+      "xmlSha256": "6d6e430b935d5e3a72080eb7789b23b821e11b5bf21fadd5514859aabb1c083e",
       "clockEdge": null
     },
     {
@@ -60,7 +60,7 @@
       "name": "Generic microcontroller interface",
       "nameId": 6,
       "symbolId": 6,
-      "xmlSha256": "22964839cdf7e0561a23df0246be97ed447c40a7383945a34b1c97e9f0888377",
+      "xmlSha256": "c1a76bc15f59c0382f3ba8f7dcad1891f97e7b7e9c15254d23c0778100cab127",
       "clockEdge": null
     },
     {
@@ -69,7 +69,7 @@
       "name": "Output transducer block",
       "nameId": 7,
       "symbolId": 7,
-      "xmlSha256": "d08c3d72a911b1074cf293016f85fb87f256693c196d7c0f109c1aa5ad30ce10",
+      "xmlSha256": "8916a611597f4cee012b0c1df12e60b51d17b9b293656626a81971093a121fef",
       "clockEdge": null
     },
     {
@@ -78,7 +78,7 @@
       "name": "PCM encoder functional block (rising edge)",
       "nameId": 8,
       "symbolId": 8,
-      "xmlSha256": "089f43bdaa1eb8f10257d7f2ad6e5028f6e0be8ff679d19d5073c8bd049f3e5a",
+      "xmlSha256": "8dbbf8a1419a01534ead02da41811edc4daa5ae840617b49321c402fa3056635",
       "clockEdge": "rising"
     },
     {
@@ -87,7 +87,7 @@
       "name": "PLC input/output interface",
       "nameId": 9,
       "symbolId": 9,
-      "xmlSha256": "7891279119d4dfbee369f289042225eb77a3259c4369913ed2a63380b55b2987",
+      "xmlSha256": "b530a948bb44a716145b3ad95191ad2d61e15861fbc94cd0be11ea367ed0b63d",
       "clockEdge": null
     },
     {
@@ -96,7 +96,7 @@
       "name": "Communication receiver block",
       "nameId": 10,
       "symbolId": 10,
-      "xmlSha256": "3f40e04a797284211c7ac9b6ed523d6ff4fbc31b09ff65a85017f072bb9a21c6",
+      "xmlSha256": "d9dde412513bc23657873aec686b33b69cddf6b9c73253082432e25f4e3f7a39",
       "clockEdge": null
     },
     {
@@ -105,7 +105,7 @@
       "name": "Sample-and-hold functional block",
       "nameId": 11,
       "symbolId": 11,
-      "xmlSha256": "cfe38f1fe425e8974e72f9a115607e5c3cf23131f0d2657dcdea83d49090bff2",
+      "xmlSha256": "1e20141d91ef19ca00725b3179429b722e685b3c7aff96dd44074664affa01b2",
       "clockEdge": null
     },
     {
@@ -114,7 +114,7 @@
       "name": "State-machine functional block (rising edge)",
       "nameId": 12,
       "symbolId": 12,
-      "xmlSha256": "4a36ee277c2701dc8e3394a611c4489d1da9ff15cfa740dade4859f8570d293f",
+      "xmlSha256": "b57b16d3bb4a1f17a6ef70423f9a8e4ec5476eb0730904c1a9e4c687c8c02b17",
       "clockEdge": "rising"
     },
     {
@@ -123,7 +123,7 @@
       "name": "Time-division multiplexer block",
       "nameId": 13,
       "symbolId": 13,
-      "xmlSha256": "ecbc9b9fc77da03020948b2eb1524fcd9d518b5429c28d6e8bc407a811d301ff",
+      "xmlSha256": "d26507f179f724612687fccdcc47e65925f86f45b3fe8283bb01a053669e543b",
       "clockEdge": null
     },
     {
@@ -132,7 +132,7 @@
       "name": "Communication transmitter block",
       "nameId": 14,
       "symbolId": 14,
-      "xmlSha256": "67240c0be92a8ab070311e5f8d523e2ee2a3778c4df5c3dbc5b4d2a0a45c4a92",
+      "xmlSha256": "c28e2258e22fd426cb7882031ce396708c8d37ca6a3857602714cd35502a2831",
       "clockEdge": null
     },
     {
@@ -141,7 +141,7 @@
       "name": "ADC functional block, 4-bit illustration (falling edge)",
       "nameId": 15,
       "symbolId": 15,
-      "xmlSha256": "357be4a431e2cfceb982d6e3f4952c691a70e9da2e27ec7baba2246fd0632d5d",
+      "xmlSha256": "be6035d51d6a24ac177ad4bdb8f803d8ba081fc6e81fc00c6a325cbde0c22b7c",
       "clockEdge": "falling"
     },
     {
@@ -150,7 +150,7 @@
       "name": "PCM encoder functional block (falling edge)",
       "nameId": 16,
       "symbolId": 16,
-      "xmlSha256": "a11baf547d7f9f07832b309d384143262cb74c897a0097595d6e42f8449b6baa",
+      "xmlSha256": "90a0606e2fa50ea04c2b32cacac0d4fe6f748e7cd1fd5eb7412f830cf6788c12",
       "clockEdge": "falling"
     },
     {
@@ -159,7 +159,7 @@
       "name": "State-machine functional block (falling edge)",
       "nameId": 17,
       "symbolId": 17,
-      "xmlSha256": "d65bfc2d2e18fe417dd4381f4788ccc2e71c5de9fc4037f48ab54182fea981fd",
+      "xmlSha256": "023c328a2eabf93a46f1face04b2737d1275167fa15e8edb3e0b9ab029becce3",
       "clockEdge": "falling"
     }
   ],

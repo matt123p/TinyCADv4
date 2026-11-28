@@ -1,5 +1,8 @@
-import { chooseProjectFolder, closeProjectMode, saveProjectTabs } from '../../io/projectMode';
-import { boardMenuCommand, confirmBoardClose } from '../../io/boardWorkspaceEvents';
+import { confirmBoardClose, editorHeaderDocument } from '../../io/boardWorkspaceEvents';
+import { closeProjectMode, confirmProjectClose, editProjectHistory, saveActiveProjectFile, saveProjectTabs } from '../../io/projectMode';
+import { openLaunchedProject, openProjectFolder } from '../../io/projects';
+import { useStore } from 'react-redux';
+import type { docDrawing } from '../../state/undo/undo';
 import React, { FunctionComponent, useEffect } from 'react';
 import ContextmenuContainer from '../../state/containers/contextmenuContainer';
 import DialogueContainer from '../../state/containers/dialogueContainer';
@@ -8,6 +11,7 @@ import { Dispatch } from 'redux';
 import { tclib, tclibLibraryEntry } from '../../model/tclib';
 import { handleMenuCommand, handleMenuCommandWithData, initialise } from '../../io/files';
 import { BrowserSheetData } from '../../model/dsnView';
+import { CurrentFile } from '../../state/stores/altStoreReducer';
 import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
 
 export interface MainAppElectronProps {
@@ -19,6 +23,7 @@ export interface MainAppElectronProps {
   editLibrary: tclib;
   browserSheets: BrowserSheetData[];
   dispatch: Dispatch;
+  file: CurrentFile;
   saveNeeded: boolean;
 }
 
@@ -29,6 +34,7 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
   props: MainAppElectronProps,
 ) => {
   let content = null;
+  const store = useStore<docDrawing>();
 
   useEffect(() => {
     if (window.electronAPI && window.electronAPI.setMenuMode) {
@@ -47,48 +53,73 @@ export const MainAppElectron: FunctionComponent<MainAppElectronProps> = (
   useEffect(() => {
     props.dispatch(initialise() as any);
     const params = new URLSearchParams(window.location.search);
-    const openProject = (chooseFolder = false, recentId?: string) => {
-      void import('../../io/projects')
-        .then(({ openLaunchedProject, chooseDesktopProjectFolder, openRecentDesktopProjectFolder }) =>
-          recentId ? openRecentDesktopProjectFolder(recentId) :
-            chooseFolder ? chooseDesktopProjectFolder() : openLaunchedProject(),
-        )
-        .catch((error) => props.dispatch(actionSelectDialog('io_failure', {
-          message: error instanceof Error ? error.message : String(error),
-        })));
-    };
-    const chooseFolder = () => openProject(true);
-    window.addEventListener(chooseProjectFolder, chooseFolder);
-    if (params.get('project') === '1') openProject();
     if (params.get('about') === '1') {
       props.dispatch(actionSelectDialog('about', null));
     }
+    const openFolder = (id?: string, launch = false) => {
+      void (launch ? openLaunchedProject(store.getState) : openProjectFolder(store.getState, id)).catch((error) => props.dispatch(actionSelectDialog('io_failure', {
+        message: error instanceof Error ? error.message : String(error),
+      })));
+    };
     const unsubscribe = window.electronAPI.onMenuCommand((command) => {
-      if (command === 'file-open-project-launch') openProject();
-      else if (command === 'file-open-project-folder') openProject(true);
-      else if (command === 'file-save-all') window.dispatchEvent(new Event(saveProjectTabs));
+      if (command === 'file-open-project-folder') openFolder();
+      else if (command === 'file-open-project-launch') openFolder(undefined, true);
       else if (command === 'file-close-project') window.dispatchEvent(new Event(closeProjectMode));
-      else if (command.startsWith('pcb-menu:')) window.dispatchEvent(
-        new CustomEvent(boardMenuCommand, { detail: command.slice('pcb-menu:'.length) }),
-      );
-      else props.dispatch(handleMenuCommand(command) as any);
+      else if (command === 'file-save-all') window.dispatchEvent(new Event(saveProjectTabs));
+      else if (command === 'edit-undo' || command === 'edit-redo') {
+        const detail = command === 'edit-undo' ? 'undo' : 'redo';
+        const editable = document.activeElement?.closest('textarea, input, [contenteditable="true"]');
+        if (editable && !editable.hasAttribute('data-project-text-editor')) {
+          document.execCommand(detail);
+        } else if (window.dispatchEvent(new CustomEvent(editProjectHistory, { detail, cancelable: true }))) {
+          props.dispatch(handleMenuCommand(command) as any);
+        }
+      }
+      else if (
+        (command !== 'file-save' && command !== 'file-save-as') ||
+        window.dispatchEvent(new CustomEvent(saveActiveProjectFile, { cancelable: true, detail: command }))
+      )
+        props.dispatch(handleMenuCommand(command) as any);
     });
     const unsubscribeWithData = window.electronAPI.onMenuCommandWithData((command, data) => {
-      if (command === 'file-open-recent-project') openProject(false, data.id);
+      if (command === 'file-open-recent-project') openFolder(data.id);
       else props.dispatch(handleMenuCommandWithData(command, data) as any);
     });
     return () => {
       unsubscribe();
       unsubscribeWithData();
-      window.removeEventListener(chooseProjectFolder, chooseFolder);
     };
   }, []);
+
+  const [boardTitle, setBoardTitle] = React.useState<{ name: string; dirty: boolean }>();
+  useEffect(() => {
+    const update = (event: WindowEventMap[typeof editorHeaderDocument]) => setBoardTitle(event.detail);
+    window.addEventListener(editorHeaderDocument, update);
+    return () => window.removeEventListener(editorHeaderDocument, update);
+  }, []);
+  useEffect(() => {
+    let name = '';
+    if (props.file) {
+      name = props.file.name;
+    }
+    if (name?.length > 0 && props.saveNeeded) {
+      name = name + '*';
+    }
+    if (boardTitle) name = boardTitle.name + (boardTitle.dirty ? '*' : '');
+    window.electronAPI.setTitle(`TinyCAD - ${name}`);
+  }, [boardTitle, props.file, props.saveNeeded]);
 
   useEffect(() => {
     if (window.electronAPI?.onAppClosing) {
       const unsubscribe = window.electronAPI.onAppClosing(() => {
         if (!window.dispatchEvent(new Event(confirmBoardClose, { cancelable: true }))) {
           window.electronAPI.sendAppClosingResponse(false);
+          return;
+        }
+        if (store.getState().schematicTabs?.enabled) {
+          window.electronAPI.sendAppClosingResponse(
+            window.dispatchEvent(new Event(confirmProjectClose, { cancelable: true })),
+          );
           return;
         }
         if (props.saveNeeded) {

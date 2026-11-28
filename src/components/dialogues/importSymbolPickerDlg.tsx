@@ -92,15 +92,11 @@ export const ImportSymbolPickerDialog: FunctionComponent<ImportSymbolPickerDialo
                         count: item.name.ppp,
                       })}
                     </div>
+                    {item.spiceImportError && <div className={styles.symbolMeta}>SPICE model skipped. {item.spiceImportError}</div>}
                   </div>
                 );
               })}
             </div>
-            {!!selected?.issues?.length && (
-              <ul aria-label="Symbol import report">
-                {selected.issues.map((issue) => <li key={issue}>{issue}</li>)}
-              </ul>
-            )}
           </DialogContent>
           <DialogActions>
             <Button

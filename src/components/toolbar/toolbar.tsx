@@ -1,10 +1,5 @@
-import { SplitMenuButton } from './SplitMenuButton';
-import { generateActiveBom } from '../../io/netlists/activeNetlist';
-import { chooseProjectFolder, closeProjectMode, saveProjectTabs } from '../../io/projectMode';
+import { EditorNewMenu } from './FileToolbarControls';
 import React, { Dispatch } from 'react';
-import { EditorToolbar } from './EditorToolbar';
-import { EditorFileMenu, EditorHistoryControls, EditorNewMenu, EditorSaveAllButton, EditorSaveButton } from './FileToolbarControls';
-import { ViewToolbarControls } from './ViewToolbarControls';
 import { useTranslation } from 'react-i18next';
 import {
   actionCommand,
@@ -14,6 +9,7 @@ import {
   actionSelectDialog,
 } from '../../state/dispatcher/AppDispatcher';
 import {
+  Toolbar as FluentToolbar,
   ToolbarButton,
   ToolbarDivider,
   Menu,
@@ -24,13 +20,15 @@ import {
   MenuItemRadio,
   makeStyles,
   tokens,
+  mergeClasses,
   MenuDivider,
 } from '@fluentui/react-components';
 import {
   ChatSparkleRegular,
-  ChevronDownRegular,
   ArrowUndoRegular,
   ArrowRedoRegular,
+  ZoomInRegular,
+  ZoomOutRegular,
   ArrowRotateClockwiseRegular,
   ArrowRotateCounterclockwiseRegular,
   FlipHorizontalRegular,
@@ -38,7 +36,9 @@ import {
   SaveRegular,
   DismissRegular,
   ArrowDownloadRegular,
-  DocumentRegular,
+  ChevronDownRegular,
+  ChevronLeftRegular,
+  ChevronRightRegular,
   ImageRegular,
   SettingsRegular,
   DataAreaRegular,
@@ -48,8 +48,9 @@ import {
   SaveCopyRegular,
   QuestionCircleRegular,
   ColorRegular,
+  DocumentRegular,
+  RulerRegular,
   GlobeRegular,
-  CheckmarkRegular,
   PulseRegular,
   DataLineRegular,
   TargetRegular,
@@ -65,7 +66,7 @@ import {
 import { ActionCreators } from 'redux-undo';
 import { SPICE_COMPONENTS, insertSpiceComponent, showSpiceLibrary } from '../../io/spiceComponents';
 import {
-  downloadBom,
+  saveBom,
   fileSave,
   librarySave,
   fileOpen,
@@ -88,7 +89,10 @@ import {
   persistLanguagePreference,
   SUPPORTED_LANGUAGES,
 } from '../../i18n/languages';
-import { openExternalUrl } from '../../util/navigation';
+import { openCurrentAppUrl, openExternalUrl } from '../../util/navigation';
+import { useDesignExportDestination } from '../controls/useDesignExportDestination';
+import { helpLinks, manualLinks } from '../../../shared/helpLinks';
+import { LanguageFlag } from '../controls/LanguageFlag';
 
 
 // Images (ES module imports)
@@ -103,8 +107,10 @@ import label0Image from 'url:../../../images/label0.png';
 import label1Image from 'url:../../../images/label1.png';
 import label2Image from 'url:../../../images/label2.png';
 import label3Image from 'url:../../../images/label3.png';
-import { TextToolButton } from './TextToolButton';
-import { rectangleImage, ellipseImage, lineImage } from './shapeToolImages';
+import textImage from 'url:../../../images/text.png';
+import rectangleImage from 'url:../../../images/rectangle.png';
+import ellipseImage from 'url:../../../images/ellipse.png';
+import lineImage from 'url:../../../images/line.png';
 import busImage from 'url:../../../images/bus.png';
 import busJunctionImage from 'url:../../../images/bus_junction.png';
 import busLabelImage from 'url:../../../images/bus_label.png';
@@ -114,12 +120,58 @@ import pinImage from 'url:../../../images/pin.png';
 import discordImage from 'url:../../../images/Discord-Logo-Black.png';
 
 const useStyles = makeStyles({
+  toolbarContainer: {
+    '& .fui-ToolbarButton': {
+      fontFamily: tokens.fontFamilyBase,
+      fontSize: tokens.fontSizeBase200,
+      fontWeight: tokens.fontWeightRegular,
+      lineHeight: tokens.lineHeightBase200,
+    },
+    display: 'flex',
+    alignItems: 'center',
+    backgroundColor: 'rgb(230, 230, 230)',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+    borderTop: '1px solid white',
+    overflowX: 'auto',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+    '&::-webkit-scrollbar': {
+      display: 'none',
+    },
+  },
+  toolbarContent: {
+    fontFamily: tokens.fontFamilyBase,
+    marginLeft: '-8px', // Shifts content left to reduce gap
+    flexGrow: 1,
+    flexShrink: 0,
+    minWidth: 'max-content',
+  },
   highlight: {
     backgroundColor: tokens.colorBrandBackground2,
   },
   imageIcon: {
     width: '18px',
     height: '18px',
+  },
+  splitButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+  },
+  splitButtonMain: {
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  splitButtonMainHighlighted: {
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    backgroundColor: tokens.colorBrandBackground2,
+  },
+  splitButtonMenu: {
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    minWidth: '24px',
+    paddingLeft: '2px',
+    paddingRight: '2px',
   },
   spacer: {
     flexGrow: 1,
@@ -137,11 +189,13 @@ const useStyles = makeStyles({
 });
 
 interface ToolbarProps {
+  hierarchicalSymbolSheet?: boolean;
   simulationPanelVisible?: boolean;
   simulationToolbarRef?: React.Ref<HTMLSpanElement>;
   simulationSheet?: boolean;
   chatOpen?: boolean;
   onToggleChat?: () => void;
+  saveBlocked?: boolean;
   menu_command: string;
   wireMode: WireMode;
   can_undo: boolean;
@@ -158,12 +212,9 @@ interface ToolbarProps {
   selected_sheet: number;
   toolbarDefaults: ToolbarDefaults;
   saveInProgress: boolean;
-  showSaveAll?: boolean;
-  saveAllDisabled?: boolean;
   saveNeeded: boolean;
   editLibrary: tclib;
   editSymbol: tclibLibraryEntry;
-  hierarchyInterface: boolean;
   recentFiles: CurrentFile[];
   dispatch: Dispatch<any>;
 }
@@ -194,34 +245,384 @@ const AutorouteWireIcon: React.FC = () => (
   </svg>
 );
 
-export const Toolbar: React.FC<ToolbarProps> = (props) => {
+// Split button with dropdown menu
+const SplitMenuButton: React.FC<{
+  text: string;
+  optionsSuffix: string;
+  mainImage: string;
+  highlighted: boolean;
+  onMainClick: () => void;
+  menuItems: MenuItemConfig[];
+  onMenuItemClick: (item: MenuItemConfig) => void;
+  styles: ReturnType<typeof useStyles>;
+}> = ({ text, optionsSuffix, mainImage, highlighted, onMainClick, menuItems, onMenuItemClick, styles }) => {
+  return (
+    <div className={styles.splitButton}>
+      <ToolbarButton
+        aria-label={text}
+        title={text}
+        icon={<ImageIcon src={mainImage} />}
+        onClick={onMainClick}
+        className={highlighted ? styles.splitButtonMainHighlighted : styles.splitButtonMain}
+      />
+      <Menu>
+        <MenuTrigger disableButtonEnhancement>
+          <ToolbarButton
+            aria-label={`${text} ${optionsSuffix}`}
+            icon={<ChevronDownRegular />}
+            className={styles.splitButtonMenu}
+          />
+        </MenuTrigger>
+        <MenuPopover>
+          <MenuList>
+            {menuItems.map((item) => (
+              <MenuItem
+                key={item.key}
+                icon={<ImageIcon src={item.image} />}
+                onClick={() => onMenuItemClick(item)}
+              >
+                {item.text}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </MenuPopover>
+      </Menu>
+    </div>
+  );
+};
+
+const ScrollableToolbarWrapper: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = React.useState(false);
+  const [showRightArrow, setShowRightArrow] = React.useState(false);
+
+  const updateScrollButtons = React.useCallback(() => {
+    const el = containerRef.current;
+    if (el) {
+      const { scrollLeft, scrollWidth, clientWidth } = el;
+      setShowLeftArrow(scrollLeft > 2);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 2);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Check initial scroll state
+    updateScrollButtons();
+
+    // Set up ResizeObserver to track container resizing
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollButtons();
+    });
+    resizeObserver.observe(el);
+
+    // Also observe the child (FluentToolbar) resize to handle dynamic content loading
+    const child = el.firstElementChild;
+    if (child) {
+      resizeObserver.observe(child);
+    }
+
+    window.addEventListener('resize', updateScrollButtons);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateScrollButtons);
+    };
+  }, [updateScrollButtons]);
+
+  const scroll = (direction: 'left' | 'right') => {
+    const el = containerRef.current;
+    if (el) {
+      const amount = direction === 'left' ? -200 : 200;
+      el.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <div style={{ position: 'relative', width: '100%', overflow: 'hidden', flexShrink: 0 }}>
+      <div
+        ref={containerRef}
+        onScroll={updateScrollButtons}
+        className={className}
+      >
+        {children}
+      </div>
+
+      {showLeftArrow && (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: '48px',
+            background: 'linear-gradient(to right, rgb(230, 230, 230) 40%, rgba(230, 230, 230, 0) 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            paddingLeft: '6px',
+            pointerEvents: 'none',
+            zIndex: 10,
+          }}
+        >
+          <button
+            onClick={() => scroll('left')}
+            style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 255, 255, 0.75)',
+              border: '1px solid rgba(0, 0, 0, 0.15)',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              pointerEvents: 'all',
+              padding: 0,
+              color: '#333',
+              transition: 'background-color 0.2s, box-shadow 0.2s',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.75)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.08)';
+            }}
+          >
+            <ChevronLeftRegular style={{ fontSize: '16px' }} />
+          </button>
+        </div>
+      )}
+
+      {showRightArrow && (
+        <div
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: '48px',
+            background: 'linear-gradient(to left, rgb(230, 230, 230) 40%, rgba(230, 230, 230, 0) 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            paddingRight: '6px',
+            pointerEvents: 'none',
+            zIndex: 10,
+          }}
+        >
+          <button
+            onClick={() => scroll('right')}
+            style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 255, 255, 0.75)',
+              border: '1px solid rgba(0, 0, 0, 0.15)',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              pointerEvents: 'all',
+              padding: 0,
+              color: '#333',
+              transition: 'background-color 0.2s, box-shadow 0.2s',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.75)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.08)';
+            }}
+          >
+            <ChevronRightRegular style={{ fontSize: '16px' }} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export function EditorToolbarFrame({
+  children,
+  label,
+  chatOpen,
+  onToggleChat,
+  onAbout,
+}: Pick<ToolbarProps, 'chatOpen' | 'onToggleChat'> & {
+  children: React.ReactNode;
+  label?: string;
+  onAbout?: () => void;
+}) {
   const styles = useStyles();
   const { t, i18n } = useTranslation();
-  const chatButton = process.env.TARGET_SYSTEM === 'electron' && props.onToggleChat && (
-    <ToolbarButton
-      aria-label="Chat"
-      title="Chat"
-      icon={<ChatSparkleRegular />}
-      aria-expanded={!!props.chatOpen}
-      aria-controls="tinycad-chat"
-      className={props.chatOpen ? styles.highlight : undefined}
-      onClick={props.onToggleChat}
-    >
-      Chat
-    </ToolbarButton>
+  const currentLanguage = normalizeLanguageCode(i18n.language);
+  return (
+    <ScrollableToolbarWrapper className={mergeClasses('toolbar-container', styles.toolbarContainer)}>
+      <FluentToolbar className={styles.toolbarContent} aria-label={label}>
+        {children}
+        <div className={styles.spacer} />
+        {process.env.TARGET_SYSTEM === 'electron' && onToggleChat && (
+          <ToolbarButton
+            aria-label="Chat"
+            title="Chat"
+            icon={<ChatSparkleRegular />}
+            aria-expanded={!!chatOpen}
+            aria-controls="tinycad-chat"
+            className={chatOpen ? styles.highlight : undefined}
+            onClick={onToggleChat}
+          >
+            Chat
+          </ToolbarButton>
+        )}
+        <Menu checkedValues={{ language: [currentLanguage] }} hasCheckmarks hasIcons>
+          <MenuTrigger disableButtonEnhancement>
+            <ToolbarButton
+              aria-label={t('toolbar.languageMenu')}
+              title={t('toolbar.language')}
+              icon={<GlobeRegular />}
+            >
+              {currentLanguage.slice(0, 2).toLowerCase()}
+            </ToolbarButton>
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              <MenuItem onClick={() => openExternalUrl(manualLinks(currentLanguage).languageTranslation)}>
+                {t('toolbar.aboutTranslations')}
+              </MenuItem>
+              <MenuDivider />
+              {SUPPORTED_LANGUAGES.map((language) => (
+                <MenuItemRadio
+                  key={language.code}
+                  name="language"
+                  value={language.code}
+                  lang={language.code}
+                  icon={{
+                    children: <LanguageFlag language={language.code} />,
+                    style: { width: 24 },
+                  }}
+                  onClick={() => {
+                    persistLanguagePreference(language.code);
+                    void i18n.changeLanguage(language.code);
+                  }}
+                >
+                  {language.label}
+                </MenuItemRadio>
+              ))}
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+        {process.env.TARGET_SYSTEM !== 'electron' && onAbout && (
+          <Menu>
+            <MenuTrigger disableButtonEnhancement>
+              <ToolbarButton
+                aria-label={t('toolbar.help')}
+                title={t('toolbar.help')}
+                icon={<QuestionCircleRegular />}
+              />
+            </MenuTrigger>
+            <MenuPopover>
+              <MenuList>
+                <MenuItem
+                  icon={<ImageIcon src={discordImage} />}
+                  onClick={() => openExternalUrl(helpLinks.discord)}
+                >
+                  {t('toolbar.discord')}
+                </MenuItem>
+                <MenuItem
+                  icon={<DocumentRegular />}
+                  onClick={() => openExternalUrl(manualLinks(currentLanguage).home)}
+                >
+                  {t('toolbar.manual')}
+                </MenuItem>
+                <MenuItem onClick={() => openExternalUrl(helpLinks.issues)}>
+                  {t('toolbar.reportIssue')}
+                </MenuItem>
+                <MenuDivider />
+                <MenuItem onClick={onAbout}>{t('toolbar.aboutTinyCAD')}</MenuItem>
+              </MenuList>
+            </MenuPopover>
+          </Menu>
+        )}
+      </FluentToolbar>
+    </ScrollableToolbarWrapper>
   );
-  const m = props.menu_command;
-  const currentLanguageAbbreviation = normalizeLanguageCode(i18n.language).slice(0, 2).toLowerCase();
+}
 
-  const changeLanguage = (code: string) => {
-    persistLanguagePreference(code);
-    void i18n.changeLanguage(code);
+export function EditorToolbarDivider() {
+  const styles = useStyles();
+  return <ToolbarDivider className={styles.divider} />;
+}
+
+function BomExportButtons({ dispatch }: { dispatch: Dispatch<any> }) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = React.useState(false);
+  const destination = useDesignExportDestination('bom');
+  async function save(chooseLocation: boolean) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await dispatch(saveBom(chooseLocation) as any);
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (process.env.TARGET_SYSTEM === 'filesystem') {
+    return (
+      <ToolbarButton
+        aria-label={t('toolbar.downloadBomAria')}
+        icon={<ArrowDownloadRegular />}
+        disabled={busy}
+        onClick={() => { void save(true); }}
+      >
+        {t('toolbar.downloadBom')}
+      </ToolbarButton>
+    );
+  }
+  return (
+    <>
+      {destination && (
+        <ToolbarButton
+          aria-label={t('toolbar.save')}
+          title={t('toolbar.save') + ' — ' + destination}
+          icon={<SaveRegular />}
+          disabled={busy}
+          onClick={() => { void save(false); }}
+        />
+      )}
+      <ToolbarButton
+        aria-label={t('toolbar.saveAs')}
+        title={t('toolbar.saveAs')}
+        icon={<SaveCopyRegular />}
+        disabled={busy}
+        onClick={() => { void save(true); }}
+      />
+    </>
+  );
+}
+
+export const Toolbar: React.FC<ToolbarProps> = (props) => {
+  const styles = useStyles();
+  const { t } = useTranslation();
+  const sharedActions = {
+    chatOpen: props.chatOpen,
+    onToggleChat: props.onToggleChat,
+    onAbout: () => { props.dispatch(actionSelectDialog('about', null)); },
   };
+  const m = props.menu_command;
 
   // BOM sheet toolbar
   if (props.selected_sheet === -1) {
     return (
-      <EditorToolbar>
+      <EditorToolbarFrame {...sharedActions}>
           <ToolbarButton
             aria-label={t('toolbar.closeBomAria')}
             icon={<DismissRegular />}
@@ -229,22 +630,16 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           >
             {t('toolbar.closeBom')}
           </ToolbarButton>
-          <ToolbarButton
-            aria-label={t('toolbar.downloadBomAria')}
-            icon={<ArrowDownloadRegular />}
-            onClick={() => props.dispatch(downloadBom)}
-          >
-            {t('toolbar.downloadBom')}
-          </ToolbarButton>
-          {chatButton}
-        </EditorToolbar>
+          <EditorToolbarDivider />
+          <BomExportButtons dispatch={props.dispatch} />
+      </EditorToolbarFrame>
     );
   }
 
   // Browser sheet toolbar
   if (props.selected_sheet < -1) {
     return (
-      <EditorToolbar>
+      <EditorToolbarFrame {...sharedActions}>
           <ToolbarDivider className={styles.divider} />
           <ToolbarButton
             aria-label={t('toolbar.closeHelpAria')}
@@ -253,15 +648,14 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           >
             {t('toolbar.close')}
           </ToolbarButton>
-          {chatButton}
-        </EditorToolbar>
+      </EditorToolbarFrame>
     );
   }
 
   // Library editor toolbar (no symbol selected)
   if (props.editLibrary && !props.editSymbol) {
     return (
-      <EditorToolbar>
+      <EditorToolbarFrame {...sharedActions}>
           {process.env.TARGET_SYSTEM === 'filesystem' && (
              <ToolbarButton
                 aria-label={t('toolbar.open')}
@@ -308,8 +702,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             disabled={!props.can_redo}
             onClick={() => props.dispatch(ActionCreators.redo())}
           />
-          {chatButton}
-        </EditorToolbar>
+      </EditorToolbarFrame>
     );
   }
 
@@ -363,26 +756,20 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
   };
 
   return (
-    <EditorToolbar>
+    <EditorToolbarFrame {...sharedActions}>
         {/* File Menu */}
         {process.env.TARGET_SYSTEM !== 'electron' && (
-         <EditorFileMenu>
+         <Menu>
+          <MenuTrigger disableButtonEnhancement>
+            <ToolbarButton icon={<DocumentRegular />} aria-label={t('toolbar.file')} title={t('toolbar.fileMenu')} />
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
               <EditorNewMenu submenu />
               { process.env.TARGET_SYSTEM === 'filesystem' && (
                   <MenuItem icon={<FolderOpenRegular />} onClick={() => props.dispatch(fileOpen())}>
                     {t('toolbar.open')}
                   </MenuItem>
-              )}
-              {process.env.TARGET_SYSTEM === 'google' && !props.editLibrary && (
-                <>
-                  <MenuItem icon={<FolderOpenRegular />} onClick={() => window.dispatchEvent(new Event(chooseProjectFolder))}>
-                    {t('projects.openFolder')}
-                  </MenuItem>
-                  <MenuItem onClick={() => window.dispatchEvent(new Event(saveProjectTabs))}>Save All</MenuItem>
-                  <MenuItem onClick={() => window.dispatchEvent(new Event(closeProjectMode))}>
-                    {t('projects.closeProject')}
-                  </MenuItem>
-                </>
               )}
               {!props.editLibrary && <MenuItem icon={<SaveCopyRegular />} disabled={props.saveInProgress} onClick={() => props.dispatch(fileSaveWithoutResults)}>
                 Save without results...
@@ -410,7 +797,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
               <MenuItem icon={<SettingsRegular />} onClick={() => props.dispatch(actionSelectDialog('annotate', null))}>
                 {t('toolbar.annotateSymbols')}
               </MenuItem>
-              <MenuItem icon={<DataAreaRegular />} onClick={() => props.dispatch(generateActiveBom() as any)}>
+              <MenuItem icon={<DataAreaRegular />} onClick={() => props.dispatch(handleMenuCommand('tools-bom'))}>
                 {t('toolbar.billOfMaterials')}
               </MenuItem>
               <MenuItem icon={<ShareRegular />} onClick={() => props.dispatch(actionSelectDialog('netlist', null))}>
@@ -419,21 +806,43 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
               <MenuItem icon={<ShareRegular />} onClick={() => props.dispatch(handleMenuCommand('tools-spice'))}>
                 {t('toolbar.generateSpiceNetlist')}
               </MenuItem>
-         </EditorFileMenu>
+              <MenuItem icon={<ShareRegular />} onClick={() => props.dispatch(handleMenuCommand('tools-vhdl'))}>
+                {t('toolbar.createVhdlFile')}
+              </MenuItem>
+              <MenuDivider />
+              {/* New Custom Library */}
+               <MenuItem icon={<LibraryRegular />} onClick={() => {
+                  const qp = new URLSearchParams();
+                  qp.set('action', 'new-library');
+                openCurrentAppUrl(qp);
+               }}>
+               {t('toolbar.newCustomLibrary')}
+              </MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
         )}
 
         {!props.editLibrary && <EditorNewMenu />}
 
-
-
         {/* Save buttons */}
-        <EditorSaveButton disabled={!props.saveNeeded && !props.saveInProgress}
+        <ToolbarButton
+          aria-label={t('toolbar.save')}
           title={props.editLibrary ? t('toolbar.saveLibrary') : t('toolbar.saveDesign')}
-          onClick={() => props.dispatch(props.editLibrary ? librarySave : fileSave)} />
-        {props.showSaveAll && <EditorSaveAllButton disabled={props.saveAllDisabled || props.saveInProgress} />}
-        {process.env.TARGET_SYSTEM === 'filesystem' && (
-          <EditorSaveButton saveAs onClick={() => props.dispatch(props.editLibrary ? librarySaveAs : fileSaveAs)} />
-        )}
+          icon={<SaveRegular />}
+          disabled={!props.saveNeeded || props.saveInProgress || props.saveBlocked}
+          onClick={() => props.dispatch(props.editLibrary ? librarySave : fileSave)}
+        >
+        </ToolbarButton>
+
+         {process.env.TARGET_SYSTEM === 'filesystem' && (
+             <ToolbarButton
+               aria-label={t('toolbar.saveAs')}
+               title={t('toolbar.saveAs')}
+                icon={<SaveCopyRegular />}
+                onClick={() => props.dispatch(props.editLibrary ? librarySaveAs : fileSaveAs)}
+             />
+          )}
 
         {!props.editSymbol && <>
         <ToolbarDivider className={styles.divider} />
@@ -501,16 +910,28 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         )}
         </>}
         <ToolbarDivider className={styles.divider} />
-        <EditorHistoryControls canUndo={props.can_undo} canRedo={props.can_redo}
-          onUndo={() => props.dispatch(ActionCreators.undo())}
-          onRedo={() => props.dispatch(ActionCreators.redo())} />
+        {/* Undo/Redo */}
+        <ToolbarButton
+          aria-label={t('toolbar.undo')}
+          title={t('toolbar.undo')}
+          icon={<ArrowUndoRegular />}
+          disabled={!props.can_undo}
+          onClick={() => props.dispatch(ActionCreators.undo())}
+        />
+        <ToolbarButton
+          aria-label={t('toolbar.redo')}
+          title={t('toolbar.redo')}
+          icon={<ArrowRedoRegular />}
+          disabled={!props.can_redo}
+          onClick={() => props.dispatch(ActionCreators.redo())}
+        />
 
         <ToolbarDivider className={styles.divider} />
         
         <span ref={props.simulationToolbarRef} style={{ display: 'contents' }} />
         {!props.simulationSheet && <>
         {/* Pin (Only if editing symbol) */}
-        {(props.hierarchyInterface || (props.editSymbol && process.env.TARGET_SYSTEM !== 'electron')) && (
+        {(props.hierarchicalSymbolSheet || (props.editSymbol && process.env.TARGET_SYSTEM !== 'electron')) && (
           <ToolbarButton
             aria-label={t('toolbar.pin')}
             title={t('toolbar.pin')}
@@ -580,7 +1001,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           onMainClick={() => props.dispatch(actionCommand(props.toolbarDefaults.Power.command))}
           menuItems={powerItems}
           onMenuItemClick={handleMenuItemClick('Power')}
-
+          styles={styles}
         />
 
         {/* Label (split button) - only in normal mode */}
@@ -593,14 +1014,17 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             onMainClick={() => props.dispatch(actionCommand(props.toolbarDefaults.Label.command))}
             menuItems={labelItems}
             onMenuItemClick={handleMenuItemClick('Label')}
-
+            styles={styles}
           />
         )}
 
         {/* Text */}
-        <TextToolButton
+        <ToolbarButton
+          aria-label={t('toolbar.text')}
+          title={t('toolbar.text')}
+          icon={<ImageIcon src={textImage} />}
           onClick={() => props.dispatch(actionCommand('add_text'))}
-          active={m === 'add_text'}
+          className={m === 'add_text' ? styles.highlight : undefined}
         />
 
         {/* Shapes (split button) */}
@@ -612,7 +1036,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           onMainClick={() => props.dispatch(actionCommand(props.toolbarDefaults.Shape.command))}
           menuItems={shapeItems}
           onMenuItemClick={handleMenuItemClick('Shape')}
-
+          styles={styles}
         />
 
         {/* Bus (split button) */}
@@ -624,7 +1048,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           onMainClick={() => props.dispatch(actionCommand(props.toolbarDefaults.Bus.command))}
           menuItems={busItems}
           onMenuItemClick={handleMenuItemClick('Bus')}
-
+          styles={styles}
         />
 
         {/* Ruler (split button) - only in normal mode */}
@@ -637,7 +1061,7 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
             onMainClick={() => props.dispatch(actionCommand(props.toolbarDefaults.Ruler.command))}
             menuItems={rulerItems}
             onMenuItemClick={handleMenuItemClick('Ruler')}
-
+            styles={styles}
           />
         )}
 
@@ -676,14 +1100,31 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
 
         <ToolbarDivider className={styles.divider} />
 
-        <ViewToolbarControls
-          canZoomIn={props.can_zoom_in}
-          canZoomOut={props.can_zoom_out}
-          showRulers={props.showRulers}
-          dividerClassName={styles.divider}
-          highlightClassName={styles.highlight}
-          onZoom={(direction) => props.dispatch(actionCommand(direction === 'in' ? 'zoom_in' : 'zoom_out'))}
-          onToggleRulers={() => props.dispatch(actionToggleRulers())}
+        {/* Zoom */}
+        <ToolbarButton
+          aria-label={t('toolbar.zoomIn')}
+          title={t('toolbar.zoomIn')}
+          icon={<ZoomInRegular />}
+          disabled={!props.can_zoom_in}
+          onClick={() => props.dispatch(actionCommand('zoom_in'))}
+        />
+        <ToolbarButton
+          aria-label={t('toolbar.zoomOut')}
+          title={t('toolbar.zoomOut')}
+          icon={<ZoomOutRegular />}
+          disabled={!props.can_zoom_out}
+          onClick={() => props.dispatch(actionCommand('zoom_out'))}
+        />
+
+        <ToolbarDivider className={styles.divider} />
+
+        <ToolbarButton
+          aria-label={t('toolbar.toggleRulers')}
+          title={t('toolbar.toggleRulers')}
+          icon={<RulerRegular />}
+          disabled={false}
+          className={props.showRulers ? styles.highlight : undefined}
+          onClick={() => props.dispatch(actionToggleRulers())}
         />
 
         </>}
@@ -707,6 +1148,11 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
                   <MenuItem icon={<SettingsRegular />} onClick={() => props.dispatch(actionSelectDialog('settings', null))}>
                     {t('toolbar.settings')}
                   </MenuItem>
+                  {!props.editLibrary && (
+                    <MenuItem onClick={() => props.dispatch(actionSelectDialog('symbol_property_font_defaults', null))}>
+                      {t('panel.symbol.fontDefaults')}
+                    </MenuItem>
+                  )}
                   <MenuItem icon={<ColorRegular />} onClick={() => props.dispatch(actionSelectDialog('colours', null))}>
                     {t('toolbar.colours')}
                   </MenuItem>
@@ -716,74 +1162,6 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
           </>
         )}
 
-        <div className={styles.spacer} />
-
-        {chatButton}
-
-        {/* Far Items */}
-        <>
-        <Menu>
-          <MenuTrigger disableButtonEnhancement>
-            <ToolbarButton
-              aria-label={t('toolbar.languageMenu')}
-              title={t('toolbar.language')}
-              icon={<GlobeRegular />}
-            >
-              {currentLanguageAbbreviation}
-            </ToolbarButton>
-          </MenuTrigger>
-          <MenuPopover>
-            <MenuList>
-              <MenuItem onClick={() => openExternalUrl('https://docs.tinycad.net/v4/Language-translation/')}>
-                {t('toolbar.aboutTranslations')}
-              </MenuItem>
-              <MenuDivider />
-              {SUPPORTED_LANGUAGES.map((language) => (
-                <MenuItem
-                  key={language.code}
-                  icon={normalizeLanguageCode(i18n.language) === language.code ? <CheckmarkRegular /> : undefined}
-                  onClick={() => changeLanguage(language.code)}
-                >
-                  {language.label}
-                </MenuItem>
-              ))}
-            </MenuList>
-          </MenuPopover>
-        </Menu>
-
-         {/* Help */}
-        {process.env.TARGET_SYSTEM !== 'electron' && (
-          <Menu>
-            <MenuTrigger disableButtonEnhancement>
-              <ToolbarButton
-                aria-label={t('toolbar.help')}
-                title={t('toolbar.help')}
-                icon={<QuestionCircleRegular />}
-              />
-            </MenuTrigger>
-            <MenuPopover>
-              <MenuList>
-                <MenuItem
-                  icon={<ImageIcon src={discordImage} />}
-                  onClick={() => openExternalUrl('https://discord.gg/bdXnjhrSYQ')}
-                >
-                  {t('toolbar.discord')}
-                </MenuItem>
-                <MenuItem
-                  icon={<DocumentRegular />}
-                  onClick={() => openExternalUrl('https://docs.tinycad.net/v4/')}
-                >
-                  {t('toolbar.manual')}
-                </MenuItem>
-                <MenuDivider />
-                <MenuItem onClick={() => props.dispatch(actionSelectDialog('about', null))}>
-                  {t('toolbar.aboutTinyCAD')}
-                </MenuItem>
-              </MenuList>
-            </MenuPopover>
-          </Menu>
-        )}
-        </>
-      </EditorToolbar>
+    </EditorToolbarFrame>
   );
 };

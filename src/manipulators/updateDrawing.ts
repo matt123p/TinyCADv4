@@ -1,3 +1,4 @@
+import { powerMarkerElectricalType } from '../io/netlists/netlistGenerator';
 //
 // This object deals with collections of drawing
 // objects, which it collects together as a single
@@ -42,13 +43,11 @@ export class updateDrawing {
     editingLibrary: boolean,
     heterogeneous: boolean,
   ): IsInsideResult {
-    let findTable = [];
-    if (panel === Panels.DrcPanel) {
-      findTable = drawing.drcTable;
-    }
+    const findTable = panel === Panels.DrcPanel ? drawing.drcTable : [];
 
     for (let i = 0; i < findTable.length; ++i) {
       const search_marker = findTable[i];
+      if (search_marker.source?.fileId || search_marker.sheet !== drawing.sheets[selected_sheet]?.name) continue;
       const dx = search_marker.a[0] - tp[0];
       const dy = search_marker.a[1] - tp[1];
       if (dx * dx + dy * dy < 25) {
@@ -78,9 +77,20 @@ export class updateDrawing {
     // Generate the netlist
     let bom: dsnBomEntry[] = [];
     const update_sheet = new updateView();
-    for (var i = 0; i < drawing.sheets.length; ++i) {
-      if (drawing.sheets[i].hierarchicalSymbol) continue;
-      bom = update_sheet.makeBomForSheet(drawing.sheets[i], bom);
+    const pending = [{ drawing, prefix: '' }];
+    for (const context of pending) {
+      for (const sheet of context.drawing.sheets) {
+        if (sheet.hierarchicalSymbol) continue;
+        bom = update_sheet.makeBomForSheet(sheet, bom, context.prefix);
+        for (const item of sheet.items) {
+          if (item.NodeName !== DocItemTypes.Symbol || !item._hierarchicalDrawing) continue;
+          const ref = item.text.find((field) => field.description === 'Ref')?.value;
+          pending.push({
+            drawing: item._hierarchicalDrawing,
+            prefix: context.prefix + (ref || `H${pending.length}`) + '_',
+          });
+        }
+      }
     }
     bom.sort((a, b) => a.Name.localeCompare(b.Name));
 
@@ -162,7 +172,7 @@ export class updateDrawing {
 
   updateNetlistTypes(
     drawing: dsnDrawing,
-    netlist: NetlistData,
+    netlist: NetlistData | null,
     netlistTypes: NetlistTypes,
     netTypeAssignments: { [net: string]: string },
   ) {
@@ -175,7 +185,9 @@ export class updateDrawing {
       netlistTypes: resolvedTypes,
       netTypeAssignments: resolvedAssignments,
     };
-    return this.stampWireNetTypes(updatedDrawing, netlist, resolvedTypes, resolvedAssignments);
+    return netlist
+      ? this.stampWireNetTypes(updatedDrawing, netlist, resolvedTypes, resolvedAssignments)
+      : updatedDrawing;
   }
 
   /**
@@ -269,126 +281,73 @@ export class updateDrawing {
     return { ...drawing, sheets: newSheets };
   }
 
-  _addDrcError(
-    drawing: dsnDrawing,
-    r: DrcError[],
-    name: string,
+  private addDrcNetError(
+    errors: DrcError[],
+    message: string,
     net: NetListNode[],
-    fallback?: NetListNode,
+    pinTypes?: number[],
   ) {
-    for (let i = 0; i < net.length; ++i) {
-      let n = net[i];
-      if (n.reference && n.symbol) {
-        let a = n.a;
-        if (!a) {
-          a = n.symbol.point;
-        }
-        r.push({
-          symbol: n.reference,
-          pin: n.pin,
-          text: name,
-          a: a.slice(),
-          id: n.symbol._id,
-          sheet: n.sheet,
-          ...(n.source?.instancePath.length ? {
-            source: {
-              ...n.source,
-              pinId: n.parent?.NodeName === DocItemTypes.Pin ? n.parent.pinId : undefined,
-            },
-          } : {}),
-        });
-        return;
-      }
-    }
-    if (fallback?.parent && fallback.a) {
-      r.push({
-        symbol: fallback.label,
-        text: name,
-        a: fallback.a.slice(),
-        id: fallback.parent._id,
-        sheet: fallback.sheet,
-        ...(fallback.source?.instancePath.length ? { source: fallback.source } : {}),
+    const reported = new Set<number>();
+    for (const node of net) {
+      if (node.hierarchicalPort || (pinTypes && !pinTypes.includes(node.eprop))) continue;
+      if (!node.symbol && (node.eprop === null || !node.parent)) continue;
+      const instance = node.drcSource?.instance ?? 0;
+      if (reported.has(instance)) continue;
+      reported.add(instance);
+      errors.push({
+        symbol: node.reference ?? node.label,
+        pin: node.pin,
+        text: message,
+        a: [...(node.a ?? node.symbol.point)],
+        id: node.symbol?._id ?? node.parent._id,
+        sheet: node.drcSource?.sheet ?? node.sheet,
+        source: node.drcSource,
       });
     }
   }
 
-  designRulesCheck(
-    drawing: dsnDrawing,
-    drc_options: DrcOptions,
-    netlist: NetlistData,
-  ) {
-    let r: DrcError[] = [];
+  designRulesCheck(_drawing: dsnDrawing, drcOptions: DrcOptions, netlist: NetlistData) {
+    const hierarchy = netlist.drcHierarchy;
+    const errors: DrcError[] = [...(hierarchy?.errors ?? [])];
+    if (drcOptions.UnConnected) errors.push(...(hierarchy?.unmatchedPorts ?? []));
 
-    let b = null;
-    let last_ref = '';
-    let ref_count = 1;
-    let last_index = netlist.symbols.length - 1;
-    for (let i = 0; i < netlist.symbols.length; i++) {
-      let ax = netlist.symbols[i];
-      let a = ax[1];
-      let ref_a = a.text.find((t) => t.description === 'Ref')?.value;
-      if (drc_options.MissingSpice && !a.text.find(field => field.description === '$$SPICE')?.value?.trim()) {
-        r.push({ symbol: ref_a || 'Unnamed symbol', pin: '', text: 'No SPICE information',
-          a: [...a.point], id: a._id, sheet: ax[0] });
+    const references = new Set<string>();
+    const packages = new Map<string, { parts: number; seen: Set<number>; location: Omit<DrcError, 'text'> }>();
+    const placements = new Set(hierarchy?.placements);
+    for (const entry of [...netlist.symbols, ...placements]) {
+      const [sheet, symbol, source] = entry;
+      const ref = symbol.text.find((field) => field.description === 'Ref')?.value ?? '';
+      const parts = new updateSymbol(symbol).parts();
+      const designator = parts > 1 ? ref + String.fromCharCode(65 + symbol.part) : ref;
+      const location = {
+        symbol: designator || 'Unnamed symbol', pin: '', a: [...symbol.point],
+        id: symbol._id, sheet: source?.sheet ?? sheet, source,
+      };
+      if (drcOptions.MissingSpice && !placements.has(entry) &&
+          !symbol.text.find((field) => field.description === '$$SPICE')?.value?.trim()) {
+        errors.push({ ...location, text: 'No SPICE information' });
       }
-      let ref_ra = ref_a;
-      const update_symbol_a = new updateSymbol(a);
-      if (update_symbol_a.parts() > 1) {
-        ref_a = ref_a + String.fromCharCode(65 + a.part);
-      }
-      if (ref_a.indexOf('?') !== -1) {
-        if (drc_options.UnAssignedRefDes) {
-          r.push({
-            symbol: ref_a,
-            pin: '',
-            text: 'Unassigned reference designators (i.e., U?)',
-            a: a.point.slice(),
-            id: a._id,
-            sheet: ax[0],
-          });
-        }
-      } else if (drc_options.DupRef && b) {
-        let ref_b = b.text.find((t) => t.description === 'Ref').value;
-        const update_symbol_b = new updateSymbol(b);
-        if (update_symbol_b.parts() > 1) {
-          ref_b += String.fromCharCode(65 + b.part);
-        }
-
-        if (ref_a.toLowerCase() === ref_b.toLowerCase()) {
-          r.push({
-            symbol: ref_a,
-            pin: '',
-            text: 'Duplicated references: ' + ref_a,
-            a: a.point.slice(),
-            id: a._id,
-            sheet: ax[0],
-          });
-        }
+      if (!ref || designator.includes('?')) {
+        if (drcOptions.UnAssignedRefDes)
+          errors.push({ ...location, text: 'Unassigned reference designators (i.e., U?)' });
+        continue;
       }
 
-      if (drc_options.UnConnect && b) {
-        let ref_b = b.text.find((t) => t.description === 'Ref').value;
-        if (ref_ra === ref_b) {
-          ++ref_count;
-        }
-        if (ref_ra !== ref_b || i === last_index) {
-          if (update_symbol_a.parts() > 1) {
-            if (ref_count !== update_symbol_a.parts()) {
-              r.push({
-                symbol: ref_ra,
-                pin: '',
-                text: 'Not all parts in package are in use: ' + ref_ra,
-                a: a.point.slice(),
-                id: a._id,
-                sheet: ax[0],
-              });
-            }
-          }
-          ref_count = 1;
-        }
-      }
+      const key = designator.toLowerCase();
+      if (drcOptions.DupRef && references.has(key))
+        errors.push({ ...location, text: 'Duplicated references: ' + designator });
+      references.add(key);
 
-      b = a;
+      if (drcOptions.UnConnect && parts > 1) {
+        const packageKey = JSON.stringify([source?.instance ?? 0, ref.toLowerCase()]);
+        if (!packages.has(packageKey))
+          packages.set(packageKey, { parts, seen: new Set(), location: { ...location, symbol: ref } });
+        packages.get(packageKey)!.seen.add(symbol.part);
+      }
+    }
+    for (const { parts, seen, location } of packages.values()) {
+      if (seen.size < parts)
+        errors.push({ ...location, text: 'Not all parts in package are in use: ' + location.symbol });
     }
 
     const instrumentSymbols = new Set(netlist.symbols
@@ -400,10 +359,10 @@ export class updateDrawing {
       if (netlist.nets.hasOwnProperty(net)) {
         const nodes = netlist.nets[net];
         const eprop = netlist.eprops[net];
-        const railMarkers = drc_options.Power && eprop.powers > 1
-          ? nodes.filter(({ eprop }) => eprop === 'power-marker')
+        const rails = drcOptions.Power && eprop.powers > 1
+          ? nodes.filter(({ eprop }) => eprop === powerMarkerElectricalType)
           : [];
-        const conflictingRail = railMarkers.find(({ label }) => label !== railMarkers[0].label);
+        const conflictingRail = rails.find(({ label }) => label !== rails[0].label);
 
         let total =
           eprop.input_outputs +
@@ -420,58 +379,61 @@ export class updateDrawing {
           eprop.power_outputs +
           eprop.open_emitters;
 
-        if (drc_options.NoConnect && eprop.not_connecteds > 0 && total > 2) {
-          this._addDrcError(
-            drawing,
-            r,
-            'Mode than one item on a no-connect net',
+        if (drcOptions.NoConnect && eprop.not_connecteds > 0 && total > 2) {
+          this.addDrcNetError(
+            errors,
+            'More than one item on a no-connect net',
             netlist.nets[net],
           );
         } else if (conflictingRail) {
-          this._addDrcError(drawing, r, 'Power connected to power', nodes, conflictingRail);
-        } else if (
-          drc_options.PowerOutputConflict &&
-          eprop.power_outputs > 1
-        ) {
-          this._addDrcError(
-            drawing,
-            r,
-            'Multiple power outputs on same net',
-            netlist.nets[net],
+          this.addDrcNetError(
+            errors,
+            'Power connected to power',
+            [conflictingRail],
           );
         } else if (
-          drc_options.PowerInputConflict &&
+          drcOptions.PowerOutputConflict &&
+          eprop.power_outputs > 1
+        ) {
+          this.addDrcNetError(
+            errors,
+            'Multiple power outputs on same net',
+            netlist.nets[net],
+            [10],
+          );
+        } else if (
+          drcOptions.PowerInputConflict &&
           eprop.power_inputs > 1 &&
           eprop.power_outputs === 0 &&
           eprop.outputs === 0 &&
           eprop.passives === 0
         ) {
-          this._addDrcError(
-            drawing,
-            r,
+          this.addDrcNetError(
+            errors,
             'Multiple power inputs with no driver',
             netlist.nets[net],
+            [9],
           );
         } else if (
-          drc_options.OutputPwr &&
+          drcOptions.OutputPwr &&
           eprop.outputs > 0 &&
           (eprop.powers > 0 || eprop.power_inputs > 0 || eprop.power_outputs > 0)
         ) {
-          this._addDrcError(
-            drawing,
-            r,
+          this.addDrcNetError(
+            errors,
             'Power connected to an output',
             netlist.nets[net],
+            [powerMarkerElectricalType, 9, 1, 10],
           );
-        } else if (drc_options.Output && eprop.outputs > 1) {
-          this._addDrcError(
-            drawing,
-            r,
+        } else if (drcOptions.Output && eprop.outputs > 1) {
+          this.addDrcNetError(
+            errors,
             'Output connected to an output',
             netlist.nets[net],
+            [1],
           );
         } else if (
-          drc_options.NoOutput &&
+          drcOptions.NoOutput &&
           eprop.outputs === 0 &&
           eprop.passives === 0 &&
           eprop.power_outputs === 0 &&
@@ -479,90 +441,49 @@ export class updateDrawing {
           eprop.inputs > 0 &&
           eprop.not_connecteds === 0
         ) {
-          this._addDrcError(
-            drawing,
-            r,
+          this.addDrcNetError(
+            errors,
             'No outputs driving inputs',
             netlist.nets[net],
+            [0],
           );
         } else if (
-          drc_options.UnConnected &&
+          drcOptions.UnConnected &&
           total === 1 &&
           eprop.not_connecteds === 0 &&
           !netlist.nets[net].every(node => node.symbol &&
             instrumentSymbols.has(`${node.sheet}:${node.symbol._id}`))
         ) {
-          this._addDrcError(drawing, r, 'Unconnected nets', netlist.nets[net]);
+          this.addDrcNetError(errors, 'Unconnected nets', netlist.nets[net]);
         }
 
-        let labels: { [key: string]: NetListNode } = Object.create(null);
-        let lc_labels: { [key: string]: NetListNode } = Object.create(null);
-        for (let i in netlist.nets[net]) {
-          if (netlist.nets[net].hasOwnProperty(i)) {
-            let n = netlist.nets[net][i];
-            if (n.label) {
-              labels[n.label] = n;
-              lc_labels[n.label.toLowerCase()] = n;
-            }
-          }
+        // Port labels are local names for the same connection in different instances.
+        const localLabels = new Map<number, Map<string, NetListNode>>();
+        for (const node of netlist.nets[net]) {
+          if (!node.label) continue;
+          const instance = node.drcSource?.instance ?? 0;
+          if (!localLabels.has(instance)) localLabels.set(instance, new Map());
+          localLabels.get(instance)!.set(node.label, node);
         }
-
-        if (
-          drc_options.NonCaseDistinctNetNames &&
-          Object.keys(labels).length > 1 &&
-          Object.keys(lc_labels).length === 1
-        ) {
-          for (let l in labels) {
-            if (Object.prototype.hasOwnProperty.call(labels, l)) {
-              let label = labels[l];
-              let a = [0, 0];
-              if (label.parent && label.parent.NodeName !== DocItemTypes.Wire) {
-                a = label.parent.point;
-              }
-              r.push({
-                symbol: l,
-                pin: '',
-                text: 'Non-case distinct net names (i.e., Vcc and VCC)',
-                a: a,
-                id: label.parent ? label.parent._id : 0,
-                sheet: label.sheet,
-              });
-            }
-          }
-        } else if (
-          drc_options.MultipleNetNames &&
-          Object.keys(lc_labels).length > 1
-        ) {
-          for (let l in labels) {
-            if (Object.prototype.hasOwnProperty.call(labels, l)) {
-              let label = labels[l];
-              let a = [0, 0];
-              if (label.parent && label.parent.NodeName !== DocItemTypes.Wire) {
-                a = label.parent.point;
-              }
-              r.push({
-                symbol: l,
-                pin: '',
-                text: 'Multiple names on same net',
-                a: a,
-                id: label.parent ? label.parent._id : 0,
-                sheet: label.sheet,
-              });
-            }
+        for (const labels of localLabels.values()) {
+          if (labels.size < 2) continue;
+          const caseDistinct = new Set([...labels.keys()].map((label) => label.toLowerCase())).size > 1;
+          const message = !caseDistinct && drcOptions.NonCaseDistinctNetNames
+            ? 'Non-case distinct net names (i.e., Vcc and VCC)'
+            : caseDistinct && drcOptions.MultipleNetNames ? 'Multiple names on same net' : null;
+          if (!message) continue;
+          for (const [label, node] of labels) {
+            errors.push({
+              symbol: label, pin: '', text: message, a: [...(node.a ?? node.symbol.point)],
+              id: node.symbol?._id ?? node.parent?._id ?? 0,
+              sheet: node.drcSource?.sheet ?? node.sheet, source: node.drcSource,
+            });
           }
         }
       }
     }
 
-    if (netlist.sources) {
-      const origins = new Map(netlist.symbols.map(([, symbol]) =>
-        [symbol._id, netlist.sources[symbol.unitId]]));
-      for (const row of r) {
-        const origin = origins.get(row.id);
-        if (!row.source && origin?.instancePath.length) row.source = origin;
-      }
-    }
-    return r;
+    return errors;
   }
 
   //

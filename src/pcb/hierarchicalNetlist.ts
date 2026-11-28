@@ -18,9 +18,9 @@ import { stableHierarchyId } from './stableHierarchyId';
 export { stableHierarchyId } from './stableHierarchyId';
 import {
   createSheetSnapshot,
-  mergeSheetSnapshots,
 } from '../web-worker/netlistState';
-import type { ScopedNet, SheetSnapshot } from '../web-worker/netlistState';
+import type { SheetSnapshot } from '../web-worker/netlistState';
+import { mergeSheetSnapshots, type ScopedNet } from './pcbSheetNetlist';
 
 export interface HierarchyDocument {
   path: string;

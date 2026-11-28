@@ -8,7 +8,7 @@ Each entry has a stable unique `id`, display `name`, relative `path` and optiona
 
 Library source tabs appear as **Standard**, **Online**, then **My Libraries**. New users start on Standard; the last selected source is remembered locally for subsequent sessions.
 
-The **Standard Libraries** selector loads one library at a time, on demand, and remembers the selection separately from personal libraries. Failed loads offer Retry or another library selection. Standard libraries support preview, search, placement and replacement; personal libraries also provide editing controls.
+The **Standard Libraries** selector loads one library at a time, on demand, and remembers the selection separately from personal libraries. Failed loads offer Retry or another library selection. Standard libraries support preview, search, placement and replacement; personal libraries also provide editing controls. Newly placed standard symbols show their Name field by default. Use its Show checkbox in the symbol properties to hide or reveal the name.
 
 All three sources use compact result rows. Selecting a symbol shows its description and a draggable artwork preview; long descriptions scroll independently.
 
@@ -20,7 +20,7 @@ The picker browser regression runs with `npm run test:layout:browser -- library-
 
 | Bundle | Contents and contracts |
 | --- | --- |
-| SPICE essentials | 27 entries: passives, transformer, resonators, discrete semiconductors, coloured LEDs, 741 and independent sources. European and US resistor variants share connectivity. |
+| SPICE essentials | 29 entries: passives, transformer, resonators, discrete semiconductors, coloured LEDs, 741, LM358, LM324 and independent sources. European and US resistor variants share connectivity. |
 | Digital logic | 21 canonical types / 28 entries: gates, combinational blocks, counters, shift register, flip-flops and latches. Seven clocked types have separate rising/falling entries. |
 | Functional blocks | 14 interfaces / 17 entries: ADC/DAC, communications, logger, MCU/FPGA/PLC, sample-and-hold, state machine, PCM/TDM and transducer. ADC, PCM and state machine have both clock-edge variants. |
 | Sensors and interfaces | Ten generic types: test point, Hall, piezo, light/pressure/temperature voltage sensors, moisture, pH, analogue switch and AM modulator. |
@@ -55,7 +55,7 @@ Each RJ45 socket and SFP+ cage has one passive cable endpoint at the centre of i
 
 Names specify actual socket counts rather than marketed port totals. The layouts are generic and unbranded; similar SFP/SFP+ cage artwork does not imply compatibility with a particular product.
 
-Every rack device has the same **80 × 8 XML-unit face (400 × 40 drawing units)**, including rack ears and matching mounting holes. Keep the default scale, align the native bottom-right placement anchors, and step vertically by **40 drawing units** for each 1U panel. Smaller copper switches use single port rows, larger switches use paired odd/even rows, and 24-port patch panels use one row. These are drawing conventions, not mechanical rack dimensions. Name/reference metadata is hidden by default; front-panel labels remain visible. Existing drawings retain their embedded symbols.
+Every rack device has the same **80 × 8 XML-unit face (400 × 40 drawing units)**, including rack ears and matching mounting holes. Keep the default scale, align the native bottom-right placement anchors, and step vertically by **40 drawing units** for each 1U panel. Smaller copper switches use single port rows, larger switches use paired odd/even rows, and 24-port patch panels use one row. These are drawing conventions, not mechanical rack dimensions. The Name field is visible by default and the reference is hidden. Front-panel labels remain visible. Existing drawings retain their embedded symbols.
 
 **Open Example → Examples → Small office network** opens an editable four-unit rack with an ISP fibre terminal, ceiling access point and desk switch. The cable map is ONT1 LAN1 → RTR1 WAN1, RTR1 SFP+1 → SW1 SFP+1, SW1 port 4 → PP1 port 1 → AP1, and SW1 port 6 → PP1 port 3 → DS1. Patch-panel sockets join rack leads to office runs. Spare sockets and the external ISP endpoint are intentionally open; checker notices for these endpoints and wires entering panel outlines are expected.
 
@@ -93,7 +93,7 @@ The [A4 preview](motors-motion-a4.png) fits 16 mixed resources at native placeme
 
 Select **Standard → Solar power and batteries** for the 52 supplied home-energy planning components: solar panels and arrays, inverters and charge controllers, battery storage, EV charging, grid/supply and backup equipment, switches and protection, monitoring/control and household loads.
 
-The [supplied library](../bundled-libraries/solar/Solar-Power-and-Batteries.TCLib) is bundled unchanged. Its connection points represent whole cables or logical links rather than individual electrical terminals; component attributes retain the supplied usage notes and reference sources. It has no embedded SPICE models. The [import provenance](../bundled-libraries/solar/solar.provenance.json) records its original filename, entry count and file hash.
+The [solar library](../bundled-libraries/solar/Solar-Power-and-Batteries.TCLib) uses the visible Name field for the supplied equipment names. Its connection points represent whole cables or logical links rather than individual electrical terminals; component attributes retain the supplied usage notes and reference sources. It has no embedded SPICE models. The [import provenance](../bundled-libraries/solar/solar.provenance.json) records its original filename, entry count, original and bundled file hashes, and caption changes.
 
 The catalogue entry makes it available in Electron and both browser modes. `npm run libraries:package` and `npm run libraries:all` copy the supplied file into the build; no generator rewrites it.
 
@@ -107,15 +107,19 @@ Use **Simulation → Components** for common parts; **More…** opens the full s
 | MOSFET | 2 gate, 3 drain, 4 source; bulk tied to source. |
 | Diode, zener, LED | 1 anode, 2 cathode. |
 | 741 | 3 IN+, 2 IN−, 7 positive supply, 4 negative supply, 6 output. Offset-null pins omitted. |
+| LM358 | Complete eight-pin dual package. Supply pins are 8 (V+) and 4 (V−). |
+| LM324 | Complete 14-pin quad package. Supply pins are 4 (V+) and 11 (V−). |
 | Potentiometer | Ends 1/2, wiper 3; two resistor segments with a 1 micro-ohm floor. |
 | Transformer | Primary 1/2, secondary 3/4; coupled ideal inductors, no saturation/winding resistance. |
 | Resonators | Motional series RLC in parallel with shunt capacitance. |
 
 The 741 behavioural model approximates 200,000 open-loop DC gain, 2 Megohm differential input resistance, 5 Hz dominant pole, 0.5 V/µs slew limit, 75 ohm output resistance and rail clipping with 2 V headroom. It omits bias/offset, common-mode validity, temperature, noise, short-circuit current and full stability effects. Generic diode/transistor/LED/resonator models are teaching approximations; LED colour is not calibrated brightness. Electrolytic polarity is graphical and is not enforced by its ideal capacitor model. Core inductors remain linear.
 
+The LM358 and LM324 link to the typical-behaviour OpenJellyBean package models in the bundled catalog. Both can simulate after placement with the supply and signal pins wired. The LM358 and LM324 models omit effects such as input common-mode limits, noise and offset drift. [LM358 datasheet](https://www.ti.com/lit/ds/symlink/lm358.pdf) · [LM324 pinout](https://www.ti.com/lit/ds/symlink/lm324-mil.pdf) · [OpenJellyBean definitions](https://github.com/xdylanm/openjellybean/blob/v0.6.0/jellybean.lib)
+
 ## Sources, recipes and provenance
 
-[library-recipes](../library-recipes) records selections and guarded adaptations. Adjacent `*.provenance.json` files in [bundled-libraries](../bundled-libraries) retain attribution, source IDs, hashes and drawing/model changes; generated bundle metadata is also embedded in SQLite `TinyCADBundleInfo`. The supplied solar library is preserved unchanged, with its import metadata recorded alongside it.
+[library-recipes](../library-recipes) records selections and guarded adaptations. Adjacent `*.provenance.json` files in [bundled-libraries](../bundled-libraries) retain attribution, source IDs, hashes and drawing/model changes; generated bundle metadata is also embedded in SQLite `TinyCADBundleInfo`. The supplied solar library has import metadata recorded alongside it.
 
 SPICE artwork comes from **onetransistor** and templates from **aryajur** in the legacy SQL collection. The digital style derives from **matt**'s NAND (SymbolID 160 / NameID 9279), retained as [nand-reference.xml](../library-sources/digital/nand-reference.xml). The digital, functional and sensor generators use checked-in sources without a private SQL dump or selection UI.
 
@@ -202,7 +206,7 @@ With `occt-import-js` 0.0.23 available, run `node scripts/pcb/verify-starter-ste
 
 In a browser, **Open Example** is on the right of the title bar. **Explanation** appears beside it when the current drawing has an example explanation, and toggles that panel. In Electron, use **File → Open Example**, after **Open Recent** and a separator; **View → View Explanation** toggles the panel and is disabled when no explanation is available.
 
-[bundled-examples/config.json](../bundled-examples/config.json) defines the **Examples** collection, containing seven drawings: the transistor amplifier, small office network, ESP32 climate station, solar/battery home, podcast studio, laboratory bench and motor-control bench. Equipment-layout examples include a Markdown explanation and matching preview. The bundled SPICE and XSPICE examples are defined in [tutorials/catalog.json](../tutorials/catalog.json), with drawings, descriptions and previews under [tutorials](../tutorials/README.md). The packaging script merges both catalogues into `dist/bundled-examples/config.json` and copies tutorial resources under `dist/bundled-examples/tutorials/`. Both catalogues use [bundled-examples.schema.json](../schemas/bundled-examples.schema.json).
+[bundled-examples/config.json](../bundled-examples/config.json) defines two groups. **Electronics** contains the transistor amplifier and ESP32 climate station. **Schematics** contains the small office network, solar and battery plan, podcast studio, laboratory bench and motor-control bench. Equipment-layout examples include a Markdown explanation and matching preview. The bundled SPICE and XSPICE examples are defined in [tutorials/catalog.json](../tutorials/catalog.json), with drawings, descriptions and previews under [tutorials](../tutorials/README.md). The packaging script merges both catalogues into `dist/bundled-examples/config.json` and copies tutorial resources under `dist/bundled-examples/tutorials/`. Both catalogues use [bundled-examples.schema.json](../schemas/bundled-examples.schema.json).
 
 | Example | Editable drawing | Preview |
 | --- | --- | --- |
@@ -214,7 +218,7 @@ In a browser, **Open Example** is on the right of the title bar. **Explanation**
 | DC load and waveform bench | [lab-measurement-bench.dsn](../bundled-examples/drawings/lab-measurement-bench.dsn); [explanation](../bundled-examples/descriptions/lab-measurement-bench.md). | [Preview](../bundled-examples/images/lab-measurement-bench.png) |
 | DC motor and limit-control bench | [motor-control-bench.dsn](../bundled-examples/drawings/motor-control-bench.dsn); [explanation](../bundled-examples/descriptions/motor-control-bench.md). | [Preview](../bundled-examples/images/motor-control-bench.png) |
 
-Add future general examples to this collection's `examples` array, with a drawing path, preview and description. Keep drawing resources inside `bundled-examples/`; rerun `npm run examples:package` and `npm run test:examples` after changes. The example tests check rack dimensions, exact port-to-port net topology, embedded library artwork and standalone save/load. Explanations appear in the picker and remain accessible through **Explanation** after opening. The wiring/layout examples use A4 landscape except the supplied solar artwork, which uses A3. They have no SPICE models. Unused ports, physical socket/body envelopes and extended power-type classification can produce checker notices; the explanations describe these limits.
+Add future general examples to the appropriate group's `examples` array, with a drawing path, preview and description. Keep drawing resources inside `bundled-examples/`. Rerun `npm run examples:package` and `npm run test:examples` after changes. The example tests check rack dimensions, exact port-to-port net topology, embedded library artwork and standalone save/load. Explanations appear in the picker and remain accessible through **Explanation** after opening. The wiring/layout examples use A4 landscape except the supplied solar artwork, which uses A3. They have no SPICE models. Unused ports, physical socket/body envelopes and extended power-type classification can produce checker notices. The explanations describe these limits.
 
 Generate the equipment examples with `node scripts/build-library-examples.mjs`, then validate and render them with `python3 scripts/review-library-examples.py` through `https://www.tinycad.net/mcp`. The build and review tools check socket contacts and net connectivity before saving drawings and previews. [Source provenance](../bundled-examples/library-examples.provenance.json) records library/component IDs, source hashes, expected nets and verification results.
 

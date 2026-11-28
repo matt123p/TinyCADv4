@@ -3,11 +3,13 @@ import EditSheetDialog from './editSheetDlg';
 import DesignDetailsDialog from './designDetailsDlg';
 import PageSizeDialog from './pageSizeDlg';
 import SettingsDialog from './settingsDlg';
+import { SymbolPropertyFontDefaultsDialog } from './symbolPropertyFontsDlg';
 import ColoursDialog from './coloursDlg';
 import DrcDialog from './drcDlg';
 import AnnotateDialog from './annotateDlg';
 import AutoLayoutDialog from './autoLayoutDlg';
 import NetlistDialog from './netlistDlg';
+import { DriveExportDialog } from './driveExportDlg';
 import { DeleteSheetDialog } from './deleteSheetDlg';
 import { ClipboardFailureDialog } from './clipboardFailureDlg';
 import ColourPickerDialog from './colourPickerDlg';
@@ -22,10 +24,7 @@ import { ImportLibrarySymbolPickerDialog } from './importLibrarySymbolPickerDlg'
 import { LibraryInfoDialog } from './libraryInfoDlg';
 import { LibraryFolderDialog } from './libraryFolderDlg';
 import { ReplaceSymbolDialog } from './replaceSymbolDlg';
-import OpenExampleDialog from './openExampleDlg';
-
-const ProjectSaveAsDialog = process.env.TARGET_SYSTEM === 'filesystem' ? null : React.lazy(() => import('../projects/ProjectSaveAsDialog'));
-const ProjectRecoveryDialog = process.env.TARGET_SYSTEM === 'filesystem' ? null : React.lazy(() => import('../projects/ProjectRecoveryDialog'));
+import WelcomeDialog from './welcomeDlg';
 
 interface TDialogueProps {
   show_dialogue: string;
@@ -39,12 +38,8 @@ const TDialogue: FunctionComponent<TDialogueProps> = (
   props: TDialogueProps,
 ) => {
   switch (props.show_dialogue) {
-    case 'project_recovery':
-      return ProjectRecoveryDialog && <React.Suspense fallback={null}><ProjectRecoveryDialog prompt={props.dialogue_props} /></React.Suspense>;
-    case 'project_save_as':
-      return ProjectSaveAsDialog && <React.Suspense fallback={null}><ProjectSaveAsDialog omitResults={props.dialogue_props?.omitResults} /></React.Suspense>;
     case 'open_example':
-      return <OpenExampleDialog groupId={props.dialogue_props?.groupId} exampleId={props.dialogue_props?.exampleId} />;
+      return <WelcomeDialog groupId={props.dialogue_props?.groupId} exampleId={props.dialogue_props?.exampleId} />;
     case 'auto_layout':
       return <AutoLayoutDialog />;
     case 'sheet_rename':
@@ -59,6 +54,8 @@ const TDialogue: FunctionComponent<TDialogueProps> = (
       return <DesignDetailsDialog details={props.dialogue_props} />;
     case 'settings':
       return <SettingsDialog details={props.dialogue_props} />;
+    case 'symbol_property_font_defaults':
+      return <SymbolPropertyFontDefaultsDialog />;
     case 'colours':
       return <ColoursDialog options={props.dialogue_props} />;
     case 'drc':
@@ -79,6 +76,8 @@ const TDialogue: FunctionComponent<TDialogueProps> = (
       );
     case 'netlist':
       return <NetlistDialog />;
+    case 'drive_export':
+      return <DriveExportDialog {...props.dialogue_props} />;
     case 'netlist_type_editor':
       return <NetlistTypeEditorDialog />;
     case 'symbol_delete':

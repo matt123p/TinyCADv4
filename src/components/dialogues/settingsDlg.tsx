@@ -20,8 +20,6 @@ import {
   Radio,
 } from '@fluentui/react-components';
 import { connect } from 'react-redux';
-import { projectModeSupported, saveStartupMode, startupMode } from '../../io/projectMode';
-import type { StartupMode } from '../../io/projectMode';
 
 interface SettingsDialogProps extends WithTranslation {
   details: SetSettingModel;
@@ -35,7 +33,6 @@ interface SettingsDialogState {
   units: number;
   grid_spacing: number;
   grid_units: number;
-  openIn: StartupMode;
 }
 
 //
@@ -68,7 +65,6 @@ class SettingsDialog extends React.PureComponent<
     }
 
     this.state = {
-      openIn: startupMode(),
       grid: this.props.details.grid,
       grid_snap: this.props.details.grid_snap,
       show_grid: this.props.details.show_grid,
@@ -79,14 +75,6 @@ class SettingsDialog extends React.PureComponent<
   }
 
   handleClickOk() {
-    if (projectModeSupported) saveStartupMode(this.state.openIn);
-    const { grid, grid_snap, show_grid, units } = this.state;
-    const current = this.props.details;
-    if (grid === current.grid && grid_snap === current.grid_snap &&
-        show_grid === current.show_grid && units === current.units) {
-      this.props.dispatch(actionCancelDialog());
-      return;
-    }
     this.props.dispatch(
       actionUpdateSettings({
         grid: this.state.grid,
@@ -185,20 +173,6 @@ class SettingsDialog extends React.PureComponent<
             <DialogTitle>{t('dialogues.settings.title')}</DialogTitle>
             <DialogContent>
               <div style={{ display: 'flex', flexDirection: 'column', rowGap: '10px' }}>
-                {projectModeSupported && (
-                  <label>
-                    {t('projects.openIn')}{' '}
-                    <select
-                      value={this.state.openIn}
-                      onChange={(event) => this.setState({
-                        openIn: event.target.value === 'project' ? 'project' : 'single',
-                      })}
-                    >
-                      <option value="single">{t('projects.singleFile')}</option>
-                      <option value="project">{t('projects.projectMode')}</option>
-                    </select>
-                  </label>
-                )}
                 <strong>{t('dialogues.settings.grid')}</strong>
                 <Checkbox
                   label={t('dialogues.settings.showGrid')}

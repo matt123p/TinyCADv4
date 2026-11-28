@@ -58,6 +58,8 @@ const sorted = (nets) =>
     .map((n) => [...n].sort())
     .sort((a, b) => a.join().localeCompare(b.join()));
 
+// Compare rendered primitive properties, ignoring resource IDs, runtime caches,
+// invisible note borders and insignificant XML floating-point round trips.
 // Legacy TEXT stores an anchor rather than a box. Different renderer versions
 // derive different Markdown padding and font widths when they import it.
 const round = (value) => Math.round(value * 1e6) / 1e6;
@@ -80,7 +82,7 @@ function artwork(items, legacyAnchors) {
     const invisible = item.NodeName === 'text' && !item.stroked && !item.filled;
     if (invisible && legacyAnchors) {
       const point = item.rotation % 2 ? item.point_b : [item.point[0], item.point_b[1]];
-      if (legacyAnchors.has(textAnchor(item.text, point, item.rotation))) {
+      if (legacyAnchors === true || legacyAnchors.has(textAnchor(item.text, point, item.rotation))) {
         item = { ...item, point, point_b: undefined };
       }
     }
@@ -90,7 +92,7 @@ function artwork(items, legacyAnchors) {
           key.startsWith('_') ||
           ['style_id', 'fill_id', 'font_id', 'textData'].includes(key) ||
           // Independent legacy loads can assign different IDs to the same source pin.
-          (legacyAnchors && key === 'pinId')
+          key === 'pinId'
         )
           return undefined;
         if (
@@ -117,12 +119,14 @@ test('all five new library examples retain their source artwork, exact nets and 
   const catalog = parseExampleCatalog(
     JSON.parse(await fs.readFile('bundled-examples/config.json', 'utf8')),
   );
-  const entries = catalog.groups.find((g) => g.id === 'examples').examples;
-  assert.equal(
-    entries.length,
-    7,
-    'Keep AMP and the office network alongside the five new examples',
-  );
+  const electronics = catalog.groups.find((g) => g.id === 'electronics').examples.filter((entry) => !entry.project);
+  const schematics = catalog.groups.find((g) => g.id === 'schematics').examples;
+  assert.deepEqual(electronics.map((entry) => entry.id), ['amp', 'embedded-climate-station']);
+  assert.deepEqual(schematics.map((entry) => entry.id), [
+    'network-layout', 'solar-battery-home', 'podcast-studio',
+    'lab-measurement-bench', 'motor-control-bench',
+  ]);
+  const entries = [...electronics, ...schematics];
   const resources = exampleResourcePaths(catalog);
   const provenance = JSON.parse(
     await fs.readFile(
@@ -179,7 +183,7 @@ test('all five new library examples retain their source artwork, exact nets and 
     assert.equal(
       sha(bytes),
       proof.finalSha256,
-      'Deliver the exact final auto-tidy XML',
+      'Deliver the exact reviewed XML with its final wire styling',
     );
     for (const ext of ['png', 'svg']) {
       const preview = await fs.readFile(
@@ -217,9 +221,12 @@ test('all five new library examples retain their source artwork, exact nets and 
       symbols.length,
     );
     assert.ok(
-      sheet.items.filter((i) => i.NodeName === 'text').length >=
-        symbols.length + 1,
-      'Native notes explain and identify the equipment',
+      sheet.items.filter((i) => i.NodeName === 'text').length >= 2,
+      'The drawings retain their title and explanatory notes',
+    );
+    assert.ok(
+      sheet.items.some((i) => i.NodeName === 'text' && /^### .+/m.test(i.text)),
+      'Each equipment drawing demonstrates Markdown headings in its notes',
     );
     for (const source of proof.sources) {
       if (!libs.has(source.libraryPath))
@@ -250,10 +257,13 @@ test('all five new library examples retain their source artwork, exact nets and 
           height: 0,
           autoReference: true,
         });
-        sourceArt.set(key, {
-          items: artwork(d.sheets[0].items[0]._symbol.outlines[0].items, legacyAnchors),
-          legacyAnchors,
-        });
+        sourceArt.set(
+          key,
+          artwork(
+            d.sheets[0].items[0]._symbol.outlines[0].items,
+            source.library === 'solar',
+          ),
+        );
       }
       const symbol = symbols.find(
         (s) =>
@@ -263,10 +273,43 @@ test('all five new library examples retain their source artwork, exact nets and 
       assert.ok(symbol, source.reference);
       assert.equal(symbol.scale_x, 1);
       assert.equal(symbol.scale_y, 1);
-      const art = sourceArt.get(key);
+      const nameFields = symbol.text.filter((t) => t.description === 'Name');
+      assert.equal(nameFields.length, 1, source.reference);
+      assert.ok(nameFields[0].show && nameFields[0].value.trim());
+      assert.equal(nameFields[0].display, 0);
+      const ref = symbol.text.find((t) => t.description === 'Ref');
+      assert.ok(ref.show);
+      assert.equal(nameFields[0].position[1], ref.position[1]);
+      assert.ok(nameFields[0].position[0] > ref.position[0]);
+      const body = api.bodyRect(symbol);
+      const labels = api.texts(symbol);
+      assert.equal(labels.length, 2);
+      for (const text of labels) {
+        assert.ok(
+          text.x1 >= 0 && text.y1 >= 0 &&
+            text.x2 <= sheet.details.page_size[0] &&
+            text.y2 <= sheet.details.page_size[1],
+          source.reference + ' label fits on the sheet',
+        );
+        assert.ok(
+          text.y2 <= body.y1 || text.x1 >= body.x2,
+          source.reference + ' label sits outside its artwork',
+        );
+      }
+      const aboveGap = body.y1 - Math.max(...labels.map((t) => t.y2));
+      const rightGap = Math.min(...labels.map((t) => t.x1)) - body.x2;
+      assert.ok(
+        (aboveGap >= 0 && aboveGap <= 20) ||
+          (rightGap >= 0 && rightGap <= 20),
+        source.reference + ' labels sit close to the symbol',
+      );
+      const embedded = artwork(
+        symbol._symbol.outlines[0].items,
+        source.library === 'solar',
+      );
       assert.deepEqual(
-        artwork(symbol._symbol.outlines[0].items, art.legacyAnchors),
-        art.items,
+        embedded,
+        sourceArt.get(key),
         source.reference +
           ' preserves source geometry, labels, socket mapping and electrical types',
       );

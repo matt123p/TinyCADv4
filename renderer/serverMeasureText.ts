@@ -10,25 +10,36 @@ type FontFaceMetrics = {
 
 type FontMetrics = {
   regular: FontFaceMetrics;
+  bold: FontFaceMetrics;
+  italic: FontFaceMetrics;
+  bold_italic: FontFaceMetrics;
   size: number;
 };
+
+type FontFace = Exclude<keyof FontMetrics, 'size'>;
 
 const DEFAULT_FONT_SIZE = 10;
 const FALLBACK_GLYPH = '77';
 const SPACE_GLYPH = '32';
 
-function parseFont(font: string) {
-  const match = /^\s*(\d+(?:\.\d+)?)px\s+(.+?)\s*$/i.exec(font || '');
+function parseFont(font: string): { size: number; family: string; face: FontFace } {
+  const match = /^\s*((?:(?:italic|bold)\s+)*)(\d+(?:\.\d+)?)px\s+(.+?)\s*$/i.exec(font || '');
   if (!match) {
     return {
       size: DEFAULT_FONT_SIZE,
       family: 'Arial',
+      face: 'regular',
     };
   }
 
+  const styles = match[1].toLowerCase();
+  const bold = styles.includes('bold');
+  const italic = styles.includes('italic');
+  const face = bold ? (italic ? 'bold_italic' : 'bold') : (italic ? 'italic' : 'regular');
   return {
-    size: Math.max(1, Number.parseFloat(match[1]) || DEFAULT_FONT_SIZE),
-    family: match[2],
+    size: Math.max(1, Number.parseFloat(match[2]) || DEFAULT_FONT_SIZE),
+    family: match[3],
+    face,
   };
 }
 
@@ -42,9 +53,7 @@ function selectMetrics(family: string): FontMetrics {
   return ArialMetrics as FontMetrics;
 }
 
-function glyphWidth(metrics: FontMetrics, charCode: number) {
-  const widths = metrics.regular.widths;
-  const code = String(charCode);
+function glyphWidth(widths: FontFaceMetrics['widths'], size: number, code: string) {
   if (widths[code] != null) {
     return widths[code];
   }
@@ -54,11 +63,17 @@ function glyphWidth(metrics: FontMetrics, charCode: number) {
   if (widths[SPACE_GLYPH] != null) {
     return widths[SPACE_GLYPH];
   }
-  return metrics.size * 0.6;
+  return size * 0.6;
 }
 
 export function getFont(item: Text) {
   return item.font_size + 'px ' + item.font_name;
+}
+
+export function getStyledFont(item: Text) {
+  const style = item.font_italic ? 'italic ' : '';
+  const weight = item.font_bold ? 'bold ' : '';
+  return style + weight + getFont(item);
 }
 
 export function measureText(font: string, value: string) {
@@ -66,18 +81,18 @@ export function measureText(font: string, value: string) {
     return 0;
   }
 
-  const { size, family } = parseFont(font);
+  const { size, family, face } = parseFont(font);
   const metrics = selectMetrics(family);
+  const { widths, kerning } = metrics[face];
   let width = 0;
   let previous = '';
 
   for (let index = 0; index < value.length; ++index) {
-    const charCode = value.charCodeAt(index);
-    const code = String(charCode);
-    width += glyphWidth(metrics, charCode);
+    const code = String(value.charCodeAt(index));
+    width += glyphWidth(widths, metrics.size, code);
 
-    if (previous && metrics.regular.kerning[previous]?.[code] != null) {
-      width += metrics.regular.kerning[previous][code];
+    if (previous) {
+      width += kerning[previous]?.[code] ?? 0;
     }
 
     previous = code;

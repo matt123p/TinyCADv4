@@ -651,7 +651,6 @@ export function audioSymbol(device) {
       )}</PIN>`,
     );
   }
-  text(0, h + 4, device.short, 2);
   return {
     device,
     width: Math.ceil(Math.max(w, textWidth(device.short, 8)) / 2) * 2,
@@ -693,7 +692,7 @@ export function audioArtwork(recipe) {
       Name: r.device.name,
       Reference: 'A?',
       ppp: 1,
-      ShowName: 1,
+      ShowName: 0,
       ShowRef: 1,
       DefRotate: 0,
       Description: [r.device.name, r.device.notes, recipe.scope]

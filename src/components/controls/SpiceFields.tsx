@@ -14,7 +14,7 @@ const useStyles = makeStyles({
     display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0,
   },
   wide: {
-    display: 'flex', flexWrap: 'wrap', gap: '16px', maxWidth: '1100px',
+    display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: '16px', maxWidth: '1100px',
   },
   model: { flex: '1.4 1 300px', minWidth: 0 },
   sections: { display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 },
@@ -37,6 +37,7 @@ function OptionalSpiceSection({
   label,
   value,
   onChange,
+  wide,
 }: SpiceFieldsProps & { name: string; label: string }) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -60,9 +61,9 @@ function OptionalSpiceSection({
             className={styles.text}
             size="small"
             resize="vertical"
-            rows={3}
+            rows={name === '$$SPICE_PROLOG' ? (wide ? 6 : 4) : 3}
             aria-label={label}
-            textarea={{ className: styles.code }}
+            textarea={{ className: styles.code, wrap: 'off' }}
             value={text}
             onChange={(_, data) => {
               setEnabledEmpty(true);
@@ -106,7 +107,7 @@ export function SpiceFields({ value, onChange, wide }: SpiceFieldsProps) {
           size="small"
           resize="vertical"
           rows={5}
-          textarea={{ className: styles.code }}
+          textarea={{ className: styles.code, wrap: 'off' }}
           value={value('$$SPICE') ?? ''}
           onChange={(_, data) => onChange('$$SPICE', data.value)}
         />
@@ -117,6 +118,7 @@ export function SpiceFields({ value, onChange, wide }: SpiceFieldsProps) {
           label={t('panel.editSpice.prologue')}
           value={value}
           onChange={onChange}
+          wide={wide}
         />
         <OptionalSpiceSection
           name="$$SPICE_EPILOG"

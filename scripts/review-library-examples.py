@@ -112,4 +112,6 @@ for example in manifest['examples']:
 manifest['service'] = 'https://www.tinycad.net/mcp'
 manifest['scope'] = 'Equipment/PCB wiring and cable plans; no firmware, hardware testing or SPICE models. Spare ports and physical socket/body-envelope notices are intentional. Preserve real pin types; extended power classification is a known checker limitation.'
 (DEST / 'library-examples.provenance.json').write_text(json.dumps(manifest, indent=2) + '\n')
+subprocess.run(['node', 'scripts/style-example-netlist-types.mjs',
+                'solar-battery-home', 'podcast-studio'], check=True)
 print('Saved five final drawings and their matching PNG/SVG previews.', flush=True)

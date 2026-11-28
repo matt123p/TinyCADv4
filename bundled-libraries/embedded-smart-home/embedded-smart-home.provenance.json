@@ -423,7 +423,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "9d316a887bd9f7eedd83b614e9e5254dacacc79acfb6c5580f56ddf825ff1a78"
+      "xmlSha256": "e96c8fca624705336a569dae5b05bd8c952bb5f6e7ca379ec3cdf5f3ca44c60c"
     },
     {
       "id": "esp32s3-devkitc1",
@@ -799,7 +799,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "b561b92342da5c04e526adb0f045ab5b07b60ce675c087d3a386a86df783efd0"
+      "xmlSha256": "1449e238d80c159bdef3780e5d67661d794d703563c830c28c68eb55b833eaca"
     },
     {
       "id": "nodemcu-esp8266",
@@ -1063,7 +1063,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "e73e8b62d9b767ee2bda5e90b6d6f087f4ca3517ccd8be4cb9f61aecab801fa5"
+      "xmlSha256": "20eecb85275629f2df61fcc410b7226aa47b139c7f3817d4a6a974580857d734"
     },
     {
       "id": "lolin-d1-mini",
@@ -1215,7 +1215,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "39cb1e3859c853693f7947c6c674dd82497066a56f365597ff74621f13ad2975"
+      "xmlSha256": "a90067bb9a80074db3b4f456f2e730fe7976cd8aacc0eaa62fa518266b6ce066"
     },
     {
       "id": "raspberry-pi-3",
@@ -1561,7 +1561,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "c606bb654fdfda9fbda58d2f90aba6d06b8a82ea9e77654add96b9997774a525"
+      "xmlSha256": "d51daa3a03d38908412729cb202a24d9752ddce617537bc06a25e3ab23b02f58"
     },
     {
       "id": "raspberry-pi-4",
@@ -1907,7 +1907,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "04463b0fd2dffecaa6f75702ada6a361ef771767cf904451f17a27c5774a7f67"
+      "xmlSha256": "b9254ad2d7dd6695aacd9e24558831a2c0fdd1a7ce86cc07fb59add55afdb596"
     },
     {
       "id": "raspberry-pi-5",
@@ -2253,7 +2253,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "e48e4018dd6a899627cee7c0f0d52d540b4e05dd08ea4e9d773cc962a308a956"
+      "xmlSha256": "a246adc5b432b3541b628ae21b4d689771d372e17af1ecb1317b458ef985e482"
     },
     {
       "id": "arduino-uno",
@@ -2629,7 +2629,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "0a5e7b9ab3cfe1058cec49efb3550c731c2dc4905d88067f4d52246cc4c8da7e"
+      "xmlSha256": "b6eb33f93251f34102a39b14e4c24355ce73cfc9131374174b308f2f75fe92eb"
     },
     {
       "id": "arduino-nano",
@@ -2941,7 +2941,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "7debb6448074ee104e9a467481a307c8b8b31e9cadd1d96415134671177e1638"
+      "xmlSha256": "d96fe5a305f1901c96affade67815f80ea25e8bec8cda29ab3c632b095867525"
     },
     {
       "id": "arduino-mega",
@@ -3749,7 +3749,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "57d0198cb755e73ccdd9ff7eb7d599a265b871bcc8eacd037ac7da8777c9ede6"
+      "xmlSha256": "1c6564236e7546aa887d838d4c7cee94c45e411e577847fbaf198559dabcb3f0"
     },
     {
       "id": "adafruit-aht20",
@@ -3922,7 +3922,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "d08b5e9ef2382731bb9aafaf57cdd7d8d41f73210c1a8825c6bc28d0b7a2c91a"
+      "xmlSha256": "a11a9d68559014d752daf05e2503f1a399e6bdab507d2569e0c19a6ecaf128c8"
     },
     {
       "id": "adafruit-sht31",
@@ -4036,7 +4036,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "dfbeccc4eb152923d670fccc81d3c3af7b9981e8d311d7d7c56fdcbf3b9b9ae6"
+      "xmlSha256": "67a69ed09df4cc0cd8ca243bde39430d211e85446de1c086280d686021b9ba7d"
     },
     {
       "id": "adafruit-bme280",
@@ -4150,7 +4150,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "b507493c58772b6e0942226d9ff8ab71f7d8707079abaed83fc26e4f726a76ab"
+      "xmlSha256": "3d4e68ffb2d3bf2b8bd70b5b8f83bacafd467e6489dfa3fbe5e71980b9603658"
     },
     {
       "id": "adafruit-bmp280",
@@ -4264,7 +4264,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "6dacfaf4efa88fbab6754a945febbfe1b3541bfaf9bd77f79ee300e8fbd252c2"
+      "xmlSha256": "3d4e68ffb2d3bf2b8bd70b5b8f83bacafd467e6489dfa3fbe5e71980b9603658"
     },
     {
       "id": "adafruit-bh1750",
@@ -4461,7 +4461,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "342e0337b482868e71cac9e82f9085fcbd9282b89090249694c1744768d00d1c"
+      "xmlSha256": "9dff5b9d2431a33fd2e9c8b1723711542ce169f131fdd1238f181eb3b812449e"
     },
     {
       "id": "adafruit-veml7700",
@@ -4551,7 +4551,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "50072542ac7912abfc5c98be6064052357a809cd45a4c2e1d2047e59e06aa5b9"
+      "xmlSha256": "dfddf6a2a5eca3da58946a2a105e859f844fb6ce7ea55ac8522828ce51e3a10a"
     },
     {
       "id": "adafruit-tsl2591",
@@ -4653,7 +4653,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "8b4b91a2f6412c2bf9ebcefb93328aa84d46bdfab50164499537451acb021940"
+      "xmlSha256": "c1aca14c053091397a62f531721056526d17ab74918bdcf2a023a9bddd807f19"
     },
     {
       "id": "adafruit-vl53l0x",
@@ -4767,7 +4767,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "d4835ed694638ec9ab1c171bb847823c8f107bf3e755391118bfbe66436233b2"
+      "xmlSha256": "19672d18e93cfdeb68a8b3e8fd7522ecc483a15e3913ed3e7f859ed0d3ddb254"
     },
     {
       "id": "adafruit-lis3dh",
@@ -4929,7 +4929,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "b598540b090692a79651951e8ebb682ccda38d4cf851889ed72d28a9e1f603e6"
+      "xmlSha256": "b57cd2ce51858cf7d4f98c50cb45e0aaee4a1ba8de963892c8536c7dd36c6afe"
     },
     {
       "id": "adafruit-mpu6050",
@@ -5198,7 +5198,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "d7f8fe1af827f67c0fc70fafb5b1632741b2883ec10a84c893160a5e1940fcea"
+      "xmlSha256": "38c5c56ee20db8ad2158e0764f953d5fe1e49af627f6ad61f19ec615cd0f384b"
     },
     {
       "id": "adafruit-scd41",
@@ -5383,7 +5383,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "4555b1276a9990cfd47de5291a5dce396b1a0bd12e6fb7831c737447d4cf55ff"
+      "xmlSha256": "e127e7168043b16e3e052cf70a6c841ee5091dfb85501a478764d49dafcf5762"
     },
     {
       "id": "adafruit-qt1010",
@@ -5460,7 +5460,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "3bfc5436555c40579fca49d94f9f3ce8f5296331ce1c0c41c88f8768ee54e2ed"
+      "xmlSha256": "d8b3a4debfef50031b4a58428ec57c0e35bc7e405580f3bb93f12d16c56abc2c"
     },
     {
       "id": "adafruit-qt1012",
@@ -5549,7 +5549,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "55f42b1d1c1e06911f5f2e508b0d440349a0de8d9a4b8ee59292b8ca5049a60f"
+      "xmlSha256": "1a425c786931533a28c545485c617c20cdafc9a2ba318d8757e129241c3923b0"
     },
     {
       "id": "adafruit-soil",
@@ -5626,7 +5626,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "a2017264ebe00a870ba501cdc83f0b161c239a7f317bc522d57cb0df4905a294"
+      "xmlSha256": "57b54743a0fcce7a8adc63863001ea2d7cdeaa386f3ddeb40b4bbe119de190b9"
     },
     {
       "id": "grove-ldr",
@@ -5684,7 +5684,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "fcd4d755648fc50c10e4c37aa2feb729323db590c0d977a016ab45cf160211b3"
+      "xmlSha256": "4fd42f9e9953725f73e8bb0448031f0441cfa9e6a157d50236a21941743653f8"
     },
     {
       "id": "grove-sound",
@@ -5742,7 +5742,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "d22b6900c7f9afc0a378f083357eff58cdde91a0dcb0e4a137bcaa8e750a93a2"
+      "xmlSha256": "a722afff4b5a4a59007957a56f598f48de7f8b75dca173e48bc8adb4baf7268e"
     },
     {
       "id": "grove-pir",
@@ -5800,7 +5800,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "e4ca5d44e8c6c65c60d9c4865ee6185afc3ad77dddf7abe67f384623cde57843"
+      "xmlSha256": "8e767b859d03e46db9c1d093179fda2eb2fb1722a0f596a9da78f7e68c1e815a"
     },
     {
       "id": "grove-buzzer",
@@ -5858,7 +5858,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "5d8242ace38e4d437d1d4f5bb54246450c06fbe56ddba294e2eadc771d373903"
+      "xmlSha256": "aefa8f1783cbba1f32a886566e35f3c8994c4254f4c3369f0d1a03bbdba36d5a"
     },
     {
       "id": "grove-button",
@@ -5916,7 +5916,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "d385a81f9c51a07664259ef89cbe2cb80c6890fecda7f1f49d94f81b561de5ff"
+      "xmlSha256": "16c8d8cd2de71f24fa5fdd84808da6389f986473d0093658db76c7eb4a8f8d2a"
     },
     {
       "id": "grove-water",
@@ -5974,7 +5974,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "2078a4eb9244b3ca9690ed668260e5d66398537bbb349180f09155f84c16b6fe"
+      "xmlSha256": "fd5d0a4ba1362369c654249e72d311f665b51e503008c8d00869888a00d504d0"
     },
     {
       "id": "grove-reed",
@@ -6033,7 +6033,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "d556e975092acdb21d62f07d03ff5fb06d2fc8c62f1e7e2e23286519f63642a0"
+      "xmlSha256": "3547dfb8ebf4c5b68dc1e680c29f9e36200fb9af5855ef83a3446b9413764ec7"
     },
     {
       "id": "gravity-dht22",
@@ -6083,7 +6083,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "fdf0f1271bd6a313228c9abd7de25667e64a37aeacf39a4f1b8d9e943a2226f8"
+      "xmlSha256": "574f9813bf7c8456490088271d482d1cf97f7b18da3cb8cbd31d91200e73801e"
     },
     {
       "id": "gravity-ds18b20",
@@ -6133,7 +6133,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "ef62286b2fd66e427cfc4f499003cb0c095f92c969dd453473ca7511c827ca95"
+      "xmlSha256": "033ec6bd9477da555843976680a4616f8c7600673ccc2749585448751c776759"
     },
     {
       "id": "gravity-soil",
@@ -6183,7 +6183,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "15cf5da015536d485fcf3031b072623f415a123c5f37189378a0a8248270c4f3"
+      "xmlSha256": "0af832c389b1f507fe9c93edb1b316ee7459da6c130d7fb80fae135b38188b04"
     },
     {
       "id": "gravity-relay",
@@ -6265,7 +6265,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "8e165cc8e45b650a63f1be535c81fb262d4dd03de066a83d8bd4db51dad999d5"
+      "xmlSha256": "2bb685cd15eb0370aaaf963cd188db98090c5974fac07753b53bfeac4fb58729"
     },
     {
       "id": "hc-sr04",
@@ -6322,7 +6322,7 @@
         "labelFontSize": 6,
         "rearX": null
       },
-      "xmlSha256": "d84569f49e04ecbca78b331839ebde18134c1278b51dbd66366975799bf99545"
+      "xmlSha256": "580987772809392a6e266c363a4647999d4a4c6cb58eaec2f763edc18e5b7b59"
     },
     {
       "id": "display-lcd1602",
@@ -6393,7 +6393,7 @@
         "labelFontSize": 6,
         "rearX": 49.5
       },
-      "xmlSha256": "092b4dd50822bf822980dbe38bdf38764a800deeddb982840309ccbcd3375160"
+      "xmlSha256": "2722c7124d6dd7e2fa984ae266f92a08967e63178ad6e7666baad48206855735"
     },
     {
       "id": "display-oled12864",
@@ -6471,7 +6471,7 @@
         "labelFontSize": 6,
         "rearX": 37
       },
-      "xmlSha256": "902ec30c0a8ae204c813cbef2e4454da51deb017465a359efc0650754152a4e7"
+      "xmlSha256": "e181baf010cbe9164126826d66e7dbc2d701d2fa3e47b960af7d3a6a95ddda03"
     },
     {
       "id": "display-tft18",
@@ -6642,7 +6642,7 @@
         "labelFontSize": 6,
         "rearX": 28.5
       },
-      "xmlSha256": "7a473eb71a06b34bd5315e8bc6f223eb4aeb58cefedf0ef37a2f31ceeb9c45e6"
+      "xmlSha256": "c26a17b603764917031c408b1211ef1ba4bffbb211479d5b1011627fa5eaa07f"
     },
     {
       "id": "display-touch28",
@@ -6789,7 +6789,7 @@
         "labelFontSize": 6,
         "rearX": 34
       },
-      "xmlSha256": "9fc21e5d5a269f6d194df574ab0569fb8e5770258d7cef53f6a4aba70bc9f72b"
+      "xmlSha256": "7f5a720417bc3319f9c384888d32792a9880f5671022fedac9b87d8e59a9303e"
     },
     {
       "id": "display-nextion28",
@@ -6859,7 +6859,7 @@
         "labelFontSize": 6,
         "rearX": 32
       },
-      "xmlSha256": "6d52d840c40f0ad77745d8f04185529b5e899ea489dc1828c1243355ef4cb633"
+      "xmlSha256": "fe31888b22e27498a2be3b3c500b06a9163567d2ad27464976afb125579f7011"
     },
     {
       "id": "display-epaper213",
@@ -6961,7 +6961,7 @@
         "labelFontSize": 6,
         "rearX": 45
       },
-      "xmlSha256": "23223e466437c16e2dce93d196e3fc9bdd9568f8fa7f380f8c633c7ab01d168f"
+      "xmlSha256": "da912f3f2f62c8077f6edd37b48d3a72b6fc873c66d314d12288bc95487e98db"
     },
     {
       "id": "display-epaper29",
@@ -7063,7 +7063,7 @@
         "labelFontSize": 6,
         "rearX": 54.5
       },
-      "xmlSha256": "18abdb5643b01915dbb81dc33511329762a2c3930929029087874c302aa4d9a1"
+      "xmlSha256": "d200cfa927c7ba2562e0557a9bb4162172bdfa6c9647261868b6ff5430e4d00a"
     },
     {
       "id": "display-epaper42",
@@ -7229,7 +7229,7 @@
         "labelFontSize": 6,
         "rearX": 57.5
       },
-      "xmlSha256": "0071df3aaafe9a2c78d5aca56f9957bb2d72847d860251f211e31ed9f3c0380b"
+      "xmlSha256": "24010dcdb30e6d0cf504fe46d4336f37e37e79df39ddbce3d6127cf52ac3a176"
     }
   ]
 }

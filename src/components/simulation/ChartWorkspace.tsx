@@ -47,7 +47,7 @@ import { NetlistData } from '../../io/netlists/netlistGenerator';
 import { dsnDrawing } from '../../model/dsnDrawing';
 import { ResultData, SimulationSetup } from '../../simulation/contracts';
 import { hasSimulation } from '../../io/drawingSaveFormat';
-import { buildDeck } from '../../simulation/deck';
+import { prepareSpiceDeck } from '../../simulation/deck';
 import { digest } from '../../io/dsnContainer';
 import { Waveform, WaveformPreferences } from './LazyWaveform';
 import { MeasurementResults } from './MeasurementResults';
@@ -406,7 +406,7 @@ function DocumentCharts({ drawing }: { drawing: dsnDrawing }) {
         }
         digest(
           new TextEncoder().encode(
-            buildDeck(capturedNet, captured) + JSON.stringify(captured.models),
+            prepareSpiceDeck(capturedNet, captured, drawing.spiceModelPacks).identity,
           ),
         )
           .then((hash) => {

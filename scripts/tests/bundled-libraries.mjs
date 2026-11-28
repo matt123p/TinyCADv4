@@ -10,15 +10,21 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { loadComponent } from './load-component.mjs';
 import * as validation from '../../shared/bundledLibraries.js';
 import { packageLibraries } from '../package-libraries.mjs';
 import { registerBundledLibraries } from '../../electron/bundledLibraries.js';
+import { readNativeLibrary } from '../../electron/tclibReader.js';
 
 const require = createRequire(import.meta.url);
 const model = loadComponent('src/model/tclib.ts', {});
+const catalogBindings = loadComponent('src/simulation/catalogBindings.ts', {
+  '../model/tclib': model,
+});
 const managerModule = loadComponent('src/io/bundledLibraries.ts', {
   '../model/tclib': model,
+  '../simulation/catalogBindings': catalogBindings,
   '../../shared/bundledLibraries': validation,
 });
 const { BundledLibraryManager } = managerModule;
@@ -248,6 +254,7 @@ const sqlite = loadComponent('src/io/tclib.ts', {
   'sql.js/dist/sql-wasm.js': (options) => initSqlJs({ ...options, wasmBinary }),
   'url:sql.js/dist/sql-wasm.wasm': '',
   '../model/tclib': model,
+  '../simulation/catalogBindings': catalogBindings,
 });
 const bytes = await sqlite.saveTcLibrary({
   ...library,
@@ -282,6 +289,58 @@ await assert.rejects(
   () => sqlite.saveTcLibrary({ ...decoded, readOnly: true }),
   /read-only/,
 );
+
+const bundledCatalog = validation.parseBundledLibraryCatalog(
+  JSON.parse(
+    await readFile(
+      new URL('../../bundled-libraries/config.json', import.meta.url),
+      'utf8',
+    ),
+  ),
+);
+for (const entry of bundledCatalog.libraries) {
+  const file = new URL('../../bundled-libraries/' + entry.path, import.meta.url);
+  const bundle = await sqlite.loadTcLibrary(
+    entry.id,
+    entry.name,
+    null,
+    await readFile(file),
+  );
+  assert.deepEqual(
+    await readNativeLibrary(fileURLToPath(file)),
+    { names: bundle.names, symbols: bundle.symbols },
+    entry.name + ' must decode the same way in native SQLite and WebAssembly',
+  );
+  assert.ok(bundle.names.length > 0, entry.name);
+  for (const symbol of bundle.names)
+    assert.equal(
+      symbol.ShowName,
+      model.TextDisplayMethod.ShowValue,
+      entry.name + '/' + symbol.Name,
+    );
+}
+
+const spice = bundledCatalog.libraries.find(({ id }) => id === 'spice');
+const spiceFile = new URL('../../bundled-libraries/' + spice.path, import.meta.url);
+globalThis.window = {
+  electronAPI: {
+    bundledLibraryCatalog: async () => bundledCatalog,
+    bundledLibrarySelection: async () => [],
+    readBundledLibrary: async () => ({
+      fileId: 'bundled:spice', name: spice.name, modified: null,
+      ...(await readNativeLibrary(fileURLToPath(spiceFile))),
+    }),
+  },
+};
+try {
+  assert.deepEqual(
+    await managerModule.bundledLibraries.readLibrary('spice'),
+    await sqlite.loadTcLibrary('bundled:spice', spice.name, null, await readFile(spiceFile)),
+    'Electron must preserve the same SPICE symbol identity metadata as the browser',
+  );
+} finally {
+  delete globalThis.window;
+}
 
 // Personal-library refreshes preserve bundled data; bundled updates can remove it.
 const actionModules = {};
@@ -446,10 +505,12 @@ try {
     (await handlers.get('bundled-library-catalog')(event)).libraries.length,
     2,
   );
-  assert.equal(
-    (await handlers.get('bundled-library-read')(event, 'passives')).length,
-    bytes.byteLength,
-  );
+  const read = (id) => handlers.get('bundled-library-read')(event, id);
+  assert.deepEqual(await read('passives'), { ...decoded, readOnly: true });
+  await writeFile(path.join(destination, 'connectors.tclib'), 'broken library');
+  const [corrupt, valid] = await Promise.allSettled([read('connectors'), read('passives')]);
+  assert.equal(corrupt.status, 'rejected');
+  assert.deepEqual(valid, { status: 'fulfilled', value: { ...decoded, readOnly: true } });
   await assert.rejects(
     () => handlers.get('bundled-library-read')(event, '../config.json'),
     /Unknown/,

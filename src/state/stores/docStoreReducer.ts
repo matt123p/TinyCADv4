@@ -2,26 +2,23 @@ import { createSimulationSheet, withoutResults } from '../../simulation/document
 import { createControl, updateControl, compactControl, resizeStudentInstruments } from '../../simulation/controlSymbols';
 import { updatePower } from '../../manipulators/updatePower';
 import { applyBindings } from '../../simulation/bindings';
-import { dsnSymbol } from '../../model/dsnItem';
-import { updateSymbol } from '../../manipulators/updateSymbol';
+import { dsnSymbol, SymbolPropertyFont } from '../../model/dsnItem';
+import { updateSymbol, applySymbolPropertyFontDefaults, syncSymbolPropertyFonts } from '../../manipulators/updateSymbol';
 import {
   actionSelectPanel,
   actionSelectBottomPanel,
   AppActionTypes,
   Panels,
   BottomPanels,
-  actionSelectDialog,
 } from '../dispatcher/AppDispatcher';
 import update from 'immutability-helper';
 
-import { hasChildPlacements, isChildPlacement, refreshPlacement } from '../../io/hierarchyDrawing';
-import { newSchematicEntityId } from '../../model/schematicIdentity';
 import { DocActionTypes } from '../actions/docActions';
 import { get_global_id } from '../../util/global_id';
 import { MenuActionTypes } from '../actions/menuActions';
 import { FindActionTypes } from '../actions/findActions';
 import { DialogActionTypes } from '../actions/dialogActions';
-import { SymbolActionTypes } from '../actions/symbolActions';
+import { PropertyFontEdit, SetPropertyFonts, SymbolActionTypes } from '../actions/symbolActions';
 import { TextActionTypes } from '../actions/menuText';
 import { dsnDrawing, dsnSheet } from '../../model/dsnDrawing';
 import { dsnView } from '../../model/dsnView';
@@ -45,6 +42,7 @@ const getStore = () => {
 };
 
 export interface docStore {
+  hierarchyRevision?: number;
   drawing: dsnDrawing;
   view: dsnView;
   bom: dsnBomEntry[];
@@ -144,13 +142,106 @@ export function activeSelectedSheet(state: docStore) {
   return index;
 }
 
-//
-// Handle dispatcher actions
-//
+function editPropertyFont(current: SymbolPropertyFont | undefined, edit: PropertyFontEdit) {
+  const font = {
+    font_name: edit.font.font_name === undefined ? current?.font_name : edit.font.font_name ?? undefined,
+    font_size: edit.font.font_size === undefined ? current?.font_size : edit.font.font_size ?? undefined,
+  };
+  if (font.font_name === current?.font_name && font.font_size === current?.font_size) return current;
+  if (font.font_name === undefined) delete font.font_name;
+  if (font.font_size === undefined) delete font.font_size;
+  return Object.keys(font).length ? font : undefined;
+}
+
+function setPropertyFonts(state: docStore, { target, edits }: SetPropertyFonts): docStore {
+  if (!edits.length || state.editLibrary) return state;
+  const drawing = state.drawing;
+  if (!target) {
+    const defaults = new Map(drawing.settings.symbolPropertyFonts?.map(
+      ({ description, ...font }) => [description, font] as const,
+    ));
+    let changed = false;
+    for (const edit of edits) {
+      const current = defaults.get(edit.description);
+      const font = editPropertyFont(current, edit);
+      if (font === current) continue;
+      changed = true;
+      if (font) defaults.set(edit.description, font);
+      else defaults.delete(edit.description);
+    }
+    if (!changed) return state;
+    const symbolPropertyFonts = defaults.size
+      ? Array.from(defaults, ([description, font]) => ({ description, ...font }))
+      : undefined;
+    return {
+      ...state,
+      drawing: { ...drawing, settings: { ...drawing.settings, symbolPropertyFonts } },
+      drawingVersion: state.drawingVersion + 1,
+    };
+  }
+
+  const sheet = drawing.sheets[target.sheetIndex];
+  if (!sheet || sheet.kind === 'simulation') return state;
+  const selected = new Set(target.symbolIds);
+  const byName = new Map(edits.filter((edit) => edit.index === undefined).map((edit) => [edit.description, edit]));
+  const byIndex = new Map(edits.filter((edit) => edit.index !== undefined).map((edit) => [edit.index, edit]));
+  let changed = false;
+  const items = sheet.items.map((item) => {
+    if (item.NodeName !== DocItemTypes.Symbol || !selected.has(item._id)) return item;
+    const text = item.text.map((field, index) => {
+      const edit = byIndex.get(index) ?? byName.get(field.description);
+      if (!item.textData?.[index] || edit?.description !== field.description) return field;
+      const font = editPropertyFont(field.font, edit);
+      return font === field.font ? field : { ...field, font };
+    });
+    if (text.every((field, index) => field === item.text[index])) return item;
+    changed = true;
+    return new updateSymbol({ ...item, text }).post_construction();
+  });
+  if (!changed) return state;
+  const sheets = drawing.sheets.slice();
+  sheets[target.sheetIndex] = { ...sheet, items };
+  return { ...state, drawing: { ...drawing, sheets }, drawingVersion: state.drawingVersion + 1 };
+}
+
 export function DocStoreReducer(
   state: docStore = intialState,
   action: AppActionTypes,
 ): docStore {
+  const next = reduceDocument(state, action);
+  const drawing = next.drawing === state.drawing
+    ? next.drawing
+    : syncSymbolPropertyFonts(next.drawing, state.drawing);
+  const pending = next.view.add;
+  const add = pending && applySymbolPropertyFontDefaults(pending, drawing.settings.symbolPropertyFonts);
+  if (drawing === next.drawing && pending === add) return next;
+  return { ...next, drawing, view: pending === add ? next.view : { ...next.view, add } };
+}
+
+function reduceDocument(state: docStore, action: AppActionTypes): docStore {
+  if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalReload) {
+    const { source, drawing } = action.hierarchicalReload;
+    if (state.drawing !== source || drawing === source) return state;
+    return { ...state, drawing, hierarchyRevision: (state.hierarchyRevision ?? 0) + 1 };
+  }
+  if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalRefresh) {
+    const selected = activeSheet(state);
+    const refreshed = action.hierarchicalRefresh;
+    if (!selected?.items.some((item) => item._id === refreshed._id)) return state;
+    const sheets = state.drawing.sheets.map((sheet) => sheet === selected
+      ? { ...sheet, items: sheet.items.map((item) => item._id === refreshed._id ? refreshed : item) }
+      : sheet);
+    return {
+      ...state,
+      drawing: { ...state.drawing, sheets },
+      hierarchyRevision: (state.hierarchyRevision ?? 0) + 1,
+    };
+  }
+  if (action.type === SymbolActionTypes.SetPropertyFonts) return setPropertyFonts(state, action);
+  if (action.type === 'simulation/catalog-model') {
+    if (state.editSymbol || state.editLibrary || state.drawing !== action.source || action.source === action.drawing) return state;
+    return { ...state, drawing: action.drawing, drawingVersion: state.drawingVersion + 1 };
+  }
   if (action.type === 'simulation/apply-tuning') {
     const target = state.drawing.sheets.find(s => s.id === action.sheetId && s.kind === 'simulation');
     if (!target || state.editSymbol) return state;
@@ -321,71 +412,21 @@ export function DocStoreReducer(
       });
       break;
 
-    case DocActionTypes.AddHierarchySheet: {
-      const sheets = state.drawing.sheets;
-      if (state.editLibrary || sheets.some(({ hierarchicalSymbol }) => hierarchicalSymbol)) break;
-      const base = sheets.find(({ kind }) => kind !== 'simulation');
-      if (!base) break;
-      const interfaceSheet: dsnSheet = {
-        ...base, id: newSchematicEntityId(), name: 'Hierarchical Symbol',
-        hierarchicalSymbol: true, items: [], symbols: {}, images: {}, hatches: [],
-        details: { ...base.details, show_details: false, show_guides: false },
-      };
-      state = { ...state, drawing: { ...state.drawing, sheets: [interfaceSheet, ...sheets] } };
-      view = { ...update_view.cancel_add(view, interfaceSheet).view, selected_sheet: 0, _selected_array: [], hiddenItemIds: [] };
-      sheet = null;
-      break;
-    }
-
-    case DocActionTypes.PlaceChild:
-      if (sheet === action.source && !sheet.hierarchicalSymbol && !state.editLibrary) {
-        const used = new Set(state.drawing.sheets.flatMap(s => s.items.flatMap(item =>
-          item.NodeName === DocItemTypes.Symbol ? [item.text.find(field => field.description === 'Ref')?.value?.toUpperCase()] : [],
-        )));
-        let index = 1;
-        while (used.has('H' + index)) index++;
-        view = update_view.beginHierarchyPlacement(view, sheet, action.definition, action.link, 'H' + index);
-      }
-      break;
-
-    case DocActionTypes.RefreshChild:
-      if (sheet === action.source && sheet.items.includes(action.placement) && isChildPlacement(action.placement)) {
-        const { placement, link, definition } = action;
-        const refreshed = definition
-          ? refreshPlacement(placement, link, definition)
-          : { ...placement, hierarchy: link };
-        const items = sheet.items.map((item) => item === placement ? refreshed : item);
-        sheet = definition
-          ? update_view.tidy_wires({ ...sheet, items, symbols: { ...sheet.symbols, [definition.id]: definition } })
-          : { ...sheet, items };
-      }
-      break;
-
     // Load a completely new document
     case DocActionTypes.SetDocument:
       let new_drawing = resizeStudentInstruments(action.doc);
       for (let i = 0; i < new_drawing.sheets.length; ++i) {
         if (new_drawing.sheets[i].kind !== 'simulation') new_drawing.sheets[i] = update_view.tidy_wires(new_drawing.sheets[i]);
       }
-      const initialSheet = action.project?.openSheetId
-        ? Math.max(0, new_drawing.sheets.findIndex(s => s.id === action.project.openSheetId))
-        : 0;
-      const placement = action.project?.openUnitId &&
-        new_drawing.sheets[initialSheet]?.items.find(i => i.NodeName === DocItemTypes.Symbol && i.unitId === action.project.openUnitId);
-      const newView: dsnView = {
-        ...update_view.cancel_add(state.view, new_drawing.sheets[initialSheet]).view,
-        selected_sheet: initialSheet, hiddenItemIds: [], _selected_array: placement ? [placement._id] : [],
-        _selected_handle: 0, hover_obj: null,
-        hover_pins: placement && action.project?.openPinId
-          ? [`${placement._id}:@${action.project.openPinId}`]
-          : [],
-      };
       state = update(state, {
         drawing: { $set: new_drawing },
         drawingVersion: { $set: 0 },
         editLibrary: { $set: null },
         editSymbol: { $set: null },
-        view: { $set: newView },
+        view: {
+          selected_sheet: { $set: 0 },
+          hiddenItemIds: { $set: [] },
+        },
       });
       view = null;
       break;
@@ -423,10 +464,8 @@ export function DocStoreReducer(
       break;
 
     case DocActionTypes.BomGenerate:
-      if (!action.rows && hasChildPlacements(state.drawing)) break;
       if (state.drawing) {
-        const bom = action.rows ?? update_drawing.makeBomForDrawing(state.drawing);
-        if (sheet && view._selected_array.length) view = update_view.unselect(view, sheet).view;
+        const bom = update_drawing.makeBomForDrawing(action.drawing ?? state.drawing);
         state = update(state, {
           bom: { $set: bom },
         });
@@ -524,6 +563,22 @@ export function DocStoreReducer(
     case MenuActionTypes.MenuCommand:
     case MenuActionTypes.MenuCommandWithDefault:
       {
+        if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalRedirect && sheet) {
+          const replacement = action.hierarchicalRedirect;
+          sheet = { ...sheet, items: sheet.items.map((item) => item._id === replacement._id ? replacement : item) };
+          break;
+        }
+        if (action.type === MenuActionTypes.MenuCommand && action.hierarchicalPlacement &&
+            sheet && !sheet.hierarchicalSymbol && sheet.kind !== 'simulation') {
+          ({ view, sheet } = update_view.add_object(view, sheet, action.hierarchicalPlacement, 'add_hierarchical_symbol'));
+          if (action.hierarchicalDropPoint) {
+            const [width, height] = action.hierarchicalPlacement._symbol.outlines[0].size;
+            const [x, y] = action.hierarchicalDropPoint;
+            const moved = update_view.mousemove_add(view, sheet, [x + width / 2, y + height / 2]).view;
+            ({ view, sheet } = update_view.complete_add(moved, sheet));
+          }
+          break;
+        }
         if (action.command) {
           let fname = 'command_' + action.command;
           if (fname in update_view && sheet) {
@@ -657,7 +712,9 @@ export function DocStoreReducer(
     //
     case LibraryActionTypes.SelectLibrarySymbol:
       if (sheet && action.beginPlacement) {
-        ({ view, sheet } = update_view.beginLibrarySymbolPlacement(view, sheet, action.name, action.symbolData));
+        ({ view, sheet } = update_view.beginLibrarySymbolPlacement(
+          view, sheet, action.name, action.symbolData, state.drawing.settings.symbolPropertyFonts,
+        ));
       } else if (sheet) {
         ({ view, sheet } = update_view.handleSelectLibrarySymbol(
           view,
@@ -665,6 +722,7 @@ export function DocStoreReducer(
           action.name,
           action.symbolData,
           action.pos ?? view.contextMenuLastPoint,
+          state.drawing.settings.symbolPropertyFonts,
         ));
       }
       break;
@@ -691,25 +749,29 @@ export function DocStoreReducer(
     //
     case MenuActionTypes.MenuPaste:
       if (sheet) {
-        ({ view, sheet } = update_view.handlePaste(
+        const pasted = update_view.handlePaste(
           view,
           sheet,
           action.text,
           action.pos ?? view.contextMenuLastPoint,
-        ));
+          state.drawing.spiceModelPacks,
+        );
+        ({ view, sheet } = pasted);
+        if (pasted.spiceModelPacks && pasted.spiceModelPacks !== state.drawing.spiceModelPacks)
+          state = { ...state, drawing: { ...state.drawing, spiceModelPacks: pasted.spiceModelPacks } };
         update_hatches = true;
       }
       break;
 
     case MenuActionTypes.MenuCut:
       if (sheet) {
-        ({ view, sheet } = update_view.handleCopy(view, sheet, true));
+        ({ view, sheet } = update_view.handleCopy(view, sheet, true, state.drawing.spiceModelPacks));
       }
       break;
 
     case MenuActionTypes.MenuCopy:
       if (sheet) {
-        ({ view, sheet } = update_view.handleCopy(view, sheet, false));
+        ({ view, sheet } = update_view.handleCopy(view, sheet, false, state.drawing.spiceModelPacks));
       }
       break;
 
@@ -717,7 +779,6 @@ export function DocStoreReducer(
     // Sheet operations
     //
     case MenuActionTypes.MenuSheetSelect:
-      if (view.add && isChildPlacement(view.add)) view = update_view.cancel_add(view, sheet).view;
       view = update(view, {
         selected_sheet: { $set: action.sheet_index },
       });
@@ -748,7 +809,7 @@ export function DocStoreReducer(
       break;
     case MenuActionTypes.MenuSheetRight:
       if (
-        !sheet?.hierarchicalSymbol && view.selected_sheet < state.drawing.sheets.length - 1 &&
+        view.selected_sheet < state.drawing.sheets.length - 1 &&
         !state.editSymbol
       ) {
         let sheets = state.drawing.sheets.slice();
@@ -805,8 +866,9 @@ export function DocStoreReducer(
     case MenuActionTypes.MenuSheetAdd:
       {
         let sheets = state.drawing.sheets.slice();
+        const hierarchical = action.hierarchical === true;
+        if (hierarchical && sheets.some((item) => item.hierarchicalSymbol)) break;
         let new_sheet: dsnSheet = {
-          id: newSchematicEntityId(),
           items: [],
           details: sheet.details,
           options: sheet.options,
@@ -814,9 +876,10 @@ export function DocStoreReducer(
           symbols: {},
           images: {},
           hatches: [],
-          hierarchicalSymbol: false,
+          hierarchicalSymbol: hierarchical,
         };
-        sheets.push(new_sheet);
+        if (hierarchical) sheets.unshift(new_sheet);
+        else sheets.push(new_sheet);
         sheet = null;
         view = null;
         state = update(state, {
@@ -824,13 +887,13 @@ export function DocStoreReducer(
             sheets: { $set: sheets },
           },
           view: {
-            selected_sheet: { $set: sheets.length - 1 },
+            selected_sheet: { $set: hierarchical ? 0 : sheets.length - 1 },
           },
         });
       }
       break;
     case MenuActionTypes.MenuSheetRemove:
-      if (!state.editSymbol && state.drawing.sheets.length > 1 && (sheet?.kind === 'simulation' || sheet?.hierarchicalSymbol || state.drawing.sheets.filter(s => s.kind !== 'simulation' && !s.hierarchicalSymbol).length > 1)) {
+      if (!state.editSymbol && state.drawing.sheets.length > 1 && (sheet?.kind === 'simulation' || state.drawing.sheets.filter(s => s.kind !== 'simulation').length > 1)) {
         let sheets = state.drawing.sheets.slice();
         sheets.splice(view.selected_sheet, 1);
         let selected_sheet = view.selected_sheet;
@@ -1011,17 +1074,9 @@ export function DocStoreReducer(
       break;
 
     case DialogActionTypes.SetDRC:
-      let drcTable = update_drawing.designRulesCheck(
-        state.drawing,
-        action.drc,
-        action.netlist,
-      );
-      return update(state, {
-        drawing: {
-          drc: { $set: action.drc },
-          drcTable: { $set: drcTable },
-        },
-      });
+      return { ...state, drawing: { ...state.drawing, drc: action.drc,
+        drcTable: update_drawing.designRulesCheck(state.drawing, action.drc, action.netlist),
+      } };
 
     case DialogActionTypes.SetAnnotate:
       state = update(state, {
@@ -1372,6 +1427,7 @@ export function DocStoreReducer(
   }
 
   if (state.editSymbol != prev_edit_symbol) {
+    if (!state.editSymbol) return state;
     // Has the name changed?
     if (state.editSymbol.NameID === prev_edit_symbol?.NameID) {
       // No, so write back the new name data

@@ -1,13 +1,11 @@
+import { retainSchematicNetlist } from '../../web-worker/worker';
 import { Store } from 'redux';
 import { dsnDrawing, dsnSheet } from '../../model/dsnDrawing';
 import { DocItem, DocItemTypes, dsnWire } from '../../model/dsnItem';
 import { NetlistData } from './netlistGenerator';
 import { docDrawing } from '../../state/undo/undo';
-import { retainSchematicNetlist, wkrInitNetlist, wkrUpdateNetlistSheets } from '../../web-worker/worker';
+import { wkrInitNetlist, wkrUpdateNetlistSheets } from '../../web-worker/worker';
 import { actionStampWireNetTypes } from '../../state/dispatcher/AppDispatcher';
-import { hasChildPlacements } from '../hierarchyDrawing';
-import { projectFilesChanged } from '../projectStorage';
-import { generateActiveNetlist } from './activeNetlist';
 
 const netlistDebug = process.env.NODE_ENV === 'development';
 const netlistIdleDelayMs = 1000;
@@ -127,52 +125,65 @@ function findNetlistDirtySheets(prev: dsnDrawing, next: dsnDrawing) {
 type NetlistListener = (netlist: NetlistData | null) => void;
 
 let currentNetlist: NetlistData | null = null;
+let netlistDrawing: dsnDrawing | null = null;
 const listeners = new Set<NetlistListener>();
-let onNetlistDemandChanged: (() => void) | undefined;
+let updateDemand: (() => void) | undefined;
 
-function publishNetlist(netlist: NetlistData | null) {
+function publishNetlist(netlist: NetlistData, drawing: dsnDrawing) {
   currentNetlist = netlist;
+  netlistDrawing = drawing;
   for (const listener of listeners) {
     listener(currentNetlist);
   }
 }
 
+export function getCurrentNetlist(drawing: dsnDrawing): NetlistData | null {
+  if (!netlistDrawing) {
+    return null;
+  }
+  if (drawing.sheets !== netlistDrawing.sheets) {
+    const { changedSheets, removedSheets } = findNetlistDirtySheets(netlistDrawing, drawing);
+    if (changedSheets.length || removedSheets.length) {
+      return null;
+    }
+  }
+  return currentNetlist;
+}
+
 export function subscribeNetlist(listener: NetlistListener) {
   listeners.add(listener);
   listener(currentNetlist);
-  if (listeners.size === 1) onNetlistDemandChanged?.();
+  if (listeners.size === 1) updateDemand?.();
   return () => {
-    if (listeners.delete(listener) && listeners.size === 0) onNetlistDemandChanged?.();
+    if (listeners.delete(listener) && listeners.size === 0) updateDemand?.();
   };
 }
 
 export function initializeNetlistSync(store: Store) {
   let previousDrawing: dsnDrawing | null = null;
   let previousVersion = -1;
-  let projectRevision = 0;
-  let previousProjectRevision = -1;
-  let previousFile: docDrawing['altStore']['file'] | null = null;
-  let usedHierarchy = false;
+  let previousHierarchyRevision = 0;
   let running = false;
   let resyncRequested = false;
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
-  let observerGeneration = 0;
+  let generation = 0;
 
   const sync = async () => {
     if (!listeners.size) return;
-    const generation = observerGeneration;
-    const observing = () => generation === observerGeneration && listeners.size > 0;
+    const observed = generation;
     const state = store.getState() as docDrawing;
     const present = state.docStore.present;
 
     if (present.editSymbol) {
       previousDrawing = null;
       previousVersion = -1;
+      previousHierarchyRevision = 0;
       return;
     }
 
     const drawing = present.drawing;
     const drawingVersion = present.drawingVersion;
+    const hierarchyRevision = present.hierarchyRevision ?? 0;
 
     if (!drawing) {
       return;
@@ -180,34 +191,6 @@ export function initializeNetlistSync(store: Store) {
 
     // Publishing a netlist dispatches an internal action. At version zero that
     // notification must not initialize the same drawing again indefinitely.
-    const hierarchical = hasChildPlacements(drawing) ||
-      !!Object.keys(state.altStore.file.project?.instanceReferencesByUnit ?? {}).length;
-    if (hierarchical) {
-      const file = state.altStore.file;
-      const revision = projectRevision;
-      if (drawing === previousDrawing && file === previousFile && revision === previousProjectRevision)
-        return;
-      previousDrawing = drawing;
-      previousFile = file;
-      previousProjectRevision = revision;
-      usedHierarchy = true;
-      // Return no stale partial circuit when a project child is missing or being edited.
-      publishNetlist(null);
-      try {
-        const netlist = await generateActiveNetlist(state);
-        const current = store.getState() as docDrawing;
-        if (observing() && current.docStore.present.drawing === drawing && current.altStore.file === file &&
-            projectRevision === revision && !current.docStore.present.editSymbol)
-          publishNetlist(netlist);
-      } catch (error) {
-        netlistLog('could not compile hierarchy', error);
-      }
-      return;
-    }
-    if (usedHierarchy) {
-      previousDrawing = null;
-      usedHierarchy = false;
-    }
     if (drawing === previousDrawing) {
       return;
     }
@@ -218,15 +201,16 @@ export function initializeNetlistSync(store: Store) {
         sheets: drawing.sheets.map((s) => s.name),
       });
       const netlist = await wkrInitNetlist(drawing);
-      if (!observing()) return;
-      publishNetlist(netlist);
+      if (observed !== generation) return;
+      publishNetlist(netlist, drawing);
       store.dispatch(actionStampWireNetTypes(netlist));
       previousDrawing = drawing;
       previousVersion = drawingVersion;
+      previousHierarchyRevision = hierarchyRevision;
       return;
     }
 
-    if (drawingVersion === previousVersion) {
+    if (drawingVersion === previousVersion && hierarchyRevision === previousHierarchyRevision) {
       return;
     }
 
@@ -241,8 +225,8 @@ export function initializeNetlistSync(store: Store) {
         delta.changedSheets,
         delta.removedSheets,
       );
-      if (!observing()) return;
-      publishNetlist(netlist);
+      if (observed !== generation) return;
+      publishNetlist(netlist, drawing);
       store.dispatch(actionStampWireNetTypes(netlist));
     } else {
       netlistLog('no netlist-active changes');
@@ -250,6 +234,7 @@ export function initializeNetlistSync(store: Store) {
 
     previousDrawing = drawing;
     previousVersion = drawingVersion;
+    previousHierarchyRevision = hierarchyRevision;
   };
 
   const scheduleSync = async () => {
@@ -283,27 +268,24 @@ export function initializeNetlistSync(store: Store) {
     }, netlistIdleDelayMs);
   };
 
-  onNetlistDemandChanged = () => {
-    retainSchematicNetlist(listeners.size > 0);
-    if (listeners.size) {
-      requestSyncWhenIdle();
-      return;
-    }
-    observerGeneration++;
-    if (idleTimer) clearTimeout(idleTimer);
-    idleTimer = null;
-    previousDrawing = null;
-    previousFile = null;
-    previousVersion = -1;
-    previousProjectRevision = -1;
-    currentNetlist = null;
-  };
-
-  store.subscribe(requestSyncWhenIdle);
-
-  globalThis.addEventListener?.(projectFilesChanged, () => {
-    projectRevision++;
+  store.subscribe(() => {
     requestSyncWhenIdle();
   });
-  onNetlistDemandChanged();
+
+  updateDemand = () => {
+    retainSchematicNetlist(listeners.size > 0);
+    generation++;
+    if (listeners.size) {
+      requestSyncWhenIdle();
+    } else {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = null;
+      currentNetlist = null;
+      netlistDrawing = null;
+      previousDrawing = null;
+      previousVersion = -1;
+      previousHierarchyRevision = 0;
+    }
+  };
+  updateDemand();
 }

@@ -2,7 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ServerDrawing from '../../renderer/ServerDrawing';
 import SvgDefs from '../../src/components/svg/SvgDefs';
-import { DeviceFootprintPreview } from '../../src/components/projects/DeviceMappingPreview';
+import { DeviceFootprintPreview } from '../../src/components/projects/DeviceFootprintPreview';
 import type { EmbeddedFootprint } from '../../src/pcb/boardAssets';
 import { dsnSheet } from '../../src/model/dsnDrawing';
 import {
@@ -126,7 +126,7 @@ export function renderCircuit(sheet: dsnSheet, bounds = circuitBounds(sheet)) {
 }
 
 export { editBoardReferences, previewBackAnnotation, applyBackAnnotation } from '../../src/pcb/referenceEco';
-export { referencesForInstance } from '../../src/io/projectHierarchy';
+export { referencesForInstance } from '../../src/io/hierarchyDrawing';
 
 export { importFootprintLibrary, encodeFootprintLibrary, decodeFootprintLibrary, footprintDefinition, makeFootprintPad, publishFootprintDevice, inspectFootprintDimensions, translateFootprintOrigin } from '../../src/pcb/footprintLibrary';
 

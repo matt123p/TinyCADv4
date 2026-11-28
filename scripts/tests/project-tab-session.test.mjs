@@ -44,6 +44,18 @@ test('opening a legacy empty session protects it from eviction by project count'
   assert.deepEqual(readProjectTabSession('new', account), empty);
 });
 
+test('restores pin and preview indices after filtering an invalid tab', (t) => {
+  const { items } = mockStorage(t);
+  const pinned = { kind: 'file', id: 'pinned.xml', folder: 'root' };
+  const preview = { kind: 'drawing', id: 'preview.dsn', folder: 'root', name: 'preview.dsn' };
+  const session = { tabs: [pinned, null, preview], active: 2, pinned: [0, 1], preview: 2 };
+  writeProjectTabSession('root', account, session);
+  assert.deepEqual(readProjectTabSession('root', account), {
+    tabs: [pinned, preview], active: 1, pinned: [0], preview: 1,
+  });
+  assert.ok(items.has(key('root')));
+});
+
 test('prunes sessions to the byte budget, including when a single session is oversized', (t) => {
   const { items } = mockStorage(t);
   const session = (length) => ({ tabs: [{ kind: 'file', folder: 'root', id: 'x'.repeat(length) }], active: 0 });

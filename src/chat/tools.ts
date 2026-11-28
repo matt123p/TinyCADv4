@@ -8,6 +8,11 @@ import { ioXML } from '../io/ioXml';
 import { XMLBuilder } from '../util/xmlbuilder';
 import { docDrawing } from '../state/undo/undo';
 import { DocActionTypes } from '../state/actions/docActions';
+import { DocItemTypes, type dsnSymbol } from '../model/dsnItem';
+import { BUNDLED_SPICE_SYMBOL, MODEL_BINDING, SPICE_ALTERNATE, bundledSpiceIdentity, hasCustomSpiceTemplate, modelBinding, nativeSpiceTemplate, symbolField } from '../simulation/catalogBindings';
+import { bindSpiceModel, catalogModelPack, changeSpiceModel, inspectSpiceModel, searchSpiceModels, spiceSymbolPins } from '../simulation/spiceModelCatalog';
+import { spiceDefinitionText } from '../simulation/spiceModelDefinitions';
+import { validateSpiceText } from '../simulation/deck';
 import { toolSpecs, checkArguments } from './tool-specs';
 import { ToolExecutor, ToolResult } from './types';
 import { nativeCall } from './native-client';
@@ -24,6 +29,32 @@ export interface ChatArtifact {
   name: string;
   blob: Blob;
 }
+type ComponentAttributes = StoredComponent['attributes'];
+
+function withCustomSpice(attributes: ComponentAttributes = [], custom: {
+  template: string;
+  prologue?: string;
+  epilogue?: string;
+  replaceExisting?: boolean;
+}): ComponentAttributes {
+  if (!custom.template.trim()) throw new Error('Supply a SPICE instance template.');
+  const fields = [
+    { name: '$$SPICE', value: custom.template },
+    { name: '$$SPICE_PROLOG', value: custom.prologue },
+    { name: '$$SPICE_EPILOG', value: custom.epilogue },
+  ];
+  const replaced = new Set([...fields.map(({ name }) => name), MODEL_BINDING, SPICE_ALTERNATE]);
+  if (!custom.replaceExisting && attributes.some(({ name, value }) => replaced.has(name) && value))
+    throw new Error('Confirm replacement of the existing SPICE definition.');
+  for (const { value } of fields) {
+    if (!value) continue;
+    if (/^\s*\.(?:op|tran|ac|dc|noise|tf|pz|end)\b/im.test(value))
+      throw new Error('Put simulation commands in the Simulation sheet.');
+    validateSpiceText(value, {});
+  }
+  return [...attributes.filter(({ name }) => !replaced.has(name)), ...fields.filter(({ value }) => value)];
+}
+
 export function createEditorTools(
   store: Store,
   artifact: (file: ChatArtifact) => void,
@@ -48,6 +79,20 @@ export function createEditorTools(
   const found = new Map<number, any>();
   const bundledFound = new Map<string, string>();
   const present = () => (store.getState() as docDrawing).docStore.present;
+  function spiceTarget(reference?: string, sheetNumber?: number) {
+    const state = present();
+    if (state.editLibrary || state.editSymbol) throw new Error('Open a circuit drawing to use SPICE model tools.');
+    const matches = state.drawing.sheets.flatMap((sheet, index) => {
+      if (sheet.kind === 'simulation' || (sheetNumber !== undefined && index !== sheetNumber - 1)) return [];
+      if (!reference && index !== state.view.selected_sheet) return [];
+      return sheet.items.filter((item): item is dsnSymbol => item.NodeName === DocItemTypes.Symbol && (reference
+        ? symbolField(item, 'Ref')?.toLowerCase() === reference.toLowerCase()
+        : state.view._selected_array.includes(item._id)
+      )).map((symbol) => ({ sheet, sheetNumber: index + 1, symbol, reference: symbolField(symbol, 'Ref') }));
+    });
+    if (matches.length !== 1) throw new Error(matches.length ? 'Specify one unambiguous placed symbol and sheet.' : 'No matching placed symbol was found.');
+    return matches[0];
+  }
   const revision = () => {
     const { drawing, editLibrary: library, editSymbol: symbol } = present();
     const entries = revisions.get(drawing) || [];
@@ -212,14 +257,81 @@ export function createEditorTools(
       pins,
     };
   };
+  const componentTarget = (asset: StoredComponent) => ({
+    pins: compact(asset).pins,
+    text: (asset.attributes ?? []).map(({ name, value }) => ({
+      description: name, value, display: 2, show: false, position: [0, 0] as [number, number],
+    })),
+  });
+  const modelKey = (args: { modelId: string; packId: string; revision: string }) => ({
+    id: args.modelId, packId: args.packId, revision: args.revision,
+  });
+  const readSpiceTarget = async (args: any, signal: AbortSignal) => {
+    if (!args.componentId) return spiceTarget(args.reference, args.sheet);
+    if (args.reference || args.sheet !== undefined || args.selected)
+      throw new Error('Choose a retained component or a placed symbol.');
+    const asset = await resolveComponent(args.componentId, signal);
+    return { symbol: componentTarget(asset), componentId: asset.componentId };
+  };
   return async (name, input, signal) => {
     const spec = toolSpecs.find((t) => t.name === name);
     if (!spec) throw new Error(`Unknown tool ${name}.`);
     checkArguments(input, spec.parameters);
     const args: any = { ...input };
     if (signal.aborted) throw new DOMException('Stopped', 'AbortError');
+    if (name === 'search_spice_models') {
+      const target = args.componentId || args.reference || args.selected || args.sheet !== undefined
+        ? await readSpiceTarget(args, signal)
+        : undefined;
+      const models = searchSpiceModels(args.query || '', target?.symbol);
+      return { data: { total: models.length, models: models.slice(0, args.limit ?? 10) } };
+    }
+    if (name === 'inspect_spice_model') {
+      const pack = catalogModelPack(modelKey(args));
+      const model = searchSpiceModels(args.modelId).find((entry) =>
+        entry.id === args.modelId && entry.packId === args.packId && entry.revision === args.revision,
+      );
+      return { data: {
+        ...model,
+        license: pack.license,
+        template: nativeSpiceTemplate(pack, args.modelId)?.instance,
+        definition: spiceDefinitionText(pack, args.modelId),
+      } };
+    }
+    if (name === 'inspect_spice_target') {
+      const target = await readSpiceTarget(args, signal);
+      const { symbol } = target;
+      const binding = modelBinding(symbol);
+      const customTemplate = hasCustomSpiceTemplate(symbol);
+      return { data: {
+        ...('componentId' in target ? { componentId: target.componentId } :
+          { reference: target.reference, sheet: target.sheetNumber }),
+        revision: revision(), pins: 'pins' in symbol ? symbol.pins : spiceSymbolPins(symbol),
+        template: symbolField(symbol, '$$SPICE'), customTemplate,
+        ...(customTemplate ? { prologue: symbolField(symbol, '$$SPICE_PROLOG'),
+          epilogue: symbolField(symbol, '$$SPICE_EPILOG') } : {}),
+        attachment: binding && { modelId: binding.modelId, packId: binding.packId, revision: binding.revision,
+          source: binding.source, pins: binding.pins, parameters: binding.parameters },
+        ...(args.modelId || args.packId || args.revision ? { mapping: inspectSpiceModel(symbol, modelKey(args)) } : {}),
+      } };
+    }
+    if (name === 'attach_spice_model') {
+      const target = spiceTarget(args.reference, args.sheet);
+      const { symbol, sheet, sheetNumber, reference } = target;
+      const source = present().drawing;
+      if (args.baseRevision !== revision()) throw new Error('The drawing changed. Inspect the target again before attaching the model.');
+      const drawing = changeSpiceModel(source, sheet.id, symbol._id, {
+        modelId: args.modelId, packId: args.packId, revision: args.revision, pins: args.pins,
+        parameters: Object.fromEntries((args.parameters ?? []).map(({ name, value }: { name: string; value: string }) => [name, value])),
+        replaceExisting: args.replaceExisting === true,
+      });
+      store.dispatch({ type: 'simulation/catalog-model', source, drawing });
+      if (present().drawing !== drawing) throw new Error('The drawing changed during model attachment.');
+      const binding = modelBinding(spiceTarget(reference, sheetNumber).symbol);
+      return { data: { reference, sheet: sheetNumber, revision: revision(), modelId: binding.modelId, source: binding.source, pins: binding.pins, parameters: binding.parameters } };
+    }
     if (name === 'read_skill_reference') {
-      await bundledLibraries.initialize();
+      if (args.path === 'SKILL.md') await bundledLibraries.initialize();
       return {
         data: {
           path: args.path,
@@ -230,6 +342,8 @@ export function createEditorTools(
                 ) +
                 '\n' +
                 resources['references/editor-common.md'] +
+                '\n' +
+                resources['references/spice-models.md'] +
                 '\n' +
                 resources[
                   present().editLibrary
@@ -452,7 +566,21 @@ export function createEditorTools(
       const additions: StoredComponent[] = [];
       for (const item of args.components) {
         const asset = await resolveComponent(item.componentId, signal);
-        const component = { ...asset, ...item, name: item.name || asset.name };
+        const component = { ...asset, name: item.name || asset.name,
+          reference: item.reference || asset.reference, description: item.description ?? asset.description };
+        if (item.spiceModel && item.customSpice)
+          throw new Error('Choose one SPICE definition per component.');
+        if (item.spiceModel) {
+          const { symbol } = bindSpiceModel(componentTarget(component), {
+            ...item.spiceModel,
+            parameters: Object.fromEntries((item.spiceModel.parameters ?? []).map(
+              ({ name, value }: { name: string; value: string }) => [name, value],
+            )),
+          });
+          component.attributes = symbol.text.map(({ description, value }) => ({ name: description, value }));
+        }
+        if (item.customSpice)
+          component.attributes = withCustomSpice(component.attributes, item.customSpice);
         const validation = await native(
           'validate_component',
           {
@@ -531,6 +659,22 @@ export function createEditorTools(
         args.name ||= asset.name;
         args.description ||= asset.description;
         args.attributes ||= asset.attributes;
+        if (asset.source?.libraryId === 'spice' || args.customSpice) {
+          const attributes = new Map((asset.attributes ?? []).map((field) => [field.name, field]));
+          const protectedFields = new Set([BUNDLED_SPICE_SYMBOL, MODEL_BINDING,
+            SPICE_ALTERNATE, '$$SPICE', '$$SPICE_PROLOG', '$$SPICE_EPILOG']);
+          for (const field of args.attributes ?? [])
+            if (!protectedFields.has(field.name)) attributes.set(field.name, field);
+          if (asset.source?.libraryId === 'spice')
+            attributes.set(BUNDLED_SPICE_SYMBOL, {
+              name: BUNDLED_SPICE_SYMBOL,
+              value: bundledSpiceIdentity(asset.source.nameId, asset.source.symbolId,
+                (field) => attributes.get(field)?.value),
+            });
+          args.attributes = [...attributes.values()];
+        }
+        if (args.customSpice)
+          args.attributes = withCustomSpice(args.attributes, args.customSpice);
         if (!args.reference) {
           const prefix =
             (asset.reference || 'U?').replace(/[?*\d]+$/g, '') || 'U';
@@ -648,8 +792,10 @@ export function createEditorTools(
       };
     }
     if (name === 'export_file') {
-      const definition = args.definition ?? currentXml(),
-        component = args.kind !== 'drawing';
+      const component = args.kind !== 'drawing';
+      const asset = component && args.componentId
+        ? await resolveComponent(args.componentId, signal) : undefined;
+      const definition = args.definition ?? asset?.definition ?? currentXml();
       const validation = await native(
         component ? 'validate_component' : 'validate_drawing',
         { definition },
@@ -662,11 +808,12 @@ export function createEditorTools(
           .replace(/[\\/\x00-\x1f]/g, '_')
           .replace(/\.(dsn|xml|tclib)$/i, '') || 'TinyCAD';
       if (args.kind === 'library') {
-        if (!args.name?.trim())
+        const name = args.name ?? asset?.name;
+        if (!name?.trim())
           throw new Error('Library export requires the component name.');
         const { saveTcLibrary } = await import('../io/tclib');
         const bytes = await saveTcLibrary({
-          name: args.name,
+          name,
           fileId: null,
           modified: '',
           symbols: [{ SymbolId: 1, Data: definition }],
@@ -674,13 +821,13 @@ export function createEditorTools(
             {
               NameID: 1,
               SymbolID: 1,
-              Name: args.name,
-              Reference: args.reference ?? 'U?',
+              Name: name,
+              Reference: args.reference ?? asset?.reference ?? 'U?',
               ppp: 1,
-              Description: args.description ?? '',
+              Description: args.description ?? asset?.description ?? '',
               ShowName: 0,
               ShowRef: 0,
-              Attributes: (args.attributes || []).map(
+              Attributes: (args.attributes ?? asset?.attributes ?? []).map(
                 (a: { name: string; value: string }) => ({
                   AttName: a.name,
                   AttValue: a.value,

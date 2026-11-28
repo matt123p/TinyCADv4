@@ -9,6 +9,9 @@ const mapStateToProps = (state: docDrawing) => {
   const view = state.docStore.present.view;
   const update_view = new updateView();
   return {
+    drawing: state.docStore.present.drawing,
+    sheetId: sheet?.id,
+    isLibraryEditMode: !!state.docStore.present.editLibrary,
     selectedSymbol: update_view.getSelectedSymbol(view, sheet),
   };
 };

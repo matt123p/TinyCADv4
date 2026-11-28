@@ -1,3 +1,4 @@
+import { powerMarkerElectricalType } from '../io/netlists/netlistGenerator';
 /*
  * Connections between nets (the nodes) are at:
  * .. the end of wires
@@ -49,6 +50,8 @@ export function makeNetForSheet(
     switch (ObjPtr.NodeName) {
       case DocItemTypes.Symbol:
         {
+          const update_ap = new updateSymbol(ObjPtr);
+          let active_points = update_ap.active_points();
           if (instancePorts && ObjPtr.hierarchy) {
             for (const [x, y, pin] of new updateSymbol(ObjPtr).active_points()) {
               netlist_builder.Add({
@@ -58,11 +61,23 @@ export function makeNetForSheet(
             }
             break;
           }
+          if (ObjPtr.hierarchicalFile !== undefined) {
+            for (const [x, y, pin] of active_points) {
+              netlist_builder.Add({
+                parent: pin,
+                a: [x, y],
+                eprop: null,
+                sheet: null,
+                netlist: null,
+                hints: [],
+                hierarchicalPort: { symbolId: ObjPtr._id, name: pin.name },
+              });
+            }
+            break;
+          }
           netlist_builder.addSymbol(ObjPtr);
 
           let myRefDes = ObjPtr.text.find((a) => a.description === 'Ref').value;
-          const update_ap = new updateSymbol(ObjPtr);
-          let active_points = update_ap.active_points();
           for (let j = 0; j < active_points.length; ++j) {
             let pointer = active_points[j];
             let pin = pointer[2];
@@ -157,7 +172,7 @@ export function makeNetForSheet(
           parent: ObjPtr,
           a: ObjPtr.point,
           label: update_power.get_power_label(),
-          eprop: 'power-marker',
+          eprop: powerMarkerElectricalType,
           netlist: null,
           sheet: null,
           hints: ObjPtr.hints || [],

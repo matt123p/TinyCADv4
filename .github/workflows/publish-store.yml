@@ -71,6 +71,8 @@ jobs:
           path: build/engine-artifacts
       - run: node scripts/stage-engine-artifacts.mjs
 
+      - name: Refresh APT indexes for Snapcraft
+        run: sudo apt-get -o APT::Update::Error-Mode=any update
 
       - name: Build Snap
         run: npm run dist -- --linux snap

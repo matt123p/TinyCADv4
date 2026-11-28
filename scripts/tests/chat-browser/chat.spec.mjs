@@ -83,6 +83,128 @@ const run = (page, name, args = {}) =>
   });
 const snapshot = (page) => page.evaluate(() => window.chatTest.snapshot());
 
+test('project chat sends the visible tab and reads linked references through project tools', async ({ page }) => {
+  const pdf = new PDFDocument({ size: 'A5' });
+  const chunks = [];
+  pdf.on('data', (chunk) => chunks.push(chunk));
+  const complete = new Promise((resolve) => pdf.on('end', () => resolve(Buffer.concat(chunks))));
+  pdf.text('Auxiliary information');
+  pdf.addPage().text('Pin 1 VCC, pin 2 GND');
+  pdf.end();
+  const datasheet = await complete;
+  const directoryRequests = [];
+  await page.exposeFunction('testProjectReference', (request) => {
+    directoryRequests.push(request);
+    if (request.operation === 'chat-list')
+      return { entries: [{ path: 'Docs/Pins.txt', kind: 'file' }], nextOffset: null };
+    if (request.relative !== 'Docs/Pins.txt')
+      throw new Error('Choose a path inside the current project.');
+    return Array.from(Buffer.from('Linked pin reference'));
+  });
+  await page.evaluate((bytes) => {
+    const endpoint = 'http://localhost:11434/v1';
+    localStorage.setItem('tinycad.chat.settings.v1', JSON.stringify({ provider: 'ollama', endpoint, model: 'test-local' }));
+    localStorage.setItem('tinycad.chat.connection.v1', JSON.stringify({
+      kind: 'local', provider: 'ollama', endpoint, models: ['test-local'],
+    }));
+    const root = { id: '/project', name: 'Board' };
+    const files = ['Notes.md', 'Datasheet.pdf'].map((name) => ({
+      id: root.id + '/' + name, name, folder: false,
+    }));
+    window.electronAPI.onProjectFoldersChanged = () => () => {};
+    window.electronAPI.setEditorMenuState = (state) => { window.testMenuState = state; };
+    window.electronAPI.projectFiles = async (request) => {
+      if (request.operation === 'list') return files;
+      if (request.operation === 'git') return null;
+      if (request.operation === 'read') return {
+        version: 'initial',
+        data: request.id.endsWith('.pdf') ? new Uint8Array(bytes) : new TextEncoder().encode('# Initial'),
+      };
+      if (request.operation === 'chat-list') return window.testProjectReference(request);
+      if (request.operation === 'chat-read') return new Uint8Array(await window.testProjectReference(request));
+    };
+    window.dispatchEvent(new CustomEvent('tinycad:project-folder-opened', { detail: root }));
+  }, [...datasheet]);
+
+  const requests = [];
+  const tool = (id, name, args) => ({ id, type: 'function', function: { name, arguments: JSON.stringify(args) } });
+  await page.route('http://localhost:11434/v1/chat/completions', async (route) => {
+    const request = route.request().postDataJSON();
+    requests.push(request);
+    let call = {
+      1: tool('list', 'list_project_files', { path: 'Docs' }),
+      2: tool('read', 'read_project_file', { path: 'Docs/Pins.txt' }),
+      4: tool('pdf', 'read_project_file', { path: 'Datasheet.pdf', page: 2, image: true }),
+      6: tool('create', 'create_ic_symbol', {
+        name: 'Datasheet part',
+        pins: [
+          { name: 'VCC', number: '1', side: 'west', order: 1 },
+          { name: 'GND', number: '2', side: 'east', order: 1 },
+        ],
+      }),
+    }[requests.length];
+    if (requests.length === 7) {
+      const result = JSON.parse(request.messages.find((message) => message.tool_call_id === 'create').content);
+      call = tool('export', 'export_file', {
+        kind: 'library', filename: 'Datasheet part', componentId: result.componentId,
+      });
+    }
+    await route.fulfill({ json: { choices: [{
+      finish_reason: call ? 'tool_calls' : 'stop',
+      message: call ? { role: 'assistant', tool_calls: [call] }
+        : { role: 'assistant', content: { 3: 'Notes read.', 5: 'Datasheet read.', 8: 'Symbol packaged.' }[requests.length] },
+    }] } });
+  });
+
+  const files = page.getByRole('region', { name: 'Project Files' });
+  const sidebar = page.getByRole('navigation', { name: 'Project views' });
+  await sidebar.getByRole('button', { name: 'Files', exact: true }).click();
+  await expect(files).toBeVisible();
+  await sidebar.getByRole('button', { name: 'Hide side panel' }).click();
+  await sidebar.getByRole('button', { name: 'Files', exact: true }).click();
+  await expect(files).toBeHidden();
+  await sidebar.getByRole('button', { name: 'Show side panel' }).click();
+  await files.getByRole('button', { name: 'Notes.md' }).click();
+  await expect.poll(() => page.evaluate(() => window.testMenuState)).toEqual({ project: true, editor: 'text' });
+  await page.getByRole('tab', { name: 'Source' }).click();
+  await page.getByRole('textbox', { name: 'Edit Notes.md' }).fill('# Unsaved board notes');
+  await page.getByRole('button', { name: 'Chat', exact: true }).click();
+  const prompt = page.getByRole('textbox', { name: 'Message', exact: true });
+  await prompt.fill('Read this tab and the linked pin reference.');
+  await prompt.press('Enter');
+  await expect(page.getByText('Notes read.', { exact: true })).toBeVisible();
+  const first = requests[0];
+  expect(first.messages[0].content).toContain('project mode');
+  expect(first.messages[1].content[0].text).toContain('Unsaved board notes');
+  expect(first.messages[1].content[0].text).toContain('"unsaved":true');
+  expect(requests[2].messages.find((message) => message.tool_call_id === 'read').content)
+    .toContain('Linked pin reference');
+  expect(directoryRequests.map(({ operation, project, relative }) => [operation, project, relative]))
+    .toEqual([['chat-list', '/project', 'Docs'], ['chat-read', '/project', 'Docs/Pins.txt']]);
+
+  await files.getByRole('button', { name: 'Datasheet.pdf' }).click();
+  await expect.poll(() => page.evaluate(() => window.testMenuState)).toEqual({ project: true, editor: 'pdf' });
+  await page.getByRole('button', { name: 'Next page' }).click();
+  await prompt.fill('What pins are shown on this page?');
+  await prompt.press('Enter');
+  await expect(page.getByText('Datasheet read.', { exact: true })).toBeVisible();
+  const active = requests[3].messages.filter((message) => message.role === 'user').at(-1);
+  expect(active.content[0].text).toContain('Datasheet.pdf');
+  expect(active.content[0].text).toContain('Pin 1 VCC, pin 2 GND');
+  expect(active.content[1].image_url.url).toMatch(/^data:image\/png;base64,/);
+  expect(requests[4].messages.find((message) => message.tool_call_id === 'pdf').content)
+    .toContain('Pin 1 VCC, pin 2 GND');
+
+  const drawing = page.getByLabel('Open files').getByRole('button', { name: /^Close .*\.d[sz]n$/i });
+  if (await drawing.count()) await drawing.click();
+  await prompt.fill('Create an editable symbol using this datasheet.');
+  await prompt.press('Enter');
+  await expect(page.getByText('Symbol packaged.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Datasheet part.TCLib' })).toBeVisible();
+  expect(requests[5].messages.filter((message) => message.role === 'user').at(-1).content[0].text)
+    .toContain('"editingTarget":null');
+});
+
 test('attachments show files immediately and invalid selections keep existing files', async ({
   page,
 }) => {
@@ -1641,6 +1763,69 @@ test('library batch additions preserve unsaved artwork, reject stale edits and u
   );
 });
 
+test('SPICE tools inspect local models and set requested definitions on generated components', async ({ page }) => {
+  const skill = (await run(page, 'read_skill_reference', { path: 'references/spice-models.md' })).data.content;
+  expect(skill).toContain('only when the user explicitly requests SPICE or simulation support');
+  const found = (await run(page, 'search_spice_models', { query: '1N4148' })).data.models;
+  const { id: modelId, packId, revision } = found.find(({ id }) => id === '1N4148_OJ');
+  const model = { modelId, packId, revision };
+  const details = (await run(page, 'inspect_spice_model', model)).data;
+  expect(details.definition).toMatch(/\.model 1N4148_OJ/i);
+  expect(details.source.url).toMatch(/^https:/);
+  const created = (await run(page, 'create_ic_symbol', {
+    name: 'Signal diode',
+    reference: 'D?',
+    pins: [
+      { name: 'A', number: '2', side: 'west', order: 1 },
+      { name: 'K', number: '1', side: 'east', order: 1 },
+    ],
+    includeDefinition: true,
+    format: 'svg',
+  })).data;
+  const { componentId } = created;
+  const target = (await run(page, 'inspect_spice_target', { componentId, ...model })).data;
+  expect(target.mapping.mapping).toEqual(['2', '1']);
+  expect(target.attachment).toBeUndefined();
+  const plain = (await run(page, 'place_component', { componentId, baseRevision: target.revision })).data;
+  const placed = (await run(page, 'inspect_spice_target', { reference: plain.reference })).data;
+  expect(placed.template).toBeUndefined();
+  const attached = (await run(page, 'attach_spice_model', {
+    ...model, reference: plain.reference, sheet: 1, baseRevision: placed.revision, pins: ['2', '1'],
+  })).data;
+  const customSpice = {
+    template: 'DTC_$(ref) %(2) %(1) TEST_DIODE',
+    prologue: '* Test diode\n' + '* Standalone test definition\n'.repeat(50) + '.model TEST_DIODE D(IS=1n)',
+  };
+  const custom = (await run(page, 'place_component', {
+    componentId, customSpice, baseRevision: attached.revision,
+  })).data;
+  expect(custom.applied).toBe(true);
+  expect((await snapshot(page)).xml).toContain('TEST_DIODE');
+  const customTarget = (await run(page, 'inspect_spice_target', { reference: custom.reference })).data;
+  expect(customTarget.template).toBe(customSpice.template);
+  expect(customTarget.prologue).toBe(customSpice.prologue);
+  expect(customTarget.customTemplate).toBe(true);
+  await page.evaluate(xml => window.chatTest.openLibrary(xml), created.definition);
+  const library = (await run(page, 'read_library')).data;
+  expect((await run(page, 'search_spice_models', { query: '1N4148', componentId })).data.total).toBeGreaterThan(0);
+  await run(page, 'add_library_components', {
+    baseRevision: library.revision,
+    components: [
+      { componentId, name: 'Linked diode', spiceModel: { ...model, pins: ['2', '1'] } },
+      { componentId, name: 'Custom diode', customSpice },
+    ],
+  });
+  const { components } = (await run(page, 'read_library')).data;
+  const linked = components.find(({ name }) => name === 'Linked diode').attributes;
+  const binding = linked.find(({ AttName }) => AttName === '$$CATALOG_MODEL');
+  expect(binding.ShowAtt).toBe(2);
+  expect(JSON.parse(binding.AttValue)).toMatchObject({ modelId, packId, pins: ['2', '1'] });
+  const attributes = components.find(({ name }) => name === 'Custom diode').attributes;
+  expect(attributes.find(({ AttName }) => AttName === '$$SPICE_PROLOG')).toMatchObject({
+    AttValue: customSpice.prologue, ShowAtt: 2,
+  });
+});
+
 test('ChatGPT web search shows inline citations and keeps search details collapsed', async ({
   page,
 }) => {
@@ -2358,6 +2543,7 @@ test('bundled library search injects the catalog and places original SPICE symbo
   await page.route('**/api/search/**', async route => { online++; await route.abort(); });
   const skill = (await run(page, 'read_skill_reference', { path: 'SKILL.md' })).data.content;
   expect(skill).toContain('SPICE essentials');
+  expect(skill).toContain('SPICE models when requested');
   expect(skill).toContain('Digital logic');
   expect(skill).toContain('search_bundled_symbols BEFORE the online search_symbols');
   expect(requested).toEqual([]); // The runtime catalog does not eagerly load SQLite.

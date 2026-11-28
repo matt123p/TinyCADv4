@@ -1,5 +1,6 @@
 import { validateInstanceReferences } from '../model/schematicReferences';
 import { createSimulationSheet, validateSetup } from '../simulation/document';
+import { mergeDrawingModelPacks, parseSpiceModelPacks, referencedSpiceModelPacks } from '../simulation/catalogBindings';
 import { newIdentity } from '../simulation/contracts';
 import { readSchematicEntityId } from '../model/schematicIdentity';
 import { XMLBuilder } from '../util/xmlbuilder';
@@ -21,6 +22,7 @@ import {
   dsnPin,
   dsnPower,
   dsnSymbol,
+  SymbolPropertyFont,
   dsnText,
   dsnWire,
   Text,
@@ -39,7 +41,7 @@ import {
   NetlistTypeDefinition,
   ensureNetlistTypes,
 } from '../model/dsnDrawing';
-import { isStroked, isFilled, isText } from '../model/dsnTypeGuards';
+import { isStroked, isFilled } from '../model/dsnTypeGuards';
 import { get_global_id } from '../util/global_id';
 import { Snap } from '../manipulators/snap';
 import { updateLine } from '../manipulators/updateLine';
@@ -48,10 +50,10 @@ import { updatePower } from '../manipulators/updatePower';
 import { updatePin } from '../manipulators/updatePin';
 import { updateLabel } from '../manipulators/updateLabel';
 import { updateBusLabel } from '../manipulators/updateBusLabel';
-import { updateSymbol } from '../manipulators/updateSymbol';
+import { updateSymbol, syncSymbolPropertyFonts } from '../manipulators/updateSymbol';
 import md5 from 'md5';
 import { updateFactory } from '../manipulators/updateFactory';
-import { measureText, getFont } from '../util/measureText';
+import { measureText, getStyledFont } from '../util/measureText';
 import { uudecode } from './uudecode';
 import { updateView } from '../manipulators/updateView';
 
@@ -71,6 +73,17 @@ interface XMLFont {
   STRIKEOUT: number;
   CHARSET: number;
 }
+
+type SymbolFieldFontIds = WeakMap<dsnSymbol, (number | undefined)[]>;
+
+interface SheetFonts {
+  custom: XMLFont[];
+  usesPinFont: boolean;
+}
+
+// TinyCAD v3 reserves 0 for text, 1 for pin text, and 2 for rulers.
+const pinFontId = 1;
+const firstCustomFontId = 3;
 
 interface XMLFill {
   INDEX: string;
@@ -191,7 +204,7 @@ export class ioXML {
     } else {
       let nodes = root[0].childNodes;
       for (let i = 0; i < nodes.length; ++i) {
-        if (['HierarchicalSymbol', 'HierachicalSymbol'].includes(nodes[i].nodeName)) {
+        if (nodes[i].nodeName === 'HierarchicalSymbol' || nodes[i].nodeName === 'HierachicalSymbol') {
           let sheet = this.from_tinycad(nodes[i], nodes[i], true);
           r.sheets.push(sheet);
         }
@@ -225,35 +238,30 @@ export class ioXML {
           sheet.simulation = validateSetup(JSON.parse(this.nodeText(nodes[i])));
           r.sheets.push(sheet);
         }
+        if (nodes[i].nodeName === 'SPICE_MODEL_PACKS') {
+          if (r.spiceModelPacks) throw new Error('Duplicate SPICE model packs.');
+          if (nodes[i].getAttribute('version') !== '1') throw new Error('Unsupported SPICE model pack version.');
+          r.spiceModelPacks = parseSpiceModelPacks(this.nodeText(nodes[i]));
+        }
         if (nodes[i].nodeName === 'NETLIST_TYPES') {
           const parsed = this.readNetlistTypes(nodes[i]);
           r.netlistTypes = parsed.types;
           r.netTypeAssignments = parsed.assignments;
         }
         if (nodes[i].nodeName === 'DSNSETTINGS') {
-          r.settings = this.readSettings(nodes[i]);
+          r.settings = this.readSettings(root[0], nodes[i]);
         }
       }
     }
 
-    const interfaceSheets = r.sheets.filter(sheet => sheet.hierarchicalSymbol);
-    if (interfaceSheets.length > 1) throw new Error('A drawing can have only one hierarchy interface.');
-    if (interfaceSheets.length && r.sheets[0] !== interfaceSheets[0])
-      r.sheets = [interfaceSheets[0], ...r.sheets.filter(sheet => !sheet.hierarchicalSymbol)];
-    if (!r.sheets.some(sheet => sheet.kind !== 'simulation' && !sheet.hierarchicalSymbol))
-      throw new Error('A drawing must contain a schematic sheet.');
     const sheetIds = r.sheets.map(sheet => sheet.id);
     if (new Set(sheetIds).size !== sheetIds.length) throw new Error('Duplicate sheet identity.');
-    const unitIds = r.sheets.flatMap((sheet) => sheet.items.flatMap((item) =>
-      item.NodeName === DocItemTypes.Symbol && item.unitId ? [item.unitId] : [],
-    ));
-    if (new Set(unitIds).size !== unitIds.length) throw new Error('Duplicate schematic unit identity.');
     r.netlistTypes = ensureNetlistTypes(r.netlistTypes);
     if (!r.netTypeAssignments) {
       r.netTypeAssignments = {};
     }
 
-    return r;
+    return syncSymbolPropertyFonts(r);
   }
 
   public to_dsn(
@@ -273,6 +281,26 @@ export class ioXML {
           path: instancePath.join('/'), component: componentId, value: reference,
         });
     }
+    const catalogSymbols = drawing.sheets.flatMap(({ name, items }) => items.flatMap((item) =>
+      item.NodeName === DocItemTypes.Symbol && (item.hierarchicalFile === undefined || item.hierarchy?.cached)
+        ? [[name, item] as [string, dsnSymbol]] : [],
+    ));
+    const packs = mergeDrawingModelPacks(drawing.spiceModelPacks,
+      referencedSpiceModelPacks({ symbols: catalogSymbols }, drawing.spiceModelPacks, true));
+    if (packs.length)
+      dsn.appendChild('SPICE_MODEL_PACKS', JSON.stringify(packs), { version: '1' });
+    // Drawing defaults have document-scoped IDs. Each schematic keeps its own font table.
+    const defaultFonts: XMLFont[] = [];
+    const propertyDefaults = (drawing.settings?.symbolPropertyFonts ?? []).map(({ description, ...font }) => {
+      const id = this.registerFont(defaultFonts, {
+        font_name: font.font_name ?? 'Arial',
+        font_size: font.font_size ?? 10,
+        font_bold: false,
+        font_italic: false,
+      });
+      return { description, ...this.propertyFontReference(font, id) };
+    });
+    this.writeFonts(dsn, defaultFonts);
     for (var i = 0; i < drawing.sheets.length; ++i) {
       const sheet = drawing.sheets[i];
       if (sheet.kind === 'simulation') {
@@ -288,7 +316,11 @@ export class ioXML {
         false,
       );
     }
-    this.writeSettings(dsn, drawing.settings);
+    const settings = dsn.appendChild('DSNSETTINGS');
+    settings.appendChild('SHOW_RULERS', drawing.settings?.showRulers === false ? '0' : '1');
+    for (const attributes of propertyDefaults) {
+      settings.appendChild('SYMBOL_PROPERTY_FONT', null, attributes);
+    }
     this.writeNetlistTypes(dsn, drawing);
 
     return dsn;
@@ -313,7 +345,8 @@ export class ioXML {
     // 8. ... Drawing Objects ...
 
     // Compile a list of fonts, styles, fills, symboldefs & images
-    let fonts: XMLFont[] = [];
+    const fonts: SheetFonts = { custom: [], usesPinFont: false };
+    const fieldFontIds: SymbolFieldFontIds = new WeakMap();
     let styles: XMLStyle[] = [];
     let fills: XMLFill[] = [];
     let symboldefs: { [key: string]: XMLSymbolDef } = {};
@@ -325,7 +358,7 @@ export class ioXML {
     );
 
     // Create the resources and document for insertion later
-    this.to_resources(root, items, fonts, styles, fills, symboldefs, images);
+    this.to_resources(root, items, fonts, styles, fills, symboldefs, images, fieldFontIds);
 
     if (sheet.id) root.insert.setAttribute('id', sheet.id);
 
@@ -360,12 +393,15 @@ export class ioXML {
     }
 
     // 3.. FONT (s)
-    for (let index = 0; index < fonts.length; ++index) {
-      let font = root.appendChild('FONT', null, {
-        id: index + 1,
-      });
-      font.appendChildren(fonts[index]);
+    if (fonts.usesPinFont) {
+      root.appendChild('FONT', null, { id: pinFontId }).appendChildren(this.fontResource({
+        font_name: 'Arial',
+        font_size: -10, // The legacy Windows logical height for the built-in pin font.
+        font_bold: false,
+        font_italic: false,
+      }));
     }
+    this.writeFonts(root, fonts.custom);
 
     // 4.. STYLE (s)
     for (let index = 0; index < styles.length; ++index) {
@@ -414,7 +450,7 @@ export class ioXML {
           tinycad = symboldef.appendChild('TinyCADSheets');
           for (let i = 0; i < symbol.outlines.length; ++i) {
             const ts = tinycad.appendChild('TinyCAD');
-            this.to_tinycad_simple(sheet, ts, symbol.outlines[i].items, false);
+            this.to_tinycad_simple(sheet, ts, symbol.outlines[i].items, false, fieldFontIds);
           }
         } else {
           tinycad = symboldef.appendChild('TinyCAD');
@@ -423,6 +459,7 @@ export class ioXML {
             tinycad,
             symbol.outlines[0].items,
             false,
+            fieldFontIds,
           );
         }
       }
@@ -495,19 +532,43 @@ export class ioXML {
     }
 
     // Now the actual drawing objects
-    this.to_tinycad_simple(sheet, root, items, no_junctions);
+    this.to_tinycad_simple(sheet, root, items, no_junctions, fieldFontIds);
 
     return root;
   }
 
-  to_resources(
+  private fontResource(font: Text): XMLFont {
+    return {
+      HEIGHT: font.font_size,
+      FACENAME: font.font_name,
+      WIDTH: 0,
+      WEIGHT: font.font_bold ? 700 : 400,
+      ITALIC: font.font_italic ? 255 : 0,
+      UNDERLINE: 0,
+      STRIKEOUT: 0,
+      CHARSET: 0,
+    };
+  }
+
+  private registerFont(fonts: XMLFont[], font: Text) {
+    return this.lookup_item(fonts, this.fontResource(font)) + firstCustomFontId - 1;
+  }
+
+  private writeFonts(root: XMLBuilder, fonts: XMLFont[]) {
+    fonts.forEach((font, index) => {
+      root.appendChild('FONT', null, { id: firstCustomFontId + index }).appendChildren(font);
+    });
+  }
+
+  private to_resources(
     root: XMLBuilder,
     items: DocItem[],
-    fonts: XMLFont[],
+    fonts: SheetFonts,
     styles: XMLStyle[],
     fills: XMLFill[],
     symboldefs: { [key: string]: XMLSymbolDef },
     images: { [key: string]: XMLImageDef },
+    fieldFontIds: SymbolFieldFontIds,
   ) {
     // Extract resources
     for (let i = 0; i < items.length; ++i) {
@@ -543,21 +604,27 @@ export class ioXML {
         }
       }
 
-      if (isText(item)) {
-        let font = {
-          HEIGHT: item.font_size,
-          FACENAME: item.font_name,
-          WIDTH: 0,
-          WEIGHT: item.font_bold ? 700 : 400,
-          ITALIC: item.font_italic ? 255 : 0,
-          UNDERLINE: 0,
-          STRIKEOUT: 0,
-          CHARSET: 0,
-        };
-        item.font_id = this.lookup_item(fonts, font);
+      if (
+        item.NodeName === DocItemTypes.Text ||
+        item.NodeName === DocItemTypes.Label ||
+        item.NodeName === DocItemTypes.BusLabel
+      ) {
+        item.font_id = this.registerFont(fonts.custom, item);
+      }
+      if (
+        item.NodeName === DocItemTypes.Symbol ||
+        item.NodeName === DocItemTypes.Pin ||
+        item.NodeName === DocItemTypes.Power
+      ) {
+        fonts.usesPinFont = true;
       }
 
-      if (item.NodeName === DocItemTypes.Symbol && (!item.hierarchy || item.hierarchy.cached)) {
+      if (item.NodeName === DocItemTypes.Symbol) {
+        const symbol = new updateSymbol(item);
+        fieldFontIds.set(item, item.text.map((field) => field.font
+          ? this.registerFont(fonts.custom, symbol.propertyFont(field))
+          : undefined));
+        if (item.hierarchicalFile !== undefined && !item.hierarchy?.cached) continue;
         let symboldef = {
           symbol: item._symbol,
         };
@@ -571,6 +638,7 @@ export class ioXML {
             fills,
             symboldefs,
             images,
+            fieldFontIds,
           );
         }
       }
@@ -584,11 +652,12 @@ export class ioXML {
     }
   }
 
-  to_tinycad_simple(
+  private to_tinycad_simple(
     sheet: dsnSheet,
     root: XMLBuilder,
     items: DocItem[],
     no_junctions: boolean,
+    fieldFontIds: SymbolFieldFontIds,
   ) {
     for (let i = 0; i < items.length; ++i) {
       let item = items[i];
@@ -834,14 +903,18 @@ export class ioXML {
           o = root.appendChild('METAFILE', null, a);
           break;
         case DocItemTypes.Symbol:
+          const hierarchicalFile = item.hierarchy?.cached ? item.hierarchy.path : item.hierarchicalFile ?? item.hierarchy?.path;
+          const hierarchical = hierarchicalFile !== undefined;
           a = {
             pos: root.makeCoords(item.point),
-            id: item._symbol.id,
-            show_power: item.show_power ? 1 : 0,
             can_scale: item.allow_resize ? 1 : 0,
             scale_x: item.scale_x,
             scale_y: item.scale_y,
-            part: item.part,
+            ...(hierarchical ? { file: hierarchicalFile, ...(item.hierarchy?.cached ? { id: item._symbol.id } : {}) } : {
+              id: item._symbol.id,
+              show_power: item.show_power ? 1 : 0,
+              part: item.part,
+            }),
           };
           if (item.unitId) a.unit_uuid = item.unitId;
 
@@ -867,13 +940,9 @@ export class ioXML {
               a.rotate = 3 | (mirror ? 4 : 0);
               break;
           }
-          if (item.hierarchy) {
-            a.file = item.hierarchy.path;
-            if (item.hierarchy.documentId) a.child_uuid = item.hierarchy.documentId;
-            if (item.hierarchy.boardInstance) a.board_uuid = item.hierarchy.boardInstance.boardId;
-            if (!item.hierarchy.cached) delete a.id;
-          }
-          o = root.appendChild(item.hierarchy ? 'HIERARCHICAL_SYMBOL' : 'SYMBOL', null, a);
+          if (item.hierarchy?.documentId) a.child_uuid = item.hierarchy.documentId;
+          if (item.hierarchy?.boardInstance) a.board_uuid = item.hierarchy.boardInstance.boardId;
+          o = root.appendChild(hierarchical ? 'HIERARCHICAL_SYMBOL' : 'SYMBOL', null, a);
 
           for (let j = 0; j < item.text.length; ++j) {
             let field = item.text[j];
@@ -882,11 +951,14 @@ export class ioXML {
                 field.position[0],
                 field.position[1] + item.font_size,
               ]),
-              value: field.value,
+              value: hierarchical && field.description === 'Design' ? '' : field.value,
               description: field.description,
               type: field.display,
               show: field.show ? 1 : 0,
             };
+            if (field.font) {
+              Object.assign(a, this.propertyFontReference(field.font, fieldFontIds.get(item)[j]));
+            }
             o.appendChild('FIELD', null, a);
           }
           for (const { portId, componentId, signalId } of item.hierarchy?.boardInstance?.ports ?? []) {
@@ -1102,7 +1174,7 @@ export class ioXML {
             // Markdown text reserves three units of padding on every side.
             // Legacy TEXT has no explicit box, so include that padding in its bounds.
             // Leave a pixel for rounding/kerning differences between Markdown runs.
-            const txt_size = Math.ceil(measureText(getFont(o), o.text)) + 1;
+            const txt_size = Math.ceil(measureText(getStyledFont(o), o.text)) + 1;
             const pos = this.coords(node.getAttribute('pos'));
             switch (rotation) {
               case 0: // Right
@@ -1297,9 +1369,9 @@ export class ioXML {
             point: this.coords(node.getAttribute('pos')),
             rotation: this.rotation2(node.getAttribute('direction')),
             name: this.nodeText(node) ?? '',
-            number: node.getAttribute('number'),
-            length: parseInt(node.getAttribute('length'), 10),
-            number_pos: parseInt(node.getAttribute('number_pos'), 10),
+            number: node.getAttribute('number') ?? '',
+            length: parseInt(node.getAttribute('length') ?? '20', 10),
+            number_pos: parseInt(node.getAttribute('number_pos') ?? '0', 10),
             centre_name: !!parseInt(node.getAttribute('centre_name'), 10),
             which: parseInt(node.getAttribute('which'), 10),
             elec: parseInt(node.getAttribute('elec'), 10),
@@ -1307,7 +1379,7 @@ export class ioXML {
             show_name: (show & 1) !== 0,
             // tslint:disable-next-line: no-bitwise
             show_number: (show & 2) !== 0,
-            part: parseInt(node.getAttribute('part'), 10),
+            part: parseInt(node.getAttribute('part') ?? '0', 10),
             // The label's default style
             font_name: 'Arial',
             font_colour: '#000000',
@@ -1395,8 +1467,9 @@ export class ioXML {
         case 'SYMBOL':
           {
             const hierarchical = node.nodeName !== 'SYMBOL';
+            const hierarchicalFile = hierarchical ? node.getAttribute('file') ?? '' : undefined;
             const symbolId = node.getAttribute('id');
-            const definition = !hierarchical || symbolId
+            const definition = hierarchical && symbolId && node.getAttribute('child_uuid')
               ? this.symboldef(root, newSheet, symbolId) : null;
             const boardId = hierarchical && readSchematicEntityId(node.getAttribute('board_uuid'), false);
             const ports = Array.from(node.getElementsByTagName('BOARDPORT') as HTMLCollectionOf<Element>, (port) => ({
@@ -1446,14 +1519,16 @@ export class ioXML {
               _id: get_global_id(),
               unitId: readSchematicEntityId(node.getAttribute('unit_uuid'), this.readOptions.migrateEntityIds !== false),
               point: this.coords(node.getAttribute('pos')),
+              ...(hierarchical ? { hierarchicalFile, hierarchy } : {}),
               show_power: hierarchical || parseInt(node.getAttribute('show_power'), 10) !== 0,
-              allow_resize: !!parseInt(node.getAttribute('can_scale'), 10),
-              scale_x: parseFloat(node.getAttribute('scale_x')) || 1,
-              scale_y: parseFloat(node.getAttribute('scale_y')) || 1,
+              allow_resize: parseInt(node.getAttribute('can_scale'), 10) !== 0,
+              scale_x: parseFloat(node.getAttribute('scale_x') ?? '1.0'),
+              scale_y: parseFloat(node.getAttribute('scale_y') ?? '1.0'),
               part: hierarchical ? 0 : parseInt(node.getAttribute('part'), 10),
               rotation: rotation,
-              _symbol: hierarchical && !hierarchy.cached ? this.unresolvedChildSymbol(hierarchy.path) : definition,
-              ...(hierarchy ? { hierarchy } : {}),
+              _symbol: hierarchical
+                ? definition ?? this.emptySymbol()
+                : this.symboldef(root, newSheet, node.getAttribute('id')),
               text: [],
               textData: [],
               _active_points: null,
@@ -1468,23 +1543,19 @@ export class ioXML {
             for (let j = 0; j < fields.length; ++j) {
               let field = {
                 position: this.coords(fields[j].getAttribute('pos')),
-                value: fields[j].getAttribute('value'),
+                value: hierarchical && fields[j].getAttribute('description') === 'Design'
+                  ? hierarchicalFile.split(/[\\/]/).at(-1)
+                  : fields[j].getAttribute('value'),
                 description: fields[j].getAttribute('description'),
                 type: parseInt(fields[j].getAttribute('type'), 10),
                 show: parseInt(fields[j].getAttribute('show'), 10) !== 0,
                 display: parseInt(fields[j].getAttribute('type'), 10),
+                ...this.readPropertyFont(root, fields[j]),
               };
               field.position[1] -= o.font_size;
               o.text.push(field);
             }
-            if (hierarchy) {
-              const label = hierarchy.path.split(/[/\\]/).pop() || 'Missing child';
-              const name = o.text.find((field) => field.description === 'Name');
-              if (name && !name.value) name.value = label;
-              if (!name) o.text.unshift({ description: 'Name', value: label, display: 0, show: true, position: [-50, 0] });
-              if (!o.text.some((field) => field.description === 'Ref'))
-                o.text.push({ description: 'Ref', value: 'H?', display: 0, show: true, position: [-50, 12] });
-            }
+
             let hints = node.getElementsByTagName('HINT');
             for (let j = 0; j < hints.length; ++j) {
               let hint = {
@@ -1582,15 +1653,14 @@ export class ioXML {
     return 0;
   }
 
-  private writeSettings(dsn: XMLBuilder, settings: DsnSettings | null | undefined) {
-    const nextSettings: DsnSettings = {
-      showRulers: settings?.showRulers !== false,
-    };
-    const root = dsn.appendChild('DSNSETTINGS');
-    root.appendChild('SHOW_RULERS', nextSettings.showRulers ? '1' : '0');
+  private propertyFontReference(font: SymbolPropertyFont, id: number) {
+    // A font resource is complete even when only one of its settings overrides the default.
+    if (font.font_name === undefined) return { font: id, font_inherit: 'name' };
+    if (font.font_size === undefined) return { font: id, font_inherit: 'size' };
+    return { font: id };
   }
 
-  private readSettings(node: any): DsnSettings {
+  private readSettings(root: Element, node: any): DsnSettings {
     const settings: DsnSettings = {
       showRulers: true,
     };
@@ -1600,10 +1670,29 @@ export class ioXML {
       const child = childNodes[i];
       if (child.nodeName === 'SHOW_RULERS') {
         settings.showRulers = this.nodeText(child) !== '0';
+      } else if (child.nodeName === 'SYMBOL_PROPERTY_FONT') {
+        const description = child.getAttribute('description');
+        const { font } = this.readPropertyFont(root, child);
+        if (description !== null && font) {
+          (settings.symbolPropertyFonts ??= []).push({ description, ...font });
+        }
       }
     }
 
     return settings;
+  }
+
+  private readPropertyFont(root: Element, node: Element): { font?: SymbolPropertyFont } {
+    const id = node.getAttribute('font');
+    if (!id) return {};
+    const resource = this.font(root, id, true);
+    const inherit = node.getAttribute('font_inherit');
+    const font: SymbolPropertyFont = {};
+    if (resource.font_name && inherit !== 'name') font.font_name = resource.font_name;
+    if (Number.isFinite(resource.font_size) && resource.font_size > 0 && inherit !== 'size') {
+      font.font_size = resource.font_size;
+    }
+    return Object.keys(font).length ? { font } : {};
   }
 
   private writeNetlistTypes(dsn: XMLBuilder, drawing: dsnDrawing) {
@@ -1728,7 +1817,7 @@ export class ioXML {
     );
   }
 
-  private font(root: XMLDocument, fs: string) {
+  private font(root: XMLDocument | Element, fs: string, direct = false) {
     const o: Text = {
       font_name: '',
       font_size: 0,
@@ -1739,9 +1828,10 @@ export class ioXML {
     let fonts = root.getElementsByTagName('FONT');
     for (let k = 0; k < fonts.length; ++k) {
       let selected_font = fonts[k];
+      if (direct && selected_font.parentNode !== root) continue;
       if (parseInt(selected_font.getAttribute('id'), 10) === f) {
         o.font_size = this.fontSizeFromHeight(
-          this.nodeNumber(selected_font.getElementsByTagName('HEIGHT')[0]),
+          parseFloat(this.nodeText(selected_font.getElementsByTagName('HEIGHT')[0])) || 0,
         );
         // let width = nodeNumber( font.getElementsByTagName( "WIDTH" )[0] );
         // let underline = nodeNumber( font.getElementsByTagName( "UNDERLINE" )[0] );
@@ -1980,27 +2070,8 @@ export class ioXML {
     return selected_imagedef;
   }
 
-  private unresolvedChildSymbol(path: string): libSymbol {
-    const rectangle: dsnRectangle = {
-      NodeName: DocItemTypes.Rectangle, _id: get_global_id(),
-      point: [-65, -35], point_b: [0, 0], stroked: true,
-      line_colour: '#a65100', line_width: 1, line_pattern: 2,
-      filled: false, hatch: 0, fill_colour: '#ffffff',
-    };
+  private emptySymbol(): libSymbol {
     return {
-      id: -get_global_id(), uid: null, parts: 1, heterogeneous: false,
-      description: '', name: { value: path, type: 0 }, ref: { value: 'H?', type: 0 },
-      outlines: [{ items: [rectangle], size: [65, 35], ref_point: [0, 0], active_points: [] }],
-    };
-  }
-
-  private symboldef(root: any, sheet: dsnSheet, sId: string) {
-    const s = parseInt(sId, 10);
-    if (Object.hasOwn(sheet.symbols, s)) {
-      return sheet.symbols[s];
-    }
-    let symbols = root.getElementsByTagName('SYMBOLDEF');
-    let selected_symboldef: libSymbol = {
       id: null,
       description: null,
       name: null,
@@ -2017,6 +2088,15 @@ export class ioXML {
       uid: null,
       heterogeneous: false,
     };
+  }
+
+  private symboldef(root: any, sheet: dsnSheet, sId: string) {
+    const s = parseInt(sId, 10);
+    if (s in sheet.symbols) {
+      return sheet.symbols[s];
+    }
+    let symbols = root.getElementsByTagName('SYMBOLDEF');
+    const selected_symboldef = this.emptySymbol();
     for (let k = 0; k < symbols.length; ++k) {
       let symbol = symbols[k];
       if (parseInt(symbol.getAttribute('id'), 10) === s) {

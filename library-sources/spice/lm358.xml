@@ -1,0 +1,13 @@
+<TinyCAD>
+  <STYLE id="1"><STYLE>0</STYLE><COLOR>000000</COLOR><THICKNESS>1</THICKNESS></STYLE>
+  <FILL id="0"><INDEX>-1</INDEX><COLOR>000000</COLOR></FILL>
+  <RECTANGLE a="20,20" b="40,37" style="1" fill="0"/>
+  <PIN pos="16,24" which="0" elec="1" direction="3" part="0" number="1" show="3" length="20" number_pos="0" centre_name="0">1OUT</PIN>
+  <PIN pos="16,27" which="0" elec="0" direction="3" part="0" number="2" show="3" length="20" number_pos="0" centre_name="0">1IN-</PIN>
+  <PIN pos="16,30" which="0" elec="0" direction="3" part="0" number="3" show="3" length="20" number_pos="0" centre_name="0">1IN+</PIN>
+  <PIN pos="16,33" which="0" elec="9" direction="3" part="0" number="4" show="3" length="20" number_pos="0" centre_name="0">V-</PIN>
+  <PIN pos="44,33" which="0" elec="0" direction="2" part="0" number="5" show="3" length="20" number_pos="0" centre_name="0">2IN+</PIN>
+  <PIN pos="44,30" which="0" elec="0" direction="2" part="0" number="6" show="3" length="20" number_pos="0" centre_name="0">2IN-</PIN>
+  <PIN pos="44,27" which="0" elec="1" direction="2" part="0" number="7" show="3" length="20" number_pos="0" centre_name="0">2OUT</PIN>
+  <PIN pos="44,24" which="0" elec="9" direction="2" part="0" number="8" show="3" length="20" number_pos="0" centre_name="0">V+</PIN>
+</TinyCAD>

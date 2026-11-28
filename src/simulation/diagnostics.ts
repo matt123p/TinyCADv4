@@ -4,6 +4,7 @@ import { writeSpice } from '../io/netlists/netlistSpice';
 import { SimulationSetup } from './contracts';
 import { validateSpiceText } from './deck';
 import { readControl, controlTemplate } from './controls';
+import { activeSpiceModelPacks, mergeSpiceModelFiles, type SpiceModelPack } from './catalogBindings';
 
 const reference = ([, symbol]: SymbolRef) =>
   symbol.text.find((field) => field.description === 'Ref')?.value || '';
@@ -42,8 +43,12 @@ function componentText(netlist: NetlistData, source: SymbolRef): string {
 export function checkSpiceComponents(
   netlist: NetlistData,
   setup: SimulationSetup,
+  packs?: SpiceModelPack[],
 ): DrcError[] {
   const errors: DrcError[] = [];
+  const files = packs?.length
+    ? mergeSpiceModelFiles(activeSpiceModelPacks(netlist, packs), setup.models)
+    : setup.models;
   const references = netlist.symbols.map((source) =>
     reference(source).toLowerCase(),
   );
@@ -102,7 +107,7 @@ export function checkSpiceComponents(
             'Remove analysis commands and .end; configure these on the Simulation sheet.',
           ),
         );
-      validateSpiceText(text, setup.models);
+      validateSpiceText(text, files);
     } catch (error) {
       errors.push(
         componentError(

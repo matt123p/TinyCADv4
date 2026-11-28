@@ -154,7 +154,7 @@ export function insertSymbol(args: any) {
       pos: `0,${-7.4 - i * 2.4}`,
       description: a.name,
       value: a.value,
-      type: 0,
+      type: a.name.startsWith('$$') ? 2 : 0,
       show: 0,
     });
   });

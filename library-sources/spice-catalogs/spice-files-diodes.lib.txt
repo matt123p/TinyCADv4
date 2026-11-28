@@ -1,0 +1,38 @@
+* ==========================================================================
+* @part: generic LEDs, 1N4733A, 1N4742A, bridge rectifier
+* @family: diodes
+* @source: Repo
+* @url: (written for this repo)
+* @retrieved: 2026-09-24
+* @licence: MIT
+* @added-by: nav
+* ==========================================================================
+* ============================================================================
+* generic_diodes_repo.lib  --  flag: BOTH (native ngspice)   licence: MIT
+* ----------------------------------------------------------------------------
+* Written for this repository. Teaching-grade approximations fitted by hand to
+* datasheet headline values; check against bench measurements before relying
+* on them. Values printed by tests/diodes_generic.cir.
+* ============================================================================
+
+* Red LED:   Vf ~ 2.0 V  @ 20 mA
+* Green LED: Vf ~ 2.15 V @ 20 mA
+.model LED_RED_GEN   D(Is=1e-18 N=2 Rs=5 Cjo=20p Bv=5 Ibv=10u)
+.model LED_GREEN_GEN D(Is=1e-19 N=2 Rs=5 Cjo=20p Bv=5 Ibv=10u)
+
+* Zeners: Bv set to nominal Vz at the datasheet test current Izt
+*   1N4733A: 5.1 V @ 49 mA     1N4742A: 12 V @ 21 mA
+.model 1N4733A_GEN D(Is=1n N=1.5 Rs=2 Cjo=300p M=.4 Bv=5.1 Ibv=49m)
+.model 1N4742A_GEN D(Is=1n N=1.5 Rs=2 Cjo=150p M=.4 Bv=12 Ibv=21m)
+
+* Generic 1 A / 1000 V rectifier (1N400x-like)
+.model DRECT_GEN D(Is=15n N=1.8 Rs=30m Cjo=30p Bv=1000 Ibv=5u Tt=5u)
+
+* Full-wave bridge from four rectifier diodes (DB107 / W04 / KBP style)
+* Pins: AC1 AC2 +DC -DC
+.subckt BRIDGE_GEN ac1 ac2 pos neg
+D1 ac1 pos DRECT_GEN
+D2 ac2 pos DRECT_GEN
+D3 neg ac1 DRECT_GEN
+D4 neg ac2 DRECT_GEN
+.ends BRIDGE_GEN

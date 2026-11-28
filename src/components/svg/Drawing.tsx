@@ -101,7 +101,7 @@ export class TDrawing extends React.PureComponent<TDrawingProps> {
       return netlistTypes[typeName] || null;
     };
 
-    if (netlist && !netlist.sources && sheetName) {
+    if (netlist && sheetName) {
       for (const net in netlist.nets) {
         if (!netlist.nets.hasOwnProperty(net)) {
           continue;

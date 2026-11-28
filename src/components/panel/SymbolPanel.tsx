@@ -10,8 +10,14 @@ import {
   Option,
   Button,
   makeStyles,
+  mergeClasses,
 } from '@fluentui/react-components';
 import { SpiceFields } from '../controls/SpiceFields';
+import { SpiceModelPicker } from './SpiceModelPicker';
+import { SymbolFontDefaultsButton, SymbolTextSizePanel } from './SymbolTextSizePanel';
+import type { dsnDrawing } from '../../model/dsnDrawing';
+import { BUNDLED_SPICE_SYMBOL, MODEL_BINDING, SPICE_ALTERNATE } from '../../simulation/catalogBindings';
+import { changeSpiceModel } from '../../simulation/spiceModelCatalog';
 import { ArrowResetRegular, PulseRegular } from '@fluentui/react-icons';
 import { dsnSymbol } from '../../model/dsnItem';
 import { updateSymbol } from '../../manipulators/updateSymbol';
@@ -100,6 +106,22 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
+    overflowY: 'auto',
+    minHeight: 0,
+  },
+  tabsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+  },
+  textSizeSection: {
+    width: '504px',
+  },
+  textSizeContent: {
+    display: 'flex',
+    flex: '1 1 auto',
+    minHeight: 0,
   },
   resizeRow: {
     display: 'flex',
@@ -114,6 +136,9 @@ const useStyles = makeStyles({
 
 interface SymbolPanelProps {
   selectedSymbol: dsnSymbol;
+  drawing: dsnDrawing;
+  sheetId: string;
+  isLibraryEditMode: boolean;
   dispatch: Dispatch<any>;
 }
 
@@ -122,11 +147,15 @@ let lastSelectedTab = 'options';
 
 export const SymbolPanel: React.FC<SymbolPanelProps> = ({
   selectedSymbol,
+  drawing,
+  sheetId,
+  isLibraryEditMode,
   dispatch,
 }) => {
   const styles = useStyles();
   const { t } = useTranslation();
   const [selectedTab, setSelectedTab] = useState(lastSelectedTab);
+  const activeTab = isLibraryEditMode && selectedTab === 'textSize' ? 'options' : selectedTab;
 
   // Build the property items list including Ref as the first row
   const propertyItems: PropertyItem[] = useMemo(() => {
@@ -144,7 +173,7 @@ export const SymbolPanel: React.FC<SymbolPanelProps> = ({
         v.display === TextDisplayMethod.ShowValueExtra;
 
       // Skip SPICE properties
-      if (isSpice) return;
+      if (isSpice || v.description === BUNDLED_SPICE_SYMBOL || v.description === MODEL_BINDING) return;
 
       items.push({
         id: index,
@@ -220,6 +249,7 @@ export const SymbolPanel: React.FC<SymbolPanelProps> = ({
     property.description.startsWith('$$SPICE'),
   );
   const standardSpiceNames = new Set([
+    SPICE_ALTERNATE,
     '$$SPICE',
     '$$SPICE_PROLOG',
     '$$SPICE_EPILOG',
@@ -280,25 +310,29 @@ export const SymbolPanel: React.FC<SymbolPanelProps> = ({
         </div>
 
         {/* Options Section */}
-        <div className={styles.optionsSection}>
-          <TabList
-            size="small"
-            aria-label="Symbol settings"
-            selectedValue={selectedTab}
-            onTabSelect={(_, data) => {
-              lastSelectedTab = String(data.value);
-              setSelectedTab(lastSelectedTab);
-            }}
-          >
-            <Tab value="options">{t('panel.symbol.options')}</Tab>
-            <Tab
-              value="spice"
-              icon={existingSpice.length ? <PulseRegular /> : undefined}
+        <div className={mergeClasses(styles.optionsSection, activeTab === 'textSize' && styles.textSizeSection)}>
+          <div className={styles.tabsRow}>
+            <TabList
+              size="small"
+              aria-label={t('panel.symbol.propertiesTitle')}
+              selectedValue={activeTab}
+              onTabSelect={(_, data) => {
+                lastSelectedTab = String(data.value);
+                setSelectedTab(lastSelectedTab);
+              }}
             >
-              SPICE
-            </Tab>
-          </TabList>
-          {selectedTab === 'options' && (
+              <Tab value="options">{t('panel.symbol.options')}</Tab>
+              {!isLibraryEditMode && <Tab value="textSize">{t('panel.symbol.textSize')}</Tab>}
+              <Tab
+                value="spice"
+                icon={existingSpice.length ? <PulseRegular /> : undefined}
+              >
+                SPICE
+              </Tab>
+            </TabList>
+            {activeTab === 'textSize' && <SymbolFontDefaultsButton />}
+          </div>
+          {activeTab === 'options' && (
             <div
               className={styles.optionsContent}
               role="tabpanel"
@@ -333,41 +367,47 @@ export const SymbolPanel: React.FC<SymbolPanelProps> = ({
               </div>
             </div>
           )}
-          {selectedTab === 'spice' && (
+          {activeTab === 'textSize' && (
+            <div className={styles.textSizeContent} role="tabpanel" aria-label={t('panel.symbol.textSize')}>
+              <SymbolTextSizePanel />
+            </div>
+          )}
+          {activeTab === 'spice' && (
             <div
               className={styles.spiceContent}
               role="tabpanel"
-              aria-label="SPICE properties"
+              aria-label="SPICE"
             >
-              <SpiceFields
+              <SpiceModelPicker
                 key={selectedSymbol._id}
-                value={(name) =>
-                  existingSpice.find((property) => property.description === name)
-                    ?.value
-                }
-                onChange={(name, value) =>
-                  dispatch(actionSymbolSpiceProperty(name, value))
-                }
-              />
-              {existingSpice.filter((property) =>
-                !standardSpiceNames.has(property.description),
-              ).map((property) => (
-                <Field
-                  key={property.description}
-                  label={property.description}
-                  size="small"
-                >
-                  <Textarea
-                    size="small"
-                    resize="vertical"
-                    rows={2}
-                    value={property.value}
-                    onChange={(_, data) => dispatch(
-                      actionSymbolSpiceProperty(property.description, data.value),
-                    )}
-                  />
-                </Field>
-              ))}
+                symbol={selectedSymbol}
+                packs={drawing.spiceModelPacks}
+                onChange={(selection) => dispatch({
+                  type: 'simulation/catalog-model',
+                  source: drawing,
+                  drawing: changeSpiceModel(drawing, sheetId, selectedSymbol._id, selection),
+                })}
+              >
+                <SpiceFields
+                  value={(name) => existingSpice.find((property) => property.description === name)?.value}
+                  onChange={(name, value) => dispatch(actionSymbolSpiceProperty(name, value))}
+                />
+                {existingSpice.filter((property) =>
+                  !standardSpiceNames.has(property.description),
+                ).map((property) => (
+                  <Field key={property.description} label={property.description} size="small">
+                    <Textarea
+                      size="small"
+                      resize="vertical"
+                      rows={2}
+                      value={property.value}
+                      onChange={(_, data) => dispatch(
+                        actionSymbolSpiceProperty(property.description, data.value),
+                      )}
+                    />
+                  </Field>
+                ))}
+              </SpiceModelPicker>
             </div>
           )}
         </div>

@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
-import { isBoardFile, boardFileName, isDrawingFile, drawingFileName, isCompressedDrawing } from '../shared/drawingFiles.js';
+import { boardFileName, isBoardFile } from '../shared/drawingFiles.js';
 import { isProjectFile } from '../shared/projectFiles.js';
+import { isDrawingFile, drawingFileName, isCompressedDrawing } from '../shared/drawingFiles.js';
 import { dialog } from "electron";
 import fs from "fs";
 import path from "path";
@@ -8,43 +9,36 @@ import Store from 'electron-store';
 
 
 const store = new Store();
-const supportingExtensions = ['txt', 'md', 'markdown', 'csv', 'tsv', 'log', 'xml', 'json', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'avif'];
 
-export function loadFile(mainWindow, file, isLibraryMode, openNewWindow, openProject, authorizeDocument) {
-    const loadPicked = (filePath) => {
-        if (isProjectFile(filePath) && openProject) openProject(filePath);
-        else if (file?.projectMode && authorizeDocument && supportingExtensions.includes(path.extname(filePath).slice(1).toLowerCase())) {
-            authorizeDocument(filePath).then((id) => {
-                addRecentFile(mainWindow, id);
-                mainWindow.webContents.send('file-loaded', { id, name: path.basename(id), folderId: path.dirname(id) });
-            }).catch((failure) => error(mainWindow, failure));
-        } else processLoadFile(mainWindow, filePath, isLibraryMode, openNewWindow);
-    };
+export function loadFile(mainWindow, file, isLibraryMode, openNewWindow, openProject) {
     if (typeof file === 'string') {
-        processLoadFile(mainWindow, file, isLibraryMode, openNewWindow);
+        processLoadFile(mainWindow, file, isLibraryMode, openNewWindow, openProject);
     }
     else if (file?.id) {
-        if (store.get('recentFiles', []).includes(file.id)) loadPicked(file.id);
-        else processLoadFile(mainWindow, file.id, isLibraryMode, openNewWindow);
+        processLoadFile(mainWindow, file.id, isLibraryMode, openNewWindow, openProject);
     }
     else {
         dialog.showOpenDialog({
             filters: [
-                ...(file?.projectMode ? [{ name: 'Project files', extensions: ['dsn', 'dzn', 'dpn', ...supportingExtensions] }] : []),
-                { name: 'TinyCAD Design Files', extensions: ['dsn', 'dzn', 'dpn'] },
-                { name: 'TinyCAD projects', extensions: ['tcproject'] },
+                { name: 'TinyCAD Drawings', extensions: ['dsn', 'dzn', 'dpn'] },
                 { name: 'TinyCAD Libraries', extensions: ['tclib'] },
+                { name: 'TinyCAD Projects', extensions: ['tcproject'] }
             ],
             properties: ['openFile']
         }).then(result => {
             if (!result.canceled && result.filePaths.length > 0) {
-                loadPicked(result.filePaths[0]);
+                const currentFilePath = result.filePaths[0];
+                processLoadFile(mainWindow, currentFilePath, isLibraryMode, openNewWindow, openProject);
             }
         });
     }
 }
 
-function processLoadFile(mainWindow, filePath, isLibraryMode, openNewWindow) {
+function processLoadFile(mainWindow, filePath, isLibraryMode, openNewWindow, openProject) {
+    if (isProjectFile(filePath) && openProject) {
+        openProject(filePath);
+        return;
+    }
     const isLib = filePath.toLowerCase().endsWith('.tclib');
     const isDesign = isDrawingFile(filePath) || isBoardFile(filePath);
 

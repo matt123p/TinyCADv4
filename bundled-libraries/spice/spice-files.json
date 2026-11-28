@@ -1,0 +1,544 @@
+{
+  "schemaVersion": 1,
+  "pack": {
+    "id": "spice-files",
+    "version": "b84968c1769e",
+    "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+    "filename": "spice-files_b84968c1769e.lib",
+    "sha256": "692768f647e66f434637223649911d471acfea2821af3145f5c5837a5fe1b976",
+    "license": "MIT",
+    "licenseText": "MIT License\n\nCopyright (c) 2026 the Spice_Files contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n",
+    "spice": "* TinyCAD selection from Spice_Files\n\n.model LED_RED_GEN   D(Is=1e-18 N=2 Rs=5 Cjo=20p Bv=5 Ibv=10u)\n\n.model LED_GREEN_GEN D(Is=1e-19 N=2 Rs=5 Cjo=20p Bv=5 Ibv=10u)\n\n.model 1N4733A_GEN D(Is=1n N=1.5 Rs=2 Cjo=300p M=.4 Bv=5.1 Ibv=49m)\n\n.model 1N4742A_GEN D(Is=1n N=1.5 Rs=2 Cjo=150p M=.4 Bv=12 Ibv=21m)\n\n.model DRECT_GEN D(Is=15n N=1.8 Rs=30m Cjo=30p Bv=1000 Ibv=5u Tt=5u)\n\n.subckt BRIDGE_GEN ac1 ac2 pos neg\nD1 ac1 pos DRECT_GEN\nD2 ac2 pos DRECT_GEN\nD3 neg ac1 DRECT_GEN\nD4 neg ac2 DRECT_GEN\n.ends BRIDGE_GEN\n\n.subckt OPTO_GEN A K C E params: CTR=1\nVsense A a1 0\nD1 a1 K DLED_OPTO\nC1 A K 18p\nF1 0 b Vsense {CTR/500}\nRbe b E 100Meg\nQ1 C b E QPHOTO_OPTO\n.model DLED_OPTO D(Is=8e-13 N=2 Rs=1 Cjo=18p Bv=6 Ibv=10u)\n.model QPHOTO_OPTO NPN(Bf=500 Vaf=100 Ikf=10 Rc=1 Cjc=10p Cje=7p Tf=5n Tr=1u)\n.ends OPTO_GEN\n\n.subckt PC817_GEN A K C E\nX1 A K C E OPTO_GEN CTR=1.3\n.ends PC817_GEN\n\n.subckt 4N35_GEN A K C E\nX1 A K C E OPTO_GEN CTR=1.0\n.ends 4N35_GEN\n\n.subckt CNY17_GEN A K C E\nX1 A K C E OPTO_GEN CTR=0.9\n.ends CNY17_GEN\n\n.model SW_IDEAL SW(Ron=0.1 Roff=100Meg Vt=2.5 Vh=0.1)\n\n.subckt RELAY_SPST_5V cp cn com no\nLcoil cp n1 50m\nRcoil n1 cn 70\nS1 com no cp cn SW_RLY\n.model SW_RLY SW(Ron=0.05 Roff=1G Vt=2.5 Vh=1)\n.ends RELAY_SPST_5V\n\n.subckt XTAL_16M 1 2\nLm 1 n1 7m\nCm n1 n2 14.1f\nRm n2 2 20\nC0 1 2 5p\n.ends XTAL_16M\n\n.subckt XFMR_10TO1 p1 p2 s1 s2\nRwp p1 np 0.5\nLp np p2 100m\nRws s1 ns 5m\nLs ns s2 1m\nK1 Lp Ls 0.999\nRdc s2 p2 1G\n.ends XFMR_10TO1\n"
+  },
+  "models": [
+    {
+      "id": "LED_RED_GEN",
+      "kind": "led",
+      "description": "Generic red indicator LED for board-level simulation.",
+      "aliases": [
+        "red LED"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/diodes/generic-diodes_Repo.lib#L20"
+      },
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model LED_RED_GEN   D(Is=1e-18 N=2 Rs=5 Cjo=20p Bv=5 Ibv=10u)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 15,
+          "symbolId": 15,
+          "name": "LED (red)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "LED_GREEN_GEN",
+      "kind": "led",
+      "description": "Generic green indicator LED for board-level simulation.",
+      "aliases": [
+        "green LED"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/diodes/generic-diodes_Repo.lib#L21"
+      },
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model LED_GREEN_GEN D(Is=1e-19 N=2 Rs=5 Cjo=20p Bv=5 Ibv=10u)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 16,
+          "symbolId": 16,
+          "name": "LED (green)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1N4733A_GEN",
+      "kind": "zener",
+      "description": "Approximation of the 5.1 V 1N4733A zener.",
+      "aliases": [
+        "1N4733A"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/diodes/generic-diodes_Repo.lib#L25"
+      },
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 1N4733A_GEN D(Is=1n N=1.5 Rs=2 Cjo=300p M=.4 Bv=5.1 Ibv=49m)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 14,
+          "symbolId": 14,
+          "name": "Zener diode (5.1 V)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1N4742A_GEN",
+      "kind": "zener",
+      "description": "Approximation of the 12 V 1N4742A zener.",
+      "aliases": [
+        "1N4742A"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/diodes/generic-diodes_Repo.lib#L26"
+      },
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 1N4742A_GEN D(Is=1n N=1.5 Rs=2 Cjo=150p M=.4 Bv=12 Ibv=21m)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "DRECT_GEN",
+      "kind": "diode",
+      "description": "Generic 1 A, 1000 V slow rectifier in the 1N400x family.",
+      "aliases": [
+        "1N4007",
+        "1N400x"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/diodes/generic-diodes_Repo.lib#L29"
+      },
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model DRECT_GEN D(Is=15n N=1.8 Rs=30m Cjo=30p Bv=1000 Ibv=5u Tt=5u)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 13,
+          "symbolId": 13,
+          "name": "Diode",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BRIDGE_GEN",
+      "kind": "rectifier",
+      "description": "Four-diode bridge rectifier using the library’s generic rectifier model.",
+      "aliases": [
+        "DB107",
+        "W04",
+        "KBP"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/diodes/generic-diodes_Repo.lib#L33"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "ac1",
+          "role": "AC terminal 1"
+        },
+        {
+          "port": "ac2",
+          "role": "AC terminal 2"
+        },
+        {
+          "port": "pos",
+          "role": "positive DC output"
+        },
+        {
+          "port": "neg",
+          "role": "negative DC output"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt BRIDGE_GEN ac1 ac2 pos neg\nD1 ac1 pos DRECT_GEN\nD2 ac2 pos DRECT_GEN\nD3 neg ac1 DRECT_GEN\nD4 neg ac2 DRECT_GEN\n.ends BRIDGE_GEN\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "OPTO_GEN",
+      "kind": "optocoupler",
+      "description": "Generic phototransistor optocoupler with adjustable, constant current transfer ratio.",
+      "aliases": [],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/optocouplers/OPTO-generic_Repo.lib#L23"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "A",
+          "role": "anode"
+        },
+        {
+          "port": "K",
+          "role": "cathode"
+        },
+        {
+          "port": "C",
+          "role": "collector"
+        },
+        {
+          "port": "E",
+          "role": "emitter"
+        }
+      ],
+      "parameterDefaults": {
+        "CTR": "1"
+      },
+      "definition": ".subckt OPTO_GEN A K C E params: CTR=1\nVsense A a1 0\nD1 a1 K DLED_OPTO\nC1 A K 18p\nF1 0 b Vsense {CTR/500}\nRbe b E 100Meg\nQ1 C b E QPHOTO_OPTO\n.model DLED_OPTO D(Is=8e-13 N=2 Rs=1 Cjo=18p Bv=6 Ibv=10u)\n.model QPHOTO_OPTO NPN(Bf=500 Vaf=100 Ikf=10 Rc=1 Cjc=10p Cje=7p Tf=5n Tr=1u)\n.ends OPTO_GEN\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "PC817_GEN",
+      "kind": "optocoupler",
+      "description": "PC817 approximation with a fixed 130% current transfer ratio.",
+      "aliases": [
+        "PC817"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/optocouplers/OPTO-generic_Repo.lib#L35"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "A",
+          "role": "anode"
+        },
+        {
+          "port": "K",
+          "role": "cathode"
+        },
+        {
+          "port": "C",
+          "role": "collector"
+        },
+        {
+          "port": "E",
+          "role": "emitter"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt PC817_GEN A K C E\nX1 A K C E OPTO_GEN CTR=1.3\n.ends PC817_GEN\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "4N35_GEN",
+      "kind": "optocoupler",
+      "description": "4N35 approximation with fixed 100% current transfer ratio. Base terminal omitted.",
+      "aliases": [
+        "4N35"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/optocouplers/OPTO-generic_Repo.lib#L40"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "A",
+          "role": "anode"
+        },
+        {
+          "port": "K",
+          "role": "cathode"
+        },
+        {
+          "port": "C",
+          "role": "collector"
+        },
+        {
+          "port": "E",
+          "role": "emitter"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt 4N35_GEN A K C E\nX1 A K C E OPTO_GEN CTR=1.0\n.ends 4N35_GEN\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "CNY17_GEN",
+      "kind": "optocoupler",
+      "description": "CNY17-2 approximation with a fixed 90% current transfer ratio.",
+      "aliases": [
+        "CNY17",
+        "CNY17-2"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/optocouplers/OPTO-generic_Repo.lib#L45"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "A",
+          "role": "anode"
+        },
+        {
+          "port": "K",
+          "role": "cathode"
+        },
+        {
+          "port": "C",
+          "role": "collector"
+        },
+        {
+          "port": "E",
+          "role": "emitter"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt CNY17_GEN A K C E\nX1 A K C E OPTO_GEN CTR=0.9\n.ends CNY17_GEN\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "SW_IDEAL",
+      "kind": "switch",
+      "description": "Voltage-controlled switch with 2.5 V threshold and 0.1 V hysteresis.",
+      "aliases": [
+        "ideal switch"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/passive/generic-passive_Repo.lib#L20"
+      },
+      "designator": "S",
+      "terminals": [
+        {
+          "role": "switched terminal 1"
+        },
+        {
+          "role": "switched terminal 2"
+        },
+        {
+          "role": "positive control"
+        },
+        {
+          "role": "negative control"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model SW_IDEAL SW(Ron=0.1 Roff=100Meg Vt=2.5 Vh=0.1)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "RELAY_SPST_5V",
+      "kind": "relay",
+      "description": "Approximate 5 V normally-open SPST relay with inductor and resistor coil.",
+      "aliases": [
+        "SPST relay",
+        "5 V relay"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/passive/generic-passive_Repo.lib#L24"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "cp",
+          "role": "positive coil"
+        },
+        {
+          "port": "cn",
+          "role": "negative coil"
+        },
+        {
+          "port": "com",
+          "role": "common"
+        },
+        {
+          "port": "no",
+          "role": "normally open"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt RELAY_SPST_5V cp cn com no\nLcoil cp n1 50m\nRcoil n1 cn 70\nS1 com no cp cn SW_RLY\n.model SW_RLY SW(Ron=0.05 Roff=1G Vt=2.5 Vh=1)\n.ends RELAY_SPST_5V\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "XTAL_16M",
+      "kind": "crystal",
+      "description": "16 MHz quartz crystal model with a motional RLC branch and 5 pF shunt capacitance.",
+      "aliases": [
+        "quartz crystal",
+        "16 MHz crystal"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/passive/generic-passive_Repo.lib#L34"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "1",
+          "role": "terminal 1"
+        },
+        {
+          "port": "2",
+          "role": "terminal 2"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt XTAL_16M 1 2\nLm 1 n1 7m\nCm n1 n2 14.1f\nRm n2 2 20\nC0 1 2 5p\n.ends XTAL_16M\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 21,
+          "symbolId": 21,
+          "name": "XTAL (quartz crystal)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "XFMR_10TO1",
+      "kind": "transformer",
+      "description": "10:1 voltage-ratio linear transformer with winding losses and 0.999 coupling.",
+      "aliases": [
+        "transformer",
+        "10:1 transformer"
+      ],
+      "source": {
+        "name": "Spice_Files",
+        "revision": "b84968c1769edaa8082dbc9d7daf526d9b977489",
+        "url": "https://github.com/BoredDog/Spice_Files/blob/b84968c1769edaa8082dbc9d7daf526d9b977489/models/passive/generic-passive_Repo.lib#L48"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "p1",
+          "role": "primary dotted"
+        },
+        {
+          "port": "p2",
+          "role": "primary return"
+        },
+        {
+          "port": "s1",
+          "role": "secondary dotted"
+        },
+        {
+          "port": "s2",
+          "role": "secondary return"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt XFMR_10TO1 p1 p2 s1 s2\nRwp p1 np 0.5\nLp np p2 100m\nRws s1 ns 5m\nLs ns s2 1m\nK1 Lp Ls 0.999\nRdc s2 p2 1G\n.ends XFMR_10TO1\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 20,
+          "symbolId": 20,
+          "name": "Transformer",
+          "pinLayout": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ]
+        }
+      ]
+    }
+  ]
+}

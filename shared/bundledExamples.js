@@ -1,5 +1,7 @@
+import { isProjectFile, validProjectName } from './projectFiles.js';
+
 /** @typedef {{ id: string, title: string, preview: string, description?: string, descriptionPath?: string }} ExampleContent */
-/** @typedef {ExampleContent & { path: string }} BundledExample */
+/** @typedef {ExampleContent & { path: string, project?: {folder: string, files: string[]} }} BundledExample */
 /** @typedef {ExampleContent & { examples: BundledExample[] }} ExampleGroup */
 /** @typedef {{ version: 1, groups: ExampleGroup[], assets: string[] }} ExampleCatalog */
 
@@ -87,10 +89,28 @@ export function parseExampleCatalog(input) {
     const ids = new Set();
     return {
       ...group,
-      examples: value.examples.map((example) => ({
-        ...content(example, ids),
-        path: examplePath(example.path, ['dsn', 'dzn']),
-      })),
+      examples: value.examples.map((example) => {
+        const item = {
+          ...content(example, ids),
+          path: examplePath(example.path, ['dsn', 'dzn']),
+        };
+        if (example.project === undefined) return item;
+        const { folder, files } = example.project ?? {};
+        if (!validProjectName(folder) || !Array.isArray(files))
+          throw new Error(`Invalid project example: ${item.id}`);
+        const paths = [item.path, ...files.map((file) =>
+          examplePath(file, ['dsn', 'dzn', 'tcproject', 'md']),
+        )];
+        const names = paths.map((file) => file.split('/').pop());
+        if (
+          paths.some((file) => file.slice(0, file.lastIndexOf('/') + 1) !==
+            item.path.slice(0, item.path.lastIndexOf('/') + 1)) ||
+          names.some((name) => !validProjectName(name)) ||
+          new Set(names.map((name) => name.toLowerCase())).size !== names.length ||
+          names.filter(isProjectFile).length !== 1
+        ) throw new Error(`Invalid files for project example: ${item.id}`);
+        return { ...item, project: { folder, files: paths.slice(1) } };
+      }),
     };
   });
   if (input.assets !== undefined && !Array.isArray(input.assets))
@@ -113,7 +133,10 @@ export function exampleResourcePaths(catalog) {
       paths.add(item.preview);
       if (item.descriptionPath) paths.add(item.descriptionPath);
     }
-    group.examples.forEach((example) => paths.add(example.path));
+    for (const example of group.examples) {
+      paths.add(example.path);
+      for (const file of example.project?.files ?? []) paths.add(file);
+    }
   }
   return paths;
 }

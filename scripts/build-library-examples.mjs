@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { librarySqlite } from './lib/library-from-sql.mjs';
 import { layoutRuntime } from './lib/layout-runtime.mjs';
 import { recordDrawing } from './lib/layout-proof-page.mjs';
-import { escapeXML } from './lib/layout-artwork.mjs';
+import { escapeXML, textWidth } from './lib/layout-artwork.mjs';
 
 const api = await layoutRuntime(),
   SQL = await librarySqlite();
@@ -88,7 +88,7 @@ class Example {
     this.annotations = [];
     this.note(15, 10, size[0] - 15, 21, title, 24);
   }
-  async part(ref, library, id, x, y, caption) {
+  async part(ref, library, id, x, y, caption, captionSide = 'top') {
     const source = libraries.get(library);
     const entry =
       typeof id === 'number' ? null : source.entries.find((e) => e.id === id);
@@ -110,6 +110,7 @@ class Example {
     const symbol = parsed.sheets[0].items.find((i) => i.NodeName === 'symbol');
     if (!this.defs.has(key)) {
       symbol._symbol.id = this.defs.size + 1;
+      symbol._symbol.name.type = 0;
       symbol._symbol.ref.value = row[4];
       symbol._symbol.description = row[5];
       this.defs.set(key, symbol._symbol);
@@ -134,20 +135,33 @@ class Example {
       xmlSha256: sha(xml),
     });
     if (caption) {
-      const text = `${ref}: ${caption}`;
-      this.note(
-        x - 2,
-        y - 12,
-        Math.min(
-          this.sheet.details.page_size[0] / 5 - 12,
-          x - 2 + text.length * 1.6,
-        ),
-        y - 7,
-        text,
-        12,
-      );
+      this.name(ref, caption, captionSide);
     }
     return symbol;
+  }
+  name(ref, value, side) {
+    const symbol = this.parts[ref];
+    const body = api.bodyRect(symbol);
+    const refWidth = textWidth(ref, symbol.font_size);
+    const labelWidth = refWidth + textWidth(value, symbol.font_size);
+    const x =
+      side === 'right'
+        ? body.x2 / 5 + 2
+        : (body.x1 + body.x2) / 10 - labelWidth / 2;
+    const y = body.y1 / 5 + (side === 'right' ? 3 : -4);
+    const offset = (left) => [
+      left * 5 - symbol.point[0],
+      y * 5 - symbol.point[1] + 5,
+    ];
+    const reference = symbol.text.find((field) => field.description === 'Ref');
+    Object.assign(reference, { show: true, display: 0, position: offset(x) });
+    symbol.text.push({
+      description: 'Name',
+      value,
+      show: true,
+      display: 0,
+      position: offset(x + refWidth),
+    });
   }
   pin(ref, number) {
     const p = new api.updateSymbol(this.parts[ref])
@@ -313,8 +327,14 @@ const examples = [];
     50,
     'BME280 breakout',
   );
-  await e.part('DISP1', 'embedded-smart-home', 'display-oled12864', 175, 135);
-  e.note(173, 125, 213, 132, 'DISP1: OLED front / rear');
+  await e.part(
+    'DISP1',
+    'embedded-smart-home',
+    'display-oled12864',
+    175,
+    135,
+    'OLED front / rear',
+  );
   e.tail('U1', 'J1-1', [[25, 56]], '3V3');
   e.tail('U1', 'J1-14', [[25, 82]], '0');
   e.tail('U1', 'J3-3', [[85, 60]], 'SCL');
@@ -377,14 +397,23 @@ const examples = [];
     128,
     145,
     166,
-    'Matching SDA / SCL labels form the I2C bus.\nGPIO21 = SDA; GPIO22 = SCL.\nENV1 SDO is grounded: address 0x76.\nUSB powers U1; both modules use its 3V3 rail.',
+    [
+      '### I²C bus and power',
+      '- `GPIO21 → SDA` and `GPIO22 → SCL`',
+      '- Ground `ENV1 SDO` for address `0x76`.',
+      '- USB powers U1. Its **3V3 rail powers both modules.**',
+    ].join('\n'),
   );
   e.note(
     20,
     183,
     280,
     201,
-    'PCB wiring example. Spare headers, ENV1 3Vo and CS are open intentionally.\nConfigure the OLED address and firmware for the named boards. See Explanation for the full pin table.',
+    [
+      '### Setup checklist',
+      '- [x] Power and I²C wiring shown. Spare headers, `3Vo` and `CS` are intentionally open.',
+      '- [ ] Configure the OLED address and board firmware. See **Explanation** for the full pin table.',
+    ].join('\n'),
   );
   examples.push(
     await e.save([
@@ -442,15 +471,25 @@ const examples = [];
     20,
     22,
     400,
-    37,
-    'Energy flows: PV and battery connect to the hybrid inverter; its AC connection joins the home distribution board.\nThe grid/meter branch supplies the same distribution board. Each endpoint represents a whole cable.',
+    43,
+    [
+      '### Energy paths',
+      '- **PV and battery** → hybrid inverter → home distribution board',
+      '- **Grid and meter** → the same distribution board',
+      '',
+      '*Each connection point represents a whole cable.*',
+    ].join('\n'),
   );
   e.note(
     20,
     265,
     400,
     286,
-    'Conceptual planning example, not an installation or protection design. Spare backup, EV and battery data ports are open.\nBattery BMS compatibility, earthing, protection, cable ratings and export controls depend on the actual system. See Explanation.',
+    [
+      '> **Planning scope**',
+      '> Spare backup, EV and battery data ports are open. For an installation design, verify BMS compatibility,',
+      '> earthing, protection, cable ratings and export controls for the actual system. See **Explanation**.',
+    ].join('\n'),
   );
   examples.push(
     await e.save([
@@ -484,10 +523,10 @@ const examples = [];
     110,
     50,
     'Podcast mixer',
+    'right',
   );
   await e.part('HP1', 'audio-music', 'headphones', 230, 56, 'Host headphones');
-  await e.part('HP2', 'audio-music', 'headphones', 230, 104);
-  e.note(230, 145, 282, 150, 'HP2: Guest headphones');
+  await e.part('HP2', 'audio-music', 'headphones', 230, 104, 'Guest headphones');
   await e.part(
     'PC1',
     'audio-music',
@@ -534,7 +573,16 @@ const examples = [];
     156,
     278,
     194,
-    'MIC1 / MIC2: balanced XLR microphone cables.\nHP1 / HP2: separate stereo headphone feeds.\nUSB: MIX1 to PC1, carrying recording/playback audio.\nUse the mixer headphone monitoring to avoid delay.\nEquipment power and software setup are described in Explanation.',
+    [
+      '### Audio signal path',
+      '1. Route **MIC1** and **MIC2** to the mixer over balanced XLR.',
+      '2. Connect **HP1** and **HP2** to separate stereo feeds.',
+      '3. Connect **MIX1** to **PC1** over USB for recording and playback.',
+      '',
+      '> *Monitor through the mixer to avoid delay.*',
+      '',
+      'See **Explanation** for power and software setup.',
+    ].join('\n'),
   );
   examples.push(
     await e.save([
@@ -593,14 +641,19 @@ const examples = [];
     112,
     175,
     119,
-    'DMM: voltage mode, HI / LO in parallel; current socket unused.\nCrossings join only where a dot is shown.',
+    '**Voltage measurement**\nIn voltage mode, connect `HI` and `LO` in parallel. Leave the current socket unused. Dots mark joined crossings.',
   );
   e.note(
     20,
     191,
     280,
-    204,
-    'Set suitable supply current/voltage limits and load ratings. GEN1 OUT1 to SCOPE1 CH1 is one complete BNC coax cable.\nNo automatic chassis-earth bond or SPICE instrument model is implied. See Explanation for settings and extensions.',
+    208,
+    [
+      '### Bench setup',
+      '- **Supply limits:** Set voltage and current to suit the load ratings.',
+      '- `GEN1 OUT1` → `SCOPE1 CH1` uses one BNC coax cable.',
+      '- Check chassis earthing separately. See **Explanation** for settings and SPICE model scope.',
+    ].join('\n'),
   );
   examples.push(
     await e.save([
@@ -731,14 +784,22 @@ const examples = [];
     128,
     280,
     182,
-    'Matching labels join control nets.\nGPIO18: PWM\nGPIO19: direction\nGPIO25: enable\nGPIO27: NC limit, input pull-up\nCommon 0 is the signal return.',
+    [
+      '### ESP32 control nets',
+      '- `GPIO18` → **PWM**',
+      '- `GPIO19` → **Direction**',
+      '- `GPIO25` → **Enable**',
+      '- `GPIO27` → **NC limit**, with input pull-up',
+      '',
+      'Matching labels join control nets. Common `0` is the signal return.',
+    ].join('\n'),
   );
   e.note(
     20,
     200,
     280,
     208,
-    'Use a 3.3V-compatible driver and matching motor/supply ratings. Firmware starts disabled and stops on an open NC limit.\nThis is a wiring layout, with no firmware, motion simulation or certified emergency-stop function. See Explanation.',
+    '**Before powering up**, check 3.3 V driver compatibility and motor/supply ratings. Firmware must start disabled and stop on an open NC limit.\n*Wiring layout only.* See **Explanation** for firmware, simulation and emergency-stop scope.',
   );
   examples.push(
     await e.save([

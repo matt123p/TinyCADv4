@@ -1,5 +1,5 @@
 import { docStore } from '../state/stores/docStoreReducer';
-import { tclib, tclibLibraryEntry } from '../model/tclib';
+import { TextDisplayMethod, tclib, tclibLibraryEntry } from '../model/tclib';
 import { updateLibrary } from '../manipulators/updateLibrary';
 import { XMLBuilder } from '../util/xmlbuilder';
 import { ioXML } from '../io/ioXml';
@@ -69,7 +69,7 @@ export function prepareLibraryAddition(
       Attributes: (component.attributes || []).map((attribute) => ({
         AttName: attribute.name,
         AttValue: attribute.value,
-        ShowAtt: 1,
+        ShowAtt: attribute.name.startsWith('$$') ? TextDisplayMethod.NeverShow : TextDisplayMethod.HideValue,
       })),
     };
     names.push(entry);

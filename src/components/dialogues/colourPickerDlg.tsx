@@ -1,5 +1,5 @@
 ﻿import React, { Dispatch } from 'react';
-import { SketchPicker, ColorResult } from 'react-color';
+import { ColourPicker } from '../controls/ColourPicker';
 import {
   Dialog,
   DialogSurface,
@@ -55,12 +55,13 @@ class ColourPickerDialog extends React.PureComponent<
   }
 
   handleClickCancel() {
-    this.setColor(this.state.color);
+    this.setColor(this.props.settings);
     this.props.dispatch(actionCancelDialog());
   }
 
-  handleColorChange(color: ColorResult) {
-    this.setColor(color?.hex);
+  handleColorChange(color: string) {
+    this.setState({ color });
+    this.setColor(color);
   }
 
   setColor(color: string) {
@@ -89,17 +90,14 @@ class ColourPickerDialog extends React.PureComponent<
   render() {
     return (
       <Dialog open={true} onOpenChange={this.handleClickCancel}>
-        <DialogSurface>
+        <DialogSurface style={{ width: '302px', maxWidth: '96vw' }}>
           <DialogBody>
             <DialogTitle>{this.props.title}</DialogTitle>
             <DialogContent>
-              <div>
-                <SketchPicker
-                  disableAlpha={true}
-                  color={this.props.settings ?? '#ffffff'}
-                  onChange={this.handleColorChange}
-                />
-              </div>
+              <ColourPicker
+                colour={this.state.color ?? '#ffffff'}
+                onChange={this.handleColorChange}
+              />
             </DialogContent>
             <DialogActions>
               <Button appearance="primary" onClick={this.handleClickOk}>

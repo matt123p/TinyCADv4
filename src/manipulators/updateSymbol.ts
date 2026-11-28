@@ -17,8 +17,10 @@ import {
   Coordinate,
   DocItem,
   SymbolTextItem,
+  DocItemTypes,
 } from '../model/dsnItem';
 import { IsInsideTextResult } from '../model/textArea';
+import type { dsnDrawing } from '../model/dsnDrawing';
 import { updateTextData } from './updateTextArea';
 import { updateFactory } from './updateFactory';
 import { ViewTracker, FindResult } from '../model/dsnView';
@@ -58,6 +60,18 @@ export class updateSymbol
 
   getFont() {
     return this.item.font_size + 'px ' + this.item.font_name;
+  }
+
+  propertyFont(field: SymbolTextItem) {
+    const defaults = this.item._propertyFontDefaults?.find(
+      (entry) => entry.description === field.description,
+    );
+    return {
+      font_name: field.font?.font_name ?? defaults?.font_name ?? this.item.font_name,
+      font_size: field.font?.font_size ?? defaults?.font_size ?? this.item.font_size,
+      font_bold: this.item.font_bold,
+      font_italic: this.item.font_italic,
+    };
   }
 
   // Get the list of handles associated with a selected
@@ -289,7 +303,15 @@ export class updateSymbol
   }
 
   getContextMenu(items: ContextMenuList) {
-    if (this.item.hierarchy) return items;
+    if (this.item.hierarchicalFile !== undefined) {
+      return [
+        ...items.slice(0, 4),
+        { key: `hierarchy:open:${this.item._id}`, text: 'Open Linked Schematic' },
+        { key: `hierarchy:refresh:${this.item._id}`, text: 'Reload Linked Schematic' },
+        { key: `hierarchy:change:${this.item._id}`, text: 'Change Linked Schematic…' },
+        ...items.slice(4),
+      ];
+    }
     return [
       ...items.slice(0, 4),
       {
@@ -878,22 +900,7 @@ export class updateSymbol
       }),
     );
 
-    const UpdateTextAreas = this.create_updateTextArea(
-      { ...this.item, text: text },
-      this.item.point,
-    );
-    return update(this.item, {
-      text: { $set: text },
-      _active_points: { $set: null },
-      textData: {
-        $set: this.create_text_blocks(
-          UpdateTextAreas,
-          this.item,
-          this.item.part,
-          text,
-        ),
-      },
-    });
+    return this.withText(text);
   }
 
   setSpiceProperty(name: string, value: string) {
@@ -920,22 +927,7 @@ export class updateSymbol
       }),
     );
 
-    const UpdateTextAreas = this.create_updateTextArea(
-      this.item,
-      this.item.point,
-    );
-    return update(this.item, {
-      text: { $set: text },
-      _active_points: { $set: null },
-      textData: {
-        $set: this.create_text_blocks(
-          UpdateTextAreas,
-          this.item,
-          this.item.part,
-          text,
-        ),
-      },
-    });
+    return this.withText(text);
   }
 
   showPPP(part: number) {
@@ -965,73 +957,30 @@ export class updateSymbol
       }),
     );
 
-    const UpdateTextAreas = this.create_updateTextArea(
-      this.item,
-      this.item.point,
-    );
-    return update(this.item, {
-      text: { $set: text },
-      _active_points: { $set: null },
-      textData: {
-        $set: this.create_text_blocks(
-          UpdateTextAreas,
-          this.item,
-          this.item.part,
-          text,
-        ),
-      },
-    });
+    return this.withText(text);
   }
 
   showDelete(index: number) {
     let text = this.item.text.slice();
     text.splice(index, 1);
     text = this.layout_text_fields(this.item.rotation, text);
-    const UpdateTextAreas = this.create_updateTextArea(
-      this.item,
-      this.item.point,
-    );
-    return update(this.item, {
-      text: { $set: text },
-      _active_points: { $set: null },
-      textData: {
-        $set: this.create_text_blocks(
-          UpdateTextAreas,
-          this.item,
-          this.item.part,
-          text,
-        ),
-      },
-    });
+    return this.withText(text);
+  }
+
+  private withText(text: SymbolTextItem[]) {
+    return new updateSymbol({ ...this.item, text, _active_points: null }).post_construction();
   }
 
   showAdd() {
-    let field = {
+    const field: SymbolTextItem = {
       position: [0, 0],
       value: '..',
       description: 'Other',
-      type: 2,
       show: true,
       display: TextDisplayMethod.ShowValueExtra,
     };
 
-    const item = update(this.item, {
-      text: { $push: [field] },
-    });
-
-    item.text = this.layout_text_fields(item.rotation, item.text);
-    const UpdateTextAreas = this.create_updateTextArea(item, this.item.point);
-    return update(item, {
-      _active_points: { $set: null },
-      textData: {
-        $set: this.create_text_blocks(
-          UpdateTextAreas,
-          this.item,
-          this.item.part,
-          item.text,
-        ),
-      },
-    });
+    return this.withText(this.layout_text_fields(this.item.rotation, [...this.item.text, field]));
   }
 
   // Menu Handlers
@@ -1071,21 +1020,9 @@ export class updateSymbol
 
     const text = this.layout_text_fields(rotation, this.item.text);
 
-    const UpdateTextAreas = this.create_updateTextArea(this.item, point);
-    return update(this.item, {
-      point: { $set: point },
-      rotation: { $set: rotation },
-      text: { $set: text },
-      _active_points: { $set: null },
-      textData: {
-        $set: this.create_text_blocks(
-          UpdateTextAreas,
-          this.item,
-          this.item.part,
-          this.item.text,
-        ),
-      },
-    });
+    return new updateSymbol({
+      ...this.item, point, rotation, text, _active_points: null,
+    }).post_construction();
   }
 
   can_rotate() {
@@ -1164,6 +1101,7 @@ export class updateSymbol
     const UpdateTextAreas = this.create_updateTextArea(this.item, point);
     let r = update(this.item, {
       point: { $set: point },
+      _active_points: { $set: null },
       textData: {
         $set: this.create_text_blocks(
           UpdateTextAreas,
@@ -1193,15 +1131,20 @@ export class updateSymbol
     let width = r.x2 - r.x1;
     let height = r.y2 - r.y1;
     let spacing = 5;
-    let text_stride = this.item.font_size + spacing;
-    let name = text.find((t) => t.description === 'Name');
+    text = text.map((field) => ({ ...field }));
+    const name = text.find((t) => t.description === 'Name');
+    const place = (field: SymbolTextItem, top: number) => {
+      const size = this.propertyFont(field).font_size;
+      field.position = [x, top + size - this.item.font_size];
+      return size + spacing;
+    };
 
     // Determine the new rotation
     // tslint:disable-next-line: no-bitwise
     rotation = rotation & 3;
     let vertical = rotation === 0 || rotation === 2;
 
-    let x, y;
+    let x: number, y: number;
     if (vertical) {
       // Display the name at the top
       y = -height;
@@ -1212,15 +1155,14 @@ export class updateSymbol
       x = -width;
     }
 
-    if (name.show) {
+    if (name?.show) {
       if (vertical) {
         // Display to right hand side if display up or down
-        name.position = [x, y];
-        y += text_stride;
+        y += place(name, y);
       }
       // Display above if left or right
       else {
-        name.position = [x, -height - text_stride];
+        place(name, -height - this.propertyFont(name).font_size - spacing);
       }
     }
 
@@ -1233,8 +1175,7 @@ export class updateSymbol
 
       // Place the other fields
       if (text[i].show) {
-        text[i].position = [x, y];
-        y += text_stride;
+        y += place(text[i], y);
       }
     }
 
@@ -1490,9 +1431,10 @@ export class updateSymbol
       ];
       return new updateTextData(
         p[0],
+        // Field positions use the original baseline offset in the DSN format.
         p[1] + item.font_size,
         p,
-        item,
+        this.propertyFont(t),
         dragHandle,
         moveHandle,
         false,
@@ -1505,4 +1447,33 @@ export class updateSymbol
     });
     return r;
   }
+}
+
+export function applySymbolPropertyFontDefaults(
+  item: DocItem,
+  defaults: dsnDrawing['settings']['symbolPropertyFonts'],
+): DocItem {
+  if (item.NodeName !== DocItemTypes.Symbol || item._propertyFontDefaults === defaults) {
+    return item;
+  }
+  return new updateSymbol({ ...item, _propertyFontDefaults: defaults }).post_construction();
+}
+
+export function syncSymbolPropertyFonts(drawing: dsnDrawing, previous?: dsnDrawing): dsnDrawing {
+  const defaults = drawing.settings?.symbolPropertyFonts;
+  if (drawing.sheets === previous?.sheets && defaults === previous?.settings?.symbolPropertyFonts) {
+    return drawing;
+  }
+  const unchangedItems = defaults === previous?.settings?.symbolPropertyFonts
+    ? new Set(previous?.sheets.map((sheet) => sheet.items))
+    : null;
+  let changed = false;
+  const sheets = drawing.sheets.map((sheet) => {
+    if (unchangedItems?.has(sheet.items)) return sheet;
+    const items = sheet.items.map((item) => applySymbolPropertyFontDefaults(item, defaults));
+    if (items.every((item, index) => item === sheet.items[index])) return sheet;
+    changed = true;
+    return { ...sheet, items };
+  });
+  return changed ? { ...drawing, sheets } : drawing;
 }

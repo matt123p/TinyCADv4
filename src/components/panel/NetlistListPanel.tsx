@@ -1,35 +1,30 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useStore } from 'react-redux';
-import { fileOpenProject } from '../../io/files';
-import type { docDrawing } from '../../state/undo/undo';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Button,
-  Combobox,
   Input,
-  Option,
   TableCellLayout,
   TableColumnDefinition,
   makeStyles,
 } from '@fluentui/react-components';
 import { Dispatch } from 'react';
-import { subscribeNetlist } from '../../io/netlists/netlistSync';
 import { NetlistData, NetListNode } from '../../io/netlists/netlistGenerator';
 import { DocItemTypes } from '../../model/dsnItem';
 import {
   DEFAULT_NETLIST_TYPE_NAME,
-  NetlistTypes,
   dsnDrawing,
-  ensureNetlistTypes,
 } from '../../model/dsnDrawing';
 import {
   actionFindSelection,
-  actionSelectDialog,
   actionUnfocus,
-  actionUpdateNetlistTypes,
 } from '../../state/dispatcher/AppDispatcher';
-import { NetlistGrid } from './NetlistGrid';
+import { PersistentDataGrid } from '../controls/PersistentDataGrid';
 import { ListModeMenuButton } from './ListModeMenuButton';
+import {
+  NetlistTypePicker,
+  NetlistTypesButton,
+  useNetlist,
+  useNetlistTypeEditor,
+} from './NetlistTypeControls';
 
 const useStyles = makeStyles({
   container: {
@@ -77,11 +72,6 @@ const useStyles = makeStyles({
     width: '100%',
     minWidth: 0,
     maxWidth: '100%',
-  },
-  typeInput: {
-    minWidth: 0,
-    width: '100%',
-    paddingRight: '28px',
     '& .fui-Combobox__input': {
       width: '100%',
       minWidth: 0,
@@ -115,16 +105,6 @@ interface NetItem {
 
 const persistentState = {
   searchQuery: '',
-};
-
-const noAssignments: Record<string, string> = {};
-
-const emptyNetlist: NetlistData = {
-  nets: {},
-  nodes: {},
-  eprops: {},
-  labels: {},
-  symbols: [],
 };
 
 function buildRows(
@@ -222,17 +202,16 @@ function buildRows(
           .filter((x) => !!x),
       ),
     );
-    const rootNodes = nodes.filter(({ source }) => !source?.instancePath.length);
     const parentIds = Array.from(
       new Set(
-        rootNodes
+        nodes
           .map((node) => resolveNodeTargetId(node))
           .filter((id) => typeof id === 'number'),
       ),
     ) as number[];
     const hoverIds = Array.from(
       new Set(
-        rootNodes
+        nodes
           .filter((node) => !!node.parent && allowedHoverTypes.has(node.parent.NodeName))
           .map((node) => resolveNodeParentId(node))
           .filter((id) => typeof id === 'number'),
@@ -240,15 +219,12 @@ function buildRows(
     ) as number[];
     const hoverPins = Array.from(
       new Set(
-        rootNodes
+        nodes
           .map((node) => resolveNodePinKey(node))
           .filter((pinKey) => !!pinKey),
       ),
     ) as string[];
-    const localTarget = pickTargetNode(rootNodes);
-    const targetNode = (localTarget?.parent && localTarget) ||
-      nodes.find((node) => node.symbol && node.source?.instancePath.length) ||
-      pickTargetNode(nodes);
+    const targetNode = pickTargetNode(nodes);
     const primaryNode = targetNode;
     const targetId = resolveNodeTargetId(targetNode);
 
@@ -281,22 +257,10 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
 }) => {
     const { t } = useTranslation();
   const styles = useStyles();
-  const store = useStore<docDrawing>();
   const [searchQuery, setSearchQuery] = useState(persistentState.searchQuery);
-  const [netlist, setNetlist] = useState<NetlistData | null>(null);
-
-  const netlistTypes = useMemo(
-    () => ensureNetlistTypes(drawing?.netlistTypes),
-    [drawing?.netlistTypes],
-  );
-  const netTypeAssignments = netlist?.sources ? noAssignments : drawing?.netTypeAssignments || noAssignments;
-  const typeNames = useMemo(() => Object.keys(netlistTypes).sort(), [netlistTypes]);
-
-  useEffect(() => {
-    return subscribeNetlist((value) => {
-      setNetlist(value);
-    });
-  }, []);
+  const netlist = useNetlist();
+  const netTypeAssignments = drawing?.netTypeAssignments || {};
+  const { typeNames, commitNetType } = useNetlistTypeEditor(drawing, netlist, dispatch);
 
   const handleSearchChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -304,49 +268,6 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
   ) => {
     setSearchQuery(data.value);
     persistentState.searchQuery = data.value;
-  };
-
-  const applyTypeState = (
-    nextTypes: NetlistTypes,
-    nextAssignments: { [net: string]: string },
-  ) => {
-    dispatch(
-      actionUpdateNetlistTypes(netlist || emptyNetlist, nextTypes, nextAssignments),
-    );
-  };
-
-  const ensureTypeExists = (typeName: string, sourceTypes: NetlistTypes) => {
-    const name = typeName.trim();
-    if (!name) {
-      return sourceTypes;
-    }
-    if (sourceTypes[name]) {
-      return sourceTypes;
-    }
-    const base =
-      sourceTypes[DEFAULT_NETLIST_TYPE_NAME] ||
-      netlistTypes[DEFAULT_NETLIST_TYPE_NAME];
-    return {
-      ...sourceTypes,
-      [name]: {
-        ...base,
-        name,
-        attributes: { ...(base.attributes || {}) },
-      },
-    };
-  };
-
-  const commitNetType = (net: string, rawTypeName: string) => {
-    const typeName = rawTypeName.trim();
-    if (!typeName) {
-      return;
-    }
-    const nextTypes = ensureTypeExists(typeName, netlistTypes);
-    const nextAssignments = {
-      ...netTypeAssignments,
-      [net]: typeName,
-    };
-    applyTypeState(nextTypes, nextAssignments);
   };
 
   const items = useMemo(() => {
@@ -395,30 +316,14 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
       columnId: 'type',
       compare: (a, b) => a.type.localeCompare(b.type),
       renderHeaderCell: () => t('panel.netlistList.type'),
-      renderCell: (item) => netlist?.sources ? <TableCellLayout>{item.type}</TableCellLayout> : (
+      renderCell: (item) => (
         <div className={styles.typeCell} onClick={(e) => e.stopPropagation()}>
-          <Combobox
+          <NetlistTypePicker
             className={styles.typeCombo}
-            input={{ className: styles.typeInput }}
             value={item.type}
-            freeform
-            size="small"
-            onOptionSelect={(_, data) =>
-              commitNetType(item.net, String(data.optionValue || ''))
-            }
-            onBlur={(event) =>
-              commitNetType(
-                item.net,
-                (event.target as HTMLInputElement).value || item.type,
-              )
-            }
-          >
-            {typeNames.map((name) => (
-              <Option key={name} value={name}>
-                {name}
-              </Option>
-            ))}
-          </Combobox>
+            typeNames={typeNames}
+            onCommit={(name) => commitNetType(item.net, name)}
+          />
         </div>
       ),
     },
@@ -436,22 +341,7 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
               className={styles.searchInput}
               size="small"
             />
-            <Button
-              type="button"
-              size="small"
-              className={styles.netlistTypesButton}
-              disabled={!!netlist?.sources}
-              onClick={() =>
-                dispatch(
-                  actionSelectDialog('netlist_type_editor', {
-                    drawing,
-                    netlist: netlist || emptyNetlist,
-                  }),
-                )
-              }
-            >
-              {t('dialogues.netlistTypeEditor.title')}
-            </Button>
+            <NetlistTypesButton dispatch={dispatch} className={styles.netlistTypesButton} />
             <ListModeMenuButton
               listMode={listMode}
               onListModeChange={onListModeChange}
@@ -473,27 +363,7 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
     return row ? row.id : null;
   }, [items, focusedParentId]);
 
-  const handleRowClick = async (item: NetItem) => {
-    const { source, parent } = item.targetNode;
-    if (source?.instancePath.length && source.unitId) {
-      const initial = store.getState();
-      const project = initial.altStore.file.project;
-      if (!project) return;
-      const stillCurrent = () => store.getState().altStore.file === initial.altStore.file &&
-        store.getState().docStore.present.drawing === initial.docStore.present.drawing;
-      try {
-        const { navigateSchematicSource } = await import('../../io/projectHierarchy');
-        const location = await navigateSchematicSource(project, drawing, {
-          ...source,
-          pinId: parent?.NodeName === DocItemTypes.Pin ? parent.pinId : undefined,
-        });
-        if (stillCurrent()) dispatch(fileOpenProject({ type: 'file-open-project', location }));
-      } catch (error) {
-        if (stillCurrent()) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
-      }
-      return;
-    }
-    if (source?.instancePath.length) return;
+  const handleRowClick = (item: NetItem) => {
     const id = item.targetId ?? item.hoverIds[0] ?? null;
     if (!id) {
       return;
@@ -513,7 +383,6 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
   };
 
   const handleMouseEnter = (item: NetItem) => {
-    if (item.firstNode.source?.instancePath.length) return;
     const id = item.hoverIds[0] ?? null;
     if (!id && item.hoverPins.length === 0) {
       return;
@@ -533,7 +402,6 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
   };
 
   const handleMouseLeave = (item: NetItem) => {
-    if (item.firstNode.source?.instancePath.length) return;
     const id = item.hoverIds[0] ?? null;
     if (!id) {
       return;
@@ -552,7 +420,7 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
 
   return (
     <div className={styles.container}>
-      <NetlistGrid<NetItem>
+      <PersistentDataGrid<NetItem>
         items={items}
         columns={columns}
         stateKey="NetlistListPanel"
@@ -562,6 +430,7 @@ export const NetlistListPanel: React.FC<NetlistListPanelProps> = ({
         onRowMouseEnter={handleMouseEnter}
         onRowMouseLeave={handleMouseLeave}
         selectionMode={undefined}
+        defaultSortColumn="net"
       />
     </div>
   );

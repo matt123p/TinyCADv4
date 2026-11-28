@@ -156,6 +156,8 @@ and returns actual rotated pin hotspots. Optional x/y place it in the intended
 functional block; omitted coordinates stage it beside existing content.
 `insert_symbol` remains available for explicitly supplied XML.
 
+When asked for SPICE support, the assistant starts with `search_spice_models` across the bundled catalog, including exact parts, drop-in candidates and generic models. It can read model text and its source with `inspect_spice_model`, compare model terminals to a placed or newly created component with `inspect_spice_target`, and attach a model in one undoable edit. It can also set a default for a new library entry through `add_library_components` or add a Custom definition when placing or creating a component. Ordinary symbol and schematic requests preserve existing definitions and skip SPICE research. [Bundled SPICE models](bundled-spice-models.md)
+
 `auto_layout` reads and applies the current drawing directly, returning compact
 quality/connectivity reports and a new revision. There is no download or XML
 round trip. It requires connectivity and serialization checks to pass. Existing

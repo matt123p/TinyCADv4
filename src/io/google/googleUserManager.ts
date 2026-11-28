@@ -1,9 +1,5 @@
-import { showOpenedBoard } from '../boardWorkspaceEvents';
-import { isProjectFile } from '../../../shared/projectFiles';
-import { digest } from '../../util/sha256';
-import { actionSelectDialog } from '../../state/dispatcher/AppDispatcher';
 import { normalizeUserConfig } from '../libraryConfig';
-import { drawingFileName, isBoardFile, isCompressedDrawing, drawingMimeType } from '../../../shared/drawingFiles.js';
+import { drawingFileName, isCompressedDrawing, drawingMimeType } from '../../../shared/drawingFiles.js';
 import { decodeDrawing } from '../dsnCodec';
 import { Dispatch } from 'redux';
 import { ActionCreators } from 'redux-undo';
@@ -24,7 +20,6 @@ import { XMLBuilder } from '../../util/xmlbuilder';
 import { logWebUser, UserManager } from '../files';
 import { ioXML } from '../ioXml';
 import update from 'immutability-helper';
-import type { ProjectStorageRequest } from '../projectStorage';
 
 // The Browser API Key obtained from the Google API Console.
 const getGoogleClientId = () => {
@@ -177,33 +172,13 @@ export class GoogleUserManager implements UserManager {
                 });
                 dispatch(actionEditLibrary(lib, meta.title, meta.id, null));
               });
-            } else if (isProjectFile(meta.title)) {
-              const parent = meta.parents?.[0];
-              if (!parent?.id) throw new Error('The Drive project has no accessible containing folder.');
-              return Promise.all([
-                this.loadFileMetadata(parent.id),
-                import('../projects'),
-                import('../projectStorage'),
-              ]).then(async ([folder, { readProject }, { projectFolderOpened }]) => {
-                await readProject(meta.id, parent.id);
-                window.dispatchEvent(new CustomEvent(projectFolderOpened, {
-                  detail: { id: parent.id, name: folder.title || 'My Drive' },
-                }));
-              });
-            } else if (isBoardFile(meta.title)) {
-              return Promise.all([
-                this.projectFiles({ operation: 'read', id: meta.id }),
-                import('../boardWorkspace'),
-              ]).then(async ([{ data }, { openStandaloneBoard }]) => {
-                showOpenedBoard(await openStandaloneBoard(data, { name: meta.title, id: meta.id }));
-              });
             } else {
               return fetch(`https://www.googleapis.com/drive/v3/files/${state.ids[0]}?alt=media`, { headers: { Authorization: `Bearer ${this.getToken()}` } }).then(r => { if (!r.ok) throw new Error('Unable to load drawing.'); return r.arrayBuffer(); }).then(decodeDrawing).then((doc) => {
                 dispatch(actionSetDocument(doc, meta.title, meta.id, null));
                 dispatch(ActionCreators.clearHistory());
               });
             }
-          }).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+          });
           return;
         case 'create':
           dispatch(actionSetFileData('tCad1.dsn', null, state.folderId, 0));
@@ -222,20 +197,6 @@ export class GoogleUserManager implements UserManager {
   private getToken() {
     return gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse(true)
       .access_token;
-  }
-
-  async projectFiles(request: ProjectStorageRequest) {
-    const { driveProjectFiles } = await import('../projectStorage');
-    return driveProjectFiles(request, async (resource, options) => {
-      const headers = new Headers(options?.headers);
-      headers.set('Authorization', `Bearer ${this.getToken()}`);
-      const url = resource.startsWith('/upload/')
-        ? `https://www.googleapis.com/upload/drive/v3${resource.slice('/upload'.length)}`
-        : `https://www.googleapis.com/drive/v3${resource}`;
-      const response = await fetch(url, { ...options, headers });
-      if (!response.ok) throw new Error(`Project operation on Google Drive failed (${response.status}).`);
-      return response;
-    });
   }
 
   loadFileMetadata(fileId: string) {
@@ -280,20 +241,47 @@ export class GoogleUserManager implements UserManager {
     );
   }
 
-  async saveFile(xml: string | Uint8Array, file: CurrentFile, expectedVersion?: string): Promise<any> {
-    if (isBoardFile(file.name)) {
-      if (expectedVersion && typeof file.id === 'string' && xml instanceof Uint8Array) {
-        const { data, version } = await this.projectFiles({ operation: 'read', id: file.id });
-        if (await digest(data) !== expectedVersion)
-          throw new Error('This PCB changed on Drive. Reopen it or use Save As.');
-        return this.projectFiles({
-          operation: 'write', folder: file.folderId ?? 'root',
-          id: file.id, name: file.name, data: xml, version,
-        });
-      }
-      return this.saveFileInternal(xml, file, 'application/xml');
-    }
+  saveFile(xml: string | Uint8Array, file: CurrentFile): Promise<any> {
     return this.saveFileInternal(xml, { ...file, name: drawingFileName(file.name, isCompressedDrawing(xml)) }, drawingMimeType(xml));
+  }
+
+  async exportFolders(drawingId?: string) {
+    const headers = { Authorization: `Bearer ${this.getToken()}` };
+    const folders: { id: string; name: string }[] = [];
+    const preferred = drawingId ? fetch(
+      `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(drawingId)}?fields=parents`,
+      { headers },
+    ).then(async (response) => response.ok ? (await response.json()).parents?.[0] : undefined)
+      .catch((): undefined => undefined) : Promise.resolve(undefined);
+    let page: string | undefined;
+    do {
+      const params = new URLSearchParams({
+        q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+        fields: 'nextPageToken,files(id,name,capabilities(canAddChildren))',
+        pageSize: '100',
+        orderBy: 'name',
+      });
+      if (page) params.set('pageToken', page);
+      const response = await fetch('https://www.googleapis.com/drive/v3/files?' + params, { headers });
+      if (!response.ok) throw new Error(`Unable to list Drive folders (${response.status}).`);
+      const result: {
+        files?: { id: string; name: string; capabilities?: { canAddChildren?: boolean } }[];
+        nextPageToken?: string;
+      } = await response.json();
+      folders.push(...(result.files ?? []).filter(({ capabilities }) => capabilities?.canAddChildren));
+      page = result.nextPageToken;
+    } while (page);
+    return { folders, preferred: await preferred };
+  }
+
+  async saveExport(text: string, destination: { id?: string; name: string; folderId?: string }, mime: string) {
+    const result = await this.saveFileInternal(text, {
+      name: destination.name,
+      id: destination.id,
+      folderId: destination.folderId,
+    }, mime);
+    if (typeof result.id !== 'string' || !result.id) throw new Error('Drive did not return a saved file ID.');
+    return { id: result.id as string, name: result.name as string, folderId: destination.folderId };
   }
 
   private saveFileInternal(

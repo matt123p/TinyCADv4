@@ -1,5 +1,5 @@
+import type { SchematicTabs } from '../schematicTabs';
 import undoable from 'redux-undo';
-import { DocItemTypes } from '../../model/dsnItem';
 
 import { StateWithHistory } from 'redux-undo';
 import { activeSheet, docStore, DocStoreReducer } from '../stores/docStoreReducer';
@@ -8,16 +8,16 @@ import { MenuActionTypes } from '../actions/menuActions';
 import { altStore } from '../stores/altStoreReducer';
 import { SymbolActionTypes } from '../actions/symbolActions';
 import { LibraryActionTypes } from '../actions/libraryActions';
-import type { SchematicTabs } from '../schematicTabs';
 import { DocActionTypes } from '../actions/docActions';
+import { DialogActionTypes } from '../actions/dialogActions';
 
 let lastEvent = new Date();
 let needHistory = false;
 
 export interface docDrawing {
+  schematicTabs?: SchematicTabs;
   docStore: StateWithHistory<docStore>;
   altStore: altStore;
-  schematicTabs?: SchematicTabs;
 }
 
 const reduceWithHistory = undoable(DocStoreReducer, {
@@ -26,19 +26,21 @@ const reduceWithHistory = undoable(DocStoreReducer, {
     currentState: docStore,
     previousHistory: StateWithHistory<docStore>,
   ) => {
-    if (action.type === DocActionTypes.PlaceChild) return false;
+    if (action.type === MenuActionTypes.MenuCommand &&
+        (action.hierarchicalRefresh || action.hierarchicalReload)) return false;
+    if (action.type === DialogActionTypes.SetDRC) return false;
     if (action.type === 'simulation/diagnostics' || action.type === 'simulation/panel') return false;
     const now = new Date();
     needHistory =
       needHistory ||
       currentState.drawing != previousHistory._latestUnfiltered?.drawing;
     let undoCheckpoint = now.getTime() - lastEvent.getTime() > 500;
-    if (action.type === MenuActionTypes.MenuSheetRename ||
-        (action.type === MenuActionTypes.MenuSetStyle && action.style.image)) undoCheckpoint = true;
+    if (action.type === MenuActionTypes.MenuSetStyle && action.style.image) undoCheckpoint = true;
     if (action.type.startsWith('simulation/') || action.type === MenuActionTypes.MenuCommand || action.type === DocActionTypes.ApplyAutoLayout || action.type === DocActionTypes.ApplyChatEdit || action.type === DocActionTypes.ApplyChatLibrary) {
       undoCheckpoint = true;
     }
     if (
+      action.type === SymbolActionTypes.SetPropertyFonts ||
       action.type === SymbolActionTypes.SymbolEditOutline ||
       action.type === SymbolActionTypes.SymbolEditSymbol ||
       action.type === SymbolActionTypes.ReplaceSymbol
@@ -54,10 +56,6 @@ const reduceWithHistory = undoable(DocStoreReducer, {
       }
       undoCheckpoint = true;
     }
-    if (action.type === DocActionTypes.AddHierarchySheet || action.type === DocActionTypes.RefreshChild ||
-      (action.type === MenuActionTypes.MenuEditor && previousHistory.present.view.add?.NodeName === DocItemTypes.Symbol &&
-        'hierarchy' in previousHistory.present.view.add && !currentState.view.add &&
-        currentState.drawing !== previousHistory.present.drawing)) undoCheckpoint = true;
     if (!!currentState.view.add) {
       undoCheckpoint = false;
     }
@@ -81,12 +79,8 @@ export function DocStoreWithHistory(
   state: StateWithHistory<docStore> | undefined,
   action: AppActionTypes,
 ): StateWithHistory<docStore> {
-  if (state && (action.type === DocActionTypes.AddHierarchySheet ||
-      action.type === DocActionTypes.RefreshChild || action.type === DocActionTypes.PlaceChild ||
-      action.type === MenuActionTypes.MenuSheetRename)) {
-    state = { ...state, _latestUnfiltered: state.present };
-  }
-  if (state && action.type === MenuActionTypes.MenuSetStyle && action.style.image) {
+  if (state && (action.type === SymbolActionTypes.SetPropertyFonts ||
+      (action.type === MenuActionTypes.MenuSetStyle && action.style.image))) {
     state = { ...state, _latestUnfiltered: state.present };
   }
   if (
@@ -102,6 +96,10 @@ export function DocStoreWithHistory(
     state = { ...state, _latestUnfiltered: state.present };
   }
   if (state && action.type === DocActionTypes.ApplyChatEdit && state.present.drawing === action.source && state.present.editSymbol === action.sourceSymbol) {
+    state = { ...state, _latestUnfiltered: state.present };
+  }
+  if (state && action.type === 'simulation/catalog-model' && state.present.drawing === action.source &&
+      action.source !== action.drawing && !state.present.editSymbol && !state.present.editLibrary) {
     state = { ...state, _latestUnfiltered: state.present };
   }
   return reduceWithHistory(state, action);

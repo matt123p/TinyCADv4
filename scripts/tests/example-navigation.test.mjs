@@ -233,6 +233,7 @@ test('Electron forwards current panel state to the native menu independently of 
     {
       react: {
         ...React,
+        useState: () => [undefined, () => {}],
         useEffect: (effect, deps) => effects.push({ effect, deps }),
       },
     },

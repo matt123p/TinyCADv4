@@ -1,0 +1,1897 @@
+{
+  "schemaVersion": 1,
+  "pack": {
+    "id": "openjellybean",
+    "version": "0.6.0",
+    "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+    "filename": "openjellybean_0_6_0.lib",
+    "sha256": "bc0304fe2fae01979bcbd6eb74466a3b25e8a632088ffa7ce19b385ada799163",
+    "license": "MIT",
+    "licenseText": "MIT License\n\nCopyright (c) 2026 openjellybean contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n",
+    "spice": "* =============================================================================\n* openjellybean - generic \"jelly bean\" SPICE models\n* Version 0.6.0\n* https://github.com/xdylanm/openjellybean\n* SPDX-License-Identifier: MIT\n* Copyright (c) 2026 openjellybean contributors. See LICENSE for the full text.\n*\n* Original models written from scratch: parameters were fitted in ngspice to\n* typical values published in public datasheets. No manufacturer model file\n* was copied or adapted. They BEHAVE LIKE the named parts at typical bias;\n* they are not the manufacturer's models and carry no manufacturer warranty.\n* Names end in _OJ so they never collide with vendor models in the same tree.\n*\n* Tested with ngspice 47. Uses only standard SPICE syntax plus the VDMOS\n* model (ngspice >= 47, LTspice) and subcircuit params: (ngspice, LTspice).\n* =============================================================================\n\n* ---------------------------------------------------------------- BJTs ------\n* BC547B_OJ : small-signal NPN, 45 V / 100 mA class, hFE group B\n* BC557B_OJ : complementary PNP\n.model BC547B_OJ NPN(IS=1.8e-14 NF=1 BF=330 VAF=65 IKF=0.12 ISE=5e-14 NE=1.5\n+ BR=4 NR=1 VAR=20 IKR=0.1 ISC=1e-13 NC=2\n+ RB=40 RE=0.4 RC=1.2\n+ CJE=10p VJE=0.7 MJE=0.33 CJC=4p VJC=0.6 MJC=0.33 FC=0.5\n+ TF=0.45n XTF=2 VTF=10 ITF=0.1 TR=50n\n+ EG=1.11 XTI=3 XTB=1.5)\n\n.model BC557B_OJ PNP(IS=1.8e-14 NF=1 BF=330 VAF=40 IKF=0.1 ISE=5e-14 NE=1.5\n+ BR=6 NR=1 VAR=15 IKR=0.08 ISC=1e-13 NC=2\n+ RB=40 RE=0.6 RC=1.2\n+ CJE=12p VJE=0.7 MJE=0.33 CJC=7p VJC=0.6 MJC=0.33 FC=0.5\n+ TF=0.95n XTF=2 VTF=10 ITF=0.1 TR=60n\n+ EG=1.11 XTI=3 XTB=1.5)\n\n* 2N3904_OJ : 40 V / 200 mA general-purpose NPN (TO-92 pinout E-B-C)\n* 2N3906_OJ : complementary PNP\n.model 2N3904_OJ NPN(IS=1e-14 NF=1 BF=200 VAF=90 IKF=0.07 ISE=4e-14 NE=1.5\n+ BR=4 NR=1 VAR=20 IKR=0.1 ISC=1e-13 NC=2\n+ RB=10 RE=0.3 RC=1\n+ CJE=6p VJE=0.7 MJE=0.33 CJC=5p VJC=0.6 MJC=0.33 FC=0.5\n+ TF=0.4n XTF=2 VTF=10 ITF=0.1 TR=30n\n+ EG=1.11 XTI=3 XTB=1.5)\n\n.model 2N3906_OJ PNP(IS=1e-14 NF=1 BF=200 VAF=35 IKF=0.08 ISE=4e-14 NE=1.5\n+ BR=4 NR=1 VAR=15 IKR=0.08 ISC=1e-13 NC=2\n+ RB=10 RE=0.4 RC=1.5\n+ CJE=8p VJE=0.7 MJE=0.33 CJC=6.5p VJC=0.6 MJC=0.33 FC=0.5\n+ TF=0.5n XTF=2 VTF=10 ITF=0.1 TR=40n\n+ EG=1.11 XTI=3 XTB=1.5)\n\n* ------------------------------------------------------------ MOSFETs -------\n* VDMOS model: 3 terminals (D G S), body diode built in.\n* 2N7000_OJ : 60 V small-signal N-channel (also a fair 2N7002 / BS170 stand-in)\n* BS250_OJ  : 45 V small-signal P-channel\n.model 2N7000_OJ VDMOS(VTO=2.0 KP=0.3 LAMBDA=0.01 RD=0.6 RS=0.1 RG=10\n+ CGS=16p CGDMAX=20p CGDMIN=3p A=0.5\n+ CJO=40p VJ=0.75 M=0.5 IS=1e-13 N=1.1 RB=0.2 BV=60 IBV=10u TT=20n)\n\n.model BS250_OJ VDMOS(pchan VTO=-2.1 KP=0.02 LAMBDA=0.01 RD=1.8 RS=0.2 RG=10\n+ CGS=25p CGDMAX=21p CGDMIN=3.7p A=0.5\n+ CJO=57p VJ=0.75 M=0.5 IS=1e-13 N=1.1 RB=0.5 BV=45 IBV=10u TT=30n)\n\n* -------------------------------------------------------------- JFETs -------\n* Pins D G S. VTO is negative for both polarities, as SPICE defines it.\n* 2N5457_OJ .. 2N5459_OJ : N-channel general-purpose amplifiers, 25 V\n.model 2N5457_OJ NJF(VTO=-3.06 BETA=3.2e-4 LAMBDA=3.3e-3 RD=20 RS=20\n+ CGS=3.2p CGD=5.5p PB=1 IS=1e-14 FC=0.5)\n.model 2N5458_OJ NJF(VTO=-4.28 BETA=3.4e-4 LAMBDA=1.7e-3 RD=20 RS=20\n+ CGS=3.2p CGD=5.4p PB=1 IS=1e-14 FC=0.5)\n.model 2N5459_OJ NJF(VTO=-5.7 BETA=2.9e-4 LAMBDA=1.1e-3 RD=20 RS=20\n+ CGS=3.2p CGD=5.2p PB=1 IS=1e-14 FC=0.5)\n\n* J112_OJ, J113_OJ : N-channel analog switches, 35 V\n.model J112_OJ NJF(VTO=-2.2 BETA=6.6e-3 LAMBDA=0.035 RD=7 RS=7\n+ CGS=13p CGD=9p PB=1.25 IS=1e-15 FC=0.5)\n.model J113_OJ NJF(VTO=-1.5 BETA=8.3e-3 LAMBDA=0.035 RD=12 RS=12\n+ CGS=13p CGD=9p PB=1.25 IS=1e-15 FC=0.5)\n\n* PN4392_OJ, PN4393_OJ : N-channel switches, 40 V\n.model PN4392_OJ NJF(VTO=-2.8 BETA=4.4e-3 LAMBDA=0.035 RD=4 RS=4\n+ CGS=12p CGD=9p PB=1.17 IS=1e-15 FC=0.5)\n.model PN4393_OJ NJF(VTO=-1.2 BETA=7.4e-3 LAMBDA=0.035 RD=10 RS=10\n+ CGS=12.5p CGD=8p PB=1.17 IS=1e-15 FC=0.5)\n\n* 2N5460_OJ .. 2N5462_OJ : P-channel general-purpose amplifiers, 40 V\n.model 2N5460_OJ PJF(VTO=-2.2 BETA=5.3e-4 LAMBDA=5e-3 RD=40 RS=40\n+ CGS=4.8p CGD=2.3p PB=1 IS=1e-14 FC=0.5)\n.model 2N5461_OJ PJF(VTO=-3 BETA=5.1e-4 LAMBDA=5e-3 RD=30 RS=30\n+ CGS=4.8p CGD=2.3p PB=1 IS=1e-14 FC=0.5)\n.model 2N5462_OJ PJF(VTO=-5 BETA=3.7e-4 LAMBDA=3e-3 RD=20 RS=20\n+ CGS=4.7p CGD=2.7p PB=1 IS=1e-14 FC=0.5)\n\n* ------------------------------------------------------------- Diodes -------\n* 1N4148_OJ : small-signal fast switching (also 1N914)\n.model 1N4148_OJ D(IS=2.9n N=1.85 RS=0.9 BV=100 IBV=100u\n+ CJO=2p VJ=0.5 M=0.33 TT=2.5n EG=1.11 XTI=3)\n\n* 1N5819_OJ : 1 A / 40 V Schottky\n.model 1N5819_OJ D(IS=1.6u N=1.05 RS=0.057 BV=40 IBV=1m\n+ CJO=300p VJ=0.5 M=0.45 TT=0 EG=0.69 XTI=2)\n\n* BAT54_OJ : 200 mA / 30 V small-signal Schottky (one diode of the A/C/S duals)\n.model BAT54_OJ D(IS=14n N=1 RS=1.1 BV=30 IBV=10u\n+ CJO=13.5p VJ=0.3 M=0.39 TT=0 EG=0.69 XTI=2)\n\n* B140_OJ : 1 A / 40 V Schottky rectifier (also a fair SB140 stand-in)\n.model B140_OJ D(IS=200n N=1 RS=0.062 BV=45 IBV=500u\n+ CJO=310p VJ=0.5 M=0.45 TT=0 EG=0.69 XTI=2)\n\n* ------------------------------------------------------------- Zeners -------\n* Generic zener:  X1 anode cathode ZENER_OJ params: VZ=5.1 IZT=5m RZ=40 NK=1.5\n*   VZ  : zener voltage at test current IZT\n*   RZ  : total dynamic impedance at IZT (as quoted on datasheets)\n*   NK  : knee softness (1 = sharp, 2-3 = the soft knee of sub-5 V parts)\n.subckt ZENER_OJ a k params: VZ=5.1 IZT=5m RZ=40 NK=1.5\n.param RSER={max(RZ - NK*0.025865/IZT, 0.01)}\n.param VOFS={VZ - IZT*RSER - NK*0.025865*ln(IZT/1e-12)}\nDf  a k dfwd\nVof k n1 {VOFS}\nDbk n1 n2 dknee\nRz  n2 a {RSER}\n.model dfwd  D(IS=3n N=1.8 RS=0.5 CJO=40p VJ=0.75 M=0.4 TT=50n)\n.model dknee D(IS=1e-12 N={NK})\n.ends ZENER_OJ\n\n* 500 mW glass zeners, BZX79 class, specified at IZT = 5 mA\n.subckt BZX79C3V3_OJ a k\nX1 a k ZENER_OJ params: VZ=3.3 IZT=5m RZ=85 NK=3\n.ends\n.subckt BZX79C4V7_OJ a k\nX1 a k ZENER_OJ params: VZ=4.7 IZT=5m RZ=50 NK=2.5\n.ends\n.subckt BZX79C5V1_OJ a k\nX1 a k ZENER_OJ params: VZ=5.1 IZT=5m RZ=40 NK=2\n.ends\n.subckt BZX79C5V6_OJ a k\nX1 a k ZENER_OJ params: VZ=5.6 IZT=5m RZ=15 NK=1.5\n.ends\n.subckt BZX79C6V2_OJ a k\nX1 a k ZENER_OJ params: VZ=6.2 IZT=5m RZ=6 NK=1\n.ends\n.subckt BZX79C9V1_OJ a k\nX1 a k ZENER_OJ params: VZ=9.1 IZT=5m RZ=6 NK=1\n.ends\n.subckt BZX79C12_OJ a k\nX1 a k ZENER_OJ params: VZ=12 IZT=5m RZ=10 NK=1\n.ends\n.subckt BZX79C15_OJ a k\nX1 a k ZENER_OJ params: VZ=15 IZT=5m RZ=10 NK=1\n.ends\n* 1 W, 1N47xxA class, specified at the datasheet IZT\n.subckt 1N4733A_OJ a k\nX1 a k ZENER_OJ params: VZ=5.1 IZT=49m RZ=7 NK=2\n.ends\n.subckt 1N4742A_OJ a k\nX1 a k ZENER_OJ params: VZ=12 IZT=21m RZ=9 NK=1\n.ends\n\n* ---------------------------------------------------------------- LEDs ------\n* Generic 5 mm indicator LEDs, one color each:  D1 a k LED_RED_OJ\n* LED_RED_OJ   : high-efficiency red, VF about 1.9 V at 10 mA\n* LED_GREEN_OJ : standard green, VF about 2.0 V at 10 mA\n* LED_BLUE_OJ  : InGaN blue, VF about 3.3 V at 20 mA\n.model LED_RED_OJ D(IS=1.4n N=4.64 RS=1.7 BV=10 IBV=10u\n+ CJO=15p VJ=0.75 M=0.33 TT=0 EG=2.46 XTI=0)\n.model LED_GREEN_OJ D(IS=1.1e-18 N=2 RS=10 BV=10 IBV=10u\n+ CJO=15p VJ=0.75 M=0.33 TT=0 EG=2.44 XTI=0)\n.model LED_BLUE_OJ D(IS=1.4e-10 N=6 RS=19.7 BV=10 IBV=10u\n+ CJO=65p VJ=0.75 M=0.33 TT=0 EG=3.8 XTI=0)\n\n* ------------------------------------------------------------- Op-amps ------\n* Pin order (TI / LTspice convention):  +IN  -IN  V+  V-  OUT\n* Generic single-pole + second-pole macromodel with slew limit, output swing\n* limits, short-circuit current limit and supply current that follows the\n* load (output current is drawn from the correct rail).\n* Not modelled: input common-mode range limits / phase reversal, noise,\n* CMRR/PSRR, offset drift, LM358 crossover distortion.\n*   GBW [Hz]  SR [V/s]  AOL [V/V]  VOS [V]  IB [A, into each pin]\n*   ISC [A]   IQ [A per amplifier]  VOH/VOL: headroom from V+ / V- [V]\n*   ROUT: open-loop output resistance [ohm]  FP2: second pole [Hz]\n.subckt OPAMP_OJ inp inn vcc vee out params: GBW=3e6 SR=13e6 AOL=200k\n+ VOS=0 IB=30p RIN=1e12 CIN=3p ISC=30m IQ=1.4m VOH=1.5 VOL=1.5 ROUT=100 FP2=4.5e6\n.param CC=1n\n.param IMAX={SR*CC}\n.param GM={6.2831853*GBW*CC}\n.param VLIN={IMAX/GM}\nBmid mid 0 V={(V(vcc)+V(vee))/2}\nIq   vcc vee {IQ}\nVos  inp inp1 {VOS}\nIbp  inp mid {IB}\nIbn  inn mid {IB}\nRin  inp1 inn {RIN}\nCinp inp1 mid {CIN}\nCinn inn mid {CIN}\n* transconductance with tanh slew limit -> integrator\nBg   mid int I={IMAX}*tanh((V(inp1)-V(inn))/{VLIN})\nCc   int mid {CC}\nRint int mid {AOL/GM}\n* output-swing clamps\nBhi  nhi 0 V=V(vcc)-{VOH}\nBlo  nlo 0 V=V(vee)+{VOL}\nDhi  int nhi dclamp\nDlo  nlo int dclamp\n* second pole\nE2   p2a 0 int 0 1\nRp2  p2a p2 1k\nCp2  p2 0 {1/(6.2831853*FP2*1k)}\n* current-limited output, current drawn from the rails\n* soft current limit: I = ISC*x/(1+x^4)^0.25, x=(V(p2)-V(out))/(ROUT*ISC)\nBx   x 0 V=(V(p2)-V(out))/({ROUT}*{ISC})\nBsrc vcc out I={ISC}*0.5*(abs(V(x))+V(x))/pwr(1+V(x)*V(x)*V(x)*V(x),0.25)\nBsnk out vee I={ISC}*0.5*(abs(V(x))-V(x))/pwr(1+V(x)*V(x)*V(x)*V(x),0.25)\n.model dclamp D(IS=1e-15 N=0.02)\n.ends OPAMP_OJ\n\n* TL07X_OJ : one section of a TL071/TL072/TL074-class JFET-input op-amp\n.subckt TL07X_OJ inp inn vcc vee out\n* GBW/FP2 chosen so the unity-gain frequency lands at ~3 MHz with ~55-60 deg PM\nX1 inp inn vcc vee out OPAMP_OJ params: GBW=3.5e6 SR=13e6 AOL=200k IB=30p\n+ RIN=1e12 CIN=3p ISC=30m IQ=1.4m VOH=1.5 VOL=1.5 ROUT=100 FP2=4.5e6\n.ends TL07X_OJ\n\n* TL072_OJ : complete dual package, pins 1-8 in order:\n*   1OUT 1IN- 1IN+ VCC- 2IN+ 2IN- 2OUT VCC+\n.subckt TL072_OJ out1 inn1 inp1 vee inp2 inn2 out2 vcc\nXA inp1 inn1 vcc vee out1 TL07X_OJ\nXB inp2 inn2 vcc vee out2 TL07X_OJ\n.ends TL072_OJ\n\n* TL074_OJ : complete quad package, pins 1-14 in order:\n*   1OUT 1IN- 1IN+ VCC+ 2IN+ 2IN- 2OUT 3OUT 3IN- 3IN+ VCC- 4IN+ 4IN- 4OUT\n.subckt TL074_OJ out1 inn1 inp1 vcc inp2 inn2 out2 out3 inn3 inp3 vee inp4 inn4 out4\nXA inp1 inn1 vcc vee out1 TL07X_OJ\nXB inp2 inn2 vcc vee out2 TL07X_OJ\nXC inp3 inn3 vcc vee out3 TL07X_OJ\nXD inp4 inn4 vcc vee out4 TL07X_OJ\n.ends TL074_OJ\n\n* LM358_OJ : one section of an LM358/LM324-class single-supply op-amp\n*   (output swings to within ~10 mV of V- at light load; bias current flows\n*    out of the pins, hence negative IB)\n.subckt LM358_OJ inp inn vcc vee out\nX1 inp inn vcc vee out OPAMP_OJ params: GBW=0.8e6 SR=0.3e6 AOL=100k IB=-20n\n+ RIN=10Meg CIN=3p ISC=30m IQ=0.35m VOH=1.5 VOL=0.02 ROUT=100 FP2=1.5e6\n.ends LM358_OJ\n\n* LM358_DUAL_OJ : complete dual package, pins 1-8 in order:\n*   1OUT 1IN- 1IN+ GND 2IN+ 2IN- 2OUT VCC+\n.subckt LM358_DUAL_OJ out1 inn1 inp1 vee inp2 inn2 out2 vcc\nXA inp1 inn1 vcc vee out1 LM358_OJ\nXB inp2 inn2 vcc vee out2 LM358_OJ\n.ends LM358_DUAL_OJ\n\n* LM324_QUAD_OJ : complete quad package, pins 1-14 in order:\n*   1OUT 1IN- 1IN+ VCC+ 2IN+ 2IN- 2OUT 3OUT 3IN- 3IN+ GND 4IN+ 4IN- 4OUT\n*   Sections follow the LM324's own datasheet: faster than LM358_OJ, half the supply current.\n.subckt LM324_QUAD_OJ out1 inn1 inp1 vcc inp2 inn2 out2 out3 inn3 inp3 vee inp4 inn4 out4\n.subckt section inp inn vcc vee out\nX1 inp inn vcc vee out OPAMP_OJ params: GBW=1.34e6 SR=0.5e6 AOL=100k IB=-20n\n+ RIN=10Meg CIN=3p ISC=30m IQ=0.175m VOH=1.5 VOL=0.02 ROUT=100 FP2=2.5e6\n.ends section\nXA inp1 inn1 vcc vee out1 section\nXB inp2 inn2 vcc vee out2 section\nXC inp3 inn3 vcc vee out3 section\nXD inp4 inn4 vcc vee out4 section\n.ends LM324_QUAD_OJ\n\n* ------------------------------------------------------- Potentiometers -----\n* Generic linear potentiometer:  X1 a w b POT_OJ params: R=10k POS=0.5\n*   R   : total resistance from A to B [ohm]\n*   POS : wiper position, 0 = at A, 1 = at B (limited to that range)\n.subckt POT_OJ a w b params: R=10k POS=0.5\n.param FRAC={max(min(POS,1),0)}\nRa a w {max(R*FRAC,1e-3)}\nRb w b {max(R*(1-FRAC),1e-3)}\n.ends POT_OJ\n"
+  },
+  "models": [
+    {
+      "id": "BC547B_OJ",
+      "kind": "npn",
+      "description": "General-purpose NPN bipolar transistor. Typical stand-in for BC547B.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L21"
+      },
+      "aliases": [
+        "BC547B"
+      ],
+      "datasheetReference": "onsemi BC546 family datasheet (hFE, VCE(sat), fT); NXP BC547 datasheet (VBE typ)",
+      "designator": "Q",
+      "terminals": [
+        {
+          "role": "collector"
+        },
+        {
+          "role": "base"
+        },
+        {
+          "role": "emitter"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model BC547B_OJ NPN(IS=1.8e-14 NF=1 BF=330 VAF=65 IKF=0.12 ISE=5e-14 NE=1.5\n+ BR=4 NR=1 VAR=20 IKR=0.1 ISC=1e-13 NC=2\n+ RB=40 RE=0.4 RC=1.2\n+ CJE=10p VJE=0.7 MJE=0.33 CJC=4p VJC=0.6 MJC=0.33 FC=0.5\n+ TF=0.45n XTF=2 VTF=10 ITF=0.1 TR=50n\n+ EG=1.11 XTI=3 XTB=1.5)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 9,
+          "symbolId": 9,
+          "name": "NPN transistor",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BC557B_OJ",
+      "kind": "pnp",
+      "description": "General-purpose PNP bipolar transistor. Typical stand-in for BC557B.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L28"
+      },
+      "aliases": [
+        "BC557B"
+      ],
+      "datasheetReference": "onsemi BC556 family datasheet; fT from a BC557B sheet giving 150 MHz typ (onsemi gives 320 MHz)",
+      "designator": "Q",
+      "terminals": [
+        {
+          "role": "collector"
+        },
+        {
+          "role": "base"
+        },
+        {
+          "role": "emitter"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model BC557B_OJ PNP(IS=1.8e-14 NF=1 BF=330 VAF=40 IKF=0.1 ISE=5e-14 NE=1.5\n+ BR=6 NR=1 VAR=15 IKR=0.08 ISC=1e-13 NC=2\n+ RB=40 RE=0.6 RC=1.2\n+ CJE=12p VJE=0.7 MJE=0.33 CJC=7p VJC=0.6 MJC=0.33 FC=0.5\n+ TF=0.95n XTF=2 VTF=10 ITF=0.1 TR=60n\n+ EG=1.11 XTI=3 XTB=1.5)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 10,
+          "symbolId": 10,
+          "name": "PNP transistor",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2N3904_OJ",
+      "kind": "npn",
+      "description": "General-purpose NPN bipolar transistor. Typical stand-in for 2N3904, MMBT3904.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L37"
+      },
+      "aliases": [
+        "2N3904",
+        "MMBT3904"
+      ],
+      "datasheetReference": "onsemi 2N3903/2N3904 datasheet, min/max limits (no typical column)",
+      "designator": "Q",
+      "terminals": [
+        {
+          "role": "collector"
+        },
+        {
+          "role": "base"
+        },
+        {
+          "role": "emitter"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 2N3904_OJ NPN(IS=1e-14 NF=1 BF=200 VAF=90 IKF=0.07 ISE=4e-14 NE=1.5\n+ BR=4 NR=1 VAR=20 IKR=0.1 ISC=1e-13 NC=2\n+ RB=10 RE=0.3 RC=1\n+ CJE=6p VJE=0.7 MJE=0.33 CJC=5p VJC=0.6 MJC=0.33 FC=0.5\n+ TF=0.4n XTF=2 VTF=10 ITF=0.1 TR=30n\n+ EG=1.11 XTI=3 XTB=1.5)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 9,
+          "symbolId": 9,
+          "name": "NPN transistor",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2N3906_OJ",
+      "kind": "pnp",
+      "description": "General-purpose PNP bipolar transistor. Typical stand-in for 2N3906, MMBT3906.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L44"
+      },
+      "aliases": [
+        "2N3906",
+        "MMBT3906"
+      ],
+      "datasheetReference": "onsemi 2N3906 datasheet, min/max limits (no typical column)",
+      "designator": "Q",
+      "terminals": [
+        {
+          "role": "collector"
+        },
+        {
+          "role": "base"
+        },
+        {
+          "role": "emitter"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 2N3906_OJ PNP(IS=1e-14 NF=1 BF=200 VAF=35 IKF=0.08 ISE=4e-14 NE=1.5\n+ BR=4 NR=1 VAR=15 IKR=0.08 ISC=1e-13 NC=2\n+ RB=10 RE=0.4 RC=1.5\n+ CJE=8p VJE=0.7 MJE=0.33 CJC=6.5p VJC=0.6 MJC=0.33 FC=0.5\n+ TF=0.5n XTF=2 VTF=10 ITF=0.1 TR=40n\n+ EG=1.11 XTI=3 XTB=1.5)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 10,
+          "symbolId": 10,
+          "name": "PNP transistor",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2N7000_OJ",
+      "kind": "nmos",
+      "description": "Small-signal N-channel MOSFET with a modelled body diode. Typical stand-in for 2N7000, 2N7002, BS170.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L55"
+      },
+      "aliases": [
+        "2N7000",
+        "2N7002",
+        "BS170"
+      ],
+      "datasheetReference": "onsemi 2N7000/2N7002/NDS7002A datasheet, typical column",
+      "designator": "M",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 2N7000_OJ VDMOS(VTO=2.0 KP=0.3 LAMBDA=0.01 RD=0.6 RS=0.1 RG=10\n+ CGS=16p CGDMAX=20p CGDMIN=3p A=0.5\n+ CJO=40p VJ=0.75 M=0.5 IS=1e-13 N=1.1 RB=0.2 BV=60 IBV=10u TT=20n)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 11,
+          "symbolId": 11,
+          "name": "N-channel MOSFET",
+          "pinLayout": [
+            "2",
+            "3",
+            "4"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "2",
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BS250_OJ",
+      "kind": "pmos",
+      "description": "Small-signal P-channel MOSFET with a modelled body diode. Typical stand-in for BS250.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L59"
+      },
+      "aliases": [
+        "BS250"
+      ],
+      "datasheetReference": "Philips BS250 datasheet, April 1995: VGS(th) limits, typical RDS(on) and capacitances",
+      "designator": "M",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model BS250_OJ VDMOS(pchan VTO=-2.1 KP=0.02 LAMBDA=0.01 RD=1.8 RS=0.2 RG=10\n+ CGS=25p CGDMAX=21p CGDMIN=3.7p A=0.5\n+ CJO=57p VJ=0.75 M=0.5 IS=1e-13 N=1.1 RB=0.5 BV=45 IBV=10u TT=30n)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 12,
+          "symbolId": 12,
+          "name": "P-channel MOSFET",
+          "pinLayout": [
+            "2",
+            "3",
+            "4"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "2",
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2N5457_OJ",
+      "kind": "njfet",
+      "description": "N-channel JFET. Typical stand-in for 2N5457, MMBF5457.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L66"
+      },
+      "aliases": [
+        "2N5457",
+        "MMBF5457"
+      ],
+      "datasheetReference": "Fairchild 2N5457/5458/5459 datasheet: typical column, min/max where it gives no typical",
+      "designator": "J",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 2N5457_OJ NJF(VTO=-3.06 BETA=3.2e-4 LAMBDA=3.3e-3 RD=20 RS=20\n+ CGS=3.2p CGD=5.5p PB=1 IS=1e-14 FC=0.5)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "2N5458_OJ",
+      "kind": "njfet",
+      "description": "N-channel JFET. Typical stand-in for 2N5458, MMBF5458.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L68"
+      },
+      "aliases": [
+        "2N5458",
+        "MMBF5458"
+      ],
+      "datasheetReference": "Fairchild 2N5457/5458/5459 datasheet: typical column, min/max where it gives no typical",
+      "designator": "J",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 2N5458_OJ NJF(VTO=-4.28 BETA=3.4e-4 LAMBDA=1.7e-3 RD=20 RS=20\n+ CGS=3.2p CGD=5.4p PB=1 IS=1e-14 FC=0.5)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "2N5459_OJ",
+      "kind": "njfet",
+      "description": "N-channel JFET. Typical stand-in for 2N5459, MMBF5459.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L70"
+      },
+      "aliases": [
+        "2N5459",
+        "MMBF5459"
+      ],
+      "datasheetReference": "Fairchild 2N5457/5458/5459 datasheet: typical column, min/max where it gives no typical",
+      "designator": "J",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 2N5459_OJ NJF(VTO=-5.7 BETA=2.9e-4 LAMBDA=1.1e-3 RD=20 RS=20\n+ CGS=3.2p CGD=5.2p PB=1 IS=1e-14 FC=0.5)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "J112_OJ",
+      "kind": "njfet",
+      "description": "N-channel JFET. Typical stand-in for J112, SST112.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L74"
+      },
+      "aliases": [
+        "J112",
+        "SST112"
+      ],
+      "datasheetReference": "Vishay J/SST111 series datasheet 70232: limits, typical column, and typical curves at the chosen VGS(off)",
+      "designator": "J",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model J112_OJ NJF(VTO=-2.2 BETA=6.6e-3 LAMBDA=0.035 RD=7 RS=7\n+ CGS=13p CGD=9p PB=1.25 IS=1e-15 FC=0.5)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "J113_OJ",
+      "kind": "njfet",
+      "description": "N-channel JFET. Typical stand-in for J113, SST113.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L76"
+      },
+      "aliases": [
+        "J113",
+        "SST113"
+      ],
+      "datasheetReference": "Vishay J/SST111 series datasheet 70232: limits, typical column, and typical curves at the chosen VGS(off)",
+      "designator": "J",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model J113_OJ NJF(VTO=-1.5 BETA=8.3e-3 LAMBDA=0.035 RD=12 RS=12\n+ CGS=13p CGD=9p PB=1.25 IS=1e-15 FC=0.5)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "PN4392_OJ",
+      "kind": "njfet",
+      "description": "N-channel JFET. Typical stand-in for PN4392, 2N4392.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L80"
+      },
+      "aliases": [
+        "PN4392",
+        "2N4392"
+      ],
+      "datasheetReference": "Vishay 2N/PN/SST4391 series datasheet 70241: limits, typical column, typical curves; IDSS limits also from Central PN4391-4393",
+      "designator": "J",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model PN4392_OJ NJF(VTO=-2.8 BETA=4.4e-3 LAMBDA=0.035 RD=4 RS=4\n+ CGS=12p CGD=9p PB=1.17 IS=1e-15 FC=0.5)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "PN4393_OJ",
+      "kind": "njfet",
+      "description": "N-channel JFET. Typical stand-in for PN4393, 2N4393.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L82"
+      },
+      "aliases": [
+        "PN4393",
+        "2N4393"
+      ],
+      "datasheetReference": "Vishay 2N/PN/SST4391 series datasheet 70241: limits, typical column, typical curves; IDSS limits also from Central PN4391-4393",
+      "designator": "J",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model PN4393_OJ NJF(VTO=-1.2 BETA=7.4e-3 LAMBDA=0.035 RD=10 RS=10\n+ CGS=12.5p CGD=8p PB=1.17 IS=1e-15 FC=0.5)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "2N5460_OJ",
+      "kind": "pjfet",
+      "description": "P-channel JFET. Typical stand-in for 2N5460, MMBF5460.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L86"
+      },
+      "aliases": [
+        "2N5460",
+        "MMBF5460"
+      ],
+      "datasheetReference": "Fairchild 2N5460/5461/5462 datasheet: limits (no typical IDSS or VGS(off)) and typical Ciss, Crss",
+      "designator": "J",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 2N5460_OJ PJF(VTO=-2.2 BETA=5.3e-4 LAMBDA=5e-3 RD=40 RS=40\n+ CGS=4.8p CGD=2.3p PB=1 IS=1e-14 FC=0.5)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "2N5461_OJ",
+      "kind": "pjfet",
+      "description": "P-channel JFET. Typical stand-in for 2N5461, MMBF5461.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L88"
+      },
+      "aliases": [
+        "2N5461",
+        "MMBF5461"
+      ],
+      "datasheetReference": "Fairchild 2N5460/5461/5462 datasheet: limits (no typical IDSS or VGS(off)) and typical Ciss, Crss",
+      "designator": "J",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 2N5461_OJ PJF(VTO=-3 BETA=5.1e-4 LAMBDA=5e-3 RD=30 RS=30\n+ CGS=4.8p CGD=2.3p PB=1 IS=1e-14 FC=0.5)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "2N5462_OJ",
+      "kind": "pjfet",
+      "description": "P-channel JFET. Typical stand-in for 2N5462, MMBF5462.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L90"
+      },
+      "aliases": [
+        "2N5462",
+        "MMBF5462"
+      ],
+      "datasheetReference": "Fairchild 2N5460/5461/5462 datasheet: limits (no typical IDSS or VGS(off)) and typical Ciss, Crss",
+      "designator": "J",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 2N5462_OJ PJF(VTO=-5 BETA=3.7e-4 LAMBDA=3e-3 RD=20 RS=20\n+ CGS=4.7p CGD=2.7p PB=1 IS=1e-14 FC=0.5)\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "1N4148_OJ",
+      "kind": "diode",
+      "description": "Fast small-signal switching diode. Typical stand-in for 1N4148, 1N914.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L95"
+      },
+      "aliases": [
+        "1N4148",
+        "1N914"
+      ],
+      "datasheetReference": "Vishay 1N4148 datasheet 81857 Rev. 1.6: limits, and VF read by eye from Fig. 1",
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 1N4148_OJ D(IS=2.9n N=1.85 RS=0.9 BV=100 IBV=100u\n+ CJO=2p VJ=0.5 M=0.33 TT=2.5n EG=1.11 XTI=3)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 13,
+          "symbolId": 13,
+          "name": "Diode",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1N5819_OJ",
+      "kind": "schottky",
+      "description": "Schottky diode. Typical stand-in for 1N5819.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L99"
+      },
+      "aliases": [
+        "1N5819"
+      ],
+      "datasheetReference": "Vishay 1N5817/18/19 datasheet 88525: limits, and typical VF read by eye from Fig. 3",
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model 1N5819_OJ D(IS=1.6u N=1.05 RS=0.057 BV=40 IBV=1m\n+ CJO=300p VJ=0.5 M=0.45 TT=0 EG=0.69 XTI=2)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 13,
+          "symbolId": 13,
+          "name": "Diode",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BAT54_OJ",
+      "kind": "schottky",
+      "description": "Schottky diode. Typical stand-in for BAT54.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L103"
+      },
+      "aliases": [
+        "BAT54"
+      ],
+      "datasheetReference": "onsemi BAT54T1/D Rev. 12, typical column; Diodes DS11005 Rev. 35 for the trr load",
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model BAT54_OJ D(IS=14n N=1 RS=1.1 BV=30 IBV=10u\n+ CJO=13.5p VJ=0.3 M=0.39 TT=0 EG=0.69 XTI=2)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 13,
+          "symbolId": 13,
+          "name": "Diode",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B140_OJ",
+      "kind": "schottky",
+      "description": "Schottky diode. Typical stand-in for B140, SB140.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L107"
+      },
+      "aliases": [
+        "B140",
+        "SB140"
+      ],
+      "datasheetReference": "Diodes DS13002 Rev. 21: limits, CT, and typical VF read by eye from Fig. 1",
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model B140_OJ D(IS=200n N=1 RS=0.062 BV=45 IBV=500u\n+ CJO=310p VJ=0.5 M=0.45 TT=0 EG=0.69 XTI=2)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 13,
+          "symbolId": 13,
+          "name": "Diode",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ZENER_OJ",
+      "kind": "zener",
+      "description": "Generic zener with adjustable voltage, test current, dynamic resistance and knee softness.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L115"
+      },
+      "aliases": [],
+      "datasheetReference": "Parametric: checks that the instance parameters are honoured",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {
+        "VZ": "5.1",
+        "IZT": "5m",
+        "RZ": "40",
+        "NK": "1.5"
+      },
+      "definition": ".subckt ZENER_OJ a k params: VZ=5.1 IZT=5m RZ=40 NK=1.5\n.param RSER={max(RZ - NK*0.025865/IZT, 0.01)}\n.param VOFS={VZ - IZT*RSER - NK*0.025865*ln(IZT/1e-12)}\nDf  a k dfwd\nVof k n1 {VOFS}\nDbk n1 n2 dknee\nRz  n2 a {RSER}\n.model dfwd  D(IS=3n N=1.8 RS=0.5 CJO=40p VJ=0.75 M=0.4 TT=50n)\n.model dknee D(IS=1e-12 N={NK})\n.ends ZENER_OJ\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 14,
+          "symbolId": 14,
+          "name": "Zener diode (5.1 V)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BZX79C3V3_OJ",
+      "kind": "zener",
+      "description": "BZX79-C3V3 zener diode, modelled at 3.3 V and a 5 mA test current.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L127"
+      },
+      "aliases": [
+        "BZX79-C3V3"
+      ],
+      "datasheetReference": "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt BZX79C3V3_OJ a k\nX1 a k ZENER_OJ params: VZ=3.3 IZT=5m RZ=85 NK=3\n.ends\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "BZX79C4V7_OJ",
+      "kind": "zener",
+      "description": "BZX79-C4V7 zener diode, modelled at 4.7 V and a 5 mA test current.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L130"
+      },
+      "aliases": [
+        "BZX79-C4V7"
+      ],
+      "datasheetReference": "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt BZX79C4V7_OJ a k\nX1 a k ZENER_OJ params: VZ=4.7 IZT=5m RZ=50 NK=2.5\n.ends\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "BZX79C5V1_OJ",
+      "kind": "zener",
+      "description": "BZX79-C5V1 zener diode, modelled at 5.1 V and a 5 mA test current.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L133"
+      },
+      "aliases": [
+        "BZX79-C5V1"
+      ],
+      "datasheetReference": "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt BZX79C5V1_OJ a k\nX1 a k ZENER_OJ params: VZ=5.1 IZT=5m RZ=40 NK=2\n.ends\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 14,
+          "symbolId": 14,
+          "name": "Zener diode (5.1 V)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BZX79C5V6_OJ",
+      "kind": "zener",
+      "description": "BZX79-C5V6 zener diode, modelled at 5.6 V and a 5 mA test current.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L136"
+      },
+      "aliases": [
+        "BZX79-C5V6"
+      ],
+      "datasheetReference": "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt BZX79C5V6_OJ a k\nX1 a k ZENER_OJ params: VZ=5.6 IZT=5m RZ=15 NK=1.5\n.ends\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "BZX79C6V2_OJ",
+      "kind": "zener",
+      "description": "BZX79-C6V2 zener diode, modelled at 6.2 V and a 5 mA test current.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L139"
+      },
+      "aliases": [
+        "BZX79-C6V2"
+      ],
+      "datasheetReference": "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt BZX79C6V2_OJ a k\nX1 a k ZENER_OJ params: VZ=6.2 IZT=5m RZ=6 NK=1\n.ends\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "BZX79C9V1_OJ",
+      "kind": "zener",
+      "description": "BZX79-C9V1 zener diode, modelled at 9.1 V and a 5 mA test current.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L142"
+      },
+      "aliases": [
+        "BZX79-C9V1"
+      ],
+      "datasheetReference": "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt BZX79C9V1_OJ a k\nX1 a k ZENER_OJ params: VZ=9.1 IZT=5m RZ=6 NK=1\n.ends\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "BZX79C12_OJ",
+      "kind": "zener",
+      "description": "BZX79-C12 zener diode, modelled at 12 V and a 5 mA test current.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L145"
+      },
+      "aliases": [
+        "BZX79-C12"
+      ],
+      "datasheetReference": "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt BZX79C12_OJ a k\nX1 a k ZENER_OJ params: VZ=12 IZT=5m RZ=10 NK=1\n.ends\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "BZX79C15_OJ",
+      "kind": "zener",
+      "description": "BZX79-C15 zener diode, modelled at 15 V and a 5 mA test current.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L148"
+      },
+      "aliases": [
+        "BZX79-C15"
+      ],
+      "datasheetReference": "NXP BZX79 series data sheet, 2002 Feb 27, Table 1: typical rdif at IZ = 5 mA",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt BZX79C15_OJ a k\nX1 a k ZENER_OJ params: VZ=15 IZT=5m RZ=10 NK=1\n.ends\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "1N4733A_OJ",
+      "kind": "zener",
+      "description": "1N4733A zener diode, modelled at 5.1 V and a 49 mA test current.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L152"
+      },
+      "aliases": [
+        "1N4733A"
+      ],
+      "datasheetReference": "Vishay 1N4728A-1N4761A datasheet 85816 Rev. 2.7: nominal VZ and typical ZZT",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt 1N4733A_OJ a k\nX1 a k ZENER_OJ params: VZ=5.1 IZT=49m RZ=7 NK=2\n.ends\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 14,
+          "symbolId": 14,
+          "name": "Zener diode (5.1 V)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1N4742A_OJ",
+      "kind": "zener",
+      "description": "1N4742A zener diode, modelled at 12 V and a 21 mA test current.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L155"
+      },
+      "aliases": [
+        "1N4742A"
+      ],
+      "datasheetReference": "Vishay 1N4728A-1N4761A datasheet 85816 Rev. 2.7: nominal VZ and typical ZZT",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt 1N4742A_OJ a k\nX1 a k ZENER_OJ params: VZ=12 IZT=21m RZ=9 NK=1\n.ends\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "LED_RED_OJ",
+      "kind": "led",
+      "description": "Electrical model of a generic high-efficiency red 5 mm LED.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L164"
+      },
+      "aliases": [
+        "generic high-efficiency red 5 mm LED"
+      ],
+      "datasheetReference": "Kingbright WP7113ID V.14A: table VF and IR, and typical VF read by eye from its curve",
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model LED_RED_OJ D(IS=1.4n N=4.64 RS=1.7 BV=10 IBV=10u\n+ CJO=15p VJ=0.75 M=0.33 TT=0 EG=2.46 XTI=0)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 15,
+          "symbolId": 15,
+          "name": "LED (red)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "LED_GREEN_OJ",
+      "kind": "led",
+      "description": "Electrical model of a generic green 5 mm LED.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L166"
+      },
+      "aliases": [
+        "generic green 5 mm LED"
+      ],
+      "datasheetReference": "Kingbright WP7113GD V.12B: table VF, IR and capacitance, and typical VF read by eye from its curve",
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model LED_GREEN_OJ D(IS=1.1e-18 N=2 RS=10 BV=10 IBV=10u\n+ CJO=15p VJ=0.75 M=0.33 TT=0 EG=2.44 XTI=0)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 16,
+          "symbolId": 16,
+          "name": "LED (green)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "LED_BLUE_OJ",
+      "kind": "led",
+      "description": "Electrical model of a generic InGaN blue 5 mm LED.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L168"
+      },
+      "aliases": [
+        "generic InGaN blue 5 mm LED"
+      ],
+      "datasheetReference": "Kingbright WP7113QBC/D V.18B: table VF and IR, and typical VF read by eye from its curve",
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model LED_BLUE_OJ D(IS=1.4e-10 N=6 RS=19.7 BV=10 IBV=10u\n+ CJO=65p VJ=0.75 M=0.33 TT=0 EG=3.8 XTI=0)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 17,
+          "symbolId": 17,
+          "name": "LED (blue)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OPAMP_OJ",
+      "kind": "opamp",
+      "description": "Generic single op-amp with configurable gain, bandwidth, slew rate and output limits.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L181"
+      },
+      "aliases": [],
+      "datasheetReference": "Parametric: checks the default macromodel and that VOS is honoured",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "inp",
+          "role": "non-inverting input"
+        },
+        {
+          "port": "inn",
+          "role": "inverting input"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        },
+        {
+          "port": "out",
+          "role": "output"
+        }
+      ],
+      "parameterDefaults": {
+        "GBW": "3e6",
+        "SR": "13e6",
+        "AOL": "200k",
+        "VOS": "0",
+        "IB": "30p",
+        "RIN": "1e12",
+        "CIN": "3p",
+        "ISC": "30m",
+        "IQ": "1.4m",
+        "VOH": "1.5",
+        "VOL": "1.5",
+        "ROUT": "100",
+        "FP2": "4.5e6"
+      },
+      "definition": ".subckt OPAMP_OJ inp inn vcc vee out params: GBW=3e6 SR=13e6 AOL=200k\n+ VOS=0 IB=30p RIN=1e12 CIN=3p ISC=30m IQ=1.4m VOH=1.5 VOL=1.5 ROUT=100 FP2=4.5e6\n.param CC=1n\n.param IMAX={SR*CC}\n.param GM={6.2831853*GBW*CC}\n.param VLIN={IMAX/GM}\nBmid mid 0 V={(V(vcc)+V(vee))/2}\nIq   vcc vee {IQ}\nVos  inp inp1 {VOS}\nIbp  inp mid {IB}\nIbn  inn mid {IB}\nRin  inp1 inn {RIN}\nCinp inp1 mid {CIN}\nCinn inn mid {CIN}\n* transconductance with tanh slew limit -> integrator\nBg   mid int I={IMAX}*tanh((V(inp1)-V(inn))/{VLIN})\nCc   int mid {CC}\nRint int mid {AOL/GM}\n* output-swing clamps\nBhi  nhi 0 V=V(vcc)-{VOH}\nBlo  nlo 0 V=V(vee)+{VOL}\nDhi  int nhi dclamp\nDlo  nlo int dclamp\n* second pole\nE2   p2a 0 int 0 1\nRp2  p2a p2 1k\nCp2  p2 0 {1/(6.2831853*FP2*1k)}\n* current-limited output, current drawn from the rails\n* soft current limit: I = ISC*x/(1+x^4)^0.25, x=(V(p2)-V(out))/(ROUT*ISC)\nBx   x 0 V=(V(p2)-V(out))/({ROUT}*{ISC})\nBsrc vcc out I={ISC}*0.5*(abs(V(x))+V(x))/pwr(1+V(x)*V(x)*V(x)*V(x),0.25)\nBsnk out vee I={ISC}*0.5*(abs(V(x))-V(x))/pwr(1+V(x)*V(x)*V(x)*V(x),0.25)\n.model dclamp D(IS=1e-15 N=0.02)\n.ends OPAMP_OJ\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "TL07X_OJ",
+      "kind": "opamp",
+      "description": "One amplifier section for TL071, TL072, TL074, with five SPICE terminals.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L217"
+      },
+      "aliases": [
+        "TL071",
+        "TL072",
+        "TL074"
+      ],
+      "datasheetReference": "TI TL07x datasheet SLOS080W at +-15 V, 3 MHz GBW grade; 13 V/us from slower published TL07x variants",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "inp",
+          "role": "non-inverting input"
+        },
+        {
+          "port": "inn",
+          "role": "inverting input"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        },
+        {
+          "port": "out",
+          "role": "output"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt TL07X_OJ inp inn vcc vee out\n* GBW/FP2 chosen so the unity-gain frequency lands at ~3 MHz with ~55-60 deg PM\nX1 inp inn vcc vee out OPAMP_OJ params: GBW=3.5e6 SR=13e6 AOL=200k IB=30p\n+ RIN=1e12 CIN=3p ISC=30m IQ=1.4m VOH=1.5 VOL=1.5 ROUT=100 FP2=4.5e6\n.ends TL07X_OJ\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "TL072_OJ",
+      "kind": "opamp2",
+      "description": "Complete eight-pin dual TL072 op-amp package with shared supply pins.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L225"
+      },
+      "aliases": [
+        "TL072"
+      ],
+      "datasheetReference": "TI TL07x datasheet SLOS080W: 8-pin pin table, IQ per amplifier",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "out1",
+          "role": "output 1"
+        },
+        {
+          "port": "inn1",
+          "role": "inverting input 1"
+        },
+        {
+          "port": "inp1",
+          "role": "non-inverting input 1"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        },
+        {
+          "port": "inp2",
+          "role": "non-inverting input 2"
+        },
+        {
+          "port": "inn2",
+          "role": "inverting input 2"
+        },
+        {
+          "port": "out2",
+          "role": "output 2"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt TL072_OJ out1 inn1 inp1 vee inp2 inn2 out2 vcc\nXA inp1 inn1 vcc vee out1 TL07X_OJ\nXB inp2 inn2 vcc vee out2 TL07X_OJ\n.ends TL072_OJ\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "TL074_OJ",
+      "kind": "opamp4",
+      "description": "Complete 14-pin quad TL074 op-amp package with shared supply pins.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L232"
+      },
+      "aliases": [
+        "TL074"
+      ],
+      "datasheetReference": "TI TL07x datasheet SLOS080W: 14-pin pin table, IQ per amplifier",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "out1",
+          "role": "output 1"
+        },
+        {
+          "port": "inn1",
+          "role": "inverting input 1"
+        },
+        {
+          "port": "inp1",
+          "role": "non-inverting input 1"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        },
+        {
+          "port": "inp2",
+          "role": "non-inverting input 2"
+        },
+        {
+          "port": "inn2",
+          "role": "inverting input 2"
+        },
+        {
+          "port": "out2",
+          "role": "output 2"
+        },
+        {
+          "port": "out3",
+          "role": "output 3"
+        },
+        {
+          "port": "inn3",
+          "role": "inverting input 3"
+        },
+        {
+          "port": "inp3",
+          "role": "non-inverting input 3"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        },
+        {
+          "port": "inp4",
+          "role": "non-inverting input 4"
+        },
+        {
+          "port": "inn4",
+          "role": "inverting input 4"
+        },
+        {
+          "port": "out4",
+          "role": "output 4"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt TL074_OJ out1 inn1 inp1 vcc inp2 inn2 out2 out3 inn3 inp3 vee inp4 inn4 out4\nXA inp1 inn1 vcc vee out1 TL07X_OJ\nXB inp2 inn2 vcc vee out2 TL07X_OJ\nXC inp3 inn3 vcc vee out3 TL07X_OJ\nXD inp4 inn4 vcc vee out4 TL07X_OJ\n.ends TL074_OJ\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "LM358_OJ",
+      "kind": "opamp",
+      "description": "One amplifier section for LM358, LM324, with five SPICE terminals.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L242"
+      },
+      "aliases": [
+        "LM358",
+        "LM324"
+      ],
+      "datasheetReference": "TI LM358 datasheet SLOS068AB, typical column (AOL quoted at 15 V)",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "inp",
+          "role": "non-inverting input"
+        },
+        {
+          "port": "inn",
+          "role": "inverting input"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        },
+        {
+          "port": "out",
+          "role": "output"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt LM358_OJ inp inn vcc vee out\nX1 inp inn vcc vee out OPAMP_OJ params: GBW=0.8e6 SR=0.3e6 AOL=100k IB=-20n\n+ RIN=10Meg CIN=3p ISC=30m IQ=0.35m VOH=1.5 VOL=0.02 ROUT=100 FP2=1.5e6\n.ends LM358_OJ\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "LM358_DUAL_OJ",
+      "kind": "opamp2",
+      "description": "Complete eight-pin dual LM358 op-amp package with shared supply pins.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L249"
+      },
+      "aliases": [
+        "LM358"
+      ],
+      "datasheetReference": "TI LM358 datasheet SLOS068AB: 8-pin pin table, IQ per amplifier at 5 V",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "out1",
+          "role": "output 1"
+        },
+        {
+          "port": "inn1",
+          "role": "inverting input 1"
+        },
+        {
+          "port": "inp1",
+          "role": "non-inverting input 1"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        },
+        {
+          "port": "inp2",
+          "role": "non-inverting input 2"
+        },
+        {
+          "port": "inn2",
+          "role": "inverting input 2"
+        },
+        {
+          "port": "out2",
+          "role": "output 2"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt LM358_DUAL_OJ out1 inn1 inp1 vee inp2 inn2 out2 vcc\nXA inp1 inn1 vcc vee out1 LM358_OJ\nXB inp2 inn2 vcc vee out2 LM358_OJ\n.ends LM358_DUAL_OJ\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 28,
+          "symbolId": 27,
+          "name": "LM358",
+          "pinLayout": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "LM324_QUAD_OJ",
+      "kind": "opamp4",
+      "description": "Complete 14-pin quad LM324 op-amp package with shared supply pins.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L257"
+      },
+      "aliases": [
+        "LM324"
+      ],
+      "datasheetReference": "TI LM324 datasheet SLOS066AE: 14-pin pin table, supply current for four amplifiers at 5 V, B1 and SR",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "out1",
+          "role": "output 1"
+        },
+        {
+          "port": "inn1",
+          "role": "inverting input 1"
+        },
+        {
+          "port": "inp1",
+          "role": "non-inverting input 1"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        },
+        {
+          "port": "inp2",
+          "role": "non-inverting input 2"
+        },
+        {
+          "port": "inn2",
+          "role": "inverting input 2"
+        },
+        {
+          "port": "out2",
+          "role": "output 2"
+        },
+        {
+          "port": "out3",
+          "role": "output 3"
+        },
+        {
+          "port": "inn3",
+          "role": "inverting input 3"
+        },
+        {
+          "port": "inp3",
+          "role": "non-inverting input 3"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        },
+        {
+          "port": "inp4",
+          "role": "non-inverting input 4"
+        },
+        {
+          "port": "inn4",
+          "role": "inverting input 4"
+        },
+        {
+          "port": "out4",
+          "role": "output 4"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt LM324_QUAD_OJ out1 inn1 inp1 vcc inp2 inn2 out2 out3 inn3 inp3 vee inp4 inn4 out4\n.subckt section inp inn vcc vee out\nX1 inp inn vcc vee out OPAMP_OJ params: GBW=1.34e6 SR=0.5e6 AOL=100k IB=-20n\n+ RIN=10Meg CIN=3p ISC=30m IQ=0.175m VOH=1.5 VOL=0.02 ROUT=100 FP2=2.5e6\n.ends section\nXA inp1 inn1 vcc vee out1 section\nXB inp2 inn2 vcc vee out2 section\nXC inp3 inn3 vcc vee out3 section\nXD inp4 inn4 vcc vee out4 section\n.ends LM324_QUAD_OJ\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 29,
+          "symbolId": 28,
+          "name": "LM324",
+          "pinLayout": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "POT_OJ",
+      "kind": "pot",
+      "description": "Linear potentiometer with adjustable end-to-end resistance and wiper position.",
+      "source": {
+        "name": "OpenJellyBean",
+        "revision": "0d0d9b659b202368dc419f8276bacb1e39694915",
+        "url": "https://github.com/xdylanm/openjellybean/blob/0d0d9b659b202368dc419f8276bacb1e39694915/jellybean.lib#L272"
+      },
+      "aliases": [],
+      "datasheetReference": "Parametric: checks that the instance parameters are honoured",
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "end A"
+        },
+        {
+          "port": "w",
+          "role": "wiper"
+        },
+        {
+          "port": "b",
+          "role": "end B"
+        }
+      ],
+      "parameterDefaults": {
+        "R": "10k",
+        "POS": "0.5"
+      },
+      "definition": ".subckt POT_OJ a w b params: R=10k POS=0.5\n.param FRAC={max(min(POS,1),0)}\nRa a w {max(R*FRAC,1e-3)}\nRb w b {max(R*(1-FRAC),1e-3)}\n.ends POT_OJ\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 2,
+          "symbolId": 2,
+          "name": "Potentiometer",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "3",
+            "2"
+          ],
+          "parameterAttributes": {
+            "R": "Value",
+            "POS": "Wiper"
+          }
+        },
+        {
+          "libraryId": "spice",
+          "nameId": 3,
+          "symbolId": 3,
+          "name": "Trimmer resistor",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "3",
+            "2"
+          ],
+          "parameterAttributes": {
+            "R": "Value",
+            "POS": "Wiper"
+          }
+        },
+        {
+          "libraryId": "spice",
+          "nameId": 26,
+          "symbolId": 25,
+          "name": "Potentiometer (US)",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "3",
+            "2"
+          ],
+          "parameterAttributes": {
+            "R": "Value",
+            "POS": "Wiper"
+          }
+        },
+        {
+          "libraryId": "spice",
+          "nameId": 27,
+          "symbolId": 26,
+          "name": "Trimmer resistor (US)",
+          "pinLayout": [
+            "1",
+            "2",
+            "3"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "3",
+            "2"
+          ],
+          "parameterAttributes": {
+            "R": "Value",
+            "POS": "Wiper"
+          }
+        }
+      ]
+    }
+  ],
+  "uncoveredComponents": [
+    {
+      "libraryId": "spice",
+      "nameId": 1,
+      "symbolId": 1,
+      "name": "Resistor"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 4,
+      "symbolId": 4,
+      "name": "Capacitor"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 5,
+      "symbolId": 5,
+      "name": "Electrolytic capacitor"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 6,
+      "symbolId": 6,
+      "name": "Trimmer capacitor"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 7,
+      "symbolId": 7,
+      "name": "Inductor"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 8,
+      "symbolId": 8,
+      "name": "Inductor with core"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 18,
+      "symbolId": 18,
+      "name": "LED (yellow)"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 19,
+      "symbolId": 19,
+      "name": "741 op-amp"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 20,
+      "symbolId": 20,
+      "name": "Transformer"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 21,
+      "symbolId": 21,
+      "name": "XTAL (quartz crystal)"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 22,
+      "symbolId": 21,
+      "name": "Ceramic resonator"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 23,
+      "symbolId": 22,
+      "name": "DC / AC voltage source"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 24,
+      "symbolId": 23,
+      "name": "DC / AC current source"
+    },
+    {
+      "libraryId": "spice",
+      "nameId": 25,
+      "symbolId": 24,
+      "name": "Resistor (US)"
+    }
+  ]
+}

@@ -46,6 +46,10 @@ export function useOpenBoards() {
     [update],
   );
 
+  const deactivate = useCallback(() => {
+    if (current.current.activeId) update((state) => ({ ...state, activeId: undefined }));
+  }, [update]);
+
   const replace = useCallback(
     (
       id: string,
@@ -77,14 +81,12 @@ export function useOpenBoards() {
         const remaining = tabs.filter(({ id }) => !ids.includes(id));
         return {
           tabs: remaining,
-          activeId: remaining.some(({ id }) => id === activeId)
-            ? activeId
-            : remaining.at(-1)?.id,
+          activeId: remaining.some(({ id }) => id === activeId) ? activeId : undefined,
         };
       });
     },
     [update],
   );
 
-  return { ...state, get, add, select, replace, remove };
+  return { ...state, get, add, select, deactivate, replace, remove };
 }

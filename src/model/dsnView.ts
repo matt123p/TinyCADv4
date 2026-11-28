@@ -2,6 +2,7 @@ import type { SchematicSource } from '../io/netlists/netlistGenerator';
 import { DocItem, Coordinate } from './dsnItem';
 import { dragObject } from '../manipulators/dragObject';
 import { ContextMenuList, MergedStyle } from '../manipulators/updateInterfaces';
+import type { DrcSource } from './dsnDrawing';
 
 export type WireMode = '90' | '45' | 'free';
 
@@ -24,8 +25,7 @@ export interface ViewTracker {
 }
 
 export interface FindResult {
-  source?: SchematicSource;
-  symbol: string;
+  symbol?: string;
   text: string;
   pin?: string;
   a: Coordinate;
@@ -33,6 +33,7 @@ export interface FindResult {
   ids?: number[];
   pins?: string[];
   sheet?: string;
+  source?: DrcSource;
 }
 
 export interface BrowserSheetData {

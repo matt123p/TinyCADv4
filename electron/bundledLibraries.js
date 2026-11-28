@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parseBundledLibraryCatalog } from '../shared/bundledLibraries.js';
+import { readNativeLibrary } from './tclibReader.js';
 
 export function registerBundledLibraries({
   ipcMain,
@@ -43,7 +44,13 @@ export function registerBundledLibraries({
       path.isAbsolute(relative)
     )
       throw new Error('Invalid bundled library location.');
-    return new Uint8Array(await fs.readFile(file));
+    return {
+      fileId: `bundled:${entry.id}`,
+      name: entry.name,
+      modified: null,
+      readOnly: true,
+      ...(await readNativeLibrary(file)),
+    };
   });
   ipcMain.handle('bundled-library-selection', async (event, ids) => {
     authorize(event);

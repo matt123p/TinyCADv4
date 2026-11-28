@@ -2,7 +2,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { constants, createReadStream, watch } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
-import { cloneProjectGit, runProjectGit } from './projectGit.js';
+import { addProjectWorktree, cloneProjectGit, projectWorktrees, runProjectGit } from './projectGit.js';
+import { createDesignExportHandler } from './designExports.js';
+import { createProjectSettings } from './projectSettings.js';
+import { createProjectLibraryHandler } from './projectLibraries.js';
+import { createHierarchyIndex } from './projectHierarchyIndex.js';
+import { installProjectExample } from './bundledExamples.js';
+import { drawingFileName, isDrawingFile } from '../shared/drawingFiles.js';
 import {
   MAX_PROJECT_FILE_BYTES,
   MAX_PROJECT_SETTINGS_BYTES,
@@ -28,6 +34,9 @@ export function registerProjectFiles({
   store,
   documents,
   takeProjectOpen,
+  onRecentProjectsChanged,
+  openLibrary,
+  exampleSources,
 }) {
   let root = store.get('projectFolder', documents);
   const pendingWrites = new Set();
@@ -42,6 +51,7 @@ export function registerProjectFiles({
   function rememberProjectFolder(folder) {
     const recent = recentProjectFolders(store).filter((entry) => entry !== folder);
     store.set?.(recentFoldersKey, [folder, ...recent].slice(0, 10));
+    onRecentProjectsChanged?.();
   }
 
   async function openRecentFolder(folder) {
@@ -82,6 +92,33 @@ export function registerProjectFiles({
       !path.isAbsolute(relative)
     );
   };
+
+  const sameFilename = (first, second) => process.platform === 'win32'
+    ? first.toLowerCase() === second.toLowerCase()
+    : first === second;
+
+  const hierarchyBase = (project, owner) => {
+    if (!openedRoots.has(project) ||
+        (owner !== undefined && owner !== project && (typeof owner !== 'string' || !path.isAbsolute(owner) ||
+          !within(project, owner) || !isDrawingFile(owner))))
+      throw new Error('Choose a linked schematic inside the open project.');
+    return owner === undefined || owner === project ? project : path.dirname(owner);
+  };
+  const hierarchyTarget = (project, base, filename) => {
+    if (typeof filename !== 'string' || filename.includes('\0') || !isDrawingFile(filename))
+      throw new Error('Choose a TinyCAD schematic.');
+    const target = path.resolve(base, filename.replaceAll('\\', '/'));
+    if (!within(project, target))
+      throw new Error('The linked schematic is outside the open project.');
+    return target;
+  };
+  const hierarchyRelative = (base, target) => path.relative(base, target).split(path.sep).join('/');
+  async function resolveHierarchyFile(project, target) {
+    const id = await fs.realpath(target);
+    if (!within(project, id) || !sameFilename(id, target))
+      throw new Error('Symbolic links are unavailable in project trees.');
+    return id;
+  }
 
   async function readFile(filename, maxBytes = MAX_PROJECT_FILE_BYTES) {
     const file = await fs.open(
@@ -150,6 +187,10 @@ export function registerProjectFiles({
       await fs.copyFile(source, target, constants.COPYFILE_EXCL);
     }
   }
+  const projectSettings = createProjectSettings({ readFile, pendingWrites, linkNewFile });
+  const handleDesignExport = createDesignExportHandler({ dialog, store, openedRoots, ...projectSettings });
+  const handleProjectLibraries = createProjectLibraryHandler({ dialog, store, openedRoots, within, ...projectSettings });
+  const scanHierarchy = createHierarchyIndex({ readFile, ...projectSettings });
   ipcMain.handle('project-files', async (event, request) => {
     const window = getWindow();
     if (
@@ -158,6 +199,33 @@ export function registerProjectFiles({
       event.senderFrame !== window.webContents.mainFrame
     ) {
       throw new Error('Projects are available only to the host main frame.');
+    }
+    if (['export-destination', 'save-design-export', 'bind-design-exports'].includes(request.operation))
+      return handleDesignExport(window, request);
+    if (['project-library-config', 'save-project-library-config', 'choose-project-libraries', 'read-project-library'].includes(request.operation))
+      return handleProjectLibraries(window, request);
+    if (request.operation === 'scan-project-hierarchy') {
+      if (!openedRoots.has(request.project)) throw new Error('Open a project folder first.');
+      return scanHierarchy(request.project);
+    }
+    if (request.operation === 'install-project-example' && exampleSources) {
+      const installed = await installProjectExample(exampleSources, request.groupId, request.exampleId, async () => {
+        const selection = await dialog.showOpenDialog(window, {
+          defaultPath: root,
+          properties: ['openDirectory', 'createDirectory'],
+        });
+        return selection.canceled ? null : fs.realpath(selection.filePaths[0]);
+      });
+      if (!installed) return null;
+      const location = await openRecentFolder(installed.destination);
+      rememberProjectFolder(location.id);
+      return {
+        ...location,
+        initialDrawing: {
+          id: path.join(location.id, installed.drawingName),
+          name: installed.drawingName,
+        },
+      };
     }
     if (request.operation === 'open-launch') {
       const filename = takeProjectOpen?.();
@@ -327,9 +395,9 @@ export function registerProjectFiles({
       for (const directory of wanted) {
         if (folderWatchers.has(directory)) continue;
         try {
-          const watcher = watch(directory, { persistent: false }, (eventType, filename) => {
+          const watcher = watch(directory, { persistent: false }, (_, filename) => {
             if (folderWatchers.get(directory) === watcher &&
-              (!filename || eventType === 'rename') && !temporaryProjectFile.test(filename ?? ''))
+              !temporaryProjectFile.test(filename ?? ''))
               notifyFolderChange();
           });
           folderWatchers.set(directory, watcher);
@@ -345,8 +413,147 @@ export function registerProjectFiles({
       }
       return;
     }
+    if (operation === 'worktree-list')
+      return projectWorktrees(await resolve(folder, true));
+    if (operation === 'worktree-add' || operation === 'worktree-open') {
+      const project = await resolve(folder, true);
+      let target;
+      if (operation === 'worktree-add') {
+        if (!validProjectName(name)) throw new Error('Enter a valid worktree folder name.');
+        const selection = await dialog.showOpenDialog(window, {
+          title: 'Choose a parent folder for the worktree',
+          defaultPath: path.dirname(project),
+          properties: ['openDirectory'],
+        });
+        if (selection.canceled) return null;
+        target = path.join(await fs.realpath(selection.filePaths[0]), name);
+        await addProjectWorktree(project, target, request.branch, request.createBranch === true);
+      } else {
+        const worktree = (await projectWorktrees(project)).find((item) => item.id === id && !item.prunable && !item.bare);
+        if (!worktree) throw new Error('This worktree is unavailable.');
+        target = worktree.id;
+      }
+      const selected = await fs.realpath(target);
+      openedRoots.add(selected);
+      rememberProjectFolder(selected);
+      return { id: selected, name: path.basename(selected) || selected };
+    }
     if (operation === 'git')
       return runProjectGit(await resolve(folder, true), request.request);
+    if (operation === 'choose-hierarchical-save') {
+      const { project, owner, compressed } = request;
+      if (!openedRoots.has(project) || !validProjectName(name))
+        throw new Error('Choose a schematic filename inside the open project.');
+      const folder = typeof owner === 'string' && within(project, owner)
+        ? path.dirname(owner) : project;
+      const extension = compressed === true ? 'dzn' : 'dsn';
+      const selection = await dialog.showSaveDialog(window, {
+        defaultPath: path.join(folder, drawingFileName(name, compressed === true)),
+        filters: [{ name: 'TinyCAD schematics', extensions: [extension] }],
+      });
+      if (selection.canceled || !selection.filePath) return null;
+      const selected = path.resolve(selection.filePath);
+      const id = drawingFileName(selected, compressed === true);
+      if (!within(project, id) || !validProjectName(path.basename(id)))
+        throw new Error('Save the linked schematic inside the open project.');
+      await resolve(path.dirname(selected), true);
+      let version;
+      try {
+        await resolve(id, false);
+        if (id !== selected)
+          throw new Error('Select the exact filename to confirm replacing it.');
+        version = hash(await readFile(id));
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+      }
+      return { id, folder: path.dirname(id), name: path.basename(id), version };
+    }
+    if (operation === 'rebase-hierarchical-links') {
+      const { project, owner, links } = request;
+      if (typeof owner !== 'string' || !Array.isArray(links) || links.length > 1000)
+        throw new Error('Choose a schematic inside the open project.');
+      const base = hierarchyBase(project, owner);
+      return links.map(({ owner: source, filename }) => {
+        const target = hierarchyTarget(project, hierarchyBase(project, source), filename);
+        return hierarchyRelative(base, target);
+      });
+    }
+    if (operation === 'choose-hierarchical-drawing') {
+      const { project } = request;
+      const base = hierarchyBase(project);
+      const selection = await dialog.showOpenDialog(window, {
+        defaultPath: project,
+        properties: ['openFile'],
+        filters: [{ name: 'TinyCAD schematics', extensions: ['dsn', 'dzn'] }],
+      });
+      if (selection.canceled) return null;
+      const target = hierarchyTarget(project, base, selection.filePaths[0]);
+      const id = await resolveHierarchyFile(project, target);
+      return { id, name: path.basename(id) };
+    }
+    if (operation === 'read-hierarchical-drawing') {
+      const { project, owner, filename } = request;
+      const base = hierarchyBase(project, owner);
+      const target = hierarchyTarget(project, base, filename);
+      let id, data;
+      try {
+        id = await resolveHierarchyFile(project, target);
+        data = await readFile(id, 32 * 1024 * 1024);
+      } catch (error) {
+        if (error.code === 'ENOENT' || error.code === 'ENOTDIR')
+          throw new Error('The linked schematic file is missing.');
+        throw error;
+      }
+      return {
+        id,
+        folder: path.dirname(id),
+        relative: hierarchyRelative(base, id),
+        data: new Uint8Array(data),
+        version: hash(data),
+      };
+    }
+    if (operation === 'chat-list' || operation === 'chat-read') {
+      const { project, relative = '', offset = 0 } = request;
+      const parts = typeof relative === 'string' ? relative.split('/') : [];
+      const visible = (name) =>
+        name.toLowerCase() !== '.git' && !temporaryProjectFile.test(name);
+      if (
+        !openedRoots.has(project) ||
+        (relative === ''
+          ? operation !== 'chat-list'
+          : !parts.length || parts.some((name) =>
+              name === '.' || name === '..' || !validProjectName(name) || !visible(name)))
+      ) throw new Error('Choose a path inside the current project.');
+
+      const directory = operation === 'chat-list';
+      const target = path.join(project, relative);
+      if (!within(project, target, directory))
+        throw new Error('Choose a path inside the current project.');
+      if (!Number.isSafeInteger(offset) || offset < 0)
+        throw new Error('Invalid directory offset.');
+      let items;
+      try {
+        await resolve(target, directory);
+        if (!directory) return new Uint8Array(await readFile(target, 32 * 1024 * 1024));
+        items = await fs.readdir(target, { withFileTypes: true });
+      } catch (error) {
+        if (error.code) throw new Error('Could not open that project file or folder.');
+        throw error;
+      }
+      const entries = items
+        .filter((entry) => visible(entry.name) && validProjectName(entry.name) &&
+          (entry.isDirectory() || entry.isFile()))
+        .sort((a, b) => Number(b.isDirectory()) - Number(a.isDirectory()) ||
+          a.name.localeCompare(b.name));
+      const limit = 100;
+      return {
+        entries: entries.slice(offset, offset + limit).map((entry) => ({
+          path: relative ? `${relative}/${entry.name}` : entry.name,
+          kind: entry.isDirectory() ? 'folder' : 'file',
+        })),
+        nextOffset: offset + limit < entries.length ? offset + limit : null,
+      };
+    }
     if (operation === 'list') {
       const parent = await resolve(folder, true);
       return (await fs.readdir(parent, { withFileTypes: true }))
@@ -370,6 +577,42 @@ export function registerProjectFiles({
       const data = await read(id, true);
       return { data: new Uint8Array(data), version: hash(data) };
     }
+    if (operation === 'reveal') {
+      const target = await resolve(id, request.directory === true);
+      if (request.openFolder && request.directory) {
+        const error = await shell.openPath(target);
+        if (error) throw new Error(error);
+      } else {
+        shell.showItemInFolder(target);
+      }
+      return;
+    }
+    if (operation === 'edit-library') {
+      const target = await resolve(id, false);
+      if (!/\.tclib$/i.test(target)) throw new Error('Choose a TinyCAD library.');
+      openLibrary(target);
+      return;
+    }
+    if (operation === 'create-entry') {
+      const directory = request.directory === true;
+      const parent = await resolve(folder, true);
+      const suffix = request.extension ?? '';
+      if (!/^(?:\.[a-z0-9]+)?$/i.test(suffix) || (directory && suffix))
+        throw new Error('Invalid file extension.');
+      const stem = directory ? 'New Folder' : 'New File';
+      for (let count = 1; count <= 1000; count++) {
+        const name = stem + (count === 1 ? '' : ' ' + count) + suffix;
+        const target = path.join(parent, name);
+        try {
+          if (directory) await fs.mkdir(target);
+          else await (await fs.open(target, 'wx')).close();
+          return { id: target, name };
+        } catch (error) {
+          if (error.code !== 'EEXIST') throw error;
+        }
+      }
+      throw new Error('Could not find an available name.');
+    }
     if (operation === 'mkdir') {
       const target = await destination(folder, name);
       await fs.mkdir(target);
@@ -383,9 +626,26 @@ export function registerProjectFiles({
         );
       const target = await destination(folder, name);
       if (target === source) return { id: target, name };
-      if (pendingWrites.has(source) || pendingWrites.has(target))
+      if (pendingWrites.has(source) || pendingWrites.has(target) ||
+          (request.directory && [...pendingWrites].some((file) => within(source, file))))
         throw new Error('A project save is in progress.');
-      if (request.directory === true) {
+      if (request.directory && within(source, target))
+        throw new Error('A folder cannot be moved into itself.');
+      const caseOnly = path.dirname(source) === path.dirname(target) &&
+        path.basename(source).toLowerCase() === path.basename(target).toLowerCase();
+      const aliasesSource = caseOnly && await fs.realpath(target).then(
+        (resolved) => resolved === source,
+        (error) => {
+          if (error.code === 'ENOENT') return false;
+          throw error;
+        },
+      );
+      if (aliasesSource) {
+        const names = await fs.readdir(path.dirname(source));
+        if (names.includes(path.basename(target)))
+          throw new Error('A file or folder already has that name.');
+        await fs.rename(source, target);
+      } else if (request.directory === true) {
         try {
           await fs.lstat(target);
           throw new Error('A file or folder already has that name.');
@@ -409,17 +669,58 @@ export function registerProjectFiles({
       if (allowedRoots.has(target) || pendingWrites.has(target) ||
           (request.directory && [...pendingWrites].some((file) => within(target, file))))
         throw new Error('This location is in use.');
-      await shell.trashItem(target);
-      return;
+      const identity = await fs.stat(target, { bigint: true });
+      try {
+        await shell.trashItem(target);
+        return true;
+      } catch {
+        const result = await dialog.showMessageBox(window, {
+          type: 'warning',
+          message: 'The system Trash is unavailable for this item.',
+          detail: `Permanently delete "${path.basename(target)}"?`,
+          buttons: ['Cancel', 'Delete Permanently'],
+          defaultId: 0,
+          cancelId: 0,
+        });
+        if (result.response !== 1) return false;
+        const selected = await resolve(id, request.directory === true);
+        const current = await fs.stat(selected, { bigint: true });
+        if (selected !== target || current.ino !== identity.ino || current.dev !== identity.dev)
+          throw new Error('The location changed. Select it again.');
+        if (pendingWrites.has(target) ||
+            (request.directory && [...pendingWrites].some((file) => within(target, file))))
+          throw new Error('A project save is in progress.');
+        if (request.directory) await fs.rm(target, { recursive: true });
+        else await fs.unlink(target);
+        return true;
+      }
     }
     if (operation === 'copy') {
-      const source = await resolve(id, false);
-      await fs.copyFile(
-        source,
-        await destination(folder, name),
-        constants.COPYFILE_EXCL,
-      );
-      return;
+      const directory = request.directory === true;
+      const source = await resolve(id, directory);
+      const target = await destination(folder, name);
+      if (directory) {
+        if (within(source, target, true)) throw new Error('A folder cannot be copied into itself.');
+        await fs.mkdir(target);
+        try {
+          for (const child of await fs.readdir(source)) {
+            if (child === '.git') continue;
+            await fs.cp(path.join(source, child), path.join(target, child), {
+              recursive: true,
+              force: false,
+              errorOnExist: true,
+              verbatimSymlinks: true,
+              filter: (entry) => path.basename(entry) !== '.git',
+            });
+          }
+        } catch (error) {
+          await fs.rm(target, { recursive: true, force: true });
+          throw error;
+        }
+      } else {
+        await fs.copyFile(source, target, constants.COPYFILE_EXCL);
+      }
+      return { id: target, name };
     }
     if (operation === 'folder-identity') {
       const stat = await fs.stat(await resolve(id, true), { bigint: true });

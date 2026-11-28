@@ -54,7 +54,14 @@ export interface Text {
   font_id?: number;
 }
 
+export type SymbolPropertyFont = Partial<Pick<Text, 'font_name' | 'font_size'>>;
+
+export interface SymbolPropertyFontDefault extends SymbolPropertyFont {
+  description: string;
+}
+
 export interface SymbolTextItem {
+  font?: SymbolPropertyFont;
   position: Coordinate;
   value: string;
   description: string;
@@ -215,9 +222,18 @@ export interface HierarchicalLink {
 
 export interface dsnSymbol extends dsnPointBase, Text {
   NodeName: DocItemTypes.Symbol;
-  /** Stable identity of this placed schematic unit. */
+  /** The v3 HIERARCHICAL_SYMBOL file attribute, resolved relative to its owner. */
   unitId?: string;
   hierarchy?: HierarchicalLink;
+  hierarchicalFile?: string;
+  /** Resolved circuit for this link. The DSN stores only hierarchicalFile. */
+  _hierarchicalDrawing?: import('./dsnDrawing').dsnDrawing;
+  _hierarchicalError?: string;
+  /** The saved file that originally owned the relative link. */
+  _hierarchicalOwner?: string;
+  _hierarchicalTarget?: string;
+  /** Local reference and ancestor placements on a flattened component. */
+  _hierarchicalReference?: { local: string; parents: string[] };
   show_power: boolean;
   allow_resize: boolean;
   scale_x: number;
@@ -226,6 +242,8 @@ export interface dsnSymbol extends dsnPointBase, Text {
   rotation: number;
   _symbol: libSymbol;
   text: SymbolTextItem[];
+  // Derived from the drawing settings. Only per-field overrides are saved on symbols.
+  _propertyFontDefaults?: readonly SymbolPropertyFontDefault[];
   _active_points: Coordinate[];
   textData: TextAreaData[];
   hints: dsnSymbolHint[];

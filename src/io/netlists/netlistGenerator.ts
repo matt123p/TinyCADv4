@@ -16,6 +16,7 @@ import {
   dsnSymbolHint,
 } from '../../model/dsnItem';
 import { updateSymbol } from '../../manipulators/updateSymbol';
+import type { DrcError, DrcSource } from '../../model/dsnDrawing';
 
 export interface EProp {
   inputs: number;
@@ -53,12 +54,17 @@ export interface SchematicSource {
   pinId?: string;
 }
 
+// Native pin types occupy values 0 through 11. A power symbol is a separate net marker.
+export const powerMarkerElectricalType = 12;
+
 export interface NetListNode {
   a: Coordinate;
   sheet: string;
-  eprop: number | 'power-marker';
+  eprop: number;
   netlist: string;
   label?: string;
+  hierarchicalPort?: { symbolId: number; name: string };
+  drcSource?: DrcSource;
   symbol?: NetListSymbol;
   reference?: string;
   pin?: string;
@@ -75,10 +81,12 @@ export interface NetlistData {
   eprops: { [key: string]: EProp };
   labels: { [key: string]: string };
   symbols: SymbolRef[];
-  sources?: Record<string, SchematicSource>;
+  hierarchyErrors?: string[];
+  drcHierarchy?: { errors: DrcError[]; unmatchedPorts: DrcError[]; placements: SymbolRef[] };
+  hierarchyModelPacks?: import('../../simulation/catalogBindings').SpiceModelPack[];
 }
 
-export type SymbolRef = [string, dsnSymbol];
+export type SymbolRef = [string, dsnSymbol, DrcSource?];
 
 export type NetList = NetListNode[];
 
@@ -189,6 +197,9 @@ export class NetlistGenerator implements NetlistData {
         case 6: // Not Connected
           this.eprops[netlist].not_connecteds++;
           break;
+        case powerMarkerElectricalType: // Power marker
+          this.eprops[netlist].powers++;
+          break;
         case 7: // Free
           this.eprops[netlist].free++;
           break;
@@ -203,9 +214,6 @@ export class NetlistGenerator implements NetlistData {
           break;
         case 11: // Open Emitter
           this.eprops[netlist].open_emitters++;
-          break;
-        case 'power-marker':
-          this.eprops[netlist].powers++;
           break;
       }
     }

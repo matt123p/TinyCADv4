@@ -1,4 +1,4 @@
-import React, { Fragment, Dispatch, useState, useRef } from 'react';
+import React, { Dispatch, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Menu,
@@ -7,7 +7,6 @@ import {
   MenuList,
   MenuItem,
   MenuDivider,
-  Text,
   makeStyles,
   tokens,
   mergeClasses,
@@ -28,34 +27,9 @@ import {
   actionSheetMove,
 } from '../../state/dispatcher/AppDispatcher';
 import { connect } from 'react-redux';
+import { SheetTabLabel } from './sheetTabStrip';
 
 const useStyles = makeStyles({
-  sheetHeading: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '3px 8px',
-    cursor: 'pointer',
-    borderRadius: tokens.borderRadiusMedium,
-    userSelect: 'none',
-    whiteSpace: 'nowrap',
-    backgroundColor: 'transparent',
-    border: `1px solid transparent`,
-    transition: 'background-color 0.1s ease, border-color 0.1s ease',
-    '&:hover': {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
-    },
-  },
-  sheetHeadingOn: {
-    backgroundColor: tokens.colorNeutralBackground1,
-    borderTopColor: tokens.colorNeutralStroke1,
-    borderBottomColor: tokens.colorNeutralStroke1,
-    borderLeftColor: tokens.colorNeutralStroke1,
-    borderRightColor: tokens.colorNeutralStroke1,
-    boxShadow: `0 1px 2px ${tokens.colorNeutralShadowAmbient}`,
-    '&:hover': {
-      backgroundColor: tokens.colorNeutralBackground1,
-    },
-  },
   sheetHeadingIcon: {
     marginLeft: '4px',
     cursor: 'pointer',
@@ -247,18 +221,18 @@ const SheetTab: React.FC<SheetTabProps> = (props) => {
   } : {};
 
   const classNames = mergeClasses(
-    styles.sheetHeading,
-    props.selected && styles.sheetHeadingOn,
     isDragging && styles.dragging,
     props.isDragOver && styles.dragOver,
-    'sheet-heading',
-    props.selected && 'sheet-heading-on'
   );
 
   if (props.selected) {
     return (
-      <div className={classNames} {...dragProps}>
-        <Text size={200}>{displayName}</Text>
+      <SheetTabLabel
+        className={classNames}
+        label={displayName}
+        selected
+        {...dragProps}
+      >
         {showMenu && (
           <Menu open={menuOpen} onOpenChange={(e, data) => setMenuOpen(data.open)}>
             <MenuTrigger disableButtonEnhancement>
@@ -290,13 +264,17 @@ const SheetTab: React.FC<SheetTabProps> = (props) => {
             </MenuPopover>
           </Menu>
         )}
-      </div>
+      </SheetTabLabel>
     );
   } else {
     return (
-      <div className={classNames} onClick={handleClick} {...dragProps}>
-        <Text size={200}>{displayName}</Text>
-      </div>
+      <SheetTabLabel
+        className={classNames}
+        label={displayName}
+        selected={false}
+        onClick={handleClick}
+        {...dragProps}
+      />
     );
   }
 };

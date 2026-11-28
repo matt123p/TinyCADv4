@@ -1,14 +1,15 @@
 import type { CurrentFile } from './stores/altStoreReducer';
 import { isDrawingFile } from '../../shared/drawingFiles';
 import type { docDrawing } from './undo/undo';
-import type { OpenProjectDrawing } from '../io/projectStorage';
 import { DocActionTypes } from './actions/docActions';
-import { DocItemTypes } from '../model/dsnItem';
 import { ActionCreators } from 'redux-undo';
+import type { SetMousePosition } from './actions/viewActions';
 import type { AppActionTypes } from './dispatcher/AppDispatcher';
 
 export type SchematicSnapshot = {
   history: docDrawing['docStore'];
+  exampleExplanation: docDrawing['altStore']['exampleExplanation'];
+  exampleExplanationVisible: boolean;
   file: CurrentFile;
   savedVersion: number;
   simulationPanelVisible: boolean;
@@ -17,18 +18,21 @@ export type SchematicSnapshot = {
 
 export type SchematicTabs = {
   enabled: boolean;
+  projectRoot?: string;
   order: string[];
   inactive: Record<string, SchematicSnapshot>;
 };
 
+type EditorAction = AppActionTypes | SetMousePosition;
+
 type TabsAction =
-  | { type: 'schematic-tabs/enable'; enabled: boolean }
+  | { type: 'schematic-tabs/enable'; enabled: boolean; projectRoot?: string }
   | {
       type: 'schematic-tabs/activate';
       key: string;
-      location?: OpenProjectDrawing;
     }
   | { type: 'schematic-tabs/remove'; key: string }
+  | { type: 'schematic-tabs/relocate'; files: Record<string, CurrentFile> }
   | {
       type: 'schematic-tabs/reload';
       key: string;
@@ -43,12 +47,19 @@ type TabsAction =
       savedVersion: number;
     };
 
-export const schematicTabKey = (location?: { id: string; entryId: string }) =>
-  location ? JSON.stringify([location.id, location.entryId]) : undefined;
-
 export const schematicFileTabKey = (file?: CurrentFile) =>
-  file?.project ? schematicTabKey(file.project)
-    : typeof file?.id === 'string' && file.id && isDrawingFile(file.name) ? JSON.stringify([file.id]) : undefined;
+  typeof file?.id === 'string' && file.id && isDrawingFile(file.name)
+    ? JSON.stringify([file.id])
+    : undefined;
+
+export function activeSchematicTabKey(state?: docDrawing) {
+  if (!state || state.docStore.present.editLibrary) return;
+  const id = state.docStore.present.drawing.documentId;
+  return (
+    schematicFileTabKey(state.altStore.file) ??
+    (id ? JSON.stringify(['untitled', id]) : undefined)
+  );
+}
 
 export const schematicTabDirty = (tab: SchematicSnapshot) =>
   tab.history.present.drawingVersion !== tab.savedVersion;
@@ -56,6 +67,8 @@ export const schematicTabDirty = (tab: SchematicSnapshot) =>
 export function activeSchematicSnapshot(state: docDrawing): SchematicSnapshot {
   const {
     file,
+    exampleExplanation,
+    exampleExplanationVisible,
     savedVersion,
     simulationPanelVisible,
     simulationPanelActivated,
@@ -63,6 +76,8 @@ export function activeSchematicSnapshot(state: docDrawing): SchematicSnapshot {
   return {
     history: state.docStore,
     file,
+    exampleExplanation,
+    exampleExplanationVisible,
     savedVersion,
     simulationPanelVisible,
     simulationPanelActivated,
@@ -72,19 +87,12 @@ export function activeSchematicSnapshot(state: docDrawing): SchematicSnapshot {
 export function openSchematicTabs(state: docDrawing) {
   const tabs = state.schematicTabs;
   if (!tabs?.enabled) return [];
-  const selected = schematicFileTabKey(state.altStore.file);
+  const selected = activeSchematicTabKey(state);
   return tabs.order.flatMap((key) => {
     const tab =
       selected === key ? activeSchematicSnapshot(state) : tabs.inactive[key];
     return tab ? [{ key, tab }] : [];
   });
-}
-
-export function linkedSchematicSnapshot(state: docDrawing, projectId: string, entryId: string) {
-  const key = schematicTabKey({ id: projectId, entryId });
-  return key === schematicTabKey(state.altStore.file.project)
-    ? activeSchematicSnapshot(state)
-    : state.schematicTabs?.inactive[key];
 }
 
 export function reloadSchematicTab(
@@ -95,15 +103,15 @@ export function reloadSchematicTab(
   return { type: 'schematic-tabs/reload', key, original, document };
 }
 
-export function enableSchematicTabs(enabled: boolean): TabsAction {
-  return { type: 'schematic-tabs/enable', enabled };
+export function enableSchematicTabs(
+  enabled: boolean,
+  projectRoot?: string,
+): TabsAction {
+  return { type: 'schematic-tabs/enable', enabled, projectRoot };
 }
 
-export function activateSchematicTab(
-  key: string,
-  location?: OpenProjectDrawing,
-): TabsAction {
-  return { type: 'schematic-tabs/activate', key, location };
+export function activateSchematicTab(key: string): TabsAction {
+  return { type: 'schematic-tabs/activate', key };
 }
 
 export function removeSchematicTab(key: string): TabsAction {
@@ -119,28 +127,63 @@ export function savedSchematicTab(
   return { type: 'schematic-tabs/saved', key, original, file, savedVersion };
 }
 
+export function relocateSchematicTabs(
+  files: Record<string, CurrentFile>,
+): TabsAction {
+  return { type: 'schematic-tabs/relocate', files };
+}
+
 const disabled: SchematicTabs = { enabled: false, order: [], inactive: {} };
 
 export function withSchematicTabs(
-  reduce: (state: docDrawing | undefined, action: AppActionTypes) => docDrawing,
+  reduce: (state: docDrawing | undefined, action: EditorAction) => docDrawing,
 ) {
   return (
     state: docDrawing | undefined,
-    raw: AppActionTypes | TabsAction,
+    raw: EditorAction | TabsAction,
   ): docDrawing => {
     const tabs = state?.schematicTabs ?? disabled;
-    const active = schematicFileTabKey(state?.altStore.file);
+    const active = activeSchematicTabKey(state);
     if (raw.type === 'schematic-tabs/enable' && state)
       return {
         ...state,
+        altStore: { ...state.altStore, projectDrcTabKey: undefined },
         schematicTabs: raw.enabled
-          ? { enabled: true, order: active ? [active] : [], inactive: {} }
+          ? {
+              enabled: true,
+              projectRoot: raw.projectRoot,
+              order: active ? [active] : [],
+              inactive: {},
+            }
           : disabled,
       };
-    if (!state) return reduce(state, raw as AppActionTypes);
+    if (!state) return reduce(state, raw as EditorAction);
     if (!tabs.enabled) {
       const { schematicTabs: _, ...editor } = state;
-      return reduce(editor, raw as AppActionTypes);
+      return reduce(editor, raw as EditorAction);
+    }
+
+    if (raw.type === 'schematic-tabs/relocate') {
+      const inactive = Object.fromEntries(
+        Object.entries(tabs.inactive).map(([key, tab]) => {
+          const file = raw.files[key];
+          return file
+            ? [schematicFileTabKey(file), { ...tab, file }]
+            : [key, tab];
+        }),
+      );
+      const file = raw.files[active] ?? state.altStore.file;
+      return {
+        ...state,
+        altStore: { ...state.altStore, file },
+        schematicTabs: {
+          ...tabs,
+          order: tabs.order.map((key) =>
+            raw.files[key] ? schematicFileTabKey(raw.files[key]) : key,
+          ),
+          inactive,
+        },
+      };
     }
 
     if (raw.type === 'schematic-tabs/activate') {
@@ -153,45 +196,13 @@ export function withSchematicTabs(
       if (active && active !== raw.key)
         inactive[active] = activeSchematicSnapshot(state);
       delete inactive[raw.key];
-      let history = selected.history;
-      const location = raw.location;
-      if (location?.openSheetId) {
-        const present = history.present;
-        const index = present.drawing.sheets.findIndex(
-          ({ id }) => id === location.openSheetId,
-        );
-        if (index >= 0) {
-          const unit = present.drawing.sheets[index].items.find(
-            (item) =>
-              item.NodeName === DocItemTypes.Symbol &&
-              item.unitId === location.openUnitId,
-          );
-          history = {
-            ...history,
-            present: {
-              ...present,
-              view: {
-                ...present.view,
-                selected_sheet: index,
-                _selected_array: unit ? [unit._id] : [],
-                _selected_handle: 0,
-                hover_obj: null,
-                hover_pins:
-                  unit && location.openPinId
-                    ? [`${unit._id}:@${location.openPinId}`]
-                    : [],
-              },
-            },
-          };
-        }
-      }
       return {
-        docStore: history,
+        docStore: selected.history,
         altStore: {
           ...state.altStore,
-          file: location
-            ? { ...selected.file, project: location }
-            : selected.file,
+          file: selected.file,
+          exampleExplanation: selected.exampleExplanation,
+          exampleExplanationVisible: selected.exampleExplanationVisible,
           savedVersion: selected.savedVersion,
           simulationPanelVisible: selected.simulationPanelVisible,
           simulationPanelActivated: selected.simulationPanelActivated,
@@ -213,21 +224,31 @@ export function withSchematicTabs(
     }
     if (raw.type === 'schematic-tabs/reload') {
       const original = tabs.inactive[raw.key];
-      if (original !== raw.original || schematicTabDirty(original)) return state;
-      const reloaded = reduce({
-        docStore: original.history,
-        altStore: {
-          ...state.altStore,
-          file: original.file,
-          savedVersion: original.savedVersion,
+      if (original !== raw.original || schematicTabDirty(original))
+        return state;
+      const reloaded = reduce(
+        {
+          docStore: original.history,
+          altStore: {
+            ...state.altStore,
+            file: original.file,
+            savedVersion: original.savedVersion,
+          },
         },
-      }, raw.document);
-      const fresh = reduce(reloaded, ActionCreators.clearHistory() as AppActionTypes);
+        raw.document,
+      );
+      const fresh = reduce(
+        reloaded,
+        ActionCreators.clearHistory() as AppActionTypes,
+      );
       return {
         ...state,
         schematicTabs: {
           ...tabs,
-          inactive: { ...tabs.inactive, [raw.key]: activeSchematicSnapshot(fresh) },
+          inactive: {
+            ...tabs.inactive,
+            [raw.key]: activeSchematicSnapshot(fresh),
+          },
         },
       };
     }
@@ -236,12 +257,16 @@ export function withSchematicTabs(
       const key = schematicFileTabKey(raw.file) ?? raw.key;
       const inactive = { ...tabs.inactive };
       delete inactive[raw.key];
-      inactive[key] = { ...raw.original, file: raw.file, savedVersion: raw.savedVersion };
+      inactive[key] = {
+        ...raw.original,
+        file: raw.file,
+        savedVersion: raw.savedVersion,
+      };
       return {
         ...state,
         schematicTabs: {
           ...tabs,
-          order: tabs.order.map((id) => id === raw.key ? key : id),
+          order: tabs.order.map((id) => (id === raw.key ? key : id)),
           inactive,
         },
       };
@@ -249,8 +274,8 @@ export function withSchematicTabs(
 
     // Keep the tab registry out of the existing document reducers.
     const { schematicTabs: _, ...editor } = state;
-    const next = reduce(editor, raw as AppActionTypes);
-    const incoming = schematicFileTabKey(next.altStore.file);
+    const next = reduce(editor, raw as EditorAction);
+    const incoming = activeSchematicTabKey(next);
     if (incoming === active)
       return next === editor ? state : { ...next, schematicTabs: tabs };
     const inactive = { ...tabs.inactive };
@@ -266,6 +291,6 @@ export function withSchematicTabs(
       delete inactive[incoming];
       if (!order.includes(incoming)) order.push(incoming);
     }
-    return { ...next, schematicTabs: { enabled: true, order, inactive } };
+    return { ...next, schematicTabs: { ...tabs, order, inactive } };
   };
 }

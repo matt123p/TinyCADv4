@@ -8,6 +8,9 @@ interface ElectronLibraryLoadError {
 declare global {
     interface Window {
         electronAPI: {
+            projectFiles(request: import('./io/projectStorage').ProjectStorageRequest): Promise<unknown>;
+            onProjectFoldersChanged(callback: () => void): () => void;
+            preferredSystemLanguages?: string[];
             licenseIndex: () => Promise<import('./io/licenses').LicenseNotice[]>;
             readLicense: (file: string) => Promise<string>;
             openChromiumLicenses: () => Promise<void>;
@@ -32,12 +35,12 @@ declare global {
             stopSimulation: (runId: string) => void;
             onSimulation: (callback: (runId: string, event: import('./simulation/contracts').EngineEvent) => void) => () => void;
             // Files
-            loadFile: (file?: { name: string, id: string, projectMode?: boolean }) => void;
+            loadFile: (file?: { name: string, id: string }) => void;
             saveFile: (data: {
                 name: string;
                 id: FileIdType | string;
                 folderId: FileIdType | string;
-                content: string | Uint8Array
+                content: string | Uint8Array;
                 expectedVersion?: string;
             }) => void;
 
@@ -47,9 +50,9 @@ declare global {
 
             // Libraries
             bundledLibraryCatalog: () => Promise<unknown>;
-            readBundledLibrary: (id: string) => Promise<Uint8Array>;
+            readBundledLibrary: (id: string) => Promise<import('./model/tclib').tclib>;
             bundledLibrarySelection: (ids?: string[]) => Promise<unknown>;
-            loadLibrary: (file?: { name?: string, id?: string, silent?: boolean, folderId?: string | null }) => void;
+            loadLibrary: (file?: { name?: string, id?: string, silent?: boolean, allowEmpty?: boolean, folderId?: string | null }) => void;
             saveLibrary: (data: {
                 name: string;
                 id: FileIdType | string;
@@ -62,17 +65,17 @@ declare global {
                 libraryFolders: { id: string, name: string }[];
             }) => void;
             setViewMenuState: (state: { hasExampleExplanation: boolean; exampleExplanationVisible: boolean; simulationPanelVisible: boolean }) => void;
-            setBoardMenus: (menus: import('./io/boardWorkspaceEvents').BoardMenuState[]) => void;
-            projectFiles: (request: import('./io/projectStorage').ProjectStorageRequest) => Promise<any>;
-            onProjectFoldersChanged: (callback: () => void) => () => void;
             setMenuMode: (mode: boolean) => void;
-            setMenuTranslations: (translations: Record<string, string>) => void;
+            setEditorMenuState: (state: { project: boolean; editor: string }) => void;
+            setBoardMenus: (menus: import('./io/boardWorkspaceEvents').BoardMenuState[]) => void;
+            setMenuTranslations: (translations: Record<string, string>, language: string) => void;
 
             // Callbacks
-            fileLoaded: (callback: (data: { content?: string | Uint8Array, name: string, id: string, folderId?: string }) => void) => () => void;
+            fileLoaded: (callback: (data: { content: string | Uint8Array, name: string, id: string, folderId?: string }) => void) => () => void;
             fileSaved: (callback: (data: { success: boolean, name: string, id: string, error?: string }) => void) => () => void;
+            requestStartupLists?: () => void;
             recentFiles: (callback: (data: { name: string, id: string }[]) => void) => () => void;
-            libraryLoaded: (callback: (data: { content: ArrayBuffer, name: string, id: string, lastModified?: Date | string }) => void) => () => void;
+            libraryLoaded: (callback: (library: import('./model/tclib').tclib) => void) => () => void;
             libraryLoadFailed: (callback: (data: { id: string, name: string, error: ElectronLibraryLoadError }) => void) => () => void;
             librarySaved: (callback: (data: { success: boolean, name: string, id: string }) => void) => () => void;
             libraries: (callback: (data: {
@@ -84,14 +87,21 @@ declare global {
             sendAppClosingResponse: (saveNeeded: boolean) => void;
             
             // PDF printing and export
-            printPdf: (pdfBase64: string) => void;
-            getPrinters: () => Promise<{ name: string; displayName: string; isDefault: boolean }[]>;
-            printDocument: (options: { html: string; printerName: string; copies?: number; landscape?: boolean }) => void;
-            onPrintComplete: (callback: (data: { success: boolean, failureReason?: string }) => void) => () => void;
+            openPrintPdf: (pdfBase64: string) => Promise<boolean | void>;
+            getPrinters: () => Promise<{ name: string; displayName: string }[]>;
+            printDocument: (options: {
+                html: string;
+                printerName: string;
+                copies: number;
+                landscape: boolean;
+                pageSize: import('./io/printerSettings').PrinterSettings['paperSize'];
+                color?: boolean;
+                duplexMode: import('./io/printerSettings').PrinterSettings['duplexMode'];
+            }) => Promise<{ success: boolean; failureReason?: string; printerUnavailable?: boolean }>;
             savePdf: (data: { content: string, name: string }) => void;
             saveSvg: (data: { content: string, name: string }) => void;
             onPdfSaved: (callback: (data: { success: boolean, path?: string, error?: string, cancelled?: boolean }) => void) => () => void;
-            openKicadImport: () => Promise<{ fileName: string, content: string } | null>;
+            openKicadImport: () => Promise<import('./io/kicad/importer').SymbolImportFile | null>;
             openImageImport: () => Promise<{ fileName: string, mime: string, content: string } | null>;
 
             // Window management

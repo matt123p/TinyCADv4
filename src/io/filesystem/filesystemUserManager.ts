@@ -7,6 +7,7 @@ import { ActionCreators } from 'redux-undo';
 import { tclib } from '../../model/tclib';
 import {
   actionEditLibrary,
+  actionMenuSetRecentFileList,
   actionSetDocument,
   actionSelectDialog,
   actionSetFileData,
@@ -19,10 +20,38 @@ import { XMLBuilder } from '../../util/xmlbuilder';
 import { UserManager, FileIdType } from '../files';
 import { ioXML } from '../ioXml';
 import update from 'immutability-helper';
+import { readRecentDrawings, updateRecentDrawings } from './recentDrawings';
 
 export class FileSystemUserManager implements UserManager {
   // Scope to use to access user's Drive items.
   public scope: string[] = [];
+  private dispatch: Dispatch;
+
+  private publishRecentDrawings(handles: FileSystemFileHandle[]) {
+    this.dispatch?.(actionMenuSetRecentFileList(handles.map((id) => ({ id, name: id.name }))));
+  }
+
+  private rememberDrawing(handle: FileSystemFileHandle, remove = false) {
+    void updateRecentDrawings(handle, remove).then(
+      (handles) => this.publishRecentDrawings(handles),
+      () => {},
+    );
+  }
+
+  private async openDrawing(handle: FileSystemFileHandle, file: File, dispatch: Dispatch) {
+    if (isBoardFile(file.name)) {
+      const { openStandaloneBoard } = await import('../boardWorkspace');
+      showOpenedBoard(await openStandaloneBoard(await file.arrayBuffer(), { name: file.name, id: handle }));
+      this.rememberDrawing(handle);
+      return;
+    }
+    if (!canOpenCircuit()) return;
+    const drawing = await decodeDrawing(await file.arrayBuffer());
+    dispatch(actionSetDocument(drawing, file.name, handle, null));
+    dispatch(ActionCreators.clearHistory());
+    this.rememberDrawing(handle);
+    window.dispatchEvent(new Event(circuitOpened));
+  }
 
   private loadFileOrNew(dispatch: Dispatch): void {
     const urlParams = new URLSearchParams(window.location.search);
@@ -73,6 +102,8 @@ export class FileSystemUserManager implements UserManager {
       }),
     );
     this.loadFileOrNew(dispatch);
+    this.dispatch = dispatch;
+    void readRecentDrawings().then((handles) => this.publishRecentDrawings(handles));
     return Promise.resolve();
   }
 
@@ -80,7 +111,19 @@ export class FileSystemUserManager implements UserManager {
     return Promise.resolve();
   }
 
-  public fileOpen(dispatch: Dispatch) {
+  public fileOpen(dispatch: Dispatch, recent?: CurrentFile) {
+    if (recent?.id && typeof recent.id !== 'string') {
+      const handle = recent.id;
+      void handle.requestPermission({ mode: 'read' }).then(async (permission) => {
+        if (permission === 'granted') {
+          await this.openDrawing(handle, await handle.getFile(), dispatch);
+        }
+      }).catch((error) => {
+        if (error?.name === 'NotFoundError') this.rememberDrawing(handle, true);
+        if (error?.name !== 'AbortError') dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+      });
+      return;
+    }
     const pickerOpts: OpenFilePickerOptions = {
       types: [
         {
@@ -105,18 +148,8 @@ export class FileSystemUserManager implements UserManager {
       .then((files: FileSystemFileHandle[]) => {
         if (files.length > 0) {
           return files[0].getFile().then((file: File) => {
-            if (isBoardFile(file.name)) {
-              return Promise.all([file.arrayBuffer(), import('../boardWorkspace')])
-                .then(async ([bytes, { openStandaloneBoard }]) => {
-                  showOpenedBoard(await openStandaloneBoard(bytes, { name: file.name, id: files[0] }));
-                });
-            } else if (isDrawingFile(file.name)) {
-              return file.arrayBuffer().then(decodeDrawing).then((doc) => {
-                if (!canOpenCircuit()) return;
-                dispatch(actionSetDocument(doc, file.name, files[0], null));
-                dispatch(ActionCreators.clearHistory());
-                window.dispatchEvent(new Event(circuitOpened));
-              });
+            if (isDrawingFile(file.name) || isBoardFile(file.name)) {
+              return this.openDrawing(files[0], file, dispatch);
             } else if (file.name.toLowerCase().indexOf('.tclib') !== -1) {
               this.loadLibrary(
                 files[0],
@@ -176,6 +209,7 @@ export class FileSystemUserManager implements UserManager {
       await writable.close();
     }
     catch(error) { await writable.abort().catch(()=>{}); throw error; }
+    this.rememberDrawing(handle);
     return {name:handle.name,id:handle,mimeType:drawingMimeType(xml)};
   }
 

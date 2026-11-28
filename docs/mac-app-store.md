@@ -39,7 +39,7 @@ npm run dist:mas
 Outputs are in `release/mas-store/`. Upload the generated distribution `.pkg`
 using Apple's Transporter app. Increment `MAS_BUILD_VERSION` for subsequent
 Store uploads. It defaults to `4.1.1` and changes only the internal Mac Store
-build number; the shared release version in `package.json` stays `4.1.0`. The build checks the profile's team, bundle ID (`MAS_APP_ID`, default `com.tinycad.app`) and expiry, requires
+build number independently of the shared release version in `package.json`. The build checks the profile's team, bundle ID (`MAS_APP_ID`, default `com.tinycad.app`) and expiry, requires
 signing, and checks the resulting installer signature. Electron-builder checks
 the installer certificate when packaging. No notarization is needed for this
 store workflow. The normal DMG build remains available separately.

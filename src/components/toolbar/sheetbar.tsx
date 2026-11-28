@@ -1,6 +1,7 @@
 import React, { Dispatch, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import SheetTab, { MenuItemData } from './sheetTab';
+import { SheetTabStrip } from './sheetTabStrip';
 import { makeStyles, tokens } from '@fluentui/react-components';
 import { AddRegular, DismissRegular, SubtractRegular } from '@fluentui/react-icons';
 import { dsnSheet } from '../../model/dsnDrawing';
@@ -10,6 +11,7 @@ import {
   actionSelectDialog,
   actionSheetMove,
   actionSetPPP,
+  actionSheetAdd,
 } from '../../state/dispatcher/AppDispatcher';
 import { dsnBomEntry } from '../../model/dsnBomEntry';
 import { tclibLibraryEntry } from '../../model/tclib';
@@ -17,31 +19,6 @@ import { BrowserSheetData } from '../../model/dsnView';
 import { Coordinate } from '../../model/dsnItem';
 
 const useStyles = makeStyles({
-  sheetbar: {
-    display: 'flex',
-    alignItems: 'center',
-    backgroundColor: tokens.colorNeutralBackground3,
-    borderTop: `1px solid ${tokens.colorNeutralStroke1}`,
-    padding: '0 4px',
-    gap: '0',
-    height: '26px',
-    minHeight: '26px',
-    flexShrink: 0,
-  },
-  sheetTabsContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '2px',
-    overflowX: 'auto',
-    overflowY: 'hidden',
-    flexShrink: 1,
-    flexGrow: 0,
-    maxWidth: 'calc(50% - 20px)',
-    scrollbarWidth: 'none',
-    '&::-webkit-scrollbar': {
-      display: 'none',
-    },
-  },
   sheetAddButton: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -73,6 +50,7 @@ const useStyles = makeStyles({
 });
 
 interface SheetbarProps {
+  project?: boolean;
   sheets: dsnSheet[];
   selected_sheet: number;
   editSymbol: tclibLibraryEntry;
@@ -157,6 +135,11 @@ export const Sheetbar: React.FC<SheetbarProps> = (props) => {
             text: 'Duplicate setup',
             iconName: 'Copy',
             onClick: () => props.dispatch({ type: 'simulation/duplicate', sheetId: sheet.id }),
+          }] : props.project && !props.sheets.some((item) => item.hierarchicalSymbol) ? [{
+            key: 'add_hierarchical_symbol',
+            text: 'Add Hierarchical Symbol',
+            iconName: 'Add',
+            onClick: () => props.dispatch(actionSheetAdd('Hierarchical Symbol', true)),
           }] : undefined}
           draggable={canDrag}
           onDragStart={handleDragStart}
@@ -178,50 +161,14 @@ export const Sheetbar: React.FC<SheetbarProps> = (props) => {
     },
   ];
 
-  return (
-    <div className={`${styles.sheetbar} sheetbar`}>
-      <div className={styles.sheetTabsContainer}>
-        {props.bom ? (
-          <SheetTab
-            name="BOM"
-            index={-1}
-            selected={props.selected_sheet === -1}
-            menu={bomMenu}
-            canDelete={false}
-            hierarchicalSymbol={false}
-            draggable={false}
-          />
-        ) : null}
-        {sheets}
-        {props.browserSheets.map((browserData, index) => {
-          const browserMenu: MenuItemData[] = [
-            {
-              key: `close_sheet_${index}`,
-              text: t('common.close'),
-              iconName: 'Cancel',
-              onClick: () => props.dispatch(actionMenuBrowserClose(index)),
-            },
-          ];
-          return (
-            <SheetTab
-              name={browserData.name}
-              index={-2 - index}
-              key={`browser_${index}`}
-              selected={props.selected_sheet === (-2 - index)}
-              menu={browserMenu}
-              canDelete={false}
-              hierarchicalSymbol={false}
-              draggable={false}
-            />
-          );
-        })}
-      </div>
+  const actions = (
+    <>
       <div className={`${styles.sheetAddButton} sheet-add-button`} onClick={handleAddClick} title={props.editSymbol ? t('toolbar.sheetbar.addNewPart') : t('toolbar.sheetbar.addNewSheet')}>
         <AddRegular />
       </div>
       {props.editSymbol && props.editSymbol.ppp > 1 && (
-        <div 
-          className={`${styles.sheetAddButton} sheet-add-button`} 
+        <div
+          className={`${styles.sheetAddButton} sheet-add-button`}
           onClick={() => props.dispatch(actionSetPPP(props.editSymbol.ppp - 1))}
           title={t('toolbar.sheetbar.removeLastPart')}
         >
@@ -231,10 +178,49 @@ export const Sheetbar: React.FC<SheetbarProps> = (props) => {
       <div className={styles.divider} />
       <div className={styles.scrollbarArea} />
       <div style={{ marginLeft: '10px', marginRight: '4px', fontSize: '11px', whiteSpace: 'nowrap', userSelect: 'none', color: tokens.colorNeutralForeground2, fontFamily: 'monospace' }}>
-         {props.hover_point 
+         {props.hover_point
            ? `X: ${(props.hover_point[0] / 5).toFixed(2).padStart(7, '\u00A0')} mm  Y: ${(props.hover_point[1] / 5).toFixed(2).padStart(7, '\u00A0')} mm`
            : `X: ${'\u00A0'.repeat(7)}--- mm  Y: ${'\u00A0'.repeat(7)}--- mm`}
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <SheetTabStrip actions={actions}>
+      {props.bom ? (
+        <SheetTab
+          name="BOM"
+          index={-1}
+          selected={props.selected_sheet === -1}
+          menu={bomMenu}
+          canDelete={false}
+          hierarchicalSymbol={false}
+          draggable={false}
+        />
+      ) : null}
+      {sheets}
+      {props.browserSheets.map((browserData, index) => {
+        const browserMenu: MenuItemData[] = [
+          {
+            key: `close_sheet_${index}`,
+            text: t('common.close'),
+            iconName: 'Cancel',
+            onClick: () => props.dispatch(actionMenuBrowserClose(index)),
+          },
+        ];
+        return (
+          <SheetTab
+            name={browserData.name}
+            index={-2 - index}
+            key={`browser_${index}`}
+            selected={props.selected_sheet === (-2 - index)}
+            menu={browserMenu}
+            canDelete={false}
+            hierarchicalSymbol={false}
+            draggable={false}
+          />
+        );
+      })}
+    </SheetTabStrip>
   );
 };

@@ -1,15 +1,15 @@
-import type { dsnDrawing } from '../model/dsnDrawing';
+import { isProjectFile } from '../../shared/projectFiles';
+import { decodeDrawing } from './dsnCodec';
+import { decodeProjectSettings } from '../pcb/projectSettings';
+import { childPath } from './hierarchyDrawing';
+import { buildHierarchicalNetlist } from '../pcb/hierarchicalNetlist';
+import { buildHierarchicalCircuitSnapshot } from '../pcb/hierarchicalSnapshot';
 import type { BoardDocument } from '../pcb/board';
 import { decodeBoard, encodeBoard } from '../pcb/boardCodec';
 import { editableBoardWorkspace } from './boardWorkspace';
 import type { BoardWorkspaceSession } from './boardWorkspace';
-import {
-  findProjectPath,
-  projectFilesChanged,
-  projectRequest,
-  readProject,
-  readProjectBoard,
-} from './projects';
+import { projectRequest } from './projects';
+import { projectFilesChanged } from './projectStorage';
 
 type BoardFile = { id: string; name: string; folder: string; path: string };
 
@@ -48,56 +48,67 @@ function openTrackedBoard(
   );
 }
 
-export async function openProjectBoardFile(file: BoardFile, account: string) {
+export async function openProjectBoardFile(file: BoardFile, root: string) {
   const saved = await projectRequest({ operation: 'read', id: file.id });
   const board = await decodeBoard(saved.data);
+  const markers = (await projectRequest({ operation: 'list', folder: root, tree: true }))
+    .filter(({ name, folder, unsupported }) => !folder && !unsupported && isProjectFile(name));
+  const basename = file.path.replaceAll('\\', '/').toLowerCase();
+  const settings = async () => {
+    for (const marker of markers) {
+      const { data } = await projectRequest({ operation: 'read', id: marker.id });
+      if (!/<SETTINGS[\s>]/.test(new TextDecoder().decode(data))) continue;
+      const project = decodeProjectSettings(data);
+      if (project.entries.some(({ kind, id, path }) => kind === 'board' &&
+          id === board.boardId && path.toLowerCase() === basename)) return project;
+    }
+  };
+  const project = await settings();
+  const linked = project && (board.sourceCircuit || project.associations?.some((entry) => entry.board === board.boardId));
+  const readProjectCircuit: BoardWorkspaceSession['readProjectCircuit'] = linked && (async (candidate) => {
+    try {
+      const current = await settings();
+      if (!current) throw new Error('The PCB is no longer linked to this project.');
+      const association = current.associations?.find(({ board: id }) => id === candidate.boardId);
+      const embedded = candidate.sourceCircuit?.documentId;
+      if (association && embedded && association.schematic !== embedded)
+        throw new Error('The PCB source circuit and schematic association disagree.');
+      const sourceId = association?.schematic ?? embedded;
+      if (!sourceId) return { state: 'unlinked' };
+      const schematics = current.entries.filter(({ kind }) => kind === 'schematic');
+      const entry = schematics.find(({ id }) => id === sourceId);
+      if (!entry) throw new Error('The project source schematic is missing.');
+      const separator = root.includes('\\') ? '\\' : '/';
+      const files = new Map<string, string>();
+      async function read(path: string, id?: string) {
+        const filename = root.replace(/[\\/]$/, '') + separator + path.replaceAll('/', separator);
+        const { data, version } = await projectRequest({ operation: 'read', id: filename });
+        files.set(filename, version);
+        const drawing = await decodeDrawing(data, new Map());
+        return { path, drawing: { ...drawing, documentId: id ?? drawing.documentId } };
+      }
+      const graph = await buildHierarchicalNetlist(await read(entry.path, entry.id), (parent, link) => {
+        const linked = link.documentId && schematics.find(({ id }) => id === link.documentId);
+        return linked ? read(linked.path, linked.id) : read(childPath(link, parent.path));
+      });
+      const applied = candidate.appliedCircuit;
+      const { snapshot } = await buildHierarchicalCircuitSnapshot(graph, {
+        documentId: sourceId, revision: (candidate.sourceCircuit?.revision ?? 0) + 1, previous: applied?.nets,
+      });
+      for (const [id, version] of files) {
+        if (await projectRequest({ operation: 'fingerprint', id }) !== version)
+          throw new Error('The schematic changed during PCB checks. Run the checks again.');
+      }
+      return { state: 'resolved', snapshot, applied };
+    } catch (error) {
+      return { state: 'unavailable', detail: error instanceof Error ? error.message : String(error) };
+    }
+  });
   return openTrackedBoard(
     board,
     saved.version,
     file,
-    JSON.stringify(['pcb-project-file', account, file.id, board.boardId]),
-  );
-}
-
-export async function openProjectBoardWorkspace(
-  location: { id: string; rootId: string },
-  boardId: string,
-  account: string,
-  activeDrawing: (id: string) => dsnDrawing | undefined,
-): Promise<BoardWorkspaceSession> {
-  const project = await readProject(location.id, location.rootId);
-  const entry = project.settings.entries.find(
-    ({ kind, id }) => kind === 'board' && id === boardId,
-  );
-  if (!entry) throw new Error('The board is no longer linked to the project.');
-  const directory = entry.path.split('/').slice(0, -1).join('/');
-  const folder = directory
-    ? (await findProjectPath(location.rootId, directory, true))?.id
-    : location.rootId;
-  const file = project.files.get(entry.path);
-  if (!folder || !file) throw new Error('The PCB file is no longer available.');
-  const saved = await readProjectBoard(project, boardId);
-  return openTrackedBoard(
-    saved.board,
-    saved.version,
-    { ...file, folder, path: entry.path },
-    JSON.stringify(['pcb-project', account, location.id, file.id, boardId]),
-    {
-      projectId: project.settings.projectId,
-      circuit: saved.circuit,
-      async readProjectCircuit(board, source) {
-        const { currentProjectCircuit } = await import(
-          './projectCircuitStatus'
-        );
-        const applied =
-          board.appliedCircuit ??
-          (board.sourceCircuit?.documentId === saved.circuit?.documentId &&
-          board.sourceCircuit?.revision === saved.circuit?.revision
-            ? saved.circuit
-            : undefined);
-        return currentProjectCircuit(location, board, applied,
-          source === 'saved' ? () => undefined : activeDrawing);
-      },
-    },
+    JSON.stringify(['pcb-project-file', file.id, board.boardId]),
+    { projectId: project?.projectId, readProjectCircuit },
   );
 }

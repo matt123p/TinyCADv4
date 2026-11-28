@@ -1,53 +1,37 @@
 import { useCallback, useRef, useState } from 'react';
-import { isProjectFile } from '../../shared/projectFiles';
-import type { ProjectSettings } from '../pcb/projectSettings';
-import type { ProjectMetadata } from './projects';
 import { projectDocumentKind } from './projectDocumentKind';
-import type { ProjectDocumentKind } from './projectDocumentKind';
+import type {
+  ProjectDocumentKind,
+  ProjectTextKind,
+} from './projectDocumentKind';
 import { projectFilesChanged } from './projectStorage';
 import type { ProjectLocation } from './projectStorage';
 
-const loadProjects =
-  process.env.TARGET_SYSTEM === 'electron' ||
-  process.env.TARGET_SYSTEM === 'google'
-    ? () => import('./projects')
-    : undefined;
+import { projectRequest } from './projects';
 
 export type ProjectDocumentLocation = ProjectLocation & {
   folder: string;
   ancestors: readonly string[];
 };
-type Text = {
-  kind: 'text';
-  markdown: boolean;
+type TextEncoding = 'utf-8' | 'utf-16le' | 'utf-16be';
+type Text = ProjectTextKind & {
+  encoding: TextEncoding;
   saved: string;
   value: string;
-  crlf: boolean;
+  newline: '\n' | '\r\n' | '\r';
   bom: boolean;
 };
 type Asset = { kind: 'image' | 'pdf'; bytes: Uint8Array };
-type Settings = {
-  kind: 'settings';
-  settings: ProjectSettings;
-  saved: ProjectMetadata;
-  value: ProjectMetadata;
-};
 export type ProjectDocument = ProjectDocumentLocation & {
   version: string;
   mime: string;
-} & (Text | Asset | Settings);
+} & (Text | Asset);
 export type SaveSummary = {
   saved: string[];
   failed: { name: string; message: string }[];
 };
 export const dirtyProjectDocument = (file: ProjectDocument) =>
-  file.kind === 'text'
-    ? file.value !== file.saved
-    : file.kind === 'settings' &&
-      (file.value.title !== file.saved.title ||
-        file.value.author !== file.saved.author ||
-        file.value.primarySchematic !== file.saved.primarySchematic ||
-        file.value.primaryBoard !== file.saved.primaryBoard);
+  file.kind === 'text' && file.value !== file.saved;
 
 function openDocument(
   location: ProjectDocumentLocation,
@@ -57,43 +41,48 @@ function openDocument(
 ): ProjectDocument & (Text | Asset) {
   const base = { ...location, version, mime: type.mime };
   if (type.kind !== 'text') return { ...base, kind: type.kind, bytes: data };
-  const bom = data[0] === 0xef && data[1] === 0xbb && data[2] === 0xbf;
-  const text = new TextDecoder('utf-8', { fatal: true }).decode(data);
-  const crlf =
-    text.includes('\r\n') && !text.replaceAll('\r\n', '').includes('\n');
+  const encoding: TextEncoding =
+    data[0] === 0xff && data[1] === 0xfe
+      ? 'utf-16le'
+      : data[0] === 0xfe && data[1] === 0xff
+      ? 'utf-16be'
+      : 'utf-8';
+  const bom =
+    encoding !== 'utf-8' ||
+    (data[0] === 0xef && data[1] === 0xbb && data[2] === 0xbf);
+  let text: string;
+  try {
+    text = new TextDecoder(encoding, { fatal: true }).decode(data);
+  } catch {
+    throw new Error('This file is not UTF-8 or UTF-16 text.');
+  }
+  if (/[\x00-\x08\x0e-\x1a]/.test(text))
+    throw new Error(
+      'This file contains binary data and cannot be opened as text.',
+    );
+  const newline = (/\r\n|\n|\r/.exec(text)?.[0] as Text['newline']) ?? '\n';
   const saved = text.replace(/\r\n?/g, '\n');
-  return {
-    ...base,
-    kind: 'text',
-    markdown: type.markdown,
-    saved,
-    value: saved,
-    crlf,
-    bom,
-  };
+  return { ...base, ...type, encoding, bom, newline, saved, value: saved };
+}
+
+function encodeText(file: Text): Uint8Array {
+  const text =
+    (file.bom ? '\ufeff' : '') + file.value.replaceAll('\n', file.newline);
+  if (file.encoding === 'utf-8') return new TextEncoder().encode(text);
+  const view = new DataView(new ArrayBuffer(text.length * 2));
+  for (let index = 0; index < text.length; index++)
+    view.setUint16(
+      index * 2,
+      text.charCodeAt(index),
+      file.encoding === 'utf-16le',
+    );
+  return new Uint8Array(view.buffer);
 }
 
 async function readDocument(
   location: ProjectDocumentLocation,
 ): Promise<ProjectDocument> {
-  if (!loadProjects) throw new Error('Project documents are unavailable.');
-  const { projectRequest, readProject, projectMetadata } = await loadProjects();
-  if (isProjectFile(location.name)) {
-    const project = await readProject(location.id, location.folder);
-    const value = projectMetadata(project.settings);
-    return {
-      ...location,
-      version: project.version,
-      mime: 'application/xml',
-      kind: 'settings',
-      settings: project.settings,
-      saved: value,
-      value,
-    };
-  }
   const type = projectDocumentKind(location.name);
-  if (!type)
-    throw new Error('This file type is unavailable in the project editor.');
   const { data, version } = await projectRequest({
     operation: 'read',
     id: location.id,
@@ -123,18 +112,20 @@ export function useProjectDocuments() {
     setActive(id);
   }, []);
 
-  async function open(location: ProjectDocumentLocation) {
-    if (!loadProjects) return;
+  async function open(location: ProjectDocumentLocation, canOpen = () => true) {
     const epoch = ++openEpoch.current;
     const project = projectEpoch.current;
     if (!current.current.some(({ id }) => id === location.id)) {
       const opened = await readDocument(location);
-      if (project !== projectEpoch.current) return;
+      if (project !== projectEpoch.current || epoch !== openEpoch.current || !canOpen())
+        return false;
       update((files) =>
         files.some(({ id }) => id === opened.id) ? files : [...files, opened],
       );
     }
-    if (epoch === openEpoch.current) select(location.id);
+    if (epoch !== openEpoch.current || !canOpen()) return false;
+    select(location.id);
+    return true;
   }
 
   function edit(id: string, value: string) {
@@ -145,69 +136,30 @@ export function useProjectDocuments() {
     );
   }
 
-  function editSettings(id: string, key: keyof ProjectMetadata, value: string) {
-    update((files) =>
-      files.map((file) =>
-        file.id === id && file.kind === 'settings'
-          ? { ...file, value: { ...file.value, [key]: value } }
-          : file,
-      ),
-    );
-  }
-
   async function save(id: string) {
-    if (!loadProjects) return;
     if (pending.current.has(id))
       throw new Error('A save is already in progress.');
     const file = current.current.find((file) => file.id === id);
-    if (!file || !dirtyProjectDocument(file)) return;
+    if (!file || file.kind !== 'text' || !dirtyProjectDocument(file)) return;
     pending.current.add(id);
     setWriting(new Set(pending.current));
     try {
-      const { projectRequest, saveProjectMetadata } = await loadProjects();
-      if (file.kind === 'settings') {
-        const saved = await saveProjectMetadata(
-          file.id,
-          file.folder,
-          file.name,
-          file.version,
-          file.settings,
-          file.value,
-        );
-        update((files) =>
-          files.map((item) =>
-            item.id === id && item.kind === 'settings'
-              ? {
-                  ...item,
-                  settings: saved.settings,
-                  version: saved.version,
-                  saved: saved.value,
-                  value: item.value === file.value ? saved.value : item.value,
-                }
-              : item,
-          ),
-        );
-      } else if (file.kind === 'text') {
-        const content =
-          (file.bom ? '\ufeff' : '') +
-          (file.crlf ? file.value.replaceAll('\n', '\r\n') : file.value);
-        const { version } = await projectRequest({
-          operation: 'write',
-          id,
-          folder: file.folder,
-          name: file.name,
-          version: file.version,
-          data: new TextEncoder().encode(content),
-          mediaType: file.mime,
-        });
-        update((files) =>
-          files.map((item) =>
-            item.id === id && item.kind === 'text'
-              ? { ...item, version, saved: file.value }
-              : item,
-          ),
-        );
-      }
+      const { version } = await projectRequest({
+        operation: 'write',
+        id,
+        folder: file.folder,
+        name: file.name,
+        version: file.version,
+        data: encodeText(file),
+        mediaType: file.mime,
+      });
+      update((files) =>
+        files.map((item) =>
+          item.id === id && item.kind === 'text'
+            ? { ...item, version, saved: file.value }
+            : item,
+        ),
+      );
       window.dispatchEvent(new Event(projectFilesChanged));
     } finally {
       pending.current.delete(id);
@@ -234,7 +186,7 @@ export function useProjectDocuments() {
     return summary;
   }
 
-  async function refresh(matches: (id: string) => boolean) {
+  const refresh = useCallback(async (matches: (id: string) => boolean) => {
     const unavailable: string[] = [];
     for (const file of current.current) {
       if (
@@ -255,12 +207,32 @@ export function useProjectDocuments() {
       }
     }
     return unavailable;
+  }, [update]);
+
+  function relocate(locations: Record<string, ProjectDocumentLocation>) {
+    const selected = active && locations[active];
+    update((files) =>
+      files.map((file) => {
+        const location = locations[file.id];
+        if (!location) return file;
+        const type = projectDocumentKind(location.name);
+        return file.kind === 'text' && type.kind === 'text'
+          ? {
+              ...file,
+              ...location,
+              ...type,
+              language: type.language,
+              preview: type.preview,
+            }
+          : { ...file, ...location, mime: type.mime };
+      }),
+    );
+    if (selected) select(selected.id);
   }
 
-  function close(id: string) {
-    if (pending.current.has(id)) return;
-    update((files) => files.filter((file) => file.id !== id));
-    if (active === id) select(current.current.at(-1)?.id);
+  function removeWhere(matches: (id: string) => boolean, selectNext = true) {
+    update((files) => files.filter((file) => !matches(file.id)));
+    if (selectNext && active && matches(active)) select(current.current.at(-1)?.id);
   }
 
   function clear() {
@@ -271,21 +243,22 @@ export function useProjectDocuments() {
 
   return {
     files,
+    has: (id: string) => current.current.some((file) => file.id === id),
     active,
     writing,
     select,
     open,
     edit,
-    editSettings,
     save,
     saveAll,
     refresh,
-    close,
+    relocate,
+    removeWhere,
     clear,
-    hasDirty: () => current.current.some(dirtyProjectDocument),
-    isProtected: (id: string) =>
+    isSaving: () => pending.current.size > 0,
+    hasDirty: (matches: (id: string) => boolean = () => true) =>
       current.current.some(
-        (file) => file.id === id || file.ancestors.includes(id),
+        (file) => matches(file.id) && dirtyProjectDocument(file),
       ),
   };
 }

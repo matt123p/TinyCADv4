@@ -1,0 +1,57 @@
+* Provenance: written for circsim from manufacturer datasheet parameters, MIT.
+* In-house phototransistor-optocoupler macromodels. No vendor model text is
+* copied. Each part is an input LED, a transistor, and a current-controlled
+* current source that injects the transistor's base current from the LED current:
+*   base current = (CTR / bf) x I(LED),  so the collector current in the forward
+*   active region is bf x base current = CTR x I(LED).
+* bf is a constant 100 (no Early effect, no roll-off) and the source is a
+* current gain on a 0 V ammeter in series with the LED, so the collector current
+* is exactly CTR x IF until the transistor saturates, and saturation (VCE(sat),
+* the knee) comes from the transistor card itself rather than from a fudge
+* term. The LED side and the transistor side share no node: the model is
+* galvanically isolated, as the part is. The .model cards live INSIDE each
+* subckt so deck inlining carries them along (the generator inlines the .subckt
+* block; a top-level card would dangle).
+*
+* SIMPLIFICATIONS: the current transfer ratio is a constant (no dependence on
+* IF, VCE or temperature, no aging), no response-time limit beyond the
+* junction capacitances (real phototransistor couplers have a few microseconds
+* of rise and fall time, which the card's storage and capacitance only
+* approximate), dark current (ICEO) is the junction leakage of the card, and the
+* base pin of the six-pin parts is not modeled.
+*
+* Nodes of every part: a k c e (LED anode, LED cathode, collector, emitter).
+* Phototransistor card: bf 100, rc 10 ohm (sets the saturation voltage), no
+* Early voltage, 2 pF collector-base capacitance.
+
+* ---------------------------------------------------------------------------
+* PC817 (Sharp; EL817, LTV-817 equivalents), 4-pin DIP / SOP. Input: VF 1.2 V
+* typ (1.4 V max) at IF = 20 mA. Output: CTR 50 to 600 percent at IF = 5 mA,
+* VCE = 5 V (rank A 80-160, B 130-260, C 200-400, D 300-600 percent); the model
+* uses 170 percent, the geometric middle of the full window (the CTR of an
+* unranked part is a lottery, so a design should hold from 50 percent up).
+* VCE(sat) 0.1 V typ (0.2 V max) at IF = 20 mA, IC = 1 mA.
+.subckt PC817 a k c e
+.model DPC817 D(is=3.47e-15 rs=3 n=1.5 cjo=30p vj=0.75 m=0.333 bv=6 ibv=10u eg=1.11)
+.model QOPTO NPN(is=1e-14 bf=100 br=1 rc=10 cjc=2p cje=5p tf=1n)
+vled a ai 0
+dled ai k DPC817
+fb e b vled 0.017
+q1 c b e QOPTO
+.ends PC817
+
+* ---------------------------------------------------------------------------
+* 4N35 (Vishay / onsemi / Lite-On), 6-pin DIP (1 anode, 2 cathode, 3 NC,
+* 4 emitter, 5 collector, 6 base; the base pin is not modeled). Input: VF 1.15 V
+* typ (1.5 V max) at IF = 10 mA. Output: CTR 100 percent minimum at IF = 10 mA,
+* VCE = 10 V (no typical is guaranteed; the model uses the 100 percent minimum so
+* that a design which works in simulation works with any compliant part).
+* VCE(sat) 0.3 V max at IF = 10 mA, IC = 0.5 mA.
+.subckt 4N35 a k c e
+.model D4N35 D(is=1.26e-14 rs=3 n=1.5 cjo=30p vj=0.75 m=0.333 bv=6 ibv=10u eg=1.11)
+.model QOPTO NPN(is=1e-14 bf=100 br=1 rc=10 cjc=2p cje=5p tf=1n)
+vled a ai 0
+dled ai k D4N35
+fb e b vled 0.01
+q1 c b e QOPTO
+.ends 4N35

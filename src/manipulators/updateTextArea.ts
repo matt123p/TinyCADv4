@@ -1,9 +1,10 @@
-import { measureText, getFont } from '../util/measureText';
+import { measureText, getFont, getStyledFont } from '../util/measureText';
 import { UtilityService } from '../util/utilityService';
 import update from 'immutability-helper';
 import { Coordinate, Text, DocItem, DocItemTypes } from '../model/dsnItem';
 import { TextArea, TextAreaData, TextAreaBlock, IsInsideTextResult } from '../model/textArea';
 import { DrawingDelta } from './updateInterfaces';
+import { hasMarkdown } from '../util/markdown';
 import { layoutMarkdownSource } from '../util/markdownSource';
 
 export class updateTextData {
@@ -599,14 +600,17 @@ export class updateTextData {
       if (best_block.caretOffsets) {
         return this.get_position_in_block(best_block, target_pos);
       }
-      let bt = this.find_best_text(best_block.value, target_pos - best_block.x);
+      let position = this.nearestTextPosition(
+        best_block.value,
+        target_pos - best_block.x,
+      );
       if (
-        bt.exact >= best_block.value.length &&
-        best_block.start + bt.exact !== textAreaData.drawText.length
+        position >= best_block.value.length &&
+        best_block.start + position !== textAreaData.drawText.length
       ) {
-        --bt.exact;
+        --position;
       }
-      return best_block.start + bt.exact;
+      return best_block.start + position;
     }
 
     return textAreaData.edit_position;
@@ -831,63 +835,51 @@ export class updateTextData {
     };
   }
 
-  private find_best_text(text: string, target_width: number) {
-    // If there is CR/LF then we cut at that
-    let cut = text.indexOf('\r');
-    if (cut >= 0) {
-      text = text.substring(0, cut + 1);
-    }
+  private fitText(text: string, width: number, font: string) {
+    if (measureText(font, text) <= width) return text.length;
 
-    // Do a binary search to match the text to the width (in pixels)
-    let high_cut = text.length;
-    let low_cut = 0;
-    let mid_width = 0;
-
-    let high_width = measureText(this.getFont(), text);
-    if (target_width >= high_width) {
-      return { cut: high_cut, width: high_width, exact: high_cut };
-    }
-
-    while (Math.abs(low_cut - high_cut) > 1) {
-      let mid_cut = Math.floor((high_cut + low_cut) / 2);
-      mid_width = measureText(this.getFont(), text.substring(0, mid_cut));
-
-      // Ok, which way do we search next?
-      if (mid_width > target_width) {
-        high_cut = mid_cut;
+    let start = 0;
+    let end = text.length;
+    while (end - start > 1) {
+      const middle = Math.floor((start + end) / 2);
+      if (measureText(font, text.slice(0, middle)) > width) {
+        end = middle;
       } else {
-        low_cut = mid_cut;
+        start = middle;
       }
     }
+    return start;
+  }
 
-    // We have the character the user clicked on, so the question
-    // is, which end of the text is the user closest to?
-    let mid_width1 = measureText(this.getFont(), text.substring(0, low_cut));
-    let mid_width2 = measureText(
-      this.getFont(),
-      text.substring(0, low_cut + 1),
-    );
-    if (
-      Math.abs(mid_width1 - target_width) > Math.abs(mid_width2 - target_width)
-    ) {
-      ++low_cut;
+  private nearestTextPosition(text: string, x: number) {
+    const lineBreak = /\r\n?|\n/.exec(text);
+    if (lineBreak) text = text.slice(0, lineBreak.index + lineBreak[0].length);
+    const font = this.getFont();
+    const fit = this.fitText(text, x, font);
+    if (fit === text.length) return fit;
+
+    const before = measureText(font, text.slice(0, fit));
+    const after = measureText(font, text.slice(0, fit + 1));
+    return x - before > after - x ? fit + 1 : fit;
+  }
+
+  private wrapText(text: string, width: number, font: string) {
+    const lineBreak = /\r\n?|\n/.exec(text);
+    const line = lineBreak ? text.slice(0, lineBreak.index) : text;
+    const fit = this.fitText(line, width, font);
+    if (fit === line.length) {
+      return {
+        cut: fit + (lineBreak?.[0].length ?? 0),
+        width: measureText(font, line),
+      };
     }
 
-    // Now scan back for a space
-    cut = low_cut;
-    while (cut > 0 && text.charAt(cut) !== ' ' && text.charAt(cut) !== '\r') {
-      --cut;
-    }
-
-    if (cut === 0) {
-      // We have to break the word as it is longer than
-      // a line
-      cut = low_cut;
-    } else if (text.charAt(cut) === ' ' || text.charAt(cut) === '\r') {
-      ++cut;
-    }
-
-    return { cut: cut, width: mid_width, exact: low_cut };
+    // Keep the separating space with the preceding word to preserve source offsets.
+    const space = line.lastIndexOf(' ', fit);
+    let cut = space > 0 ? space + 1 : fit;
+    if (cut > 0 && /[\uDC00-\uDFFF]/.test(line.charAt(cut))) --cut;
+    if (cut === 0) cut = line.codePointAt(0) > 0xffff ? 2 : 1;
+    return { cut, width: measureText(font, line.slice(0, cut)) };
   }
 
   private rotateRotation(dr: number, rotation: number) {
@@ -1024,8 +1016,7 @@ export class updateTextData {
       }
       return block.start + closest;
     }
-    let bt = this.find_best_text(block.value, x - block.x);
-    return block.start + bt.exact;
+    return block.start + this.nearestTextPosition(block.value, x - block.x);
   }
 
   private find_line_start(textAreaData: TextAreaData) {
@@ -1077,7 +1068,11 @@ export class updateTextData {
       };
     }
 
-    if (this.textArea.drawMultiline && (this.textArea.drawItem as DocItem).NodeName === DocItemTypes.Text) {
+    if (
+      this.textArea.drawMultiline &&
+      (this.textArea.drawItem as DocItem).NodeName === DocItemTypes.Text &&
+      hasMarkdown(drawText)
+    ) {
       return {
         ...textAreaData,
         ...layoutMarkdownSource(this.textArea, textAreaData, drawText),
@@ -1113,18 +1108,18 @@ export class updateTextData {
       y_end = this.textArea.font_size + 4;
     }
 
+    const font = this.getFont();
     while (y <= y_end) {
       let bt;
 
       if (this.textArea.drawMultiline) {
-        bt = this.find_best_text(txt, width);
+        bt = this.wrapText(txt, Math.max(0, width - 2), font);
       } else {
-        width = measureText(this.getFont(), txt);
+        width = measureText(font, txt);
         height = this.textArea.font_size;
         bt = {
           cut: txt.length,
           width: width,
-          exact: txt.length,
         };
       }
 
@@ -1132,14 +1127,14 @@ export class updateTextData {
       let next_text = txt.substring(0, bt.cut);
       txt = txt.substring(bt.cut);
 
-      let trailing_cr =
+      const trailingLineBreak =
         this.textArea.drawMultiline &&
-        next_text[next_text.length - 1] === '\r' &&
+        /[\r\n]$/.test(next_text) &&
         txt.length === 0;
 
       // Is the selection position within this text block?
       if (
-        trailing_cr &&
+        trailingLineBreak &&
         textEdit == null &&
         edit_position >= next_text.length
       ) {
@@ -1154,7 +1149,7 @@ export class updateTextData {
       ) {
         // Yes so determine it's location
         let metrics = measureText(
-          this.getFont(),
+          font,
           next_text.slice(0, edit_position),
         );
         textEdit = {
@@ -1173,14 +1168,14 @@ export class updateTextData {
       } else if (sel_end >= next_text.length) {
         sel_end_pos = bt.width;
       } else {
-        sel_end_pos = measureText(this.getFont(), next_text.slice(0, sel_end));
+        sel_end_pos = measureText(font, next_text.slice(0, sel_end));
       }
 
       if (sel_start <= 0) {
         sel_start_pos = 0;
       } else if (sel_start < next_text.length) {
         sel_start_pos = measureText(
-          this.getFont(),
+          font,
           next_text.slice(0, sel_start),
         );
       } else {
@@ -1229,6 +1224,7 @@ export class updateTextData {
   }
 
   private getFont() {
-    return getFont(this.textArea.drawItem);
+    const item = this.textArea.drawItem;
+    return this.textArea.drawMultiline ? getStyledFont(item) : getFont(item);
   }
 }

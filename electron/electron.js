@@ -1,4 +1,7 @@
-import { isBoardFile, isDrawingFile } from '../shared/drawingFiles.js';
+import { isProjectFile } from '../shared/projectFiles.js';
+import { recentProjectFolders, registerProjectFiles } from './projectFiles.js';
+import { isDrawingFile } from '../shared/drawingFiles.js';
+import { helpLinks, manualLinks } from '../shared/helpLinks.js';
 import { registerSimulation } from './simulation.js';
 import { chartWindowOptions, configureChartWindow } from './chartWindows.js';
 import { boardWorkspaceMenus, drawingNewMenu, drawingOpenMenu, drawingViewMenu } from './drawingMenus.js';
@@ -8,12 +11,13 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import Store from 'electron-store';
 import { registerBundledLibraries } from './bundledLibraries.js';
+import { unpackedResource } from './tclibReader.js';
 import { registerBundledExamples } from './bundledExamples.js';
+import { repositoryExampleSources } from '../shared/exampleSources.js';
 import { registerOnlineLibrary } from './onlineLibrary.js';
 import { registerLicenseHandlers } from './licenses.js';
-import { recentProjectFolders, registerProjectFiles } from './projectFiles.js';
-import { isProjectFile } from '../shared/projectFiles.js';
 import fs from 'fs';
+import { randomUUID } from 'node:crypto';
 import { spawn } from 'child_process';
 import { loadFile, saveFile, sendRecentFiles } from './io.js';
 import { loadLibrary, loadLibraryToWebContents, saveLibrary, sendLibraries, removeLibrary, saveLibraryConfig } from './libraries.js';
@@ -23,40 +27,37 @@ const __dirname = path.dirname(__filename);
 const { app, ipcMain, BrowserWindow, Menu, dialog, shell, safeStorage, net } = await import('electron');
 const isDev = (await import('electron-is-dev')).default;
 const isMac = process.platform === 'darwin'
-const electronMajorVersion = Number.parseInt(process.versions.electron.split('.')[0] || '0', 10);
 const appDisplayName = 'TinyCAD';
 
 const store = new Store(); // Create store instance
 let mainWindow;
-let authorizeProjectDocument;
 let fileToOpen = null;
-let projectToOpen;
+let projectToOpen = null;
 
-function openProjectFile(filename) {
+function queueProjectOpen(filename) {
   projectToOpen = path.resolve(filename);
   const contents = mainWindow.webContents;
-  const show = () => contents.send('menu-command', 'file-open-project-launch');
-  if (contents.isLoadingMainFrame()) contents.once('did-finish-load', show);
-  else show();
-}
-
-function takeProjectOpen() {
-  const filename = projectToOpen;
-  projectToOpen = undefined;
-  return filename;
+  const open = () => contents.send('menu-command', 'file-open-project-launch');
+  if (contents.isLoadingMainFrame()) contents.once('did-finish-load', open);
+  else open();
 }
 let isLibraryMode = false;
-let viewMenuState = { hasExampleExplanation: false, exampleExplanationVisible: false, simulationPanelVisible: false };
 let boardMenus = [];
+let editorMenuState = { project: false, editor: 'design' };
+let viewMenuState = { hasExampleExplanation: false, exampleExplanationVisible: false, simulationPanelVisible: false };
 let menuTranslations = {};
+let menuLanguage = 'en';
 let refreshMenu = () => {};
 let ipcHandlersRegistered = false;
 
 const spawnNewWindow = (filePath) => {
   const args = [];
-  if (isDev) {
-    args.push('.');
+  if (!app.isPackaged) {
+    if (process.argv.includes('--no-sandbox')) args.push('--no-sandbox');
+    args.push(app.getAppPath());
   }
+  const profile = process.argv.find(arg => arg.startsWith('--user-data-dir='));
+  if (profile) args.push(profile);
   args.push(filePath);
   const subprocess = spawn(process.execPath, args, {
     detached: true,
@@ -106,6 +107,7 @@ function createWindow({ openAbout = false } = {}) {
   // Load saved window size & position
   const windowState = store.get('windowState') || { width: 1200, height: 800 };
   const windowIcon = getWindowIconPath();
+  const additionalArguments = [`--tinycad-system-languages=${app.getPreferredSystemLanguages().join(',')}`];
   const appWindowUrl = isDev
     ? 'http://localhost:1234/'
     : `file://${path.join(__dirname, '../dist/index-electron.html')}`;
@@ -123,22 +125,44 @@ function createWindow({ openAbout = false } = {}) {
     webPreferences: {
       nodeIntegration: false, // Important for security
       contextIsolation: true, // Prevents direct access to Node APIs
+      additionalArguments,
       preload: path.join(__dirname, './preload.js')
     },
   });
 
+  mainWindow.webContents.on('context-menu', (_event, { isEditable, editFlags }) => {
+    if (!isEditable) return;
+    Menu.buildFromTemplate([
+      { label: getMenuLabel('undo', 'Undo'), click: () => mainWindow.webContents.send('menu-command', 'edit-undo') },
+      { label: getMenuLabel('redo', 'Redo'), click: () => mainWindow.webContents.send('menu-command', 'edit-redo') },
+      { type: 'separator' },
+      { role: 'cut', enabled: editFlags.canCut },
+      { role: 'copy', enabled: editFlags.canCopy },
+      { role: 'paste', enabled: editFlags.canPaste },
+      { role: 'delete', enabled: editFlags.canDelete },
+      { type: 'separator' },
+      { role: 'selectAll', enabled: editFlags.canSelectAll },
+    ]).popup({ window: mainWindow });
+  });
+
   function updateMenu() {
-    const pcbMode = boardMenus.length > 0;
+    const { project, editor } = editorMenuState;
+    const design = editor === 'design' && !isLibraryMode;
+    const canvas = editor === 'design';
+    const pcbMode = editor === 'pcb';
+    const editable = canvas || editor === 'text';
+    const canSave = editable || editor === 'bom' || pcbMode;
+    const canSaveAs = canvas || editor === 'bom' || pcbMode;
     const recentFiles = store.get('recentFiles') || [];
     const recentMenu = recentFiles.map(file => ({
       label: path.basename(file),
       click: () => mainWindow.webContents.send('menu-command-with-data', 'file-open-recent', { name: path.basename(file), id: file })
     }));
+
     const recentProjects = recentProjectFolders(store).map(id => ({
       label: isMac ? id : id.replaceAll('&', '&&'),
       click: () => mainWindow.webContents.send('menu-command-with-data', 'file-open-recent-project', { id }),
     }));
-
     const menuTemplate = [
       ...(isMac ? [{
         label: app.name,
@@ -159,41 +183,34 @@ function createWindow({ openAbout = false } = {}) {
         submenu: [
           {
             label: getMenuLabel('new', 'New'),
-            submenu: drawingNewMenu(getMenuLabel, command => mainWindow.webContents.send('menu-command', command)),
+            submenu: drawingNewMenu(getMenuLabel, command => mainWindow.webContents.send('menu-command', command))
           },
           { label: getMenuLabel('open', 'Open'), accelerator: 'CmdOrCtrl+O', click: () => mainWindow.webContents.send('menu-command', 'file-open') },
-          { label: getMenuLabel('openProjectFolder', 'Open Project Folder…'), click: () => mainWindow.webContents.send('menu-command', 'file-open-project-folder') },
-          {
-            label: getMenuLabel('recentProjects', 'Recent Projects'),
-            submenu: recentProjects.length ? recentProjects : [
-              { label: getMenuLabel('noRecentProjects', 'No Recent Projects'), enabled: false },
-            ],
-          },
-          { label: getMenuLabel('closeProject', 'Close Project'), click: () => mainWindow.webContents.send('menu-command', 'file-close-project') },
+          { label: 'Open Project Folder…', click: () => mainWindow.webContents.send('menu-command', 'file-open-project-folder') },
+          { label: 'Recent Projects', submenu: recentProjects.length ? recentProjects : [{ label: 'No Recent Projects', enabled: false }] },
+          { label: 'Close Project', enabled: project, click: () => mainWindow.webContents.send('menu-command', 'file-close-project') },
           ...drawingOpenMenu(getMenuLabel, recentMenu, command => mainWindow.webContents.send('menu-command', command)),
-          { label: getMenuLabel('save', 'Save'), accelerator: 'CmdOrCtrl+S', click: () => mainWindow.webContents.send('menu-command', 'file-save') },
-          { label: getMenuLabel('saveAll', 'Save All'), click: () => mainWindow.webContents.send('menu-command', 'file-save-all') },
-          { label: getMenuLabel('saveAs', 'Save As...'), accelerator: 'CmdOrCtrl+Shift+S', click: () => mainWindow.webContents.send('menu-command', 'file-save-as') },
-          ...(!pcbMode ? [
-          { label: getMenuLabel('saveWithoutResults', 'Save without results...'), click: () => mainWindow.webContents.send('menu-command', 'file-save-without-results') },
+          { label: getMenuLabel('save', 'Save'), accelerator: 'CmdOrCtrl+S', enabled: canSave, click: () => mainWindow.webContents.send('menu-command', 'file-save') },
+          ...(project ? [{ label: 'Save All', click: () => mainWindow.webContents.send('menu-command', 'file-save-all') }] : []),
+          { label: getMenuLabel('saveAs', 'Save As...'), accelerator: 'CmdOrCtrl+Shift+S', enabled: canSaveAs, click: () => mainWindow.webContents.send('menu-command', 'file-save-as') },
+          { label: getMenuLabel('saveWithoutResults', 'Save without results...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'file-save-without-results') },
           { type: 'separator' },
           {
             label: getMenuLabel('import', 'Import'),
             submenu: [
-              { label: getMenuLabel('importImage', 'Image...'), click: () => mainWindow.webContents.send('menu-command', 'import-image') },
-              { label: getMenuLabel('importKicadSymbols', 'KiCad Symbols...'), click: () => mainWindow.webContents.send('menu-command', 'import-kicad-symbols') },
+              { label: getMenuLabel('importImage', 'Image...'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'import-image') },
+              { label: getMenuLabel('importKicadSymbols', 'KiCad Symbols...'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'import-kicad-symbols') },
             ],
           },
           {
             label: getMenuLabel('export', 'Export'),
             submenu: [
-              { label: getMenuLabel('exportSvg', 'Export to SVG'), click: () => mainWindow.webContents.send('menu-command', 'file-export-svg') },
-              { label: getMenuLabel('exportPdf', 'Export to PDF'), click: () => mainWindow.webContents.send('menu-command', 'file-export-pdf') },
+              { label: getMenuLabel('exportSvg', 'Export to SVG'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'file-export-svg') },
+              { label: getMenuLabel('exportPdf', 'Export to PDF'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'file-export-pdf') },
             ],
           },
           { type: 'separator' },
-          { label: getMenuLabel('print', 'Print'), accelerator: 'CmdOrCtrl+P', click: () => mainWindow.webContents.send('menu-command', 'file-print') },
-          ] : []),
+          { label: getMenuLabel('print', 'Print'), accelerator: 'CmdOrCtrl+P', enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'file-print') },
           { type: 'separator' },
           isMac ? { role: 'close' } : { role: 'quit' }
         ]
@@ -202,57 +219,62 @@ function createWindow({ openAbout = false } = {}) {
         label: getMenuLabel('edit', 'Edit'),
         submenu: [
           { label: getMenuLabel('undo', 'Undo'), accelerator: 'CmdOrCtrl+Z', click: () => mainWindow.webContents.send('menu-command', 'edit-undo') },
-          { label: getMenuLabel('redo', 'Redo'), accelerator: 'CmdOrCtrl+Y', click: () => mainWindow.webContents.send('menu-command', 'edit-redo') },
+          { label: getMenuLabel('redo', 'Redo'), accelerator: isMac ? 'Cmd+Shift+Z' : 'Ctrl+Y', click: () => mainWindow.webContents.send('menu-command', 'edit-redo') },
           { type: 'separator' },
           { role: 'cut' },
           { role: 'copy' },
           { role: 'paste' },
           { role: 'delete' },
           { role: 'selectAll' },
-          ...(!pcbMode ? [
           { type: 'separator' },
-          { label: getMenuLabel('rotateLeft', 'Rotate Left'), click: () => mainWindow.webContents.send('menu-command', 'edit-rotate-left') },
-          { label: getMenuLabel('rotateRight', 'Rotate Right'), click: () => mainWindow.webContents.send('menu-command', 'edit-rotate-right') },
-          { label: getMenuLabel('flipHorizontal', 'Flip Horizontal'), click: () => mainWindow.webContents.send('menu-command', 'edit-flip-h') },
-          { label: getMenuLabel('flipVertical', 'Flip Vertical'), click: () => mainWindow.webContents.send('menu-command', 'edit-flip-v') }
-          ] : [])
+          { label: getMenuLabel('rotateLeft', 'Rotate Left'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'edit-rotate-left') },
+          { label: getMenuLabel('rotateRight', 'Rotate Right'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'edit-rotate-right') },
+          { label: getMenuLabel('flipHorizontal', 'Flip Horizontal'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'edit-flip-h') },
+          { label: getMenuLabel('flipVertical', 'Flip Vertical'), enabled: canvas, click: () => mainWindow.webContents.send('menu-command', 'edit-flip-v') }
         ]
       },
       {
         label: getMenuLabel('view', 'View'),
-        submenu: drawingViewMenu(getMenuLabel, viewMenuState, isLibraryMode,
+        submenu: drawingViewMenu(getMenuLabel, { ...viewMenuState, canvas: canvas || pcbMode }, isLibraryMode,
           command => mainWindow.webContents.send('menu-command', command), pcbMode)
       },
-      ...(!isLibraryMode ? boardWorkspaceMenus(boardMenus,
-        (command) => mainWindow.webContents.send('menu-command', command)) : []),
+      ...(pcbMode ? boardWorkspaceMenus(boardMenus,
+        command => mainWindow.webContents.send('menu-command', command)) : []),
       ...(isLibraryMode || pcbMode ? [] : [{
         label: getMenuLabel('tools', 'Tools'),
         submenu: [
-          { label: getMenuLabel('autoLayout', 'Auto-layout'), click: () => mainWindow.webContents.send('menu-command', 'tools-auto-layout') },
-          { label: getMenuLabel('annotateSymbols', 'Annotate Symbols...'), click: () => mainWindow.webContents.send('menu-command', 'tools-annotate') },
-          { label: getMenuLabel('billOfMaterials', 'Bill of Materials...'), click: () => mainWindow.webContents.send('menu-command', 'tools-bom') },
+          ...(project ? [
+            { label: 'Add Hierarchical Symbol', enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-add-hierarchical-symbol') },
+            { label: 'Insert Another Design as a Symbol…', enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-insert-hierarchical-symbol') },
+            { type: 'separator' },
+          ] : []),
+          { label: getMenuLabel('autoLayout', 'Auto-layout'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-auto-layout') },
+          { label: getMenuLabel('annotateSymbols', 'Annotate Symbols...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-annotate') },
+          { label: getMenuLabel('billOfMaterials', 'Bill of Materials...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-bom') },
           { type: 'separator' },
-          { label: getMenuLabel('checkDesignRules', 'Check Design Rules'), click: () => mainWindow.webContents.send('menu-command', 'tools-drc') },
+          { label: getMenuLabel('checkDesignRules', 'Check Design Rules'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-drc') },
           { type: 'separator' },
-          { label: getMenuLabel('generateNetlist', 'Generate Netlist...'), click: () => mainWindow.webContents.send('menu-command', 'tools-netlist') },
-          { label: getMenuLabel('generateSpiceNetlist', 'Generate Spice NetList'), click: () => mainWindow.webContents.send('menu-command', 'tools-spice') },
-          { label: getMenuLabel('createVhdlFile', 'Create VHDL file'), click: () => mainWindow.webContents.send('menu-command', 'tools-vhdl') },
+          { label: getMenuLabel('generateNetlist', 'Generate Netlist...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-netlist') },
+          { label: getMenuLabel('generateSpiceNetlist', 'Generate Spice NetList'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-spice') },
+          { label: getMenuLabel('createVhdlFile', 'Create VHDL file'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'tools-vhdl') },
         ]
       }]),
-      ...(isLibraryMode || pcbMode ? [] : [{
+      ...(isLibraryMode ? [] : [{
         label: getMenuLabel('settings', 'Settings'),
         submenu: [
-          { label: getMenuLabel('designDetails', 'Design Details...'), click: () => mainWindow.webContents.send('menu-command', 'settings-design-details') },
-          { label: getMenuLabel('pageSize', 'Page Size...'), click: () => mainWindow.webContents.send('menu-command', 'settings-page-size') },
+          { label: getMenuLabel('designDetails', 'Design Details...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'settings-design-details') },
+          { label: getMenuLabel('pageSize', 'Page Size...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'settings-page-size') },
           { label: getMenuLabel('settingsDialog', 'Settings...'), click: () => mainWindow.webContents.send('menu-command', 'settings-settings') },
+          { label: getMenuLabel('symbolPropertyFontDefaults', 'Default Symbol Attribute Fonts...'), enabled: design, click: () => mainWindow.webContents.send('menu-command', 'settings-symbol-property-fonts') },
           { label: getMenuLabel('colours', 'Colours...'), click: () => mainWindow.webContents.send('menu-command', 'settings-colours') },
         ]
       }]),
       {
         role: 'help',
         submenu: [
-          { label: getMenuLabel('discord', 'Discord'), click: () => shell.openExternal('https://discord.gg/bdXnjhrSYQ') },
-          { label: getMenuLabel('manual', 'Manual'), click: () => shell.openExternal('https://docs.tinycad.net/v4/') },
+          { label: getMenuLabel('discord', 'Discord'), click: () => shell.openExternal(helpLinks.discord) },
+          { label: getMenuLabel('manual', 'Manual'), click: () => shell.openExternal(manualLinks(menuLanguage).home) },
+          { label: getMenuLabel('reportIssue', 'Report an issue on GitHub'), click: () => shell.openExternal(helpLinks.issues) },
           ...(isMac ? [] : [
             { type: 'separator' },
             { label: getMenuLabel('aboutTinyCAD', 'About TinyCAD'), click: showAbout },
@@ -268,10 +290,8 @@ function createWindow({ openAbout = false } = {}) {
   refreshMenu = updateMenu;
   updateMenu();
   const unsubscribe = store.onDidChange('recentFiles', () => refreshMenu());
-  const unsubscribeProjects = store.onDidChange('recentProjectFolders', () => refreshMenu());
   mainWindow.on('closed', () => {
     unsubscribe();
-    unsubscribeProjects();
     if (mainWindow && mainWindow.isDestroyed()) {
       mainWindow = null;
     }
@@ -295,6 +315,7 @@ function createWindow({ openAbout = false } = {}) {
           webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
+            additionalArguments,
             preload: path.join(__dirname, './preload.js')
           }
         }
@@ -320,34 +341,29 @@ function createWindow({ openAbout = false } = {}) {
   for (const arg of process.argv) {
     if (arg === '--new-library') {
       qp.set('action', 'new-library');
+    } else if (arg.toLowerCase().endsWith('.tclib')) {
+      qp.set('library', arg);
     } else if (arg === '--new-pcb') {
       qp.set('workspace', 'pcb');
     } else if (isProjectFile(arg)) {
       projectToOpen = path.resolve(arg);
-    } else if (arg.toLowerCase().endsWith('.tclib')) {
-      qp.set('library', arg);
-    } else if ((isDrawingFile(arg) || isBoardFile(arg))) {
+      qp.set('project', '1');
+    } else if (isDrawingFile(arg)) {
       qp.set('file', arg);
     }
   }
 
   // Check for MacOS file open
   if (fileToOpen) {
-    if (isProjectFile(fileToOpen)) {
-      projectToOpen = path.resolve(fileToOpen);
-    } else if (fileToOpen.toLowerCase().endsWith('.tclib')) {
+    if (fileToOpen.toLowerCase().endsWith('.tclib')) {
       qp.set('library', fileToOpen);
-    } else if ((isDrawingFile(fileToOpen) || isBoardFile(fileToOpen))) {
+    } else if (isProjectFile(fileToOpen)) {
+      projectToOpen = path.resolve(fileToOpen);
+      qp.set('project', '1');
+    } else if (isDrawingFile(fileToOpen)) {
       qp.set('file', fileToOpen);
     }
     fileToOpen = null;
-  }
-
-  if (projectToOpen) {
-    qp.delete('file');
-    qp.delete('library');
-    qp.delete('action');
-    qp.set('project', '1');
   }
 
   // and load the index.html of the app.
@@ -364,16 +380,6 @@ function createWindow({ openAbout = false } = {}) {
   }
 
   mainWindow.loadURL(url);
-
-  // Call a function after the main renderer has started
-  mainWindow.webContents.on('did-finish-load', () => {
-    // Send the list of recent files
-    sendRecentFiles(mainWindow);
-
-    // Send the list of libraries
-    sendLibraries(mainWindow);
-  });
-
 
   // Save window size & position when closing
   let isQuitting = false;
@@ -437,12 +443,25 @@ function createWindow({ openAbout = false } = {}) {
   if (!ipcHandlersRegistered) {
     ipcHandlersRegistered = true;
     registerSimulation();
+    const exampleSources = app.isPackaged
+      ? [{ directory: path.join(__dirname, '../dist/bundled-examples') }]
+      : repositoryExampleSources(path.join(__dirname, '..'));
+    registerProjectFiles({
+      ipcMain, getWindow: () => mainWindow, dialog, shell, store,
+      documents: app.getPath('documents'), onRecentProjectsChanged: () => refreshMenu(),
+      exampleSources,
+      openLibrary: spawnNewWindow,
+      takeProjectOpen: () => {
+        const filename = projectToOpen;
+        projectToOpen = null;
+        return filename;
+      },
+    });
     registerLicenseHandlers({ ipcMain, app, shell, getWindow: () => mainWindow });
-    authorizeProjectDocument = registerProjectFiles({ ipcMain, dialog, shell, store, getWindow: () => mainWindow, documents: app.getPath('documents'), takeProjectOpen });
     registerBundledExamples({ ipcMain, getWindow: () => mainWindow,
-      directory: path.join(__dirname, '../dist/bundled-examples') });
+      sources: exampleSources });
     registerBundledLibraries({ ipcMain, getWindow: () => mainWindow, store,
-      directory: path.join(__dirname, isDev ? '../bundled-libraries' : '../dist/bundled-libraries') });
+      directory: unpackedResource(path.join(__dirname, isDev ? '../bundled-libraries' : '../dist/bundled-libraries')) });
     registerChatSecretHandlers(ipcMain, { app, safeStorage });
     registerOnlineLibrary({ ipcMain, app, getWindow: () => mainWindow,
       send: (url, options) => net.fetch(url, options) });
@@ -489,9 +508,7 @@ function createWindow({ openAbout = false } = {}) {
         return;
       }
 
-      if (event.sender !== mainWindow.webContents ||
-          event.senderFrame !== mainWindow.webContents.mainFrame) return;
-      loadFile(mainWindow, file, isLibraryMode, spawnNewWindow, openProjectFile, authorizeProjectDocument);
+      loadFile(mainWindow, file, isLibraryMode, spawnNewWindow, queueProjectOpen);
     });
 
     ipcMain.on('save-file', (event, data) => {
@@ -521,6 +538,13 @@ function createWindow({ openAbout = false } = {}) {
       }
 
       saveLibrary(mainWindow, filePath);
+    });
+
+    ipcMain.on('request-startup-lists', (event) => {
+      const window = BrowserWindow.fromWebContents(event.sender);
+      if (!window || event.senderFrame !== event.sender.mainFrame) return;
+      sendRecentFiles(window);
+      sendLibraries(window);
     });
 
     ipcMain.on('refresh-libraries', () => {
@@ -577,6 +601,22 @@ function createWindow({ openAbout = false } = {}) {
       }
     });
 
+    ipcMain.on('set-board-menus', (event, menus) => {
+      if (!mainWindow || event.sender !== mainWindow.webContents ||
+          event.senderFrame !== mainWindow.webContents.mainFrame || !Array.isArray(menus)) return;
+      boardMenus = menus;
+      refreshMenu();
+    });
+    ipcMain.on('set-editor-menu-state', (event, state) => {
+      if (!mainWindow || event.sender !== mainWindow.webContents ||
+          event.senderFrame !== mainWindow.webContents.mainFrame ||
+          !['design', 'pcb', 'text', 'image', 'pdf', 'bom', 'web', 'empty'].includes(state?.editor)) return;
+      const project = state.project === true;
+      if (project === editorMenuState.project && state.editor === editorMenuState.editor) return;
+      editorMenuState = { project, editor: state.editor };
+      refreshMenu();
+    });
+
     ipcMain.on('set-view-menu-state', (event, state) => {
       if (!mainWindow || event.sender !== mainWindow.webContents || !state || typeof state !== 'object') return;
       const next = {
@@ -590,17 +630,7 @@ function createWindow({ openAbout = false } = {}) {
       }
     });
 
-    ipcMain.on('set-board-menus', (event, menus) => {
-      if (!mainWindow || event.sender !== mainWindow.webContents || !Array.isArray(menus) || menus.length > 4) return;
-      if (!menus.every((menu) => typeof menu?.title === 'string' && Array.isArray(menu.items) &&
-        menu.items.length <= 32 && menu.items.every((item) => item === null ||
-          (typeof item?.id === 'string' && typeof item.label === 'string')))) return;
-      if (JSON.stringify(boardMenus) === JSON.stringify(menus)) return;
-      boardMenus = menus;
-      refreshMenu();
-    });
-
-    ipcMain.on('set-menu-translations', (event, translations) => {
+    ipcMain.on('set-menu-translations', (event, translations, language) => {
       if (!mainWindow || event.sender !== mainWindow.webContents) {
         return;
       }
@@ -610,6 +640,7 @@ function createWindow({ openAbout = false } = {}) {
       }
 
       menuTranslations = translations;
+      menuLanguage = language;
       refreshMenu();
     });
 
@@ -639,19 +670,30 @@ function createWindow({ openAbout = false } = {}) {
       }
 
       const result = await dialog.showOpenDialog(mainWindow, {
-        filters: [{ name: 'KiCad Symbols', extensions: ['kicad_sym'] }],
-        properties: ['openFile'],
+        filters: [{ name: 'KiCad Symbols and SPICE files', extensions: [
+          'kicad_sym', 'lib', 'cir', 'sub', 'mod', 'model', 'spice', 'sp', 'spi', 'inc', 'txt',
+        ] }],
+        properties: ['openFile', 'multiSelections'],
       });
 
       if (result.canceled || result.filePaths.length === 0) {
         return null;
       }
 
-      const selectedPath = result.filePaths[0];
+      const libraries = result.filePaths.filter((file) => /\.kicad_sym$/i.test(file));
+      if (libraries.length !== 1)
+        throw new Error('Select one KiCad symbol library and any accompanying SPICE files.');
+      const [selectedPath] = libraries;
+      const modelFiles = await Promise.all(result.filePaths.filter((file) => file !== selectedPath).map(async (file) => {
+        if ((await fs.promises.stat(file)).size > 8 * 1024 * 1024)
+          throw new Error('An accompanying SPICE file exceeds 8 MiB.');
+        return { fileName: path.basename(file), content: await fs.promises.readFile(file, 'utf8') };
+      }));
       const content = await fs.promises.readFile(selectedPath, 'utf8');
       return {
         fileName: path.basename(selectedPath),
         content,
+        modelFiles,
       };
     });
 
@@ -698,17 +740,24 @@ function createWindow({ openAbout = false } = {}) {
       return printers.map(p => ({
         name: p.name,
         displayName: p.displayName || p.name,
-        isDefault: p.isDefault,
       }));
     });
 
-    ipcMain.on('print-document', async (event, options) => {
-      if (!mainWindow) {
-        return;
+    ipcMain.handle('print-document', async (event, options) => {
+      if (!mainWindow || event.senderFrame !== mainWindow.webContents.mainFrame) {
+        throw new Error('Print requests must come from the TinyCAD window');
+      }
+
+      if (options.printerName) {
+        const printers = await event.sender.getPrintersAsync();
+        if (!printers.some(printer => printer.name === options.printerName)) {
+          return { success: false, printerUnavailable: true };
+        }
       }
 
       const printWindow = new BrowserWindow({
         show: false,
+        parent: mainWindow,
         title: 'TinyCAD',
         icon: getWindowIconPath(),
         webPreferences: {
@@ -718,66 +767,100 @@ function createWindow({ openAbout = false } = {}) {
       });
 
       try {
-        const waitForPrintLayout = () => printWindow.webContents.executeJavaScript(`
-          new Promise((resolve) => {
-            const waitForImages = Promise.all(
-              Array.from(document.images || []).map((image) => {
-                if (image.complete) {
-                  return Promise.resolve();
-                }
+        await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(options.html)}`);
+        if (process.platform === 'linux') {
+          // The loaded document has its images. Flush layout to start any font
+          // loads without waiting for animation frames from the hidden window.
+          await printWindow.webContents.executeJavaScript(`
+            (async () => {
+              document.body.getBoundingClientRect();
+              await document.fonts.ready;
+            })()
+          `);
+        } else {
+          const waitForPrintLayout = () => printWindow.webContents.executeJavaScript(`
+            new Promise((resolve) => {
+              const waitForImages = Promise.all(
+                Array.from(document.images || []).map((image) => {
+                  if (image.complete) {
+                    return Promise.resolve();
+                  }
 
-                return new Promise((imageResolve) => {
-                  image.addEventListener('load', imageResolve, { once: true });
-                  image.addEventListener('error', imageResolve, { once: true });
+                  return new Promise((imageResolve) => {
+                    image.addEventListener('load', imageResolve, { once: true });
+                    image.addEventListener('error', imageResolve, { once: true });
+                  });
+                })
+              );
+
+              const waitForFonts = document.fonts?.ready ?? Promise.resolve();
+
+              Promise.all([waitForImages, waitForFonts]).then(() => {
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(resolve);
                 });
-              })
-            );
-
-            const waitForFonts = document.fonts?.ready ?? Promise.resolve();
-
-            Promise.all([waitForImages, waitForFonts]).then(() => {
-              requestAnimationFrame(() => {
-                requestAnimationFrame(resolve);
               });
             });
-          });
-        `);
-
-        await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(options.html)}`);
-        await waitForPrintLayout();
-
-        const printCallback = (success, failureReason) => {
-          printWindow.close();
-          mainWindow?.webContents.send('print-complete', {
-            success,
-            failureReason: failureReason || undefined
-          });
-        };
-
-        if (process.platform === 'win32' && electronMajorVersion < 38) {
-          printWindow.webContents.print(undefined, printCallback);
-          return;
+          `);
+          await waitForPrintLayout();
         }
 
         const printOptions = {
           silent: true,
-          copies: options.copies || 1,
-          landscape: options.landscape || false,
+          copies: options.copies,
+          landscape: options.landscape,
           printBackground: true,
-          usePrinterDefaultPageSize: true,
+          ...(options.printerName && { deviceName: options.printerName }),
+          ...(options.pageSize ? { pageSize: options.pageSize } : { usePrinterDefaultPageSize: true }),
+          ...(options.color !== undefined && { color: options.color }),
+          ...(options.duplexMode && { duplexMode: options.duplexMode }),
         };
 
-        if (typeof options.printerName === 'string' && options.printerName.trim() !== '') {
-          printOptions.deviceName = options.printerName;
+        return await new Promise(resolve => {
+          printWindow.webContents.print(printOptions, (success, failureReason) => {
+            resolve({ success, failureReason });
+          });
+        });
+      } finally {
+        if (!printWindow.isDestroyed()) printWindow.destroy();
+      }
+    });
+
+    ipcMain.handle('open-print-pdf', async (event, content) => {
+      if (!mainWindow || event.senderFrame !== mainWindow.webContents.mainFrame) {
+        throw new Error('Print requests must come from the TinyCAD window');
+      }
+
+      const pdf = Buffer.from(content, 'base64');
+      if (pdf.subarray(0, 5).toString() !== '%PDF-') {
+        throw new Error('The print document is not a PDF');
+      }
+      const directory = path.join(app.getPath('temp'), 'TinyCAD-Print');
+      await fs.promises.mkdir(directory, { recursive: true });
+
+      // Keep recent files available to PDF viewers and prune older previews.
+      const expiresBefore = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const files = await fs.promises.readdir(directory);
+      await Promise.allSettled(files.filter(name => /^TinyCAD-[\da-f-]{36}\.pdf$/.test(name)).map(async name => {
+        const file = path.join(directory, name);
+        const info = await fs.promises.lstat(file);
+        if (info.isFile() && info.mtimeMs < expiresBefore) await fs.promises.unlink(file);
+      }));
+
+      const file = path.join(directory, `TinyCAD-${randomUUID()}.pdf`);
+      await fs.promises.writeFile(file, pdf, { flag: 'wx', mode: 0o600 });
+      try {
+        if (process.platform === 'linux') {
+          const { openPdfPrintWindow } = await import('./printPdf.js');
+          await openPdfPrintWindow(mainWindow, file);
+          return true;
         }
 
-        printWindow.webContents.print(printOptions, printCallback);
-      } catch (err) {
-        printWindow.close();
-        mainWindow?.webContents.send('print-complete', {
-          success: false,
-          failureReason: err.message
-        });
+        const error = await shell.openPath(file);
+        if (error) throw new Error(error);
+      } catch (error) {
+        await fs.promises.unlink(file).catch(() => {});
+        throw error;
       }
     });
 
@@ -856,8 +939,8 @@ app.on('open-file', (event, filePath) => {
     mainWindow.focus();
 
     if (isProjectFile(filePath)) {
-      openProjectFile(filePath);
-    } else if (isDrawingFile(filePath) || isBoardFile(filePath)) {
+      queueProjectOpen(filePath);
+    } else if (isDrawingFile(filePath)) {
       loadFile(mainWindow, filePath, isLibraryMode, spawnNewWindow);
     } else if (filePath.toLowerCase().endsWith('.tclib')) {
       loadLibrary(mainWindow, filePath);

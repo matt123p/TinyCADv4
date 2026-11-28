@@ -41,7 +41,7 @@
       "id": "spice",
       "name": "SPICE essentials",
       "path": "spice/spice.tclib",
-      "description": "Standard onetransistor symbols with SPICE models and sources. Includes generic teaching models and a 741-style behavioral model."
+      "description": "Passives, discrete devices, sources and 741, LM358 and LM324 op-amps with built-in SPICE models."
     },
     {
       "id": "digital",

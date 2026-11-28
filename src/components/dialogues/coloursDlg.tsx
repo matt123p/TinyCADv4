@@ -1,6 +1,6 @@
 import React, { Dispatch } from 'react';
 import { WithTranslation, withTranslation } from 'react-i18next';
-import { SketchPicker, ColorResult } from 'react-color';
+import { ColourPicker } from '../controls/ColourPicker';
 import {
   Dialog,
   DialogSurface,
@@ -168,33 +168,33 @@ class ColoursDialog extends React.PureComponent<
     });
   }
 
-  handleColorChange(colour: ColorResult) {
+  handleColorChange(colour: string) {
     this.setState((s) => {
       switch (s.selected) {
         case 'color_background':
-          return { ...s, color_background: colour?.hex };
+          return { ...s, color_background: colour };
         case 'color_bus':
-          return { ...s, color_bus: colour?.hex };
+          return { ...s, color_bus: colour };
         case 'color_hidden_pin':
-          return { ...s, color_hidden_pin: colour?.hex };
+          return { ...s, color_hidden_pin: colour };
         case 'color_junction':
-          return { ...s, color_junction: colour?.hex };
+          return { ...s, color_junction: colour };
         case 'color_label':
-          return { ...s, color_label: colour?.hex };
+          return { ...s, color_label: colour };
         case 'color_noconnect':
-          return { ...s, color_noconnect: colour?.hex };
+          return { ...s, color_noconnect: colour };
         case 'color_notetext_fill':
-          return { ...s, color_notetext_fill: colour?.hex };
+          return { ...s, color_notetext_fill: colour };
         case 'color_notetext_line':
-          return { ...s, color_notetext_line: colour?.hex };
+          return { ...s, color_notetext_line: colour };
         case 'color_notetext_text':
-          return { ...s, color_notetext_text: colour?.hex };
+          return { ...s, color_notetext_text: colour };
         case 'color_pin':
-          return { ...s, color_pin: colour?.hex };
+          return { ...s, color_pin: colour };
         case 'color_power':
-          return { ...s, color_power: colour?.hex };
+          return { ...s, color_power: colour };
         case 'color_wire':
-          return { ...s, color_wire: colour?.hex };
+          return { ...s, color_wire: colour };
       }
       return s;
     });
@@ -225,14 +225,16 @@ class ColoursDialog extends React.PureComponent<
 
     return (
       <Dialog open={true} onOpenChange={this.handleClickCancel}>
-        <DialogSurface style={{ width: '760px', maxWidth: '96vw' }}>
+        <DialogSurface style={{ width: '600px', maxWidth: '96vw' }}>
           <DialogBody>
             <DialogTitle>{t('dialogues.colours.title')}</DialogTitle>
             <DialogContent>
-              <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '16px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
                 <div
                   style={{
-                    maxHeight: '430px',
+                    flex: '1 1 220px',
+                    minWidth: 0,
+                    maxHeight: 'clamp(180px, 52vw, 430px)',
                     overflowY: 'auto',
                     border: `1px solid ${tokens.colorNeutralStroke1}`,
                     borderRadius: tokens.borderRadiusMedium,
@@ -284,6 +286,8 @@ class ColoursDialog extends React.PureComponent<
 
                 <div
                   style={{
+                    flex: '1 1 260px',
+                    minWidth: 0,
                     border: `1px solid ${tokens.colorNeutralStroke1}`,
                     borderRadius: tokens.borderRadiusMedium,
                     padding: '12px',
@@ -301,9 +305,9 @@ class ColoursDialog extends React.PureComponent<
                       item: selectedItem ? t(selectedItem.labelKey) : selectedKey,
                     })}
                   </Text>
-                  <SketchPicker
-                    disableAlpha={true}
-                    color={colour}
+                  <ColourPicker
+                    key={selectedKey}
+                    colour={colour}
                     onChange={this.handleColorChange}
                   />
                   <div

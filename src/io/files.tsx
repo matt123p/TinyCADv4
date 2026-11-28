@@ -1,18 +1,19 @@
-import { bomCsv } from './bomCsv';
-import { boardHistoryCommand, boardZoomCommand, canOpenCircuit, circuitOpened, editFootprintLibrary, saveActiveBoard, showOpenedBoard } from './boardWorkspaceEvents';
-import { generateActiveBom, generateActiveNetlist } from './netlists/activeNetlist';
+import { boardHistoryCommand, boardMenuCommand, boardZoomCommand, canOpenCircuit, circuitOpened, editFootprintLibrary, saveActiveBoard, showOpenedBoard } from './boardWorkspaceEvents';
+import { projectFilesChanged } from './projectStorage';
+import { newProjectDesign } from './projectMode';
+import type { dsnDrawing } from '../model/dsnDrawing';
 import { apiServer, tinycadUrl } from './apiServer';
 import { withoutResults } from '../simulation/document';
 import { drawingFileName, isCompressedDrawing } from '../../shared/drawingFiles.js';
-import { decodeDrawing, encodeDrawing } from './dsnCodec';
-import { activateSchematicTab, openSchematicTabs, schematicFileTabKey } from '../state/schematicTabs';
-import type { dsnDrawing } from '../model/dsnDrawing';
+import { encodeDrawing } from './dsnCodec';
 import React from 'react';
 
 import { ActionCreators } from 'redux-undo';
 import { ioXML } from './ioXml';
 import {
   actionAddImage,
+  actionBomGenerate,
+  actionSheetAdd,
   actionCommand,
   actionMenuBrowserOpen,
   actionRename,
@@ -33,7 +34,8 @@ import { saveAs } from 'file-saver';
 import { tclib, tclibLibraryEntry, tclibSymbol } from '../model/tclib';
 import { libCache } from './libCache';
 import TPrintSheet from '../components/svg/PrintSheet';
-import { render } from 'react-dom';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Coordinate, DocItem, DocItemTypes, dsnPin } from '../model/dsnItem';
 import update from 'immutability-helper';
 
@@ -46,22 +48,24 @@ import { updateFactory } from '../manipulators/updateFactory';
 import { GoogleUserManager } from './google/googleUserManager';
 import { FileSystemUserManager } from './filesystem/filesystemUserManager';
 import { wkrGenerateNetlist } from '../web-worker/worker';
-import { downloadNetlist } from './netlists/netlistFiles';
-import { findImporter, ImportedSymbol } from './kicad/importer';
+import { netlistContents } from './netlists/netlistFiles';
+import { bindDrawingExports, designExportSource, driveExportLocation, rememberDriveExport, saveDesignExport } from './designExports';
+import type { DesktopDesignExport, DesignExportFormat } from './designExports';
+import { designExportFormats, designExportName } from '../../shared/designExports';
+import { findImporter, ImportedSymbol, type SymbolImportFile } from './kicad/importer';
 import { actionEditLibrarySymbol, actionSelectLibrarySymbol } from '../state/dispatcher/AppDispatcher';
 import { get_global_id } from '../util/global_id';
 import { openCurrentAppUrl, openExternalUrl } from '../util/navigation';
 import { normalizeUserConfig, sortLibrariesByConfig, ConfiguredLibraryFile } from './libraryConfig';
 import { commitExample } from './examples';
-import type { OpenProjectAction } from './projects';
-import type { ProjectStorageRequest } from './projectStorage';
+import { showWelcomeOnStartup } from './welcomePreferences';
+import { updateProjectLibraryConfig } from './projectLibraries';
 
 export type FileIdType = string | FileSystemFileHandle;
 
 export interface UserManager {
-  projectFiles?(request: ProjectStorageRequest): Promise<unknown>;
-  initialize(dispatch: Dispatch, getState: () => docDrawing): Promise<void>;
-  fileOpen(dispatch: Dispatch, file?: CurrentFile, projectMode?: boolean): void;
+  initialize(dispatch: Dispatch): Promise<void>;
+  fileOpen(dispatch: Dispatch, file?: CurrentFile): void;
   saveFile(xml: string | Uint8Array, file: CurrentFile, expectedVersion?: string): Promise<any>;
   login(): Promise<void>;
   renameFile(title: string, fileId: FileIdType): Promise<boolean>;
@@ -78,6 +82,7 @@ export interface UserManager {
 }
 
 export let userManager: UserManager = null;
+let startupWelcomeHandled = false;
 
 export function initialise() {
   return (dispatch: Dispatch, getState: { (): docDrawing }): Promise<void> => {
@@ -89,7 +94,23 @@ export function initialise() {
       userManager = new FileSystemUserManager();
     }
 
-    return userManager.initialize(dispatch, getState);
+    return Promise.resolve(userManager.initialize(dispatch)).then(() => {
+      if (startupWelcomeHandled) return;
+      startupWelcomeHandled = true;
+
+      const launch = new URLSearchParams(globalThis.window?.location?.search);
+      const { altStore, docStore } = getState();
+      if (
+        showWelcomeOnStartup() &&
+        altStore.loginState === 3 &&
+        !altStore.file.id &&
+        !altStore.show_dialogue &&
+        !docStore.present.editLibrary &&
+        !['about', 'file', 'library', 'action', 'state', 'project', 'workspace'].some((key) => launch.has(key))
+      ) {
+        dispatch(actionSelectDialog('open_example', null));
+      }
+    });
   };
 }
 
@@ -104,57 +125,26 @@ function checkSaveNeeded(getState: { (): docDrawing }): boolean {
   return state.docStore.present.drawingVersion !== state.altStore.savedVersion;
 }
 
-function openingReplacesDirtySchematic(getState: () => docDrawing) {
-  const state = getState();
-  return checkSaveNeeded(getState) && !(state.schematicTabs?.enabled && schematicFileTabKey(state.altStore.file));
-}
-
-export function showOpenedSchematic(dispatch: Dispatch, state: docDrawing, drawing: dsnDrawing, file: CurrentFile) {
-  if (!canOpenCircuit()) return;
-  const path = (value: string) => value.replaceAll('\\', '/').toLowerCase();
-  const existing = openSchematicTabs(state).find(({ tab }) =>
-    tab.file.id === file.id || (process.env.TARGET_SYSTEM === 'electron' && tab.file.project &&
-      path(`${tab.file.project.rootId}/${tab.file.project.documentPath}`) === path(String(file.id))));
-  if (existing) dispatch(activateSchematicTab(existing.key) as any);
-  else {
-    dispatch(actionSetDocument(drawing, file.name, file.id, file.folderId));
-    dispatch(ActionCreators.clearHistory());
-  }
-  window.dispatchEvent(new Event(circuitOpened));
-}
-
 // Performs the actual action after user confirms (or if no save needed)
 export function performPendingAction(pendingAction: UnsavedAction) {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
     switch (pendingAction.type) {
-      case 'file-open-project':
-        if (process.env.TARGET_SYSTEM === 'electron' || process.env.TARGET_SYSTEM === 'google') {
-          return import('./projects').then(({ openProjectDrawing }) => openProjectDrawing(pendingAction, dispatch, getState));
-        }
-        break;
       case 'file-open-example':
         commitExample(dispatch, pendingAction);
         break;
       case 'file-new':
         if (!canOpenCircuit()) break;
+        window.dispatchEvent(new Event(circuitOpened));
         // Create a new blank drawing and reset file data
         dispatch(actionSetDocument(blank(), 'tCad1.dsn', null, null));
-        window.dispatchEvent(new Event(circuitOpened));
         dispatch(ActionCreators.clearHistory());
         break;
       case 'file-open':
-        userManager.fileOpen(dispatch, undefined, getState().schematicTabs?.enabled);
+        userManager.fileOpen(dispatch);
         break;
       case 'file-open-recent':
-        userManager.fileOpen(dispatch, pendingAction.file as CurrentFile, getState().schematicTabs?.enabled);
+        userManager.fileOpen(dispatch, pendingAction.file);
         break;
-      case 'file-open-project-schematic':
-        return import('./projects').then(async ({ projectRequest }) => {
-          const { file, folder } = pendingAction;
-          const { data } = await projectRequest({ operation: 'read', id: file.id });
-          const drawing = await decodeDrawing(data);
-          showOpenedSchematic(dispatch, getState(), drawing, { ...file, folderId: folder });
-        }).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
       case 'app-close':
         if (process.env.TARGET_SYSTEM === 'electron' && window.electronAPI) {
           window.electronAPI.sendAppClosingResponse(true);
@@ -164,30 +154,14 @@ export function performPendingAction(pendingAction: UnsavedAction) {
   };
 }
 
-export function fileOpenProject(pendingAction: OpenProjectAction) {
-  return (dispatch: Dispatch, getState: () => docDrawing) => {
-    if (getState().altStore.saveInProgress) return;
-    if (openingReplacesDirtySchematic(getState))
-      dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
-    else return dispatch(performPendingAction(pendingAction) as any);
-  };
-}
-
-export function fileOpenProjectSchematic(file: { name: string; id: string }, folder: string) {
-  return (dispatch: Dispatch, getState: () => docDrawing) => {
-    if (getState().altStore.saveInProgress) return;
-    const pendingAction: UnsavedAction = { type: 'file-open-project-schematic', file, folder };
-    if (openingReplacesDirtySchematic(getState))
-      dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
-    else return dispatch(performPendingAction(pendingAction) as any);
-  };
-}
-
 export function fileNew() {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
+    if (process.env.TARGET_SYSTEM === 'electron' && getState().schematicTabs?.enabled &&
+        !window.dispatchEvent(new Event(newProjectDesign, { cancelable: true })))
+      return;
     const pendingAction: UnsavedAction = { type: 'file-new' };
     
-    if (openingReplacesDirtySchematic(getState)) {
+    if (!getState().schematicTabs?.enabled && checkSaveNeeded(getState)) {
       dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
       return;
     }
@@ -200,10 +174,10 @@ export function fileNew() {
 export function fileOpen(file?: CurrentFile) {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
     const pendingAction: UnsavedAction = file 
-      ? { type: 'file-open-recent', file: { name: file.name, id: file.id as string } }
+      ? { type: 'file-open-recent', file }
       : { type: 'file-open' };
     
-    if (openingReplacesDirtySchematic(getState)) {
+    if (!getState().schematicTabs?.enabled && checkSaveNeeded(getState)) {
       dispatch(actionSelectDialog('unsaved_changes', { pendingAction }));
       return;
     }
@@ -214,22 +188,10 @@ export function fileOpen(file?: CurrentFile) {
 }
 
 export function fileSave(dispatch: Dispatch, getState: { (): docDrawing }) {
-  if (!window.dispatchEvent(new CustomEvent(saveActiveBoard, { cancelable: true, detail: false }))) return;
   return internalfileSave(dispatch, getState, false);
-}
-
-export function saveSchematicFile(dispatch: Dispatch, getState: () => docDrawing) {
-  return internalfileSave(dispatch, getState, false);
-}
-
-export async function saveStandaloneSchematic(drawing: dsnDrawing, file: CurrentFile) {
-  const netlist = await wkrGenerateNetlist(drawing);
-  const bytes = await encodeDrawing(new updateDrawing().updateNetlistHints(drawing, netlist));
-  return userManager.saveFile(bytes, { ...file, name: drawingFileName(file.name, isCompressedDrawing(bytes)) });
 }
 
 export function fileSaveAs(dispatch: Dispatch, getState: { (): docDrawing }) {
-  if (!window.dispatchEvent(new CustomEvent(saveActiveBoard, { cancelable: true, detail: true }))) return;
   return internalfileSave(dispatch, getState, true);
 }
 
@@ -237,18 +199,25 @@ export function fileSaveAs(dispatch: Dispatch, getState: { (): docDrawing }) {
 export async function fileSaveWithoutResults(dispatch: Dispatch, getState: { (): docDrawing }) {
   const state = getState();
   if (state.altStore.saveInProgress || state.docStore.present.editLibrary) return;
-  if ((process.env.TARGET_SYSTEM === 'electron' || process.env.TARGET_SYSTEM === 'google') && state.altStore.file.project) {
-    dispatch(actionSelectDialog('project_save_as', { omitResults: true }));
-    return;
-  }
   const { drawing } = state.docStore.present;
   const file = state.altStore.file;
   dispatch(actionSetSaveInProgress(true, null));
   try {
-    const bytes = await encodeDrawing(withoutResults(drawing));
+    const copy = withoutResults(drawing);
+    const name = file.name.replace(/\.(dsn|dzn)$/i, '') + '-without-results';
+    const project = state.schematicTabs?.projectRoot;
+    if (project) {
+      const { hasProjectHierarchy } = await import('./projectHierarchy');
+      if (hasProjectHierarchy(copy)) {
+        await saveSchematicFile({ ...file, name: name + '.dsn' }, copy, true, project);
+        window.dispatchEvent(new Event(projectFilesChanged));
+        return;
+      }
+    }
+    const bytes = await encodeDrawing(copy);
     await userManager.saveFile(bytes, {
       ...file, id: null,
-      name: drawingFileName(file.name.replace(/\.(dsn|dzn)$/i, '') + '-without-results', isCompressedDrawing(bytes)),
+      name: drawingFileName(name, isCompressedDrawing(bytes)),
     });
   } catch (error) {
     if (error) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
@@ -257,42 +226,74 @@ export async function fileSaveWithoutResults(dispatch: Dispatch, getState: { ():
   }
 }
 
-function internalfileSave(
+export async function saveSchematicFile(file: CurrentFile, drawing: dsnDrawing, saveAs = false, project?: string) {
+  const netlist = await wkrGenerateNetlist(drawing, !!project);
+  const updated = new updateDrawing().updateNetlistHints(drawing, netlist);
+  const projectSave = process.env.TARGET_SYSTEM === 'electron' && file.projectVersion && !saveAs;
+  let bytes = await encodeDrawing(updated, projectSave ? (/\.dzn$/i.test(file.name) ? 'zip-v1' : 'xml') : undefined);
+  if (project) {
+    const { hasProjectHierarchy, rebaseProjectHierarchy } = await import('./projectHierarchy');
+    const { projectRequest, isProjectSchematicPath } = await import('./projects');
+    const owner = typeof file.id === 'string' ? file.id : undefined;
+    if (hasProjectHierarchy(drawing) && (saveAs || !owner || isProjectSchematicPath(project, owner))) {
+      const compressed = isCompressedDrawing(bytes);
+      const destination = projectSave
+        ? { id: owner, name: file.name, folder: file.folderId, version: file.projectVersion }
+        : await projectRequest({
+            operation: 'choose-hierarchical-save', project, owner, name: file.name, compressed,
+          });
+      if (!destination) throw undefined;
+      const rebased = await rebaseProjectHierarchy(updated, project, owner, destination.id);
+      if (rebased !== updated) bytes = await encodeDrawing(rebased, compressed ? 'zip-v1' : 'xml');
+      const saved = await projectRequest({
+        operation: 'write',
+        id: destination.version ? destination.id : undefined,
+        folder: destination.folder, name: destination.name, version: destination.version, data: bytes,
+      });
+      return { ...saved, folderId: destination.folder };
+    }
+  }
+  if (projectSave) {
+    const { projectRequest } = await import('./projects');
+    return projectRequest({
+      operation: 'write', id: file.id as string, folder: file.folderId,
+      name: file.name, version: file.projectVersion, data: bytes,
+    });
+  }
+  return userManager.saveFile(bytes, {
+    ...file,
+    name: drawingFileName(file.name, isCompressedDrawing(bytes)),
+    id: saveAs ? null : file.id,
+  });
+}
+
+async function internalfileSave(
   dispatch: Dispatch,
   getState: { (): docDrawing },
   saveAs: boolean,
 ) {
-  const file = getState().altStore.file;
-  const saveInProgress = getState().altStore.saveInProgress;
-  const drawing = getState().docStore.present.drawing;
-  const drawingVerison = getState().docStore.present.drawingVersion;
-
-  // If we are already saving the file, then ignore this...
-  if (saveInProgress) {
-    return;
-  }
-
-  if ((process.env.TARGET_SYSTEM === 'electron' || process.env.TARGET_SYSTEM === 'google') && file.project) {
-    if (saveAs) return dispatch(actionSelectDialog('project_save_as', {}));
-    return import('./projects').then(({ saveProjectDrawing }) => saveProjectDrawing(dispatch, getState));
-  }
-
+  const state = getState();
+  const { altStore, docStore: { present } } = state;
+  const { file, saveInProgress } = altStore;
+  if (saveInProgress) return false;
   dispatch(actionSetSaveInProgress(true, null));
-
-  return saveStandaloneSchematic(drawing, { ...file, id: saveAs ? null : file.id })
-    .then(
-      (meta) => {
-        dispatch(
-          actionSetFileData(meta.name, meta.id, file.folderId, drawingVerison),
-        );
-      },
-      (error: string) => {
-        dispatch(actionSetSaveInProgress(false, null));
-        if (error) {
-          dispatch(actionSelectDialog('io_failure', { message: error }));
-        }
-      },
-    );
+  try {
+    const meta = await saveSchematicFile(file, present.drawing, saveAs, state.schematicTabs?.projectRoot);
+    dispatch(actionSetFileData(meta.name, meta.id, meta.version ? meta.folderId ?? file.folderId : file.folderId,
+      present.drawingVersion, meta.version));
+    if (!file.id && typeof meta.id === 'string') {
+      await bindDrawingExports({ ...designExportSource(state), drawingId: meta.id, name: meta.name }).catch((error) =>
+        dispatch(actionSelectDialog('io_failure', { message: `The drawing was saved, but its export locations could not be remembered. ${String(error)}` })),
+      );
+    }
+    if (meta.version)
+      window.dispatchEvent(new Event(projectFilesChanged));
+    return true;
+  } catch (error) {
+    dispatch(actionSetSaveInProgress(false, null));
+    if (error) dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+    return false;
+  }
 }
 
 export function librarySave(dispatch: Dispatch, getState: { (): docDrawing }) {
@@ -366,15 +367,71 @@ export function renameFile(
   );
 }
 
-export function downloadBom(dispatch: Dispatch, getState: { (): docDrawing }) {
-  const bom = getState().docStore.present.bom;
-  let filename = getState().altStore.file.name;
-  filename = filename.replace(/\.[^/.]+$/, '') + '.csv';
+async function exportDrawingData(
+  dispatch: Dispatch,
+  source: DesktopDesignExport,
+  chooseLocation: boolean,
+  contents: () => string | Promise<string>,
+): Promise<boolean> {
+  if (process.env.TARGET_SYSTEM !== 'google') return saveDesignExport(source, chooseLocation, contents);
+  const manager = userManager as GoogleUserManager;
+  const remembered = driveExportLocation(source);
+  const { mime, extension } = designExportFormats[source.format];
+  if (!chooseLocation && remembered) {
+    rememberDriveExport(source, await manager.saveExport(await contents(), remembered, mime));
+    return true;
+  }
+  dispatch(actionSelectDialog('drive_export', {
+    filename: remembered?.name ?? designExportName(source.name, source.format),
+    folderId: remembered ? remembered.folderId : source.folderId,
+    load: () => manager.exportFolders(remembered ? undefined : source.drawingId),
+    save: async (enteredName: string, folderId?: string) => {
+      const name = /\.[^/.]+$/.test(enteredName) ? enteredName : enteredName + extension;
+      if (!name.toLowerCase().endsWith(extension) && !(source.format === 'VHDL' && /\.vhd$/i.test(name)))
+        throw new Error(`Choose a filename ending in ${extension}.`);
+      const id = remembered?.name === name && remembered.folderId === folderId ? remembered.id : undefined;
+      const saved = await manager.saveExport(await contents(), { id, name, folderId }, mime);
+      rememberDriveExport(source, saved);
+    },
+  }));
+  return false;
+}
 
-  const txt = bomCsv(bom);
+export function saveBom(chooseLocation: boolean) {
+  return async (dispatch: Dispatch, getState: () => docDrawing) => {
+    const state = getState();
+    const { bom } = state.docStore.present;
+    if (!bom) return false;
+    const csv = (text: string) => '"' + text.replaceAll('"', '""') + '"';
+    return exportDrawingData(dispatch, { ...designExportSource(state), format: 'bom' }, chooseLocation, () =>
+      'Reference,Quantity,Name\r\n' + bom.map(({ References, Quantity, Name }) =>
+        `${csv(References.join(','))},${Quantity},${csv(Name)}`,
+      ).join('\r\n'),
+    ).catch((error) => {
+      dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+      return false;
+    });
+  };
+}
 
-  var blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
-  saveAs(blob, filename);
+export function saveNetlist(format: Exclude<DesignExportFormat, 'bom'>, chooseLocation: boolean) {
+  return (dispatch: Dispatch, getState: () => docDrawing) => {
+    const state = getState();
+    const { drawing } = state.docStore.present;
+    const source = designExportSource(state);
+    return exportDrawingData(dispatch, { ...source, format }, chooseLocation, async () => {
+      const { readCurrentHierarchy } = await import('./projects');
+      const linked = await readCurrentHierarchy(state, true);
+      const netlist = await wkrGenerateNetlist(linked, !!source.project);
+      const contents = netlistContents(source.name, format, netlist, drawing.spiceModelPacks);
+      if (getState().docStore.present.drawing === drawing)
+        dispatch(actionUpdateNetlistHints(netlist));
+      return contents;
+    }).catch((error) => {
+      dispatch(actionSelectDialog('io_failure', { message: String(error) }));
+      return false;
+    });
+  };
 }
 
 export function removeLibrary(fileId: string) {
@@ -390,6 +447,11 @@ export function removeLibrary(fileId: string) {
       },
     });
 
+    if (state.schematicTabs?.projectRoot) {
+      return updateProjectLibraryConfig(updatedConfig, dispatch, getState).catch((error) =>
+        dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+    }
+
     dispatch(actionUpdateConfig(updatedConfig));
     dispatch(actionSetLibraryList(sortLibrariesByConfig(libraries, updatedConfig)));
 
@@ -399,6 +461,10 @@ export function removeLibrary(fileId: string) {
 
 export function saveLibraryConfig(config: UserConfig) {
   return (dispatch: Dispatch, getState: { (): docDrawing }) => {
+    if (getState().schematicTabs?.projectRoot) {
+      return updateProjectLibraryConfig(config, dispatch, getState).catch((error) =>
+        dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+    }
     const normalizedConfig = normalizeUserConfig(config);
     const libraries = sortLibrariesByConfig(
       getState().altStore.libraries,
@@ -585,27 +651,35 @@ export function importSelectedSymbolsToCurrentLibrary(selectedSymbols: ImportedS
   };
 }
 
-function pickImportFile(): Promise<{ fileName: string; content: string } | null> {
+function pickImportFile(): Promise<SymbolImportFile | null> {
   if (process.env.TARGET_SYSTEM === 'electron' && window.electronAPI?.openKicadImport) {
     return window.electronAPI.openKicadImport();
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.kicad_sym';
-    input.onchange = () => {
-      const file = input.files?.[0];
-      if (!file) {
-        resolve(null);
-        return;
+    input.accept = '.kicad_sym,.lib,.cir,.sub,.mod,.model,.spice,.sp,.spi,.inc,.txt';
+    input.multiple = true;
+    input.oncancel = () => resolve(null);
+    input.onchange = async () => {
+      try {
+        const files = Array.from(input.files ?? []);
+        if (!files.length) return resolve(null);
+        const libraries = files.filter((file) => findImporter(file.name));
+        if (libraries.length !== 1)
+          throw new Error('Select one KiCad symbol library and any accompanying SPICE files.');
+        const [file] = libraries;
+        const companions = files.filter((entry) => entry !== file);
+        if (companions.some(({ size }) => size > 8 * 1024 * 1024))
+          throw new Error('An accompanying SPICE file exceeds 8 MiB.');
+        const modelFiles = await Promise.all(companions.map(async (entry) => ({
+          fileName: entry.name, content: await entry.text(),
+        })));
+        resolve({ fileName: file.name, content: await file.text(), modelFiles });
+      } catch (error) {
+        reject(error);
       }
-      file.text().then((content) => {
-        resolve({
-          fileName: file.name,
-          content,
-        });
-      });
     };
     input.click();
   });
@@ -632,6 +706,7 @@ export function importSymbolsFromFile() {
       const importedSymbols = await importer.importSymbols(
         picked.content,
         picked.fileName,
+        picked.modelFiles,
       );
 
       if (importedSymbols.length === 0) {
@@ -759,8 +834,7 @@ export function exportSvg(
     ? `${state.altStore.file.name.replace(/\.[^.]+$/, '')}.svg`
     : 'drawing.svg';
 
-  const element = document.createElement('div');
-  render(
+  const svg = (
     <TPrintSheet
       items={sheet.items}
       page_size={sheet.details.page_size}
@@ -768,15 +842,24 @@ export function exportSvg(
       options={sheet.options}
       images={sheet.images}
       hatches={sheet.hatches}
-    />,
-    element,
+    />
   );
 
-  let blob = new Blob(
+  const element = document.createElement('div');
+  const root = createRoot(element);
+  let markup: string;
+  try {
+    flushSync(() => root.render(svg));
+    markup = new XMLSerializer().serializeToString(element.children[0]);
+  } finally {
+    root.unmount();
+  }
+
+  const blob = new Blob(
     [
       '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' +
       '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
-      new XMLSerializer().serializeToString(element.children[0]),
+      markup,
     ],
     { type: 'image/svg+xml' },
   );
@@ -932,6 +1015,19 @@ export function handleMenuCommand(command: string) {
     const state = getState();
     const editLibrary = state.docStore.present.editLibrary;
 
+    if (command.startsWith('pcb-menu:')) {
+      window.dispatchEvent(new CustomEvent(boardMenuCommand, { detail: command.slice(9) }));
+      return;
+    }
+    if (command === 'file-save' || command === 'file-save-as') {
+      if (!window.dispatchEvent(new CustomEvent(saveActiveBoard, { cancelable: true, detail: command === 'file-save-as' }))) return;
+    }
+    if (command === 'edit-undo' || command === 'edit-redo') {
+      if (!window.dispatchEvent(new CustomEvent(boardHistoryCommand, { cancelable: true, detail: command === 'edit-undo' ? 'undo' : 'redo' }))) return;
+    }
+    if (command === 'view-zoom-in' || command === 'view-zoom-out') {
+      if (!window.dispatchEvent(new CustomEvent(boardZoomCommand, { cancelable: true, detail: command === 'view-zoom-in' ? 'in' : 'out' }))) return;
+    }
     switch (command) {
       case 'file-new':
         if (editLibrary) {
@@ -968,7 +1064,9 @@ export function handleMenuCommand(command: string) {
         dispatch(fileOpen() as any);
         break;
       case 'file-save':
-        if (editLibrary) {
+        if (state.docStore.present.view.selected_sheet === -1) {
+          dispatch(saveBom(false) as any);
+        } else if (editLibrary) {
           dispatch(librarySave as any);
         } else {
           dispatch(fileSave as any);
@@ -978,7 +1076,9 @@ export function handleMenuCommand(command: string) {
         dispatch(fileSaveWithoutResults as any);
         break;
       case 'file-save-as':
-        if (editLibrary) {
+        if (state.docStore.present.view.selected_sheet === -1) {
+          dispatch(saveBom(true) as any);
+        } else if (editLibrary) {
           dispatch(librarySaveAs as any);
         } else {
           dispatch(fileSaveAs as any);
@@ -995,12 +1095,10 @@ export function handleMenuCommand(command: string) {
         break;
       // Edit
       case 'edit-undo':
-        if (window.dispatchEvent(new CustomEvent(boardHistoryCommand, { cancelable: true, detail: 'undo' })))
-          dispatch(ActionCreators.undo());
+        dispatch(ActionCreators.undo());
         break;
       case 'edit-redo':
-        if (window.dispatchEvent(new CustomEvent(boardHistoryCommand, { cancelable: true, detail: 'redo' })))
-          dispatch(ActionCreators.redo());
+        dispatch(ActionCreators.redo());
         break;
       case 'edit-rotate-left':
         dispatch(actionCommand('rotate_left'));
@@ -1026,12 +1124,11 @@ export function handleMenuCommand(command: string) {
         }
         break;
       case 'view-zoom-in':
-      case 'view-zoom-out': {
-        const zoomIn = command === 'view-zoom-in';
-        const event = new CustomEvent(boardZoomCommand, { cancelable: true, detail: zoomIn ? 'in' : 'out' });
-        if (window.dispatchEvent(event)) dispatch(actionCommand(zoomIn ? 'zoom_in' : 'zoom_out'));
+        dispatch(actionCommand('zoom_in'));
         break;
-      }
+      case 'view-zoom-out':
+        dispatch(actionCommand('zoom_out'));
+        break;
       // Tools
       case 'tools-auto-layout': {
         const present = state.docStore.present;
@@ -1045,22 +1142,33 @@ export function handleMenuCommand(command: string) {
         dispatch(actionSelectDialog('annotate', null));
         break;
       case 'tools-bom':
-        dispatch(generateActiveBom() as any);
+        if (state.schematicTabs?.projectRoot) {
+          void import('./projects').then(({ readCurrentHierarchy }) => readCurrentHierarchy(state))
+            .then((linked) => {
+              if (getState().docStore.present.drawing === state.docStore.present.drawing)
+                dispatch(actionBomGenerate(linked));
+            }).catch((error) => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+        } else {
+          dispatch(actionBomGenerate());
+        }
+        break;
+      case 'tools-add-hierarchical-symbol':
+        if (state.schematicTabs?.projectRoot)
+          dispatch(actionSheetAdd('Hierarchical Symbol', true));
+        break;
+      case 'tools-insert-hierarchical-symbol':
+        if (state.schematicTabs?.projectRoot)
+          window.dispatchEvent(new Event('tinycad:insert-hierarchical-symbol'));
         break;
       case 'tools-netlist':
         dispatch(actionSelectDialog('netlist', null));
         break;
       case 'tools-spice':
-      case 'tools-vhdl': {
-        if (command === 'tools-vhdl' && process.env.TARGET_SYSTEM !== 'electron') break;
-        generateActiveNetlist(state).then(netlist => {
-          if (getState().docStore.present.drawing !== state.docStore.present.drawing ||
-              getState().altStore.file !== state.altStore.file) return;
-          if (!netlist.sources) dispatch(actionUpdateNetlistHints(netlist));
-          downloadNetlist(state.altStore.file.name, command === 'tools-spice' ? 'SPICE' : 'VHDL', netlist);
-        }, error => dispatch(actionSelectDialog('io_failure', { message: String(error) })));
+        dispatch(saveNetlist('SPICE', true) as any);
         break;
-      }
+      case 'tools-vhdl':
+        dispatch(saveNetlist('VHDL', true) as any);
+        break;
       case 'import-kicad-symbols':
         dispatch(importSymbolsFromFile() as any);
         break;
@@ -1087,6 +1195,9 @@ export function handleMenuCommand(command: string) {
         break;
       case 'settings-settings':
         dispatch(actionSelectDialog('settings', null));
+        break;
+      case 'settings-symbol-property-fonts':
+        dispatch(actionSelectDialog('symbol_property_font_defaults', null));
         break;
       case 'settings-colours':
         dispatch(actionSelectDialog('colours', null));

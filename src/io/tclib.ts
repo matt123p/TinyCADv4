@@ -5,8 +5,10 @@ import {
   normalizeTclibLoadError,
   tclib,
   tclibLibraryAttributes,
+  tclibLibraryEntry,
 } from '../model/tclib';
 import { FileIdType } from './files';
+import { withBundledSpiceIdentity } from '../simulation/catalogBindings';
 
 let loadedSQL: SqlJsStatic = null;
 let loadingSQL: Promise<SqlJsStatic> = null;
@@ -98,7 +100,7 @@ function loadTcLibImplementation(
         }
         stmtAttr.free();
 
-        r.names.push({
+        const entry: tclibLibraryEntry = {
           id: null,
           NameID: Number(row.NameID),
           Name: row.Name.toString(),
@@ -109,7 +111,8 @@ function loadTcLibImplementation(
           ShowName: Number(row.ShowName),
           ShowRef: Number(row.ShowRef),
           Attributes: attributes,
-        });
+        };
+        r.names.push(fileId === 'bundled:spice' ? withBundledSpiceIdentity(entry) : entry);
 
         // Add the symbol data (if we don't already have it)
         if (

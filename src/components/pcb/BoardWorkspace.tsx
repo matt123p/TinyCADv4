@@ -1625,7 +1625,7 @@ export default function BoardWorkspace({
           disabled: busy || session.dirty || !session.circuit, run: onBackAnnotate },
         !board.sourceCircuit && !session.circuit && { id: 'connections', label: 'Board connections…',
           disabled: busy || routing || !!deletionDraft || !!cleanup, run: () => setConnectionsOpen(true) },
-        !onUpdate && { id: 'circuit-source', label: 'Import schematic or netlist…',
+        !onUpdate && { id: 'circuit-source', label: session.readProjectCircuit ? 'Update PCB from Schematic…' : 'Import schematic or netlist…',
           disabled: busy || routing, run: () => setCircuitSourceOpen(true) },
         { id: 'tools', label: 'View board tools', run: openBoardTools },
         process.env.TARGET_SYSTEM === 'electron' && !manageClose &&
@@ -1809,7 +1809,7 @@ export default function BoardWorkspace({
         sequential={sequentialPlacement}
         disabled={busy || routing || measuring}
         hasComponents={!!board.components?.length}
-        sourceAction={onUpdate ? 'Update PCB from Schematic…' : 'Import schematic or netlist…'}
+        sourceAction={onUpdate || session.readProjectCircuit ? 'Update PCB from Schematic…' : 'Import schematic or netlist…'}
         sourceDisabled={busy || routing || (!!onUpdate && session.dirty)}
         onSource={onUpdate ?? (() => setCircuitSourceOpen(true))}
         onGuide={(button) => {
@@ -2567,6 +2567,7 @@ export default function BoardWorkspace({
           />
         </div>
       </EditorToolbar>
+
       <Dialog open={confirmDiscard} onOpenChange={(_, { open }) => setConfirmDiscard(open)}>
         <DialogSurface>
           <DialogBody>
@@ -2604,7 +2605,7 @@ export default function BoardWorkspace({
           onApply={(operation) => setBoard(session.apply([operation]))}
         />
       )}
-      {circuitSourceOpen && <BoardCircuitSourceDialog board={board}
+      {circuitSourceOpen && <BoardCircuitSourceDialog board={board} readProjectCircuit={session.readProjectCircuit}
         onApply={(candidate) => {
           setBoard(session.commit({ ...candidate, revision: board.revision }));
           openBoardList('netlist');

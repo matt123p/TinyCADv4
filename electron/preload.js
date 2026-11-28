@@ -1,6 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
+const languageArgument = '--tinycad-system-languages=';
+const preferredSystemLanguages = process.argv.find((arg) => arg.startsWith(languageArgument))
+    ?.slice(languageArgument.length).split(',').filter(Boolean) ?? [];
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  projectFiles: (request) => ipcRenderer.invoke('project-files', request),
+  onProjectFoldersChanged: (callback) => {
+    const listener = () => callback();
+    ipcRenderer.on('project-folders-changed', listener);
+    return () => ipcRenderer.removeListener('project-folders-changed', listener);
+  },
+    preferredSystemLanguages,
     licenseIndex: () => ipcRenderer.invoke('licenses-index'),
     readLicense: (file) => ipcRenderer.invoke('licenses-read', file),
     openChromiumLicenses: () => ipcRenderer.invoke('licenses-open-chromium'),
@@ -34,12 +44,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     maximize: () => ipcRenderer.send('window-maximize'),
     close: () => ipcRenderer.send('window-close'),
     setTitle: (title) => ipcRenderer.send('window-set-title', title),
-    projectFiles: (request) => ipcRenderer.invoke('project-files', request),
-    onProjectFoldersChanged: (callback) => {
-        const listener = () => callback();
-        ipcRenderer.on('project-folders-changed', listener);
-        return () => ipcRenderer.removeListener('project-folders-changed', listener);
-    },
     loadFile: (file) => ipcRenderer.send('load-file', file),
     saveFile: (data) => ipcRenderer.send('save-file', data),
     exampleCatalog: () => ipcRenderer.invoke('bundled-example-catalog'),
@@ -52,9 +56,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     removeLibrary: (data) => ipcRenderer.send('remove-library', data),
     saveLibraryConfig: (config) => ipcRenderer.send('save-library-config', config),
     setViewMenuState: (state) => ipcRenderer.send('set-view-menu-state', state),
-    setBoardMenus: (menus) => ipcRenderer.send('set-board-menus', menus),
     setMenuMode: (mode) => ipcRenderer.send('set-menu-mode', mode),
-    setMenuTranslations: (translations) => ipcRenderer.send('set-menu-translations', translations),
+    setBoardMenus: (menus) => ipcRenderer.send('set-board-menus', menus),
+  setEditorMenuState: (state) => ipcRenderer.send('set-editor-menu-state', state),
+    setMenuTranslations: (translations, language) => ipcRenderer.send('set-menu-translations', translations, language),
 
     fileLoaded: (callback) => {
         const listener = (event, data) => {
@@ -77,6 +82,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         };
     },
 
+    requestStartupLists: () => ipcRenderer.send('request-startup-lists'),
     recentFiles: (callback) => {
         const listener = (event, data) => {
             callback(data);
@@ -149,25 +155,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on('simulation-event', listener);
         return () => ipcRenderer.removeListener('simulation-event', listener);
     },
-    // Print a PDF using native print dialog (fallback - prints main window)
-    printPdf: (pdfBase64) => ipcRenderer.send('print-pdf', pdfBase64),
+    openPrintPdf: (pdfBase64) => ipcRenderer.invoke('open-print-pdf', pdfBase64),
     
     // Get list of available printers
     getPrinters: () => ipcRenderer.invoke('get-printers'),
     
-    // Print HTML content to a specific printer (uses our custom preview dialog)
-    printDocument: (options) => ipcRenderer.send('print-document', options),
+    // Print the sheets selected in TinyCAD’s print preview
+    printDocument: (options) => ipcRenderer.invoke('print-document', options),
 
     openNewWindow: (arg) => ipcRenderer.send('open-new-window', arg),
     openExternal: (url) => ipcRenderer.send('open-external', url),
     openContainingFolder: (filePath) => ipcRenderer.send('open-containing-folder', filePath),
     
-    onPrintComplete: (callback) => {
-        const listener = (event, data) => callback(data);
-        ipcRenderer.on('print-complete', listener);
-        return () => ipcRenderer.removeListener('print-complete', listener);
-    },
-
     // Save a PDF file using native save dialog
     savePdf: (data) => ipcRenderer.send('save-pdf', data),
     saveSvg: (data) => ipcRenderer.send('save-svg', data),

@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import Store from 'electron-store';
 import { error } from "./io.js";
+import { readNativeLibrary } from "./tclibReader.js";
 
 
 const store = new Store();
@@ -141,6 +142,7 @@ export function loadLibrary(mainWindow, file) {
     else if (file?.id) {
         readFileInternal(mainWindow, file.id, {
             silent: !!file.silent,
+            allowEmpty: !!file.allowEmpty,
             name: file.name,
             folderId: file.folderId,
         });
@@ -163,39 +165,44 @@ export function loadLibrary(mainWindow, file) {
     }
 }
 
-function readFileInternal(mainWindow, currentFilePath, options = {}) {
-    fs.readFile(currentFilePath, null, (err, data) => {
-        if (!err) {
-            const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-            const stats = fs.statSync(currentFilePath);
+async function readFileInternal(mainWindow, currentFilePath, options = {}, webContents = mainWindow.webContents) {
+    const name = path.basename(currentFilePath);
+    let stats;
+    try {
+        stats = await fs.promises.stat(currentFilePath);
+        if (!stats.isFile()) throw new Error('The library path must be a file.');
+        const library = options.allowEmpty && stats.size === 0
+            ? { names: [], symbols: [] }
+            : await readNativeLibrary(currentFilePath);
+        if (webContents.isDestroyed()) return;
+        if (!mainWindow.isDestroyed()) addLibrary(mainWindow, currentFilePath, options.folderId);
+        webContents.send('library-loaded', {
+            ...library,
+            fileId: currentFilePath,
+            name,
+            modified: stats.mtime.toISOString(),
+        });
+    } catch (err) {
+        if (webContents.isDestroyed()) return;
+        if (stats?.isFile() && !mainWindow.isDestroyed()) {
             addLibrary(mainWindow, currentFilePath, options.folderId);
-            mainWindow.webContents.send('library-loaded', { name: path.basename(currentFilePath), id: currentFilePath, content: arrayBuffer, lastModified: stats.mtime });
         }
-        else {
-            if (options.silent) {
-                mainWindow.webContents.send('library-load-failed', {
-                    name: options.name || path.basename(currentFilePath),
-                    id: currentFilePath,
-                    error: serializeLibraryError(err),
-                });
-            } else {
-                error(mainWindow, err);
-            }
+        if (options.silent || stats?.isFile() || webContents !== mainWindow.webContents) {
+            webContents.send('library-load-failed', {
+                name: options.name || name,
+                id: currentFilePath,
+                error: serializeLibraryError(err),
+            });
+        } else {
+            error(mainWindow, err);
         }
-    });
+    }
 }
 
-// Load library and send to a specific webContents (for popup windows)
+// Reply to the requesting window when a library is opened in a popup.
 export function loadLibraryToWebContents(webContents, mainWindow, file) {
     if (file?.id) {
-        fs.readFile(file.id, null, (err, data) => {
-            if (!err) {
-                const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-                const stats = fs.statSync(file.id);
-                addLibrary(mainWindow, file.id, file.folderId);
-                webContents.send('library-loaded', { name: path.basename(file.id), id: file.id, content: arrayBuffer, lastModified: stats.mtime });
-            }
-        });
+        return readFileInternal(mainWindow, file.id, file, webContents);
     }
 }
 

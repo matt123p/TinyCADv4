@@ -3,6 +3,7 @@ import { docDrawing } from '../undo/undo';
 import { Panels } from '../dispatcher/AppDispatcher';
 import { connect } from 'react-redux';
 import { activeSheet } from '../stores/docStoreReducer';
+import { drcResultInActiveDrawing, projectDrcDrawing } from '../projectDrc';
 
 const mapStateToProps = (state: docDrawing) => {
   const sheet = activeSheet(state.docStore.present);
@@ -19,10 +20,11 @@ const mapStateToProps = (state: docDrawing) => {
       ? false
       : true;
 
-  let markers = [];
-  if (state.altStore.panel === Panels.DrcPanel) {
-    markers = state.docStore.present.drawing.drcTable;
-  }
+  const checked = state.altStore.panel === Panels.DrcPanel ? projectDrcDrawing(state) : undefined;
+  const markers = state.altStore.panel === Panels.DrcPanel
+    ? (checked?.drawing.drcTable ?? state.docStore.present.drawing.drcTable).filter((p) =>
+        p.sheet === sheet.name && (checked ? drcResultInActiveDrawing(state, p) : !p.source?.fileId))
+    : [];
   return {
     sheet_name: sheet.name,
     items: view.hiddenItemIds?.length
@@ -43,7 +45,7 @@ const mapStateToProps = (state: docDrawing) => {
     cursor: view.cursor,
     details: sheet.details,
     options: sheet.options,
-    markers: markers?.filter((p) => p.sheet === sheet.name),
+    markers,
     zoom: view.zoom,
     images: sheet.images,
     hatches: sheet.hatches,
@@ -54,7 +56,6 @@ const mapStateToProps = (state: docDrawing) => {
     editingLibrary: !!state.docStore.present.editLibrary,
     heterogeneous: heterogeneous,
     showRulers: state.docStore.present.drawing.settings.showRulers,
-    instanceReferencesByUnit: state.altStore.file.project?.instanceReferencesByUnit,
     netlistTypes: state.docStore.present.drawing.netlistTypes,
     netTypeAssignments: state.docStore.present.drawing.netTypeAssignments,
   };

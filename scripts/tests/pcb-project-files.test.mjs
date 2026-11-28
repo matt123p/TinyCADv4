@@ -1,8 +1,261 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { recentProjectFolders, registerProjectFiles } from '../../electron/projectFiles.js';
+
+test('hierarchical schematics and chat stay within the active project', async (t) => {
+  const parent = path.resolve('.tmp');
+  await mkdir(parent, { recursive: true });
+  const area = await mkdtemp(path.join(parent, 'chat-project-'));
+  t.after(() => rm(area, { recursive: true, force: true }));
+  const project = path.join(area, 'Project');
+  const outside = path.join(area, 'Outside');
+  await Promise.all([
+    mkdir(path.join(project, 'Docs'), { recursive: true }),
+    mkdir(path.join(project, '.git'), { recursive: true }),
+    mkdir(outside),
+  ]);
+  await Promise.all([
+    writeFile(path.join(project, 'Docs', 'Pins.txt'), 'Pin 1: VCC'),
+    writeFile(path.join(project, 'Docs', 'Top.dsn'), '<TinyCAD/>'),
+    writeFile(path.join(project, 'Child.dsn'), '<TinyCADSheets/>'),
+    writeFile(path.join(project, '.git', 'config'), 'git metadata'),
+    writeFile(path.join(outside, 'Private.txt'), 'outside data'),
+    writeFile(path.join(outside, 'Child.dsn'), '<TinyCADSheets><HierarchicalSymbol/></TinyCADSheets>'),
+    symlink(outside, path.join(project, 'Linked'), process.platform === 'win32' ? 'junction' : 'dir'),
+  ]);
+  const mainFrame = {};
+  const webContents = { mainFrame };
+  let handler;
+  let selected = project;
+  const configuration = new Map();
+  configuration.set('externalHierarchicalSchematics', [
+    { project, filename: path.join(outside, 'Child.dsn') },
+  ]);
+  registerProjectFiles({
+    ipcMain: { handle: (_, callback) => { handler = callback; } },
+    getWindow: () => ({ webContents }),
+    dialog: {
+      showOpenDialog: async () => ({ canceled: false, filePaths: [selected] }),
+    },
+    store: { get: (key, fallback) => configuration.get(key) ?? fallback, set: (key, value) => configuration.set(key, value) },
+    documents: area,
+  });
+  const request = (payload) => handler({ sender: webContents, senderFrame: mainFrame }, payload);
+  await assert.rejects(request({ operation: 'chat-list', project }), /inside the current project/);
+  await request({ operation: 'choose-project-folder' });
+  selected = outside;
+  await request({ operation: 'choose-project-folder' });
+  assert.deepEqual(await request({ operation: 'chat-list', project }), {
+    entries: [{ path: 'Docs', kind: 'folder' }, { path: 'Child.dsn', kind: 'file' }], nextOffset: null,
+  });
+  assert.deepEqual((await request({ operation: 'chat-list', project, relative: 'Docs' })).entries,
+    [{ path: 'Docs/Pins.txt', kind: 'file' }, { path: 'Docs/Top.dsn', kind: 'file' }]);
+  const data = await request({ operation: 'chat-read', project, relative: 'Docs/Pins.txt' });
+  assert.equal(new TextDecoder().decode(data), 'Pin 1: VCC');
+  for (const relative of ['../Outside/Private.txt', path.join(outside, 'Private.txt'), '.git/config', 'Docs\\Pins.txt'])
+    await assert.rejects(request({ operation: 'chat-read', project, relative }), /inside the current project/);
+  await assert.rejects(request({ operation: 'chat-read', project, relative: 'Linked/Private.txt' }), /Symbolic links/);
+  const owner = path.join(project, 'Docs', 'Top.dsn');
+  const linked = await request({ operation: 'read-hierarchical-drawing', project, owner, filename: '..\\Child.dsn' });
+  assert.equal(linked.id, path.join(project, 'Child.dsn'));
+  assert.equal(linked.relative, '../Child.dsn');
+  assert.equal(new TextDecoder().decode(linked.data), '<TinyCADSheets/>');
+  assert.match(linked.version, /^[a-f0-9]{64}$/);
+  assert.deepEqual(await request({
+    operation: 'rebase-hierarchical-links', project, owner: path.join(project, 'Copy.dsn'),
+    links: [{ owner, filename: '..\\Child.dsn' }],
+  }), ['Child.dsn']);
+  const external = {
+    operation: 'read-hierarchical-drawing', project, owner, filename: '../../Outside/Child.dsn',
+  };
+  await assert.rejects(request(external), /outside the open project/);
+  await assert.rejects(request({ ...external, allowExternal: true }), /outside the open project/);
+  await assert.rejects(request({
+    operation: 'rebase-hierarchical-links', project, owner: path.join(project, 'Copy.dsn'),
+    links: [{ owner, filename: external.filename }],
+  }), /outside the open project/);
+  selected = path.join(outside, 'Child.dsn');
+  await assert.rejects(request({ operation: 'choose-hierarchical-drawing', project }), /outside the open project/);
+  selected = path.join(project, 'Child.dsn');
+  assert.equal((await request({ operation: 'choose-hierarchical-drawing', project })).id, selected);
+  assert.equal((await request({ ...external, filename: selected })).relative, '../Child.dsn');
+  assert.equal((await request({ ...external, owner: undefined, filename: 'Child.dsn' })).relative, 'Child.dsn');
+  await assert.rejects(request({ operation: 'chat-read', project, relative: '../Outside/Child.dsn' }), /inside the current project/);
+  await assert.rejects(request({ ...external, owner: undefined, filename: 'Linked/Child.dsn' }), /Symbolic links/);
+});
+
+test('project custom libraries are saved only on edits and reopen with relative project paths', async (t) => {
+  const area = await mkdtemp(path.resolve('.tmp', 'project-libraries-'));
+  t.after(() => rm(area, { recursive: true, force: true }));
+  const project = path.join(area, 'Project');
+  const libraries = path.join(project, 'Libraries');
+  const internal = path.join(libraries, 'Local.tclib');
+  const external = path.join(area, 'Shared.tclib');
+  const marker = path.join(project, 'Project.tcproject');
+  await mkdir(libraries, { recursive: true });
+  await Promise.all([writeFile(internal, ''), writeFile(external, '')]);
+  const mainFrame = {};
+  const webContents = { mainFrame };
+  const preferences = new Map();
+  let handle;
+  let selected = project;
+  let pickerOptions;
+  registerProjectFiles({
+    ipcMain: { handle: (_, callback) => { handle = callback; } },
+    getWindow: () => ({ webContents }),
+    dialog: {
+      showOpenDialog: async (_, options) => {
+        pickerOptions = options;
+        return { canceled: false, filePaths: [selected] };
+      },
+    },
+    store: { get: (key, fallback) => preferences.get(key) ?? fallback, set: (key, value) => preferences.set(key, value) },
+    documents: area,
+  });
+  const request = (operation, fields = {}) => handle(
+    { sender: webContents, senderFrame: mainFrame }, { operation, project, ...fields },
+  );
+  await request('choose-project-folder');
+  assert.equal((await request('project-library-config')).saved, false);
+  await assert.rejects(readFile(marker), { code: 'ENOENT' });
+  const local = { id: internal, name: 'Local.tclib' };
+  assert.deepEqual(await request('choose-project-libraries', { id: internal }), [local]);
+  assert.equal((await request('read-project-library', { id: internal })).fileId, internal);
+  await assert.rejects(request('choose-project-libraries', { id: external }), /grant the project access/);
+  await assert.rejects(request('read-project-library', { id: external }), /grant the project access/);
+  selected = external;
+  const shared = { id: external, name: 'Shared.tclib' };
+  assert.deepEqual(await request('choose-project-libraries'), [shared]);
+  assert.equal(pickerOptions.defaultPath, project);
+  assert.equal((await request('read-project-library', { id: external })).fileId, external);
+  await assert.rejects(readFile(marker), { code: 'ENOENT' });
+
+  const config = { libraries: [local, shared], libraryFolders: [] };
+  await request('save-project-library-config', { config, initialOnly: true });
+  const content = await readFile(marker, 'utf8');
+  assert.match(content, /"id": "Libraries\/Local\.tclib"/);
+  await request('save-project-library-config', { config: { ...config, libraries: [] }, initialOnly: true });
+  assert.equal(await readFile(marker, 'utf8'), content);
+  assert.deepEqual(await request('project-library-config'), { saved: true, config });
+  assert.equal(preferences.has('libraries'), false);
+  await request('save-project-library-config', { config: { ...config, libraries: [local] } });
+  assert.deepEqual((await request('project-library-config')).config.libraries, [local]);
+  const moved = path.join(area, 'Moved');
+  await rename(project, moved);
+  selected = moved;
+  await request('choose-project-folder');
+  assert.deepEqual((await request('project-library-config', { project: moved })).config.libraries, [
+    { ...local, id: path.join(moved, 'Libraries', 'Local.tclib') },
+  ]);
+});
+
+test('remembers export destinations per drawing and format in the project settings', async (t) => {
+  const parent = path.resolve('.tmp');
+  await mkdir(parent, { recursive: true });
+  const area = await mkdtemp(path.join(parent, 'design-exports-'));
+  t.after(() => rm(area, { recursive: true, force: true }));
+  const folder = path.join(area, 'Project');
+  const other = path.join(folder, 'Other');
+  await mkdir(other, { recursive: true });
+  const marker = path.join(folder, 'Settings.tcproject');
+  const originalSettings = '<?xml version="1.0"?><TinyCADProject><Name>Test</Name></TinyCADProject>';
+  await writeFile(marker, originalSettings);
+  const drawingId = path.join(folder, 'Circuit.dsn');
+  const secondId = path.join(other, 'Circuit.dsn');
+  await Promise.all([drawingId, secondId].map((id) => writeFile(id, 'drawing')));
+  const preferences = new Map();
+  const mainFrame = {};
+  const webContents = { mainFrame };
+  let selection;
+  let dialogues = [];
+  const register = async (localPreferences = preferences) => {
+    let handle;
+    registerProjectFiles({
+      ipcMain: { handle: (_, callback) => { handle = callback; } },
+      getWindow: () => ({ webContents }),
+      dialog: {
+        showOpenDialog: async () => ({ canceled: false, filePaths: [folder] }),
+        showSaveDialog: async (_, options) => {
+          dialogues.push(options);
+          return selection ? { canceled: false, filePath: selection } : { canceled: true };
+        },
+      },
+      store: {
+        get: (key, fallback) => localPreferences.get(key) ?? fallback,
+        set: (key, value) => localPreferences.set(key, value),
+      },
+      documents: area,
+    });
+    const request = (payload) => handle({ sender: webContents, senderFrame: mainFrame }, payload);
+    await request({ operation: 'choose-project-folder' });
+    return request;
+  };
+  const first = { project: folder, drawingId, name: 'Circuit.dsn', draftId: 'draft-one' };
+  const second = { ...first, drawingId: secondId, draftId: 'draft-two' };
+  const bom = path.join(folder, 'Components.csv');
+  const netlist = path.join(area, 'Board.net');
+  const vhdl = path.join(other, 'Circuit.vhdl');
+  function save(request, source, format, text, saveAs = true) {
+    return request({ operation: 'save-design-export', ...source, format, text, saveAs });
+  }
+  const location = (request, source, format) => request({ operation: 'export-destination', ...source, format });
+  async function readSettings() {
+    const contents = await readFile(marker, 'utf8');
+    assert.ok(contents.startsWith(originalSettings));
+    return JSON.parse(contents.match(/<\?tinycad-exports\s+([\s\S]*?)\?>/)[1]);
+  }
+  let request = await register();
+  selection = bom;
+  assert.equal(await save(request, first, 'bom', 'parts'), true);
+  assert.equal(await location(request, second, 'bom'), null);
+  selection = netlist;
+  await save(request, first, 'PADS-PCB', 'nets');
+  selection = vhdl;
+  await save(request, second, 'VHDL', 'hdl');
+  assert.equal(await location(request, first, 'VHDL'), null);
+  assert.deepEqual((await readSettings()).drawings, {
+    'Circuit.dsn': { bom: 'Components.csv', 'PADS-PCB': netlist },
+    'Other/Circuit.dsn': { VHDL: 'Other/Circuit.vhdl' },
+  });
+
+  request = await register();
+  dialogues = [];
+  selection = undefined;
+  assert.equal(await save(request, first, 'bom', 'updated', false), true);
+  assert.equal(dialogues.length, 0);
+  assert.equal(await readFile(bom, 'utf8'), 'updated');
+  assert.equal(await location(request, { ...first, project: undefined }, 'bom'), bom);
+  assert.equal(await save(request, first, 'PADS-PCB', 'cancelled'), false);
+  assert.equal(dialogues.at(-1).defaultPath, netlist);
+  assert.equal(await readFile(netlist, 'utf8'), 'nets');
+
+  const imported = await register(new Map());
+  assert.equal(await save(imported, first, 'bom', 'not authorized', false), false);
+  assert.equal(dialogues.at(-1).defaultPath, bom);
+  assert.equal(await readFile(bom, 'utf8'), 'updated');
+
+  const draft = { project: folder, name: 'New.dsn', draftId: 'draft-three' };
+  const draftNetlist = path.join(other, 'Custom.net');
+  selection = draftNetlist;
+  await save(request, draft, 'PADS-PCB', 'draft nets');
+  assert.deepEqual(Object.values((await readSettings()).drafts), [
+    { name: draft.name, outputs: { 'PADS-PCB': 'Other/Custom.net' } },
+  ]);
+  request = await register(new Map());
+  assert.equal(await location(request, draft, 'PADS-PCB'), draftNetlist);
+  assert.equal(await location(request, { ...draft, draftId: 'unrelated' }, 'PADS-PCB'), null);
+  const saved = { ...draft, name: 'Renamed.dsn', drawingId: path.join(other, 'Renamed.dsn') };
+  await writeFile(saved.drawingId, 'drawing');
+  await request({ operation: 'bind-design-exports', ...saved });
+  const settings = await readSettings();
+  assert.equal(settings.drafts, undefined);
+  assert.deepEqual(settings.drawings['Other/Renamed.dsn'], {
+    'PADS-PCB': 'Other/Custom.net',
+  });
+  assert.equal(await location(await register(new Map()), saved, 'PADS-PCB'), draftNetlist);
+});
 
 test('reopens recent project folders in order without granting access to arbitrary folders', async (t) => {
   const parent = path.resolve('.tmp');
@@ -191,4 +444,36 @@ test('opens only a queued desktop project and rejects stale launch tickets', asy
     request({ operation: 'activate-launch', ticket: second.ticket }),
     /no longer available/,
   );
+});
+
+test('creates unique empty entries and confirms permanent deletion only after the system trash fails', async (t) => {
+  const area = await mkdtemp(path.resolve('.tmp/project-entry-'));
+  t.after(() => rm(area, { recursive: true, force: true }));
+  const root = path.join(area, 'Project');
+  await mkdir(root);
+  const frame = {};
+  const webContents = { mainFrame: frame };
+  let reply = 0;
+  let handler;
+  const prompts = [];
+  registerProjectFiles({
+    ipcMain: { handle: (_, callback) => { handler = callback; } },
+    getWindow: () => ({ webContents }),
+    documents: root,
+    store: { get: (_, fallback) => fallback },
+    shell: { trashItem: async () => { throw new Error('Trash unavailable'); } },
+    dialog: { showMessageBox: async (_, options) => { prompts.push(options); return { response: reply }; } },
+  });
+  const request = (payload) => handler({ sender: webContents, senderFrame: frame }, payload);
+  const create = () => request({ operation: 'create-entry', folder: root, directory: false, extension: '.tclib' });
+  const [first, second] = await Promise.all([create(), create()]);
+  assert.deepEqual([first.name, second.name].sort(), ['New File 2.tclib', 'New File.tclib']);
+  assert.equal((await readFile(first.id)).byteLength, 0);
+  await assert.rejects(request({ operation: 'reveal', id: area, directory: true }), /outside/);
+  assert.equal(await request({ operation: 'trash', id: first.id, directory: false }), false);
+  assert.equal((await readFile(first.id)).byteLength, 0);
+  assert.equal(prompts[0].defaultId, 0);
+  reply = 1;
+  assert.equal(await request({ operation: 'trash', id: first.id, directory: false }), true);
+  await assert.rejects(readFile(first.id), { code: 'ENOENT' });
 });

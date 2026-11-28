@@ -221,6 +221,13 @@
               "children": []
             },
             {
+              "kind": "element",
+              "name": "SPICE_MODEL_PACKS",
+              "type": "spiceModelPacksType",
+              "minOccurs": "0",
+              "children": []
+            },
+            {
               "kind": "choice",
               "minOccurs": "1",
               "maxOccurs": "unbounded",
@@ -1784,6 +1791,30 @@
           "type": "xs:string",
           "use": "required",
           "children": []
+        }
+      ]
+    },
+    {
+      "kind": "complexType",
+      "name": "spiceModelPacksType",
+      "children": [
+        {
+          "kind": "simpleContent",
+          "children": [
+            {
+              "kind": "extension",
+              "base": "xs:string",
+              "children": [
+                {
+                  "kind": "attribute",
+                  "name": "version",
+                  "type": "xs:string",
+                  "use": "required",
+                  "children": []
+                }
+              ]
+            }
+          ]
         }
       ]
     },

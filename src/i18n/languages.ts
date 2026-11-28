@@ -19,63 +19,38 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
 
 export const DEFAULT_LANGUAGE = 'en';
 
-export const normalizeLanguageCode = (value: string | null | undefined): string => {
-  if (!value) {
-    return DEFAULT_LANGUAGE;
-  }
+function supportedLanguage(
+  value: string | null | undefined,
+): string | undefined {
+  const base = value?.trim().toLowerCase().split(/[-_]/, 1)[0];
+  return SUPPORTED_LANGUAGES.find(
+    ({ code }) => code.toLowerCase().split('-')[0] === base,
+  )?.code;
+}
 
-  const lower = value.toLowerCase();
-
-  if (lower.startsWith('zh')) {
-    return 'zh-CN';
-  }
-
-  if (lower.startsWith('en')) {
-    return 'en';
-  }
-
-  if (lower.startsWith('nl')) {
-    return 'nl';
-  }
-
-  if (lower.startsWith('fr')) {
-    return 'fr';
-  }
-
-  if (lower.startsWith('es')) {
-    return 'es';
-  }
-
-  if (lower.startsWith('de')) {
-    return 'de';
-  }
-
-  if (lower.startsWith('it')) {
-    return 'it';
-  }
-
-  if (lower.startsWith('ja')) {
-    return 'ja';
-  }
-
-  if (lower.startsWith('pl')) {
-    return 'pl';
-  }
-
-  return DEFAULT_LANGUAGE;
-};
+export const normalizeLanguageCode = (
+  value: string | null | undefined,
+): string => supportedLanguage(value) ?? DEFAULT_LANGUAGE;
 
 export const detectInitialLanguage = (): string => {
   if (typeof window === 'undefined') {
     return DEFAULT_LANGUAGE;
   }
 
-  const saved = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  if (saved) {
-    return normalizeLanguageCode(saved);
+  try {
+    const saved = supportedLanguage(
+      window.localStorage.getItem(LANGUAGE_STORAGE_KEY),
+    );
+    if (saved) return saved;
+  } catch {
+    // Browser preferences are still available when storage is disabled.
   }
 
-  return normalizeLanguageCode(window.navigator.language);
+  const systemLanguages = window.electronAPI?.preferredSystemLanguages;
+  const preferred = systemLanguages?.length
+    ? systemLanguages
+    : [...(window.navigator.languages ?? []), window.navigator.language];
+  return preferred.map(supportedLanguage).find(Boolean) ?? DEFAULT_LANGUAGE;
 };
 
 export const persistLanguagePreference = (code: string): void => {
@@ -83,5 +58,12 @@ export const persistLanguagePreference = (code: string): void => {
     return;
   }
 
-  window.localStorage.setItem(LANGUAGE_STORAGE_KEY, normalizeLanguageCode(code));
+  try {
+    window.localStorage.setItem(
+      LANGUAGE_STORAGE_KEY,
+      normalizeLanguageCode(code),
+    );
+  } catch {
+    // Switching languages still works for this session.
+  }
 };

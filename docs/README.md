@@ -6,6 +6,7 @@ These documents describe TinyCAD's current implementation and the contracts usef
 | --- | --- |
 | [TinyCAD editor design](tinycad-ui-design.md) | v4.1.0 audit and shared toolbar, menus, panel layout, placement, context menus, zoom and rulers. |
 | [SPICE engine](spice-engine.md) | Runtime architecture, engine identity, model inputs, lifecycle, limits and verification. |
+| [Bundled SPICE models](bundled-spice-models.md) | Catalog sources, compatibility, symbol editor and placed-symbol workflows, chatbot tools and simulation export. |
 | [Simulation](simulation.md) | Analyses, sources, probes, charts, Circuit Explorer and virtual instruments. |
 | [Drawing format](drawing-format.md) | XML/ZIP persistence, simulation records, numerical results and storage adapters. |
 | [Project specification](project-specification.md) | Project browser, file tabs and Save All, Git source control, `.tcproject` settings, generated files, recovery and hierarchical schematics. |
@@ -17,6 +18,8 @@ These documents describe TinyCAD's current implementation and the contracts usef
 For editor development, follow the [repository skills](../AGENTS.md). Start the PCB milestones with the [WP3 editor recovery checklist](TODO.md#editor-interface-redesign) and use its results in the [M1 milestone acceptance checks](TODO.md#wp2wp6--m1-manufacturing-release).
 
 The [symbol inventory](symbol-libraries/README.md) explains the machine-readable data used by library generators. Implementation details that change frequently belong in the linked source, recipes, schemas and tests.
+
+The [self-hosted container design](self-hosted-container.md) describes a proposed browser workspace, native Linux simulation, library service, and publishing workflow.
 
 Use **Standard → Network layout** for the 47 physical network device symbols, or **Open Example → Examples** for the transistor amplifier and small office network. The network example embeds its artwork and shows matching rack panels with socket-to-socket cabling. The same collection includes explained examples for embedded/smart home, solar/batteries, Audio & Music, Test & Measurement, and Motors & Motion. Each opens as a standalone editable drawing; the **Explanation** panel keeps the connection tables and extension ideas available.
 

@@ -64,6 +64,9 @@ onmessage = async function (event: MessageEvent<WorkerRequest>) {
       case 'netlist-get':
         response.data = state.get();
         break;
+      case 'netlist-calculate':
+        response.data = new NetlistWorkerState().init(request.payload.drawing);
+        break;
       case 'netlist':
         // Backward compatibility command
         response.data = state.init(request.payload);

@@ -193,10 +193,6 @@ function buildSymbol(template, requirement, recipe, standard, edge) {
       );
   const neck = standard.width * standard.neckRatio;
   body(doc, gate?.shape || 'block', width, height, neck);
-  if (!gate) {
-    const title = recipe.blocks[requirement.id];
-    label(doc, [width / 2 - title.length * 0.35, height / 2 + 0.9], title);
-  }
   const lengths = recipe.style.leadLengthMm * 5;
   for (const side of ['left', 'right']) {
     const pins = side === 'left' ? left : right;
@@ -399,7 +395,7 @@ export async function digitalArtworkSnapshot({ root, spice, requirements }) {
       Reference: r.reference_prefix + '?',
       ppp: 1,
       Description: c.names[0].description,
-      ShowName: 1,
+      ShowName: 0,
       ShowRef: 0,
       DefRotate: 0,
       Attributes: [{ AttName: 'Package', AttValue: '', ShowAtt: 1 }],

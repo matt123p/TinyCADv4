@@ -631,7 +631,6 @@ export function motorsMotionSymbol(device) {
       )}</PIN>`,
     );
   }
-  text(0, h + 5, device.short, 2);
   const width = Math.ceil(Math.max(w, textWidth(device.short, 8)) / 2) * 2,
     height = Math.ceil((h + 8) / 2) * 2;
   c.resources.splice(
@@ -701,7 +700,7 @@ export function motorsMotionArtwork(recipe) {
         ? 'MECH?'
         : 'M?',
       ppp: 1,
-      ShowName: 1,
+      ShowName: 0,
       ShowRef: 1,
       DefRotate: 0,
       Description: [r.device.name, r.device.notes, recipe.scope]

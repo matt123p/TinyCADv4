@@ -1,5 +1,74 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Set the font and size of visible symbol attributes in the **Text Size** tab. Set drawing-wide defaults for Ref, Name and custom attributes, and override either setting for individual symbols or a multi-selection. Font changes preserve label positions and values. [#34](https://github.com/matt123p/TinyCADv4/issues/34)
+- Select a wire to edit its connected net's type in the **Wire Properties** panel or open the **Netlist Types** editor to customise wire appearance.
+- Use **Save As** to choose where to save bills of materials, netlists and VHDL files on desktop and Google Drive. Desktop projects store each schematic's export destinations in the `.tcproject` file. The browser filesystem edition offers downloads.
+- View the Git branch graph, create or switch branches, and merge from the branch dialog. Fetch, Pull, Push and Sync are grouped in a menu next to the branch name.
+- The new welcome page shows the TinyCAD version and gives you quick access to new drawings, existing files and recent drawings. Use **Show welcome page on startup** to save your startup preference.
+- Open the first drawing, simulation and AI Assistant guides from the welcome page in your selected language. Ask for help on Discord or report an issue on GitHub from the welcome page or Help menu.
+- Browse linked drawings in the Project mode **Hierarchy** panel. Repeated child instances appear with their references, open drawings contribute unsaved changes, and searchable child designs can be previewed and dragged onto a sheet. The project file caches the bounded scan, which honours `.gitignore`.
+- Store custom library selections in the project file on the first edit. Add libraries from the project explorer or use the library picker, which opens at the project root.
+
+### Changed
+
+- Save symbol attribute fonts through DSN font tables and preserve the reserved pin font on sheets that use it.
+- Switch between Files, Git and Libraries in the shared desktop project sidebar. File tabs start alongside the sidebar, with **Save All** at the far right and the close button inside the selected tab.
+- Use a consistent toolbar across editors, including the BOM viewer. Edit syntax-highlighted files directly, switch Markdown and CSV views using bottom tabs, and zoom centred images from a bottom control.
+- Source Control warns about unsaved edits before staging or committing. The saved-changes viewer and file and line history actions have been removed.
+- The project file menu calls the trash action **Delete**. The context menu closes before the confirmation opens.
+- Use the same colour picker for application colours, drawing objects, and netlist types.
+- The Small office network, Home solar and battery plan, and Two-person podcast studio examples use editable **Netlist Types** to distinguish cable groups by colour and line width. Their previews and explanations show the new styling.
+- Browse bundled examples on the welcome page under **Electronics**, **Schematics**, **SPICE tutorial**, and **XSPICE and digital tutorial**.
+- The language pickers on the welcome page and toolbar display flags. TinyCAD starts with the first supported language from your operating system or browser preferences, falls back to English, and remembers your selection.
+- The About dialog uses **TinyCAD** as its title.
+- Project hierarchy links use relative paths within the project folder.
+
+### Fixed
+
+- Open the project folder's context menu from the blank space below the file tree.
+- Use the next available name for a new schematic, accounting for project files and unsaved tabs.
+- Wrap bold and italic drawing notes within their text boxes when viewing or editing a drawing. Plain notes preserve their line breaks and spacing.
+- Refresh child symbols when opening or revisiting a parent schematic. Missing files and symbol sheets show a placeholder and details in the Hierarchy panel and DRC. The hierarchy tree stops at cycles, and netlist export reports broken links.
+- Keep examples and tutorials available in local Electron runs while build output is regenerated.
+
+## v4.1.2 — 2026-11-24
+
+This release improves desktop printing and the display of names on standard library symbols. It also expands the bundled SPICE model catalog and adds support for importing KiCad simulation models.
+
+### Added
+
+- Browse bundled SPICE models offline in the symbol editor and on placed components. The picker shows descriptions, source links and optional model text.
+- When asked for SPICE support, the desktop AI assistant can search the bundled catalog offline for exact parts, drop-in candidates and generic models. It can inspect model text and pin mappings, attach a model to a placed component, and set a bundled or Custom definition on a new library symbol. Ordinary symbol and schematic requests preserve existing defaults and skip SPICE setup.
+- Import supported SPICE definitions from KiCad symbol libraries, including embedded models and external model files supplied with the import. TinyCAD preserves pin mappings and parameter overrides in editable Custom definitions.
+- View and enter page dimensions in millimetres (mm) or inches (in) in Page Size.
+- Set and save the printer, paper size, orientation, copies, colour, and duplex options alongside the drawing in desktop Print Preview. Print uses the displayed settings and sends the job directly to the selected printer or system default.
+- Open a PDF of the selected sheets for printing with Advanced Print.
+
+### Changed
+
+- All 29 SPICE essentials components start with a compatible bundled model and preset pin mapping. The catalog includes 20 TinyCAD Basic models, and the LM358 and LM324 default to OpenJellyBean package models.
+- Library symbols link to shared model definitions. Stock parts in the SPICE and XSPICE tutorials use those links and retain their original simulation results.
+
+### Fixed
+
+- Restore direct printing to the selected printer on Windows.
+- Fix Print on Linux when launching TinyCAD from development tools on GNOME Wayland, including the VS Code Snap.
+- On Linux, Advanced Print opens the selected sheets as a PDF in TinyCAD and displays the system print dialog. Canceling keeps the PDF open.
+- Update printing and SVG export to use React 18 rendering.
+- Show the editable Name field by default on newly placed standard library symbols and remove duplicate name captions from their artwork.
+- Demonstrate Markdown formatting in the notes on bundled equipment and network drawings.
+
+
+## v4.1.1 — 2026-11-20
+
+### Fixed
+
+- Bundle the Electron runtime libraries required to launch the Linux Snap and use XWayland on Wayland desktops.
+
 ## v4.1.0 — 2026-11-18
 
 ### Added

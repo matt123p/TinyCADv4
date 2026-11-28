@@ -2,6 +2,8 @@
 
 This document defines the project browser, file editing and saving, Git source control, project settings, generated files and hierarchical schematics. The browser should behave like the folder explorer in VS Code or Visual Studio. The [PCB layout specification](TinyCAD_PCB_Layout_Complete_Specification.md) defines board editing and manufacturing, and the [drawing format](drawing-format.md) and [PCB format](pcb-format.md) define the native design files.
 
+The Electron Project workspace owns the folder browser, file tabs, project libraries, hierarchy, and Git integration. PCB Design opens `.dpn` files in the same workspace. PCB files retain their board-specific format and are saved through the project file service. For boards with an existing schematic association, PCB checks and updates read the saved project schematic.
+
 ## Single File and Project modes
 
 **Single File** is a complete way to use TinyCAD. Start with the familiar TinyCAD v4.1.0 layout, including the drawing canvas, menus, toolbars, sheet tabs and Libraries. Open, inspect, edit and save a drawing directly. The project tree, project file-tab strip and vertical activity bar appear only in **Project** mode. Opening an ordinary file in Single File mode keeps that mode, even if the file is stored under a project folder.

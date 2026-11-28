@@ -4,7 +4,7 @@ import { drawingSaveFormat } from './drawingSaveFormat';
 import { resizeStudentInstruments } from '../simulation/controlSymbols';
 import { ioXML } from './ioXml';
 import { XMLBuilder } from '../util/xmlbuilder';
-import { packDsn, unpackDsn, Payloads, validPath } from './dsnContainer';
+import { digest, packDsn, unpackDsn, Payloads, validPath } from './dsnContainer';
 import {
   getResult,
   restoreResults,
@@ -170,6 +170,11 @@ export async function decodeDrawing(
     }
   }
   const drawing = resizeStudentInstruments(new ioXML().from_dsn(builder));
+  for (const pack of drawing.spiceModelPacks ?? []) {
+    const checksum = await digest(new TextEncoder().encode(pack.spice));
+    if (checksum !== pack.sha256.toLowerCase())
+      throw new Error(`Embedded SPICE model pack ${pack.id} failed its checksum.`);
+  }
   // Older browser saves may already have flattened a built-in template. Repair
   // only an exact whitespace-flattened match to its embedded configuration;
   // custom SPICE statements must remain untouched.

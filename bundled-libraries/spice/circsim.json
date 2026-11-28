@@ -1,0 +1,680 @@
+{
+  "schemaVersion": 1,
+  "pack": {
+    "id": "circsim",
+    "version": "059858b15671",
+    "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+    "filename": "circsim_059858b15671.lib",
+    "sha256": "f4a15fbfa6402ee054f2e4186a71f0c8c16bf39fb192845b35865358c03f92e3",
+    "license": "MIT",
+    "licenseText": "MIT License\n\nCopyright (c) 2026 circsim maintainers\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n",
+    "spice": "* TinyCAD selection of circsim models\n\n.subckt opamp_core inp inn out vcc vee\n+ params: aol=100k gbw=1e6 slew=0.5e6 vos=0 rout=75 dsat=0 vsathi=1.5 vsatlo=0.0 iq=0.5m\n* input sense (high-Z): e = (inp - inn) + offset\nbin e 0 v = v(inp,inn) + vos\n* dominant-pole network. Rp chosen for DC gain = aol; Cp for pole at gbw/aol.\n* A transconductance gm=1 drives Rp||Cp, so V(vpole) = gm*V(e)*Rp at DC and the\n* pole sits at fp = 1/(2*pi*Rp*Cp). Set Rp=aol (gm=1 -> DC gain=aol) and\n* Cp = 1/(2*pi*Rp*fp) with fp = gbw/aol -> unity-gain crossing at gbw.\n.param rp = {aol}\n.param cp = {1/(6.283185307*rp*(gbw/aol))}\n* slew-rate current limit: gm*v(e) for small signals, +/- imax at most.\n.param imax = {slew*cp}\n* gate width (V) and stiff-clamp conductance (A/V, 5 mV overshoot at imax).\n.param wg = 0.005\n.param kc = {imax/0.005}\n* output limits, live from the rail pins and shifted by dsat*Iout (item 4).\nblo clo 0 v = v(vee) + vsatlo + dsat*i(vsns)\nbhi chi 0 v = v(vcc) - vsathi + dsat*i(vsns)\nbmid vmid 0 v = 0.5*(v(clo) + v(chi))\n* smooth rails-present measure: 0 at 0 V across the rails, 1 above about 2 V.\nbpr pr 0 v = 0.5*(1 + tanh((v(vcc) - v(vee) - 1)/0.25))\n* drive current: imax*tanh(e/imax) (sign and saturation), times one gate per\n* limit: the upper gate closes the positive drive as vpole reaches chi, the lower\n* gate closes the negative drive as vpole reaches clo. Each gate is offset by\n* 3.6*wg so the drive has just fallen to the pole leak current when vpole reaches\n* the limit, which parks vpole at the limit itself. The expression is kept in one\n* piece on purpose: split into intermediate nodes, the zero starting value of\n* those nodes would hide the gm path from the first Newton pass.\nbg 0 vpole i = imax*tanh(v(e)/imax)*( 0.5*(1 + tanh(v(e)/imax))*0.5*(1 - tanh((v(vpole) - v(chi))/wg + 3.6))\n+ + 0.5*(1 - tanh(v(e)/imax))*0.5*(1 + tanh((v(vpole) - v(clo))/wg - 3.6)) )\nrp vpole vmid {rp}\ncp vpole 0 {cp}\n* stiff clamp, 30 mV beyond each limit, active only with the rails present. The\n* upper knee is the high limit floored at the low limit (soft max), so a\n* collapsed or unpowered supply parks the pole node at the low limit instead of\n* the midpoint of an inverted window. The floor is written inline: as a node it\n* would be a nonlinear function of the rails whose value after the first Newton\n* pass is wrong, while chi and clo, being linear in the rails, are exact.\nbclp vpole 0 i = v(pr)*kc*( 0.5*((v(vpole)-v(clo)-0.5*((v(chi)-v(clo)) + sqrt((v(chi)-v(clo))*(v(chi)-v(clo)) + 0.01))-0.03) + sqrt((v(vpole)-v(clo)-0.5*((v(chi)-v(clo)) + sqrt((v(chi)-v(clo))*(v(chi)-v(clo)) + 0.01))-0.03)*(v(vpole)-v(clo)-0.5*((v(chi)-v(clo)) + sqrt((v(chi)-v(clo))*(v(chi)-v(clo)) + 0.01))-0.03) + 1e-6))\n+ - 0.5*((v(clo)-0.03-v(vpole)) + sqrt((v(clo)-0.03-v(vpole))*(v(clo)-0.03-v(vpole)) + 1e-6)) )\n* output buffer: follow vpole, referenced to the vee pin, then drive the pin\n* through rout and a 0 V output-current sense source.\nbout obuf vee v = v(vpole) - v(vee)\nrout obuf osns {rout}\nvsns osns out 0\n* supply-pin currents: sourced output current moves vcc -> vee (sunk output\n* current already leaves through vee via the vee-referenced Bout); quiescent\n* current is constant. The sqrt form is the smooth positive part of i(vsns).\n* Both are scaled by the rails-present measure pr, so a rail that is floating\n* or not yet powered carries no draw (a current source alone on a floating rail\n* would push it to an absurd voltage) and the model draws exactly iq once\n* powered (pr is 1 above about 2 V).\nbsrc vcc vee i = v(pr)*0.5*( i(vsns) + sqrt(i(vsns)*i(vsns) + 1e-12) )\nbiq vcc vee i = iq*v(pr)\n.ends opamp_core\n\n.subckt LM741 inp inn out vcc vee\nxa inp inn out vcc vee opamp_core\n+ params: aol=200k gbw=1e6 slew=0.5e6 vos=1e-3 rout=75 vsathi=1 vsatlo=1 iq=1.7m\n.ends LM741\n\n.subckt LM393 inp inn out vcc vee\n+ params: iq=0.4m\n* high-gain decision node 'dec' relative to vee (single supply friendly)\nxc inp inn dec vcc vee opamp_core\n+ params: aol=200k gbw=0.8e6 slew=10e6 vos=1e-3 rout=50 vsathi=0.3 vsatlo=0.2 iq={iq}\n* open-collector pulldown: when dec is HIGH (>mid) the output transistor is OFF\n* (high-Z); when dec is LOW the transistor pulls 'out' toward vee through Ron.\n* Model as a voltage-controlled resistance from out to vee. The sunk current\n* leaves through the vee pin, so the supply side needs no extra source.\n* gatev ~ 1 when output should be LOW (dec low), ~0 when output high-Z.\nbsw out vee i = (v(dec) < ((v(vcc)+v(vee))/2)) ?\n+ ((v(out)-v(vee))/40) : ((v(out)-v(vee))/1e9)\n.ends LM393\n\n.subckt LM339_QUAD in1p in1n out1 in2p in2n out2 in3p in3n out3 in4p in4n out4 vcc vee\nx1 in1p in1n out1 vcc vee LM393 params: iq=0.2m\nx2 in2p in2n out2 vcc vee LM393 params: iq=0.2m\nx3 in3p in3n out3 vcc vee LM393 params: iq=0.2m\nx4 in4p in4n out4 vcc vee LM393 params: iq=0.2m\n.ends LM339_QUAD\n\n.subckt NE5532 inap inan outa inbp inbn outb vcc vee\nxa inap inan outa vcc vee opamp_core\n+ params: aol=100k gbw=10e6 slew=9e6 vos=0.5e-3 rout=50 vsathi=2 vsatlo=2 iq=4m\nxb inbp inbn outb vcc vee opamp_core\n+ params: aol=100k gbw=10e6 slew=9e6 vos=0.5e-3 rout=50 vsathi=2 vsatlo=2 iq=4m\n.ends NE5532\n\n.model LED_YELLOW D(is=1.87e-21 rs=3 n=1.8 cjo=30p vj=0.75 m=0.333 bv=5 ibv=100u\n+ eg=2 xti=3)\n\n.subckt NE555 gnd trig out reset ctrl thres disch vcc\n*\n* ---- internal 5k / 5k / 5k resistor divider ----\n* VCC --[5k]-- ctrl(=2/3 Vcc) --[5k]-- ntrig(=1/3 Vcc) --[5k]-- GND\n* The CTRL pin is brought out at the 2/3 node (so an external cap/voltage on\n* CTRL shifts the upper threshold, per the datasheet).\nrdiv_a vcc ctrl 5k\nrdiv_b ctrl n13 5k\nrdiv_c n13 gnd 5k\n*\n* ---- supply current ----\n* The datasheet supply current (about 3 mA at 5 V, about 10 mA at 15 V, output\n* low, no load) is nearly resistive. This shunt, together with the 15k divider\n* above, draws about 3.1 mA at 5 V and 9.3 mA at 15 V.\nrq vcc gnd 1.8k\n*\n* Start-up ramps used below, written out in each expression on purpose (an\n* intermediate node would start at 0 V and hide the ramp from the first Newton\n* pass):\n*   sf = (time < 1e-6 ? 1 - time/1e-6 : 0) is 1 at time 0 and 0 from 1 us on;\n*   mr = (time < 1e-6 ? time/1e-6 : 1)     is 0 at time 0 and 1 from 1 us on.\n*\n* ---- upper (threshold) comparator ----\n* output -> 1 when THRES > CTRL (2/3 Vcc). Drives the latch RESET input.\n* Smooth step 2 mV wide (1 V wide at time 0).\nbcomphi chi gnd v = 0.5*(1 + tanh(v(thres,ctrl)/(0.002 + 1.0*(time < 1e-6 ? 1 - time/1e-6 : 0))))\n*\n* ---- lower (trigger) comparator ----\n* output -> 1 when TRIG < 1/3 Vcc (node n13). Drives the latch SET input.\nbcomplo clo gnd v = 0.5*(1 + tanh(v(n13,trig)/(0.002 + 1.0*(time < 1e-6 ? 1 - time/1e-6 : 0))))\n*\n* ---- active-low RESET pin gate (datasheet threshold about 1 V) ----\n* rok -> 1 when the pin is high (latch allowed to run), -> 0 when pulled low.\nbrok rok gnd v = 0.5*(1 + tanh((v(reset,gnd) - 1)/0.05))\n*\n* ---- RS latch with active-low RESET pin override ----\n* State node 'q' is algebraic: the voltage source below forces\n*   q = run * ( clo + (1-clo)*mr*hold(q) ),   run = (1-chi)*rok,\n*   hold(q) = 1 when q > 0.5, else 0.\n* run is 0 whenever the upper comparator or the RESET pin resets the latch\n* (RESET is dominant, per the datasheet) and clo = 1 sets it. The self-reference\n* through hold(q) is the latch memory, with two branches:\n*   set branch    q = run      (hold = 1), valid while run > 0.5\n*   reset branch  q = run*clo  (hold = 0), valid while run*clo < 0.5\n* so the latch resets when the upper comparator passes its midpoint (THRES =\n* CTRL) or RESET falls through 1 V, and sets when the lower comparator passes\n* its midpoint (TRIG = Vcc/3). The memory term is off at time 0 (mr = 0), so the\n* operating point is the smooth function q = run*clo: output low and discharge\n* on whenever neither comparator is active, with no memory to choose between two\n* states. There is deliberately no capacitor or lag on q (see \"Solver step\"\n* above): the real part's propagation delay (about 100 ns) is far below the\n* step circsim normally takes.\nbq q gnd v = v(rok,gnd)*(1 - v(chi,gnd))*( v(clo,gnd) + (1 - v(clo,gnd))*(time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0) )\n* Read the latch state for the output. From 1 us on this is the same hard\n* decision as the memory, so the output changes only when q jumps between\n* branches. A readout that moved along a branch (q runs from 1 down to 0.5 on\n* the set branch as THRES approaches CTRL) would let the discharge switch and\n* THRES settle into an analog equilibrium at the threshold. At time 0 it is a\n* smooth step of slope 8 per volt.\nbqd qd gnd v = (time < 1e-6 ? 1 - time/1e-6 : 0)*0.5*(1 + tanh(8*(v(q,gnd) - 0.5))) + (time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0)\n*\n* ---- output buffer (pin 3) ----\n* OUT is HIGH (Vcc - 0.5) when the latch is SET, LOW (0.1 V) when reset,\n* through a small output resistance; RESET low forces the output to 0 V. The\n* buffer is referenced to the gnd pin, so current the load pushes into OUT\n* leaves through gnd on its own. A 0 V sense source in series with the output\n* resistance measures the output current, and a controlled source moves the\n* SOURCED current from vcc to gnd so the supply pin carries the load (faded\n* out below about 2 V so a floating rail carries nothing).\nbout obuf gnd v = v(rok,gnd)*( 0.1 + (v(vcc,gnd) - 0.6)*v(qd,gnd) )\nrout obuf osns 10\nvsns osns out 0\nbsrc vcc gnd i = 0.5*(1 + tanh((v(vcc,gnd) - 1)/0.25))*0.5*( i(vsns) + sqrt(i(vsns)*i(vsns) + 1e-12) )\n*\n* ---- discharge transistor (pin 7, open collector to GND) ----\n* The discharge transistor is ON (DISCH pulled to GND through 15 ohm) when the\n* output is LOW (latch reset) and OFF (1 Gohm) when the output is HIGH. RESET\n* low forces it ON. Modeled as a voltage-controlled conductance from DISCH to\n* GND; the current it sinks leaves through the gnd pin. The state readout inside\n* it is the same as qd from 1 us on, and softer than qd at time 0 (3 per volt),\n* because the loop through THRES is what the operating point has to solve.\nbdisch disch gnd i = v(disch,gnd)*( (1 - ((time < 1e-6 ? 1 - time/1e-6 : 0)*0.5*(1 + tanh(3*(v(q,gnd) - 0.5))) + (time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0))*v(rok,gnd))/15 + (((time < 1e-6 ? 1 - time/1e-6 : 0)*0.5*(1 + tanh(3*(v(q,gnd) - 0.5))) + (time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0))*v(rok,gnd))/1e9 )\n.ends NE555\n\n.subckt PC817 a k c e\n.model DPC817 D(is=3.47e-15 rs=3 n=1.5 cjo=30p vj=0.75 m=0.333 bv=6 ibv=10u eg=1.11)\n.model QOPTO NPN(is=1e-14 bf=100 br=1 rc=10 cjc=2p cje=5p tf=1n)\nvled a ai 0\ndled ai k DPC817\nfb e b vled 0.017\nq1 c b e QOPTO\n.ends PC817\n\n.subckt 4N35 a k c e\n.model D4N35 D(is=1.26e-14 rs=3 n=1.5 cjo=30p vj=0.75 m=0.333 bv=6 ibv=10u eg=1.11)\n.model QOPTO NPN(is=1e-14 bf=100 br=1 rc=10 cjc=2p cje=5p tf=1n)\nvled a ai 0\ndled ai k D4N35\nfb e b vled 0.01\nq1 c b e QOPTO\n.ends 4N35\n\n.subckt reg_lin vin gnd vout\n+ params: vreg=5 drop=2 dropl=1.5 irated=1 ilim=1.2 rout=0.05 iq=5m\n* Load position: 0 at 0.1*irated, 1 at irated, from the pass current sensed by\n* vsense below; smooth-clamped to [0,1] (0.02 wide) to give the load fraction.\nblf lf gnd v = (i(vsense)/irated - 0.1)/0.9\nbfrc frc gnd v = 0.5*( 1 + sqrt( v(lf,gnd)*v(lf,gnd) + 4e-4 ) - sqrt( (v(lf,gnd)-1)*(v(lf,gnd)-1) + 4e-4 ) )\n* Load-dependent dropout voltage and the headroom-limited target.\nbdrp dp gnd v = dropl + (drop - dropl)*v(frc,gnd)\nbtgt tgt gnd v = v(vin,gnd) - v(dp,gnd)\n* Regulated target = smooth min(vreg, vin-dropout), smooth-floored at 0 (both\n* smoothing widths 10 mV).\nbmn mn gnd v = 0.5*( v(tgt,gnd) + vreg - sqrt( (v(tgt,gnd)-vreg)*(v(tgt,gnd)-vreg) + 1e-4 ) )\nbreg reg gnd v = 0.5*( v(mn,gnd) + sqrt( v(mn,gnd)*v(mn,gnd) + 1e-4 ) )\n* output resistance for load regulation, then a 0 V ammeter to sense Iout.\nrpass reg rsen {rout}\nvsense rsen vout 0\n* Current-limit foldback: once the sensed pass current exceeds ilim, sink the\n* excess back to gnd so the net delivered current is held at the limit. The\n* excess is a smooth positive part of (i(vsense) - ilim), 2 mA*ilim wide;\n* i(vsense) is the current flowing out of the regulator into the load.\nbexc exc gnd v = 0.5*( (i(vsense) - ilim) + sqrt( (i(vsense) - ilim)*(i(vsense) - ilim) + 4e-6*ilim*ilim ) )\nbilim vout gnd i = v(exc,gnd)\n* Input current: the current delivered through the output pin plus the\n* quiescent ground current, drawn from the vin pin and returned to gnd. The\n* quiescent part fades out below about 2 V so an unpowered input draws nothing.\nbiq vin gnd i = i(vsense) - v(exc,gnd) + iq*0.5*(1 + tanh((v(vin,gnd) - 1)/0.25))\n.ends reg_lin\n\n.subckt reg_lin_ref vin ref vout\n+ params: vreg=5 drop=2 dropl=1.5 irated=1 ilim=1.2 rout=0.05 iq=5m\n* Load position: 0 at 0.1*irated, 1 at irated, from the pass current sensed by\n* vsense below; smooth-clamped to [0,1] (0.02 wide) to give the load fraction.\nblf lf ref v = (i(vsense)/irated - 0.1)/0.9\nbfrc frc ref v = 0.5*( 1 + sqrt( v(lf,ref)*v(lf,ref) + 4e-4 ) - sqrt( (v(lf,ref)-1)*(v(lf,ref)-1) + 4e-4 ) )\n* Load-dependent dropout voltage and the headroom-limited target.\nbdrp dp ref v = dropl + (drop - dropl)*v(frc,ref)\nbtgt tgt ref v = v(vin,ref) - v(dp,ref)\n* Regulated target = smooth min(vreg, vin-dropout), smooth-floored at 0 (both\n* smoothing widths 10 mV).\nbmn mn ref v = 0.5*( v(tgt,ref) + vreg - sqrt( (v(tgt,ref)-vreg)*(v(tgt,ref)-vreg) + 1e-4 ) )\nbreg reg ref v = 0.5*( v(mn,ref) + sqrt( v(mn,ref)*v(mn,ref) + 1e-4 ) )\n* output resistance for load regulation, then a 0 V ammeter to sense Iout.\nrpass reg rsen {rout}\nvsense rsen vout 0\n* Current-limit foldback: once the sensed pass current exceeds ilim, sink the\n* excess back to ref so the net delivered current is held at the limit. The\n* excess is a smooth positive part of (i(vsense) - ilim), 2 mA*ilim wide;\n* i(vsense) is the current flowing out of the regulator into the load.\nbexc exc ref v = 0.5*( (i(vsense) - ilim) + sqrt( (i(vsense) - ilim)*(i(vsense) - ilim) + 4e-6*ilim*ilim ) )\nbilim vout ref i = v(exc,ref)\n* Input current: the current delivered through the output pin plus the\n* quiescent ground current, drawn from the vin pin and returned to ref. The\n* quiescent part fades out below about 2 V so an unpowered input draws nothing.\nbiq vin ref i = i(vsense) - v(exc,ref) + iq*0.5*(1 + tanh((v(vin,ref) - 1)/0.25))\n.ends reg_lin_ref\n\n.subckt 7805 vin gnd vout\nxr vin gnd vout reg_lin params: vreg=5.0 drop=2.0 dropl=1.5 irated=1.0 ilim=1.2 rout=0.02 iq=5m\n.ends 7805\n\n.subckt TL431 k a ref\n* high-gain error stage -> shunt element: sink from cathode to anode above Vref.\nbshunt k a i = ( v(ref,a) > 2.495 ) ? ( (v(ref,a)-2.495)*10 + 1u ) : 1u\n* reference-pin input bias current (~2uA into the ref pin)\nbref ref a i = 2u\n.ends TL431\n\n.subckt LM317 vin adj vout\nxr vin adj vout reg_lin_ref params: vreg=1.25 drop=2.0 dropl=1.5 irated=1.5 ilim=2.2 rout=0.01 iq=50u\n.ends LM317\n\n.model MIRLZ44N VDMOS(vto=1.5 kp=62 lambda=0.01 rd=0.0155 rs=0.0024 rg=1.7\n+ cgdmax=300p cgdmin=30p cgs=1550p cjo=400p is=1e-12 rb=0.005 bv=55)\n\n.model MIRF540N VDMOS(vto=3 kp=18 lambda=0.01 rd=0.027 rs=0.005 rg=2\n+ cgdmax=80p cgdmin=8p cgs=1920p cjo=250p is=1e-12 rb=0.01 bv=100)\n\n.model MIRF3205 VDMOS(vto=3 kp=71 lambda=0.01 rd=0.0045 rs=0.0007 rg=1\n+ cgdmax=420p cgdmin=42p cgs=3030p cjo=780p is=1e-12 rb=0.002 bv=55)\n\n.model MIRF9540N VDMOS(pchan=1 vto=-3 kp=4.76 lambda=0.01 rd=0.065 rs=0.01 rg=2.5\n+ cgdmax=280p cgdmin=28p cgs=1160p cjo=400p is=1e-12 rb=0.02 bv=100)\n"
+  },
+  "models": [
+    {
+      "id": "LM741",
+      "kind": "opamp",
+      "description": "Single 741 op-amp. Models nominal gain, bandwidth, slew rate and offset. Offset-null pins are omitted.",
+      "aliases": [
+        "UA741"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/opamp.lib#L235"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "inp",
+          "role": "non-inverting input"
+        },
+        {
+          "port": "inn",
+          "role": "inverting input"
+        },
+        {
+          "port": "out",
+          "role": "output"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt LM741 inp inn out vcc vee\nxa inp inn out vcc vee opamp_core\n+ params: aol=200k gbw=1e6 slew=0.5e6 vos=1e-3 rout=75 vsathi=1 vsatlo=1 iq=1.7m\n.ends LM741\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 19,
+          "symbolId": 19,
+          "name": "741 op-amp",
+          "pinLayout": [
+            "2",
+            "3",
+            "4",
+            "6",
+            "7"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "2",
+            "6",
+            "7",
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "LM393",
+      "kind": "comparator",
+      "description": "One LM393 comparator channel. Open-collector output requires a pull-up.",
+      "aliases": [
+        "LM2903"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/opamp.lib#L165"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "inp",
+          "role": "non-inverting input"
+        },
+        {
+          "port": "inn",
+          "role": "inverting input"
+        },
+        {
+          "port": "out",
+          "role": "output"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        }
+      ],
+      "parameterDefaults": {
+        "iq": "0.4m"
+      },
+      "definition": ".subckt LM393 inp inn out vcc vee\n+ params: iq=0.4m\n* high-gain decision node 'dec' relative to vee (single supply friendly)\nxc inp inn dec vcc vee opamp_core\n+ params: aol=200k gbw=0.8e6 slew=10e6 vos=1e-3 rout=50 vsathi=0.3 vsatlo=0.2 iq={iq}\n* open-collector pulldown: when dec is HIGH (>mid) the output transistor is OFF\n* (high-Z); when dec is LOW the transistor pulls 'out' toward vee through Ron.\n* Model as a voltage-controlled resistance from out to vee. The sunk current\n* leaves through the vee pin, so the supply side needs no extra source.\n* gatev ~ 1 when output should be LOW (dec low), ~0 when output high-Z.\nbsw out vee i = (v(dec) < ((v(vcc)+v(vee))/2)) ?\n+ ((v(out)-v(vee))/40) : ((v(out)-v(vee))/1e9)\n.ends LM393\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "LM339_QUAD",
+      "kind": "comparator",
+      "description": "Complete LM339 quad comparator with open-collector outputs.",
+      "aliases": [
+        "LM339",
+        "LM2901"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/opamp.lib#L186"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "in1p",
+          "role": "in1p"
+        },
+        {
+          "port": "in1n",
+          "role": "in1n"
+        },
+        {
+          "port": "out1",
+          "role": "out1"
+        },
+        {
+          "port": "in2p",
+          "role": "in2p"
+        },
+        {
+          "port": "in2n",
+          "role": "in2n"
+        },
+        {
+          "port": "out2",
+          "role": "out2"
+        },
+        {
+          "port": "in3p",
+          "role": "in3p"
+        },
+        {
+          "port": "in3n",
+          "role": "in3n"
+        },
+        {
+          "port": "out3",
+          "role": "out3"
+        },
+        {
+          "port": "in4p",
+          "role": "in4p"
+        },
+        {
+          "port": "in4n",
+          "role": "in4n"
+        },
+        {
+          "port": "out4",
+          "role": "out4"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt LM339_QUAD in1p in1n out1 in2p in2n out2 in3p in3n out3 in4p in4n out4 vcc vee\nx1 in1p in1n out1 vcc vee LM393 params: iq=0.2m\nx2 in2p in2n out2 vcc vee LM393 params: iq=0.2m\nx3 in3p in3n out3 vcc vee LM393 params: iq=0.2m\nx4 in4p in4n out4 vcc vee LM393 params: iq=0.2m\n.ends LM339_QUAD\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "NE5532",
+      "kind": "opamp2",
+      "description": "Complete dual audio op-amp with shared supply pins.",
+      "aliases": [
+        "NE5532P",
+        "NE5532D"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/opamp.lib#L222"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "inap",
+          "role": "inap"
+        },
+        {
+          "port": "inan",
+          "role": "inan"
+        },
+        {
+          "port": "outa",
+          "role": "outa"
+        },
+        {
+          "port": "inbp",
+          "role": "inbp"
+        },
+        {
+          "port": "inbn",
+          "role": "inbn"
+        },
+        {
+          "port": "outb",
+          "role": "outb"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        },
+        {
+          "port": "vee",
+          "role": "negative supply"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt NE5532 inap inan outa inbp inbn outb vcc vee\nxa inap inan outa vcc vee opamp_core\n+ params: aol=100k gbw=10e6 slew=9e6 vos=0.5e-3 rout=50 vsathi=2 vsatlo=2 iq=4m\nxb inbp inbn outb vcc vee opamp_core\n+ params: aol=100k gbw=10e6 slew=9e6 vos=0.5e-3 rout=50 vsathi=2 vsatlo=2 iq=4m\n.ends NE5532\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "LED_YELLOW",
+      "kind": "led",
+      "description": "Generic yellow indicator LED fitted to 2.10 V at 20 mA. Electrical behaviour only.",
+      "aliases": [
+        "yellow LED"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/discrete-extra.lib#L54"
+      },
+      "designator": "D",
+      "terminals": [
+        {
+          "role": "anode"
+        },
+        {
+          "role": "cathode"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model LED_YELLOW D(is=1.87e-21 rs=3 n=1.8 cjo=30p vj=0.75 m=0.333 bv=5 ibv=100u\n+ eg=2 xti=3)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 18,
+          "symbolId": 18,
+          "name": "LED (yellow)",
+          "pinLayout": [
+            "1",
+            "2"
+          ],
+          "pinsInModelOrder": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "NE555",
+      "kind": "timer",
+      "description": "Behavioural 555 timer with trigger, threshold, reset and discharge terminals.",
+      "aliases": [
+        "LM555",
+        "555"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/timer555.lib#L50"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "gnd",
+          "role": "ground"
+        },
+        {
+          "port": "trig",
+          "role": "trigger"
+        },
+        {
+          "port": "out",
+          "role": "output"
+        },
+        {
+          "port": "reset",
+          "role": "reset"
+        },
+        {
+          "port": "ctrl",
+          "role": "control voltage"
+        },
+        {
+          "port": "thres",
+          "role": "threshold"
+        },
+        {
+          "port": "disch",
+          "role": "discharge"
+        },
+        {
+          "port": "vcc",
+          "role": "positive supply"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt NE555 gnd trig out reset ctrl thres disch vcc\n*\n* ---- internal 5k / 5k / 5k resistor divider ----\n* VCC --[5k]-- ctrl(=2/3 Vcc) --[5k]-- ntrig(=1/3 Vcc) --[5k]-- GND\n* The CTRL pin is brought out at the 2/3 node (so an external cap/voltage on\n* CTRL shifts the upper threshold, per the datasheet).\nrdiv_a vcc ctrl 5k\nrdiv_b ctrl n13 5k\nrdiv_c n13 gnd 5k\n*\n* ---- supply current ----\n* The datasheet supply current (about 3 mA at 5 V, about 10 mA at 15 V, output\n* low, no load) is nearly resistive. This shunt, together with the 15k divider\n* above, draws about 3.1 mA at 5 V and 9.3 mA at 15 V.\nrq vcc gnd 1.8k\n*\n* Start-up ramps used below, written out in each expression on purpose (an\n* intermediate node would start at 0 V and hide the ramp from the first Newton\n* pass):\n*   sf = (time < 1e-6 ? 1 - time/1e-6 : 0) is 1 at time 0 and 0 from 1 us on;\n*   mr = (time < 1e-6 ? time/1e-6 : 1)     is 0 at time 0 and 1 from 1 us on.\n*\n* ---- upper (threshold) comparator ----\n* output -> 1 when THRES > CTRL (2/3 Vcc). Drives the latch RESET input.\n* Smooth step 2 mV wide (1 V wide at time 0).\nbcomphi chi gnd v = 0.5*(1 + tanh(v(thres,ctrl)/(0.002 + 1.0*(time < 1e-6 ? 1 - time/1e-6 : 0))))\n*\n* ---- lower (trigger) comparator ----\n* output -> 1 when TRIG < 1/3 Vcc (node n13). Drives the latch SET input.\nbcomplo clo gnd v = 0.5*(1 + tanh(v(n13,trig)/(0.002 + 1.0*(time < 1e-6 ? 1 - time/1e-6 : 0))))\n*\n* ---- active-low RESET pin gate (datasheet threshold about 1 V) ----\n* rok -> 1 when the pin is high (latch allowed to run), -> 0 when pulled low.\nbrok rok gnd v = 0.5*(1 + tanh((v(reset,gnd) - 1)/0.05))\n*\n* ---- RS latch with active-low RESET pin override ----\n* State node 'q' is algebraic: the voltage source below forces\n*   q = run * ( clo + (1-clo)*mr*hold(q) ),   run = (1-chi)*rok,\n*   hold(q) = 1 when q > 0.5, else 0.\n* run is 0 whenever the upper comparator or the RESET pin resets the latch\n* (RESET is dominant, per the datasheet) and clo = 1 sets it. The self-reference\n* through hold(q) is the latch memory, with two branches:\n*   set branch    q = run      (hold = 1), valid while run > 0.5\n*   reset branch  q = run*clo  (hold = 0), valid while run*clo < 0.5\n* so the latch resets when the upper comparator passes its midpoint (THRES =\n* CTRL) or RESET falls through 1 V, and sets when the lower comparator passes\n* its midpoint (TRIG = Vcc/3). The memory term is off at time 0 (mr = 0), so the\n* operating point is the smooth function q = run*clo: output low and discharge\n* on whenever neither comparator is active, with no memory to choose between two\n* states. There is deliberately no capacitor or lag on q (see \"Solver step\"\n* above): the real part's propagation delay (about 100 ns) is far below the\n* step circsim normally takes.\nbq q gnd v = v(rok,gnd)*(1 - v(chi,gnd))*( v(clo,gnd) + (1 - v(clo,gnd))*(time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0) )\n* Read the latch state for the output. From 1 us on this is the same hard\n* decision as the memory, so the output changes only when q jumps between\n* branches. A readout that moved along a branch (q runs from 1 down to 0.5 on\n* the set branch as THRES approaches CTRL) would let the discharge switch and\n* THRES settle into an analog equilibrium at the threshold. At time 0 it is a\n* smooth step of slope 8 per volt.\nbqd qd gnd v = (time < 1e-6 ? 1 - time/1e-6 : 0)*0.5*(1 + tanh(8*(v(q,gnd) - 0.5))) + (time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0)\n*\n* ---- output buffer (pin 3) ----\n* OUT is HIGH (Vcc - 0.5) when the latch is SET, LOW (0.1 V) when reset,\n* through a small output resistance; RESET low forces the output to 0 V. The\n* buffer is referenced to the gnd pin, so current the load pushes into OUT\n* leaves through gnd on its own. A 0 V sense source in series with the output\n* resistance measures the output current, and a controlled source moves the\n* SOURCED current from vcc to gnd so the supply pin carries the load (faded\n* out below about 2 V so a floating rail carries nothing).\nbout obuf gnd v = v(rok,gnd)*( 0.1 + (v(vcc,gnd) - 0.6)*v(qd,gnd) )\nrout obuf osns 10\nvsns osns out 0\nbsrc vcc gnd i = 0.5*(1 + tanh((v(vcc,gnd) - 1)/0.25))*0.5*( i(vsns) + sqrt(i(vsns)*i(vsns) + 1e-12) )\n*\n* ---- discharge transistor (pin 7, open collector to GND) ----\n* The discharge transistor is ON (DISCH pulled to GND through 15 ohm) when the\n* output is LOW (latch reset) and OFF (1 Gohm) when the output is HIGH. RESET\n* low forces it ON. Modeled as a voltage-controlled conductance from DISCH to\n* GND; the current it sinks leaves through the gnd pin. The state readout inside\n* it is the same as qd from 1 us on, and softer than qd at time 0 (3 per volt),\n* because the loop through THRES is what the operating point has to solve.\nbdisch disch gnd i = v(disch,gnd)*( (1 - ((time < 1e-6 ? 1 - time/1e-6 : 0)*0.5*(1 + tanh(3*(v(q,gnd) - 0.5))) + (time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0))*v(rok,gnd))/15 + (((time < 1e-6 ? 1 - time/1e-6 : 0)*0.5*(1 + tanh(3*(v(q,gnd) - 0.5))) + (time < 1e-6 ? time/1e-6 : 1)*(v(q,gnd) > 0.5 ? 1 : 0))*v(rok,gnd))/1e9 )\n.ends NE555\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "PC817",
+      "kind": "optocoupler",
+      "description": "Phototransistor optocoupler with a constant typical current transfer ratio.",
+      "aliases": [
+        "EL817",
+        "LTV-817"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/opto.lib#L34"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        },
+        {
+          "port": "c",
+          "role": "collector"
+        },
+        {
+          "port": "e",
+          "role": "emitter"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt PC817 a k c e\n.model DPC817 D(is=3.47e-15 rs=3 n=1.5 cjo=30p vj=0.75 m=0.333 bv=6 ibv=10u eg=1.11)\n.model QOPTO NPN(is=1e-14 bf=100 br=1 rc=10 cjc=2p cje=5p tf=1n)\nvled a ai 0\ndled ai k DPC817\nfb e b vled 0.017\nq1 c b e QOPTO\n.ends PC817\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "4N35",
+      "kind": "optocoupler",
+      "description": "Phototransistor optocoupler with constant current transfer ratio. Base terminal is omitted.",
+      "aliases": [],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/opto.lib#L50"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "k",
+          "role": "cathode"
+        },
+        {
+          "port": "c",
+          "role": "collector"
+        },
+        {
+          "port": "e",
+          "role": "emitter"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt 4N35 a k c e\n.model D4N35 D(is=1.26e-14 rs=3 n=1.5 cjo=30p vj=0.75 m=0.333 bv=6 ibv=10u eg=1.11)\n.model QOPTO NPN(is=1e-14 bf=100 br=1 rc=10 cjc=2p cje=5p tf=1n)\nvled a ai 0\ndled ai k D4N35\nfb e b vled 0.01\nq1 c b e QOPTO\n.ends 4N35\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "7805",
+      "kind": "regulator",
+      "description": "Behavioural 5 V linear regulator with dropout and current limiting.",
+      "aliases": [
+        "LM7805",
+        "L7805"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/regulators.lib#L67"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "vin",
+          "role": "input supply"
+        },
+        {
+          "port": "gnd",
+          "role": "ground"
+        },
+        {
+          "port": "vout",
+          "role": "output"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt 7805 vin gnd vout\nxr vin gnd vout reg_lin params: vreg=5.0 drop=2.0 dropl=1.5 irated=1.0 ilim=1.2 rout=0.02 iq=5m\n.ends 7805\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "TL431",
+      "kind": "reference",
+      "description": "Behavioural adjustable shunt reference with a nominal 2.495 V reference.",
+      "aliases": [
+        "TL431A",
+        "TL432"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/regulators.lib#L110"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "k",
+          "role": "cathode"
+        },
+        {
+          "port": "a",
+          "role": "anode"
+        },
+        {
+          "port": "ref",
+          "role": "reference"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt TL431 k a ref\n* high-gain error stage -> shunt element: sink from cathode to anode above Vref.\nbshunt k a i = ( v(ref,a) > 2.495 ) ? ( (v(ref,a)-2.495)*10 + 1u ) : 1u\n* reference-pin input bias current (~2uA into the ref pin)\nbref ref a i = 2u\n.ends TL431\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "LM317",
+      "kind": "regulator",
+      "description": "Behavioural adjustable linear regulator with a nominal 1.25 V OUT-to-ADJ reference.",
+      "aliases": [
+        "LM317T"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/regulators.lib#L163"
+      },
+      "designator": "X",
+      "terminals": [
+        {
+          "port": "vin",
+          "role": "input supply"
+        },
+        {
+          "port": "adj",
+          "role": "adjust"
+        },
+        {
+          "port": "vout",
+          "role": "output"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".subckt LM317 vin adj vout\nxr vin adj vout reg_lin_ref params: vreg=1.25 drop=2.0 dropl=1.5 irated=1.5 ilim=2.2 rout=0.01 iq=50u\n.ends LM317\n",
+      "compatibleComponents": []
+    },
+    {
+      "id": "MIRLZ44N",
+      "kind": "nmos",
+      "description": "Logic-level 55 V N-channel power MOSFET.",
+      "aliases": [
+        "IRLZ44N"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/mosfet.lib#L67"
+      },
+      "designator": "M",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model MIRLZ44N VDMOS(vto=1.5 kp=62 lambda=0.01 rd=0.0155 rs=0.0024 rg=1.7\n+ cgdmax=300p cgdmin=30p cgs=1550p cjo=400p is=1e-12 rb=0.005 bv=55)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 11,
+          "symbolId": 11,
+          "name": "N-channel MOSFET",
+          "pinLayout": [
+            "2",
+            "3",
+            "4"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "2",
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MIRF540N",
+      "kind": "nmos",
+      "description": "100 V N-channel power MOSFET.",
+      "aliases": [
+        "IRF540N"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/mosfet.lib#L73"
+      },
+      "designator": "M",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model MIRF540N VDMOS(vto=3 kp=18 lambda=0.01 rd=0.027 rs=0.005 rg=2\n+ cgdmax=80p cgdmin=8p cgs=1920p cjo=250p is=1e-12 rb=0.01 bv=100)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 11,
+          "symbolId": 11,
+          "name": "N-channel MOSFET",
+          "pinLayout": [
+            "2",
+            "3",
+            "4"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "2",
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MIRF3205",
+      "kind": "nmos",
+      "description": "55 V low-resistance N-channel power MOSFET.",
+      "aliases": [
+        "IRF3205"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/mosfet.lib#L79"
+      },
+      "designator": "M",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model MIRF3205 VDMOS(vto=3 kp=71 lambda=0.01 rd=0.0045 rs=0.0007 rg=1\n+ cgdmax=420p cgdmin=42p cgs=3030p cjo=780p is=1e-12 rb=0.002 bv=55)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 11,
+          "symbolId": 11,
+          "name": "N-channel MOSFET",
+          "pinLayout": [
+            "2",
+            "3",
+            "4"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "2",
+            "4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MIRF9540N",
+      "kind": "pmos",
+      "description": "100 V P-channel power MOSFET.",
+      "aliases": [
+        "IRF9540N"
+      ],
+      "source": {
+        "name": "circsim",
+        "revision": "059858b15671c3edaf4c62f944ecb8c7420ae1d4",
+        "url": "https://github.com/epim/circsim/blob/059858b15671c3edaf4c62f944ecb8c7420ae1d4/resources/models/mosfet.lib#L87"
+      },
+      "designator": "M",
+      "terminals": [
+        {
+          "role": "drain"
+        },
+        {
+          "role": "gate"
+        },
+        {
+          "role": "source"
+        }
+      ],
+      "parameterDefaults": {},
+      "definition": ".model MIRF9540N VDMOS(pchan=1 vto=-3 kp=4.76 lambda=0.01 rd=0.065 rs=0.01 rg=2.5\n+ cgdmax=280p cgdmin=28p cgs=1160p cjo=400p is=1e-12 rb=0.02 bv=100)\n",
+      "compatibleComponents": [
+        {
+          "libraryId": "spice",
+          "nameId": 12,
+          "symbolId": 12,
+          "name": "P-channel MOSFET",
+          "pinLayout": [
+            "2",
+            "3",
+            "4"
+          ],
+          "pinsInModelOrder": [
+            "3",
+            "2",
+            "4"
+          ]
+        }
+      ]
+    }
+  ]
+}

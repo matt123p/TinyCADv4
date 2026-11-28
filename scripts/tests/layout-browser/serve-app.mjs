@@ -6,7 +6,7 @@ import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 'filesystem', nodeEnv = 'production', env = {}) {
+export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 'filesystem', nodeEnv = 'production', { testStartupWelcome = false } = {}) {
   const root = fileURLToPath(new URL('../../../', import.meta.url));
   await mkdir(path.join(root, '.tmp'), { recursive: true });
   const directory = await mkdtemp(path.join(root, '.tmp/layout-browser-'));
@@ -26,7 +26,7 @@ export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 
       entries: path.join(root, `scripts/tests/fixtures/${fixture}.html`),
       defaultConfig: '@parcel/config-default',
       mode: 'production',
-      env: { ...env, TARGET_SYSTEM: targetSystem, NODE_ENV: nodeEnv },
+      env: { TARGET_SYSTEM: targetSystem, NODE_ENV: nodeEnv },
       shouldDisableCache: true,
       cacheDir: path.join(directory, 'cache'),
       // A filesystem cache releases files after each operation. LMDB keeps its
@@ -57,8 +57,16 @@ export async function serveLayoutApp(fixture = 'layout-browser', targetSystem = 
         const relative = decodeURIComponent(url.pathname).replace(/^\/layout\//, '');
         const filename = path.resolve(dist, relative || `${fixture}.html`);
         if (!filename.startsWith(dist + path.sep)) { response.writeHead(403); response.end(); return; }
-        response.setHeader('Content-Type', mime[path.extname(filename)] || 'application/octet-stream');
-        response.end(await readFile(filename));
+        const extension = path.extname(filename);
+        response.setHeader('Content-Type', mime[extension] || 'application/octet-stream');
+        if (extension === '.html' && !testStartupWelcome) {
+          const html = await readFile(filename, 'utf8');
+          // Parcel can omit <head> in production output. Set the test preference
+          // before the fixture's first script instead.
+          response.end(html.replace(/<script\b/i, '<script>localStorage.setItem("tinycad.showWelcomeOnStartup", "false")</script><script'));
+        } else {
+          response.end(await readFile(filename));
+        }
       } catch { response.writeHead(404); response.end(); }
     });
     await new Promise((resolve, reject) => {

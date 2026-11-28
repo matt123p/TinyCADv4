@@ -1,12 +1,12 @@
+import { canOpenCircuit, circuitOpened, showOpenedBoard } from '../boardWorkspaceEvents';
 import { isBoardFile } from '../../../shared/drawingFiles.js';
-import { showOpenedBoard } from '../boardWorkspaceEvents';
+import { activateSchematicTab, openSchematicTabs, schematicFileTabKey } from '../../state/schematicTabs';
+import type { docDrawing } from '../../state/undo/undo';
 import { drawingMimeType } from '../../../shared/drawingFiles.js';
 import { decodeDrawing } from '../dsnCodec';
+import { isProjectSchematicPath, readProjectDrawing } from '../projects';
 import { Dispatch } from 'redux';
-import { showOpenedSchematic } from '../files';
-import { projectDocumentKind } from '../projectDocumentKind';
-import { projectDocumentOpened } from '../projectStorage';
-import type { docDrawing } from '../../state/undo/undo';
+import { ActionCreators } from 'redux-undo';
 import {
   normalizeTclibLoadError,
   tclib,
@@ -17,6 +17,7 @@ import {
 import {
   actionEditLibrary,
   actionMenuSetRecentFileList,
+  actionSetDocument,
   actionSelectDialog,
   actionSetFileData,
   actionUpdateConfig,
@@ -61,33 +62,46 @@ export class ElectronUserManager implements UserManager {
     return isNaN(date.getTime()) ? null : date.toISOString();
   }
 
-  public initialize(dispatch: Dispatch, getState: () => docDrawing): Promise<void> {
+  public initialize(dispatch: Dispatch): Promise<void> {
     // Clear previous listeners
     this.unsubs.forEach((u) => u());
     this.unsubs = [];
+    const outsideProject = (callback: () => void) => {
+      dispatch(((_dispatch: Dispatch, getState: () => docDrawing) => {
+        if (!getState().schematicTabs?.projectRoot) callback();
+      }) as any);
+    };
 
     // Add the callbacks
     this.unsubs.push(
-      window.electronAPI.fileLoaded(async (data) => {
-        try {
-          if (isBoardFile(data.name)) {
-            const { openStandaloneBoard } = await import('../boardWorkspace');
-            const content = typeof data.content === 'string' ? new TextEncoder().encode(data.content) : data.content;
-            showOpenedBoard(await openStandaloneBoard(content, {
-              name: data.name, id: data.id, folderId: data.id,
-            }), data.id);
-            return;
+      window.electronAPI.fileLoaded((data) => {
+        dispatch((async (dispatch: Dispatch, getState: () => docDrawing) => {
+          try {
+            if (isBoardFile(data.name)) {
+              const { openStandaloneBoard } = await import('../boardWorkspace');
+              showOpenedBoard(await openStandaloneBoard(typeof data.content === 'string' ? new TextEncoder().encode(data.content) : data.content, { name: data.name, id: data.id, folderId: data.folderId }), data.id);
+              return;
+            }
+            if (!canOpenCircuit()) return;
+            const key = schematicFileTabKey({ id: data.id, name: data.name });
+            if (openSchematicTabs(getState()).some((entry) => entry.key === key)) {
+              dispatch(activateSchematicTab(key));
+            } else {
+              const project = getState().schematicTabs?.projectRoot;
+              const doc = project && isProjectSchematicPath(project, data.id)
+                ? await readProjectDrawing({ id: data.id, name: data.name,
+                    folder: data.id.slice(0, Math.max(project.length, data.id.length - data.name.length - 1)),
+                  }, project)
+                : actionSetDocument(await decodeDrawing(data.content), data.name, data.id, data.id);
+              if (getState().schematicTabs?.projectRoot !== project) return;
+              dispatch(doc);
+              dispatch(ActionCreators.clearHistory());
+            }
+            window.dispatchEvent(new Event(circuitOpened));
+          } catch (error) {
+            dispatch(actionSelectDialog('io_failure', { message: String(error) }));
           }
-          if (getState().schematicTabs?.enabled && projectDocumentKind(data.name) && data.folderId) {
-            window.dispatchEvent(new CustomEvent(projectDocumentOpened, {
-              detail: { id: data.id, name: data.name, folder: data.folderId },
-            }));
-            return;
-          }
-          if (!data.content) return;
-          const doc = await decodeDrawing(data.content);
-          showOpenedSchematic(dispatch, getState(), doc, { name: data.name, id: data.id, folderId: data.folderId ?? data.id });
-        } catch (error) { dispatch(actionSelectDialog('io_failure',{message:String(error)})); }
+        }) as any);
       }),
     );
 
@@ -98,48 +112,19 @@ export class ElectronUserManager implements UserManager {
     );
 
     this.unsubs.push(
-      window.electronAPI.libraryLoaded((data) => {
-        if (data.content) {
-          // Import the tc lib module
-          import('../tclib')
-            .then((module) =>
-              // Load the library
-              module.loadTcLibrary(
-                data.id,
-                data.name,
-                this.toModifiedString(data.lastModified),
-                data.content,
-              ),
-            )
-            .then((lib) => {
-              // ... and set it
-              dispatch(
-                actionSetLibraryData({
-                  ...lib,
-                  bad: false,
-                  loadError: undefined,
-                }),
-              );
-            })
-            .catch((error) => {
-              dispatch(
-                actionSetLibraryData(
-                  this.createFailedLibrary(data.id, data.name, error),
-                ),
-              );
-            });
-        }
-      }),
+      window.electronAPI.libraryLoaded((library) => outsideProject(() => {
+        dispatch(actionSetLibraryData({ ...library, bad: false, loadError: undefined }));
+      })),
     );
 
     this.unsubs.push(
-      window.electronAPI.libraryLoadFailed((data) => {
+      window.electronAPI.libraryLoadFailed((data) => outsideProject(() => {
         dispatch(actionSetLibraryData(this.createFailedLibrary(data.id, data.name, data.error)));
-      }),
+      })),
     );
 
     this.unsubs.push(
-      window.electronAPI.libraries((data) => {
+      window.electronAPI.libraries((data) => outsideProject(() => {
         const config = normalizeUserConfig({
           fileId: this.currentConfig.fileId,
           libraries: data.libraries.map((library) => ({
@@ -173,9 +158,11 @@ export class ElectronUserManager implements UserManager {
             );
           }
         }
-      }),
+      })),
     );
 
+
+    window.electronAPI.requestStartupLists?.();
 
     // Check URL parameters for startup actions
     const urlParams = new URLSearchParams(window.location.search);
@@ -191,32 +178,23 @@ export class ElectronUserManager implements UserManager {
     // Check for library to open
     const libraryPath = urlParams.get('library');
     if (libraryPath) {
-        // Load the library and open it for editing
-        return import('../tclib').then((module) => {
-        // Request the library to be loaded
-        return new Promise<void>((resolve) => {
-            // Set up a one-time listener for the library data
-            const unsubscribe = window.electronAPI.libraryLoaded((data) => {
-            if (data.id === libraryPath && data.content) {
-                unsubscribe();
-                module.loadTcLibrary(
-                data.id,
-                data.name,
-                this.toModifiedString(data.lastModified),
-                data.content,
-                ).then((lib) => {
-                dispatch(actionEditLibrary(lib, lib.name, lib.fileId, null));
-                resolve();
-                });
-            }
-            });
-            // Request the library
-            window.electronAPI.loadLibrary({
-                name: libraryPath, // Name might be incorrect initially but loadLibrary mainly needs path
-                id: libraryPath,
-            });
+      return new Promise<void>((resolve) => {
+        const loaded = window.electronAPI.libraryLoaded((library) => {
+          if (library.fileId !== libraryPath) return;
+          loaded();
+          failed();
+          dispatch(actionEditLibrary(library, library.name, library.fileId, null));
+          resolve();
         });
+        const failed = window.electronAPI.libraryLoadFailed((data) => {
+          if (data.id !== libraryPath) return;
+          loaded();
+          failed();
+          dispatch(actionSelectDialog('io_failure', { message: data.error.summary }));
+          resolve();
         });
+        window.electronAPI.loadLibrary({ id: libraryPath, silent: true, allowEmpty: true });
+      });
     }
 
     // Check for file to open
@@ -238,11 +216,10 @@ export class ElectronUserManager implements UserManager {
     return Promise.resolve();
   }
 
-  public fileOpen(dispatch: Dispatch, file?: CurrentFile, projectMode?: boolean) {
+  public fileOpen(dispatch: Dispatch, file?: CurrentFile) {
     window.electronAPI.loadFile({
       name: file?.name,
       id: file?.id as string,
-      projectMode,
     });
   }
 
@@ -278,7 +255,7 @@ export class ElectronUserManager implements UserManager {
         id: file.id,
         folderId: file.folderId,
         content: xml,
-        ...(expectedVersion ? { expectedVersion } : {}),
+        expectedVersion,
       });
     });
   }

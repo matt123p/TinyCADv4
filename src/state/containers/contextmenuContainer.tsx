@@ -20,7 +20,9 @@ const mapStateToProps = (state: docDrawing) => {
   }
   const can_undo = state.docStore.past?.length > 0;
   const can_redo = state.docStore.future?.length > 0;
-  let items = state.altStore.contextMenu?.items?.map((f) => {
+  let items = state.altStore.contextMenu?.items?.filter((item) =>
+    !item.key.startsWith('hierarchy:') || !!state.schematicTabs?.projectRoot,
+  ).map((f) => {
     switch (f.key) {
       case 'undo':
         return { ...f, disabled: !can_undo };
@@ -42,7 +44,13 @@ const mapDispatchToProps = (dispatch: Dispatch<any>) => {
   return {
     onDismiss: () => dispatch(actionCommand(null)),
     onItemClick: (key: string) => {
-      if (key === 'undo') {
+      if (key.startsWith('hierarchy:')) {
+        dispatch(actionCommand(null));
+        const [, command, symbolId] = key.split(':');
+        window.dispatchEvent(new CustomEvent('tinycad:hierarchy-symbol', {
+          detail: { command, symbolId: Number(symbolId) },
+        }));
+      } else if (key === 'undo') {
         dispatch(ActionCreators.undo());
       } else if (key === 'redo') {
         dispatch(ActionCreators.redo());

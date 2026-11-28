@@ -39,7 +39,7 @@ import type { FootprintAssembly, FootprintModel } from '../../pcb/footprintDetai
 import FootprintModelTransformEditor from './FootprintModelTransformEditor';
 import FootprintLayoutTools from './FootprintLayoutTools';
 import FootprintArtworkEditor from './FootprintArtworkEditor';
-import { DeviceFootprintPreview } from './DeviceMappingPreview';
+import { DeviceFootprintPreview } from './DeviceFootprintPreview';
 import type { SvgViewportHandle } from '../svg/SvgViewport';
 
 type PadDraft = {

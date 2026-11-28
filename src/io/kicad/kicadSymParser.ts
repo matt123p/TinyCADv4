@@ -262,6 +262,17 @@ function parseProperty(node: SExprList): KiProperty {
   };
 }
 
+function parseEmbeddedFiles(node: SExprList): ReadonlyMap<string, string> {
+  const files = new Map<string, string>();
+  for (const file of children(child(node, 'embedded_files'), 'file')) {
+    const name = asString(child(file, 'name')?.values[0]);
+    const payload = child(file, 'data')?.values;
+    if (!name || !payload?.length) continue;
+    files.set(name, payload.join('').replace(/\s/g, ''));
+  }
+  return files;
+}
+
 function parseTopSymbol(node: SExprList): KiSymbol {
   const name = asString(node.values[0]);
   const properties = children(node, 'property').map(parseProperty);
@@ -294,27 +305,21 @@ function parseTopSymbol(node: SExprList): KiSymbol {
     onBoard: flag('on_board'),
     inBom: flag('in_bom'),
     issues,
+    embeddedFiles: parseEmbeddedFiles(node),
   };
 }
 
 function mergeInherited(symbols: KiSymbol[]) {
-  const byName: { [name: string]: KiSymbol } = {};
-  for (const symbol of symbols) {
-    byName[symbol.name] = symbol;
-  }
-
-  for (const symbol of symbols) {
-    if (!symbol.extendsName) {
-      continue;
-    }
-    const parent = byName[symbol.extendsName];
-    if (!parent) {
-      symbol.issues.push(`Missing inherited symbol ${symbol.extendsName}.`);
-      continue;
-    }
-    symbol.onBoard ??= parent.onBoard;
-    symbol.inBom ??= parent.inBom;
-    symbol.issues.push(...parent.issues);
+  const byName = new Map(symbols.map((symbol) => [symbol.name, symbol]));
+  const visited = new Set<KiSymbol>();
+  function inherit(symbol: KiSymbol, ancestors: Set<KiSymbol>) {
+    if (visited.has(symbol) || ancestors.has(symbol)) return;
+    visited.add(symbol);
+    const parent = byName.get(symbol.extendsName);
+    if (!parent || parent === symbol || ancestors.has(parent)) return;
+    ancestors.add(symbol);
+    inherit(parent, ancestors);
+    ancestors.delete(symbol);
 
     const existingUnits = new Set(symbol.subsymbols.map((s) => `${s.unit}:${s.style}`));
     const inherited = parent.subsymbols
@@ -329,7 +334,9 @@ function mergeInherited(symbols: KiSymbol[]) {
         symbol.properties.push({ ...p });
       }
     }
+    symbol.embeddedFiles = new Map([...parent.embeddedFiles, ...symbol.embeddedFiles]);
   }
+  for (const symbol of symbols) inherit(symbol, new Set());
 }
 
 export function parseKicadSym(input: string): KiCadLibrary {
@@ -340,5 +347,5 @@ export function parseKicadSym(input: string): KiCadLibrary {
 
   const symbols = children(root, 'symbol').map(parseTopSymbol);
   mergeInherited(symbols);
-  return { symbols };
+  return { symbols, embeddedFiles: parseEmbeddedFiles(root) };
 }
